@@ -1,0 +1,57 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - application/geo+json
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - api.weather.gov
+    method: GET
+    uri: https://api.weather.gov/points/0.0,0.0
+  response:
+    body:
+      string: "{\n    \"correlationId\": \"119a8954\",\n    \"title\": \"Data Unavailable
+        For Requested Point\",\n    \"type\": \"https://api.weather.gov/problems/InvalidPoint\",\n
+        \   \"status\": 404,\n    \"detail\": \"Unable to provide data for requested
+        point 0,0\",\n    \"instance\": \"https://api.weather.gov/requests/119a8954\"\n}"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Access-Control-Expose-Headers:
+      - X-Correlation-Id, X-Request-Id, X-Server-Id
+      Cache-Control:
+      - private, must-revalidate, max-age=86400
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '293'
+      Content-Type:
+      - application/problem+json
+      Date:
+      - Tue, 20 Jan 2026 18:51:32 GMT
+      Expires:
+      - Wed, 21 Jan 2026 18:51:32 GMT
+      Pragma:
+      - no-cache
+      Server:
+      - nginx/1.20.1
+      Strict-Transport-Security:
+      - max-age=31536000 ; includeSubDomains ; preload
+      Vary:
+      - Accept,Feature-Flags,Accept-Language
+      X-Correlation-ID:
+      - 119a8954
+      X-Edge-Request-ID:
+      - 31d8b63
+      X-Request-ID:
+      - aa4447e1-a026-477d-9a36-9be319a88773
+      X-Server-ID:
+      - vm-cprk-api-ops-app1.ncep.noaa.gov
+    status:
+      code: 404
+      message: Not Found
+version: 1

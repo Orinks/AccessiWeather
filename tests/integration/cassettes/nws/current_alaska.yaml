@@ -1,0 +1,1761 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - application/geo+json
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - api.weather.gov
+    method: GET
+    uri: https://api.weather.gov/points/61.2181,-149.9003
+  response:
+    body:
+      string: "{\n    \"@context\": [\n        \"https://geojson.org/geojson-ld/geojson-context.jsonld\",\n
+        \       {\n            \"@version\": \"1.1\",\n            \"wx\": \"https://api.weather.gov/ontology#\",\n
+        \           \"s\": \"https://schema.org/\",\n            \"geo\": \"http://www.opengis.net/ont/geosparql#\",\n
+        \           \"unit\": \"http://codes.wmo.int/common/unit/\",\n            \"@vocab\":
+        \"https://api.weather.gov/ontology#\",\n            \"geometry\": {\n                \"@id\":
+        \"s:GeoCoordinates\",\n                \"@type\": \"geo:wktLiteral\"\n            },\n
+        \           \"city\": \"s:addressLocality\",\n            \"state\": \"s:addressRegion\",\n
+        \           \"distance\": {\n                \"@id\": \"s:Distance\",\n                \"@type\":
+        \"s:QuantitativeValue\"\n            },\n            \"bearing\": {\n                \"@type\":
+        \"s:QuantitativeValue\"\n            },\n            \"value\": {\n                \"@id\":
+        \"s:value\"\n            },\n            \"unitCode\": {\n                \"@id\":
+        \"s:unitCode\",\n                \"@type\": \"@id\"\n            },\n            \"forecastOffice\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"forecastGridData\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"publicZone\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"county\":
+        {\n                \"@type\": \"@id\"\n            }\n        }\n    ],\n
+        \   \"id\": \"https://api.weather.gov/points/61.2181,-149.9003\",\n    \"type\":
+        \"Feature\",\n    \"geometry\": {\n        \"type\": \"Point\",\n        \"coordinates\":
+        [\n            -149.9003,\n            61.2181\n        ]\n    },\n    \"properties\":
+        {\n        \"@id\": \"https://api.weather.gov/points/61.2181,-149.9003\",\n
+        \       \"@type\": \"wx:Point\",\n        \"cwa\": \"AFC\",\n        \"type\":
+        \"land\",\n        \"forecastOffice\": \"https://api.weather.gov/offices/AFC\",\n
+        \       \"gridId\": \"AER\",\n        \"gridX\": 143,\n        \"gridY\":
+        236,\n        \"forecast\": \"https://api.weather.gov/gridpoints/AER/143,236/forecast\",\n
+        \       \"forecastHourly\": \"https://api.weather.gov/gridpoints/AER/143,236/forecast/hourly\",\n
+        \       \"forecastGridData\": \"https://api.weather.gov/gridpoints/AER/143,236\",\n
+        \       \"observationStations\": \"https://api.weather.gov/gridpoints/AER/143,236/stations\",\n
+        \       \"relativeLocation\": {\n            \"type\": \"Feature\",\n            \"geometry\":
+        {\n                \"type\": \"Point\",\n                \"coordinates\":
+        [\n                    -150.16935,\n                    61.355597\n                ]\n
+        \           },\n            \"properties\": {\n                \"city\": \"Point
+        MacKenzie\",\n                \"state\": \"AK\",\n                \"distance\":
+        {\n                    \"unitCode\": \"wmoUnit:m\",\n                    \"value\":
+        20984.08291461\n                },\n                \"bearing\": {\n                    \"unitCode\":
+        \"wmoUnit:degree_(angle)\",\n                    \"value\": 136\n                }\n
+        \           }\n        },\n        \"forecastZone\": \"https://api.weather.gov/zones/forecast/AKZ701\",\n
+        \       \"county\": \"https://api.weather.gov/zones/county/AKC020\",\n        \"fireWeatherZone\":
+        \"https://api.weather.gov/zones/fire/AKZ701\",\n        \"timeZone\": \"America/Anchorage\",\n
+        \       \"radarStation\": \"PAHG\"\n    }\n}"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Access-Control-Expose-Headers:
+      - X-Correlation-Id, X-Request-Id, X-Server-Id
+      Cache-Control:
+      - public, max-age=86397, s-maxage=120
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/geo+json
+      Date:
+      - Tue, 20 Jan 2026 18:51:18 GMT
+      Expires:
+      - Wed, 21 Jan 2026 18:51:15 GMT
+      Server:
+      - nginx/1.20.1
+      Strict-Transport-Security:
+      - max-age=31536000 ; includeSubDomains ; preload
+      Vary:
+      - Accept-Encoding
+      - Accept,Feature-Flags,Accept-Language
+      X-Correlation-ID:
+      - 119a34e7
+      X-Edge-Request-ID:
+      - 3177dca
+      X-Request-ID:
+      - 2c164f3b-3cb3-4d4f-a68b-1af89c92cb1d
+      X-Server-ID:
+      - vm-cprk-api-ops-app2.ncep.noaa.gov
+      content-length:
+      - '3102'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - api.weather.gov
+    method: GET
+    uri: https://api.weather.gov/gridpoints/AER/143,236/stations
+  response:
+    body:
+      string: "{\n    \"@context\": [\n        \"https://geojson.org/geojson-ld/geojson-context.jsonld\",\n
+        \       {\n            \"@version\": \"1.1\",\n            \"wx\": \"https://api.weather.gov/ontology#\",\n
+        \           \"s\": \"https://schema.org/\",\n            \"geo\": \"http://www.opengis.net/ont/geosparql#\",\n
+        \           \"unit\": \"http://codes.wmo.int/common/unit/\",\n            \"@vocab\":
+        \"https://api.weather.gov/ontology#\",\n            \"geometry\": {\n                \"@id\":
+        \"s:GeoCoordinates\",\n                \"@type\": \"geo:wktLiteral\"\n            },\n
+        \           \"city\": \"s:addressLocality\",\n            \"state\": \"s:addressRegion\",\n
+        \           \"distance\": {\n                \"@id\": \"s:Distance\",\n                \"@type\":
+        \"s:QuantitativeValue\"\n            },\n            \"bearing\": {\n                \"@type\":
+        \"s:QuantitativeValue\"\n            },\n            \"value\": {\n                \"@id\":
+        \"s:value\"\n            },\n            \"unitCode\": {\n                \"@id\":
+        \"s:unitCode\",\n                \"@type\": \"@id\"\n            },\n            \"forecastOffice\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"forecastGridData\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"publicZone\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"county\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"observationStations\":
+        {\n                \"@container\": \"@list\",\n                \"@type\":
+        \"@id\"\n            }\n        }\n    ],\n    \"type\": \"FeatureCollection\",\n
+        \   \"features\": [\n        {\n            \"id\": \"https://api.weather.gov/stations/PAMR\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -149.85,\n
+        \                   61.21667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAMR\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 42.0624\n                },\n
+        \               \"stationIdentifier\": \"PAMR\",\n                \"name\":
+        \"Anchorage, Merrill Field Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 2025.0290855549\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        82\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ701\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC020\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ701\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PALH\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -149.96667,\n
+        \                   61.18333\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PALH\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 21.9456\n                },\n
+        \               \"stationIdentifier\": \"PALH\",\n                \"name\":
+        \"Anchorage, Lake Hood Seaplane Base\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 5462.695498311\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        230\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ701\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC020\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ701\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PANC\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -149.99611,\n
+        \                   61.17444\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PANC\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 43.8912\n                },\n
+        \               \"stationIdentifier\": \"PANC\",\n                \"name\":
+        \"Anchorage, Ted Stevens Anchorage International Airport\",\n                \"timeZone\":
+        \"America/Anchorage\",\n                \"distance\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 7314.3451567304\n                },\n
+        \               \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \                   \"value\": 232\n                },\n                \"forecast\":
+        \"https://api.weather.gov/zones/forecast/AKZ701\",\n                \"county\":
+        \"https://api.weather.gov/zones/county/AKC020\",\n                \"fireWeatherZone\":
+        \"https://api.weather.gov/zones/fire/AKZ701\"\n            }\n        },\n
+        \       {\n            \"id\": \"https://api.weather.gov/stations/PABV\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -149.51667,\n
+        \                   61.41667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PABV\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 28.956\n                },\n
+        \               \"stationIdentifier\": \"PABV\",\n                \"name\":
+        \"Birchwood, Birchwood Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 29968.692548294\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        41\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ701\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC020\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ701\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAWS\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -149.54056,\n
+        \                   61.57194\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAWS\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 106.0704\n                },\n
+        \               \"stationIdentifier\": \"PAWS\",\n                \"name\":
+        \"Wasilla, Wasilla Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 43848.859929349\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        24\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ711\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC170\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ711\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAAQ\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -149.08333,\n
+        \                   61.6\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAAQ\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 74.0664\n                },\n
+        \               \"stationIdentifier\": \"PAAQ\",\n                \"name\":
+        \"Palmer, Palmer Municipal Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 60586.623851607\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        44\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ711\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC170\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ711\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PATO\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -148.83333,\n
+        \                   60.78333\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PATO\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 28.956\n                },\n
+        \               \"stationIdentifier\": \"PATO\",\n                \"name\":
+        \"Portage, Portage Glacier\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 74336.264688087\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        129\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ704\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC020\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ704\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PASX\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -151.03333,\n
+        \                   60.48333\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PASX\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 32.9184\n                },\n
+        \               \"stationIdentifier\": \"PASX\",\n                \"name\":
+        \"Soldotna\",\n                \"timeZone\": \"America/Anchorage\",\n                \"distance\":
+        {\n                    \"unitCode\": \"wmoUnit:m\",\n                    \"value\":
+        102262.35193984\n                },\n                \"bearing\": {\n                    \"unitCode\":
+        \"wmoUnit:degree_(angle)\",\n                    \"value\": 217\n                },\n
+        \               \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ723\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC122\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ723\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAEN\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -151.245,\n
+        \                   60.57306\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAEN\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 29.8704\n                },\n
+        \               \"stationIdentifier\": \"PAEN\",\n                \"name\":
+        \"Kenai, Kenai Municipal Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 102344.90032042\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        226\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ723\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC122\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ723\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PATK\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -150.09361,\n
+        \                   62.32056\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PATK\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 109.1184\n                },\n
+        \               \"stationIdentifier\": \"PATK\",\n                \"name\":
+        \"Talkeetna, Talkeetna Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 123488.39998351\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        355\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ747\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC170\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ747\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAWD\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -149.45,\n
+        \                   60.11667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAWD\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 9.144\n                },\n
+        \               \"stationIdentifier\": \"PAWD\",\n                \"name\":
+        \"Seward\",\n                \"timeZone\": \"America/Anchorage\",\n                \"distance\":
+        {\n                    \"unitCode\": \"wmoUnit:m\",\n                    \"value\":
+        124354.42674029\n                },\n                \"bearing\": {\n                    \"unitCode\":
+        \"wmoUnit:degree_(angle)\",\n                    \"value\": 168\n                },\n
+        \               \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ725\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC122\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ725\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAPT\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -152.75,\n
+        \                   62.1\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAPT\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 559.9176\n                },\n
+        \               \"stationIdentifier\": \"PAPT\",\n                \"name\":
+        \"Puntilla\",\n                \"timeZone\": \"America/Anchorage\",\n                \"distance\":
+        {\n                    \"unitCode\": \"wmoUnit:m\",\n                    \"value\":
+        180346.97811875\n                },\n                \"bearing\": {\n                    \"unitCode\":
+        \"wmoUnit:degree_(angle)\",\n                    \"value\": 304\n                },\n
+        \               \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ745\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC170\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ745\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAVD\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -146.26667,\n
+        \                   61.13333\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAVD\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 36.8808\n                },\n
+        \               \"stationIdentifier\": \"PAVD\",\n                \"name\":
+        \"Valdez 2\",\n                \"timeZone\": \"America/Anchorage\",\n                \"distance\":
+        {\n                    \"unitCode\": \"wmoUnit:m\",\n                    \"value\":
+        194307.71012545\n                },\n                \"bearing\": {\n                    \"unitCode\":
+        \"wmoUnit:degree_(angle)\",\n                    \"value\": 91\n                },\n
+        \               \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ731\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC063\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ731\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAHO\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -151.48333,\n
+        \                   59.65\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAHO\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 25.908\n                },\n
+        \               \"stationIdentifier\": \"PAHO\",\n                \"name\":
+        \"Homer, Homer Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 194724.35572196\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        207\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ722\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC122\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ722\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PASO\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -151.7,\n
+        \                   59.45\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PASO\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 9.144\n                },\n
+        \               \"stationIdentifier\": \"PASO\",\n                \"name\":
+        \"Seldovia, Seldovia Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 220067.22790707\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        207\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ721\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC122\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ721\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PACV\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -145.47778,\n
+        \                   60.49167\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PACV\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 13.1064\n                },\n
+        \               \"stationIdentifier\": \"PACV\",\n                \"name\":
+        \"Cordova, Merle K (Mudhole) Smith Airport\",\n                \"timeZone\":
+        \"America/Anchorage\",\n                \"distance\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 251917.05205903\n                },\n
+        \               \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \                   \"value\": 106\n                },\n                \"forecast\":
+        \"https://api.weather.gov/zones/forecast/AKZ735\",\n                \"county\":
+        \"https://api.weather.gov/zones/county/AKC063\",\n                \"fireWeatherZone\":
+        \"https://api.weather.gov/zones/fire/AKZ735\"\n            }\n        },\n
+        \       {\n            \"id\": \"https://api.weather.gov/stations/PAGK\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -145.45,\n
+        \                   62.15\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAGK\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 480.9744\n                },\n
+        \               \"stationIdentifier\": \"PAGK\",\n                \"name\":
+        \"Gulkana, Gulkana Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 256078.9427608\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        64\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ743\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC066\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ743\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAMD\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -146.3166,\n
+        \                   59.4423\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAMD\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 30.48\n                },\n
+        \               \"stationIdentifier\": \"PAMD\",\n                \"name\":
+        \"Middleton Island Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 278241.09532187\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        133\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ728\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC063\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ728\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAIN\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -148.91667,\n
+        \                   63.73333\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAIN\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 523.9512\n                },\n
+        \               \"stationIdentifier\": \"PAIN\",\n                \"name\":
+        \"McKinley Park, McKinley National Park Airport\",\n                \"timeZone\":
+        \"America/Anchorage\",\n                \"distance\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 284504.55069192\n                },\n
+        \               \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \                   \"value\": 9\n                },\n                \"forecast\":
+        \"https://api.weather.gov/zones/forecast/AKZ847\",\n                \"county\":
+        \"https://api.weather.gov/zones/county/AKC068\",\n                \"fireWeatherZone\":
+        \"https://api.weather.gov/zones/fire/AKZ947\"\n            }\n        },\n
+        \       {\n            \"id\": \"https://api.weather.gov/stations/PASV\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -155.56667,\n
+        \                   61.1\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PASV\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 484.0224\n                },\n
+        \               \"stationIdentifier\": \"PASV\",\n                \"name\":
+        \"Sparrevohn Airways Facilities Sector\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 304808.1994672\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        270\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ754\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC050\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ754\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAIL\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -154.9,\n
+        \                   59.75\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAIL\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 56.9976\n                },\n
+        \               \"stationIdentifier\": \"PAIL\",\n                \"name\":
+        \"Iliamna, Iliamna Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 319129.03315527\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        241\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ766\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC164\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ766\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAMH\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -152.30056,\n
+        \                   63.88056\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAMH\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 207.8736\n                },\n
+        \               \"stationIdentifier\": \"PAMH\",\n                \"name\":
+        \"Minchumina, Minchumina Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 321192.19013637\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        338\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ846\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC290\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ946\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAMC\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -155.61667,\n
+        \                   62.96667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAMC\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 103.0224\n                },\n
+        \               \"stationIdentifier\": \"PAMC\",\n                \"name\":
+        \"McGrath, McGrath Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 356016.63664882\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        305\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ852\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC290\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ952\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PATL\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -155.98333,\n
+        \                   62.9\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PATL\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 294.132\n                },\n
+        \               \"stationIdentifier\": \"PATL\",\n                \"name\":
+        \"Takotna, Tatalina LRRS Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 368592.157453\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        303\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ852\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC290\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ952\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PANN\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -149.08398,\n
+        \                   64.54796\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PANN\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 106.9848\n                },\n
+        \               \"stationIdentifier\": \"PANN\",\n                \"name\":
+        \"Nenana Municipal Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 372910.50560832\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        5\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ845\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC290\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ945\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PABI\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -145.73333,\n
+        \                   64\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PABI\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 388.9248\n                },\n
+        \               \"stationIdentifier\": \"PABI\",\n                \"name\":
+        \"Delta Junction/Ft Greely, Allen Army Airfield\",\n                \"timeZone\":
+        \"America/Anchorage\",\n                \"distance\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 375490.07232366\n                },\n
+        \               \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \                   \"value\": 32\n                },\n                \"forecast\":
+        \"https://api.weather.gov/zones/forecast/AKZ837\",\n                \"county\":
+        \"https://api.weather.gov/zones/county/AKC240\",\n                \"fireWeatherZone\":
+        \"https://api.weather.gov/zones/fire/AKZ937\"\n            }\n        },\n
+        \       {\n            \"id\": \"https://api.weather.gov/stations/PASL\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -157.16712,\n
+        \                   61.69735\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PASL\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 63.0936\n                },\n
+        \               \"stationIdentifier\": \"PASL\",\n                \"name\":
+        \"Sleetmute\",\n                \"timeZone\": \"America/Anchorage\",\n                \"distance\":
+        {\n                    \"unitCode\": \"wmoUnit:m\",\n                    \"value\":
+        390288.84439156\n                },\n                \"bearing\": {\n                    \"unitCode\":
+        \"wmoUnit:degree_(angle)\",\n                    \"value\": 281\n                },\n
+        \               \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ753\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC050\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ753\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAFA\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -147.87611,\n
+        \                   64.80389\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAFA\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 131.9784\n                },\n
+        \               \"stationIdentifier\": \"PAFA\",\n                \"name\":
+        \"Fairbanks, Fairbanks International Airport\",\n                \"timeZone\":
+        \"America/Anchorage\",\n                \"distance\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 411798.12336465\n                },\n
+        \               \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \                   \"value\": 13\n                },\n                \"forecast\":
+        \"https://api.weather.gov/zones/forecast/AKZ844\",\n                \"county\":
+        \"https://api.weather.gov/zones/county/AKC090\",\n                \"fireWeatherZone\":
+        \"https://api.weather.gov/zones/fire/AKZ944\"\n            }\n        },\n
+        \       {\n            \"id\": \"https://api.weather.gov/stations/PADQ\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -152.5,\n
+        \                   57.75\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PADQ\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 21.9456\n                },\n
+        \               \"stationIdentifier\": \"PADQ\",\n                \"name\":
+        \"Kodiak, Kodiak Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 412410.98846648\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        202\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ771\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC150\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ771\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PATA\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -152.1,\n
+        \                   65.16667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PATA\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 68.8848\n                },\n
+        \               \"stationIdentifier\": \"PATA\",\n                \"name\":
+        \"Tanana, Calhoun Memorial Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 453206.46806833\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        346\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ846\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC290\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ946\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAOR\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -141.92889,\n
+        \                   62.96111\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAOR\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 523.0368\n                },\n
+        \               \"stationIdentifier\": \"PAOR\",\n                \"name\":
+        \"Northway, Northway Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 457136.71767724\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        61\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ836\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC240\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ936\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAKN\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -156.64917,\n
+        \                   58.67667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAKN\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 17.0688\n                },\n
+        \               \"stationIdentifier\": \"PAKN\",\n                \"name\":
+        \"King Salmon, King Salmon Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 470167.69407545\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        236\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ763\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC060\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ763\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PANI\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -159.54278,\n
+        \                   61.58139\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PANI\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 27.1272\n                },\n
+        \               \"stationIdentifier\": \"PANI\",\n                \"name\":
+        \"Aniak, Aniak Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 515109.9060735\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        278\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ752\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC050\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ752\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAGA\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -156.93333,\n
+        \                   64.73333\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAGA\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 46.0248\n                },\n
+        \               \"stationIdentifier\": \"PAGA\",\n                \"name\":
+        \"Galena, Edward G. Pitka Sr. Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 528420.57501889\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        320\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ829\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC290\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ929\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PADL\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -158.51667,\n
+        \                   59.05\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PADL\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 25.908\n                },\n
+        \               \"stationIdentifier\": \"PADL\",\n                \"name\":
+        \"Dillingham, Dillingham Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 534464.22264572\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        247\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ764\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC070\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ764\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PANV\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -160.18972,\n
+        \                   62.64833\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PANV\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 93.8784\n                },\n
+        \               \"stationIdentifier\": \"PANV\",\n                \"name\":
+        \"Anvik, Anvik Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 561412.02417626\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        290\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ830\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC290\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ930\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAIM\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -153.7,\n
+        \                   66\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAIM\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 371.856\n                },\n
+        \               \"stationIdentifier\": \"PAIM\",\n                \"name\":
+        \"Utopia Creek, Indian Mountain LRRS Airport\",\n                \"timeZone\":
+        \"America/Anchorage\",\n                \"distance\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 564278.76380434\n                },\n
+        \               \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \                   \"value\": 342\n                },\n                \"forecast\":
+        \"https://api.weather.gov/zones/forecast/AKZ831\",\n                \"county\":
+        \"https://api.weather.gov/zones/county/AKC290\",\n                \"fireWeatherZone\":
+        \"https://api.weather.gov/zones/fire/AKZ931\"\n            }\n        },\n
+        \       {\n            \"id\": \"https://api.weather.gov/stations/PAKV\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -158.73333,\n
+        \                   64.31667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAKV\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 53.9496\n                },\n
+        \               \"stationIdentifier\": \"PAKV\",\n                \"name\":
+        \"Kaltag, Kaltag Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 566301.37349137\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        311\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ829\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC290\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ929\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAEG\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -141.15083,\n
+        \                   64.77639\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAEG\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 267.9192\n                },\n
+        \               \"stationIdentifier\": \"PAEG\",\n                \"name\":
+        \"Eagle, Eagle Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 591928.20996495\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        44\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ835\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC240\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ935\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAYA\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -139.66667,\n
+        \                   59.51667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAYA\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 10.9728\n                },\n
+        \               \"stationIdentifier\": \"PAYA\",\n                \"name\":
+        \"Yakutat\",\n                \"timeZone\": \"America/Yakutat\",\n                \"distance\":
+        {\n                    \"unitCode\": \"wmoUnit:m\",\n                    \"value\":
+        592085.96718416\n                },\n                \"bearing\": {\n                    \"unitCode\":
+        \"wmoUnit:degree_(angle)\",\n                    \"value\": 104\n                },\n
+        \               \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ317\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC282\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ317\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAHL\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -156.35111,\n
+        \                   65.6975\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAHL\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 64.9224\n                },\n
+        \               \"stationIdentifier\": \"PAHL\",\n                \"name\":
+        \"Huslia, Huslia Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 592369.35867368\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        330\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ828\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC290\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ928\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PATG\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -160.4,\n
+        \                   59.05\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PATG\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 6.096\n                },\n
+        \               \"stationIdentifier\": \"PATG\",\n                \"name\":
+        \"Togiac Village, Togiak Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 629026.32719513\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        252\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ764\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC070\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ764\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAUN\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -160.8,\n
+        \                   63.88333\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAUN\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 6.096\n                },\n
+        \               \"stationIdentifier\": \"PAUN\",\n                \"name\":
+        \"Unalakleet\",\n                \"timeZone\": \"America/Anchorage\",\n                \"distance\":
+        {\n                    \"unitCode\": \"wmoUnit:m\",\n                    \"value\":
+        632102.4201553\n                },\n                \"bearing\": {\n                    \"unitCode\":
+        \"wmoUnit:degree_(angle)\",\n                    \"value\": 302\n                },\n
+        \               \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ824\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC180\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ924\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PFYU\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -145.26667,\n
+        \                   66.56667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PFYU\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 131.064\n                },\n
+        \               \"stationIdentifier\": \"PFYU\",\n                \"name\":
+        \"Fort Yukon, Fort Yukon Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 636255.42693251\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        18\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ833\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC290\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ933\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PABT\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -151.51667,\n
+        \                   66.91667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PABT\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 195.9864\n                },\n
+        \               \"stationIdentifier\": \"PABT\",\n                \"name\":
+        \"Bettles, Bettles Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 638951.30300715\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        353\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ831\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC290\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ931\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PABE\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -161.83778,\n
+        \                   60.77972\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PABE\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 38.1\n                },\n
+        \               \"stationIdentifier\": \"PABE\",\n                \"name\":
+        \"Bethel, Bethel Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 645183.63375782\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        270\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ756\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC050\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ756\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAKK\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -161.15806,\n
+        \                   64.93389\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAKK\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 36.8808\n                },\n
+        \               \"stationIdentifier\": \"PAKK\",\n                \"name\":
+        \"Koyuk, Koyuk Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 700630.15711978\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        311\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ824\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC180\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ924\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PASM\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -163.3,\n
+        \                   62.05\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PASM\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 95.0976\n                },\n
+        \               \"stationIdentifier\": \"PASM\",\n                \"name\":
+        \"St. Mary's, St. Mary's Airport\",\n                \"timeZone\": \"America/Nome\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 713365.89298197\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        283\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ826\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC158\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ926\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAJC\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -158.37333,\n
+        \                   56.31139\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAJC\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 6.096\n                },\n
+        \               \"stationIdentifier\": \"PAJC\",\n                \"name\":
+        \"Chignik, Chignik Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 731437.6641018\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        225\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ773\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC164\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ773\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAEH\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -162.06667,\n
+        \                   58.65\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAEH\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 164.8968\n                },\n
+        \               \"stationIdentifier\": \"PAEH\",\n                \"name\":
+        \"Cape Newenham, Cape Newenham LRRS Airport\",\n                \"timeZone\":
+        \"America/Nome\",\n                \"distance\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 734595.99924154\n                },\n
+        \               \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \                   \"value\": 252\n                },\n                \"forecast\":
+        \"https://api.weather.gov/zones/forecast/AKZ757\",\n                \"county\":
+        \"https://api.weather.gov/zones/county/AKC050\",\n                \"fireWeatherZone\":
+        \"https://api.weather.gov/zones/fire/AKZ757\"\n            }\n        },\n
+        \       {\n            \"id\": \"https://api.weather.gov/stations/PAFM\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -157.85,\n
+        \                   67.1\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAFM\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 88.0872\n                },\n
+        \               \"stationIdentifier\": \"PAFM\",\n                \"name\":
+        \"Ambler, Ambler Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 758468.71256006\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        333\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ819\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC188\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ919\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAGL\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -163.03944,\n
+        \                   64.54333\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAGL\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 7.9248\n                },\n
+        \               \"stationIdentifier\": \"PAGL\",\n                \"name\":
+        \"Golovin, Golovin Airport\",\n                \"timeZone\": \"America/Nome\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 760525.77485549\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        304\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ822\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC180\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ922\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PABL\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -161.15194,\n
+        \                   65.98222\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PABL\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 7.0104\n                },\n
+        \               \"stationIdentifier\": \"PABL\",\n                \"name\":
+        \"Buckland, Buckland Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 766897.30177587\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        318\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ818\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC188\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ918\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAKP\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -151.74333,\n
+        \                   68.13361\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAKP\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 640.9944\n                },\n
+        \               \"stationIdentifier\": \"PAKP\",\n                \"name\":
+        \"Anaktuvuk Pass, Anaktuvuk Pass Airport\",\n                \"timeZone\":
+        \"America/Anchorage\",\n                \"distance\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 774353.20771055\n                },\n
+        \               \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \                   \"value\": 354\n                },\n                \"forecast\":
+        \"https://api.weather.gov/zones/forecast/AKZ809\",\n                \"county\":
+        \"https://api.weather.gov/zones/county/AKC185\",\n                \"fireWeatherZone\":
+        \"https://api.weather.gov/zones/fire/AKZ909\"\n            }\n        },\n
+        \       {\n            \"id\": \"https://api.weather.gov/stations/PASK\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -160,\n
+        \                   66.61667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PASK\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 7.9248\n                },\n
+        \               \"stationIdentifier\": \"PASK\",\n                \"name\":
+        \"Selawik\",\n                \"timeZone\": \"America/Anchorage\",\n                \"distance\":
+        {\n                    \"unitCode\": \"wmoUnit:m\",\n                    \"value\":
+        776116.691233\n                },\n                \"bearing\": {\n                    \"unitCode\":
+        \"wmoUnit:degree_(angle)\",\n                    \"value\": 325\n                },\n
+        \               \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ816\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC188\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ916\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PARC\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -145.57917,\n
+        \                   68.11444\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PARC\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 637.9464\n                },\n
+        \               \"stationIdentifier\": \"PARC\",\n                \"name\":
+        \"Arctic Village, Arctic Village Airport\",\n                \"timeZone\":
+        \"America/Anchorage\",\n                \"distance\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 793706.66719845\n                },\n
+        \               \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \                   \"value\": 13\n                },\n                \"forecast\":
+        \"https://api.weather.gov/zones/forecast/AKZ811\",\n                \"county\":
+        \"https://api.weather.gov/zones/county/AKC290\",\n                \"fireWeatherZone\":
+        \"https://api.weather.gov/zones/fire/AKZ911\"\n            }\n        },\n
+        \       {\n            \"id\": \"https://api.weather.gov/stations/PAGB\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -149.48333,\n
+        \                   68.48333\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAGB\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 814.1208\n                },\n
+        \               \"stationIdentifier\": \"PAGB\",\n                \"name\":
+        \"Galbraith Lake, Galbraith Lake Airport\",\n                \"timeZone\":
+        \"America/Anchorage\",\n                \"distance\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 808502.66693792\n                },\n
+        \               \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \                   \"value\": 1\n                },\n                \"forecast\":
+        \"https://api.weather.gov/zones/forecast/AKZ809\",\n                \"county\":
+        \"https://api.weather.gov/zones/county/AKC185\",\n                \"fireWeatherZone\":
+        \"https://api.weather.gov/zones/fire/AKZ909\"\n            }\n        },\n
+        \       {\n            \"id\": \"https://api.weather.gov/stations/PAHN\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -135.5114,\n
+        \                   59.2429\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAHN\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 14.9352\n                },\n
+        \               \"stationIdentifier\": \"PAHN\",\n                \"name\":
+        \"Haines - Haines Airport\",\n                \"timeZone\": \"America/Juneau\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 821562.28440099\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        99\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ319\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC100\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ319\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAGY\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -135.3263,\n
+        \                   59.4544\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAGY\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 6.4008\n                },\n
+        \               \"stationIdentifier\": \"PAGY\",\n                \"name\":
+        \"Skagway\",\n                \"timeZone\": \"America/Juneau\",\n                \"distance\":
+        {\n                    \"unitCode\": \"wmoUnit:m\",\n                    \"value\":
+        823021.37198384\n                },\n                \"bearing\": {\n                    \"unitCode\":
+        \"wmoUnit:degree_(angle)\",\n                    \"value\": 97\n                },\n
+        \               \"forecast\": \"https://api.weather.gov/zones/forecast/PKZ012\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAEL\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -136.34663,\n
+        \                   58.19467\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAEL\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 7.9248\n                },\n
+        \               \"stationIdentifier\": \"PAEL\",\n                \"name\":
+        \"Elfin Cove - Elfin Cove Seaplane Base\",\n                \"timeZone\":
+        \"America/Juneau\",\n                \"distance\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 828466.10169512\n                },\n
+        \               \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \                   \"value\": 107\n                },\n                \"forecast\":
+        \"https://api.weather.gov/zones/forecast/PKZ022\"\n            }\n        },\n
+        \       {\n            \"id\": \"https://api.weather.gov/stations/PADE\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -162.75,\n
+        \                   66.08333\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PADE\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 4.8768\n                },\n
+        \               \"stationIdentifier\": \"PADE\",\n                \"name\":
+        \"Deering, Deering/New Airport\",\n                \"timeZone\": \"America/Nome\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 831623.87416814\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        316\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ818\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC188\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ918\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAGS\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -135.7,\n
+        \                   58.41667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAGS\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 10.0584\n                },\n
+        \               \"stationIdentifier\": \"PAGS\",\n                \"name\":
+        \"Gustavus, Gustavus Airport\",\n                \"timeZone\": \"America/Juneau\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 849872.34811973\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        105\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ320\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC105\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ320\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PACZ\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -166.03333,\n
+        \                   61.78333\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PACZ\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 138.9888\n                },\n
+        \               \"stationIdentifier\": \"PACZ\",\n                \"name\":
+        \"Cape Romanzof, Cape Romanzof LRRS Airport\",\n                \"timeZone\":
+        \"America/Nome\",\n                \"distance\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 856802.51387629\n                },\n
+        \               \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \                   \"value\": 281\n                },\n                \"forecast\":
+        \"https://api.weather.gov/zones/forecast/AKZ825\",\n                \"county\":
+        \"https://api.weather.gov/zones/county/AKC158\",\n                \"fireWeatherZone\":
+        \"https://api.weather.gov/zones/fire/AKZ925\"\n            }\n        },\n
+        \       {\n            \"id\": \"https://api.weather.gov/stations/PAHP\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -166.13333,\n
+        \                   61.51667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAHP\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 4.8768\n                },\n
+        \               \"stationIdentifier\": \"PAHP\",\n                \"name\":
+        \"Hooper Bay, Hooper Bay Airport\",\n                \"timeZone\": \"America/Nome\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 864098.49846663\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        279\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ825\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC158\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ925\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAOM\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -165.445,\n
+        \                   64.51194\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAOM\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 10.9728\n                },\n
+        \               \"stationIdentifier\": \"PAOM\",\n                \"name\":
+        \"Nome, Nome Airport\",\n                \"timeZone\": \"America/Nome\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 867118.75235965\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        301\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ822\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC180\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ922\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAOT\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -162.60624,\n
+        \                   66.88576\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAOT\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 4.8768\n                },\n
+        \               \"stationIdentifier\": \"PAOT\",\n                \"name\":
+        \"Ralph Wien Memorial Airport\",\n                \"timeZone\": \"America/Nome\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 880430.81723958\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        321\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ817\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC188\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ917\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAOH\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -135.414,\n
+        \                   58.097\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAOH\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 7.3152\n                },\n
+        \               \"stationIdentifier\": \"PAOH\",\n                \"name\":
+        \"Hoonah - Hoonah Seaplane Base\",\n                \"timeZone\": \"America/Juneau\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 881476.50698298\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        106\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ321\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC105\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ321\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAMY\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -166.26667,\n
+        \                   60.36667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAMY\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 14.9352\n                },\n
+        \               \"stationIdentifier\": \"PAMY\",\n                \"name\":
+        \"Mekoryuk, Mekoryuk Airport\",\n                \"timeZone\": \"America/Nome\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 891397.53077165\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        271\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ755\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC050\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ755\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PASD\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -160.51667,\n
+        \                   55.31667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PASD\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 7.0104\n                },\n
+        \               \"stationIdentifier\": \"PASD\",\n                \"name\":
+        \"Sand Point\",\n                \"timeZone\": \"America/Anchorage\",\n                \"distance\":
+        {\n                    \"unitCode\": \"wmoUnit:m\",\n                    \"value\":
+        901503.01596302\n                },\n                \"bearing\": {\n                    \"unitCode\":
+        \"wmoUnit:degree_(angle)\",\n                    \"value\": 228\n                },\n
+        \               \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ781\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC013\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ781\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAJN\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -134.57611,\n
+        \                   58.35472\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAJN\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 6.096\n                },\n
+        \               \"stationIdentifier\": \"PAJN\",\n                \"name\":
+        \"Juneau, Juneau International Airport\",\n                \"timeZone\": \"America/Juneau\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 911305.90782022\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        103\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ325\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC110\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ325\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAWN\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -162.98333,\n
+        \                   67.56667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAWN\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 27.1272\n                },\n
+        \               \"stationIdentifier\": \"PAWN\",\n                \"name\":
+        \"Noatak, Noatak Airport\",\n                \"timeZone\": \"America/Nome\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 942340.70765708\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        324\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ814\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC188\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ914\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PASI\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -135.3647,\n
+        \                   57.048\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PASI\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 3.9624\n                },\n
+        \               \"stationIdentifier\": \"PASI\",\n                \"name\":
+        \"Sitka - Sitka Airport\",\n                \"timeZone\": \"America/Sitka\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 946342.49974711\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        112\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ323\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC220\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ323\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PASH\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -166.08333,\n
+        \                   66.26667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PASH\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 3.9624\n                },\n
+        \               \"stationIdentifier\": \"PASH\",\n                \"name\":
+        \"Shishmaref, Shishmaref Airport\",\n                \"timeZone\": \"America/Nome\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 970373.4032058\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        312\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/PKZ807\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PASC\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -148.46667,\n
+        \                   70.2\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PASC\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 17.0688\n                },\n
+        \               \"stationIdentifier\": \"PASC\",\n                \"name\":
+        \"Deadhorse, Deadhorse Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 1001210.3122374\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        3\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ804\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC185\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ904\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAQT\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -151.00556,\n
+        \                   70.21\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAQT\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 11.8872\n                },\n
+        \               \"stationIdentifier\": \"PAQT\",\n                \"name\":
+        \"Nuiqsut, Nuiqsut Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 1001542.6214644\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        357\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ804\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC185\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ904\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PACD\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -162.72778,\n
+        \                   55.22083\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PACD\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 29.8704\n                },\n
+        \               \"stationIdentifier\": \"PACD\",\n                \"name\":
+        \"Cold Bay, Cold Bay Airport\",\n                \"timeZone\": \"America/Nome\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 1001700.9531455\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        234\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ781\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC013\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ781\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAVL\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -164.55,\n
+        \                   67.73333\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAVL\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 3.9624\n                },\n
+        \               \"stationIdentifier\": \"PAVL\",\n                \"name\":
+        \"Kivalina, Kivalina Airport\",\n                \"timeZone\": \"America/Nome\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 1004669.8349992\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        322\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ815\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC188\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ915\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PATC\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -167.91667,\n
+        \                   65.56667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PATC\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 82.9056\n                },\n
+        \               \"stationIdentifier\": \"PATC\",\n                \"name\":
+        \"Tin City Airways Facilities Sector\",\n                \"timeZone\": \"America/Nome\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 1014993.5876263\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        306\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ821\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC180\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ921\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAFE\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -133.913,\n
+        \                   56.964\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAFE\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 45.72\n                },\n
+        \               \"stationIdentifier\": \"PAFE\",\n                \"name\":
+        \"Kake - Kake Airport\",\n                \"timeZone\": \"America/Sitka\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 1023939.4163758\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        110\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ327\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC198\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ327\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PABA\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -143.57694,\n
+        \                   70.13389\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PABA\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 2.1336\n                },\n
+        \               \"stationIdentifier\": \"PABA\",\n                \"name\":
+        \"Barter Island, Barter Island LRRS Airport\",\n                \"timeZone\":
+        \"America/Anchorage\",\n                \"distance\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 1031760.0976754\n                },\n
+        \               \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \                   \"value\": 13\n                },\n                \"forecast\":
+        \"https://api.weather.gov/zones/forecast/PKZ815\"\n            }\n        },\n
+        \       {\n            \"id\": \"https://api.weather.gov/stations/PAPG\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -132.9453,\n
+        \                   56.8017\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAPG\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 21.6408\n                },\n
+        \               \"stationIdentifier\": \"PAPG\",\n                \"name\":
+        \"Petersburg\",\n                \"timeZone\": \"America/Sitka\",\n                \"distance\":
+        {\n                    \"unitCode\": \"wmoUnit:m\",\n                    \"value\":
+        1082766.4293353\n                },\n                \"bearing\": {\n                    \"unitCode\":
+        \"wmoUnit:degree_(angle)\",\n                    \"value\": 109\n                },\n
+        \               \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ326\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC195\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ326\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PASA\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -170.5,\n
+        \                   63.68333\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PASA\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 15.8496\n                },\n
+        \               \"stationIdentifier\": \"PASA\",\n                \"name\":
+        \"Savoonga Airport\",\n                \"timeZone\": \"America/Nome\",\n                \"distance\":
+        {\n                    \"unitCode\": \"wmoUnit:m\",\n                    \"value\":
+        1089811.1145692\n                },\n                \"bearing\": {\n                    \"unitCode\":
+        \"wmoUnit:degree_(angle)\",\n                    \"value\": 293\n                },\n
+        \               \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ827\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC180\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ927\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PPIZ\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -163,\n
+        \                   69.71667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PPIZ\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 7.9248\n                },\n
+        \               \"stationIdentifier\": \"PPIZ\",\n                \"name\":
+        \"Point Lay, Point Lay LRRS Airport\",\n                \"timeZone\": \"America/Nome\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 1117458.6247694\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        333\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/PKZ812\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAPO\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -166.8,\n
+        \                   68.35\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAPO\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 3.9624\n                },\n
+        \               \"stationIdentifier\": \"PAPO\",\n                \"name\":
+        \"Point Hope, Point Hope Airport\",\n                \"timeZone\": \"America/Nome\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 1120599.0098684\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        322\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ801\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC185\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ901\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAWG\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -132.36667,\n
+        \                   56.48333\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAWG\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 13.1064\n                },\n
+        \               \"stationIdentifier\": \"PAWG\",\n                \"name\":
+        \"Wrangell\",\n                \"timeZone\": \"America/Sitka\",\n                \"distance\":
+        {\n                    \"unitCode\": \"wmoUnit:m\",\n                    \"value\":
+        1131960.7614615\n                },\n                \"bearing\": {\n                    \"unitCode\":
+        \"wmoUnit:degree_(angle)\",\n                    \"value\": 109\n                },\n
+        \               \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ329\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC275\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ329\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PALU\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -166.1,\n
+        \                   68.88333\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PALU\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 3.9624\n                },\n
+        \               \"stationIdentifier\": \"PALU\",\n                \"name\":
+        \"Cape Lisburne, Cape Lisburne LRRS Airport\",\n                \"timeZone\":
+        \"America/Nome\",\n                \"distance\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 1135593.5477574\n                },\n
+        \               \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \                   \"value\": 325\n                },\n                \"forecast\":
+        \"https://api.weather.gov/zones/forecast/PKZ811\"\n            }\n        },\n
+        \       {\n            \"id\": \"https://api.weather.gov/stations/PAGM\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -171.73333,\n
+        \                   63.76667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAGM\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 7.9248\n                },\n
+        \               \"stationIdentifier\": \"PAGM\",\n                \"name\":
+        \"Gambell, Gambell Airport\",\n                \"timeZone\": \"America/Nome\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 1151079.0937362\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        293\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ827\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC180\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ927\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAKW\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -133.067,\n
+        \                   55.5839\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAKW\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 9.7536\n                },\n
+        \               \"stationIdentifier\": \"PAKW\",\n                \"name\":
+        \"Klawock - Klawock Airport\",\n                \"timeZone\": \"America/Sitka\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 1157846.243321\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        115\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ328\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC198\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ328\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PABR\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -156.76583,\n
+        \                   71.28528\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PABR\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 13.1064\n                },\n
+        \               \"stationIdentifier\": \"PABR\",\n                \"name\":
+        \"Wiley Post-Will Rogers Memorial Airport\",\n                \"timeZone\":
+        \"America/Anchorage\",\n                \"distance\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 1159658.3483455\n                },\n
+        \               \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \                   \"value\": 347\n                },\n                \"forecast\":
+        \"https://api.weather.gov/zones/forecast/AKZ803\",\n                \"county\":
+        \"https://api.weather.gov/zones/county/AKC185\",\n                \"fireWeatherZone\":
+        \"https://api.weather.gov/zones/fire/AKZ903\"\n            }\n        },\n
+        \       {\n            \"id\": \"https://api.weather.gov/stations/PAHY\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -132.83333,\n
+        \                   55.2\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAHY\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 4.8768\n                },\n
+        \               \"stationIdentifier\": \"PAHY\",\n                \"name\":
+        \"Hydaburg - Hydaburg Seaplane Base\",\n                \"timeZone\": \"America/Sitka\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 1196676.8027374\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        116\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ328\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC198\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ328\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PASN\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -170.21667,\n
+        \                   57.16667\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PASN\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 18.8976\n                },\n
+        \               \"stationIdentifier\": \"PASN\",\n                \"name\":
+        \"St. Paul Island, St. Paul Island Airport\",\n                \"timeZone\":
+        \"America/Nome\",\n                \"distance\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 1235901.5978037\n                },\n
+        \               \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \                   \"value\": 257\n                },\n                \"forecast\":
+        \"https://api.weather.gov/zones/forecast/AKZ795\",\n                \"county\":
+        \"https://api.weather.gov/zones/county/AKC016\",\n                \"fireWeatherZone\":
+        \"https://api.weather.gov/zones/fire/AKZ795\"\n            }\n        },\n
+        \       {\n            \"id\": \"https://api.weather.gov/stations/PAKT\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -131.71361,\n
+        \                   55.35556\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAKT\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 27.1272\n                },\n
+        \               \"stationIdentifier\": \"PAKT\",\n                \"name\":
+        \"Ketchikan, Ketchikan International Airport\",\n                \"timeZone\":
+        \"America/Sitka\",\n                \"distance\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 1239943.6678763\n                },\n
+        \               \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \                   \"value\": 113\n                },\n                \"forecast\":
+        \"https://api.weather.gov/zones/forecast/AKZ330\",\n                \"county\":
+        \"https://api.weather.gov/zones/county/AKC130\",\n                \"fireWeatherZone\":
+        \"https://api.weather.gov/zones/fire/AKZ330\"\n            }\n        },\n
+        \       {\n            \"id\": \"https://api.weather.gov/stations/PAMM\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -131.57806,\n
+        \                   55.13111\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAMM\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 0.3048\n                },\n
+        \               \"stationIdentifier\": \"PAMM\",\n                \"name\":
+        \"Metlakatla, Metlakatla Seaplane Base\",\n                \"timeZone\": \"America/Metlakatla\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 1262429.6182481\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        114\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/PKZ036\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PADU\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -166.53333,\n
+        \                   53.9\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PADU\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 7.0104\n                },\n
+        \               \"stationIdentifier\": \"PADU\",\n                \"name\":
+        \"Unalaska, Unalaska Airport\",\n                \"timeZone\": \"America/Anchorage\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 1277195.1348695\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        237\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ785\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC016\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ785\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PAAK\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -174.20639,\n
+        \                   52.22028\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PAAK\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 17.0688\n                },\n
+        \               \"stationIdentifier\": \"PAAK\",\n                \"name\":
+        \"Atka, Atka Airport\",\n                \"timeZone\": \"America/Adak\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 1772944.722535\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        246\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ787\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC016\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ787\"\n
+        \           }\n        },\n        {\n            \"id\": \"https://api.weather.gov/stations/PADK\",\n
+        \           \"type\": \"Feature\",\n            \"geometry\": {\n                \"type\":
+        \"Point\",\n                \"coordinates\": [\n                    -176.64583,\n
+        \                   51.87778\n                ]\n            },\n            \"properties\":
+        {\n                \"@id\": \"https://api.weather.gov/stations/PADK\",\n                \"@type\":
+        \"wx:ObservationStation\",\n                \"elevation\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 6.096\n                },\n
+        \               \"stationIdentifier\": \"PADK\",\n                \"name\":
+        \"Adak Island, Adak Airport\",\n                \"timeZone\": \"America/Adak\",\n
+        \               \"distance\": {\n                    \"unitCode\": \"wmoUnit:m\",\n
+        \                   \"value\": 1920287.4740499\n                },\n                \"bearing\":
+        {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n                    \"value\":
+        249\n                },\n                \"forecast\": \"https://api.weather.gov/zones/forecast/AKZ787\",\n
+        \               \"county\": \"https://api.weather.gov/zones/county/AKC016\",\n
+        \               \"fireWeatherZone\": \"https://api.weather.gov/zones/fire/AKZ787\"\n
+        \           }\n        }\n    ],\n    \"observationStations\": [\n        \"https://api.weather.gov/stations/PAMR\",\n
+        \       \"https://api.weather.gov/stations/PALH\",\n        \"https://api.weather.gov/stations/PANC\",\n
+        \       \"https://api.weather.gov/stations/PABV\",\n        \"https://api.weather.gov/stations/PAWS\",\n
+        \       \"https://api.weather.gov/stations/PAAQ\",\n        \"https://api.weather.gov/stations/PATO\",\n
+        \       \"https://api.weather.gov/stations/PASX\",\n        \"https://api.weather.gov/stations/PAEN\",\n
+        \       \"https://api.weather.gov/stations/PATK\",\n        \"https://api.weather.gov/stations/PAWD\",\n
+        \       \"https://api.weather.gov/stations/PAPT\",\n        \"https://api.weather.gov/stations/PAVD\",\n
+        \       \"https://api.weather.gov/stations/PAHO\",\n        \"https://api.weather.gov/stations/PASO\",\n
+        \       \"https://api.weather.gov/stations/PACV\",\n        \"https://api.weather.gov/stations/PAGK\",\n
+        \       \"https://api.weather.gov/stations/PAMD\",\n        \"https://api.weather.gov/stations/PAIN\",\n
+        \       \"https://api.weather.gov/stations/PASV\",\n        \"https://api.weather.gov/stations/PAIL\",\n
+        \       \"https://api.weather.gov/stations/PAMH\",\n        \"https://api.weather.gov/stations/PAMC\",\n
+        \       \"https://api.weather.gov/stations/PATL\",\n        \"https://api.weather.gov/stations/PANN\",\n
+        \       \"https://api.weather.gov/stations/PABI\",\n        \"https://api.weather.gov/stations/PASL\",\n
+        \       \"https://api.weather.gov/stations/PAFA\",\n        \"https://api.weather.gov/stations/PADQ\",\n
+        \       \"https://api.weather.gov/stations/PATA\",\n        \"https://api.weather.gov/stations/PAOR\",\n
+        \       \"https://api.weather.gov/stations/PAKN\",\n        \"https://api.weather.gov/stations/PANI\",\n
+        \       \"https://api.weather.gov/stations/PAGA\",\n        \"https://api.weather.gov/stations/PADL\",\n
+        \       \"https://api.weather.gov/stations/PANV\",\n        \"https://api.weather.gov/stations/PAIM\",\n
+        \       \"https://api.weather.gov/stations/PAKV\",\n        \"https://api.weather.gov/stations/PAEG\",\n
+        \       \"https://api.weather.gov/stations/PAYA\",\n        \"https://api.weather.gov/stations/PAHL\",\n
+        \       \"https://api.weather.gov/stations/PATG\",\n        \"https://api.weather.gov/stations/PAUN\",\n
+        \       \"https://api.weather.gov/stations/PFYU\",\n        \"https://api.weather.gov/stations/PABT\",\n
+        \       \"https://api.weather.gov/stations/PABE\",\n        \"https://api.weather.gov/stations/PAKK\",\n
+        \       \"https://api.weather.gov/stations/PASM\",\n        \"https://api.weather.gov/stations/PAJC\",\n
+        \       \"https://api.weather.gov/stations/PAEH\",\n        \"https://api.weather.gov/stations/PAFM\",\n
+        \       \"https://api.weather.gov/stations/PAGL\",\n        \"https://api.weather.gov/stations/PABL\",\n
+        \       \"https://api.weather.gov/stations/PAKP\",\n        \"https://api.weather.gov/stations/PASK\",\n
+        \       \"https://api.weather.gov/stations/PARC\",\n        \"https://api.weather.gov/stations/PAGB\",\n
+        \       \"https://api.weather.gov/stations/PAHN\",\n        \"https://api.weather.gov/stations/PAGY\",\n
+        \       \"https://api.weather.gov/stations/PAEL\",\n        \"https://api.weather.gov/stations/PADE\",\n
+        \       \"https://api.weather.gov/stations/PAGS\",\n        \"https://api.weather.gov/stations/PACZ\",\n
+        \       \"https://api.weather.gov/stations/PAHP\",\n        \"https://api.weather.gov/stations/PAOM\",\n
+        \       \"https://api.weather.gov/stations/PAOT\",\n        \"https://api.weather.gov/stations/PAOH\",\n
+        \       \"https://api.weather.gov/stations/PAMY\",\n        \"https://api.weather.gov/stations/PASD\",\n
+        \       \"https://api.weather.gov/stations/PAJN\",\n        \"https://api.weather.gov/stations/PAWN\",\n
+        \       \"https://api.weather.gov/stations/PASI\",\n        \"https://api.weather.gov/stations/PASH\",\n
+        \       \"https://api.weather.gov/stations/PASC\",\n        \"https://api.weather.gov/stations/PAQT\",\n
+        \       \"https://api.weather.gov/stations/PACD\",\n        \"https://api.weather.gov/stations/PAVL\",\n
+        \       \"https://api.weather.gov/stations/PATC\",\n        \"https://api.weather.gov/stations/PAFE\",\n
+        \       \"https://api.weather.gov/stations/PABA\",\n        \"https://api.weather.gov/stations/PAPG\",\n
+        \       \"https://api.weather.gov/stations/PASA\",\n        \"https://api.weather.gov/stations/PPIZ\",\n
+        \       \"https://api.weather.gov/stations/PAPO\",\n        \"https://api.weather.gov/stations/PAWG\",\n
+        \       \"https://api.weather.gov/stations/PALU\",\n        \"https://api.weather.gov/stations/PAGM\",\n
+        \       \"https://api.weather.gov/stations/PAKW\",\n        \"https://api.weather.gov/stations/PABR\",\n
+        \       \"https://api.weather.gov/stations/PAHY\",\n        \"https://api.weather.gov/stations/PASN\",\n
+        \       \"https://api.weather.gov/stations/PAKT\",\n        \"https://api.weather.gov/stations/PAMM\",\n
+        \       \"https://api.weather.gov/stations/PADU\",\n        \"https://api.weather.gov/stations/PAAK\",\n
+        \       \"https://api.weather.gov/stations/PADK\"\n    ],\n    \"pagination\":
+        {\n        \"next\": \"https://api.weather.gov/stations?id%5B0%5D=PAAK&id%5B1%5D=PAAP&id%5B2%5D=PAAQ&id%5B3%5D=PABA&id%5B4%5D=PABE&id%5B5%5D=PABI&id%5B6%5D=PABL&id%5B7%5D=PABN&id%5B8%5D=PABR&id%5B9%5D=PABT&id%5B10%5D=PABV&id%5B11%5D=PACD&id%5B12%5D=PACV&id%5B13%5D=PACZ&id%5B14%5D=PADE&id%5B15%5D=PADK&id%5B16%5D=PADL&id%5B17%5D=PADQ&id%5B18%5D=PADT&id%5B19%5D=PADU&id%5B20%5D=PAEC&id%5B21%5D=PAEG&id%5B22%5D=PAEH&id%5B23%5D=PAEL&id%5B24%5D=PAEM&id%5B25%5D=PAEN&id%5B26%5D=PAFA&id%5B27%5D=PAFE&id%5B28%5D=PAFK&id%5B29%5D=PAFM&id%5B30%5D=PAGA&id%5B31%5D=PAGB&id%5B32%5D=PAGK&id%5B33%5D=PAGL&id%5B34%5D=PAGM&id%5B35%5D=PAGS&id%5B36%5D=PAGY&id%5B37%5D=PAHL&id%5B38%5D=PAHN&id%5B39%5D=PAHO&id%5B40%5D=PAHP&id%5B41%5D=PAHS&id%5B42%5D=PAHV&id%5B43%5D=PAHY&id%5B44%5D=PAHZ&id%5B45%5D=PAII&id%5B46%5D=PAIL&id%5B47%5D=PAIM&id%5B48%5D=PAIN&id%5B49%5D=PAJC&id%5B50%5D=PAJN&id%5B51%5D=PAJV&id%5B52%5D=PAKK&id%5B53%5D=PAKN&id%5B54%5D=PAKP&id%5B55%5D=PAKT&id%5B56%5D=PAKV&id%5B57%5D=PAKW&id%5B58%5D=PALH&id%5B59%5D=PALJ&id%5B60%5D=PALK&id%5B61%5D=PALR&id%5B62%5D=PALU&id%5B63%5D=PALV&id%5B64%5D=PAMC&id%5B65%5D=PAMD&id%5B66%5D=PAMH&id%5B67%5D=PAML&id%5B68%5D=PAMM&id%5B69%5D=PAMR&id%5B70%5D=PAMX&id%5B71%5D=PAMY&id%5B72%5D=PANC&id%5B73%5D=PANI&id%5B74%5D=PANN&id%5B75%5D=PANT&id%5B76%5D=PANV&id%5B77%5D=PAOH&id%5B78%5D=PAOM&id%5B79%5D=PAOR&id%5B80%5D=PAOT&id%5B81%5D=PAPG&id%5B82%5D=PAPH&id%5B83%5D=PAPO&id%5B84%5D=PAPT&id%5B85%5D=PAQT&id%5B86%5D=PARC&id%5B87%5D=PARD&id%5B88%5D=PARL&id%5B89%5D=PASA&id%5B90%5D=PASC&id%5B91%5D=PASD&id%5B92%5D=PASH&id%5B93%5D=PASI&id%5B94%5D=PASK&id%5B95%5D=PASL&id%5B96%5D=PASM&id%5B97%5D=PASN&id%5B98%5D=PASO&id%5B99%5D=PASP&id%5B100%5D=PASV&id%5B101%5D=PASW&id%5B102%5D=PASX&id%5B103%5D=PATA&id%5B104%5D=PATC&id%5B105%5D=PATG&id%5B106%5D=PATK&id%5B107%5D=PATL&id%5B108%5D=PATO&id%5B109%5D=PATW&id%5B110%5D=PAUN&id%5B111%5D=PAVD&id%5B112%5D=PAVL&id%5B113%5D=PAVW&id%5B114%5D=PAWD&id%5B115%5D=PAWG&id%5B116%5D=PAWI&id%5B117%5D=PAWN&id%5B118%5D=PAWS&id%5B119%5D=PAYA&id%5B120%5D=PFYU&id%5B121%5D=PPIZ&cursor=eyJzIjo1MDB9\"\n
+        \   }\n}"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Access-Control-Expose-Headers:
+      - X-Correlation-Id, X-Request-Id, X-Server-Id
+      Cache-Control:
+      - public, max-age=86400, s-maxage=120
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/geo+json
+      Date:
+      - Tue, 20 Jan 2026 18:51:19 GMT
+      Expires:
+      - Wed, 21 Jan 2026 18:51:19 GMT
+      Server:
+      - nginx/1.20.1
+      Strict-Transport-Security:
+      - max-age=31536000 ; includeSubDomains ; preload
+      Vary:
+      - Accept-Encoding
+      - Accept,Feature-Flags,Accept-Language
+      X-Correlation-ID:
+      - '12248373'
+      X-Edge-Request-ID:
+      - 31d73be
+      X-Request-ID:
+      - d53f7a1b-2313-4c7f-b32e-81cea72a01c2
+      X-Server-ID:
+      - vm-cprk-api-ops-app8.ncep.noaa.gov
+      content-length:
+      - '125929'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - application/geo+json
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - api.weather.gov
+    method: GET
+    uri: https://api.weather.gov/stations/PAMR/observations/latest
+  response:
+    body:
+      string: "{\n    \"@context\": [\n        \"https://geojson.org/geojson-ld/geojson-context.jsonld\",\n
+        \       {\n            \"@version\": \"1.1\",\n            \"wx\": \"https://api.weather.gov/ontology#\",\n
+        \           \"s\": \"https://schema.org/\",\n            \"geo\": \"http://www.opengis.net/ont/geosparql#\",\n
+        \           \"unit\": \"http://codes.wmo.int/common/unit/\",\n            \"@vocab\":
+        \"https://api.weather.gov/ontology#\",\n            \"geometry\": {\n                \"@id\":
+        \"s:GeoCoordinates\",\n                \"@type\": \"geo:wktLiteral\"\n            },\n
+        \           \"city\": \"s:addressLocality\",\n            \"state\": \"s:addressRegion\",\n
+        \           \"distance\": {\n                \"@id\": \"s:Distance\",\n                \"@type\":
+        \"s:QuantitativeValue\"\n            },\n            \"bearing\": {\n                \"@type\":
+        \"s:QuantitativeValue\"\n            },\n            \"value\": {\n                \"@id\":
+        \"s:value\"\n            },\n            \"unitCode\": {\n                \"@id\":
+        \"s:unitCode\",\n                \"@type\": \"@id\"\n            },\n            \"forecastOffice\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"forecastGridData\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"publicZone\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"county\":
+        {\n                \"@type\": \"@id\"\n            }\n        }\n    ],\n
+        \   \"id\": \"https://api.weather.gov/stations/PAMR/observations/2026-01-20T18:40:00+00:00\",\n
+        \   \"type\": \"Feature\",\n    \"geometry\": {\n        \"type\": \"Point\",\n
+        \       \"coordinates\": [\n            -149.85,\n            61.22\n        ]\n
+        \   },\n    \"properties\": {\n        \"@id\": \"https://api.weather.gov/stations/PAMR/observations/2026-01-20T18:40:00+00:00\",\n
+        \       \"@type\": \"wx:ObservationStation\",\n        \"elevation\": {\n
+        \           \"unitCode\": \"wmoUnit:m\",\n            \"value\": 42\n        },\n
+        \       \"station\": \"https://api.weather.gov/stations/PAMR\",\n        \"stationId\":
+        \"PAMR\",\n        \"stationName\": \"Anchorage, Merrill Field Airport\",\n
+        \       \"timestamp\": \"2026-01-20T18:40:00+00:00\",\n        \"rawMessage\":
+        \"\",\n        \"textDescription\": \"Clear\",\n        \"icon\": \"https://api.weather.gov/icons/land/night/skc?size=medium\",\n
+        \       \"presentWeather\": [],\n        \"temperature\": {\n            \"unitCode\":
+        \"wmoUnit:degC\",\n            \"value\": -9,\n            \"qualityControl\":
+        \"V\"\n        },\n        \"dewpoint\": {\n            \"unitCode\": \"wmoUnit:degC\",\n
+        \           \"value\": -10,\n            \"qualityControl\": \"V\"\n        },\n
+        \       \"windDirection\": {\n            \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \           \"value\": 0,\n            \"qualityControl\": \"V\"\n        },\n
+        \       \"windSpeed\": {\n            \"unitCode\": \"wmoUnit:km_h-1\",\n
+        \           \"value\": 0,\n            \"qualityControl\": \"V\"\n        },\n
+        \       \"windGust\": {\n            \"unitCode\": \"wmoUnit:km_h-1\",\n            \"value\":
+        null,\n            \"qualityControl\": \"Z\"\n        },\n        \"barometricPressure\":
+        {\n            \"unitCode\": \"wmoUnit:Pa\",\n            \"value\": 103047.8,\n
+        \           \"qualityControl\": \"V\"\n        },\n        \"seaLevelPressure\":
+        {\n            \"unitCode\": \"wmoUnit:Pa\",\n            \"value\": null,\n
+        \           \"qualityControl\": \"Z\"\n        },\n        \"visibility\":
+        {\n            \"unitCode\": \"wmoUnit:m\",\n            \"value\": 12874.75,\n
+        \           \"qualityControl\": \"C\"\n        },\n        \"maxTemperatureLast24Hours\":
+        {\n            \"unitCode\": \"wmoUnit:degC\",\n            \"value\": null\n
+        \       },\n        \"minTemperatureLast24Hours\": {\n            \"unitCode\":
+        \"wmoUnit:degC\",\n            \"value\": null\n        },\n        \"precipitationLast3Hours\":
+        {\n            \"unitCode\": \"wmoUnit:mm\",\n            \"value\": null,\n
+        \           \"qualityControl\": \"Z\"\n        },\n        \"relativeHumidity\":
+        {\n            \"unitCode\": \"wmoUnit:percent\",\n            \"value\":
+        92.446584559155,\n            \"qualityControl\": \"V\"\n        },\n        \"windChill\":
+        {\n            \"unitCode\": \"wmoUnit:degC\",\n            \"value\": null,\n
+        \           \"qualityControl\": \"V\"\n        },\n        \"heatIndex\":
+        {\n            \"unitCode\": \"wmoUnit:degC\",\n            \"value\": null,\n
+        \           \"qualityControl\": \"V\"\n        },\n        \"cloudLayers\":
+        [\n            {\n                \"base\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 3810\n                },\n
+        \               \"amount\": \"CLR\"\n            }\n        ]\n    }\n}"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Access-Control-Expose-Headers:
+      - X-Correlation-Id, X-Request-Id, X-Server-Id
+      Cache-Control:
+      - public, max-age=300, s-maxage=300
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/geo+json
+      Date:
+      - Tue, 20 Jan 2026 18:51:20 GMT
+      Expires:
+      - Tue, 20 Jan 2026 18:56:20 GMT
+      Last-Modified:
+      - Tue, 20 Jan 2026 18:40:00 GMT
+      Server:
+      - nginx/1.20.1
+      Strict-Transport-Security:
+      - max-age=31536000 ; includeSubDomains ; preload
+      Vary:
+      - Accept-Encoding
+      - Accept,Feature-Flags,Accept-Language
+      X-Correlation-ID:
+      - 12248aad
+      X-Edge-Request-ID:
+      - 31d74b9
+      X-Request-ID:
+      - ae1142e2-b193-43b1-8935-78938800da88
+      X-Server-ID:
+      - vm-cprk-api-ops-app12.ncep.noaa.gov
+      content-length:
+      - '4307'
+    status:
+      code: 200
+      message: OK
+version: 1

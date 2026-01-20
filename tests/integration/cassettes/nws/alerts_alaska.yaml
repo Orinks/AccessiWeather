@@ -1,0 +1,55 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - api.weather.gov
+    method: GET
+    uri: https://api.weather.gov/alerts/active?point=61.2181%2C-149.9003
+  response:
+    body:
+      string: "{\n    \"@context\": {\n        \"@version\": \"1.1\"\n    },\n    \"type\":
+        \"FeatureCollection\",\n    \"features\": [],\n    \"title\": \"Current watches,
+        warnings, and advisories for 61.2181 N, 149.9003 W\",\n    \"updated\": \"2026-01-18T15:00:00+00:00\"\n}"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Access-Control-Expose-Headers:
+      - X-Correlation-Id, X-Request-Id, X-Server-Id
+      Cache-Control:
+      - public, max-age=30, s-maxage=30
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/geo+json
+      Date:
+      - Tue, 20 Jan 2026 18:51:29 GMT
+      Expires:
+      - Tue, 20 Jan 2026 18:51:59 GMT
+      Server:
+      - nginx/1.20.1
+      Strict-Transport-Security:
+      - max-age=31536000 ; includeSubDomains ; preload
+      Vary:
+      - Accept-Encoding
+      - Accept,Feature-Flags,Accept-Language
+      X-Correlation-ID:
+      - 6f9e437
+      X-Edge-Request-ID:
+      - 31793cf
+      X-Request-ID:
+      - bae7e3bf-cb49-4c24-90f4-035912b0299e
+      X-Server-ID:
+      - vm-cprk-api-ops-app5.ncep.noaa.gov
+      content-length:
+      - '234'
+    status:
+      code: 200
+      message: OK
+version: 1
