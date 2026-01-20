@@ -55,6 +55,9 @@ class MainWindow(forms.SizedFrame):
     # Status display
     status_label = fields.StaticText(label="")
 
+    # Stale/cached data warning
+    stale_warning_label = fields.StaticText(label="")
+
     # Current conditions section
     conditions_label = fields.StaticText(label="Current Conditions:")
     current_conditions = fields.Text(
@@ -62,6 +65,9 @@ class MainWindow(forms.SizedFrame):
         multiline=True,
         readonly=True,
     )
+
+    # Data source attribution
+    data_source_label = fields.StaticText(label="")
 
     # Forecast section
     forecast_label = fields.StaticText(label="Forecast:")
@@ -364,11 +370,8 @@ class MainWindow(forms.SizedFrame):
     def _set_current_location(self, location_name: str) -> None:
         """Set the current location."""
         try:
-            locations = self.app.config_manager.get_all_locations()
-            for loc in locations:
-                if loc.name == location_name:
-                    self.app.config_manager.set_current_location(loc)
-                    break
+            # set_current_location expects a string (location name), not a Location object
+            self.app.config_manager.set_current_location(location_name)
         except Exception as e:
             logger.error(f"Failed to set current location: {e}")
 
@@ -417,6 +420,19 @@ class MainWindow(forms.SizedFrame):
             else:
                 self.current_conditions.set_value("No current conditions available.")
 
+            # Update data source attribution
+            if presentation.source_attribution and presentation.source_attribution.summary_text:
+                self.data_source_label.set_label(presentation.source_attribution.summary_text)
+            else:
+                self.data_source_label.set_label("")
+
+            # Update stale/cached data warning
+            if presentation.status_messages:
+                warning_text = " ".join(presentation.status_messages)
+                self.stale_warning_label.set_label(warning_text)
+            else:
+                self.stale_warning_label.set_label("")
+
             # Update forecast
             if presentation.forecast:
                 self.forecast_display.set_value(presentation.forecast.fallback_text)
@@ -425,6 +441,16 @@ class MainWindow(forms.SizedFrame):
 
             # Update alerts
             self._update_alerts(weather_data.alerts)
+
+            # Process alerts for desktop notifications
+            if (
+                weather_data.alerts
+                and weather_data.alerts.has_alerts()
+                and self.app.alert_notification_system
+            ):
+                self.app.run_async(
+                    self.app.alert_notification_system.process_and_notify(weather_data.alerts)
+                )
 
             location = self.app.config_manager.get_current_location()
             location_name = location.name if location else "Unknown"

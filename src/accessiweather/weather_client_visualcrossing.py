@@ -1,55 +1,43 @@
-"""Visual Crossing alert processing and notification integration for AccessiWeather."""
+"""
+Visual Crossing alert processing for AccessiWeather.
+
+Note: Alert notifications are now handled centrally by the main window's
+alert_notification_system. This module's process_visual_crossing_alerts
+function is kept for backward compatibility but delegates to the central system.
+"""
 
 from __future__ import annotations
 
 import logging
-import os
-import tempfile
 
-from .alert_manager import AlertManager, AlertSettings
-from .alert_notification_system import AlertNotificationSystem
 from .models import Location, WeatherAlerts
 
 logger = logging.getLogger(__name__)
 
 
 async def process_visual_crossing_alerts(alerts: WeatherAlerts, location: Location) -> None:
-    """Process Visual Crossing alerts and dispatch notifications."""
-    try:
-        config_dir = os.path.join(tempfile.gettempdir(), "accessiweather_alerts")
+    """
+    Process Visual Crossing alerts.
 
-        settings = AlertSettings()
-        settings.min_severity_priority = 1
-        settings.notifications_enabled = True
+    Note: Alert notifications are now handled centrally by the main window's
+    AlertNotificationSystem after weather data is received. This function
+    is kept for backward compatibility but no longer creates a separate
+    AlertManager instance.
 
-        alert_manager = AlertManager(config_dir, settings)
-        notification_system = AlertNotificationSystem(alert_manager)
+    The central AlertNotificationSystem in main_window.py processes ALL alerts
+    (from NWS, Visual Crossing, etc.) through a single AlertManager instance,
+    ensuring proper state tracking, rate limiting, and cooldown management.
 
-        logger.info(f"Processing Visual Crossing alerts for {location.name}")
-        logger.info(f"Number of alerts to process: {len(alerts.alerts)}")
+    Args:
+        alerts: Weather alerts from Visual Crossing
+        location: The location for the alerts
 
-        for i, alert in enumerate(alerts.alerts):
-            logger.info(f"Alert {i + 1}: {alert.event} - {alert.severity} - {alert.headline}")
+    """
+    if not alerts or not alerts.has_alerts():
+        return
 
-        system_settings = notification_system.get_settings()
-        logger.info(
-            "Notification settings - enabled: %s, min_severity: %s",
-            system_settings.notifications_enabled,
-            system_settings.min_severity_priority,
-        )
-
-        notifications_sent = await notification_system.process_and_notify(alerts)
-
-        if notifications_sent > 0:
-            logger.info(
-                "✅ Sent %s Visual Crossing alert notifications for %s",
-                notifications_sent,
-                location.name,
-            )
-        else:
-            logger.warning("⚠️ No Visual Crossing alert notifications sent for %s", location.name)
-            stats = notification_system.get_statistics()
-            logger.info("Alert statistics: %s", stats)
-
-    except Exception as exc:  # noqa: BLE001
-        logger.error(f"Failed to process Visual Crossing alerts for notifications: {exc}")
+    logger.debug(
+        "Visual Crossing alerts for %s will be processed by main notification system (%d alerts)",
+        location.name,
+        len(alerts.alerts),
+    )

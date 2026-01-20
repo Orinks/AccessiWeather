@@ -9,12 +9,16 @@ All notable changes to this project will be documented in this file.
 - Settings export and import - backup your preferences to a file and restore them on another machine, perfect for keeping your setup in sync across devices. Find it in Settings > Advanced. Your API keys stay secure in your system keyring and aren't included in the export file
 - Config file protection on Windows - your configuration file now has Windows-equivalent permissions (user-only access), matching the existing protection on macOS and Linux. This adds defense-in-depth for your location data and preferences
 - UV Index Dialog - dedicated view for detailed UV index information and sun protection recommendations accessible from the View menu
+- Data source attribution - now shows "Data from: National Weather Service, Open-Meteo" etc. so you always know where your weather data comes from
+- Stale data warnings - when you're seeing cached weather data, the app now tells you with messages like "Showing cached data from 2:30 PM (API timeout)"
 
 ### Changed
 -
 
 ### Fixed
--
+- Weather alerts now trigger desktop notifications - previously alerts showed in the UI but never sent notifications
+- Location switching now updates the weather display - switching locations was silently failing due to a type mismatch
+- Cleaned up Visual Crossing alert processing - removed orphaned AlertManager that was losing state between calls
 
 ### Removed
 -
