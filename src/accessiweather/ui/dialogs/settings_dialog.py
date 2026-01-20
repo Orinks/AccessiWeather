@@ -721,7 +721,13 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["minimize_tray"] = wx.CheckBox(
             panel, label="Minimize to notification area when closing"
         )
+        self._controls["minimize_tray"].Bind(wx.EVT_CHECKBOX, self._on_minimize_tray_changed)
         sizer.Add(self._controls["minimize_tray"], 0, wx.ALL, 5)
+
+        self._controls["minimize_on_startup"] = wx.CheckBox(
+            panel, label="Start minimized to notification area"
+        )
+        sizer.Add(self._controls["minimize_on_startup"], 0, wx.LEFT | wx.BOTTOM, 5)
 
         self._controls["startup"] = wx.CheckBox(panel, label="Launch automatically at startup")
         sizer.Add(self._controls["startup"], 0, wx.LEFT | wx.BOTTOM, 5)
@@ -960,7 +966,13 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["custom_instructions"].SetValue(custom_instructions)
 
             # Advanced tab
-            self._controls["minimize_tray"].SetValue(getattr(settings, "minimize_to_tray", False))
+            minimize_to_tray = getattr(settings, "minimize_to_tray", False)
+            self._controls["minimize_tray"].SetValue(minimize_to_tray)
+            self._controls["minimize_on_startup"].SetValue(
+                getattr(settings, "minimize_on_startup", False)
+            )
+            # Link settings: disable minimize_on_startup if minimize_to_tray is disabled
+            self._update_minimize_on_startup_state(minimize_to_tray)
             self._controls["startup"].SetValue(getattr(settings, "startup_enabled", False))
             self._controls["weather_history"].SetValue(
                 getattr(settings, "weather_history_enabled", True)
@@ -1052,6 +1064,7 @@ class SettingsDialogSimple(wx.Dialog):
                 "custom_instructions": self._controls["custom_instructions"].GetValue() or None,
                 # Advanced
                 "minimize_to_tray": self._controls["minimize_tray"].GetValue(),
+                "minimize_on_startup": self._controls["minimize_on_startup"].GetValue(),
                 "startup_enabled": self._controls["startup"].GetValue(),
                 "weather_history_enabled": self._controls["weather_history"].GetValue(),
                 "debug_mode": self._controls["debug"].GetValue(),
@@ -1526,6 +1539,25 @@ class SettingsDialogSimple(wx.Dialog):
                             "Import Error",
                             wx.OK | wx.ICON_ERROR,
                         )
+
+    def _on_minimize_tray_changed(self, event):
+        """Handle minimize to tray checkbox state change."""
+        minimize_to_tray_enabled = self._controls["minimize_tray"].GetValue()
+        self._update_minimize_on_startup_state(minimize_to_tray_enabled)
+        event.Skip()
+
+    def _update_minimize_on_startup_state(self, minimize_to_tray_enabled: bool):
+        """
+        Update the enabled state of minimize_on_startup based on minimize_to_tray.
+
+        Args:
+            minimize_to_tray_enabled: Whether minimize to tray is enabled
+
+        """
+        self._controls["minimize_on_startup"].Enable(minimize_to_tray_enabled)
+        if not minimize_to_tray_enabled:
+            # If minimize to tray is disabled, also uncheck minimize on startup
+            self._controls["minimize_on_startup"].SetValue(False)
 
     def _on_open_soundpacks_dir(self, event):
         """Open sound packs directory."""

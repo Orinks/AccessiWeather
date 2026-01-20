@@ -117,9 +117,8 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     if config.settings.weather_history_enabled:
         wx.CallLater(200, _initialize_weather_history_deferred, app)
 
-    # System tray is handled differently in wxPython - skip for now
-    # TODO: Implement wx.adv.TaskBarIcon for system tray support
-    app.status_icon = None
+    # System tray icon is initialized in app.py after main window creation
+    # The tray_icon attribute is set there via _initialize_tray_icon()
 
     logger.info("Application components initialized")
 

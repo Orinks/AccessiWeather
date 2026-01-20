@@ -114,8 +114,12 @@ class MainWindow(forms.SizedFrame):
         self._create_menu_bar()
         # Bind close event to the frame
         self.widget.control.Bind(wx.EVT_CLOSE, self._on_close)
+        # Bind iconize event (minimize button) to the frame
+        self.widget.control.Bind(wx.EVT_ICONIZE, self._on_iconize)
         # Bind show event to set focus when window is actually displayed
         self.widget.control.Bind(wx.EVT_SHOW, self._on_window_shown)
+        # Bind key events for Escape key handling
+        self.widget.control.Bind(wx.EVT_CHAR_HOOK, self._on_key_down)
 
     def _on_window_shown(self, event) -> None:
         """Handle window shown event to set initial focus."""
@@ -356,16 +360,55 @@ class MainWindow(forms.SizedFrame):
     def _on_close(self, event):
         """Handle window close event."""
         # Check if minimize to tray is enabled
-        try:
-            settings = self.app.config_manager.get_settings()
-            if getattr(settings, "minimize_to_tray", False):
-                self.widget.Hide()
-                return
-        except Exception:
-            pass
+        if self._should_minimize_to_tray():
+            self._minimize_to_tray()
+            event.Veto()  # Prevent the window from being destroyed
+            return
 
         # Otherwise, exit the application
         self.app.request_exit()
+
+    def _on_iconize(self, event) -> None:
+        """Handle window iconize (minimize) event."""
+        # Check if minimize to tray is enabled and window is being minimized
+        if event.IsIconized() and self._should_minimize_to_tray():
+            # Use CallAfter to let the iconize event complete before hiding
+            wx.CallAfter(self._minimize_to_tray)
+            return
+        event.Skip()  # Allow normal minimize behavior
+
+    def _on_key_down(self, event) -> None:
+        """Handle key down events for Escape key."""
+        key_code = event.GetKeyCode()
+        if key_code == wx.WXK_ESCAPE and self._should_minimize_to_tray():
+            # Escape key pressed - minimize to tray
+            self._minimize_to_tray()
+            return
+        event.Skip()  # Allow other key handling to proceed
+
+    def _should_minimize_to_tray(self) -> bool:
+        """
+        Check if minimize to tray is enabled in settings.
+
+        Returns:
+            True if minimize to tray is enabled, False otherwise
+
+        """
+        try:
+            settings = self.app.config_manager.get_settings()
+            return bool(getattr(settings, "minimize_to_tray", False))
+        except Exception:
+            return False
+
+    def _minimize_to_tray(self) -> None:
+        """Minimize the window to the system tray."""
+        try:
+            frame = self.widget.control
+            frame.Iconize(False)  # Restore from iconized state first
+            frame.Hide()
+            logger.debug("Window minimized to system tray")
+        except Exception as e:
+            logger.error(f"Failed to minimize to tray: {e}")
 
     def _set_current_location(self, location_name: str) -> None:
         """Set the current location."""
@@ -455,6 +498,9 @@ class MainWindow(forms.SizedFrame):
             location = self.app.config_manager.get_current_location()
             location_name = location.name if location else "Unknown"
             self.set_status(f"Weather updated for {location_name}")
+
+            # Update system tray tooltip with current weather
+            self.app.update_tray_tooltip(weather_data, location_name)
 
         except Exception as e:
             logger.error(f"Failed to update weather display: {e}")
