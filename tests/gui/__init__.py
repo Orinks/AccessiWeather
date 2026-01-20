@@ -1,0 +1,1 @@
+"""GUI tests for AccessiWeather."""

@@ -51,6 +51,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "show_detailed_forecast",
     "enable_alerts",
     "minimize_to_tray",
+    "minimize_on_startup",
     "startup_enabled",
     "auto_update_enabled",
     "update_channel",
@@ -89,6 +90,7 @@ class AppSettings:
     show_detailed_forecast: bool = True
     enable_alerts: bool = True
     minimize_to_tray: bool = False
+    minimize_on_startup: bool = False
     startup_enabled: bool = False
     data_source: str = "auto"
     visual_crossing_api_key: str = ""
@@ -331,6 +333,7 @@ class AppSettings:
             "show_detailed_forecast": self.show_detailed_forecast,
             "enable_alerts": self.enable_alerts,
             "minimize_to_tray": self.minimize_to_tray,
+            "minimize_on_startup": self.minimize_on_startup,
             "startup_enabled": self.startup_enabled,
             "data_source": self.data_source,
             # visual_crossing_api_key and github_app_* are stored in secure keyring, not JSON
@@ -396,6 +399,7 @@ class AppSettings:
             show_detailed_forecast=cls._as_bool(data.get("show_detailed_forecast"), True),
             enable_alerts=cls._as_bool(data.get("enable_alerts"), True),
             minimize_to_tray=cls._as_bool(data.get("minimize_to_tray"), False),
+            minimize_on_startup=cls._as_bool(data.get("minimize_on_startup"), False),
             startup_enabled=cls._as_bool(data.get("startup_enabled"), False),
             data_source=data.get("data_source", "auto"),
             visual_crossing_api_key=data.get("visual_crossing_api_key", ""),
