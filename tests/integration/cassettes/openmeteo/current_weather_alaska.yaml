@@ -1,0 +1,33 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - api.open-meteo.com
+    method: GET
+    uri: https://api.open-meteo.com/v1/forecast?current=apparent_temperature&current=cloud_cover&current=is_day&current=precipitation&current=pressure_msl&current=relative_humidity_2m&current=snow_depth&current=snowfall&current=surface_pressure&current=temperature_2m&current=uv_index&current=visibility&current=weather_code&current=wind_direction_10m&current=wind_gusts_10m&current=wind_speed_10m&daily=sunrise&daily=sunset&daily=uv_index_max&forecast_days=1&latitude=61.2181&longitude=-149.9003&precipitation_unit=inch&temperature_unit=fahrenheit&timezone=auto&wind_speed_unit=mph
+  response:
+    body:
+      string: "{\"latitude\":61.25,\"longitude\":-149.875,\"generationtime_ms\":0.2377033233642578,\"utc_offset_seconds\":-32400,\"timezone\":\"America/Anchorage\",\"timezone_abbreviation\":\"GMT-9\",\"elevation\":34.0,\"current_units\":{\"time\":\"iso8601\",\"interval\":\"seconds\",\"temperature_2m\":\"\xB0F\",\"relative_humidity_2m\":\"%\",\"apparent_temperature\":\"\xB0F\",\"is_day\":\"\",\"precipitation\":\"inch\",\"weather_code\":\"wmo
+        code\",\"cloud_cover\":\"%\",\"pressure_msl\":\"hPa\",\"surface_pressure\":\"hPa\",\"wind_speed_10m\":\"mp/h\",\"wind_direction_10m\":\"\xB0\",\"wind_gusts_10m\":\"mp/h\",\"uv_index\":\"\",\"snowfall\":\"inch\",\"snow_depth\":\"ft\",\"visibility\":\"ft\"},\"current\":{\"time\":\"2026-01-20T10:15\",\"interval\":900,\"temperature_2m\":21.9,\"relative_humidity_2m\":99,\"apparent_temperature\":15.4,\"is_day\":1,\"precipitation\":0.000,\"weather_code\":45,\"cloud_cover\":86,\"pressure_msl\":1031.6,\"surface_pressure\":1027.1,\"wind_speed_10m\":3.2,\"wind_direction_10m\":352,\"wind_gusts_10m\":4.9,\"uv_index\":0.05,\"snowfall\":0.000,\"snow_depth\":0.492,\"visibility\":79199.477},\"daily_units\":{\"time\":\"iso8601\",\"sunrise\":\"iso8601\",\"sunset\":\"iso8601\",\"uv_index_max\":\"\"},\"daily\":{\"time\":[\"2026-01-20\"],\"sunrise\":[\"2026-01-20T09:46\"],\"sunset\":[\"2026-01-20T16:34\"],\"uv_index_max\":[0.60]}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 20 Jan 2026 19:20:49 GMT
+      Transfer-Encoding:
+      - chunked
+      content-length:
+      - '1180'
+    status:
+      code: 200
+      message: OK
+version: 1

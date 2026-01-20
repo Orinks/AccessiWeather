@@ -1,0 +1,33 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - api.open-meteo.com
+    method: GET
+    uri: https://api.open-meteo.com/v1/forecast?daily=apparent_temperature_max&daily=apparent_temperature_min&daily=precipitation_probability_max&daily=precipitation_sum&daily=snowfall_sum&daily=sunrise&daily=sunset&daily=temperature_2m_max&daily=temperature_2m_min&daily=uv_index_max&daily=weather_code&daily=wind_direction_10m_dominant&daily=wind_gusts_10m_max&daily=wind_speed_10m_max&forecast_days=7&latitude=61.2181&longitude=-149.9003&precipitation_unit=inch&temperature_unit=fahrenheit&timezone=auto&wind_speed_unit=mph
+  response:
+    body:
+      string: "{\"latitude\":61.25,\"longitude\":-149.875,\"generationtime_ms\":0.20587444305419922,\"utc_offset_seconds\":-32400,\"timezone\":\"America/Anchorage\",\"timezone_abbreviation\":\"GMT-9\",\"elevation\":34.0,\"daily_units\":{\"time\":\"iso8601\",\"weather_code\":\"wmo
+        code\",\"temperature_2m_max\":\"\xB0F\",\"temperature_2m_min\":\"\xB0F\",\"apparent_temperature_max\":\"\xB0F\",\"apparent_temperature_min\":\"\xB0F\",\"sunrise\":\"iso8601\",\"sunset\":\"iso8601\",\"precipitation_sum\":\"inch\",\"precipitation_probability_max\":\"%\",\"wind_speed_10m_max\":\"mp/h\",\"wind_gusts_10m_max\":\"mp/h\",\"wind_direction_10m_dominant\":\"\xB0\",\"uv_index_max\":\"\",\"snowfall_sum\":\"inch\"},\"daily\":{\"time\":[\"2026-01-20\",\"2026-01-21\",\"2026-01-22\",\"2026-01-23\",\"2026-01-24\",\"2026-01-25\",\"2026-01-26\"],\"weather_code\":[48,45,45,3,66,66,45],\"temperature_2m_max\":[27.4,23.7,21.8,29.7,30.9,31.7,30.4],\"temperature_2m_min\":[19.6,17.7,18.6,21.4,28.9,29.9,25.9],\"apparent_temperature_max\":[22.0,17.3,14.8,21.2,22.6,26.8,25.0],\"apparent_temperature_min\":[13.3,11.0,12.1,14.4,20.2,22.1,18.4],\"sunrise\":[\"2026-01-20T09:46\",\"2026-01-21T09:44\",\"2026-01-22T09:42\",\"2026-01-23T09:40\",\"2026-01-24T09:38\",\"2026-01-25T09:36\",\"2026-01-26T09:33\"],\"sunset\":[\"2026-01-20T16:34\",\"2026-01-21T16:37\",\"2026-01-22T16:39\",\"2026-01-23T16:42\",\"2026-01-24T16:44\",\"2026-01-25T16:47\",\"2026-01-26T16:50\"],\"precipitation_sum\":[0.000,0.000,0.000,0.000,0.008,0.063,0.000],\"precipitation_probability_max\":[3,0,0,0,2,12,24],\"wind_speed_10m_max\":[3.8,3.1,3.9,7.8,9.9,8.5,7.0],\"wind_gusts_10m_max\":[5.8,4.5,5.8,11.9,15.7,13.9,10.7],\"wind_direction_10m_dominant\":[11,5,12,15,12,19,8],\"uv_index_max\":[0.60,0.60,0.65,0.70,0.70,0.70,0.70],\"snowfall_sum\":[0.000,0.000,0.000,0.000,0.000,0.000,0.000]}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 20 Jan 2026 19:20:50 GMT
+      Transfer-Encoding:
+      - chunked
+      content-length:
+      - '1661'
+    status:
+      code: 200
+      message: OK
+version: 1
