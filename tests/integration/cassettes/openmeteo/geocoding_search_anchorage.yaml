@@ -1,0 +1,37 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - geocoding-api.open-meteo.com
+    method: GET
+    uri: https://geocoding-api.open-meteo.com/v1/search?count=5&format=json&language=en&name=Anchorage
+  response:
+    body:
+      string: '{"results":[{"id":5879400,"name":"Anchorage","latitude":61.21806,"longitude":-149.90028,"elevation":31.0,"feature_code":"PPLA2","country_code":"US","admin1_id":5879092,"admin2_id":5879348,"timezone":"America/Anchorage","population":291247,"postcodes":["99501","99502","99503","99504","99507","99508","99509","99510","99511","99513","99514","99515","99516","99517","99518","99519","99520","99521","99522","99523","99524","99599","99695"],"country_id":6252001,"country":"United
+        States","admin1":"Alaska","admin2":"Anchorage"},{"id":4282497,"name":"Anchorage","latitude":38.26674,"longitude":-85.53302,"elevation":217.0,"feature_code":"PPL","country_code":"US","admin1_id":6254925,"admin2_id":4296212,"timezone":"America/Kentucky/Louisville","population":2420,"country_id":6252001,"country":"United
+        States","admin1":"Kentucky","admin2":"Jefferson"},{"id":4314787,"name":"Anchorage","latitude":30.48269,"longitude":-91.21039,"elevation":7.0,"feature_code":"PPL","country_code":"US","admin1_id":4331987,"admin2_id":4345713,"timezone":"America/Chicago","country_id":6252001,"country":"United
+        States","admin1":"Louisiana","admin2":"West Baton Rouge"},{"id":4347203,"name":"Anchorage","latitude":38.944,"longitude":-76.47357,"elevation":9.0,"feature_code":"PPL","country_code":"US","admin1_id":4361885,"admin2_id":4347283,"timezone":"America/New_York","country_id":6252001,"country":"United
+        States","admin1":"Maryland","admin2":"Anne Arundel"},{"id":4347204,"name":"Anchorage","latitude":38.79567,"longitude":-76.13828,"elevation":4.0,"feature_code":"PPL","country_code":"US","admin1_id":4361885,"admin2_id":4370904,"timezone":"America/New_York","country_id":6252001,"country":"United
+        States","admin1":"Maryland","admin2":"Talbot"}],"generationtime_ms":0.7022619}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 20 Jan 2026 19:20:53 GMT
+      X-Encoding-Time:
+      - 0.004827976226806641 ms
+      content-length:
+      - '1755'
+    status:
+      code: 200
+      message: OK
+version: 1

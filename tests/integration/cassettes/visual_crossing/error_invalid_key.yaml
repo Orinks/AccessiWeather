@@ -1,0 +1,38 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - weather.visualcrossing.com
+    method: GET
+    uri: https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/40.7128,-74.006?elements=temp%2Cfeelslike%2Chumidity%2Cwindspeed%2Cwinddir%2Cpressure%2Cconditions%2Cdatetime%2Csunrise%2Csunset%2Cmoonrise%2Cmoonset%2Cmoonphase%2CsunriseEpoch%2CsunsetEpoch%2CmoonriseEpoch%2CmoonsetEpoch%2Csnowdepth%2Cpreciptype%2Cwindchill%2Cheatindex%2Csevererisk%2Cvisibility&include=current%2Cdays&numDays=1&unitGroup=us
+  response:
+    body:
+      string: No account found with API key 'invalid-key'
+    headers:
+      Access-Control-Allow-Headers:
+      - X-Requested-With, Content-Type, X-Codingpedia
+      Access-Control-Allow-Methods:
+      - GET, POST, DELETE, PUT
+      Access-Control-Allow-Origin:
+      - '*'
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 20 Jan 2026 19:16:16 GMT
+      X-Powered-By:
+      - Visual Crossing Weather
+      content-length:
+      - '43'
+    status:
+      code: 401
+      message: ''
+version: 1

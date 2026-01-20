@@ -1,0 +1,57 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - weather.visualcrossing.com
+    method: GET
+    uri: https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/40.7128,-74.006?elements=datetime%2Ctempmax%2Ctempmin%2Ctemp%2Cconditions%2Cdescription%2Cwindspeed%2Cwinddir%2Cicon%2Cprecipprob%2Csnow%2Cuvindex%2Csnowdepth%2Cpreciptype%2Cwindchill%2Cheatindex%2Csevererisk%2Cvisibility%2Cfeelslikemax%2Cfeelslikemin&include=days&unitGroup=us
+  response:
+    body:
+      string: '{"queryCost":1,"latitude":40.7128,"longitude":-74.006,"resolvedAddress":"40.7128,-74.006","address":"40.7128,-74.006","timezone":"America/New_York","tzoffset":-5.0,"days":[{"datetime":"2026-01-20","tempmax":26.4,"tempmin":16.5,"temp":20.3,"feelslikemax":13.9,"feelslikemin":2.0,"precipprob":0.0,"preciptype":null,"snow":0.0,"snowdepth":1.5,"windspeed":16.3,"winddir":272.5,"visibility":10.0,"uvindex":5.0,"severerisk":10.0,"conditions":"Clear","description":"Clear
+        conditions throughout the day.","icon":"clear-day"},{"datetime":"2026-01-21","tempmax":36.0,"tempmin":18.0,"temp":26.5,"feelslikemax":28.1,"feelslikemin":8.1,"precipprob":1.0,"preciptype":["rain"],"snow":0.0,"snowdepth":1.3,"windspeed":11.4,"winddir":216.7,"visibility":10.1,"uvindex":4.0,"severerisk":10.0,"conditions":"Partially
+        cloudy","description":"Partly cloudy throughout the day.","icon":"partly-cloudy-day"},{"datetime":"2026-01-22","tempmax":40.9,"tempmin":33.7,"temp":36.9,"feelslikemax":33.7,"feelslikemin":26.5,"precipprob":10.0,"preciptype":null,"snow":0.0,"snowdepth":1.0,"windspeed":12.8,"winddir":244.6,"visibility":10.1,"uvindex":4.0,"severerisk":10.0,"conditions":"Partially
+        cloudy","description":"Partly cloudy throughout the day.","icon":"partly-cloudy-day"},{"datetime":"2026-01-23","tempmax":33.2,"tempmin":18.8,"temp":28.9,"feelslikemax":26.1,"feelslikemin":5.4,"precipprob":9.0,"preciptype":null,"snow":0.0,"snowdepth":0.4,"windspeed":14.3,"winddir":284.1,"visibility":12.1,"uvindex":3.0,"severerisk":10.0,"conditions":"Partially
+        cloudy","description":"Partly cloudy throughout the day.","icon":"partly-cloudy-day"},{"datetime":"2026-01-24","tempmax":17.3,"tempmin":13.2,"temp":15.7,"feelslikemax":6.0,"feelslikemin":-0.7,"precipprob":25.0,"preciptype":null,"snow":0.0,"snowdepth":0.2,"windspeed":13.4,"winddir":328.9,"visibility":15.0,"uvindex":3.0,"severerisk":10.0,"conditions":"Partially
+        cloudy","description":"Partly cloudy throughout the day.","icon":"partly-cloudy-day"},{"datetime":"2026-01-25","tempmax":18.6,"tempmin":14.8,"temp":16.6,"feelslikemax":6.5,"feelslikemin":1.9,"precipprob":57.0,"preciptype":["snow"],"snow":2.4,"snowdepth":1.1,"windspeed":11.9,"winddir":25.8,"visibility":3.5,"uvindex":1.0,"severerisk":10.0,"conditions":"Snow,
+        Partially cloudy","description":"Partly cloudy throughout the day with a chance
+        of snow.","icon":"snow"},{"datetime":"2026-01-26","tempmax":21.8,"tempmin":14.3,"temp":18.1,"feelslikemax":10.2,"feelslikemin":1.9,"precipprob":53.0,"preciptype":["snow"],"snow":0.0,"snowdepth":2.3,"windspeed":11.9,"winddir":336.3,"visibility":14.8,"uvindex":4.0,"severerisk":10.0,"conditions":"Snow,
+        Partially cloudy","description":"Partly cloudy throughout the day with a chance
+        of snow.","icon":"snow"},{"datetime":"2026-01-27","tempmax":24.0,"tempmin":15.7,"temp":19.7,"feelslikemax":12.8,"feelslikemin":3.1,"precipprob":15.0,"preciptype":null,"snow":0.0,"snowdepth":1.6,"windspeed":12.5,"winddir":290.2,"visibility":15.0,"uvindex":4.0,"severerisk":10.0,"conditions":"Partially
+        cloudy","description":"Partly cloudy throughout the day.","icon":"partly-cloudy-day"},{"datetime":"2026-01-28","tempmax":33.3,"tempmin":16.4,"temp":26.4,"feelslikemax":27.4,"feelslikemin":5.2,"precipprob":16.1,"preciptype":null,"snow":0.0,"snowdepth":0.9,"windspeed":11.9,"winddir":287.8,"visibility":15.0,"uvindex":5.0,"severerisk":10.0,"conditions":"Partially
+        cloudy","description":"Becoming cloudy in the afternoon.","icon":"partly-cloudy-day"},{"datetime":"2026-01-29","tempmax":36.0,"tempmin":25.6,"temp":30.7,"feelslikemax":29.7,"feelslikemin":18.0,"precipprob":6.5,"preciptype":null,"snow":0.0,"snowdepth":0.3,"windspeed":9.2,"winddir":260.8,"visibility":15.0,"uvindex":5.0,"severerisk":10.0,"conditions":"Partially
+        cloudy","description":"Partly cloudy throughout the day.","icon":"partly-cloudy-day"},{"datetime":"2026-01-30","tempmax":33.3,"tempmin":29.2,"temp":31.6,"feelslikemax":27.5,"feelslikemin":21.6,"precipprob":3.2,"preciptype":["rain","snow"],"snow":0.0,"snowdepth":0.2,"windspeed":8.7,"winddir":210.8,"visibility":10.2,"uvindex":1.0,"severerisk":10.0,"conditions":"Overcast","description":"Cloudy
+        skies throughout the day.","icon":"cloudy"},{"datetime":"2026-01-31","tempmax":34.2,"tempmin":31.0,"temp":32.8,"feelslikemax":34.2,"feelslikemin":21.6,"precipprob":22.6,"preciptype":["rain","snow"],"snow":1.3,"snowdepth":0.6,"windspeed":11.9,"winddir":164.7,"visibility":0.2,"uvindex":1.0,"severerisk":10.0,"conditions":"Overcast","description":"Cloudy
+        skies throughout the day.","icon":"fog"},{"datetime":"2026-02-01","tempmax":30.6,"tempmin":21.6,"temp":24.3,"feelslikemax":21.0,"feelslikemin":6.1,"precipprob":19.4,"preciptype":["rain","snow"],"snow":6.3,"snowdepth":6.1,"windspeed":21.7,"winddir":297.3,"visibility":7.0,"uvindex":2.0,"severerisk":10.0,"conditions":"Overcast","description":"Cloudy
+        skies throughout the day.","icon":"cloudy"},{"datetime":"2026-02-02","tempmax":31.7,"tempmin":21.3,"temp":26.6,"feelslikemax":20.0,"feelslikemin":6.6,"precipprob":6.5,"preciptype":null,"snow":0.0,"snowdepth":6.8,"windspeed":19.2,"winddir":269.4,"visibility":14.6,"uvindex":4.0,"severerisk":10.0,"conditions":"Partially
+        cloudy","description":"Partly cloudy throughout the day.","icon":"partly-cloudy-day"},{"datetime":"2026-02-03","tempmax":30.8,"tempmin":19.5,"temp":25.1,"feelslikemax":21.3,"feelslikemin":8.9,"precipprob":6.5,"preciptype":["rain","snow"],"snow":0.0,"snowdepth":5.9,"windspeed":17.0,"winddir":275.8,"visibility":15.0,"uvindex":6.0,"severerisk":10.0,"conditions":"Clear","description":"Clear
+        conditions throughout the day.","icon":"clear-day"}]}'
+    headers:
+      Access-Control-Allow-Headers:
+      - X-Requested-With, Content-Type, X-Codingpedia
+      Access-Control-Allow-Methods:
+      - GET, POST, DELETE, PUT
+      Access-Control-Allow-Origin:
+      - '*'
+      Cache-Control:
+      - no-cache, no-transform
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 20 Jan 2026 19:16:15 GMT
+      X-Powered-By:
+      - Visual Crossing Weather
+      content-length:
+      - '5584'
+    status:
+      code: 200
+      message: ''
+version: 1

@@ -1,0 +1,305 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - application/geo+json
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - api.weather.gov
+    method: GET
+    uri: https://api.weather.gov/points/61.2181,-149.9003
+  response:
+    body:
+      string: "{\n    \"@context\": [\n        \"https://geojson.org/geojson-ld/geojson-context.jsonld\",\n
+        \       {\n            \"@version\": \"1.1\",\n            \"wx\": \"https://api.weather.gov/ontology#\",\n
+        \           \"s\": \"https://schema.org/\",\n            \"geo\": \"http://www.opengis.net/ont/geosparql#\",\n
+        \           \"unit\": \"http://codes.wmo.int/common/unit/\",\n            \"@vocab\":
+        \"https://api.weather.gov/ontology#\",\n            \"geometry\": {\n                \"@id\":
+        \"s:GeoCoordinates\",\n                \"@type\": \"geo:wktLiteral\"\n            },\n
+        \           \"city\": \"s:addressLocality\",\n            \"state\": \"s:addressRegion\",\n
+        \           \"distance\": {\n                \"@id\": \"s:Distance\",\n                \"@type\":
+        \"s:QuantitativeValue\"\n            },\n            \"bearing\": {\n                \"@type\":
+        \"s:QuantitativeValue\"\n            },\n            \"value\": {\n                \"@id\":
+        \"s:value\"\n            },\n            \"unitCode\": {\n                \"@id\":
+        \"s:unitCode\",\n                \"@type\": \"@id\"\n            },\n            \"forecastOffice\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"forecastGridData\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"publicZone\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"county\":
+        {\n                \"@type\": \"@id\"\n            }\n        }\n    ],\n
+        \   \"id\": \"https://api.weather.gov/points/61.2181,-149.9003\",\n    \"type\":
+        \"Feature\",\n    \"geometry\": {\n        \"type\": \"Point\",\n        \"coordinates\":
+        [\n            -149.9003,\n            61.2181\n        ]\n    },\n    \"properties\":
+        {\n        \"@id\": \"https://api.weather.gov/points/61.2181,-149.9003\",\n
+        \       \"@type\": \"wx:Point\",\n        \"cwa\": \"AFC\",\n        \"type\":
+        \"land\",\n        \"forecastOffice\": \"https://api.weather.gov/offices/AFC\",\n
+        \       \"gridId\": \"AER\",\n        \"gridX\": 143,\n        \"gridY\":
+        236,\n        \"forecast\": \"https://api.weather.gov/gridpoints/AER/143,236/forecast\",\n
+        \       \"forecastHourly\": \"https://api.weather.gov/gridpoints/AER/143,236/forecast/hourly\",\n
+        \       \"forecastGridData\": \"https://api.weather.gov/gridpoints/AER/143,236\",\n
+        \       \"observationStations\": \"https://api.weather.gov/gridpoints/AER/143,236/stations\",\n
+        \       \"relativeLocation\": {\n            \"type\": \"Feature\",\n            \"geometry\":
+        {\n                \"type\": \"Point\",\n                \"coordinates\":
+        [\n                    -150.16935,\n                    61.355597\n                ]\n
+        \           },\n            \"properties\": {\n                \"city\": \"Point
+        MacKenzie\",\n                \"state\": \"AK\",\n                \"distance\":
+        {\n                    \"unitCode\": \"wmoUnit:m\",\n                    \"value\":
+        20984.08291461\n                },\n                \"bearing\": {\n                    \"unitCode\":
+        \"wmoUnit:degree_(angle)\",\n                    \"value\": 136\n                }\n
+        \           }\n        },\n        \"forecastZone\": \"https://api.weather.gov/zones/forecast/AKZ701\",\n
+        \       \"county\": \"https://api.weather.gov/zones/county/AKC020\",\n        \"fireWeatherZone\":
+        \"https://api.weather.gov/zones/fire/AKZ701\",\n        \"timeZone\": \"America/Anchorage\",\n
+        \       \"radarStation\": \"PAHG\"\n    }\n}"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Access-Control-Expose-Headers:
+      - X-Correlation-Id, X-Request-Id, X-Server-Id
+      Cache-Control:
+      - public, max-age=86393, s-maxage=120
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/geo+json
+      Date:
+      - Tue, 20 Jan 2026 18:51:22 GMT
+      Expires:
+      - Wed, 21 Jan 2026 18:51:15 GMT
+      Server:
+      - nginx/1.20.1
+      Strict-Transport-Security:
+      - max-age=31536000 ; includeSubDomains ; preload
+      Vary:
+      - Accept-Encoding
+      - Accept,Feature-Flags,Accept-Language
+      X-Correlation-ID:
+      - 119a34e7
+      X-Edge-Request-ID:
+      - 31d791d
+      X-Request-ID:
+      - 2c164f3b-3cb3-4d4f-a68b-1af89c92cb1d
+      X-Server-ID:
+      - vm-cprk-api-ops-app2.ncep.noaa.gov
+      content-length:
+      - '3102'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - api.weather.gov
+    method: GET
+    uri: https://api.weather.gov/gridpoints/AER/143,236/forecast
+  response:
+    body:
+      string: "{\n    \"@context\": [\n        \"https://geojson.org/geojson-ld/geojson-context.jsonld\",\n
+        \       {\n            \"@version\": \"1.1\",\n            \"wx\": \"https://api.weather.gov/ontology#\",\n
+        \           \"geo\": \"http://www.opengis.net/ont/geosparql#\",\n            \"unit\":
+        \"http://codes.wmo.int/common/unit/\",\n            \"@vocab\": \"https://api.weather.gov/ontology#\"\n
+        \       }\n    ],\n    \"type\": \"Feature\",\n    \"geometry\": {\n        \"type\":
+        \"Polygon\",\n        \"coordinates\": [\n            [\n                [\n
+        \                   -149.8596,\n                    61.2008\n                ],\n
+        \               [\n                    -149.8595,\n                    61.2277\n
+        \               ],\n                [\n                    -149.9154,\n                    61.2278\n
+        \               ],\n                [\n                    -149.9155,\n                    61.2009\n
+        \               ],\n                [\n                    -149.8596,\n                    61.2008\n
+        \               ]\n            ]\n        ]\n    },\n    \"properties\": {\n
+        \       \"units\": \"us\",\n        \"forecastGenerator\": \"BaselineForecastGenerator\",\n
+        \       \"generatedAt\": \"2026-01-20T18:51:23+00:00\",\n        \"updateTime\":
+        \"2026-01-20T12:19:24+00:00\",\n        \"validTimes\": \"2026-01-20T06:00:00+00:00/P7DT19H\",\n
+        \       \"elevation\": {\n            \"unitCode\": \"wmoUnit:m\",\n            \"value\":
+        29.8704\n        },\n        \"periods\": [\n            {\n                \"number\":
+        1,\n                \"name\": \"Today\",\n                \"startTime\": \"2026-01-20T09:00:00-09:00\",\n
+        \               \"endTime\": \"2026-01-20T18:00:00-09:00\",\n                \"isDaytime\":
+        true,\n                \"temperature\": 27,\n                \"temperatureUnit\":
+        \"F\",\n                \"temperatureTrend\": null,\n                \"probabilityOfPrecipitation\":
+        {\n                    \"unitCode\": \"wmoUnit:percent\",\n                    \"value\":
+        4\n                },\n                \"windSpeed\": \"0 mph\",\n                \"windDirection\":
+        \"\",\n                \"icon\": \"https://api.weather.gov/icons/land/day/sct?size=medium\",\n
+        \               \"shortForecast\": \"Mostly Sunny\",\n                \"detailedForecast\":
+        \"Mostly sunny. High near 27, with temperatures falling to around 22 in the
+        afternoon. North wind around 0 mph.\"\n            },\n            {\n                \"number\":
+        2,\n                \"name\": \"Tonight\",\n                \"startTime\":
+        \"2026-01-20T18:00:00-09:00\",\n                \"endTime\": \"2026-01-21T06:00:00-09:00\",\n
+        \               \"isDaytime\": false,\n                \"temperature\": 11,\n
+        \               \"temperatureUnit\": \"F\",\n                \"temperatureTrend\":
+        null,\n                \"probabilityOfPrecipitation\": {\n                    \"unitCode\":
+        \"wmoUnit:percent\",\n                    \"value\": 1\n                },\n
+        \               \"windSpeed\": \"0 mph\",\n                \"windDirection\":
+        \"\",\n                \"icon\": \"https://api.weather.gov/icons/land/night/fog?size=medium\",\n
+        \               \"shortForecast\": \"Patchy Freezing Fog\",\n                \"detailedForecast\":
+        \"Patchy freezing fog after 9pm. Mostly cloudy, with a low around 11. Northeast
+        wind around 0 mph.\"\n            },\n            {\n                \"number\":
+        3,\n                \"name\": \"Wednesday\",\n                \"startTime\":
+        \"2026-01-21T06:00:00-09:00\",\n                \"endTime\": \"2026-01-21T18:00:00-09:00\",\n
+        \               \"isDaytime\": true,\n                \"temperature\": 25,\n
+        \               \"temperatureUnit\": \"F\",\n                \"temperatureTrend\":
+        null,\n                \"probabilityOfPrecipitation\": {\n                    \"unitCode\":
+        \"wmoUnit:percent\",\n                    \"value\": 1\n                },\n
+        \               \"windSpeed\": \"0 mph\",\n                \"windDirection\":
+        \"\",\n                \"icon\": \"https://api.weather.gov/icons/land/day/fog/bkn?size=medium\",\n
+        \               \"shortForecast\": \"Patchy Freezing Fog then Partly Sunny\",\n
+        \               \"detailedForecast\": \"Patchy freezing fog before 9am. Partly
+        sunny. High near 25, with temperatures falling to around 20 in the afternoon.
+        Northeast wind around 0 mph.\"\n            },\n            {\n                \"number\":
+        4,\n                \"name\": \"Wednesday Night\",\n                \"startTime\":
+        \"2026-01-21T18:00:00-09:00\",\n                \"endTime\": \"2026-01-22T06:00:00-09:00\",\n
+        \               \"isDaytime\": false,\n                \"temperature\": 11,\n
+        \               \"temperatureUnit\": \"F\",\n                \"temperatureTrend\":
+        null,\n                \"probabilityOfPrecipitation\": {\n                    \"unitCode\":
+        \"wmoUnit:percent\",\n                    \"value\": 0\n                },\n
+        \               \"windSpeed\": \"0 mph\",\n                \"windDirection\":
+        \"\",\n                \"icon\": \"https://api.weather.gov/icons/land/night/bkn?size=medium\",\n
+        \               \"shortForecast\": \"Mostly Cloudy\",\n                \"detailedForecast\":
+        \"Mostly cloudy, with a low around 11. Northeast wind around 0 mph.\"\n            },\n
+        \           {\n                \"number\": 5,\n                \"name\": \"Thursday\",\n
+        \               \"startTime\": \"2026-01-22T06:00:00-09:00\",\n                \"endTime\":
+        \"2026-01-22T18:00:00-09:00\",\n                \"isDaytime\": true,\n                \"temperature\":
+        26,\n                \"temperatureUnit\": \"F\",\n                \"temperatureTrend\":
+        null,\n                \"probabilityOfPrecipitation\": {\n                    \"unitCode\":
+        \"wmoUnit:percent\",\n                    \"value\": 0\n                },\n
+        \               \"windSpeed\": \"0 to 5 mph\",\n                \"windDirection\":
+        \"N\",\n                \"icon\": \"https://api.weather.gov/icons/land/day/sct?size=medium\",\n
+        \               \"shortForecast\": \"Mostly Sunny\",\n                \"detailedForecast\":
+        \"Mostly sunny, with a high near 26. North wind 0 to 5 mph.\"\n            },\n
+        \           {\n                \"number\": 6,\n                \"name\": \"Thursday
+        Night\",\n                \"startTime\": \"2026-01-22T18:00:00-09:00\",\n
+        \               \"endTime\": \"2026-01-23T06:00:00-09:00\",\n                \"isDaytime\":
+        false,\n                \"temperature\": 15,\n                \"temperatureUnit\":
+        \"F\",\n                \"temperatureTrend\": null,\n                \"probabilityOfPrecipitation\":
+        {\n                    \"unitCode\": \"wmoUnit:percent\",\n                    \"value\":
+        0\n                },\n                \"windSpeed\": \"0 to 5 mph\",\n                \"windDirection\":
+        \"N\",\n                \"icon\": \"https://api.weather.gov/icons/land/night/sct?size=medium\",\n
+        \               \"shortForecast\": \"Partly Cloudy\",\n                \"detailedForecast\":
+        \"Partly cloudy, with a low around 15. North wind 0 to 5 mph.\"\n            },\n
+        \           {\n                \"number\": 7,\n                \"name\": \"Friday\",\n
+        \               \"startTime\": \"2026-01-23T06:00:00-09:00\",\n                \"endTime\":
+        \"2026-01-23T18:00:00-09:00\",\n                \"isDaytime\": true,\n                \"temperature\":
+        25,\n                \"temperatureUnit\": \"F\",\n                \"temperatureTrend\":
+        null,\n                \"probabilityOfPrecipitation\": {\n                    \"unitCode\":
+        \"wmoUnit:percent\",\n                    \"value\": 0\n                },\n
+        \               \"windSpeed\": \"0 to 5 mph\",\n                \"windDirection\":
+        \"N\",\n                \"icon\": \"https://api.weather.gov/icons/land/day/few?size=medium\",\n
+        \               \"shortForecast\": \"Sunny\",\n                \"detailedForecast\":
+        \"Sunny, with a high near 25.\"\n            },\n            {\n                \"number\":
+        8,\n                \"name\": \"Friday Night\",\n                \"startTime\":
+        \"2026-01-23T18:00:00-09:00\",\n                \"endTime\": \"2026-01-24T06:00:00-09:00\",\n
+        \               \"isDaytime\": false,\n                \"temperature\": 14,\n
+        \               \"temperatureUnit\": \"F\",\n                \"temperatureTrend\":
+        null,\n                \"probabilityOfPrecipitation\": {\n                    \"unitCode\":
+        \"wmoUnit:percent\",\n                    \"value\": 0\n                },\n
+        \               \"windSpeed\": \"0 to 5 mph\",\n                \"windDirection\":
+        \"NE\",\n                \"icon\": \"https://api.weather.gov/icons/land/night/sct?size=medium\",\n
+        \               \"shortForecast\": \"Partly Cloudy\",\n                \"detailedForecast\":
+        \"Partly cloudy, with a low around 14.\"\n            },\n            {\n
+        \               \"number\": 9,\n                \"name\": \"Saturday\",\n
+        \               \"startTime\": \"2026-01-24T06:00:00-09:00\",\n                \"endTime\":
+        \"2026-01-24T18:00:00-09:00\",\n                \"isDaytime\": true,\n                \"temperature\":
+        26,\n                \"temperatureUnit\": \"F\",\n                \"temperatureTrend\":
+        null,\n                \"probabilityOfPrecipitation\": {\n                    \"unitCode\":
+        \"wmoUnit:percent\",\n                    \"value\": 0\n                },\n
+        \               \"windSpeed\": \"0 to 5 mph\",\n                \"windDirection\":
+        \"NE\",\n                \"icon\": \"https://api.weather.gov/icons/land/day/sct?size=medium\",\n
+        \               \"shortForecast\": \"Mostly Sunny\",\n                \"detailedForecast\":
+        \"Mostly sunny, with a high near 26.\"\n            },\n            {\n                \"number\":
+        10,\n                \"name\": \"Saturday Night\",\n                \"startTime\":
+        \"2026-01-24T18:00:00-09:00\",\n                \"endTime\": \"2026-01-25T06:00:00-09:00\",\n
+        \               \"isDaytime\": false,\n                \"temperature\": 13,\n
+        \               \"temperatureUnit\": \"F\",\n                \"temperatureTrend\":
+        null,\n                \"probabilityOfPrecipitation\": {\n                    \"unitCode\":
+        \"wmoUnit:percent\",\n                    \"value\": 5\n                },\n
+        \               \"windSpeed\": \"5 mph\",\n                \"windDirection\":
+        \"N\",\n                \"icon\": \"https://api.weather.gov/icons/land/night/sct?size=medium\",\n
+        \               \"shortForecast\": \"Partly Cloudy\",\n                \"detailedForecast\":
+        \"Partly cloudy, with a low around 13.\"\n            },\n            {\n
+        \               \"number\": 11,\n                \"name\": \"Sunday\",\n                \"startTime\":
+        \"2026-01-25T06:00:00-09:00\",\n                \"endTime\": \"2026-01-25T18:00:00-09:00\",\n
+        \               \"isDaytime\": true,\n                \"temperature\": 23,\n
+        \               \"temperatureUnit\": \"F\",\n                \"temperatureTrend\":
+        null,\n                \"probabilityOfPrecipitation\": {\n                    \"unitCode\":
+        \"wmoUnit:percent\",\n                    \"value\": 13\n                },\n
+        \               \"windSpeed\": \"5 mph\",\n                \"windDirection\":
+        \"N\",\n                \"icon\": \"https://api.weather.gov/icons/land/day/sct?size=medium\",\n
+        \               \"shortForecast\": \"Mostly Sunny\",\n                \"detailedForecast\":
+        \"Mostly sunny, with a high near 23.\"\n            },\n            {\n                \"number\":
+        12,\n                \"name\": \"Sunday Night\",\n                \"startTime\":
+        \"2026-01-25T18:00:00-09:00\",\n                \"endTime\": \"2026-01-26T06:00:00-09:00\",\n
+        \               \"isDaytime\": false,\n                \"temperature\": 10,\n
+        \               \"temperatureUnit\": \"F\",\n                \"temperatureTrend\":
+        null,\n                \"probabilityOfPrecipitation\": {\n                    \"unitCode\":
+        \"wmoUnit:percent\",\n                    \"value\": 18\n                },\n
+        \               \"windSpeed\": \"5 mph\",\n                \"windDirection\":
+        \"N\",\n                \"icon\": \"https://api.weather.gov/icons/land/night/bkn/snow,20?size=medium\",\n
+        \               \"shortForecast\": \"Mostly Cloudy then Chance Light Snow\",\n
+        \               \"detailedForecast\": \"A chance of snow after 3am. Mostly
+        cloudy, with a low around 10.\"\n            },\n            {\n                \"number\":
+        13,\n                \"name\": \"Monday\",\n                \"startTime\":
+        \"2026-01-26T06:00:00-09:00\",\n                \"endTime\": \"2026-01-26T18:00:00-09:00\",\n
+        \               \"isDaytime\": true,\n                \"temperature\": 20,\n
+        \               \"temperatureUnit\": \"F\",\n                \"temperatureTrend\":
+        null,\n                \"probabilityOfPrecipitation\": {\n                    \"unitCode\":
+        \"wmoUnit:percent\",\n                    \"value\": 25\n                },\n
+        \               \"windSpeed\": \"5 to 10 mph\",\n                \"windDirection\":
+        \"N\",\n                \"icon\": \"https://api.weather.gov/icons/land/day/snow,20/snow,30?size=medium\",\n
+        \               \"shortForecast\": \"Chance Light Snow\",\n                \"detailedForecast\":
+        \"A chance of snow. Mostly cloudy, with a high near 20.\"\n            },\n
+        \           {\n                \"number\": 14,\n                \"name\":
+        \"Monday Night\",\n                \"startTime\": \"2026-01-26T18:00:00-09:00\",\n
+        \               \"endTime\": \"2026-01-27T06:00:00-09:00\",\n                \"isDaytime\":
+        false,\n                \"temperature\": 11,\n                \"temperatureUnit\":
+        \"F\",\n                \"temperatureTrend\": null,\n                \"probabilityOfPrecipitation\":
+        {\n                    \"unitCode\": \"wmoUnit:percent\",\n                    \"value\":
+        32\n                },\n                \"windSpeed\": \"5 to 10 mph\",\n
+        \               \"windDirection\": \"NE\",\n                \"icon\": \"https://api.weather.gov/icons/land/night/snow,30?size=medium\",\n
+        \               \"shortForecast\": \"Chance Light Snow\",\n                \"detailedForecast\":
+        \"A chance of snow. Mostly cloudy, with a low around 11.\"\n            }\n
+        \       ]\n    }\n}"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Access-Control-Expose-Headers:
+      - X-Correlation-Id, X-Request-Id, X-Server-Id
+      Cache-Control:
+      - public, max-age=3600, s-maxage=3600
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/geo+json
+      Date:
+      - Tue, 20 Jan 2026 18:51:23 GMT
+      Expires:
+      - Tue, 20 Jan 2026 19:51:23 GMT
+      Last-Modified:
+      - Tue, 20 Jan 2026 15:00:00 GMT
+      Server:
+      - nginx/1.20.1
+      Strict-Transport-Security:
+      - max-age=31536000 ; includeSubDomains ; preload
+      Vary:
+      - Accept-Encoding
+      - Accept,Feature-Flags,Accept-Language
+      X-Correlation-ID:
+      - 122499bc
+      X-Edge-Request-ID:
+      - 31d7ab8
+      X-Request-ID:
+      - 5286466b-f81e-4603-ac2f-d6fbf54e59ca
+      X-Server-ID:
+      - vm-cprk-api-ops-app3.ncep.noaa.gov
+      content-length:
+      - '13008'
+    status:
+      code: 200
+      message: OK
+version: 1

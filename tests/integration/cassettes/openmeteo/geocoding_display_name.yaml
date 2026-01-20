@@ -1,0 +1,37 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - geocoding-api.open-meteo.com
+    method: GET
+    uri: https://geocoding-api.open-meteo.com/v1/search?count=3&format=json&language=en&name=San+Francisco
+  response:
+    body:
+      string: "{\"results\":[{\"id\":5391959,\"name\":\"San Francisco\",\"latitude\":37.77493,\"longitude\":-122.41942,\"elevation\":16.0,\"feature_code\":\"PPLA2\",\"country_code\":\"US\",\"admin1_id\":5332921,\"admin2_id\":5391997,\"timezone\":\"America/Los_Angeles\",\"population\":864816,\"postcodes\":[\"94102\",\"94103\",\"94104\",\"94105\",\"94107\",\"94108\",\"94109\",\"94110\",\"94111\",\"94112\",\"94114\",\"94115\",\"94116\",\"94117\",\"94118\",\"94119\",\"94120\",\"94121\",\"94122\",\"94123\",\"94124\",\"94125\",\"94126\",\"94127\",\"94129\",\"94130\",\"94131\",\"94132\",\"94133\",\"94134\",\"94137\",\"94139\",\"94140\",\"94141\",\"94142\",\"94143\",\"94144\",\"94145\",\"94146\",\"94147\",\"94151\",\"94159\",\"94160\",\"94161\",\"94163\",\"94164\",\"94172\",\"94177\",\"94188\"],\"country_id\":6252001,\"country\":\"United
+        States\",\"admin1\":\"California\",\"admin2\":\"San Francisco County\"},{\"id\":3583747,\"name\":\"San
+        Francisco\",\"latitude\":13.7,\"longitude\":-88.1,\"elevation\":270.0,\"feature_code\":\"PPLA\",\"country_code\":\"SV\",\"admin1_id\":3584317,\"timezone\":\"America/El_Salvador\",\"population\":16152,\"country_id\":3585968,\"country\":\"El
+        Salvador\",\"admin1\":\"Departamento de Moraz\xE1n\"},{\"id\":3837675,\"name\":\"San
+        Francisco\",\"latitude\":-31.42497,\"longitude\":-62.08404,\"elevation\":120.0,\"feature_code\":\"PPLA2\",\"country_code\":\"AR\",\"admin1_id\":3860255,\"admin2_id\":3837121,\"timezone\":\"America/Argentina/Cordoba\",\"population\":59062,\"country_id\":3865483,\"country\":\"Argentina\",\"admin1\":\"Cordoba\",\"admin2\":\"San
+        Justo Department\"}],\"generationtime_ms\":3.1218529}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 20 Jan 2026 19:20:54 GMT
+      X-Encoding-Time:
+      - 0.005638599395751953 ms
+      content-length:
+      - '1403'
+    status:
+      code: 200
+      message: OK
+version: 1
