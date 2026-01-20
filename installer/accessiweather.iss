@@ -9,16 +9,14 @@
 ;   iscc installer/accessiweather.iss
 
 #define MyAppName "AccessiWeather"
-#define MyAppVersion "0.5.0"
+; Version can be overridden via command line: ISCC /DMyAppVersion="0.5.0 (nightly 2026-01-20)" accessiweather.iss
+#ifndef MyAppVersion
+  #define MyAppVersion "0.5.0"
+#endif
 #define MyAppPublisher "Orinks"
 #define MyAppURL "https://github.com/Orinks/AccessiWeather"
 #define MyAppExeName "AccessiWeather.exe"
 #define MyAppDescription "An accessible weather application with NOAA and Open-Meteo support"
-
-; Try to read version from file if it exists
-#ifexist "..\dist\version.txt"
-  #define MyAppVersion ReadIni("..\dist\version.txt", "version", "value", "0.5.0")
-#endif
 
 [Setup]
 ; Application identity

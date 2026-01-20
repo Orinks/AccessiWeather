@@ -132,9 +132,16 @@ jobs:
       - name: Set nightly version
         id: version
         run: |
-          VERSION="nightly-$(date +%Y%m%d)"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Building version: $VERSION"
+          # Get base version from pyproject.toml
+          BASE_VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          # Format: 0.5.0 (nightly 2026-01-20)
+          NIGHTLY_DATE=$(date +%Y-%m-%d)
+          DISPLAY_VERSION="${BASE_VERSION} (nightly ${NIGHTLY_DATE})"
+          # For filenames, use simpler format without spaces/parentheses
+          FILE_VERSION="nightly-$(date +%Y%m%d)"
+          echo "version=$DISPLAY_VERSION" >> $GITHUB_OUTPUT
+          echo "file_version=$FILE_VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $DISPLAY_VERSION (files: $FILE_VERSION)"
 
       - name: Generate icons
         run: python installer/create_icons.py
@@ -147,22 +154,19 @@ jobs:
 
       - name: Create Windows Installer
         run: |
-          # Write version file for Inno Setup
-          mkdir -p dist
-          echo "[version]" > dist/version.txt
-          echo "value=${{ steps.version.outputs.version }}" >> dist/version.txt
-
-          # Run Inno Setup
-          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" installer/accessiweather.iss
+          # Pass version directly to Inno Setup via command line
+          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" \
+            /DMyAppVersion="${{ steps.version.outputs.version }}" \
+            installer/accessiweather.iss
 
       - name: Create portable ZIP
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
+          FILE_VERSION="${{ steps.version.outputs.file_version }}"
           cd dist
           if [ -d "AccessiWeather_dir" ]; then
-            7z a -tzip "AccessiWeather_Portable_v${VERSION}.zip" "AccessiWeather_dir/*"
+            7z a -tzip "AccessiWeather_Portable_v${FILE_VERSION}.zip" "AccessiWeather_dir/*"
           elif [ -f "AccessiWeather.exe" ]; then
-            7z a -tzip "AccessiWeather_Portable_v${VERSION}.zip" "AccessiWeather.exe"
+            7z a -tzip "AccessiWeather_Portable_v${FILE_VERSION}.zip" "AccessiWeather.exe"
           fi
 
       - name: Upload Windows Installer
@@ -217,9 +221,16 @@ jobs:
       - name: Set nightly version
         id: version
         run: |
-          VERSION="nightly-$(date +%Y%m%d)"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Building version: $VERSION"
+          # Get base version from pyproject.toml
+          BASE_VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          # Format: 0.5.0 (nightly 2026-01-20)
+          NIGHTLY_DATE=$(date +%Y-%m-%d)
+          DISPLAY_VERSION="${BASE_VERSION} (nightly ${NIGHTLY_DATE})"
+          # For filenames, use simpler format without spaces/parentheses
+          FILE_VERSION="nightly-$(date +%Y%m%d)"
+          echo "version=$DISPLAY_VERSION" >> $GITHUB_OUTPUT
+          echo "file_version=$FILE_VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $DISPLAY_VERSION (files: $FILE_VERSION)"
 
       - name: Generate icons
         run: python installer/create_icons.py
@@ -229,7 +240,7 @@ jobs:
 
       - name: Create DMG
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
+          FILE_VERSION="${{ steps.version.outputs.file_version }}"
 
           # Try create-dmg first, fallback to hdiutil
           if command -v create-dmg &> /dev/null; then
@@ -241,11 +252,11 @@ jobs:
               --icon "AccessiWeather.app" 175 190 \
               --hide-extension "AccessiWeather.app" \
               --app-drop-link 425 190 \
-              "dist/AccessiWeather_v${VERSION}.dmg" \
+              "dist/AccessiWeather_v${FILE_VERSION}.dmg" \
               "dist/AccessiWeather.app" || \
-              hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${VERSION}.dmg"
+              hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${FILE_VERSION}.dmg"
           else
-            hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${VERSION}.dmg"
+            hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${FILE_VERSION}.dmg"
           fi
 
       - name: Upload macOS DMG

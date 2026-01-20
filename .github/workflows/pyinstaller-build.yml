@@ -76,21 +76,30 @@ jobs:
       - name: Extract version
         id: version
         run: |
+          # Get base version from pyproject.toml
+          BASE_VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+
           if [ -n "${{ github.event.inputs.version_override }}" ]; then
             VERSION="${{ github.event.inputs.version_override }}"
             VERSION=${VERSION#v}
+            FILE_VERSION="$VERSION"
           elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             # Tagged release - use the tag version
             VERSION="${GITHUB_REF#refs/tags/v}"
+            FILE_VERSION="$VERSION"
           elif [[ "${{ github.ref }}" == refs/heads/dev ]] || [[ "${{ github.event.workflow_run.head_branch }}" == "dev" ]]; then
-            # Dev branch - use nightly-YYYYMMDD format
-            VERSION="nightly-$(date +%Y%m%d)"
+            # Dev branch - format: 0.5.0 (nightly 2026-01-20)
+            NIGHTLY_DATE=$(date +%Y-%m-%d)
+            VERSION="${BASE_VERSION} (nightly ${NIGHTLY_DATE})"
+            FILE_VERSION="nightly-$(date +%Y%m%d)"
           else
             # Default to pyproject.toml version
-            VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+            VERSION="$BASE_VERSION"
+            FILE_VERSION="$BASE_VERSION"
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Building version: $VERSION"
+          echo "file_version=$FILE_VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION (files: $FILE_VERSION)"
 
       - name: Generate icons
         run: python installer/create_icons.py
@@ -105,22 +114,19 @@ jobs:
 
       - name: Create Windows Installer
         run: |
-          # Write version file
-          mkdir -p dist
-          echo "[version]" > dist/version.txt
-          echo "value=${{ steps.version.outputs.version }}" >> dist/version.txt
-
-          # Run Inno Setup
-          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" installer/accessiweather.iss
+          # Pass version directly to Inno Setup via command line
+          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" \
+            /DMyAppVersion="${{ steps.version.outputs.version }}" \
+            installer/accessiweather.iss
 
       - name: Create portable ZIP
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
+          FILE_VERSION="${{ steps.version.outputs.file_version }}"
           cd dist
           if [ -d "AccessiWeather_dir" ]; then
-            7z a -tzip "AccessiWeather_Portable_v${VERSION}.zip" "AccessiWeather_dir/*"
+            7z a -tzip "AccessiWeather_Portable_v${FILE_VERSION}.zip" "AccessiWeather_dir/*"
           elif [ -f "AccessiWeather.exe" ]; then
-            7z a -tzip "AccessiWeather_Portable_v${VERSION}.zip" "AccessiWeather.exe"
+            7z a -tzip "AccessiWeather_Portable_v${FILE_VERSION}.zip" "AccessiWeather.exe"
           fi
 
       - name: Generate checksums
@@ -139,7 +145,7 @@ jobs:
       - name: Upload Windows Installer
         uses: actions/upload-artifact@v4
         with:
-          name: windows-installer-${{ steps.version.outputs.version }}
+          name: windows-installer-${{ steps.version.outputs.file_version }}
           path: |
             dist/AccessiWeather_Setup_*.exe
             dist/checksums.txt
@@ -148,7 +154,7 @@ jobs:
       - name: Upload Windows Portable
         uses: actions/upload-artifact@v4
         with:
-          name: windows-portable-${{ steps.version.outputs.version }}
+          name: windows-portable-${{ steps.version.outputs.file_version }}
           path: dist/AccessiWeather_Portable_*.zip
           retention-days: 90
 
@@ -189,21 +195,30 @@ jobs:
       - name: Extract version
         id: version
         run: |
+          # Get base version from pyproject.toml
+          BASE_VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+
           if [ -n "${{ github.event.inputs.version_override }}" ]; then
             VERSION="${{ github.event.inputs.version_override }}"
             VERSION=${VERSION#v}
+            FILE_VERSION="$VERSION"
           elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             # Tagged release - use the tag version
             VERSION="${GITHUB_REF#refs/tags/v}"
+            FILE_VERSION="$VERSION"
           elif [[ "${{ github.ref }}" == refs/heads/dev ]] || [[ "${{ github.event.workflow_run.head_branch }}" == "dev" ]]; then
-            # Dev branch - use nightly-YYYYMMDD format
-            VERSION="nightly-$(date +%Y%m%d)"
+            # Dev branch - format: 0.5.0 (nightly 2026-01-20)
+            NIGHTLY_DATE=$(date +%Y-%m-%d)
+            VERSION="${BASE_VERSION} (nightly ${NIGHTLY_DATE})"
+            FILE_VERSION="nightly-$(date +%Y%m%d)"
           else
             # Default to pyproject.toml version
-            VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+            VERSION="$BASE_VERSION"
+            FILE_VERSION="$BASE_VERSION"
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Building version: $VERSION"
+          echo "file_version=$FILE_VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION (files: $FILE_VERSION)"
 
       - name: Generate icons
         run: python installer/create_icons.py
@@ -214,7 +229,7 @@ jobs:
 
       - name: Create DMG
         run: |
-          VERSION="${{ steps.version.outputs.version }}"
+          FILE_VERSION="${{ steps.version.outputs.file_version }}"
 
           # Try create-dmg first, fallback to hdiutil
           if command -v create-dmg &> /dev/null; then
@@ -226,11 +241,11 @@ jobs:
               --icon "AccessiWeather.app" 175 190 \
               --hide-extension "AccessiWeather.app" \
               --app-drop-link 425 190 \
-              "dist/AccessiWeather_v${VERSION}.dmg" \
+              "dist/AccessiWeather_v${FILE_VERSION}.dmg" \
               "dist/AccessiWeather.app" || \
-              hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${VERSION}.dmg"
+              hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${FILE_VERSION}.dmg"
           else
-            hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${VERSION}.dmg"
+            hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${FILE_VERSION}.dmg"
           fi
 
       - name: Generate checksums
@@ -249,7 +264,7 @@ jobs:
       - name: Upload macOS DMG
         uses: actions/upload-artifact@v4
         with:
-          name: macos-dmg-${{ steps.version.outputs.version }}
+          name: macos-dmg-${{ steps.version.outputs.file_version }}
           path: |
             dist/AccessiWeather_*.dmg
             dist/checksums.txt
