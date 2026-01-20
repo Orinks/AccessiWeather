@@ -83,6 +83,12 @@ class AccessiWeatherApp(wx.App):
         # Notification system
         self._notifier = None
 
+        # System tray icon (initialized after main window)
+        self.tray_icon = None
+
+        # Taskbar icon text updater for dynamic tooltips
+        self.taskbar_icon_updater = None
+
         # Async event loop for background tasks
         self._async_loop: asyncio.AbstractEventLoop | None = None
         self._async_thread: threading.Thread | None = None
@@ -122,6 +128,9 @@ class AccessiWeatherApp(wx.App):
             # Set up keyboard accelerators (shortcuts)
             self._setup_accelerators()
 
+            # Initialize system tray icon
+            self._initialize_tray_icon()
+
             # Load initial data
             self._load_initial_data()
 
@@ -130,6 +139,12 @@ class AccessiWeatherApp(wx.App):
 
             # Play startup sound
             self._play_startup_sound()
+
+            # Initialize taskbar icon updater for dynamic tooltips
+            self._initialize_taskbar_updater()
+
+            # Handle minimize on startup
+            self._handle_minimize_on_startup()
 
             logger.info("AccessiWeather application started successfully")
             return True
@@ -233,6 +248,65 @@ class AccessiWeatherApp(wx.App):
         """Handle Ctrl+Q shortcut."""
         self.request_exit()
 
+    def _initialize_tray_icon(self) -> None:
+        """Initialize the system tray icon."""
+        try:
+            from .ui.system_tray import SystemTrayIcon
+
+            self.tray_icon = SystemTrayIcon(self)
+            logger.info("System tray icon initialized")
+        except Exception as e:
+            logger.warning(f"Failed to initialize system tray icon: {e}")
+            self.tray_icon = None
+
+    def _initialize_taskbar_updater(self) -> None:
+        """Initialize the taskbar icon updater for dynamic tooltips."""
+        try:
+            from .taskbar_icon_updater import TaskbarIconUpdater
+
+            settings = self.config_manager.get_settings()
+            self.taskbar_icon_updater = TaskbarIconUpdater(
+                text_enabled=getattr(settings, "taskbar_icon_text_enabled", False),
+                dynamic_enabled=getattr(settings, "taskbar_icon_dynamic_enabled", True),
+                format_string=getattr(settings, "taskbar_icon_text_format", "{temp} {condition}"),
+                temperature_unit=getattr(settings, "temperature_unit", "both"),
+                verbosity_level=getattr(settings, "verbosity_level", "standard"),
+            )
+            logger.debug("Taskbar icon updater initialized")
+        except Exception as e:
+            logger.warning(f"Failed to initialize taskbar icon updater: {e}")
+            self.taskbar_icon_updater = None
+
+    def _handle_minimize_on_startup(self) -> None:
+        """Handle minimize on startup setting."""
+        try:
+            settings = self.config_manager.get_settings()
+            if getattr(settings, "minimize_on_startup", False) and self.main_window:
+                # Hide the window to tray on startup
+                frame = self.main_window.widget.control
+                frame.Hide()
+                logger.info("Window minimized to tray on startup")
+        except Exception as e:
+            logger.warning(f"Failed to handle minimize on startup: {e}")
+
+    def update_tray_tooltip(self, weather_data=None, location_name: str | None = None) -> None:
+        """
+        Update the system tray icon tooltip with current weather.
+
+        Args:
+            weather_data: Current weather data
+            location_name: Name of the current location
+
+        """
+        if not self.tray_icon or not self.taskbar_icon_updater:
+            return
+
+        try:
+            tooltip = self.taskbar_icon_updater.format_tooltip(weather_data, location_name)
+            self.tray_icon.update_tooltip(tooltip)
+        except Exception as e:
+            logger.debug(f"Failed to update tray tooltip: {e}")
+
     def _start_background_updates(self) -> None:
         """Start periodic background weather updates."""
         try:
@@ -283,6 +357,12 @@ class AccessiWeatherApp(wx.App):
         except Exception:
             pass
 
+        # Clean up system tray icon
+        if self.tray_icon:
+            self.tray_icon.RemoveIcon()
+            self.tray_icon.Destroy()
+            self.tray_icon = None
+
         # Release single instance lock
         if self.single_instance_manager:
             self.single_instance_manager.release_lock()
@@ -317,6 +397,18 @@ class AccessiWeatherApp(wx.App):
 
             if self.alert_notification_system:
                 self.alert_notification_system.settings = settings
+
+            # Update taskbar icon updater settings
+            if self.taskbar_icon_updater:
+                self.taskbar_icon_updater.update_settings(
+                    text_enabled=getattr(settings, "taskbar_icon_text_enabled", False),
+                    dynamic_enabled=getattr(settings, "taskbar_icon_dynamic_enabled", True),
+                    format_string=getattr(
+                        settings, "taskbar_icon_text_format", "{temp} {condition}"
+                    ),
+                    temperature_unit=getattr(settings, "temperature_unit", "both"),
+                    verbosity_level=getattr(settings, "verbosity_level", "standard"),
+                )
 
             logger.info("Runtime settings refreshed successfully")
         except Exception as e:

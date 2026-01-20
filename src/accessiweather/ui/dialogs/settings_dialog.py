@@ -723,6 +723,11 @@ class SettingsDialogSimple(wx.Dialog):
         )
         sizer.Add(self._controls["minimize_tray"], 0, wx.ALL, 5)
 
+        self._controls["minimize_on_startup"] = wx.CheckBox(
+            panel, label="Start minimized to notification area"
+        )
+        sizer.Add(self._controls["minimize_on_startup"], 0, wx.LEFT | wx.BOTTOM, 5)
+
         self._controls["startup"] = wx.CheckBox(panel, label="Launch automatically at startup")
         sizer.Add(self._controls["startup"], 0, wx.LEFT | wx.BOTTOM, 5)
 
@@ -961,6 +966,9 @@ class SettingsDialogSimple(wx.Dialog):
 
             # Advanced tab
             self._controls["minimize_tray"].SetValue(getattr(settings, "minimize_to_tray", False))
+            self._controls["minimize_on_startup"].SetValue(
+                getattr(settings, "minimize_on_startup", False)
+            )
             self._controls["startup"].SetValue(getattr(settings, "startup_enabled", False))
             self._controls["weather_history"].SetValue(
                 getattr(settings, "weather_history_enabled", True)
@@ -1052,6 +1060,7 @@ class SettingsDialogSimple(wx.Dialog):
                 "custom_instructions": self._controls["custom_instructions"].GetValue() or None,
                 # Advanced
                 "minimize_to_tray": self._controls["minimize_tray"].GetValue(),
+                "minimize_on_startup": self._controls["minimize_on_startup"].GetValue(),
                 "startup_enabled": self._controls["startup"].GetValue(),
                 "weather_history_enabled": self._controls["weather_history"].GetValue(),
                 "debug_mode": self._controls["debug"].GetValue(),
