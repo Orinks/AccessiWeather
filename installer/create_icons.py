@@ -47,7 +47,6 @@ def create_weather_icon(size: int) -> Image.Image:
     draw = ImageDraw.Draw(img)
 
     # Calculate proportions based on size
-    margin = size * 0.08
     center_x = size * 0.4
     center_y = size * 0.4
     sun_radius = size * 0.25

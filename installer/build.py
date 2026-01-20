@@ -47,14 +47,13 @@ def run_command(
     """Run a command and handle errors."""
     print(f"$ {' '.join(cmd)}")
     try:
-        result = subprocess.run(
+        return subprocess.run(
             cmd,
             cwd=str(cwd) if cwd else None,
             check=check,
             capture_output=capture,
             text=True,
         )
-        return result
     except subprocess.CalledProcessError as e:
         print(f"Command failed with exit code {e.returncode}")
         if e.stdout:
@@ -131,8 +130,11 @@ def install_dependencies() -> None:
 
     # Check for Pillow (for icon generation)
     try:
-        import PIL
-        print(f"✓ Pillow found")
+        import importlib.util
+        if importlib.util.find_spec("PIL"):
+            print("✓ Pillow found")
+        else:
+            raise ImportError
     except ImportError:
         print("Installing Pillow for icon generation...")
         run_command([sys.executable, "-m", "pip", "install", "Pillow"])
@@ -380,7 +382,7 @@ def run_dev() -> int:
 
 
 def main() -> int:
-    """Main entry point."""
+    """Run the build process."""
     parser = argparse.ArgumentParser(
         description="Build AccessiWeather application",
         formatter_class=argparse.RawDescriptionHelpFormatter,
