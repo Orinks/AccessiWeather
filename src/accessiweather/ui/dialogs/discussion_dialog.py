@@ -185,7 +185,7 @@ class DiscussionDialog(forms.Dialog):
         """Enable or disable the explain button based on AI availability."""
         # Check if OpenRouter API key is configured
         try:
-            from ..config.secure_storage import SecureStorage
+            from ...config.secure_storage import SecureStorage
 
             api_key = SecureStorage.get_password("openrouter_api_key")
             if api_key and self._current_discussion:
