@@ -63,6 +63,9 @@ class MainWindow(forms.SizedFrame):
         readonly=True,
     )
 
+    # Data source attribution
+    data_source_label = fields.StaticText(label="")
+
     # Forecast section
     forecast_label = fields.StaticText(label="Forecast:")
     forecast_display = fields.Text(
@@ -413,6 +416,12 @@ class MainWindow(forms.SizedFrame):
                 self.current_conditions.set_value(presentation.current_conditions.fallback_text)
             else:
                 self.current_conditions.set_value("No current conditions available.")
+
+            # Update data source attribution
+            if presentation.source_attribution and presentation.source_attribution.summary_text:
+                self.data_source_label.set_label(presentation.source_attribution.summary_text)
+            else:
+                self.data_source_label.set_label("")
 
             # Update forecast
             if presentation.forecast:
