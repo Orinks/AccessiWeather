@@ -31,7 +31,7 @@ jobs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           ref: dev
           fetch-depth: 0
@@ -79,12 +79,12 @@ jobs:
           fi
 
           # Check for meaningful changes in src/ or pyproject.toml
-          if git diff --quiet "$LAST_NIGHTLY_TAG"..HEAD -- src/ pyproject.toml; then
-            echo "No changes in src/ or pyproject.toml since last nightly."
+          if git diff --quiet "$LAST_NIGHTLY_TAG"..HEAD -- src/ pyproject.toml installer/; then
+            echo "No changes in src/, pyproject.toml, or installer/ since last nightly."
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
-            echo "Changes detected in src/ or pyproject.toml since last nightly."
-            git --no-pager diff --stat "$LAST_NIGHTLY_TAG"..HEAD -- src/ pyproject.toml | tail -20
+            echo "Changes detected in src/, pyproject.toml, or installer/ since last nightly."
+            git --no-pager diff --stat "$LAST_NIGHTLY_TAG"..HEAD -- src/ pyproject.toml installer/ | tail -20
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -95,92 +95,179 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Version: $VERSION"
 
-  build:
-    name: Build ${{ matrix.platform }}
-    runs-on: ${{ matrix.os }}
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
     needs: prepare
     if: needs.prepare.outputs.changed == 'true'
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: windows-latest
-            platform: windows
-            installer_pattern: "*.msi"
-          - os: macos-latest
-            platform: macOS
-            installer_pattern: "*.dmg"
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           ref: dev
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-nightly-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-nightly-
+            ${{ runner.os }}-pip-
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install -e .[dev]
-          pip install briefcase
+          pip install pyinstaller pillow
 
-      - name: Create Briefcase app scaffold
-        run: python installer/make.py create --platform ${{ matrix.platform }}
-        env:
-          DISPLAY: ""
-          ACCESSIWEATHER_TEST_MODE: "1"
+      - name: Set nightly version
+        id: version
+        run: |
+          VERSION="nightly-$(date +%Y%m%d)"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
 
-      - name: Build Briefcase app
-        run: python installer/make.py build --platform ${{ matrix.platform }}
-        env:
-          DISPLAY: ""
-          ACCESSIWEATHER_TEST_MODE: "1"
+      - name: Generate icons
+        run: python installer/create_icons.py
 
-      - name: Create portable ZIP (Windows only)
-        if: matrix.platform == 'windows'
-        run: python installer/make.py zip --platform windows || true
-        env:
-          DISPLAY: ""
-          ACCESSIWEATHER_TEST_MODE: "1"
+      - name: Build with PyInstaller
+        run: python -m PyInstaller --clean --noconfirm installer/accessiweather.spec
 
-      - name: Package Briefcase app
-        run: python installer/make.py package --platform ${{ matrix.platform }}
-        env:
-          DISPLAY: ""
-          ACCESSIWEATHER_TEST_MODE: "1"
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
 
-      - name: Upload installer artifact
-        uses: actions/upload-artifact@v6
+      - name: Create Windows Installer
+        run: |
+          # Write version file for Inno Setup
+          mkdir -p dist
+          echo "[version]" > dist/version.txt
+          echo "value=${{ steps.version.outputs.version }}" >> dist/version.txt
+
+          # Run Inno Setup
+          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" installer/accessiweather.iss
+
+      - name: Create portable ZIP
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          cd dist
+          if [ -d "AccessiWeather_dir" ]; then
+            7z a -tzip "AccessiWeather_Portable_v${VERSION}.zip" "AccessiWeather_dir/*"
+          elif [ -f "AccessiWeather.exe" ]; then
+            7z a -tzip "AccessiWeather_Portable_v${VERSION}.zip" "AccessiWeather.exe"
+          fi
+
+      - name: Upload Windows Installer
+        uses: actions/upload-artifact@v4
         with:
-          name: nightly-${{ matrix.platform }}-installer
-          path: dist/${{ matrix.installer_pattern }}
+          name: nightly-windows-installer
+          path: dist/AccessiWeather_Setup_*.exe
           retention-days: 7
 
-      - name: Upload portable artifact (Windows only)
-        if: matrix.platform == 'windows'
-        uses: actions/upload-artifact@v6
+      - name: Upload Windows Portable
+        uses: actions/upload-artifact@v4
         with:
           name: nightly-windows-portable
-          path: dist/AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip
+          path: dist/AccessiWeather_Portable_*.zip
+          retention-days: 7
+
+  build-macos:
+    name: Build macOS
+    runs-on: macos-latest
+    needs: prepare
+    if: needs.prepare.outputs.changed == 'true'
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/pip
+          key: ${{ runner.os }}-pip-nightly-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-nightly-
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e .[dev]
+          pip install pyinstaller pillow
+          brew install create-dmg || true
+
+      - name: Set nightly version
+        id: version
+        run: |
+          VERSION="nightly-$(date +%Y%m%d)"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Generate icons
+        run: python installer/create_icons.py
+
+      - name: Build with PyInstaller
+        run: python -m PyInstaller --clean --noconfirm installer/accessiweather.spec
+
+      - name: Create DMG
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Try create-dmg first, fallback to hdiutil
+          if command -v create-dmg &> /dev/null; then
+            create-dmg \
+              --volname "AccessiWeather" \
+              --window-pos 200 120 \
+              --window-size 600 400 \
+              --icon-size 100 \
+              --icon "AccessiWeather.app" 175 190 \
+              --hide-extension "AccessiWeather.app" \
+              --app-drop-link 425 190 \
+              "dist/AccessiWeather_v${VERSION}.dmg" \
+              "dist/AccessiWeather.app" || \
+              hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${VERSION}.dmg"
+          else
+            hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${VERSION}.dmg"
+          fi
+
+      - name: Upload macOS DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-macos-dmg
+          path: dist/AccessiWeather_*.dmg
           retention-days: 7
 
   nightly-release:
     name: Publish Nightly Release
-    needs: [prepare, build]
+    needs: [prepare, build-windows, build-macos]
     if: needs.prepare.outputs.changed == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           ref: dev
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v4
         with:
           path: dist
           pattern: nightly-*
@@ -197,7 +284,7 @@ jobs:
           cd dist
 
           # Flatten directory structure - extract files from subdirectories
-          find . -type f \( -name "*.msi" -o -name "*.dmg" -o -name "*.zip" \) -exec mv {} . \;
+          find . -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.zip" \) -exec mv {} . \;
 
           # Remove empty directories
           find . -type d -empty -delete
@@ -205,22 +292,22 @@ jobs:
           # Remove existing checksums if they exist
           rm -f checksums.txt
 
-          # Rename artifacts
+          # Rename artifacts to nightly format
           for file in *; do
             # Skip if it's not a file
             [ -f "$file" ] || continue
 
-            if [[ "$file" == *.msi ]]; then
-              mv "$file" "AccessiWeather-nightly-${TIMESTAMP}-windows-setup.msi"
+            if [[ "$file" == AccessiWeather_Setup_*.exe ]]; then
+              mv "$file" "AccessiWeather-nightly-${TIMESTAMP}-windows-setup.exe"
             elif [[ "$file" == *.dmg ]]; then
               mv "$file" "AccessiWeather-nightly-${TIMESTAMP}-macOS.dmg"
-            elif [[ "$file" == *.zip ]]; then
+            elif [[ "$file" == AccessiWeather_Portable_*.zip ]]; then
               mv "$file" "AccessiWeather-nightly-${TIMESTAMP}-windows-portable.zip"
             fi
           done
 
-          # Generate new checksums (only for files, not directories)
-          sha256sum *.msi *.dmg *.zip 2>/dev/null > checksums.txt || true
+          # Generate new checksums
+          sha256sum *.exe *.dmg *.zip 2>/dev/null > checksums.txt || true
 
           echo "Prepared assets:"
           ls -la
@@ -235,9 +322,9 @@ jobs:
           # Delete existing release/tag if re-running for the same day
           gh release delete "$TAG" -y --cleanup-tag || true
 
-          # Only upload files from dist/ (exclude subdirectories)
+          # Upload files from dist/
           cd dist
-          gh release create "$TAG" *.msi *.dmg *.zip checksums.txt \
+          gh release create "$TAG" *.exe *.dmg *.zip checksums.txt \
             --title "$TITLE" \
             --generate-notes \
             --prerelease \
@@ -252,7 +339,7 @@ jobs:
       actions: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Trigger update-pages workflow
         env:
