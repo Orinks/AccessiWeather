@@ -31,7 +31,6 @@ class TestVisualCrossingCurrentConditions:
     Run with VCR_RECORD_MODE=all and VISUAL_CROSSING_API_KEY set.
     """
 
-    @pytest.mark.live_only
     @integration_vcr.use_cassette("visual_crossing/current_nyc.yaml")
     @pytest.mark.asyncio
     async def test_get_current_conditions(self, us_location, visual_crossing_api_key):
@@ -51,7 +50,6 @@ class TestVisualCrossingCurrentConditions:
         assert conditions.humidity is not None
         assert 0 <= conditions.humidity <= 100
 
-    @pytest.mark.live_only
     @integration_vcr.use_cassette("visual_crossing/current_london.yaml")
     @pytest.mark.asyncio
     async def test_get_current_conditions_international(
@@ -72,7 +70,6 @@ class TestVisualCrossingCurrentConditions:
 class TestVisualCrossingForecast:
     """Test Visual Crossing forecast API."""
 
-    @pytest.mark.live_only
     @integration_vcr.use_cassette("visual_crossing/forecast_nyc.yaml")
     @pytest.mark.asyncio
     async def test_get_forecast(self, us_location, visual_crossing_api_key):
@@ -91,7 +88,6 @@ class TestVisualCrossingForecast:
         assert first_period.temperature is not None
         assert first_period.short_forecast is not None
 
-    @pytest.mark.live_only
     @integration_vcr.use_cassette("visual_crossing/forecast_fields.yaml")
     @pytest.mark.asyncio
     async def test_forecast_has_all_fields(self, us_location, visual_crossing_api_key):
@@ -114,7 +110,6 @@ class TestVisualCrossingForecast:
 class TestVisualCrossingHourlyForecast:
     """Test Visual Crossing hourly forecast API."""
 
-    @pytest.mark.live_only
     @integration_vcr.use_cassette("visual_crossing/hourly_nyc.yaml")
     @pytest.mark.asyncio
     async def test_get_hourly_forecast(self, us_location, visual_crossing_api_key):
@@ -156,7 +151,6 @@ class TestVisualCrossingAlerts:
 class TestVisualCrossingHistory:
     """Test Visual Crossing historical data API."""
 
-    @pytest.mark.live_only
     @integration_vcr.use_cassette("visual_crossing/history_nyc.yaml")
     @pytest.mark.asyncio
     async def test_get_history(self, us_location, visual_crossing_api_key):
@@ -179,7 +173,6 @@ class TestVisualCrossingHistory:
 class TestVisualCrossingErrorHandling:
     """Test Visual Crossing error handling."""
 
-    @pytest.mark.live_only
     @integration_vcr.use_cassette("visual_crossing/error_invalid_key.yaml")
     @pytest.mark.asyncio
     async def test_invalid_api_key(self, us_location):
