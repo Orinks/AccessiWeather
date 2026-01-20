@@ -265,8 +265,11 @@ BETA_RELEASE.md
 knowledge.md
 RELEASE_README.md
 
-# PyInstaller spec files (project-specific)
-AccessiWeather.spec
+# PyInstaller spec files (root level only - keep installer/*.spec)
+/AccessiWeather.spec
+
+# Inno Setup output
+installer/Output/
 
 # TUF (The Update Framework) repository files
 # SECURITY: Never commit private keys or sensitive repository state

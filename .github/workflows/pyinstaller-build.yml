@@ -1,0 +1,284 @@
+name: Build with PyInstaller
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_override:
+        description: 'Override version (optional)'
+        required: false
+        type: string
+      skip_cache:
+        description: 'Skip build cache'
+        required: false
+        type: boolean
+        default: false
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches: [main, dev]
+
+permissions:
+  contents: write
+  actions: write
+  packages: read
+
+env:
+  PYTHON_VERSION: "3.12"
+  FORCE_COLOR: "0"
+  PYTHONUTF8: "1"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || github.event_name == 'push' }}
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e .[dev]
+          pip install pyinstaller pillow
+
+      - name: Extract version
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version_override }}" ]; then
+            VERSION="${{ github.event.inputs.version_override }}"
+            VERSION=${VERSION#v}
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # Tagged release - use the tag version
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          elif [[ "${{ github.ref }}" == refs/heads/dev ]] || [[ "${{ github.event.workflow_run.head_branch }}" == "dev" ]]; then
+            # Dev branch - use nightly-YYYYMMDD format
+            VERSION="nightly-$(date +%Y%m%d)"
+          else
+            # Default to pyproject.toml version
+            VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Generate icons
+        run: python installer/create_icons.py
+
+      - name: Build with PyInstaller
+        run: |
+          python -m PyInstaller --clean --noconfirm installer/accessiweather.spec
+
+      - name: Install Inno Setup
+        run: |
+          choco install innosetup -y --no-progress
+
+      - name: Create Windows Installer
+        run: |
+          # Write version file
+          mkdir -p dist
+          echo "[version]" > dist/version.txt
+          echo "value=${{ steps.version.outputs.version }}" >> dist/version.txt
+
+          # Run Inno Setup
+          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" installer/accessiweather.iss
+
+      - name: Create portable ZIP
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          cd dist
+          if [ -d "AccessiWeather_dir" ]; then
+            7z a -tzip "AccessiWeather_Portable_v${VERSION}.zip" "AccessiWeather_dir/*"
+          elif [ -f "AccessiWeather.exe" ]; then
+            7z a -tzip "AccessiWeather_Portable_v${VERSION}.zip" "AccessiWeather.exe"
+          fi
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "AccessiWeather v${VERSION} - Windows Build Checksums" > checksums.txt
+          echo "" >> checksums.txt
+          for file in *.exe *.zip *.msi; do
+            if [ -f "$file" ]; then
+              sha256sum "$file" >> checksums.txt
+            fi
+          done
+          cat checksums.txt
+
+      - name: Upload Windows Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer-${{ steps.version.outputs.version }}
+          path: |
+            dist/AccessiWeather_Setup_*.exe
+            dist/checksums.txt
+          retention-days: 90
+
+      - name: Upload Windows Portable
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-portable-${{ steps.version.outputs.version }}
+          path: dist/AccessiWeather_Portable_*.zip
+          retention-days: 90
+
+  build-macos:
+    name: Build macOS
+    runs-on: macos-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || github.event_name == 'push' }}
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e .[dev]
+          pip install pyinstaller pillow
+          brew install create-dmg || true
+
+      - name: Extract version
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version_override }}" ]; then
+            VERSION="${{ github.event.inputs.version_override }}"
+            VERSION=${VERSION#v}
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # Tagged release - use the tag version
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          elif [[ "${{ github.ref }}" == refs/heads/dev ]] || [[ "${{ github.event.workflow_run.head_branch }}" == "dev" ]]; then
+            # Dev branch - use nightly-YYYYMMDD format
+            VERSION="nightly-$(date +%Y%m%d)"
+          else
+            # Default to pyproject.toml version
+            VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Generate icons
+        run: python installer/create_icons.py
+
+      - name: Build with PyInstaller
+        run: |
+          python -m PyInstaller --clean --noconfirm installer/accessiweather.spec
+
+      - name: Create DMG
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Try create-dmg first, fallback to hdiutil
+          if command -v create-dmg &> /dev/null; then
+            create-dmg \
+              --volname "AccessiWeather" \
+              --window-pos 200 120 \
+              --window-size 600 400 \
+              --icon-size 100 \
+              --icon "AccessiWeather.app" 175 190 \
+              --hide-extension "AccessiWeather.app" \
+              --app-drop-link 425 190 \
+              "dist/AccessiWeather_v${VERSION}.dmg" \
+              "dist/AccessiWeather.app" || \
+              hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${VERSION}.dmg"
+          else
+            hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${VERSION}.dmg"
+          fi
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "AccessiWeather v${VERSION} - macOS Build Checksums" > checksums.txt
+          echo "" >> checksums.txt
+          for file in *.dmg; do
+            if [ -f "$file" ]; then
+              shasum -a 256 "$file" >> checksums.txt
+            fi
+          done
+          cat checksums.txt
+
+      - name: Upload macOS DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-dmg-${{ steps.version.outputs.version }}
+          path: |
+            dist/AccessiWeather_*.dmg
+            dist/checksums.txt
+          retention-days: 90
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build-windows, build-macos]
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          generate_release_notes: true
+          files: |
+            artifacts/**/*.exe
+            artifacts/**/*.zip
+            artifacts/**/*.dmg
+            artifacts/**/checksums.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
