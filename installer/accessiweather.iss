@@ -11,7 +11,7 @@
 #define MyAppName "AccessiWeather"
 ; Version can be overridden via command line: ISCC /DMyAppVersion="0.5.0 (nightly 2026-01-20)" accessiweather.iss
 #ifndef MyAppVersion
-  #define MyAppVersion "0.5.0"
+  #define MyAppVersion "0.4.3"
 #endif
 #define MyAppPublisher "Orinks"
 #define MyAppURL "https://github.com/Orinks/AccessiWeather"
