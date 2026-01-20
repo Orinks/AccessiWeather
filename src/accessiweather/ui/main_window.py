@@ -79,6 +79,7 @@ class MainWindow(forms.SizedFrame):
     remove_button = fields.Button(label="Re&move")
     refresh_button = fields.Button(label="&Refresh")
     explain_button = fields.Button(label="&Explain")
+    discussion_button = fields.Button(label="&Discussion")
     settings_button = fields.Button(label="&Settings")
 
     def __init__(self, app: AccessiWeatherApp = None, **kwargs):
@@ -178,6 +179,9 @@ class MainWindow(forms.SizedFrame):
         history_item = view_menu.Append(
             wx.ID_ANY, "Weather &History\tCtrl+H", "View weather history"
         )
+        discussion_item = view_menu.Append(
+            wx.ID_ANY, "Forecast &Discussion...", "View NWS Area Forecast Discussion"
+        )
         aviation_item = view_menu.Append(wx.ID_ANY, "&Aviation Weather...", "View aviation weather")
         air_quality_item = view_menu.Append(
             wx.ID_ANY, "Air &Quality...", "View air quality information"
@@ -207,6 +211,7 @@ class MainWindow(forms.SizedFrame):
         frame.Bind(wx.EVT_MENU, lambda e: self.on_refresh(), refresh_item)
         frame.Bind(wx.EVT_MENU, lambda e: self._on_explain_weather(), explain_item)
         frame.Bind(wx.EVT_MENU, lambda e: self.on_view_history(), history_item)
+        frame.Bind(wx.EVT_MENU, lambda e: self._on_discussion(), discussion_item)
         frame.Bind(wx.EVT_MENU, lambda e: self._on_aviation(), aviation_item)
         frame.Bind(wx.EVT_MENU, lambda e: self._on_air_quality(), air_quality_item)
         frame.Bind(wx.EVT_MENU, lambda e: self._on_uv_index(), uv_index_item)
@@ -276,6 +281,11 @@ class MainWindow(forms.SizedFrame):
         """Handle explain button click."""
         self._on_explain_weather()
 
+    @discussion_button.add_callback
+    def on_discussion(self):
+        """Handle discussion button click."""
+        self._on_discussion()
+
     @settings_button.add_callback
     def on_settings(self):
         """Handle settings button click."""
@@ -295,6 +305,12 @@ class MainWindow(forms.SizedFrame):
         from .dialogs import show_explanation_dialog
 
         show_explanation_dialog(self.widget, self.app)
+
+    def _on_discussion(self):
+        """View NWS Area Forecast Discussion."""
+        from .dialogs import show_discussion_dialog
+
+        show_discussion_dialog(self.widget, self.app)
 
     def _on_aviation(self):
         """View aviation weather."""
