@@ -55,6 +55,9 @@ class MainWindow(forms.SizedFrame):
     # Status display
     status_label = fields.StaticText(label="")
 
+    # Stale/cached data warning
+    stale_warning_label = fields.StaticText(label="")
+
     # Current conditions section
     conditions_label = fields.StaticText(label="Current Conditions:")
     current_conditions = fields.Text(
@@ -422,6 +425,13 @@ class MainWindow(forms.SizedFrame):
                 self.data_source_label.set_label(presentation.source_attribution.summary_text)
             else:
                 self.data_source_label.set_label("")
+
+            # Update stale/cached data warning
+            if presentation.status_messages:
+                warning_text = " ".join(presentation.status_messages)
+                self.stale_warning_label.set_label(warning_text)
+            else:
+                self.stale_warning_label.set_label("")
 
             # Update forecast
             if presentation.forecast:
