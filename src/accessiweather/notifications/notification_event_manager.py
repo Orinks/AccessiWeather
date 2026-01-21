@@ -24,6 +24,30 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def get_risk_category(risk: int) -> str:
+    """
+    Categorize severe weather risk level.
+
+    Uses the same thresholds as the UI display in current_conditions.py.
+
+    Args:
+        risk: Risk percentage (0-100)
+
+    Returns:
+        Category name: 'minimal', 'low', 'moderate', 'high', or 'extreme'
+
+    """
+    if risk >= 80:
+        return "extreme"
+    if risk >= 60:
+        return "high"
+    if risk >= 40:
+        return "moderate"
+    if risk >= 20:
+        return "low"
+    return "minimal"
+
+
 @dataclass
 class NotificationEvent:
     """Represents a notification event to be sent."""
@@ -208,12 +232,14 @@ class NotificationEventManager:
         """
         Check if the severe weather risk level has changed significantly.
 
-        Visual Crossing severerisk scale:
-        - 0-30: Low risk
-        - 30-70: Moderate risk
-        - 70+: High risk
+        Visual Crossing severerisk scale (aligned with UI display):
+        - 0-19: Minimal risk
+        - 20-39: Low risk
+        - 40-59: Moderate risk
+        - 60-79: High risk
+        - 80+: Extreme risk
 
-        Only notify when crossing thresholds (low->moderate, moderate->high, etc.)
+        Only notify when crossing thresholds (e.g., low->moderate, moderate->high, etc.)
 
         Args:
             current: Current weather conditions
@@ -226,14 +252,6 @@ class NotificationEventManager:
         severe_risk = getattr(current, "severe_weather_risk", None)
         if severe_risk is None:
             return None
-
-        # Categorize risk levels
-        def get_risk_category(risk: int) -> str:
-            if risk < 30:
-                return "low"
-            if risk < 70:
-                return "moderate"
-            return "high"
 
         current_category = get_risk_category(severe_risk)
 
@@ -257,7 +275,7 @@ class NotificationEventManager:
             self.state.last_severe_risk = severe_risk
 
             # Determine if risk increased or decreased
-            category_levels = {"low": 0, "moderate": 1, "high": 2}
+            category_levels = {"minimal": 0, "low": 1, "moderate": 2, "high": 3, "extreme": 4}
             increased = category_levels[current_category] > category_levels[previous_category]
 
             if increased:

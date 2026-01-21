@@ -12,6 +12,7 @@ from accessiweather.notifications.notification_event_manager import (
     NotificationEvent,
     NotificationEventManager,
     NotificationState,
+    get_risk_category,
 )
 
 
@@ -190,18 +191,18 @@ class TestNotificationEventManager:
         weather_data.discussion_issuance_time = None
         weather_data.current = current
 
-        # First risk (low)
-        current.severe_weather_risk = 20
+        # First risk (low: 20-39)
+        current.severe_weather_risk = 25
         events1 = manager.check_for_events(weather_data, settings_with_severe_risk, "Test Location")
         assert len(events1) == 0
 
         # Same category (still low) - no notification
-        current.severe_weather_risk = 25
+        current.severe_weather_risk = 35
         events2 = manager.check_for_events(weather_data, settings_with_severe_risk, "Test Location")
         assert len(events2) == 0
 
-        # Category change to moderate - should notify
-        current.severe_weather_risk = 50
+        # Category change to moderate (40-59) - should notify
+        current.severe_weather_risk = 45
         events3 = manager.check_for_events(weather_data, settings_with_severe_risk, "Test Location")
         assert len(events3) == 1
         assert events3[0].event_type == "severe_risk"
@@ -216,12 +217,12 @@ class TestNotificationEventManager:
         weather_data.discussion_issuance_time = None
         weather_data.current = current
 
-        # Start at high
-        current.severe_weather_risk = 80
+        # Start at extreme (80+)
+        current.severe_weather_risk = 85
         manager.check_for_events(weather_data, settings_with_severe_risk, "Test Location")
 
-        # Decrease to low
-        current.severe_weather_risk = 20
+        # Decrease to low (20-39)
+        current.severe_weather_risk = 25
         events = manager.check_for_events(weather_data, settings_with_severe_risk, "Test Location")
         assert len(events) == 1
         assert "Decreased" in events[0].title
@@ -270,3 +271,37 @@ class TestNotificationEvent:
         assert event.title == "Test Title"
         assert event.message == "Test message"
         assert event.sound_event == "notify"
+
+
+class TestGetRiskCategory:
+    """Tests for get_risk_category function."""
+
+    def test_minimal_risk(self):
+        """Test minimal risk category (0-19)."""
+        assert get_risk_category(0) == "minimal"
+        assert get_risk_category(10) == "minimal"
+        assert get_risk_category(19) == "minimal"
+
+    def test_low_risk(self):
+        """Test low risk category (20-39)."""
+        assert get_risk_category(20) == "low"
+        assert get_risk_category(30) == "low"
+        assert get_risk_category(39) == "low"
+
+    def test_moderate_risk(self):
+        """Test moderate risk category (40-59)."""
+        assert get_risk_category(40) == "moderate"
+        assert get_risk_category(50) == "moderate"
+        assert get_risk_category(59) == "moderate"
+
+    def test_high_risk(self):
+        """Test high risk category (60-79)."""
+        assert get_risk_category(60) == "high"
+        assert get_risk_category(70) == "high"
+        assert get_risk_category(79) == "high"
+
+    def test_extreme_risk(self):
+        """Test extreme risk category (80+)."""
+        assert get_risk_category(80) == "extreme"
+        assert get_risk_category(90) == "extreme"
+        assert get_risk_category(100) == "extreme"

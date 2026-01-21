@@ -595,6 +595,14 @@ class MainWindow(SizedFrame):
             self._notification_event_manager = NotificationEventManager(state_file=state_file)
         return self._notification_event_manager
 
+    def _get_fallback_notifier(self):
+        """Get or create a cached fallback notifier for event notifications."""
+        if not hasattr(self, "_fallback_notifier") or self._fallback_notifier is None:
+            from ..notifications.toast_notifier import SafeDesktopNotifier
+
+            self._fallback_notifier = SafeDesktopNotifier()
+        return self._fallback_notifier
+
     def _process_notification_events(self, weather_data) -> None:
         """
         Process weather data for notification events.
@@ -616,12 +624,10 @@ class MainWindow(SizedFrame):
             if not location:
                 return
 
-            # Get notifier from app
+            # Get notifier from app or use cached fallback
             notifier = getattr(self.app, "notifier", None)
             if not notifier:
-                from ..notifications.toast_notifier import SafeDesktopNotifier
-
-                notifier = SafeDesktopNotifier()
+                notifier = self._get_fallback_notifier()
 
             # Get event manager and check for events
             event_manager = self._get_notification_event_manager()
