@@ -158,7 +158,7 @@ class TestWeatherClientFetching:
         """Test successful weather data fetch."""
         # Mock the internal fetch methods
         client._fetch_nws_data = AsyncMock(
-            return_value=(mock_current, mock_forecast, None, WeatherAlerts(alerts=[]), None)
+            return_value=(mock_current, mock_forecast, None, None, WeatherAlerts(alerts=[]), None)
         )
         client._launch_enrichment_tasks = MagicMock(return_value={})
         client._await_enrichments = AsyncMock()
@@ -182,7 +182,7 @@ class TestWeatherClientFetching:
         client.offline_cache = cache
 
         client._fetch_nws_data = AsyncMock(
-            return_value=(mock_current, mock_forecast, None, WeatherAlerts(alerts=[]), None)
+            return_value=(mock_current, mock_forecast, None, None, WeatherAlerts(alerts=[]), None)
         )
         client._launch_enrichment_tasks = MagicMock(return_value={})
         client._await_enrichments = AsyncMock()
@@ -212,7 +212,7 @@ class TestWeatherClientFetching:
 
         # Mock returns new data
         client._fetch_nws_data = AsyncMock(
-            return_value=(mock_current, None, None, WeatherAlerts(alerts=[]), None)
+            return_value=(mock_current, None, None, None, WeatherAlerts(alerts=[]), None)
         )
         client._launch_enrichment_tasks = MagicMock(return_value={})
         client._await_enrichments = AsyncMock()
@@ -252,7 +252,7 @@ class TestWeatherClientFetching:
             nonlocal call_count
             call_count += 1
             await asyncio.sleep(0.1)  # Simulate network delay
-            return (mock_current, mock_forecast, None, WeatherAlerts(alerts=[]), None)
+            return (mock_current, mock_forecast, None, None, WeatherAlerts(alerts=[]), None)
 
         client._fetch_nws_data = mock_fetch
         client._launch_enrichment_tasks = MagicMock(return_value={})
