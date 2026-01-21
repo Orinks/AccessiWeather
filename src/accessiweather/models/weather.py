@@ -490,6 +490,7 @@ class WeatherData:
     hourly_forecast: HourlyForecast | None = None
     daily_history: list[ForecastPeriod] = field(default_factory=list)
     discussion: str | None = None
+    discussion_issuance_time: datetime | None = None  # NWS AFD issuance time for update detection
     alerts: WeatherAlerts | None = None
     environmental: EnvironmentalConditions | None = None
     aviation: AviationData | None = None

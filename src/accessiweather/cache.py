@@ -556,6 +556,7 @@ def _deserialize_weather_data(data: dict, location: Location) -> WeatherData:
         forecast=_deserialize_forecast(data.get("forecast")),
         hourly_forecast=_deserialize_hourly(data.get("hourly_forecast")),
         discussion=data.get("discussion"),
+        discussion_issuance_time=_deserialize_datetime(data.get("discussion_issuance_time")),
         alerts=_deserialize_alerts(data.get("alerts")),
         environmental=_deserialize_environmental(data.get("environmental")),
         trend_insights=_deserialize_trends(data.get("trend_insights")),

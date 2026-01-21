@@ -31,6 +31,9 @@ FRIENDLY_ALERT_CATEGORIES: list[tuple[str, str]] = [
     ("Success Sound", "success"),
     ("App Startup", "startup"),
     ("App Exit", "exit"),
+    # Notification events
+    ("Forecast Discussion Update", "discussion_update"),
+    ("Severe Weather Risk Change", "severe_risk"),
     # Weather alert types
     ("Tornado Warnings", "tornado_warning"),
     ("Flood Warnings", "flood_warning"),

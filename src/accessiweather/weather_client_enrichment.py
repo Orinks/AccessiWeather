@@ -139,10 +139,15 @@ async def enrich_with_nws_discussion(
 
     try:
         logger.debug("Fetching forecast discussion from NWS for %s", location.name)
-        _, discussion = await client._get_nws_forecast_and_discussion(location)
+        _, discussion, discussion_issuance_time = await client._get_nws_forecast_and_discussion(
+            location
+        )
         if discussion:
             weather_data.discussion = discussion
-            logger.info("Updated forecast discussion from NWS")
+            weather_data.discussion_issuance_time = discussion_issuance_time
+            logger.info(
+                "Updated forecast discussion from NWS (issued: %s)", discussion_issuance_time
+            )
     except Exception as exc:  # noqa: BLE001
         logger.debug("Failed to fetch NWS discussion: %s", exc)
 
