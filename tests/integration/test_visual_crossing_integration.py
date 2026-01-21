@@ -15,7 +15,7 @@ These tests verify:
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pytest
 
@@ -159,9 +159,10 @@ class TestVisualCrossingHistory:
 
         client = VisualCrossingClient(api_key=visual_crossing_api_key)
 
-        # Get yesterday's weather
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=2)
+        # Use fixed dates matching the recorded cassette
+        # When recording new cassettes, use current dates and update these
+        start_date = datetime(2026, 1, 18)
+        end_date = datetime(2026, 1, 20)
 
         history = await client.get_history(us_location, start_date, end_date)
 
