@@ -189,6 +189,7 @@ class WeatherClient:
         CurrentConditions | None,
         Forecast | None,
         str | None,
+        datetime | None,
         WeatherAlerts | None,
         HourlyForecast | None,
     ]:
@@ -218,7 +219,7 @@ class WeatherClient:
                 )
             except APITimeoutError as exc:
                 logger.error(f"NWS API timeout after retries: {exc}")
-                return None, None, None, None, None
+                return None, None, None, None, None, None
 
         current, forecast_result, alerts, hourly_forecast = await asyncio.gather(
             self._get_nws_current_conditions(location),
@@ -229,12 +230,12 @@ class WeatherClient:
 
         forecast: Forecast | None
         discussion: str | None
-        if isinstance(forecast_result, tuple):
-            forecast, discussion = forecast_result
+        if isinstance(forecast_result, tuple) and len(forecast_result) == 3:
+            forecast, discussion, discussion_issuance_time = forecast_result
         else:
-            forecast, discussion = (None, None)
+            forecast, discussion, discussion_issuance_time = (None, None, None)
 
-        return current, forecast, discussion, alerts, hourly_forecast
+        return current, forecast, discussion, discussion_issuance_time, alerts, hourly_forecast
 
     async def _fetch_openmeteo_data(
         self, location: Location
@@ -443,6 +444,7 @@ class WeatherClient:
                 weather_data.forecast = forecast
                 weather_data.hourly_forecast = hourly_forecast
                 weather_data.discussion = "Forecast discussion not available from Visual Crossing."
+                weather_data.discussion_issuance_time = None
                 weather_data.alerts = alerts
 
                 # Process alerts for notifications if we have any (unless skipped for pre-warming)
@@ -467,6 +469,7 @@ class WeatherClient:
                 weather_data.forecast = forecast
                 weather_data.hourly_forecast = hourly_forecast
                 weather_data.discussion = "Forecast discussion not available from Open-Meteo."
+                weather_data.discussion_issuance_time = None
                 weather_data.alerts = WeatherAlerts(alerts=[])  # Open-Meteo doesn't provide alerts
 
                 logger.info(f"Successfully fetched Open-Meteo data for {location.name}")
@@ -481,6 +484,7 @@ class WeatherClient:
                     current,
                     forecast,
                     discussion,
+                    discussion_issuance_time,
                     alerts,
                     hourly_forecast,
                 ) = await self._fetch_nws_data(location)
@@ -489,6 +493,7 @@ class WeatherClient:
                 weather_data.forecast = forecast
                 weather_data.hourly_forecast = hourly_forecast
                 weather_data.discussion = discussion
+                weather_data.discussion_issuance_time = discussion_issuance_time
                 weather_data.alerts = alerts
 
                 if (current is None or not current.has_data()) and forecast is None:
@@ -554,11 +559,18 @@ class WeatherClient:
         # Always fetch from Open-Meteo (works globally)
         async def fetch_openmeteo():
             current, forecast, hourly = await self._fetch_openmeteo_data(location)
-            return (current, forecast, hourly, None)  # Open-Meteo has no alerts
+            return (current, forecast, hourly)
 
         # Fetch from NWS for US locations
         async def fetch_nws():
-            current, forecast, discussion, alerts, hourly = await self._fetch_nws_data(location)
+            (
+                current,
+                forecast,
+                discussion,
+                discussion_time,
+                alerts,
+                hourly,
+            ) = await self._fetch_nws_data(location)
             return (current, forecast, hourly, alerts)
 
         # Fetch from Visual Crossing if configured
@@ -648,8 +660,10 @@ class WeatherClient:
         # Set appropriate discussion message based on location
         if is_us:
             discussion = "Forecast discussion available from NWS for US locations."
+            discussion_issuance_time = None  # Will be populated by enrichment
         else:
             discussion = "Forecast discussion not available from Open-Meteo."
+            discussion_issuance_time = None
 
         # Create the merged WeatherData
         weather_data = WeatherData(
@@ -658,6 +672,7 @@ class WeatherClient:
             forecast=merged_forecast,
             hourly_forecast=merged_hourly,
             discussion=discussion,
+            discussion_issuance_time=discussion_issuance_time,
             alerts=merged_alerts,
             source_attribution=attribution,
             incomplete_sections=incomplete_sections,
@@ -879,6 +894,7 @@ class WeatherClient:
         weather_data.forecast = Forecast(periods=[])
         weather_data.hourly_forecast = HourlyForecast(periods=[])
         weather_data.discussion = "Weather data not available."
+        weather_data.discussion_issuance_time = None
         weather_data.alerts = WeatherAlerts(alerts=[])
 
     async def _get_nws_current_conditions(self, location: Location) -> CurrentConditions | None:
@@ -889,7 +905,7 @@ class WeatherClient:
 
     async def _get_nws_forecast_and_discussion(
         self, location: Location
-    ) -> tuple[Forecast | None, str | None]:
+    ) -> tuple[Forecast | None, str | None, datetime | None]:
         """Delegate to the NWS client module."""
         return await nws_client.get_nws_forecast_and_discussion(
             location, self.nws_base_url, self.user_agent, self.timeout, self._get_http_client()

@@ -2,7 +2,7 @@
 Notification event manager for tracking weather data changes.
 
 This module provides state tracking and change detection for:
-- Area Forecast Discussion (AFD) updates
+- Area Forecast Discussion (AFD) updates (using NWS API issuanceTime)
 - Severe weather risk level changes
 
 Both notification types are opt-in (disabled by default) and can be
@@ -11,7 +11,6 @@ enabled in Settings > Notifications.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
 from dataclasses import dataclass
@@ -39,14 +38,18 @@ class NotificationEvent:
 class NotificationState:
     """Tracks state for notification change detection."""
 
-    last_discussion_hash: str | None = None
+    last_discussion_issuance_time: datetime | None = None  # NWS API issuanceTime
     last_severe_risk: int | None = None
     last_check_time: datetime | None = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary for persistence."""
         return {
-            "last_discussion_hash": self.last_discussion_hash,
+            "last_discussion_issuance_time": (
+                self.last_discussion_issuance_time.isoformat()
+                if self.last_discussion_issuance_time
+                else None
+            ),
             "last_severe_risk": self.last_severe_risk,
             "last_check_time": self.last_check_time.isoformat() if self.last_check_time else None,
         }
@@ -55,8 +58,11 @@ class NotificationState:
     def from_dict(cls, data: dict) -> NotificationState:
         """Create from dictionary."""
         last_check = data.get("last_check_time")
+        last_issuance = data.get("last_discussion_issuance_time")
         return cls(
-            last_discussion_hash=data.get("last_discussion_hash"),
+            last_discussion_issuance_time=(
+                datetime.fromisoformat(last_issuance) if last_issuance else None
+            ),
             last_severe_risk=data.get("last_severe_risk"),
             last_check_time=datetime.fromisoformat(last_check) if last_check else None,
         )
@@ -67,7 +73,7 @@ class NotificationEventManager:
     Manages notification events for weather data changes.
 
     Tracks changes in:
-    - Area Forecast Discussion (AFD) content
+    - Area Forecast Discussion (AFD) updates using NWS API issuanceTime
     - Severe weather risk levels (from Visual Crossing)
 
     Both notifications are opt-in (disabled by default).
@@ -112,14 +118,6 @@ class NotificationEventManager:
         except Exception as e:
             logger.warning("Failed to save notification state: %s", e)
 
-    def _compute_discussion_hash(self, discussion: str | None) -> str | None:
-        """Compute a hash of the discussion text for change detection."""
-        if not discussion:
-            return None
-        # Normalize whitespace and compute hash
-        normalized = " ".join(discussion.split())
-        return hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:16]
-
     def check_for_events(
         self,
         weather_data: WeatherData,
@@ -140,9 +138,11 @@ class NotificationEventManager:
         """
         events: list[NotificationEvent] = []
 
-        # Check for AFD/discussion update
+        # Check for AFD/discussion update using NWS API issuanceTime
         if settings.notify_discussion_update:
-            discussion_event = self._check_discussion_update(weather_data.discussion, location_name)
+            discussion_event = self._check_discussion_update(
+                weather_data.discussion_issuance_time, location_name
+            )
             if discussion_event:
                 events.append(discussion_event)
 
@@ -161,42 +161,37 @@ class NotificationEventManager:
         return events
 
     def _check_discussion_update(
-        self, discussion: str | None, location_name: str
+        self, issuance_time: datetime | None, location_name: str
     ) -> NotificationEvent | None:
         """
-        Check if the forecast discussion has been updated.
+        Check if the forecast discussion has been updated using NWS API issuanceTime.
 
         Args:
-            discussion: Current discussion text
+            issuance_time: The issuanceTime from the NWS API for the current AFD
             location_name: Name of the location
 
         Returns:
-            NotificationEvent if discussion changed, None otherwise
+            NotificationEvent if discussion was updated, None otherwise
 
         """
-        if not discussion:
+        if not issuance_time:
+            # No issuance time available (non-US location or API issue)
             return None
-
-        # Skip placeholder messages
-        if discussion.startswith("Forecast discussion not available"):
-            return None
-
-        current_hash = self._compute_discussion_hash(discussion)
 
         # First time seeing discussion - store but don't notify
-        if self.state.last_discussion_hash is None:
-            self.state.last_discussion_hash = current_hash
-            logger.debug("First discussion hash stored: %s", current_hash)
+        if self.state.last_discussion_issuance_time is None:
+            self.state.last_discussion_issuance_time = issuance_time
+            logger.debug("First discussion issuance time stored: %s", issuance_time)
             return None
 
-        # Check if discussion changed
-        if current_hash != self.state.last_discussion_hash:
+        # Check if issuance time is newer (discussion was updated)
+        if issuance_time > self.state.last_discussion_issuance_time:
             logger.info(
                 "Discussion updated: %s -> %s",
-                self.state.last_discussion_hash,
-                current_hash,
+                self.state.last_discussion_issuance_time,
+                issuance_time,
             )
-            self.state.last_discussion_hash = current_hash
+            self.state.last_discussion_issuance_time = issuance_time
 
             return NotificationEvent(
                 event_type="discussion_update",

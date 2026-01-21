@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock
 
 import pytest
@@ -20,29 +21,31 @@ class TestNotificationState:
     def test_default_state(self):
         """Test default state values."""
         state = NotificationState()
-        assert state.last_discussion_hash is None
+        assert state.last_discussion_issuance_time is None
         assert state.last_severe_risk is None
         assert state.last_check_time is None
 
     def test_to_dict(self):
         """Test state serialization."""
+        issuance_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
         state = NotificationState(
-            last_discussion_hash="abc123",
+            last_discussion_issuance_time=issuance_time,
             last_severe_risk=50,
         )
         data = state.to_dict()
-        assert data["last_discussion_hash"] == "abc123"
+        assert data["last_discussion_issuance_time"] == issuance_time.isoformat()
         assert data["last_severe_risk"] == 50
 
     def test_from_dict(self):
         """Test state deserialization."""
+        issuance_time_str = "2026-01-20T14:35:00+00:00"
         data = {
-            "last_discussion_hash": "xyz789",
+            "last_discussion_issuance_time": issuance_time_str,
             "last_severe_risk": 75,
             "last_check_time": None,
         }
         state = NotificationState.from_dict(data)
-        assert state.last_discussion_hash == "xyz789"
+        assert state.last_discussion_issuance_time == datetime.fromisoformat(issuance_time_str)
         assert state.last_severe_risk == 75
 
 
@@ -91,58 +94,41 @@ class TestNotificationEventManager:
 
     def test_initialization(self, manager):
         """Test manager initialization."""
-        assert manager.state.last_discussion_hash is None
+        assert manager.state.last_discussion_issuance_time is None
         assert manager.state.last_severe_risk is None
-
-    def test_discussion_hash_computed(self, manager):
-        """Test discussion hash computation."""
-        discussion = "This is a test discussion text."
-        hash1 = manager._compute_discussion_hash(discussion)
-        assert hash1 is not None
-        assert len(hash1) == 16
-
-        # Same text should give same hash
-        hash2 = manager._compute_discussion_hash(discussion)
-        assert hash1 == hash2
-
-        # Different text should give different hash
-        hash3 = manager._compute_discussion_hash("Different text")
-        assert hash1 != hash3
-
-    def test_discussion_hash_normalized(self, manager):
-        """Test that whitespace is normalized in hash computation."""
-        text1 = "Test  discussion   with   spaces"
-        text2 = "Test discussion with spaces"
-        hash1 = manager._compute_discussion_hash(text1)
-        hash2 = manager._compute_discussion_hash(text2)
-        assert hash1 == hash2
 
     def test_first_discussion_no_notification(self, manager, settings_with_discussion):
         """Test that first discussion doesn't trigger notification."""
         weather_data = MagicMock(spec=WeatherData)
         weather_data.discussion = "First discussion text"
+        weather_data.discussion_issuance_time = datetime(
+            2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc
+        )
         weather_data.current = None
 
         events = manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
         assert len(events) == 0
-        assert manager.state.last_discussion_hash is not None
+        assert manager.state.last_discussion_issuance_time is not None
 
     def test_discussion_update_triggers_notification(self, manager, settings_with_discussion):
-        """Test that discussion update triggers notification."""
+        """Test that discussion update triggers notification based on issuanceTime."""
         weather_data = MagicMock(spec=WeatherData)
         weather_data.current = None
+        weather_data.discussion = "Discussion text"
 
-        # First discussion
-        weather_data.discussion = "First discussion text"
+        # First discussion with issuance time
+        first_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
+        weather_data.discussion_issuance_time = first_time
         events1 = manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
         assert len(events1) == 0
 
-        # Same discussion - no notification
+        # Same issuance time - no notification
         events2 = manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
         assert len(events2) == 0
 
-        # Updated discussion - should notify
-        weather_data.discussion = "Updated discussion text"
+        # Newer issuance time - should notify
+        newer_time = first_time + timedelta(hours=3)
+        weather_data.discussion_issuance_time = newer_time
         events3 = manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
         assert len(events3) == 1
         assert events3[0].event_type == "discussion_update"
@@ -152,17 +138,33 @@ class TestNotificationEventManager:
         """Test that notifications are not sent when disabled."""
         weather_data = MagicMock(spec=WeatherData)
         weather_data.discussion = "First discussion"
+        weather_data.discussion_issuance_time = datetime(
+            2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc
+        )
         weather_data.current = None
 
         # First check
         manager.check_for_events(weather_data, settings_none_enabled, "Test Location")
 
-        # Update discussion
-        weather_data.discussion = "Updated discussion"
+        # Update discussion with newer issuance time
+        weather_data.discussion_issuance_time = datetime(
+            2026, 1, 20, 17, 35, 0, tzinfo=timezone.utc
+        )
         events = manager.check_for_events(weather_data, settings_none_enabled, "Test Location")
 
         # Should not notify because setting is disabled
         assert len(events) == 0
+
+    def test_no_issuance_time_no_notification(self, manager, settings_with_discussion):
+        """Test that missing issuance time doesn't trigger notification."""
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.discussion = "Some discussion text"
+        weather_data.discussion_issuance_time = None  # Non-US location or API issue
+        weather_data.current = None
+
+        events = manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
+        assert len(events) == 0
+        assert manager.state.last_discussion_issuance_time is None
 
     def test_first_severe_risk_no_notification(self, manager, settings_with_severe_risk):
         """Test that first severe risk doesn't trigger notification."""
@@ -171,6 +173,7 @@ class TestNotificationEventManager:
 
         weather_data = MagicMock(spec=WeatherData)
         weather_data.discussion = None
+        weather_data.discussion_issuance_time = None
         weather_data.current = current
 
         events = manager.check_for_events(weather_data, settings_with_severe_risk, "Test Location")
@@ -184,6 +187,7 @@ class TestNotificationEventManager:
         current = MagicMock(spec=CurrentConditions)
         weather_data = MagicMock(spec=WeatherData)
         weather_data.discussion = None
+        weather_data.discussion_issuance_time = None
         weather_data.current = current
 
         # First risk (low)
@@ -209,6 +213,7 @@ class TestNotificationEventManager:
         current = MagicMock(spec=CurrentConditions)
         weather_data = MagicMock(spec=WeatherData)
         weather_data.discussion = None
+        weather_data.discussion_issuance_time = None
         weather_data.current = current
 
         # Start at high
@@ -227,34 +232,27 @@ class TestNotificationEventManager:
 
         # Create manager and set some state
         manager1 = NotificationEventManager(state_file=state_file)
-        manager1.state.last_discussion_hash = "test_hash"
+        issuance_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
+        manager1.state.last_discussion_issuance_time = issuance_time
         manager1.state.last_severe_risk = 42
         manager1._save_state()
 
         # Create new manager and verify state is loaded
         manager2 = NotificationEventManager(state_file=state_file)
-        assert manager2.state.last_discussion_hash == "test_hash"
+        assert manager2.state.last_discussion_issuance_time == issuance_time
         assert manager2.state.last_severe_risk == 42
 
     def test_reset_state(self, manager):
         """Test state reset."""
-        manager.state.last_discussion_hash = "some_hash"
+        manager.state.last_discussion_issuance_time = datetime(
+            2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc
+        )
         manager.state.last_severe_risk = 75
 
         manager.reset_state()
 
-        assert manager.state.last_discussion_hash is None
+        assert manager.state.last_discussion_issuance_time is None
         assert manager.state.last_severe_risk is None
-
-    def test_placeholder_discussion_ignored(self, manager, settings_with_discussion):
-        """Test that placeholder discussion text is ignored."""
-        weather_data = MagicMock(spec=WeatherData)
-        weather_data.discussion = "Forecast discussion not available for this location."
-        weather_data.current = None
-
-        events = manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
-        assert len(events) == 0
-        assert manager.state.last_discussion_hash is None
 
 
 class TestNotificationEvent:
