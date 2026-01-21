@@ -183,7 +183,8 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
     def show_main_window(self) -> None:
         """Show and restore the main window."""
         if self.app.main_window:
-            frame = self.app.main_window.widget.control
+            # MainWindow is now a SizedFrame directly (no gui_builder wrapper)
+            frame = self.app.main_window
             frame.Show(True)
             frame.Iconize(False)  # Restore if minimized
             frame.Raise()  # Bring to front

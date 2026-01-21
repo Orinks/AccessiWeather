@@ -1,0 +1,593 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - application/geo+json
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - api.weather.gov
+    method: GET
+    uri: https://api.weather.gov/points/40.7128,-74.006
+  response:
+    body:
+      string: "{\n    \"@context\": [\n        \"https://geojson.org/geojson-ld/geojson-context.jsonld\",\n
+        \       {\n            \"@version\": \"1.1\",\n            \"wx\": \"https://api.weather.gov/ontology#\",\n
+        \           \"s\": \"https://schema.org/\",\n            \"geo\": \"http://www.opengis.net/ont/geosparql#\",\n
+        \           \"unit\": \"http://codes.wmo.int/common/unit/\",\n            \"@vocab\":
+        \"https://api.weather.gov/ontology#\",\n            \"geometry\": {\n                \"@id\":
+        \"s:GeoCoordinates\",\n                \"@type\": \"geo:wktLiteral\"\n            },\n
+        \           \"city\": \"s:addressLocality\",\n            \"state\": \"s:addressRegion\",\n
+        \           \"distance\": {\n                \"@id\": \"s:Distance\",\n                \"@type\":
+        \"s:QuantitativeValue\"\n            },\n            \"bearing\": {\n                \"@type\":
+        \"s:QuantitativeValue\"\n            },\n            \"value\": {\n                \"@id\":
+        \"s:value\"\n            },\n            \"unitCode\": {\n                \"@id\":
+        \"s:unitCode\",\n                \"@type\": \"@id\"\n            },\n            \"forecastOffice\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"forecastGridData\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"publicZone\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"county\":
+        {\n                \"@type\": \"@id\"\n            }\n        }\n    ],\n
+        \   \"id\": \"https://api.weather.gov/points/40.7128,-74.006\",\n    \"type\":
+        \"Feature\",\n    \"geometry\": {\n        \"type\": \"Point\",\n        \"coordinates\":
+        [\n            -74.006,\n            40.7128\n        ]\n    },\n    \"properties\":
+        {\n        \"@id\": \"https://api.weather.gov/points/40.7128,-74.006\",\n
+        \       \"@type\": \"wx:Point\",\n        \"cwa\": \"OKX\",\n        \"type\":
+        \"land\",\n        \"forecastOffice\": \"https://api.weather.gov/offices/OKX\",\n
+        \       \"gridId\": \"OKX\",\n        \"gridX\": 33,\n        \"gridY\": 35,\n
+        \       \"forecast\": \"https://api.weather.gov/gridpoints/OKX/33,35/forecast\",\n
+        \       \"forecastHourly\": \"https://api.weather.gov/gridpoints/OKX/33,35/forecast/hourly\",\n
+        \       \"forecastGridData\": \"https://api.weather.gov/gridpoints/OKX/33,35\",\n
+        \       \"observationStations\": \"https://api.weather.gov/gridpoints/OKX/33,35/stations\",\n
+        \       \"relativeLocation\": {\n            \"type\": \"Feature\",\n            \"geometry\":
+        {\n                \"type\": \"Point\",\n                \"coordinates\":
+        [\n                    -74.027926,\n                    40.745251\n                ]\n
+        \           },\n            \"properties\": {\n                \"city\": \"Hoboken\",\n
+        \               \"state\": \"NJ\",\n                \"distance\": {\n                    \"unitCode\":
+        \"wmoUnit:m\",\n                    \"value\": 4053.889432394\n                },\n
+        \               \"bearing\": {\n                    \"unitCode\": \"wmoUnit:degree_(angle)\",\n
+        \                   \"value\": 152\n                }\n            }\n        },\n
+        \       \"forecastZone\": \"https://api.weather.gov/zones/forecast/NYZ072\",\n
+        \       \"county\": \"https://api.weather.gov/zones/county/NYC061\",\n        \"fireWeatherZone\":
+        \"https://api.weather.gov/zones/fire/NYZ212\",\n        \"timeZone\": \"America/New_York\",\n
+        \       \"radarStation\": \"KDIX\"\n    }\n}"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Access-Control-Expose-Headers:
+      - X-Correlation-Id, X-Request-Id, X-Server-Id
+      Cache-Control:
+      - public, max-age=85632, s-maxage=120
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/geo+json
+      Date:
+      - Tue, 20 Jan 2026 18:51:29 GMT
+      Expires:
+      - Wed, 21 Jan 2026 18:38:41 GMT
+      Server:
+      - nginx/1.20.1
+      Strict-Transport-Security:
+      - max-age=31536000 ; includeSubDomains ; preload
+      Vary:
+      - Accept-Encoding
+      - Accept,Feature-Flags,Accept-Language
+      X-Correlation-ID:
+      - 118a4286
+      X-Edge-Request-ID:
+      - 31d876f
+      X-Request-ID:
+      - f6d8462c-9021-4bb7-b418-8b07a8962c0c
+      X-Server-ID:
+      - vm-cprk-api-ops-app2.ncep.noaa.gov
+      content-length:
+      - '3077'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - api.weather.gov
+    method: GET
+    uri: https://api.weather.gov/products/types/AFD/locations/OKX
+  response:
+    body:
+      string: "{\n    \"@context\": {\n        \"@version\": \"1.1\",\n        \"@vocab\":
+        \"https://api.weather.gov/ontology#\"\n    },\n    \"@graph\": [\n        {\n
+        \           \"@id\": \"https://api.weather.gov/products/bdb45bc8-aa3a-473c-bc13-aa079f05f816\",\n
+        \           \"id\": \"bdb45bc8-aa3a-473c-bc13-aa079f05f816\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-20T14:35:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/d9c98104-98a5-4993-9815-ccf24b0c8310\",\n
+        \           \"id\": \"d9c98104-98a5-4993-9815-ccf24b0c8310\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-20T11:32:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/f1ea7775-b654-49e2-b51c-220420665099\",\n
+        \           \"id\": \"f1ea7775-b654-49e2-b51c-220420665099\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-20T06:35:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/9ee25a82-6dcd-4e03-a804-805a52247489\",\n
+        \           \"id\": \"9ee25a82-6dcd-4e03-a804-805a52247489\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-20T05:34:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/9c856611-e93c-426c-bc3a-9c56b30957d0\",\n
+        \           \"id\": \"9c856611-e93c-426c-bc3a-9c56b30957d0\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-20T02:51:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/d26fcbfc-231c-4d1a-bb13-6bbb66770881\",\n
+        \           \"id\": \"d26fcbfc-231c-4d1a-bb13-6bbb66770881\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-20T00:11:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/8cfa246e-ff46-4573-9a30-0c2dddb9bae4\",\n
+        \           \"id\": \"8cfa246e-ff46-4573-9a30-0c2dddb9bae4\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-19T20:30:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/85f224bc-590c-452d-9f66-118ac1c6db28\",\n
+        \           \"id\": \"85f224bc-590c-452d-9f66-118ac1c6db28\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-19T19:05:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/07c97700-e0a6-4e2e-84b2-be42228df1f6\",\n
+        \           \"id\": \"07c97700-e0a6-4e2e-84b2-be42228df1f6\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-19T17:43:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/ff688c9c-daf5-4176-8846-b210c3bc00bc\",\n
+        \           \"id\": \"ff688c9c-daf5-4176-8846-b210c3bc00bc\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-19T15:34:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/3db6b0cc-79c1-4fc9-9898-12e27b78730b\",\n
+        \           \"id\": \"3db6b0cc-79c1-4fc9-9898-12e27b78730b\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-19T14:40:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/d17cf43b-e4b2-4eb9-9aed-5bdb7491507b\",\n
+        \           \"id\": \"d17cf43b-e4b2-4eb9-9aed-5bdb7491507b\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-19T11:33:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/7d7e2080-97a7-4632-8e85-c324faa98a2a\",\n
+        \           \"id\": \"7d7e2080-97a7-4632-8e85-c324faa98a2a\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-19T08:58:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/0bd48488-e0da-4993-aab8-98938e9e157d\",\n
+        \           \"id\": \"0bd48488-e0da-4993-aab8-98938e9e157d\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-19T08:42:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/590f8520-21ad-40fa-b228-bea18aa456a8\",\n
+        \           \"id\": \"590f8520-21ad-40fa-b228-bea18aa456a8\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-19T07:22:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/60e2d720-63cb-4b8f-9b0a-535f96443076\",\n
+        \           \"id\": \"60e2d720-63cb-4b8f-9b0a-535f96443076\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-19T05:42:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/65549ac2-8c4c-4de1-84c6-3df718433e83\",\n
+        \           \"id\": \"65549ac2-8c4c-4de1-84c6-3df718433e83\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-19T02:56:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/6c9e7cb4-4a1f-4cce-9f7a-8966b2303310\",\n
+        \           \"id\": \"6c9e7cb4-4a1f-4cce-9f7a-8966b2303310\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-18T23:48:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/8ab44149-33db-4314-b67b-d454106840dd\",\n
+        \           \"id\": \"8ab44149-33db-4314-b67b-d454106840dd\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-18T20:11:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/88870eb1-c426-44db-90d2-2d4d190c880d\",\n
+        \           \"id\": \"88870eb1-c426-44db-90d2-2d4d190c880d\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-18T18:53:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/8b696322-96dc-4ae1-b6bd-d2bd2da27852\",\n
+        \           \"id\": \"8b696322-96dc-4ae1-b6bd-d2bd2da27852\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-18T17:48:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/ff6f2e19-5683-41a3-b202-a42b61a8341b\",\n
+        \           \"id\": \"ff6f2e19-5683-41a3-b202-a42b61a8341b\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-18T15:16:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/33e0e4db-1bb8-4ae0-a580-a861f583e699\",\n
+        \           \"id\": \"33e0e4db-1bb8-4ae0-a580-a861f583e699\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-18T12:15:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/ee0aebd2-a2db-4e5e-b061-db867f5c312b\",\n
+        \           \"id\": \"ee0aebd2-a2db-4e5e-b061-db867f5c312b\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-18T10:07:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/2779e248-853f-4b09-8327-fc030b674add\",\n
+        \           \"id\": \"2779e248-853f-4b09-8327-fc030b674add\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-18T08:57:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/d7c0ab4a-ebdd-43e5-b74e-144bf0df55d3\",\n
+        \           \"id\": \"d7c0ab4a-ebdd-43e5-b74e-144bf0df55d3\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-18T07:14:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/a147446d-5891-4a36-ae52-5fd5bcfdecb5\",\n
+        \           \"id\": \"a147446d-5891-4a36-ae52-5fd5bcfdecb5\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-18T05:39:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/502e5793-f5d6-46df-84ea-14ef095feeaf\",\n
+        \           \"id\": \"502e5793-f5d6-46df-84ea-14ef095feeaf\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-18T03:17:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/9f193ad9-08ff-4c0d-8fa4-68069e415f86\",\n
+        \           \"id\": \"9f193ad9-08ff-4c0d-8fa4-68069e415f86\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-18T00:46:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/9a0c4db1-8277-4562-a7ed-930df7c9fb7c\",\n
+        \           \"id\": \"9a0c4db1-8277-4562-a7ed-930df7c9fb7c\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-17T23:02:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/cd25fd00-6638-40f2-840b-6796d593cb6d\",\n
+        \           \"id\": \"cd25fd00-6638-40f2-840b-6796d593cb6d\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-17T20:37:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/4c7bb34c-949f-4175-921b-da870ca39d0c\",\n
+        \           \"id\": \"4c7bb34c-949f-4175-921b-da870ca39d0c\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-17T19:12:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/3eee50b4-eb50-46ff-8f82-905165b6bfc8\",\n
+        \           \"id\": \"3eee50b4-eb50-46ff-8f82-905165b6bfc8\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-17T18:25:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/30018d21-92a3-4b4c-bd6c-51410a42507c\",\n
+        \           \"id\": \"30018d21-92a3-4b4c-bd6c-51410a42507c\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-17T14:55:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/3bce11bf-135c-4ff4-bff4-69c44f10d287\",\n
+        \           \"id\": \"3bce11bf-135c-4ff4-bff4-69c44f10d287\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-17T11:54:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/dbd62d87-cea0-44d1-bc4e-05f98eb059b4\",\n
+        \           \"id\": \"dbd62d87-cea0-44d1-bc4e-05f98eb059b4\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-17T08:43:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/a82cba4a-1ada-4960-b174-d304406dde65\",\n
+        \           \"id\": \"a82cba4a-1ada-4960-b174-d304406dde65\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-17T07:05:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/93c78a1b-9afd-4e3e-8b71-4b09b6d5fbe0\",\n
+        \           \"id\": \"93c78a1b-9afd-4e3e-8b71-4b09b6d5fbe0\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-17T05:36:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/f46986b5-9c90-484e-ada1-fa68e35cc9c4\",\n
+        \           \"id\": \"f46986b5-9c90-484e-ada1-fa68e35cc9c4\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-17T02:45:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/6f1ccf79-33a6-4d30-b86d-1b8cd1064d20\",\n
+        \           \"id\": \"6f1ccf79-33a6-4d30-b86d-1b8cd1064d20\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-17T02:05:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/b866d241-0433-4dc6-bfa2-6a03f75fed2a\",\n
+        \           \"id\": \"b866d241-0433-4dc6-bfa2-6a03f75fed2a\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-16T20:39:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/e212a131-d606-4405-b028-e9c4018ce6e4\",\n
+        \           \"id\": \"e212a131-d606-4405-b028-e9c4018ce6e4\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-16T18:18:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/558a8064-f5a4-4b95-86c4-58ea571b58cc\",\n
+        \           \"id\": \"558a8064-f5a4-4b95-86c4-58ea571b58cc\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-16T17:59:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/81f7b13e-2548-4810-b990-2ef22f076f84\",\n
+        \           \"id\": \"81f7b13e-2548-4810-b990-2ef22f076f84\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-16T14:51:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/a2a7a76e-6d46-4017-b5e0-36459ce18eff\",\n
+        \           \"id\": \"a2a7a76e-6d46-4017-b5e0-36459ce18eff\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-16T11:58:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/59b24030-33d5-4f70-ab54-c7cc3c9b5236\",\n
+        \           \"id\": \"59b24030-33d5-4f70-ab54-c7cc3c9b5236\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-16T08:36:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/4efa329e-a515-4faf-938b-5a7475d36a62\",\n
+        \           \"id\": \"4efa329e-a515-4faf-938b-5a7475d36a62\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-16T07:12:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/d459be35-41bf-4be1-8774-95fdf427efea\",\n
+        \           \"id\": \"d459be35-41bf-4be1-8774-95fdf427efea\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-16T05:35:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/55ffb228-baea-4853-b1c4-5c419193b3ce\",\n
+        \           \"id\": \"55ffb228-baea-4853-b1c4-5c419193b3ce\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-15T23:44:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/f6dfba77-8903-47c0-a89f-7b131ddbc553\",\n
+        \           \"id\": \"f6dfba77-8903-47c0-a89f-7b131ddbc553\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-15T20:39:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/eb6f69e5-6e42-4e16-ba65-502bab011877\",\n
+        \           \"id\": \"eb6f69e5-6e42-4e16-ba65-502bab011877\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-15T18:52:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/48256634-56a1-451b-b9ff-f591e475f48a\",\n
+        \           \"id\": \"48256634-56a1-451b-b9ff-f591e475f48a\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-15T18:49:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/8eafddf9-b081-4570-bb2e-fba612854c85\",\n
+        \           \"id\": \"8eafddf9-b081-4570-bb2e-fba612854c85\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-15T14:50:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/bfef7dd8-46d7-48eb-a685-ccd23e7d0fd0\",\n
+        \           \"id\": \"bfef7dd8-46d7-48eb-a685-ccd23e7d0fd0\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-15T11:38:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/07ceae3d-e2ce-4b89-aa7b-d11336285f38\",\n
+        \           \"id\": \"07ceae3d-e2ce-4b89-aa7b-d11336285f38\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-15T11:04:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/ddd8f4dd-4e4f-45bd-bfd6-0bc13fad43da\",\n
+        \           \"id\": \"ddd8f4dd-4e4f-45bd-bfd6-0bc13fad43da\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-15T08:37:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/c6ef92a3-ea1d-4871-b01e-4dfadd184d97\",\n
+        \           \"id\": \"c6ef92a3-ea1d-4871-b01e-4dfadd184d97\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-15T07:46:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/2c781036-fe87-4d1e-a345-8ae5996029a0\",\n
+        \           \"id\": \"2c781036-fe87-4d1e-a345-8ae5996029a0\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-15T05:21:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/8e9be2a1-349a-497d-a3b1-e5f1862d3d7d\",\n
+        \           \"id\": \"8e9be2a1-349a-497d-a3b1-e5f1862d3d7d\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-15T02:42:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/5b6585b6-da0a-4abe-869c-51d56cac45d5\",\n
+        \           \"id\": \"5b6585b6-da0a-4abe-869c-51d56cac45d5\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-14T23:46:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/0c8b973a-f634-4575-8f03-f4e875fbeb99\",\n
+        \           \"id\": \"0c8b973a-f634-4575-8f03-f4e875fbeb99\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-14T18:25:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/91f4f536-4ccf-44bd-b563-10226235cb8f\",\n
+        \           \"id\": \"91f4f536-4ccf-44bd-b563-10226235cb8f\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-14T11:35:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/81aba578-fbb4-4256-bc38-d0b6a0cf3f0c\",\n
+        \           \"id\": \"81aba578-fbb4-4256-bc38-d0b6a0cf3f0c\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-14T08:34:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/3e203d28-306c-49cc-894a-f8878494ff6e\",\n
+        \           \"id\": \"3e203d28-306c-49cc-894a-f8878494ff6e\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-14T07:26:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/887fc346-24b9-4d9e-8a45-fdc1b1ed3d21\",\n
+        \           \"id\": \"887fc346-24b9-4d9e-8a45-fdc1b1ed3d21\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-14T05:23:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/bed6e519-72ac-491e-bcfc-34e84bbcd56a\",\n
+        \           \"id\": \"bed6e519-72ac-491e-bcfc-34e84bbcd56a\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-14T02:31:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        },\n        {\n            \"@id\":
+        \"https://api.weather.gov/products/dfb396a3-93c6-4962-908d-cbb1e1695519\",\n
+        \           \"id\": \"dfb396a3-93c6-4962-908d-cbb1e1695519\",\n            \"wmoCollectiveId\":
+        \"FXUS61\",\n            \"issuingOffice\": \"KOKX\",\n            \"issuanceTime\":
+        \"2026-01-13T23:29:00+00:00\",\n            \"productCode\": \"AFD\",\n            \"productName\":
+        \"Area Forecast Discussion\"\n        }\n    ]\n}"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Access-Control-Expose-Headers:
+      - X-Correlation-Id, X-Request-Id, X-Server-Id
+      Cache-Control:
+      - public, max-age=104, s-maxage=120
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/ld+json
+      Date:
+      - Tue, 20 Jan 2026 18:51:30 GMT
+      Expires:
+      - Tue, 20 Jan 2026 18:53:14 GMT
+      Server:
+      - nginx/1.20.1
+      Strict-Transport-Security:
+      - max-age=31536000 ; includeSubDomains ; preload
+      Vary:
+      - Accept-Encoding
+      - Accept,Feature-Flags,Accept-Language
+      X-Correlation-ID:
+      - 119a264a
+      X-Edge-Request-ID:
+      - 31d8959
+      X-Request-ID:
+      - 23b0325f-eb2a-438a-8e77-7b8486767b28
+      X-Server-ID:
+      - vm-cprk-api-ops-app2.ncep.noaa.gov
+      content-length:
+      - '26528'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - api.weather.gov
+    method: GET
+    uri: https://api.weather.gov/products/bdb45bc8-aa3a-473c-bc13-aa079f05f816
+  response:
+    body:
+      string: "{\n    \"@context\": {\n        \"@version\": \"1.1\",\n        \"@vocab\":
+        \"https://api.weather.gov/ontology#\"\n    },\n    \"@id\": \"https://api.weather.gov/products/bdb45bc8-aa3a-473c-bc13-aa079f05f816\",\n
+        \   \"id\": \"bdb45bc8-aa3a-473c-bc13-aa079f05f816\",\n    \"wmoCollectiveId\":
+        \"FXUS61\",\n    \"issuingOffice\": \"KOKX\",\n    \"issuanceTime\": \"2026-01-20T14:35:00+00:00\",\n
+        \   \"productCode\": \"AFD\",\n    \"productName\": \"Area Forecast Discussion\",\n
+        \   \"productText\": \"\\n000\\nFXUS61 KOKX 201435\\nAFDOKX\\n\\nArea Forecast
+        Discussion\\nNational Weather Service New York NY\\n935 AM EST Tue Jan 20
+        2026\\n\\n.WHAT HAS CHANGED...\\nNo significant changes made to forecast.\\n\\n&&\\n\\n.KEY
+        MESSAGES...\\n1.) Temperatures remain below normal through at least early
+        next \\nweek with the exception of Thursday.\\n\\n2.) Potential for snow late
+        Saturday into Sunday.\\n\\n&&\\n\\n.DISCUSSION...\\n.KEY MESSAGE 1...\\nSome
+        of the coldest air of the season builds into the region \\ntoday with temperatures
+        only reaching the lower and middle 20s. \\nA gusty west wind will make it
+        feel even cold with wind chill \\nvalues only in the single digits. This is
+        about 15 to 20 degrees\\nbelow normal. \\n\\nAs high pressure builds in tonight,
+        wind diminish and lows will get \\ninto the single digits inland and the lower
+        teens at the coast. \\n\\n\\nAs the high slides east and a return flow sets
+        up, temperatures warm \\na bit on Wednesday and then a few degrees further
+        on Thursday. Highs \\non Wednesday will be in the upper 20s and 30s. Thursday
+        will be the \\nwarmest day of the week with highs in the upper 30s and lower
+        40s. \\n\\nA cold front moves across the region late Thursday, followed by
+        a \\nsecond on Friday evening. It will be this second cold front that \\nbrings
+        a modified Arctic air mass into the area for the weekend. \\nHighs on Friday
+        will be in the middle 20s to lower 30s. The weekend \\nand start of next week
+        will see highs only in the teens and lower \\n20s. Overnight lows will fall
+        into the single digits. \\n\\n.KEY MESSAGE 2...\\nWe will continue to monitor
+        a low pressure system moving out of the \\nmiddle portion of the country which
+        is expected to move off the \\nMiddle Atlantic coast early Sunday morning
+        and pass south of long \\nisland during the day Sunday. With plenty of cold
+        air in place, any \\nprecipitation will be in the form of snow. The question
+        is how far \\nnorth the precipitation field from this low reaches. 00z GFS/CMC
+        has \\nthe area seeing a period of snow during this period. Will continue
+        \\nto stick close to the NBM guidance. The forecast carries a chance of \\nsnow
+        from Sat night into Sunday night, though it is still way too \\nearly to get
+        into specifics.\\n\\n&&\\n\\n.AVIATION /14Z TUESDAY THROUGH SATURDAY/...\\nHigh
+        pressure builds in through the day.\\n\\nVFR.\\n\\nW winds around 15kt with
+        gusts 20-25kt. Gusts subside early \\nevening, and winds lighten further into
+        early Wed morning.\\nWinds shift more SW then eventually S into Wednesday
+        late \\nmorning/early afternoon.\\n\\n ...NY Metro (KEWR/KLGA/KJFK/KTEB) TAF
+        Uncertainty...\\n\\nPeak gusts around 30 kt possible this afternoon.\\n\\n.OUTLOOK
+        FOR 12Z WEDNESDAY THROUGH SATURDAY...\\n\\nWednesday: VFR. SW-S winds G20-25kt
+        in the afternoon.\\n\\nThursday: A period of MVFR or lower possible with a
+        band of rain\\nor snow.\\n\\nFriday: VFR with W winds becoming NW G25-35kt.
+        \\n\\nSaturday: MVFR or lower possible depending on the track, timing,\\nand
+        intensity of possible low pres.\\n\\nDetailed information, including hourly
+        TAF wind component\\nforecasts, can be found at: https:/www.weather.gov/zny/n90\\n\\n&&\\n\\n.MARINE...\\nA
+        gusty west flow will produce SCA conditions across all waters\\ntoday, persisting
+        on the ocean through the early morning hours \\nWednesday. Seas on the ocean
+        are expected to build as high as 5 \\nto 9 ft, highest east of Moriches Inlet
+        due to the westerly \\nfetch. Waves on the sound will get up to 3 to 5 ft.
+        Winds and \\nseas will begin to gradually subside tonight.\\n\\nSome freezing
+        spray is possible from through at least the first\\npart of tonight. \\n\\nA
+        brief lull Wednesday morning will be replaced by a \\nstrengthening SW flow
+        in the afternoon with the return of SCA \\nconditions on the ocean waters.
+        The SCA conditions will continue\\non the ocean through Friday morning ahead
+        of and behind a cold \\nfrontal passage, with SW-W flow gusting to 25 kt and
+        seas 5-7 \\nft. An Arctic cold frontal passage Friday afternoon should then
+        \\nbring SCA conditions to all waters Friday afternoon/night, with \\nNW flow
+        gusting to 25-30 kt and occasional gusts to 35 kt on the\\nocean, and seas
+        5-6 ft. \\n\\nSCA conditions should continue on the ocean Sat into Sat night,
+        with \\nNW-N flow gusting to 25-30 kt. A few gusts to 25 kt may also be \\npossible
+        on the non ocean waters as well Sat night.\\n\\n&&\\n\\n.OKX WATCHES/WARNINGS/ADVISORIES...\\nCT...None.\\nNY...None.\\nNJ...None.\\nMARINE...Small
+        Craft Advisory until 6 PM EST this evening for ANZ331-\\n     332-335-338-340-345.\\n
+        \    Small Craft Advisory until 1 AM EST Wednesday for ANZ350-353-\\n     355.\\n\\n&&\\n\\n$$\\n
+        \\nAVIATION...JC/MW\\n\"\n}"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Access-Control-Expose-Headers:
+      - X-Correlation-Id, X-Request-Id, X-Server-Id
+      Cache-Control:
+      - public, max-age=103, s-maxage=120
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/ld+json
+      Date:
+      - Tue, 20 Jan 2026 18:51:31 GMT
+      Expires:
+      - Tue, 20 Jan 2026 18:53:14 GMT
+      Server:
+      - nginx/1.20.1
+      Strict-Transport-Security:
+      - max-age=31536000 ; includeSubDomains ; preload
+      Vary:
+      - Accept-Encoding
+      - Accept,Feature-Flags,Accept-Language
+      X-Correlation-ID:
+      - 119a31ab
+      X-Edge-Request-ID:
+      - 31d8a35
+      X-Request-ID:
+      - d4246ff4-7556-4391-8609-5a4b236abfaa
+      X-Server-ID:
+      - vm-cprk-api-ops-app1.ncep.noaa.gov
+      content-length:
+      - '5022'
+    status:
+      code: 200
+      message: OK
+version: 1

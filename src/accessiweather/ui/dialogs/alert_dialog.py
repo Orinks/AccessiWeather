@@ -18,13 +18,12 @@ def show_alert_dialog(parent, alert) -> None:
     Show the alert details dialog.
 
     Args:
-        parent: Parent window (gui_builder widget)
+        parent: Parent window
         alert: Weather alert object
 
     """
     try:
-        # Get the underlying wx control if parent is a gui_builder widget
-        parent_ctrl = getattr(parent, "control", parent)
+        parent_ctrl = parent
 
         dlg = AlertDialog(parent_ctrl, alert)
         dlg.ShowModal()

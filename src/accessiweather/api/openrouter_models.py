@@ -34,6 +34,13 @@ class OpenRouterModel:
     output_modalities: list[str]
 
     @property
+    def provider(self) -> str:
+        """Get the provider name from the model ID."""
+        if "/" in self.id:
+            return self.id.split("/")[0]
+        return "unknown"
+
+    @property
     def display_name(self) -> str:
         """Get a user-friendly display name."""
         suffix = " (Free)" if self.is_free else ""

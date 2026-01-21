@@ -1,0 +1,39 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - geocoding-api.open-meteo.com
+    method: GET
+    uri: https://geocoding-api.open-meteo.com/v1/search?count=5&format=json&language=en&name=New+York
+  response:
+    body:
+      string: '{"results":[{"id":5128581,"name":"New York","latitude":40.71427,"longitude":-74.00597,"elevation":10.0,"feature_code":"PPL","country_code":"US","admin1_id":5128638,"timezone":"America/New_York","population":8804190,"postcodes":["10001","10002","10003","10004","10005","10006","10007","10008","10009","10010","10011","10012","10013","10014","10016","10017","10018","10019","10020","10021","10022","10023","10024","10025","10026","10027","10028","10029","10030","10031","10032","10033","10034","10035","10036","10037","10038","10039","10040","10041","10043","10044","10045","10055","10060","10065","10069","10080","10081","10087","10090","10101","10102","10103","10104","10105","10106","10107","10108","10109","10110","10111","10112","10113","10114","10115","10116","10117","10118","10119","10120","10121","10122","10123","10124","10125","10126","10128","10129","10130","10131","10132","10133","10138","10150","10151","10152","10153","10154","10155","10156","10157","10158","10159","10160","10161","10162","10163","10164","10165","10166","10167","10168","10169","10170","10171","10172","10173","10174","10175","10176","10177","10178","10179","10185","10199","10203","10211","10212","10213","10242","10249","10256","10258","10259","10260","10261","10265","10268","10269","10270","10271","10272","10273","10274","10275","10276","10277","10278","10279","10280","10281","10282","10285","10286"],"country_id":6252001,"country":"United
+        States","admin1":"New York"},{"id":5082331,"name":"York","latitude":40.86807,"longitude":-97.592,"elevation":488.0,"feature_code":"PPLA2","country_code":"US","admin1_id":5073708,"admin2_id":5082335,"admin3_id":7317456,"timezone":"America/Chicago","population":7864,"postcodes":["68467"],"country_id":6252001,"country":"United
+        States","admin1":"Nebraska","admin2":"York","admin3":"City of York"},{"id":5248969,"name":"Clinton","latitude":42.55779,"longitude":-88.86511,"elevation":293.0,"feature_code":"PPL","country_code":"US","admin1_id":5279468,"admin2_id":5269209,"admin3_id":5248984,"timezone":"America/Chicago","population":2140,"postcodes":["53525"],"country_id":6252001,"country":"United
+        States","admin1":"Wisconsin","admin2":"Rock","admin3":"Village of Clinton"},{"id":4257559,"name":"Florence","latitude":38.78423,"longitude":-84.92439,"elevation":145.0,"feature_code":"PPL","country_code":"US","admin1_id":4921868,"admin2_id":4265618,"admin3_id":4267282,"timezone":"America/Indiana/Vevay","population":80,"postcodes":["47020"],"country_id":6252001,"country":"United
+        States","admin1":"Indiana","admin2":"Switzerland","admin3":"York Township"},{"id":2641508,"name":"New
+        York","latitude":53.07897,"longitude":-0.14008,"elevation":7.0,"feature_code":"PPL","country_code":"GB","admin1_id":6269131,"admin2_id":2644486,"admin3_id":7290589,"admin4_id":7298672,"timezone":"Europe/London","country_id":2635167,"country":"United
+        Kingdom","admin1":"England","admin2":"Lincolnshire","admin3":"East Lindsey
+        District","admin4":"Wildmore"}],"generationtime_ms":2.7430058}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 20 Jan 2026 19:20:51 GMT
+      X-Encoding-Time:
+      - 0.007045269012451172 ms
+      content-length:
+      - '2993'
+    status:
+      code: 200
+      message: OK
+version: 1

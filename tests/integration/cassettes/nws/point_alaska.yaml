@@ -1,0 +1,91 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - application/geo+json
+      Accept-Encoding:
+      - gzip, deflate, zstd
+      Connection:
+      - keep-alive
+      Host:
+      - api.weather.gov
+    method: GET
+    uri: https://api.weather.gov/points/61.2181,-149.9003
+  response:
+    body:
+      string: "{\n    \"@context\": [\n        \"https://geojson.org/geojson-ld/geojson-context.jsonld\",\n
+        \       {\n            \"@version\": \"1.1\",\n            \"wx\": \"https://api.weather.gov/ontology#\",\n
+        \           \"s\": \"https://schema.org/\",\n            \"geo\": \"http://www.opengis.net/ont/geosparql#\",\n
+        \           \"unit\": \"http://codes.wmo.int/common/unit/\",\n            \"@vocab\":
+        \"https://api.weather.gov/ontology#\",\n            \"geometry\": {\n                \"@id\":
+        \"s:GeoCoordinates\",\n                \"@type\": \"geo:wktLiteral\"\n            },\n
+        \           \"city\": \"s:addressLocality\",\n            \"state\": \"s:addressRegion\",\n
+        \           \"distance\": {\n                \"@id\": \"s:Distance\",\n                \"@type\":
+        \"s:QuantitativeValue\"\n            },\n            \"bearing\": {\n                \"@type\":
+        \"s:QuantitativeValue\"\n            },\n            \"value\": {\n                \"@id\":
+        \"s:value\"\n            },\n            \"unitCode\": {\n                \"@id\":
+        \"s:unitCode\",\n                \"@type\": \"@id\"\n            },\n            \"forecastOffice\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"forecastGridData\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"publicZone\":
+        {\n                \"@type\": \"@id\"\n            },\n            \"county\":
+        {\n                \"@type\": \"@id\"\n            }\n        }\n    ],\n
+        \   \"id\": \"https://api.weather.gov/points/61.2181,-149.9003\",\n    \"type\":
+        \"Feature\",\n    \"geometry\": {\n        \"type\": \"Point\",\n        \"coordinates\":
+        [\n            -149.9003,\n            61.2181\n        ]\n    },\n    \"properties\":
+        {\n        \"@id\": \"https://api.weather.gov/points/61.2181,-149.9003\",\n
+        \       \"@type\": \"wx:Point\",\n        \"cwa\": \"AFC\",\n        \"type\":
+        \"land\",\n        \"forecastOffice\": \"https://api.weather.gov/offices/AFC\",\n
+        \       \"gridId\": \"AER\",\n        \"gridX\": 143,\n        \"gridY\":
+        236,\n        \"forecast\": \"https://api.weather.gov/gridpoints/AER/143,236/forecast\",\n
+        \       \"forecastHourly\": \"https://api.weather.gov/gridpoints/AER/143,236/forecast/hourly\",\n
+        \       \"forecastGridData\": \"https://api.weather.gov/gridpoints/AER/143,236\",\n
+        \       \"observationStations\": \"https://api.weather.gov/gridpoints/AER/143,236/stations\",\n
+        \       \"relativeLocation\": {\n            \"type\": \"Feature\",\n            \"geometry\":
+        {\n                \"type\": \"Point\",\n                \"coordinates\":
+        [\n                    -150.16935,\n                    61.355597\n                ]\n
+        \           },\n            \"properties\": {\n                \"city\": \"Point
+        MacKenzie\",\n                \"state\": \"AK\",\n                \"distance\":
+        {\n                    \"unitCode\": \"wmoUnit:m\",\n                    \"value\":
+        20984.08291461\n                },\n                \"bearing\": {\n                    \"unitCode\":
+        \"wmoUnit:degree_(angle)\",\n                    \"value\": 136\n                }\n
+        \           }\n        },\n        \"forecastZone\": \"https://api.weather.gov/zones/forecast/AKZ701\",\n
+        \       \"county\": \"https://api.weather.gov/zones/county/AKC020\",\n        \"fireWeatherZone\":
+        \"https://api.weather.gov/zones/fire/AKZ701\",\n        \"timeZone\": \"America/Anchorage\",\n
+        \       \"radarStation\": \"PAHG\"\n    }\n}"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Access-Control-Expose-Headers:
+      - X-Correlation-Id, X-Request-Id, X-Server-Id
+      Cache-Control:
+      - public, max-age=86400, s-maxage=120
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/geo+json
+      Date:
+      - Tue, 20 Jan 2026 18:51:15 GMT
+      Expires:
+      - Wed, 21 Jan 2026 18:51:15 GMT
+      Server:
+      - nginx/1.20.1
+      Strict-Transport-Security:
+      - max-age=31536000 ; includeSubDomains ; preload
+      Vary:
+      - Accept-Encoding
+      - Accept,Feature-Flags,Accept-Language
+      X-Correlation-ID:
+      - 119a34e7
+      X-Edge-Request-ID:
+      - 31d6d06
+      X-Request-ID:
+      - 2c164f3b-3cb3-4d4f-a68b-1af89c92cb1d
+      X-Server-ID:
+      - vm-cprk-api-ops-app2.ncep.noaa.gov
+      content-length:
+      - '3102'
+    status:
+      code: 200
+      message: OK
+version: 1

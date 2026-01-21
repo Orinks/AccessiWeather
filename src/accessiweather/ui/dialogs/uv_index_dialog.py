@@ -54,13 +54,12 @@ def show_uv_index_dialog(parent, app: AccessiWeatherApp) -> None:
     Show the UV index dialog.
 
     Args:
-        parent: Parent window (gui_builder widget)
+        parent: Parent window
         app: Application instance
 
     """
     try:
-        # Get the underlying wx control if parent is a gui_builder widget
-        parent_ctrl = getattr(parent, "control", parent)
+        parent_ctrl = parent
 
         # Get current location
         location = app.config_manager.get_current_location()

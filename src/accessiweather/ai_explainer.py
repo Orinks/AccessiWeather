@@ -253,7 +253,10 @@ class AIExplainer:
             "and what activities it's suitable for.\n\n"
             "IMPORTANT: Do NOT repeat the location name, date, time, or timezone in your response. "
             "The user already sees this information. Jump straight into describing the weather "
-            "conditions and what to expect."
+            "conditions and what to expect.\n\n"
+            "IMPORTANT: Respond in plain text only. Do NOT use markdown formatting such as "
+            "bold (**text**), italic (*text*), headers (#), bullet points, or any other "
+            "markdown syntax. Use simple paragraph text."
         )
 
     def get_prompt_preview(
@@ -539,6 +542,7 @@ class AIExplainer:
         afd_text: str,
         location_name: str,
         style: ExplanationStyle = ExplanationStyle.DETAILED,
+        preserve_markdown: bool = False,
     ) -> ExplanationResult:
         """
         Generate plain language explanation of an Area Forecast Discussion.
@@ -547,6 +551,7 @@ class AIExplainer:
             afd_text: The raw AFD text from NWS
             location_name: Human-readable location name
             style: Explanation style (brief, standard, detailed)
+            preserve_markdown: Whether to preserve markdown in output (default: False)
 
         Returns:
             ExplanationResult with text, model used, and metadata
@@ -565,7 +570,13 @@ class AIExplainer:
             "- Any significant weather events or changes\n"
             "- How confident forecasters are in their predictions\n"
             "- What this means for daily activities\n\n"
-            "Avoid using technical jargon. If you must use a technical term, explain it."
+            "Avoid using technical jargon. If you must use a technical term, explain it.\n\n"
+            "IMPORTANT: Do NOT start with a preamble like 'Here is a summary...' or "
+            "'This forecast discussion explains...'. Do NOT repeat the location name. "
+            "Jump straight into explaining the weather. The user already knows what they asked for.\n\n"
+            "IMPORTANT: Respond in plain text only. Do NOT use markdown formatting such as "
+            "bold (**text**), italic (*text*), headers (#), bullet points, or any other "
+            "markdown syntax. Use simple paragraph text that can be read directly."
         )
 
         style_instructions = {
@@ -624,8 +635,9 @@ class AIExplainer:
                 "All AI models returned empty responses. Please try again later."
             )
 
-        # Process response
-        text = response["content"]
+        # Process response - strip markdown formatting for plain text display
+        raw_content = response["content"]
+        text = self._format_response(raw_content, preserve_markdown)
         token_count = response["total_tokens"]
         model_used = response["model"]
         estimated_cost = self._estimate_cost(model_used, token_count)

@@ -1,8 +1,8 @@
 """
-Main window for AccessiWeather using gui_builder.
+Main window for AccessiWeather using plain wxPython.
 
-This module defines the main application window using gui_builder's
-declarative form syntax for clean, maintainable UI code.
+This module defines the main application window using standard wxPython
+widgets for optimal screen reader compatibility.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ import logging
 from typing import TYPE_CHECKING
 
 import wx
-from gui_builder import fields, forms
+from wx.lib.sized_controls import SizedFrame, SizedPanel
 
 if TYPE_CHECKING:
     from ..app import AccessiWeatherApp
@@ -19,26 +19,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class WeatherAlertsPanel(forms.Panel):
-    """Panel displaying weather alerts."""
-
-    alerts_label = fields.StaticText(label="Weather Alerts:")
-    alerts_list = fields.ListBox(label="Active Alerts")
-    view_alert_button = fields.Button(label="View Alert Details")
-
-    @view_alert_button.add_callback
-    def on_view_alert(self):
-        """Handle view alert button click."""
-        selected = self.alerts_list.get_index()
-        if selected is not None and selected >= 0:
-            parent = self.get_first_ancestor()
-            if hasattr(parent, "_show_alert_details"):
-                parent._show_alert_details(selected)
-
-
-class MainWindow(forms.SizedFrame):
+class MainWindow(SizedFrame):
     """
-    Main application window using gui_builder declarative forms.
+    Main application window using plain wxPython.
 
     This provides the primary UI for AccessiWeather with:
     - Location selection dropdown
@@ -48,78 +31,125 @@ class MainWindow(forms.SizedFrame):
     - Control buttons
     """
 
-    # Location section
-    location_label = fields.StaticText(label="Location:")
-    location_dropdown = fields.ComboBox(label="Select Location", read_only=True)
-
-    # Status display
-    status_label = fields.StaticText(label="")
-
-    # Stale/cached data warning
-    stale_warning_label = fields.StaticText(label="")
-
-    # Current conditions section
-    conditions_label = fields.StaticText(label="Current Conditions:")
-    current_conditions = fields.Text(
-        label="Current weather conditions",
-        multiline=True,
-        readonly=True,
-    )
-
-    # Data source attribution
-    data_source_label = fields.StaticText(label="")
-
-    # Forecast section
-    forecast_label = fields.StaticText(label="Forecast:")
-    forecast_display = fields.Text(
-        label="Weather forecast",
-        multiline=True,
-        readonly=True,
-    )
-
-    # Weather alerts panel
-    alerts_panel = WeatherAlertsPanel()
-
-    # Control buttons
-    add_button = fields.Button(label="&Add")
-    remove_button = fields.Button(label="Re&move")
-    refresh_button = fields.Button(label="&Refresh")
-    explain_button = fields.Button(label="&Explain")
-    discussion_button = fields.Button(label="&Discussion")
-    settings_button = fields.Button(label="&Settings")
-
-    def __init__(self, app: AccessiWeatherApp = None, **kwargs):
+    def __init__(self, app: AccessiWeatherApp, title: str = "AccessiWeather", **kwargs):
         """
         Initialize the main window.
 
         Args:
             app: The AccessiWeather application instance
+            title: Window title
             **kwargs: Additional keyword arguments passed to SizedFrame
 
         """
+        super().__init__(parent=None, title=title, **kwargs)
         self.app = app
-        # Ensure top_level_window is set for gui_builder to return a bound instance
-        kwargs.setdefault("top_level_window", True)
-        kwargs.setdefault("title", "AccessiWeather")
-        super().__init__(**kwargs)
-        # Note: Don't call _setup_accessibility, _populate_locations, or _create_menu_bar here
-        # They require widgets to be rendered first. Call them after render() in _post_render().
+        self._escape_id = None
 
-    def render(self, **kwargs):
-        """Render the main window and set up post-render components."""
-        super().render(**kwargs)
-        # Now widgets are created, set up accessibility, menus, and data
-        self._setup_accessibility()
-        self._populate_locations()
+        # Create the UI
+        self._create_widgets()
         self._create_menu_bar()
-        # Bind close event to the frame
-        self.widget.control.Bind(wx.EVT_CLOSE, self._on_close)
-        # Bind iconize event (minimize button) to the frame
-        self.widget.control.Bind(wx.EVT_ICONIZE, self._on_iconize)
-        # Bind show event to set focus when window is actually displayed
-        self.widget.control.Bind(wx.EVT_SHOW, self._on_window_shown)
-        # Bind key events for Escape key handling
-        self.widget.control.Bind(wx.EVT_CHAR_HOOK, self._on_key_down)
+        self._bind_events()
+        self._setup_escape_accelerator()
+
+        # Set initial window size
+        self.SetSize((800, 600))
+
+        # Populate initial data
+        self._populate_locations()
+
+    def _create_widgets(self) -> None:
+        """Create all UI widgets."""
+        panel = self.GetContentsPane()
+        panel.SetSizerType("vertical")
+
+        # Location section
+        location_panel = SizedPanel(panel)
+        location_panel.SetSizerType("horizontal")
+        location_panel.SetSizerProps(expand=True)
+
+        wx.StaticText(location_panel, label="Location:")
+        self.location_dropdown = wx.ComboBox(
+            location_panel,
+            style=wx.CB_READONLY,
+            name="Location selection",
+        )
+        self.location_dropdown.SetSizerProps(expand=True, proportion=1)
+
+        # Status display
+        self.status_label = wx.StaticText(panel, label="")
+        self.status_label.SetSizerProps(expand=True)
+
+        # Stale/cached data warning
+        self.stale_warning_label = wx.StaticText(panel, label="")
+        self.stale_warning_label.SetSizerProps(expand=True)
+
+        # Current conditions section
+        wx.StaticText(panel, label="Current Conditions:")
+        self.current_conditions = wx.TextCtrl(
+            panel,
+            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
+            name="Current weather conditions",
+        )
+        self.current_conditions.SetSizerProps(expand=True, proportion=1)
+
+        # Data source attribution
+        self.data_source_label = wx.StaticText(panel, label="")
+        self.data_source_label.SetSizerProps(expand=True)
+
+        # Forecast section
+        wx.StaticText(panel, label="Forecast:")
+        self.forecast_display = wx.TextCtrl(
+            panel,
+            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
+            name="Weather forecast",
+        )
+        self.forecast_display.SetSizerProps(expand=True, proportion=1)
+
+        # Weather alerts section
+        alerts_panel = SizedPanel(panel)
+        alerts_panel.SetSizerType("vertical")
+        alerts_panel.SetSizerProps(expand=True)
+
+        wx.StaticText(alerts_panel, label="Weather Alerts:")
+        self.alerts_list = wx.ListBox(
+            alerts_panel,
+            name="Weather alerts list",
+        )
+        self.alerts_list.SetSizerProps(expand=True, proportion=1)
+
+        self.view_alert_button = wx.Button(alerts_panel, label="View Alert Details")
+        self.view_alert_button.Disable()  # Disabled until alerts are available
+
+        # Control buttons
+        button_panel = SizedPanel(panel)
+        button_panel.SetSizerType("horizontal")
+        button_panel.SetSizerProps(expand=True)
+
+        self.add_button = wx.Button(button_panel, label="&Add")
+        self.remove_button = wx.Button(button_panel, label="Re&move")
+        self.refresh_button = wx.Button(button_panel, label="&Refresh")
+        self.explain_button = wx.Button(button_panel, label="&Explain")
+        self.discussion_button = wx.Button(button_panel, label="&Discussion")
+        self.settings_button = wx.Button(button_panel, label="&Settings")
+
+    def _bind_events(self) -> None:
+        """Bind all event handlers."""
+        # Window events
+        self.Bind(wx.EVT_CLOSE, self._on_close)
+        self.Bind(wx.EVT_ICONIZE, self._on_iconize)
+        self.Bind(wx.EVT_SHOW, self._on_window_shown)
+
+        # Location dropdown
+        self.location_dropdown.Bind(wx.EVT_COMBOBOX, self._on_location_changed)
+
+        # Buttons
+        self.add_button.Bind(wx.EVT_BUTTON, lambda e: self.on_add_location())
+        self.remove_button.Bind(wx.EVT_BUTTON, lambda e: self.on_remove_location())
+        self.refresh_button.Bind(wx.EVT_BUTTON, lambda e: self.on_refresh())
+        self.explain_button.Bind(wx.EVT_BUTTON, lambda e: self._on_explain_weather())
+        self.discussion_button.Bind(wx.EVT_BUTTON, lambda e: self._on_discussion())
+        self.settings_button.Bind(wx.EVT_BUTTON, lambda e: self.on_settings())
+        self.view_alert_button.Bind(wx.EVT_BUTTON, self._on_view_alert)
 
     def _on_window_shown(self, event) -> None:
         """Handle window shown event to set initial focus."""
@@ -132,30 +162,24 @@ class MainWindow(forms.SizedFrame):
     def _set_initial_focus(self) -> None:
         """Set initial focus to the location dropdown for keyboard accessibility."""
         try:
-            combo = self.location_dropdown.widget.control
-            combo.SetFocus()
+            self.location_dropdown.SetFocus()
             logger.debug("Initial focus set to location dropdown")
         except Exception as e:
             logger.debug(f"Could not set initial focus: {e}")
-
-    def _setup_accessibility(self) -> None:
-        """Set up accessibility labels for screen readers."""
-        self.location_dropdown.set_accessible_label("Location selection")
-        self.current_conditions.set_accessible_label("Current weather conditions")
-        self.forecast_display.set_accessible_label("Weather forecast")
-        self.alerts_panel.alerts_list.set_accessible_label("Weather alerts list")
 
     def _populate_locations(self) -> None:
         """Populate the location dropdown with saved locations."""
         try:
             locations = self.app.config_manager.get_all_locations()
             location_names = [loc.name for loc in locations]
-            self.location_dropdown.set_items(location_names)
+            self.location_dropdown.Clear()
+            self.location_dropdown.Append(location_names)
 
             # Select current location
             current = self.app.config_manager.get_current_location()
             if current and current.name in location_names:
-                self.location_dropdown.set_index_to_item(current.name)
+                idx = location_names.index(current.name)
+                self.location_dropdown.SetSelection(idx)
         except Exception as e:
             logger.error(f"Failed to populate locations: {e}")
 
@@ -209,49 +233,43 @@ class MainWindow(forms.SizedFrame):
         about_item = help_menu.Append(wx.ID_ABOUT, "&About", "About AccessiWeather")
         menu_bar.Append(help_menu, "&Help")
 
-        # Access the underlying wx.Frame control to set the menu bar and bind events
-        frame = self.widget.control
-        frame.SetMenuBar(menu_bar)
+        self.SetMenuBar(menu_bar)
 
-        # Bind menu events to the frame
-        frame.Bind(wx.EVT_MENU, lambda e: self.on_settings(), settings_item)
-        frame.Bind(wx.EVT_MENU, lambda e: self.app.request_exit(), exit_item)
-        frame.Bind(wx.EVT_MENU, lambda e: self.on_add_location(), add_item)
-        frame.Bind(wx.EVT_MENU, lambda e: self.on_remove_location(), remove_item)
-        frame.Bind(wx.EVT_MENU, lambda e: self.on_refresh(), refresh_item)
-        frame.Bind(wx.EVT_MENU, lambda e: self._on_explain_weather(), explain_item)
-        frame.Bind(wx.EVT_MENU, lambda e: self.on_view_history(), history_item)
-        frame.Bind(wx.EVT_MENU, lambda e: self._on_discussion(), discussion_item)
-        frame.Bind(wx.EVT_MENU, lambda e: self._on_aviation(), aviation_item)
-        frame.Bind(wx.EVT_MENU, lambda e: self._on_air_quality(), air_quality_item)
-        frame.Bind(wx.EVT_MENU, lambda e: self._on_uv_index(), uv_index_item)
-        frame.Bind(wx.EVT_MENU, lambda e: self._on_soundpack_manager(), soundpack_item)
-        frame.Bind(wx.EVT_MENU, lambda e: self._on_about(), about_item)
+        # Bind menu events
+        self.Bind(wx.EVT_MENU, lambda e: self.on_settings(), settings_item)
+        self.Bind(wx.EVT_MENU, lambda e: self.app.request_exit(), exit_item)
+        self.Bind(wx.EVT_MENU, lambda e: self.on_add_location(), add_item)
+        self.Bind(wx.EVT_MENU, lambda e: self.on_remove_location(), remove_item)
+        self.Bind(wx.EVT_MENU, lambda e: self.on_refresh(), refresh_item)
+        self.Bind(wx.EVT_MENU, lambda e: self._on_explain_weather(), explain_item)
+        self.Bind(wx.EVT_MENU, lambda e: self.on_view_history(), history_item)
+        self.Bind(wx.EVT_MENU, lambda e: self._on_discussion(), discussion_item)
+        self.Bind(wx.EVT_MENU, lambda e: self._on_aviation(), aviation_item)
+        self.Bind(wx.EVT_MENU, lambda e: self._on_air_quality(), air_quality_item)
+        self.Bind(wx.EVT_MENU, lambda e: self._on_uv_index(), uv_index_item)
+        self.Bind(wx.EVT_MENU, lambda e: self._on_soundpack_manager(), soundpack_item)
+        self.Bind(wx.EVT_MENU, lambda e: self._on_about(), about_item)
 
-    # Event handlers using gui_builder decorators
-    @location_dropdown.add_callback
-    def on_location_changed(self):
+    def _on_location_changed(self, event) -> None:
         """Handle location selection change."""
-        selected = self.location_dropdown.get_choice()
+        selected = self.location_dropdown.GetStringSelection()
         if selected:
             logger.info(f"Location changed to: {selected}")
             self._set_current_location(selected)
             self.refresh_weather_async()
 
-    @add_button.add_callback
-    def on_add_location(self):
+    def on_add_location(self) -> None:
         """Handle add location button click."""
         from .dialogs import show_add_location_dialog
 
-        result = show_add_location_dialog(self.widget, self.app)
+        result = show_add_location_dialog(self, self.app)
         if result:
             self._populate_locations()
             self.refresh_weather_async()
 
-    @remove_button.add_callback
-    def on_remove_location(self):
+    def on_remove_location(self) -> None:
         """Handle remove location button click."""
-        selected = self.location_dropdown.get_choice()
+        selected = self.location_dropdown.GetStringSelection()
         if not selected:
             wx.MessageBox(
                 "Please select a location to remove.",
@@ -281,83 +299,77 @@ class MainWindow(forms.SizedFrame):
             self._populate_locations()
             self.refresh_weather_async()
 
-    @refresh_button.add_callback
-    def on_refresh(self):
+    def on_refresh(self) -> None:
         """Handle refresh button click."""
         self.refresh_weather_async()
 
-    @explain_button.add_callback
-    def on_explain(self):
-        """Handle explain button click."""
-        self._on_explain_weather()
-
-    @discussion_button.add_callback
-    def on_discussion(self):
-        """Handle discussion button click."""
-        self._on_discussion()
-
-    @settings_button.add_callback
-    def on_settings(self):
+    def on_settings(self) -> None:
         """Handle settings button click."""
         from .dialogs import show_settings_dialog
 
-        if show_settings_dialog(self.widget, self.app):
+        if show_settings_dialog(self, self.app):
             self.app.refresh_runtime_settings()
 
-    def on_view_history(self):
+    def on_view_history(self) -> None:
         """View weather history comparison."""
         from .dialogs import show_weather_history_dialog
 
-        show_weather_history_dialog(self.widget, self.app)
+        show_weather_history_dialog(self, self.app)
 
-    def _on_explain_weather(self):
+    def _on_explain_weather(self) -> None:
         """Get AI explanation of current weather."""
         from .dialogs import show_explanation_dialog
 
-        show_explanation_dialog(self.widget, self.app)
+        show_explanation_dialog(self, self.app)
 
-    def _on_discussion(self):
+    def _on_discussion(self) -> None:
         """View NWS Area Forecast Discussion."""
         from .dialogs import show_discussion_dialog
 
-        show_discussion_dialog(self.widget, self.app)
+        show_discussion_dialog(self, self.app)
 
-    def _on_aviation(self):
+    def _on_aviation(self) -> None:
         """View aviation weather."""
         from .dialogs import show_aviation_dialog
 
-        show_aviation_dialog(self.widget, self.app)
+        show_aviation_dialog(self, self.app)
 
-    def _on_air_quality(self):
+    def _on_air_quality(self) -> None:
         """View air quality information."""
         from .dialogs import show_air_quality_dialog
 
-        show_air_quality_dialog(self.widget, self.app)
+        show_air_quality_dialog(self, self.app)
 
-    def _on_uv_index(self):
+    def _on_uv_index(self) -> None:
         """View UV index information."""
         from .dialogs import show_uv_index_dialog
 
-        show_uv_index_dialog(self.widget, self.app)
+        show_uv_index_dialog(self, self.app)
 
-    def _on_soundpack_manager(self):
+    def _on_soundpack_manager(self) -> None:
         """Open the soundpack manager dialog."""
         from .dialogs import show_soundpack_manager_dialog
 
-        show_soundpack_manager_dialog(self.widget, self.app)
+        show_soundpack_manager_dialog(self, self.app)
 
-    def _on_about(self):
+    def _on_about(self) -> None:
         """Show about dialog."""
         wx.MessageBox(
             "AccessiWeather\n\n"
             "An accessible weather application with NOAA and Open-Meteo support.\n\n"
-            "Built with wxPython and gui_builder for screen reader compatibility.\n\n"
+            "Built with wxPython for screen reader compatibility.\n\n"
             "https://github.com/Orinks/AccessiWeather",
             "About AccessiWeather",
             wx.OK | wx.ICON_INFORMATION,
         )
 
-    def _on_close(self, event):
+    def _on_view_alert(self, event) -> None:
+        """Handle view alert button click."""
+        selected = self.alerts_list.GetSelection()
+        if selected != wx.NOT_FOUND:
+            self._show_alert_details(selected)
+
+    def _on_close(self, event) -> None:
         """Handle window close event."""
         # Check if minimize to tray is enabled
         if self._should_minimize_to_tray():
@@ -377,14 +389,21 @@ class MainWindow(forms.SizedFrame):
             return
         event.Skip()  # Allow normal minimize behavior
 
-    def _on_key_down(self, event) -> None:
-        """Handle key down events for Escape key."""
-        key_code = event.GetKeyCode()
-        if key_code == wx.WXK_ESCAPE and self._should_minimize_to_tray():
-            # Escape key pressed - minimize to tray
+    def _setup_escape_accelerator(self) -> None:
+        """Set up accelerator table for Escape key to minimize to tray."""
+        # Create a unique ID for the escape action
+        self._escape_id = wx.NewIdRef()
+        # Create accelerator table with just Escape key
+        accel_tbl = wx.AcceleratorTable([(wx.ACCEL_NORMAL, wx.WXK_ESCAPE, self._escape_id)])
+        self.SetAcceleratorTable(accel_tbl)
+        # Bind the escape action
+        self.Bind(wx.EVT_MENU, self._on_escape_pressed, id=self._escape_id)
+
+    def _on_escape_pressed(self, event) -> None:
+        """Handle Escape key press via accelerator."""
+        if self._should_minimize_to_tray():
             self._minimize_to_tray()
-            return
-        event.Skip()  # Allow other key handling to proceed
+        # If minimize to tray is disabled, do nothing (Escape has no effect)
 
     def _should_minimize_to_tray(self) -> bool:
         """
@@ -403,9 +422,8 @@ class MainWindow(forms.SizedFrame):
     def _minimize_to_tray(self) -> None:
         """Minimize the window to the system tray."""
         try:
-            frame = self.widget.control
-            frame.Iconize(False)  # Restore from iconized state first
-            frame.Hide()
+            self.Iconize(False)  # Restore from iconized state first
+            self.Hide()
             logger.debug("Window minimized to system tray")
         except Exception as e:
             logger.error(f"Failed to minimize to tray: {e}")
@@ -426,7 +444,7 @@ class MainWindow(forms.SizedFrame):
 
         self.app.is_updating = True
         self.set_status("Updating weather data...")
-        self.refresh_button.disable()
+        self.refresh_button.Disable()
 
         # Run async weather fetch
         self.app.run_async(self._fetch_weather_data())
@@ -459,28 +477,28 @@ class MainWindow(forms.SizedFrame):
 
             # Update current conditions
             if presentation.current_conditions:
-                self.current_conditions.set_value(presentation.current_conditions.fallback_text)
+                self.current_conditions.SetValue(presentation.current_conditions.fallback_text)
             else:
-                self.current_conditions.set_value("No current conditions available.")
+                self.current_conditions.SetValue("No current conditions available.")
 
             # Update data source attribution
             if presentation.source_attribution and presentation.source_attribution.summary_text:
-                self.data_source_label.set_label(presentation.source_attribution.summary_text)
+                self.data_source_label.SetLabel(presentation.source_attribution.summary_text)
             else:
-                self.data_source_label.set_label("")
+                self.data_source_label.SetLabel("")
 
             # Update stale/cached data warning
             if presentation.status_messages:
                 warning_text = " ".join(presentation.status_messages)
-                self.stale_warning_label.set_label(warning_text)
+                self.stale_warning_label.SetLabel(warning_text)
             else:
-                self.stale_warning_label.set_label("")
+                self.stale_warning_label.SetLabel("")
 
             # Update forecast
             if presentation.forecast:
-                self.forecast_display.set_value(presentation.forecast.fallback_text)
+                self.forecast_display.SetValue(presentation.forecast.fallback_text)
             else:
-                self.forecast_display.set_value("No forecast available.")
+                self.forecast_display.SetValue("No forecast available.")
 
             # Update alerts
             self._update_alerts(weather_data.alerts)
@@ -502,19 +520,22 @@ class MainWindow(forms.SizedFrame):
             # Update system tray tooltip with current weather
             self.app.update_tray_tooltip(weather_data, location_name)
 
+            # Process notification events (AFD updates, severe risk changes)
+            self._process_notification_events(weather_data)
+
         except Exception as e:
             logger.error(f"Failed to update weather display: {e}")
             self.set_status(f"Error updating display: {e}")
 
         finally:
             self.app.is_updating = False
-            self.refresh_button.enable()
+            self.refresh_button.Enable()
 
     def _on_weather_error(self, error_message: str) -> None:
         """Handle weather fetch error (called on main thread)."""
         self.set_status(f"Error: {error_message}")
         self.app.is_updating = False
-        self.refresh_button.enable()
+        self.refresh_button.Enable()
 
     def _update_alerts(self, alerts) -> None:
         """Update the alerts list."""
@@ -535,13 +556,15 @@ class MainWindow(forms.SizedFrame):
             severity = getattr(alert, "severity", "Unknown")
             alert_items.append(f"{event} ({severity})")
 
-        self.alerts_panel.alerts_list.set_items(alert_items)
+        self.alerts_list.Clear()
+        if alert_items:
+            self.alerts_list.Append(alert_items)
 
         # Enable/disable view button based on alerts
         if alert_items:
-            self.alerts_panel.view_alert_button.enable()
+            self.view_alert_button.Enable()
         else:
-            self.alerts_panel.view_alert_button.disable()
+            self.view_alert_button.Disable()
 
     def _show_alert_details(self, alert_index: int) -> None:
         """Show details for the selected alert."""
@@ -553,9 +576,85 @@ class MainWindow(forms.SizedFrame):
             alert = alerts.alerts[alert_index]
             from .dialogs import show_alert_dialog
 
-            show_alert_dialog(self.widget, alert)
+            show_alert_dialog(self, alert)
 
     def set_status(self, message: str) -> None:
         """Set the status label text."""
-        self.status_label.set_label(message)
+        self.status_label.SetLabel(message)
         logger.info(f"Status: {message}")
+
+    def _get_notification_event_manager(self):
+        """Get or create the notification event manager for AFD/severe risk notifications."""
+        if (
+            not hasattr(self, "_notification_event_manager")
+            or self._notification_event_manager is None
+        ):
+            from ..notifications.notification_event_manager import NotificationEventManager
+
+            state_file = self.app.paths.config / "notification_event_state.json"
+            self._notification_event_manager = NotificationEventManager(state_file=state_file)
+        return self._notification_event_manager
+
+    def _get_fallback_notifier(self):
+        """Get or create a cached fallback notifier for event notifications."""
+        if not hasattr(self, "_fallback_notifier") or self._fallback_notifier is None:
+            from ..notifications.toast_notifier import SafeDesktopNotifier
+
+            self._fallback_notifier = SafeDesktopNotifier()
+        return self._fallback_notifier
+
+    def _process_notification_events(self, weather_data) -> None:
+        """
+        Process weather data for notification events.
+
+        Checks for:
+        - Area Forecast Discussion (AFD) updates (NWS US only)
+        - Severe weather risk level changes (Visual Crossing only)
+
+        Both are opt-in notifications (disabled by default).
+        """
+        try:
+            settings = self.app.config_manager.get_settings()
+
+            # Skip if neither notification type is enabled
+            if not settings.notify_discussion_update and not settings.notify_severe_risk_change:
+                return
+
+            location = self.app.config_manager.get_current_location()
+            if not location:
+                return
+
+            # Get notifier from app or use cached fallback
+            notifier = getattr(self.app, "notifier", None)
+            if not notifier:
+                notifier = self._get_fallback_notifier()
+
+            # Get event manager and check for events
+            event_manager = self._get_notification_event_manager()
+            events = event_manager.check_for_events(weather_data, settings, location.name)
+
+            # Send notifications for each event
+            for event in events:
+                try:
+                    success = notifier.send_notification(
+                        title=event.title,
+                        message=event.message,
+                        timeout=10,
+                    )
+
+                    if success and settings.sound_enabled:
+                        import contextlib
+
+                        from ..notifications.sound_player import play_notification_sound
+
+                        with contextlib.suppress(Exception):
+                            play_notification_sound(event.sound_event, settings.sound_pack)
+
+                    if success:
+                        logger.info("Sent %s notification: %s", event.event_type, event.title)
+
+                except Exception as e:
+                    logger.warning("Failed to send event notification: %s", e)
+
+        except Exception as e:
+            logger.debug("Error processing notification events: %s", e)

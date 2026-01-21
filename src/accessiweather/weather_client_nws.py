@@ -281,13 +281,14 @@ async def get_nws_all_data_parallel(
     CurrentConditions | None,
     Forecast | None,
     str | None,
+    datetime | None,
     WeatherAlerts | None,
     HourlyForecast | None,
 ]:
     """
     Fetch all NWS data in parallel with optimized grid data caching.
 
-    Returns: (current, forecast, discussion, alerts, hourly_forecast)
+    Returns: (current, forecast, discussion, discussion_issuance_time, alerts, hourly_forecast)
     """
     try:
         # First, fetch grid data once
@@ -318,17 +319,17 @@ async def get_nws_all_data_parallel(
 
         # Gather all results
         current = await current_task
-        forecast, discussion = await forecast_task
+        forecast, discussion, discussion_issuance_time = await forecast_task
         alerts = await alerts_task
         hourly_forecast = await hourly_task
 
-        return current, forecast, discussion, alerts, hourly_forecast
+        return current, forecast, discussion, discussion_issuance_time, alerts, hourly_forecast
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS data in parallel: {exc}")
         if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
             raise
-        return None, None, None, None, None
+        return None, None, None, None, None, None
 
 
 @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
@@ -575,8 +576,14 @@ async def get_nws_forecast_and_discussion(
     timeout: float,
     client: httpx.AsyncClient | None = None,
     grid_data: dict[str, Any] | None = None,
-) -> tuple[Forecast | None, str | None]:
-    """Fetch forecast and discussion from the NWS API for the given location."""
+) -> tuple[Forecast | None, str | None, datetime | None]:
+    """
+    Fetch forecast and discussion from the NWS API for the given location.
+
+    Returns:
+        Tuple of (forecast, discussion_text, discussion_issuance_time)
+
+    """
     try:
         headers = {"User-Agent": user_agent}
         feature_headers = headers.copy()
@@ -596,9 +603,11 @@ async def get_nws_forecast_and_discussion(
             response.raise_for_status()
             forecast_data = response.json()
 
-            discussion = await get_nws_discussion(client, headers, grid_data, nws_base_url)
+            discussion, discussion_issuance_time = await get_nws_discussion(
+                client, headers, grid_data, nws_base_url
+            )
 
-            return parse_nws_forecast(forecast_data), discussion
+            return parse_nws_forecast(forecast_data), discussion, discussion_issuance_time
         grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
 
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
@@ -611,15 +620,17 @@ async def get_nws_forecast_and_discussion(
             response.raise_for_status()
             forecast_data = response.json()
 
-            discussion = await get_nws_discussion(new_client, headers, grid_data, nws_base_url)
+            discussion, discussion_issuance_time = await get_nws_discussion(
+                new_client, headers, grid_data, nws_base_url
+            )
 
-            return parse_nws_forecast(forecast_data), discussion
+            return parse_nws_forecast(forecast_data), discussion, discussion_issuance_time
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS forecast and discussion: {exc}")
         if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
             raise
-        return None, None
+        return None, None, None
 
 
 async def get_nws_discussion(
@@ -627,18 +638,26 @@ async def get_nws_discussion(
     headers: dict[str, str],
     grid_data: dict[str, Any],
     nws_base_url: str,
-) -> str:
-    """Fetch the NWS Area Forecast Discussion (AFD) for the given grid data."""
+) -> tuple[str, datetime | None]:
+    """
+    Fetch the NWS Area Forecast Discussion (AFD) for the given grid data.
+
+    Returns:
+        Tuple of (discussion_text, issuance_time). The issuance_time is parsed from
+        the NWS API's issuanceTime field and can be used to detect when the AFD
+        has been updated without comparing content.
+
+    """
     try:
         forecast_url = grid_data.get("properties", {}).get("forecast")
         if not forecast_url:
             logger.warning("No forecast URL found in grid data")
-            return "Forecast discussion not available."
+            return "Forecast discussion not available.", None
 
         parts = forecast_url.split("/")
         if len(parts) < 6:
             logger.warning(f"Unexpected forecast URL format: {forecast_url}")
-            return "Forecast discussion not available."
+            return "Forecast discussion not available.", None
 
         office_id = parts[-3]
         logger.info(f"Fetching AFD for office: {office_id}")
@@ -648,40 +667,48 @@ async def get_nws_discussion(
 
         if response.status_code != 200:
             logger.warning(f"Failed to get AFD products: HTTP {response.status_code}")
-            return "Forecast discussion not available."
+            return "Forecast discussion not available.", None
 
         products_data = response.json()
 
         if not products_data.get("@graph"):
             logger.warning(f"No AFD products found for office {office_id}")
-            return "Forecast discussion not available for this location."
+            return "Forecast discussion not available for this location.", None
 
         latest_product = products_data["@graph"][0]
         latest_product_id = latest_product.get("id")
         if not latest_product_id:
             logger.warning("No product ID found in latest AFD product")
-            return "Forecast discussion not available."
+            return "Forecast discussion not available.", None
+
+        # Extract issuanceTime from the product metadata
+        issuance_time: datetime | None = None
+        issuance_time_str = latest_product.get("issuanceTime")
+        if issuance_time_str:
+            issuance_time = _parse_iso_datetime(issuance_time_str)
+            if issuance_time:
+                logger.debug(f"AFD issuance time: {issuance_time}")
 
         product_url = f"{nws_base_url}/products/{latest_product_id}"
         response = await _client_get(client, product_url, headers=headers)
 
         if response.status_code != 200:
             logger.warning(f"Failed to get AFD product text: HTTP {response.status_code}")
-            return "Forecast discussion not available."
+            return "Forecast discussion not available.", None
 
         product_data = response.json()
         product_text = product_data.get("productText")
 
         if not product_text:
             logger.warning("No product text found in AFD product")
-            return "Forecast discussion not available."
+            return "Forecast discussion not available.", None
 
         logger.info(f"Successfully fetched AFD for office {office_id}")
-        return product_text
+        return product_text, issuance_time
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS discussion: {exc}")
-        return "Forecast discussion not available due to error."
+        return "Forecast discussion not available due to error.", None
 
 
 @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)

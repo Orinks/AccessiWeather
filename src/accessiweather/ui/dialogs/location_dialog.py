@@ -18,7 +18,7 @@ def show_add_location_dialog(parent, app: AccessiWeatherApp) -> str | None:
     Show the add location dialog.
 
     Args:
-        parent: Parent window (gui_builder widget)
+        parent: Parent window
         app: Application instance
 
     Returns:
@@ -26,8 +26,7 @@ def show_add_location_dialog(parent, app: AccessiWeatherApp) -> str | None:
 
     """
     try:
-        # Get the underlying wx control if parent is a gui_builder widget
-        parent_ctrl = getattr(parent, "control", parent)
+        parent_ctrl = parent
 
         dlg = AddLocationDialog(parent_ctrl, app)
         result = dlg.ShowModal()
