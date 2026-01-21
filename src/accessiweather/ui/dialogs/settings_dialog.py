@@ -1580,7 +1580,7 @@ def show_settings_dialog(parent, app: AccessiWeatherApp) -> bool:
     Show the settings dialog.
 
     Args:
-        parent: Parent window (gui_builder widget)
+        parent: Parent window
         app: Application instance
 
     Returns:
@@ -1588,8 +1588,7 @@ def show_settings_dialog(parent, app: AccessiWeatherApp) -> bool:
 
     """
     try:
-        # Get the underlying wx control if parent is a gui_builder widget
-        parent_ctrl = getattr(parent, "control", parent)
+        parent_ctrl = parent
 
         dlg = SettingsDialogSimple(parent_ctrl, app)
         result = dlg.ShowModal() == wx.ID_OK

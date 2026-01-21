@@ -1,8 +1,8 @@
 """
 AccessiWeather wxPython application.
 
-This module provides the main wxPython application class using gui_builder
-for declarative UI construction with excellent screen reader accessibility.
+This module provides the main wxPython application class with excellent
+screen reader accessibility.
 """
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 class AccessiWeatherApp(wx.App):
-    """AccessiWeather application using wxPython and gui_builder."""
+    """AccessiWeather application using wxPython."""
 
     def __init__(self, config_dir: str | None = None, portable_mode: bool = False):
         """
@@ -117,13 +117,10 @@ class AccessiWeatherApp(wx.App):
             # Initialize core components
             self._initialize_components()
 
-            # Create main window using gui_builder
-            # Note: Must pass top_level_window=True to get a bound instance
+            # Create main window
             from .ui.main_window import MainWindow
 
-            self.main_window = MainWindow(app=self, top_level_window=True)
-            self.main_window.render()
-            self.main_window.display()
+            self.main_window = MainWindow(app=self)
 
             # Set up keyboard accelerators (shortcuts)
             self._setup_accelerators()
@@ -143,8 +140,8 @@ class AccessiWeatherApp(wx.App):
             # Initialize taskbar icon updater for dynamic tooltips
             self._initialize_taskbar_updater()
 
-            # Handle minimize on startup
-            self._handle_minimize_on_startup()
+            # Show window (or minimize to tray if setting enabled)
+            self._show_or_minimize_window()
 
             logger.info("AccessiWeather application started successfully")
             return True
@@ -207,8 +204,8 @@ class AccessiWeatherApp(wx.App):
         ]
 
         # Create accelerator table
-        # Access the underlying wx.Frame control via .widget.control
-        frame = self.main_window.widget.control
+        # Access the frame directly (MainWindow is now a SizedFrame)
+        frame = self.main_window
         accel_entries = []
         for flags, key, handler in accelerators:
             cmd_id = wx.NewIdRef()
@@ -277,17 +274,26 @@ class AccessiWeatherApp(wx.App):
             logger.warning(f"Failed to initialize taskbar icon updater: {e}")
             self.taskbar_icon_updater = None
 
-    def _handle_minimize_on_startup(self) -> None:
-        """Handle minimize on startup setting."""
+    def _show_or_minimize_window(self) -> None:
+        """Show the main window or minimize to tray based on settings."""
+        if not self.main_window:
+            return
+
         try:
             settings = self.config_manager.get_settings()
-            if getattr(settings, "minimize_on_startup", False) and self.main_window:
-                # Hide the window to tray on startup
-                frame = self.main_window.widget.control
-                frame.Hide()
+            # Only minimize to tray if setting is enabled AND tray icon is available
+            if getattr(settings, "minimize_on_startup", False) and self.tray_icon:
+                # Don't show the window - keep it hidden (starts minimized to tray)
                 logger.info("Window minimized to tray on startup")
+            else:
+                # Show the window normally
+                self.main_window.Show()
+                if getattr(settings, "minimize_on_startup", False) and not self.tray_icon:
+                    logger.warning("minimize_on_startup enabled but tray icon unavailable")
         except Exception as e:
-            logger.warning(f"Failed to handle minimize on startup: {e}")
+            # On error, show the window to avoid invisible app
+            logger.warning(f"Failed to check minimize setting, showing window: {e}")
+            self.main_window.Show()
 
     def update_tray_tooltip(self, weather_data=None, location_name: str | None = None) -> None:
         """
@@ -373,7 +379,7 @@ class AccessiWeatherApp(wx.App):
 
         # Close main window and exit
         if self.main_window:
-            self.main_window.destroy()
+            self.main_window.Destroy()
 
         self.ExitMainLoop()
 

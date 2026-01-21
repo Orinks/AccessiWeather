@@ -208,12 +208,11 @@ def show_explanation_dialog(
     Generate and show AI weather explanation.
 
     Args:
-        parent: Parent window (gui_builder widget)
+        parent: Parent window
         app: Application instance
 
     """
-    # Get the underlying wx control if parent is a gui_builder widget
-    parent_ctrl = getattr(parent, "control", parent)
+    parent_ctrl = parent
 
     # Get current location
     location = app.config_manager.get_current_location()
