@@ -28,6 +28,7 @@ class SettingsDialogSimple(wx.Dialog):
         self.app = app
         self.config_manager = app.config_manager
         self._controls = {}
+        self._selected_specific_model: str | None = None
 
         self._create_ui()
         self._load_settings()
@@ -988,7 +989,11 @@ class SettingsDialogSimple(wx.Dialog):
             elif ai_model == "auto":
                 self._controls["ai_model"].SetSelection(1)
             else:
-                self._controls["ai_model"].SetSelection(0)
+                # Specific model was selected - add it to the dropdown
+                model_display = f"Selected: {ai_model.split('/')[-1]}"
+                self._controls["ai_model"].Append(model_display)
+                self._controls["ai_model"].SetSelection(2)
+                self._selected_specific_model = ai_model
 
             ai_style = getattr(settings, "ai_explanation_style", "standard")
             style_map = {"brief": 0, "standard": 1, "detailed": 2}
@@ -1094,9 +1099,7 @@ class SettingsDialogSimple(wx.Dialog):
                 "update_check_interval_hours": self._controls["update_check_interval"].GetValue(),
                 # AI
                 "openrouter_api_key": self._controls["openrouter_key"].GetValue(),
-                "ai_model_preference": "meta-llama/llama-3.3-70b-instruct:free"
-                if self._controls["ai_model"].GetSelection() == 0
-                else "auto",
+                "ai_model_preference": self._get_ai_model_preference(),
                 "ai_explanation_style": style_values[self._controls["ai_style"].GetSelection()],
                 "custom_system_prompt": self._controls["custom_prompt"].GetValue() or None,
                 "custom_instructions": self._controls["custom_instructions"].GetValue() or None,
@@ -1125,6 +1128,17 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["data_source"].SetName("Weather data source selection")
         self._controls["vc_key"].SetName("Visual Crossing API key")
         self._controls["openrouter_key"].SetName("OpenRouter API key")
+
+    def _get_ai_model_preference(self) -> str:
+        """Get the AI model preference based on UI selection."""
+        selection = self._controls["ai_model"].GetSelection()
+        if selection == 0:
+            return "meta-llama/llama-3.3-70b-instruct:free"
+        if selection == 1:
+            return "auto"
+        if selection == 2 and self._selected_specific_model:
+            return self._selected_specific_model
+        return "meta-llama/llama-3.3-70b-instruct:free"
 
     def _on_ok(self, event):
         """Handle OK button press."""
@@ -1246,7 +1260,30 @@ class SettingsDialogSimple(wx.Dialog):
 
     def _on_browse_models(self, event):
         """Browse available AI models."""
-        webbrowser.open("https://openrouter.ai/models")
+        from .model_browser_dialog import show_model_browser_dialog
+
+        api_key = self._controls["openrouter_key"].GetValue()
+        selected_model_id = show_model_browser_dialog(self, api_key=api_key or None)
+
+        if selected_model_id:
+            # Update the model preference based on selection
+            # Check if it's a known preset
+            if selected_model_id == "meta-llama/llama-3.3-70b-instruct:free":
+                self._controls["ai_model"].SetSelection(0)
+            elif selected_model_id == "openrouter/auto":
+                self._controls["ai_model"].SetSelection(1)
+            else:
+                # Add as "Specific Model" option or update existing
+                model_display = f"Selected: {selected_model_id.split('/')[-1]}"
+                if self._controls["ai_model"].GetCount() > 2:
+                    # Replace existing specific model choice
+                    self._controls["ai_model"].SetString(2, model_display)
+                else:
+                    # Add new specific model choice
+                    self._controls["ai_model"].Append(model_display)
+                self._controls["ai_model"].SetSelection(2)
+                # Store the full model ID for saving
+                self._selected_specific_model = selected_model_id
 
     def _on_reset_prompt(self, event):
         """Reset custom prompt to default."""
