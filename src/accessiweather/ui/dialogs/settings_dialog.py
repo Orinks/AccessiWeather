@@ -407,6 +407,33 @@ class SettingsDialogSimple(wx.Dialog):
         )
         sizer.Add(self._controls["notify_unknown"], 0, wx.LEFT, 10)
 
+        # Event-Based Notifications Section
+        sizer.Add(
+            wx.StaticText(panel, label="Event-Based Notifications:"),
+            0,
+            wx.ALL,
+            5,
+        )
+        sizer.Add(
+            wx.StaticText(
+                panel,
+                label="Get notified when specific weather events occur (disabled by default).",
+            ),
+            0,
+            wx.LEFT | wx.BOTTOM,
+            5,
+        )
+
+        self._controls["notify_discussion_update"] = wx.CheckBox(
+            panel, label="Notify when Area Forecast Discussion is updated (NWS US only)"
+        )
+        sizer.Add(self._controls["notify_discussion_update"], 0, wx.LEFT, 10)
+
+        self._controls["notify_severe_risk_change"] = wx.CheckBox(
+            panel, label="Notify when severe weather risk level changes (Visual Crossing only)"
+        )
+        sizer.Add(self._controls["notify_severe_risk_change"], 0, wx.LEFT | wx.BOTTOM, 10)
+
         # Rate Limiting Section
         sizer.Add(
             wx.StaticText(panel, label="Rate Limiting:"),
@@ -924,6 +951,14 @@ class SettingsDialogSimple(wx.Dialog):
                 getattr(settings, "alert_max_notifications_per_hour", 10)
             )
 
+            # Event-based notifications
+            self._controls["notify_discussion_update"].SetValue(
+                getattr(settings, "notify_discussion_update", False)
+            )
+            self._controls["notify_severe_risk_change"].SetValue(
+                getattr(settings, "notify_severe_risk_change", False)
+            )
+
             # Audio tab
             self._controls["sound_enabled"].SetValue(getattr(settings, "sound_enabled", True))
             current_pack = getattr(settings, "sound_pack", "default")
@@ -1042,6 +1077,9 @@ class SettingsDialogSimple(wx.Dialog):
                 "alert_per_alert_cooldown_minutes": self._controls["per_alert_cooldown"].GetValue(),
                 "alert_freshness_window_minutes": self._controls["freshness_window"].GetValue(),
                 "alert_max_notifications_per_hour": self._controls["max_notifications"].GetValue(),
+                # Event-based notifications
+                "notify_discussion_update": self._controls["notify_discussion_update"].GetValue(),
+                "notify_severe_risk_change": self._controls["notify_severe_risk_change"].GetValue(),
                 # Audio
                 "sound_enabled": self._controls["sound_enabled"].GetValue(),
                 "sound_pack": self._sound_pack_ids[self._controls["sound_pack"].GetSelection()]

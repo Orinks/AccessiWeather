@@ -520,6 +520,9 @@ class MainWindow(SizedFrame):
             # Update system tray tooltip with current weather
             self.app.update_tray_tooltip(weather_data, location_name)
 
+            # Process notification events (AFD updates, severe risk changes)
+            self._process_notification_events(weather_data)
+
         except Exception as e:
             logger.error(f"Failed to update weather display: {e}")
             self.set_status(f"Error updating display: {e}")
@@ -579,3 +582,73 @@ class MainWindow(SizedFrame):
         """Set the status label text."""
         self.status_label.SetLabel(message)
         logger.info(f"Status: {message}")
+
+    def _get_notification_event_manager(self):
+        """Get or create the notification event manager for AFD/severe risk notifications."""
+        if (
+            not hasattr(self, "_notification_event_manager")
+            or self._notification_event_manager is None
+        ):
+            from ..notifications.notification_event_manager import NotificationEventManager
+
+            state_file = self.app.paths.config / "notification_event_state.json"
+            self._notification_event_manager = NotificationEventManager(state_file=state_file)
+        return self._notification_event_manager
+
+    def _process_notification_events(self, weather_data) -> None:
+        """
+        Process weather data for notification events.
+
+        Checks for:
+        - Area Forecast Discussion (AFD) updates (NWS US only)
+        - Severe weather risk level changes (Visual Crossing only)
+
+        Both are opt-in notifications (disabled by default).
+        """
+        try:
+            settings = self.app.config_manager.get_settings()
+
+            # Skip if neither notification type is enabled
+            if not settings.notify_discussion_update and not settings.notify_severe_risk_change:
+                return
+
+            location = self.app.config_manager.get_current_location()
+            if not location:
+                return
+
+            # Get notifier from app
+            notifier = getattr(self.app, "notifier", None)
+            if not notifier:
+                from ..notifications.toast_notifier import SafeDesktopNotifier
+
+                notifier = SafeDesktopNotifier()
+
+            # Get event manager and check for events
+            event_manager = self._get_notification_event_manager()
+            events = event_manager.check_for_events(weather_data, settings, location.name)
+
+            # Send notifications for each event
+            for event in events:
+                try:
+                    success = notifier.send_notification(
+                        title=event.title,
+                        message=event.message,
+                        timeout=10,
+                    )
+
+                    if success and settings.sound_enabled:
+                        import contextlib
+
+                        from ..notifications.sound_player import play_notification_sound
+
+                        with contextlib.suppress(Exception):
+                            play_notification_sound(event.sound_event, settings.sound_pack)
+
+                    if success:
+                        logger.info("Sent %s notification: %s", event.event_type, event.title)
+
+                except Exception as e:
+                    logger.warning("Failed to send event notification: %s", e)
+
+        except Exception as e:
+            logger.debug("Error processing notification events: %s", e)

@@ -33,6 +33,9 @@ NON_CRITICAL_SETTINGS: set[str] = {
     # Sound settings
     "sound_enabled",
     "sound_pack",
+    # Event notifications
+    "notify_discussion_update",
+    "notify_severe_risk_change",
     # GitHub settings
     "github_backend_url",
     "github_app_id",
@@ -100,6 +103,9 @@ class AppSettings:
     debug_mode: bool = False
     sound_enabled: bool = True
     sound_pack: str = "default"
+    # Event-based notifications (opt-in, disabled by default)
+    notify_discussion_update: bool = False
+    notify_severe_risk_change: bool = False
     github_backend_url: str = ""
     github_app_id: str = ""
     github_app_private_key: str = ""
@@ -343,6 +349,8 @@ class AppSettings:
             "debug_mode": self.debug_mode,
             "sound_enabled": self.sound_enabled,
             "sound_pack": self.sound_pack,
+            "notify_discussion_update": self.notify_discussion_update,
+            "notify_severe_risk_change": self.notify_severe_risk_change,
             "github_backend_url": self.github_backend_url,
             "alert_notifications_enabled": self.alert_notifications_enabled,
             "alert_notify_extreme": self.alert_notify_extreme,
@@ -409,6 +417,8 @@ class AppSettings:
             debug_mode=cls._as_bool(data.get("debug_mode"), False),
             sound_enabled=cls._as_bool(data.get("sound_enabled"), True),
             sound_pack=data.get("sound_pack", "default"),
+            notify_discussion_update=cls._as_bool(data.get("notify_discussion_update"), False),
+            notify_severe_risk_change=cls._as_bool(data.get("notify_severe_risk_change"), False),
             github_backend_url=data.get("github_backend_url", ""),
             alert_notifications_enabled=cls._as_bool(data.get("alert_notifications_enabled"), True),
             alert_notify_extreme=cls._as_bool(data.get("alert_notify_extreme"), True),
