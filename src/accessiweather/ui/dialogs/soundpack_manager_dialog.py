@@ -1057,8 +1057,7 @@ class SoundPackManagerDialog(wx.Dialog):
 
 def show_soundpack_manager_dialog(parent: wx.Window, app: AccessiWeatherApp) -> None:
     """Show the sound pack manager dialog."""
-    # Get the underlying wx control if parent is a gui_builder widget
-    parent_ctrl = getattr(parent, "control", parent)
+    parent_ctrl = parent
     dialog = SoundPackManagerDialog(parent_ctrl, app)
     dialog.ShowModal()
     dialog.Destroy()

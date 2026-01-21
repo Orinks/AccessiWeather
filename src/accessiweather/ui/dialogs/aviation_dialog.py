@@ -21,13 +21,12 @@ def show_aviation_dialog(parent, app: AccessiWeatherApp) -> None:
     Show the aviation weather dialog.
 
     Args:
-        parent: Parent window (gui_builder widget)
+        parent: Parent window
         app: Application instance
 
     """
     try:
-        # Get the underlying wx control if parent is a gui_builder widget
-        parent_ctrl = getattr(parent, "control", parent)
+        parent_ctrl = parent
 
         dlg = AviationDialog(parent_ctrl, app)
         dlg.ShowModal()

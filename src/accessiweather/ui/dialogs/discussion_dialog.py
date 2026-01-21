@@ -1,4 +1,4 @@
-"""NWS Area Forecast Discussion dialog using gui_builder."""
+"""NWS Area Forecast Discussion dialog using plain wxPython."""
 
 from __future__ import annotations
 
@@ -6,7 +6,6 @@ import logging
 from typing import TYPE_CHECKING
 
 import wx
-from gui_builder import fields, forms
 
 if TYPE_CHECKING:
     from ...app import AccessiWeatherApp
@@ -14,79 +13,114 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class DiscussionDialog(forms.Dialog):
-    """Dialog for displaying NWS Area Forecast Discussion using gui_builder."""
+class DiscussionDialog(wx.Dialog):
+    """Dialog for displaying NWS Area Forecast Discussion."""
 
-    # Header
-    header_label = fields.StaticText(
-        label="NWS Area Forecast Discussion provides detailed meteorologist analysis."
-    )
-
-    # Status
-    status_label = fields.StaticText(label="Loading discussion...")
-
-    # Discussion section
-    discussion_header = fields.StaticText(label="Forecast Discussion")
-    discussion_display = fields.Text(
-        label="Forecast discussion text",
-        multiline=True,
-        readonly=True,
-    )
-
-    # AI Explanation section
-    explanation_header = fields.StaticText(label="Plain Language Summary")
-    explanation_display = fields.Text(
-        label="AI-generated plain language summary",
-        multiline=True,
-        readonly=True,
-    )
-
-    # Buttons
-    refresh_button = fields.Button(label="&Refresh")
-    explain_button = fields.Button(label="&Explain with AI")
-    close_button = fields.Button(label="&Close")
-
-    def __init__(self, app: AccessiWeatherApp, **kwargs):
+    def __init__(
+        self, parent: wx.Window, app: AccessiWeatherApp, title: str = "Area Forecast Discussion"
+    ):
         """
         Initialize the discussion dialog.
 
         Args:
+            parent: Parent window
             app: Application instance
-            **kwargs: Additional keyword arguments passed to Dialog
+            title: Dialog title
 
         """
+        super().__init__(parent, title=title, style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
         self.app = app
         self._is_loading = False
         self._is_explaining = False
         self._current_discussion: str | None = None
 
-        kwargs.setdefault("title", "Area Forecast Discussion")
-        super().__init__(**kwargs)
-
-    def render(self, **kwargs):
-        """Render the dialog and set up components."""
-        super().render(**kwargs)
+        self._create_widgets()
+        self._bind_events()
         self._setup_initial_state()
-        self._setup_accessibility()
+
+        # Set a reasonable size
+        self.SetSize((700, 600))
+        self.CenterOnParent()
+
+        # Load the discussion
         self._load_discussion()
+
+    def _create_widgets(self) -> None:
+        """Create all UI widgets."""
+        panel = wx.Panel(self)
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Header
+        self.header_label = wx.StaticText(
+            panel, label="NWS Area Forecast Discussion provides detailed meteorologist analysis."
+        )
+        main_sizer.Add(self.header_label, 0, wx.ALL | wx.EXPAND, 10)
+
+        # Status
+        self.status_label = wx.StaticText(panel, label="Loading discussion...")
+        main_sizer.Add(self.status_label, 0, wx.LEFT | wx.RIGHT | wx.EXPAND, 10)
+
+        # Discussion section
+        discussion_header = wx.StaticText(panel, label="Forecast Discussion:")
+        main_sizer.Add(discussion_header, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
+
+        self.discussion_display = wx.TextCtrl(
+            panel,
+            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
+            name="Forecast discussion text",
+        )
+        main_sizer.Add(self.discussion_display, 1, wx.ALL | wx.EXPAND, 10)
+
+        # AI Explanation section
+        explanation_header = wx.StaticText(panel, label="Plain Language Summary:")
+        main_sizer.Add(explanation_header, 0, wx.LEFT | wx.RIGHT, 10)
+
+        self.explanation_display = wx.TextCtrl(
+            panel,
+            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
+            name="AI-generated plain language summary",
+        )
+        main_sizer.Add(self.explanation_display, 1, wx.ALL | wx.EXPAND, 10)
+
+        # Button sizer
+        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.refresh_button = wx.Button(panel, label="&Refresh")
+        button_sizer.Add(self.refresh_button, 0, wx.RIGHT, 5)
+
+        self.explain_button = wx.Button(panel, label="&Explain with AI")
+        button_sizer.Add(self.explain_button, 0, wx.RIGHT, 5)
+
+        self.close_button = wx.Button(panel, wx.ID_CLOSE, label="&Close")
+        button_sizer.Add(self.close_button, 0)
+
+        main_sizer.Add(button_sizer, 0, wx.ALL | wx.ALIGN_RIGHT, 10)
+
+        panel.SetSizer(main_sizer)
+
+        # Dialog sizer to contain the panel
+        dialog_sizer = wx.BoxSizer(wx.VERTICAL)
+        dialog_sizer.Add(panel, 1, wx.EXPAND)
+        self.SetSizer(dialog_sizer)
+
+    def _bind_events(self) -> None:
+        """Bind event handlers."""
+        self.refresh_button.Bind(wx.EVT_BUTTON, self._on_refresh)
+        self.explain_button.Bind(wx.EVT_BUTTON, self._on_explain)
+        self.close_button.Bind(wx.EVT_BUTTON, self._on_close)
 
     def _setup_initial_state(self) -> None:
         """Set up initial state."""
-        self.discussion_display.set_value("Loading...")
-        self.explanation_display.set_value(
+        self.discussion_display.SetValue("Loading...")
+        self.explanation_display.SetValue(
             "Click 'Explain with AI' to generate a plain language summary.\n\n"
             "Note: Requires an OpenRouter API key configured in Settings."
         )
-        self.explain_button.disable()
-
-    def _setup_accessibility(self) -> None:
-        """Set up accessibility labels for screen readers."""
-        self.discussion_display.set_accessible_label("Forecast discussion text")
-        self.explanation_display.set_accessible_label("AI-generated plain language summary")
+        self.explain_button.Disable()
 
     def _set_status(self, message: str) -> None:
         """Update the status label."""
-        self.status_label.set_label(message)
+        self.status_label.SetLabel(message)
 
     def _load_discussion(self) -> None:
         """Load the discussion from current weather data or fetch fresh."""
@@ -106,7 +140,7 @@ class DiscussionDialog(forms.Dialog):
         location = self.app.config_manager.get_current_location()
         if not location:
             self._set_status("No location selected.")
-            self.discussion_display.set_value(
+            self.discussion_display.SetValue(
                 "Please select a location to view the forecast discussion."
             )
             return
@@ -116,7 +150,7 @@ class DiscussionDialog(forms.Dialog):
             return
 
         self._is_loading = True
-        self.refresh_button.disable()
+        self.refresh_button.Disable()
         self._set_status(f"Fetching discussion for {location.name}...")
 
         # Run async fetch
@@ -136,27 +170,27 @@ class DiscussionDialog(forms.Dialog):
     def _on_fetch_complete(self, location_name: str, discussion: str | None) -> None:
         """Handle fetch completion."""
         self._is_loading = False
-        self.refresh_button.enable()
+        self.refresh_button.Enable()
 
         if discussion:
             self._on_discussion_loaded(discussion, location_name)
         else:
             self._set_status("No discussion available for this location.")
-            self.discussion_display.set_value(
+            self.discussion_display.SetValue(
                 "Forecast discussion not available.\n\n"
                 "This may occur if:\n"
                 "- The location is outside NWS coverage (US only)\n"
                 "- The NWS service is temporarily unavailable\n"
                 "- No recent discussion has been issued"
             )
-            self.explain_button.disable()
+            self.explain_button.Disable()
 
     def _on_fetch_error(self, error: str) -> None:
         """Handle fetch error."""
         self._is_loading = False
-        self.refresh_button.enable()
+        self.refresh_button.Enable()
         self._set_status(f"Error: {error}")
-        self.discussion_display.set_value(f"Failed to load discussion: {error}")
+        self.discussion_display.SetValue(f"Failed to load discussion: {error}")
 
     def _on_discussion_loaded(self, discussion: str, location_name: str | None = None) -> None:
         """Handle discussion data loaded."""
@@ -165,8 +199,8 @@ class DiscussionDialog(forms.Dialog):
         # Check if it's an error message
         if discussion.startswith("Forecast discussion not available"):
             self._set_status("Discussion not available.")
-            self.discussion_display.set_value(discussion)
-            self.explain_button.disable()
+            self.discussion_display.SetValue(discussion)
+            self.explain_button.Disable()
             return
 
         if location_name:
@@ -176,7 +210,7 @@ class DiscussionDialog(forms.Dialog):
             loc_name = location.name if location else "current location"
             self._set_status(f"Discussion loaded for {loc_name}.")
 
-        self.discussion_display.set_value(discussion)
+        self.discussion_display.SetValue(discussion)
 
         # Enable explain button if AI is available
         self._update_explain_button_state()
@@ -189,26 +223,24 @@ class DiscussionDialog(forms.Dialog):
 
             api_key = SecureStorage.get_password("openrouter_api_key")
             if api_key and self._current_discussion:
-                self.explain_button.enable()
+                self.explain_button.Enable()
             else:
-                self.explain_button.disable()
+                self.explain_button.Disable()
         except Exception:
-            self.explain_button.disable()
+            self.explain_button.Disable()
 
-    @refresh_button.add_callback
-    def on_refresh(self):
+    def _on_refresh(self, event) -> None:
         """Handle refresh button press."""
         self._fetch_discussion()
 
-    @explain_button.add_callback
-    def on_explain(self):
+    def _on_explain(self, event) -> None:
         """Handle explain button press - use AI to explain the discussion."""
         if not self._current_discussion or self._is_explaining:
             return
 
         self._is_explaining = True
-        self.explain_button.disable()
-        self.explanation_display.set_value("Generating plain language summary...")
+        self.explain_button.Disable()
+        self.explanation_display.SetValue("Generating plain language summary...")
         self._set_status("Generating AI explanation...")
 
         # Run async explanation
@@ -256,24 +288,23 @@ class DiscussionDialog(forms.Dialog):
     def _on_explain_complete(self, explanation: str, model_used: str) -> None:
         """Handle explanation completion."""
         self._is_explaining = False
-        self.explain_button.enable()
-        self.explanation_display.set_value(explanation)
+        self.explain_button.Enable()
+        self.explanation_display.SetValue(explanation)
         self._set_status(f"Explanation generated using {model_used}.")
 
     def _on_explain_error(self, error: str) -> None:
         """Handle explanation error."""
         self._is_explaining = False
-        self.explain_button.enable()
-        self.explanation_display.set_value(
+        self.explain_button.Enable()
+        self.explanation_display.SetValue(
             f"Failed to generate explanation: {error}\n\n"
             "Please check your OpenRouter API key in Settings."
         )
         self._set_status("Explanation failed.")
 
-    @close_button.add_callback
-    def on_close(self):
+    def _on_close(self, event) -> None:
         """Handle close button press."""
-        self.widget.control.EndModal(wx.ID_CLOSE)
+        self.EndModal(wx.ID_CLOSE)
 
 
 def show_discussion_dialog(parent, app: AccessiWeatherApp) -> None:
@@ -281,18 +312,17 @@ def show_discussion_dialog(parent, app: AccessiWeatherApp) -> None:
     Show the Area Forecast Discussion dialog.
 
     Args:
-        parent: Parent window (gui_builder widget)
+        parent: Parent window (wx.Window or has .control attribute)
         app: Application instance
 
     """
     try:
-        # Get the underlying wx control if parent is a gui_builder widget
+        # Get the underlying wx control if parent has a control attribute
         parent_ctrl = getattr(parent, "control", parent)
 
-        dlg = DiscussionDialog(app, parent=parent_ctrl)
-        dlg.render()
-        dlg.widget.control.ShowModal()
-        dlg.widget.control.Destroy()
+        dlg = DiscussionDialog(parent_ctrl, app)
+        dlg.ShowModal()
+        dlg.Destroy()
 
     except Exception as e:
         logger.error(f"Failed to show discussion dialog: {e}")
