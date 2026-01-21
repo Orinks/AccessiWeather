@@ -5,13 +5,19 @@ This module provides functionality to ensure only one instance of the applicatio
 can run at a time using a lock file approach.
 """
 
+import atexit
+import contextlib
 import logging
 import os
+import signal
 import subprocess
 import time
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+# Global reference for cleanup handlers (needed for atexit and signal handlers)
+_active_manager: "SingleInstanceManager | None" = None
 
 
 class SingleInstanceManager:
@@ -31,6 +37,7 @@ class SingleInstanceManager:
         self.lock_filename = lock_filename
         self.lock_file_path: Path | None = None
         self._lock_acquired = False
+        self._cleanup_registered = False
 
     def try_acquire_lock(self) -> bool:
         """
@@ -61,6 +68,10 @@ class SingleInstanceManager:
             # Create lock file with current process info
             self._create_lock_file()
             self._lock_acquired = True
+
+            # Register cleanup handlers for various termination scenarios
+            self._register_cleanup_handlers()
+
             logger.info("Successfully acquired single instance lock")
             return True
 
@@ -152,8 +163,15 @@ class SingleInstanceManager:
         """
         try:
             import ctypes
+            from ctypes import wintypes
 
-            kernel32 = ctypes.windll.kernel32
+            kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+
+            # Set up function signatures for proper error handling
+            kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+            kernel32.OpenProcess.restype = wintypes.HANDLE
+            kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+            kernel32.CloseHandle.restype = wintypes.BOOL
 
             # OpenProcess with PROCESS_QUERY_LIMITED_INFORMATION (0x1000)
             # This is the minimum access right needed to query process info
@@ -167,7 +185,8 @@ class SingleInstanceManager:
 
             # Check if access was denied (process exists but we can't open it)
             ERROR_ACCESS_DENIED = 5
-            return ctypes.get_last_error() == ERROR_ACCESS_DENIED
+            last_error = ctypes.get_last_error()
+            return last_error == ERROR_ACCESS_DENIED
 
         except Exception as e:
             logger.debug(f"Windows process check failed, falling back to tasklist: {e}")
@@ -216,11 +235,54 @@ class SingleInstanceManager:
         except Exception as e:
             logger.error(f"Failed to remove lock file: {e}")
 
+    def _register_cleanup_handlers(self) -> None:
+        """
+        Register cleanup handlers for various termination scenarios.
+
+        This ensures the lock file is cleaned up when:
+        - Python exits normally (atexit)
+        - Process receives SIGTERM or SIGINT (signal handlers)
+        - On Windows: SIGBREAK (Ctrl+Break)
+
+        Note: SIGKILL (kill -9) and Windows Task Manager "End Process"
+        cannot be caught - the stale lock detection handles those cases.
+        """
+        global _active_manager
+
+        if self._cleanup_registered:
+            return
+
+        _active_manager = self
+
+        # Register atexit handler for normal Python exit
+        atexit.register(_cleanup_lock_file)
+
+        # Register signal handlers for graceful termination
+        # SIGTERM: Standard termination signal (kill command default)
+        # SIGINT: Interrupt signal (Ctrl+C)
+        try:
+            signal.signal(signal.SIGTERM, _signal_handler)
+            signal.signal(signal.SIGINT, _signal_handler)
+        except (ValueError, OSError) as e:
+            # Signal handlers can fail in some environments (e.g., threads)
+            logger.debug(f"Could not register signal handlers: {e}")
+
+        # Windows-specific: SIGBREAK (Ctrl+Break)
+        if os.name == "nt":
+            with contextlib.suppress(ValueError, OSError, AttributeError):
+                signal.signal(signal.SIGBREAK, _signal_handler)
+
+        self._cleanup_registered = True
+        logger.debug("Registered cleanup handlers for lock file")
+
     def release_lock(self) -> None:
         """Release the single instance lock."""
+        global _active_manager
+
         if self._lock_acquired:
             self._remove_lock_file()
             self._lock_acquired = False
+            _active_manager = None
             logger.info("Released single instance lock")
 
     async def show_already_running_dialog(self) -> None:
@@ -244,3 +306,41 @@ class SingleInstanceManager:
     def __exit__(self, _exc_type, _exc_val, _exc_tb):
         """Context manager exit - ensure lock is released."""
         self.release_lock()
+
+
+def _cleanup_lock_file() -> None:
+    """
+    Cleanup function called by atexit.
+
+    This is a module-level function because atexit requires a callable
+    that doesn't hold references that might be garbage collected.
+    """
+    global _active_manager
+    if _active_manager and _active_manager._lock_acquired:
+        try:
+            _active_manager._remove_lock_file()
+            logger.debug("Lock file cleaned up via atexit handler")
+        except Exception as e:
+            logger.debug(f"Failed to clean up lock file in atexit: {e}")
+
+
+def _signal_handler(signum: int, frame) -> None:
+    """
+    Signal handler for SIGTERM, SIGINT, and SIGBREAK.
+
+    Cleans up the lock file before the process terminates.
+    """
+    global _active_manager
+    signal_name = signal.Signals(signum).name if hasattr(signal, "Signals") else str(signum)
+    logger.info(f"Received signal {signal_name}, cleaning up lock file")
+
+    if _active_manager and _active_manager._lock_acquired:
+        try:
+            _active_manager._remove_lock_file()
+            _active_manager._lock_acquired = False
+        except Exception as e:
+            logger.debug(f"Failed to clean up lock file in signal handler: {e}")
+
+    # Re-raise the signal with default handler to allow normal termination
+    signal.signal(signum, signal.SIG_DFL)
+    os.kill(os.getpid(), signum)
