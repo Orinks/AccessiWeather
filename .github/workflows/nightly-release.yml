@@ -153,11 +153,14 @@ jobs:
         run: choco install innosetup -y --no-progress
 
       - name: Create Windows Installer
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+          FILE_VERSION: ${{ steps.version.outputs.file_version }}
         run: |
           # Pass version directly to Inno Setup via command line
           # MyAppVersion: displayed in installer UI (can have spaces/parentheses)
           # MyAppFileVersion: used for output filename (must be filename-safe)
-          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" /DMyAppVersion="${{ steps.version.outputs.version }}" /DMyAppFileVersion="${{ steps.version.outputs.file_version }}" installer/accessiweather.iss
+          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" "/DMyAppVersion=$APP_VERSION" "/DMyAppFileVersion=$FILE_VERSION" installer/accessiweather.iss
 
       - name: Create portable ZIP
         run: |
