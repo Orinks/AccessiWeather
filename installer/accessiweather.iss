@@ -9,9 +9,10 @@
 ;   iscc installer/accessiweather.iss
 
 #define MyAppName "AccessiWeather"
-; Version can be overridden via command line: ISCC /DMyAppVersion="0.4.3" accessiweather.iss
-#ifndef MyAppVersion
-  #define MyAppVersion "0.4.3"
+; Version can be read from dist/version.txt (written by CI) or use default
+#define MyAppVersion "0.4.3"
+#ifexist "..\dist\version.txt"
+  #define MyAppVersion ReadIni("..\dist\version.txt", "version", "value", "0.4.3")
 #endif
 #define MyAppPublisher "Orinks"
 #define MyAppURL "https://github.com/Orinks/AccessiWeather"
