@@ -115,9 +115,9 @@ jobs:
       - name: Create Windows Installer
         run: |
           # Pass version directly to Inno Setup via command line
-          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" \
-            /DMyAppVersion="${{ steps.version.outputs.version }}" \
-            installer/accessiweather.iss
+          # MyAppVersion: displayed in installer UI (can have spaces/parentheses)
+          # MyAppFileVersion: used for output filename (must be filename-safe)
+          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" /DMyAppVersion="${{ steps.version.outputs.version }}" /DMyAppFileVersion="${{ steps.version.outputs.file_version }}" installer/accessiweather.iss
 
       - name: Create portable ZIP
         run: |

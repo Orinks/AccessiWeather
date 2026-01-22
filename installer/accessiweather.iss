@@ -9,9 +9,15 @@
 ;   iscc installer/accessiweather.iss
 
 #define MyAppName "AccessiWeather"
-; Version can be overridden via command line: ISCC /DMyAppVersion="0.5.0 (nightly 2026-01-20)" accessiweather.iss
+; Version can be overridden via command line:
+;   ISCC /DMyAppVersion="0.5.0 (nightly 2026-01-20)" /DMyAppFileVersion="nightly-20260120" accessiweather.iss
+; MyAppVersion is displayed in the installer UI
+; MyAppFileVersion is used for the output filename (must be filename-safe: no spaces or parentheses)
 #ifndef MyAppVersion
   #define MyAppVersion "0.4.3"
+#endif
+#ifndef MyAppFileVersion
+  #define MyAppFileVersion MyAppVersion
 #endif
 #define MyAppPublisher "Orinks"
 #define MyAppURL "https://github.com/Orinks/AccessiWeather"
@@ -38,7 +44,7 @@ DisableProgramGroupPage=yes
 
 ; Output settings
 OutputDir=..\dist
-OutputBaseFilename=AccessiWeather_Setup_v{#MyAppVersion}
+OutputBaseFilename=AccessiWeather_Setup_v{#MyAppFileVersion}
 SetupIconFile=app.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 
