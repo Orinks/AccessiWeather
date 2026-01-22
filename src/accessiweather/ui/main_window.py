@@ -92,10 +92,6 @@ class MainWindow(SizedFrame):
         )
         self.current_conditions.SetSizerProps(expand=True, proportion=1)
 
-        # Data source attribution
-        self.data_source_label = wx.StaticText(panel, label="")
-        self.data_source_label.SetSizerProps(expand=True)
-
         # Forecast section
         wx.StaticText(panel, label="Forecast:")
         self.forecast_display = wx.TextCtrl(
@@ -475,17 +471,18 @@ class MainWindow(SizedFrame):
             # Use presenter to create formatted presentation
             presentation = self.app.presenter.present(weather_data)
 
-            # Update current conditions
+            # Update current conditions (with data source attribution appended)
+            current_text = ""
             if presentation.current_conditions:
-                self.current_conditions.SetValue(presentation.current_conditions.fallback_text)
+                current_text = presentation.current_conditions.fallback_text
             else:
-                self.current_conditions.SetValue("No current conditions available.")
+                current_text = "No current conditions available."
 
-            # Update data source attribution
+            # Append data source attribution to current conditions for screen reader accessibility
             if presentation.source_attribution and presentation.source_attribution.summary_text:
-                self.data_source_label.SetLabel(presentation.source_attribution.summary_text)
-            else:
-                self.data_source_label.SetLabel("")
+                current_text += f"\n\n{presentation.source_attribution.summary_text}"
+
+            self.current_conditions.SetValue(current_text)
 
             # Update stale/cached data warning
             if presentation.status_messages:

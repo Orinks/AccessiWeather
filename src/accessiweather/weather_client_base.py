@@ -447,6 +447,11 @@ class WeatherClient:
                 weather_data.discussion_issuance_time = None
                 weather_data.alerts = alerts
 
+                # Set source attribution for single-source mode
+                weather_data.source_attribution = SourceAttribution(
+                    contributing_sources={"visualcrossing"},
+                )
+
                 # Process alerts for notifications if we have any (unless skipped for pre-warming)
                 if not skip_notifications and alerts and alerts.has_alerts():
                     logger.info(
@@ -472,6 +477,11 @@ class WeatherClient:
                 weather_data.discussion_issuance_time = None
                 weather_data.alerts = WeatherAlerts(alerts=[])  # Open-Meteo doesn't provide alerts
 
+                # Set source attribution for single-source mode
+                weather_data.source_attribution = SourceAttribution(
+                    contributing_sources={"openmeteo"},
+                )
+
                 logger.info(f"Successfully fetched Open-Meteo data for {location.name}")
 
             except Exception as e:
@@ -495,6 +505,11 @@ class WeatherClient:
                 weather_data.discussion = discussion
                 weather_data.discussion_issuance_time = discussion_issuance_time
                 weather_data.alerts = alerts
+
+                # Set source attribution for single-source mode
+                weather_data.source_attribution = SourceAttribution(
+                    contributing_sources={"nws"},
+                )
 
                 if (current is None or not current.has_data()) and forecast is None:
                     logger.warning(f"NWS returned empty data for {location.name}")

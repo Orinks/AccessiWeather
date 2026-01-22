@@ -21,6 +21,7 @@ from .models import (
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    SourceAttribution,
     TrendInsight,
     WeatherAlert,
     WeatherAlerts,
@@ -31,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 # Cache schema version - increment this when cache data structure changes
 # This is independent of app version and allows test builds to invalidate old cache
-CACHE_SCHEMA_VERSION = 5
+CACHE_SCHEMA_VERSION = 6
 
 
 @dataclass
@@ -513,6 +514,28 @@ def _serialize_trends(trends: list[TrendInsight]) -> list[dict]:
     ]
 
 
+def _serialize_source_attribution(attribution: SourceAttribution | None) -> dict | None:
+    """Serialize source attribution for cache storage."""
+    if attribution is None:
+        return None
+    return {
+        "contributing_sources": list(attribution.contributing_sources),
+        "failed_sources": list(attribution.failed_sources),
+        "field_sources": attribution.field_sources,
+    }
+
+
+def _deserialize_source_attribution(data: dict | None) -> SourceAttribution | None:
+    """Deserialize source attribution from cache storage."""
+    if not isinstance(data, dict):
+        return None
+    return SourceAttribution(
+        contributing_sources=set(data.get("contributing_sources", [])),
+        failed_sources=set(data.get("failed_sources", [])),
+        field_sources=data.get("field_sources", {}),
+    )
+
+
 def _deserialize_trends(data: list | None) -> list[TrendInsight]:
     if not isinstance(data, list):
         return []
@@ -543,6 +566,8 @@ def _serialize_weather_data(weather: WeatherData) -> dict:
         "alerts": _serialize_alerts(weather.alerts),
         "environmental": _serialize_environmental(weather.environmental),
         "trend_insights": _serialize_trends(weather.trend_insights),
+        "source_attribution": _serialize_source_attribution(weather.source_attribution),
+        "incomplete_sections": list(weather.incomplete_sections),
         "stale": weather.stale,
         "stale_since": _serialize_datetime(weather.stale_since),
         "stale_reason": weather.stale_reason,
@@ -560,6 +585,8 @@ def _deserialize_weather_data(data: dict, location: Location) -> WeatherData:
         alerts=_deserialize_alerts(data.get("alerts")),
         environmental=_deserialize_environmental(data.get("environmental")),
         trend_insights=_deserialize_trends(data.get("trend_insights")),
+        source_attribution=_deserialize_source_attribution(data.get("source_attribution")),
+        incomplete_sections=set(data.get("incomplete_sections", [])),
     )
     weather.stale = bool(data.get("stale", False))
     weather.stale_since = _deserialize_datetime(data.get("stale_since"))
