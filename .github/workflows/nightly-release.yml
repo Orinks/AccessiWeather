@@ -148,9 +148,7 @@ jobs:
 
       - name: Create Windows Installer
         run: |
-          # Pass version from pyproject.toml to Inno Setup
-          # Script file must come BEFORE /D parameters
-          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" installer/accessiweather.iss /DMyAppVersion=${{ steps.version.outputs.version }}
+          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" installer/accessiweather.iss
 
       - name: Create portable ZIP
         run: |
