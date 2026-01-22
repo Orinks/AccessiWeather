@@ -80,6 +80,24 @@ AccessiWeather works out of the box with free data sources (NWS and Open-Meteo).
 - [Sound Pack System](docs/SOUND_PACK_SYSTEM.md) - Create and install custom alert sounds
 - [Update System](docs/UPDATE_SYSTEM.md) - How automatic updates work
 
+## Troubleshooting
+
+### Antivirus False Positives
+
+Some antivirus software (e.g., Avast, AVG) may flag AccessiWeather's auto-update service as malicious during builds or first run. This is a **false positive** caused by the update mechanism using standard Windows patterns (batch scripts, PowerShell for ZIP extraction) that superficially resemble malware techniques.
+
+**The code is safe** - our update service:
+- Only downloads from official GitHub releases
+- Verifies all downloads with SHA256 checksums
+- Uses no obfuscation or suspicious network calls
+
+**If flagged:**
+1. Report as false positive to your antivirus vendor
+2. Add an exception for AccessiWeather in your antivirus settings
+3. The flagged file is typically `github_update_service.cpython-*.pyc` in `__pycache__`
+
+See [docs/UPDATE_SYSTEM.md](docs/UPDATE_SYSTEM.md) for technical details about the update system's security measures.
+
 ## Support & Community
 
 - **Issues**: Report bugs or request features on [GitHub Issues](https://github.com/Orinks/AccessiWeather/issues)
