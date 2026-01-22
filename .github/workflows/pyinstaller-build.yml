@@ -103,6 +103,9 @@ jobs:
 
       - name: Create Windows Installer
         run: |
+          # Write version file for Inno Setup (from pyproject.toml)
+          echo "[version]" > dist/version.txt
+          echo "value=${{ steps.version.outputs.version }}" >> dist/version.txt
           "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" installer/accessiweather.iss
 
       - name: Create portable ZIP

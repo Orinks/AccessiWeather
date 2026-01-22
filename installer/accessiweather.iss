@@ -9,8 +9,12 @@
 ;   iscc installer/accessiweather.iss
 
 #define MyAppName "AccessiWeather"
-; Keep this version in sync with pyproject.toml
+; Version is read from dist/version.txt (written by CI from pyproject.toml)
+; Falls back to hardcoded default for local builds
 #define MyAppVersion "0.4.3"
+#ifexist "..\dist\version.txt"
+  #define MyAppVersion ReadIni("..\dist\version.txt", "version", "value", "0.4.3")
+#endif
 #define MyAppPublisher "Orinks"
 #define MyAppURL "https://github.com/Orinks/AccessiWeather"
 #define MyAppExeName "AccessiWeather.exe"
