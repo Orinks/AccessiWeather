@@ -129,19 +129,13 @@ jobs:
           pip install -e .[dev]
           pip install pyinstaller pillow
 
-      - name: Set nightly version
+      - name: Get version
         id: version
         run: |
-          # Get base version from pyproject.toml
-          BASE_VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
-          # Format: 0.5.0 (nightly 2026-01-20)
-          NIGHTLY_DATE=$(date +%Y-%m-%d)
-          DISPLAY_VERSION="${BASE_VERSION} (nightly ${NIGHTLY_DATE})"
-          # For filenames, use simpler format without spaces/parentheses
-          FILE_VERSION="nightly-$(date +%Y%m%d)"
-          echo "version=$DISPLAY_VERSION" >> $GITHUB_OUTPUT
-          echo "file_version=$FILE_VERSION" >> $GITHUB_OUTPUT
-          echo "Building version: $DISPLAY_VERSION (files: $FILE_VERSION)"
+          # Just use the version from pyproject.toml
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
 
       - name: Generate icons
         run: python installer/create_icons.py
@@ -153,23 +147,18 @@ jobs:
         run: choco install innosetup -y --no-progress
 
       - name: Create Windows Installer
-        env:
-          APP_VERSION: ${{ steps.version.outputs.version }}
-          FILE_VERSION: ${{ steps.version.outputs.file_version }}
         run: |
-          # Pass version directly to Inno Setup via command line
-          # MyAppVersion: displayed in installer UI (can have spaces/parentheses)
-          # MyAppFileVersion: used for output filename (must be filename-safe)
-          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" "/DMyAppVersion=$APP_VERSION" "/DMyAppFileVersion=$FILE_VERSION" installer/accessiweather.iss
+          # Pass version from pyproject.toml to Inno Setup
+          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" /DMyAppVersion="${{ steps.version.outputs.version }}" installer/accessiweather.iss
 
       - name: Create portable ZIP
         run: |
-          FILE_VERSION="${{ steps.version.outputs.file_version }}"
+          VERSION="${{ steps.version.outputs.version }}"
           cd dist
           if [ -d "AccessiWeather_dir" ]; then
-            7z a -tzip "AccessiWeather_Portable_v${FILE_VERSION}.zip" "AccessiWeather_dir/*"
+            7z a -tzip "AccessiWeather_Portable_v${VERSION}.zip" "AccessiWeather_dir/*"
           elif [ -f "AccessiWeather.exe" ]; then
-            7z a -tzip "AccessiWeather_Portable_v${FILE_VERSION}.zip" "AccessiWeather.exe"
+            7z a -tzip "AccessiWeather_Portable_v${VERSION}.zip" "AccessiWeather.exe"
           fi
 
       - name: Upload Windows Installer
@@ -221,19 +210,13 @@ jobs:
           pip install pyinstaller pillow
           brew install create-dmg || true
 
-      - name: Set nightly version
+      - name: Get version
         id: version
         run: |
-          # Get base version from pyproject.toml
-          BASE_VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
-          # Format: 0.5.0 (nightly 2026-01-20)
-          NIGHTLY_DATE=$(date +%Y-%m-%d)
-          DISPLAY_VERSION="${BASE_VERSION} (nightly ${NIGHTLY_DATE})"
-          # For filenames, use simpler format without spaces/parentheses
-          FILE_VERSION="nightly-$(date +%Y%m%d)"
-          echo "version=$DISPLAY_VERSION" >> $GITHUB_OUTPUT
-          echo "file_version=$FILE_VERSION" >> $GITHUB_OUTPUT
-          echo "Building version: $DISPLAY_VERSION (files: $FILE_VERSION)"
+          # Just use the version from pyproject.toml
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
 
       - name: Generate icons
         run: python installer/create_icons.py
@@ -243,7 +226,7 @@ jobs:
 
       - name: Create DMG
         run: |
-          FILE_VERSION="${{ steps.version.outputs.file_version }}"
+          VERSION="${{ steps.version.outputs.version }}"
 
           # Try create-dmg first, fallback to hdiutil
           if command -v create-dmg &> /dev/null; then
@@ -255,11 +238,11 @@ jobs:
               --icon "AccessiWeather.app" 175 190 \
               --hide-extension "AccessiWeather.app" \
               --app-drop-link 425 190 \
-              "dist/AccessiWeather_v${FILE_VERSION}.dmg" \
+              "dist/AccessiWeather_v${VERSION}.dmg" \
               "dist/AccessiWeather.app" || \
-              hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${FILE_VERSION}.dmg"
+              hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${VERSION}.dmg"
           else
-            hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${FILE_VERSION}.dmg"
+            hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${VERSION}.dmg"
           fi
 
       - name: Upload macOS DMG
