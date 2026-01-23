@@ -19,6 +19,73 @@ env:
   FORCE_COLOR: "1"
 
 jobs:
+  changelog-check:
+    name: CHANGELOG Check
+    runs-on: ubuntu-latest
+    # Only run on dev branch (where nightlies come from)
+    if: github.ref == 'refs/heads/dev' || github.base_ref == 'dev'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+
+    - name: Check for CHANGELOG updates
+      run: |
+        echo "Checking if src/ changes include CHANGELOG.md updates..."
+
+        # Determine the comparison base
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          BASE="origin/${{ github.base_ref }}"
+          echo "PR detected - comparing against $BASE"
+        else
+          # For pushes, compare against the previous commit or last nightly tag
+          LAST_NIGHTLY=$(git tag --list "nightly-*" --sort=-version:refname | head -n 1)
+          if [ -n "$LAST_NIGHTLY" ]; then
+            BASE="$LAST_NIGHTLY"
+            echo "Push detected - comparing against last nightly tag: $BASE"
+          else
+            BASE="HEAD~1"
+            echo "Push detected - no nightly tag found, comparing against previous commit"
+          fi
+        fi
+
+        # Get changed files (two-dot syntax: changes in HEAD not in BASE)
+        CHANGED_FILES=$(git diff --name-only "$BASE"..HEAD)
+
+        # Check if src/ was modified
+        SRC_CHANGED=$(echo "$CHANGED_FILES" | grep -E "^src/" || true)
+        CHANGELOG_CHANGED=$(echo "$CHANGED_FILES" | grep -E "^CHANGELOG\.md$" || true)
+
+        echo ""
+        echo "Changed files in src/:"
+        echo "$SRC_CHANGED" | head -20
+        echo ""
+
+        if [ -n "$SRC_CHANGED" ] && [ -z "$CHANGELOG_CHANGED" ]; then
+          echo "::warning::⚠️ Source files were changed but CHANGELOG.md was not updated!"
+          echo ""
+          echo "┌─────────────────────────────────────────────────────────────┐"
+          echo "│  📝 CHANGELOG REMINDER                                      │"
+          echo "├─────────────────────────────────────────────────────────────┤"
+          echo "│  You modified files in src/ but didn't update CHANGELOG.md │"
+          echo "│                                                             │"
+          echo "│  Please add your changes to the '## Unreleased' section:    │"
+          echo "│  - New features go under '### Added'                        │"
+          echo "│  - Bug fixes go under '### Fixed'                           │"
+          echo "│  - Changes go under '### Changed'                           │"
+          echo "│                                                             │"
+          echo "│  This helps generate accurate nightly release notes!        │"
+          echo "└─────────────────────────────────────────────────────────────┘"
+          echo ""
+          # Don't fail the build, just warn
+          exit 0
+        elif [ -n "$SRC_CHANGED" ] && [ -n "$CHANGELOG_CHANGED" ]; then
+          echo "✅ CHANGELOG.md was updated along with source changes. Great job!"
+        else
+          echo "ℹ️ No source file changes detected (or only non-src files changed)."
+        fi
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
