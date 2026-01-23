@@ -103,13 +103,9 @@ class AccessiWeatherApp(wx.App):
             # Check for single instance
             self.single_instance_manager = SingleInstanceManager(self)
             if not self.single_instance_manager.try_acquire_lock():
-                logger.info("Another instance is already running, exiting")
-                wx.MessageBox(
-                    "AccessiWeather is already running.",
-                    "Already Running",
-                    wx.OK | wx.ICON_INFORMATION,
-                )
-                return False
+                logger.info("Another instance is already running, showing force start dialog")
+                if not self._show_force_start_dialog():
+                    return False
 
             # Start async event loop in background thread
             self._start_async_loop()
@@ -154,6 +150,52 @@ class AccessiWeatherApp(wx.App):
                 wx.OK | wx.ICON_ERROR,
             )
             return False
+
+    def _show_force_start_dialog(self) -> bool:
+        """
+        Show a dialog offering to force start when another instance appears to be running.
+
+        Returns
+        -------
+            bool: True if user chose to force start and lock was acquired, False to exit
+
+        """
+        dialog = wx.MessageDialog(
+            None,
+            "AccessiWeather appears to be already running, or a previous session "
+            "didn't close properly.\n\n"
+            "Would you like to force start? This will close any existing instance.",
+            "AccessiWeather - Already Running",
+            wx.YES_NO | wx.NO_DEFAULT | wx.ICON_QUESTION,
+        )
+        dialog.SetYesNoLabels("Force Start", "Cancel")
+
+        result = dialog.ShowModal()
+        dialog.Destroy()
+
+        if result == wx.ID_YES:
+            logger.info("User chose to force start")
+            if self.single_instance_manager.force_remove_lock():
+                if self.single_instance_manager.try_acquire_lock():
+                    logger.info("Successfully acquired lock after force removal")
+                    return True
+                logger.error("Failed to acquire lock even after force removal")
+                wx.MessageBox(
+                    "Failed to start AccessiWeather.\n\n"
+                    "Please try closing any running instances and try again.",
+                    "Startup Error",
+                    wx.OK | wx.ICON_ERROR,
+                )
+            else:
+                wx.MessageBox(
+                    "Failed to remove the lock file.\n\n"
+                    "Please try manually deleting the lock file or restarting your computer.",
+                    "Startup Error",
+                    wx.OK | wx.ICON_ERROR,
+                )
+            return False
+        logger.info("User cancelled force start")
+        return False
 
     def _start_async_loop(self) -> None:
         """Start asyncio event loop in a background thread."""

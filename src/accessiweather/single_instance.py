@@ -285,6 +285,33 @@ class SingleInstanceManager:
             _active_manager = None
             logger.info("Released single instance lock")
 
+    def force_remove_lock(self) -> bool:
+        """
+        Force remove the lock file regardless of ownership.
+
+        This is used when the user explicitly chooses to force start the app,
+        typically when a previous instance crashed and left a stale lock.
+
+        Returns
+        -------
+            bool: True if lock was removed successfully, False otherwise
+
+        """
+        try:
+            if self.lock_file_path is None:
+                # Initialize lock file path if not already done
+                lock_dir = self.app.paths.data
+                lock_dir.mkdir(parents=True, exist_ok=True)
+                self.lock_file_path = lock_dir / self.lock_filename
+
+            if self.lock_file_path.exists():
+                self.lock_file_path.unlink()
+                logger.info(f"Force removed lock file: {self.lock_file_path}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to force remove lock file: {e}")
+            return False
+
     async def show_already_running_dialog(self) -> None:
         """Show a user-friendly dialog when another instance is already running."""
         try:
