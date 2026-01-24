@@ -1,4 +1,5 @@
-"""Tests for alert_sound_mapper module.
+"""
+Tests for alert_sound_mapper module.
 
 Tests the mapping of WeatherAlert objects to sound event keys,
 including hazard detection, severity fallbacks, and candidate ordering.

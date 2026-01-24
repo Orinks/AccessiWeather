@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Build script for AccessiWeather using PyInstaller.
+"""
+Build script for AccessiWeather using PyInstaller.
 
 This script handles the complete build process:
 - Generates app icons if needed

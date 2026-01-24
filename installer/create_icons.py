@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Generate weather-themed app icons for AccessiWeather.
+"""
+Generate weather-themed app icons for AccessiWeather.
 
 Creates icons in multiple sizes for Windows (.ico) and macOS (.icns).
 Uses Pillow to draw a simple weather icon (sun with cloud).
@@ -33,7 +34,8 @@ CLOUD_SHADOW = (200, 200, 210)  # Cloud shadow
 
 
 def create_weather_icon(size: int) -> Image.Image:
-    """Create a weather icon (sun with partial cloud) at the specified size.
+    """
+    Create a weather icon (sun with partial cloud) at the specified size.
 
     Args:
         size: Icon size in pixels (square)
@@ -116,7 +118,8 @@ def _draw_cloud(
     height: float,
     color: tuple[int, int, int],
 ) -> None:
-    """Draw a fluffy cloud shape.
+    """
+    Draw a fluffy cloud shape.
 
     Args:
         draw: ImageDraw object
@@ -144,7 +147,8 @@ def _draw_cloud(
 
 
 def save_ico(images: list[Image.Image], output_path: Path) -> None:
-    """Save images as a Windows ICO file.
+    """
+    Save images as a Windows ICO file.
 
     Args:
         images: List of PIL Image objects at different sizes
@@ -163,7 +167,8 @@ def save_ico(images: list[Image.Image], output_path: Path) -> None:
 
 
 def save_icns(images: list[Image.Image], output_path: Path) -> None:
-    """Save images as a macOS ICNS file.
+    """
+    Save images as a macOS ICNS file.
 
     Args:
         images: List of PIL Image objects at different sizes
@@ -194,7 +199,8 @@ def save_icns(images: list[Image.Image], output_path: Path) -> None:
 
 
 def save_png(image: Image.Image, output_path: Path) -> None:
-    """Save an image as PNG.
+    """
+    Save an image as PNG.
 
     Args:
         image: PIL Image object

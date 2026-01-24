@@ -1,7 +1,6 @@
 import json
 import logging
 import platform
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -10,7 +9,7 @@ SOUND_LIB_AVAILABLE = False
 _sound_lib_output = None
 
 try:
-    from sound_lib import output, stream
+    from sound_lib import output
 
     _sound_lib_output = output.Output()
     SOUND_LIB_AVAILABLE = True
@@ -128,6 +127,7 @@ class PreviewPlayer:
 
         Returns:
             True if playback started successfully.
+
         """
         # Stop any current playback first
         self.stop()
@@ -138,11 +138,10 @@ class PreviewPlayer:
 
         if SOUND_LIB_AVAILABLE:
             return self._play_with_sound_lib(sound_file)
-        elif PLAYSOUND_AVAILABLE:
+        if PLAYSOUND_AVAILABLE:
             return self._play_with_playsound(sound_file)
-        else:
-            logger.warning("No audio backend available")
-            return False
+        logger.warning("No audio backend available")
+        return False
 
     def _play_with_sound_lib(self, sound_file: Path) -> bool:
         """Play using sound_lib (supports stop)."""
@@ -207,13 +206,13 @@ class PreviewPlayer:
 
         Returns:
             True if now playing, False if stopped.
+
         """
         if self.is_playing():
             self.stop()
             return False
-        else:
-            self.play(sound_file)
-            return True
+        self.play(sound_file)
+        return True
 
 
 # Global preview player instance

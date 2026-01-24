@@ -1,4 +1,5 @@
-"""PyInstaller hook for AccessiWeather.
+"""
+PyInstaller hook for AccessiWeather.
 
 This hook ensures all necessary modules and data files are included.
 """
