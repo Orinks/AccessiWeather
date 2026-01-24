@@ -5,21 +5,20 @@ import sys
 from pathlib import Path
 from typing import Any
 
-# Try sound_lib first (supports stopping playback)
+# Try sound_lib first (supports stopping playback, cross-platform)
 SOUND_LIB_AVAILABLE = False
 _sound_lib_output = None
-_sound_lib_stream = None
 
 try:
-    if sys.platform == "win32":
-        from sound_lib import output, stream
+    from sound_lib import output, stream
 
-        _sound_lib_output = output.Output()
-        SOUND_LIB_AVAILABLE = True
+    _sound_lib_output = output.Output()
+    SOUND_LIB_AVAILABLE = True
 except ImportError:
     pass
-except Exception:
-    pass
+except Exception as e:
+    import logging
+    logging.getLogger(__name__).debug(f"sound_lib initialization failed: {e}")
 
 # Fallback to playsound3
 try:
