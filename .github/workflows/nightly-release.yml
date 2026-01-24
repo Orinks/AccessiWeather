@@ -327,9 +327,8 @@ jobs:
 
       - name: Validate artifacts
         id: validate
+        working-directory: dist
         run: |
-          cd dist 2>/dev/null || mkdir -p dist && cd dist
-          
           WINDOWS_OK="false"
           MACOS_OK="false"
           
@@ -358,9 +357,9 @@ jobs:
           fi
 
       - name: Prepare assets
+        working-directory: dist
         run: |
           TIMESTAMP=$(date -u +%Y%m%d)
-          cd dist
 
           # Flatten directory structure - extract files from subdirectories
           find . -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.zip" \) -exec mv {} . \; 2>/dev/null || true
@@ -562,19 +561,16 @@ jobs:
           # Delete existing release/tag if re-running for the same day
           gh release delete "$TAG" -y --cleanup-tag 2>/dev/null || true
 
-          # Upload files from dist/ with combined release notes
-          cd dist
-          
-          # Build file list (only existing files)
+          # Build file list from dist/ (only existing files)
           FILES=""
-          for f in *.exe *.dmg *.zip checksums.txt; do
+          for f in dist/*.exe dist/*.dmg dist/*.zip dist/checksums.txt; do
             [ -f "$f" ] && FILES="$FILES $f"
           done
           
           if [ -n "$FILES" ]; then
             gh release create "$TAG" $FILES \
               --title "$TITLE" \
-              --notes-file ../release-notes.md \
+              --notes-file release-notes.md \
               --prerelease \
               --target dev
             echo "✓ Release created: $TAG"
