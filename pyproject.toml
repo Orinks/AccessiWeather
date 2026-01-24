@@ -14,6 +14,7 @@ requires-python = ">=3.10"
 dependencies = [
     "wxPython>=4.2.0",
     "gui_builder @ git+https://github.com/accessibleapps/gui_builder.git",
+    "sound_lib @ git+https://github.com/accessibleapps/sound_lib.git",
     "desktop-notifier",
     "python-dateutil",
     "beautifulsoup4",

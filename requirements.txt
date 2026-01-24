@@ -2,6 +2,10 @@
 wxPython>=4.2.0
 gui_builder @ git+https://github.com/accessibleapps/gui_builder.git
 
+# Audio
+sound_lib @ git+https://github.com/accessibleapps/sound_lib.git
+playsound3
+
 # Core dependencies
 httpx>=0.20.0
 requests>=2.0
@@ -13,4 +17,3 @@ psutil
 packaging
 keyring
 openai>=1.0.0
-playsound3
