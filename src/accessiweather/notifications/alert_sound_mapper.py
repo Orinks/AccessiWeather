@@ -150,7 +150,9 @@ def get_candidate_sound_events(alert: WeatherAlert) -> list[str]:
 
     # Hazard combinations next
     if hazard and atype:
-        candidates.append(f"{hazard}_{atype}")
+        key = f"{hazard}_{atype}"
+        if key not in candidates:
+            candidates.append(key)
     if hazard and sev:
         key = f"{hazard}_{sev}"
         if key not in candidates:
