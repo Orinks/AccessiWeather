@@ -4,6 +4,15 @@ on:
   schedule:
     - cron: "30 3 * * *"
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run - skip actual release creation'
+        type: boolean
+        default: false
+      force_build:
+        description: 'Force build even if no changes detected'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -29,6 +38,7 @@ jobs:
     outputs:
       changed: ${{ steps.changes.outputs.changed }}
       version: ${{ steps.version.outputs.version }}
+      previous_tag: ${{ steps.changes.outputs.previous_tag }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -45,6 +55,15 @@ jobs:
           HEAD_SHA=$(git rev-parse HEAD)
           echo "HEAD commit: $HEAD_SHA"
 
+          # Check for force build
+          if [ "${{ inputs.force_build }}" == "true" ]; then
+            echo "Force build requested."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            LAST_NIGHTLY_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -n 1)
+            echo "previous_tag=$LAST_NIGHTLY_TAG" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           # Check if HEAD already has a nightly tag (already released)
           HEAD_TAGS=$(git tag --points-at HEAD | grep "^nightly-" || true)
           if [ -n "$HEAD_TAGS" ]; then
@@ -57,6 +76,7 @@ jobs:
           # Find the latest nightly tag
           LAST_NIGHTLY_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -n 1)
           echo "Last nightly tag: $LAST_NIGHTLY_TAG"
+          echo "previous_tag=$LAST_NIGHTLY_TAG" >> "$GITHUB_OUTPUT"
 
           if [ -z "$LAST_NIGHTLY_TAG" ]; then
             echo "No previous nightly tag found - first nightly build."
@@ -102,6 +122,7 @@ jobs:
     if: needs.prepare.outputs.changed == 'true'
     outputs:
       version: ${{ steps.version.outputs.version }}
+      success: ${{ steps.build-status.outputs.success }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -163,6 +184,16 @@ jobs:
             7z a -tzip "AccessiWeather_Portable_v${VERSION}.zip" "AccessiWeather.exe"
           fi
 
+      - name: Set build status
+        id: build-status
+        if: always()
+        run: |
+          if [ -f dist/AccessiWeather_Setup_*.exe ]; then
+            echo "success=true" >> $GITHUB_OUTPUT
+          else
+            echo "success=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Upload Windows Installer
         uses: actions/upload-artifact@v4
         with:
@@ -184,6 +215,7 @@ jobs:
     if: needs.prepare.outputs.changed == 'true'
     outputs:
       version: ${{ steps.version.outputs.version }}
+      success: ${{ steps.build-status.outputs.success }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -247,6 +279,16 @@ jobs:
             hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${VERSION}.dmg"
           fi
 
+      - name: Set build status
+        id: build-status
+        if: always()
+        run: |
+          if [ -f dist/AccessiWeather_*.dmg ]; then
+            echo "success=true" >> $GITHUB_OUTPUT
+          else
+            echo "success=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Upload macOS DMG
         uses: actions/upload-artifact@v4
         with:
@@ -257,7 +299,11 @@ jobs:
   nightly-release:
     name: Publish Nightly Release
     needs: [prepare, build-windows, build-macos]
-    if: needs.prepare.outputs.changed == 'true'
+    # Release if changes detected AND at least one build succeeded
+    if: |
+      always() &&
+      needs.prepare.outputs.changed == 'true' &&
+      (needs.build-windows.result == 'success' || needs.build-macos.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -272,11 +318,44 @@ jobs:
           path: dist
           pattern: nightly-*
           merge-multiple: true
+        continue-on-error: true
 
       - name: List downloaded artifacts
         run: |
           echo "Downloaded artifacts:"
-          ls -laR dist/
+          ls -laR dist/ || echo "No artifacts downloaded"
+
+      - name: Validate artifacts
+        id: validate
+        run: |
+          cd dist 2>/dev/null || mkdir -p dist && cd dist
+          
+          WINDOWS_OK="false"
+          MACOS_OK="false"
+          
+          # Check for Windows artifacts
+          if ls AccessiWeather_Setup_*.exe 1>/dev/null 2>&1 || ls *windows*.exe 1>/dev/null 2>&1; then
+            WINDOWS_OK="true"
+            echo "✓ Windows installer found"
+          else
+            echo "✗ Windows installer missing"
+          fi
+          
+          # Check for macOS artifacts
+          if ls *.dmg 1>/dev/null 2>&1; then
+            MACOS_OK="true"
+            echo "✓ macOS DMG found"
+          else
+            echo "✗ macOS DMG missing"
+          fi
+          
+          echo "windows_ok=$WINDOWS_OK" >> $GITHUB_OUTPUT
+          echo "macos_ok=$MACOS_OK" >> $GITHUB_OUTPUT
+          
+          if [ "$WINDOWS_OK" == "false" ] && [ "$MACOS_OK" == "false" ]; then
+            echo "::error::No artifacts available for release"
+            exit 1
+          fi
 
       - name: Prepare assets
         run: |
@@ -284,10 +363,10 @@ jobs:
           cd dist
 
           # Flatten directory structure - extract files from subdirectories
-          find . -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.zip" \) -exec mv {} . \;
+          find . -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.zip" \) -exec mv {} . \; 2>/dev/null || true
 
           # Remove empty directories
-          find . -type d -empty -delete
+          find . -type d -empty -delete 2>/dev/null || true
 
           # Remove existing checksums if they exist
           rm -f checksums.txt
@@ -312,135 +391,139 @@ jobs:
           echo "Prepared assets:"
           ls -la
 
-      - name: Extract new CHANGELOG entries since last nightly
-        id: changelog
+      - name: Extract changelog and generate release notes
+        id: notes
+        env:
+          PREVIOUS_TAG: ${{ needs.prepare.outputs.previous_tag }}
+          WINDOWS_OK: ${{ steps.validate.outputs.windows_ok }}
+          MACOS_OK: ${{ steps.validate.outputs.macos_ok }}
         run: |
-          # Find the previous nightly tag
           git fetch --tags
-          PREVIOUS_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -n 1)
+          
           echo "Previous nightly tag: $PREVIOUS_TAG"
-
-          if [ -z "$PREVIOUS_TAG" ]; then
-            echo "No previous nightly tag - extracting full Unreleased section"
-            # First nightly: extract full Unreleased section
-            python3 << 'PYTHON_EOF' > changelog-notes.md
+          
+          # Generate release notes with Python for robustness
+          python3 << 'PYTHON_EOF'
+          import subprocess
+          import os
           import re
           import sys
 
-          try:
-              with open("CHANGELOG.md", 'r') as f:
-                  content = f.read()
-              pattern = r'## \[?Unreleased\]?.*?\n(.*?)(?=\n## \[|$)'
-              match = re.search(pattern, content, re.DOTALL)
-              if match:
-                  notes = match.group(1).strip()
-                  notes = re.sub(r'\n---\s*$', '', notes)
-                  # Filter out empty section headers
-                  lines = [l for l in notes.split('\n') if not (l.startswith('### ') and True) or l.strip() != '-']
-                  print('\n'.join(lines))
-          except Exception as e:
-              print(f"Error: {e}", file=sys.stderr)
-          PYTHON_EOF
-          else
-            echo "Extracting CHANGELOG additions since $PREVIOUS_TAG"
-            # Export for Python script access
-            export PREVIOUS_TAG
-            # Get diff of CHANGELOG.md since last nightly, extract only added lines
-            python3 << 'PYTHON_EOF' > changelog-notes.md
-          import subprocess
-          import sys
-          import os
-
           previous_tag = os.environ.get("PREVIOUS_TAG", "")
-          if not previous_tag:
-              print("No previous tag available", file=sys.stderr)
-              sys.exit(0)
+          windows_ok = os.environ.get("WINDOWS_OK", "false") == "true"
+          macos_ok = os.environ.get("MACOS_OK", "false") == "true"
 
+          notes = []
+
+          # Add build status warning if partial
+          if not (windows_ok and macos_ok):
+              missing = []
+              if not windows_ok:
+                  missing.append("Windows")
+              if not macos_ok:
+                  missing.append("macOS")
+              notes.append(f"> ⚠️ **Partial build**: {', '.join(missing)} build(s) failed\n")
+
+          notes.append("## What's New\n")
+
+          changelog_entries = []
+          
+          # Try to extract CHANGELOG entries
           try:
-              # Get the diff for CHANGELOG.md
-              result = subprocess.run(
-                  ["git", "diff", f"{previous_tag}..HEAD", "--", "CHANGELOG.md"],
-                  capture_output=True, text=True, check=True
-              )
-              diff_output = result.stdout
-
-              # Extract only added lines (start with +, but not +++)
-              added_lines = []
-              for line in diff_output.split('\n'):
-                  if line.startswith('+') and not line.startswith('+++'):
-                      # Remove the leading + and add the line
-                      content = line[1:]
-                      # Skip empty lines that are just whitespace
-                      if content.strip() or content == '':
-                          added_lines.append(content)
-
-              # Filter out noise: empty section headers with just "-"
-              filtered = []
-              for i, line in enumerate(added_lines):
-                  # Skip standalone dashes that are placeholders
-                  if line.strip() == '-' and i > 0 and added_lines[i-1].startswith('### '):
-                      continue
-                  # Skip empty ### headers followed by just a dash
-                  if line.startswith('### '):
-                      # Check if next non-empty line is just '-'
-                      next_content = None
-                      for j in range(i+1, len(added_lines)):
-                          if added_lines[j].strip():
-                              next_content = added_lines[j].strip()
-                              break
-                      if next_content == '-':
-                          continue
-                  filtered.append(line)
-
-              # Clean up: remove leading/trailing empty lines
-              while filtered and not filtered[0].strip():
-                  filtered.pop(0)
-              while filtered and not filtered[-1].strip():
-                  filtered.pop()
-
-              if filtered:
-                  print('\n'.join(filtered))
-                  print(f"✓ Found {len(filtered)} new CHANGELOG lines", file=sys.stderr)
+              if previous_tag:
+                  # Get diff of CHANGELOG.md
+                  result = subprocess.run(
+                      ["git", "diff", f"{previous_tag}..HEAD", "--", "CHANGELOG.md"],
+                      capture_output=True, text=True, timeout=30
+                  )
+                  if result.returncode == 0 and result.stdout:
+                      # Extract added lines
+                      for line in result.stdout.split('\n'):
+                          if line.startswith('+') and not line.startswith('+++'):
+                              content = line[1:]
+                              # Skip empty section headers and placeholder dashes
+                              if content.strip() and content.strip() != '-':
+                                  # Skip lines that are just section headers with no content following
+                                  changelog_entries.append(content)
               else:
-                  print("No new CHANGELOG entries since last nightly.", file=sys.stderr)
-
-          except subprocess.CalledProcessError as e:
-              print(f"Git diff failed: {e}", file=sys.stderr)
+                  # First nightly - extract Unreleased section
+                  with open("CHANGELOG.md", 'r') as f:
+                      content = f.read()
+                  pattern = r'## \[?Unreleased\]?.*?\n(.*?)(?=\n## \[|$)'
+                  match = re.search(pattern, content, re.DOTALL)
+                  if match:
+                      for line in match.group(1).strip().split('\n'):
+                          if line.strip() and line.strip() != '-':
+                              changelog_entries.append(line)
           except Exception as e:
-              print(f"Error: {e}", file=sys.stderr)
+              print(f"Warning: Could not extract CHANGELOG: {e}", file=sys.stderr)
+
+          # Filter out empty section headers
+          filtered_entries = []
+          skip_next_dash = False
+          for i, entry in enumerate(changelog_entries):
+              if entry.startswith('### '):
+                  # Check if this section has content
+                  has_content = False
+                  for j in range(i + 1, len(changelog_entries)):
+                      if changelog_entries[j].startswith('### '):
+                          break
+                      if changelog_entries[j].strip() and changelog_entries[j].strip() != '-':
+                          if not changelog_entries[j].startswith('### '):
+                              has_content = True
+                              break
+                  if has_content:
+                      filtered_entries.append(entry)
+              elif entry.strip() != '-':
+                  filtered_entries.append(entry)
+
+          if filtered_entries:
+              notes.append('\n'.join(filtered_entries))
+          else:
+              # Fallback: list recent commits
+              notes.append("### Recent Changes\n")
+              try:
+                  if previous_tag:
+                      result = subprocess.run(
+                          ["git", "log", f"{previous_tag}..HEAD", "--oneline", "--no-merges", "-20"],
+                          capture_output=True, text=True, timeout=30
+                      )
+                  else:
+                      result = subprocess.run(
+                          ["git", "log", "--oneline", "--no-merges", "-20"],
+                          capture_output=True, text=True, timeout=30
+                      )
+                  if result.returncode == 0 and result.stdout.strip():
+                      for line in result.stdout.strip().split('\n'):
+                          # Format: hash message -> - message
+                          parts = line.split(' ', 1)
+                          if len(parts) == 2:
+                              notes.append(f"- {parts[1]}")
+                  else:
+                      notes.append("_No changes documented._")
+              except Exception as e:
+                  notes.append(f"_Could not retrieve commit history: {e}_")
+
+          notes.append("\n---\n")
+          notes.append("## Download\n")
+          notes.append("Choose your platform below. Checksums available in `checksums.txt`.\n")
+
+          # Write release notes
+          with open("release-notes.md", 'w') as f:
+              f.write('\n'.join(notes))
+
+          print("Generated release notes:")
+          print('\n'.join(notes))
           PYTHON_EOF
-          fi
 
-          echo ""
-          echo "CHANGELOG notes (new since last nightly):"
-          cat changelog-notes.md
-
-      - name: Generate combined release notes
+      - name: Generate PR-based notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PREVIOUS_TAG: ${{ needs.prepare.outputs.previous_tag }}
         run: |
           TAG="nightly-$(date -u +%Y%m%d)"
-
-          # Find the previous nightly tag for PR-based notes (already fetched above)
-          PREVIOUS_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -n 1)
-
-          echo "Previous nightly tag: $PREVIOUS_TAG"
-
-          # Start with CHANGELOG notes
-          echo "## What's New (from CHANGELOG)" > release-notes.md
+          
           echo "" >> release-notes.md
-
-          if [ -s changelog-notes.md ]; then
-            cat changelog-notes.md >> release-notes.md
-          else
-            echo "_No documented changes in this nightly build._" >> release-notes.md
-          fi
-
-          echo "" >> release-notes.md
-          echo "---" >> release-notes.md
-          echo "" >> release-notes.md
-
-          # Generate PR-based notes using GitHub API
           echo "## Pull Requests & Commits" >> release-notes.md
           echo "" >> release-notes.md
 
@@ -465,10 +548,11 @@ jobs:
           fi
 
           echo ""
-          echo "Combined release notes:"
+          echo "Final release notes:"
           cat release-notes.md
 
       - name: Create Prerelease
+        if: ${{ inputs.dry_run != true }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -476,20 +560,51 @@ jobs:
           TITLE="Nightly $(date -u +%Y-%m-%d)"
 
           # Delete existing release/tag if re-running for the same day
-          gh release delete "$TAG" -y --cleanup-tag || true
+          gh release delete "$TAG" -y --cleanup-tag 2>/dev/null || true
 
           # Upload files from dist/ with combined release notes
           cd dist
-          gh release create "$TAG" *.exe *.dmg *.zip checksums.txt \
-            --title "$TITLE" \
-            --notes-file ../release-notes.md \
-            --prerelease \
-            --target dev
+          
+          # Build file list (only existing files)
+          FILES=""
+          for f in *.exe *.dmg *.zip checksums.txt; do
+            [ -f "$f" ] && FILES="$FILES $f"
+          done
+          
+          if [ -n "$FILES" ]; then
+            gh release create "$TAG" $FILES \
+              --title "$TITLE" \
+              --notes-file ../release-notes.md \
+              --prerelease \
+              --target dev
+            echo "✓ Release created: $TAG"
+          else
+            echo "::error::No files to release"
+            exit 1
+          fi
+
+      - name: Dry run summary
+        if: ${{ inputs.dry_run == true }}
+        run: |
+          echo "🏃 DRY RUN - No release created"
+          echo ""
+          echo "Would have created release with:"
+          echo "- Tag: nightly-$(date -u +%Y%m%d)"
+          echo "- Title: Nightly $(date -u +%Y-%m-%d)"
+          echo ""
+          echo "Assets:"
+          ls -la dist/
+          echo ""
+          echo "Release notes:"
+          cat release-notes.md
 
   trigger-pages-update:
     name: Trigger Pages Update
     needs: [prepare, nightly-release]
-    if: needs.prepare.outputs.changed == 'true'
+    if: |
+      always() &&
+      needs.prepare.outputs.changed == 'true' &&
+      needs.nightly-release.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       actions: write
@@ -498,6 +613,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Trigger update-pages workflow
+        if: ${{ inputs.dry_run != true }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
