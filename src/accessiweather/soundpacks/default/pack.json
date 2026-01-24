@@ -5,6 +5,7 @@
   "version": "1.0.0",
   "sounds": {
     "alert": "alert.wav",
+    "extreme": "critical_alert.wav",
     "notify": "notify.wav",
     "error": "error.wav",
     "success": "success.wav",
