@@ -67,15 +67,21 @@ def _build_history_sections(app, weather_data) -> list[tuple[str, str]]:
     if daily_history:
         history_text = []
         for period in daily_history[:7]:  # Last 7 days
-            date_str = getattr(period, "date", "Unknown")
-            temp_high = getattr(period, "high_temp", None)
-            temp_low = getattr(period, "low_temp", None)
-            condition = getattr(period, "condition", "Unknown")
+            # ForecastPeriod uses: name, start_time, temperature, short_forecast
+            name = getattr(period, "name", None)
+            start_time = getattr(period, "start_time", None)
+            if start_time:
+                date_str = start_time.strftime("%A, %b %d") if hasattr(start_time, "strftime") else str(start_time)
+            elif name:
+                date_str = name
+            else:
+                date_str = "Unknown"
 
-            if temp_high is not None and temp_low is not None:
-                history_text.append(
-                    f"{date_str}: High {temp_high}°F, Low {temp_low}°F - {condition}"
-                )
+            temp = getattr(period, "temperature", None)
+            condition = getattr(period, "short_forecast", None) or getattr(period, "condition", "Unknown")
+
+            if temp is not None:
+                history_text.append(f"{date_str}: {temp}°F - {condition}")
             else:
                 history_text.append(f"{date_str}: {condition}")
 
@@ -103,15 +109,15 @@ def _build_history_sections(app, weather_data) -> list[tuple[str, str]]:
         if yesterday:
             comparison_text = []
             current_temp = getattr(current, "temperature_f", None)
-            yesterday_high = getattr(yesterday, "high_temp", None)
-            getattr(yesterday, "low_temp", None)
+            # ForecastPeriod uses 'temperature' not 'high_temp'
+            yesterday_temp = getattr(yesterday, "temperature", None)
 
-            if current_temp is not None and yesterday_high is not None:
-                diff = current_temp - yesterday_high
+            if current_temp is not None and yesterday_temp is not None:
+                diff = current_temp - yesterday_temp
                 direction = "warmer" if diff > 0 else "cooler" if diff < 0 else "about the same"
                 comparison_text.append(
                     f"Current temperature ({current_temp}°F) is {abs(diff):.1f}°F {direction} "
-                    f"than yesterday's high ({yesterday_high}°F)."
+                    f"than yesterday ({yesterday_temp}°F)."
                 )
 
             if comparison_text:
