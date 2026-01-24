@@ -147,10 +147,18 @@ class SoundPackManagerDialog(wx.Dialog):
         self.installer = SoundPackInstaller(self.soundpacks_dir)
         self.community_service = self._create_community_service()
 
+        # Preview player for sound previews (supports stop)
+        from ...notifications.sound_player import get_preview_player
+        self._preview_player = get_preview_player()
+        self._current_preview_path: Path | None = None
+
         self._load_sound_packs()
         self._create_ui()
         self._refresh_pack_list()
         self.Centre()
+
+        # Bind close event to stop any playing preview
+        self.Bind(wx.EVT_CLOSE, self._on_dialog_close)
 
     def _create_community_service(self) -> CommunitySoundPackService | None:
         """Create the community soundpack service."""
@@ -448,6 +456,12 @@ class SoundPackManagerDialog(wx.Dialog):
 
     def _on_sound_selected(self, event) -> None:
         """Handle sound selection."""
+        # Stop any current preview when selecting a different sound
+        if self._preview_player.is_playing():
+            self._preview_player.stop()
+            self._current_preview_path = None
+        self.preview_btn.SetLabel("Preview Selected Sound")
+
         sel = self.sounds_listbox.GetSelection()
         if sel == wx.NOT_FOUND or not self.selected_pack:
             self.preview_btn.Enable(False)
@@ -461,7 +475,7 @@ class SoundPackManagerDialog(wx.Dialog):
             self.preview_btn.Enable(sound_path.exists())
 
     def _on_preview_sound(self, event) -> None:
-        """Preview the selected sound."""
+        """Preview the selected sound (toggle play/stop)."""
         sel = self.sounds_listbox.GetSelection()
         if sel == wx.NOT_FOUND or not self.selected_pack:
             return
@@ -474,10 +488,23 @@ class SoundPackManagerDialog(wx.Dialog):
         info = self.sound_packs[self.selected_pack]
         sound_path = info.path / sound_file
 
-        if sound_path.exists():
-            from ...notifications.sound_player import play_sound_file
+        if not sound_path.exists():
+            return
 
-            play_sound_file(sound_path)
+        # Check if we're playing the same sound - toggle stop
+        if self._preview_player.is_playing() and self._current_preview_path == sound_path:
+            self._preview_player.stop()
+            self.preview_btn.SetLabel("Preview Selected Sound")
+            self._current_preview_path = None
+        else:
+            # Stop any current preview and play new one
+            self._preview_player.stop()
+            if self._preview_player.play(sound_path):
+                self._current_preview_path = sound_path
+                self.preview_btn.SetLabel("Stop Preview")
+            else:
+                self._current_preview_path = None
+                self.preview_btn.SetLabel("Preview Selected Sound")
 
     def _on_category_changed(self, event) -> None:
         """Handle category selection change."""
@@ -634,7 +661,7 @@ class SoundPackManagerDialog(wx.Dialog):
             )
 
     def _on_preview_mapping(self, event) -> None:
-        """Preview the current category mapping."""
+        """Preview the current category mapping (toggle play/stop)."""
         if not self.selected_pack:
             return
 
@@ -650,10 +677,25 @@ class SoundPackManagerDialog(wx.Dialog):
             return
 
         sound_path = info.path / filename
-        if sound_path.exists():
-            from ...notifications.sound_player import play_sound_file
+        if not sound_path.exists():
+            return
 
-            play_sound_file(sound_path)
+        # Check if we're playing the same sound - toggle stop
+        if self._preview_player.is_playing() and self._current_preview_path == sound_path:
+            self._preview_player.stop()
+            self.preview_mapping_btn.SetLabel("Preview")
+            self._current_preview_path = None
+        else:
+            # Stop any current preview and play new one
+            self._preview_player.stop()
+            # Also reset the other preview button
+            self.preview_btn.SetLabel("Preview Selected Sound")
+            if self._preview_player.play(sound_path):
+                self._current_preview_path = sound_path
+                self.preview_mapping_btn.SetLabel("Stop")
+            else:
+                self._current_preview_path = None
+                self.preview_mapping_btn.SetLabel("Preview")
 
     def _on_import_pack(self, event) -> None:
         """Import a sound pack from ZIP."""
@@ -1101,8 +1143,19 @@ class SoundPackManagerDialog(wx.Dialog):
         progress.complete_error(error)
         wx.CallLater(3000, progress.Destroy)
 
+    def _on_dialog_close(self, event) -> None:
+        """Handle dialog close event (X button or escape)."""
+        # Stop any playing preview
+        if self._preview_player:
+            self._preview_player.stop()
+        event.Skip()  # Allow normal close handling
+
     def _on_close(self, event) -> None:
         """Close the dialog."""
+        # Stop any playing preview
+        if self._preview_player:
+            self._preview_player.stop()
+
         # Clean up community service
         if self.community_service:
             try:

@@ -1,10 +1,27 @@
 import json
 import logging
 import platform
+import sys
 from pathlib import Path
 from typing import Any
 
-# playsound3 for cross-platform audio playback
+# Try sound_lib first (supports stopping playback)
+SOUND_LIB_AVAILABLE = False
+_sound_lib_output = None
+_sound_lib_stream = None
+
+try:
+    if sys.platform == "win32":
+        from sound_lib import output, stream
+
+        _sound_lib_output = output.Output()
+        SOUND_LIB_AVAILABLE = True
+except ImportError:
+    pass
+except Exception:
+    pass
+
+# Fallback to playsound3
 try:
     from playsound3 import playsound
 
@@ -86,6 +103,130 @@ def stop_all_sounds() -> None:
     Note: playsound3 doesn't support stopping sounds mid-playback.
     This function is kept for API compatibility.
     """
+
+
+class PreviewPlayer:
+    """
+    Sound preview player with stop support.
+
+    Uses sound_lib on Windows for stop functionality,
+    falls back to playsound3 (no stop support) on other platforms.
+    """
+
+    def __init__(self):
+        """Initialize the preview player."""
+        self._current_stream = None
+        self._is_playing = False
+
+    def play(self, sound_file: Path) -> bool:
+        """
+        Play a sound file for preview.
+
+        Stops any currently playing preview first.
+
+        Args:
+            sound_file: Path to the sound file.
+
+        Returns:
+            True if playback started successfully.
+        """
+        # Stop any current playback first
+        self.stop()
+
+        if not sound_file.exists():
+            logger.warning(f"Sound file not found: {sound_file}")
+            return False
+
+        if SOUND_LIB_AVAILABLE:
+            return self._play_with_sound_lib(sound_file)
+        elif PLAYSOUND_AVAILABLE:
+            return self._play_with_playsound(sound_file)
+        else:
+            logger.warning("No audio backend available")
+            return False
+
+    def _play_with_sound_lib(self, sound_file: Path) -> bool:
+        """Play using sound_lib (supports stop)."""
+        try:
+            from sound_lib import stream
+
+            self._current_stream = stream.FileStream(file=str(sound_file))
+            self._current_stream.play()
+            self._is_playing = True
+            logger.debug(f"Playing preview with sound_lib: {sound_file}")
+            return True
+        except Exception as e:
+            logger.warning(f"sound_lib playback failed: {e}")
+            self._current_stream = None
+            self._is_playing = False
+            return False
+
+    def _play_with_playsound(self, sound_file: Path) -> bool:
+        """Play using playsound3 (no stop support)."""
+        try:
+            if platform.system() == "Windows":
+                sound_path = str(sound_file).replace("\\", "/")
+            else:
+                sound_path = str(sound_file)
+            playsound(sound_path, block=False)
+            self._is_playing = True
+            logger.debug(f"Playing preview with playsound3: {sound_file}")
+            return True
+        except Exception as e:
+            logger.warning(f"playsound3 playback failed: {e}")
+            self._is_playing = False
+            return False
+
+    def stop(self) -> None:
+        """Stop the currently playing preview."""
+        if self._current_stream is not None:
+            try:
+                self._current_stream.stop()
+                self._current_stream.free()
+            except Exception as e:
+                logger.debug(f"Error stopping sound: {e}")
+            finally:
+                self._current_stream = None
+
+        self._is_playing = False
+
+    def is_playing(self) -> bool:
+        """Check if a preview is currently playing."""
+        if self._current_stream is not None:
+            try:
+                return self._current_stream.is_playing
+            except Exception:
+                pass
+        return self._is_playing
+
+    def toggle(self, sound_file: Path) -> bool:
+        """
+        Toggle play/stop for a sound file.
+
+        Args:
+            sound_file: Path to the sound file.
+
+        Returns:
+            True if now playing, False if stopped.
+        """
+        if self.is_playing():
+            self.stop()
+            return False
+        else:
+            self.play(sound_file)
+            return True
+
+
+# Global preview player instance
+_preview_player: PreviewPlayer | None = None
+
+
+def get_preview_player() -> PreviewPlayer:
+    """Get the global preview player instance."""
+    global _preview_player
+    if _preview_player is None:
+        _preview_player = PreviewPlayer()
+    return _preview_player
 
 
 def is_playsound_available() -> bool:
