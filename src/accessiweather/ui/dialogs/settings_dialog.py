@@ -376,30 +376,23 @@ class SettingsDialogSimple(wx.Dialog):
         sizer.Add(self._controls["alert_notif"], 0, wx.LEFT | wx.BOTTOM, 5)
 
         # Alert precision setting
-        sizer.Add(
+        row_precision = wx.BoxSizer(wx.HORIZONTAL)
+        row_precision.Add(
             wx.StaticText(panel, label="Alert Location Precision:"),
             0,
-            wx.ALL,
-            5,
-        )
-        sizer.Add(
-            wx.StaticText(
-                panel,
-                label="Point: Exact location (polygon alerts). Zone: Your forecast zone. State: Entire state.",
-            ),
-            0,
-            wx.LEFT | wx.BOTTOM,
-            5,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
         )
         self._controls["alert_radius_type"] = wx.Choice(
             panel,
             choices=[
-                "Point (most precise - recommended)",
-                "Zone (your forecast zone)",
-                "State (entire state)",
+                "Point (recommended)",
+                "Zone",
+                "State",
             ],
         )
-        sizer.Add(self._controls["alert_radius_type"], 0, wx.LEFT | wx.BOTTOM, 10)
+        row_precision.Add(self._controls["alert_radius_type"], 0)
+        sizer.Add(row_precision, 0, wx.ALL, 5)
 
         # Severity levels
         sizer.Add(
