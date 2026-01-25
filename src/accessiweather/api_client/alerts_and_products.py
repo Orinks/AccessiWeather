@@ -62,14 +62,18 @@ class AlertsAndProductsMixin:
         """
         Get active weather alerts for the given coordinates.
 
+        Uses point-based queries as the primary method for precise_location=True,
+        which provides accurate polygon intersection for county-based alerts
+        (tornado warnings, severe thunderstorm warnings, flash floods, etc.).
+
         Args:
         ----
             lat: Latitude of the location
             lon: Longitude of the location
-            radius: Radius in miles to search for alerts
-                    (used if location type cannot be determined)
-            precise_location: Whether to get alerts for the precise location (county/zone)
-                             or for the entire state
+            radius: Radius in miles to search for alerts (unused with point query,
+                    kept for API compatibility)
+            precise_location: Whether to get alerts for the precise location (point query)
+                             or for the entire state (area query)
             force_refresh: If True, bypass cache and fetch fresh data
 
         Returns:
@@ -78,55 +82,50 @@ class AlertsAndProductsMixin:
 
         """
         logger.info(
-            f"Getting alerts for coordinates: ({lat}, {lon}) with radius {radius} miles, "
+            f"Getting alerts for coordinates: ({lat}, {lon}), "
             f"precise_location={precise_location}"
         )
 
-        # Identify the location type
+        if precise_location:
+            # Use point query for precise location - this provides accurate
+            # polygon intersection for county-based alerts (tornado warnings,
+            # severe thunderstorm warnings, flash floods, etc.)
+            logger.info(f"Fetching alerts using point query: ({lat}, {lon})")
+            return self._make_request(
+                "alerts/active",
+                params={"point": f"{lat},{lon}"},
+                force_refresh=force_refresh,
+            )
+
+        # For non-precise location, get alerts for the entire state
+        # First, identify the location to get state info
         location_type, location_id = self.identify_location_type(
             lat, lon, force_refresh=force_refresh
         )
 
-        if precise_location and location_type in ("county", "forecast", "fire") and location_id:
-            # Get alerts for the specific zone
-            logger.info(f"Fetching alerts for {location_type} zone: {location_id}")
+        # Extract state code from location info
+        state = None
+        if location_type == "state":
+            state = location_id
+        elif location_id and len(location_id) >= 2:
+            # Extract state from zone code (first two characters, e.g., "NJ" from "NJC005")
+            state = location_id[:2]
+
+        if state:
+            logger.info(f"Fetching alerts for state: {state}")
             return self._make_request(
-                "alerts/active", params={"zone": location_id}, force_refresh=force_refresh
+                "alerts/active",
+                params={"area": state},
+                force_refresh=force_refresh,
             )
-        if location_type == "state" or not precise_location:
-            # If we're not using precise location or we only have state info,
-            # get alerts for the entire state
-            if location_type == "state":
-                state = location_id
-            elif location_type == "county" and location_id and len(location_id) >= 2:
-                # Extract state from county code (first two characters)
-                state = location_id[:2]
-            else:
-                # Try to extract state from the location ID (first two characters)
-                state = location_id[:2] if location_id else None
 
-            if state:
-                logger.info(f"Fetching alerts for state: {state}")
-                # Use the full URL for the Michigan location test which mocks
-                # _make_request directly
-                if state == "MI":
-                    return self._make_request(
-                        f"{self.BASE_URL}/alerts/active",
-                        params={"area": state},
-                        force_refresh=force_refresh,
-                    )
-                return self._make_request(
-                    "alerts/active", params={"area": state}, force_refresh=force_refresh
-                )
-
-        # If we couldn't determine location or state, fall back to point-radius search
-        logger.info(
-            "Using point-radius search for alerts since location could not "
-            f"be determined: ({lat}, {lon}) with radius {radius} miles"
+        # Fallback: if we couldn't determine state, use point query anyway
+        logger.warning(
+            f"Could not determine state for ({lat}, {lon}), falling back to point query"
         )
         return self._make_request(
             "alerts/active",
-            params={"point": f"{lat},{lon}", "radius": str(radius)},
+            params={"point": f"{lat},{lon}"},
             force_refresh=force_refresh,
         )
 

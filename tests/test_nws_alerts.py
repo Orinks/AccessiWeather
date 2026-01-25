@@ -217,14 +217,64 @@ class TestGetNwsAlertsParameters:
     """
     Tests for get_nws_alerts API parameters.
 
-    These tests verify that the API request does not incorrectly filter
-    by message_type, which would exclude Update alerts.
+    These tests verify:
+    - The API uses point query for precise polygon-based alert matching
+    - The API does not incorrectly filter by message_type (which would exclude Update alerts)
     """
 
     @pytest.fixture
     def location(self):
         """Test location in the US."""
         return Location(name="Test City", latitude=40.7128, longitude=-74.0060)
+
+    @pytest.mark.asyncio
+    async def test_get_alerts_uses_point_query(self, location):
+        """
+        Test that get_nws_alerts uses point-based query for precise location matching.
+
+        Point queries provide accurate polygon intersection for county-based alerts
+        (tornado warnings, severe thunderstorm warnings, flash floods, etc.) rather
+        than zone-based queries which may over-report alerts for your general area.
+        """
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"features": []}
+        mock_response.raise_for_status = MagicMock()
+
+        with patch("accessiweather.weather_client_nws.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+            mock_client.get.return_value = mock_response
+
+            await get_nws_alerts(
+                location=location,
+                nws_base_url="https://api.weather.gov",
+                user_agent="Test/1.0",
+                timeout=10.0,
+            )
+
+            # Verify the request was made
+            mock_client.get.assert_called_once()
+            call_args = mock_client.get.call_args
+
+            # Get the params from the call
+            params = call_args.kwargs.get("params", {})
+
+            # Critical assertion: point parameter must be present for precise location matching
+            assert "point" in params, (
+                "Point query is required for precise polygon-based alert matching. "
+                "Zone-based queries may over-report alerts."
+            )
+
+            # Verify point format is correct (lat,lon)
+            expected_point = f"{location.latitude},{location.longitude}"
+            assert params.get("point") == expected_point, (
+                f"Point parameter should be '{expected_point}', got '{params.get('point')}'"
+            )
+
+            # Verify zone is NOT used (we want point-based, not zone-based)
+            assert "zone" not in params, (
+                "Zone parameter should not be used - point query is preferred for precision"
+            )
 
     @pytest.mark.asyncio
     async def test_get_alerts_no_message_type_filter(self, location):
