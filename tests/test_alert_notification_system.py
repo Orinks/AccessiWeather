@@ -9,12 +9,12 @@ are processed simultaneously.
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
-from accessiweather.alert_notification_system import AlertNotificationSystem
 from accessiweather.alert_manager import AlertManager
+from accessiweather.alert_notification_system import AlertNotificationSystem
 from accessiweather.models import WeatherAlert, WeatherAlerts
 
 
@@ -95,8 +95,9 @@ class TestAlertNotificationBatchSound:
     async def test_batch_alerts_only_one_sound(
         self, notification_system, mock_notifier, multiple_alerts
     ):
-        """Test that multiple alerts in a batch only play one sound.
-        
+        """
+        Test that multiple alerts in a batch only play one sound.
+
         When multiple alerts are processed at once, only the most severe
         alert should trigger a sound to prevent overlapping audio.
         """

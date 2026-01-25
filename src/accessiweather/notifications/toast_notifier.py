@@ -156,6 +156,7 @@ class SafeDesktopNotifier:
             play_sound: Whether to play a sound (default True). Set to False
                        to send notification silently (useful when batching
                        multiple alerts to avoid overlapping sounds).
+
         """
         if not DESKTOP_NOTIFIER_AVAILABLE:
             logger.info(f"Notification (desktop notifier unavailable): {title} - {message}")

@@ -13,10 +13,9 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import httpx
 import pytest
 
-from accessiweather.models import Location, WeatherAlerts
+from accessiweather.models import Location
 from accessiweather.weather_client_nws import get_nws_alerts, parse_nws_alerts
 
 
@@ -48,8 +47,9 @@ class TestParseNwsAlerts:
         assert alerts.alerts[0].severity == "Extreme"
 
     def test_parse_alert_message_type_update(self):
-        """Test parsing alert with messageType 'Update'.
-        
+        """
+        Test parsing alert with messageType 'Update'.
+
         This is a regression test for issue where updated warnings
         were being filtered out (commit 7862708).
         """
@@ -145,7 +145,7 @@ class TestParseNwsAlerts:
         alerts = parse_nws_alerts(data)
         # All three should be parsed
         assert len(alerts.alerts) == 3
-        
+
         # Verify each type was included
         events = {a.event for a in alerts.alerts}
         assert "Flash Flood Warning" in events
@@ -214,8 +214,9 @@ class TestParseNwsAlerts:
 
 
 class TestGetNwsAlertsParameters:
-    """Tests for get_nws_alerts API parameters.
-    
+    """
+    Tests for get_nws_alerts API parameters.
+
     These tests verify that the API request does not incorrectly filter
     by message_type, which would exclude Update alerts.
     """
@@ -227,8 +228,9 @@ class TestGetNwsAlertsParameters:
 
     @pytest.mark.asyncio
     async def test_get_alerts_no_message_type_filter(self, location):
-        """Test that get_nws_alerts does NOT filter by message_type.
-        
+        """
+        Test that get_nws_alerts does NOT filter by message_type.
+
         Regression test for commit 7862708. The old code had:
             params = {"message_type": "alert"}
         which excluded alerts with messageType="Update".
@@ -254,7 +256,7 @@ class TestGetNwsAlertsParameters:
             mock_client_class.return_value.__aenter__.return_value = mock_client
             mock_client.get.return_value = mock_response
 
-            result = await get_nws_alerts(
+            await get_nws_alerts(
                 location=location,
                 nws_base_url="https://api.weather.gov",
                 user_agent="Test/1.0",
@@ -345,7 +347,7 @@ class TestAlertTimeParsing:
         }
         alerts = parse_nws_alerts(data)
         alert = alerts.alerts[0]
-        
+
         assert alert.onset is not None
         assert alert.expires is not None
         assert alert.sent is not None
@@ -368,7 +370,7 @@ class TestAlertTimeParsing:
         }
         alerts = parse_nws_alerts(data)
         alert = alerts.alerts[0]
-        
+
         assert alert.onset is not None
         assert alert.expires is not None
 
@@ -388,7 +390,7 @@ class TestAlertTimeParsing:
         }
         alerts = parse_nws_alerts(data)
         alert = alerts.alerts[0]
-        
+
         assert alert.onset is None
         assert alert.expires is None
         assert alert.sent is None
