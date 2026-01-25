@@ -14,6 +14,7 @@ from .constants import (
     MAX_DISPLAYED_AREAS,
     MAX_NOTIFICATION_DESCRIPTION_LENGTH,
     SEVERITY_PRIORITY_EXTREME,
+    SEVERITY_PRIORITY_MAP,
     SEVERITY_PRIORITY_MINOR,
     SEVERITY_PRIORITY_MODERATE,
     SEVERITY_PRIORITY_SEVERE,
@@ -143,6 +144,9 @@ class AlertNotificationSystem:
         """
         Process alerts and send notifications for qualifying alerts.
 
+        When multiple alerts are processed in a batch, only one sound is played
+        (for the most severe alert) to avoid overlapping sounds.
+
         Returns
         -------
             Number of notifications sent.
@@ -156,11 +160,25 @@ class AlertNotificationSystem:
                 logger.debug("No notifications to send")
                 return 0
 
-            # Send notifications
+            # Sort notifications by severity (highest first) to play sound for most severe
+            # Higher priority number = more severe
+            sorted_notifications = sorted(
+                notifications_to_send,
+                key=lambda x: SEVERITY_PRIORITY_MAP.get(
+                    (x[0].severity or "unknown").lower(), SEVERITY_PRIORITY_UNKNOWN
+                ),
+                reverse=True,
+            )
+
+            # Send notifications - only play sound for the first (most severe) one
             notifications_sent = 0
-            for alert, reason in notifications_to_send:
+            for i, (alert, reason) in enumerate(sorted_notifications):
                 try:
-                    success = await self._send_alert_notification(alert, reason)
+                    # Only play sound for the first notification to avoid overlap
+                    play_sound = (i == 0)
+                    success = await self._send_alert_notification(
+                        alert, reason, play_sound=play_sound
+                    )
                     if success:
                         notifications_sent += 1
                 except Exception as e:
@@ -177,7 +195,9 @@ class AlertNotificationSystem:
             logger.error(f"Error processing alert notifications: {e}")
             return 0
 
-    async def _send_alert_notification(self, alert: WeatherAlert, reason: str) -> bool:
+    async def _send_alert_notification(
+        self, alert: WeatherAlert, reason: str, play_sound: bool = True
+    ) -> bool:
         """
         Send a notification for a specific alert.
 
@@ -185,6 +205,7 @@ class AlertNotificationSystem:
         ----
             alert: The weather alert to notify about
             reason: The reason for notification (new_alert, escalation, etc.)
+            play_sound: Whether to play a sound with this notification
 
         Returns:
         -------
@@ -201,14 +222,16 @@ class AlertNotificationSystem:
                 settings=self.settings,
             )
 
-            # Compute sound candidates based on alert content
-            try:
-                from .notifications.alert_sound_mapper import get_candidate_sound_events
+            # Compute sound candidates based on alert content (only if playing sound)
+            sound_candidates = None
+            if play_sound:
+                try:
+                    from .notifications.alert_sound_mapper import get_candidate_sound_events
 
-                sound_candidates = get_candidate_sound_events(alert)
-            except Exception:
-                # Fallback if mapper not available
-                sound_candidates = None
+                    sound_candidates = get_candidate_sound_events(alert)
+                except Exception:
+                    # Fallback if mapper not available
+                    pass
 
             # Send the notification, providing candidate-based sound selection
             success = self.notifier.send_notification(
@@ -216,6 +239,7 @@ class AlertNotificationSystem:
                 message=message,
                 timeout=15,  # Longer timeout for weather alerts
                 sound_candidates=sound_candidates,
+                play_sound=play_sound,
             )
 
             if success:

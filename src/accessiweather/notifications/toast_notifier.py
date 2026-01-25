@@ -139,17 +139,28 @@ class SafeDesktopNotifier:
         *,
         sound_event: str | None = None,
         sound_candidates: list[str] | None = None,
+        play_sound: bool = True,
     ) -> bool:
         """
         Send a notification synchronously.
 
         Optionally specify a specific sound_event or a list of sound_candidates
         to determine which sound to play. candidates take precedence over event.
+
+        Args:
+            title: Notification title
+            message: Notification message body
+            timeout: Notification display timeout in seconds
+            sound_event: Specific sound event key to play
+            sound_candidates: List of sound event keys to try in order
+            play_sound: Whether to play a sound (default True). Set to False
+                       to send notification silently (useful when batching
+                       multiple alerts to avoid overlapping sounds).
         """
         if not DESKTOP_NOTIFIER_AVAILABLE:
             logger.info(f"Notification (desktop notifier unavailable): {title} - {message}")
-            # Still play sound if configured, as a basic cue
-            if self.sound_enabled:
+            # Still play sound if configured and requested, as a basic cue
+            if self.sound_enabled and play_sound:
                 try:
                     if sound_candidates:
                         play_notification_sound_candidates(sound_candidates, self.soundpack)
@@ -161,8 +172,8 @@ class SafeDesktopNotifier:
 
         try:
             self._run_async(self._send_notification_async(title, message, timeout))
-            # Play alert sound for weather alerts when enabled
-            if self.sound_enabled:
+            # Play alert sound for weather alerts when enabled and requested
+            if self.sound_enabled and play_sound:
                 try:
                     if sound_candidates:
                         play_notification_sound_candidates(sound_candidates, self.soundpack)
