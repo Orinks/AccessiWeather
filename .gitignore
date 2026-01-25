@@ -296,3 +296,6 @@ tmpclaude*
 .auto-claude-security.json
 .claude_settings.json
 .claude/
+# UV package manager
+uv.lock
+.uv/
