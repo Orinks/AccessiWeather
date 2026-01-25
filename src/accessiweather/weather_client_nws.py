@@ -725,7 +725,8 @@ async def get_nws_alerts(
         params = {
             "point": f"{location.latitude},{location.longitude}",
             "status": "actual",
-            "message_type": "alert",
+            # Note: Don't filter by message_type - we want Alert, Update, and Cancel
+            # message_type=alert would exclude updated warnings (messageType: "Update")
         }
         headers = {"User-Agent": user_agent}
 
