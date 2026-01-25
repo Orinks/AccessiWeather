@@ -299,3 +299,4 @@ tmpclaude*
 # UV package manager
 uv.lock
 .uv/
+.venv-test/
