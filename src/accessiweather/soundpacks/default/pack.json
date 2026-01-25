@@ -12,9 +12,9 @@
     "startup": "startup.wav",
     "exit": "exit.wav",
     "tornado_warning": "tornado_warning.wav",
-    "warning": "warning.wav",
+    "warning": "critical_alert.wav",
     "watch": "watch.wav",
     "discussion_update": "notify.wav",
-    "severe_risk": "warning.wav"
+    "severe_risk": "critical_alert.wav"
   }
 }
