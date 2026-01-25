@@ -152,6 +152,10 @@ class SoundPackManagerDialog(wx.Dialog):
         self._preview_player = get_preview_player()
         self._current_preview_path: Path | None = None
 
+        # Timer to check when preview playback finishes
+        self._preview_timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self._on_preview_timer, self._preview_timer)
+
         self._load_sound_packs()
         self._create_ui()
         self._refresh_pack_list()
@@ -494,6 +498,7 @@ class SoundPackManagerDialog(wx.Dialog):
         # Check if we're playing the same sound - toggle stop
         if self._preview_player.is_playing() and self._current_preview_path == sound_path:
             self._preview_player.stop()
+            self._preview_timer.Stop()
             self.preview_btn.SetLabel("Preview Selected Sound")
             self._current_preview_path = None
         else:
@@ -502,9 +507,20 @@ class SoundPackManagerDialog(wx.Dialog):
             if self._preview_player.play(sound_path):
                 self._current_preview_path = sound_path
                 self.preview_btn.SetLabel("Stop Preview")
+                # Start timer to detect when playback finishes
+                self._preview_timer.Start(200)  # Check every 200ms
             else:
                 self._current_preview_path = None
                 self.preview_btn.SetLabel("Preview Selected Sound")
+
+    def _on_preview_timer(self, event) -> None:
+        """Check if preview playback has finished and reset button state."""
+        if not self._preview_player.is_playing():
+            self._preview_timer.Stop()
+            self._current_preview_path = None
+            # Reset both preview buttons to their default labels
+            self.preview_btn.SetLabel("Preview Selected Sound")
+            self.preview_mapping_btn.SetLabel("Preview")
 
     def _on_category_changed(self, event) -> None:
         """Handle category selection change."""
@@ -683,6 +699,7 @@ class SoundPackManagerDialog(wx.Dialog):
         # Check if we're playing the same sound - toggle stop
         if self._preview_player.is_playing() and self._current_preview_path == sound_path:
             self._preview_player.stop()
+            self._preview_timer.Stop()
             self.preview_mapping_btn.SetLabel("Preview")
             self._current_preview_path = None
         else:
@@ -693,6 +710,8 @@ class SoundPackManagerDialog(wx.Dialog):
             if self._preview_player.play(sound_path):
                 self._current_preview_path = sound_path
                 self.preview_mapping_btn.SetLabel("Stop")
+                # Start timer to detect when playback finishes
+                self._preview_timer.Start(200)  # Check every 200ms
             else:
                 self._current_preview_path = None
                 self.preview_mapping_btn.SetLabel("Preview")
@@ -1145,14 +1164,16 @@ class SoundPackManagerDialog(wx.Dialog):
 
     def _on_dialog_close(self, event) -> None:
         """Handle dialog close event (X button or escape)."""
-        # Stop any playing preview
+        # Stop any playing preview and timer
+        self._preview_timer.Stop()
         if self._preview_player:
             self._preview_player.stop()
         event.Skip()  # Allow normal close handling
 
     def _on_close(self, event) -> None:
         """Close the dialog."""
-        # Stop any playing preview
+        # Stop any playing preview and timer
+        self._preview_timer.Stop()
         if self._preview_player:
             self._preview_player.stop()
 
