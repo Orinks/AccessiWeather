@@ -375,10 +375,10 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["alert_notif"] = wx.CheckBox(panel, label="Enable alert notifications")
         sizer.Add(self._controls["alert_notif"], 0, wx.LEFT | wx.BOTTOM, 5)
 
-        # Alert precision setting
-        row_precision = wx.BoxSizer(wx.HORIZONTAL)
-        row_precision.Add(
-            wx.StaticText(panel, label="Alert Location Precision:"),
+        # Alert area setting
+        row_area = wx.BoxSizer(wx.HORIZONTAL)
+        row_area.Add(
+            wx.StaticText(panel, label="Alert Area:"),
             0,
             wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
             10,
@@ -391,8 +391,8 @@ class SettingsDialogSimple(wx.Dialog):
                 "State",
             ],
         )
-        row_precision.Add(self._controls["alert_radius_type"], 0)
-        sizer.Add(row_precision, 0, wx.ALL, 5)
+        row_area.Add(self._controls["alert_radius_type"], 0)
+        sizer.Add(row_area, 0, wx.ALL, 5)
 
         # Severity levels
         sizer.Add(
