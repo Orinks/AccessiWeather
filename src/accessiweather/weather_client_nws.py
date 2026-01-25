@@ -718,17 +718,79 @@ async def get_nws_alerts(
     user_agent: str,
     timeout: float,
     client: httpx.AsyncClient | None = None,
+    alert_radius_type: str = "point",
 ) -> WeatherAlerts | None:
-    """Fetch weather alerts from the NWS API."""
+    """
+    Fetch weather alerts from the NWS API.
+
+    Args:
+        location: The location to fetch alerts for
+        nws_base_url: Base URL for NWS API
+        user_agent: User agent string
+        timeout: Request timeout
+        client: Optional HTTP client to reuse
+        alert_radius_type: "point" (exact location), "zone" (forecast zone), or "state"
+
+    """
     try:
         alerts_url = f"{nws_base_url}/alerts/active"
-        params = {
-            "point": f"{location.latitude},{location.longitude}",
-            "status": "actual",
-            # Note: Don't filter by message_type - we want Alert, Update, and Cancel
-            # message_type=alert would exclude updated warnings (messageType: "Update")
-        }
         headers = {"User-Agent": user_agent}
+
+        # Build params based on alert_radius_type
+        if alert_radius_type == "state":
+            # Get state from location - need to fetch point data first
+            point_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+            if client is not None:
+                point_response = await _client_get(client, point_url, headers=headers)
+            else:
+                async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+                    point_response = await new_client.get(point_url, headers=headers)
+            point_response.raise_for_status()
+            point_data = point_response.json()
+            state = point_data.get("properties", {}).get("relativeLocation", {}).get("properties", {}).get("state")
+            if state:
+                params = {"area": state, "status": "actual"}
+            else:
+                # Fall back to point query if state not found
+                logger.warning("Could not determine state, falling back to point query")
+                params = {"point": f"{location.latitude},{location.longitude}", "status": "actual"}
+
+        elif alert_radius_type == "zone":
+            # Get zone from point data
+            point_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+            if client is not None:
+                point_response = await _client_get(client, point_url, headers=headers)
+            else:
+                async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+                    point_response = await new_client.get(point_url, headers=headers)
+            point_response.raise_for_status()
+            point_data = point_response.json()
+
+            # Try to get zone ID (prefer county, then forecast zone)
+            zone_id = None
+            county_url = point_data.get("properties", {}).get("county")
+            if county_url and "/county/" in county_url:
+                zone_id = county_url.split("/county/")[1]
+            if not zone_id:
+                forecast_zone_url = point_data.get("properties", {}).get("forecastZone")
+                if forecast_zone_url and "/forecast/" in forecast_zone_url:
+                    zone_id = forecast_zone_url.split("/forecast/")[1]
+
+            if zone_id:
+                params = {"zone": zone_id, "status": "actual"}
+            else:
+                # Fall back to point query if zone not found
+                logger.warning("Could not determine zone, falling back to point query")
+                params = {"point": f"{location.latitude},{location.longitude}", "status": "actual"}
+
+        else:  # "point" (default) - most precise
+            params = {
+                "point": f"{location.latitude},{location.longitude}",
+                "status": "actual",
+            }
+
+        # Note: Don't filter by message_type - we want Alert, Update, and Cancel
+        # message_type=alert would exclude updated warnings (messageType: "Update")
 
         # Use provided client or create a new one
         if client is not None:
