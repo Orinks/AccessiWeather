@@ -1,5 +1,5 @@
-# -*- mode: python ; coding: utf-8 -*-
-"""PyInstaller spec file for AccessiWeather.
+"""
+PyInstaller spec file for AccessiWeather.
 
 This spec file configures PyInstaller to build AccessiWeather as a standalone
 application for Windows and macOS.
@@ -9,7 +9,6 @@ Usage:
 """
 
 import platform
-import sys
 from pathlib import Path
 
 # Determine paths
@@ -137,6 +136,11 @@ a = Analysis(
 a.binaries = [b for b in a.binaries if not b[0].startswith("tcl")]
 a.binaries = [b for b in a.binaries if not b[0].startswith("tk")]
 a.binaries = [b for b in a.binaries if "_tkinter" not in b[0]]
+
+# On macOS, exclude x86 sound_lib binaries (they cause PyInstaller to fail on arm64)
+if IS_MACOS:
+    a.binaries = [b for b in a.binaries if "sound_lib/lib/x86" not in b[0]]
+    a.datas = [d for d in a.datas if "sound_lib/lib/x86" not in d[0]]
 
 pyz = PYZ(a.pure)
 
