@@ -928,8 +928,14 @@ class WeatherClient:
 
     async def _get_nws_alerts(self, location: Location) -> WeatherAlerts | None:
         """Delegate to the NWS client module."""
+        alert_radius_type = getattr(self.settings, "alert_radius_type", "point")
         return await nws_client.get_nws_alerts(
-            location, self.nws_base_url, self.user_agent, self.timeout, self._get_http_client()
+            location,
+            self.nws_base_url,
+            self.user_agent,
+            self.timeout,
+            self._get_http_client(),
+            alert_radius_type=alert_radius_type,
         )
 
     async def _get_nws_hourly_forecast(self, location: Location) -> HourlyForecast | None:

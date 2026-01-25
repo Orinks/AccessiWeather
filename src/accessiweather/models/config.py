@@ -18,6 +18,7 @@ CRITICAL_SETTINGS: set[str] = {
 # These can be loaded lazily without blocking startup
 NON_CRITICAL_SETTINGS: set[str] = {
     # Alert notification settings
+    "alert_radius_type",
     "alert_notifications_enabled",
     "alert_notify_extreme",
     "alert_notify_severe",
@@ -110,6 +111,7 @@ class AppSettings:
     github_app_id: str = ""
     github_app_private_key: str = ""
     github_app_installation_id: str = ""
+    alert_radius_type: str = "point"  # "point", "zone", or "state"
     alert_notifications_enabled: bool = True
     alert_notify_extreme: bool = True
     alert_notify_severe: bool = True
@@ -279,6 +281,11 @@ class AppSettings:
             if not isinstance(value, int) or value < 1:
                 setattr(self, setting_name, 180)
 
+        elif setting_name == "alert_radius_type":
+            valid_types = {"point", "zone", "state"}
+            if value not in valid_types:
+                setattr(self, setting_name, "point")
+
         elif setting_name == "openmeteo_weather_model":
             valid_models = {
                 "best_match",
@@ -352,6 +359,7 @@ class AppSettings:
             "notify_discussion_update": self.notify_discussion_update,
             "notify_severe_risk_change": self.notify_severe_risk_change,
             "github_backend_url": self.github_backend_url,
+            "alert_radius_type": self.alert_radius_type,
             "alert_notifications_enabled": self.alert_notifications_enabled,
             "alert_notify_extreme": self.alert_notify_extreme,
             "alert_notify_severe": self.alert_notify_severe,
@@ -420,6 +428,7 @@ class AppSettings:
             notify_discussion_update=cls._as_bool(data.get("notify_discussion_update"), False),
             notify_severe_risk_change=cls._as_bool(data.get("notify_severe_risk_change"), False),
             github_backend_url=data.get("github_backend_url", ""),
+            alert_radius_type=data.get("alert_radius_type", "point"),
             alert_notifications_enabled=cls._as_bool(data.get("alert_notifications_enabled"), True),
             alert_notify_extreme=cls._as_bool(data.get("alert_notify_extreme"), True),
             alert_notify_severe=cls._as_bool(data.get("alert_notify_severe"), True),
