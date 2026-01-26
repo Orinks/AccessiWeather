@@ -195,14 +195,14 @@ jobs:
           fi
 
       - name: Upload Windows Installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: nightly-windows-installer
           path: dist/AccessiWeather_Setup_*.exe
           retention-days: 7
 
       - name: Upload Windows Portable
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: nightly-windows-portable
           path: dist/AccessiWeather_Portable_*.zip
@@ -290,7 +290,7 @@ jobs:
           fi
 
       - name: Upload macOS DMG
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: nightly-macos-dmg
           path: dist/AccessiWeather_*.dmg
