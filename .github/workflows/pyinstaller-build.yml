@@ -132,7 +132,7 @@ jobs:
           cat checksums.txt
 
       - name: Upload Windows Installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: windows-installer-${{ steps.version.outputs.version }}
           path: |
@@ -141,7 +141,7 @@ jobs:
           retention-days: 90
 
       - name: Upload Windows Portable
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: windows-portable-${{ steps.version.outputs.version }}
           path: dist/AccessiWeather_Portable_*.zip
@@ -240,7 +240,7 @@ jobs:
           cat checksums.txt
 
       - name: Upload macOS DMG
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: macos-dmg-${{ steps.version.outputs.version }}
           path: |
