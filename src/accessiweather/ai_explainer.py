@@ -685,12 +685,15 @@ class AIExplainer:
             client = self._get_client()
             model = model_override or self.get_effective_model()
 
+            logger.info(f"OpenRouter request: model={model}, system_prompt_len={len(system_prompt)}, user_prompt_len={len(user_prompt)}")
+
             # Build extra_body with fallback models for free tier
             # Only use fallbacks for default model, not user-configured models
             extra_body = {}
             if model == DEFAULT_FREE_MODEL and ":free" in model:
                 # Use OpenRouter's native models parameter for automatic fallback
                 extra_body["models"] = FALLBACK_FREE_MODELS
+                logger.debug(f"Using fallback models: {FALLBACK_FREE_MODELS}")
 
             response = client.chat.completions.create(
                 model=model,
@@ -706,9 +709,12 @@ class AIExplainer:
                 extra_body=extra_body if extra_body else None,
             )
 
+            # Log full response for debugging
+            logger.debug(f"OpenRouter raw response: {response}")
+
             # Extract content - handle potential None values
             if not response.choices:
-                logger.warning("OpenRouter returned empty choices in response")
+                logger.warning(f"OpenRouter returned empty choices. Full response: model={response.model}, id={getattr(response, 'id', 'N/A')}, usage={response.usage}")
                 return {
                     "content": "",
                     "model": response.model or "unknown",
@@ -716,12 +722,17 @@ class AIExplainer:
                     "prompt_tokens": 0,
                     "completion_tokens": 0,
                 }
+            
             content = response.choices[0].message.content
+            finish_reason = getattr(response.choices[0], 'finish_reason', 'unknown')
+            
             if content is None:
-                logger.warning("OpenRouter returned None content in response")
+                logger.warning(f"OpenRouter returned None content. finish_reason={finish_reason}, model={response.model}")
                 content = ""
+            elif len(content.strip()) < 20:
+                logger.warning(f"OpenRouter returned short content ({len(content)} chars). finish_reason={finish_reason}, content={content[:100]!r}")
 
-            logger.info(f"OpenRouter response: model={response.model}, content_len={len(content)}")
+            logger.info(f"OpenRouter response: model={response.model}, content_len={len(content)}, finish_reason={finish_reason}")
 
             # Handle potential None usage
             usage = response.usage
