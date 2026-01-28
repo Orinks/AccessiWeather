@@ -701,7 +701,7 @@ class AIExplainer:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
-                max_tokens=1000,  # Allow complete explanations without cutoff
+                max_tokens=4000,  # Increased for models with thinking/reasoning features
                 extra_headers={
                     "HTTP-Referer": "https://accessiweather.orinks.net",
                     "X-Title": "AccessiWeather",
