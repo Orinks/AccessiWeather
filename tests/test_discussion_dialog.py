@@ -158,7 +158,7 @@ class TestAIExplanationGeneration:
     )
     async def test_discussion_dialog_passes_custom_prompt_settings(
         self,
-        ai_model,
+        ai_model_preference,
         expected_model,
     ):
         """Test discussion dialog passes custom AI prompt settings to explainer."""
@@ -166,7 +166,7 @@ class TestAIExplanationGeneration:
         from accessiweather.ui.dialogs import discussion_dialog
 
         settings = MagicMock()
-        settings.ai_model_preference = ai_model
+        settings.ai_model_preference = ai_model_preference
         settings.custom_system_prompt = "System prompt"
         settings.custom_instructions = "Custom instructions"
 
