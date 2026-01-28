@@ -264,8 +264,11 @@ class DiscussionDialog(wx.Dialog):
             settings = self.app.config_manager.get_settings()
             model = getattr(settings, "ai_model", None)
 
-            explainer = (
-                AIExplainer(api_key=api_key, model=model) if model else AIExplainer(api_key=api_key)
+            explainer = AIExplainer(
+                api_key=api_key,
+                model=model if model else None,
+                custom_system_prompt=getattr(settings, "custom_system_prompt", None),
+                custom_instructions=getattr(settings, "custom_instructions", None),
             )
 
             location = self.app.config_manager.get_current_location()
