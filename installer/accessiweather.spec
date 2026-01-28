@@ -9,9 +9,13 @@ Usage:
 """
 
 import platform
+import sys
 from pathlib import Path
 
+# Ensure installer/ directory is on Python path so spec_utils can be imported
+sys.path.insert(0, SPECPATH)
 from spec_utils import filter_platform_binaries, filter_sound_lib_entries
+
 # Determine paths
 SPEC_DIR = Path(SPECPATH).resolve()
 PROJECT_ROOT = SPEC_DIR.parent

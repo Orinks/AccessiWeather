@@ -8,7 +8,7 @@ avoid packaging obvious cross-platform binary artifacts.
 from __future__ import annotations
 
 import re
-from typing import Iterable
+from collections.abc import Iterable
 
 _BINARY_EXTS = (".dll", ".dylib", ".pyd", ".exe", ".bundle")
 _SOUND_LIB_ROOT = "sound_lib/lib/"
