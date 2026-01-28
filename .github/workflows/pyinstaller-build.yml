@@ -15,11 +15,6 @@ on:
   push:
     tags:
       - 'v*.*.*'
-  workflow_run:
-    workflows: ["CI"]
-    types:
-      - completed
-    branches: [main, dev]
 
 permissions:
   contents: write
