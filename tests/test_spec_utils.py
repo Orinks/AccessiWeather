@@ -1,6 +1,4 @@
-"""
-Tests for PyInstaller spec filtering utilities.
-"""
+"""Tests for PyInstaller spec filtering utilities."""
 
 from __future__ import annotations
 
@@ -43,7 +41,7 @@ def test_filter_platform_binaries_removes_cross_platform(platform_system, expect
             assert (".bundle" in expected_exts) == (entry in filtered)
         elif ext.endswith(".pyd"):
             assert (".pyd" in expected_exts) == (entry in filtered)
-        elif ext.endswith(".so") or ext.endswith(".so.1"):
+        elif ext.endswith((".so", ".so.1")):
             assert (".so" in expected_exts) == (entry in filtered)
 
 
