@@ -559,25 +559,28 @@ class AIExplainer:
         """
         import asyncio
 
-        # Build AFD-specific prompts
-        system_prompt = (
-            "You are a helpful weather assistant that explains National Weather Service "
-            "Area Forecast Discussions (AFDs) in plain, accessible language. AFDs contain "
-            "technical meteorological terminology that most people don't understand. "
-            "Your job is to translate this into clear, everyday language that anyone can "
-            "understand. Focus on:\n"
-            "- What weather to expect and when\n"
-            "- Any significant weather events or changes\n"
-            "- How confident forecasters are in their predictions\n"
-            "- What this means for daily activities\n\n"
-            "Avoid using technical jargon. If you must use a technical term, explain it.\n\n"
-            "IMPORTANT: Do NOT start with a preamble like 'Here is a summary...' or "
-            "'This forecast discussion explains...'. Do NOT repeat the location name. "
-            "Jump straight into explaining the weather. The user already knows what they asked for.\n\n"
-            "IMPORTANT: Respond in plain text only. Do NOT use markdown formatting such as "
-            "bold (**text**), italic (*text*), headers (#), bullet points, or any other "
-            "markdown syntax. Use simple paragraph text that can be read directly."
-        )
+        # Build AFD-specific prompts - use custom system prompt if configured
+        if self.custom_system_prompt:
+            system_prompt = self.custom_system_prompt
+        else:
+            system_prompt = (
+                "You are a helpful weather assistant that explains National Weather Service "
+                "Area Forecast Discussions (AFDs) in plain, accessible language. AFDs contain "
+                "technical meteorological terminology that most people don't understand. "
+                "Your job is to translate this into clear, everyday language that anyone can "
+                "understand. Focus on:\n"
+                "- What weather to expect and when\n"
+                "- Any significant weather events or changes\n"
+                "- How confident forecasters are in their predictions\n"
+                "- What this means for daily activities\n\n"
+                "Avoid using technical jargon. If you must use a technical term, explain it.\n\n"
+                "IMPORTANT: Do NOT start with a preamble like 'Here is a summary...' or "
+                "'This forecast discussion explains...'. Do NOT repeat the location name. "
+                "Jump straight into explaining the weather. The user already knows what they asked for.\n\n"
+                "IMPORTANT: Respond in plain text only. Do NOT use markdown formatting such as "
+                "bold (**text**), italic (*text*), headers (#), bullet points, or any other "
+                "markdown syntax. Use simple paragraph text that can be read directly."
+            )
 
         style_instructions = {
             ExplanationStyle.BRIEF: "Provide a 2-3 sentence summary of the key points.",
@@ -593,6 +596,10 @@ class AIExplainer:
             f"in plain language:\n\n{afd_text}\n\n"
             f"{style_instructions.get(style, style_instructions[ExplanationStyle.DETAILED])}"
         )
+
+        # Add custom instructions if configured
+        if self.custom_instructions and self.custom_instructions.strip():
+            user_prompt += f"\n\nAdditional Instructions: {self.custom_instructions}"
 
         # Build list of models to try
         primary_model = self.get_effective_model()
@@ -695,6 +702,15 @@ class AIExplainer:
             )
 
             # Extract content - handle potential None values
+            if not response.choices:
+                logger.warning("OpenRouter returned empty choices in response")
+                return {
+                    "content": "",
+                    "model": response.model or "unknown",
+                    "total_tokens": 0,
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                }
             content = response.choices[0].message.content
             if content is None:
                 logger.warning("OpenRouter returned None content in response")
@@ -702,12 +718,14 @@ class AIExplainer:
 
             logger.info(f"OpenRouter response: model={response.model}, content_len={len(content)}")
 
+            # Handle potential None usage
+            usage = response.usage
             return {
                 "content": content,
-                "model": response.model,
-                "total_tokens": response.usage.total_tokens,
-                "prompt_tokens": response.usage.prompt_tokens,
-                "completion_tokens": response.usage.completion_tokens,
+                "model": response.model or "unknown",
+                "total_tokens": usage.total_tokens if usage else 0,
+                "prompt_tokens": usage.prompt_tokens if usage else 0,
+                "completion_tokens": usage.completion_tokens if usage else 0,
             }
 
         except Exception as e:
