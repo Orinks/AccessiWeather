@@ -24,6 +24,9 @@ All notable changes to this project will be documented in this file.
 - macOS PyInstaller builds on Apple Silicon now use an x86_64 toolchain and filter sound_lib binaries so the DMG build completes under Rosetta
 - AI explanation now correctly reads your configured model preference instead of always falling back to default
 - Canceling AI explanation generation no longer crashes the app
+- OpenRouter auto-router now works in Area Forecast Discussion dialog
+- Your chosen AI model won't silently fall back to other models when it returns short responses
+- Increased AI token limit for models with thinking/reasoning features (Gemini, Grok, etc.)
 
 ### Removed
 -
