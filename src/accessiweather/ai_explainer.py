@@ -457,7 +457,9 @@ class AIExplainer:
         # Build list of models to try: primary first, then fallbacks for free models
         primary_model = self.get_effective_model()
         models_to_try = [primary_model]
-        if ":free" in primary_model:
+        # Only use fallbacks for default free model, not user-configured models
+        # User may have chosen a specific model (e.g., uncensored) for a reason
+        if primary_model == DEFAULT_FREE_MODEL and ":free" in primary_model:
             models_to_try.extend(FALLBACK_FREE_MODELS)
 
         # Try each model until we get a non-empty response
@@ -604,7 +606,9 @@ class AIExplainer:
         # Build list of models to try
         primary_model = self.get_effective_model()
         models_to_try = [primary_model]
-        if ":free" in primary_model:
+        # Only use fallbacks for default free model, not user-configured models
+        # User may have chosen a specific model (e.g., uncensored) for a reason
+        if primary_model == DEFAULT_FREE_MODEL and ":free" in primary_model:
             models_to_try.extend(FALLBACK_FREE_MODELS)
 
         # Try each model until we get a non-empty response
