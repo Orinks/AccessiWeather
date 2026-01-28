@@ -198,8 +198,12 @@ class LoadingDialog(wx.Dialog):
         """Close the loading dialog safely."""
         if self.is_cancelled:
             return  # Already closed via cancel
-        self.timer.Stop()
-        self.EndModal(wx.ID_OK)
+        try:
+            self.timer.Stop()
+            self.EndModal(wx.ID_OK)
+        except RuntimeError:
+            # Dialog already destroyed
+            pass
 
 
 def show_explanation_dialog(
@@ -236,8 +240,20 @@ def show_explanation_dialog(
         )
         return
 
+    # Use a mutable container for cancelled state that survives dialog destruction
+    state = {"cancelled": False, "dialog_closed": False}
+
     # Show loading dialog (non-modal so we can update it)
     loading_dialog = LoadingDialog(parent_ctrl, location.name)
+    
+    # Hook into the dialog's cancel to set our independent flag
+    original_on_cancel = loading_dialog._on_cancel
+    def wrapped_on_cancel(event):
+        state["cancelled"] = True
+        original_on_cancel(event)
+    loading_dialog._on_cancel = wrapped_on_cancel
+    loading_dialog.cancel_btn.Unbind(wx.EVT_BUTTON)
+    loading_dialog.cancel_btn.Bind(wx.EVT_BUTTON, wrapped_on_cancel)
 
     def generate_explanation():
         """Generate explanation in background thread."""
@@ -349,24 +365,25 @@ def show_explanation_dialog(
                 loop.close()
 
             # Show result on main thread
-            if not loading_dialog.is_cancelled:
+            if not state["cancelled"]:
                 wx.CallAfter(_show_result, result)
 
         except AIExplainerError as e:
-            if not loading_dialog.is_cancelled:
+            if not state["cancelled"]:
                 wx.CallAfter(_show_error, str(e))
             logger.warning(f"AI explanation error: {e}")
 
         except Exception as e:
-            if not loading_dialog.is_cancelled:
+            if not state["cancelled"]:
                 wx.CallAfter(_show_error, f"Unable to generate explanation.\n\nError: {e}")
             logger.error(f"Unexpected error generating AI explanation: {e}", exc_info=True)
 
     def _show_result(result):
         """Show the explanation result."""
         # Don't try to close if already cancelled/destroyed
-        if loading_dialog.is_cancelled:
+        if state["cancelled"] or state["dialog_closed"]:
             return
+        state["dialog_closed"] = True
         loading_dialog.close()
         dlg = ExplanationDialog(parent_ctrl, result, location.name)
         dlg.ShowModal()
@@ -379,8 +396,9 @@ def show_explanation_dialog(
     def _show_error(error_message):
         """Show error message."""
         # Don't try to close if already cancelled/destroyed
-        if loading_dialog.is_cancelled:
+        if state["cancelled"] or state["dialog_closed"]:
             return
+        state["dialog_closed"] = True
         loading_dialog.close()
         wx.MessageBox(
             error_message,
@@ -393,5 +411,8 @@ def show_explanation_dialog(
     thread.start()
 
     # Show loading dialog modally
-    loading_dialog.ShowModal()
+    result = loading_dialog.ShowModal()
+    if result == wx.ID_CANCEL:
+        state["cancelled"] = True
+    state["dialog_closed"] = True
     loading_dialog.Destroy()
