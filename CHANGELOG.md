@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - Weather alerts now trigger desktop notifications - previously alerts showed in the UI but never sent notifications
 - Location switching now updates the weather display - switching locations was silently failing due to a type mismatch
 - Cleaned up Visual Crossing alert processing - removed orphaned AlertManager that was losing state between calls
+- macOS PyInstaller builds on Apple Silicon now use an x86_64 toolchain and filter sound_lib binaries so the DMG build completes under Rosetta
 
 ### Removed
 -

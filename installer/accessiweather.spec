@@ -11,6 +11,7 @@ Usage:
 import platform
 from pathlib import Path
 
+from spec_utils import filter_platform_binaries, filter_sound_lib_entries
 # Determine paths
 SPEC_DIR = Path(SPECPATH).resolve()
 PROJECT_ROOT = SPEC_DIR.parent
@@ -137,10 +138,10 @@ a.binaries = [b for b in a.binaries if not b[0].startswith("tcl")]
 a.binaries = [b for b in a.binaries if not b[0].startswith("tk")]
 a.binaries = [b for b in a.binaries if "_tkinter" not in b[0]]
 
-# On macOS, exclude x86 sound_lib binaries (they cause PyInstaller to fail on arm64)
-if IS_MACOS:
-    a.binaries = [b for b in a.binaries if "sound_lib/lib/x86" not in b[0]]
-    a.datas = [d for d in a.datas if "sound_lib/lib/x86" not in d[0]]
+# Remove cross-platform binary artifacts and limit sound_lib to platform-friendly bits
+a.binaries = filter_platform_binaries(a.binaries, platform.system())
+a.binaries = filter_sound_lib_entries(a.binaries, platform.system())
+a.datas = filter_sound_lib_entries(a.datas, platform.system())
 
 pyz = PYZ(a.pure)
 
