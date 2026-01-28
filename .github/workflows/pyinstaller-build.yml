@@ -58,7 +58,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          architecture: x64
 
       - name: Cache pip dependencies
         uses: actions/cache@v4
@@ -96,7 +95,7 @@ jobs:
 
       - name: Build with PyInstaller
         run: |
-          arch -x86_64 python -m PyInstaller --clean --noconfirm installer/accessiweather.spec
+          python -m PyInstaller --clean --noconfirm installer/accessiweather.spec
 
       - name: Install Inno Setup
         run: |
