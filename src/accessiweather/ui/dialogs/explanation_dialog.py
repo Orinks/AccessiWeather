@@ -195,7 +195,9 @@ class LoadingDialog(wx.Dialog):
         self.EndModal(wx.ID_CANCEL)
 
     def close(self):
-        """Close the loading dialog."""
+        """Close the loading dialog safely."""
+        if self.is_cancelled:
+            return  # Already closed via cancel
         self.timer.Stop()
         self.EndModal(wx.ID_OK)
 
@@ -362,6 +364,9 @@ def show_explanation_dialog(
 
     def _show_result(result):
         """Show the explanation result."""
+        # Don't try to close if already cancelled/destroyed
+        if loading_dialog.is_cancelled:
+            return
         loading_dialog.close()
         dlg = ExplanationDialog(parent_ctrl, result, location.name)
         dlg.ShowModal()
@@ -373,6 +378,9 @@ def show_explanation_dialog(
 
     def _show_error(error_message):
         """Show error message."""
+        # Don't try to close if already cancelled/destroyed
+        if loading_dialog.is_cancelled:
+            return
         loading_dialog.close()
         wx.MessageBox(
             error_message,
