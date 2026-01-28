@@ -262,7 +262,7 @@ class DiscussionDialog(wx.Dialog):
 
             # Get configured model or use default
             settings = self.app.config_manager.get_settings()
-            model = getattr(settings, "ai_model", None)
+            model = getattr(settings, "ai_model_preference", None)
 
             explainer = AIExplainer(
                 api_key=api_key,
