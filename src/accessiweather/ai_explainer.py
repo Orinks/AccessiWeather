@@ -686,8 +686,9 @@ class AIExplainer:
             model = model_override or self.get_effective_model()
 
             # Build extra_body with fallback models for free tier
+            # Only use fallbacks for default model, not user-configured models
             extra_body = {}
-            if ":free" in model:
+            if model == DEFAULT_FREE_MODEL and ":free" in model:
                 # Use OpenRouter's native models parameter for automatic fallback
                 extra_body["models"] = FALLBACK_FREE_MODELS
 
