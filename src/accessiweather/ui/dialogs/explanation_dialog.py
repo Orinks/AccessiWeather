@@ -190,6 +190,7 @@ class LoadingDialog(wx.Dialog):
         """Handle cancel button press."""
         logger.info("User cancelled explanation generation")
         self.is_cancelled = True
+        self.timer.Stop()  # Stop timer before closing to prevent post-destroy crashes
         self.status_label.SetLabel("Cancelling...")
         self.cancel_btn.Enable(False)
         self.EndModal(wx.ID_CANCEL)
