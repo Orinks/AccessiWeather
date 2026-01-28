@@ -150,7 +150,7 @@ class TestAIExplanationGeneration:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        ("ai_model", "expected_model"),
+        ("ai_model_preference", "expected_model"),
         [
             ("openrouter/auto", "openrouter/auto"),
             (None, None),
@@ -166,7 +166,7 @@ class TestAIExplanationGeneration:
         from accessiweather.ui.dialogs import discussion_dialog
 
         settings = MagicMock()
-        settings.ai_model = ai_model
+        settings.ai_model_preference = ai_model
         settings.custom_system_prompt = "System prompt"
         settings.custom_instructions = "Custom instructions"
 
@@ -366,19 +366,19 @@ class TestModelConfiguration:
 
     def test_uses_configured_model(self, mock_app):
         """Test that configured model is used."""
-        mock_app.config_manager.get_settings.return_value.ai_model = "gpt-4"
+        mock_app.config_manager.get_settings.return_value.ai_model_preference = "gpt-4"
 
         settings = mock_app.config_manager.get_settings()
-        model = settings.ai_model
+        model = settings.ai_model_preference
 
         assert model == "gpt-4"
 
     def test_uses_default_when_no_model_configured(self, mock_app):
         """Test that default model is used when none configured."""
-        mock_app.config_manager.get_settings.return_value.ai_model = None
+        mock_app.config_manager.get_settings.return_value.ai_model_preference = None
 
         settings = mock_app.config_manager.get_settings()
-        model = getattr(settings, "ai_model", None)
+        model = getattr(settings, "ai_model_preference", None)
 
         assert model is None  # Will use default in AIExplainer
 
