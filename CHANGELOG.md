@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - Location switching now updates the weather display - switching locations was silently failing due to a type mismatch
 - Cleaned up Visual Crossing alert processing - removed orphaned AlertManager that was losing state between calls
 - Area Forecast Discussion AI summaries now respect your custom system prompt and instructions from Settings > AI
+- macOS PyInstaller builds on Apple Silicon now use an x86_64 toolchain and filter sound_lib binaries so the DMG build completes under Rosetta
 
 ### Removed
 -
