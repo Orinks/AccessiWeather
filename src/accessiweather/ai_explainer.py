@@ -177,8 +177,8 @@ class AIExplainer:
         if not self.api_key:
             return DEFAULT_FREE_MODEL
 
-        # With API key, use configured preference
-        return self.model
+        # With API key, use configured preference (fall back to default if None)
+        return self.model if self.model else DEFAULT_FREE_MODEL
 
     def _get_client(self):
         """Get or create OpenAI client configured for OpenRouter."""
