@@ -22,6 +22,8 @@ All notable changes to this project will be documented in this file.
 - Cleaned up Visual Crossing alert processing - removed orphaned AlertManager that was losing state between calls
 - Area Forecast Discussion AI summaries now respect your custom system prompt and instructions from Settings > AI
 - macOS PyInstaller builds on Apple Silicon now use an x86_64 toolchain and filter sound_lib binaries so the DMG build completes under Rosetta
+- AI explanation now correctly reads your configured model preference instead of always falling back to default
+- Canceling AI explanation generation no longer crashes the app
 
 ### Removed
 -
