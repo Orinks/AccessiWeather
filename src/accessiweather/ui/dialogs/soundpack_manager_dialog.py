@@ -515,7 +515,10 @@ class SoundPackManagerDialog(wx.Dialog):
                 return
             info = self.sound_packs[self.selected_pack]
             sound_path = info.path / sound_file
-            self.preview_btn.Enable(sound_path.exists())
+            exists = sound_path.exists()
+            self.preview_btn.Enable(exists)
+            # Enable Set Vol button for sounds list selection too
+            self.set_volume_btn.Enable(exists)
             # Update the volume spinner to show this sound's volume
             self.volume_spin.SetValue(int(volume * 100))
 
@@ -612,59 +615,82 @@ class SoundPackManagerDialog(wx.Dialog):
             self.set_volume_btn.Enable(False)
 
     def _on_set_volume(self, event) -> None:
-        """Set volume for the current category's sound without changing the file."""
+        """Set volume for selected sound (from list or category mapping)."""
         if not self.selected_pack:
             return
 
-        sel = self.category_choice.GetSelection()
-        if sel == wx.NOT_FOUND:
-            return
-
-        _, tech_key = FRIENDLY_ALERT_CATEGORIES[sel]
         info = self.sound_packs[self.selected_pack]
+        volume = self.volume_spin.GetValue() / 100.0
 
-        # Get current sound file
-        sound_entry = info.sounds.get(tech_key)
-        if not sound_entry:
+        # First check if a sound is selected in the sounds list
+        list_sel = self.sounds_listbox.GetSelection()
+        cat_sel = self.category_choice.GetSelection()
+
+        if list_sel != wx.NOT_FOUND:
+            # Use the selected sound from the list
+            data = self.sounds_listbox.GetClientData(list_sel)
+            if data and len(data) >= 2:
+                sound_key = data[0]
+                sound_file = data[1]
+            else:
+                return
+        elif cat_sel != wx.NOT_FOUND:
+            # Fall back to category selection
+            _, sound_key = FRIENDLY_ALERT_CATEGORIES[cat_sel]
+            sound_entry = info.sounds.get(sound_key)
+            if not sound_entry:
+                wx.MessageBox(
+                    "No sound mapped to this category yet.",
+                    "No Sound",
+                    wx.OK | wx.ICON_INFORMATION,
+                )
+                return
+            sound_file = (
+                sound_entry.get("file", "")
+                if isinstance(sound_entry, dict)
+                else sound_entry
+            )
+        else:
             wx.MessageBox(
-                "No sound mapped to this category yet.",
-                "No Sound",
+                "Please select a sound from the list or a category.",
+                "No Selection",
                 wx.OK | wx.ICON_INFORMATION,
             )
             return
 
-        # Get the filename (handle both formats)
-        sound_file = sound_entry.get("file", "") if isinstance(sound_entry, dict) else sound_entry
-
         if not sound_file:
             return
-
-        # Get new volume from spinner
-        volume = self.volume_spin.GetValue() / 100.0
 
         # Update pack.json
         pack_json = info.path / "pack.json"
         try:
             with open(pack_json, encoding="utf-8") as f:
-                data = json.load(f)
-            sounds = data.get("sounds", {})
+                pack_data = json.load(f)
+            sounds = pack_data.get("sounds", {})
 
             # Use inline format if volume != 1.0, otherwise keep simple format
             if volume < 1.0:
-                sounds[tech_key] = {"file": sound_file, "volume": volume}
+                sounds[sound_key] = {"file": sound_file, "volume": volume}
             else:
-                sounds[tech_key] = sound_file
+                sounds[sound_key] = sound_file
                 # Remove from volumes section if present
-                if "volumes" in data and tech_key in data["volumes"]:
-                    del data["volumes"][tech_key]
+                if "volumes" in pack_data and sound_key in pack_data["volumes"]:
+                    del pack_data["volumes"][sound_key]
 
-            data["sounds"] = sounds
+            pack_data["sounds"] = sounds
             with open(pack_json, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2)
+                json.dump(pack_data, f, indent=2)
 
             # Reload and refresh
             self._load_sound_packs()
             self._update_pack_details()
+
+            # Re-select the sound we just modified in the list
+            for i in range(self.sounds_listbox.GetCount()):
+                item_data = self.sounds_listbox.GetClientData(i)
+                if item_data and item_data[0] == sound_key:
+                    self.sounds_listbox.SetSelection(i)
+                    break
 
         except Exception as e:
             logger.error(f"Failed to set volume: {e}")
