@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Report Issue dialog (Help menu) - quickly report bugs or request features directly to GitHub with auto-collected system info
 - Per-sound volume control in Sound Pack Manager - adjust volume for individual sounds directly in the UI, with live preview at the selected volume level
 - Model browser dialog - browse and select from 300+ OpenRouter AI models directly in Settings instead of opening a web browser. Filter by provider (OpenAI, Anthropic, Meta, Google, etc.), search by name, and toggle free-only models. Provider list updates dynamically based on your filters
 - Weather model selection for Open-Meteo - choose from 11 forecast models including ECMWF, GFS, ICON, Météo-France, and more. Find it in Settings > Data Sources when using Open-Meteo or Auto mode
