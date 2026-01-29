@@ -241,7 +241,7 @@ class PreviewPlayer:
         self._current_stream = None
         self._is_playing = False
 
-    def play(self, sound_file: Path) -> bool:
+    def play(self, sound_file: Path, volume: float = 1.0) -> bool:
         """
         Play a sound file for preview.
 
@@ -249,6 +249,7 @@ class PreviewPlayer:
 
         Args:
             sound_file: Path to the sound file.
+            volume: Volume level from 0.0 to 1.0 (default 1.0).
 
         Returns:
             True if playback started successfully.
@@ -261,22 +262,28 @@ class PreviewPlayer:
             logger.warning(f"Sound file not found: {sound_file}")
             return False
 
+        # Clamp volume to valid range
+        volume = max(0.0, min(1.0, volume))
+
         if SOUND_LIB_AVAILABLE:
-            return self._play_with_sound_lib(sound_file)
+            return self._play_with_sound_lib(sound_file, volume)
         if PLAYSOUND_AVAILABLE:
             return self._play_with_playsound(sound_file)
         logger.warning("No audio backend available")
         return False
 
-    def _play_with_sound_lib(self, sound_file: Path) -> bool:
-        """Play using sound_lib (supports stop)."""
+    def _play_with_sound_lib(self, sound_file: Path, volume: float = 1.0) -> bool:
+        """Play using sound_lib (supports stop and volume)."""
         try:
             from sound_lib import stream
 
             self._current_stream = stream.FileStream(file=str(sound_file))
+            self._current_stream.volume = volume
             self._current_stream.play()
             self._is_playing = True
-            logger.debug(f"Playing preview with sound_lib: {sound_file}")
+            logger.debug(
+                f"Playing preview with sound_lib at volume {volume}: {sound_file}"
+            )
             return True
         except Exception as e:
             logger.warning(f"sound_lib playback failed: {e}")
@@ -285,7 +292,7 @@ class PreviewPlayer:
             return False
 
     def _play_with_playsound(self, sound_file: Path) -> bool:
-        """Play using playsound3 (no stop support)."""
+        """Play using playsound3 (no stop or volume support)."""
         try:
             if platform.system() == "Windows":
                 sound_path = str(sound_file).replace("\\", "/")

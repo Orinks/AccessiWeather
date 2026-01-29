@@ -528,6 +528,7 @@ class SoundPackManagerDialog(wx.Dialog):
 
         # Data is (sound_name, sound_file, volume)
         sound_file = data[1]
+        volume = data[2] if len(data) > 2 else 1.0
         info = self.sound_packs[self.selected_pack]
         sound_path = info.path / sound_file
 
@@ -543,7 +544,7 @@ class SoundPackManagerDialog(wx.Dialog):
         else:
             # Stop any current preview and play new one
             self._preview_player.stop()
-            if self._preview_player.play(sound_path):
+            if self._preview_player.play(sound_path, volume):
                 self._current_preview_path = sound_path
                 self.preview_btn.SetLabel("Stop Preview")
                 # Start timer to detect when playback finishes
@@ -831,7 +832,13 @@ class SoundPackManagerDialog(wx.Dialog):
             return
 
         # Handle both inline format and simple string format
-        filename = sound_entry.get("file", "") if isinstance(sound_entry, dict) else sound_entry
+        if isinstance(sound_entry, dict):
+            filename = sound_entry.get("file", "")
+            volume = sound_entry.get("volume", 1.0)
+        else:
+            filename = sound_entry
+            volume = 1.0
+
         if not filename:
             return
 
@@ -850,7 +857,7 @@ class SoundPackManagerDialog(wx.Dialog):
             self._preview_player.stop()
             # Also reset the other preview button
             self.preview_btn.SetLabel("Preview Selected Sound")
-            if self._preview_player.play(sound_path):
+            if self._preview_player.play(sound_path, volume):
                 self._current_preview_path = sound_path
                 self.preview_mapping_btn.SetLabel("Stop")
                 # Start timer to detect when playback finishes
