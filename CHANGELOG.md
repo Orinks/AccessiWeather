@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Per-sound volume control in Sound Pack Manager - adjust volume (0-100%) for any sound directly in the UI. Select a sound from the list, adjust the volume spinner, and click "Set Vol" to save. Preview plays at the selected volume so you can test before saving
 - Per-sound volume settings for soundpacks - soundpack creators can now specify default volume levels (0.0-1.0) for individual sounds in pack.json. This helps blind/VI users balance alert sounds with their screen reader output. Supports both inline format (`{"sounds": {"alert": {"file": "alert.wav", "volume": 0.7}}}`) and separate volumes section (`{"sounds": {...}, "volumes": {"alert": 0.7}}`)
 - Model browser dialog - browse and select from 300+ OpenRouter AI models directly in Settings instead of opening a web browser. Filter by provider (OpenAI, Anthropic, Meta, Google, etc.), search by name, and toggle free-only models. Provider list updates dynamically based on your filters
 - Weather model selection for Open-Meteo - choose from 11 forecast models including ECMWF, GFS, ICON, Météo-France, and more. Find it in Settings > Data Sources when using Open-Meteo or Auto mode
