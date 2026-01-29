@@ -523,10 +523,11 @@ class SoundPackManagerDialog(wx.Dialog):
             return
 
         data = self.sounds_listbox.GetClientData(sel)
-        if not data:
+        if not data or len(data) < 2:
             return
 
-        sound_name, sound_file = data
+        # Data is (sound_name, sound_file, volume)
+        sound_file = data[1]
         info = self.sound_packs[self.selected_pack]
         sound_path = info.path / sound_file
 
@@ -824,8 +825,13 @@ class SoundPackManagerDialog(wx.Dialog):
 
         _, tech_key = FRIENDLY_ALERT_CATEGORIES[sel]
         info = self.sound_packs[self.selected_pack]
-        filename = info.sounds.get(tech_key)
+        sound_entry = info.sounds.get(tech_key)
 
+        if not sound_entry:
+            return
+
+        # Handle both inline format and simple string format
+        filename = sound_entry.get("file", "") if isinstance(sound_entry, dict) else sound_entry
         if not filename:
             return
 
