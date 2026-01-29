@@ -326,12 +326,7 @@ class SoundPackManagerDialog(wx.Dialog):
         self.set_volume_btn.SetToolTip("Apply volume to current sound")
         self.set_volume_btn.Bind(wx.EVT_BUTTON, self._on_set_volume)
         self.set_volume_btn.Enable(False)
-        cat_row.Add(self.set_volume_btn, 0, wx.RIGHT, 5)
-
-        self.preview_mapping_btn = wx.Button(parent, label="Preview")
-        self.preview_mapping_btn.Bind(wx.EVT_BUTTON, self._on_preview_mapping)
-        self.preview_mapping_btn.Enable(False)
-        cat_row.Add(self.preview_mapping_btn, 0)
+        cat_row.Add(self.set_volume_btn, 0)
 
         mapping_sizer.Add(cat_row, 0, wx.EXPAND | wx.ALL, 5)
 
@@ -565,16 +560,13 @@ class SoundPackManagerDialog(wx.Dialog):
         if not self._preview_player.is_playing():
             self._preview_timer.Stop()
             self._current_preview_path = None
-            # Reset both preview buttons to their default labels
             self.preview_btn.SetLabel("Preview Selected Sound")
-            self.preview_mapping_btn.SetLabel("Preview")
 
     def _on_category_changed(self, event) -> None:
         """Handle category selection change."""
         if not self.selected_pack or self.selected_pack not in self.sound_packs:
             self.mapping_file_text.SetValue("")
             self.volume_spin.SetValue(100)
-            self.preview_mapping_btn.Enable(False)
             return
 
         sel = self.category_choice.GetSelection()
@@ -607,11 +599,8 @@ class SoundPackManagerDialog(wx.Dialog):
 
         if current_file:
             sound_path = info.path / current_file
-            exists = sound_path.exists()
-            self.preview_mapping_btn.Enable(exists)
-            self.set_volume_btn.Enable(exists)
+            self.set_volume_btn.Enable(sound_path.exists())
         else:
-            self.preview_mapping_btn.Enable(False)
             self.set_volume_btn.Enable(False)
 
     def _on_set_volume(self, event) -> None:
@@ -844,57 +833,6 @@ class SoundPackManagerDialog(wx.Dialog):
                 "Error",
                 wx.OK | wx.ICON_ERROR,
             )
-
-    def _on_preview_mapping(self, event) -> None:
-        """Preview the current category mapping (toggle play/stop)."""
-        if not self.selected_pack:
-            return
-
-        sel = self.category_choice.GetSelection()
-        if sel == wx.NOT_FOUND:
-            return
-
-        _, tech_key = FRIENDLY_ALERT_CATEGORIES[sel]
-        info = self.sound_packs[self.selected_pack]
-        sound_entry = info.sounds.get(tech_key)
-
-        if not sound_entry:
-            return
-
-        # Handle both inline format and simple string format
-        if isinstance(sound_entry, dict):
-            filename = sound_entry.get("file", "")
-            volume = sound_entry.get("volume", 1.0)
-        else:
-            filename = sound_entry
-            volume = 1.0
-
-        if not filename:
-            return
-
-        sound_path = info.path / filename
-        if not sound_path.exists():
-            return
-
-        # Check if we're playing the same sound - toggle stop
-        if self._preview_player.is_playing() and self._current_preview_path == sound_path:
-            self._preview_player.stop()
-            self._preview_timer.Stop()
-            self.preview_mapping_btn.SetLabel("Preview")
-            self._current_preview_path = None
-        else:
-            # Stop any current preview and play new one
-            self._preview_player.stop()
-            # Also reset the other preview button
-            self.preview_btn.SetLabel("Preview Selected Sound")
-            if self._preview_player.play(sound_path, volume):
-                self._current_preview_path = sound_path
-                self.preview_mapping_btn.SetLabel("Stop")
-                # Start timer to detect when playback finishes
-                self._preview_timer.Start(200)  # Check every 200ms
-            else:
-                self._current_preview_path = None
-                self.preview_mapping_btn.SetLabel("Preview")
 
     def _on_import_pack(self, event) -> None:
         """Import a sound pack from ZIP."""
