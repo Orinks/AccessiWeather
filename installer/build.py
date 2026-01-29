@@ -72,6 +72,7 @@ def get_version() -> str:
     pyproject = ROOT / "pyproject.toml"
     try:
         import tomllib
+
         with open(pyproject, "rb") as f:
             data = tomllib.load(f)
         return data.get("project", {}).get("version", "0.0.0")
@@ -124,6 +125,7 @@ def install_dependencies() -> None:
     # Check for PyInstaller
     try:
         import PyInstaller
+
         print(f"✓ PyInstaller {PyInstaller.__version__} found")
     except ImportError:
         print("Installing PyInstaller...")
@@ -132,6 +134,7 @@ def install_dependencies() -> None:
     # Check for Pillow (for icon generation)
     try:
         import importlib.util
+
         if importlib.util.find_spec("PIL"):
             print("✓ Pillow found")
         else:
@@ -161,7 +164,9 @@ def build_pyinstaller() -> bool:
 
     # Run PyInstaller
     cmd = [
-        sys.executable, "-m", "PyInstaller",
+        sys.executable,
+        "-m",
+        "PyInstaller",
         "--clean",
         "--noconfirm",
         str(spec_file),
@@ -247,13 +252,25 @@ def create_macos_dmg() -> bool:
             icon_path = RESOURCES_DIR / "app.icns"
             cmd = [
                 "create-dmg",
-                "--volname", "AccessiWeather",
-                "--window-pos", "200", "120",
-                "--window-size", "600", "400",
-                "--icon-size", "100",
-                "--icon", "AccessiWeather.app", "175", "190",
-                "--hide-extension", "AccessiWeather.app",
-                "--app-drop-link", "425", "190",
+                "--volname",
+                "AccessiWeather",
+                "--window-pos",
+                "200",
+                "120",
+                "--window-size",
+                "600",
+                "400",
+                "--icon-size",
+                "100",
+                "--icon",
+                "AccessiWeather.app",
+                "175",
+                "190",
+                "--hide-extension",
+                "AccessiWeather.app",
+                "--app-drop-link",
+                "425",
+                "190",
             ]
             if icon_path.exists():
                 cmd.extend(["--volicon", str(icon_path)])
@@ -280,14 +297,20 @@ def create_macos_dmg() -> bool:
         (dmg_temp / "Applications").symlink_to("/Applications")
 
         # Create DMG with hdiutil
-        run_command([
-            "hdiutil", "create",
-            "-volname", "AccessiWeather",
-            "-srcfolder", str(dmg_temp),
-            "-ov",
-            "-format", "UDZO",
-            str(dmg_path),
-        ])
+        run_command(
+            [
+                "hdiutil",
+                "create",
+                "-volname",
+                "AccessiWeather",
+                "-srcfolder",
+                str(dmg_temp),
+                "-ov",
+                "-format",
+                "UDZO",
+                str(dmg_path),
+            ]
+        )
 
         # Cleanup
         shutil.rmtree(dmg_temp)

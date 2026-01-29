@@ -149,6 +149,7 @@ class SoundPackManagerDialog(wx.Dialog):
 
         # Preview player for sound previews (supports stop)
         from ...notifications.sound_player import get_preview_player
+
         self._preview_player = get_preview_player()
         self._current_preview_path: Path | None = None
 
@@ -635,9 +636,7 @@ class SoundPackManagerDialog(wx.Dialog):
                 )
                 return
             sound_file = (
-                sound_entry.get("file", "")
-                if isinstance(sound_entry, dict)
-                else sound_entry
+                sound_entry.get("file", "") if isinstance(sound_entry, dict) else sound_entry
             )
         else:
             wx.MessageBox(

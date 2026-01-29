@@ -71,14 +71,20 @@ def _build_history_sections(app, weather_data) -> list[tuple[str, str]]:
             name = getattr(period, "name", None)
             start_time = getattr(period, "start_time", None)
             if start_time:
-                date_str = start_time.strftime("%A, %b %d") if hasattr(start_time, "strftime") else str(start_time)
+                date_str = (
+                    start_time.strftime("%A, %b %d")
+                    if hasattr(start_time, "strftime")
+                    else str(start_time)
+                )
             elif name:
                 date_str = name
             else:
                 date_str = "Unknown"
 
             temp = getattr(period, "temperature", None)
-            condition = getattr(period, "short_forecast", None) or getattr(period, "condition", "Unknown")
+            condition = getattr(period, "short_forecast", None) or getattr(
+                period, "condition", "Unknown"
+            )
 
             if temp is not None:
                 history_text.append(f"{date_str}: {temp}°F - {condition}")

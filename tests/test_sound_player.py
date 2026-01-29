@@ -164,9 +164,7 @@ class TestPreviewPlayerWithPlaysound:
             temp_path = Path(f.name)
 
         try:
-            with patch(
-                "accessiweather.notifications.sound_player.playsound"
-            ) as mock_playsound:
+            with patch("accessiweather.notifications.sound_player.playsound") as mock_playsound:
                 result = player._play_with_playsound(temp_path)
 
             mock_playsound.assert_called_once()
@@ -211,11 +209,12 @@ class TestPreviewPlayerPlay:
             temp_path = Path(f.name)
 
         try:
-            with patch(
-                "accessiweather.notifications.sound_player.SOUND_LIB_AVAILABLE", False
-            ), patch(
-                "accessiweather.notifications.sound_player.PLAYSOUND_AVAILABLE",
-                False,
+            with (
+                patch("accessiweather.notifications.sound_player.SOUND_LIB_AVAILABLE", False),
+                patch(
+                    "accessiweather.notifications.sound_player.PLAYSOUND_AVAILABLE",
+                    False,
+                ),
             ):
                 player.play(temp_path)
 
@@ -243,9 +242,7 @@ class TestPreviewPlayerPlay:
             temp_path = Path(f.name)
 
         try:
-            with patch(
-                "accessiweather.notifications.sound_player.SOUND_LIB_AVAILABLE", True
-            ):
+            with patch("accessiweather.notifications.sound_player.SOUND_LIB_AVAILABLE", True):
                 player.play(temp_path)
 
             player._play_with_sound_lib.assert_called_once()
@@ -265,11 +262,12 @@ class TestPreviewPlayerPlay:
             temp_path = Path(f.name)
 
         try:
-            with patch(
-                "accessiweather.notifications.sound_player.SOUND_LIB_AVAILABLE", False
-            ), patch(
-                "accessiweather.notifications.sound_player.PLAYSOUND_AVAILABLE",
-                True,
+            with (
+                patch("accessiweather.notifications.sound_player.SOUND_LIB_AVAILABLE", False),
+                patch(
+                    "accessiweather.notifications.sound_player.PLAYSOUND_AVAILABLE",
+                    True,
+                ),
             ):
                 player.play(temp_path)
 
@@ -755,13 +753,11 @@ class TestPlaySoundFileWithVolume:
 
         try:
             # Test with volume > 1.0 (should work without error)
-            with patch(
-                "accessiweather.notifications.sound_player.PLAYSOUND_AVAILABLE", True
-            ), patch(
-                "accessiweather.notifications.sound_player.SOUND_LIB_AVAILABLE", False
-            ), patch(
-                "accessiweather.notifications.sound_player.playsound"
-            ) as mock_playsound:
+            with (
+                patch("accessiweather.notifications.sound_player.PLAYSOUND_AVAILABLE", True),
+                patch("accessiweather.notifications.sound_player.SOUND_LIB_AVAILABLE", False),
+                patch("accessiweather.notifications.sound_player.playsound") as mock_playsound,
+            ):
                 _play_sound_file(temp_path, volume=1.5)
                 assert mock_playsound.called
         finally:

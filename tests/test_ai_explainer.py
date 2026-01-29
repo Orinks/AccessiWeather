@@ -18,6 +18,7 @@ from accessiweather.ai_explainer import (
     ExplanationStyle,
     InsufficientCreditsError,
     InvalidAPIKeyError,
+    InvalidModelError,
     RateLimitError,
     WeatherContext,
     has_valid_api_key,
@@ -594,6 +595,34 @@ class TestErrorHandling:
             mock_call.side_effect = AIExplainerError("All models failed")
 
             with pytest.raises(AIExplainerError):
+                await explainer.explain_weather(sample_weather_data, "Test City")
+
+    @pytest.mark.asyncio
+    async def test_invalid_model_error_404(self, sample_weather_data):
+        """Test InvalidModelError is raised for 404/model not found errors."""
+        explainer = AIExplainer(api_key="test-key", model="nonexistent/model:free")
+
+        with patch.object(explainer, "_get_client"):
+            # Simulate a 404 error for invalid model
+            error_msg = "Error code: 404 - No endpoints found matching your data"
+            with (
+                patch.object(explainer, "_call_openrouter", side_effect=Exception(error_msg)),
+                pytest.raises((InvalidModelError, AIExplainerError)),
+            ):
+                await explainer.explain_weather(sample_weather_data, "Test City")
+
+    @pytest.mark.asyncio
+    async def test_invalid_model_error_not_found(self, sample_weather_data):
+        """Test InvalidModelError is raised for 'model not found' errors."""
+        explainer = AIExplainer(api_key="test-key", model="invalid/model")
+
+        with patch.object(explainer, "_get_client"):
+            # Simulate a model not found error
+            error_msg = "Model 'invalid/model' does not exist"
+            with (
+                patch.object(explainer, "_call_openrouter", side_effect=Exception(error_msg)),
+                pytest.raises((InvalidModelError, AIExplainerError)),
+            ):
                 await explainer.explain_weather(sample_weather_data, "Test City")
 
 

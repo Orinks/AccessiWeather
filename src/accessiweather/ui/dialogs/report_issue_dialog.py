@@ -55,8 +55,7 @@ class ReportIssueDialog(wx.Dialog):
             style=wx.TE_MULTILINE,
         )
         self.desc_input.SetHint(
-            "Describe the issue or feature request.\n"
-            "For bugs: What happened? What did you expect?"
+            "Describe the issue or feature request.\nFor bugs: What happened? What did you expect?"
         )
 
         # System info preview
@@ -91,9 +90,7 @@ class ReportIssueDialog(wx.Dialog):
 
         # System info
         main_sizer.Add(self.info_label, 0, wx.LEFT | wx.RIGHT, 10)
-        main_sizer.Add(
-            self.info_text, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10
-        )
+        main_sizer.Add(self.info_text, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
         self.info_text.SetMinSize((-1, 60))
 
         # Buttons

@@ -27,7 +27,8 @@ DEFAULT_PAID_MODEL = "openrouter/auto"
 # Fallback free models to try if primary returns empty response (max 3 for OpenRouter)
 FALLBACK_FREE_MODELS = [
     "google/gemma-3-27b-it:free",
-    "qwen/qwen3-235b-a22b:free",
+    "qwen/qwen3-4b:free",
+    "deepseek/deepseek-r1-0528:free",
 ]
 
 
@@ -45,6 +46,10 @@ class RateLimitError(AIExplainerError):
 
 class InvalidAPIKeyError(AIExplainerError):
     """Raised when API key is invalid or malformed."""
+
+
+class InvalidModelError(AIExplainerError):
+    """Raised when the specified model ID does not exist."""
 
 
 class ExplanationStyle(Enum):
@@ -494,6 +499,20 @@ class AIExplainer:
         if response is None:
             if last_error:
                 logger.error(f"All models failed. Last error: {last_error}", exc_info=True)
+                # Convert common errors to specific exceptions
+                error_message = str(last_error).lower()
+                if (
+                    "404" in error_message
+                    or "not found" in error_message
+                    or "no endpoints found" in error_message
+                    or "does not exist" in error_message
+                ):
+                    raise InvalidModelError(
+                        f"The AI model '{primary_model}' was not found. "
+                        f"It may have been removed or renamed.\n\n"
+                        f"Please go to Settings → AI Explanations and select a different model.\n\n"
+                        f"Details: {last_error}"
+                    ) from last_error
                 raise last_error
             raise AIExplainerError(
                 "All AI models returned empty responses. Please try again later."
@@ -641,6 +660,20 @@ class AIExplainer:
         if response is None:
             if last_error:
                 logger.error(f"All models failed for AFD. Last error: {last_error}", exc_info=True)
+                # Convert common errors to specific exceptions
+                error_message = str(last_error).lower()
+                if (
+                    "404" in error_message
+                    or "not found" in error_message
+                    or "no endpoints found" in error_message
+                    or "does not exist" in error_message
+                ):
+                    raise InvalidModelError(
+                        f"The AI model '{primary_model}' was not found. "
+                        f"It may have been removed or renamed.\n\n"
+                        f"Please go to Settings → AI Explanations and select a different model.\n\n"
+                        f"Details: {last_error}"
+                    ) from last_error
                 raise last_error
             raise AIExplainerError(
                 "All AI models returned empty responses. Please try again later."
@@ -685,7 +718,9 @@ class AIExplainer:
             client = self._get_client()
             model = model_override or self.get_effective_model()
 
-            logger.info(f"OpenRouter request: model={model}, system_prompt_len={len(system_prompt)}, user_prompt_len={len(user_prompt)}")
+            logger.info(
+                f"OpenRouter request: model={model}, system_prompt_len={len(system_prompt)}, user_prompt_len={len(user_prompt)}"
+            )
 
             # Build extra_body with fallback models for free tier
             # Only use fallbacks for default model, not user-configured models
@@ -714,7 +749,9 @@ class AIExplainer:
 
             # Extract content - handle potential None values
             if not response.choices:
-                logger.warning(f"OpenRouter returned empty choices. Full response: model={response.model}, id={getattr(response, 'id', 'N/A')}, usage={response.usage}")
+                logger.warning(
+                    f"OpenRouter returned empty choices. Full response: model={response.model}, id={getattr(response, 'id', 'N/A')}, usage={response.usage}"
+                )
                 return {
                     "content": "",
                     "model": response.model or "unknown",
@@ -722,17 +759,23 @@ class AIExplainer:
                     "prompt_tokens": 0,
                     "completion_tokens": 0,
                 }
-            
+
             content = response.choices[0].message.content
-            finish_reason = getattr(response.choices[0], 'finish_reason', 'unknown')
-            
+            finish_reason = getattr(response.choices[0], "finish_reason", "unknown")
+
             if content is None:
-                logger.warning(f"OpenRouter returned None content. finish_reason={finish_reason}, model={response.model}")
+                logger.warning(
+                    f"OpenRouter returned None content. finish_reason={finish_reason}, model={response.model}"
+                )
                 content = ""
             elif len(content.strip()) < 20:
-                logger.warning(f"OpenRouter returned short content ({len(content)} chars). finish_reason={finish_reason}, content={content[:100]!r}")
+                logger.warning(
+                    f"OpenRouter returned short content ({len(content)} chars). finish_reason={finish_reason}, content={content[:100]!r}"
+                )
 
-            logger.info(f"OpenRouter response: model={response.model}, content_len={len(content)}, finish_reason={finish_reason}")
+            logger.info(
+                f"OpenRouter response: model={response.model}, content_len={len(content)}, finish_reason={finish_reason}"
+            )
 
             # Handle potential None usage
             usage = response.usage
@@ -768,6 +811,21 @@ class AIExplainer:
             if "rate limit" in error_message or "too many requests" in error_message:
                 raise RateLimitError(
                     f"Rate limit exceeded. Try again in a few minutes.\n\nDetails: {original_error}"
+                ) from e
+
+            # Check for 404 / model not found errors
+            if (
+                "404" in error_message
+                or "not found" in error_message
+                or "no endpoints found" in error_message
+                or "does not exist" in error_message
+            ):
+                model_used = model_override or self.get_effective_model()
+                raise InvalidModelError(
+                    f"The AI model '{model_used}' was not found. "
+                    f"It may have been removed or renamed.\n\n"
+                    f"Please go to Settings → AI Explanations and select a different model.\n\n"
+                    f"Details: {original_error}"
                 ) from e
 
             # Generic error - include the actual error message
@@ -847,6 +905,38 @@ class AIExplainer:
             # Restore original key
             self.api_key = original_key
             self._client = None
+
+    @staticmethod
+    async def validate_model_id(model_id: str) -> bool:
+        """
+        Validate that a model ID exists in OpenRouter's model list.
+
+        Args:
+            model_id: The model ID to validate
+
+        Returns:
+            True if the model exists, False otherwise
+
+        """
+        from .api.openrouter_models import OpenRouterModelsClient
+
+        client = OpenRouterModelsClient()
+        return await client.validate_model_id(model_id)
+
+    @staticmethod
+    async def get_valid_free_models() -> list[str]:
+        """
+        Get a list of valid free model IDs from OpenRouter.
+
+        Returns:
+            List of free model IDs
+
+        """
+        from .api.openrouter_models import OpenRouterModelsClient
+
+        client = OpenRouterModelsClient()
+        models = await client.get_free_models()
+        return [m.id for m in models]
 
     def select_best_data_source(self, sources: list[dict[str, Any]]) -> dict[str, Any] | None:
         """

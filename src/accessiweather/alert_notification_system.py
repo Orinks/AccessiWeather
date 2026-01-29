@@ -175,7 +175,7 @@ class AlertNotificationSystem:
             for i, (alert, reason) in enumerate(sorted_notifications):
                 try:
                     # Only play sound for the first notification to avoid overlap
-                    play_sound = (i == 0)
+                    play_sound = i == 0
                     success = await self._send_alert_notification(
                         alert, reason, play_sound=play_sound
                     )
