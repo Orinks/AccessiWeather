@@ -503,10 +503,6 @@ jobs:
               except Exception as e:
                   notes.append(f"_Could not retrieve commit history: {e}_")
 
-          notes.append("\n---\n")
-          notes.append("## Download\n")
-          notes.append("Choose your platform below. Checksums available in `checksums.txt`.\n")
-
           # Write release notes
           with open("release-notes.md", 'w') as f:
               f.write('\n'.join(notes))
@@ -514,41 +510,6 @@ jobs:
           print("Generated release notes:")
           print('\n'.join(notes))
           PYTHON_EOF
-
-      - name: Generate PR-based notes
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PREVIOUS_TAG: ${{ needs.prepare.outputs.previous_tag }}
-        run: |
-          TAG="nightly-$(date -u +%Y%m%d)"
-          
-          echo "" >> release-notes.md
-          echo "## Pull Requests & Commits" >> release-notes.md
-          echo "" >> release-notes.md
-
-          if [ -n "$PREVIOUS_TAG" ]; then
-            # Use GitHub API to generate notes between tags
-            PR_NOTES=$(gh api \
-              --method POST \
-              -H "Accept: application/vnd.github+json" \
-              repos/${{ github.repository }}/releases/generate-notes \
-              -f tag_name="$TAG" \
-              -f target_commitish="dev" \
-              -f previous_tag_name="$PREVIOUS_TAG" \
-              --jq '.body' 2>/dev/null || echo "")
-
-            if [ -n "$PR_NOTES" ]; then
-              echo "$PR_NOTES" >> release-notes.md
-            else
-              echo "_No pull requests merged since last nightly._" >> release-notes.md
-            fi
-          else
-            echo "_First nightly build - no previous release to compare._" >> release-notes.md
-          fi
-
-          echo ""
-          echo "Final release notes:"
-          cat release-notes.md
 
       - name: Create Prerelease
         if: ${{ inputs.dry_run != true }}

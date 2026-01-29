@@ -177,8 +177,8 @@ class AIExplainer:
         if not self.api_key:
             return DEFAULT_FREE_MODEL
 
-        # With API key, use configured preference
-        return self.model
+        # With API key, use configured preference (fall back to default if None)
+        return self.model if self.model else DEFAULT_FREE_MODEL
 
     def _get_client(self):
         """Get or create OpenAI client configured for OpenRouter."""
@@ -457,7 +457,9 @@ class AIExplainer:
         # Build list of models to try: primary first, then fallbacks for free models
         primary_model = self.get_effective_model()
         models_to_try = [primary_model]
-        if ":free" in primary_model:
+        # Only use fallbacks for default free model, not user-configured models
+        # User may have chosen a specific model (e.g., uncensored) for a reason
+        if primary_model == DEFAULT_FREE_MODEL and ":free" in primary_model:
             models_to_try.extend(FALLBACK_FREE_MODELS)
 
         # Try each model until we get a non-empty response
@@ -559,25 +561,28 @@ class AIExplainer:
         """
         import asyncio
 
-        # Build AFD-specific prompts
-        system_prompt = (
-            "You are a helpful weather assistant that explains National Weather Service "
-            "Area Forecast Discussions (AFDs) in plain, accessible language. AFDs contain "
-            "technical meteorological terminology that most people don't understand. "
-            "Your job is to translate this into clear, everyday language that anyone can "
-            "understand. Focus on:\n"
-            "- What weather to expect and when\n"
-            "- Any significant weather events or changes\n"
-            "- How confident forecasters are in their predictions\n"
-            "- What this means for daily activities\n\n"
-            "Avoid using technical jargon. If you must use a technical term, explain it.\n\n"
-            "IMPORTANT: Do NOT start with a preamble like 'Here is a summary...' or "
-            "'This forecast discussion explains...'. Do NOT repeat the location name. "
-            "Jump straight into explaining the weather. The user already knows what they asked for.\n\n"
-            "IMPORTANT: Respond in plain text only. Do NOT use markdown formatting such as "
-            "bold (**text**), italic (*text*), headers (#), bullet points, or any other "
-            "markdown syntax. Use simple paragraph text that can be read directly."
-        )
+        # Build AFD-specific prompts - use custom system prompt if configured
+        if self.custom_system_prompt:
+            system_prompt = self.custom_system_prompt
+        else:
+            system_prompt = (
+                "You are a helpful weather assistant that explains National Weather Service "
+                "Area Forecast Discussions (AFDs) in plain, accessible language. AFDs contain "
+                "technical meteorological terminology that most people don't understand. "
+                "Your job is to translate this into clear, everyday language that anyone can "
+                "understand. Focus on:\n"
+                "- What weather to expect and when\n"
+                "- Any significant weather events or changes\n"
+                "- How confident forecasters are in their predictions\n"
+                "- What this means for daily activities\n\n"
+                "Avoid using technical jargon. If you must use a technical term, explain it.\n\n"
+                "IMPORTANT: Do NOT start with a preamble like 'Here is a summary...' or "
+                "'This forecast discussion explains...'. Do NOT repeat the location name. "
+                "Jump straight into explaining the weather. The user already knows what they asked for.\n\n"
+                "IMPORTANT: Respond in plain text only. Do NOT use markdown formatting such as "
+                "bold (**text**), italic (*text*), headers (#), bullet points, or any other "
+                "markdown syntax. Use simple paragraph text that can be read directly."
+            )
 
         style_instructions = {
             ExplanationStyle.BRIEF: "Provide a 2-3 sentence summary of the key points.",
@@ -594,10 +599,16 @@ class AIExplainer:
             f"{style_instructions.get(style, style_instructions[ExplanationStyle.DETAILED])}"
         )
 
+        # Add custom instructions if configured
+        if self.custom_instructions and self.custom_instructions.strip():
+            user_prompt += f"\n\nAdditional Instructions: {self.custom_instructions}"
+
         # Build list of models to try
         primary_model = self.get_effective_model()
         models_to_try = [primary_model]
-        if ":free" in primary_model:
+        # Only use fallbacks for default free model, not user-configured models
+        # User may have chosen a specific model (e.g., uncensored) for a reason
+        if primary_model == DEFAULT_FREE_MODEL and ":free" in primary_model:
             models_to_try.extend(FALLBACK_FREE_MODELS)
 
         # Try each model until we get a non-empty response
@@ -674,11 +685,15 @@ class AIExplainer:
             client = self._get_client()
             model = model_override or self.get_effective_model()
 
+            logger.info(f"OpenRouter request: model={model}, system_prompt_len={len(system_prompt)}, user_prompt_len={len(user_prompt)}")
+
             # Build extra_body with fallback models for free tier
+            # Only use fallbacks for default model, not user-configured models
             extra_body = {}
-            if ":free" in model:
+            if model == DEFAULT_FREE_MODEL and ":free" in model:
                 # Use OpenRouter's native models parameter for automatic fallback
                 extra_body["models"] = FALLBACK_FREE_MODELS
+                logger.debug(f"Using fallback models: {FALLBACK_FREE_MODELS}")
 
             response = client.chat.completions.create(
                 model=model,
@@ -686,7 +701,7 @@ class AIExplainer:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
-                max_tokens=1000,  # Allow complete explanations without cutoff
+                max_tokens=4000,  # Increased for models with thinking/reasoning features
                 extra_headers={
                     "HTTP-Referer": "https://accessiweather.orinks.net",
                     "X-Title": "AccessiWeather",
@@ -694,20 +709,39 @@ class AIExplainer:
                 extra_body=extra_body if extra_body else None,
             )
 
+            # Log full response for debugging
+            logger.debug(f"OpenRouter raw response: {response}")
+
             # Extract content - handle potential None values
+            if not response.choices:
+                logger.warning(f"OpenRouter returned empty choices. Full response: model={response.model}, id={getattr(response, 'id', 'N/A')}, usage={response.usage}")
+                return {
+                    "content": "",
+                    "model": response.model or "unknown",
+                    "total_tokens": 0,
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                }
+            
             content = response.choices[0].message.content
+            finish_reason = getattr(response.choices[0], 'finish_reason', 'unknown')
+            
             if content is None:
-                logger.warning("OpenRouter returned None content in response")
+                logger.warning(f"OpenRouter returned None content. finish_reason={finish_reason}, model={response.model}")
                 content = ""
+            elif len(content.strip()) < 20:
+                logger.warning(f"OpenRouter returned short content ({len(content)} chars). finish_reason={finish_reason}, content={content[:100]!r}")
 
-            logger.info(f"OpenRouter response: model={response.model}, content_len={len(content)}")
+            logger.info(f"OpenRouter response: model={response.model}, content_len={len(content)}, finish_reason={finish_reason}")
 
+            # Handle potential None usage
+            usage = response.usage
             return {
                 "content": content,
-                "model": response.model,
-                "total_tokens": response.usage.total_tokens,
-                "prompt_tokens": response.usage.prompt_tokens,
-                "completion_tokens": response.usage.completion_tokens,
+                "model": response.model or "unknown",
+                "total_tokens": usage.total_tokens if usage else 0,
+                "prompt_tokens": usage.prompt_tokens if usage else 0,
+                "completion_tokens": usage.completion_tokens if usage else 0,
             }
 
         except Exception as e:

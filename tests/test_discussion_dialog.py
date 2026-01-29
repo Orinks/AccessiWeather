@@ -6,6 +6,7 @@ Tests the DiscussionDialog class and its AI explanation integration.
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -148,6 +149,90 @@ class TestAIExplanationGeneration:
     """Tests for AI explanation generation in discussion dialog."""
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("ai_model_preference", "expected_model"),
+        [
+            ("openrouter/auto", "openrouter/auto"),
+            (None, None),
+        ],
+    )
+    async def test_discussion_dialog_passes_custom_prompt_settings(
+        self,
+        ai_model_preference,
+        expected_model,
+    ):
+        """Test discussion dialog passes custom AI prompt settings to explainer."""
+        from accessiweather.ai_explainer import ExplanationStyle
+        from accessiweather.ui.dialogs import discussion_dialog
+
+        settings = MagicMock()
+        settings.ai_model_preference = ai_model_preference
+        settings.custom_system_prompt = "System prompt"
+        settings.custom_instructions = "Custom instructions"
+
+        app = MagicMock()
+        app.config_manager = MagicMock()
+        app.config_manager.get_settings.return_value = settings
+        location = MagicMock()
+        location.name = "Test City"
+        app.config_manager.get_current_location.return_value = location
+
+        dialog = SimpleNamespace(
+            app=app,
+            _current_discussion="Discussion text",
+            _on_explain_error=MagicMock(),
+            _on_explain_complete=MagicMock(),
+        )
+
+        captured: dict[str, object] = {}
+
+        class FakeExplainer:
+            def __init__(
+                self,
+                api_key=None,
+                model=None,
+                custom_system_prompt=None,
+                custom_instructions=None,
+            ):
+                captured["init"] = {
+                    "api_key": api_key,
+                    "model": model,
+                    "custom_system_prompt": custom_system_prompt,
+                    "custom_instructions": custom_instructions,
+                }
+
+            async def explain_afd(self, discussion_text, location_name, style):
+                captured["call"] = {
+                    "discussion_text": discussion_text,
+                    "location_name": location_name,
+                    "style": style,
+                }
+                return MagicMock(text="Result text", model_used="test-model")
+
+        with (
+            patch(
+                "accessiweather.config.secure_storage.SecureStorage.get_password",
+                return_value="test-key",
+            ),
+            patch("accessiweather.ai_explainer.AIExplainer", FakeExplainer),
+            patch.object(
+                discussion_dialog.wx,
+                "CallAfter",
+                side_effect=lambda func, *args: func(*args),
+            ),
+        ):
+            await discussion_dialog.DiscussionDialog._do_explain(dialog)
+
+        assert captured["init"]["api_key"] == "test-key"
+        assert captured["init"]["model"] is expected_model
+        assert captured["init"]["custom_system_prompt"] == "System prompt"
+        assert captured["init"]["custom_instructions"] == "Custom instructions"
+        assert captured["call"]["discussion_text"] == "Discussion text"
+        assert captured["call"]["location_name"] == "Test City"
+        assert captured["call"]["style"] == ExplanationStyle.DETAILED
+        dialog._on_explain_complete.assert_called_once_with("Result text", "test-model")
+
+    @pytest.mark.asyncio
     async def test_explain_afd_called_with_correct_params(self, sample_discussion):
         """Test that explain_afd is called with correct parameters."""
         from accessiweather.ai_explainer import AIExplainer, ExplanationStyle
@@ -281,19 +366,19 @@ class TestModelConfiguration:
 
     def test_uses_configured_model(self, mock_app):
         """Test that configured model is used."""
-        mock_app.config_manager.get_settings.return_value.ai_model = "gpt-4"
+        mock_app.config_manager.get_settings.return_value.ai_model_preference = "gpt-4"
 
         settings = mock_app.config_manager.get_settings()
-        model = settings.ai_model
+        model = settings.ai_model_preference
 
         assert model == "gpt-4"
 
     def test_uses_default_when_no_model_configured(self, mock_app):
         """Test that default model is used when none configured."""
-        mock_app.config_manager.get_settings.return_value.ai_model = None
+        mock_app.config_manager.get_settings.return_value.ai_model_preference = None
 
         settings = mock_app.config_manager.get_settings()
-        model = getattr(settings, "ai_model", None)
+        model = getattr(settings, "ai_model_preference", None)
 
         assert model is None  # Will use default in AIExplainer
 

@@ -314,10 +314,19 @@ class SoundPackManagerDialog(wx.Dialog):
         browse_btn.Bind(wx.EVT_BUTTON, self._on_browse_mapping)
         cat_row.Add(browse_btn, 0, wx.RIGHT, 5)
 
-        self.preview_mapping_btn = wx.Button(parent, label="Preview")
-        self.preview_mapping_btn.Bind(wx.EVT_BUTTON, self._on_preview_mapping)
-        self.preview_mapping_btn.Enable(False)
-        cat_row.Add(self.preview_mapping_btn, 0)
+        # Volume control for mapping
+        vol_label = wx.StaticText(parent, label="Vol:")
+        cat_row.Add(vol_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 2)
+
+        self.volume_spin = wx.SpinCtrl(parent, min=0, max=100, initial=100, size=(60, -1))
+        self.volume_spin.SetToolTip("Volume percentage (0-100%)")
+        cat_row.Add(self.volume_spin, 0, wx.RIGHT, 5)
+
+        self.set_volume_btn = wx.Button(parent, label="Set Vol")
+        self.set_volume_btn.SetToolTip("Apply volume to current sound")
+        self.set_volume_btn.Bind(wx.EVT_BUTTON, self._on_set_volume)
+        self.set_volume_btn.Enable(False)
+        cat_row.Add(self.set_volume_btn, 0)
 
         mapping_sizer.Add(cat_row, 0, wx.EXPAND | wx.ALL, 5)
 
@@ -427,7 +436,25 @@ class SoundPackManagerDialog(wx.Dialog):
 
         # Populate sounds list
         self.sounds_listbox.Clear()
-        for sound_name, sound_file in info.sounds.items():
+        # Load volumes section if present
+        pack_json = info.path / "pack.json"
+        volumes_section = {}
+        try:
+            with open(pack_json, encoding="utf-8") as f:
+                pack_data = json.load(f)
+            volumes_section = pack_data.get("volumes", {})
+        except Exception:
+            pass
+
+        for sound_name, sound_entry in info.sounds.items():
+            # Handle both inline format and simple string format
+            if isinstance(sound_entry, dict):
+                sound_file = sound_entry.get("file", "")
+                volume = sound_entry.get("volume", 1.0)
+            else:
+                sound_file = sound_entry
+                volume = volumes_section.get(sound_name, 1.0)
+
             sound_path = info.path / sound_file
             status = "✓" if sound_path.exists() else "✗"
             # Get friendly name
@@ -436,8 +463,10 @@ class SoundPackManagerDialog(wx.Dialog):
                 if key == sound_name:
                     friendly = display_name
                     break
-            display = f"{friendly} ({sound_file}) - {status}"
-            self.sounds_listbox.Append(display, (sound_name, sound_file))
+            # Show volume percentage
+            vol_pct = int(volume * 100)
+            display = f"{friendly} ({sound_file}) @ {vol_pct}% - {status}"
+            self.sounds_listbox.Append(display, (sound_name, sound_file, volume))
 
         # Enable buttons
         self.duplicate_btn.Enable(True)
@@ -473,10 +502,20 @@ class SoundPackManagerDialog(wx.Dialog):
 
         data = self.sounds_listbox.GetClientData(sel)
         if data:
-            sound_name, sound_file = data
+            # Handle both old (name, file) and new (name, file, volume) formats
+            if len(data) >= 2:
+                sound_file = data[1]
+                volume = data[2] if len(data) > 2 else 1.0
+            else:
+                return
             info = self.sound_packs[self.selected_pack]
             sound_path = info.path / sound_file
-            self.preview_btn.Enable(sound_path.exists())
+            exists = sound_path.exists()
+            self.preview_btn.Enable(exists)
+            # Enable Set Vol button for sounds list selection too
+            self.set_volume_btn.Enable(exists)
+            # Update the volume spinner to show this sound's volume
+            self.volume_spin.SetValue(int(volume * 100))
 
     def _on_preview_sound(self, event) -> None:
         """Preview the selected sound (toggle play/stop)."""
@@ -485,10 +524,13 @@ class SoundPackManagerDialog(wx.Dialog):
             return
 
         data = self.sounds_listbox.GetClientData(sel)
-        if not data:
+        if not data or len(data) < 2:
             return
 
-        sound_name, sound_file = data
+        # Data is (sound_name, sound_file, volume)
+        sound_file = data[1]
+        # Use the volume from the shared spinner
+        volume = self.volume_spin.GetValue() / 100.0
         info = self.sound_packs[self.selected_pack]
         sound_path = info.path / sound_file
 
@@ -504,7 +546,7 @@ class SoundPackManagerDialog(wx.Dialog):
         else:
             # Stop any current preview and play new one
             self._preview_player.stop()
-            if self._preview_player.play(sound_path):
+            if self._preview_player.play(sound_path, volume):
                 self._current_preview_path = sound_path
                 self.preview_btn.SetLabel("Stop Preview")
                 # Start timer to detect when playback finishes
@@ -518,15 +560,13 @@ class SoundPackManagerDialog(wx.Dialog):
         if not self._preview_player.is_playing():
             self._preview_timer.Stop()
             self._current_preview_path = None
-            # Reset both preview buttons to their default labels
             self.preview_btn.SetLabel("Preview Selected Sound")
-            self.preview_mapping_btn.SetLabel("Preview")
 
     def _on_category_changed(self, event) -> None:
         """Handle category selection change."""
         if not self.selected_pack or self.selected_pack not in self.sound_packs:
             self.mapping_file_text.SetValue("")
-            self.preview_mapping_btn.Enable(False)
+            self.volume_spin.SetValue(100)
             return
 
         sel = self.category_choice.GetSelection()
@@ -535,14 +575,119 @@ class SoundPackManagerDialog(wx.Dialog):
 
         _, tech_key = FRIENDLY_ALERT_CATEGORIES[sel]
         info = self.sound_packs[self.selected_pack]
-        current_file = info.sounds.get(tech_key, "")
+        sound_entry = info.sounds.get(tech_key, "")
+
+        # Handle both inline format and simple string format
+        if isinstance(sound_entry, dict):
+            current_file = sound_entry.get("file", "")
+            volume = sound_entry.get("volume", 1.0)
+        else:
+            current_file = sound_entry
+            # Check volumes section
+            pack_json = info.path / "pack.json"
+            volume = 1.0
+            try:
+                with open(pack_json, encoding="utf-8") as f:
+                    pack_data = json.load(f)
+                volumes_section = pack_data.get("volumes", {})
+                volume = volumes_section.get(tech_key, 1.0)
+            except Exception:
+                pass
+
         self.mapping_file_text.SetValue(current_file)
+        self.volume_spin.SetValue(int(volume * 100))
 
         if current_file:
             sound_path = info.path / current_file
-            self.preview_mapping_btn.Enable(sound_path.exists())
+            self.set_volume_btn.Enable(sound_path.exists())
         else:
-            self.preview_mapping_btn.Enable(False)
+            self.set_volume_btn.Enable(False)
+
+    def _on_set_volume(self, event) -> None:
+        """Set volume for selected sound (from list or category mapping)."""
+        if not self.selected_pack:
+            return
+
+        info = self.sound_packs[self.selected_pack]
+        volume = self.volume_spin.GetValue() / 100.0
+
+        # First check if a sound is selected in the sounds list
+        list_sel = self.sounds_listbox.GetSelection()
+        cat_sel = self.category_choice.GetSelection()
+
+        if list_sel != wx.NOT_FOUND:
+            # Use the selected sound from the list
+            data = self.sounds_listbox.GetClientData(list_sel)
+            if data and len(data) >= 2:
+                sound_key = data[0]
+                sound_file = data[1]
+            else:
+                return
+        elif cat_sel != wx.NOT_FOUND:
+            # Fall back to category selection
+            _, sound_key = FRIENDLY_ALERT_CATEGORIES[cat_sel]
+            sound_entry = info.sounds.get(sound_key)
+            if not sound_entry:
+                wx.MessageBox(
+                    "No sound mapped to this category yet.",
+                    "No Sound",
+                    wx.OK | wx.ICON_INFORMATION,
+                )
+                return
+            sound_file = (
+                sound_entry.get("file", "")
+                if isinstance(sound_entry, dict)
+                else sound_entry
+            )
+        else:
+            wx.MessageBox(
+                "Please select a sound from the list or a category.",
+                "No Selection",
+                wx.OK | wx.ICON_INFORMATION,
+            )
+            return
+
+        if not sound_file:
+            return
+
+        # Update pack.json
+        pack_json = info.path / "pack.json"
+        try:
+            with open(pack_json, encoding="utf-8") as f:
+                pack_data = json.load(f)
+            sounds = pack_data.get("sounds", {})
+
+            # Use inline format if volume != 1.0, otherwise keep simple format
+            if volume < 1.0:
+                sounds[sound_key] = {"file": sound_file, "volume": volume}
+            else:
+                sounds[sound_key] = sound_file
+                # Remove from volumes section if present
+                if "volumes" in pack_data and sound_key in pack_data["volumes"]:
+                    del pack_data["volumes"][sound_key]
+
+            pack_data["sounds"] = sounds
+            with open(pack_json, "w", encoding="utf-8") as f:
+                json.dump(pack_data, f, indent=2)
+
+            # Reload and refresh
+            self._load_sound_packs()
+            self._update_pack_details()
+
+            # Re-select the sound we just modified in the list
+            for i in range(self.sounds_listbox.GetCount()):
+                item_data = self.sounds_listbox.GetClientData(i)
+                if item_data and item_data[0] == sound_key:
+                    self.sounds_listbox.SetSelection(i)
+                    break
+
+        except Exception as e:
+            logger.error(f"Failed to set volume: {e}")
+            wx.MessageBox(
+                f"Failed to set volume: {e}",
+                "Error",
+                wx.OK | wx.ICON_ERROR,
+            )
 
     def _on_browse_mapping(self, event) -> None:
         """Browse for a sound file to map."""
@@ -597,13 +742,25 @@ class SoundPackManagerDialog(wx.Dialog):
             if src_path.resolve() != dest_path.resolve():
                 shutil.copy2(src_path, dest_path)
 
+            # Get volume from spinner (convert percentage to 0.0-1.0)
+            volume = self.volume_spin.GetValue() / 100.0
+
             # Update pack.json
             pack_json = info.path / "pack.json"
             try:
                 with open(pack_json, encoding="utf-8") as f:
                     data = json.load(f)
                 sounds = data.get("sounds", {})
-                sounds[key] = src_path.name
+
+                # Use inline format if volume != 1.0, otherwise keep simple format
+                if volume < 1.0:
+                    sounds[key] = {"file": src_path.name, "volume": volume}
+                else:
+                    sounds[key] = src_path.name
+                    # Remove from volumes section if present
+                    if "volumes" in data and key in data["volumes"]:
+                        del data["volumes"][key]
+
                 data["sounds"] = sounds
                 with open(pack_json, "w", encoding="utf-8") as f:
                     json.dump(data, f, indent=2)
@@ -612,8 +769,9 @@ class SoundPackManagerDialog(wx.Dialog):
                 self._load_sound_packs()
                 self._update_pack_details()
 
+                vol_str = f" at {int(volume * 100)}%" if volume < 1.0 else ""
                 wx.MessageBox(
-                    f"Mapped '{key}' to '{src_path.name}'.",
+                    f"Mapped '{key}' to '{src_path.name}'{vol_str}.",
                     "Mapping Updated",
                     wx.OK | wx.ICON_INFORMATION,
                 )
@@ -675,46 +833,6 @@ class SoundPackManagerDialog(wx.Dialog):
                 "Error",
                 wx.OK | wx.ICON_ERROR,
             )
-
-    def _on_preview_mapping(self, event) -> None:
-        """Preview the current category mapping (toggle play/stop)."""
-        if not self.selected_pack:
-            return
-
-        sel = self.category_choice.GetSelection()
-        if sel == wx.NOT_FOUND:
-            return
-
-        _, tech_key = FRIENDLY_ALERT_CATEGORIES[sel]
-        info = self.sound_packs[self.selected_pack]
-        filename = info.sounds.get(tech_key)
-
-        if not filename:
-            return
-
-        sound_path = info.path / filename
-        if not sound_path.exists():
-            return
-
-        # Check if we're playing the same sound - toggle stop
-        if self._preview_player.is_playing() and self._current_preview_path == sound_path:
-            self._preview_player.stop()
-            self._preview_timer.Stop()
-            self.preview_mapping_btn.SetLabel("Preview")
-            self._current_preview_path = None
-        else:
-            # Stop any current preview and play new one
-            self._preview_player.stop()
-            # Also reset the other preview button
-            self.preview_btn.SetLabel("Preview Selected Sound")
-            if self._preview_player.play(sound_path):
-                self._current_preview_path = sound_path
-                self.preview_mapping_btn.SetLabel("Stop")
-                # Start timer to detect when playback finishes
-                self._preview_timer.Start(200)  # Check every 200ms
-            else:
-                self._current_preview_path = None
-                self.preview_mapping_btn.SetLabel("Preview")
 
     def _on_import_pack(self, event) -> None:
         """Import a sound pack from ZIP."""

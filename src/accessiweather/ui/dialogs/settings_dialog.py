@@ -375,6 +375,25 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["alert_notif"] = wx.CheckBox(panel, label="Enable alert notifications")
         sizer.Add(self._controls["alert_notif"], 0, wx.LEFT | wx.BOTTOM, 5)
 
+        # Alert area setting
+        row_area = wx.BoxSizer(wx.HORIZONTAL)
+        row_area.Add(
+            wx.StaticText(panel, label="Alert Area:"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["alert_radius_type"] = wx.Choice(
+            panel,
+            choices=[
+                "Point (recommended)",
+                "Zone",
+                "State",
+            ],
+        )
+        row_area.Add(self._controls["alert_radius_type"], 0)
+        sizer.Add(row_area, 0, wx.ALL, 5)
+
         # Severity levels
         sizer.Add(
             wx.StaticText(panel, label="Alert Severity Levels:"),
@@ -928,6 +947,10 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["alert_notif"].SetValue(
                 getattr(settings, "alert_notifications_enabled", True)
             )
+            # Alert radius type: map value to choice index
+            radius_type = getattr(settings, "alert_radius_type", "point")
+            radius_type_map = {"point": 0, "zone": 1, "state": 2}
+            self._controls["alert_radius_type"].SetSelection(radius_type_map.get(radius_type, 0))
             self._controls["notify_extreme"].SetValue(
                 getattr(settings, "alert_notify_extreme", True)
             )
@@ -1073,6 +1096,9 @@ class SettingsDialogSimple(wx.Dialog):
                 # Notifications
                 "enable_alerts": self._controls["enable_alerts"].GetValue(),
                 "alert_notifications_enabled": self._controls["alert_notif"].GetValue(),
+                "alert_radius_type": ["point", "zone", "state"][
+                    self._controls["alert_radius_type"].GetSelection()
+                ],
                 "alert_notify_extreme": self._controls["notify_extreme"].GetValue(),
                 "alert_notify_severe": self._controls["notify_severe"].GetValue(),
                 "alert_notify_moderate": self._controls["notify_moderate"].GetValue(),

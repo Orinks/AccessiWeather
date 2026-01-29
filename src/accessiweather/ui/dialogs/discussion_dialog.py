@@ -262,10 +262,15 @@ class DiscussionDialog(wx.Dialog):
 
             # Get configured model or use default
             settings = self.app.config_manager.get_settings()
-            model = getattr(settings, "ai_model", None)
+            model_pref = getattr(settings, "ai_model_preference", None)
+            # Convert "auto" to OpenRouter's auto-router model ID
+            model = "openrouter/auto" if model_pref == "auto" else model_pref
 
-            explainer = (
-                AIExplainer(api_key=api_key, model=model) if model else AIExplainer(api_key=api_key)
+            explainer = AIExplainer(
+                api_key=api_key,
+                model=model if model else None,
+                custom_system_prompt=getattr(settings, "custom_system_prompt", None),
+                custom_instructions=getattr(settings, "custom_instructions", None),
             )
 
             location = self.app.config_manager.get_current_location()

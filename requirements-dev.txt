@@ -12,6 +12,7 @@ pytest-timeout>=2.3.0
 hypothesis>=6.0.0
 vcrpy>=6.0.0
 requests-mock>=1.10.0
+diff-cover>=9.0.0
 
 # Type stubs
 types-requests>=2.31.0

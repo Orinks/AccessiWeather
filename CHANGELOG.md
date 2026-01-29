@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Per-sound volume settings for soundpacks - soundpack creators can now specify default volume levels (0.0-1.0) for individual sounds in pack.json. This helps blind/VI users balance alert sounds with their screen reader output. Supports both inline format (`{"sounds": {"alert": {"file": "alert.wav", "volume": 0.7}}}`) and separate volumes section (`{"sounds": {...}, "volumes": {"alert": 0.7}}`)
 - Model browser dialog - browse and select from 300+ OpenRouter AI models directly in Settings instead of opening a web browser. Filter by provider (OpenAI, Anthropic, Meta, Google, etc.), search by name, and toggle free-only models. Provider list updates dynamically based on your filters
 - Weather model selection for Open-Meteo - choose from 11 forecast models including ECMWF, GFS, ICON, Météo-France, and more. Find it in Settings > Data Sources when using Open-Meteo or Auto mode
 - Settings export and import - backup your preferences to a file and restore them on another machine, perfect for keeping your setup in sync across devices. Find it in Settings > Advanced. Your API keys stay secure in your system keyring and aren't included in the export file
@@ -20,6 +21,13 @@ All notable changes to this project will be documented in this file.
 - Weather alerts now trigger desktop notifications - previously alerts showed in the UI but never sent notifications
 - Location switching now updates the weather display - switching locations was silently failing due to a type mismatch
 - Cleaned up Visual Crossing alert processing - removed orphaned AlertManager that was losing state between calls
+- Area Forecast Discussion AI summaries now respect your custom system prompt and instructions from Settings > AI
+- macOS PyInstaller builds on Apple Silicon now use an x86_64 toolchain and filter sound_lib binaries so the DMG build completes under Rosetta
+- AI explanation now correctly reads your configured model preference instead of always falling back to default
+- Canceling AI explanation generation no longer crashes the app
+- OpenRouter auto-router now works in Area Forecast Discussion dialog
+- Your chosen AI model won't silently fall back to other models when it returns short responses
+- Increased AI token limit for models with thinking/reasoning features (Gemini, Grok, etc.)
 
 ### Removed
 -

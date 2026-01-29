@@ -1,5 +1,5 @@
-# -*- mode: python ; coding: utf-8 -*-
-"""PyInstaller spec file for AccessiWeather.
+"""
+PyInstaller spec file for AccessiWeather.
 
 This spec file configures PyInstaller to build AccessiWeather as a standalone
 application for Windows and macOS.
@@ -11,6 +11,10 @@ Usage:
 import platform
 import sys
 from pathlib import Path
+
+# Ensure installer/ directory is on Python path so spec_utils can be imported
+sys.path.insert(0, SPECPATH)
+from spec_utils import filter_platform_binaries, filter_sound_lib_entries
 
 # Determine paths
 SPEC_DIR = Path(SPECPATH).resolve()
@@ -137,6 +141,11 @@ a = Analysis(
 a.binaries = [b for b in a.binaries if not b[0].startswith("tcl")]
 a.binaries = [b for b in a.binaries if not b[0].startswith("tk")]
 a.binaries = [b for b in a.binaries if "_tkinter" not in b[0]]
+
+# Remove cross-platform binary artifacts and limit sound_lib to platform-friendly bits
+a.binaries = filter_platform_binaries(a.binaries, platform.system())
+a.binaries = filter_sound_lib_entries(a.binaries, platform.system())
+a.datas = filter_sound_lib_entries(a.datas, platform.system())
 
 pyz = PYZ(a.pure)
 
