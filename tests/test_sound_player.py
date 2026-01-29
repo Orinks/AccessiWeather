@@ -372,8 +372,6 @@ class TestSoundPackFunctions:
 
     def test_validate_sound_pack_valid(self):
         """validate_sound_pack should pass for valid pack."""
-        import json
-
         from accessiweather.notifications.sound_player import validate_sound_pack
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -393,8 +391,6 @@ class TestSoundPackFunctions:
 
     def test_validate_sound_pack_missing_sound_file(self):
         """validate_sound_pack should fail for missing sound files."""
-        import json
-
         from accessiweather.notifications.sound_player import validate_sound_pack
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -516,10 +512,7 @@ class TestGetSoundEntry:
 
     def test_get_sound_entry_string_format(self):
         """get_sound_entry should handle string sound entries."""
-        import json
-
         from accessiweather.notifications.sound_player import (
-            SOUNDPACKS_DIR,
             get_sound_entry,
         )
 
@@ -548,8 +541,6 @@ class TestGetSoundEntry:
 
     def test_get_sound_entry_inline_volume_format(self):
         """get_sound_entry should handle inline volume format."""
-        import json
-
         from accessiweather.notifications.sound_player import get_sound_entry
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -579,8 +570,6 @@ class TestGetSoundEntry:
 
     def test_get_sound_entry_separate_volumes_format(self):
         """get_sound_entry should handle separate volumes section."""
-        import json
-
         from accessiweather.notifications.sound_player import get_sound_entry
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -611,8 +600,6 @@ class TestGetSoundEntry:
 
     def test_get_sound_entry_missing_sound_returns_none(self):
         """get_sound_entry should return (None, 1.0) for missing sounds."""
-        import json
-
         from accessiweather.notifications.sound_player import get_sound_entry
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -642,8 +629,6 @@ class TestValidateSoundPackWithVolume:
 
     def test_validate_pack_with_inline_volume(self):
         """validate_sound_pack should accept inline volume format."""
-        import json
-
         from accessiweather.notifications.sound_player import validate_sound_pack
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -662,8 +647,6 @@ class TestValidateSoundPackWithVolume:
 
     def test_validate_pack_with_separate_volumes(self):
         """validate_sound_pack should accept separate volumes section."""
-        import json
-
         from accessiweather.notifications.sound_player import validate_sound_pack
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -683,8 +666,6 @@ class TestValidateSoundPackWithVolume:
 
     def test_validate_pack_with_invalid_volume_value(self):
         """validate_sound_pack should reject invalid volume values."""
-        import json
-
         from accessiweather.notifications.sound_player import validate_sound_pack
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -705,8 +686,6 @@ class TestValidateSoundPackWithVolume:
 
     def test_validate_pack_with_invalid_volume_type(self):
         """validate_sound_pack should reject non-numeric volume values."""
-        import json
-
         from accessiweather.notifications.sound_player import validate_sound_pack
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -731,8 +710,6 @@ class TestGetSoundPackSoundsWithVolume:
 
     def test_get_sounds_normalizes_inline_format(self):
         """get_sound_pack_sounds should return just filenames for inline format."""
-        import json
-
         from accessiweather.notifications.sound_player import get_sound_pack_sounds
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -781,7 +758,7 @@ class TestPlaySoundFileWithVolume:
             ), patch(
                 "accessiweather.notifications.sound_player.playsound"
             ) as mock_playsound:
-                result = _play_sound_file(temp_path, volume=1.5)
+                _play_sound_file(temp_path, volume=1.5)
                 assert mock_playsound.called
         finally:
             temp_path.unlink(missing_ok=True)
@@ -806,7 +783,7 @@ class TestPlaySoundFileWithVolume:
                 mock_stream_module,
                 create=True,
             ):
-                result = _play_sound_file(temp_path, volume=0.5)
+                _play_sound_file(temp_path, volume=0.5)
 
             # Should have created a stream and set volume
             mock_stream_module.FileStream.assert_called_once()
