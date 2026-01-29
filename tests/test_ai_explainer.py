@@ -670,6 +670,62 @@ class TestStaticValidationMethods:
             assert result is False
 
     @pytest.mark.asyncio
+    async def test_validate_and_get_fallback_valid_model(self):
+        """Test validate_and_get_fallback with a valid model."""
+        with patch(
+            "accessiweather.api.openrouter_models.OpenRouterModelsClient"
+        ) as mock_client_class:
+            mock_client = MagicMock()
+            mock_client_class.return_value = mock_client
+
+            async def mock_validate(model_id, force_refresh=False):
+                return True
+
+            mock_client.validate_model_id = mock_validate
+
+            model_id, was_fallback = await AIExplainer.validate_and_get_fallback(
+                "valid/model"
+            )
+            assert model_id == "valid/model"
+            assert was_fallback is False
+
+    @pytest.mark.asyncio
+    async def test_validate_and_get_fallback_invalid_model(self):
+        """Test validate_and_get_fallback with an invalid model returns fallback."""
+        from accessiweather.ai_explainer import DEFAULT_FREE_MODEL
+
+        with patch(
+            "accessiweather.api.openrouter_models.OpenRouterModelsClient"
+        ) as mock_client_class:
+            mock_client = MagicMock()
+            mock_client_class.return_value = mock_client
+
+            async def mock_validate(model_id, force_refresh=False):
+                return False
+
+            mock_client.validate_model_id = mock_validate
+
+            model_id, was_fallback = await AIExplainer.validate_and_get_fallback(
+                "invalid/model"
+            )
+            assert model_id == DEFAULT_FREE_MODEL
+            assert was_fallback is True
+
+    @pytest.mark.asyncio
+    async def test_validate_and_get_fallback_special_cases(self):
+        """Test validate_and_get_fallback skips validation for special cases."""
+        # "auto" and default model should always be valid without API call
+        model_id, was_fallback = await AIExplainer.validate_and_get_fallback("auto")
+        assert model_id == "auto"
+        assert was_fallback is False
+
+        model_id, was_fallback = await AIExplainer.validate_and_get_fallback(
+            "openrouter/auto"
+        )
+        assert model_id == "openrouter/auto"
+        assert was_fallback is False
+
+    @pytest.mark.asyncio
     async def test_get_valid_free_models_static(self):
         """Test AIExplainer.get_valid_free_models static method."""
         with patch(

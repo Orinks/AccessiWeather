@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- AI model validation at startup - if your configured model was removed from OpenRouter, you'll be warned and offered to reset to default or open Settings
+- Auto-fallback for AI models - if your configured model fails, the app automatically tries the default model before giving up
 - AI model validation - invalid or removed models now show a clear error message directing you to Settings instead of cryptic API errors
 - Model validation methods in OpenRouter client - check if a model ID exists before using it
 - Report Issue dialog (Help menu) - quickly report bugs or request features directly to GitHub with auto-collected system info

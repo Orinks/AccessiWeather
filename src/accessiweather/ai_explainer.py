@@ -459,13 +459,20 @@ class AIExplainer:
         system_prompt = self.get_effective_system_prompt(style)
         user_prompt = self._build_prompt(weather_data, location_name, style)
 
-        # Build list of models to try: primary first, then fallbacks for free models
+        # Build list of models to try: primary first, then fallbacks
         primary_model = self.get_effective_model()
         models_to_try = [primary_model]
-        # Only use fallbacks for default free model, not user-configured models
-        # User may have chosen a specific model (e.g., uncensored) for a reason
-        if primary_model == DEFAULT_FREE_MODEL and ":free" in primary_model:
-            models_to_try.extend(FALLBACK_FREE_MODELS)
+
+        # Add default model as fallback if using a custom model
+        # This provides auto-recovery when a user's configured model is removed
+        if primary_model != DEFAULT_FREE_MODEL:
+            models_to_try.append(DEFAULT_FREE_MODEL)
+
+        # Add additional fallbacks for free models
+        if ":free" in primary_model or primary_model == DEFAULT_FREE_MODEL:
+            for fallback in FALLBACK_FREE_MODELS:
+                if fallback not in models_to_try:
+                    models_to_try.append(fallback)
 
         # Try each model until we get a non-empty response
         response = None
@@ -622,13 +629,20 @@ class AIExplainer:
         if self.custom_instructions and self.custom_instructions.strip():
             user_prompt += f"\n\nAdditional Instructions: {self.custom_instructions}"
 
-        # Build list of models to try
+        # Build list of models to try: primary first, then fallbacks
         primary_model = self.get_effective_model()
         models_to_try = [primary_model]
-        # Only use fallbacks for default free model, not user-configured models
-        # User may have chosen a specific model (e.g., uncensored) for a reason
-        if primary_model == DEFAULT_FREE_MODEL and ":free" in primary_model:
-            models_to_try.extend(FALLBACK_FREE_MODELS)
+
+        # Add default model as fallback if using a custom model
+        # This provides auto-recovery when a user's configured model is removed
+        if primary_model != DEFAULT_FREE_MODEL:
+            models_to_try.append(DEFAULT_FREE_MODEL)
+
+        # Add additional fallbacks for free models
+        if ":free" in primary_model or primary_model == DEFAULT_FREE_MODEL:
+            for fallback in FALLBACK_FREE_MODELS:
+                if fallback not in models_to_try:
+                    models_to_try.append(fallback)
 
         # Try each model until we get a non-empty response
         response = None
@@ -937,6 +951,37 @@ class AIExplainer:
         client = OpenRouterModelsClient()
         models = await client.get_free_models()
         return [m.id for m in models]
+
+    @staticmethod
+    async def validate_and_get_fallback(model_id: str) -> tuple[str, bool]:
+        """
+        Validate a model ID and return a fallback if invalid.
+
+        Args:
+            model_id: The model ID to validate
+
+        Returns:
+            Tuple of (valid_model_id, was_fallback_used)
+            If the model is valid, returns (model_id, False)
+            If invalid, returns (DEFAULT_FREE_MODEL, True)
+
+        """
+        # Special cases that are always valid
+        if model_id in ("auto", "openrouter/auto", DEFAULT_FREE_MODEL):
+            return model_id, False
+
+        from .api.openrouter_models import OpenRouterModelsClient
+
+        client = OpenRouterModelsClient()
+        is_valid = await client.validate_model_id(model_id)
+
+        if is_valid:
+            return model_id, False
+        logger.warning(
+            f"Model '{model_id}' not found in OpenRouter. "
+            f"Falling back to default: {DEFAULT_FREE_MODEL}"
+        )
+        return DEFAULT_FREE_MODEL, True
 
     def select_best_data_source(self, sources: list[dict[str, Any]]) -> dict[str, Any] | None:
         """

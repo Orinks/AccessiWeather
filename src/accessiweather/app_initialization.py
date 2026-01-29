@@ -167,5 +167,103 @@ def load_initial_data(app: AccessiWeatherApp) -> None:
             if app.main_window:
                 app.main_window.refresh_weather_async()
 
+        # Defer AI model validation to not block startup
+        wx.CallLater(500, _validate_ai_model_deferred, app)
+
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.error("Failed to load initial data: %s", exc)
+
+
+def _validate_ai_model_deferred(app: AccessiWeatherApp) -> None:
+    """Validate AI model configuration and warn user if invalid."""
+    import asyncio
+    import threading
+
+    try:
+        settings = app.config_manager.get_settings()
+        model_id = getattr(settings, "ai_model_preference", None)
+
+        # Skip validation if no model configured or using defaults
+        if not model_id or model_id in ("auto", "openrouter/auto"):
+            return
+
+        # Skip if no API key configured (AI features won't work anyway)
+        api_key = getattr(settings, "openrouter_api_key", None)
+        if not api_key:
+            return
+
+        def validate_in_thread():
+            """Run async validation in a background thread."""
+            try:
+                from .ai_explainer import AIExplainer
+
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    valid_model, was_fallback = loop.run_until_complete(
+                        AIExplainer.validate_and_get_fallback(model_id)
+                    )
+                finally:
+                    loop.close()
+
+                if was_fallback:
+                    # Model was invalid - schedule warning dialog on main thread
+                    wx.CallAfter(_show_invalid_model_warning, app, model_id, valid_model)
+
+            except Exception as exc:
+                logger.warning(f"Failed to validate AI model: {exc}")
+
+        # Run validation in background thread to not block UI
+        thread = threading.Thread(target=validate_in_thread, daemon=True)
+        thread.start()
+
+    except Exception as exc:
+        logger.warning(f"Failed to start AI model validation: {exc}")
+
+
+def _show_invalid_model_warning(
+    app: AccessiWeatherApp, invalid_model: str, fallback_model: str
+) -> None:
+    """Show warning dialog about invalid AI model and offer to fix it."""
+    from .ai_explainer import DEFAULT_FREE_MODEL
+
+    dialog = wx.MessageDialog(
+        app.main_window,
+        f"Your configured AI model '{invalid_model}' is no longer available on OpenRouter.\n\n"
+        f"It may have been removed or renamed.\n\n"
+        f"Would you like to reset to the default model ({DEFAULT_FREE_MODEL})?\n\n"
+        f"Click 'Yes' to reset, or 'No' to open Settings and choose a different model.",
+        "AI Model Not Found",
+        wx.YES_NO | wx.ICON_WARNING,
+    )
+    dialog.SetYesNoLabels("Reset to Default", "Open Settings")
+
+    result = dialog.ShowModal()
+    dialog.Destroy()
+
+    if result == wx.ID_YES:
+        # Reset to default model
+        try:
+            settings = app.config_manager.get_settings()
+            # Update the setting
+            new_settings = settings._replace(ai_model_preference=DEFAULT_FREE_MODEL)
+            app.config_manager.save_settings(new_settings)
+            logger.info(f"Reset AI model to default: {DEFAULT_FREE_MODEL}")
+
+            # Show confirmation
+            wx.MessageBox(
+                f"AI model has been reset to: {DEFAULT_FREE_MODEL}",
+                "Model Reset",
+                wx.OK | wx.ICON_INFORMATION,
+            )
+        except Exception as exc:
+            logger.error(f"Failed to reset AI model: {exc}")
+            wx.MessageBox(
+                f"Failed to reset model: {exc}\n\nPlease update it manually in Settings.",
+                "Error",
+                wx.OK | wx.ICON_ERROR,
+            )
+    else:
+        # Open settings dialog
+        if app.main_window:
+            app.main_window.on_settings()
