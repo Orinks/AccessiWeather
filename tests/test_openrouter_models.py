@@ -237,6 +237,17 @@ class TestOpenRouterModelsClient:
             result = await client.get_model_by_id("test/nonexistent")
             assert result is None
 
+    @pytest.mark.asyncio
+    async def test_get_model_by_id_fetch_error(self):
+        """Test that get_model_by_id returns None if fetch fails."""
+        client = OpenRouterModelsClient()
+
+        with patch.object(client, "fetch_models", new_callable=AsyncMock) as mock_fetch:
+            mock_fetch.side_effect = OpenRouterModelsError("Network error")
+
+            result = await client.get_model_by_id("any-model")
+            assert result is None
+
 
 class TestProviderDisplayNames:
     """Tests for provider display name mapping."""

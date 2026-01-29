@@ -625,6 +625,97 @@ class TestErrorHandling:
             ):
                 await explainer.explain_weather(sample_weather_data, "Test City")
 
+    @pytest.mark.asyncio
+    async def test_invalid_model_error_in_afd(self):
+        """Test InvalidModelError is raised for AFD explanations too."""
+        explainer = AIExplainer(api_key="test-key", model="nonexistent/model")
+        sample_afd = "AREA FORECAST DISCUSSION..."
+
+        with patch.object(explainer, "_get_client"):
+            error_msg = "Error code: 404 - No endpoints found matching your data"
+            with (
+                patch.object(explainer, "_call_openrouter", side_effect=Exception(error_msg)),
+                pytest.raises((InvalidModelError, AIExplainerError)),
+            ):
+                await explainer.explain_afd(sample_afd, "Test City")
+
+
+# =============================================================================
+# Static Model Validation Tests
+# =============================================================================
+
+
+class TestStaticValidationMethods:
+    """Tests for static model validation methods."""
+
+    @pytest.mark.asyncio
+    async def test_validate_model_id_static(self):
+        """Test AIExplainer.validate_model_id static method."""
+        with patch(
+            "accessiweather.api.openrouter_models.OpenRouterModelsClient"
+        ) as mock_client_class:
+            mock_client = MagicMock()
+            mock_client_class.return_value = mock_client
+
+            # Mock the async method
+            async def mock_validate(model_id, force_refresh=False):
+                return model_id == "valid/model"
+
+            mock_client.validate_model_id = mock_validate
+
+            result = await AIExplainer.validate_model_id("valid/model")
+            assert result is True
+
+            result = await AIExplainer.validate_model_id("invalid/model")
+            assert result is False
+
+    @pytest.mark.asyncio
+    async def test_get_valid_free_models_static(self):
+        """Test AIExplainer.get_valid_free_models static method."""
+        with patch(
+            "accessiweather.api.openrouter_models.OpenRouterModelsClient"
+        ) as mock_client_class:
+            mock_client = MagicMock()
+            mock_client_class.return_value = mock_client
+
+            # Create mock models
+            from accessiweather.api.openrouter_models import OpenRouterModel
+
+            mock_models = [
+                OpenRouterModel(
+                    id="test/free-model:free",
+                    name="Free Model",
+                    description="",
+                    context_length=4096,
+                    pricing_prompt=0.0,
+                    pricing_completion=0.0,
+                    is_free=True,
+                    is_moderated=True,
+                    input_modalities=["text"],
+                    output_modalities=["text"],
+                ),
+                OpenRouterModel(
+                    id="test/another-free:free",
+                    name="Another Free",
+                    description="",
+                    context_length=8192,
+                    pricing_prompt=0.0,
+                    pricing_completion=0.0,
+                    is_free=True,
+                    is_moderated=True,
+                    input_modalities=["text"],
+                    output_modalities=["text"],
+                ),
+            ]
+
+            async def mock_get_free(force_refresh=False):
+                return mock_models
+
+            mock_client.get_free_models = mock_get_free
+
+            result = await AIExplainer.get_valid_free_models()
+            assert result == ["test/free-model:free", "test/another-free:free"]
+
 
 # =============================================================================
 # Response Formatting Tests
