@@ -284,30 +284,12 @@ class SoundPackManagerDialog(wx.Dialog):
         self.sounds_listbox.Bind(wx.EVT_LISTBOX, self._on_sound_selected)
         sizer.Add(self.sounds_listbox, 1, wx.EXPAND | wx.BOTTOM, 5)
 
-        # Preview button with volume control
+        # Preview button
         preview_sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.preview_btn = wx.Button(parent, label="Preview Selected Sound")
         self.preview_btn.Bind(wx.EVT_BUTTON, self._on_preview_sound)
         self.preview_btn.Enable(False)
-        preview_sizer.Add(self.preview_btn, 0, wx.RIGHT, 10)
-
-        # Volume control for sounds list preview
-        preview_vol_label = wx.StaticText(parent, label="Vol:")
-        preview_sizer.Add(preview_vol_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 2)
-
-        self.preview_volume_spin = wx.SpinCtrl(
-            parent, min=0, max=100, initial=100, size=(60, -1)
-        )
-        self.preview_volume_spin.SetToolTip("Preview volume (0-100%)")
-        self.preview_volume_spin.Bind(wx.EVT_SPINCTRL, self._on_preview_volume_changed)
-        preview_sizer.Add(self.preview_volume_spin, 0, wx.RIGHT, 5)
-
-        self.set_preview_vol_btn = wx.Button(parent, label="Set Vol")
-        self.set_preview_vol_btn.SetToolTip("Save this volume for the selected sound")
-        self.set_preview_vol_btn.Bind(wx.EVT_BUTTON, self._on_set_preview_volume)
-        self.set_preview_vol_btn.Enable(False)
-        preview_sizer.Add(self.set_preview_vol_btn, 0)
-
+        preview_sizer.Add(self.preview_btn, 0)
         sizer.Add(preview_sizer, 0, wx.BOTTOM, 10)
 
         # Mapping section
@@ -521,7 +503,6 @@ class SoundPackManagerDialog(wx.Dialog):
         sel = self.sounds_listbox.GetSelection()
         if sel == wx.NOT_FOUND or not self.selected_pack:
             self.preview_btn.Enable(False)
-            self.set_preview_vol_btn.Enable(False)
             return
 
         data = self.sounds_listbox.GetClientData(sel)
@@ -534,11 +515,9 @@ class SoundPackManagerDialog(wx.Dialog):
                 return
             info = self.sound_packs[self.selected_pack]
             sound_path = info.path / sound_file
-            exists = sound_path.exists()
-            self.preview_btn.Enable(exists)
-            self.set_preview_vol_btn.Enable(exists)
-            # Set the volume spinner to the sound's current volume
-            self.preview_volume_spin.SetValue(int(volume * 100))
+            self.preview_btn.Enable(sound_path.exists())
+            # Update the volume spinner to show this sound's volume
+            self.volume_spin.SetValue(int(volume * 100))
 
     def _on_preview_sound(self, event) -> None:
         """Preview the selected sound (toggle play/stop)."""
@@ -552,8 +531,8 @@ class SoundPackManagerDialog(wx.Dialog):
 
         # Data is (sound_name, sound_file, volume)
         sound_file = data[1]
-        # Use the volume from the spinner (allows previewing at different volumes)
-        volume = self.preview_volume_spin.GetValue() / 100.0
+        # Use the volume from the shared spinner
+        volume = self.volume_spin.GetValue() / 100.0
         info = self.sound_packs[self.selected_pack]
         sound_path = info.path / sound_file
 
@@ -586,64 +565,6 @@ class SoundPackManagerDialog(wx.Dialog):
             # Reset both preview buttons to their default labels
             self.preview_btn.SetLabel("Preview Selected Sound")
             self.preview_mapping_btn.SetLabel("Preview")
-
-    def _on_preview_volume_changed(self, event) -> None:
-        """Handle preview volume spinner change (no action needed, value read on preview)."""
-
-    def _on_set_preview_volume(self, event) -> None:
-        """Set volume for the selected sound in the sounds list."""
-        sel = self.sounds_listbox.GetSelection()
-        if sel == wx.NOT_FOUND or not self.selected_pack:
-            return
-
-        data = self.sounds_listbox.GetClientData(sel)
-        if not data or len(data) < 2:
-            return
-
-        sound_name = data[0]
-        sound_file = data[1]
-        volume = self.preview_volume_spin.GetValue() / 100.0
-
-        info = self.sound_packs[self.selected_pack]
-        pack_json = info.path / "pack.json"
-
-        try:
-            with open(pack_json, encoding="utf-8") as f:
-                pack_data = json.load(f)
-            sounds = pack_data.get("sounds", {})
-
-            # Use inline format if volume != 1.0, otherwise keep simple format
-            if volume < 1.0:
-                sounds[sound_name] = {"file": sound_file, "volume": volume}
-            else:
-                sounds[sound_name] = sound_file
-                # Remove from volumes section if present
-                if "volumes" in pack_data and sound_name in pack_data["volumes"]:
-                    del pack_data["volumes"][sound_name]
-
-            pack_data["sounds"] = sounds
-            with open(pack_json, "w", encoding="utf-8") as f:
-                json.dump(pack_data, f, indent=2)
-
-            # Reload and refresh
-            self._load_sound_packs()
-            self._update_pack_details()
-
-            # Re-select the sound we just modified
-            for i in range(self.sounds_listbox.GetCount()):
-                item_data = self.sounds_listbox.GetClientData(i)
-                if item_data and item_data[0] == sound_name:
-                    self.sounds_listbox.SetSelection(i)
-                    self._on_sound_selected(None)
-                    break
-
-        except Exception as e:
-            logger.error(f"Failed to set volume: {e}")
-            wx.MessageBox(
-                f"Failed to set volume: {e}",
-                "Error",
-                wx.OK | wx.ICON_ERROR,
-            )
 
     def _on_category_changed(self, event) -> None:
         """Handle category selection change."""
