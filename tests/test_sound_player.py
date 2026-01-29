@@ -7,6 +7,7 @@ including sound_lib integration and playsound3 fallback.
 
 from __future__ import annotations
 
+import json
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -428,3 +429,388 @@ class TestAvailabilityChecks:
 
         # They should be the same function
         assert is_sound_lib_available is is_playsound_available
+
+
+class TestParseSoundEntry:
+    """Test _parse_sound_entry function for volume parsing."""
+
+    def test_parse_string_entry_default_volume(self):
+        """String entry should default to volume 1.0."""
+        from accessiweather.notifications.sound_player import _parse_sound_entry
+
+        filename, volume = _parse_sound_entry("alert.wav", "alert")
+        assert filename == "alert.wav"
+        assert volume == 1.0
+
+    def test_parse_string_entry_with_volumes_dict(self):
+        """String entry with volumes dict should use dict value."""
+        from accessiweather.notifications.sound_player import _parse_sound_entry
+
+        volumes = {"alert": 0.7}
+        filename, volume = _parse_sound_entry("alert.wav", "alert", volumes)
+        assert filename == "alert.wav"
+        assert volume == 0.7
+
+    def test_parse_inline_dict_entry(self):
+        """Inline dict entry should parse file and volume."""
+        from accessiweather.notifications.sound_player import _parse_sound_entry
+
+        entry = {"file": "critical_alert.wav", "volume": 0.5}
+        filename, volume = _parse_sound_entry(entry, "critical_alert")
+        assert filename == "critical_alert.wav"
+        assert volume == 0.5
+
+    def test_parse_inline_dict_entry_missing_volume(self):
+        """Inline dict without volume should default to 1.0."""
+        from accessiweather.notifications.sound_player import _parse_sound_entry
+
+        entry = {"file": "alert.wav"}
+        filename, volume = _parse_sound_entry(entry, "alert")
+        assert filename == "alert.wav"
+        assert volume == 1.0
+
+    def test_parse_inline_dict_entry_missing_file(self):
+        """Inline dict without file should use event name as default."""
+        from accessiweather.notifications.sound_player import _parse_sound_entry
+
+        entry = {"volume": 0.8}
+        filename, volume = _parse_sound_entry(entry, "warning")
+        assert filename == "warning.wav"
+        assert volume == 0.8
+
+    def test_parse_volume_clamped_above_one(self):
+        """Volume above 1.0 should be clamped to 1.0."""
+        from accessiweather.notifications.sound_player import _parse_sound_entry
+
+        entry = {"file": "alert.wav", "volume": 1.5}
+        filename, volume = _parse_sound_entry(entry, "alert")
+        assert volume == 1.0
+
+    def test_parse_volume_clamped_below_zero(self):
+        """Volume below 0.0 should be clamped to 0.0."""
+        from accessiweather.notifications.sound_player import _parse_sound_entry
+
+        entry = {"file": "alert.wav", "volume": -0.5}
+        filename, volume = _parse_sound_entry(entry, "alert")
+        assert volume == 0.0
+
+    def test_parse_invalid_volume_defaults_to_one(self):
+        """Invalid volume type should default to 1.0."""
+        from accessiweather.notifications.sound_player import _parse_sound_entry
+
+        entry = {"file": "alert.wav", "volume": "loud"}
+        filename, volume = _parse_sound_entry(entry, "alert")
+        assert volume == 1.0
+
+    def test_parse_empty_string_entry(self):
+        """Empty string entry should use event name as default."""
+        from accessiweather.notifications.sound_player import _parse_sound_entry
+
+        filename, volume = _parse_sound_entry("", "alert")
+        assert filename == "alert.wav"
+        assert volume == 1.0
+
+
+class TestGetSoundEntry:
+    """Test get_sound_entry function."""
+
+    def test_get_sound_entry_string_format(self):
+        """get_sound_entry should handle string sound entries."""
+        import json
+
+        from accessiweather.notifications.sound_player import (
+            SOUNDPACKS_DIR,
+            get_sound_entry,
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Temporarily override SOUNDPACKS_DIR
+            import accessiweather.notifications.sound_player as sp
+
+            original_dir = sp.SOUNDPACKS_DIR
+            sp.SOUNDPACKS_DIR = Path(tmpdir)
+
+            try:
+                pack_path = Path(tmpdir) / "test_pack"
+                pack_path.mkdir()
+
+                pack_data = {"name": "Test", "sounds": {"alert": "alert.wav"}}
+                (pack_path / "pack.json").write_text(json.dumps(pack_data))
+                (pack_path / "alert.wav").touch()
+
+                sound_file, volume = get_sound_entry("alert", "test_pack")
+
+                assert sound_file is not None
+                assert sound_file.name == "alert.wav"
+                assert volume == 1.0
+            finally:
+                sp.SOUNDPACKS_DIR = original_dir
+
+    def test_get_sound_entry_inline_volume_format(self):
+        """get_sound_entry should handle inline volume format."""
+        import json
+
+        from accessiweather.notifications.sound_player import get_sound_entry
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import accessiweather.notifications.sound_player as sp
+
+            original_dir = sp.SOUNDPACKS_DIR
+            sp.SOUNDPACKS_DIR = Path(tmpdir)
+
+            try:
+                pack_path = Path(tmpdir) / "test_pack"
+                pack_path.mkdir()
+
+                pack_data = {
+                    "name": "Test",
+                    "sounds": {"critical": {"file": "critical.wav", "volume": 0.7}},
+                }
+                (pack_path / "pack.json").write_text(json.dumps(pack_data))
+                (pack_path / "critical.wav").touch()
+
+                sound_file, volume = get_sound_entry("critical", "test_pack")
+
+                assert sound_file is not None
+                assert sound_file.name == "critical.wav"
+                assert volume == 0.7
+            finally:
+                sp.SOUNDPACKS_DIR = original_dir
+
+    def test_get_sound_entry_separate_volumes_format(self):
+        """get_sound_entry should handle separate volumes section."""
+        import json
+
+        from accessiweather.notifications.sound_player import get_sound_entry
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import accessiweather.notifications.sound_player as sp
+
+            original_dir = sp.SOUNDPACKS_DIR
+            sp.SOUNDPACKS_DIR = Path(tmpdir)
+
+            try:
+                pack_path = Path(tmpdir) / "test_pack"
+                pack_path.mkdir()
+
+                pack_data = {
+                    "name": "Test",
+                    "sounds": {"alert": "alert.wav"},
+                    "volumes": {"alert": 0.6},
+                }
+                (pack_path / "pack.json").write_text(json.dumps(pack_data))
+                (pack_path / "alert.wav").touch()
+
+                sound_file, volume = get_sound_entry("alert", "test_pack")
+
+                assert sound_file is not None
+                assert sound_file.name == "alert.wav"
+                assert volume == 0.6
+            finally:
+                sp.SOUNDPACKS_DIR = original_dir
+
+    def test_get_sound_entry_missing_sound_returns_none(self):
+        """get_sound_entry should return (None, 1.0) for missing sounds."""
+        import json
+
+        from accessiweather.notifications.sound_player import get_sound_entry
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import accessiweather.notifications.sound_player as sp
+
+            original_dir = sp.SOUNDPACKS_DIR
+            sp.SOUNDPACKS_DIR = Path(tmpdir)
+
+            try:
+                # Create a pack without default pack for fallback
+                pack_path = Path(tmpdir) / "default"
+                pack_path.mkdir()
+
+                pack_data = {"name": "Default", "sounds": {}}
+                (pack_path / "pack.json").write_text(json.dumps(pack_data))
+
+                sound_file, volume = get_sound_entry("nonexistent", "default")
+
+                assert sound_file is None
+                assert volume == 1.0
+            finally:
+                sp.SOUNDPACKS_DIR = original_dir
+
+
+class TestValidateSoundPackWithVolume:
+    """Test validate_sound_pack with volume-related fields."""
+
+    def test_validate_pack_with_inline_volume(self):
+        """validate_sound_pack should accept inline volume format."""
+        import json
+
+        from accessiweather.notifications.sound_player import validate_sound_pack
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            pack_path = Path(tmpdir)
+
+            pack_data = {
+                "name": "Test Pack",
+                "sounds": {"alert": {"file": "alert.wav", "volume": 0.8}},
+            }
+            (pack_path / "pack.json").write_text(json.dumps(pack_data))
+            (pack_path / "alert.wav").touch()
+
+            is_valid, msg = validate_sound_pack(pack_path)
+
+        assert is_valid is True
+
+    def test_validate_pack_with_separate_volumes(self):
+        """validate_sound_pack should accept separate volumes section."""
+        import json
+
+        from accessiweather.notifications.sound_player import validate_sound_pack
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            pack_path = Path(tmpdir)
+
+            pack_data = {
+                "name": "Test Pack",
+                "sounds": {"alert": "alert.wav"},
+                "volumes": {"alert": 0.7},
+            }
+            (pack_path / "pack.json").write_text(json.dumps(pack_data))
+            (pack_path / "alert.wav").touch()
+
+            is_valid, msg = validate_sound_pack(pack_path)
+
+        assert is_valid is True
+
+    def test_validate_pack_with_invalid_volume_value(self):
+        """validate_sound_pack should reject invalid volume values."""
+        import json
+
+        from accessiweather.notifications.sound_player import validate_sound_pack
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            pack_path = Path(tmpdir)
+
+            pack_data = {
+                "name": "Test Pack",
+                "sounds": {"alert": "alert.wav"},
+                "volumes": {"alert": 1.5},  # Invalid: > 1.0
+            }
+            (pack_path / "pack.json").write_text(json.dumps(pack_data))
+            (pack_path / "alert.wav").touch()
+
+            is_valid, msg = validate_sound_pack(pack_path)
+
+        assert is_valid is False
+        assert "0.0 and 1.0" in msg
+
+    def test_validate_pack_with_invalid_volume_type(self):
+        """validate_sound_pack should reject non-numeric volume values."""
+        import json
+
+        from accessiweather.notifications.sound_player import validate_sound_pack
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            pack_path = Path(tmpdir)
+
+            pack_data = {
+                "name": "Test Pack",
+                "sounds": {"alert": "alert.wav"},
+                "volumes": {"alert": "loud"},  # Invalid: not a number
+            }
+            (pack_path / "pack.json").write_text(json.dumps(pack_data))
+            (pack_path / "alert.wav").touch()
+
+            is_valid, msg = validate_sound_pack(pack_path)
+
+        assert is_valid is False
+        assert "Invalid volume" in msg
+
+
+class TestGetSoundPackSoundsWithVolume:
+    """Test get_sound_pack_sounds handles volume formats."""
+
+    def test_get_sounds_normalizes_inline_format(self):
+        """get_sound_pack_sounds should return just filenames for inline format."""
+        import json
+
+        from accessiweather.notifications.sound_player import get_sound_pack_sounds
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import accessiweather.notifications.sound_player as sp
+
+            original_dir = sp.SOUNDPACKS_DIR
+            sp.SOUNDPACKS_DIR = Path(tmpdir)
+
+            try:
+                pack_path = Path(tmpdir) / "test_pack"
+                pack_path.mkdir()
+
+                pack_data = {
+                    "name": "Test",
+                    "sounds": {
+                        "alert": {"file": "alert.wav", "volume": 0.8},
+                        "warning": "warning.wav",
+                    },
+                }
+                (pack_path / "pack.json").write_text(json.dumps(pack_data))
+
+                sounds = get_sound_pack_sounds("test_pack")
+
+                assert sounds["alert"] == "alert.wav"
+                assert sounds["warning"] == "warning.wav"
+            finally:
+                sp.SOUNDPACKS_DIR = original_dir
+
+
+class TestPlaySoundFileWithVolume:
+    """Test _play_sound_file with volume parameter."""
+
+    def test_play_sound_file_clamps_volume(self):
+        """_play_sound_file should clamp volume to 0.0-1.0."""
+        from accessiweather.notifications.sound_player import _play_sound_file
+
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+            temp_path = Path(f.name)
+
+        try:
+            # Test with volume > 1.0 (should work without error)
+            with patch(
+                "accessiweather.notifications.sound_player.PLAYSOUND_AVAILABLE", True
+            ), patch(
+                "accessiweather.notifications.sound_player.SOUND_LIB_AVAILABLE", False
+            ), patch(
+                "accessiweather.notifications.sound_player.playsound"
+            ) as mock_playsound:
+                result = _play_sound_file(temp_path, volume=1.5)
+                assert mock_playsound.called
+        finally:
+            temp_path.unlink(missing_ok=True)
+
+    def test_play_sound_file_uses_sound_lib_for_volume(self):
+        """_play_sound_file should use sound_lib when volume < 1.0."""
+        from accessiweather.notifications.sound_player import _play_sound_file
+
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+            temp_path = Path(f.name)
+
+        try:
+            mock_stream_module = MagicMock()
+            mock_file_stream = MagicMock()
+            mock_file_stream.is_playing = False
+            mock_stream_module.FileStream.return_value = mock_file_stream
+
+            with patch(
+                "accessiweather.notifications.sound_player.SOUND_LIB_AVAILABLE", True
+            ), patch(
+                "accessiweather.notifications.sound_player.stream",
+                mock_stream_module,
+                create=True,
+            ):
+                result = _play_sound_file(temp_path, volume=0.5)
+
+            # Should have created a stream and set volume
+            mock_stream_module.FileStream.assert_called_once()
+            assert mock_file_stream.volume == 0.5
+            mock_file_stream.play.assert_called_once()
+        finally:
+            temp_path.unlink(missing_ok=True)
