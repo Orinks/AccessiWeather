@@ -226,6 +226,10 @@ class MainWindow(SizedFrame):
 
         # Help menu
         help_menu = wx.Menu()
+        report_issue_item = help_menu.Append(
+            wx.ID_ANY, "&Report Issue...", "Report a bug or request a feature"
+        )
+        help_menu.AppendSeparator()
         about_item = help_menu.Append(wx.ID_ABOUT, "&About", "About AccessiWeather")
         menu_bar.Append(help_menu, "&Help")
 
@@ -244,6 +248,7 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_MENU, lambda e: self._on_air_quality(), air_quality_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_uv_index(), uv_index_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_soundpack_manager(), soundpack_item)
+        self.Bind(wx.EVT_MENU, lambda e: self._on_report_issue(), report_issue_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_about(), about_item)
 
     def _on_location_changed(self, event) -> None:
@@ -347,6 +352,14 @@ class MainWindow(SizedFrame):
         from .dialogs import show_soundpack_manager_dialog
 
         show_soundpack_manager_dialog(self, self.app)
+
+    def _on_report_issue(self) -> None:
+        """Open the report issue dialog."""
+        from .dialogs.report_issue_dialog import ReportIssueDialog
+
+        dialog = ReportIssueDialog(self)
+        dialog.ShowModal()
+        dialog.Destroy()
 
     def _on_about(self) -> None:
         """Show about dialog."""
