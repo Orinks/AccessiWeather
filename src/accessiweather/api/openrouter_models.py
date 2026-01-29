@@ -254,3 +254,46 @@ class OpenRouterModelsClient:
     def clear_cache(self) -> None:
         """Clear the cached models."""
         self._cached_models = None
+
+    async def validate_model_id(self, model_id: str, force_refresh: bool = False) -> bool:
+        """
+        Check if a model ID is valid (exists in OpenRouter's model list).
+
+        Args:
+            model_id: The model ID to validate
+            force_refresh: If True, bypass cache and fetch fresh data
+
+        Returns:
+            True if the model ID exists, False otherwise
+
+        """
+        try:
+            all_models = await self.fetch_models(force_refresh)
+            return any(m.id == model_id for m in all_models)
+        except OpenRouterModelsError:
+            # If we can't fetch models, assume valid to avoid blocking
+            logger.warning(f"Could not validate model ID {model_id} - fetch failed")
+            return True
+
+    async def get_model_by_id(
+        self, model_id: str, force_refresh: bool = False
+    ) -> OpenRouterModel | None:
+        """
+        Get a specific model by its ID.
+
+        Args:
+            model_id: The model ID to find
+            force_refresh: If True, bypass cache and fetch fresh data
+
+        Returns:
+            The OpenRouterModel if found, None otherwise
+
+        """
+        try:
+            all_models = await self.fetch_models(force_refresh)
+            for model in all_models:
+                if model.id == model_id:
+                    return model
+            return None
+        except OpenRouterModelsError:
+            return None

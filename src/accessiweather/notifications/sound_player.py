@@ -17,6 +17,7 @@ except ImportError:
     pass
 except Exception as e:
     import logging
+
     logging.getLogger(__name__).debug(f"sound_lib initialization failed: {e}")
 
 # Fallback to playsound3
@@ -118,9 +119,7 @@ def get_sound_entry(event: str, pack_dir: str) -> tuple[Path | None, float]:
 
         sound_file = pack_path / filename
         if not sound_file.exists():
-            logger.warning(
-                f"Sound file {sound_file} not found, falling back to default pack."
-            )
+            logger.warning(f"Sound file {sound_file} not found, falling back to default pack.")
             if pack_dir != DEFAULT_PACK:
                 return get_sound_entry(event, DEFAULT_PACK)
             return None, 1.0
@@ -281,9 +280,7 @@ class PreviewPlayer:
             self._current_stream.volume = volume
             self._current_stream.play()
             self._is_playing = True
-            logger.debug(
-                f"Playing preview with sound_lib at volume {volume}: {sound_file}"
-            )
+            logger.debug(f"Playing preview with sound_lib at volume {volume}: {sound_file}")
             return True
         except Exception as e:
             logger.warning(f"sound_lib playback failed: {e}")

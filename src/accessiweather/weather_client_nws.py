@@ -747,7 +747,12 @@ async def get_nws_alerts(
                     point_response = await new_client.get(point_url, headers=headers)
             point_response.raise_for_status()
             point_data = point_response.json()
-            state = point_data.get("properties", {}).get("relativeLocation", {}).get("properties", {}).get("state")
+            state = (
+                point_data.get("properties", {})
+                .get("relativeLocation", {})
+                .get("properties", {})
+                .get("state")
+            )
             if state:
                 params = {"area": state, "status": "actual"}
             else:

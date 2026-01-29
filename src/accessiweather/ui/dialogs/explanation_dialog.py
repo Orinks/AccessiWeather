@@ -246,12 +246,14 @@ def show_explanation_dialog(
 
     # Show loading dialog (non-modal so we can update it)
     loading_dialog = LoadingDialog(parent_ctrl, location.name)
-    
+
     # Hook into the dialog's cancel to set our independent flag
     original_on_cancel = loading_dialog._on_cancel
+
     def wrapped_on_cancel(event):
         state["cancelled"] = True
         original_on_cancel(event)
+
     loading_dialog._on_cancel = wrapped_on_cancel
     loading_dialog.cancel_btn.Unbind(wx.EVT_BUTTON)
     loading_dialog.cancel_btn.Bind(wx.EVT_BUTTON, wrapped_on_cancel)

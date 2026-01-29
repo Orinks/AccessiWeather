@@ -180,6 +180,7 @@ def save_icns(images: list[Image.Image], output_path: Path) -> None:
 
     """
     import platform
+
     if platform.system() != "Darwin":
         print(f"Warning: ICNS generation is only reliable on macOS. Skipping {output_path}")
         # Save as PNG instead for cross-platform compatibility

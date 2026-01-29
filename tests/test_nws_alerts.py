@@ -322,8 +322,7 @@ class TestGetNwsAlertsParameters:
 
             # The critical assertion: message_type should NOT be in params
             assert "message_type" not in params, (
-                "message_type filter would exclude Update alerts! "
-                "See commit 7862708 for context."
+                "message_type filter would exclude Update alerts! See commit 7862708 for context."
             )
 
             # Verify status=actual is still there (expected filter)
