@@ -35,6 +35,46 @@ Each sound pack is a directory containing:
 }
 ```
 
+### Per-Sound Volume Settings
+
+Soundpack creators can specify default volume levels for individual sounds. This is particularly useful for accessibility, allowing critical alerts to be balanced with screen reader output.
+
+Volume values range from `0.0` (silent) to `1.0` (full volume). If not specified, sounds default to `1.0`.
+
+**Inline Format** - Volume specified directly in the sound entry:
+
+```json
+{
+    "name": "Accessible Pack",
+    "sounds": {
+        "alert": {"file": "alert.wav", "volume": 0.8},
+        "critical_alert": {"file": "critical_alert.wav", "volume": 0.7},
+        "notify": "notify.wav"
+    }
+}
+```
+
+**Separate Volumes Section** - Volume specified in a separate `volumes` object:
+
+```json
+{
+    "name": "Accessible Pack",
+    "sounds": {
+        "alert": "alert.wav",
+        "critical_alert": "critical_alert.wav",
+        "notify": "notify.wav"
+    },
+    "volumes": {
+        "alert": 0.8,
+        "critical_alert": 0.7
+    }
+}
+```
+
+Both formats can be mixed - inline volume takes precedence if specified.
+
+**Note:** Volume control requires the `sound_lib` backend. If only `playsound3` is available, volume settings are logged but not applied.
+
 ### Core Sound Events
 
 - `alert` - Weather alerts and important notifications
