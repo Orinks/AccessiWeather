@@ -4,6 +4,8 @@ import platform
 from pathlib import Path
 from typing import Any
 
+from ..soundpack_paths import get_soundpacks_dir
+
 # Try sound_lib first (supports stopping playback, cross-platform)
 SOUND_LIB_AVAILABLE = False
 _sound_lib_output = None
@@ -16,8 +18,6 @@ try:
 except ImportError:
     pass
 except Exception as e:
-    import logging
-
     logging.getLogger(__name__).debug(f"sound_lib initialization failed: {e}")
 
 # Fallback to playsound3
@@ -31,7 +31,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-SOUNDPACKS_DIR = Path(__file__).parent.parent / "soundpacks"
+SOUNDPACKS_DIR = get_soundpacks_dir()
 DEFAULT_PACK = "default"
 DEFAULT_EVENT = "alert"
 

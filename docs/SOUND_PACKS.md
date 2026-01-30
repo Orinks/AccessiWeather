@@ -9,11 +9,12 @@ Sound packs are collections of audio files organized in a specific directory str
 - **pack.json**: Metadata file describing the sound pack
 - **Sound files**: WAV audio files for different notification types
 - **Directory structure**: Organized in the `soundpacks/` directory
+- **Extra packs**: Additional packs can be added via the Sound Pack Manager
 
 ## Directory Structure
 
 ```
-src/accessiweather/soundpacks/
+soundpacks/
 ├── default/
 │   ├── pack.json
 │   ├── alert.wav
@@ -113,7 +114,7 @@ The Sound Pack Manager includes a built-in wizard to guide you through creating 
 
 For advanced users or automated workflows:
 
-1. Create a new directory in `src/accessiweather/soundpacks/`
+1. Create a new directory in `soundpacks/`
 2. Name the directory with a unique identifier (e.g., `my_custom_pack`)
 3. Create a `pack.json` file with the required metadata
 4. Add your WAV audio files to the directory
@@ -167,6 +168,9 @@ zip -r nature_sounds_pack.zip *
 ```
 
 ## Built-in Sound Packs
+
+Only the **Default** pack ships with the app. You can install additional packs (including
+classic, minimal, and nature) via the Sound Pack Manager or by importing ZIP files.
 
 ### Default Pack
 - **Name**: Default

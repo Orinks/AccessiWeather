@@ -306,7 +306,7 @@ briefcase package
 | **src/accessiweather/ui/** | UI construction | `ui_builder.py` |
 | **src/accessiweather/dialogs/** | Modal dialogs | `settings_dialog.py`, etc. |
 | **src/accessiweather/notifications/** | Alert system | `alert_notification_system.py` |
-| **src/accessiweather/soundpacks/** | Sound pack system | `sound_player.py`, `sound_pack_installer.py` |
+| **soundpacks/** | Sound pack system | `sound_player.py`, `sound_pack_installer.py` |
 | **tests/** | Test suite | `test_*.py`, `toga_test_helpers.py` |
 | **docs/** | Documentation | This file and all linked docs |
 | **.github/workflows/** | CI/CD pipelines | `ci.yml`, `briefcase-build.yml`, etc. |

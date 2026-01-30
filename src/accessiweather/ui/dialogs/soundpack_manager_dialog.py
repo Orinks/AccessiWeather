@@ -16,6 +16,7 @@ import wx
 
 from ...notifications.sound_pack_installer import SoundPackInstaller
 from ...services.community_soundpack_service import CommunitySoundPackService
+from ...soundpack_paths import get_soundpacks_dir
 
 if TYPE_CHECKING:
     from ...app import AccessiWeatherApp
@@ -138,7 +139,7 @@ class SoundPackManagerDialog(wx.Dialog):
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self.app = app
-        self.soundpacks_dir = Path(__file__).parent.parent.parent / "soundpacks"
+        self.soundpacks_dir = get_soundpacks_dir()
         self.soundpacks_dir.mkdir(exist_ok=True)
         self.sound_packs: dict[str, SoundPackInfo] = {}
         self.selected_pack: str | None = None

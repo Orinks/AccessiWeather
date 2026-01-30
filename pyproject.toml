@@ -195,6 +195,7 @@ test_sources = [
 
 resources = [
     "src/accessiweather/resources",
+    "soundpacks",
 ]
 
 # Specify the entry point for the main app

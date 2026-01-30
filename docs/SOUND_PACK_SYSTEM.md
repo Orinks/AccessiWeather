@@ -9,7 +9,8 @@ The sound pack system consists of several key components:
 1. **Sound Player** (`sound_player.py`) - Core functionality for playing sounds
 2. **Sound Pack Manager Dialog** (`soundpack_manager_dialog.py`) - GUI for managing sound packs
 3. **Sound Pack Installer** (`sound_pack_installer.py`) - Installation and management utilities
-4. **Built-in Sound Packs** - Default, Nature, and Minimal themes
+4. **Built-in Sound Packs** - Default pack ships with the app; additional packs are
+   available via the Sound Pack Manager
 
 ## Sound Pack Structure
 
@@ -106,18 +107,21 @@ AccessiWeather supports specific sound mappings for different types of weather a
 
 ## Built-in Sound Packs
 
+Only the **Default** pack ships with the app. You can install additional packs (including
+nature and minimal) via the Sound Pack Manager or by importing ZIP files.
+
 ### Default Pack
 - Standard system sounds
 - Balanced volume and tone
 - Suitable for most users
 
-### Nature Pack
+### Nature Pack (available via Sound Pack Manager)
 - Bird chirps for alerts
 - Water drops for notifications
 - Distant thunder for errors
 - Gentle rain for success
 
-### Minimal Pack
+### Minimal Pack (available via Sound Pack Manager)
 - Subtle beeps and chimes
 - Low volume, unobtrusive
 - Ideal for quiet environments
@@ -419,7 +423,7 @@ pytest tests/test_sound_pack_system_submission.py -v
 ## File Locations
 
 ### Core Sound Pack System
-- **Sound Packs**: `src/accessiweather/soundpacks/`
+- **Sound Packs**: `soundpacks/`
 - **Core Module**: `src/accessiweather/notifications/sound_player.py`
 - **Manager Dialog**: `src/accessiweather/dialogs/soundpack_manager_dialog.py`
 - **Installer**: `src/accessiweather/notifications/sound_pack_installer.py`
