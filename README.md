@@ -31,15 +31,6 @@ Visit [accessiweather.orinks.net](https://accessiweather.orinks.net) to download
 - **macOS**: DMG installer
 - **Linux**: AppImage (coming soon)
 
-### Nightly Builds
-
-Want to test the latest features? Nightly builds are available from the [dev branch](https://github.com/Orinks/AccessiWeather/tree/dev):
-
-- Download from [GitHub Actions](https://github.com/Orinks/AccessiWeather/actions/workflows/briefcase-build.yml) (select a successful run → Artifacts)
-- See [docs/nightly-link-setup.md](docs/nightly-link-setup.md) for direct download links
-
-⚠️ Nightly builds may contain bugs or incomplete features.
-
 ## Getting Started
 
 1. **Launch AccessiWeather** after installation
@@ -120,7 +111,25 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## Development
 
-### Quick Setup
+### Quick Start with uv (Recommended)
+
+[uv](https://docs.astral.sh/uv/) handles everything automatically — no manual environment activation needed.
+
+```bash
+# Install uv first (if you don't have it)
+# Windows (PowerShell):
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+# macOS/Linux:
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Clone and run
+git clone https://github.com/Orinks/AccessiWeather.git
+cd AccessiWeather
+uv sync
+uv run python -m accessiweather
+```
+
+### Traditional Method
 
 ```bash
 # Clone and setup
@@ -131,7 +140,7 @@ source .venv/bin/activate  # or .venv\Scripts\activate on Windows
 pip install -e ".[dev]"
 
 # Run the app
-briefcase dev
+python -m accessiweather
 
 # Run tests
 pytest -n auto
@@ -141,16 +150,11 @@ pytest -n auto
 
 ```bash
 # Development
-briefcase dev              # Run with hot reload
-pytest -n auto             # Run tests (parallel)
-ruff check --fix .         # Lint and fix
-ruff format .              # Format code
-pyright                    # Type checking
-
-# Building
-briefcase create           # Create platform skeleton
-briefcase build            # Build app
-briefcase package          # Generate installer
+uv run python -m accessiweather  # Run the app
+uv run pytest -n auto            # Run tests (parallel)
+uv run ruff check --fix .        # Lint and fix
+uv run ruff format .             # Format code
+uv run pyright                   # Type checking
 ```
 
 See [AGENTS.md](AGENTS.md) for detailed development conventions, architecture overview, and CI/CD information.
