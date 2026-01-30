@@ -1,11 +1,13 @@
 # AccessiWeather
 
+**Weather that speaks to you.**
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 [![Built with wxPython](https://img.shields.io/badge/Built%20with-wxPython-blue)](https://wxpython.org/)
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20macOS%20%7C%20Linux-informational)
 
-AccessiWeather is a cross-platform, accessible weather application built with Python and wxPython. Get detailed weather forecasts, alerts, and conditions with full screen reader support and keyboard navigation.
+AccessiWeather is a cross-platform, accessible weather application built with Python and wxPython. Get detailed weather forecasts, alerts, and conditions with full screen reader support, customizable audio alerts, and keyboard navigation.
 
 ## Features
 
