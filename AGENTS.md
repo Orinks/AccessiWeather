@@ -24,7 +24,7 @@ pyright                               # Type checking (excludes tests/)
 briefcase create                      # Create platform-specific skeleton
 briefcase build                       # Build app bundle
 briefcase package                     # Generate installers (MSI/DMG/AppImage)
-python installer/make.py dev          # Helper wrapper around Briefcase
+python installer/build.py --dev      # Run in development mode
 
 # Git (Windows)
 # Use --no-pager BEFORE the subcommand to prevent hanging on Windows

@@ -15,7 +15,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 - Runs Ruff format checks
 - Runs Ruff linting
 - Executes pytest test suite
-- Validates installer/make.py smoke test
+- Validates installer/build.py smoke test
 
 **Next step**: Triggers `briefcase-build.yml` on success
 

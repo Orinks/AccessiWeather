@@ -139,5 +139,4 @@ installer/
 ├── accessiweather.spec    # PyInstaller spec
 ├── accessiweather.iss     # Inno Setup script
 ├── app.ico                # Generated Windows icon
-└── make.py                # Legacy Briefcase script (deprecated)
 ```

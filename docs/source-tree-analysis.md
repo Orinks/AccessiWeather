@@ -128,7 +128,7 @@ accessiweather/
 │   └── [additional docs]     # Feature-specific documentation
 │
 ├── installer/                 # Custom installer scripts
-│   └── make.py               # Briefcase build wrapper
+│   └── build.py               # Briefcase build wrapper
 │
 ├── examples/                  # Example scripts
 │   ├── hourly_aqi_example.py # AQI usage example

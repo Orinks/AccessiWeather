@@ -292,8 +292,8 @@ briefcase package
 
 ```bash
 # Wrapper around Briefcase commands
-python installer/make.py dev     # Build for development
-python installer/make.py release # Build for release
+python installer/build.py --dev     # Run in development mode
+python installer/build.py           # Full build for release
 ```
 
 ---

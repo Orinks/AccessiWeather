@@ -292,7 +292,7 @@ Windows 11 has stricter system tray icon policies:
 Briefcase supports desktop shortcut creation through:
 - Windows: MSI installer properties
 - Configuration in `pyproject.toml` under `[tool.briefcase.app.accessiweather.windows]`
-- Custom installer scripts in `installer/make.py`
+- Custom installer scripts in `installer/build.py`
 
 ### Backward Compatibility
 

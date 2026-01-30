@@ -310,7 +310,7 @@ briefcase package
 | **tests/** | Test suite | `test_*.py`, `toga_test_helpers.py` |
 | **docs/** | Documentation | This file and all linked docs |
 | **.github/workflows/** | CI/CD pipelines | `ci.yml`, `briefcase-build.yml`, etc. |
-| **installer/** | Build scripts | `make.py` |
+| **installer/** | Build scripts | `build.py` |
 
 **Docs:** [Source Tree Analysis](source-tree-analysis.md) - Complete annotated tree
 
