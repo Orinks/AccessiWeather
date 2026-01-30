@@ -2,10 +2,10 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
-[![Built with BeeWare/Toga](https://img.shields.io/badge/Built%20with-BeeWare%20%2F%20Toga-ff6f00)](https://beeware.org/)
+[![Built with wxPython](https://img.shields.io/badge/Built%20with-wxPython-blue)](https://wxpython.org/)
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20macOS%20%7C%20Linux-informational)
 
-AccessiWeather is a cross-platform, accessible weather application built with Python and BeeWare/Toga. Get detailed weather forecasts, alerts, and conditions with full screen reader support and keyboard navigation.
+AccessiWeather is a cross-platform, accessible weather application built with Python and wxPython. Get detailed weather forecasts, alerts, and conditions with full screen reader support and keyboard navigation.
 
 ## Features
 
@@ -159,8 +159,12 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
-Built with [BeeWare/Toga](https://beeware.org/) for cross-platform Python GUI development. Weather data provided by:
+Built with [wxPython](https://wxpython.org/) for accessible cross-platform GUI development. Weather data provided by:
 
 - [National Weather Service](https://www.weather.gov/) (US)
 - [Open-Meteo](https://open-meteo.com/) (Global)
 - [Visual Crossing](https://www.visualcrossing.com/) (Optional, for historical data)
+
+## Related Projects
+
+- [AccessiSky](https://github.com/Orinks/AccessiSky) - Accessible sky tracking app (ISS passes, moon phases, aurora forecasts)
