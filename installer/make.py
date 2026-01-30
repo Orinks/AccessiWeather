@@ -233,30 +233,36 @@ def run_headless() -> int:
 def _cleanup_soundpacks(args: argparse.Namespace) -> None:
     """Remove non-default soundpacks from build directory to keep only default soundpack."""
     build_base = ROOT / "build" / "accessiweather" / args.platform / "app"
-    soundpacks_path = build_base / "src" / "app" / "accessiweather" / "soundpacks"
+    soundpacks_paths = [
+        build_base / "soundpacks",
+        build_base / "src" / "app" / "soundpacks",
+        build_base / "src" / "app" / "accessiweather" / "soundpacks",
+    ]
 
-    if not soundpacks_path.exists():
+    existing_paths = [path for path in soundpacks_paths if path.exists()]
+    if not existing_paths:
         return
 
     # Keep only the default soundpack
     default_soundpacks = {"default", ".gitkeep"}
 
-    print("Cleaning up soundpacks (keeping only default)...")
-    removed_count = 0
+    for soundpacks_path in existing_paths:
+        print(f"Cleaning up soundpacks (keeping only default) in {soundpacks_path}...")
+        removed_count = 0
 
-    for item in soundpacks_path.iterdir():
-        if item.name not in default_soundpacks:
-            if item.is_dir():
-                shutil.rmtree(item, ignore_errors=True)
-            else:
-                item.unlink(missing_ok=True)
-            print(f"  Removed: {item.name}")
-            removed_count += 1
+        for item in soundpacks_path.iterdir():
+            if item.name not in default_soundpacks:
+                if item.is_dir():
+                    shutil.rmtree(item, ignore_errors=True)
+                else:
+                    item.unlink(missing_ok=True)
+                print(f"  Removed: {item.name}")
+                removed_count += 1
 
-    if removed_count > 0:
-        print(f"  Cleaned up {removed_count} non-default soundpack(s)")
-    else:
-        print("  No non-default soundpacks found to clean")
+        if removed_count > 0:
+            print(f"  Cleaned up {removed_count} non-default soundpack(s)")
+        else:
+            print("  No non-default soundpacks found to clean")
 
 
 def _cleanup_weather_cache(args: argparse.Namespace) -> None:

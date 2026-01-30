@@ -1663,9 +1663,10 @@ class SettingsDialogSimple(wx.Dialog):
     def _on_open_soundpacks_dir(self, event):
         """Open sound packs directory."""
         import subprocess
-        from pathlib import Path
 
-        soundpacks_dir = Path(__file__).parent.parent.parent / "soundpacks"
+        from ...soundpack_paths import get_soundpacks_dir
+
+        soundpacks_dir = get_soundpacks_dir()
         if soundpacks_dir.exists():
             subprocess.Popen(["explorer", str(soundpacks_dir)])
         else:

@@ -197,7 +197,7 @@ accessiweather/
 - `ToastNotifier` - Desktop notification integration
 - `WeatherNotifier` - Weather-specific formatting
 
-### `/src/accessiweather/soundpacks/` (Audio System)
+### `/soundpacks/` (Audio System)
 **Purpose:** Customizable alert sounds
 **Features:**
 - Community sound pack support

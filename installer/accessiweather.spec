@@ -21,7 +21,7 @@ SPEC_DIR = Path(SPECPATH).resolve()
 PROJECT_ROOT = SPEC_DIR.parent
 SRC_DIR = PROJECT_ROOT / "src"
 RESOURCES_DIR = SRC_DIR / "accessiweather" / "resources"
-SOUNDPACKS_DIR = SRC_DIR / "accessiweather" / "soundpacks"
+SOUNDPACKS_DIR = PROJECT_ROOT / "soundpacks"
 
 # Platform-specific settings
 IS_WINDOWS = platform.system() == "Windows"
@@ -62,7 +62,7 @@ if SOUNDPACKS_DIR.exists():
     # Only include default soundpack to reduce size
     default_soundpack = SOUNDPACKS_DIR / "default"
     if default_soundpack.exists():
-        datas.append((str(default_soundpack), "accessiweather/soundpacks/default"))
+        datas.append((str(default_soundpack), "soundpacks/default"))
 
 # Hidden imports for wxPython and other dynamic imports
 hiddenimports = [
