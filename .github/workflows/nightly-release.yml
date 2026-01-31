@@ -390,7 +390,14 @@ jobs:
           echo "Prepared assets:"
           ls -la
 
-      - name: Extract changelog and generate release notes
+      - name: Install git-cliff
+        run: |
+          # Install git-cliff for changelog generation
+          curl -sSfL https://github.com/orhun/git-cliff/releases/latest/download/git-cliff-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          sudo mv git-cliff /usr/local/bin/
+          git-cliff --version
+
+      - name: Generate release notes with git-cliff
         id: notes
         env:
           PREVIOUS_TAG: ${{ needs.prepare.outputs.previous_tag }}
@@ -401,115 +408,45 @@ jobs:
           
           echo "Previous nightly tag: $PREVIOUS_TAG"
           
-          # Generate release notes with Python for robustness
-          python3 << 'PYTHON_EOF'
-          import subprocess
-          import os
-          import re
-          import sys
-
-          previous_tag = os.environ.get("PREVIOUS_TAG", "")
-          windows_ok = os.environ.get("WINDOWS_OK", "false") == "true"
-          macos_ok = os.environ.get("MACOS_OK", "false") == "true"
-
-          notes = []
-
-          # Add build status warning if partial
-          if not (windows_ok and macos_ok):
-              missing = []
-              if not windows_ok:
-                  missing.append("Windows")
-              if not macos_ok:
-                  missing.append("macOS")
-              notes.append(f"> ⚠️ **Partial build**: {', '.join(missing)} build(s) failed\n")
-
-          notes.append("## What's New\n")
-
-          changelog_entries = []
+          # Start building release notes
+          NOTES=""
           
-          # Try to extract CHANGELOG entries
-          try:
-              if previous_tag:
-                  # Get diff of CHANGELOG.md
-                  result = subprocess.run(
-                      ["git", "diff", f"{previous_tag}..HEAD", "--", "CHANGELOG.md"],
-                      capture_output=True, text=True, timeout=30
-                  )
-                  if result.returncode == 0 and result.stdout:
-                      # Extract added lines
-                      for line in result.stdout.split('\n'):
-                          if line.startswith('+') and not line.startswith('+++'):
-                              content = line[1:]
-                              # Skip empty section headers and placeholder dashes
-                              if content.strip() and content.strip() != '-':
-                                  # Skip lines that are just section headers with no content following
-                                  changelog_entries.append(content)
-              else:
-                  # First nightly - extract Unreleased section
-                  with open("CHANGELOG.md", 'r') as f:
-                      content = f.read()
-                  pattern = r'## \[?Unreleased\]?.*?\n(.*?)(?=\n## \[|$)'
-                  match = re.search(pattern, content, re.DOTALL)
-                  if match:
-                      for line in match.group(1).strip().split('\n'):
-                          if line.strip() and line.strip() != '-':
-                              changelog_entries.append(line)
-          except Exception as e:
-              print(f"Warning: Could not extract CHANGELOG: {e}", file=sys.stderr)
-
-          # Filter out empty section headers
-          filtered_entries = []
-          skip_next_dash = False
-          for i, entry in enumerate(changelog_entries):
-              if entry.startswith('### '):
-                  # Check if this section has content
-                  has_content = False
-                  for j in range(i + 1, len(changelog_entries)):
-                      if changelog_entries[j].startswith('### '):
-                          break
-                      if changelog_entries[j].strip() and changelog_entries[j].strip() != '-':
-                          if not changelog_entries[j].startswith('### '):
-                              has_content = True
-                              break
-                  if has_content:
-                      filtered_entries.append(entry)
-              elif entry.strip() != '-':
-                  filtered_entries.append(entry)
-
-          if filtered_entries:
-              notes.append('\n'.join(filtered_entries))
-          else:
-              # Fallback: list recent commits
-              notes.append("### Recent Changes\n")
-              try:
-                  if previous_tag:
-                      result = subprocess.run(
-                          ["git", "log", f"{previous_tag}..HEAD", "--oneline", "--no-merges", "-20"],
-                          capture_output=True, text=True, timeout=30
-                      )
-                  else:
-                      result = subprocess.run(
-                          ["git", "log", "--oneline", "--no-merges", "-20"],
-                          capture_output=True, text=True, timeout=30
-                      )
-                  if result.returncode == 0 and result.stdout.strip():
-                      for line in result.stdout.strip().split('\n'):
-                          # Format: hash message -> - message
-                          parts = line.split(' ', 1)
-                          if len(parts) == 2:
-                              notes.append(f"- {parts[1]}")
-                  else:
-                      notes.append("_No changes documented._")
-              except Exception as e:
-                  notes.append(f"_Could not retrieve commit history: {e}_")
-
+          # Add build status warning if partial
+          if [ "$WINDOWS_OK" != "true" ] || [ "$MACOS_OK" != "true" ]; then
+            MISSING=""
+            [ "$WINDOWS_OK" != "true" ] && MISSING="Windows"
+            [ "$MACOS_OK" != "true" ] && MISSING="${MISSING:+$MISSING, }macOS"
+            NOTES="> ⚠️ **Partial build**: ${MISSING} build(s) failed\n\n"
+          fi
+          
+          # Generate changelog with git-cliff
+          if [ -n "$PREVIOUS_TAG" ]; then
+            echo "Generating changelog from $PREVIOUS_TAG to HEAD..."
+            CLIFF_OUTPUT=$(git-cliff "$PREVIOUS_TAG"..HEAD --unreleased 2>/dev/null || echo "")
+          else
+            echo "No previous tag, generating changelog for recent commits..."
+            CLIFF_OUTPUT=$(git-cliff --unreleased -l 20 2>/dev/null || echo "")
+          fi
+          
+          if [ -n "$CLIFF_OUTPUT" ] && [ "$CLIFF_OUTPUT" != "## What's New" ]; then
+            NOTES="${NOTES}${CLIFF_OUTPUT}"
+          else
+            # Fallback if git-cliff produces empty output
+            echo "git-cliff produced no output, using commit log fallback..."
+            NOTES="${NOTES}## What's New\n\n### Recent Changes\n\n"
+            if [ -n "$PREVIOUS_TAG" ]; then
+              COMMITS=$(git log "$PREVIOUS_TAG"..HEAD --oneline --no-merges -20 | while read hash msg; do echo "- $msg"; done)
+            else
+              COMMITS=$(git log --oneline --no-merges -20 | while read hash msg; do echo "- $msg"; done)
+            fi
+            [ -n "$COMMITS" ] && NOTES="${NOTES}${COMMITS}" || NOTES="${NOTES}_No changes documented._"
+          fi
+          
           # Write release notes
-          with open("release-notes.md", 'w') as f:
-              f.write('\n'.join(notes))
-
-          print("Generated release notes:")
-          print('\n'.join(notes))
-          PYTHON_EOF
+          echo -e "$NOTES" > release-notes.md
+          
+          echo "Generated release notes:"
+          cat release-notes.md
 
       - name: Create Prerelease
         if: ${{ inputs.dry_run != true }}
