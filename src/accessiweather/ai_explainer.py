@@ -56,6 +56,10 @@ class NetworkError(AIExplainerError):
     """Raised when network connectivity issues occur."""
 
 
+class RequestTimeoutError(AIExplainerError):
+    """Raised when API request times out."""
+
+
 class EmptyResponseError(AIExplainerError):
     """Raised when all models return empty or insufficient responses."""
 
@@ -210,6 +214,7 @@ class AIExplainer:
                 self._client = OpenAI(
                     base_url=OPENROUTER_BASE_URL,
                     api_key=self.api_key,
+                    timeout=60.0,  # 60 second timeout to prevent hanging
                 )
             except ImportError as e:
                 logger.error("OpenAI package not installed")
@@ -549,6 +554,14 @@ class AIExplainer:
                         "• Switch to a paid model in Settings"
                     ) from last_error
 
+                # Timeout errors - check before generic network errors
+                if "timed out" in error_message or "timeout" in error_message:
+                    raise RequestTimeoutError(
+                        "Request timed out.\n\n"
+                        "The AI service is taking too long to respond.\n"
+                        "This usually means the servers are busy. Please try again."
+                    ) from last_error
+
                 # Network errors (check for specific codes/phrases, not just "connection")
                 if (
                     "502" in error_message
@@ -556,8 +569,6 @@ class AIExplainer:
                     or "network error" in error_message
                     or "connection refused" in error_message
                     or "connection reset" in error_message
-                    or "connection timed out" in error_message
-                    or "timed out" in error_message
                 ):
                     raise NetworkError(
                         "Network connection error while contacting AI service.\n\n"
@@ -758,6 +769,14 @@ class AIExplainer:
                         "• Switch to a paid model in Settings"
                     ) from last_error
 
+                # Timeout errors - check before generic network errors
+                if "timed out" in error_message or "timeout" in error_message:
+                    raise RequestTimeoutError(
+                        "Request timed out.\n\n"
+                        "The AI service is taking too long to respond.\n"
+                        "This usually means the servers are busy. Please try again."
+                    ) from last_error
+
                 # Network errors (check for specific codes/phrases, not just "connection")
                 if (
                     "502" in error_message
@@ -765,8 +784,6 @@ class AIExplainer:
                     or "network error" in error_message
                     or "connection refused" in error_message
                     or "connection reset" in error_message
-                    or "connection timed out" in error_message
-                    or "timed out" in error_message
                 ):
                     raise NetworkError(
                         "Network connection error while contacting AI service.\n\n"
@@ -952,6 +969,14 @@ class AIExplainer:
                     )
                 ) from e
 
+            # Timeout errors - check before generic network errors
+            if "timed out" in error_message or "timeout" in error_message:
+                raise RequestTimeoutError(
+                    "Request timed out.\n\n"
+                    "The AI service is taking too long to respond.\n"
+                    "This usually means the servers are busy. Please try again."
+                ) from e
+
             # Network/connection errors - use specific phrases to avoid false matches
             if (
                 "502" in error_message
@@ -959,8 +984,6 @@ class AIExplainer:
                 or "network error" in error_message
                 or "connection refused" in error_message
                 or "connection reset" in error_message
-                or "connection timed out" in error_message
-                or "timed out" in error_message
             ):
                 raise NetworkError(
                     "Network connection error.\n\n"
