@@ -52,6 +52,14 @@ class InvalidModelError(AIExplainerError):
     """Raised when the specified model ID does not exist."""
 
 
+class NetworkError(AIExplainerError):
+    """Raised when network connectivity issues occur."""
+
+
+class EmptyResponseError(AIExplainerError):
+    """Raised when all models return empty or insufficient responses."""
+
+
 class ExplanationStyle(Enum):
     """Available explanation styles."""
 
@@ -508,6 +516,8 @@ class AIExplainer:
                 logger.error(f"All models failed. Last error: {last_error}", exc_info=True)
                 # Convert common errors to specific exceptions
                 error_message = str(last_error).lower()
+
+                # Model not found
                 if (
                     "404" in error_message
                     or "not found" in error_message
@@ -515,14 +525,37 @@ class AIExplainer:
                     or "does not exist" in error_message
                 ):
                     raise InvalidModelError(
-                        f"The AI model '{primary_model}' was not found. "
-                        f"It may have been removed or renamed.\n\n"
-                        f"Please go to Settings → AI Explanations and select a different model.\n\n"
-                        f"Details: {last_error}"
+                        f"The AI model '{primary_model}' was not found.\n\n"
+                        "It may have been removed or renamed by OpenRouter.\n"
+                        "Please go to Settings → AI Explanations and select a different model."
                     ) from last_error
+
+                # Rate limiting
+                if "429" in error_message or "rate limit" in error_message or "rate-limited" in error_message:
+                    raise RateLimitError(
+                        "All AI models are currently rate-limited.\n\n"
+                        "Free models share rate limits with all users.\n\n"
+                        "Options:\n"
+                        "• Wait a few minutes and try again\n"
+                        "• Add credits to your OpenRouter account\n"
+                        "• Switch to a paid model in Settings"
+                    ) from last_error
+
+                # Network errors
+                if "502" in error_message or "503" in error_message or "network" in error_message or "connection" in error_message:
+                    raise NetworkError(
+                        "Network connection error while contacting AI service.\n\n"
+                        "Please check your internet connection and try again."
+                    ) from last_error
+
+                # Re-raise the original error with context
                 raise last_error
-            raise AIExplainerError(
-                "All AI models returned empty responses. Please try again later."
+
+            # No error but empty responses from all models
+            raise EmptyResponseError(
+                "All AI models returned empty responses.\n\n"
+                "This can happen when models are overloaded.\n"
+                "Please try again in a few minutes."
             )
 
         # Process response
@@ -676,6 +709,8 @@ class AIExplainer:
                 logger.error(f"All models failed for AFD. Last error: {last_error}", exc_info=True)
                 # Convert common errors to specific exceptions
                 error_message = str(last_error).lower()
+
+                # Model not found
                 if (
                     "404" in error_message
                     or "not found" in error_message
@@ -683,14 +718,37 @@ class AIExplainer:
                     or "does not exist" in error_message
                 ):
                     raise InvalidModelError(
-                        f"The AI model '{primary_model}' was not found. "
-                        f"It may have been removed or renamed.\n\n"
-                        f"Please go to Settings → AI Explanations and select a different model.\n\n"
-                        f"Details: {last_error}"
+                        f"The AI model '{primary_model}' was not found.\n\n"
+                        "It may have been removed or renamed by OpenRouter.\n"
+                        "Please go to Settings → AI Explanations and select a different model."
                     ) from last_error
+
+                # Rate limiting
+                if "429" in error_message or "rate limit" in error_message or "rate-limited" in error_message:
+                    raise RateLimitError(
+                        "All AI models are currently rate-limited.\n\n"
+                        "Free models share rate limits with all users.\n\n"
+                        "Options:\n"
+                        "• Wait a few minutes and try again\n"
+                        "• Add credits to your OpenRouter account\n"
+                        "• Switch to a paid model in Settings"
+                    ) from last_error
+
+                # Network errors
+                if "502" in error_message or "503" in error_message or "network" in error_message or "connection" in error_message:
+                    raise NetworkError(
+                        "Network connection error while contacting AI service.\n\n"
+                        "Please check your internet connection and try again."
+                    ) from last_error
+
+                # Re-raise the original error
                 raise last_error
-            raise AIExplainerError(
-                "All AI models returned empty responses. Please try again later."
+
+            # No error but empty responses
+            raise EmptyResponseError(
+                "All AI models returned empty responses.\n\n"
+                "This can happen when models are overloaded.\n"
+                "Please try again in a few minutes."
             )
 
         # Process response - strip markdown formatting for plain text display
@@ -806,28 +864,69 @@ class AIExplainer:
             original_error = str(e)
 
             # Map specific errors to custom exceptions
+
+            # Authentication errors (401)
             if "invalid api key" in error_message or "authentication" in error_message:
                 raise InvalidAPIKeyError(
-                    f"API key is invalid. Please check your settings.\n\nDetails: {original_error}"
+                    "Your OpenRouter API key is invalid.\n\n"
+                    "Please check Settings → AI Explanations and verify your API key.\n"
+                    "Get a free key at: openrouter.ai/keys"
                 ) from e
 
             if "401" in error_message or "unauthorized" in error_message:
                 raise InvalidAPIKeyError(
-                    f"API key authentication failed.\n\nDetails: {original_error}"
+                    "API key authentication failed.\n\n"
+                    "Your API key may be expired or incorrectly entered.\n"
+                    "Please check Settings → AI Explanations."
                 ) from e
 
+            # Insufficient credits
             if "insufficient" in error_message or "no credits" in error_message:
                 raise InsufficientCreditsError(
-                    f"Your OpenRouter account has no funds. "
-                    f"Add credits or switch to free models in settings.\n\nDetails: {original_error}"
+                    "Your OpenRouter account has no funds.\n\n"
+                    "Options:\n"
+                    "• Add credits at openrouter.ai/credits\n"
+                    "• Switch to a free model in Settings → AI Explanations"
                 ) from e
 
-            if "rate limit" in error_message or "too many requests" in error_message:
+            # Rate limiting (429) - check for status code AND common phrases
+            if (
+                "429" in error_message
+                or "rate limit" in error_message
+                or "too many requests" in error_message
+                or "rate-limited" in error_message
+            ):
+                model_used = model_override or self.get_effective_model()
+                is_free = ":free" in model_used
                 raise RateLimitError(
-                    f"Rate limit exceeded. Try again in a few minutes.\n\nDetails: {original_error}"
+                    "Rate limit exceeded.\n\n"
+                    + (
+                        "Free models share rate limits with all users and may be busy.\n\n"
+                        "Options:\n"
+                        "• Wait a few minutes and try again\n"
+                        "• Add credits to get your own rate limit\n"
+                        "• Switch to a paid model for faster access"
+                        if is_free
+                        else "Please wait a few minutes and try again."
+                    )
                 ) from e
 
-            # Check for 404 / model not found errors
+            # Network/connection errors (502, 503, timeout, connection)
+            if (
+                "502" in error_message
+                or "503" in error_message
+                or "network" in error_message
+                or "connection" in error_message
+                or "timeout" in error_message
+                or "timed out" in error_message
+            ):
+                raise NetworkError(
+                    "Network connection error.\n\n"
+                    "Could not reach the AI service. This is usually temporary.\n"
+                    "Please check your internet connection and try again."
+                ) from e
+
+            # Model not found (404)
             if (
                 "404" in error_message
                 or "not found" in error_message
@@ -836,16 +935,20 @@ class AIExplainer:
             ):
                 model_used = model_override or self.get_effective_model()
                 raise InvalidModelError(
-                    f"The AI model '{model_used}' was not found. "
-                    f"It may have been removed or renamed.\n\n"
-                    f"Please go to Settings → AI Explanations and select a different model.\n\n"
-                    f"Details: {original_error}"
+                    f"The AI model '{model_used}' was not found.\n\n"
+                    "It may have been removed or renamed by OpenRouter.\n"
+                    "Please go to Settings → AI Explanations and select a different model."
                 ) from e
 
-            # Generic error - include the actual error message
+            # Generic error - log full details and show user-friendly message
             logger.error(f"OpenRouter API error: {e}", exc_info=True)
             raise AIExplainerError(
-                f"Unable to generate explanation.\n\nAPI Error: {original_error}"
+                f"Unable to generate explanation.\n\n"
+                f"Error: {original_error}\n\n"
+                "If this persists, try:\n"
+                "• Checking your internet connection\n"
+                "• Selecting a different AI model in Settings\n"
+                "• Trying again in a few minutes"
             ) from e
 
     def _estimate_cost(self, model: str, token_count: int) -> float:
