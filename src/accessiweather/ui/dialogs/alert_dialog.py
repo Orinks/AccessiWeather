@@ -146,31 +146,23 @@ class AlertDialog(wx.Dialog):
         self.subject_ctrl.SetFocus()
 
     def _build_subject_text(self) -> str:
-        """Build the subject text with headline and times."""
-        parts = []
+        """
+        Build the subject text with headline.
 
+        Note: Time information (effective/expires) is intentionally omitted
+        as the headline already contains human-readable timing information.
+        The API's 'expires' field refers to message validity, not when the
+        weather event ends, which would be confusing to display.
+        """
         # Headline or event name
         headline = getattr(self.alert, "headline", None)
         event = getattr(self.alert, "event", None)
+
         if headline:
-            parts.append(headline)
-        elif event:
-            parts.append(event)
-
-        # Time information
-        effective = getattr(self.alert, "effective", None)
-        expires = getattr(self.alert, "expires", None)
-
-        if effective or expires:
-            time_parts = []
-            if effective:
-                time_parts.append(f"issued {self._format_time(effective)}")
-            if expires:
-                time_parts.append(f"expires {self._format_time(expires)}")
-            if time_parts:
-                parts.append(", ".join(time_parts))
-
-        return "\n".join(parts) if parts else "Weather Alert"
+            return headline
+        if event:
+            return event
+        return "Weather Alert"
 
     def _build_info_text(self) -> str:
         """Build the alert info text with severity, urgency, certainty, and areas."""
@@ -202,22 +194,9 @@ class AlertDialog(wx.Dialog):
 
         return "\n".join(parts)
 
-    def _format_time(self, time_value) -> str:
-        """Format a time value for display."""
-        if time_value is None:
-            return "Unknown"
-
-        if isinstance(time_value, str):
-            return time_value
-
-        try:
-            return time_value.strftime("%B %d at %I:%M %p")
-        except Exception:
-            return str(time_value)
-
     def _setup_accessibility(self):
         """Set up accessibility labels for screen readers."""
-        self.subject_ctrl.SetName("Subject with headline and times")
+        self.subject_ctrl.SetName("Subject with alert headline")
 
         if hasattr(self, "info_ctrl"):
             self.info_ctrl.SetName("Alert information with severity and areas")
