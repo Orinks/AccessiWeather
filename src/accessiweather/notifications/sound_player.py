@@ -170,8 +170,8 @@ def _play_sound_file(sound_file: Path, block: bool = False, volume: float = 1.0)
     # Clamp volume to valid range
     volume = max(0.0, min(1.0, volume))
 
-    # Try sound_lib first if volume is not 1.0 (since it supports volume control)
-    if SOUND_LIB_AVAILABLE and volume < 1.0:
+    # Always prefer sound_lib when available (supports volume, stop, better reliability)
+    if SOUND_LIB_AVAILABLE:
         try:
             from sound_lib import stream
 
