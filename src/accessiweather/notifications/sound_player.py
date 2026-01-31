@@ -9,6 +9,7 @@ from ..soundpack_paths import get_soundpacks_dir
 # Try sound_lib first (supports stopping playback, cross-platform)
 SOUND_LIB_AVAILABLE = False
 _sound_lib_output = None
+_active_streams: list = []  # Keep references to prevent garbage collection
 
 try:
     from sound_lib import output
@@ -175,6 +176,9 @@ def _play_sound_file(sound_file: Path, block: bool = False, volume: float = 1.0)
         try:
             from sound_lib import stream
 
+            # Clean up finished streams to prevent memory leak
+            _active_streams[:] = [s for s in _active_streams if s.is_playing]
+
             s = stream.FileStream(file=str(sound_file))
             s.volume = volume
             s.play()
@@ -185,6 +189,9 @@ def _play_sound_file(sound_file: Path, block: bool = False, volume: float = 1.0)
                 while s.is_playing:
                     time.sleep(0.1)
                 s.free()
+            else:
+                # Keep reference to prevent garbage collection during playback
+                _active_streams.append(s)
             logger.debug(f"Played sound using sound_lib at volume {volume}: {sound_file}")
             return True
         except Exception as e:
