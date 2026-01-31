@@ -21,15 +21,73 @@ logger = logging.getLogger(__name__)
 
 # OpenRouter API configuration
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models"
 # Use current working free models from OpenRouter (updated Dec 2025)
 DEFAULT_FREE_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
 DEFAULT_PAID_MODEL = "openrouter/auto"
-# Fallback free models to try if primary returns empty response (max 3 for OpenRouter)
-FALLBACK_FREE_MODELS = [
+# Static fallback models only used if dynamic fetch fails
+STATIC_FALLBACK_MODELS = [
     "google/gemma-3-27b-it:free",
     "qwen/qwen3-4b:free",
-    "deepseek/deepseek-r1-0528:free",
 ]
+
+# Cache for dynamically fetched free models
+_free_models_cache: list[str] | None = None
+_free_models_cache_time: float = 0
+_FREE_MODELS_CACHE_TTL = 3600  # 1 hour cache
+
+
+def get_available_free_models(exclude_model: str | None = None) -> list[str]:
+    """
+    Fetch available free models from OpenRouter API.
+
+    Results are cached for 1 hour to avoid excessive API calls.
+    Falls back to static list if API is unavailable.
+
+    Args:
+        exclude_model: Model ID to exclude from results (e.g., the primary model)
+
+    Returns:
+        List of free model IDs, up to 3 models (OpenRouter's fallback limit)
+
+    """
+    import time
+    global _free_models_cache, _free_models_cache_time
+
+    # Return cached results if still valid
+    if _free_models_cache is not None and (time.time() - _free_models_cache_time) < _FREE_MODELS_CACHE_TTL:
+        models = [m for m in _free_models_cache if m != exclude_model]
+        return models[:3]
+
+    try:
+        import httpx
+
+        response = httpx.get(OPENROUTER_MODELS_URL, timeout=10.0)
+        response.raise_for_status()
+        data = response.json()
+
+        # Filter for free models and sort by context length (prefer larger context)
+        free_models = []
+        for model in data.get("data", []):
+            model_id = model.get("id", "")
+            if model_id.endswith(":free"):
+                context_length = model.get("context_length", 0)
+                free_models.append((model_id, context_length))
+
+        # Sort by context length descending, take top models
+        free_models.sort(key=lambda x: x[1], reverse=True)
+        _free_models_cache = [m[0] for m in free_models]
+        _free_models_cache_time = time.time()
+
+        logger.info(f"Fetched {len(_free_models_cache)} free models from OpenRouter")
+
+        models = [m for m in _free_models_cache if m != exclude_model]
+        return models[:3]
+
+    except Exception as e:
+        logger.warning(f"Failed to fetch free models from OpenRouter: {e}, using static fallbacks")
+        models = [m for m in STATIC_FALLBACK_MODELS if m != exclude_model]
+        return models[:3]
 
 
 class AIExplainerError(Exception):
@@ -481,9 +539,10 @@ class AIExplainer:
         if primary_model != DEFAULT_FREE_MODEL:
             models_to_try.append(DEFAULT_FREE_MODEL)
 
-        # Add additional fallbacks for free models
+        # Add additional fallbacks for free models (dynamically fetched)
         if ":free" in primary_model or primary_model == DEFAULT_FREE_MODEL:
-            for fallback in FALLBACK_FREE_MODELS:
+            fallback_models = get_available_free_models(exclude_model=primary_model)
+            for fallback in fallback_models:
                 if fallback not in models_to_try:
                     models_to_try.append(fallback)
 
@@ -698,9 +757,10 @@ class AIExplainer:
         if primary_model != DEFAULT_FREE_MODEL:
             models_to_try.append(DEFAULT_FREE_MODEL)
 
-        # Add additional fallbacks for free models
+        # Add additional fallbacks for free models (dynamically fetched)
         if ":free" in primary_model or primary_model == DEFAULT_FREE_MODEL:
-            for fallback in FALLBACK_FREE_MODELS:
+            fallback_models = get_available_free_models(exclude_model=primary_model)
+            for fallback in fallback_models:
                 if fallback not in models_to_try:
                     models_to_try.append(fallback)
 
@@ -848,8 +908,10 @@ class AIExplainer:
             extra_body = {}
             if model == DEFAULT_FREE_MODEL and ":free" in model:
                 # Use OpenRouter's native models parameter for automatic fallback
-                extra_body["models"] = FALLBACK_FREE_MODELS
-                logger.debug(f"Using fallback models: {FALLBACK_FREE_MODELS}")
+                fallback_models = get_available_free_models(exclude_model=model)
+                if fallback_models:
+                    extra_body["models"] = fallback_models
+                    logger.debug(f"Using fallback models: {fallback_models}")
 
             response = client.chat.completions.create(
                 model=model,
