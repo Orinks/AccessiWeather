@@ -214,7 +214,7 @@ class AIExplainer:
                 self._client = OpenAI(
                     base_url=OPENROUTER_BASE_URL,
                     api_key=self.api_key,
-                    timeout=60.0,  # 60 second timeout to prevent hanging
+                    timeout=30.0,  # 30 second timeout to prevent hanging
                 )
             except ImportError as e:
                 logger.error("OpenAI package not installed")
