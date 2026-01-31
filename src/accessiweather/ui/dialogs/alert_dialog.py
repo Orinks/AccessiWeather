@@ -64,113 +64,71 @@ class AlertDialog(wx.Dialog):
         self._setup_accessibility()
 
     def _create_ui(self):
-        """Create the dialog UI."""
+        """Create the dialog UI with accessible text controls."""
         panel = wx.Panel(self)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # Alert header
-        event = getattr(self.alert, "event", "Unknown Alert")
-        header = wx.StaticText(panel, label=event)
-        header.SetFont(header.GetFont().Bold().Scaled(1.3))
-        main_sizer.Add(header, 0, wx.ALL, 15)
+        # Subject field (headline + times) - gets initial focus
+        subject_text = self._build_subject_text()
+        subject_label = wx.StaticText(panel, label="Subject:")
+        subject_label.SetFont(subject_label.GetFont().Bold())
+        main_sizer.Add(subject_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 15)
 
-        # Severity and urgency row
-        info_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.subject_ctrl = wx.TextCtrl(
+            panel,
+            value=subject_text,
+            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
+            size=(-1, 60),
+        )
+        main_sizer.Add(self.subject_ctrl, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
 
-        severity = getattr(self.alert, "severity", "Unknown")
-        severity_label = wx.StaticText(panel, label=f"Severity: {severity}")
-        severity_label.SetFont(severity_label.GetFont().Bold())
-        self._set_severity_color(severity_label, severity)
-        info_sizer.Add(severity_label, 0, wx.RIGHT, 20)
+        # Alert info field (severity, urgency, certainty, areas)
+        info_text = self._build_info_text()
+        if info_text:
+            info_label = wx.StaticText(panel, label="Alert Info:")
+            info_label.SetFont(info_label.GetFont().Bold())
+            main_sizer.Add(info_label, 0, wx.LEFT | wx.RIGHT, 15)
 
-        urgency = getattr(self.alert, "urgency", None)
-        if urgency:
-            urgency_label = wx.StaticText(panel, label=f"Urgency: {urgency}")
-            info_sizer.Add(urgency_label, 0, wx.RIGHT, 20)
+            self.info_ctrl = wx.TextCtrl(
+                panel,
+                value=info_text,
+                style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
+                size=(-1, 60),
+            )
+            main_sizer.Add(self.info_ctrl, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
 
-        certainty = getattr(self.alert, "certainty", None)
-        if certainty:
-            certainty_label = wx.StaticText(panel, label=f"Certainty: {certainty}")
-            info_sizer.Add(certainty_label, 0)
-
-        main_sizer.Add(info_sizer, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
-
-        # Time information
-        time_sizer = wx.BoxSizer(wx.VERTICAL)
-
-        effective = getattr(self.alert, "effective", None)
-        if effective:
-            effective_str = self._format_time(effective)
-            effective_label = wx.StaticText(panel, label=f"Effective: {effective_str}")
-            time_sizer.Add(effective_label, 0, wx.BOTTOM, 4)
-
-        expires = getattr(self.alert, "expires", None)
-        if expires:
-            expires_str = self._format_time(expires)
-            expires_label = wx.StaticText(panel, label=f"Expires: {expires_str}")
-            time_sizer.Add(expires_label, 0, wx.BOTTOM, 4)
-
-        onset = getattr(self.alert, "onset", None)
-        if onset:
-            onset_str = self._format_time(onset)
-            onset_label = wx.StaticText(panel, label=f"Onset: {onset_str}")
-            time_sizer.Add(onset_label, 0)
-
-        if time_sizer.GetItemCount() > 0:
-            main_sizer.Add(time_sizer, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
-
-        # Areas affected
-        areas = getattr(self.alert, "areas", None) or getattr(self.alert, "area_desc", None)
-        if areas:
-            areas_label = wx.StaticText(panel, label="Areas Affected:")
-            areas_label.SetFont(areas_label.GetFont().Bold())
-            main_sizer.Add(areas_label, 0, wx.LEFT | wx.RIGHT, 15)
-
-            areas_text = ", ".join(areas) if isinstance(areas, list) else str(areas)
-
-            areas_value = wx.StaticText(panel, label=areas_text)
-            areas_value.Wrap(650)
-            main_sizer.Add(areas_value, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
-
-        # Headline
-        headline = getattr(self.alert, "headline", None)
-        if headline:
-            headline_label = wx.StaticText(panel, label="Headline:")
-            headline_label.SetFont(headline_label.GetFont().Bold())
-            main_sizer.Add(headline_label, 0, wx.LEFT | wx.RIGHT, 15)
-
-            headline_value = wx.StaticText(panel, label=headline)
-            headline_value.Wrap(650)
-            main_sizer.Add(headline_value, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
-
-        # Description/Details
+        # Details field (description)
         description = getattr(self.alert, "description", None)
         if description:
-            desc_label = wx.StaticText(panel, label="Details:")
-            desc_label.SetFont(desc_label.GetFont().Bold())
-            main_sizer.Add(desc_label, 0, wx.LEFT | wx.RIGHT, 15)
+            details_label = wx.StaticText(panel, label="Details:")
+            details_label.SetFont(details_label.GetFont().Bold())
+            main_sizer.Add(details_label, 0, wx.LEFT | wx.RIGHT, 15)
 
-            self.desc_text = wx.TextCtrl(
+            self.details_ctrl = wx.TextCtrl(
                 panel,
                 value=description,
                 style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
             )
-            main_sizer.Add(self.desc_text, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
+            main_sizer.Add(
+                self.details_ctrl, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 15
+            )
 
-        # Instructions
+        # Instructions field
         instruction = getattr(self.alert, "instruction", None)
         if instruction:
             instr_label = wx.StaticText(panel, label="Instructions:")
             instr_label.SetFont(instr_label.GetFont().Bold())
             main_sizer.Add(instr_label, 0, wx.LEFT | wx.RIGHT, 15)
 
-            instr_text = wx.TextCtrl(
+            self.instr_ctrl = wx.TextCtrl(
                 panel,
                 value=instruction,
                 style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
                 size=(-1, 80),
             )
-            main_sizer.Add(instr_text, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
+            main_sizer.Add(
+                self.instr_ctrl, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 15
+            )
 
         # Close button
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -184,23 +142,65 @@ class AlertDialog(wx.Dialog):
 
         panel.SetSizer(main_sizer)
 
-        # Set initial focus
-        if hasattr(self, "desc_text"):
-            self.desc_text.SetFocus()
+        # Set initial focus to subject field
+        self.subject_ctrl.SetFocus()
 
-    def _set_severity_color(self, label, severity: str):
-        """Set the color based on severity level."""
-        severity_lower = severity.lower() if severity else ""
-        if severity_lower == "extreme":
-            label.SetForegroundColour(wx.Colour(139, 0, 0))  # Dark red
-        elif severity_lower == "severe":
-            label.SetForegroundColour(wx.Colour(255, 69, 0))  # Red-orange
-        elif severity_lower == "moderate":
-            label.SetForegroundColour(wx.Colour(255, 140, 0))  # Orange
-        elif severity_lower == "minor":
-            label.SetForegroundColour(wx.Colour(218, 165, 32))  # Goldenrod
-        else:
-            label.SetForegroundColour(wx.Colour(128, 128, 128))  # Gray
+    def _build_subject_text(self) -> str:
+        """Build the subject text with headline and times."""
+        parts = []
+
+        # Headline or event name
+        headline = getattr(self.alert, "headline", None)
+        event = getattr(self.alert, "event", None)
+        if headline:
+            parts.append(headline)
+        elif event:
+            parts.append(event)
+
+        # Time information
+        effective = getattr(self.alert, "effective", None)
+        expires = getattr(self.alert, "expires", None)
+
+        if effective or expires:
+            time_parts = []
+            if effective:
+                time_parts.append(f"issued {self._format_time(effective)}")
+            if expires:
+                time_parts.append(f"expires {self._format_time(expires)}")
+            if time_parts:
+                parts.append(", ".join(time_parts))
+
+        return "\n".join(parts) if parts else "Weather Alert"
+
+    def _build_info_text(self) -> str:
+        """Build the alert info text with severity, urgency, certainty, and areas."""
+        parts = []
+
+        # Severity, urgency, certainty on one line
+        metadata = []
+        severity = getattr(self.alert, "severity", None)
+        urgency = getattr(self.alert, "urgency", None)
+        certainty = getattr(self.alert, "certainty", None)
+
+        if severity:
+            metadata.append(f"Severity: {severity}")
+        if urgency:
+            metadata.append(f"Urgency: {urgency}")
+        if certainty:
+            metadata.append(f"Certainty: {certainty}")
+
+        if metadata:
+            parts.append(", ".join(metadata))
+
+        # Areas affected
+        areas = getattr(self.alert, "areas", None) or getattr(
+            self.alert, "area_desc", None
+        )
+        if areas:
+            areas_text = ", ".join(areas) if isinstance(areas, list) else str(areas)
+            parts.append(f"Areas: {areas_text}")
+
+        return "\n".join(parts)
 
     def _format_time(self, time_value) -> str:
         """Format a time value for display."""
@@ -211,14 +211,22 @@ class AlertDialog(wx.Dialog):
             return time_value
 
         try:
-            return time_value.strftime("%B %d, %Y at %I:%M %p")
+            return time_value.strftime("%B %d at %I:%M %p")
         except Exception:
             return str(time_value)
 
     def _setup_accessibility(self):
-        """Set up accessibility labels."""
-        if hasattr(self, "desc_text"):
-            self.desc_text.SetName("Alert description")
+        """Set up accessibility labels for screen readers."""
+        self.subject_ctrl.SetName("Subject with headline and times")
+
+        if hasattr(self, "info_ctrl"):
+            self.info_ctrl.SetName("Alert information with severity and areas")
+
+        if hasattr(self, "details_ctrl"):
+            self.details_ctrl.SetName("Alert details")
+
+        if hasattr(self, "instr_ctrl"):
+            self.instr_ctrl.SetName("Instructions")
 
     def _on_close(self, event):
         """Handle close button press."""
