@@ -165,10 +165,12 @@ class AlertDialog(wx.Dialog):
         return "Weather Alert"
 
     def _build_info_text(self) -> str:
-        """Build the alert info text with severity, urgency, certainty, and areas."""
-        parts = []
+        """
+        Build the alert info text with severity, urgency, and certainty.
 
-        # Severity, urgency, certainty on one line
+        Note: Areas are intentionally omitted as the Details section
+        already contains location information.
+        """
         metadata = []
         severity = getattr(self.alert, "severity", None)
         urgency = getattr(self.alert, "urgency", None)
@@ -181,25 +183,14 @@ class AlertDialog(wx.Dialog):
         if certainty:
             metadata.append(f"Certainty: {certainty}")
 
-        if metadata:
-            parts.append(", ".join(metadata))
-
-        # Areas affected
-        areas = getattr(self.alert, "areas", None) or getattr(
-            self.alert, "area_desc", None
-        )
-        if areas:
-            areas_text = ", ".join(areas) if isinstance(areas, list) else str(areas)
-            parts.append(f"Areas: {areas_text}")
-
-        return "\n".join(parts)
+        return ", ".join(metadata)
 
     def _setup_accessibility(self):
         """Set up accessibility labels for screen readers."""
         self.subject_ctrl.SetName("Subject with alert headline")
 
         if hasattr(self, "info_ctrl"):
-            self.info_ctrl.SetName("Alert information with severity and areas")
+            self.info_ctrl.SetName("Alert information with severity, urgency, and certainty")
 
         if hasattr(self, "details_ctrl"):
             self.details_ctrl.SetName("Alert details")
