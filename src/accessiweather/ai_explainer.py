@@ -517,6 +517,14 @@ class AIExplainer:
                 # Convert common errors to specific exceptions
                 error_message = str(last_error).lower()
 
+                # API key errors (check FIRST to avoid matching "connection" in suggestion text)
+                if "api key" in error_message or "api_key" in error_message:
+                    raise InvalidAPIKeyError(
+                        "OpenRouter API key is required.\n\n"
+                        "Please add your API key in Settings → AI Explanations.\n"
+                        "Get a free key at: openrouter.ai/keys"
+                    ) from last_error
+
                 # Model not found
                 if (
                     "404" in error_message
@@ -541,8 +549,16 @@ class AIExplainer:
                         "• Switch to a paid model in Settings"
                     ) from last_error
 
-                # Network errors
-                if "502" in error_message or "503" in error_message or "network" in error_message or "connection" in error_message:
+                # Network errors (check for specific codes/phrases, not just "connection")
+                if (
+                    "502" in error_message
+                    or "503" in error_message
+                    or "network error" in error_message
+                    or "connection refused" in error_message
+                    or "connection reset" in error_message
+                    or "connection timed out" in error_message
+                    or "timed out" in error_message
+                ):
                     raise NetworkError(
                         "Network connection error while contacting AI service.\n\n"
                         "Please check your internet connection and try again."
@@ -710,6 +726,14 @@ class AIExplainer:
                 # Convert common errors to specific exceptions
                 error_message = str(last_error).lower()
 
+                # API key errors (check FIRST to avoid matching "connection" in suggestion text)
+                if "api key" in error_message or "api_key" in error_message:
+                    raise InvalidAPIKeyError(
+                        "OpenRouter API key is required.\n\n"
+                        "Please add your API key in Settings → AI Explanations.\n"
+                        "Get a free key at: openrouter.ai/keys"
+                    ) from last_error
+
                 # Model not found
                 if (
                     "404" in error_message
@@ -734,8 +758,16 @@ class AIExplainer:
                         "• Switch to a paid model in Settings"
                     ) from last_error
 
-                # Network errors
-                if "502" in error_message or "503" in error_message or "network" in error_message or "connection" in error_message:
+                # Network errors (check for specific codes/phrases, not just "connection")
+                if (
+                    "502" in error_message
+                    or "503" in error_message
+                    or "network error" in error_message
+                    or "connection refused" in error_message
+                    or "connection reset" in error_message
+                    or "connection timed out" in error_message
+                    or "timed out" in error_message
+                ):
                     raise NetworkError(
                         "Network connection error while contacting AI service.\n\n"
                         "Please check your internet connection and try again."
@@ -864,8 +896,17 @@ class AIExplainer:
             original_error = str(e)
 
             # Map specific errors to custom exceptions
+            # Note: Check API key errors FIRST to avoid false matches on "connection" in suggestion text
 
-            # Authentication errors (401)
+            # Missing API key (check first - most common user error)
+            if "api key required" in error_message or "api key" in error_message:
+                raise InvalidAPIKeyError(
+                    "OpenRouter API key is required.\n\n"
+                    "Please add your API key in Settings → AI Explanations.\n"
+                    "Get a free key at: openrouter.ai/keys"
+                ) from e
+
+            # Invalid API key / authentication errors (401)
             if "invalid api key" in error_message or "authentication" in error_message:
                 raise InvalidAPIKeyError(
                     "Your OpenRouter API key is invalid.\n\n"
@@ -911,13 +952,14 @@ class AIExplainer:
                     )
                 ) from e
 
-            # Network/connection errors (502, 503, timeout, connection)
+            # Network/connection errors - use specific phrases to avoid false matches
             if (
                 "502" in error_message
                 or "503" in error_message
-                or "network" in error_message
-                or "connection" in error_message
-                or "timeout" in error_message
+                or "network error" in error_message
+                or "connection refused" in error_message
+                or "connection reset" in error_message
+                or "connection timed out" in error_message
                 or "timed out" in error_message
             ):
                 raise NetworkError(
