@@ -8,7 +8,9 @@ import platform
 import re
 import subprocess
 import sys
+import tempfile
 import textwrap
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -17,6 +19,9 @@ import httpx
 from packaging.version import InvalidVersion, Version
 
 from .update_service.settings import DEFAULT_OWNER, DEFAULT_REPO
+
+# Type alias for progress callbacks: (bytes_downloaded, total_bytes) -> None
+ProgressCallback = Callable[[int, int], None]
 
 try:
     from ..config_utils import is_portable_mode
@@ -31,6 +36,22 @@ logger = logging.getLogger(__name__)
 GITHUB_RELEASES_URL = "https://api.github.com/repos/{owner}/{repo}/releases?per_page=20"
 COMMIT_PATTERN = re.compile(r"(?i)\bcommit(?:\s+hash)?\s*[:=]\s*([0-9a-f]{7,40})\b")
 FALLBACK_HASH_PATTERN = re.compile(r"\b[0-9a-f]{7,40}\b", re.IGNORECASE)
+
+
+def is_installed_version() -> bool:
+    """
+    Check if running from an installed location (Program Files) vs portable.
+
+    Returns:
+        True if exe is in Program Files, False otherwise (portable or dev).
+
+    """
+    if not getattr(sys, "frozen", False):
+        return False
+    exe_path = sys.executable
+    program_files = os.environ.get("PROGRAMFILES", r"C:\Program Files")
+    program_files_x86 = os.environ.get("PROGRAMFILES(X86)", r"C:\Program Files (x86)")
+    return exe_path.startswith((program_files, program_files_x86))
 
 
 @dataclass(frozen=True)
@@ -157,6 +178,39 @@ def select_asset(
     return filtered[0] if filtered else (assets[0] if assets else None)
 
 
+def build_macos_update_script(
+    update_path: Path,
+    app_path: Path,
+) -> str:
+    """
+    Build a shell script to apply macOS update.
+
+    Args:
+        update_path: Path to downloaded zip/dmg file.
+        app_path: Path to the .app bundle to update.
+
+    Returns:
+        Shell script content as string.
+
+    """
+    app_dir = app_path.parent
+    return textwrap.dedent(
+        f"""
+        #!/bin/bash
+        sleep 2
+        if [[ "{update_path}" == *.zip ]]; then
+            unzip -o "{update_path}" -d "{app_dir}"
+        elif [[ "{update_path}" == *.dmg ]]; then
+            hdiutil attach "{update_path}" -nobrowse -quiet
+            cp -R /Volumes/*/*.app "{app_dir}/"
+            hdiutil detach /Volumes/* -quiet
+        fi
+        open "{app_path}"
+        rm -f "$0" "{update_path}"
+        """
+    ).strip()
+
+
 def build_portable_update_script(
     zip_path: Path,
     target_dir: Path,
@@ -196,6 +250,18 @@ def plan_restart(
     portable: bool,
     platform_system: str | None = None,
 ) -> RestartPlan:
+    """
+    Plan how to apply an update and restart.
+
+    Args:
+        update_path: Path to downloaded update file.
+        portable: Whether running in portable mode.
+        platform_system: Override for platform.system() (for testing).
+
+    Returns:
+        RestartPlan with kind, command, and optional script_path.
+
+    """
     system = (platform_system or platform.system()).lower()
     if "windows" in system and portable:
         exe_path = Path(sys.executable).resolve()
@@ -204,7 +270,9 @@ def plan_restart(
     if "windows" in system:
         return RestartPlan("windows_installer", [str(update_path)])
     if "darwin" in system or "mac" in system:
-        return RestartPlan("macos_open", ["open", str(update_path)])
+        # Use shell script for proper update handling
+        script_path = Path(tempfile.gettempdir()) / "accessiweather_update.sh"
+        return RestartPlan("macos_script", ["bash", str(script_path)], script_path=script_path)
     return RestartPlan("unsupported", [str(update_path)])
 
 
@@ -214,7 +282,20 @@ def apply_update(
     portable: bool,
     platform_system: str | None = None,
 ) -> None:
+    """
+    Apply update and restart the application.
+
+    This function does not return on success - it exits after launching
+    the update process.
+
+    Args:
+        update_path: Path to downloaded update file.
+        portable: Whether running in portable mode.
+        platform_system: Override for platform.system() (for testing).
+
+    """
     plan = plan_restart(update_path, portable=portable, platform_system=platform_system)
+
     if plan.kind == "portable" and plan.script_path:
         exe_path = Path(sys.executable).resolve()
         script_content = build_portable_update_script(
@@ -225,9 +306,22 @@ def apply_update(
         plan.script_path.write_text(script_content, encoding="utf-8")
         subprocess.Popen([str(plan.script_path)], shell=True, cwd=str(exe_path.parent))
         os._exit(0)
-    if plan.kind in {"windows_installer", "macos_open"}:
-        subprocess.Popen(plan.command, shell=plan.kind == "windows_installer")
+
+    if plan.kind == "macos_script" and plan.script_path:
+        # Find the .app bundle path
+        exe_path = Path(sys.executable).resolve()
+        # Typically: /path/to/App.app/Contents/MacOS/executable
+        app_path = exe_path.parent.parent.parent
+        script_content = build_macos_update_script(update_path, app_path)
+        plan.script_path.write_text(script_content, encoding="utf-8")
+        plan.script_path.chmod(0o755)
+        subprocess.Popen(["bash", str(plan.script_path)])
         os._exit(0)
+
+    if plan.kind == "windows_installer":
+        subprocess.Popen(plan.command, shell=True)
+        os._exit(0)
+
     logger.warning("Update requires manual installation: %s", update_path)
 
 
@@ -300,5 +394,48 @@ class SimpleUpdateService:
             is_prerelease=bool(latest.get("prerelease")),
         )
 
+    async def download_update(
+        self,
+        update_info: UpdateInfo,
+        dest_dir: Path | None = None,
+        progress_callback: ProgressCallback | None = None,
+    ) -> Path:
+        """
+        Download an update file.
+
+        Args:
+            update_info: UpdateInfo from check_for_updates().
+            dest_dir: Directory to save file (defaults to temp dir).
+            progress_callback: Optional callback(bytes_downloaded, total_bytes).
+
+        Returns:
+            Path to the downloaded file.
+
+        Raises:
+            httpx.HTTPError: If download fails.
+
+        """
+        if dest_dir is None:
+            dest_dir = Path(tempfile.gettempdir())
+        dest_dir.mkdir(parents=True, exist_ok=True)
+
+        dest_path = dest_dir / update_info.artifact_name
+
+        async with self.http_client.stream("GET", update_info.download_url) as response:
+            response.raise_for_status()
+            total = int(response.headers.get("content-length", 0))
+            downloaded = 0
+
+            with dest_path.open("wb") as f:
+                async for chunk in response.aiter_bytes(chunk_size=65536):
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    if progress_callback:
+                        progress_callback(downloaded, total)
+
+        logger.info("Downloaded update to %s", dest_path)
+        return dest_path
+
     async def close(self) -> None:
+        """Close the HTTP client."""
         await self.http_client.aclose()
