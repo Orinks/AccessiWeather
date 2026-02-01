@@ -226,6 +226,16 @@ class MainWindow(SizedFrame):
 
         # Help menu
         help_menu = wx.Menu()
+
+        # Check for updates - show current channel in label
+        channel = self._get_update_channel()
+        self._check_updates_item = help_menu.Append(
+            wx.ID_ANY,
+            f"Check for &Updates ({channel.title()})...",
+            "Check for application updates",
+        )
+        help_menu.AppendSeparator()
+
         report_issue_item = help_menu.Append(
             wx.ID_ANY, "&Report Issue...", "Report a bug or request a feature"
         )
@@ -248,6 +258,7 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_MENU, lambda e: self._on_air_quality(), air_quality_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_uv_index(), uv_index_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_soundpack_manager(), soundpack_item)
+        self.Bind(wx.EVT_MENU, lambda e: self._on_check_updates(), self._check_updates_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_report_issue(), report_issue_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_about(), about_item)
 
@@ -306,10 +317,22 @@ class MainWindow(SizedFrame):
 
     def on_settings(self) -> None:
         """Handle settings button click."""
+        self.open_settings()
+
+    def open_settings(self, tab: str | None = None) -> None:
+        """
+        Open the settings dialog, optionally to a specific tab.
+
+        Args:
+            tab: Optional tab name to switch to (e.g., 'Updates', 'General').
+
+        """
         from .dialogs import show_settings_dialog
 
-        if show_settings_dialog(self, self.app):
+        if show_settings_dialog(self, self.app, tab=tab):
             self.app.refresh_runtime_settings()
+            # Update menu label in case update channel changed
+            self.update_check_updates_menu_label()
 
     def on_view_history(self) -> None:
         """View weather history comparison."""
@@ -352,6 +375,100 @@ class MainWindow(SizedFrame):
         from .dialogs import show_soundpack_manager_dialog
 
         show_soundpack_manager_dialog(self, self.app)
+
+    def _get_update_channel(self) -> str:
+        """Get the configured update channel from settings."""
+        try:
+            settings = self.app.config_manager.get_settings()
+            return getattr(settings, "update_channel", "stable")
+        except Exception:
+            return "stable"
+
+    def _on_check_updates(self) -> None:
+        """Check for updates from the Help menu."""
+        import asyncio
+
+        from ..services.simple_update import UpdateService, parse_nightly_date
+
+        channel = self._get_update_channel()
+        current_version = getattr(self.app, "version", "0.0.0")
+        build_tag = getattr(self.app, "build_tag", None)
+        current_nightly_date = parse_nightly_date(build_tag) if build_tag else None
+
+        # Show checking status
+        wx.BeginBusyCursor()
+
+        def do_check():
+            try:
+
+                async def check():
+                    service = UpdateService("AccessiWeather")
+                    try:
+                        return await service.check_for_updates(
+                            current_version=current_version,
+                            current_nightly_date=current_nightly_date,
+                            channel=channel,
+                        )
+                    finally:
+                        await service.close()
+
+                update_info = asyncio.run(check())
+                wx.CallAfter(wx.EndBusyCursor)
+
+                if update_info is None:
+                    # No update available - show appropriate message
+                    if current_nightly_date and channel == "stable":
+                        msg = (
+                            f"You're on nightly ({current_nightly_date}).\n"
+                            "No newer stable release available."
+                        )
+                    elif current_nightly_date:
+                        msg = f"You're on the latest nightly ({current_nightly_date})."
+                    else:
+                        msg = f"You're up to date ({current_version})."
+
+                    wx.CallAfter(
+                        wx.MessageBox,
+                        msg,
+                        "No Updates Available",
+                        wx.OK | wx.ICON_INFORMATION,
+                    )
+                else:
+                    # Update available
+                    channel_label = "nightly" if update_info.is_nightly else "stable"
+
+                    def prompt():
+                        result = wx.MessageBox(
+                            f"A new {channel_label} update is available!\n\n"
+                            f"Current: {current_version}\n"
+                            f"Latest: {update_info.version}\n\n"
+                            "Download now?",
+                            "Update Available",
+                            wx.YES_NO | wx.ICON_INFORMATION,
+                        )
+                        if result == wx.YES:
+                            self.app._download_and_apply_update(update_info)
+
+                    wx.CallAfter(prompt)
+
+            except Exception as e:
+                wx.CallAfter(wx.EndBusyCursor)
+                wx.CallAfter(
+                    wx.MessageBox,
+                    f"Failed to check for updates:\n{e}",
+                    "Update Check Failed",
+                    wx.OK | wx.ICON_ERROR,
+                )
+
+        import threading
+
+        thread = threading.Thread(target=do_check, daemon=True)
+        thread.start()
+
+    def update_check_updates_menu_label(self) -> None:
+        """Update the Check for Updates menu item label with current channel."""
+        channel = self._get_update_channel()
+        self._check_updates_item.SetItemLabel(f"Check for &Updates ({channel.title()})...")
 
     def _on_report_issue(self) -> None:
         """Open the report issue dialog."""
