@@ -40,23 +40,27 @@ from .weather_history import (
     WeatherHistoryService,
 )
 
-# Package version is sourced from installed metadata, with fallback to pyproject.toml
-try:
-    from importlib.metadata import (
-        PackageNotFoundError,
-        version as _pkg_version,
-    )
 
+# Package version: try _version.py (generated for builds), then metadata, then pyproject.toml
+def _get_version() -> str:
+    """Get version from available sources."""
+    # 1. Try generated _version.py (works in PyInstaller builds)
     try:
-        _v = _pkg_version("accessiweather")
-    except PackageNotFoundError:
-        _v = None
-except Exception:
-    _v = None
+        from ._version import __version__ as v
 
+        return v
+    except ImportError:
+        pass
 
-def _read_pyproject_version() -> str | None:
-    """Read version from pyproject.toml (project.version is the single source of truth)."""
+    # 2. Try importlib.metadata (works when pip-installed)
+    try:
+        from importlib.metadata import PackageNotFoundError, version
+
+        return version("accessiweather")
+    except (ImportError, PackageNotFoundError):
+        pass
+
+    # 3. Try reading pyproject.toml (works in dev environment)
     try:
         from pathlib import Path
 
@@ -64,16 +68,19 @@ def _read_pyproject_version() -> str | None:
 
         root = Path(__file__).resolve().parents[2]
         py = root / "pyproject.toml"
-        if not py.exists():
-            return None
-        with py.open("rb") as f:
-            data = tomllib.load(f)
-        return data.get("project", {}).get("version")
+        if py.exists():
+            with py.open("rb") as f:
+                data = tomllib.load(f)
+            v = data.get("project", {}).get("version")
+            if v:
+                return v
     except Exception:
-        return None
+        pass
+
+    return "0.0.0"
 
 
-__version__ = _v or _read_pyproject_version() or "0.0.0"
+__version__ = _get_version()
 
 
 __all__ = [

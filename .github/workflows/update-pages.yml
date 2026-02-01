@@ -104,10 +104,33 @@ jobs:
           stable = latest_release(releases, False)
           prerelease = latest_release(releases, True)
 
+          def get_asset_urls(release: dict | None) -> dict[str, str]:
+              """Extract asset download URLs from a release."""
+              result = {
+                  "installer": releases_url,
+                  "portable": releases_url,
+                  "macos": releases_url,
+              }
+              if not release:
+                  return result
+              assets = release.get("assets", [])
+              release_url = release.get("html_url", releases_url)
+              for asset in assets:
+                  name = asset.get("name", "").lower()
+                  url = asset.get("browser_download_url", release_url)
+                  if "setup" in name and name.endswith(".exe"):
+                      result["installer"] = url
+                  elif "portable" in name and name.endswith(".zip"):
+                      result["portable"] = url
+                  elif name.endswith(".dmg"):
+                      result["macos"] = url
+              return result
+
           main_version = (stable or {}).get("tag_name", "Latest Release").lstrip("v")
           main_date = format_date((stable or {}).get("published_at"))
           main_commit = (stable or {}).get("target_commitish", "")
           main_has_release = "true" if stable else "false"
+          main_assets = get_asset_urls(stable)
           main_notes_raw = (stable or {}).get("body", "")
           if main_notes_raw:
               main_notes = render_markdown(main_notes_raw)
@@ -119,6 +142,7 @@ jobs:
           dev_commit = (prerelease or {}).get("target_commitish", "")
           dev_release_url = (prerelease or {}).get("html_url", releases_url)
           dev_has_release = "true" if prerelease else "false"
+          dev_assets = get_asset_urls(prerelease)
           dev_notes_raw = (prerelease or {}).get("body", "")
           if dev_notes_raw:
               dev_notes = render_markdown(dev_notes_raw)
@@ -131,18 +155,18 @@ jobs:
               "MAIN_VERSION": main_version,
               "MAIN_DATE": main_date,
               "MAIN_COMMIT": main_commit,
-              "MAIN_INSTALLER_URL": releases_url,
-              "MAIN_PORTABLE_URL": releases_url,
-              "MAIN_MACOS_INSTALLER_URL": releases_url,
+              "MAIN_INSTALLER_URL": main_assets["installer"],
+              "MAIN_PORTABLE_URL": main_assets["portable"],
+              "MAIN_MACOS_INSTALLER_URL": main_assets["macos"],
               "MAIN_HAS_RELEASE": main_has_release,
               "MAIN_RELEASE_NOTES": main_notes,
               "DEV_VERSION": dev_version,
               "DEV_DATE": dev_date,
               "DEV_COMMIT": dev_commit,
               "DEV_RELEASE_URL": dev_release_url,
-              "DEV_INSTALLER_URL": dev_release_url,
-              "DEV_PORTABLE_URL": dev_release_url,
-              "DEV_MACOS_INSTALLER_URL": dev_release_url,
+              "DEV_INSTALLER_URL": dev_assets["installer"],
+              "DEV_PORTABLE_URL": dev_assets["portable"],
+              "DEV_MACOS_INSTALLER_URL": dev_assets["macos"],
               "DEV_HAS_RELEASE": dev_has_release,
               "DEV_RELEASE_NOTES": dev_notes,
               "LAST_UPDATED": last_updated,

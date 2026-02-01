@@ -158,6 +158,9 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version: $VERSION"
 
+      - name: Generate version file
+        run: python scripts/generate_version.py
+
       - name: Generate icons
         run: python installer/create_icons.py
 
@@ -251,6 +254,9 @@ jobs:
           VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version: $VERSION"
+
+      - name: Generate version file
+        run: python scripts/generate_version.py
 
       - name: Generate icons
         run: python installer/create_icons.py
