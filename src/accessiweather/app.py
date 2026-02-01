@@ -383,13 +383,12 @@ class AccessiWeatherApp(wx.App):
                                 f"A new {channel_label} update is available!\n\n"
                                 f"Current: {current_version}\n"
                                 f"Latest: {update_info.version}\n\n"
-                                "Would you like to open Settings to download it?",
+                                "Download now?",
                                 "Update Available",
                                 wx.YES_NO | wx.ICON_INFORMATION,
                             )
-                            if result == wx.YES and self.main_window:
-                                # Open settings dialog to Updates tab
-                                self.main_window.open_settings(tab="Updates")
+                            if result == wx.YES:
+                                self._download_and_apply_update(update_info)
 
                         wx.CallAfter(show_update_notification)
                     else:
@@ -406,6 +405,88 @@ class AccessiWeatherApp(wx.App):
 
         except Exception as e:
             logger.warning(f"Failed to initiate startup update check: {e}")
+
+    def _download_and_apply_update(self, update_info) -> None:
+        """
+        Download and apply an update.
+
+        Args:
+            update_info: UpdateInfo object from the update service.
+
+        """
+        import asyncio
+        import tempfile
+        from pathlib import Path
+
+        from .config_utils import is_portable_mode
+        from .services.simple_update import UpdateService, apply_update
+
+        # Create progress dialog
+        parent = self.main_window if self.main_window else None
+        progress_dlg = wx.ProgressDialog(
+            "Downloading Update",
+            f"Downloading {update_info.artifact_name}...",
+            maximum=100,
+            parent=parent,
+            style=wx.PD_APP_MODAL | wx.PD_AUTO_HIDE | wx.PD_CAN_ABORT,
+        )
+
+        def do_download():
+            try:
+                dest_dir = Path(tempfile.gettempdir())
+
+                def progress_callback(downloaded, total):
+                    if total > 0:
+                        percent = int((downloaded / total) * 100)
+                        wx.CallAfter(
+                            progress_dlg.Update,
+                            percent,
+                            f"Downloading... {downloaded // 1024} / {total // 1024} KB",
+                        )
+
+                async def download():
+                    service = UpdateService("AccessiWeather")
+                    try:
+                        return await service.download_update(
+                            update_info, dest_dir, progress_callback
+                        )
+                    finally:
+                        await service.close()
+
+                update_path = asyncio.run(download())
+
+                wx.CallAfter(progress_dlg.Destroy)
+
+                # Ask for confirmation before applying
+                def confirm_apply():
+                    result = wx.MessageBox(
+                        "Download complete. The application will now restart "
+                        "to apply the update.\n\n"
+                        "Continue?",
+                        "Apply Update",
+                        wx.YES_NO | wx.ICON_QUESTION,
+                    )
+                    if result == wx.YES:
+                        portable = is_portable_mode()
+                        apply_update(update_path, portable=portable)
+
+                wx.CallAfter(confirm_apply)
+
+            except Exception as e:
+                logger.error(f"Error downloading update: {e}")
+                wx.CallAfter(progress_dlg.Destroy)
+                wx.CallAfter(
+                    wx.MessageBox,
+                    f"Failed to download update:\n{e}",
+                    "Download Error",
+                    wx.OK | wx.ICON_ERROR,
+                )
+
+        # Run download in background thread
+        import threading
+
+        thread = threading.Thread(target=do_download, daemon=True)
+        thread.start()
 
     def update_tray_tooltip(self, weather_data=None, location_name: str | None = None) -> None:
         """
