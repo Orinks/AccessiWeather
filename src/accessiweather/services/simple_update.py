@@ -28,12 +28,8 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-GITHUB_RELEASES_URL = (
-    "https://api.github.com/repos/{owner}/{repo}/releases?per_page=20"
-)
-COMMIT_PATTERN = re.compile(
-    r"(?i)\bcommit(?:\s+hash)?\s*[:=]\s*([0-9a-f]{7,40})\b"
-)
+GITHUB_RELEASES_URL = "https://api.github.com/repos/{owner}/{repo}/releases?per_page=20"
+COMMIT_PATTERN = re.compile(r"(?i)\bcommit(?:\s+hash)?\s*[:=]\s*([0-9a-f]{7,40})\b")
 FALLBACK_HASH_PATTERN = re.compile(r"\b[0-9a-f]{7,40}\b", re.IGNORECASE)
 
 
@@ -173,7 +169,7 @@ def build_portable_update_script(
         set "ZIP_PATH={zip_path}"
         set "TARGET_DIR={target_dir}"
         set "EXE_PATH={exe_path}"
-        set "EXTRACT_DIR={target_dir / 'update_tmp'}"
+        set "EXTRACT_DIR={target_dir / "update_tmp"}"
 
         :WAIT_LOOP
         tasklist /FI "PID eq %PID%" 2>NUL | find /I /N "%PID%" >NUL
@@ -236,6 +232,8 @@ def apply_update(
 
 
 class SimpleUpdateService:
+    """Simple update service for checking and downloading updates from GitHub releases."""
+
     def __init__(
         self,
         app_name: str,
@@ -243,6 +241,16 @@ class SimpleUpdateService:
         repo: str = DEFAULT_REPO,
         http_client: httpx.AsyncClient | None = None,
     ) -> None:
+        """
+        Initialize the update service.
+
+        Args:
+            app_name: Application name for User-Agent header.
+            owner: GitHub repository owner.
+            repo: GitHub repository name.
+            http_client: Optional httpx.AsyncClient for custom HTTP configuration.
+
+        """
         self.app_name = app_name
         self.owner = owner
         self.repo = repo
