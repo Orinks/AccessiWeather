@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 GITHUB_RELEASES_URL = "https://api.github.com/repos/{owner}/{repo}/releases?per_page=20"
 COMMIT_PATTERN = re.compile(r"(?i)\bcommit(?:\s+hash)?\s*[:=]\s*([0-9a-f]{7,40})\b")
 FALLBACK_HASH_PATTERN = re.compile(r"\b[0-9a-f]{7,40}\b", re.IGNORECASE)
+NIGHTLY_TAG_PATTERN = re.compile(r"nightly-(\d{8})", re.IGNORECASE)
 
 
 def is_installed_version() -> bool:
@@ -73,6 +74,7 @@ class RestartPlan:
 
 
 def parse_commit_hash(release_notes: str) -> str | None:
+    """Parse commit hash from release notes body."""
     match = COMMIT_PATTERN.search(release_notes)
     if match:
         return match.group(1).lower()
@@ -80,23 +82,64 @@ def parse_commit_hash(release_notes: str) -> str | None:
     return match.group(0).lower() if match else None
 
 
+def parse_nightly_date(tag_name: str) -> str | None:
+    """Parse date from nightly tag (e.g., 'nightly-20260131' -> '20260131')."""
+    match = NIGHTLY_TAG_PATTERN.search(tag_name)
+    return match.group(1) if match else None
+
+
 def is_nightly_release(release: dict[str, Any]) -> bool:
-    return parse_commit_hash(release.get("body", "")) is not None
+    """Check if release is a nightly build based on tag name."""
+    tag = release.get("tag_name", "")
+    return parse_nightly_date(tag) is not None
+
+
+def get_release_identifier(release: dict[str, Any]) -> tuple[str, str]:
+    """
+    Get the identifier for a release (version or nightly date).
+
+    Returns:
+        Tuple of (identifier, type) where type is 'nightly' or 'stable'.
+
+    """
+    tag = release.get("tag_name", "")
+    nightly_date = parse_nightly_date(tag)
+    if nightly_date:
+        return nightly_date, "nightly"
+    # For stable, use version from tag
+    return tag.lstrip("v"), "stable"
 
 
 def is_update_available(
     release: dict[str, Any],
     current_version: str,
-    current_commit: str | None,
+    current_nightly_date: str | None = None,
 ) -> bool:
-    commit_hash = parse_commit_hash(release.get("body", ""))
-    if commit_hash:
-        return commit_hash != (current_commit or "").lower()
+    """
+    Check if release is newer than current version.
 
-    candidate = release.get("tag_name", "").lstrip("v")
+    Args:
+        release: GitHub release dict.
+        current_version: Current app version (e.g., '0.4.2').
+        current_nightly_date: Current nightly date if running nightly (e.g., '20260131').
+
+    Returns:
+        True if the release is newer.
+
+    """
+    identifier, release_type = get_release_identifier(release)
+
+    if release_type == "nightly":
+        # Compare nightly dates (YYYYMMDD format, string comparison works)
+        if current_nightly_date:
+            return identifier > current_nightly_date
+        # If running stable but checking nightly channel, any nightly is "available"
+        return True
+
+    # Stable version comparison
     current = current_version.lstrip("v")
     try:
-        return Version(candidate) > Version(current)
+        return Version(identifier) > Version(current)
     except InvalidVersion:
         return False
 
@@ -365,17 +408,31 @@ class UpdateService:
         self,
         *,
         current_version: str,
-        current_commit: str | None = None,
+        current_nightly_date: str | None = None,
         channel: str = "stable",
         portable: bool | None = None,
         platform_system: str | None = None,
     ) -> UpdateInfo | None:
+        """
+        Check for available updates.
+
+        Args:
+            current_version: Current app version (e.g., '0.4.2').
+            current_nightly_date: Current nightly date if running nightly (e.g., '20260131').
+            channel: Update channel ('stable' or 'nightly').
+            portable: Whether running in portable mode (auto-detected if None).
+            platform_system: Override for platform.system() (for testing).
+
+        Returns:
+            UpdateInfo if update available, None otherwise.
+
+        """
         releases = await self.fetch_releases()
         latest = select_latest_release(releases, channel)
         if not latest:
             return None
 
-        if not is_update_available(latest, current_version, current_commit):
+        if not is_update_available(latest, current_version, current_nightly_date):
             return None
 
         portable_flag = portable if portable is not None else is_portable_mode()
@@ -383,14 +440,15 @@ class UpdateService:
         if not asset:
             return None
 
+        identifier, release_type = get_release_identifier(latest)
         commit_hash = parse_commit_hash(latest.get("body", ""))
         return UpdateInfo(
-            version=commit_hash or latest.get("tag_name", "").lstrip("v"),
+            version=identifier,
             download_url=asset.get("browser_download_url", ""),
             artifact_name=asset.get("name", ""),
             release_notes=latest.get("body", ""),
             commit_hash=commit_hash,
-            is_nightly=commit_hash is not None,
+            is_nightly=release_type == "nightly",
             is_prerelease=bool(latest.get("prerelease")),
         )
 

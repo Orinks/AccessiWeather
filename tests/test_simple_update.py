@@ -9,10 +9,12 @@ import pytest
 from accessiweather.services.simple_update import (
     build_macos_update_script,
     build_portable_update_script,
+    get_release_identifier,
     is_installed_version,
     is_nightly_release,
     is_update_available,
     parse_commit_hash,
+    parse_nightly_date,
     plan_restart,
     select_asset,
     select_latest_release,
@@ -36,9 +38,33 @@ def test_parse_commit_hash_prefers_commit_label():
     assert parse_commit_hash(notes) == "abcdef1234567890"
 
 
-def test_is_nightly_release_from_commit_hash():
-    release = _release(body="Nightly build\nCommit hash=deadbeef")
+def test_parse_nightly_date_extracts_date():
+    assert parse_nightly_date("nightly-20260131") == "20260131"
+    assert parse_nightly_date("Nightly-20260115") == "20260115"
+    assert parse_nightly_date("v1.0.0") is None
+
+
+def test_get_release_identifier_nightly():
+    release = _release(tag_name="nightly-20260131")
+    identifier, release_type = get_release_identifier(release)
+    assert identifier == "20260131"
+    assert release_type == "nightly"
+
+
+def test_get_release_identifier_stable():
+    release = _release(tag_name="v1.2.0")
+    identifier, release_type = get_release_identifier(release)
+    assert identifier == "1.2.0"
+    assert release_type == "stable"
+
+
+def test_is_nightly_release_from_tag_name():
+    # Nightly detected by tag name pattern, not commit hash in body
+    release = _release(tag_name="nightly-20260131", body="What's New\n\n- Some changes")
     assert is_nightly_release(release) is True
+
+    release_stable = _release(tag_name="v1.0.0", body="Commit: deadbeef")
+    assert is_nightly_release(release_stable) is False
 
 
 def test_select_latest_release_stable_filters_prerelease_and_nightly():
@@ -47,7 +73,6 @@ def test_select_latest_release_stable_filters_prerelease_and_nightly():
         _release(tag_name="v1.1.0", prerelease=True, published_at="2025-02-01T00:00:00Z"),
         _release(
             tag_name="nightly-20250202",
-            body="Commit: 1111111",
             published_at="2025-02-02T00:00:00Z",
         ),
     ]
@@ -57,14 +82,18 @@ def test_select_latest_release_stable_filters_prerelease_and_nightly():
 
 def test_is_update_available_stable_version_compare():
     release = _release(tag_name="v1.2.0")
-    assert is_update_available(release, "1.1.0", None) is True
-    assert is_update_available(release, "1.2.0", None) is False
+    assert is_update_available(release, "1.1.0") is True
+    assert is_update_available(release, "1.2.0") is False
 
 
-def test_is_update_available_nightly_commit_compare():
-    release = _release(tag_name="nightly-20250101", body="Commit: a1b2c3d")
-    assert is_update_available(release, "1.0.0", "deadbeef") is True
-    assert is_update_available(release, "1.0.0", "a1b2c3d") is False
+def test_is_update_available_nightly_date_compare():
+    release = _release(tag_name="nightly-20260201")
+    # Newer nightly available
+    assert is_update_available(release, "1.0.0", "20260131") is True
+    # Same nightly date
+    assert is_update_available(release, "1.0.0", "20260201") is False
+    # Running stable, checking nightly - any nightly is available
+    assert is_update_available(release, "1.0.0", None) is True
 
 
 def test_select_asset_windows_portable():
