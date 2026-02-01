@@ -1381,79 +1381,69 @@ class SettingsDialogSimple(wx.Dialog):
             logger.warning(f"Failed to refresh sound pack list: {e}")
 
     def _on_check_updates(self, event):
-        """Check for updates."""
+        """Check for updates using the UpdateService."""
         self._controls["update_status"].SetLabel("Checking for updates...")
 
         def do_update_check():
-            try:
-                import httpx
-                from packaging import version
+            import asyncio
 
-                # Get current version from the app
+            from ...services.simple_update import (
+                UpdateService,
+                parse_nightly_date,
+            )
+
+            try:
+                # Get current version and nightly date from the app
                 current_version = getattr(self.app, "version", "0.0.0")
+                # Check if running a nightly build (tag embedded at build time)
+                build_tag = getattr(self.app, "build_tag", None)
+                current_nightly_date = parse_nightly_date(build_tag) if build_tag else None
 
                 # Determine which channel to check
-                channel = (
-                    "dev" if self._controls["update_channel"].GetSelection() == 1 else "stable"
-                )
+                channel_idx = self._controls["update_channel"].GetSelection()
+                channel = "nightly" if channel_idx == 1 else "stable"
 
-                # Check GitHub releases API
-                url = "https://api.github.com/repos/Orinks/AccessiWeather/releases"
-                if channel == "stable":
-                    url = "https://api.github.com/repos/Orinks/AccessiWeather/releases/latest"
-
-                with httpx.Client(timeout=10.0) as client:
-                    response = client.get(url, headers={"Accept": "application/vnd.github.v3+json"})
-                    response.raise_for_status()
-
-                    if channel == "stable":
-                        release_data = response.json()
-                        latest_version = release_data.get("tag_name", "").lstrip("v")
-                        release_name = release_data.get("name", latest_version)
-                    else:
-                        # For dev channel, get the latest release (including prereleases)
-                        releases = response.json()
-                        if releases:
-                            release_data = releases[0]
-                            latest_version = release_data.get("tag_name", "").lstrip("v")
-                            release_name = release_data.get("name", latest_version)
-                        else:
-                            latest_version = current_version
-                            release_name = current_version
-
-                    # Compare versions
+                async def check():
+                    service = UpdateService("AccessiWeather")
                     try:
-                        if version.parse(latest_version) > version.parse(current_version):
-                            wx.CallAfter(
-                                self._controls["update_status"].SetLabel,
-                                f"Update available: {release_name}",
-                            )
-                            wx.CallAfter(
-                                wx.MessageBox,
-                                f"A new version is available!\n\n"
-                                f"Current: {current_version}\n"
-                                f"Latest: {release_name}\n\n"
-                                f"Visit the AccessiWeather website to download.",
-                                "Update Available",
-                                wx.OK | wx.ICON_INFORMATION,
-                            )
-                        else:
-                            wx.CallAfter(
-                                self._controls["update_status"].SetLabel,
-                                f"You're up to date (v{current_version})",
-                            )
-                    except Exception:
-                        wx.CallAfter(
-                            self._controls["update_status"].SetLabel,
-                            f"Latest: {release_name}",
+                        return await service.check_for_updates(
+                            current_version=current_version,
+                            current_nightly_date=current_nightly_date,
+                            channel=channel,
                         )
+                    finally:
+                        await service.close()
 
-            except httpx.HTTPStatusError as e:
-                logger.warning(f"HTTP error checking for updates: {e}")
+                update_info = asyncio.run(check())
+
+                if update_info is None:
+                    wx.CallAfter(
+                        self._controls["update_status"].SetLabel,
+                        f"You're up to date ({current_version})",
+                    )
+                    return
+
+                # Update available - ask user if they want to download
                 wx.CallAfter(
                     self._controls["update_status"].SetLabel,
-                    "Could not check for updates (HTTP error)",
+                    f"Update available: {update_info.version}",
                 )
+
+                def prompt_download():
+                    channel_label = "Nightly" if update_info.is_nightly else "Stable"
+                    result = wx.MessageBox(
+                        f"A new {channel_label} version is available!\n\n"
+                        f"Current: {current_version}\n"
+                        f"Latest: {update_info.version}\n\n"
+                        f"Would you like to download and install it now?",
+                        "Update Available",
+                        wx.YES_NO | wx.ICON_INFORMATION,
+                    )
+                    if result == wx.YES:
+                        self._download_and_apply_update(update_info)
+
+                wx.CallAfter(prompt_download)
+
             except Exception as e:
                 logger.error(f"Error checking for updates: {e}")
                 wx.CallAfter(
@@ -1465,6 +1455,89 @@ class SettingsDialogSimple(wx.Dialog):
         import threading
 
         thread = threading.Thread(target=do_update_check, daemon=True)
+        thread.start()
+
+    def _download_and_apply_update(self, update_info):
+        """Download and apply an update."""
+        import asyncio
+        import tempfile
+        from pathlib import Path
+
+        from ...config_utils import is_portable_mode
+        from ...services.simple_update import UpdateService, apply_update
+
+        # Create progress dialog
+        progress_dlg = wx.ProgressDialog(
+            "Downloading Update",
+            f"Downloading {update_info.artifact_name}...",
+            maximum=100,
+            parent=self,
+            style=wx.PD_APP_MODAL | wx.PD_AUTO_HIDE | wx.PD_CAN_ABORT,
+        )
+
+        def do_download():
+            try:
+                dest_dir = Path(tempfile.gettempdir())
+
+                def progress_callback(downloaded, total):
+                    if total > 0:
+                        percent = int((downloaded / total) * 100)
+                        wx.CallAfter(
+                            progress_dlg.Update,
+                            percent,
+                            f"Downloading... {downloaded // 1024} / {total // 1024} KB",
+                        )
+
+                async def download():
+                    service = UpdateService("AccessiWeather")
+                    try:
+                        return await service.download_update(
+                            update_info, dest_dir, progress_callback
+                        )
+                    finally:
+                        await service.close()
+
+                update_path = asyncio.run(download())
+
+                wx.CallAfter(progress_dlg.Destroy)
+                wx.CallAfter(
+                    self._controls["update_status"].SetLabel,
+                    "Download complete. Applying update...",
+                )
+
+                # Ask for confirmation before applying
+                def confirm_apply():
+                    result = wx.MessageBox(
+                        "Download complete. The application will now restart "
+                        "to apply the update.\n\n"
+                        "Continue?",
+                        "Apply Update",
+                        wx.YES_NO | wx.ICON_QUESTION,
+                    )
+                    if result == wx.YES:
+                        portable = is_portable_mode()
+                        apply_update(update_path, portable=portable)
+
+                wx.CallAfter(confirm_apply)
+
+            except Exception as e:
+                logger.error(f"Error downloading update: {e}")
+                wx.CallAfter(progress_dlg.Destroy)
+                wx.CallAfter(
+                    self._controls["update_status"].SetLabel,
+                    "Download failed",
+                )
+                wx.CallAfter(
+                    wx.MessageBox,
+                    f"Failed to download update:\n{e}",
+                    "Download Error",
+                    wx.OK | wx.ICON_ERROR,
+                )
+
+        # Run download in background thread
+        import threading
+
+        thread = threading.Thread(target=do_download, daemon=True)
         thread.start()
 
     def _on_reset_defaults(self, event):
