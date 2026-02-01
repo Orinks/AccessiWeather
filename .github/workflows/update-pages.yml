@@ -53,6 +53,34 @@ jobs:
               with urllib.request.urlopen(req) as resp:
                   return json.loads(resp.read().decode("utf-8"))
 
+          def render_markdown(text: str) -> str:
+              """Convert markdown to HTML using GitHub's Markdown API."""
+              if not text.strip():
+                  return ""
+              headers = {
+                  "Accept": "application/vnd.github+json",
+                  "Authorization": f"Bearer {token}",
+                  "X-GitHub-Api-Version": "2022-11-28",
+                  "Content-Type": "application/json",
+              }
+              data = json.dumps({
+                  "text": text,
+                  "mode": "gfm",
+                  "context": repo,
+              }).encode("utf-8")
+              req = urllib.request.Request(
+                  "https://api.github.com/markdown",
+                  data=data,
+                  headers=headers,
+                  method="POST",
+              )
+              try:
+                  with urllib.request.urlopen(req) as resp:
+                      return resp.read().decode("utf-8")
+              except Exception:
+                  # Fallback to escaped text in pre block
+                  return f"<pre>{html.escape(text)}</pre>"
+
           def latest_release(releases: list[dict], is_prerelease: bool) -> dict | None:
               for rel in releases:
                   if rel.get("draft"):
@@ -80,9 +108,9 @@ jobs:
           main_date = format_date((stable or {}).get("published_at"))
           main_commit = (stable or {}).get("target_commitish", "")
           main_has_release = "true" if stable else "false"
-          main_notes = html.escape((stable or {}).get("body", ""))
-          if main_notes:
-              main_notes = f"<pre>{main_notes}</pre>"
+          main_notes_raw = (stable or {}).get("body", "")
+          if main_notes_raw:
+              main_notes = render_markdown(main_notes_raw)
           else:
               main_notes = f"<p>No stable release available. <a href=\"{releases_url}\">View releases</a></p>"
 
@@ -91,9 +119,9 @@ jobs:
           dev_commit = (prerelease or {}).get("target_commitish", "")
           dev_release_url = (prerelease or {}).get("html_url", releases_url)
           dev_has_release = "true" if prerelease else "false"
-          dev_notes = html.escape((prerelease or {}).get("body", ""))
-          if dev_notes:
-              dev_notes = f"<pre>{dev_notes}</pre>"
+          dev_notes_raw = (prerelease or {}).get("body", "")
+          if dev_notes_raw:
+              dev_notes = render_markdown(dev_notes_raw)
           else:
               dev_notes = f"<p>No pre-release available. <a href=\"{releases_url}\">View releases</a></p>"
 
