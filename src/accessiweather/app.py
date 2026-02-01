@@ -54,6 +54,12 @@ class AccessiWeatherApp(wx.App):
         self._config_dir = config_dir
         self._portable_mode = portable_mode
 
+        # App version from package (import locally to avoid circular import)
+        from . import __version__
+
+        self.version = __version__
+        self.build_tag: str | None = None  # Set by nightly builds or --fake-nightly
+
         # Set up paths (similar to Toga's paths API)
         self.paths = Paths()
 
