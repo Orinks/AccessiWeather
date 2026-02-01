@@ -300,3 +300,4 @@ tmpclaude*
 uv.lock
 .uv/
 .venv-test/
+src/accessiweather/_version.py

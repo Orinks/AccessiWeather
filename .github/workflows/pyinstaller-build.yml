@@ -85,6 +85,9 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version: $VERSION"
 
+      - name: Generate version file
+        run: python scripts/generate_version.py
+
       - name: Generate icons
         run: python installer/create_icons.py
 
@@ -192,6 +195,9 @@ jobs:
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version: $VERSION"
+
+      - name: Generate version file
+        run: python scripts/generate_version.py
 
       - name: Generate icons
         run: python installer/create_icons.py
