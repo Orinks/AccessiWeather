@@ -306,9 +306,19 @@ class MainWindow(SizedFrame):
 
     def on_settings(self) -> None:
         """Handle settings button click."""
+        self.open_settings()
+
+    def open_settings(self, tab: str | None = None) -> None:
+        """
+        Open the settings dialog, optionally to a specific tab.
+
+        Args:
+            tab: Optional tab name to switch to (e.g., 'Updates', 'General').
+
+        """
         from .dialogs import show_settings_dialog
 
-        if show_settings_dialog(self, self.app):
+        if show_settings_dialog(self, self.app, tab=tab):
             self.app.refresh_runtime_settings()
 
     def on_view_history(self) -> None:

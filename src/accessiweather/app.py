@@ -139,6 +139,9 @@ class AccessiWeatherApp(wx.App):
             # Show window (or minimize to tray if setting enabled)
             self._show_or_minimize_window()
 
+            # Check for updates on startup (if enabled)
+            self._check_for_updates_on_startup()
+
             logger.info("AccessiWeather application started successfully")
             return True
 
@@ -336,6 +339,73 @@ class AccessiWeatherApp(wx.App):
             # On error, show the window to avoid invisible app
             logger.warning(f"Failed to check minimize setting, showing window: {e}")
             self.main_window.Show()
+
+    def _check_for_updates_on_startup(self) -> None:
+        """Check for updates on startup if enabled in settings."""
+        try:
+            settings = self.config_manager.get_settings()
+            if not getattr(settings, "auto_update_enabled", True):
+                logger.debug("Automatic update check disabled")
+                return
+
+            channel = getattr(settings, "update_channel", "stable")
+
+            def do_check():
+                import asyncio
+
+                from .services.simple_update import UpdateService, parse_nightly_date
+
+                try:
+                    current_version = getattr(self, "version", "0.0.0")
+                    build_tag = getattr(self, "build_tag", None)
+                    current_nightly_date = parse_nightly_date(build_tag) if build_tag else None
+
+                    async def check():
+                        service = UpdateService("AccessiWeather")
+                        try:
+                            return await service.check_for_updates(
+                                current_version=current_version,
+                                current_nightly_date=current_nightly_date,
+                                channel=channel,
+                            )
+                        finally:
+                            await service.close()
+
+                    update_info = asyncio.run(check())
+
+                    if update_info:
+                        # Show notification about available update
+                        channel_label = "nightly" if update_info.is_nightly else "stable"
+                        logger.info(f"Update available: {update_info.version} ({channel_label})")
+
+                        def show_update_notification():
+                            result = wx.MessageBox(
+                                f"A new {channel_label} update is available!\n\n"
+                                f"Current: {current_version}\n"
+                                f"Latest: {update_info.version}\n\n"
+                                "Would you like to open Settings to download it?",
+                                "Update Available",
+                                wx.YES_NO | wx.ICON_INFORMATION,
+                            )
+                            if result == wx.YES and self.main_window:
+                                # Open settings dialog to Updates tab
+                                self.main_window.open_settings(tab="Updates")
+
+                        wx.CallAfter(show_update_notification)
+                    else:
+                        logger.debug("No updates available")
+
+                except Exception as e:
+                    logger.warning(f"Startup update check failed: {e}")
+
+            # Run in background thread to not block startup
+            import threading
+
+            thread = threading.Thread(target=do_check, daemon=True)
+            thread.start()
+
+        except Exception as e:
+            logger.warning(f"Failed to initiate startup update check: {e}")
 
     def update_tray_tooltip(self, weather_data=None, location_name: str | None = None) -> None:
         """

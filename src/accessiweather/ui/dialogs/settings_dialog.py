@@ -1417,9 +1417,21 @@ class SettingsDialogSimple(wx.Dialog):
                 update_info = asyncio.run(check())
 
                 if update_info is None:
+                    # Provide context-aware message
+                    if current_nightly_date and channel == "stable":
+                        # Running nightly, checked stable - explain the situation
+                        status_msg = (
+                            f"You're on nightly ({current_nightly_date}). "
+                            f"No newer stable release available."
+                        )
+                    elif current_nightly_date:
+                        status_msg = f"You're on the latest nightly ({current_nightly_date})"
+                    else:
+                        status_msg = f"You're up to date ({current_version})"
+
                     wx.CallAfter(
                         self._controls["update_status"].SetLabel,
-                        f"You're up to date ({current_version})",
+                        status_msg,
                     )
                     return
 
@@ -1750,13 +1762,14 @@ class SettingsDialogSimple(wx.Dialog):
             )
 
 
-def show_settings_dialog(parent, app: AccessiWeatherApp) -> bool:
+def show_settings_dialog(parent, app: AccessiWeatherApp, tab: str | None = None) -> bool:
     """
     Show the settings dialog.
 
     Args:
         parent: Parent window
         app: Application instance
+        tab: Optional tab name to switch to (e.g., 'Updates', 'General')
 
     Returns:
         True if settings were changed, False otherwise
@@ -1766,6 +1779,14 @@ def show_settings_dialog(parent, app: AccessiWeatherApp) -> bool:
         parent_ctrl = parent
 
         dlg = SettingsDialogSimple(parent_ctrl, app)
+
+        # Switch to specified tab if provided
+        if tab:
+            for i in range(dlg.notebook.GetPageCount()):
+                if dlg.notebook.GetPageText(i) == tab:
+                    dlg.notebook.SetSelection(i)
+                    break
+
         result = dlg.ShowModal() == wx.ID_OK
         dlg.Destroy()
         return result
