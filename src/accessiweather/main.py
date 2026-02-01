@@ -35,13 +35,28 @@ def main() -> None:
         action="store_true",
         help="Enable debug logging",
     )
+    parser.add_argument(
+        "--fake-version",
+        help="Fake version for testing updates (e.g., '0.1.0')",
+        default=None,
+    )
+    parser.add_argument(
+        "--fake-nightly",
+        help="Fake nightly tag for testing updates (e.g., 'nightly-20250101')",
+        default=None,
+    )
     args = parser.parse_args()
 
     setup_logging(debug=args.debug)
 
     from .app import main as app_main
 
-    app_main(config_dir=args.config_dir, portable_mode=args.portable)
+    app_main(
+        config_dir=args.config_dir,
+        portable_mode=args.portable,
+        fake_version=args.fake_version,
+        fake_nightly=args.fake_nightly,
+    )
 
 
 if __name__ == "__main__":

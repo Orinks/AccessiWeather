@@ -614,9 +614,32 @@ class AccessiWeatherApp(wx.App):
             logger.error(f"Failed to refresh runtime settings: {e}")
 
 
-def main(config_dir: str | None = None, portable_mode: bool = False):
-    """Run AccessiWeather application."""
+def main(
+    config_dir: str | None = None,
+    portable_mode: bool = False,
+    fake_version: str | None = None,
+    fake_nightly: str | None = None,
+):
+    """
+    Run AccessiWeather application.
+
+    Args:
+        config_dir: Custom configuration directory path.
+        portable_mode: Run in portable mode.
+        fake_version: Fake version for testing updates (e.g., '0.1.0').
+        fake_nightly: Fake nightly tag for testing updates (e.g., 'nightly-20250101').
+
+    """
     app = AccessiWeatherApp(config_dir=config_dir, portable_mode=portable_mode)
+
+    # Override version/build_tag for update testing
+    if fake_version:
+        app.version = fake_version
+        logger.info(f"Using fake version for testing: {fake_version}")
+    if fake_nightly:
+        app.build_tag = fake_nightly
+        logger.info(f"Using fake nightly tag for testing: {fake_nightly}")
+
     app.MainLoop()
     return app
 
