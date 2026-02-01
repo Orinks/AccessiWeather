@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Simplified auto-updater with one-click download and install - check for stable or nightly updates from Help menu or Settings, download with progress, and restart to apply
+- Startup update check - automatically checks for updates when the app launches (configurable in Settings > Updates)
+- "Check for Updates" in Help menu - shows your current channel (stable/nightly) and lets you check on demand
+- `--fake-version` and `--fake-nightly` CLI flags for testing the update flow without modifying code
 - AI model validation at startup - if your configured model was removed from OpenRouter, you'll be warned and offered to reset to default or open Settings
 - Auto-fallback for AI models - if your configured model fails, the app automatically tries the default model before giving up
 - AI model validation - invalid or removed models now show a clear error message directing you to Settings instead of cryptic API errors
