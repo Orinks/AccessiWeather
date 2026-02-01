@@ -161,6 +161,11 @@ jobs:
       - name: Generate version file
         run: python scripts/generate_version.py
 
+      - name: Generate build info (nightly tag)
+        run: |
+          NIGHTLY_TAG="nightly-$(date -u +%Y%m%d)"
+          python scripts/generate_build_info.py "$NIGHTLY_TAG"
+
       - name: Generate icons
         run: python installer/create_icons.py
 
@@ -257,6 +262,11 @@ jobs:
 
       - name: Generate version file
         run: python scripts/generate_version.py
+
+      - name: Generate build info (nightly tag)
+        run: |
+          NIGHTLY_TAG="nightly-$(date -u +%Y%m%d)"
+          python scripts/generate_build_info.py "$NIGHTLY_TAG"
 
       - name: Generate icons
         run: python installer/create_icons.py
