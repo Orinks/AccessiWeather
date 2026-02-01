@@ -139,6 +139,9 @@ class AccessiWeatherApp(wx.App):
             # Show window (or minimize to tray if setting enabled)
             self._show_or_minimize_window()
 
+            # Check for updates on startup (if enabled)
+            self._check_for_updates_on_startup()
+
             logger.info("AccessiWeather application started successfully")
             return True
 
@@ -337,6 +340,154 @@ class AccessiWeatherApp(wx.App):
             logger.warning(f"Failed to check minimize setting, showing window: {e}")
             self.main_window.Show()
 
+    def _check_for_updates_on_startup(self) -> None:
+        """Check for updates on startup if enabled in settings."""
+        try:
+            settings = self.config_manager.get_settings()
+            if not getattr(settings, "auto_update_enabled", True):
+                logger.debug("Automatic update check disabled")
+                return
+
+            channel = getattr(settings, "update_channel", "stable")
+
+            def do_check():
+                import asyncio
+
+                from .services.simple_update import UpdateService, parse_nightly_date
+
+                try:
+                    current_version = getattr(self, "version", "0.0.0")
+                    build_tag = getattr(self, "build_tag", None)
+                    current_nightly_date = parse_nightly_date(build_tag) if build_tag else None
+
+                    async def check():
+                        service = UpdateService("AccessiWeather")
+                        try:
+                            return await service.check_for_updates(
+                                current_version=current_version,
+                                current_nightly_date=current_nightly_date,
+                                channel=channel,
+                            )
+                        finally:
+                            await service.close()
+
+                    update_info = asyncio.run(check())
+
+                    if update_info:
+                        # Show notification about available update
+                        channel_label = "nightly" if update_info.is_nightly else "stable"
+                        logger.info(f"Update available: {update_info.version} ({channel_label})")
+
+                        def show_update_notification():
+                            result = wx.MessageBox(
+                                f"A new {channel_label} update is available!\n\n"
+                                f"Current: {current_version}\n"
+                                f"Latest: {update_info.version}\n\n"
+                                "Download now?",
+                                "Update Available",
+                                wx.YES_NO | wx.ICON_INFORMATION,
+                            )
+                            if result == wx.YES:
+                                self._download_and_apply_update(update_info)
+
+                        wx.CallAfter(show_update_notification)
+                    else:
+                        logger.debug("No updates available")
+
+                except Exception as e:
+                    logger.warning(f"Startup update check failed: {e}")
+
+            # Run in background thread to not block startup
+            import threading
+
+            thread = threading.Thread(target=do_check, daemon=True)
+            thread.start()
+
+        except Exception as e:
+            logger.warning(f"Failed to initiate startup update check: {e}")
+
+    def _download_and_apply_update(self, update_info) -> None:
+        """
+        Download and apply an update.
+
+        Args:
+            update_info: UpdateInfo object from the update service.
+
+        """
+        import asyncio
+        import tempfile
+        from pathlib import Path
+
+        from .config_utils import is_portable_mode
+        from .services.simple_update import UpdateService, apply_update
+
+        # Create progress dialog
+        parent = self.main_window if self.main_window else None
+        progress_dlg = wx.ProgressDialog(
+            "Downloading Update",
+            f"Downloading {update_info.artifact_name}...",
+            maximum=100,
+            parent=parent,
+            style=wx.PD_APP_MODAL | wx.PD_AUTO_HIDE | wx.PD_CAN_ABORT,
+        )
+
+        def do_download():
+            try:
+                dest_dir = Path(tempfile.gettempdir())
+
+                def progress_callback(downloaded, total):
+                    if total > 0:
+                        percent = int((downloaded / total) * 100)
+                        wx.CallAfter(
+                            progress_dlg.Update,
+                            percent,
+                            f"Downloading... {downloaded // 1024} / {total // 1024} KB",
+                        )
+
+                async def download():
+                    service = UpdateService("AccessiWeather")
+                    try:
+                        return await service.download_update(
+                            update_info, dest_dir, progress_callback
+                        )
+                    finally:
+                        await service.close()
+
+                update_path = asyncio.run(download())
+
+                wx.CallAfter(progress_dlg.Destroy)
+
+                # Ask for confirmation before applying
+                def confirm_apply():
+                    result = wx.MessageBox(
+                        "Download complete. The application will now restart "
+                        "to apply the update.\n\n"
+                        "Continue?",
+                        "Apply Update",
+                        wx.YES_NO | wx.ICON_QUESTION,
+                    )
+                    if result == wx.YES:
+                        portable = is_portable_mode()
+                        apply_update(update_path, portable=portable)
+
+                wx.CallAfter(confirm_apply)
+
+            except Exception as e:
+                logger.error(f"Error downloading update: {e}")
+                wx.CallAfter(progress_dlg.Destroy)
+                wx.CallAfter(
+                    wx.MessageBox,
+                    f"Failed to download update:\n{e}",
+                    "Download Error",
+                    wx.OK | wx.ICON_ERROR,
+                )
+
+        # Run download in background thread
+        import threading
+
+        thread = threading.Thread(target=do_download, daemon=True)
+        thread.start()
+
     def update_tray_tooltip(self, weather_data=None, location_name: str | None = None) -> None:
         """
         Update the system tray icon tooltip with current weather.
@@ -463,9 +614,32 @@ class AccessiWeatherApp(wx.App):
             logger.error(f"Failed to refresh runtime settings: {e}")
 
 
-def main(config_dir: str | None = None, portable_mode: bool = False):
-    """Run AccessiWeather application."""
+def main(
+    config_dir: str | None = None,
+    portable_mode: bool = False,
+    fake_version: str | None = None,
+    fake_nightly: str | None = None,
+):
+    """
+    Run AccessiWeather application.
+
+    Args:
+        config_dir: Custom configuration directory path.
+        portable_mode: Run in portable mode.
+        fake_version: Fake version for testing updates (e.g., '0.1.0').
+        fake_nightly: Fake nightly tag for testing updates (e.g., 'nightly-20250101').
+
+    """
     app = AccessiWeatherApp(config_dir=config_dir, portable_mode=portable_mode)
+
+    # Override version/build_tag for update testing
+    if fake_version:
+        app.version = fake_version
+        logger.info(f"Using fake version for testing: {fake_version}")
+    if fake_nightly:
+        app.build_tag = fake_nightly
+        logger.info(f"Using fake nightly tag for testing: {fake_nightly}")
+
     app.MainLoop()
     return app
 
