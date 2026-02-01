@@ -151,7 +151,7 @@ async def test_simple_update_service_download(tmp_path):
     """Test download_update method."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from accessiweather.services.simple_update import SimpleUpdateService, UpdateInfo
+    from accessiweather.services.simple_update import UpdateInfo, UpdateService
 
     # Create a mock HTTP client
     mock_response = MagicMock()
@@ -169,7 +169,7 @@ async def test_simple_update_service_download(tmp_path):
     mock_client = MagicMock()
     mock_client.stream = MagicMock(return_value=mock_response)
 
-    service = SimpleUpdateService("TestApp", http_client=mock_client)
+    service = UpdateService("TestApp", http_client=mock_client)
 
     update_info = UpdateInfo(
         version="1.0.0",

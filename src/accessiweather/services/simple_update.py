@@ -325,7 +325,7 @@ def apply_update(
     logger.warning("Update requires manual installation: %s", update_path)
 
 
-class SimpleUpdateService:
+class UpdateService:
     """Simple update service for checking and downloading updates from GitHub releases."""
 
     def __init__(
