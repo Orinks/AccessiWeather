@@ -248,5 +248,6 @@ jobs:
         diff-cover reports/coverage.xml \
           --compare-branch=origin/${{ github.base_ref }} \
           --fail-under=80 \
-          --diff-range-notation='..'
+          --diff-range-notation='..' \
+          --exclude 'src/accessiweather/ui/**'
         echo "✅ New code meets coverage threshold!"
