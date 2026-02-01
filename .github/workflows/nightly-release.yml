@@ -514,7 +514,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh workflow run update-pages.yml \
-            --repo ${{ github.repository }} \
-            -f force_update=true \
-            -f target_branch=both
+          gh workflow run update-pages.yml --repo ${{ github.repository }}
