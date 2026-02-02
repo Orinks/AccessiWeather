@@ -104,35 +104,40 @@ jobs:
           stable = latest_release(releases, False)
           prerelease = latest_release(releases, True)
 
-          def get_asset_urls(release: dict | None) -> dict[str, str]:
-              """Extract asset download URLs from a release."""
+          def get_asset_info(release: dict | None) -> dict[str, dict]:
+              """Extract asset download URLs and download counts from a release."""
               result = {
-                  "installer": releases_url,
-                  "portable": releases_url,
-                  "macos": releases_url,
+                  "installer": {"url": releases_url, "downloads": 0},
+                  "portable": {"url": releases_url, "downloads": 0},
+                  "macos": {"url": releases_url, "downloads": 0},
+                  "total_downloads": 0,
               }
               if not release:
                   return result
               assets = release.get("assets", [])
               release_url = release.get("html_url", releases_url)
+              total = 0
               for asset in assets:
                   name = asset.get("name", "").lower()
                   url = asset.get("browser_download_url", release_url)
+                  downloads = asset.get("download_count", 0)
+                  total += downloads
                   if name.endswith(".msi"):
-                      result["installer"] = url
+                      result["installer"] = {"url": url, "downloads": downloads}
                   elif "setup" in name and name.endswith(".exe"):
-                      result["installer"] = url
+                      result["installer"] = {"url": url, "downloads": downloads}
                   elif "portable" in name and name.endswith(".zip"):
-                      result["portable"] = url
+                      result["portable"] = {"url": url, "downloads": downloads}
                   elif name.endswith(".dmg"):
-                      result["macos"] = url
+                      result["macos"] = {"url": url, "downloads": downloads}
+              result["total_downloads"] = total
               return result
 
           main_version = (stable or {}).get("tag_name", "Latest Release").lstrip("v")
           main_date = format_date((stable or {}).get("published_at"))
           main_commit = (stable or {}).get("target_commitish", "")
           main_has_release = "true" if stable else "false"
-          main_assets = get_asset_urls(stable)
+          main_assets = get_asset_info(stable)
           main_notes_raw = (stable or {}).get("body", "")
           if main_notes_raw:
               main_notes = render_markdown(main_notes_raw)
@@ -144,7 +149,7 @@ jobs:
           dev_commit = (prerelease or {}).get("target_commitish", "")
           dev_release_url = (prerelease or {}).get("html_url", releases_url)
           dev_has_release = "true" if prerelease else "false"
-          dev_assets = get_asset_urls(prerelease)
+          dev_assets = get_asset_info(prerelease)
           dev_notes_raw = (prerelease or {}).get("body", "")
           if dev_notes_raw:
               dev_notes = render_markdown(dev_notes_raw)
@@ -153,22 +158,36 @@ jobs:
 
           last_updated = dt.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
 
+          def format_downloads(count: int) -> str:
+              """Format download count with thousands separator."""
+              if count >= 1000:
+                  return f"{count:,}"
+              return str(count)
+
           substitutions = {
               "MAIN_VERSION": main_version,
               "MAIN_DATE": main_date,
               "MAIN_COMMIT": main_commit,
-              "MAIN_INSTALLER_URL": main_assets["installer"],
-              "MAIN_PORTABLE_URL": main_assets["portable"],
-              "MAIN_MACOS_INSTALLER_URL": main_assets["macos"],
+              "MAIN_INSTALLER_URL": main_assets["installer"]["url"],
+              "MAIN_PORTABLE_URL": main_assets["portable"]["url"],
+              "MAIN_MACOS_INSTALLER_URL": main_assets["macos"]["url"],
+              "MAIN_INSTALLER_DOWNLOADS": format_downloads(main_assets["installer"]["downloads"]),
+              "MAIN_PORTABLE_DOWNLOADS": format_downloads(main_assets["portable"]["downloads"]),
+              "MAIN_MACOS_DOWNLOADS": format_downloads(main_assets["macos"]["downloads"]),
+              "MAIN_TOTAL_DOWNLOADS": format_downloads(main_assets["total_downloads"]),
               "MAIN_HAS_RELEASE": main_has_release,
               "MAIN_RELEASE_NOTES": main_notes,
               "DEV_VERSION": dev_version,
               "DEV_DATE": dev_date,
               "DEV_COMMIT": dev_commit,
               "DEV_RELEASE_URL": dev_release_url,
-              "DEV_INSTALLER_URL": dev_assets["installer"],
-              "DEV_PORTABLE_URL": dev_assets["portable"],
-              "DEV_MACOS_INSTALLER_URL": dev_assets["macos"],
+              "DEV_INSTALLER_URL": dev_assets["installer"]["url"],
+              "DEV_PORTABLE_URL": dev_assets["portable"]["url"],
+              "DEV_MACOS_INSTALLER_URL": dev_assets["macos"]["url"],
+              "DEV_INSTALLER_DOWNLOADS": format_downloads(dev_assets["installer"]["downloads"]),
+              "DEV_PORTABLE_DOWNLOADS": format_downloads(dev_assets["portable"]["downloads"]),
+              "DEV_MACOS_DOWNLOADS": format_downloads(dev_assets["macos"]["downloads"]),
+              "DEV_TOTAL_DOWNLOADS": format_downloads(dev_assets["total_downloads"]),
               "DEV_HAS_RELEASE": dev_has_release,
               "DEV_RELEASE_NOTES": dev_notes,
               "LAST_UPDATED": last_updated,
