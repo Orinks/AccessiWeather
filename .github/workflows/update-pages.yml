@@ -118,7 +118,9 @@ jobs:
               for asset in assets:
                   name = asset.get("name", "").lower()
                   url = asset.get("browser_download_url", release_url)
-                  if "setup" in name and name.endswith(".exe"):
+                  if name.endswith(".msi"):
+                      result["installer"] = url
+                  elif "setup" in name and name.endswith(".exe"):
                       result["installer"] = url
                   elif "portable" in name and name.endswith(".zip"):
                       result["portable"] = url

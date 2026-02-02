@@ -301,3 +301,4 @@ uv.lock
 .uv/
 .venv-test/
 src/accessiweather/_version.py
+src/accessiweather/_build_info.py

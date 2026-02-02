@@ -60,7 +60,11 @@ commit_preprocessors = [
 ]
 # Map commits to Keep a Changelog groups
 commit_parsers = [
-    # Skip noise
+    # Skip noise - merge commits
+    { message = "^Merge", skip = true },
+    { message = "^merge", skip = true },
+    
+    # Skip noise - conventional commit types users don't care about
     { message = "^chore\\(release\\)", skip = true },
     { message = "^chore\\(deps\\)", skip = true },
     { message = "^chore\\(pr\\)", skip = true },
@@ -71,6 +75,26 @@ commit_parsers = [
     { message = "^style", skip = true },
     { message = "^test", skip = true },
     
+    # Skip noise - dev/CI keywords in any commit message
+    { message = "(?i)git-cliff", skip = true },
+    { message = "(?i)github.pages", skip = true },
+    { message = "(?i)github.actions", skip = true },
+    { message = "(?i)workflow", skip = true },
+    { message = "(?i)pyinstaller", skip = true },
+    { message = "(?i)ci/cd", skip = true },
+    { message = "(?i)linting", skip = true },
+    { message = "(?i)pre-commit", skip = true },
+    { message = "(?i)dependabot", skip = true },
+    { message = "(?i)codecov", skip = true },
+    { message = "(?i)coverage", skip = true },
+    { message = "(?i)\.github", skip = true },
+    { message = "(?i)release.notes", skip = true },
+    { message = "(?i)changelog", skip = true },
+    { message = "(?i)update-pages", skip = true },
+    { message = "(?i)nightly", skip = true },
+    { message = "(?i)build_tag", skip = true },
+    { message = "(?i)app\\.version", skip = true },
+    
     # Added - new features
     { message = "^feat", group = "Added" },
     { message = "^[a|A]dd", group = "Added" },
@@ -78,7 +102,7 @@ commit_parsers = [
     { message = "^.*: add", group = "Added" },
     { message = "^.*: support", group = "Added" },
     
-    # Fixed - bug fixes
+    # Fixed - bug fixes (user-facing only)
     { message = "^fix", group = "Fixed" },
     { message = "^.*: fix", group = "Fixed" },
     { message = "^hotfix", group = "Fixed" },
@@ -93,11 +117,12 @@ commit_parsers = [
     { body = ".*security", group = "Security" },
     { message = "^security", group = "Security" },
     
-    # Changed - everything else that matters
+    # Changed - only conventional commits that aren't caught above
     { message = "^refactor", group = "Changed" },
     { message = "^perf", group = "Changed" },
-    { message = "^doc", group = "Changed" },
-    { message = "^.*", group = "Changed" },
+    
+    # Skip everything else - if it's not conventional, it's probably dev noise
+    { message = "^.*", skip = true },
 ]
 # Protect breaking changes
 protect_breaking_commits = true
