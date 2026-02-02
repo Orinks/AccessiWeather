@@ -311,6 +311,25 @@
             font-weight: bold;
             margin-right: 8px;
         }
+
+        .download-count {
+            font-size: 0.8rem;
+            opacity: 0.85;
+            font-weight: normal;
+        }
+
+        .download-stats {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .download-stats svg {
+            width: 16px;
+            height: 16px;
+        }
     </style>
 </head>
 
@@ -332,34 +351,35 @@
                  <h3>Version <span id="main-version">{{MAIN_VERSION}}</span></h3>
                  <p><strong>Released:</strong> <span id="main-date">{{MAIN_DATE}}</span></p>
                  <p><strong>Commit:</strong> <span id="main-commit">{{MAIN_COMMIT}}</span></p>
+                 <p><strong>Downloads:</strong> <span id="main-total-downloads">{{MAIN_TOTAL_DOWNLOADS}}</span> total</p>
              </div>
 
              <div class="download-buttons" id="main-downloads">
                  <div class="platform-group">
                      <span class="platform-label">Windows</span>
                      <div class="platform-buttons">
-                         <a href="{{MAIN_INSTALLER_URL}}" id="main-installer" class="download-btn" aria-label="Download Windows Installer">
+                         <a href="{{MAIN_INSTALLER_URL}}" id="main-installer" class="download-btn" aria-label="Download Windows Installer, {{MAIN_INSTALLER_DOWNLOADS}} downloads">
                              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                                  <path d="M3,12V6.75L9,5.43V11.91L3,12M20,3V11.75L10,11.9V5.21L20,3M3,13L9,13.09V19.9L3,18.75V13M20,13.25V22L10,20.09V13.1L20,13.25Z" />
                              </svg>
-                             Installer (.msi)
+                             Installer (.msi) <span class="download-count">({{MAIN_INSTALLER_DOWNLOADS}})</span>
                          </a>
-                         <a href="{{MAIN_PORTABLE_URL}}" id="main-portable" class="download-btn secondary" aria-label="Download Windows Portable">
+                         <a href="{{MAIN_PORTABLE_URL}}" id="main-portable" class="download-btn secondary" aria-label="Download Windows Portable, {{MAIN_PORTABLE_DOWNLOADS}} downloads">
                              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                                  <path d="M12,17.5L10.25,16H13.75L12,17.5M10,4.5C10,3.67 10.67,3 11.5,3H12.5C13.33,3 14,3.67 14,4.5V5.5H10V4.5M4,7V6H20V7H19V19A2,2 0 0,1 17,21H7A2,2 0 0,1 5,19V7H4Z" />
                              </svg>
-                             Portable (.zip)
+                             Portable (.zip) <span class="download-count">({{MAIN_PORTABLE_DOWNLOADS}})</span>
                          </a>
                      </div>
                  </div>
                  <div class="platform-group">
                      <span class="platform-label">macOS</span>
                      <div class="platform-buttons">
-                         <a href="{{MAIN_MACOS_INSTALLER_URL}}" id="main-macos-installer" class="download-btn macos" aria-label="Download macOS Installer">
+                         <a href="{{MAIN_MACOS_INSTALLER_URL}}" id="main-macos-installer" class="download-btn macos" aria-label="Download macOS Installer, {{MAIN_MACOS_DOWNLOADS}} downloads">
                              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                                  <path d="M18.71,19.5C17.88,20.74 17,21.95 15.66,21.97C14.32,22 13.89,21.18 12.37,21.18C10.84,21.18 10.37,21.95 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.09,16.67C20.06,16.74 19.67,18.11 18.71,19.5M13,3.5C13.73,2.67 14.94,2.04 15.94,2C16.07,3.17 15.6,4.35 14.9,5.19C14.21,6.04 13.07,6.7 11.95,6.61C11.8,5.46 12.36,4.26 13,3.5Z" />
                              </svg>
-                             Installer (.dmg)
+                             Installer (.dmg) <span class="download-count">({{MAIN_MACOS_DOWNLOADS}})</span>
                          </a>
                      </div>
                  </div>
@@ -385,34 +405,35 @@
                 <h3>Version <span id="dev-version">{{DEV_VERSION}}</span></h3>
                 <p><strong>Built:</strong> <span id="dev-date">{{DEV_DATE}}</span></p>
                 <p><strong>Commit:</strong> <span id="dev-commit">{{DEV_COMMIT}}</span></p>
+                <p><strong>Downloads:</strong> <span id="dev-total-downloads">{{DEV_TOTAL_DOWNLOADS}}</span> total</p>
             </div>
 
             <div class="download-buttons" id="dev-downloads">
                 <div class="platform-group">
                     <span class="platform-label">Windows</span>
                     <div class="platform-buttons">
-                        <a href="#" id="dev-installer" class="download-btn" aria-label="Download Windows Installer (Dev)">
+                        <a href="#" id="dev-installer" class="download-btn" aria-label="Download Windows Installer (Dev), {{DEV_INSTALLER_DOWNLOADS}} downloads">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M3,12V6.75L9,5.43V11.91L3,12M20,3V11.75L10,11.9V5.21L20,3M3,13L9,13.09V19.9L3,18.75V13M20,13.25V22L10,20.09V13.1L20,13.25Z" />
                             </svg>
-                            Installer (.msi)
+                            Installer (.exe) <span class="download-count">({{DEV_INSTALLER_DOWNLOADS}})</span>
                         </a>
-                        <a href="#" id="dev-portable" class="download-btn secondary" aria-label="Download Windows Portable (Dev)">
+                        <a href="#" id="dev-portable" class="download-btn secondary" aria-label="Download Windows Portable (Dev), {{DEV_PORTABLE_DOWNLOADS}} downloads">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M12,17.5L10.25,16H13.75L12,17.5M10,4.5C10,3.67 10.67,3 11.5,3H12.5C13.33,3 14,3.67 14,4.5V5.5H10V4.5M4,7V6H20V7H19V19A2,2 0 0,1 17,21H7A2,2 0 0,1 5,19V7H4Z" />
                             </svg>
-                            Portable (.zip)
+                            Portable (.zip) <span class="download-count">({{DEV_PORTABLE_DOWNLOADS}})</span>
                         </a>
                     </div>
                 </div>
                 <div class="platform-group">
                     <span class="platform-label">macOS</span>
                     <div class="platform-buttons">
-                        <a href="#" id="dev-macos-installer" class="download-btn macos" aria-label="Download macOS Installer (Dev)">
+                        <a href="#" id="dev-macos-installer" class="download-btn macos" aria-label="Download macOS Installer (Dev), {{DEV_MACOS_DOWNLOADS}} downloads">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M18.71,19.5C17.88,20.74 17,21.95 15.66,21.97C14.32,22 13.89,21.18 12.37,21.18C10.84,21.18 10.37,21.95 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.09,16.67C20.06,16.74 19.67,18.11 18.71,19.5M13,3.5C13.73,2.67 14.94,2.04 15.94,2C16.07,3.17 15.6,4.35 14.9,5.19C14.21,6.04 13.07,6.7 11.95,6.61C11.8,5.46 12.36,4.26 13,3.5Z" />
                             </svg>
-                            Installer (.dmg)
+                            Installer (.dmg) <span class="download-count">({{DEV_MACOS_DOWNLOADS}})</span>
                         </a>
                     </div>
                 </div>
