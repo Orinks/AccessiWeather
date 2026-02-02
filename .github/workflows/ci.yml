@@ -151,7 +151,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
         cache: pip
 
-    - name: Install system dependencies (wxPython)
+    - name: Install system dependencies (wxPython + xvfb for headless)
       run: |
         sudo apt-get update
         sudo apt-get install -y \
@@ -162,7 +162,8 @@ jobs:
           libnotify-dev \
           libsdl2-dev \
           libwebkit2gtk-4.1-dev \
-          freeglut3-dev
+          freeglut3-dev \
+          xvfb
 
     - name: Install dependencies
       run: |
@@ -172,14 +173,14 @@ jobs:
         pip install -r requirements-dev.txt
         pip install -e .
 
-    - name: Run tests with coverage
+    - name: Run tests with coverage (headless via xvfb)
       env:
         PYTHONPATH: src
         ACCESSIWEATHER_TEST_MODE: "1"
         HYPOTHESIS_PROFILE: ci  # Use fast CI profile (fewer examples, no deadline)
       run: |
         mkdir -p reports
-        pytest tests/ -n auto -v --tb=short -m "not integration" \
+        xvfb-run -a pytest tests/ -n auto -v --tb=short -m "not integration" \
           --junitxml=reports/junit.xml \
           --cov=src/accessiweather \
           --cov-report=xml:reports/coverage.xml \
