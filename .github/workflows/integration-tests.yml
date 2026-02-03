@@ -1,45 +1,107 @@
 name: Integration Tests
 
+# Run integration tests on a schedule to catch API changes
+# and validate weather provider data quality without blocking PRs
 on:
+  # Run daily at 6 AM UTC (before most development hours)
   schedule:
     - cron: '0 6 * * *'
+
+  # Allow manual triggering for testing
   workflow_dispatch:
     inputs:
       update_cassettes:
-        description: 'Update VCR cassettes'
-        type: boolean
+        description: 'Update VCR cassettes (rewrite with fresh API data)'
+        required: false
         default: false
+        type: boolean
 
 jobs:
-  integration:
-    name: Weather Provider Tests
+  integration-tests:
+    name: Weather Provider Integration Tests
     runs-on: ubuntu-latest
+
+    # Only run on schedule or manual dispatch
+    if: |
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.12']
+
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
-          cache: pip
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install system dependencies (wxPython)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc \
+            pkg-config \
+            python3-dev \
+            libgtk-3-dev \
+            libnotify-dev \
+            libsdl2-dev \
+            libwebkit2gtk-4.1-dev \
+            freeglut3-dev
 
       - name: Install dependencies
         run: |
-          sudo apt-get update && sudo apt-get install -y gcc pkg-config python3-dev libgtk-3-dev libnotify-dev libsdl2-dev libwebkit2gtk-4.1-dev freeglut3-dev
+          python -m pip install --upgrade pip
+          # Install wxPython from extras repo for faster/reliable builds
           pip install -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-24.04 wxPython
-          pip install -r requirements-dev.txt -e .
+          pip install -r requirements-dev.txt
+          pip install -e .
 
-      - name: Run integration tests
+      - name: Run integration tests (replay mode)
+        if: ${{ github.event.inputs.update_cassettes != 'true' }}
+        run: |
+          pytest tests/integration/ \
+            -v \
+            --tb=short \
+            --record-mode=none
         env:
           LIVE_WEATHER_TESTS: "1"
           VISUAL_CROSSING_API_KEY: ${{ secrets.VISUAL_CROSSING_API_KEY }}
-        run: |
-          pytest tests/integration/ -v --tb=short \
-            --record-mode=${{ inputs.update_cassettes && 'all' || 'none' }}
         timeout-minutes: 15
 
-      - name: Commit cassettes
-        if: inputs.update_cassettes && success()
+      - name: Run integration tests (update cassettes)
+        if: ${{ github.event.inputs.update_cassettes == 'true' }}
+        run: |
+          pytest tests/integration/ \
+            -v \
+            --tb=short \
+            --record-mode=all
+        env:
+          LIVE_WEATHER_TESTS: "1"
+          VISUAL_CROSSING_API_KEY: ${{ secrets.VISUAL_CROSSING_API_KEY }}
+        timeout-minutes: 15
+
+      - name: Commit and push new cassettes (if any)
+        if: ${{ success() && github.event.inputs.update_cassettes == 'true' }}
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git diff --quiet tests/integration/cassettes/ || \
-            (git add tests/integration/cassettes/ && git commit -m "chore: update VCR cassettes" && git push)
+
+          # Check if there are any changes to cassettes
+          if git diff --quiet tests/integration/cassettes/; then
+            echo "No cassette changes to commit"
+          else
+            echo "Committing new/updated cassettes..."
+            git add tests/integration/cassettes/
+            git commit -m $'chore: update VCR cassettes from integration tests run\n\nThis commit updates HTTP cassettes recorded from live weather API calls.\nRun: '"$RUN_URL"
+            git push
+          fi
+
+      # Removed: auto-issue creation on failure (noisy, use Actions tab instead)
