@@ -436,12 +436,11 @@ class MainWindow(SizedFrame):
                 else:
                     # Update available
                     channel_label = "nightly" if update_info.is_nightly else "stable"
-                    display_version = current_nightly_date or current_version
 
                     def prompt():
                         result = wx.MessageBox(
                             f"A new {channel_label} update is available!\n\n"
-                            f"Current: {display_version}\n"
+                            f"Current: {current_version}\n"
                             f"Latest: {update_info.version}\n\n"
                             "Download now?",
                             "Update Available",
