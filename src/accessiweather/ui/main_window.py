@@ -387,8 +387,19 @@ class MainWindow(SizedFrame):
     def _on_check_updates(self) -> None:
         """Check for updates from the Help menu."""
         import asyncio
+        import sys
 
         from ..services.simple_update import UpdateService, parse_nightly_date
+
+        # Skip update checks when running from source
+        if not getattr(sys, "frozen", False):
+            wx.MessageBox(
+                "Update checking is only available in installed builds.\n"
+                "You're running from source — use git pull to update.",
+                "Running from Source",
+                wx.OK | wx.ICON_INFORMATION,
+            )
+            return
 
         channel = self._get_update_channel()
         current_version = getattr(self.app, "version", "0.0.0")
