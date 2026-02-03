@@ -1443,9 +1443,10 @@ class SettingsDialogSimple(wx.Dialog):
 
                 def prompt_download():
                     channel_label = "Nightly" if update_info.is_nightly else "Stable"
+                    display_version = current_nightly_date or current_version
                     result = wx.MessageBox(
                         f"A new {channel_label} version is available!\n\n"
-                        f"Current: {current_version}\n"
+                        f"Current: {display_version}\n"
                         f"Latest: {update_info.version}\n\n"
                         f"Download now?",
                         "Update Available",
