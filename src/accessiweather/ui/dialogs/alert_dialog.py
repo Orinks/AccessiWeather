@@ -109,7 +109,9 @@ class AlertDialog(wx.Dialog):
                 value=description,
                 style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
             )
-            main_sizer.Add(self.details_ctrl, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
+            main_sizer.Add(
+                self.details_ctrl, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 15
+            )
 
         # Instructions field
         instruction = getattr(self.alert, "instruction", None)
@@ -124,7 +126,9 @@ class AlertDialog(wx.Dialog):
                 style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
                 size=(-1, 80),
             )
-            main_sizer.Add(self.instr_ctrl, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
+            main_sizer.Add(
+                self.instr_ctrl, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 15
+            )
 
         # Close button
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
