@@ -5,12 +5,8 @@ on:
     - cron: "30 3 * * *"
   workflow_dispatch:
     inputs:
-      dry_run:
-        description: 'Dry run - skip actual release creation'
-        type: boolean
-        default: false
       force_build:
-        description: 'Force build even if no changes detected'
+        description: 'Force build even if no changes'
         type: boolean
         default: false
 
@@ -22,90 +18,45 @@ concurrency:
   group: nightly-release
   cancel-in-progress: true
 
-defaults:
-  run:
-    shell: bash
-
 env:
-  FORCE_COLOR: "0"
-  PYTHONUTF8: "1"
   PYTHON_VERSION: "3.12"
 
 jobs:
-  prepare:
-    name: Check for changes
+  check-changes:
     runs-on: ubuntu-latest
     outputs:
-      changed: ${{ steps.changes.outputs.changed }}
+      should_build: ${{ steps.check.outputs.should_build }}
       version: ${{ steps.version.outputs.version }}
-      previous_tag: ${{ steps.changes.outputs.previous_tag }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
           ref: dev
           fetch-depth: 0
 
-      - name: Check for changes in src/ since last nightly
-        id: changes
+      - name: Check for changes
+        id: check
         run: |
-          git fetch --tags
-
-          # Get HEAD commit SHA
-          HEAD_SHA=$(git rev-parse HEAD)
-          echo "HEAD commit: $HEAD_SHA"
-
-          # Check for force build
           if [ "${{ inputs.force_build }}" == "true" ]; then
-            echo "Force build requested."
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-            LAST_NIGHTLY_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -n 1)
-            echo "previous_tag=$LAST_NIGHTLY_TAG" >> "$GITHUB_OUTPUT"
+            echo "should_build=true" >> $GITHUB_OUTPUT
             exit 0
           fi
-
-          # Check if HEAD already has a nightly tag (already released)
-          HEAD_TAGS=$(git tag --points-at HEAD | grep "^nightly-" || true)
-          if [ -n "$HEAD_TAGS" ]; then
-            echo "HEAD already has nightly tag(s): $HEAD_TAGS"
-            echo "Skipping build - this commit was already released."
-            echo "changed=false" >> "$GITHUB_OUTPUT"
+          
+          # Check if HEAD already has a nightly tag
+          if git tag --points-at HEAD | grep -q "^nightly-"; then
+            echo "should_build=false" >> $GITHUB_OUTPUT
             exit 0
           fi
-
-          # Find the latest nightly tag
-          LAST_NIGHTLY_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -n 1)
-          echo "Last nightly tag: $LAST_NIGHTLY_TAG"
-          echo "previous_tag=$LAST_NIGHTLY_TAG" >> "$GITHUB_OUTPUT"
-
-          if [ -z "$LAST_NIGHTLY_TAG" ]; then
-            echo "No previous nightly tag found - first nightly build."
-            echo "changed=true" >> "$GITHUB_OUTPUT"
+          
+          LAST_TAG=$(git tag -l "nightly-*" --sort=-version:refname | head -1)
+          if [ -z "$LAST_TAG" ]; then
+            echo "should_build=true" >> $GITHUB_OUTPUT
             exit 0
           fi
-
-          # Get the commit SHA of the last nightly tag
-          LAST_NIGHTLY_SHA=$(git rev-parse "$LAST_NIGHTLY_TAG^{commit}")
-          echo "Last nightly commit: $LAST_NIGHTLY_SHA"
-
-          # Check if there are ANY commits since last nightly (not just src/ changes)
-          COMMIT_COUNT=$(git rev-list --count "$LAST_NIGHTLY_TAG"..HEAD)
-          echo "Commits since last nightly: $COMMIT_COUNT"
-
-          if [ "$COMMIT_COUNT" -eq 0 ]; then
-            echo "No new commits since last nightly."
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # Check for meaningful changes in src/ or pyproject.toml
-          if git diff --quiet "$LAST_NIGHTLY_TAG"..HEAD -- src/ pyproject.toml installer/; then
-            echo "No changes in src/, pyproject.toml, or installer/ since last nightly."
-            echo "changed=false" >> "$GITHUB_OUTPUT"
+          
+          if git diff --quiet "$LAST_TAG"..HEAD -- src/ pyproject.toml installer/; then
+            echo "should_build=false" >> $GITHUB_OUTPUT
           else
-            echo "Changes detected in src/, pyproject.toml, or installer/ since last nightly."
-            git --no-pager diff --stat "$LAST_NIGHTLY_TAG"..HEAD -- src/ pyproject.toml installer/ | tail -20
-            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "should_build=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Get version
@@ -113,421 +64,139 @@ jobs:
         run: |
           VERSION=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
 
   build-windows:
-    name: Build Windows
+    needs: check-changes
+    if: needs.check-changes.outputs.should_build == 'true'
     runs-on: windows-latest
-    needs: prepare
-    if: needs.prepare.outputs.changed == 'true'
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-      success: ${{ steps.build-status.outputs.success }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
           ref: dev
-          fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Cache pip dependencies
-        uses: actions/cache@v5
-        with:
-          path: ~\AppData\Local\pip\Cache
-          key: ${{ runner.os }}-pip-nightly-${{ hashFiles('pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-nightly-
-            ${{ runner.os }}-pip-
-
-      - name: Install dependencies
+      - name: Build
+        shell: bash
         run: |
-          python -m pip install --upgrade pip setuptools wheel
-          pip install -e .[dev]
-          pip install pyinstaller pillow
-
-      - name: Get version
-        id: version
-        run: |
-          # Just use the version from pyproject.toml
-          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Building version: $VERSION"
-
-      - name: Generate version file
-        run: python scripts/generate_version.py
-
-      - name: Generate build info (nightly tag)
-        run: |
-          NIGHTLY_TAG="nightly-$(date -u +%Y%m%d)"
-          python scripts/generate_build_info.py "$NIGHTLY_TAG"
-
-      - name: Generate icons
-        run: python installer/create_icons.py
-
-      - name: Build with PyInstaller
-        run: python -m PyInstaller --clean --noconfirm installer/accessiweather.spec
-
-      - name: Install Inno Setup
-        run: choco install innosetup -y --no-progress
-
-      - name: Create Windows Installer
-        run: |
-          # Write version file for Inno Setup (from pyproject.toml)
+          pip install -e .[dev] pyinstaller pillow
+          python scripts/generate_version.py
+          python scripts/generate_build_info.py "nightly-$(date -u +%Y%m%d)"
+          python installer/create_icons.py
+          python -m PyInstaller --clean --noconfirm installer/accessiweather.spec
+          
+          # Create installer
+          choco install innosetup -y --no-progress
           echo "[version]" > dist/version.txt
-          echo "value=${{ steps.version.outputs.version }}" >> dist/version.txt
+          echo "value=${{ needs.check-changes.outputs.version }}" >> dist/version.txt
           "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" installer/accessiweather.iss
-
-      - name: Create portable ZIP
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
+          
+          # Create portable
           cd dist
-          if [ -d "AccessiWeather_dir" ]; then
-            7z a -tzip "AccessiWeather_Portable_v${VERSION}.zip" "AccessiWeather_dir/*"
-          elif [ -f "AccessiWeather.exe" ]; then
-            7z a -tzip "AccessiWeather_Portable_v${VERSION}.zip" "AccessiWeather.exe"
-          fi
+          7z a -tzip "AccessiWeather_Portable_v${{ needs.check-changes.outputs.version }}.zip" "AccessiWeather_dir/*" || \
+          7z a -tzip "AccessiWeather_Portable_v${{ needs.check-changes.outputs.version }}.zip" "AccessiWeather.exe"
 
-      - name: Set build status
-        id: build-status
-        if: always()
-        run: |
-          if [ -f dist/AccessiWeather_Setup_*.exe ]; then
-            echo "success=true" >> $GITHUB_OUTPUT
-          else
-            echo "success=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Upload Windows Installer
-        uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v6
         with:
-          name: nightly-windows-installer
-          path: dist/AccessiWeather_Setup_*.exe
-          retention-days: 7
-
-      - name: Upload Windows Portable
-        uses: actions/upload-artifact@v6
-        with:
-          name: nightly-windows-portable
-          path: dist/AccessiWeather_Portable_*.zip
+          name: windows-build
+          path: |
+            dist/AccessiWeather_Setup_*.exe
+            dist/AccessiWeather_Portable_*.zip
           retention-days: 7
 
   build-macos:
-    name: Build macOS
+    needs: check-changes
+    if: needs.check-changes.outputs.should_build == 'true'
     runs-on: macos-latest
-    needs: prepare
-    if: needs.prepare.outputs.changed == 'true'
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-      success: ${{ steps.build-status.outputs.success }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
           ref: dev
-          fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Cache pip dependencies
-        uses: actions/cache@v5
-        with:
-          path: ~/Library/Caches/pip
-          key: ${{ runner.os }}-pip-nightly-${{ hashFiles('pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-nightly-
-            ${{ runner.os }}-pip-
-
-      - name: Install dependencies
+      - name: Build
         run: |
-          python -m pip install --upgrade pip setuptools wheel
-          pip install -e .[dev]
-          pip install pyinstaller pillow
+          pip install -e .[dev] pyinstaller pillow
           brew install create-dmg || true
+          
+          python scripts/generate_version.py
+          python scripts/generate_build_info.py "nightly-$(date -u +%Y%m%d)"
+          python installer/create_icons.py
+          python -m PyInstaller --clean --noconfirm installer/accessiweather.spec
+          
+          VERSION="${{ needs.check-changes.outputs.version }}"
+          create-dmg --volname "AccessiWeather" --icon "AccessiWeather.app" 175 190 \
+            --app-drop-link 425 190 "dist/AccessiWeather_v${VERSION}.dmg" "dist/AccessiWeather.app" || \
+          hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${VERSION}.dmg"
 
-      - name: Get version
-        id: version
-        run: |
-          # Just use the version from pyproject.toml
-          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Building version: $VERSION"
-
-      - name: Generate version file
-        run: python scripts/generate_version.py
-
-      - name: Generate build info (nightly tag)
-        run: |
-          NIGHTLY_TAG="nightly-$(date -u +%Y%m%d)"
-          python scripts/generate_build_info.py "$NIGHTLY_TAG"
-
-      - name: Generate icons
-        run: python installer/create_icons.py
-
-      - name: Build with PyInstaller
-        run: python -m PyInstaller --clean --noconfirm installer/accessiweather.spec
-
-      - name: Create DMG
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-
-          # Try create-dmg first, fallback to hdiutil
-          if command -v create-dmg &> /dev/null; then
-            create-dmg \
-              --volname "AccessiWeather" \
-              --window-pos 200 120 \
-              --window-size 600 400 \
-              --icon-size 100 \
-              --icon "AccessiWeather.app" 175 190 \
-              --hide-extension "AccessiWeather.app" \
-              --app-drop-link 425 190 \
-              "dist/AccessiWeather_v${VERSION}.dmg" \
-              "dist/AccessiWeather.app" || \
-              hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${VERSION}.dmg"
-          else
-            hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${VERSION}.dmg"
-          fi
-
-      - name: Set build status
-        id: build-status
-        if: always()
-        run: |
-          if [ -f dist/AccessiWeather_*.dmg ]; then
-            echo "success=true" >> $GITHUB_OUTPUT
-          else
-            echo "success=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Upload macOS DMG
-        uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v6
         with:
-          name: nightly-macos-dmg
+          name: macos-build
           path: dist/AccessiWeather_*.dmg
           retention-days: 7
 
-  nightly-release:
-    name: Publish Nightly Release
-    needs: [prepare, build-windows, build-macos]
-    # Release if changes detected AND at least one build succeeded
-    if: |
-      always() &&
-      needs.prepare.outputs.changed == 'true' &&
-      (needs.build-windows.result == 'success' || needs.build-macos.result == 'success')
+  release:
+    needs: [check-changes, build-windows, build-macos]
+    if: always() && needs.check-changes.outputs.should_build == 'true' && (needs.build-windows.result == 'success' || needs.build-macos.result == 'success')
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
           ref: dev
           fetch-depth: 0
 
-      - name: Download all artifacts
-        uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v7
         with:
           path: dist
-          pattern: nightly-*
           merge-multiple: true
         continue-on-error: true
 
-      - name: List downloaded artifacts
+      - name: Prepare release
         run: |
-          echo "Downloaded artifacts:"
-          ls -laR dist/ || echo "No artifacts downloaded"
-
-      - name: Validate artifacts
-        id: validate
-        working-directory: dist
-        run: |
-          WINDOWS_OK="false"
-          MACOS_OK="false"
+          cd dist
+          TAG="nightly-$(date -u +%Y%m%d)"
           
-          # Check for Windows artifacts
-          if ls AccessiWeather_Setup_*.exe 1>/dev/null 2>&1 || ls *windows*.exe 1>/dev/null 2>&1; then
-            WINDOWS_OK="true"
-            echo "✓ Windows installer found"
-          else
-            echo "✗ Windows installer missing"
-          fi
+          # Rename to nightly format
+          for f in AccessiWeather_Setup_*.exe; do [ -f "$f" ] && mv "$f" "AccessiWeather-${TAG}-windows-setup.exe"; done
+          for f in AccessiWeather_Portable_*.zip; do [ -f "$f" ] && mv "$f" "AccessiWeather-${TAG}-windows-portable.zip"; done
+          for f in AccessiWeather_*.dmg; do [ -f "$f" ] && mv "$f" "AccessiWeather-${TAG}-macOS.dmg"; done
           
-          # Check for macOS artifacts
-          if ls *.dmg 1>/dev/null 2>&1; then
-            MACOS_OK="true"
-            echo "✓ macOS DMG found"
-          else
-            echo "✗ macOS DMG missing"
-          fi
-          
-          echo "windows_ok=$WINDOWS_OK" >> $GITHUB_OUTPUT
-          echo "macos_ok=$MACOS_OK" >> $GITHUB_OUTPUT
-          
-          if [ "$WINDOWS_OK" == "false" ] && [ "$MACOS_OK" == "false" ]; then
-            echo "::error::No artifacts available for release"
-            exit 1
-          fi
-
-      - name: Prepare assets
-        working-directory: dist
-        run: |
-          TIMESTAMP=$(date -u +%Y%m%d)
-
-          # Flatten directory structure - extract files from subdirectories
-          find . -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.zip" \) -exec mv {} . \; 2>/dev/null || true
-
-          # Remove empty directories
-          find . -type d -empty -delete 2>/dev/null || true
-
-          # Remove existing checksums if they exist
-          rm -f checksums.txt
-
-          # Rename artifacts to nightly format
-          for file in *; do
-            # Skip if it's not a file
-            [ -f "$file" ] || continue
-
-            if [[ "$file" == AccessiWeather_Setup_*.exe ]]; then
-              mv "$file" "AccessiWeather-nightly-${TIMESTAMP}-windows-setup.exe"
-            elif [[ "$file" == *.dmg ]]; then
-              mv "$file" "AccessiWeather-nightly-${TIMESTAMP}-macOS.dmg"
-            elif [[ "$file" == AccessiWeather_Portable_*.zip ]]; then
-              mv "$file" "AccessiWeather-nightly-${TIMESTAMP}-windows-portable.zip"
-            fi
-          done
-
-          # Generate new checksums
           sha256sum *.exe *.dmg *.zip 2>/dev/null > checksums.txt || true
-
-          echo "Prepared assets:"
-          ls -la
 
       - name: Install git-cliff
         run: |
-          # Install git-cliff for changelog generation
-          # Get latest version and download the correct asset
           CLIFF_VERSION=$(curl -sI https://github.com/orhun/git-cliff/releases/latest | grep -i location | sed 's/.*tag\/v//' | tr -d '\r\n')
-          echo "Installing git-cliff version $CLIFF_VERSION"
           curl -sSfL "https://github.com/orhun/git-cliff/releases/download/v${CLIFF_VERSION}/git-cliff-${CLIFF_VERSION}-x86_64-unknown-linux-gnu.tar.gz" | tar xz
           sudo mv "git-cliff-${CLIFF_VERSION}/git-cliff" /usr/local/bin/
-          git-cliff --version
 
-      - name: Generate release notes with git-cliff
-        id: notes
-        env:
-          PREVIOUS_TAG: ${{ needs.prepare.outputs.previous_tag }}
-          WINDOWS_OK: ${{ steps.validate.outputs.windows_ok }}
-          MACOS_OK: ${{ steps.validate.outputs.macos_ok }}
-        run: |
-          git fetch --tags
-          
-          echo "Previous nightly tag: $PREVIOUS_TAG"
-          
-          # Start building release notes
-          NOTES=""
-          
-          # Add build status warning if partial
-          if [ "$WINDOWS_OK" != "true" ] || [ "$MACOS_OK" != "true" ]; then
-            MISSING=""
-            [ "$WINDOWS_OK" != "true" ] && MISSING="Windows"
-            [ "$MACOS_OK" != "true" ] && MISSING="${MISSING:+$MISSING, }macOS"
-            NOTES="> ⚠️ **Partial build**: ${MISSING} build(s) failed\n\n"
-          fi
-          
-          # Generate changelog with git-cliff
-          if [ -n "$PREVIOUS_TAG" ]; then
-            echo "Generating changelog from $PREVIOUS_TAG to HEAD..."
-            CLIFF_OUTPUT=$(git-cliff "$PREVIOUS_TAG"..HEAD --unreleased 2>/dev/null || echo "")
-          else
-            echo "No previous tag, generating changelog for recent commits..."
-            CLIFF_OUTPUT=$(git-cliff --unreleased -l 20 2>/dev/null || echo "")
-          fi
-          
-          if [ -n "$CLIFF_OUTPUT" ] && [ "$CLIFF_OUTPUT" != "## What's New" ]; then
-            NOTES="${NOTES}${CLIFF_OUTPUT}"
-          else
-            # Fallback if git-cliff produces empty output
-            echo "git-cliff produced no output, using commit log fallback..."
-            NOTES="${NOTES}## What's New\n\n### Recent Changes\n\n"
-            if [ -n "$PREVIOUS_TAG" ]; then
-              COMMITS=$(git log "$PREVIOUS_TAG"..HEAD --oneline --no-merges -20 | while read hash msg; do echo "- $msg"; done)
-            else
-              COMMITS=$(git log --oneline --no-merges -20 | while read hash msg; do echo "- $msg"; done)
-            fi
-            [ -n "$COMMITS" ] && NOTES="${NOTES}${COMMITS}" || NOTES="${NOTES}_No changes documented._"
-          fi
-          
-          # Write release notes
-          echo -e "$NOTES" > release-notes.md
-          
-          echo "Generated release notes:"
-          cat release-notes.md
-
-      - name: Create Prerelease
-        if: ${{ inputs.dry_run != true }}
+      - name: Create release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="nightly-$(date -u +%Y%m%d)"
-          TITLE="Nightly $(date -u +%Y-%m-%d)"
-
-          # Delete existing release/tag if re-running for the same day
-          gh release delete "$TAG" -y --cleanup-tag 2>/dev/null || true
-
-          # Build file list from dist/ (only existing files)
-          FILES=""
-          for f in dist/*.exe dist/*.dmg dist/*.zip dist/checksums.txt; do
-            [ -f "$f" ] && FILES="$FILES $f"
-          done
+          LAST_TAG=$(git tag -l "nightly-*" --sort=-version:refname | head -1)
           
-          if [ -n "$FILES" ]; then
-            gh release create "$TAG" $FILES \
-              --title "$TITLE" \
-              --notes-file release-notes.md \
-              --prerelease \
-              --target dev
-            echo "✓ Release created: $TAG"
+          # Generate changelog
+          if [ -n "$LAST_TAG" ]; then
+            git-cliff "$LAST_TAG"..HEAD --unreleased > notes.md 2>/dev/null || \
+            git log "$LAST_TAG"..HEAD --oneline --no-merges -20 | sed 's/^/- /' > notes.md
           else
-            echo "::error::No files to release"
-            exit 1
+            git-cliff --unreleased -l 20 > notes.md 2>/dev/null || echo "Initial nightly build" > notes.md
           fi
+          
+          gh release delete "$TAG" -y --cleanup-tag 2>/dev/null || true
+          gh release create "$TAG" dist/*.exe dist/*.dmg dist/*.zip dist/checksums.txt \
+            --title "Nightly $(date -u +%Y-%m-%d)" \
+            --notes-file notes.md \
+            --prerelease \
+            --target dev
 
-      - name: Dry run summary
-        if: ${{ inputs.dry_run == true }}
-        run: |
-          echo "🏃 DRY RUN - No release created"
-          echo ""
-          echo "Would have created release with:"
-          echo "- Tag: nightly-$(date -u +%Y%m%d)"
-          echo "- Title: Nightly $(date -u +%Y-%m-%d)"
-          echo ""
-          echo "Assets:"
-          ls -la dist/
-          echo ""
-          echo "Release notes:"
-          cat release-notes.md
-
-  trigger-pages-update:
-    name: Trigger Pages Update
-    needs: [prepare, nightly-release]
-    if: |
-      always() &&
-      needs.prepare.outputs.changed == 'true' &&
-      needs.nightly-release.result == 'success'
-    runs-on: ubuntu-latest
-    permissions:
-      actions: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Trigger update-pages workflow
-        if: ${{ inputs.dry_run != true }}
+      - name: Trigger pages update
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh workflow run update-pages.yml --repo ${{ github.repository }}
+        run: gh workflow run update-pages.yml
