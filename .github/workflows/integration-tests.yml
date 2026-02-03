@@ -101,7 +101,7 @@ jobs:
             echo "Committing new/updated cassettes..."
             git add tests/integration/cassettes/
             git commit -m $'chore: update VCR cassettes from integration tests run\n\nThis commit updates HTTP cassettes recorded from live weather API calls.\nRun: '"$RUN_URL"
-            git push origin main
+            git push
           fi
 
       # Removed: auto-issue creation on failure (noisy, use Actions tab instead)

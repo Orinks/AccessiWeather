@@ -79,9 +79,7 @@ class TestGetSoundpacksDir:
         """Should use fallback path when project root not found."""
         from accessiweather import soundpack_paths
 
-        with mock.patch.object(
-            soundpack_paths, "_find_project_root", return_value=None
-        ):
+        with mock.patch.object(soundpack_paths, "_find_project_root", return_value=None):
             result = soundpack_paths.get_soundpacks_dir()
 
         # Should fall back to parents[2] of the module file
