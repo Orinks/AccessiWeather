@@ -1382,6 +1382,13 @@ class SettingsDialogSimple(wx.Dialog):
 
     def _on_check_updates(self, event):
         """Check for updates using the UpdateService."""
+        import sys
+
+        # Skip update checks when running from source
+        if not getattr(sys, "frozen", False):
+            self._controls["update_status"].SetLabel("Running from source — use git pull to update")
+            return
+
         self._controls["update_status"].SetLabel("Checking for updates...")
 
         def do_update_check():

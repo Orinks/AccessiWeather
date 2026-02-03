@@ -356,6 +356,11 @@ class AccessiWeatherApp(wx.App):
     def _check_for_updates_on_startup(self) -> None:
         """Check for updates on startup if enabled in settings."""
         try:
+            # Skip update checks when running from source (not a frozen PyInstaller build)
+            if not getattr(sys, "frozen", False):
+                logger.debug("Running from source, skipping update check")
+                return
+
             settings = self.config_manager.get_settings()
             if not getattr(settings, "auto_update_enabled", True):
                 logger.debug("Automatic update check disabled")
