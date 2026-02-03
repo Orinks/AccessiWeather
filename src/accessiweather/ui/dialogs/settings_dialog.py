@@ -1398,6 +1398,9 @@ class SettingsDialogSimple(wx.Dialog):
                 # Check if running a nightly build (tag embedded at build time)
                 build_tag = getattr(self.app, "build_tag", None)
                 current_nightly_date = parse_nightly_date(build_tag) if build_tag else None
+                # Show nightly date in UI when running a nightly build
+                if current_nightly_date:
+                    current_version = current_nightly_date
 
                 # Determine which channel to check
                 channel_idx = self._controls["update_channel"].GetSelection()
@@ -1443,10 +1446,9 @@ class SettingsDialogSimple(wx.Dialog):
 
                 def prompt_download():
                     channel_label = "Nightly" if update_info.is_nightly else "Stable"
-                    display_version = current_nightly_date or current_version
                     result = wx.MessageBox(
                         f"A new {channel_label} version is available!\n\n"
-                        f"Current: {display_version}\n"
+                        f"Current: {current_version}\n"
                         f"Latest: {update_info.version}\n\n"
                         f"Download now?",
                         "Update Available",
