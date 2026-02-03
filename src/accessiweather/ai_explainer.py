@@ -52,10 +52,14 @@ def get_available_free_models(exclude_model: str | None = None) -> list[str]:
 
     """
     import time
+
     global _free_models_cache, _free_models_cache_time
 
     # Return cached results if still valid
-    if _free_models_cache is not None and (time.time() - _free_models_cache_time) < _FREE_MODELS_CACHE_TTL:
+    if (
+        _free_models_cache is not None
+        and (time.time() - _free_models_cache_time) < _FREE_MODELS_CACHE_TTL
+    ):
         models = [m for m in _free_models_cache if m != exclude_model]
         return models[:3]
 
@@ -603,7 +607,11 @@ class AIExplainer:
                     ) from last_error
 
                 # Rate limiting
-                if "429" in error_message or "rate limit" in error_message or "rate-limited" in error_message:
+                if (
+                    "429" in error_message
+                    or "rate limit" in error_message
+                    or "rate-limited" in error_message
+                ):
                     raise RateLimitError(
                         "All AI models are currently rate-limited.\n\n"
                         "Free models share rate limits with all users.\n\n"
@@ -819,7 +827,11 @@ class AIExplainer:
                     ) from last_error
 
                 # Rate limiting
-                if "429" in error_message or "rate limit" in error_message or "rate-limited" in error_message:
+                if (
+                    "429" in error_message
+                    or "rate limit" in error_message
+                    or "rate-limited" in error_message
+                ):
                     raise RateLimitError(
                         "All AI models are currently rate-limited.\n\n"
                         "Free models share rate limits with all users.\n\n"

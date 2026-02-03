@@ -683,9 +683,7 @@ class TestStaticValidationMethods:
 
             mock_client.validate_model_id = mock_validate
 
-            model_id, was_fallback = await AIExplainer.validate_and_get_fallback(
-                "valid/model"
-            )
+            model_id, was_fallback = await AIExplainer.validate_and_get_fallback("valid/model")
             assert model_id == "valid/model"
             assert was_fallback is False
 
@@ -705,9 +703,7 @@ class TestStaticValidationMethods:
 
             mock_client.validate_model_id = mock_validate
 
-            model_id, was_fallback = await AIExplainer.validate_and_get_fallback(
-                "invalid/model"
-            )
+            model_id, was_fallback = await AIExplainer.validate_and_get_fallback("invalid/model")
             assert model_id == DEFAULT_FREE_MODEL
             assert was_fallback is True
 
@@ -719,9 +715,7 @@ class TestStaticValidationMethods:
         assert model_id == "auto"
         assert was_fallback is False
 
-        model_id, was_fallback = await AIExplainer.validate_and_get_fallback(
-            "openrouter/auto"
-        )
+        model_id, was_fallback = await AIExplainer.validate_and_get_fallback("openrouter/auto")
         assert model_id == "openrouter/auto"
         assert was_fallback is False
 
