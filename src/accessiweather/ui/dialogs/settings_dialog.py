@@ -1386,7 +1386,12 @@ class SettingsDialogSimple(wx.Dialog):
 
         # Skip update checks when running from source
         if not getattr(sys, "frozen", False):
-            self._controls["update_status"].SetLabel("Running from source — use git pull to update")
+            wx.MessageBox(
+                "Update checking is only available in installed builds.\n"
+                "You're running from source — use git pull to update.",
+                "Running from Source",
+                wx.OK | wx.ICON_INFORMATION,
+            )
             return
 
         self._controls["update_status"].SetLabel("Checking for updates...")
@@ -1429,19 +1434,24 @@ class SettingsDialogSimple(wx.Dialog):
                 if update_info is None:
                     # Provide context-aware message
                     if current_nightly_date and channel == "stable":
-                        # Running nightly, checked stable - explain the situation
                         status_msg = (
-                            f"You're on nightly ({current_nightly_date}). "
-                            f"No newer stable release available."
+                            f"You're on nightly ({current_nightly_date}).\n"
+                            "No newer stable release available."
                         )
                     elif current_nightly_date:
-                        status_msg = f"You're on the latest nightly ({current_nightly_date})"
+                        status_msg = f"You're on the latest nightly ({current_nightly_date})."
                     else:
-                        status_msg = f"You're up to date ({current_version})"
+                        status_msg = f"You're up to date ({current_version})."
 
                     wx.CallAfter(
                         self._controls["update_status"].SetLabel,
                         status_msg,
+                    )
+                    wx.CallAfter(
+                        wx.MessageBox,
+                        status_msg,
+                        "No Updates Available",
+                        wx.OK | wx.ICON_INFORMATION,
                     )
                     return
 
@@ -1472,6 +1482,12 @@ class SettingsDialogSimple(wx.Dialog):
                 wx.CallAfter(
                     self._controls["update_status"].SetLabel,
                     "Could not check for updates",
+                )
+                wx.CallAfter(
+                    wx.MessageBox,
+                    f"Failed to check for updates:\n{e}",
+                    "Update Check Failed",
+                    wx.OK | wx.ICON_ERROR,
                 )
 
         # Run update check in background thread
