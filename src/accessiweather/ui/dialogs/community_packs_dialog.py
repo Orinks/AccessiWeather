@@ -76,11 +76,13 @@ class CommunityPacksBrowserDialog(wx.Dialog):
             5,
         )
         self.search_input = wx.TextCtrl(panel, size=(250, -1))
+        self.search_input.SetName("Filter community packs")
         self.search_input.SetHint("Search by name or author")
         self.search_input.Bind(wx.EVT_TEXT, self._on_search)
         header_sizer.Add(self.search_input, 1, wx.RIGHT, 10)
 
         self.refresh_btn = wx.Button(panel, label="Refresh")
+        self.refresh_btn.SetName("Refresh community packs")
         self.refresh_btn.Bind(wx.EVT_BUTTON, self._on_refresh)
         header_sizer.Add(self.refresh_btn, 0)
 
@@ -108,11 +110,13 @@ class CommunityPacksBrowserDialog(wx.Dialog):
         button_sizer.AddStretchSpacer()
 
         self.install_btn = wx.Button(panel, label="Download && Install")
+        self.install_btn.SetName("Download and install selected pack")
         self.install_btn.Bind(wx.EVT_BUTTON, self._on_install)
         self.install_btn.Enable(False)
         button_sizer.Add(self.install_btn, 0, wx.RIGHT, 5)
 
         close_btn = wx.Button(panel, wx.ID_CLOSE, label="Close")
+        close_btn.SetName("Close community packs dialog")
         close_btn.Bind(wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_CLOSE))
         button_sizer.Add(close_btn, 0)
 
@@ -131,6 +135,7 @@ class CommunityPacksBrowserDialog(wx.Dialog):
         sizer.Add(label, 0, wx.BOTTOM, 5)
 
         self.pack_listbox = wx.ListBox(parent, style=wx.LB_SINGLE)
+        self.pack_listbox.SetName("Available community packs list")
         self.pack_listbox.Bind(wx.EVT_LISTBOX, self._on_pack_selected)
         sizer.Add(self.pack_listbox, 1, wx.EXPAND)
 
@@ -174,6 +179,7 @@ class CommunityPacksBrowserDialog(wx.Dialog):
             style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_WORDWRAP,
             size=(-1, 150),
         )
+        self.description_text.SetName("Selected pack description")
         sizer.Add(self.description_text, 1, wx.EXPAND)
 
         return sizer

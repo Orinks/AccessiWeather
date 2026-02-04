@@ -240,11 +240,13 @@ class SoundPackManagerDialog(wx.Dialog):
         sizer.Add(label, 0, wx.BOTTOM, 5)
 
         self.pack_listbox = wx.ListBox(parent, style=wx.LB_SINGLE)
+        self.pack_listbox.SetName("Available sound packs list")
         self.pack_listbox.Bind(wx.EVT_LISTBOX, self._on_pack_selected)
         sizer.Add(self.pack_listbox, 1, wx.EXPAND | wx.BOTTOM, 10)
 
         # Import button
         import_btn = wx.Button(parent, label="Import Sound Pack...")
+        import_btn.SetName("Import sound pack")
         import_btn.Bind(wx.EVT_BUTTON, self._on_import_pack)
         sizer.Add(import_btn, 0, wx.EXPAND | wx.BOTTOM, 5)
 
@@ -283,12 +285,14 @@ class SoundPackManagerDialog(wx.Dialog):
         sizer.Add(sounds_label, 0, wx.BOTTOM, 5)
 
         self.sounds_listbox = wx.ListBox(parent)
+        self.sounds_listbox.SetName("Sounds in selected pack list")
         self.sounds_listbox.Bind(wx.EVT_LISTBOX, self._on_sound_selected)
         sizer.Add(self.sounds_listbox, 1, wx.EXPAND | wx.BOTTOM, 5)
 
         # Preview button
         preview_sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.preview_btn = wx.Button(parent, label="Preview Selected Sound")
+        self.preview_btn.SetName("Preview selected sound")
         self.preview_btn.Bind(wx.EVT_BUTTON, self._on_preview_sound)
         self.preview_btn.Enable(False)
         preview_sizer.Add(self.preview_btn, 0)
@@ -306,13 +310,16 @@ class SoundPackManagerDialog(wx.Dialog):
         self.category_choice = wx.Choice(
             parent, choices=[name for name, _ in FRIENDLY_ALERT_CATEGORIES]
         )
+        self.category_choice.SetName("Alert category")
         self.category_choice.Bind(wx.EVT_CHOICE, self._on_category_changed)
         cat_row.Add(self.category_choice, 1, wx.RIGHT, 10)
 
         self.mapping_file_text = wx.TextCtrl(parent, style=wx.TE_READONLY)
+        self.mapping_file_text.SetName("Sound file for selected category")
         cat_row.Add(self.mapping_file_text, 1, wx.RIGHT, 5)
 
         browse_btn = wx.Button(parent, label="Browse...")
+        browse_btn.SetName("Browse sound file for selected category")
         browse_btn.Bind(wx.EVT_BUTTON, self._on_browse_mapping)
         cat_row.Add(browse_btn, 0, wx.RIGHT, 5)
 
@@ -321,10 +328,12 @@ class SoundPackManagerDialog(wx.Dialog):
         cat_row.Add(vol_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 2)
 
         self.volume_spin = wx.SpinCtrl(parent, min=0, max=100, initial=100, size=(60, -1))
+        self.volume_spin.SetName("Mapping volume percent")
         self.volume_spin.SetToolTip("Volume percentage (0-100%)")
         cat_row.Add(self.volume_spin, 0, wx.RIGHT, 5)
 
         self.set_volume_btn = wx.Button(parent, label="Set Vol")
+        self.set_volume_btn.SetName("Set volume for selected sound")
         self.set_volume_btn.SetToolTip("Apply volume to current sound")
         self.set_volume_btn.Bind(wx.EVT_BUTTON, self._on_set_volume)
         self.set_volume_btn.Enable(False)
@@ -338,14 +347,17 @@ class SoundPackManagerDialog(wx.Dialog):
         custom_row.Add(custom_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
 
         self.custom_key_input = wx.TextCtrl(parent, size=(200, -1), style=wx.TE_PROCESS_ENTER)
+        self.custom_key_input.SetName("Custom alert key")
         self.custom_key_input.SetHint("e.g., excessive_heat_warning")
         custom_row.Add(self.custom_key_input, 1, wx.RIGHT, 5)
 
         add_mapping_btn = wx.Button(parent, label="Choose Sound...")
+        add_mapping_btn.SetName("Choose sound for custom key")
         add_mapping_btn.Bind(wx.EVT_BUTTON, self._on_add_custom_mapping)
         custom_row.Add(add_mapping_btn, 0, wx.RIGHT, 5)
 
         remove_mapping_btn = wx.Button(parent, label="Remove")
+        remove_mapping_btn.SetName("Remove custom sound mapping")
         remove_mapping_btn.Bind(wx.EVT_BUTTON, self._on_remove_mapping)
         custom_row.Add(remove_mapping_btn, 0)
 
@@ -361,35 +373,42 @@ class SoundPackManagerDialog(wx.Dialog):
 
         # Left side buttons
         self.create_btn = wx.Button(parent, label="Create Sound Pack...")
+        self.create_btn.SetName("Create sound pack")
         self.create_btn.Bind(wx.EVT_BUTTON, self._on_create_pack)
         sizer.Add(self.create_btn, 0, wx.RIGHT, 5)
 
         self.browse_community_btn = wx.Button(parent, label="Browse Community")
+        self.browse_community_btn.SetName("Browse community sound packs")
         self.browse_community_btn.Bind(wx.EVT_BUTTON, self._on_browse_community)
         self.browse_community_btn.Enable(self.community_service is not None)
         sizer.Add(self.browse_community_btn, 0, wx.RIGHT, 5)
 
         self.share_btn = wx.Button(parent, label="Share Pack")
+        self.share_btn.SetName("Share sound pack")
         self.share_btn.Bind(wx.EVT_BUTTON, self._on_share_pack)
         self.share_btn.Enable(False)
         sizer.Add(self.share_btn, 0, wx.RIGHT, 5)
 
         self.duplicate_btn = wx.Button(parent, label="Duplicate")
+        self.duplicate_btn.SetName("Duplicate sound pack")
         self.duplicate_btn.Bind(wx.EVT_BUTTON, self._on_duplicate_pack)
         self.duplicate_btn.Enable(False)
         sizer.Add(self.duplicate_btn, 0, wx.RIGHT, 5)
 
         self.edit_btn = wx.Button(parent, label="Edit...")
+        self.edit_btn.SetName("Edit sound pack")
         self.edit_btn.Bind(wx.EVT_BUTTON, self._on_edit_pack)
         self.edit_btn.Enable(False)
         sizer.Add(self.edit_btn, 0, wx.RIGHT, 5)
 
         self.delete_btn = wx.Button(parent, label="Delete")
+        self.delete_btn.SetName("Delete sound pack")
         self.delete_btn.Bind(wx.EVT_BUTTON, self._on_delete_pack)
         self.delete_btn.Enable(False)
         sizer.Add(self.delete_btn, 0, wx.RIGHT, 5)
 
         self.export_btn = wx.Button(parent, label="Export...")
+        self.export_btn.SetName("Export sound pack")
         self.export_btn.Bind(wx.EVT_BUTTON, self._on_export_pack)
         self.export_btn.Enable(False)
         sizer.Add(self.export_btn, 0)
@@ -398,6 +417,7 @@ class SoundPackManagerDialog(wx.Dialog):
 
         # Close button
         close_btn = wx.Button(parent, wx.ID_CLOSE, label="Close")
+        close_btn.SetName("Close sound pack manager")
         close_btn.Bind(wx.EVT_BUTTON, self._on_close)
         sizer.Add(close_btn, 0)
 
@@ -987,11 +1007,13 @@ class SoundPackManagerDialog(wx.Dialog):
         # Name
         sizer.Add(wx.StaticText(panel, label="Name:"), 0, wx.ALL, 5)
         name_input = wx.TextCtrl(panel, value=info.name)
+        name_input.SetName("Sound pack name")
         sizer.Add(name_input, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
 
         # Author
         sizer.Add(wx.StaticText(panel, label="Author:"), 0, wx.ALL, 5)
         author_input = wx.TextCtrl(panel, value=info.author)
+        author_input.SetName("Sound pack author")
         sizer.Add(author_input, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
 
         # Description
@@ -999,12 +1021,15 @@ class SoundPackManagerDialog(wx.Dialog):
         desc_input = wx.TextCtrl(
             panel, value=info.description, style=wx.TE_MULTILINE, size=(-1, 100)
         )
+        desc_input.SetName("Sound pack description")
         sizer.Add(desc_input, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
 
         # Buttons
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
         save_btn = wx.Button(panel, wx.ID_SAVE, label="Save")
         cancel_btn = wx.Button(panel, wx.ID_CANCEL, label="Cancel")
+        save_btn.SetName("Save sound pack metadata")
+        cancel_btn.SetName("Cancel edit sound pack metadata")
         btn_sizer.Add(save_btn, 0, wx.RIGHT, 5)
         btn_sizer.Add(cancel_btn, 0)
         sizer.Add(btn_sizer, 0, wx.ALIGN_RIGHT | wx.ALL, 10)

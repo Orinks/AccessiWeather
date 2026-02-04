@@ -69,6 +69,7 @@ class DiscussionDialog(wx.Dialog):
             style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
             name="Forecast discussion text",
         )
+        self.discussion_display.SetName("Forecast discussion text")
         main_sizer.Add(self.discussion_display, 1, wx.ALL | wx.EXPAND, 10)
 
         # AI Explanation section
@@ -80,18 +81,22 @@ class DiscussionDialog(wx.Dialog):
             style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
             name="AI-generated plain language summary",
         )
+        self.explanation_display.SetName("Plain language summary")
         main_sizer.Add(self.explanation_display, 1, wx.ALL | wx.EXPAND, 10)
 
         # Button sizer
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         self.refresh_button = wx.Button(panel, label="&Refresh")
+        self.refresh_button.SetName("Refresh forecast discussion")
         button_sizer.Add(self.refresh_button, 0, wx.RIGHT, 5)
 
         self.explain_button = wx.Button(panel, label="&Explain with AI")
+        self.explain_button.SetName("Explain forecast discussion with AI")
         button_sizer.Add(self.explain_button, 0, wx.RIGHT, 5)
 
         self.close_button = wx.Button(panel, wx.ID_CLOSE, label="&Close")
+        self.close_button.SetName("Close forecast discussion dialog")
         button_sizer.Add(self.close_button, 0)
 
         main_sizer.Add(button_sizer, 0, wx.ALL | wx.ALIGN_RIGHT, 10)

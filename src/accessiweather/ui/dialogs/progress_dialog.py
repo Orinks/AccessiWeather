@@ -62,6 +62,7 @@ class ProgressDialog(wx.Dialog):
             btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
             btn_sizer.AddStretchSpacer()
             self.cancel_btn = wx.Button(panel, wx.ID_CANCEL, label="Cancel")
+            self.cancel_btn.SetName("Cancel download")
             self.cancel_btn.Bind(wx.EVT_BUTTON, self._on_cancel)
             btn_sizer.Add(self.cancel_btn, 0)
             btn_sizer.AddStretchSpacer()

@@ -41,11 +41,13 @@ class ReportIssueDialog(wx.Dialog):
             self,
             choices=["Bug Report", "Feature Request"],
         )
+        self.type_choice.SetName("Issue type")
         self.type_choice.SetSelection(0)
 
         # Title
         self.title_label = wx.StaticText(self, label="Title:")
         self.title_input = wx.TextCtrl(self)
+        self.title_input.SetName("Issue title")
         self.title_input.SetHint("Brief summary of the issue")
 
         # Description
@@ -54,6 +56,7 @@ class ReportIssueDialog(wx.Dialog):
             self,
             style=wx.TE_MULTILINE,
         )
+        self.desc_input.SetName("Issue description")
         self.desc_input.SetHint(
             "Describe the issue or feature request.\nFor bugs: What happened? What did you expect?"
         )
@@ -64,11 +67,14 @@ class ReportIssueDialog(wx.Dialog):
             self,
             style=wx.TE_MULTILINE | wx.TE_READONLY,
         )
+        self.info_text.SetName("System information (read-only)")
         self.info_text.SetValue(self._get_system_info())
 
         # Buttons
         self.submit_btn = wx.Button(self, wx.ID_OK, label="Open in Browser")
         self.cancel_btn = wx.Button(self, wx.ID_CANCEL, label="Cancel")
+        self.submit_btn.SetName("Open report in browser")
+        self.cancel_btn.SetName("Cancel report issue")
 
     def _do_layout(self) -> None:
         """Layout dialog controls."""

@@ -153,6 +153,7 @@ class UVIndexDialog(wx.Dialog):
         button_sizer.AddStretchSpacer()
 
         close_btn = wx.Button(panel, wx.ID_CLOSE, "Close")
+        close_btn.SetName("Close UV index dialog")
         close_btn.Bind(wx.EVT_BUTTON, self._on_close)
         button_sizer.Add(close_btn, 0)
 
@@ -239,6 +240,7 @@ class UVIndexDialog(wx.Dialog):
             style=wx.TE_MULTILINE | wx.TE_READONLY,
             size=(-1, 100),
         )
+        forecast_display.SetName("Hourly UV index forecast")
         sizer.Add(forecast_display, 1, wx.EXPAND)
 
         return sizer
@@ -267,6 +269,7 @@ class UVIndexDialog(wx.Dialog):
                 style=wx.TE_MULTILINE | wx.TE_READONLY,
                 size=(-1, 100),
             )
+            safety_display.SetName("Sun safety recommendations")
             sizer.Add(safety_display, 1, wx.EXPAND)
         else:
             no_data = wx.StaticText(panel, label="Sun safety recommendations are not available.")

@@ -136,6 +136,7 @@ class AirQualityDialog(wx.Dialog):
         button_sizer.AddStretchSpacer()
 
         close_btn = wx.Button(panel, wx.ID_CLOSE, "Close")
+        close_btn.SetName("Close air quality dialog")
         close_btn.Bind(wx.EVT_BUTTON, self._on_close)
         button_sizer.Add(close_btn, 0)
 
@@ -229,6 +230,7 @@ class AirQualityDialog(wx.Dialog):
             style=wx.TE_MULTILINE | wx.TE_READONLY,
             size=(-1, 100),
         )
+        forecast_display.SetName("Hourly air quality forecast")
         sizer.Add(forecast_display, 1, wx.EXPAND)
 
         return sizer
@@ -284,6 +286,7 @@ class AirQualityDialog(wx.Dialog):
             style=wx.TE_MULTILINE | wx.TE_READONLY,
             size=(-1, 100),
         )
+        pollutant_display.SetName("Current pollutant levels")
         sizer.Add(pollutant_display, 1, wx.EXPAND)
 
         return sizer

@@ -78,14 +78,17 @@ class SoundPackWizardDialog(wx.Dialog):
         nav_sizer.AddStretchSpacer()
 
         self.prev_btn = wx.Button(self.panel, label="< Previous")
+        self.prev_btn.SetName("Previous step")
         self.prev_btn.Bind(wx.EVT_BUTTON, self._go_previous)
         nav_sizer.Add(self.prev_btn, 0, wx.RIGHT, 5)
 
         self.next_btn = wx.Button(self.panel, label="Next >")
+        self.next_btn.SetName("Next step or create pack")
         self.next_btn.Bind(wx.EVT_BUTTON, self._go_next)
         nav_sizer.Add(self.next_btn, 0, wx.RIGHT, 5)
 
         self.cancel_btn = wx.Button(self.panel, wx.ID_CANCEL, label="Cancel")
+        self.cancel_btn.SetName("Cancel sound pack wizard")
         self.cancel_btn.Bind(wx.EVT_BUTTON, self._on_cancel)
         nav_sizer.Add(self.cancel_btn, 0)
 
@@ -134,6 +137,7 @@ class SoundPackWizardDialog(wx.Dialog):
             3,
         )
         self.name_input = wx.TextCtrl(self.content_panel, value=self.state.pack_name)
+        self.name_input.SetName("Sound pack name")
         self.name_input.SetHint("e.g., My Weather Sounds")
         self.content_sizer.Add(self.name_input, 0, wx.EXPAND | wx.BOTTOM, 10)
 
@@ -145,6 +149,7 @@ class SoundPackWizardDialog(wx.Dialog):
             3,
         )
         self.author_input = wx.TextCtrl(self.content_panel, value=self.state.author)
+        self.author_input.SetName("Sound pack author")
         self.content_sizer.Add(self.author_input, 0, wx.EXPAND | wx.BOTTOM, 10)
 
         # Description
@@ -160,6 +165,7 @@ class SoundPackWizardDialog(wx.Dialog):
             style=wx.TE_MULTILINE,
             size=(-1, 100),
         )
+        self.desc_input.SetName("Sound pack description")
         self.content_sizer.Add(self.desc_input, 1, wx.EXPAND | wx.BOTTOM, 10)
 
         # Hint
@@ -188,6 +194,7 @@ class SoundPackWizardDialog(wx.Dialog):
         self.category_checks: list[tuple[str, wx.CheckBox]] = []
         for display_name, tech_key in FRIENDLY_ALERT_CATEGORIES:
             cb = wx.CheckBox(scroll, label=display_name)
+            cb.SetName(f"Alert category {display_name}")
             cb.SetValue(tech_key in self.state.selected_alert_keys)
             scroll_sizer.Add(cb, 0, wx.BOTTOM, 5)
             self.category_checks.append((tech_key, cb))
@@ -200,10 +207,12 @@ class SoundPackWizardDialog(wx.Dialog):
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         select_common_btn = wx.Button(self.content_panel, label="Select Common")
+        select_common_btn.SetName("Select common alert categories")
         select_common_btn.Bind(wx.EVT_BUTTON, self._select_common_alerts)
         btn_sizer.Add(select_common_btn, 0, wx.RIGHT, 5)
 
         clear_btn = wx.Button(self.content_panel, label="Clear All")
+        clear_btn.SetName("Clear all alert categories")
         clear_btn.Bind(wx.EVT_BUTTON, self._clear_all_alerts)
         btn_sizer.Add(clear_btn, 0)
 
@@ -259,6 +268,7 @@ class SoundPackWizardDialog(wx.Dialog):
 
             # File display
             file_ctrl = wx.TextCtrl(scroll, style=wx.TE_READONLY)
+            file_ctrl.SetName(f"Sound file for {friendly}")
             existing = self.state.sound_mappings.get(key)
             if existing:
                 file_ctrl.SetValue(Path(existing).name)
@@ -266,6 +276,7 @@ class SoundPackWizardDialog(wx.Dialog):
 
             # Choose button
             choose_btn = wx.Button(scroll, label="Choose...", size=(80, -1))
+            choose_btn.SetName(f"Choose sound file for {friendly}")
             choose_btn.Bind(
                 wx.EVT_BUTTON,
                 lambda evt, k=key, fc=file_ctrl: self._choose_sound_file(k, fc),
@@ -346,6 +357,7 @@ class SoundPackWizardDialog(wx.Dialog):
 
             # Preview button
             preview_btn = wx.Button(scroll, label="Preview", size=(70, -1))
+            preview_btn.SetName(f"Preview sound for {friendly}")
             preview_btn.Bind(
                 wx.EVT_BUTTON,
                 lambda evt, k=key: self._preview_sound(k),
@@ -359,6 +371,7 @@ class SoundPackWizardDialog(wx.Dialog):
 
         # Test button
         test_btn = wx.Button(self.content_panel, label="Test All Sounds")
+        test_btn.SetName("Test all sounds")
         test_btn.Bind(wx.EVT_BUTTON, self._test_all_sounds)
         self.content_sizer.Add(test_btn, 0)
 
