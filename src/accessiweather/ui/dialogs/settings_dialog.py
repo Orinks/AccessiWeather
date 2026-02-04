@@ -1382,6 +1382,13 @@ class SettingsDialogSimple(wx.Dialog):
 
     def _on_check_updates(self, event):
         """Check for updates using the UpdateService."""
+        import sys
+
+        # Skip update checks when running from source
+        if not getattr(sys, "frozen", False):
+            self._controls["update_status"].SetLabel("Running from source — use git pull to update")
+            return
+
         self._controls["update_status"].SetLabel("Checking for updates...")
 
         def do_update_check():
@@ -1398,6 +1405,9 @@ class SettingsDialogSimple(wx.Dialog):
                 # Check if running a nightly build (tag embedded at build time)
                 build_tag = getattr(self.app, "build_tag", None)
                 current_nightly_date = parse_nightly_date(build_tag) if build_tag else None
+                # Show nightly date in UI when running a nightly build
+                if current_nightly_date:
+                    current_version = current_nightly_date
 
                 # Determine which channel to check
                 channel_idx = self._controls["update_channel"].GetSelection()
