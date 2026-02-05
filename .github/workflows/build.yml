@@ -206,7 +206,13 @@ jobs:
           if [ "$IS_NIGHTLY" = "true" ]; then
             LAST_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -1)
             if [ -n "$LAST_TAG" ]; then
-              git log "$LAST_TAG"..HEAD --oneline --no-merges | sed 's/^/- /' > notes.md
+              # Filter out dev-only commits (test, chore, ci, build, style, refactor, docs)
+              git log "$LAST_TAG"..HEAD --oneline --no-merges | \
+                grep -viE '^[a-f0-9]+ (test|chore|ci|build|style|refactor|docs)(\(|:)' | \
+                grep -viE '^[a-f0-9]+ Merge' | \
+                sed 's/^/- /' > notes.md
+              # If all commits were filtered, add a placeholder
+              [ -s notes.md ] || echo "- Bug fixes and improvements" > notes.md
             else
               echo "Initial nightly build" > notes.md
             fi
