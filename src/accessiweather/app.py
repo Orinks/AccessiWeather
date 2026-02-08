@@ -377,6 +377,7 @@ class AccessiWeatherApp(wx.App):
                     current_version = getattr(self, "version", "0.0.0")
                     build_tag = getattr(self, "build_tag", None)
                     current_nightly_date = parse_nightly_date(build_tag) if build_tag else None
+                    display_version = current_nightly_date if current_nightly_date else current_version
 
                     async def check():
                         service = UpdateService("AccessiWeather")
@@ -399,7 +400,7 @@ class AccessiWeatherApp(wx.App):
                         def show_update_notification():
                             result = wx.MessageBox(
                                 f"A new {channel_label} update is available!\n\n"
-                                f"Current: {current_version}\n"
+                                f"Current: {display_version}\n"
                                 f"Latest: {update_info.version}\n\n"
                                 "Download now?",
                                 "Update Available",
