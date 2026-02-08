@@ -379,6 +379,15 @@ class AccessiWeatherApp(wx.App):
                     current_nightly_date = parse_nightly_date(build_tag) if build_tag else None
                     display_version = current_nightly_date if current_nightly_date else current_version
 
+                    # Safety: if frozen but no build_tag and checking nightly channel,
+                    # skip auto-prompt to avoid infinite update loops
+                    if not build_tag and channel == "nightly":
+                        logger.warning(
+                            "Skipping startup nightly update check: no build_tag available. "
+                            "Use Help > Check for Updates to check manually."
+                        )
+                        return
+
                     async def check():
                         service = UpdateService("AccessiWeather")
                         try:
