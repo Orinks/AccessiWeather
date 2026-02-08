@@ -15,6 +15,7 @@ from wx.lib.sized_controls import SizedFrame, SizedPanel
 
 if TYPE_CHECKING:
     from ..app import AccessiWeatherApp
+    from ..models.location import Location
 
 logger = logging.getLogger(__name__)
 
@@ -267,6 +268,15 @@ class MainWindow(SizedFrame):
         if selected:
             logger.info(f"Location changed to: {selected}")
             self._set_current_location(selected)
+
+            # Show cached data instantly if available, then refresh in background
+            location = self.app.config_manager.get_current_location()
+            if location and hasattr(self.app, "weather_client") and self.app.weather_client:
+                cached = self.app.weather_client.get_cached_weather(location)
+                if cached and cached.has_any_data():
+                    logger.info(f"Showing cached data for {selected} while refreshing")
+                    self._on_weather_data_received(cached)
+
             self.refresh_weather_async(force_refresh=True)
 
     def on_add_location(self) -> None:
@@ -609,9 +619,27 @@ class MainWindow(SizedFrame):
             # Update UI on main thread
             wx.CallAfter(self._on_weather_data_received, weather_data)
 
+            # Pre-warm cache for other locations in background (non-blocking)
+            if not force_refresh:
+                await self._pre_warm_other_locations(location)
+
         except Exception as e:
             logger.error(f"Failed to fetch weather data: {e}")
             wx.CallAfter(self._on_weather_error, str(e))
+
+    async def _pre_warm_other_locations(self, current_location: Location) -> None:
+        """Pre-warm cache for non-current locations so switching is instant."""
+        try:
+            all_locations = self.app.config_manager.get_all_locations()
+            for loc in all_locations:
+                if loc.name != current_location.name:
+                    # Check if already cached
+                    cached = self.app.weather_client.get_cached_weather(loc)
+                    if not cached or not cached.has_any_data():
+                        logger.debug(f"Pre-warming cache for {loc.name}")
+                        await self.app.weather_client.pre_warm_cache(loc)
+        except Exception as e:
+            logger.debug(f"Cache pre-warm failed (non-critical): {e}")
 
     def _on_weather_data_received(self, weather_data) -> None:
         """Handle received weather data (called on main thread)."""
