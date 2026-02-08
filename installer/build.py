@@ -405,6 +405,40 @@ def run_dev() -> int:
     ).returncode
 
 
+def generate_build_metadata(args: argparse.Namespace) -> None:
+    """Generate version and build info files (mirrors CI steps)."""
+    print("\n" + "=" * 60)
+    print("Generating build metadata...")
+    print("=" * 60 + "\n")
+
+    # Generate version file
+    version_script = ROOT / "scripts" / "generate_version.py"
+    if version_script.exists():
+        run_command([sys.executable, str(version_script)], cwd=ROOT)
+    else:
+        print(f"Warning: {version_script} not found, skipping version generation")
+
+    # Generate build info (_build_info.py with BUILD_TAG)
+    build_info_script = ROOT / "scripts" / "generate_build_info.py"
+    if build_info_script.exists():
+        tag = args.tag
+        if not tag and args.nightly:
+            from datetime import datetime, timezone
+
+            tag = f"nightly-{datetime.now(timezone.utc).strftime('%Y%m%d')}"
+
+        cmd = [sys.executable, str(build_info_script)]
+        if tag:
+            cmd.append(tag)
+            print(f"  Build tag: {tag}")
+        else:
+            print("  Build tag: None (stable)")
+
+        run_command(cmd, cwd=ROOT)
+    else:
+        print(f"Warning: {build_info_script} not found, skipping build info generation")
+
+
 def main() -> int:
     """Run the build process."""
     parser = argparse.ArgumentParser(
@@ -441,6 +475,17 @@ def main() -> int:
         action="store_true",
         help="Skip portable ZIP creation",
     )
+    parser.add_argument(
+        "--nightly",
+        action="store_true",
+        help="Build as nightly (generates nightly-YYYYMMDD build tag)",
+    )
+    parser.add_argument(
+        "--tag",
+        type=str,
+        default=None,
+        help="Custom build tag (e.g. nightly-20260208). Overrides --nightly.",
+    )
 
     args = parser.parse_args()
 
@@ -470,6 +515,9 @@ def main() -> int:
 
     if not args.skip_icons:
         check_icons()
+
+    # Generate version and build info (same as CI)
+    generate_build_metadata(args)
 
     # Build with PyInstaller
     if not build_pyinstaller():

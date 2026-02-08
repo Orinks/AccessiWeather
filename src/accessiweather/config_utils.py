@@ -52,6 +52,20 @@ def is_portable_mode() -> bool:
 
         logger.debug(f"Checking portable mode for executable directory: {app_dir}")
 
+        # Check for uninstaller (Inno Setup leaves unins*.exe in app directory)
+        # This reliably detects installed copies regardless of install location
+        app_dir_path = os.path.dirname(sys.executable)
+        uninstaller_exists = any(
+            f.startswith("unins") and f.endswith(".exe")
+            for f in os.listdir(app_dir_path)
+            if os.path.isfile(os.path.join(app_dir_path, f))
+        )
+        if uninstaller_exists:
+            logger.debug(
+                f"Not in portable mode: uninstaller found in {app_dir_path}"
+            )
+            return False
+
         # Check if we're running from Program Files (standard installation)
         program_files = os.environ.get("PROGRAMFILES", "")
         program_files_x86 = os.environ.get("PROGRAMFILES(X86)", "")
