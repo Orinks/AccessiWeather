@@ -429,6 +429,8 @@ class MainWindow(SizedFrame):
         current_version = getattr(self.app, "version", "0.0.0")
         build_tag = getattr(self.app, "build_tag", None)
         current_nightly_date = parse_nightly_date(build_tag) if build_tag else None
+        # Show nightly date as the display version when running a nightly build
+        display_version = current_nightly_date if current_nightly_date else current_version
 
         # Show checking status
         wx.BeginBusyCursor()
@@ -460,7 +462,7 @@ class MainWindow(SizedFrame):
                     elif current_nightly_date:
                         msg = f"You're on the latest nightly ({current_nightly_date})."
                     else:
-                        msg = f"You're up to date ({current_version})."
+                        msg = f"You're up to date ({display_version})."
 
                     wx.CallAfter(
                         wx.MessageBox,
@@ -475,7 +477,7 @@ class MainWindow(SizedFrame):
                     def prompt():
                         result = wx.MessageBox(
                             f"A new {channel_label} update is available!\n\n"
-                            f"Current: {current_version}\n"
+                            f"Current: {display_version}\n"
                             f"Latest: {update_info.version}\n\n"
                             "Download now?",
                             "Update Available",
