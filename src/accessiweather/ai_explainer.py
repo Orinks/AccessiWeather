@@ -24,6 +24,7 @@ OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models"
 # Use current working free models from OpenRouter (updated Dec 2025)
 DEFAULT_FREE_MODEL = "meta-llama/llama-3.3-70b-instruct:free"
+DEFAULT_FREE_ROUTER = "openrouter/free"
 DEFAULT_PAID_MODEL = "openrouter/auto"
 # Static fallback models only used if dynamic fetch fails
 STATIC_FALLBACK_MODELS = [
@@ -544,7 +545,7 @@ class AIExplainer:
             models_to_try.append(DEFAULT_FREE_MODEL)
 
         # Add additional fallbacks for free models (dynamically fetched)
-        if ":free" in primary_model or primary_model == DEFAULT_FREE_MODEL:
+        if ":free" in primary_model or primary_model in (DEFAULT_FREE_MODEL, DEFAULT_FREE_ROUTER):
             fallback_models = get_available_free_models(exclude_model=primary_model)
             for fallback in fallback_models:
                 if fallback not in models_to_try:
@@ -766,7 +767,7 @@ class AIExplainer:
             models_to_try.append(DEFAULT_FREE_MODEL)
 
         # Add additional fallbacks for free models (dynamically fetched)
-        if ":free" in primary_model or primary_model == DEFAULT_FREE_MODEL:
+        if ":free" in primary_model or primary_model in (DEFAULT_FREE_MODEL, DEFAULT_FREE_ROUTER):
             fallback_models = get_available_free_models(exclude_model=primary_model)
             for fallback in fallback_models:
                 if fallback not in models_to_try:
