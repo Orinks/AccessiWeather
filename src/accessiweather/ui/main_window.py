@@ -68,9 +68,8 @@ class MainWindow(SizedFrame):
         location_panel.SetSizerProps(expand=True)
 
         wx.StaticText(location_panel, label="Location:")
-        self.location_dropdown = wx.ComboBox(
+        self.location_dropdown = wx.Choice(
             location_panel,
-            style=wx.CB_READONLY,
             name="Location selection",
         )
         self.location_dropdown.SetSizerProps(expand=True, proportion=1)
@@ -136,7 +135,7 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_SHOW, self._on_window_shown)
 
         # Location dropdown
-        self.location_dropdown.Bind(wx.EVT_COMBOBOX, self._on_location_changed)
+        self.location_dropdown.Bind(wx.EVT_CHOICE, self._on_location_changed)
 
         # Buttons
         self.add_button.Bind(wx.EVT_BUTTON, lambda e: self.on_add_location())
