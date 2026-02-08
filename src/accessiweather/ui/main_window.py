@@ -268,7 +268,7 @@ class MainWindow(SizedFrame):
         if selected:
             logger.info(f"Location changed to: {selected}")
             self._set_current_location(selected)
-            self.refresh_weather_async()
+            self.refresh_weather_async(force_refresh=True)
 
     def on_add_location(self) -> None:
         """Handle add location button click."""
@@ -566,14 +566,21 @@ class MainWindow(SizedFrame):
             logger.error(f"Failed to minimize to tray: {e}")
 
     def _set_current_location(self, location_name: str) -> None:
-        """Set the current location."""
+        """Set the current location and persist to config."""
         try:
             # set_current_location expects a string (location name), not a Location object
-            self.app.config_manager.set_current_location(location_name)
+            result = self.app.config_manager.set_current_location(location_name)
+            if not result:
+                logger.error(
+                    f"Failed to set current location '{location_name}': "
+                    "location not found or save failed"
+                )
+            else:
+                logger.info(f"Current location set and saved: {location_name}")
         except Exception as e:
             logger.error(f"Failed to set current location: {e}")
 
-    def refresh_weather_async(self) -> None:
+    def refresh_weather_async(self, force_refresh: bool = False) -> None:
         """Refresh weather data asynchronously."""
         if self.app.is_updating:
             logger.debug("Already updating, skipping refresh")
@@ -584,9 +591,9 @@ class MainWindow(SizedFrame):
         self.refresh_button.Disable()
 
         # Run async weather fetch
-        self.app.run_async(self._fetch_weather_data())
+        self.app.run_async(self._fetch_weather_data(force_refresh=force_refresh))
 
-    async def _fetch_weather_data(self) -> None:
+    async def _fetch_weather_data(self, force_refresh: bool = False) -> None:
         """Fetch weather data in background."""
         try:
             location = self.app.config_manager.get_current_location()
@@ -595,7 +602,10 @@ class MainWindow(SizedFrame):
                 return
 
             # Fetch weather data - pass the Location object directly
-            weather_data = await self.app.weather_client.get_weather_data(location)
+            # force_refresh=True bypasses cache (used when switching locations)
+            weather_data = await self.app.weather_client.get_weather_data(
+                location, force_refresh=force_refresh
+            )
 
             # Update UI on main thread
             wx.CallAfter(self._on_weather_data_received, weather_data)
