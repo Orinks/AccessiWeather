@@ -15,6 +15,7 @@ from wx.lib.sized_controls import SizedFrame, SizedPanel
 
 if TYPE_CHECKING:
     from ..app import AccessiWeatherApp
+    from ..models.location import Location
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ class MainWindow(SizedFrame):
         super().__init__(parent=None, title=title, **kwargs)
         self.app = app
         self._escape_id = None
+        self._fetch_generation = 0  # Tracks which fetch is current (prevents stale updates)
 
         # Create the UI
         self._create_widgets()
@@ -68,9 +70,8 @@ class MainWindow(SizedFrame):
         location_panel.SetSizerProps(expand=True)
 
         wx.StaticText(location_panel, label="Location:")
-        self.location_dropdown = wx.ComboBox(
+        self.location_dropdown = wx.Choice(
             location_panel,
-            style=wx.CB_READONLY,
             name="Location selection",
         )
         self.location_dropdown.SetSizerProps(expand=True, proportion=1)
@@ -136,7 +137,7 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_SHOW, self._on_window_shown)
 
         # Location dropdown
-        self.location_dropdown.Bind(wx.EVT_COMBOBOX, self._on_location_changed)
+        self.location_dropdown.Bind(wx.EVT_CHOICE, self._on_location_changed)
 
         # Buttons
         self.add_button.Bind(wx.EVT_BUTTON, lambda e: self.on_add_location())
@@ -263,12 +264,35 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_MENU, lambda e: self._on_about(), about_item)
 
     def _on_location_changed(self, event) -> None:
-        """Handle location selection change."""
+        """Handle location selection change with debounce for rapid switching."""
         selected = self.location_dropdown.GetStringSelection()
-        if selected:
-            logger.info(f"Location changed to: {selected}")
-            self._set_current_location(selected)
-            self.refresh_weather_async()
+        if not selected:
+            return
+
+        logger.info(f"Location changed to: {selected}")
+        self._set_current_location(selected)
+
+        # Show cached data instantly if available
+        location = self.app.config_manager.get_current_location()
+        if location and hasattr(self.app, "weather_client") and self.app.weather_client:
+            cached = self.app.weather_client.get_cached_weather(location)
+            if cached and cached.has_any_data():
+                logger.info(f"Showing cached data for {selected} while refreshing")
+                self._on_weather_data_received(cached)
+
+        # Debounce: cancel pending fetch, wait 500ms before fetching
+        if hasattr(self, "_location_debounce_timer") and self._location_debounce_timer.IsRunning():
+            self._location_debounce_timer.Stop()
+
+        if not hasattr(self, "_location_debounce_timer"):
+            self._location_debounce_timer = wx.Timer(self)
+            self.Bind(wx.EVT_TIMER, self._on_debounced_location_fetch, self._location_debounce_timer)
+
+        self._location_debounce_timer.StartOnce(500)
+
+    def _on_debounced_location_fetch(self, event) -> None:
+        """Fetch weather data after debounce period for the currently selected location."""
+        self.refresh_weather_async(force_refresh=True)
 
     def on_add_location(self) -> None:
         """Handle add location button click."""
@@ -566,16 +590,26 @@ class MainWindow(SizedFrame):
             logger.error(f"Failed to minimize to tray: {e}")
 
     def _set_current_location(self, location_name: str) -> None:
-        """Set the current location."""
+        """Set the current location and persist to config."""
         try:
             # set_current_location expects a string (location name), not a Location object
-            self.app.config_manager.set_current_location(location_name)
+            result = self.app.config_manager.set_current_location(location_name)
+            if not result:
+                logger.error(
+                    f"Failed to set current location '{location_name}': "
+                    "location not found or save failed"
+                )
+            else:
+                logger.info(f"Current location set and saved: {location_name}")
         except Exception as e:
             logger.error(f"Failed to set current location: {e}")
 
-    def refresh_weather_async(self) -> None:
+    def refresh_weather_async(self, force_refresh: bool = False) -> None:
         """Refresh weather data asynchronously."""
-        if self.app.is_updating:
+        # Increment generation to invalidate any in-flight fetches
+        self._fetch_generation += 1
+
+        if self.app.is_updating and not force_refresh:
             logger.debug("Already updating, skipping refresh")
             return
 
@@ -583,10 +617,11 @@ class MainWindow(SizedFrame):
         self.set_status("Updating weather data...")
         self.refresh_button.Disable()
 
-        # Run async weather fetch
-        self.app.run_async(self._fetch_weather_data())
+        # Run async weather fetch with current generation
+        generation = self._fetch_generation
+        self.app.run_async(self._fetch_weather_data(force_refresh=force_refresh, generation=generation))
 
-    async def _fetch_weather_data(self) -> None:
+    async def _fetch_weather_data(self, force_refresh: bool = False, generation: int = 0) -> None:
         """Fetch weather data in background."""
         try:
             location = self.app.config_manager.get_current_location()
@@ -595,14 +630,43 @@ class MainWindow(SizedFrame):
                 return
 
             # Fetch weather data - pass the Location object directly
-            weather_data = await self.app.weather_client.get_weather_data(location)
+            # force_refresh=True bypasses cache (used when switching locations)
+            weather_data = await self.app.weather_client.get_weather_data(
+                location, force_refresh=force_refresh
+            )
+
+            # Only update UI if this fetch is still current (not superseded by a newer one)
+            if generation != self._fetch_generation:
+                logger.debug(
+                    f"Discarding stale fetch for {location.name} "
+                    f"(gen {generation} < {self._fetch_generation})"
+                )
+                return
 
             # Update UI on main thread
             wx.CallAfter(self._on_weather_data_received, weather_data)
 
+            # Pre-warm cache for other locations in background (non-blocking)
+            if not force_refresh:
+                await self._pre_warm_other_locations(location)
+
         except Exception as e:
             logger.error(f"Failed to fetch weather data: {e}")
             wx.CallAfter(self._on_weather_error, str(e))
+
+    async def _pre_warm_other_locations(self, current_location: Location) -> None:
+        """Pre-warm cache for non-current locations so switching is instant."""
+        try:
+            all_locations = self.app.config_manager.get_all_locations()
+            for loc in all_locations:
+                if loc.name != current_location.name:
+                    # Check if already cached
+                    cached = self.app.weather_client.get_cached_weather(loc)
+                    if not cached or not cached.has_any_data():
+                        logger.debug(f"Pre-warming cache for {loc.name}")
+                        await self.app.weather_client.pre_warm_cache(loc)
+        except Exception as e:
+            logger.debug(f"Cache pre-warm failed (non-critical): {e}")
 
     def _on_weather_data_received(self, weather_data) -> None:
         """Handle received weather data (called on main thread)."""
