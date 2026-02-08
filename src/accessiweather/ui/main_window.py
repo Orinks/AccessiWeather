@@ -45,6 +45,7 @@ class MainWindow(SizedFrame):
         super().__init__(parent=None, title=title, **kwargs)
         self.app = app
         self._escape_id = None
+        self._fetch_generation = 0  # Tracks which fetch is current (prevents stale updates)
 
         # Create the UI
         self._create_widgets()
@@ -263,21 +264,35 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_MENU, lambda e: self._on_about(), about_item)
 
     def _on_location_changed(self, event) -> None:
-        """Handle location selection change."""
+        """Handle location selection change with debounce for rapid switching."""
         selected = self.location_dropdown.GetStringSelection()
-        if selected:
-            logger.info(f"Location changed to: {selected}")
-            self._set_current_location(selected)
+        if not selected:
+            return
 
-            # Show cached data instantly if available, then refresh in background
-            location = self.app.config_manager.get_current_location()
-            if location and hasattr(self.app, "weather_client") and self.app.weather_client:
-                cached = self.app.weather_client.get_cached_weather(location)
-                if cached and cached.has_any_data():
-                    logger.info(f"Showing cached data for {selected} while refreshing")
-                    self._on_weather_data_received(cached)
+        logger.info(f"Location changed to: {selected}")
+        self._set_current_location(selected)
 
-            self.refresh_weather_async(force_refresh=True)
+        # Show cached data instantly if available
+        location = self.app.config_manager.get_current_location()
+        if location and hasattr(self.app, "weather_client") and self.app.weather_client:
+            cached = self.app.weather_client.get_cached_weather(location)
+            if cached and cached.has_any_data():
+                logger.info(f"Showing cached data for {selected} while refreshing")
+                self._on_weather_data_received(cached)
+
+        # Debounce: cancel pending fetch, wait 500ms before fetching
+        if hasattr(self, "_location_debounce_timer") and self._location_debounce_timer.IsRunning():
+            self._location_debounce_timer.Stop()
+
+        if not hasattr(self, "_location_debounce_timer"):
+            self._location_debounce_timer = wx.Timer(self)
+            self.Bind(wx.EVT_TIMER, self._on_debounced_location_fetch, self._location_debounce_timer)
+
+        self._location_debounce_timer.StartOnce(500)
+
+    def _on_debounced_location_fetch(self, event) -> None:
+        """Fetch weather data after debounce period for the currently selected location."""
+        self.refresh_weather_async(force_refresh=True)
 
     def on_add_location(self) -> None:
         """Handle add location button click."""
@@ -591,7 +606,10 @@ class MainWindow(SizedFrame):
 
     def refresh_weather_async(self, force_refresh: bool = False) -> None:
         """Refresh weather data asynchronously."""
-        if self.app.is_updating:
+        # Increment generation to invalidate any in-flight fetches
+        self._fetch_generation += 1
+
+        if self.app.is_updating and not force_refresh:
             logger.debug("Already updating, skipping refresh")
             return
 
@@ -599,10 +617,11 @@ class MainWindow(SizedFrame):
         self.set_status("Updating weather data...")
         self.refresh_button.Disable()
 
-        # Run async weather fetch
-        self.app.run_async(self._fetch_weather_data(force_refresh=force_refresh))
+        # Run async weather fetch with current generation
+        generation = self._fetch_generation
+        self.app.run_async(self._fetch_weather_data(force_refresh=force_refresh, generation=generation))
 
-    async def _fetch_weather_data(self, force_refresh: bool = False) -> None:
+    async def _fetch_weather_data(self, force_refresh: bool = False, generation: int = 0) -> None:
         """Fetch weather data in background."""
         try:
             location = self.app.config_manager.get_current_location()
@@ -615,6 +634,14 @@ class MainWindow(SizedFrame):
             weather_data = await self.app.weather_client.get_weather_data(
                 location, force_refresh=force_refresh
             )
+
+            # Only update UI if this fetch is still current (not superseded by a newer one)
+            if generation != self._fetch_generation:
+                logger.debug(
+                    f"Discarding stale fetch for {location.name} "
+                    f"(gen {generation} < {self._fetch_generation})"
+                )
+                return
 
             # Update UI on main thread
             wx.CallAfter(self._on_weather_data_received, weather_data)
