@@ -134,7 +134,7 @@ class TestModelSelection:
         """Test that free model is used without API key."""
         explainer = AIExplainer()
         model = explainer.get_effective_model()
-        assert ":free" in model
+        assert "free" in model
 
     def test_get_effective_model_with_api_key(self):
         """Test that configured model is used with API key."""

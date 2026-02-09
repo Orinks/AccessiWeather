@@ -84,7 +84,11 @@ class DiscussionDialog(wx.Dialog):
 
         # Model information (shown after AI explanation)
         self.model_info = wx.TextCtrl(
-            panel, value="", style=wx.TE_READONLY, name="Model information"
+            panel,
+            value="",
+            style=wx.TE_MULTILINE | wx.TE_READONLY,
+            name="Model information",
+            size=(-1, 80),
         )
         main_sizer.Add(self.model_info, 0, wx.LEFT | wx.RIGHT | wx.EXPAND, 10)
         self.model_info.Hide()
@@ -317,9 +321,9 @@ class DiscussionDialog(wx.Dialog):
         self.explain_button.Enable()
         self.explanation_display.SetValue(explanation)
         cost_text = "No cost" if estimated_cost == 0 else f"~${estimated_cost:.6f}"
-        info = f"Model: {model_used} | Tokens: {token_count} | Cost: {cost_text}"
+        info = f"Model: {model_used}\nTokens: {token_count}\nCost: {cost_text}"
         if cached:
-            info += " (cached)"
+            info += "\nCached: Yes"
         self.model_info.SetValue(info)
         self.model_info.Show()
         self.GetSizer().Layout()

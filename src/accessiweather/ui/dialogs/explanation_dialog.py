@@ -88,15 +88,17 @@ class ExplanationDialog(wx.Dialog):
             if self.explanation.estimated_cost == 0
             else f"~${self.explanation.estimated_cost:.6f}"
         )
-        info = (
-            f"Model: {self.explanation.model_used}"
-            f" | Tokens: {self.explanation.token_count}"
-            f" | Cost: {cost_text}"
-        )
+        info = f"Model: {self.explanation.model_used}\n"
+        info += f"Tokens: {self.explanation.token_count}\n"
+        info += f"Cost: {cost_text}"
         if self.explanation.cached:
-            info += " (cached)"
+            info += "\nCached: Yes"
         model_info = wx.TextCtrl(
-            self, value=info, style=wx.TE_READONLY, name="Model information"
+            self,
+            value=info,
+            style=wx.TE_MULTILINE | wx.TE_READONLY,
+            name="Model information",
+            size=(-1, 80),
         )
         main_sizer.Add(model_info, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
 

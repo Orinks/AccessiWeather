@@ -155,7 +155,7 @@ class AppSettings:
     # AI Explanation Settings
     openrouter_api_key: str = ""
     ai_model_preference: str = (
-        "meta-llama/llama-3.3-70b-instruct:free"  # free model or "auto" for paid
+        "openrouter/free"  # free auto-router (default)
     )
     ai_explanation_style: str = "standard"  # "brief", "standard", "detailed"
     ai_cache_ttl: int = 300  # 5 minutes in seconds
@@ -471,7 +471,7 @@ class AppSettings:
             # AI settings
             openrouter_api_key=data.get("openrouter_api_key", ""),
             ai_model_preference=data.get(
-                "ai_model_preference", "meta-llama/llama-3.3-70b-instruct:free"
+                "ai_model_preference", "openrouter/free"
             ),
             ai_explanation_style=data.get("ai_explanation_style", "standard"),
             ai_cache_ttl=data.get("ai_cache_ttl", 300),
