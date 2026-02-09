@@ -4,8 +4,6 @@ import os
 import sys
 from unittest import mock
 
-import pytest
-
 from accessiweather.config_utils import ensure_config_defaults, get_config_dir, is_portable_mode
 
 
@@ -14,11 +12,12 @@ class TestIsPortableMode:
 
     def test_not_frozen_returns_false(self):
         """Running from source (not frozen) should not be portable."""
-        with mock.patch.object(sys, "frozen", False, create=True):
-            # Clear the force env var
-            with mock.patch.dict(os.environ, {}, clear=False):
-                os.environ.pop("ACCESSIWEATHER_FORCE_PORTABLE", None)
-                assert is_portable_mode() is False
+        with (
+            mock.patch.object(sys, "frozen", False, create=True),
+            mock.patch.dict(os.environ, {}, clear=False),
+        ):
+            os.environ.pop("ACCESSIWEATHER_FORCE_PORTABLE", None)
+            assert is_portable_mode() is False
 
     def test_force_portable_env_var(self):
         """ACCESSIWEATHER_FORCE_PORTABLE=1 forces portable mode."""
@@ -54,30 +53,36 @@ class TestGetConfigDir:
         """On Linux (non-portable, non-Windows), should use ~/.accessiweather."""
         with mock.patch.dict(os.environ, {}, clear=False):
             os.environ.pop("ACCESSIWEATHER_FORCE_PORTABLE", None)
-            with mock.patch("accessiweather.config_utils.is_portable_mode", return_value=False):
-                with mock.patch("accessiweather.config_utils.platform") as mock_platform:
-                    mock_platform.system.return_value = "Linux"
-                    result = get_config_dir()
-                    expected = os.path.expanduser("~/.accessiweather")
-                    assert result == expected
+            with (
+                mock.patch("accessiweather.config_utils.is_portable_mode", return_value=False),
+                mock.patch("accessiweather.config_utils.platform") as mock_platform,
+            ):
+                mock_platform.system.return_value = "Linux"
+                result = get_config_dir()
+                expected = os.path.expanduser("~/.accessiweather")
+                assert result == expected
 
     def test_windows_appdata_config_dir(self):
         """On Windows with APPDATA set, should use APPDATA/.accessiweather."""
-        with mock.patch("accessiweather.config_utils.is_portable_mode", return_value=False):
-            with mock.patch("accessiweather.config_utils.platform") as mock_platform:
-                mock_platform.system.return_value = "Windows"
-                with mock.patch.dict(os.environ, {"APPDATA": "C:\\Users\\test\\AppData\\Roaming"}):
-                    result = get_config_dir()
-                    assert result == os.path.join(
-                        "C:\\Users\\test\\AppData\\Roaming", ".accessiweather"
-                    )
+        with (
+            mock.patch("accessiweather.config_utils.is_portable_mode", return_value=False),
+            mock.patch("accessiweather.config_utils.platform") as mock_platform,
+        ):
+            mock_platform.system.return_value = "Windows"
+            with mock.patch.dict(os.environ, {"APPDATA": "C:\\Users\\test\\AppData\\Roaming"}):
+                result = get_config_dir()
+                assert result == os.path.join(
+                    "C:\\Users\\test\\AppData\\Roaming", ".accessiweather"
+                )
 
     def test_portable_mode_config_dir(self):
         """In portable mode from source, should use project_root/config."""
-        with mock.patch.dict(os.environ, {"ACCESSIWEATHER_FORCE_PORTABLE": "1"}):
-            with mock.patch("accessiweather.config_utils.is_portable_mode", return_value=True):
-                result = get_config_dir()
-                assert result.endswith("config")
+        with (
+            mock.patch.dict(os.environ, {"ACCESSIWEATHER_FORCE_PORTABLE": "1"}),
+            mock.patch("accessiweather.config_utils.is_portable_mode", return_value=True),
+        ):
+            result = get_config_dir()
+            assert result.endswith("config")
 
 
 class TestEnsureConfigDefaults:
@@ -108,7 +113,6 @@ class TestEnsureConfigDefaults:
     def test_original_config_not_mutated(self):
         """The original config dict should not be modified."""
         config = {"settings": {"data_source": "nws"}}
-        original_id = id(config["settings"])
         result = ensure_config_defaults(config)
         # Original should be untouched
         assert "auto_update_check" not in config["settings"]
