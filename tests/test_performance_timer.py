@@ -22,7 +22,7 @@ class TestMeasure:
     def test_measure_logs_completion(self, caplog):
         """Successful operation logs completion time."""
         with caplog.at_level(logging.INFO, logger="performance"), measure("test_op"):
-                time.sleep(0.01)
+            time.sleep(0.01)
         assert any("test_op completed in" in r.message for r in caplog.records)
 
     def test_measure_logs_failure_and_reraises(self, caplog):
@@ -61,7 +61,7 @@ class TestMeasureAsync:
             pytest.raises(RuntimeError, match="async_boom"),
         ):
             async with measure_async("async_fail"):
-                    raise RuntimeError("async_boom")
+                raise RuntimeError("async_boom")
         assert any("async_fail failed after" in r.message for r in caplog.records)
 
 
