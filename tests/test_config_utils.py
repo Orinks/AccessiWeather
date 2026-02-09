@@ -40,6 +40,96 @@ class TestIsPortableMode:
             # Not frozen, so returns False
             assert is_portable_mode() is False
 
+    def test_frozen_uninstaller_detected(self, tmp_path):
+        """Frozen app with uninstaller present should not be portable."""
+        # Create a fake uninstaller
+        uninstaller = tmp_path / "unins000.exe"
+        uninstaller.write_text("fake")
+        exe_path = str(tmp_path / "app.exe")
+
+        with (
+            mock.patch.object(sys, "frozen", True, create=True),
+            mock.patch.object(sys, "executable", exe_path),
+            mock.patch.dict(
+                os.environ,
+                {"ACCESSIWEATHER_FORCE_PORTABLE": "", "PROGRAMFILES": "", "PROGRAMFILES(X86)": ""},
+            ),
+        ):
+            assert is_portable_mode() is False
+
+    def test_frozen_in_program_files(self, tmp_path):
+        """Frozen app under Program Files should not be portable."""
+        pf = tmp_path / "Program Files" / "AccessiWeather"
+        pf.mkdir(parents=True)
+        exe_path = str(pf / "app.exe")
+
+        with (
+            mock.patch.object(sys, "frozen", True, create=True),
+            mock.patch.object(sys, "executable", exe_path),
+            mock.patch.dict(
+                os.environ,
+                {
+                    "ACCESSIWEATHER_FORCE_PORTABLE": "",
+                    "PROGRAMFILES": str(tmp_path / "Program Files"),
+                    "PROGRAMFILES(X86)": "",
+                },
+            ),
+            mock.patch("os.listdir", return_value=[]),
+        ):
+            assert is_portable_mode() is False
+
+    def test_frozen_in_program_files_x86(self, tmp_path):
+        """Frozen app under Program Files (x86) should not be portable."""
+        pf = tmp_path / "Program Files (x86)" / "AccessiWeather"
+        pf.mkdir(parents=True)
+        exe_path = str(pf / "app.exe")
+
+        with (
+            mock.patch.object(sys, "frozen", True, create=True),
+            mock.patch.object(sys, "executable", exe_path),
+            mock.patch.dict(
+                os.environ,
+                {
+                    "ACCESSIWEATHER_FORCE_PORTABLE": "",
+                    "PROGRAMFILES": "",
+                    "PROGRAMFILES(X86)": str(tmp_path / "Program Files (x86)"),
+                },
+            ),
+            mock.patch("os.listdir", return_value=[]),
+        ):
+            assert is_portable_mode() is False
+
+    def test_frozen_writable_directory_is_portable(self, tmp_path):
+        """Frozen app in writable non-Program Files dir should be portable."""
+        exe_path = str(tmp_path / "app.exe")
+
+        with (
+            mock.patch.object(sys, "frozen", True, create=True),
+            mock.patch.object(sys, "executable", exe_path),
+            mock.patch.dict(
+                os.environ,
+                {"ACCESSIWEATHER_FORCE_PORTABLE": "", "PROGRAMFILES": "", "PROGRAMFILES(X86)": ""},
+            ),
+            mock.patch("os.listdir", return_value=[]),
+        ):
+            assert is_portable_mode() is True
+
+    def test_frozen_non_writable_directory_not_portable(self, tmp_path):
+        """Frozen app in non-writable dir should not be portable."""
+        exe_path = str(tmp_path / "app.exe")
+
+        with (
+            mock.patch.object(sys, "frozen", True, create=True),
+            mock.patch.object(sys, "executable", exe_path),
+            mock.patch.dict(
+                os.environ,
+                {"ACCESSIWEATHER_FORCE_PORTABLE": "", "PROGRAMFILES": "", "PROGRAMFILES(X86)": ""},
+            ),
+            mock.patch("os.listdir", return_value=[]),
+            mock.patch("builtins.open", side_effect=PermissionError("no write")),
+        ):
+            assert is_portable_mode() is False
+
 
 class TestGetConfigDir:
     """Tests for get_config_dir()."""
@@ -83,6 +173,29 @@ class TestGetConfigDir:
         ):
             result = get_config_dir()
             assert result.endswith("config")
+
+    def test_portable_frozen_config_dir(self, tmp_path):
+        """In portable mode with frozen exe, should use exe_dir/config."""
+        exe_path = str(tmp_path / "app.exe")
+        with (
+            mock.patch("accessiweather.config_utils.is_portable_mode", return_value=True),
+            mock.patch.object(sys, "frozen", True, create=True),
+            mock.patch.object(sys, "executable", exe_path),
+        ):
+            result = get_config_dir()
+            assert result == os.path.join(str(tmp_path), "config")
+
+    def test_windows_no_appdata_falls_to_default(self):
+        """On Windows without APPDATA, should fall back to ~/.accessiweather."""
+        with (
+            mock.patch("accessiweather.config_utils.is_portable_mode", return_value=False),
+            mock.patch("accessiweather.config_utils.platform") as mock_platform,
+            mock.patch.dict(os.environ, {}, clear=False),
+        ):
+            os.environ.pop("APPDATA", None)
+            mock_platform.system.return_value = "Windows"
+            result = get_config_dir()
+            assert result == os.path.expanduser("~/.accessiweather")
 
 
 class TestEnsureConfigDefaults:
