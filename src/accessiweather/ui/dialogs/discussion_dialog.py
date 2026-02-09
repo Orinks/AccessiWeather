@@ -82,20 +82,38 @@ class DiscussionDialog(wx.Dialog):
         )
         main_sizer.Add(self.explanation_display, 1, wx.ALL | wx.EXPAND, 10)
 
-        # Model info (shown after AI explanation)
-        model_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        model_sizer.Add(
+        # Metadata section (shown after AI explanation)
+        self.metadata_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        model_row = wx.BoxSizer(wx.HORIZONTAL)
+        model_row.Add(
             wx.StaticText(panel, label="Model:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5
         )
         self.model_display = wx.TextCtrl(
-            panel,
-            value="",
-            style=wx.TE_READONLY,
-            name="AI model used",
+            panel, value="", style=wx.TE_READONLY, name="AI model used"
         )
-        model_sizer.Add(self.model_display, 1)
-        main_sizer.Add(model_sizer, 0, wx.LEFT | wx.RIGHT | wx.EXPAND, 10)
-        self.model_display.Hide()
+        model_row.Add(self.model_display, 1)
+        self.metadata_sizer.Add(model_row, 0, wx.EXPAND)
+
+        usage_row = wx.BoxSizer(wx.HORIZONTAL)
+        usage_row.Add(
+            wx.StaticText(panel, label="Tokens:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5
+        )
+        self.tokens_display = wx.TextCtrl(
+            panel, value="", style=wx.TE_READONLY, name="Token count"
+        )
+        usage_row.Add(self.tokens_display, 1, wx.RIGHT, 10)
+        usage_row.Add(
+            wx.StaticText(panel, label="Cost:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5
+        )
+        self.cost_display = wx.TextCtrl(
+            panel, value="", style=wx.TE_READONLY, name="Estimated cost"
+        )
+        usage_row.Add(self.cost_display, 1)
+        self.metadata_sizer.Add(usage_row, 0, wx.EXPAND | wx.TOP, 2)
+
+        main_sizer.Add(self.metadata_sizer, 0, wx.LEFT | wx.RIGHT | wx.EXPAND, 10)
+        self.metadata_sizer.ShowItems(False)
 
         # Button sizer
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -299,19 +317,38 @@ class DiscussionDialog(wx.Dialog):
                 style=ExplanationStyle.DETAILED,
             )
 
-            wx.CallAfter(self._on_explain_complete, result.text, result.model_used)
+            wx.CallAfter(
+                self._on_explain_complete,
+                result.text,
+                result.model_used,
+                result.token_count,
+                result.estimated_cost,
+                result.cached,
+            )
 
         except Exception as e:
             logger.error(f"AI explanation failed: {e}")
             wx.CallAfter(self._on_explain_error, str(e))
 
-    def _on_explain_complete(self, explanation: str, model_used: str) -> None:
+    def _on_explain_complete(
+        self,
+        explanation: str,
+        model_used: str,
+        token_count: int = 0,
+        estimated_cost: float = 0.0,
+        cached: bool = False,
+    ) -> None:
         """Handle explanation completion."""
         self._is_explaining = False
         self.explain_button.Enable()
         self.explanation_display.SetValue(explanation)
         self.model_display.SetValue(model_used)
-        self.model_display.Show()
+        self.tokens_display.SetValue(str(token_count))
+        cost_text = "No cost" if estimated_cost == 0 else f"~${estimated_cost:.6f}"
+        if cached:
+            cost_text += " (cached)"
+        self.cost_display.SetValue(cost_text)
+        self.metadata_sizer.ShowItems(True)
         self.GetSizer().Layout()
         self._set_status(f"Explanation generated using {model_used}.")
 
