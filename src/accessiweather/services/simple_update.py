@@ -278,9 +278,19 @@ def build_portable_update_script(
         if exist "%EXTRACT_DIR%" rd /s /q "%EXTRACT_DIR%"
         powershell -Command "Expand-Archive -Path '%ZIP_PATH%' ^
         -DestinationPath '%EXTRACT_DIR%' -Force"
-        xcopy "%EXTRACT_DIR%\\*" "%TARGET_DIR%\\" /E /H /Y /Q
+
+        REM Find actual content dir (zip may have a subfolder)
+        set "COPY_SRC=%EXTRACT_DIR%"
+        if not exist "%EXTRACT_DIR%\\AccessiWeather.exe" (
+            for /d %%D in ("%EXTRACT_DIR%\\*") do (
+                if exist "%%D\\AccessiWeather.exe" set "COPY_SRC=%%D"
+            )
+        )
+
+        xcopy "%COPY_SRC%\\*" "%TARGET_DIR%\\" /E /H /Y /Q
         rd /s /q "%EXTRACT_DIR%"
         del "%ZIP_PATH%"
+        timeout /t 2 /nobreak >NUL
         start "" "%EXE_PATH%"
         (goto) 2>nul & del "%~f0"
         """

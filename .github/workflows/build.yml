@@ -102,7 +102,13 @@ jobs:
         shell: cmd
         run: |
           cd dist
-          7z a -tzip "AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip" "AccessiWeather_dir\*" || 7z a -tzip "AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip" "AccessiWeather.exe"
+          if exist "AccessiWeather_dir" (
+            cd AccessiWeather_dir
+            7z a -tzip "..\AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip" *
+            cd ..
+          ) else (
+            7z a -tzip "AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip" "AccessiWeather.exe"
+          )
 
       - uses: actions/upload-artifact@v6
         with:
