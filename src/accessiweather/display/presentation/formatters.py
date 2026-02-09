@@ -240,7 +240,11 @@ def format_forecast_temperature(
     unit_pref: TemperatureUnit,
     precision: int,
 ) -> str | None:
-    """Format a forecast period temperature without mutating the period."""
+    """
+    Format a forecast period temperature without mutating the period.
+
+    When a low temperature is available, formats as "High / Low".
+    """
     if period.temperature is None:
         return None
     temp = period.temperature
@@ -251,7 +255,20 @@ def format_forecast_temperature(
     else:
         temp_c = temp
         temp_f = (temp * 9 / 5) + 32
-    return format_temperature(temp_f, unit_pref, temperature_c=temp_c, precision=precision)
+    high_str = format_temperature(temp_f, unit_pref, temperature_c=temp_c, precision=precision)
+
+    if period.temperature_low is not None:
+        low = period.temperature_low
+        if unit == "F":
+            low_f = low
+            low_c = (low - 32) * 5 / 9
+        else:
+            low_c = low
+            low_f = (low * 9 / 5) + 32
+        low_str = format_temperature(low_f, unit_pref, temperature_c=low_c, precision=precision)
+        return f"{high_str} / {low_str}"
+
+    return high_str
 
 
 def format_period_wind(period: ForecastPeriod) -> str | None:
