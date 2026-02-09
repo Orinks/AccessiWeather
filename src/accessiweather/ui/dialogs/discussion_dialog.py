@@ -82,6 +82,21 @@ class DiscussionDialog(wx.Dialog):
         )
         main_sizer.Add(self.explanation_display, 1, wx.ALL | wx.EXPAND, 10)
 
+        # Model info (shown after AI explanation)
+        model_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        model_sizer.Add(
+            wx.StaticText(panel, label="Model:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5
+        )
+        self.model_display = wx.TextCtrl(
+            panel,
+            value="",
+            style=wx.TE_READONLY,
+            name="AI model used",
+        )
+        model_sizer.Add(self.model_display, 1)
+        main_sizer.Add(model_sizer, 0, wx.LEFT | wx.RIGHT | wx.EXPAND, 10)
+        self.model_display.Hide()
+
         # Button sizer
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -295,6 +310,9 @@ class DiscussionDialog(wx.Dialog):
         self._is_explaining = False
         self.explain_button.Enable()
         self.explanation_display.SetValue(explanation)
+        self.model_display.SetValue(model_used)
+        self.model_display.Show()
+        self.GetSizer().Layout()
         self._set_status(f"Explanation generated using {model_used}.")
 
     def _on_explain_error(self, error: str) -> None:

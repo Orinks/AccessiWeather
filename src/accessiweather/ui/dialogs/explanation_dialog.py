@@ -86,8 +86,16 @@ class ExplanationDialog(wx.Dialog):
         metadata_sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Model used
-        model_label = wx.StaticText(self, label=f"Model: {self.explanation.model_used}")
-        metadata_sizer.Add(model_label, 0, wx.TOP, 10)
+        metadata_sizer.Add(
+            wx.StaticText(self, label="Model:"), 0, wx.TOP, 10
+        )
+        model_ctrl = wx.TextCtrl(
+            self,
+            value=self.explanation.model_used,
+            style=wx.TE_READONLY,
+            name="Model used",
+        )
+        metadata_sizer.Add(model_ctrl, 0, wx.EXPAND | wx.TOP, 2)
 
         # Token count and cost
         cost_text = (
