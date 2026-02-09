@@ -209,7 +209,9 @@ class TestMergeDuplicateAlerts:
 
     def test_longer_description_wins(self):
         nws = _make_alert(source="nws", description="short")
-        vc = _make_alert(source="visualcrossing", description="a much longer and more detailed description")
+        vc = _make_alert(
+            source="visualcrossing", description="a much longer and more detailed description"
+        )
         result = self.agg._merge_duplicate_alerts([nws, vc])
         assert result.description == "a much longer and more detailed description"
 
@@ -221,13 +223,17 @@ class TestMergeDuplicateAlerts:
 
     def test_longer_instruction_wins(self):
         nws = _make_alert(source="nws", instruction="go")
-        vc = _make_alert(source="visualcrossing", instruction="take shelter immediately and seek cover")
+        vc = _make_alert(
+            source="visualcrossing", instruction="take shelter immediately and seek cover"
+        )
         result = self.agg._merge_duplicate_alerts([nws, vc])
         assert result.instruction == "take shelter immediately and seek cover"
 
     def test_unknown_metadata_replaced(self):
         nws = _make_alert(source="nws", severity="Unknown", urgency="Unknown", certainty="Unknown")
-        vc = _make_alert(source="visualcrossing", severity="Moderate", urgency="Future", certainty="Possible")
+        vc = _make_alert(
+            source="visualcrossing", severity="Moderate", urgency="Future", certainty="Possible"
+        )
         result = self.agg._merge_duplicate_alerts([nws, vc])
         assert result.severity == "Moderate"
         assert result.urgency == "Future"

@@ -225,9 +225,7 @@ class TestComputeTemperatureTrend:
 
     def test_no_temperature_in_current(self):
         wd = _make_weather_data(temp_f=None, temp_c=None)
-        wd.hourly_forecast = HourlyForecast(
-            periods=_make_hourly_periods(hours=6)
-        )
+        wd.hourly_forecast = HourlyForecast(periods=_make_hourly_periods(hours=6))
         assert compute_temperature_trend(wd, 6) is None
 
     def test_target_period_missing_temperature(self):

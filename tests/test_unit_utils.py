@@ -121,7 +121,9 @@ class TestFormatVisibility:
 
     def test_format_visibility_conversion_from_miles(self) -> None:
         """Convert miles to km when only miles is provided."""
-        result = format_visibility(5.0, unit=TemperatureUnit.CELSIUS, visibility_km=None, precision=1)
+        result = format_visibility(
+            5.0, unit=TemperatureUnit.CELSIUS, visibility_km=None, precision=1
+        )
         assert result == "8.0 km"
 
     def test_format_visibility_conversion_from_km(self) -> None:
@@ -168,9 +170,7 @@ class TestFormatPrecipitation:
 
     def test_format_precipitation_conversion_from_mm(self) -> None:
         """Convert mm to inches when only mm are provided."""
-        result = format_precipitation(
-            None, unit=TemperatureUnit.FAHRENHEIT, precipitation_mm=25.4
-        )
+        result = format_precipitation(None, unit=TemperatureUnit.FAHRENHEIT, precipitation_mm=25.4)
         assert result == "1.00 in"
 
     def test_format_precipitation_zero(self) -> None:

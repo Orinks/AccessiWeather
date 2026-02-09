@@ -61,9 +61,7 @@ def is_portable_mode() -> bool:
             if os.path.isfile(os.path.join(app_dir_path, f))
         )
         if uninstaller_exists:
-            logger.debug(
-                f"Not in portable mode: uninstaller found in {app_dir_path}"
-            )
+            logger.debug(f"Not in portable mode: uninstaller found in {app_dir_path}")
             return False
 
         # Check if we're running from Program Files (standard installation)

@@ -29,6 +29,7 @@ class ExplanationDialog(wx.Dialog):
         parent,
         explanation: ExplanationResult,
         location: str,
+        app=None,
     ):
         """
         Create explanation dialog with result.
@@ -36,6 +37,7 @@ class ExplanationDialog(wx.Dialog):
         Args:
             parent: Parent window
             explanation: The AI-generated explanation result
+            app: Application instance (for regeneration)
             location: The location name for the weather data
 
         """
@@ -47,6 +49,7 @@ class ExplanationDialog(wx.Dialog):
         )
         self.explanation = explanation
         self.location = location
+        self.app = app
         self._create_ui()
         self._setup_accessibility()
 
@@ -67,11 +70,11 @@ class ExplanationDialog(wx.Dialog):
 
         # Timestamp
         timestamp_text = self.explanation.timestamp.strftime("%B %d, %Y at %I:%M %p")
-        timestamp = wx.StaticText(self, label=f"Generated: {timestamp_text}")
-        timestamp_font = timestamp.GetFont()
-        timestamp_font.SetStyle(wx.FONTSTYLE_ITALIC)
-        timestamp.SetFont(timestamp_font)
-        main_sizer.Add(timestamp, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        self.timestamp_label = wx.StaticText(self, label=f"Generated: {timestamp_text}")
+        ts_font = self.timestamp_label.GetFont()
+        ts_font.SetStyle(wx.FONTSTYLE_ITALIC)
+        self.timestamp_label.SetFont(ts_font)
+        main_sizer.Add(self.timestamp_label, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         # Explanation text (main content)
         explanation_text = self.explanation.text or "(No explanation text received)"
@@ -82,36 +85,39 @@ class ExplanationDialog(wx.Dialog):
         )
         main_sizer.Add(self.text_ctrl, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
 
-        # Metadata section
-        metadata_sizer = wx.BoxSizer(wx.VERTICAL)
-
-        # Model used
-        model_label = wx.StaticText(self, label=f"Model: {self.explanation.model_used}")
-        metadata_sizer.Add(model_label, 0, wx.TOP, 10)
-
-        # Token count and cost
+        # Model information
         cost_text = (
             "No cost"
             if self.explanation.estimated_cost == 0
             else f"~${self.explanation.estimated_cost:.6f}"
         )
-        usage_label = wx.StaticText(
-            self, label=f"Tokens: {self.explanation.token_count} | Cost: {cost_text}"
-        )
-        metadata_sizer.Add(usage_label, 0, wx.TOP, 2)
-
-        # Cached indicator
+        info = f"Model: {self.explanation.model_used}\n"
+        info += f"Tokens: {self.explanation.token_count}\n"
+        info += f"Cost: {cost_text}"
         if self.explanation.cached:
-            cached_label = wx.StaticText(self, label="(Cached result)")
-            cached_font = cached_label.GetFont()
-            cached_font.SetStyle(wx.FONTSTYLE_ITALIC)
-            cached_label.SetFont(cached_font)
-            metadata_sizer.Add(cached_label, 0, wx.TOP, 2)
+            info += "\nCached: Yes"
+        main_sizer.Add(
+            wx.StaticText(self, label="Model Information:"),
+            0,
+            wx.LEFT | wx.RIGHT | wx.TOP,
+            10,
+        )
+        self.model_info = wx.TextCtrl(
+            self,
+            value=info,
+            style=wx.TE_MULTILINE | wx.TE_READONLY,
+            name="Model information",
+            size=(-1, 80),
+        )
+        main_sizer.Add(self.model_info, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
 
-        main_sizer.Add(metadata_sizer, 0, wx.LEFT | wx.RIGHT, 10)
-
-        # Close button
+        # Buttons
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.regenerate_btn = wx.Button(self, label="&Regenerate")
+        self.regenerate_btn.Bind(wx.EVT_BUTTON, self._on_regenerate)
+        if not self.app:
+            self.regenerate_btn.Disable()
+        btn_sizer.Add(self.regenerate_btn, 0, wx.RIGHT, 5)
         btn_sizer.AddStretchSpacer()
         close_btn = wx.Button(self, wx.ID_CLOSE, "Close")
         close_btn.Bind(wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_OK))
@@ -122,6 +128,111 @@ class ExplanationDialog(wx.Dialog):
 
         # Set focus to text for screen readers
         self.text_ctrl.SetFocus()
+
+    def _on_regenerate(self, event):
+        """Regenerate the explanation in-place."""
+        if not self.app:
+            return
+
+        import threading
+
+        # Clear cache
+        cache = getattr(self.app, "ai_explanation_cache", None)
+        if cache:
+            cache.clear()
+
+        # Update UI to show generating state
+        self.regenerate_btn.Disable()
+        self.text_ctrl.SetValue("Generating explanation...")
+        self.model_info.SetValue("")
+        self.timestamp_label.SetLabel("Regenerating...")
+
+        def _do_regenerate():
+            try:
+                import asyncio
+
+                settings = self.app.config_manager.get_settings()
+                if settings.ai_model_preference == "auto":
+                    model = "openrouter/auto"
+                else:
+                    model = settings.ai_model_preference
+
+                from ...ai_explainer import AIExplainer, ExplanationStyle
+
+                explainer = AIExplainer(
+                    api_key=settings.openrouter_api_key or None,
+                    model=model,
+                    cache=getattr(self.app, "ai_explanation_cache", None),
+                    custom_system_prompt=getattr(settings, "custom_system_prompt", None),
+                    custom_instructions=getattr(settings, "custom_instructions", None),
+                )
+
+                location = self.app.config_manager.get_current_location()
+                weather_data = getattr(self.app, "current_weather_data", None)
+                if not weather_data or not weather_data.current:
+                    wx.CallAfter(self._on_regenerate_error, "No weather data available.")
+                    return
+
+                current = weather_data.current
+                weather_dict = {
+                    "temperature": current.temperature_f,
+                    "temperature_unit": "F",
+                    "conditions": current.condition,
+                    "humidity": current.humidity,
+                    "wind_speed": current.wind_speed_mph,
+                    "wind_direction": current.wind_direction,
+                    "visibility": current.visibility_miles,
+                    "pressure": current.pressure_in,
+                    "alerts": [],
+                    "forecast_periods": [],
+                }
+
+                style_map = {
+                    "brief": ExplanationStyle.BRIEF,
+                    "standard": ExplanationStyle.STANDARD,
+                    "detailed": ExplanationStyle.DETAILED,
+                }
+                style = style_map.get(settings.ai_explanation_style, ExplanationStyle.STANDARD)
+
+                loop = asyncio.new_event_loop()
+                try:
+                    result = loop.run_until_complete(
+                        explainer.explain_weather(
+                            weather_dict,
+                            location.name if location else self.location,
+                            style=style,
+                            preserve_markdown=False,
+                        )
+                    )
+                finally:
+                    loop.close()
+
+                wx.CallAfter(self._on_regenerate_complete, result)
+
+            except Exception as e:
+                wx.CallAfter(self._on_regenerate_error, str(e))
+
+        threading.Thread(target=_do_regenerate, daemon=True).start()
+
+    def _on_regenerate_complete(self, result):
+        """Update dialog with new explanation."""
+        self.explanation = result
+        self.text_ctrl.SetValue(result.text or "(No explanation text received)")
+        timestamp_text = result.timestamp.strftime("%B %d, %Y at %I:%M %p")
+        self.timestamp_label.SetLabel(f"Generated: {timestamp_text}")
+
+        cost_text = "No cost" if result.estimated_cost == 0 else f"~${result.estimated_cost:.6f}"
+        info = f"Model: {result.model_used}\nTokens: {result.token_count}\nCost: {cost_text}"
+        if result.cached:
+            info += "\nCached: Yes"
+        self.model_info.SetValue(info)
+        self.regenerate_btn.Enable()
+        self.text_ctrl.SetFocus()
+
+    def _on_regenerate_error(self, error_msg):
+        """Handle regeneration error."""
+        self.text_ctrl.SetValue(f"Failed to regenerate: {error_msg}")
+        self.regenerate_btn.Enable()
 
     def _setup_accessibility(self):
         """Set up accessibility labels."""
@@ -388,7 +499,7 @@ def show_explanation_dialog(
             return
         state["dialog_closed"] = True
         loading_dialog.close()
-        dlg = ExplanationDialog(parent_ctrl, result, location.name)
+        dlg = ExplanationDialog(parent_ctrl, result, location.name, app=app)
         dlg.ShowModal()
         dlg.Destroy()
         logger.info(

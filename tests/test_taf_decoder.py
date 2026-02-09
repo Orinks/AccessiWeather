@@ -1,6 +1,5 @@
 """Tests for TAF decoder utility."""
 
-
 from accessiweather.utils.taf_decoder import (
     _decode_cloud,
     _decode_visibility,
@@ -490,12 +489,14 @@ class TestSegmentIntro:
         assert "Becoming" in result
 
     def test_probability_with_all(self):
-        result = _segment_intro({
-            "type": "probability",
-            "prob": 30,
-            "period": "0720/0724",
-            "qualifier": "tempo",
-        })
+        result = _segment_intro(
+            {
+                "type": "probability",
+                "prob": 30,
+                "period": "0720/0724",
+                "qualifier": "tempo",
+            }
+        )
         assert "30%" in result
         assert "temporary" in result.lower()
 

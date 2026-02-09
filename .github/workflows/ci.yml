@@ -94,43 +94,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v6
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
+    - name: Ruff format check
+      uses: astral-sh/ruff-action@v3
       with:
-        python-version: "3.12"
-        cache: pip
-
-    - name: Install system dependencies (wxPython)
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y \
-          gcc \
-          pkg-config \
-          python3-dev \
-          libgtk-3-dev \
-          libnotify-dev \
-          libsdl2-dev \
-          libwebkit2gtk-4.1-dev \
-          freeglut3-dev
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        # Install wxPython from extras repo for faster/reliable builds
-        pip install -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-24.04 wxPython
-        pip install -r requirements-dev.txt
-        pip install -e .
-
-    - name: Verify wxPython installation
-      run: |
-        python -c "import wx; print(f'wxPython {wx.version()} installed successfully')"
-
-
-    - name: Ruff format
-      run: ruff format .
+        args: format --check
 
     - name: Ruff lint
-      run: ruff check --fix .
+      uses: astral-sh/ruff-action@v3
+      with:
+        args: check
 
   tests:
     name: Tests (Ubuntu, Python ${{ matrix.python-version }})
@@ -250,5 +222,5 @@ jobs:
           --compare-branch=origin/${{ github.base_ref }} \
           --fail-under=80 \
           --diff-range-notation='..' \
-          --exclude 'src/accessiweather/ui/**'
+          --exclude '*/accessiweather/ui/*'
         echo "✅ New code meets coverage threshold!"

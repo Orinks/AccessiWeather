@@ -40,11 +40,13 @@ def render_markdown(text: str, token: str, repo: str) -> str:
         "X-GitHub-Api-Version": "2022-11-28",
         "Content-Type": "application/json",
     }
-    data = json.dumps({
-        "text": text,
-        "mode": "gfm",
-        "context": repo,
-    }).encode("utf-8")
+    data = json.dumps(
+        {
+            "text": text,
+            "mode": "gfm",
+            "context": repo,
+        }
+    ).encode("utf-8")
     req = urllib.request.Request(
         "https://api.github.com/markdown",
         data=data,
@@ -137,8 +139,7 @@ def build_pages() -> None:
         main_notes = render_markdown(main_notes_raw, token, repo)
     else:
         main_notes = (
-            f'<p>No stable release available. '
-            f'<a href="{releases_url}">View releases</a></p>'
+            f'<p>No stable release available. <a href="{releases_url}">View releases</a></p>'
         )
 
     dev_version = (prerelease or {}).get("tag_name", "Development").lstrip("v")
@@ -151,10 +152,7 @@ def build_pages() -> None:
     if dev_notes_raw:
         dev_notes = render_markdown(dev_notes_raw, token, repo)
     else:
-        dev_notes = (
-            f'<p>No pre-release available. '
-            f'<a href="{releases_url}">View releases</a></p>'
-        )
+        dev_notes = f'<p>No pre-release available. <a href="{releases_url}">View releases</a></p>'
 
     last_updated = dt.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
 

@@ -245,8 +245,12 @@ class TestBuildBasicMetrics:
             uv_index=5.0,
         )
         metrics = _build_basic_metrics(
-            current, TemperatureUnit.FAHRENHEIT, 0,
-            show_dewpoint=True, show_visibility=True, show_uv_index=True,
+            current,
+            TemperatureUnit.FAHRENHEIT,
+            0,
+            show_dewpoint=True,
+            show_visibility=True,
+            show_uv_index=True,
         )
         labels = [m.label for m in metrics]
         assert "Temperature" in labels
@@ -260,8 +264,12 @@ class TestBuildBasicMetrics:
     def test_minimal_data(self):
         current = CurrentConditions(temperature_f=72.0)
         metrics = _build_basic_metrics(
-            current, TemperatureUnit.FAHRENHEIT, 0,
-            show_dewpoint=True, show_visibility=True, show_uv_index=True,
+            current,
+            TemperatureUnit.FAHRENHEIT,
+            0,
+            show_dewpoint=True,
+            show_visibility=True,
+            show_uv_index=True,
         )
         labels = [m.label for m in metrics]
         assert "Temperature" in labels
@@ -270,8 +278,12 @@ class TestBuildBasicMetrics:
     def test_dewpoint_hidden(self):
         current = CurrentConditions(temperature_f=72.0, dewpoint_f=50.0)
         metrics = _build_basic_metrics(
-            current, TemperatureUnit.FAHRENHEIT, 0,
-            show_dewpoint=False, show_visibility=True, show_uv_index=True,
+            current,
+            TemperatureUnit.FAHRENHEIT,
+            0,
+            show_dewpoint=False,
+            show_visibility=True,
+            show_uv_index=True,
         )
         labels = [m.label for m in metrics]
         assert "Dewpoint" not in labels
@@ -279,8 +291,12 @@ class TestBuildBasicMetrics:
     def test_visibility_hidden(self):
         current = CurrentConditions(temperature_f=72.0, visibility_miles=10.0)
         metrics = _build_basic_metrics(
-            current, TemperatureUnit.FAHRENHEIT, 0,
-            show_dewpoint=True, show_visibility=False, show_uv_index=True,
+            current,
+            TemperatureUnit.FAHRENHEIT,
+            0,
+            show_dewpoint=True,
+            show_visibility=False,
+            show_uv_index=True,
         )
         labels = [m.label for m in metrics]
         assert "Visibility" not in labels
@@ -288,8 +304,12 @@ class TestBuildBasicMetrics:
     def test_uv_hidden(self):
         current = CurrentConditions(temperature_f=72.0, uv_index=5.0)
         metrics = _build_basic_metrics(
-            current, TemperatureUnit.FAHRENHEIT, 0,
-            show_dewpoint=True, show_visibility=True, show_uv_index=False,
+            current,
+            TemperatureUnit.FAHRENHEIT,
+            0,
+            show_dewpoint=True,
+            show_visibility=True,
+            show_uv_index=False,
         )
         labels = [m.label for m in metrics]
         assert "UV Index" not in labels
@@ -368,7 +388,9 @@ class TestBuildEnvironmentalMetrics:
         assert "Tree" in metrics[0].value
 
     def test_pollen_category_no_index(self):
-        env = EnvironmentalConditions(pollen_category="Low", pollen_index=None, pollen_primary_allergen=None)
+        env = EnvironmentalConditions(
+            pollen_category="Low", pollen_index=None, pollen_primary_allergen=None
+        )
         # pollen_index is None and pollen_primary_allergen is None, so no pollen metric
         metrics = _build_environmental_metrics(env, None)
         assert len(metrics) == 0
@@ -509,8 +531,10 @@ class TestBuildTrendMetrics:
     def test_sparkline_appended(self):
         trends = [
             TrendInsight(
-                metric="temperature", direction="rising",
-                summary="Rising", sparkline="▁▃▅▇",
+                metric="temperature",
+                direction="rising",
+                summary="Rising",
+                sparkline="▁▃▅▇",
             ),
         ]
         metrics = _build_trend_metrics(trends, CurrentConditions(), None, show_pressure_trend=True)
