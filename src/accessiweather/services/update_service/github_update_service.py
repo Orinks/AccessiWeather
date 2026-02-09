@@ -355,8 +355,19 @@ class GitHubUpdateService:
                 exit /b 1
             )
 
-            echo Installing update...
-            xcopy "%EXTRACT_DIR%\\*" "%TARGET_DIR%\\" /E /H /Y /Q
+            REM Find the actual content directory (zip may contain a subfolder)
+            REM Look for AccessiWeather.exe to determine the correct source
+            set "COPY_SRC=%EXTRACT_DIR%"
+            if not exist "%EXTRACT_DIR%\\AccessiWeather.exe" (
+                for /d %%D in ("%EXTRACT_DIR%\\*") do (
+                    if exist "%%D\\AccessiWeather.exe" (
+                        set "COPY_SRC=%%D"
+                    )
+                )
+            )
+
+            echo Installing update from %COPY_SRC%...
+            xcopy "%COPY_SRC%\\*" "%TARGET_DIR%\\" /E /H /Y /Q
             if %ERRORLEVEL% neq 0 (
                 echo ERROR: Failed to copy update files.
                 pause
