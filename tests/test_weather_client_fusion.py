@@ -173,9 +173,7 @@ class TestMergeCurrentConditions:
 
     def test_per_field_priority_override(self, us_location):
         """Custom field_priorities should override defaults."""
-        config = SourcePriorityConfig(
-            field_priorities={"humidity": ["openmeteo", "nws"]}
-        )
+        config = SourcePriorityConfig(field_priorities={"humidity": ["openmeteo", "nws"]})
         engine = DataFusionEngine(config=config)
         nws_cc = CurrentConditions(humidity=40)
         om_cc = CurrentConditions(humidity=55)
