@@ -383,6 +383,7 @@ class VisualCrossingClient:
             period = ForecastPeriod(
                 name=name,
                 temperature=day_data.get("tempmax"),
+                temperature_low=day_data.get("tempmin"),
                 temperature_unit="F",
                 short_forecast=day_data.get("conditions"),
                 detailed_forecast=day_data.get("description"),
@@ -455,6 +456,10 @@ class VisualCrossingClient:
                     hourly_pressure_mb / 33.8639 if hourly_pressure_mb is not None else None
                 )
 
+                hourly_wind_chill_f = hour_data.get("windchill")
+                hourly_heat_index_f = hour_data.get("heatindex")
+                hourly_vis_miles = hour_data.get("visibility")
+
                 period = HourlyForecastPeriod(
                     start_time=start_time or datetime.now(),
                     temperature=hour_data.get("temp"),
@@ -472,10 +477,15 @@ class VisualCrossingClient:
                     uv_index=hour_data.get("uvindex"),
                     # Seasonal fields
                     snow_depth=hour_data.get("snowdepth"),
-                    wind_chill_f=hour_data.get("windchill"),
-                    heat_index_f=hour_data.get("heatindex"),
+                    wind_chill_f=hourly_wind_chill_f,
+                    wind_chill_c=self._convert_f_to_c(hourly_wind_chill_f),
+                    heat_index_f=hourly_heat_index_f,
+                    heat_index_c=self._convert_f_to_c(hourly_heat_index_f),
                     feels_like=hour_data.get("feelslike"),
-                    visibility_miles=hour_data.get("visibility"),
+                    visibility_miles=hourly_vis_miles,
+                    visibility_km=hourly_vis_miles * 1.60934
+                    if hourly_vis_miles is not None
+                    else None,
                     precipitation_type=precipitation_type,
                 )
                 periods.append(period)

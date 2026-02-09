@@ -220,7 +220,8 @@ class ForecastPeriod:
     """Single forecast period."""
 
     name: str
-    temperature: float | None = None
+    temperature: float | None = None  # High temperature (or single temp for the period)
+    temperature_low: float | None = None  # Low temperature for the period
     temperature_unit: str = "F"
     short_forecast: str | None = None
     detailed_forecast: str | None = None
@@ -290,10 +291,12 @@ class HourlyForecastPeriod:
     # Seasonal fields - Winter
     snow_depth: float | None = None  # Snow depth at this hour (inches)
     freezing_level_ft: float | None = None  # Freezing level (feet)
-    wind_chill_f: float | None = None  # Wind chill at this hour
+    wind_chill_f: float | None = None  # Wind chill at this hour (Fahrenheit)
+    wind_chill_c: float | None = None  # Wind chill at this hour (Celsius)
 
     # Seasonal fields - Summer
-    heat_index_f: float | None = None  # Heat index at this hour
+    heat_index_f: float | None = None  # Heat index at this hour (Fahrenheit)
+    heat_index_c: float | None = None  # Heat index at this hour (Celsius)
     air_quality_index: int | None = None  # AQI at this hour
 
     # Seasonal fields - Spring/Fall
@@ -303,7 +306,8 @@ class HourlyForecastPeriod:
     # Seasonal fields - Year-round
     precipitation_type: list[str] | None = None  # ["rain", "snow", "ice"]
     feels_like: float | None = None  # Feels like (wind chill or heat index)
-    visibility_miles: float | None = None  # Visibility forecast
+    visibility_miles: float | None = None  # Visibility forecast (miles)
+    visibility_km: float | None = None  # Visibility forecast (kilometers)
 
     def has_data(self) -> bool:
         """Check if we have any meaningful hourly forecast data."""
