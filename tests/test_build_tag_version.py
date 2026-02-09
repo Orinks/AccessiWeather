@@ -95,8 +95,8 @@ async def test_check_falls_back_to_version_when_no_build_tag(service):
         # Make _build_info import fail
         mock.patch.dict("sys.modules", {"accessiweather._build_info": None}),
     ):
-            service.settings.channel = "stable"
-            result = await service.check_for_updates()
-            # v99.0.0 should be newer than any current version
-            assert result is not None
-            assert result.version == "99.0.0"
+        service.settings.channel = "stable"
+        result = await service.check_for_updates()
+        # v99.0.0 should be newer than any current version
+        assert result is not None
+        assert result.version == "99.0.0"
