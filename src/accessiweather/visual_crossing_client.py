@@ -60,7 +60,7 @@ class VisualCrossingClient:
                 "include": "current,days",
                 "numDays": 1,
                 "unitGroup": "us",  # Use US units (Fahrenheit, mph, inches)
-                "elements": "temp,feelslike,humidity,windspeed,winddir,pressure,conditions,datetime,sunrise,sunset,moonrise,moonset,moonphase,sunriseEpoch,sunsetEpoch,moonriseEpoch,moonsetEpoch,snowdepth,preciptype,windchill,heatindex,severerisk,visibility",
+                "elements": "temp,feelslike,humidity,windspeed,winddir,pressure,conditions,datetime,sunrise,sunset,moonrise,moonset,moonphase,sunriseEpoch,sunsetEpoch,moonriseEpoch,moonsetEpoch,snowdepth,preciptype,windchill,heatindex,severerisk,visibility,uvindex,dew",
             }
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
@@ -136,7 +136,7 @@ class VisualCrossingClient:
                 "key": self.api_key,
                 "include": "hours",
                 "unitGroup": "us",
-                "elements": "datetime,temp,conditions,windspeed,winddir,icon,precipprob,snow,uvindex,snowdepth,preciptype,windchill,heatindex,visibility,feelslike",
+                "elements": "datetime,temp,conditions,windspeed,winddir,icon,precipprob,snow,uvindex,snowdepth,preciptype,windchill,heatindex,visibility,feelslike,pressure",
             }
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
@@ -322,6 +322,7 @@ class VisualCrossingClient:
         precipitation_type = precip_type if isinstance(precip_type, list) else None
 
         severe_weather_risk = current.get("severerisk")
+        uv_index = current.get("uvindex")
 
         return CurrentConditions(
             temperature_f=temp_f,
@@ -353,6 +354,7 @@ class VisualCrossingClient:
             heat_index_c=heat_index_c,
             precipitation_type=precipitation_type,
             severe_weather_risk=severe_weather_risk,
+            uv_index=uv_index,
         )
 
     def _parse_forecast(self, data: dict) -> Forecast:
@@ -447,6 +449,12 @@ class VisualCrossingClient:
                 precip_type = hour_data.get("preciptype")
                 precipitation_type = precip_type if isinstance(precip_type, list) else None
 
+                # VC returns pressure in millibars for all unit groups
+                hourly_pressure_mb = hour_data.get("pressure")
+                hourly_pressure_in = (
+                    hourly_pressure_mb / 33.8639 if hourly_pressure_mb is not None else None
+                )
+
                 period = HourlyForecastPeriod(
                     start_time=start_time or datetime.now(),
                     temperature=hour_data.get("temp"),
@@ -457,6 +465,8 @@ class VisualCrossingClient:
                     else None,
                     wind_direction=self._degrees_to_cardinal(hour_data.get("winddir")),
                     icon=hour_data.get("icon"),
+                    pressure_mb=hourly_pressure_mb,
+                    pressure_in=hourly_pressure_in,
                     precipitation_probability=hour_data.get("precipprob"),
                     snowfall=hour_data.get("snow"),
                     uv_index=hour_data.get("uvindex"),
