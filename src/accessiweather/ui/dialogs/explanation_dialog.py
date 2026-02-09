@@ -82,41 +82,23 @@ class ExplanationDialog(wx.Dialog):
         )
         main_sizer.Add(self.text_ctrl, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
 
-        # Metadata section
-        metadata_sizer = wx.BoxSizer(wx.VERTICAL)
-
-        # Model used
-        metadata_sizer.Add(
-            wx.StaticText(self, label="Model:"), 0, wx.TOP, 10
-        )
-        model_ctrl = wx.TextCtrl(
-            self,
-            value=self.explanation.model_used,
-            style=wx.TE_READONLY,
-            name="Model used",
-        )
-        metadata_sizer.Add(model_ctrl, 0, wx.EXPAND | wx.TOP, 2)
-
-        # Token count and cost
+        # Model information
         cost_text = (
             "No cost"
             if self.explanation.estimated_cost == 0
             else f"~${self.explanation.estimated_cost:.6f}"
         )
-        usage_label = wx.StaticText(
-            self, label=f"Tokens: {self.explanation.token_count} | Cost: {cost_text}"
+        info = (
+            f"Model: {self.explanation.model_used}"
+            f" | Tokens: {self.explanation.token_count}"
+            f" | Cost: {cost_text}"
         )
-        metadata_sizer.Add(usage_label, 0, wx.TOP, 2)
-
-        # Cached indicator
         if self.explanation.cached:
-            cached_label = wx.StaticText(self, label="(Cached result)")
-            cached_font = cached_label.GetFont()
-            cached_font.SetStyle(wx.FONTSTYLE_ITALIC)
-            cached_label.SetFont(cached_font)
-            metadata_sizer.Add(cached_label, 0, wx.TOP, 2)
-
-        main_sizer.Add(metadata_sizer, 0, wx.LEFT | wx.RIGHT, 10)
+            info += " (cached)"
+        model_info = wx.TextCtrl(
+            self, value=info, style=wx.TE_READONLY, name="Model information"
+        )
+        main_sizer.Add(model_info, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
         # Close button
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)

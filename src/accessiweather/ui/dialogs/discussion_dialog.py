@@ -82,38 +82,12 @@ class DiscussionDialog(wx.Dialog):
         )
         main_sizer.Add(self.explanation_display, 1, wx.ALL | wx.EXPAND, 10)
 
-        # Metadata section (shown after AI explanation)
-        self.metadata_sizer = wx.BoxSizer(wx.VERTICAL)
-
-        model_row = wx.BoxSizer(wx.HORIZONTAL)
-        model_row.Add(
-            wx.StaticText(panel, label="Model:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5
+        # Model information (shown after AI explanation)
+        self.model_info = wx.TextCtrl(
+            panel, value="", style=wx.TE_READONLY, name="Model information"
         )
-        self.model_display = wx.TextCtrl(
-            panel, value="", style=wx.TE_READONLY, name="AI model used"
-        )
-        model_row.Add(self.model_display, 1)
-        self.metadata_sizer.Add(model_row, 0, wx.EXPAND)
-
-        usage_row = wx.BoxSizer(wx.HORIZONTAL)
-        usage_row.Add(
-            wx.StaticText(panel, label="Tokens:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5
-        )
-        self.tokens_display = wx.TextCtrl(
-            panel, value="", style=wx.TE_READONLY, name="Token count"
-        )
-        usage_row.Add(self.tokens_display, 1, wx.RIGHT, 10)
-        usage_row.Add(
-            wx.StaticText(panel, label="Cost:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5
-        )
-        self.cost_display = wx.TextCtrl(
-            panel, value="", style=wx.TE_READONLY, name="Estimated cost"
-        )
-        usage_row.Add(self.cost_display, 1)
-        self.metadata_sizer.Add(usage_row, 0, wx.EXPAND | wx.TOP, 2)
-
-        main_sizer.Add(self.metadata_sizer, 0, wx.LEFT | wx.RIGHT | wx.EXPAND, 10)
-        self.metadata_sizer.ShowItems(False)
+        main_sizer.Add(self.model_info, 0, wx.LEFT | wx.RIGHT | wx.EXPAND, 10)
+        self.model_info.Hide()
 
         # Button sizer
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -342,13 +316,12 @@ class DiscussionDialog(wx.Dialog):
         self._is_explaining = False
         self.explain_button.Enable()
         self.explanation_display.SetValue(explanation)
-        self.model_display.SetValue(model_used)
-        self.tokens_display.SetValue(str(token_count))
         cost_text = "No cost" if estimated_cost == 0 else f"~${estimated_cost:.6f}"
+        info = f"Model: {model_used} | Tokens: {token_count} | Cost: {cost_text}"
         if cached:
-            cost_text += " (cached)"
-        self.cost_display.SetValue(cost_text)
-        self.metadata_sizer.ShowItems(True)
+            info += " (cached)"
+        self.model_info.SetValue(info)
+        self.model_info.Show()
         self.GetSizer().Layout()
         self._set_status(f"Explanation generated using {model_used}.")
 
