@@ -105,7 +105,7 @@ def format_pressure_value(
     pressure_mb = current.pressure_mb
     if pressure_in is None and pressure_mb is not None:
         pressure_in = pressure_mb / 33.8639
-    return format_pressure(pressure_in, unit_pref, pressure_mb=pressure_mb, precision=0)
+    return format_pressure(pressure_in, unit_pref, pressure_mb=pressure_mb, precision=1)
 
 
 def format_visibility_value(
@@ -510,8 +510,14 @@ def truncate(text: str, max_length: int) -> str:
 
 
 def get_temperature_precision(unit_pref: TemperatureUnit) -> int:
-    """Return the decimal precision to use for temperature display."""
-    return 0 if unit_pref == TemperatureUnit.BOTH else 1
+    """
+    Return the decimal precision to use for temperature display.
+
+    Uses 1 decimal place for all modes to avoid ambiguous rounding
+    (e.g., 42°F and 40°F both showing as 5°C with 0 decimals).
+    Smart precision in format_temperature still drops .0 for clean values.
+    """
+    return 1
 
 
 def format_temperature_with_feels_like(
