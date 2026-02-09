@@ -335,6 +335,7 @@ class GitHubUpdateService:
             set "EXE_PATH={exe_path}"
             set "EXTRACT_DIR={extract_dir}"
 
+            echo Waiting for AccessiWeather to exit (PID %PID%)...
             :WAIT_LOOP
             tasklist /FI "PID eq %PID%" 2>NUL | find /I /N "%PID%" >NUL
             if "%ERRORLEVEL%"=="0" (
@@ -342,16 +343,32 @@ class GitHubUpdateService:
                 goto WAIT_LOOP
             )
 
+            REM Extra wait for file handles and antivirus to release
+            timeout /t 2 /nobreak >NUL
+
             echo Extracting update...
             if exist "%EXTRACT_DIR%" rd /s /q "%EXTRACT_DIR%"
             powershell -Command "Expand-Archive -Path '%ZIP_PATH%' -DestinationPath '%EXTRACT_DIR%' -Force"
+            if %ERRORLEVEL% neq 0 (
+                echo ERROR: Failed to extract update.
+                pause
+                exit /b 1
+            )
 
             echo Installing update...
             xcopy "%EXTRACT_DIR%\\*" "%TARGET_DIR%\\" /E /H /Y /Q
+            if %ERRORLEVEL% neq 0 (
+                echo ERROR: Failed to copy update files.
+                pause
+                exit /b 1
+            )
 
             echo Cleaning up...
             rd /s /q "%EXTRACT_DIR%"
             del "%ZIP_PATH%"
+
+            REM Wait for filesystem to settle before restarting
+            timeout /t 2 /nobreak >NUL
 
             echo Restarting application...
             start "" "%EXE_PATH%"
