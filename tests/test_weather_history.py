@@ -137,7 +137,9 @@ class TestAccessibleSummary:
 
 class TestWeatherHistoryService:
     def test_init_creates_client(self):
-        with patch("accessiweather.weather_history.WeatherHistoryService.__init__", return_value=None):
+        with patch(
+            "accessiweather.weather_history.WeatherHistoryService.__init__", return_value=None
+        ):
             # Just verify the class exists and can be instantiated with a mock client
             service = WeatherHistoryService.__new__(WeatherHistoryService)
             service.openmeteo_client = MagicMock()

@@ -11,7 +11,6 @@ Covers:
 - Priority score calculation
 """
 
-
 from accessiweather.weather_condition_analyzer import (
     ConditionCategory,
     WeatherConditionAnalyzer,
@@ -129,9 +128,11 @@ class TestWeatherCodeMapping:
         """Rain shower codes map to PRECIPITATION."""
         analyzer = WeatherConditionAnalyzer()
 
-        for code, expected_sev in [(80, WeatherSeverity.MINOR),
-                                    (81, WeatherSeverity.MODERATE),
-                                    (82, WeatherSeverity.SEVERE)]:
+        for code, expected_sev in [
+            (80, WeatherSeverity.MINOR),
+            (81, WeatherSeverity.MODERATE),
+            (82, WeatherSeverity.SEVERE),
+        ]:
             cat, sev = analyzer.WEATHER_CODE_MAPPING[code]
             assert cat == ConditionCategory.PRECIPITATION
             assert sev == expected_sev
@@ -418,8 +419,8 @@ class TestPriorityScoreCalculation:
         analyzer = WeatherConditionAnalyzer()
         analysis = {
             "severity": WeatherSeverity.MODERATE,  # 20
-            "temperature_extreme": "very_cold",     # 30
-            "wind_condition": "strong",             # 15
+            "temperature_extreme": "very_cold",  # 30
+            "wind_condition": "strong",  # 15
         }
         score = analyzer._calculate_priority_score(analysis)
         assert score == 65
@@ -540,8 +541,7 @@ class TestAnalyzeWeatherConditions:
         analyzer = WeatherConditionAnalyzer()
         alerts = [{"severity": "Severe", "event": "Test Alert"}]
         result = analyzer.analyze_weather_conditions(
-            {"weather_code": 0, "temp": 70},
-            alerts_data=alerts
+            {"weather_code": 0, "temp": 70}, alerts_data=alerts
         )
 
         assert result["has_alerts"] is True
@@ -576,11 +576,13 @@ class TestAnalyzeWeatherConditions:
     def test_full_analysis_with_all_conditions(self):
         """Full analysis with temperature and wind."""
         analyzer = WeatherConditionAnalyzer()
-        result = analyzer.analyze_weather_conditions({
-            "weather_code": 65,  # Heavy rain
-            "temp": 40,
-            "wind_speed": 35,  # Strong wind threshold
-        })
+        result = analyzer.analyze_weather_conditions(
+            {
+                "weather_code": 65,  # Heavy rain
+                "temp": 40,
+                "wind_speed": 35,  # Strong wind threshold
+            }
+        )
 
         assert result["category"] == ConditionCategory.PRECIPITATION
         assert result["severity"] == WeatherSeverity.SEVERE
