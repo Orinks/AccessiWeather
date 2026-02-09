@@ -95,8 +95,8 @@ class TestEnsureConfigDefaults:
         assert "api_keys" in result
         assert "api_settings" in result
         assert "data_source" in result["settings"]
-        assert "auto_update_check" in result["settings"]
-        assert "update_check_interval" in result["settings"]
+        assert "auto_update_check_enabled" in result["settings"]
+        assert "update_check_interval_hours" in result["settings"]
         assert "update_channel" in result["settings"]
 
     def test_existing_settings_preserved(self):
@@ -115,9 +115,9 @@ class TestEnsureConfigDefaults:
         config = {"settings": {"data_source": "nws"}}
         result = ensure_config_defaults(config)
         # Original should be untouched
-        assert "auto_update_check" not in config["settings"]
+        assert "auto_update_check_enabled" not in config["settings"]
         # Result should have defaults
-        assert "auto_update_check" in result["settings"]
+        assert "auto_update_check_enabled" in result["settings"]
 
     def test_missing_sections_added(self):
         """Missing sections (api_keys, api_settings) should be added."""
