@@ -213,7 +213,8 @@ jobs:
             LAST_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -1)
             if [ -n "$LAST_TAG" ]; then
               # Filter out dev-only commits (test, chore, ci, build, style, refactor, docs)
-              git log "$LAST_TAG"..HEAD --oneline --no-merges | \
+              # Use --first-parent to avoid duplicate entries from squash merges
+              git log "$LAST_TAG"..HEAD --oneline --no-merges --first-parent | \
                 grep -viE '^[a-f0-9]+ (test|chore|ci|build|style|refactor|docs)(\(|:)' | \
                 grep -viE '^[a-f0-9]+ Merge' | \
                 sed 's/^/- /' > notes.md
