@@ -272,8 +272,9 @@ class VisualCrossingClient:
 
         wind_direction = current.get("winddir")
 
-        pressure_in = current.get("pressure")
-        pressure_mb = pressure_in * 33.8639 if pressure_in is not None else None
+        # VC returns pressure in millibars even with unitGroup=us
+        pressure_mb = current.get("pressure")
+        pressure_in = pressure_mb / 33.8639 if pressure_mb is not None else None
 
         visibility_miles = current.get("visibility")
         visibility_km = visibility_miles * 1.60934 if visibility_miles is not None else None
