@@ -82,6 +82,20 @@ class DiscussionDialog(wx.Dialog):
         )
         main_sizer.Add(self.explanation_display, 1, wx.ALL | wx.EXPAND, 10)
 
+        # Model information (shown after AI explanation)
+        self.model_info_label = wx.StaticText(panel, label="Model Information:")
+        main_sizer.Add(self.model_info_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
+        self.model_info = wx.TextCtrl(
+            panel,
+            value="",
+            style=wx.TE_MULTILINE | wx.TE_READONLY,
+            name="Model information",
+            size=(-1, 80),
+        )
+        main_sizer.Add(self.model_info, 0, wx.LEFT | wx.RIGHT | wx.EXPAND, 10)
+        self.model_info_label.Hide()
+        self.model_info.Hide()
+
         # Button sizer
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -90,6 +104,10 @@ class DiscussionDialog(wx.Dialog):
 
         self.explain_button = wx.Button(panel, label="&Explain with AI")
         button_sizer.Add(self.explain_button, 0, wx.RIGHT, 5)
+
+        self.regenerate_button = wx.Button(panel, label="Re&generate Explanation")
+        button_sizer.Add(self.regenerate_button, 0, wx.RIGHT, 5)
+        self.regenerate_button.Hide()
 
         self.close_button = wx.Button(panel, wx.ID_CLOSE, label="&Close")
         button_sizer.Add(self.close_button, 0)
@@ -107,6 +125,7 @@ class DiscussionDialog(wx.Dialog):
         """Bind event handlers."""
         self.refresh_button.Bind(wx.EVT_BUTTON, self._on_refresh)
         self.explain_button.Bind(wx.EVT_BUTTON, self._on_explain)
+        self.regenerate_button.Bind(wx.EVT_BUTTON, self._on_regenerate)
         self.close_button.Bind(wx.EVT_BUTTON, self._on_close)
 
     def _setup_initial_state(self) -> None:
@@ -284,18 +303,48 @@ class DiscussionDialog(wx.Dialog):
                 style=ExplanationStyle.DETAILED,
             )
 
-            wx.CallAfter(self._on_explain_complete, result.text, result.model_used)
+            wx.CallAfter(
+                self._on_explain_complete,
+                result.text,
+                result.model_used,
+                result.token_count,
+                result.estimated_cost,
+                result.cached,
+            )
 
         except Exception as e:
             logger.error(f"AI explanation failed: {e}")
             wx.CallAfter(self._on_explain_error, str(e))
 
-    def _on_explain_complete(self, explanation: str, model_used: str) -> None:
+    def _on_explain_complete(
+        self,
+        explanation: str,
+        model_used: str,
+        token_count: int = 0,
+        estimated_cost: float = 0.0,
+        cached: bool = False,
+    ) -> None:
         """Handle explanation completion."""
         self._is_explaining = False
         self.explain_button.Enable()
         self.explanation_display.SetValue(explanation)
+        cost_text = "No cost" if estimated_cost == 0 else f"~${estimated_cost:.6f}"
+        info = f"Model: {model_used}\nTokens: {token_count}\nCost: {cost_text}"
+        if cached:
+            info += "\nCached: Yes"
+        self.model_info.SetValue(info)
+        self.model_info_label.Show()
+        self.model_info.Show()
+        self.regenerate_button.Show()
+        self.GetSizer().Layout()
         self._set_status(f"Explanation generated using {model_used}.")
+
+    def _on_regenerate(self, event) -> None:
+        """Regenerate explanation with fresh (non-cached) result."""
+        cache = getattr(self.app, "ai_explanation_cache", None)
+        if cache:
+            cache.clear()
+        self._on_explain(event)
 
     def _on_explain_error(self, error: str) -> None:
         """Handle explanation error."""

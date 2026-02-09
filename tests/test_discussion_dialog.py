@@ -230,7 +230,9 @@ class TestAIExplanationGeneration:
         assert captured["call"]["discussion_text"] == "Discussion text"
         assert captured["call"]["location_name"] == "Test City"
         assert captured["call"]["style"] == ExplanationStyle.DETAILED
-        dialog._on_explain_complete.assert_called_once_with("Result text", "test-model")
+        call_args = dialog._on_explain_complete.call_args
+        assert call_args[0][0] == "Result text"
+        assert call_args[0][1] == "test-model"
 
     @pytest.mark.asyncio
     async def test_explain_afd_called_with_correct_params(self, sample_discussion):

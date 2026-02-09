@@ -676,6 +676,7 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["ai_model"] = wx.Choice(
             panel,
             choices=[
+                "Free Router (Auto, Free)",
                 "Llama 3.3 70B (Free)",
                 "Auto Router (Paid)",
             ],
@@ -1005,17 +1006,19 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["openrouter_key"].SetValue(str(openrouter_key))
 
             ai_model = getattr(
-                settings, "ai_model_preference", "meta-llama/llama-3.3-70b-instruct:free"
+                settings, "ai_model_preference", "openrouter/free"
             )
-            if ai_model == "meta-llama/llama-3.3-70b-instruct:free":
+            if ai_model == "openrouter/free":
                 self._controls["ai_model"].SetSelection(0)
-            elif ai_model == "auto":
+            elif ai_model == "meta-llama/llama-3.3-70b-instruct:free":
                 self._controls["ai_model"].SetSelection(1)
+            elif ai_model == "auto":
+                self._controls["ai_model"].SetSelection(2)
             else:
                 # Specific model was selected - add it to the dropdown
                 model_display = f"Selected: {ai_model.split('/')[-1]}"
                 self._controls["ai_model"].Append(model_display)
-                self._controls["ai_model"].SetSelection(2)
+                self._controls["ai_model"].SetSelection(3)
                 self._selected_specific_model = ai_model
 
             ai_style = getattr(settings, "ai_explanation_style", "standard")
@@ -1159,12 +1162,14 @@ class SettingsDialogSimple(wx.Dialog):
         """Get the AI model preference based on UI selection."""
         selection = self._controls["ai_model"].GetSelection()
         if selection == 0:
-            return "meta-llama/llama-3.3-70b-instruct:free"
+            return "openrouter/free"
         if selection == 1:
+            return "meta-llama/llama-3.3-70b-instruct:free"
+        if selection == 2:
             return "auto"
-        if selection == 2 and self._selected_specific_model:
+        if selection == 3 and self._selected_specific_model:
             return self._selected_specific_model
-        return "meta-llama/llama-3.3-70b-instruct:free"
+        return "openrouter/free"
 
     def _on_ok(self, event):
         """Handle OK button press."""
