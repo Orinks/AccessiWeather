@@ -1,6 +1,5 @@
 """Tests for accessiweather.utils.temperature_utils module."""
 
-
 import pytest
 
 from accessiweather.utils.temperature_utils import (
@@ -14,6 +13,7 @@ from accessiweather.utils.temperature_utils import (
 )
 
 # --- celsius_to_fahrenheit / fahrenheit_to_celsius ---
+
 
 class TestConversions:
     def test_celsius_to_fahrenheit_freezing(self):
@@ -33,6 +33,7 @@ class TestConversions:
 
 
 # --- _normalize_dewpoint_unit ---
+
 
 class TestNormalizeDewpointUnit:
     @pytest.mark.parametrize("val", ["c", "celsius", "°c", "degc", "wmounit:degc"])
@@ -63,6 +64,7 @@ class TestNormalizeDewpointUnit:
 
 
 # --- calculate_dewpoint ---
+
 
 class TestCalculateDewpoint:
     def test_basic_fahrenheit(self):
@@ -115,6 +117,7 @@ class TestCalculateDewpoint:
 
 # --- format_temperature ---
 
+
 class TestFormatTemperature:
     def test_fahrenheit_only(self):
         result = format_temperature(72, TemperatureUnit.FAHRENHEIT)
@@ -146,11 +149,15 @@ class TestFormatTemperature:
         assert result == "72.5°F"
 
     def test_smart_precision_off(self):
-        result = format_temperature(72.0, TemperatureUnit.FAHRENHEIT, smart_precision=False, precision=1)
+        result = format_temperature(
+            72.0, TemperatureUnit.FAHRENHEIT, smart_precision=False, precision=1
+        )
         assert result == "72.0°F"
 
     def test_celsius_smart_precision_whole(self):
-        result = format_temperature(None, TemperatureUnit.CELSIUS, temperature_c=20.0, smart_precision=True)
+        result = format_temperature(
+            None, TemperatureUnit.CELSIUS, temperature_c=20.0, smart_precision=True
+        )
         assert result == "20°C"
 
     def test_both_with_temperature_c_none(self):
@@ -159,11 +166,15 @@ class TestFormatTemperature:
         assert "°C" in result
 
     def test_both_smart_precision(self):
-        result = format_temperature(32.0, TemperatureUnit.BOTH, temperature_c=0.0, smart_precision=True)
+        result = format_temperature(
+            32.0, TemperatureUnit.BOTH, temperature_c=0.0, smart_precision=True
+        )
         assert result == "32°F (0°C)"
 
     def test_precision_2(self):
-        result = format_temperature(72.123, TemperatureUnit.FAHRENHEIT, smart_precision=False, precision=2)
+        result = format_temperature(
+            72.123, TemperatureUnit.FAHRENHEIT, smart_precision=False, precision=2
+        )
         assert result == "72.12°F"
 
     def test_only_temperature_c_celsius_unit(self):
@@ -178,6 +189,7 @@ class TestFormatTemperature:
 
 
 # --- get_temperature_values ---
+
 
 class TestGetTemperatureValues:
     def test_both_none(self):
