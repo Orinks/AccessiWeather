@@ -377,7 +377,9 @@ class AccessiWeatherApp(wx.App):
                     current_version = getattr(self, "version", "0.0.0")
                     build_tag = getattr(self, "build_tag", None)
                     current_nightly_date = parse_nightly_date(build_tag) if build_tag else None
-                    display_version = current_nightly_date if current_nightly_date else current_version
+                    display_version = (
+                        current_nightly_date if current_nightly_date else current_version
+                    )
 
                     # Safety: if frozen but no build_tag and checking nightly channel,
                     # skip auto-prompt to avoid infinite update loops

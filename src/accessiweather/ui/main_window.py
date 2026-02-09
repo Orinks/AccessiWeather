@@ -286,7 +286,9 @@ class MainWindow(SizedFrame):
 
         if not hasattr(self, "_location_debounce_timer"):
             self._location_debounce_timer = wx.Timer(self)
-            self.Bind(wx.EVT_TIMER, self._on_debounced_location_fetch, self._location_debounce_timer)
+            self.Bind(
+                wx.EVT_TIMER, self._on_debounced_location_fetch, self._location_debounce_timer
+            )
 
         self._location_debounce_timer.StartOnce(500)
 
@@ -621,7 +623,9 @@ class MainWindow(SizedFrame):
 
         # Run async weather fetch with current generation
         generation = self._fetch_generation
-        self.app.run_async(self._fetch_weather_data(force_refresh=force_refresh, generation=generation))
+        self.app.run_async(
+            self._fetch_weather_data(force_refresh=force_refresh, generation=generation)
+        )
 
     async def _fetch_weather_data(self, force_refresh: bool = False, generation: int = 0) -> None:
         """Fetch weather data in background."""

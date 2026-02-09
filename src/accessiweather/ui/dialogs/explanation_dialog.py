@@ -29,6 +29,7 @@ class ExplanationDialog(wx.Dialog):
         parent,
         explanation: ExplanationResult,
         location: str,
+        app=None,
     ):
         """
         Create explanation dialog with result.
@@ -36,6 +37,7 @@ class ExplanationDialog(wx.Dialog):
         Args:
             parent: Parent window
             explanation: The AI-generated explanation result
+            app: Application instance (for regeneration)
             location: The location name for the weather data
 
         """
@@ -47,6 +49,7 @@ class ExplanationDialog(wx.Dialog):
         )
         self.explanation = explanation
         self.location = location
+        self.app = app
         self._create_ui()
         self._setup_accessibility()
 
@@ -93,6 +96,12 @@ class ExplanationDialog(wx.Dialog):
         info += f"Cost: {cost_text}"
         if self.explanation.cached:
             info += "\nCached: Yes"
+        main_sizer.Add(
+            wx.StaticText(self, label="Model Information:"),
+            0,
+            wx.LEFT | wx.RIGHT | wx.TOP,
+            10,
+        )
         model_info = wx.TextCtrl(
             self,
             value=info,
@@ -100,10 +109,15 @@ class ExplanationDialog(wx.Dialog):
             name="Model information",
             size=(-1, 80),
         )
-        main_sizer.Add(model_info, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
+        main_sizer.Add(model_info, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
 
-        # Close button
+        # Buttons
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.regenerate_btn = wx.Button(self, label="&Regenerate")
+        self.regenerate_btn.Bind(wx.EVT_BUTTON, self._on_regenerate)
+        if not self.app:
+            self.regenerate_btn.Disable()
+        btn_sizer.Add(self.regenerate_btn, 0, wx.RIGHT, 5)
         btn_sizer.AddStretchSpacer()
         close_btn = wx.Button(self, wx.ID_CLOSE, "Close")
         close_btn.Bind(wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_OK))
@@ -114,6 +128,10 @@ class ExplanationDialog(wx.Dialog):
 
         # Set focus to text for screen readers
         self.text_ctrl.SetFocus()
+
+    def _on_regenerate(self, event):
+        """Regenerate the explanation."""
+        self.EndModal(wx.ID_RETRY)
 
     def _setup_accessibility(self):
         """Set up accessibility labels."""
@@ -380,13 +398,19 @@ def show_explanation_dialog(
             return
         state["dialog_closed"] = True
         loading_dialog.close()
-        dlg = ExplanationDialog(parent_ctrl, result, location.name)
-        dlg.ShowModal()
+        dlg = ExplanationDialog(parent_ctrl, result, location.name, app=app)
+        ret = dlg.ShowModal()
         dlg.Destroy()
         logger.info(
             f"Generated weather explanation for {location.name} "
             f"(tokens: {result.token_count}, cached: {result.cached})"
         )
+        if ret == wx.ID_RETRY:
+            # Regenerate: clear cache for this location and re-run
+            cache = getattr(app, "ai_explanation_cache", None)
+            if cache:
+                cache.clear()
+            wx.CallAfter(show_explanation_dialog, parent_ctrl, app)
 
     def _show_error(error_message):
         """Show error message."""

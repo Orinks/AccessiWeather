@@ -1005,9 +1005,7 @@ class SettingsDialogSimple(wx.Dialog):
             openrouter_key = getattr(settings, "openrouter_api_key", "") or ""
             self._controls["openrouter_key"].SetValue(str(openrouter_key))
 
-            ai_model = getattr(
-                settings, "ai_model_preference", "openrouter/free"
-            )
+            ai_model = getattr(settings, "ai_model_preference", "openrouter/free")
             if ai_model == "openrouter/free":
                 self._controls["ai_model"].SetSelection(0)
             elif ai_model == "meta-llama/llama-3.3-70b-instruct:free":
