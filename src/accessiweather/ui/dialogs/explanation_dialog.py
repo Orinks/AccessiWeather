@@ -93,6 +93,12 @@ class ExplanationDialog(wx.Dialog):
         info += f"Cost: {cost_text}"
         if self.explanation.cached:
             info += "\nCached: Yes"
+        main_sizer.Add(
+            wx.StaticText(self, label="Model Information:"),
+            0,
+            wx.LEFT | wx.RIGHT | wx.TOP,
+            10,
+        )
         model_info = wx.TextCtrl(
             self,
             value=info,
@@ -100,7 +106,7 @@ class ExplanationDialog(wx.Dialog):
             name="Model information",
             size=(-1, 80),
         )
-        main_sizer.Add(model_info, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
+        main_sizer.Add(model_info, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
 
         # Close button
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)

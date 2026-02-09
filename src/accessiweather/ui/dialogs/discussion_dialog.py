@@ -83,6 +83,8 @@ class DiscussionDialog(wx.Dialog):
         main_sizer.Add(self.explanation_display, 1, wx.ALL | wx.EXPAND, 10)
 
         # Model information (shown after AI explanation)
+        self.model_info_label = wx.StaticText(panel, label="Model Information:")
+        main_sizer.Add(self.model_info_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
         self.model_info = wx.TextCtrl(
             panel,
             value="",
@@ -91,6 +93,7 @@ class DiscussionDialog(wx.Dialog):
             size=(-1, 80),
         )
         main_sizer.Add(self.model_info, 0, wx.LEFT | wx.RIGHT | wx.EXPAND, 10)
+        self.model_info_label.Hide()
         self.model_info.Hide()
 
         # Button sizer
@@ -325,6 +328,7 @@ class DiscussionDialog(wx.Dialog):
         if cached:
             info += "\nCached: Yes"
         self.model_info.SetValue(info)
+        self.model_info_label.Show()
         self.model_info.Show()
         self.GetSizer().Layout()
         self._set_status(f"Explanation generated using {model_used}.")
