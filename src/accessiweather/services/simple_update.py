@@ -276,8 +276,7 @@ def build_portable_update_script(
         )
 
         if exist "%EXTRACT_DIR%" rd /s /q "%EXTRACT_DIR%"
-        powershell -Command "Expand-Archive -Path '%ZIP_PATH%' ^
-        -DestinationPath '%EXTRACT_DIR%' -Force"
+        powershell -Command "Expand-Archive -Path '%ZIP_PATH%' -DestinationPath '%EXTRACT_DIR%' -Force"
 
         REM Find actual content dir (zip may have a subfolder)
         set "COPY_SRC=%EXTRACT_DIR%"
