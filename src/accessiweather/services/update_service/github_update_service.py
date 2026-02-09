@@ -149,11 +149,22 @@ class GitHubUpdateService:
     ) -> UpdateInfo | None:
         """Check for updates against the configured channel (stable, beta, nightly)."""
         if current_version is None:
+            # For nightly builds, use the build tag (nightly-YYYYMMDD) as the
+            # current version so the updater correctly compares nightly dates
+            # instead of comparing against the pyproject.toml semver.
             try:
-                from ... import __version__ as pkg_version
-            except Exception:  # noqa: BLE001 - ensure comparison always succeeds
-                pkg_version = "0.0.0"
-            current_version = pkg_version
+                from ..._build_info import BUILD_TAG
+            except Exception:  # noqa: BLE001
+                BUILD_TAG = None
+
+            if BUILD_TAG:
+                current_version = BUILD_TAG
+            else:
+                try:
+                    from ... import __version__ as pkg_version
+                except Exception:  # noqa: BLE001 - ensure comparison always succeeds
+                    pkg_version = "0.0.0"
+                current_version = pkg_version
 
         releases = await self._get_releases()
         filtered = self._filter_releases_by_channel(releases, self.settings.channel)
