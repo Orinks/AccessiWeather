@@ -234,11 +234,12 @@ class WeatherAssistantDialog(wx.Dialog):
         """Toggle generating state."""
         self._is_generating = generating
         self.send_button.Enable(not generating)
-        self.input_ctrl.Enable(not generating)
+        # Keep input_ctrl always enabled so screen readers don't lose focus.
+        # The _is_generating flag prevents sends during generation.
         if generating:
             self._set_status("Thinking...")
         else:
-            self._set_status("")
+            self._set_status("Ready")
             self.input_ctrl.SetFocus()
 
     def _on_send(self, event: wx.Event) -> None:
