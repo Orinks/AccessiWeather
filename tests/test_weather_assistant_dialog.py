@@ -5,11 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from unittest.mock import MagicMock
 
-from accessiweather.ui.dialogs.weather_chat_dialog import (
+from accessiweather.ui.dialogs.weather_assistant_dialog import (
     MAX_CONTEXT_TURNS,
     SYSTEM_PROMPT,
     _build_weather_context,
-    show_weather_chat_dialog,
+    show_weather_assistant_dialog,
 )
 
 
@@ -219,4 +219,4 @@ class TestShowWeatherChatDialog:
 
     def test_function_exists(self):
         """Test the show function is importable."""
-        assert callable(show_weather_chat_dialog)
+        assert callable(show_weather_assistant_dialog)

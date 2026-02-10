@@ -220,7 +220,7 @@ class MainWindow(SizedFrame):
         uv_index_item = view_menu.Append(wx.ID_ANY, "&UV Index...", "View UV index information")
         view_menu.AppendSeparator()
         weather_chat_item = view_menu.Append(
-            wx.ID_ANY, "Weather&Chat...\tCtrl+T", "Chat with AI weather assistant"
+            wx.ID_ANY, "Weather &Assistant...\tCtrl+T", "Chat with AI weather assistant"
         )
         menu_bar.Append(view_menu, "&View")
 
@@ -402,10 +402,10 @@ class MainWindow(SizedFrame):
         show_uv_index_dialog(self, self.app)
 
     def _on_weather_chat(self) -> None:
-        """Open WeatherChat dialog."""
-        from .dialogs import show_weather_chat_dialog
+        """Open Weather Assistant dialog."""
+        from .dialogs import show_weather_assistant_dialog
 
-        show_weather_chat_dialog(self, self.app)
+        show_weather_assistant_dialog(self, self.app)
 
     def _on_soundpack_manager(self) -> None:
         """Open the soundpack manager dialog."""

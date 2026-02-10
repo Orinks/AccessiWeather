@@ -1,5 +1,5 @@
 """
-WeatherChat dialog — conversational AI weather assistant.
+Weather Assistant dialog — conversational AI weather assistant.
 
 Phase 1: Basic multi-turn chat with current weather context.
 """
@@ -79,7 +79,7 @@ def _build_weather_context(app: AccessiWeatherApp) -> str:
 
 
 SYSTEM_PROMPT = (
-    "You are WeatherChat, a friendly and knowledgeable weather assistant built into "
+    "You are Weather Assistant, a friendly and knowledgeable weather assistant built into "
     "AccessiWeather. You help users understand weather conditions in plain, accessible "
     "language optimized for screen reader users.\n\n"
     "Guidelines:\n"
@@ -95,17 +95,17 @@ SYSTEM_PROMPT = (
 )
 
 
-class WeatherChatDialog(wx.Dialog):
+class WeatherAssistantDialog(wx.Dialog):
     """Multi-turn conversational weather chat dialog."""
 
     def __init__(
         self,
         parent: wx.Window,
         app: AccessiWeatherApp,
-        title: str = "WeatherChat",
+        title: str = "Weather Assistant",
     ):
         """
-        Initialize the WeatherChat dialog.
+        Initialize the Weather Assistant dialog.
 
         Args:
             parent: Parent window
@@ -211,12 +211,12 @@ class WeatherChatDialog(wx.Dialog):
         loc_name = location.name if location else "your area"
 
         welcome = (
-            f"Welcome to WeatherChat! I can help you understand the weather "
+            f"Welcome to Weather Assistant! I can help you understand the weather "
             f"conditions for {loc_name}. Ask me anything about the current "
             f"weather, forecast, what to wear, or how conditions might affect "
             f"your plans."
         )
-        self._append_to_display("WeatherChat", welcome)
+        self._append_to_display("Weather Assistant", welcome)
 
     def _append_to_display(self, speaker: str, text: str) -> None:
         """Append a message to the chat display."""
@@ -298,7 +298,7 @@ class WeatherChatDialog(wx.Dialog):
                     max_tokens=2000,
                     extra_headers={
                         "HTTP-Referer": "https://accessiweather.orinks.net",
-                        "X-Title": "AccessiWeather WeatherChat",
+                        "X-Title": "AccessiWeather Weather Assistant",
                     },
                 )
 
@@ -315,7 +315,7 @@ class WeatherChatDialog(wx.Dialog):
 
             except Exception as e:
                 error_msg = str(e)
-                logger.error(f"WeatherChat generation error: {e}", exc_info=True)
+                logger.error(f"Weather Assistant generation error: {e}", exc_info=True)
 
                 if "api key" in error_msg.lower() or "401" in error_msg:
                     friendly = "API key is invalid. Check Settings > AI Explanations."
@@ -334,13 +334,13 @@ class WeatherChatDialog(wx.Dialog):
     def _on_response_received(self, text: str, model_used: str) -> None:
         """Handle successful AI response."""
         self._conversation.append({"role": "assistant", "content": text})
-        self._append_to_display("WeatherChat", text)
+        self._append_to_display("Weather Assistant", text)
         self._set_status(f"Model: {model_used}")
         self._set_generating(False)
 
     def _on_response_error(self, error: str) -> None:
         """Handle AI response error."""
-        self._append_to_display("WeatherChat", f"Sorry, I couldn't respond: {error}")
+        self._append_to_display("Weather Assistant", f"Sorry, I couldn't respond: {error}")
         # Remove the last user message from conversation since we failed
         if self._conversation and self._conversation[-1]["role"] == "user":
             self._conversation.pop()
@@ -367,9 +367,9 @@ class WeatherChatDialog(wx.Dialog):
         self.EndModal(wx.ID_CLOSE)
 
 
-def show_weather_chat_dialog(parent: wx.Window, app: AccessiWeatherApp) -> None:
-    """Show the WeatherChat dialog."""
-    dlg = WeatherChatDialog(parent, app)
+def show_weather_assistant_dialog(parent: wx.Window, app: AccessiWeatherApp) -> None:
+    """Show the Weather Assistant dialog."""
+    dlg = WeatherAssistantDialog(parent, app)
     try:
         dlg.ShowModal()
     finally:
