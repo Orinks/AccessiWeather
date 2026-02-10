@@ -10,6 +10,7 @@ from .settings_dialog import show_settings_dialog
 from .soundpack_manager_dialog import show_soundpack_manager_dialog
 from .soundpack_wizard_dialog import SoundPackWizardDialog
 from .uv_index_dialog import show_uv_index_dialog
+from .weather_chat_dialog import show_weather_chat_dialog
 from .weather_history_dialog import show_weather_history_dialog
 
 __all__ = [
@@ -22,6 +23,7 @@ __all__ = [
     "show_settings_dialog",
     "show_soundpack_manager_dialog",
     "show_uv_index_dialog",
+    "show_weather_chat_dialog",
     "show_weather_history_dialog",
     "SoundPackWizardDialog",
 ]
