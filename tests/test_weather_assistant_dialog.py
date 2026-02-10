@@ -82,7 +82,11 @@ class MockAlerts:
 class MockTrendInsight:
     """Mock TrendInsight for testing."""
 
-    description: str = "Temperature rising 5°F over the last 3 hours"
+    metric: str = "temperature"
+    direction: str = "rising"
+    change: float | None = 5.0
+    unit: str | None = "°F"
+    summary: str | None = "Temperature rising 5°F over the last 3 hours"
 
 
 @dataclass

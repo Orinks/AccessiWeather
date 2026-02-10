@@ -73,7 +73,10 @@ def _build_weather_context(app: AccessiWeatherApp) -> str:
     if weather.trend_insights:
         parts.append("\nTrend Insights:")
         for insight in weather.trend_insights[:3]:
-            parts.append(f"  - {insight.description}")
+            text = insight.summary or f"{insight.metric}: {insight.direction}"
+            if insight.change is not None and insight.unit:
+                text += f" ({insight.change:+.1f}{insight.unit})"
+            parts.append(f"  - {text}")
 
     return "\n".join(parts)
 
