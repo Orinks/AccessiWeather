@@ -5,6 +5,15 @@ import httpx
 from attrs import define, evolve, field
 
 
+def _validate_verify_ssl(instance: Any, attribute: Any, value: Union[str, bool, ssl.SSLContext]) -> None:
+    """Reject verify_ssl=False to prevent disabling SSL certificate verification."""
+    if value is False:
+        raise ValueError(
+            "SSL verification cannot be disabled (verify_ssl=False is not allowed). "
+            "Use True for default verification or provide a custom CA bundle path/SSLContext."
+        )
+
+
 @define
 class Client:
     """A class for keeping track of data related to the API
@@ -20,8 +29,8 @@ class Client:
         ``timeout``: The maximum amount of a time a request can take. API functions will raise
         httpx.TimeoutException if this is exceeded.
 
-        ``verify_ssl``: Whether or not to verify the SSL certificate of the API server. This should be True in production,
-        but can be set to False for testing purposes.
+        ``verify_ssl``: SSL certificate verification setting. Always enforced (cannot be set to False).
+        Use True for default verification or provide a custom CA bundle path or ssl.SSLContext.
 
         ``follow_redirects``: Whether or not to follow redirects. Default value is False.
 
@@ -40,7 +49,7 @@ class Client:
     _headers: dict[str, str] = field(factory=dict, kw_only=True, alias="headers")
     _timeout: Optional[httpx.Timeout] = field(default=None, kw_only=True, alias="timeout")
     _verify_ssl: Union[str, bool, ssl.SSLContext] = field(
-        default=True, kw_only=True, alias="verify_ssl"
+        default=True, kw_only=True, alias="verify_ssl", validator=_validate_verify_ssl
     )
     _follow_redirects: bool = field(default=False, kw_only=True, alias="follow_redirects")
     _httpx_args: dict[str, Any] = field(factory=dict, kw_only=True, alias="httpx_args")
@@ -82,20 +91,12 @@ class Client:
     def get_httpx_client(self) -> httpx.Client:
         """Get the underlying httpx.Client, constructing a new one if not previously set"""
         if self._client is None:
-            # Security: Always enforce SSL verification in production
-            verify = self._verify_ssl
-            if verify is False:
-                import logging
-                logging.getLogger(__name__).warning(
-                    "SSL verification was disabled — forcing it back on for security"
-                )
-                verify = True
             self._client = httpx.Client(
                 base_url=self._base_url,
                 cookies=self._cookies,
                 headers=self._headers,
                 timeout=self._timeout,
-                verify=verify,
+                verify=self._verify_ssl,
                 follow_redirects=self._follow_redirects,
                 **self._httpx_args,
             )
@@ -121,20 +122,12 @@ class Client:
     def get_async_httpx_client(self) -> httpx.AsyncClient:
         """Get the underlying httpx.AsyncClient, constructing a new one if not previously set"""
         if self._async_client is None:
-            # Security: Always enforce SSL verification in production
-            verify = self._verify_ssl
-            if verify is False:
-                import logging
-                logging.getLogger(__name__).warning(
-                    "SSL verification was disabled — forcing it back on for security"
-                )
-                verify = True
             self._async_client = httpx.AsyncClient(
                 base_url=self._base_url,
                 cookies=self._cookies,
                 headers=self._headers,
                 timeout=self._timeout,
-                verify=verify,
+                verify=self._verify_ssl,
                 follow_redirects=self._follow_redirects,
                 **self._httpx_args,
             )
@@ -165,8 +158,8 @@ class AuthenticatedClient:
         ``timeout``: The maximum amount of a time a request can take. API functions will raise
         httpx.TimeoutException if this is exceeded.
 
-        ``verify_ssl``: Whether or not to verify the SSL certificate of the API server. This should be True in production,
-        but can be set to False for testing purposes.
+        ``verify_ssl``: SSL certificate verification setting. Always enforced (cannot be set to False).
+        Use True for default verification or provide a custom CA bundle path or ssl.SSLContext.
 
         ``follow_redirects``: Whether or not to follow redirects. Default value is False.
 
@@ -188,7 +181,7 @@ class AuthenticatedClient:
     _headers: dict[str, str] = field(factory=dict, kw_only=True, alias="headers")
     _timeout: Optional[httpx.Timeout] = field(default=None, kw_only=True, alias="timeout")
     _verify_ssl: Union[str, bool, ssl.SSLContext] = field(
-        default=True, kw_only=True, alias="verify_ssl"
+        default=True, kw_only=True, alias="verify_ssl", validator=_validate_verify_ssl
     )
     _follow_redirects: bool = field(default=False, kw_only=True, alias="follow_redirects")
     _httpx_args: dict[str, Any] = field(factory=dict, kw_only=True, alias="httpx_args")
@@ -237,20 +230,12 @@ class AuthenticatedClient:
             self._headers[self.auth_header_name] = (
                 f"{self.prefix} {self.token}" if self.prefix else self.token
             )
-            # Security: Always enforce SSL verification in production
-            verify = self._verify_ssl
-            if verify is False:
-                import logging
-                logging.getLogger(__name__).warning(
-                    "SSL verification was disabled — forcing it back on for security"
-                )
-                verify = True
             self._client = httpx.Client(
                 base_url=self._base_url,
                 cookies=self._cookies,
                 headers=self._headers,
                 timeout=self._timeout,
-                verify=verify,
+                verify=self._verify_ssl,
                 follow_redirects=self._follow_redirects,
                 **self._httpx_args,
             )
@@ -279,20 +264,12 @@ class AuthenticatedClient:
             self._headers[self.auth_header_name] = (
                 f"{self.prefix} {self.token}" if self.prefix else self.token
             )
-            # Security: Always enforce SSL verification in production
-            verify = self._verify_ssl
-            if verify is False:
-                import logging
-                logging.getLogger(__name__).warning(
-                    "SSL verification was disabled — forcing it back on for security"
-                )
-                verify = True
             self._async_client = httpx.AsyncClient(
                 base_url=self._base_url,
                 cookies=self._cookies,
                 headers=self._headers,
                 timeout=self._timeout,
-                verify=verify,
+                verify=self._verify_ssl,
                 follow_redirects=self._follow_redirects,
                 **self._httpx_args,
             )
