@@ -102,6 +102,42 @@ WEATHER_TOOLS: list[dict[str, Any]] = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "add_location",
+            "description": "Add a location to the user's saved locations list. Use after confirming with the user which location they want to add.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Display name for the location, e.g. 'New York, NY' or 'Paris, France'.",
+                    },
+                    "latitude": {
+                        "type": "number",
+                        "description": "Latitude of the location.",
+                    },
+                    "longitude": {
+                        "type": "number",
+                        "description": "Longitude of the location.",
+                    },
+                },
+                "required": ["name", "latitude", "longitude"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_locations",
+            "description": "List all saved locations and show which one is currently selected.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+            },
+        },
+    },
 ]
 
 
@@ -181,6 +217,7 @@ class WeatherToolExecutor:
         self,
         weather_service: WeatherService,
         geocoding_service: GeocodingService,
+        config_manager: Any = None,
         default_lat: float | None = None,
         default_lon: float | None = None,
         default_name: str | None = None,
@@ -191,6 +228,7 @@ class WeatherToolExecutor:
         Args:
             weather_service: The weather service for fetching weather data.
             geocoding_service: The geocoding service for resolving locations.
+            config_manager: The config manager for saving locations (optional).
             default_lat: Latitude of the app's current/default location.
             default_lon: Longitude of the app's current/default location.
             default_name: Display name of the app's current/default location.
@@ -198,6 +236,7 @@ class WeatherToolExecutor:
         """
         self.weather_service = weather_service
         self.geocoding_service = geocoding_service
+        self.config_manager = config_manager
         self.location_resolver = LocationResolver(
             geocoding_service=geocoding_service,
             default_lat=default_lat,
@@ -210,6 +249,8 @@ class WeatherToolExecutor:
             "get_alerts": self._get_alerts,
             "get_hourly_forecast": self._get_hourly_forecast,
             "search_location": self._search_location,
+            "add_location": self._add_location,
+            "list_locations": self._list_locations,
         }
 
     def execute(self, tool_name: str, arguments: dict[str, Any]) -> str:
@@ -289,6 +330,38 @@ class WeatherToolExecutor:
         query = arguments["query"]
         suggestions = self.geocoding_service.suggest_locations(query, limit=5)
         return format_location_search(suggestions, query)
+
+    def _add_location(self, arguments: dict[str, Any]) -> str:
+        """Add a location to saved locations."""
+        if self.config_manager is None:
+            return "Error: Cannot save locations (config manager unavailable)."
+        name = arguments["name"]
+        lat = arguments["latitude"]
+        lon = arguments["longitude"]
+        # Check if already saved
+        existing = self.config_manager.get_location_names()
+        if name in existing:
+            return f"'{name}' is already in your saved locations."
+        success = self.config_manager.add_location(name, lat, lon)
+        if success:
+            self.config_manager.save_config()
+            return f"Added '{name}' to your saved locations."
+        return f"Failed to add '{name}'. It may already exist under a similar name."
+
+    def _list_locations(self, arguments: dict[str, Any]) -> str:
+        """List all saved locations."""
+        if self.config_manager is None:
+            return "Error: Cannot access locations (config manager unavailable)."
+        locations = self.config_manager.get_all_locations()
+        if not locations:
+            return "No saved locations."
+        current = self.config_manager.get_current_location()
+        current_name = current.name if current else None
+        lines = ["Your saved locations:"]
+        for loc in locations:
+            marker = " (current)" if loc.name == current_name else ""
+            lines.append(f"- {loc.name} ({loc.latitude:.2f}, {loc.longitude:.2f}){marker}")
+        return "\n".join(lines)
 
 
 def format_current_weather(data: dict[str, Any], display_name: str = "") -> str:

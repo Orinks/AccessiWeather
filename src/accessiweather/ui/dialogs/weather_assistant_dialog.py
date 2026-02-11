@@ -95,10 +95,14 @@ SYSTEM_PROMPT = (
     "- get_forecast: Get the weather forecast for a location\n"
     "- get_hourly_forecast: Get hourly forecast (great for specific time questions)\n"
     "- get_alerts: Get active weather alerts for a location\n"
-    "- search_location: Search for a location by name or ZIP code\n\n"
+    "- search_location: Search for a location by name or ZIP code\n"
+    "- add_location: Save a location to the user's locations list\n"
+    "- list_locations: Show all saved locations\n\n"
     "Use the provided tools to fetch weather data when users ask about specific locations "
     "or conditions not in the current context. You can call multiple tools if needed to "
-    "give a complete answer. Use search_location when a place name is ambiguous.\n\n"
+    "give a complete answer. Use search_location when a place name is ambiguous. "
+    "When adding locations, first resolve coordinates with search_location, then use "
+    "add_location with the resolved name and coordinates.\n\n"
     "Guidelines:\n"
     "- Be conversational and helpful\n"
     "- Explain weather in practical terms (what to wear, activity suitability, etc.)\n"
@@ -298,7 +302,10 @@ class WeatherAssistantDialog(wx.Dialog):
                 return None
 
             geocoding_service = GeocodingService()
-            return WeatherToolExecutor(weather_service, geocoding_service)
+            config_manager = getattr(self.app, "config_manager", None)
+            return WeatherToolExecutor(
+                weather_service, geocoding_service, config_manager=config_manager
+            )
         except Exception:
             logger.debug("Could not create WeatherToolExecutor", exc_info=True)
             return None
