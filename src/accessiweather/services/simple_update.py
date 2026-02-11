@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 import platform
@@ -165,6 +166,121 @@ def select_latest_release(
     return max(filtered, key=sort_key, default=None)
 
 
+def find_checksum_asset(
+    release: dict[str, Any],
+    artifact_name: str,
+) -> dict[str, Any] | None:
+    """Find a checksum asset (.sha256, .sha512) matching the given artifact.
+
+    Looks for files named like ``<artifact_name>.sha256`` or a generic
+    ``checksums.sha256`` / ``SHA256SUMS`` file that may contain the hash.
+
+    Args:
+        release: GitHub release dict containing ``assets``.
+        artifact_name: Name of the primary artifact to find a checksum for.
+
+    Returns:
+        The matching checksum asset dict, or None if not found.
+    """
+    assets = release.get("assets", [])
+    lower_artifact = artifact_name.lower()
+
+    # Priority 1: exact match like "artifact.zip.sha256"
+    for ext in (".sha256", ".sha512"):
+        for asset in assets:
+            name = asset.get("name", "").lower()
+            if name == lower_artifact + ext:
+                return asset
+
+    # Priority 2: generic checksum files
+    generic_names = ("checksums.sha256", "sha256sums", "checksums.sha512", "sha512sums", "checksums.txt")
+    for asset in assets:
+        name = asset.get("name", "").lower()
+        if name in generic_names:
+            return asset
+
+    return None
+
+
+def parse_checksum_file(content: str, artifact_name: str) -> tuple[str, str] | None:
+    """Parse a checksum file and extract the hash for the given artifact.
+
+    Supports two formats:
+    - Single hash only: ``<hex_hash>``
+    - BSD/GNU style: ``<hex_hash>  <filename>`` or ``<hex_hash> *<filename>``
+
+    Args:
+        content: Text content of the checksum file.
+        artifact_name: Artifact filename to match.
+
+    Returns:
+        Tuple of (algorithm, hex_hash) or None if not found.
+    """
+    lines = content.strip().splitlines()
+    lower_artifact = artifact_name.lower()
+
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        parts = line.split(None, 1)
+        hex_hash = parts[0]
+
+        # Determine algorithm from hash length
+        hash_len = len(hex_hash)
+        if hash_len == 64:
+            algo = "sha256"
+        elif hash_len == 128:
+            algo = "sha512"
+        elif hash_len == 32:
+            algo = "md5"
+        else:
+            continue
+
+        # Single-line file (just the hash)
+        if len(parts) == 1 and len(lines) == 1:
+            return algo, hex_hash.lower()
+
+        # Multi-entry: match filename
+        if len(parts) == 2:
+            filename = parts[1].lstrip("*").strip()
+            if filename.lower() == lower_artifact:
+                return algo, hex_hash.lower()
+
+    return None
+
+
+def verify_file_checksum(file_path: Path, algorithm: str, expected_hash: str) -> bool:
+    """Verify a file's checksum against an expected hash.
+
+    Args:
+        file_path: Path to the file to verify.
+        algorithm: Hash algorithm name (sha256, sha512, md5).
+        expected_hash: Expected hex digest.
+
+    Returns:
+        True if the file hash matches.
+
+    Raises:
+        ValueError: If the algorithm is unsupported.
+    """
+    try:
+        h = hashlib.new(algorithm)
+    except ValueError:
+        raise ValueError(f"Unsupported hash algorithm: {algorithm}")
+
+    with file_path.open("rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+
+    actual = h.hexdigest().lower()
+    return actual == expected_hash.lower()
+
+
+class ChecksumVerificationError(Exception):
+    """Raised when a downloaded artifact fails checksum verification."""
+
+
 def select_asset(
     release: dict[str, Any],
     *,
@@ -174,6 +290,8 @@ def select_asset(
     system = (platform_system or platform.system()).lower()
     assets = release.get("assets", [])
 
+    # Filter out checksum/signature files from main artifact selection,
+    # but these are still available via find_checksum_asset() for verification.
     deny_extensions = (
         ".sha256",
         ".sha512",
@@ -183,7 +301,7 @@ def select_asset(
         ".txt",
         ".json",
     )
-    deny_patterns = ("checksum", "signature", "hash", "verify", "sum")
+    deny_patterns = ("signature", "verify")
 
     def is_allowed(name: str) -> bool:
         lower = name.lower()
@@ -466,20 +584,23 @@ class UpdateService:
         update_info: UpdateInfo,
         dest_dir: Path | None = None,
         progress_callback: ProgressCallback | None = None,
+        release: dict[str, Any] | None = None,
     ) -> Path:
         """
-        Download an update file.
+        Download an update file and verify its integrity via checksum.
 
         Args:
             update_info: UpdateInfo from check_for_updates().
             dest_dir: Directory to save file (defaults to temp dir).
             progress_callback: Optional callback(bytes_downloaded, total_bytes).
+            release: GitHub release dict (needed for checksum asset lookup).
 
         Returns:
             Path to the downloaded file.
 
         Raises:
             httpx.HTTPError: If download fails.
+            ChecksumVerificationError: If checksum verification fails.
 
         """
         if dest_dir is None:
@@ -501,6 +622,50 @@ class UpdateService:
                         progress_callback(downloaded, total)
 
         logger.info("Downloaded update to %s", dest_path)
+
+        # Verify integrity if a checksum asset is available
+        if release is not None:
+            checksum_asset = find_checksum_asset(release, update_info.artifact_name)
+            if checksum_asset:
+                checksum_url = checksum_asset.get("browser_download_url", "")
+                if checksum_url:
+                    try:
+                        checksum_response = await self.http_client.get(checksum_url)
+                        checksum_response.raise_for_status()
+                        checksum_content = checksum_response.text
+
+                        parsed = parse_checksum_file(checksum_content, update_info.artifact_name)
+                        if parsed:
+                            algo, expected_hash = parsed
+                            if not verify_file_checksum(dest_path, algo, expected_hash):
+                                # Remove the corrupt/tampered file
+                                dest_path.unlink(missing_ok=True)
+                                raise ChecksumVerificationError(
+                                    f"Checksum verification failed for {update_info.artifact_name}. "
+                                    f"Expected {algo}:{expected_hash}. "
+                                    "The downloaded file may be corrupted or tampered with."
+                                )
+                            logger.info(
+                                "Checksum verified (%s) for %s",
+                                algo,
+                                update_info.artifact_name,
+                            )
+                        else:
+                            logger.warning(
+                                "Could not parse checksum for %s from checksum file",
+                                update_info.artifact_name,
+                            )
+                    except httpx.HTTPError:
+                        logger.warning(
+                            "Failed to download checksum file for %s; skipping verification",
+                            update_info.artifact_name,
+                        )
+            else:
+                logger.warning(
+                    "No checksum file found for %s; integrity not verified",
+                    update_info.artifact_name,
+                )
+
         return dest_path
 
     async def close(self) -> None:
