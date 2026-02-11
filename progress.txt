@@ -1,0 +1,24 @@
+# Progress Log
+Run: 180e8ccc-09ff-4a81-ae82-81800a3d7737
+Task: Implement issue #292: Nationwide Discussions
+Started: 2026-02-11T21:57Z
+
+## Codebase Patterns
+- Tests must run with `.venv/bin/python -m pytest` (system python lacks wx)
+- Pre-commit hooks run ruff-format; always `git add -A` and retry after format fixes
+- NationalDiscussionScraper in `src/accessiweather/services/national_discussion_scraper.py`
+- Scraper uses httpx + BeautifulSoup, with rate limiting via `_last_request_time` global dict
+- `_make_request` returns `{"success": bool, "text": ..., "error": ...}` dicts
+- Tests mock `httpx.Client.get` via `patch.object`
+- pytest runs parallel via xdist (gw0, gw1)
+
+---
+
+## 2026-02-11 21:57Z - US-003: Add CPC outlook scraping to NationalDiscussionService
+- Added `fetch_cpc_discussions()`, `_fetch_cpc_outlook()`, `_extract_cpc_outlook_text()` to NationalDiscussionScraper
+- CPC 6-10 Day and 8-14 Day outlook URLs defined as class constants
+- Scraping extracts from `<pre>` tag with fallback to content divs
+- Errors return descriptive strings instead of raising
+- Files changed: `src/accessiweather/services/national_discussion_scraper.py`, `tests/test_cpc_scraping.py`
+- **Learnings:** CPC pages use `<pre>` tags for discussion text, same as WPC/SPC pattern
+---

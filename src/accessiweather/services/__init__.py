@@ -18,11 +18,13 @@ __all__ = [
     "EnvironmentalDataClient",
     "StartupManager",
     "sync_update_channel_to_service",
+    "NationalDiscussionService",
 ]
 
 # Type hints for static type checkers (not evaluated at runtime)
 if TYPE_CHECKING:
     from .environmental_client import EnvironmentalDataClient as EnvironmentalDataClient
+    from .national_discussion_service import NationalDiscussionService as NationalDiscussionService
     from .platform_detector import PlatformDetector as PlatformDetector
     from .startup_utils import StartupManager as StartupManager
     from .update_service import (
@@ -54,4 +56,8 @@ def __getattr__(name: str) -> type:
         from .update_service import sync_update_channel_to_service
 
         return sync_update_channel_to_service
+    if name == "NationalDiscussionService":
+        from .national_discussion_service import NationalDiscussionService
+
+        return NationalDiscussionService
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

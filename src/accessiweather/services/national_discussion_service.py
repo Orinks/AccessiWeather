@@ -2,7 +2,7 @@
 National Discussion Service for AccessiWeather.
 
 Provide functionality to fetch national weather discussions from the NWS API
-(api.weather.gov/products/types/) and scrape NHC tropical outlooks.
+(api.weather.gov/products/types/) and scrape NHC tropical outlooks and CPC outlooks.
 """
 
 import logging
@@ -36,13 +36,21 @@ PRODUCT_TYPE_QPF = "QPF"  # Quantitative Precipitation Forecast
 NHC_ATLANTIC_OUTLOOK_URL = "https://www.nhc.noaa.gov/gtwo.php?basin=atlc"
 NHC_EAST_PACIFIC_OUTLOOK_URL = "https://www.nhc.noaa.gov/gtwo.php?basin=epac"
 
+# CPC outlook URLs
+CPC_6_10_URL = "https://www.cpc.ncep.noaa.gov/products/predictions/610day/"
+CPC_8_14_URL = "https://www.cpc.ncep.noaa.gov/products/predictions/814day/"
+
+# Default cache TTL (1 hour)
+DEFAULT_CACHE_TTL = 3600
+
 
 class NationalDiscussionService:
     """
-    Service for fetching national weather discussions via the NWS API and NHC scraping.
+    Service for fetching national weather discussions via the NWS API and web scraping.
 
     Fetch WPC discussions (PMD), SPC convective outlooks (SWO), QPF discussions,
-    and NHC tropical weather outlooks. Include rate limiting and retry logic.
+    NHC tropical weather outlooks, and CPC extended outlooks. Include rate limiting,
+    retry logic, and caching.
     """
 
     def __init__(
@@ -51,6 +59,7 @@ class NationalDiscussionService:
         max_retries: int = 3,
         retry_backoff: float = 1.5,
         timeout: int = 10,
+        cache_ttl: int = DEFAULT_CACHE_TTL,
     ):
         """
         Initialize the service.
@@ -60,6 +69,7 @@ class NationalDiscussionService:
             max_retries: Maximum number of retry attempts for failed requests.
             retry_backoff: Multiplier for increasing delay between retries.
             timeout: Request timeout in seconds.
+            cache_ttl: Cache time-to-live in seconds (default 3600 = 1 hour).
 
         """
         self.request_delay = request_delay
@@ -68,6 +78,11 @@ class NationalDiscussionService:
         self.timeout = timeout
         self._last_request_time: float = 0.0
         self.headers = HEADERS.copy()
+
+        # Caching
+        self.cache_ttl = cache_ttl
+        self._cache: dict[str, Any] | None = None
+        self._cache_timestamp: float = 0.0
 
     def _rate_limit(self) -> None:
         """Enforce rate limiting between requests."""
@@ -80,7 +95,7 @@ class NationalDiscussionService:
 
     def _make_request(self, url: str) -> dict[str, Any]:
         """
-        Make an HTTP GET request with retry logic.
+        Make an HTTP GET request expecting JSON with retry logic.
 
         Args:
             url: The URL to request.
@@ -98,6 +113,49 @@ class NationalDiscussionService:
                     response = client.get(url, headers=self.headers, timeout=self.timeout)
                     response.raise_for_status()
                 return {"success": True, "data": response.json()}
+            except httpx.TimeoutException:
+                last_error = "Request timed out"
+            except httpx.ConnectError:
+                last_error = "Connection error"
+            except httpx.HTTPStatusError as e:
+                last_error = f"HTTP error: {e.response.status_code}"
+            except httpx.RequestError as e:
+                last_error = f"Request error: {e}"
+            except Exception as e:
+                last_error = f"Unexpected error: {e}"
+
+            if attempt < self.max_retries:
+                delay = self.request_delay * (self.retry_backoff**attempt)
+                logger.info(f"Retrying in {delay:.1f}s after: {last_error}")
+                time.sleep(delay)
+
+        logger.error(f"All attempts failed for {url}: {last_error}")
+        return {"success": False, "error": last_error}
+
+    def _make_html_request(self, url: str) -> dict[str, Any]:
+        """
+        Make an HTTP GET request expecting HTML with retry logic.
+
+        Args:
+            url: The URL to request.
+
+        Returns:
+            Dict with 'success' bool and either 'html' or 'error' string.
+
+        """
+        last_error = ""
+        for attempt in range(self.max_retries + 1):
+            self._rate_limit()
+            try:
+                logger.debug(f"Requesting HTML {url} (attempt {attempt + 1})")
+                with httpx.Client() as client:
+                    response = client.get(
+                        url,
+                        headers={"User-Agent": "AccessiWeather/1.0 (AccessiWeather)"},
+                        timeout=self.timeout,
+                    )
+                    response.raise_for_status()
+                return {"success": True, "html": response.text}
             except httpx.TimeoutException:
                 last_error = "Request timed out"
             except httpx.ConnectError:
@@ -219,7 +277,6 @@ class NationalDiscussionService:
         Returns:
             Dict with keys 'short_range', 'medium_range', 'extended'.
             Each value is a dict with 'title' and 'text' keys.
-            On error, 'text' contains the error message.
 
         """
         result: dict[str, dict[str, str]] = {
@@ -236,7 +293,6 @@ class NationalDiscussionService:
             return result
 
         products = products_result["products"]
-
         fetched: set[str] = set()
         for product in products:
             product_name = product.get("issuingOffice", "") + " " + product.get("name", "")
@@ -271,7 +327,6 @@ class NationalDiscussionService:
         Returns:
             Dict with keys 'day1', 'day2', 'day3'.
             Each value is a dict with 'title' and 'text' keys.
-            On error, 'text' contains the error message.
 
         """
         result: dict[str, dict[str, str]] = {
@@ -288,7 +343,6 @@ class NationalDiscussionService:
             return result
 
         products = products_result["products"]
-
         fetched: set[str] = set()
         for product in products:
             product_name = product.get("issuingOffice", "") + " " + product.get("name", "")
@@ -321,9 +375,7 @@ class NationalDiscussionService:
         Fetch QPF (Quantitative Precipitation Forecast) discussion.
 
         Returns:
-            Dict with key 'qpf'.
-            Value is a dict with 'title' and 'text' keys.
-            On error, 'text' contains the error message.
+            Dict with key 'qpf'. Value is a dict with 'title' and 'text' keys.
 
         """
         result: dict[str, dict[str, str]] = {
@@ -354,49 +406,6 @@ class NationalDiscussionService:
 
         return result
 
-    def _make_html_request(self, url: str) -> dict[str, Any]:
-        """
-        Make an HTTP GET request expecting HTML with retry logic.
-
-        Args:
-            url: The URL to request.
-
-        Returns:
-            Dict with 'success' bool and either 'html' or 'error' string.
-
-        """
-        last_error = ""
-        for attempt in range(self.max_retries + 1):
-            self._rate_limit()
-            try:
-                logger.debug(f"Requesting HTML {url} (attempt {attempt + 1})")
-                with httpx.Client() as client:
-                    response = client.get(
-                        url,
-                        headers={"User-Agent": "AccessiWeather/1.0 (AccessiWeather)"},
-                        timeout=self.timeout,
-                    )
-                    response.raise_for_status()
-                return {"success": True, "html": response.text}
-            except httpx.TimeoutException:
-                last_error = "Request timed out"
-            except httpx.ConnectError:
-                last_error = "Connection error"
-            except httpx.HTTPStatusError as e:
-                last_error = f"HTTP error: {e.response.status_code}"
-            except httpx.RequestError as e:
-                last_error = f"Request error: {e}"
-            except Exception as e:
-                last_error = f"Unexpected error: {e}"
-
-            if attempt < self.max_retries:
-                delay = self.request_delay * (self.retry_backoff**attempt)
-                logger.info(f"Retrying in {delay:.1f}s after: {last_error}")
-                time.sleep(delay)
-
-        logger.error(f"All attempts failed for {url}: {last_error}")
-        return {"success": False, "error": last_error}
-
     @staticmethod
     def _extract_nhc_outlook_text(html: str) -> str:
         """
@@ -412,17 +421,14 @@ class NationalDiscussionService:
         try:
             soup = BeautifulSoup(html, "html.parser")
 
-            # NHC outlook text is typically in a <pre> tag
             pre = soup.find("pre")
             if pre:
                 return pre.get_text().strip()
 
-            # Fallback: look for div with id containing 'outlook'
             div = soup.find("div", id=lambda i: i and "outlook" in i.lower())
             if div:
                 return div.get_text().strip()
 
-            # Fallback: look for any element with class containing 'outlook'
             el = soup.find(class_=lambda c: c and "outlook" in str(c).lower())
             if el:
                 return el.get_text().strip()
@@ -449,7 +455,6 @@ class NationalDiscussionService:
         Returns:
             Dict with keys 'atlantic_outlook' and 'east_pacific_outlook'.
             Each value is a dict with 'title' and 'text' keys.
-            On error, 'text' contains a descriptive error message string.
 
         """
         result: dict[str, dict[str, str]] = {
@@ -463,7 +468,6 @@ class NationalDiscussionService:
             },
         }
 
-        # Fetch Atlantic outlook
         atlantic_result = self._make_html_request(NHC_ATLANTIC_OUTLOOK_URL)
         if atlantic_result["success"]:
             result["atlantic_outlook"]["text"] = self._extract_nhc_outlook_text(
@@ -474,7 +478,6 @@ class NationalDiscussionService:
                 f"Error fetching Atlantic outlook: {atlantic_result['error']}"
             )
 
-        # Fetch East Pacific outlook
         epac_result = self._make_html_request(NHC_EAST_PACIFIC_OUTLOOK_URL)
         if epac_result["success"]:
             result["east_pacific_outlook"]["text"] = self._extract_nhc_outlook_text(
@@ -484,5 +487,142 @@ class NationalDiscussionService:
             result["east_pacific_outlook"]["text"] = (
                 f"Error fetching East Pacific outlook: {epac_result['error']}"
             )
+
+        return result
+
+    @staticmethod
+    def _extract_cpc_outlook_text(html: str, label: str) -> str | None:
+        """
+        Extract outlook text from a CPC outlook HTML page.
+
+        Args:
+            html: Raw HTML content.
+            label: Human-readable label for logging.
+
+        Returns:
+            Extracted text, or None if extraction failed.
+
+        """
+        try:
+            soup = BeautifulSoup(html, "html.parser")
+
+            pre = soup.find("pre")
+            if pre:
+                text = pre.get_text().strip()
+                if text:
+                    return text
+
+            for selector in [
+                {"class_": "contentArea"},
+                {"class_": "mainContent"},
+                {"id": "content"},
+            ]:
+                div = soup.find("div", **selector)
+                if div:
+                    text = div.get_text().strip()
+                    if text:
+                        return text
+
+            body = soup.find("body")
+            if body:
+                texts = [
+                    p.get_text().strip()
+                    for p in body.find_all(["p", "div"])
+                    if p.get_text().strip()
+                ]
+                if texts:
+                    longest = max(texts, key=len)
+                    if len(longest) > 100:
+                        return longest
+
+            logger.error(f"Could not extract CPC {label} outlook text")
+            return None
+        except Exception as e:
+            logger.error(f"Error parsing CPC {label} outlook HTML: {e}")
+            return None
+
+    def fetch_cpc_discussions(self) -> dict[str, dict[str, str]]:
+        """
+        Fetch CPC 6-10 Day and 8-14 Day extended outlooks via scraping.
+
+        Returns:
+            Dict with keys 'outlook_6_10' and 'outlook_8_14'.
+            Each value is a dict with 'title' and 'text' keys.
+
+        """
+        result: dict[str, dict[str, str]] = {
+            "outlook_6_10": {"title": "CPC 6-10 Day Outlook", "text": ""},
+            "outlook_8_14": {"title": "CPC 8-14 Day Outlook", "text": ""},
+        }
+
+        for key, url, label in [
+            ("outlook_6_10", CPC_6_10_URL, "6-10 Day"),
+            ("outlook_8_14", CPC_8_14_URL, "8-14 Day"),
+        ]:
+            html_result = self._make_html_request(url)
+            if html_result["success"]:
+                text = self._extract_cpc_outlook_text(html_result["html"], label)
+                if text:
+                    result[key]["text"] = text
+                else:
+                    result[key]["text"] = f"CPC {label} Outlook is currently unavailable."
+            else:
+                result[key]["text"] = f"Error fetching CPC {label} outlook: {html_result['error']}"
+
+        return result
+
+    def fetch_all_discussions(self, force_refresh: bool = False) -> dict[str, Any]:
+        """
+        Fetch all national discussions with caching.
+
+        Returns a unified dict with keys: wpc, spc, qpf, nhc, cpc.
+        NHC data is only fetched during hurricane season (June-November).
+
+        Args:
+            force_refresh: If True, bypass cache and fetch fresh data.
+
+        Returns:
+            Unified dict with all discussion data.
+
+        """
+        now = time.time()
+
+        # Return cached data if valid and not forcing refresh
+        if (
+            not force_refresh
+            and self._cache is not None
+            and now - self._cache_timestamp < self.cache_ttl
+        ):
+            logger.info("Returning cached discussion data")
+            return self._cache
+
+        logger.info("Fetching all national discussions")
+
+        result: dict[str, Any] = {
+            "wpc": self.fetch_wpc_discussions(),
+            "spc": self.fetch_spc_discussions(),
+            "qpf": self.fetch_qpf_discussion(),
+            "nhc": {},
+            "cpc": self.fetch_cpc_discussions(),
+        }
+
+        # Only fetch NHC during hurricane season
+        if self.is_hurricane_season():
+            result["nhc"] = self.fetch_nhc_discussions()
+        else:
+            result["nhc"] = {
+                "atlantic_outlook": {
+                    "title": "Atlantic Tropical Weather Outlook",
+                    "text": "NHC tropical outlooks are available during hurricane season (June-November).",
+                },
+                "east_pacific_outlook": {
+                    "title": "East Pacific Tropical Weather Outlook",
+                    "text": "NHC tropical outlooks are available during hurricane season (June-November).",
+                },
+            }
+
+        # Update cache
+        self._cache = result
+        self._cache_timestamp = time.time()
 
         return result
