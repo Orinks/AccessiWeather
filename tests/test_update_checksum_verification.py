@@ -1,4 +1,5 @@
-"""Regression tests for update download integrity verification (fix-002).
+"""
+Regression tests for update download integrity verification (fix-002).
 
 These tests verify that downloaded update artifacts are checked against
 checksums and that tampered/corrupted downloads are rejected.
@@ -7,7 +8,6 @@ checksums and that tampered/corrupted downloads are rejected.
 from __future__ import annotations
 
 import hashlib
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest

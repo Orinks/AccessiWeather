@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 from unittest import mock
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -232,8 +232,8 @@ class TestApplyUpdateNoShellInjection:
     @patch("accessiweather.services.simple_update.subprocess.Popen")
     @patch("accessiweather.services.simple_update.plan_restart")
     def test_portable_update_uses_shell_false(self, mock_plan, mock_popen, mock_exit, tmp_path):
-        """should reject shell=True in portable update subprocess call"""
-        from accessiweather.services.simple_update import apply_update, RestartPlan
+        """Reject shell=True in portable update subprocess call."""
+        from accessiweather.services.simple_update import RestartPlan, apply_update
 
         script_path = tmp_path / "update.bat"
         mock_plan.return_value = RestartPlan(kind="portable", script_path=script_path, command=None)
@@ -260,8 +260,8 @@ class TestApplyUpdateNoShellInjection:
     @patch("accessiweather.services.simple_update.subprocess.Popen")
     @patch("accessiweather.services.simple_update.plan_restart")
     def test_windows_installer_uses_shell_false(self, mock_plan, mock_popen, mock_exit, tmp_path):
-        """should reject shell=True in windows installer subprocess call"""
-        from accessiweather.services.simple_update import apply_update, RestartPlan
+        """Reject shell=True in windows installer subprocess call."""
+        from accessiweather.services.simple_update import RestartPlan, apply_update
 
         mock_plan.return_value = RestartPlan(
             kind="windows_installer", script_path=None, command=["installer.exe", "/S"]
@@ -275,8 +275,9 @@ class TestApplyUpdateNoShellInjection:
         assert shell_val is False, f"subprocess.Popen called with shell={shell_val}, expected False"
 
     def test_no_shell_true_in_source(self):
-        """should not contain shell=True anywhere in simple_update.py source code"""
+        """Verify no shell=True in simple_update.py source code."""
         import inspect
+
         import accessiweather.services.simple_update as mod
 
         source = inspect.getsource(mod)

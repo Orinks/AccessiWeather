@@ -1,7 +1,6 @@
 """Regression tests for Zip Slip (path traversal) vulnerability."""
 
 import io
-import tempfile
 import zipfile
 from pathlib import Path
 
@@ -20,9 +19,8 @@ class TestSafeExtractall:
             zf.writestr("../escape.txt", "pwned")
         buf.seek(0)
 
-        with zipfile.ZipFile(buf, "r") as zf:
-            with pytest.raises(ValueError, match="Zip Slip detected"):
-                safe_extractall(zf, tmp_path)
+        with zipfile.ZipFile(buf, "r") as zf, pytest.raises(ValueError, match="Zip Slip detected"):
+            safe_extractall(zf, tmp_path)
 
         # Confirm nothing was written outside target
         assert not (tmp_path.parent / "escape.txt").exists()
@@ -34,9 +32,8 @@ class TestSafeExtractall:
             zf.writestr("../../etc/passwd", "root:x:0:0")
         buf.seek(0)
 
-        with zipfile.ZipFile(buf, "r") as zf:
-            with pytest.raises(ValueError, match="Zip Slip detected"):
-                safe_extractall(zf, tmp_path)
+        with zipfile.ZipFile(buf, "r") as zf, pytest.raises(ValueError, match="Zip Slip detected"):
+            safe_extractall(zf, tmp_path)
 
     def test_should_allow_safe_zip_entries(self, tmp_path: Path) -> None:
         """A ZIP with normal entries should extract fine."""
@@ -59,6 +56,5 @@ class TestSafeExtractall:
             zf.writestr("/tmp/evil.txt", "pwned")
         buf.seek(0)
 
-        with zipfile.ZipFile(buf, "r") as zf:
-            with pytest.raises(ValueError, match="Zip Slip detected"):
-                safe_extractall(zf, tmp_path)
+        with zipfile.ZipFile(buf, "r") as zf, pytest.raises(ValueError, match="Zip Slip detected"):
+            safe_extractall(zf, tmp_path)
