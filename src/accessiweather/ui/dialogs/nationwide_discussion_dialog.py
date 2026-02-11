@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+import threading
+from typing import TYPE_CHECKING, Any
 
 import wx
 
 if TYPE_CHECKING:
-    pass
+    from ...services.national_discussion_service import NationalDiscussionService
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ class NationwideDiscussionDialog(wx.Dialog):
         self,
         parent: wx.Window | None = None,
         title: str = "Nationwide Weather Discussions",
+        service: NationalDiscussionService | None = None,
     ):
         """
         Initialize the nationwide discussion dialog.
@@ -32,6 +34,7 @@ class NationwideDiscussionDialog(wx.Dialog):
         Args:
             parent: Parent window
             title: Dialog title
+            service: NationalDiscussionService instance for fetching data
 
         """
         super().__init__(
@@ -40,16 +43,27 @@ class NationwideDiscussionDialog(wx.Dialog):
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
 
+        self._service = service
+        self._is_loading = False
+
         self._create_widgets()
         self._bind_events()
 
         self.SetSize((800, 600))
         self.CenterOnParent()
 
+        # Auto-load if service provided
+        if self._service is not None:
+            self._load_discussions()
+
     def _create_widgets(self) -> None:
         """Create all UI widgets."""
         panel = wx.Panel(self)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Status label
+        self.status_label = wx.StaticText(panel, label="")
+        main_sizer.Add(self.status_label, 0, wx.ALL | wx.EXPAND, 5)
 
         # Notebook (tabs)
         self.notebook = wx.Notebook(panel, name="Discussion tabs")
@@ -166,6 +180,9 @@ class NationwideDiscussionDialog(wx.Dialog):
         self.nhc_panel.SetSizer(nhc_sizer)
         self.notebook.AddPage(self.nhc_panel, "NHC")
 
+        # Store NHC page index for hiding
+        self._nhc_page_index = self.notebook.GetPageCount() - 1
+
         # --- CPC tab ---
         self.cpc_panel = wx.Panel(self.notebook)
         cpc_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -191,10 +208,15 @@ class NationwideDiscussionDialog(wx.Dialog):
         self.cpc_panel.SetSizer(cpc_sizer)
         self.notebook.AddPage(self.cpc_panel, "CPC")
 
-        # Close button
+        # Button sizer
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.refresh_button = wx.Button(panel, label="&Refresh")
+        button_sizer.Add(self.refresh_button, 0, wx.RIGHT, 5)
+
         self.close_button = wx.Button(panel, wx.ID_CLOSE, label="&Close")
         button_sizer.Add(self.close_button, 0)
+
         main_sizer.Add(button_sizer, 0, wx.ALL | wx.ALIGN_RIGHT, 10)
 
         panel.SetSizer(main_sizer)
@@ -206,10 +228,130 @@ class NationwideDiscussionDialog(wx.Dialog):
     def _bind_events(self) -> None:
         """Bind event handlers."""
         self.close_button.Bind(wx.EVT_BUTTON, self._on_close)
+        self.refresh_button.Bind(wx.EVT_BUTTON, self._on_refresh)
 
     def _on_close(self, event) -> None:
         """Handle close button press."""
         self.EndModal(wx.ID_CLOSE)
+
+    def _on_refresh(self, event) -> None:
+        """Handle refresh button press."""
+        self._load_discussions(force_refresh=True)
+
+    def _set_status(self, message: str) -> None:
+        """Update the status label."""
+        self.status_label.SetLabel(message)
+
+    def _set_all_loading(self) -> None:
+        """Set all text controls to 'Loading...' state."""
+        for ctrl in [
+            self.wpc_short_range,
+            self.wpc_medium_range,
+            self.wpc_extended,
+            self.wpc_qpf,
+            self.spc_day1,
+            self.spc_day2,
+            self.spc_day3,
+            self.nhc_atlantic,
+            self.nhc_east_pacific,
+            self.cpc_6_10_day,
+            self.cpc_8_14_day,
+        ]:
+            ctrl.SetValue("Loading...")
+
+    def _load_discussions(self, force_refresh: bool = False) -> None:
+        """Load discussions in a background thread."""
+        if self._is_loading or self._service is None:
+            return
+
+        self._is_loading = True
+        self.refresh_button.Disable()
+        self._set_status("Loading...")
+        self._set_all_loading()
+
+        thread = threading.Thread(
+            target=self._fetch_discussions_thread,
+            args=(force_refresh,),
+            daemon=True,
+        )
+        thread.start()
+
+    def _fetch_discussions_thread(self, force_refresh: bool) -> None:
+        """Background thread to fetch discussions."""
+        try:
+            data = self._service.fetch_all_discussions(force_refresh=force_refresh)
+            wx.CallAfter(self._on_discussions_loaded, data)
+        except Exception as e:
+            logger.error(f"Failed to fetch discussions: {e}")
+            wx.CallAfter(self._on_discussions_error, str(e))
+
+    def _on_discussions_loaded(self, data: dict[str, Any]) -> None:
+        """Handle successful discussion loading (called via wx.CallAfter)."""
+        self._is_loading = False
+        self.refresh_button.Enable()
+        self._set_status("Discussions loaded.")
+
+        # WPC
+        wpc = data.get("wpc", {})
+        self.wpc_short_range.SetValue(wpc.get("short_range", {}).get("text", "Not available"))
+        self.wpc_medium_range.SetValue(wpc.get("medium_range", {}).get("text", "Not available"))
+        self.wpc_extended.SetValue(wpc.get("extended", {}).get("text", "Not available"))
+
+        # QPF goes into WPC tab
+        qpf = data.get("qpf", {})
+        self.wpc_qpf.SetValue(qpf.get("qpf", {}).get("text", "Not available"))
+
+        # SPC
+        spc = data.get("spc", {})
+        self.spc_day1.SetValue(spc.get("day1", {}).get("text", "Not available"))
+        self.spc_day2.SetValue(spc.get("day2", {}).get("text", "Not available"))
+        self.spc_day3.SetValue(spc.get("day3", {}).get("text", "Not available"))
+
+        # NHC
+        nhc = data.get("nhc", {})
+        self.nhc_atlantic.SetValue(nhc.get("atlantic_outlook", {}).get("text", "Not available"))
+        self.nhc_east_pacific.SetValue(
+            nhc.get("east_pacific_outlook", {}).get("text", "Not available")
+        )
+
+        # Hide NHC tab if not hurricane season
+        if self._service is not None and not self._service.is_hurricane_season():
+            self._hide_nhc_tab()
+
+        # CPC
+        cpc = data.get("cpc", {})
+        self.cpc_6_10_day.SetValue(cpc.get("outlook_6_10", {}).get("text", "Not available"))
+        self.cpc_8_14_day.SetValue(cpc.get("outlook_8_14", {}).get("text", "Not available"))
+
+    def _hide_nhc_tab(self) -> None:
+        """Remove the NHC tab from the notebook if present."""
+        for i in range(self.notebook.GetPageCount()):
+            if self.notebook.GetPageText(i) == "NHC":
+                self.notebook.RemovePage(i)
+                self.nhc_panel.Hide()
+                break
+
+    def _on_discussions_error(self, error: str) -> None:
+        """Handle discussion loading error (called via wx.CallAfter)."""
+        self._is_loading = False
+        self.refresh_button.Enable()
+        self._set_status(f"Error loading discussions: {error}")
+
+        error_msg = f"Failed to load discussions: {error}"
+        for ctrl in [
+            self.wpc_short_range,
+            self.wpc_medium_range,
+            self.wpc_extended,
+            self.wpc_qpf,
+            self.spc_day1,
+            self.spc_day2,
+            self.spc_day3,
+            self.nhc_atlantic,
+            self.nhc_east_pacific,
+            self.cpc_6_10_day,
+            self.cpc_8_14_day,
+        ]:
+            ctrl.SetValue(error_msg)
 
     def set_discussion_text(self, tab: str, field: str, text: str) -> None:
         """
@@ -227,17 +369,21 @@ class NationwideDiscussionDialog(wx.Dialog):
             ctrl.SetValue(text)
 
 
-def show_nationwide_discussion_dialog(parent: wx.Window | None = None) -> None:
+def show_nationwide_discussion_dialog(
+    parent: wx.Window | None = None,
+    service: NationalDiscussionService | None = None,
+) -> None:
     """
     Show the Nationwide Weather Discussions dialog.
 
     Args:
         parent: Parent window
+        service: NationalDiscussionService instance
 
     """
     try:
         parent_ctrl = getattr(parent, "control", parent)
-        dlg = NationwideDiscussionDialog(parent_ctrl)
+        dlg = NationwideDiscussionDialog(parent_ctrl, service=service)
         dlg.ShowModal()
         dlg.Destroy()
     except Exception as e:
