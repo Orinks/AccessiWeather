@@ -1,11 +1,12 @@
 """
 Weather Assistant dialog — conversational AI weather assistant.
 
-Phase 1: Basic multi-turn chat with current weather context.
+Phase 2: Multi-turn chat with function calling for weather lookups.
 """
 
 from __future__ import annotations
 
+import json
 import logging
 import threading
 from datetime import datetime
@@ -13,6 +14,7 @@ from typing import TYPE_CHECKING
 
 import wx
 
+from ...ai_tools import WEATHER_TOOLS, WeatherToolExecutor
 from ...screen_reader import ScreenReaderAnnouncer
 
 if TYPE_CHECKING:
@@ -271,6 +273,27 @@ class WeatherAssistantDialog(wx.Dialog):
         self._set_generating(True)
         self._generate_response()
 
+    def _get_tool_executor(self) -> WeatherToolExecutor | None:
+        """
+        Create a WeatherToolExecutor from the app's services.
+
+        Returns:
+            A WeatherToolExecutor, or None if required services are unavailable.
+
+        """
+        try:
+            from ...geocoding import GeocodingService
+
+            weather_service = getattr(self.app, "weather_service", None)
+            if weather_service is None:
+                return None
+
+            geocoding_service = GeocodingService()
+            return WeatherToolExecutor(weather_service, geocoding_service)
+        except Exception:
+            logger.debug("Could not create WeatherToolExecutor", exc_info=True)
+            return None
+
     def _generate_response(self) -> None:
         """Generate AI response in a background thread."""
         # Get config
@@ -291,8 +314,10 @@ class WeatherAssistantDialog(wx.Dialog):
         # Build messages for API
         system_message = f"{SYSTEM_PROMPT}\n\nCurrent weather data:\n{weather_context}"
 
-        messages = [{"role": "system", "content": system_message}]
+        messages: list[dict] = [{"role": "system", "content": system_message}]
         messages.extend(self._conversation)
+
+        tool_executor = self._get_tool_executor()
 
         def do_generate():
             try:
@@ -306,28 +331,97 @@ class WeatherAssistantDialog(wx.Dialog):
 
                 effective_model = model if model else "meta-llama/llama-3.3-70b-instruct:free"
 
-                response = client.chat.completions.create(
-                    model=effective_model,
-                    messages=messages,
-                    max_tokens=2000,
-                    extra_headers={
-                        "HTTP-Referer": "https://accessiweather.orinks.net",
-                        "X-Title": "AccessiWeather Weather Assistant",
-                    },
-                )
+                extra_kwargs: dict = {}
+                if tool_executor is not None:
+                    extra_kwargs["tools"] = WEATHER_TOOLS
 
-                content = ""
-                model_used = effective_model
-                if response.choices:
-                    content = response.choices[0].message.content or ""
+                max_tool_iterations = 5
+                for _iteration in range(max_tool_iterations + 1):
+                    response = client.chat.completions.create(
+                        model=effective_model,
+                        messages=messages,
+                        max_tokens=2000,
+                        extra_headers={
+                            "HTTP-Referer": "https://accessiweather.orinks.net",
+                            "X-Title": "AccessiWeather Weather Assistant",
+                        },
+                        **extra_kwargs,
+                    )
+
                     model_used = response.model or effective_model
 
-                if content.strip():
-                    wx.CallAfter(self._on_response_received, content.strip(), model_used)
+                    if not response.choices:
+                        wx.CallAfter(
+                            self._on_response_error,
+                            "Received an empty response. Try again or switch models in Settings.",
+                        )
+                        return
+
+                    choice = response.choices[0]
+                    assistant_message = choice.message
+
+                    # Check for tool calls
+                    if assistant_message.tool_calls and tool_executor is not None:
+                        # Append assistant message with tool calls to messages
+                        tool_call_msg: dict = {
+                            "role": "assistant",
+                            "content": assistant_message.content or "",
+                            "tool_calls": [
+                                {
+                                    "id": tc.id,
+                                    "type": "function",
+                                    "function": {
+                                        "name": tc.function.name,
+                                        "arguments": tc.function.arguments,
+                                    },
+                                }
+                                for tc in assistant_message.tool_calls
+                            ],
+                        }
+                        messages.append(tool_call_msg)
+
+                        # Execute each tool call
+                        for tool_call in assistant_message.tool_calls:
+                            tool_name = tool_call.function.name
+                            try:
+                                arguments = json.loads(tool_call.function.arguments)
+                                result = tool_executor.execute(tool_name, arguments)
+                            except Exception as exc:
+                                logger.warning(
+                                    "Tool call %s failed: %s", tool_name, exc, exc_info=True
+                                )
+                                result = f"Error executing {tool_name}: {exc}"
+
+                            messages.append(
+                                {
+                                    "role": "tool",
+                                    "tool_call_id": tool_call.id,
+                                    "content": result,
+                                }
+                            )
+
+                        # Continue loop to get next response
+                        continue
+
+                    # No tool calls — we have the final text response
+                    content = assistant_message.content or ""
+                    if content.strip():
+                        wx.CallAfter(self._on_response_received, content.strip(), model_used)
+                    else:
+                        wx.CallAfter(
+                            self._on_response_error,
+                            "Received an empty response. Try again or switch models in Settings.",
+                        )
+                    return
+
+                # Exhausted max iterations — use whatever content we have
+                fallback = assistant_message.content or "" if assistant_message else ""
+                if fallback.strip():
+                    wx.CallAfter(self._on_response_received, fallback.strip(), model_used)
                 else:
                     wx.CallAfter(
                         self._on_response_error,
-                        "Received an empty response. Try again or switch models in Settings.",
+                        "The assistant made too many tool calls. Please try a simpler question.",
                     )
 
             except Exception as e:
