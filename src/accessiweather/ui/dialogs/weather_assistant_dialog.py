@@ -225,7 +225,7 @@ class WeatherAssistantDialog(wx.Dialog):
             f"your plans."
         )
         self._append_to_display("Weather Assistant", welcome)
-        self._announcer.announce(welcome)
+        self._announcer.announce(f"Weather Assistant: {welcome}")
 
     def _append_to_display(self, speaker: str, text: str) -> None:
         """Append a message to the chat display."""
@@ -259,6 +259,7 @@ class WeatherAssistantDialog(wx.Dialog):
 
         self.input_ctrl.SetValue("")
         self._append_to_display("You", message)
+        self._announcer.announce(f"You: {message}")
 
         # Add to conversation history
         self._conversation.append({"role": "user", "content": message})
@@ -353,7 +354,7 @@ class WeatherAssistantDialog(wx.Dialog):
         """Handle successful AI response."""
         self._conversation.append({"role": "assistant", "content": text})
         self._append_to_display("Weather Assistant", text)
-        self._announcer.announce(text)
+        self._announcer.announce(f"Weather Assistant: {text}")
         self._set_status(f"Model: {model_used}")
         self._set_generating(False)
 
@@ -361,7 +362,7 @@ class WeatherAssistantDialog(wx.Dialog):
         """Handle AI response error."""
         error_message = f"Sorry, I couldn't respond: {error}"
         self._append_to_display("Weather Assistant", error_message)
-        self._announcer.announce(error_message)
+        self._announcer.announce(f"Weather Assistant: {error_message}")
         # Remove the last user message from conversation since we failed
         if self._conversation and self._conversation[-1]["role"] == "user":
             self._conversation.pop()
