@@ -225,41 +225,54 @@ class WeatherToolExecutor:
         location = arguments["location"]
         lat, lon, display_name = self._resolve_location(location)
         data = self.weather_service.get_current_conditions(lat, lon)
-        return _format_current_conditions(data, display_name)
+        return format_current_weather(data, display_name)
 
     def _get_forecast(self, arguments: dict[str, Any]) -> str:
         """Get weather forecast."""
         location = arguments["location"]
         lat, lon, display_name = self._resolve_location(location)
         data = self.weather_service.get_forecast(lat, lon)
-        return _format_forecast(data, display_name)
+        return format_forecast(data, display_name)
 
     def _get_alerts(self, arguments: dict[str, Any]) -> str:
         """Get weather alerts."""
         location = arguments["location"]
         lat, lon, display_name = self._resolve_location(location)
         data = self.weather_service.get_alerts(lat, lon)
-        return _format_alerts(data, display_name)
+        return format_alerts(data, display_name)
 
 
-def _format_current_conditions(data: dict[str, Any], display_name: str) -> str:
-    """Format current conditions data as a human-readable string."""
-    lines = [f"Current weather for {display_name}:"]
+def format_current_weather(data: dict[str, Any], display_name: str = "") -> str:
+    """
+    Format current weather conditions data as readable text.
 
-    if "temperature" in data:
-        lines.append(f"Temperature: {data['temperature']}")
-    if "humidity" in data:
-        lines.append(f"Humidity: {data['humidity']}")
-    if "wind" in data:
-        lines.append(f"Wind: {data['wind']}")
-    if "description" in data:
-        lines.append(f"Conditions: {data['description']}")
-    if "textDescription" in data:
-        lines.append(f"Conditions: {data['textDescription']}")
+    Extracts key fields: temperature, feels like, conditions, humidity,
+    wind, and pressure. Handles missing or None fields gracefully.
 
-    # If we didn't extract specific fields, dump a summary
+    Args:
+        data: Weather data dict from WeatherService.get_current_conditions().
+        display_name: Location display name for the header.
+
+    Returns:
+        A human-readable text summary of current conditions.
+
+    """
+    header = f"Current weather for {display_name}:" if display_name else "Current weather:"
+    lines = [header]
+
+    _append_field(lines, "Temperature", data.get("temperature"))
+    _append_field(lines, "Feels Like", data.get("feels_like") or data.get("feelsLike"))
+    _append_field(
+        lines,
+        "Conditions",
+        data.get("description") or data.get("textDescription") or data.get("conditions"),
+    )
+    _append_field(lines, "Humidity", data.get("humidity"))
+    _append_field(lines, "Wind", data.get("wind") or data.get("windSpeed"))
+    _append_field(lines, "Pressure", data.get("pressure") or data.get("barometricPressure"))
+
+    # Fallback: if no known fields matched, dump scalar values
     if len(lines) == 1:
-        # Try to provide something useful from the raw data
         for key, value in data.items():
             if isinstance(value, (str, int, float)) and key not in ("lat", "lon"):
                 lines.append(f"{key}: {value}")
@@ -267,22 +280,41 @@ def _format_current_conditions(data: dict[str, Any], display_name: str) -> str:
     return "\n".join(lines)
 
 
-def _format_forecast(data: dict[str, Any], display_name: str) -> str:
-    """Format forecast data as a human-readable string."""
-    lines = [f"Forecast for {display_name}:"]
+def format_forecast(data: dict[str, Any], display_name: str = "") -> str:
+    """
+    Format forecast data as readable text with up to 7 periods.
+
+    Each period includes name, temperature, and short forecast text.
+    Handles missing or None fields gracefully.
+
+    Args:
+        data: Forecast data dict from WeatherService.get_forecast().
+        display_name: Location display name for the header.
+
+    Returns:
+        A human-readable text summary of the forecast.
+
+    """
+    header = f"Forecast for {display_name}:" if display_name else "Forecast:"
+    lines = [header]
 
     periods = data.get("periods", data.get("properties", {}).get("periods", []))
     if isinstance(periods, list):
-        for period in periods[:6]:  # Show up to 6 periods
-            if isinstance(period, dict):
-                name = period.get("name", "Unknown")
-                detail = period.get("detailedForecast", period.get("shortForecast", ""))
-                temp = period.get("temperature", "")
-                temp_unit = period.get("temperatureUnit", "")
-                if detail:
-                    lines.append(f"{name}: {detail}")
-                elif temp:
-                    lines.append(f"{name}: {temp}°{temp_unit}")
+        for period in periods[:7]:
+            if not isinstance(period, dict):
+                continue
+            name = period.get("name") or "Unknown"
+            temp = period.get("temperature")
+            temp_unit = period.get("temperatureUnit", "")
+            short = period.get("shortForecast") or period.get("detailedForecast") or ""
+
+            parts = [name]
+            if temp is not None:
+                parts.append(f"{temp}°{temp_unit}" if temp_unit else str(temp))
+            if short:
+                parts.append(short)
+
+            lines.append(" - ".join(parts))
 
     if len(lines) == 1:
         lines.append(json.dumps(data, indent=2, default=str)[:500])
@@ -290,25 +322,57 @@ def _format_forecast(data: dict[str, Any], display_name: str) -> str:
     return "\n".join(lines)
 
 
-def _format_alerts(data: dict[str, Any], display_name: str) -> str:
-    """Format alerts data as a human-readable string."""
-    lines = [f"Weather alerts for {display_name}:"]
+def format_alerts(data: dict[str, Any], display_name: str = "") -> str:
+    """
+    Format weather alerts data as readable text.
+
+    Shows event name, severity, headline, and description for each alert.
+    Returns 'No active alerts' when the alert list is empty.
+    Handles missing or None fields gracefully.
+
+    Args:
+        data: Alerts data dict from WeatherService.get_alerts().
+        display_name: Location display name for the header.
+
+    Returns:
+        A human-readable text summary of weather alerts.
+
+    """
+    header = f"Weather alerts for {display_name}:" if display_name else "Weather alerts:"
+    lines = [header]
 
     alerts = data.get("alerts", data.get("features", []))
     if isinstance(alerts, list) and len(alerts) > 0:
         for alert in alerts:
-            if isinstance(alert, dict):
-                props = alert.get("properties", alert)
-                event = props.get("event", "Unknown Alert")
-                headline = props.get("headline", "")
-                description = props.get("description", "")
-                if headline:
-                    lines.append(f"- {event}: {headline}")
-                elif description:
-                    lines.append(f"- {event}: {description[:200]}")
-                else:
-                    lines.append(f"- {event}")
+            if not isinstance(alert, dict):
+                continue
+            props = alert.get("properties", alert)
+            event = props.get("event") or "Unknown Alert"
+            severity = props.get("severity")
+            headline = props.get("headline")
+            description = props.get("description")
+
+            alert_line = f"- {event}"
+            if severity:
+                alert_line += f" (Severity: {severity})"
+            lines.append(alert_line)
+            if headline:
+                lines.append(f"  {headline}")
+            if description:
+                lines.append(f"  {description[:300]}")
     else:
         lines.append("No active alerts.")
 
     return "\n".join(lines)
+
+
+def _append_field(lines: list[str], label: str, value: Any) -> None:
+    """Append a labeled field to lines if the value is not None/empty."""
+    if value is not None and value != "":
+        lines.append(f"{label}: {value}")
+
+
+# Keep backward-compatible private aliases
+_format_current_conditions = format_current_weather
+_format_forecast = format_forecast
+_format_alerts = format_alerts
