@@ -68,6 +68,30 @@ def get_tools_for_message(message: str) -> list[dict[str, Any]]:
     if any(trigger in msg_lower for trigger in extended_triggers):
         tools.extend(EXTENDED_TOOLS)
 
+    # Keywords that trigger discussion tools
+    discussion_triggers = (
+        "discussion",
+        "afd",
+        "forecast discussion",
+        "wpc",
+        "spc",
+        "storm prediction",
+        "weather prediction center",
+        "convective",
+        "outlook",
+        "severe",
+        "tornado",
+        "supercell",
+        "explain the forecast",
+        "why is",
+        "reasoning",
+        "meteorolog",
+        "synoptic",
+        "national",
+    )
+    if any(trigger in msg_lower for trigger in discussion_triggers):
+        tools.extend(DISCUSSION_TOOLS)
+
     return tools
 
 
@@ -120,6 +144,61 @@ CORE_TOOLS: list[dict[str, Any]] = [
                     }
                 },
                 "required": ["location"],
+            },
+        },
+    },
+]
+
+DISCUSSION_TOOLS: list[dict[str, Any]] = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_area_forecast_discussion",
+            "description": (
+                "Get the Area Forecast Discussion (AFD) for a location. "
+                "This is a detailed technical forecast discussion written by local NWS forecasters. "
+                "Great for understanding the reasoning behind the forecast."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "Location to get the AFD for, e.g. 'New York, NY'.",
+                    }
+                },
+                "required": ["location"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_wpc_discussion",
+            "description": (
+                "Get the Weather Prediction Center (WPC) Short Range Forecast Discussion. "
+                "A nationwide weather discussion covering the next 1-3 days. Covers major "
+                "weather systems, precipitation patterns, and significant weather events "
+                "across the US."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {},
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_spc_outlook",
+            "description": (
+                "Get the Storm Prediction Center (SPC) Day 1 Convective Outlook discussion. "
+                "Covers severe weather risks including tornadoes, large hail, and damaging winds. "
+                "Explains the meteorological reasoning behind severe weather risk areas."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {},
             },
         },
     },
@@ -259,7 +338,7 @@ EXTENDED_TOOLS: list[dict[str, Any]] = [
 ]
 
 # Complete list for backward compatibility
-WEATHER_TOOLS = CORE_TOOLS + EXTENDED_TOOLS
+WEATHER_TOOLS = CORE_TOOLS + EXTENDED_TOOLS + DISCUSSION_TOOLS
 
 
 class LocationResolver:
@@ -373,6 +452,9 @@ class WeatherToolExecutor:
             "add_location": self._add_location,
             "list_locations": self._list_locations,
             "query_open_meteo": self._query_open_meteo,
+            "get_area_forecast_discussion": self._get_afd,
+            "get_wpc_discussion": self._get_wpc_discussion,
+            "get_spc_outlook": self._get_spc_outlook,
         }
 
     def execute(self, tool_name: str, arguments: dict[str, Any]) -> str:
@@ -507,6 +589,60 @@ class WeatherToolExecutor:
         except Exception as e:
             logger.warning("Open-Meteo query failed: %s", e)
             return f"Error querying Open-Meteo: {e}"
+
+    def _get_afd(self, arguments: dict[str, Any]) -> str:
+        """Get Area Forecast Discussion for a location."""
+        location = arguments["location"]
+        lat, lon, display_name = self._resolve_location(location)
+        try:
+            text = self.weather_service.get_discussion(lat, lon)
+            if text:
+                # Truncate if very long to fit in context
+                if len(text) > 3000:
+                    text = text[:3000] + "\n\n[Truncated — full discussion is longer]"
+                return f"Area Forecast Discussion for {display_name}:\n\n{text}"
+            return f"No Area Forecast Discussion available for {display_name}."
+        except Exception as e:
+            logger.warning("AFD fetch failed: %s", e)
+            return f"Error fetching AFD: {e}"
+
+    def _get_wpc_discussion(self, arguments: dict[str, Any]) -> str:
+        """Get WPC Short Range Forecast Discussion."""
+        try:
+            from accessiweather.services.national_discussion_scraper import (
+                NationalDiscussionScraper,
+            )
+
+            scraper = NationalDiscussionScraper(request_delay=1.0, max_retries=2, timeout=15)
+            result = scraper.fetch_wpc_discussion()
+            text = result.get("full", "")
+            if text:
+                if len(text) > 3000:
+                    text = text[:3000] + "\n\n[Truncated — full discussion is longer]"
+                return f"WPC Short Range Forecast Discussion:\n\n{text}"
+            return "WPC discussion unavailable."
+        except Exception as e:
+            logger.warning("WPC discussion fetch failed: %s", e)
+            return f"Error fetching WPC discussion: {e}"
+
+    def _get_spc_outlook(self, arguments: dict[str, Any]) -> str:
+        """Get SPC Day 1 Convective Outlook."""
+        try:
+            from accessiweather.services.national_discussion_scraper import (
+                NationalDiscussionScraper,
+            )
+
+            scraper = NationalDiscussionScraper(request_delay=1.0, max_retries=2, timeout=15)
+            result = scraper.fetch_spc_discussion()
+            text = result.get("full", "")
+            if text:
+                if len(text) > 3000:
+                    text = text[:3000] + "\n\n[Truncated — full discussion is longer]"
+                return f"SPC Day 1 Convective Outlook:\n\n{text}"
+            return "SPC outlook unavailable."
+        except Exception as e:
+            logger.warning("SPC outlook fetch failed: %s", e)
+            return f"Error fetching SPC outlook: {e}"
 
     def _list_locations(self, arguments: dict[str, Any]) -> str:
         """List all saved locations."""
