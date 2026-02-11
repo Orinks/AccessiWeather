@@ -76,14 +76,17 @@ class TestScreenReaderAnnouncerGracefulFallback:
 
     def test_announcer_no_op_without_prismatoid(self):
         """ScreenReaderAnnouncer is a no-op when prismatoid is unavailable."""
-        from accessiweather.screen_reader import ScreenReaderAnnouncer
+        from unittest.mock import patch
 
-        # Without prismatoid actually providing a backend, announcer is no-op
-        announcer = ScreenReaderAnnouncer()
-        assert not announcer.is_available()
-        # Should not raise
-        announcer.announce("test message")
-        announcer.shutdown()
+        # Simulate prismatoid not being installed
+        with patch("accessiweather.screen_reader.PRISM_AVAILABLE", False):
+            from accessiweather.screen_reader import ScreenReaderAnnouncer
+
+            announcer = ScreenReaderAnnouncer()
+            assert not announcer.is_available()
+            # Should not raise
+            announcer.announce("test message")
+            announcer.shutdown()
 
     def test_announcer_with_mocked_unavailable(self):
         """ScreenReaderAnnouncer with is_available=False works as no-op."""
