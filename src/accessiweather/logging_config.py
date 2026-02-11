@@ -5,6 +5,7 @@ This module sets up logging for the application with both console and file outpu
 Logs are saved to a 'logs' subfolder within the AccessiWeather config directory.
 """
 
+import contextlib
 import logging
 import logging.handlers
 import os
@@ -33,10 +34,8 @@ def setup_logging(log_level=logging.INFO):
     log_dir = config_dir / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     # Secure log directory permissions: owner-only access (rwx------)
-    try:
+    with contextlib.suppress(OSError):
         log_dir.chmod(0o700)
-    except OSError:
-        pass  # Windows or permission error — best-effort
 
     # Configure root logger
     root_logger = logging.getLogger()

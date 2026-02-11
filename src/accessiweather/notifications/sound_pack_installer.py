@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 def safe_extractall(zip_file: zipfile.ZipFile, target_dir: Path) -> None:
-    """Extract all members of a ZIP file, rejecting path traversal attempts.
+    """
+    Extract all members of a ZIP file, rejecting path traversal attempts.
 
     Raises ValueError if any member path would escape the target directory.
     """

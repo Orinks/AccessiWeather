@@ -170,7 +170,8 @@ def find_checksum_asset(
     release: dict[str, Any],
     artifact_name: str,
 ) -> dict[str, Any] | None:
-    """Find a checksum asset (.sha256, .sha512) matching the given artifact.
+    """
+    Find a checksum asset (.sha256, .sha512) matching the given artifact.
 
     Looks for files named like ``<artifact_name>.sha256`` or a generic
     ``checksums.sha256`` / ``SHA256SUMS`` file that may contain the hash.
@@ -181,6 +182,7 @@ def find_checksum_asset(
 
     Returns:
         The matching checksum asset dict, or None if not found.
+
     """
     assets = release.get("assets", [])
     lower_artifact = artifact_name.lower()
@@ -209,7 +211,8 @@ def find_checksum_asset(
 
 
 def parse_checksum_file(content: str, artifact_name: str) -> tuple[str, str] | None:
-    """Parse a checksum file and extract the hash for the given artifact.
+    """
+    Parse a checksum file and extract the hash for the given artifact.
 
     Supports two formats:
     - Single hash only: ``<hex_hash>``
@@ -221,6 +224,7 @@ def parse_checksum_file(content: str, artifact_name: str) -> tuple[str, str] | N
 
     Returns:
         Tuple of (algorithm, hex_hash) or None if not found.
+
     """
     lines = content.strip().splitlines()
     lower_artifact = artifact_name.lower()
@@ -257,7 +261,8 @@ def parse_checksum_file(content: str, artifact_name: str) -> tuple[str, str] | N
 
 
 def verify_file_checksum(file_path: Path, algorithm: str, expected_hash: str) -> bool:
-    """Verify a file's checksum against an expected hash.
+    """
+    Verify a file's checksum against an expected hash.
 
     Args:
         file_path: Path to the file to verify.
@@ -269,11 +274,12 @@ def verify_file_checksum(file_path: Path, algorithm: str, expected_hash: str) ->
 
     Raises:
         ValueError: If the algorithm is unsupported.
+
     """
     try:
         h = hashlib.new(algorithm)
-    except ValueError:
-        raise ValueError(f"Unsupported hash algorithm: {algorithm}")
+    except ValueError as err:
+        raise ValueError(f"Unsupported hash algorithm: {algorithm}") from err
 
     with file_path.open("rb") as f:
         for chunk in iter(lambda: f.read(65536), b""):
