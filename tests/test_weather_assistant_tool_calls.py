@@ -309,7 +309,7 @@ class TestToolCallLoop:
         if executor is not None:
             extra_kwargs["tools"] = WEATHER_TOOLS
         assert "tools" in extra_kwargs
-        assert len(extra_kwargs["tools"]) == 3
+        assert len(extra_kwargs["tools"]) == 11
 
     def test_get_alerts_tool_call(self):
         """Test that get_alerts tool call works in the loop."""

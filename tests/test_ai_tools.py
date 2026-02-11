@@ -12,8 +12,8 @@ from accessiweather.ai_tools import WEATHER_TOOLS, WeatherToolExecutor
 class TestWeatherToolSchemas:
     """Tests for the WEATHER_TOOLS schema definitions."""
 
-    def test_weather_tools_has_three_tools(self):
-        assert len(WEATHER_TOOLS) == 3
+    def test_weather_tools_has_expected_count(self):
+        assert len(WEATHER_TOOLS) == 11
 
     def test_all_tools_have_function_type(self):
         for tool in WEATHER_TOOLS:
@@ -31,21 +31,30 @@ class TestWeatherToolSchemas:
             params = tool["function"]["parameters"]
             assert params["type"] == "object"
             assert "properties" in params
-            assert "location" in params["properties"]
-            assert params["properties"]["location"]["type"] == "string"
-            assert "required" in params
-            assert "location" in params["required"]
 
-    def test_tool_names(self):
+    def test_core_tool_names(self):
         names = [t["function"]["name"] for t in WEATHER_TOOLS]
         assert "get_current_weather" in names
         assert "get_forecast" in names
         assert "get_alerts" in names
 
+    def test_extended_tool_names(self):
+        names = [t["function"]["name"] for t in WEATHER_TOOLS]
+        assert "get_hourly_forecast" in names
+        assert "search_location" in names
+        assert "add_location" in names
+        assert "list_locations" in names
+        assert "query_open_meteo" in names
+
+    def test_discussion_tool_names(self):
+        names = [t["function"]["name"] for t in WEATHER_TOOLS]
+        assert "get_area_forecast_discussion" in names
+        assert "get_wpc_discussion" in names
+        assert "get_spc_outlook" in names
+
     def test_all_tools_have_descriptions(self):
         for tool in WEATHER_TOOLS:
             assert len(tool["function"]["description"]) > 0
-            assert len(tool["function"]["parameters"]["properties"]["location"]["description"]) > 0
 
 
 class TestWeatherToolExecutor:
