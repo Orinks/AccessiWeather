@@ -10,6 +10,22 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
+def safe_extractall(zip_file: zipfile.ZipFile, target_dir: Path) -> None:
+    """
+    Extract all members of a ZIP file, rejecting path traversal attempts.
+
+    Raises ValueError if any member path would escape the target directory.
+    """
+    target_dir = target_dir.resolve()
+    for member in zip_file.namelist():
+        member_path = (target_dir / member).resolve()
+        if not str(member_path).startswith(str(target_dir) + "/") and member_path != target_dir:
+            raise ValueError(
+                f"Zip Slip detected: member '{member}' would extract outside target directory"
+            )
+    zip_file.extractall(target_dir)
+
+
 class SoundPackInstaller:
     """Handles installation and management of sound packs."""
 
@@ -52,7 +68,7 @@ class SoundPackInstaller:
             try:
                 # Extract ZIP file
                 with zipfile.ZipFile(zip_path, "r") as zip_file:
-                    zip_file.extractall(temp_path)
+                    safe_extractall(zip_file, temp_path)
 
                 # Find pack.json file
                 pack_json_files = list(temp_path.rglob("pack.json"))
