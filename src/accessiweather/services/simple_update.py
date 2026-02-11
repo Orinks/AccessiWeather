@@ -193,7 +193,13 @@ def find_checksum_asset(
                 return asset
 
     # Priority 2: generic checksum files
-    generic_names = ("checksums.sha256", "sha256sums", "checksums.sha512", "sha512sums", "checksums.txt")
+    generic_names = (
+        "checksums.sha256",
+        "sha256sums",
+        "checksums.sha512",
+        "sha512sums",
+        "checksums.txt",
+    )
     for asset in assets:
         name = asset.get("name", "").lower()
         if name in generic_names:

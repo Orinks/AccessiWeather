@@ -275,7 +275,7 @@ class AIExplainer:
                 f"Custom prompt truncated from {len(sanitized)} to "
                 f"{AIExplainer._MAX_PROMPT_LENGTH} characters"
             )
-            sanitized = sanitized[:AIExplainer._MAX_PROMPT_LENGTH]
+            sanitized = sanitized[: AIExplainer._MAX_PROMPT_LENGTH]
 
         # Strip common prompt injection patterns
         injection_patterns = [
@@ -287,11 +287,10 @@ class AIExplainer:
         ]
 
         import re as _re
+
         for pattern in injection_patterns:
             if _re.search(pattern, sanitized):
-                logger.warning(
-                    f"Prompt injection pattern detected and stripped: {pattern}"
-                )
+                logger.warning(f"Prompt injection pattern detected and stripped: {pattern}")
                 sanitized = _re.sub(pattern, "[filtered]", sanitized)
 
         return sanitized if sanitized.strip() else None
