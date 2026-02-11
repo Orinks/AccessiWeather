@@ -51,6 +51,9 @@ build = [
     "pyinstaller>=6.0.0",
     "pillow>=10.0.0",
 ]
+screenreader = [
+    "prismatoid>=0.7.0",
+]
 
 [project.scripts]
 accessiweather = "accessiweather.main:main"
@@ -169,4 +172,3 @@ line-ending = "auto"
 
 [tool.ruff.lint.mccabe]
 max-complexity = 15
-
