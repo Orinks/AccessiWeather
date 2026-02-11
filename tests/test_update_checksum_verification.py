@@ -65,7 +65,10 @@ def test_find_checksum_asset_generic_checksums_file():
     release = {
         "assets": [
             {"name": "app.zip", "browser_download_url": "https://example.com/app.zip"},
-            {"name": "checksums.sha256", "browser_download_url": "https://example.com/checksums.sha256"},
+            {
+                "name": "checksums.sha256",
+                "browser_download_url": "https://example.com/checksums.sha256",
+            },
         ]
     }
     result = find_checksum_asset(release, "app.zip")
@@ -166,7 +169,10 @@ async def test_download_update_should_reject_tampered_artifact(tmp_path):
     release = {
         "assets": [
             {"name": "update.zip", "browser_download_url": "https://example.com/update.zip"},
-            {"name": "update.zip.sha256", "browser_download_url": "https://example.com/update.zip.sha256"},
+            {
+                "name": "update.zip.sha256",
+                "browser_download_url": "https://example.com/update.zip.sha256",
+            },
         ]
     }
 
@@ -218,7 +224,10 @@ async def test_download_update_should_accept_valid_artifact(tmp_path):
     release = {
         "assets": [
             {"name": "update.zip", "browser_download_url": "https://example.com/update.zip"},
-            {"name": "update.zip.sha256", "browser_download_url": "https://example.com/update.zip.sha256"},
+            {
+                "name": "update.zip.sha256",
+                "browser_download_url": "https://example.com/update.zip.sha256",
+            },
         ]
     }
 

@@ -243,7 +243,10 @@ class TestApplyUpdateNoShellInjection:
             mock_exe.resolve.return_value = tmp_path / "app" / "app.exe"
             mock_exe.parent = tmp_path / "app"
             mock_path_cls.return_value = mock_exe
-            with patch("accessiweather.services.simple_update.build_portable_update_script", return_value="echo hi"):
+            with patch(
+                "accessiweather.services.simple_update.build_portable_update_script",
+                return_value="echo hi",
+            ):
                 apply_update(tmp_path / "update.zip", portable=True)
 
         # Verify Popen was called with shell=False (explicitly or via list args)
@@ -260,7 +263,9 @@ class TestApplyUpdateNoShellInjection:
         """should reject shell=True in windows installer subprocess call"""
         from accessiweather.services.simple_update import apply_update, RestartPlan
 
-        mock_plan.return_value = RestartPlan(kind="windows_installer", script_path=None, command=["installer.exe", "/S"])
+        mock_plan.return_value = RestartPlan(
+            kind="windows_installer", script_path=None, command=["installer.exe", "/S"]
+        )
 
         apply_update(tmp_path / "update.exe", portable=False, platform_system="Windows")
 
