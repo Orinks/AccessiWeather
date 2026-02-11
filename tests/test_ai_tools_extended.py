@@ -304,10 +304,6 @@ class TestWeatherToolExecutorExtended:
         assert "[Truncated" in result
 
     def test_get_wpc_discussion(self, executor):
-        with patch("accessiweather.ai_tools.NationalDiscussionScraper") as MockScraper:
-            instance = MockScraper.return_value
-            instance.fetch_wpc_discussion.return_value = {"full": "WPC discussion text here."}
-            # Need to patch the import inside the method
         with patch(
             "accessiweather.services.national_discussion_scraper.NationalDiscussionScraper"
         ) as MockScraper:
@@ -326,7 +322,7 @@ class TestWeatherToolExecutorExtended:
         assert "SPC" in result
 
     def test_query_open_meteo(self, executor):
-        with patch("accessiweather.ai_tools.OpenMeteoApiClient") as MockClient:
+        with patch("accessiweather.openmeteo_client.OpenMeteoApiClient") as MockClient:
             instance = MockClient.return_value
             instance._make_request.return_value = {
                 "current": {"temperature_2m": 22.5},
@@ -343,7 +339,7 @@ class TestWeatherToolExecutorExtended:
         assert "specify at least one" in result
 
     def test_query_open_meteo_error(self, executor):
-        with patch("accessiweather.ai_tools.OpenMeteoApiClient") as MockClient:
+        with patch("accessiweather.openmeteo_client.OpenMeteoApiClient") as MockClient:
             MockClient.side_effect = Exception("API down")
             result = executor.execute(
                 "query_open_meteo",
