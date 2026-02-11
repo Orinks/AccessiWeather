@@ -1,39 +1,15 @@
-# Progress Log
-Run: 180e8ccc-09ff-4a81-ae82-81800a3d7737
-Task: Implement issue #292: Nationwide Discussions
-Started: 2026-02-11T21:57Z
 
-## Codebase Patterns
-- Tests must run with `.venv/bin/python -m pytest` (system python lacks wx)
-- Pre-commit hooks run ruff-format; always `git add -A` and retry after format fixes
-- NationalDiscussionScraper in `src/accessiweather/services/national_discussion_scraper.py` (legacy)
-- NationalDiscussionService in `src/accessiweather/services/national_discussion_service.py` (new, API-based)
-- Service uses NWS API for WPC/SPC/QPF, BeautifulSoup scraping for NHC/CPC
-- `_make_request` returns `{"success": bool, "data": ..., "error": ...}` for JSON
-- `_make_html_request` returns `{"success": bool, "html": ..., "error": ...}` for HTML
-- Tests mock service methods via `patch.object` on the service instance
-- pytest runs parallel via xdist (gw0, gw1)
-- NationalForecastHandler in `services/weather_service/national_forecast.py` delegates to NationalDiscussionService
-- Services `__init__.py` uses lazy imports via `__getattr__`
-
----
-
-## 2026-02-11 21:57Z - US-003: Add CPC outlook scraping to NationalDiscussionService
-- Added `fetch_cpc_discussions()`, `_fetch_cpc_outlook()`, `_extract_cpc_outlook_text()` to NationalDiscussionScraper
-- CPC 6-10 Day and 8-14 Day outlook URLs defined as class constants
-- Scraping extracts from `<pre>` tag with fallback to content divs
-- Errors return descriptive strings instead of raising
-- Files changed: `src/accessiweather/services/national_discussion_scraper.py`, `tests/test_cpc_scraping.py`
-- **Learnings:** CPC pages use `<pre>` tags for discussion text, same as WPC/SPC pattern
----
-
-## 2026-02-11 22:04Z - US-004: Add fetch_all method and caching to NationalDiscussionService
-- Created `NationalDiscussionService` with all fetch methods (WPC/SPC/QPF via NWS API, NHC/CPC via scraping)
-- Added `fetch_all_discussions(force_refresh=False)` returning unified dict with wpc, spc, qpf, nhc, cpc keys
-- Implemented caching with configurable TTL (default 1 hour)
-- NHC conditionally fetched based on `is_hurricane_season()` (June-November)
-- Wired NationalForecastHandler to use NationalDiscussionService instead of old scraper
-- Updated services `__init__.py` with lazy export of NationalDiscussionService
-- Files changed: `src/accessiweather/services/national_discussion_service.py` (new), `src/accessiweather/services/__init__.py`, `src/accessiweather/services/weather_service/national_forecast.py`, `tests/test_national_discussion_service.py` (new)
-- **Learnings:** The old scraper only had WPC/SPC via web scraping; new service uses NWS API for structured data. CPC `_extract_cpc_outlook_text` made static since it doesn't need instance state.
+## 2026-02-11 22:26 - US-005: Create NationwideDiscussionDialog with tabbed layout
+- Created NationwideDiscussionDialog(wx.Dialog) with wx.Notebook tabs: WPC, SPC, NHC, CPC
+- WPC: Short Range, Medium Range, Extended, QPF text controls
+- SPC: Day 1, Day 2, Day 3 Convective Outlook text controls
+- NHC: Atlantic, East Pacific Tropical Weather Outlook text controls
+- CPC: 6-10 Day, 8-14 Day Outlook text controls
+- All controls have name= for screen reader accessibility, TE_READONLY, keyboard navigable
+- Close button with &Close accelerator
+- set_discussion_text() helper for programmatic text setting
+- show_nationwide_discussion_dialog() convenience function exported from dialogs package
+- 38 tests using AST parsing (no wx.App needed) covering structure, widgets, accessibility names, exports
+- Files: src/accessiweather/ui/dialogs/nationwide_discussion_dialog.py, __init__.py, tests/test_nationwide_discussion_dialog.py
+- **Learnings:** Use AST parsing for wx dialog tests to avoid needing display/wx.App; pre-commit hooks auto-fix ruff issues so re-stage after first failed commit
 ---
