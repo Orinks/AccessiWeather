@@ -23,14 +23,24 @@ class ScreenReaderAnnouncer:
     def __init__(self) -> None:
         """Initialize the announcer, acquiring a screen reader backend if possible."""
         self._backend = None
+        self._runtime_available = False
         if PRISM_AVAILABLE:
             try:
                 ctx = prism.Context()
-                self._backend = ctx.acquire_best()
-                logger.info("Screen reader backend acquired: %s", self._backend)
+                backend = ctx.acquire_best()
+                # Check if the backend's engine is actually running
+                features = backend.features
+                if features.is_supported_at_runtime:
+                    self._backend = backend
+                    self._runtime_available = True
+                    logger.info("Screen reader backend active: %s", backend.name)
+                else:
+                    logger.debug(
+                        "Screen reader backend found (%s) but not running at runtime",
+                        backend.name,
+                    )
             except Exception:
                 logger.warning("Failed to acquire screen reader backend", exc_info=True)
-                self._backend = None
         else:
             logger.debug("prismatoid not available; announcer will be a no-op")
 
@@ -43,8 +53,8 @@ class ScreenReaderAnnouncer:
                 logger.warning("Failed to announce text", exc_info=True)
 
     def is_available(self) -> bool:
-        """Return whether a screen reader backend was successfully acquired."""
-        return self._backend is not None
+        """Return whether a screen reader is actively running."""
+        return self._runtime_available
 
     def shutdown(self) -> None:
         """Clean up resources."""

@@ -88,6 +88,33 @@ class TestScreenReaderAnnouncerGracefulFallback:
             announcer.announce("test message")
             announcer.shutdown()
 
+    def test_announcer_no_op_when_backend_not_running(self):
+        """ScreenReaderAnnouncer is a no-op when backend exists but isn't running."""
+        from unittest.mock import MagicMock, patch
+
+        mock_features = MagicMock()
+        mock_features.is_supported_at_runtime = False
+        mock_backend = MagicMock()
+        mock_backend.features = mock_features
+        mock_backend.name = "MockReader"
+
+        mock_ctx = MagicMock()
+        mock_ctx.acquire_best.return_value = mock_backend
+
+        with (
+            patch("accessiweather.screen_reader.PRISM_AVAILABLE", True),
+            patch("accessiweather.screen_reader.prism") as mock_prism,
+        ):
+            mock_prism.Context.return_value = mock_ctx
+
+            from accessiweather.screen_reader import ScreenReaderAnnouncer
+
+            announcer = ScreenReaderAnnouncer()
+            assert not announcer.is_available()
+            announcer.announce("test message")
+            mock_backend.speak.assert_not_called()
+            announcer.shutdown()
+
     def test_announcer_with_mocked_unavailable(self):
         """ScreenReaderAnnouncer with is_available=False works as no-op."""
         announcer = MagicMock()
