@@ -150,9 +150,7 @@ class TestBuildWeatherContext:
     def test_with_trend_insights(self):
         """Test with trend insights."""
         app = MagicMock()
-        app.current_weather_data = MockWeatherData(
-            trend_insights=[MockTrendInsight()]
-        )
+        app.current_weather_data = MockWeatherData(trend_insights=[MockTrendInsight()])
         result = _build_weather_context(app)
 
         assert "Trend Insights:" in result
