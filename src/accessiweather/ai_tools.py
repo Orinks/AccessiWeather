@@ -105,6 +105,66 @@ WEATHER_TOOLS: list[dict[str, Any]] = [
     {
         "type": "function",
         "function": {
+            "name": "query_open_meteo",
+            "description": (
+                "Query the Open-Meteo API with custom parameters. Use this for weather "
+                "questions not covered by other tools, such as soil temperature, cloud cover, "
+                "dew point, snow depth, precipitation probability, UV index, visibility, "
+                "surface pressure, cape, and more. Open-Meteo has global coverage and is free.\n\n"
+                "Common hourly variables: temperature_2m, relative_humidity_2m, dew_point_2m, "
+                "apparent_temperature, precipitation_probability, precipitation, rain, showers, "
+                "snowfall, snow_depth, weather_code, pressure_msl, surface_pressure, "
+                "cloud_cover, cloud_cover_low, cloud_cover_mid, cloud_cover_high, visibility, "
+                "wind_speed_10m, wind_direction_10m, wind_gusts_10m, uv_index, "
+                "soil_temperature_0cm, soil_temperature_6cm, soil_moisture_0_to_1cm\n\n"
+                "Common daily variables: temperature_2m_max, temperature_2m_min, "
+                "apparent_temperature_max, apparent_temperature_min, sunrise, sunset, "
+                "uv_index_max, precipitation_sum, rain_sum, showers_sum, snowfall_sum, "
+                "precipitation_hours, precipitation_probability_max, wind_speed_10m_max, "
+                "wind_gusts_10m_max, wind_direction_10m_dominant\n\n"
+                "Common current variables: temperature_2m, relative_humidity_2m, "
+                "apparent_temperature, is_day, precipitation, rain, showers, snowfall, "
+                "weather_code, cloud_cover, pressure_msl, surface_pressure, "
+                "wind_speed_10m, wind_direction_10m, wind_gusts_10m"
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "Location name or coordinates, e.g. 'Paris, France'.",
+                    },
+                    "hourly": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "List of hourly variables to fetch.",
+                    },
+                    "daily": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "List of daily variables to fetch.",
+                    },
+                    "current": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "List of current variables to fetch.",
+                    },
+                    "forecast_days": {
+                        "type": "integer",
+                        "description": "Number of forecast days (1-16, default 7).",
+                    },
+                    "timezone": {
+                        "type": "string",
+                        "description": "Timezone for results, e.g. 'America/New_York'. Default: auto.",
+                    },
+                },
+                "required": ["location"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "add_location",
             "description": "Add a location to the user's saved locations list. Use after confirming with the user which location they want to add.",
             "parameters": {
@@ -251,6 +311,7 @@ class WeatherToolExecutor:
             "search_location": self._search_location,
             "add_location": self._add_location,
             "list_locations": self._list_locations,
+            "query_open_meteo": self._query_open_meteo,
         }
 
     def execute(self, tool_name: str, arguments: dict[str, Any]) -> str:
@@ -347,6 +408,44 @@ class WeatherToolExecutor:
             self.config_manager.save_config()
             return f"Added '{name}' to your saved locations."
         return f"Failed to add '{name}'. It may already exist under a similar name."
+
+    def _query_open_meteo(self, arguments: dict[str, Any]) -> str:
+        """Query Open-Meteo API with custom parameters."""
+        location = arguments["location"]
+        lat, lon, display_name = self._resolve_location(location)
+
+        params: dict[str, Any] = {
+            "latitude": lat,
+            "longitude": lon,
+            "timezone": arguments.get("timezone", "auto"),
+        }
+
+        if "current" in arguments:
+            params["current"] = ",".join(arguments["current"])
+        if "hourly" in arguments:
+            params["hourly"] = ",".join(arguments["hourly"])
+        if "daily" in arguments:
+            params["daily"] = ",".join(arguments["daily"])
+        if "forecast_days" in arguments:
+            params["forecast_days"] = arguments["forecast_days"]
+
+        # Need at least one data group
+        if not any(k in params for k in ("current", "hourly", "daily")):
+            return "Error: specify at least one of current, hourly, or daily variables."
+
+        try:
+            from accessiweather.openmeteo_client import OpenMeteoApiClient
+
+            client = OpenMeteoApiClient()
+            try:
+                data = client._make_request("forecast", params)
+            finally:
+                client.close()
+
+            return format_open_meteo_response(data, display_name)
+        except Exception as e:
+            logger.warning("Open-Meteo query failed: %s", e)
+            return f"Error querying Open-Meteo: {e}"
 
     def _list_locations(self, arguments: dict[str, Any]) -> str:
         """List all saved locations."""
@@ -526,6 +625,73 @@ def format_hourly_forecast(data: dict[str, Any], display_name: str = "") -> str:
 
     if len(lines) == 1:
         lines.append("No hourly forecast data available.")
+
+    return "\n".join(lines)
+
+
+def format_open_meteo_response(data: dict[str, Any], display_name: str = "") -> str:
+    """
+    Format an Open-Meteo API response as readable text.
+
+    Handles current, hourly, and daily data sections. Limits output
+    to avoid overwhelming the AI context window.
+
+    Args:
+        data: Raw Open-Meteo API response dict.
+        display_name: Location display name for the header.
+
+    Returns:
+        A human-readable text summary of the queried data.
+
+    """
+    header = f"Open-Meteo data for {display_name}:" if display_name else "Open-Meteo data:"
+    lines = [header]
+
+    # Current data
+    current = data.get("current")
+    if isinstance(current, dict):
+        units = data.get("current_units", {})
+        lines.append("\nCurrent:")
+        for key, value in current.items():
+            if key in ("time", "interval"):
+                continue
+            unit = units.get(key, "")
+            lines.append(f"  {key}: {value}{unit}")
+
+    # Hourly data (limit to 24 periods)
+    hourly = data.get("hourly")
+    if isinstance(hourly, dict):
+        units = data.get("hourly_units", {})
+        times = hourly.get("time", [])[:24]
+        lines.append(f"\nHourly ({len(times)} periods):")
+        for i, t in enumerate(times):
+            parts = [t]
+            for key, values in hourly.items():
+                if key == "time" or not isinstance(values, list):
+                    continue
+                if i < len(values):
+                    unit = units.get(key, "")
+                    parts.append(f"{key}: {values[i]}{unit}")
+            lines.append("  " + " | ".join(parts))
+
+    # Daily data
+    daily = data.get("daily")
+    if isinstance(daily, dict):
+        units = data.get("daily_units", {})
+        times = daily.get("time", [])
+        lines.append(f"\nDaily ({len(times)} days):")
+        for i, t in enumerate(times):
+            parts = [t]
+            for key, values in daily.items():
+                if key == "time" or not isinstance(values, list):
+                    continue
+                if i < len(values):
+                    unit = units.get(key, "")
+                    parts.append(f"{key}: {values[i]}{unit}")
+            lines.append("  " + " | ".join(parts))
+
+    if len(lines) == 1:
+        lines.append("No data returned.")
 
     return "\n".join(lines)
 
