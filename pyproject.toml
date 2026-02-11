@@ -24,6 +24,7 @@ dependencies = [
     "keyring",
     "openai>=1.0.0",
     "playsound3",
+    "prismatoid>=0.7.0",
 ]
 readme = "README.md"
 classifiers = [
@@ -51,10 +52,6 @@ build = [
     "pyinstaller>=6.0.0",
     "pillow>=10.0.0",
 ]
-screenreader = [
-    "prismatoid>=0.7.0",
-]
-
 [project.scripts]
 accessiweather = "accessiweather.main:main"
 
