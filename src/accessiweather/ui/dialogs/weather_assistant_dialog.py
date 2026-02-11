@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 import wx
 
-from ...ai_tools import WEATHER_TOOLS, WeatherToolExecutor
+from ...ai_tools import WeatherToolExecutor, get_tools_for_message
 from ...screen_reader import ScreenReaderAnnouncer
 
 if TYPE_CHECKING:
@@ -351,7 +351,13 @@ class WeatherAssistantDialog(wx.Dialog):
 
                 extra_kwargs: dict = {}
                 if tool_executor is not None:
-                    extra_kwargs["tools"] = WEATHER_TOOLS
+                    # Get last user message for tool selection
+                    user_msg = ""
+                    for msg in reversed(messages):
+                        if msg.get("role") == "user":
+                            user_msg = msg.get("content", "")
+                            break
+                    extra_kwargs["tools"] = get_tools_for_message(user_msg)
 
                 max_tool_iterations = 5
                 for _iteration in range(max_tool_iterations + 1):

@@ -16,7 +16,62 @@ from accessiweather.services.weather_service.weather_service import WeatherServi
 
 logger = logging.getLogger(__name__)
 
-WEATHER_TOOLS: list[dict[str, Any]] = [
+
+def get_tools_for_message(message: str) -> list[dict[str, Any]]:
+    """
+    Select which tools to send based on the user's message.
+
+    Always includes core tools (current weather, forecast, alerts).
+    Adds extended tools only when keywords suggest they're needed,
+    saving tokens on simple weather questions.
+
+    Args:
+        message: The user's message text.
+
+    Returns:
+        List of tool schemas to send to the API.
+
+    """
+    tools = list(CORE_TOOLS)
+    msg_lower = message.lower()
+
+    # Keywords that trigger extended tools
+    extended_triggers = (
+        "hour",
+        "tonight",
+        "this afternoon",
+        "this morning",
+        "at ",
+        " pm",
+        " am",
+        "soil",
+        "uv",
+        "cloud",
+        "dew",
+        "snow depth",
+        "visibility",
+        "pressure",
+        "sunrise",
+        "sunset",
+        "cape",
+        "custom",
+        "add",
+        "save",
+        "location",
+        "list",
+        "my locations",
+        "search",
+        "find",
+        "where is",
+        "zip",
+    )
+    if any(trigger in msg_lower for trigger in extended_triggers):
+        tools.extend(EXTENDED_TOOLS)
+
+    return tools
+
+
+CORE_TOOLS: list[dict[str, Any]] = [
     {
         "type": "function",
         "function": {
@@ -68,6 +123,9 @@ WEATHER_TOOLS: list[dict[str, Any]] = [
             },
         },
     },
+]
+
+EXTENDED_TOOLS: list[dict[str, Any]] = [
     {
         "type": "function",
         "function": {
@@ -199,6 +257,9 @@ WEATHER_TOOLS: list[dict[str, Any]] = [
         },
     },
 ]
+
+# Complete list for backward compatibility
+WEATHER_TOOLS = CORE_TOOLS + EXTENDED_TOOLS
 
 
 class LocationResolver:
