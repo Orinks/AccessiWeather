@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING
 
 import wx
 
+from ...screen_reader import ScreenReaderAnnouncer
+
 if TYPE_CHECKING:
     from ...app import AccessiWeatherApp
 
@@ -124,6 +126,7 @@ class WeatherAssistantDialog(wx.Dialog):
         self.app = app
         self._conversation: list[dict[str, str]] = []
         self._is_generating = False
+        self._announcer = ScreenReaderAnnouncer()
 
         self._create_widgets()
         self._bind_events()
@@ -210,7 +213,9 @@ class WeatherAssistantDialog(wx.Dialog):
 
     def _add_welcome_message(self) -> None:
         """Add initial welcome message to the chat."""
-        location = self.app.config_manager.get_current_location() if self.app.config_manager else None
+        location = (
+            self.app.config_manager.get_current_location() if self.app.config_manager else None
+        )
         loc_name = location.name if location else "your area"
 
         welcome = (
@@ -220,6 +225,7 @@ class WeatherAssistantDialog(wx.Dialog):
             f"your plans."
         )
         self._append_to_display("Weather Assistant", welcome)
+        self._announcer.announce(welcome)
 
     def _append_to_display(self, speaker: str, text: str) -> None:
         """Append a message to the chat display."""
@@ -259,7 +265,7 @@ class WeatherAssistantDialog(wx.Dialog):
 
         # Trim conversation if too long
         if len(self._conversation) > MAX_CONTEXT_TURNS * 2:
-            self._conversation = self._conversation[-(MAX_CONTEXT_TURNS * 2):]
+            self._conversation = self._conversation[-(MAX_CONTEXT_TURNS * 2) :]
 
         self._set_generating(True)
         self._generate_response()
@@ -272,7 +278,10 @@ class WeatherAssistantDialog(wx.Dialog):
         model = settings.ai_model_preference if settings else ""
 
         if not api_key:
-            wx.CallAfter(self._on_response_error, "No OpenRouter API key configured. Set one in Settings > AI Explanations.")
+            wx.CallAfter(
+                self._on_response_error,
+                "No OpenRouter API key configured. Set one in Settings > AI Explanations.",
+            )
             return
 
         # Build weather context
@@ -315,7 +324,10 @@ class WeatherAssistantDialog(wx.Dialog):
                 if content.strip():
                     wx.CallAfter(self._on_response_received, content.strip(), model_used)
                 else:
-                    wx.CallAfter(self._on_response_error, "Received an empty response. Try again or switch models in Settings.")
+                    wx.CallAfter(
+                        self._on_response_error,
+                        "Received an empty response. Try again or switch models in Settings.",
+                    )
 
             except Exception as e:
                 error_msg = str(e)
@@ -324,7 +336,9 @@ class WeatherAssistantDialog(wx.Dialog):
                 if "api key" in error_msg.lower() or "401" in error_msg:
                     friendly = "API key is invalid. Check Settings > AI Explanations."
                 elif "429" in error_msg or "rate limit" in error_msg.lower():
-                    friendly = "Rate limited. Wait a moment and try again, or switch to a different model."
+                    friendly = (
+                        "Rate limited. Wait a moment and try again, or switch to a different model."
+                    )
                 elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
                     friendly = "Request timed out. The AI service may be busy, try again."
                 else:
@@ -339,12 +353,15 @@ class WeatherAssistantDialog(wx.Dialog):
         """Handle successful AI response."""
         self._conversation.append({"role": "assistant", "content": text})
         self._append_to_display("Weather Assistant", text)
+        self._announcer.announce(text)
         self._set_status(f"Model: {model_used}")
         self._set_generating(False)
 
     def _on_response_error(self, error: str) -> None:
         """Handle AI response error."""
-        self._append_to_display("Weather Assistant", f"Sorry, I couldn't respond: {error}")
+        error_message = f"Sorry, I couldn't respond: {error}"
+        self._append_to_display("Weather Assistant", error_message)
+        self._announcer.announce(error_message)
         # Remove the last user message from conversation since we failed
         if self._conversation and self._conversation[-1]["role"] == "user":
             self._conversation.pop()
@@ -368,6 +385,7 @@ class WeatherAssistantDialog(wx.Dialog):
 
     def _on_close(self, event: wx.Event) -> None:
         """Handle dialog close."""
+        self._announcer.shutdown()
         self.EndModal(wx.ID_CLOSE)
 
 

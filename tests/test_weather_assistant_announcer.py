@@ -1,0 +1,96 @@
+"""Tests for ScreenReaderAnnouncer integration in WeatherAssistantDialog."""
+
+from __future__ import annotations
+
+from unittest.mock import MagicMock
+
+
+class TestAnnouncerIntegration:
+    """Verify ScreenReaderAnnouncer is wired into WeatherAssistantDialog."""
+
+    def test_announcer_import_in_module(self):
+        """ScreenReaderAnnouncer is imported in the dialog module."""
+        from accessiweather.ui.dialogs import weather_assistant_dialog as mod
+
+        assert hasattr(mod, "ScreenReaderAnnouncer")
+
+    def test_dialog_source_creates_announcer_in_init(self):
+        """__init__ creates self._announcer = ScreenReaderAnnouncer()."""
+        import inspect
+
+        from accessiweather.ui.dialogs.weather_assistant_dialog import (
+            WeatherAssistantDialog,
+        )
+
+        source = inspect.getsource(WeatherAssistantDialog.__init__)
+        assert "ScreenReaderAnnouncer()" in source
+        assert "_announcer" in source
+
+    def test_on_response_received_calls_announce(self):
+        """_on_response_received calls self._announcer.announce(text)."""
+        import inspect
+
+        from accessiweather.ui.dialogs.weather_assistant_dialog import (
+            WeatherAssistantDialog,
+        )
+
+        source = inspect.getsource(WeatherAssistantDialog._on_response_received)
+        assert "_announcer.announce" in source
+
+    def test_on_response_error_calls_announce(self):
+        """_on_response_error calls self._announcer.announce(error_message)."""
+        import inspect
+
+        from accessiweather.ui.dialogs.weather_assistant_dialog import (
+            WeatherAssistantDialog,
+        )
+
+        source = inspect.getsource(WeatherAssistantDialog._on_response_error)
+        assert "_announcer.announce" in source
+
+    def test_on_close_calls_shutdown(self):
+        """_on_close calls self._announcer.shutdown()."""
+        import inspect
+
+        from accessiweather.ui.dialogs.weather_assistant_dialog import (
+            WeatherAssistantDialog,
+        )
+
+        source = inspect.getsource(WeatherAssistantDialog._on_close)
+        assert "_announcer.shutdown()" in source
+
+    def test_welcome_message_calls_announce(self):
+        """_add_welcome_message calls self._announcer.announce(welcome)."""
+        import inspect
+
+        from accessiweather.ui.dialogs.weather_assistant_dialog import (
+            WeatherAssistantDialog,
+        )
+
+        source = inspect.getsource(WeatherAssistantDialog._add_welcome_message)
+        assert "_announcer.announce" in source
+
+
+class TestScreenReaderAnnouncerGracefulFallback:
+    """Verify ScreenReaderAnnouncer works when prismatoid is not installed."""
+
+    def test_announcer_no_op_without_prismatoid(self):
+        """ScreenReaderAnnouncer is a no-op when prismatoid is unavailable."""
+        from accessiweather.screen_reader import ScreenReaderAnnouncer
+
+        # Without prismatoid actually providing a backend, announcer is no-op
+        announcer = ScreenReaderAnnouncer()
+        assert not announcer.is_available()
+        # Should not raise
+        announcer.announce("test message")
+        announcer.shutdown()
+
+    def test_announcer_with_mocked_unavailable(self):
+        """ScreenReaderAnnouncer with is_available=False works as no-op."""
+        announcer = MagicMock()
+        announcer.is_available.return_value = False
+        # Simulates dialog usage pattern
+        announcer.announce("hello")
+        announcer.shutdown()
+        announcer.announce.assert_called_with("hello")
+        announcer.shutdown.assert_called_once()
