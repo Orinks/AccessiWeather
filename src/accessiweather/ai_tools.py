@@ -68,6 +68,40 @@ WEATHER_TOOLS: list[dict[str, Any]] = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_hourly_forecast",
+            "description": "Get an hourly weather forecast for a location. Useful for questions like 'will it rain at 3pm?' or 'what's the temperature tonight?'.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "The location to get the hourly forecast for, e.g. 'New York, NY' or '10001'.",
+                    }
+                },
+                "required": ["location"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_location",
+            "description": "Search for a location by name or ZIP code to find its full name and coordinates. Useful when the user mentions an ambiguous place name.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Location name or ZIP code to search for, e.g. 'Paris' or '90210'.",
+                    }
+                },
+                "required": ["query"],
+            },
+        },
+    },
 ]
 
 
@@ -174,6 +208,8 @@ class WeatherToolExecutor:
             "get_current_weather": self._get_current_weather,
             "get_forecast": self._get_forecast,
             "get_alerts": self._get_alerts,
+            "get_hourly_forecast": self._get_hourly_forecast,
+            "search_location": self._search_location,
         }
 
     def execute(self, tool_name: str, arguments: dict[str, Any]) -> str:
@@ -240,6 +276,19 @@ class WeatherToolExecutor:
         lat, lon, display_name = self._resolve_location(location)
         data = self.weather_service.get_alerts(lat, lon)
         return format_alerts(data, display_name)
+
+    def _get_hourly_forecast(self, arguments: dict[str, Any]) -> str:
+        """Get hourly weather forecast."""
+        location = arguments["location"]
+        lat, lon, display_name = self._resolve_location(location)
+        data = self.weather_service.get_hourly_forecast(lat, lon)
+        return format_hourly_forecast(data, display_name)
+
+    def _search_location(self, arguments: dict[str, Any]) -> str:
+        """Search for a location by name or ZIP code."""
+        query = arguments["query"]
+        suggestions = self.geocoding_service.suggest_locations(query, limit=5)
+        return format_location_search(suggestions, query)
 
 
 def format_current_weather(data: dict[str, Any], display_name: str = "") -> str:
@@ -362,6 +411,70 @@ def format_alerts(data: dict[str, Any], display_name: str = "") -> str:
                 lines.append(f"  {description[:300]}")
     else:
         lines.append("No active alerts.")
+
+    return "\n".join(lines)
+
+
+def format_hourly_forecast(data: dict[str, Any], display_name: str = "") -> str:
+    """
+    Format hourly forecast data as readable text with up to 12 periods.
+
+    Args:
+        data: Hourly forecast data dict from WeatherService.get_hourly_forecast().
+        display_name: Location display name for the header.
+
+    Returns:
+        A human-readable text summary of the hourly forecast.
+
+    """
+    header = f"Hourly forecast for {display_name}:" if display_name else "Hourly forecast:"
+    lines = [header]
+
+    periods = data.get("periods", data.get("properties", {}).get("periods", []))
+    if isinstance(periods, list):
+        for period in periods[:12]:
+            if not isinstance(period, dict):
+                continue
+            name = period.get("name") or period.get("startTime", "")
+            temp = period.get("temperature")
+            temp_unit = period.get("temperatureUnit", "")
+            short = period.get("shortForecast") or ""
+            wind = period.get("windSpeed") or ""
+
+            parts = [str(name)]
+            if temp is not None:
+                parts.append(f"{temp}°{temp_unit}" if temp_unit else str(temp))
+            if short:
+                parts.append(short)
+            if wind:
+                parts.append(f"Wind: {wind}")
+
+            lines.append(" - ".join(parts))
+
+    if len(lines) == 1:
+        lines.append("No hourly forecast data available.")
+
+    return "\n".join(lines)
+
+
+def format_location_search(suggestions: list[str], query: str = "") -> str:
+    """
+    Format location search results as readable text.
+
+    Args:
+        suggestions: List of location suggestion strings.
+        query: Original search query for context.
+
+    Returns:
+        A human-readable list of matching locations.
+
+    """
+    if not suggestions:
+        return f"No locations found matching '{query}'."
+
+    lines = [f"Locations matching '{query}':"]
+    for i, suggestion in enumerate(suggestions, 1):
+        lines.append(f"{i}. {suggestion}")
 
     return "\n".join(lines)
 
