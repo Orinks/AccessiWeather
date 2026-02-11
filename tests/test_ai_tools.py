@@ -144,8 +144,9 @@ class TestWeatherToolExecutor:
     def test_execute_geocoding_failure(self, executor, mock_geocoding_service):
         mock_geocoding_service.geocode_address.return_value = None
 
-        with pytest.raises(ValueError, match="Could not resolve location"):
-            executor.execute("get_current_weather", {"location": "Nonexistent Place"})
+        result = executor.execute("get_current_weather", {"location": "Nonexistent Place"})
+        assert "Error" in result
+        assert "Could not resolve location" in result
 
     def test_execute_current_weather_minimal_data(self, executor, mock_weather_service):
         mock_weather_service.get_current_conditions.return_value = {

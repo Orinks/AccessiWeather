@@ -71,6 +71,75 @@ WEATHER_TOOLS: list[dict[str, Any]] = [
 ]
 
 
+class LocationResolver:
+    """
+    Resolves location strings to (lat, lon) coordinates.
+
+    Uses the app's current location as a shortcut when the query matches
+    the default location name (case-insensitive), otherwise falls back to
+    the GeocodingService.
+    """
+
+    def __init__(
+        self,
+        geocoding_service: GeocodingService,
+        default_lat: float | None = None,
+        default_lon: float | None = None,
+        default_name: str | None = None,
+    ) -> None:
+        """
+        Initialize the location resolver.
+
+        Args:
+            geocoding_service: The geocoding service for resolving locations.
+            default_lat: Latitude of the app's current/default location.
+            default_lon: Longitude of the app's current/default location.
+            default_name: Display name of the app's current/default location.
+
+        """
+        self.geocoding_service = geocoding_service
+        self.default_lat = default_lat
+        self.default_lon = default_lon
+        self.default_name = default_name
+
+    def _matches_default(self, location_str: str) -> bool:
+        """Check if a location string matches the default location name."""
+        if self.default_name is None or self.default_lat is None or self.default_lon is None:
+            return False
+        return location_str.strip().lower() == self.default_name.strip().lower()
+
+    def resolve(self, location_str: str) -> tuple[float, float, str]:
+        """
+        Resolve a location string to (lat, lon, display_name).
+
+        If the string matches the default location name (case-insensitive),
+        the default coordinates are returned without an API call. Otherwise
+        the GeocodingService is used.
+
+        Args:
+            location_str: The location to resolve (e.g. 'Paris' or 'New York, NY').
+
+        Returns:
+            A (latitude, longitude, display_name) tuple.
+
+        Raises:
+            ValueError: If the location cannot be resolved.
+
+        """
+        if self._matches_default(location_str):
+            logger.debug(
+                "Location '%s' matches default location '%s', using cached coordinates",
+                location_str,
+                self.default_name,
+            )
+            return (self.default_lat, self.default_lon, self.default_name)  # type: ignore[return-value]
+
+        result = self.geocoding_service.geocode_address(location_str)
+        if result is None:
+            raise ValueError(f"Could not resolve location: {location_str}")
+        return result
+
+
 class WeatherToolExecutor:
     """Executes weather tool calls using WeatherService and geocoding."""
 
@@ -78,6 +147,9 @@ class WeatherToolExecutor:
         self,
         weather_service: WeatherService,
         geocoding_service: GeocodingService,
+        default_lat: float | None = None,
+        default_lon: float | None = None,
+        default_name: str | None = None,
     ) -> None:
         """
         Initialize the weather tool executor.
@@ -85,10 +157,19 @@ class WeatherToolExecutor:
         Args:
             weather_service: The weather service for fetching weather data.
             geocoding_service: The geocoding service for resolving locations.
+            default_lat: Latitude of the app's current/default location.
+            default_lon: Longitude of the app's current/default location.
+            default_name: Display name of the app's current/default location.
 
         """
         self.weather_service = weather_service
         self.geocoding_service = geocoding_service
+        self.location_resolver = LocationResolver(
+            geocoding_service=geocoding_service,
+            default_lat=default_lat,
+            default_lon=default_lon,
+            default_name=default_name,
+        )
         self._tool_handlers = {
             "get_current_weather": self._get_current_weather,
             "get_forecast": self._get_forecast,
@@ -104,7 +185,8 @@ class WeatherToolExecutor:
             arguments: The arguments for the tool call.
 
         Returns:
-            A formatted string with the tool's results.
+            A formatted string with the tool's results, or an error
+            message string if location resolution or data fetching fails.
 
         Raises:
             ValueError: If the tool name is not recognized.
@@ -113,7 +195,14 @@ class WeatherToolExecutor:
         handler = self._tool_handlers.get(tool_name)
         if handler is None:
             raise ValueError(f"Unknown tool: {tool_name}")
-        return handler(arguments)
+        try:
+            return handler(arguments)
+        except ValueError as e:
+            logger.warning("Tool execution failed for %s: %s", tool_name, e)
+            return f"Error: {e}"
+        except Exception as e:
+            logger.error("Unexpected error executing tool %s: %s", tool_name, e)
+            return f"Error fetching weather data: {e}"
 
     def _resolve_location(self, location: str) -> tuple[float, float, str]:
         """
@@ -129,10 +218,7 @@ class WeatherToolExecutor:
             ValueError: If the location cannot be resolved.
 
         """
-        result = self.geocoding_service.geocode_address(location)
-        if result is None:
-            raise ValueError(f"Could not resolve location: {location}")
-        return result
+        return self.location_resolver.resolve(location)
 
     def _get_current_weather(self, arguments: dict[str, Any]) -> str:
         """Get current weather conditions."""
