@@ -14,6 +14,8 @@ from typing import TYPE_CHECKING
 
 import wx
 
+from accessiweather.notifications.sound_pack_installer import safe_extractall
+
 from ...notifications.sound_pack_installer import SoundPackInstaller
 from ...services.community_soundpack_service import CommunitySoundPackService
 from ...soundpack_paths import get_soundpacks_dir
@@ -876,7 +878,7 @@ class SoundPackManagerDialog(wx.Dialog):
                         shutil.rmtree(pack_dir)
 
                     pack_dir.mkdir(exist_ok=True)
-                    zf.extractall(pack_dir)
+                    safe_extractall(zf, pack_dir)
 
                 self._load_sound_packs()
                 self._refresh_pack_list()
