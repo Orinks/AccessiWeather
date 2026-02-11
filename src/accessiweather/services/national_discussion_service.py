@@ -1,16 +1,17 @@
 """
 National Discussion Service for AccessiWeather.
 
-This module provides functionality to fetch national weather discussions
-from the NWS API (api.weather.gov/products/types/), including WPC discussions
-(PMD), SPC convective outlooks (SWO), and QPF discussions.
+Provide functionality to fetch national weather discussions from the NWS API
+(api.weather.gov/products/types/) and scrape NHC tropical outlooks.
 """
 
 import logging
 import time
+from datetime import datetime, timezone
 from typing import Any
 
 import httpx
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
@@ -31,14 +32,17 @@ PRODUCT_TYPE_PMD = "PMD"  # Prognostic Meteorological Discussion (WPC)
 PRODUCT_TYPE_SWO = "SWO"  # Severe Weather Outlook (SPC)
 PRODUCT_TYPE_QPF = "QPF"  # Quantitative Precipitation Forecast
 
+# NHC tropical outlook URLs
+NHC_ATLANTIC_OUTLOOK_URL = "https://www.nhc.noaa.gov/gtwo.php?basin=atlc"
+NHC_EAST_PACIFIC_OUTLOOK_URL = "https://www.nhc.noaa.gov/gtwo.php?basin=epac"
+
 
 class NationalDiscussionService:
     """
-    Service for fetching national weather discussions via the NWS API.
+    Service for fetching national weather discussions via the NWS API and NHC scraping.
 
-    Fetches WPC discussions (PMD), SPC convective outlooks (SWO), and QPF
-    discussions using the api.weather.gov/products/types/ endpoint.
-    Includes rate limiting and retry logic.
+    Fetch WPC discussions (PMD), SPC convective outlooks (SWO), QPF discussions,
+    and NHC tropical weather outlooks. Include rate limiting and retry logic.
     """
 
     def __init__(
@@ -181,7 +185,6 @@ class NationalDiscussionService:
             or "epd" in name_lower
             or "extended" in name_lower
         ):
-            # Check for extended first since it might also contain 'extended'
             if "8-10" in name_lower or "day 8" in name_lower:
                 return "extended"
             return "medium_range"
@@ -234,13 +237,11 @@ class NationalDiscussionService:
 
         products = products_result["products"]
 
-        # Try to find and fetch each discussion type
         fetched: set[str] = set()
         for product in products:
             product_name = product.get("issuingOffice", "") + " " + product.get("name", "")
             product_id = product.get("id", "")
             if not product_id:
-                # Try extracting from @id URL
                 at_id = product.get("@id", "")
                 if at_id:
                     product_id = at_id.rsplit("/", 1)[-1]
@@ -257,7 +258,6 @@ class NationalDiscussionService:
             if len(fetched) == 3:
                 break
 
-        # Fill in any missing discussions
         for key in result:
             if not result[key]["text"]:
                 result[key]["text"] = "Discussion not available"
@@ -351,5 +351,138 @@ class NationalDiscussionService:
                 result["qpf"]["text"] = f"Error: {text_result['error']}"
         else:
             result["qpf"]["text"] = "QPF discussion not available"
+
+        return result
+
+    def _make_html_request(self, url: str) -> dict[str, Any]:
+        """
+        Make an HTTP GET request expecting HTML with retry logic.
+
+        Args:
+            url: The URL to request.
+
+        Returns:
+            Dict with 'success' bool and either 'html' or 'error' string.
+
+        """
+        last_error = ""
+        for attempt in range(self.max_retries + 1):
+            self._rate_limit()
+            try:
+                logger.debug(f"Requesting HTML {url} (attempt {attempt + 1})")
+                with httpx.Client() as client:
+                    response = client.get(
+                        url,
+                        headers={"User-Agent": "AccessiWeather/1.0 (AccessiWeather)"},
+                        timeout=self.timeout,
+                    )
+                    response.raise_for_status()
+                return {"success": True, "html": response.text}
+            except httpx.TimeoutException:
+                last_error = "Request timed out"
+            except httpx.ConnectError:
+                last_error = "Connection error"
+            except httpx.HTTPStatusError as e:
+                last_error = f"HTTP error: {e.response.status_code}"
+            except httpx.RequestError as e:
+                last_error = f"Request error: {e}"
+            except Exception as e:
+                last_error = f"Unexpected error: {e}"
+
+            if attempt < self.max_retries:
+                delay = self.request_delay * (self.retry_backoff**attempt)
+                logger.info(f"Retrying in {delay:.1f}s after: {last_error}")
+                time.sleep(delay)
+
+        logger.error(f"All attempts failed for {url}: {last_error}")
+        return {"success": False, "error": last_error}
+
+    @staticmethod
+    def _extract_nhc_outlook_text(html: str) -> str:
+        """
+        Extract tropical weather outlook text from NHC HTML page.
+
+        Args:
+            html: Raw HTML from NHC outlook page.
+
+        Returns:
+            Extracted outlook text or error message.
+
+        """
+        try:
+            soup = BeautifulSoup(html, "html.parser")
+
+            # NHC outlook text is typically in a <pre> tag
+            pre = soup.find("pre")
+            if pre:
+                return pre.get_text().strip()
+
+            # Fallback: look for div with id containing 'outlook'
+            div = soup.find("div", id=lambda i: i and "outlook" in i.lower())
+            if div:
+                return div.get_text().strip()
+
+            # Fallback: look for any element with class containing 'outlook'
+            el = soup.find(class_=lambda c: c and "outlook" in str(c).lower())
+            if el:
+                return el.get_text().strip()
+
+            return "Unable to parse NHC outlook text from page"
+        except Exception as e:
+            return f"Error parsing NHC outlook: {e}"
+
+    @staticmethod
+    def is_hurricane_season() -> bool:
+        """
+        Check if the current date falls within Atlantic hurricane season.
+
+        Returns:
+            True if current month is June through November, False otherwise.
+
+        """
+        return datetime.now(timezone.utc).month in (6, 7, 8, 9, 10, 11)
+
+    def fetch_nhc_discussions(self) -> dict[str, dict[str, str]]:
+        """
+        Fetch NHC tropical weather outlooks by scraping nhc.noaa.gov.
+
+        Returns:
+            Dict with keys 'atlantic_outlook' and 'east_pacific_outlook'.
+            Each value is a dict with 'title' and 'text' keys.
+            On error, 'text' contains a descriptive error message string.
+
+        """
+        result: dict[str, dict[str, str]] = {
+            "atlantic_outlook": {
+                "title": "Atlantic Tropical Weather Outlook",
+                "text": "",
+            },
+            "east_pacific_outlook": {
+                "title": "East Pacific Tropical Weather Outlook",
+                "text": "",
+            },
+        }
+
+        # Fetch Atlantic outlook
+        atlantic_result = self._make_html_request(NHC_ATLANTIC_OUTLOOK_URL)
+        if atlantic_result["success"]:
+            result["atlantic_outlook"]["text"] = self._extract_nhc_outlook_text(
+                atlantic_result["html"]
+            )
+        else:
+            result["atlantic_outlook"]["text"] = (
+                f"Error fetching Atlantic outlook: {atlantic_result['error']}"
+            )
+
+        # Fetch East Pacific outlook
+        epac_result = self._make_html_request(NHC_EAST_PACIFIC_OUTLOOK_URL)
+        if epac_result["success"]:
+            result["east_pacific_outlook"]["text"] = self._extract_nhc_outlook_text(
+                epac_result["html"]
+            )
+        else:
+            result["east_pacific_outlook"]["text"] = (
+                f"Error fetching East Pacific outlook: {epac_result['error']}"
+            )
 
         return result
