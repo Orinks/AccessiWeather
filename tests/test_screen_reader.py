@@ -49,7 +49,11 @@ class TestWithMockedPrismatoid:
     """Test behavior when prismatoid is available (mocked)."""
 
     def _reload_with_mock_prism(self):
+        mock_features = mock.MagicMock()
+        mock_features.is_supported_at_runtime = True
         mock_backend = mock.MagicMock()
+        mock_backend.features = mock_features
+        mock_backend.name = "MockReader"
         mock_ctx = mock.MagicMock()
         mock_ctx.acquire_best.return_value = mock_backend
         mock_prism = mock.MagicMock()

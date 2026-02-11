@@ -1,20 +1,30 @@
 """
 Thin wrapper around prismatoid for screen reader announcements.
 
-Provides graceful fallback when prismatoid is not installed.
+Provides graceful fallback when prismatoid is not installed or crashes on import.
 """
 
 import logging
 
 logger = logging.getLogger(__name__)
 
-try:
-    import prism
 
-    PRISM_AVAILABLE = True
-except ImportError:
+def _try_import_prism():
+    """Lazily import prism, returning the module or None."""
+    try:
+        import prism
+
+        return prism
+    except Exception:
+        logger.debug("prismatoid not available", exc_info=True)
+        return None
+
+
+try:
+    # Module-level flag for tests to check
+    PRISM_AVAILABLE = _try_import_prism() is not None
+except Exception:
     PRISM_AVAILABLE = False
-    logger.debug("prismatoid not installed; screen reader support disabled")
 
 
 class ScreenReaderAnnouncer:
@@ -24,11 +34,11 @@ class ScreenReaderAnnouncer:
         """Initialize the announcer, acquiring a screen reader backend if possible."""
         self._backend = None
         self._runtime_available = False
-        if PRISM_AVAILABLE:
+        prism = _try_import_prism()
+        if prism is not None:
             try:
                 ctx = prism.Context()
                 backend = ctx.acquire_best()
-                # Check if the backend's engine is actually running
                 features = backend.features
                 if features.is_supported_at_runtime:
                     self._backend = backend
@@ -59,3 +69,4 @@ class ScreenReaderAnnouncer:
     def shutdown(self) -> None:
         """Clean up resources."""
         self._backend = None
+        self._runtime_available = False
