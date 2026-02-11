@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 from unittest import mock
+from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -222,3 +223,56 @@ async def test_simple_update_service_download(tmp_path):
     assert result.read_bytes() == b"x" * 100
     assert len(progress_calls) == 2
     assert progress_calls[-1] == (100, 100)
+
+
+class TestApplyUpdateNoShellInjection:
+    """Regression tests: subprocess calls in apply_update must never use shell=True."""
+
+    @patch("accessiweather.services.simple_update.os._exit")
+    @patch("accessiweather.services.simple_update.subprocess.Popen")
+    @patch("accessiweather.services.simple_update.plan_restart")
+    def test_portable_update_uses_shell_false(self, mock_plan, mock_popen, mock_exit, tmp_path):
+        """should reject shell=True in portable update subprocess call"""
+        from accessiweather.services.simple_update import apply_update, RestartPlan
+
+        script_path = tmp_path / "update.bat"
+        mock_plan.return_value = RestartPlan(kind="portable", script_path=script_path, command=None)
+
+        with patch("accessiweather.services.simple_update.Path") as mock_path_cls:
+            mock_exe = MagicMock()
+            mock_exe.resolve.return_value = tmp_path / "app" / "app.exe"
+            mock_exe.parent = tmp_path / "app"
+            mock_path_cls.return_value = mock_exe
+            with patch("accessiweather.services.simple_update.build_portable_update_script", return_value="echo hi"):
+                apply_update(tmp_path / "update.zip", portable=True)
+
+        # Verify Popen was called with shell=False (explicitly or via list args)
+        assert mock_popen.called
+        call_kwargs = mock_popen.call_args
+        # shell should be False or not set (default is False)
+        shell_val = call_kwargs.kwargs.get("shell", call_kwargs[1].get("shell", False))
+        assert shell_val is False, f"subprocess.Popen called with shell={shell_val}, expected False"
+
+    @patch("accessiweather.services.simple_update.os._exit")
+    @patch("accessiweather.services.simple_update.subprocess.Popen")
+    @patch("accessiweather.services.simple_update.plan_restart")
+    def test_windows_installer_uses_shell_false(self, mock_plan, mock_popen, mock_exit, tmp_path):
+        """should reject shell=True in windows installer subprocess call"""
+        from accessiweather.services.simple_update import apply_update, RestartPlan
+
+        mock_plan.return_value = RestartPlan(kind="windows_installer", script_path=None, command=["installer.exe", "/S"])
+
+        apply_update(tmp_path / "update.exe", portable=False, platform_system="Windows")
+
+        assert mock_popen.called
+        call_kwargs = mock_popen.call_args
+        shell_val = call_kwargs.kwargs.get("shell", call_kwargs[1].get("shell", False))
+        assert shell_val is False, f"subprocess.Popen called with shell={shell_val}, expected False"
+
+    def test_no_shell_true_in_source(self):
+        """should not contain shell=True anywhere in simple_update.py source code"""
+        import inspect
+        import accessiweather.services.simple_update as mod
+
+        source = inspect.getsource(mod)
+        assert "shell=True" not in source, "simple_update.py still contains shell=True"
