@@ -373,10 +373,20 @@ class MainWindow(SizedFrame):
         show_explanation_dialog(self, self.app)
 
     def _on_discussion(self) -> None:
-        """View NWS Area Forecast Discussion."""
-        from .dialogs import show_discussion_dialog
+        """View NWS Area Forecast Discussion, or Nationwide discussions if Nationwide is selected."""
+        current = self.app.config_manager.get_current_location()
+        if current and current.name == "Nationwide":
+            from ..services.national_discussion_service import NationalDiscussionService
+            from .dialogs.nationwide_discussion_dialog import NationwideDiscussionDialog
 
-        show_discussion_dialog(self, self.app)
+            service = NationalDiscussionService()
+            dlg = NationwideDiscussionDialog(parent=self, service=service)
+            dlg.ShowModal()
+            dlg.Destroy()
+        else:
+            from .dialogs import show_discussion_dialog
+
+            show_discussion_dialog(self, self.app)
 
     def _on_aviation(self) -> None:
         """View aviation weather."""
