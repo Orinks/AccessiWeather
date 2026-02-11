@@ -6,11 +6,15 @@ Started: 2026-02-11T21:57Z
 ## Codebase Patterns
 - Tests must run with `.venv/bin/python -m pytest` (system python lacks wx)
 - Pre-commit hooks run ruff-format; always `git add -A` and retry after format fixes
-- NationalDiscussionScraper in `src/accessiweather/services/national_discussion_scraper.py`
-- Scraper uses httpx + BeautifulSoup, with rate limiting via `_last_request_time` global dict
-- `_make_request` returns `{"success": bool, "text": ..., "error": ...}` dicts
-- Tests mock `httpx.Client.get` via `patch.object`
+- NationalDiscussionScraper in `src/accessiweather/services/national_discussion_scraper.py` (legacy)
+- NationalDiscussionService in `src/accessiweather/services/national_discussion_service.py` (new, API-based)
+- Service uses NWS API for WPC/SPC/QPF, BeautifulSoup scraping for NHC/CPC
+- `_make_request` returns `{"success": bool, "data": ..., "error": ...}` for JSON
+- `_make_html_request` returns `{"success": bool, "html": ..., "error": ...}` for HTML
+- Tests mock service methods via `patch.object` on the service instance
 - pytest runs parallel via xdist (gw0, gw1)
+- NationalForecastHandler in `services/weather_service/national_forecast.py` delegates to NationalDiscussionService
+- Services `__init__.py` uses lazy imports via `__getattr__`
 
 ---
 
@@ -21,4 +25,15 @@ Started: 2026-02-11T21:57Z
 - Errors return descriptive strings instead of raising
 - Files changed: `src/accessiweather/services/national_discussion_scraper.py`, `tests/test_cpc_scraping.py`
 - **Learnings:** CPC pages use `<pre>` tags for discussion text, same as WPC/SPC pattern
+---
+
+## 2026-02-11 22:04Z - US-004: Add fetch_all method and caching to NationalDiscussionService
+- Created `NationalDiscussionService` with all fetch methods (WPC/SPC/QPF via NWS API, NHC/CPC via scraping)
+- Added `fetch_all_discussions(force_refresh=False)` returning unified dict with wpc, spc, qpf, nhc, cpc keys
+- Implemented caching with configurable TTL (default 1 hour)
+- NHC conditionally fetched based on `is_hurricane_season()` (June-November)
+- Wired NationalForecastHandler to use NationalDiscussionService instead of old scraper
+- Updated services `__init__.py` with lazy export of NationalDiscussionService
+- Files changed: `src/accessiweather/services/national_discussion_service.py` (new), `src/accessiweather/services/__init__.py`, `src/accessiweather/services/weather_service/national_forecast.py`, `tests/test_national_discussion_service.py` (new)
+- **Learnings:** The old scraper only had WPC/SPC via web scraping; new service uses NWS API for structured data. CPC `_extract_cpc_outlook_text` made static since it doesn't need instance state.
 ---
