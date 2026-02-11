@@ -32,6 +32,11 @@ def setup_logging(log_level=logging.INFO):
     config_dir = Path(get_config_dir())
     log_dir = config_dir / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
+    # Secure log directory permissions: owner-only access (rwx------)
+    try:
+        log_dir.chmod(0o700)
+    except OSError:
+        pass  # Windows or permission error — best-effort
 
     # Configure root logger
     root_logger = logging.getLogger()
@@ -62,7 +67,7 @@ def setup_logging(log_level=logging.INFO):
         maxBytes=5 * 1024 * 1024,
         backupCount=3,  # 5 MB
     )
-    file_handler.setLevel(min(log_level, logging.DEBUG))  # Always include DEBUG in file
+    file_handler.setLevel(log_level)  # Match configured level — don't force DEBUG to file
     file_handler.setFormatter(file_format)
     root_logger.addHandler(file_handler)
 

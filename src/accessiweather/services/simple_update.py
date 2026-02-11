@@ -474,7 +474,7 @@ def apply_update(
             exe_path,
         )
         plan.script_path.write_text(script_content, encoding="utf-8")
-        subprocess.Popen([str(plan.script_path)], shell=True, cwd=str(exe_path.parent))
+        subprocess.Popen([str(plan.script_path)], shell=False, cwd=str(exe_path.parent))
         os._exit(0)
 
     if plan.kind == "macos_script" and plan.script_path:
@@ -489,7 +489,7 @@ def apply_update(
         os._exit(0)
 
     if plan.kind == "windows_installer":
-        subprocess.Popen(plan.command, shell=True)
+        subprocess.Popen(plan.command, shell=False)
         os._exit(0)
 
     logger.warning("Update requires manual installation: %s", update_path)
@@ -604,7 +604,8 @@ class UpdateService:
 
         """
         if dest_dir is None:
-            dest_dir = Path(tempfile.gettempdir())
+            # Use a secure app-specific temp directory instead of shared system temp
+            dest_dir = Path(tempfile.mkdtemp(prefix="accessiweather_update_"))
         dest_dir.mkdir(parents=True, exist_ok=True)
 
         dest_path = dest_dir / update_info.artifact_name

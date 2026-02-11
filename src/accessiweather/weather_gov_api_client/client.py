@@ -82,12 +82,20 @@ class Client:
     def get_httpx_client(self) -> httpx.Client:
         """Get the underlying httpx.Client, constructing a new one if not previously set"""
         if self._client is None:
+            # Security: Always enforce SSL verification in production
+            verify = self._verify_ssl
+            if verify is False:
+                import logging
+                logging.getLogger(__name__).warning(
+                    "SSL verification was disabled — forcing it back on for security"
+                )
+                verify = True
             self._client = httpx.Client(
                 base_url=self._base_url,
                 cookies=self._cookies,
                 headers=self._headers,
                 timeout=self._timeout,
-                verify=self._verify_ssl,
+                verify=verify,
                 follow_redirects=self._follow_redirects,
                 **self._httpx_args,
             )
@@ -113,12 +121,20 @@ class Client:
     def get_async_httpx_client(self) -> httpx.AsyncClient:
         """Get the underlying httpx.AsyncClient, constructing a new one if not previously set"""
         if self._async_client is None:
+            # Security: Always enforce SSL verification in production
+            verify = self._verify_ssl
+            if verify is False:
+                import logging
+                logging.getLogger(__name__).warning(
+                    "SSL verification was disabled — forcing it back on for security"
+                )
+                verify = True
             self._async_client = httpx.AsyncClient(
                 base_url=self._base_url,
                 cookies=self._cookies,
                 headers=self._headers,
                 timeout=self._timeout,
-                verify=self._verify_ssl,
+                verify=verify,
                 follow_redirects=self._follow_redirects,
                 **self._httpx_args,
             )
@@ -221,12 +237,20 @@ class AuthenticatedClient:
             self._headers[self.auth_header_name] = (
                 f"{self.prefix} {self.token}" if self.prefix else self.token
             )
+            # Security: Always enforce SSL verification in production
+            verify = self._verify_ssl
+            if verify is False:
+                import logging
+                logging.getLogger(__name__).warning(
+                    "SSL verification was disabled — forcing it back on for security"
+                )
+                verify = True
             self._client = httpx.Client(
                 base_url=self._base_url,
                 cookies=self._cookies,
                 headers=self._headers,
                 timeout=self._timeout,
-                verify=self._verify_ssl,
+                verify=verify,
                 follow_redirects=self._follow_redirects,
                 **self._httpx_args,
             )
@@ -255,12 +279,20 @@ class AuthenticatedClient:
             self._headers[self.auth_header_name] = (
                 f"{self.prefix} {self.token}" if self.prefix else self.token
             )
+            # Security: Always enforce SSL verification in production
+            verify = self._verify_ssl
+            if verify is False:
+                import logging
+                logging.getLogger(__name__).warning(
+                    "SSL verification was disabled — forcing it back on for security"
+                )
+                verify = True
             self._async_client = httpx.AsyncClient(
                 base_url=self._base_url,
                 cookies=self._cookies,
                 headers=self._headers,
                 timeout=self._timeout,
-                verify=self._verify_ssl,
+                verify=verify,
                 follow_redirects=self._follow_redirects,
                 **self._httpx_args,
             )

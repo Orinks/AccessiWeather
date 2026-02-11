@@ -241,10 +241,60 @@ class AIExplainer:
         self.api_key = api_key
         self.model = model
         self.cache = cache
-        self.custom_system_prompt = custom_system_prompt
-        self.custom_instructions = custom_instructions
+        self.custom_system_prompt = self._sanitize_prompt(custom_system_prompt)
+        self.custom_instructions = self._sanitize_prompt(custom_instructions)
         self._session_token_count = 0
         self._client = None
+
+    # Maximum allowed length for custom prompts to prevent abuse
+    _MAX_PROMPT_LENGTH = 2000
+
+    @staticmethod
+    def _sanitize_prompt(prompt: str | None) -> str | None:
+        """
+        Sanitize a custom prompt to prevent prompt injection attacks.
+
+        Enforces length limits and strips potentially dangerous patterns
+        like attempts to override system behavior or extract data.
+
+        Args:
+            prompt: The custom prompt text to sanitize
+
+        Returns:
+            Sanitized prompt or None if input was None/empty
+
+        """
+        if not prompt or not prompt.strip():
+            return None
+
+        sanitized = prompt.strip()
+
+        # Enforce length limit
+        if len(sanitized) > AIExplainer._MAX_PROMPT_LENGTH:
+            logger.warning(
+                f"Custom prompt truncated from {len(sanitized)} to "
+                f"{AIExplainer._MAX_PROMPT_LENGTH} characters"
+            )
+            sanitized = sanitized[:AIExplainer._MAX_PROMPT_LENGTH]
+
+        # Strip common prompt injection patterns
+        injection_patterns = [
+            r"(?i)ignore\s+(all\s+)?(previous|above|prior)\s+(instructions?|prompts?|rules?)",
+            r"(?i)you\s+are\s+now\s+(?:a|an|in)\s+(?:new|different|unrestricted)",
+            r"(?i)disregard\s+(all\s+)?(previous|above|prior|your)\s+(instructions?|programming|rules?)",
+            r"(?i)system\s*:\s*",
+            r"(?i)\n\s*system\s*:",
+        ]
+
+        import re as _re
+        for pattern in injection_patterns:
+            if _re.search(pattern, sanitized):
+                logger.warning(
+                    f"Prompt injection pattern detected and stripped: {pattern}"
+                )
+                sanitized = _re.sub(pattern, "[filtered]", sanitized)
+
+        return sanitized if sanitized.strip() else None
 
     def get_effective_model(self) -> str:
         """
