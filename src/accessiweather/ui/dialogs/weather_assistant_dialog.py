@@ -300,18 +300,15 @@ class WeatherAssistantDialog(wx.Dialog):
 
         """
         try:
+            from ...api_client import NoaaApiClient
             from ...geocoding import GeocodingService
 
-            weather_client = getattr(self.app, "weather_client", None)
-            if weather_client is None:
-                logger.warning("No weather_client on app; tools disabled")
-                return None
-
+            # Use NoaaApiClient directly (sync, lat/lon based) rather than
+            # the app's async WeatherClient which has a different interface
+            nws_client = NoaaApiClient()
             geocoding_service = GeocodingService()
             config_manager = getattr(self.app, "config_manager", None)
-            return WeatherToolExecutor(
-                weather_client, geocoding_service, config_manager=config_manager
-            )
+            return WeatherToolExecutor(nws_client, geocoding_service, config_manager=config_manager)
         except Exception:
             logger.debug("Could not create WeatherToolExecutor", exc_info=True)
             return None
