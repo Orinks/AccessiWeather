@@ -88,3 +88,13 @@ Started: 2026-02-11 14:47 UTC
 - Files: src/accessiweather/ui/main_window.py, tests/test_noaa_radio_menu_item.py
 - **Learnings:** Source-based testing (reading .py file as text) is a pragmatic alternative when wx mocking is too complex for menu integration tests
 ---
+
+## 2026-02-12T20:28Z - US-007: Expand station database with comprehensive US coverage
+- Expanded _STATIONS from 31 to 150 stations covering all 50 US states
+- Every state has at least 1 station; larger states (CA, TX, NY, FL) have 3-5
+- All station entries have: call_sign, frequency, name, lat, lon, state
+- No duplicate call signs
+- Added 4 new tests: all_50_states_covered, no_duplicate_call_signs, station_data_fields_complete, at_least_100_stations
+- Files changed: src/accessiweather/noaa_radio/station_db.py, tests/test_noaa_radio_station_db.py
+- **Learnings:** None new - straightforward data expansion
+---

@@ -63,8 +63,12 @@ class NOAARadioDialog(wx.Dialog):
             on_playing=self._on_playing,
             on_stopped=self._on_stopped,
             on_error=self._on_error,
+            on_stalled=self._on_stalled,
+            on_reconnecting=self._on_reconnecting,
         )
         self._url_provider = StreamURLProvider()
+        self._health_timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self._on_health_check, self._health_timer)
 
         self._init_ui()
         self._load_stations()
@@ -158,16 +162,27 @@ class NOAARadioDialog(wx.Dialog):
             self._set_status("No station selected")
             return
 
-        url = self._url_provider.get_stream_url(station.call_sign)
-        if url is None:
-            self._set_status(f"No stream URL for {station.call_sign}")
+        urls = self._url_provider.get_stream_urls(station.call_sign)
+        if not urls:
+            self._set_status(f"No stream available for {station.call_sign}")
+            wx.MessageBox(
+                f"No online stream is available for station {station.call_sign} ({station.name}).\n\n"
+                "Not all NOAA Weather Radio stations have online streams.",
+                "Stream Not Available",
+                wx.OK | wx.ICON_INFORMATION,
+                self,
+            )
             return
 
         self._set_status(f"Connecting to {station.call_sign}...")
-        self._player.play(url)
+        primary_url = urls[0]
+        fallback_urls = urls[1:] if len(urls) > 1 else []
+        if self._player.play(primary_url, fallback_urls=fallback_urls):
+            self._health_timer.Start(5000)  # Check health every 5 seconds
 
     def _on_stop(self, _event: wx.CommandEvent) -> None:
         """Handle Stop button click."""
+        self._health_timer.Stop()
         self._player.stop()
 
     def _on_volume_change(self, _event: wx.CommandEvent) -> None:
@@ -191,9 +206,22 @@ class NOAARadioDialog(wx.Dialog):
 
     def _on_error(self, message: str) -> None:
         """Handle playback error event."""
+        self._health_timer.Stop()
         self._set_status(f"Error: {message}")
         self._play_btn.Enable(True)
         self._stop_btn.Enable(False)
+
+    def _on_stalled(self) -> None:
+        """Handle stream stall (buffering)."""
+        self._set_status("Stream stalled, reconnecting...")
+
+    def _on_reconnecting(self, attempt: int) -> None:
+        """Handle reconnection attempt."""
+        self._set_status(f"Reconnecting (attempt {attempt})...")
+
+    def _on_health_check(self, _event: wx.TimerEvent) -> None:
+        """Periodic health check for stream stalls."""
+        self._player.check_health()
 
     def _set_status(self, text: str) -> None:
         """Update the status text."""
@@ -201,5 +229,6 @@ class NOAARadioDialog(wx.Dialog):
 
     def _on_close(self, _event: wx.Event) -> None:
         """Handle dialog close."""
+        self._health_timer.Stop()
         self._player.stop()
         self.Destroy()
