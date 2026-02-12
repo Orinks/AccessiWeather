@@ -190,22 +190,17 @@ class NationwideDiscussionDialog(wx.Dialog):
         cpc_sizer = wx.BoxSizer(wx.VERTICAL)
 
         cpc_sizer.Add(
-            wx.StaticText(self.cpc_panel, label="6-10 Day Outlook:"), 0, wx.LEFT | wx.TOP, 5
+            wx.StaticText(self.cpc_panel, label="6-10 & 8-14 Day Outlook:"),
+            0,
+            wx.LEFT | wx.TOP,
+            5,
         )
-        self.cpc_6_10_day = wx.TextCtrl(
+        self.cpc_outlook = wx.TextCtrl(
             self.cpc_panel,
             style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
-            name="CPC 6-10 Day Outlook",
+            name="CPC 6-10 and 8-14 Day Outlook",
         )
-        cpc_sizer.Add(self.cpc_6_10_day, 1, wx.ALL | wx.EXPAND, 5)
-
-        cpc_sizer.Add(wx.StaticText(self.cpc_panel, label="8-14 Day Outlook:"), 0, wx.LEFT, 5)
-        self.cpc_8_14_day = wx.TextCtrl(
-            self.cpc_panel,
-            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
-            name="CPC 8-14 Day Outlook",
-        )
-        cpc_sizer.Add(self.cpc_8_14_day, 1, wx.ALL | wx.EXPAND, 5)
+        cpc_sizer.Add(self.cpc_outlook, 1, wx.ALL | wx.EXPAND, 5)
 
         self.cpc_panel.SetSizer(cpc_sizer)
         self.notebook.AddPage(self.cpc_panel, "CPC (Climate Prediction Center)")
@@ -254,8 +249,7 @@ class NationwideDiscussionDialog(wx.Dialog):
             self.spc_day1,
             self.spc_day2,
             self.spc_day3,
-            self.cpc_6_10_day,
-            self.cpc_8_14_day,
+            self.cpc_outlook,
         ]
         if self._nhc_available:
             controls.extend([self.nhc_atlantic, self.nhc_east_pacific])
@@ -323,8 +317,7 @@ class NationwideDiscussionDialog(wx.Dialog):
 
         # CPC
         cpc = data.get("cpc", {})
-        self.cpc_6_10_day.SetValue(cpc.get("outlook_6_10", {}).get("text", "Not available"))
-        self.cpc_8_14_day.SetValue(cpc.get("outlook_8_14", {}).get("text", "Not available"))
+        self.cpc_outlook.SetValue(cpc.get("outlook", {}).get("text", "Not available"))
 
     def _hide_empty_tabs(self, data: dict[str, Any]) -> None:
         """Hide tabs where all discussions have no useful content."""
@@ -348,9 +341,7 @@ class NationwideDiscussionDialog(wx.Dialog):
             "NHC (National Hurricane Center)": _has_data(
                 data.get("nhc", {}), ["atlantic_outlook", "east_pacific_outlook"]
             ),
-            "CPC (Climate Prediction Center)": _has_data(
-                data.get("cpc", {}), ["outlook_6_10", "outlook_8_14"]
-            ),
+            "CPC (Climate Prediction Center)": _has_data(data.get("cpc", {}), ["outlook"]),
         }
 
         # Remove tabs with no data (iterate in reverse to preserve indices)
@@ -375,8 +366,7 @@ class NationwideDiscussionDialog(wx.Dialog):
             self.spc_day1,
             self.spc_day2,
             self.spc_day3,
-            self.cpc_6_10_day,
-            self.cpc_8_14_day,
+            self.cpc_outlook,
         ]
         if self._nhc_available:
             controls.extend([self.nhc_atlantic, self.nhc_east_pacific])

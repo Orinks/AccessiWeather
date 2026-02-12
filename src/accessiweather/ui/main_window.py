@@ -729,13 +729,9 @@ class MainWindow(SizedFrame):
                     f"--- {wpc['extended']['title']} ---\n{wpc['extended']['text']}\n"
                 )
             cpc = discussions.get("cpc", {})
-            if cpc.get("outlook_6_10", {}).get("text"):
+            if cpc.get("outlook", {}).get("text"):
                 forecast_parts.append(
-                    f"--- {cpc['outlook_6_10']['title']} ---\n{cpc['outlook_6_10']['text']}\n"
-                )
-            if cpc.get("outlook_8_14", {}).get("text"):
-                forecast_parts.append(
-                    f"--- {cpc['outlook_8_14']['title']} ---\n{cpc['outlook_8_14']['text']}\n"
+                    f"--- {cpc['outlook']['title']} ---\n{cpc['outlook']['text']}\n"
                 )
             forecast_text = "\n".join(forecast_parts)
 

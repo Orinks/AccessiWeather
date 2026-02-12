@@ -37,9 +37,7 @@ NHC_ATLANTIC_OUTLOOK_URL = "https://www.nhc.noaa.gov/gtwo.php?basin=atlc"
 NHC_EAST_PACIFIC_OUTLOOK_URL = "https://www.nhc.noaa.gov/gtwo.php?basin=epac"
 
 # CPC outlook URLs
-CPC_6_10_URL = "https://www.cpc.ncep.noaa.gov/products/predictions/610day/fxus06.html"
-# 8-14 day discussion is in the same document as 6-10 day
-CPC_8_14_URL = CPC_6_10_URL
+CPC_OUTLOOK_URL = "https://www.cpc.ncep.noaa.gov/products/predictions/610day/fxus06.html"
 
 # Default cache TTL (1 hour)
 DEFAULT_CACHE_TTL = 3600
@@ -560,31 +558,26 @@ class NationalDiscussionService:
 
     def fetch_cpc_discussions(self) -> dict[str, dict[str, str]]:
         """
-        Fetch CPC 6-10 Day and 8-14 Day extended outlooks via scraping.
+        Fetch CPC 6-10 and 8-14 Day prognostic discussion via scraping.
 
         Returns:
-            Dict with keys 'outlook_6_10' and 'outlook_8_14'.
-            Each value is a dict with 'title' and 'text' keys.
+            Dict with key 'outlook'. Value is a dict with 'title' and 'text'.
+            The single discussion document covers both 6-10 and 8-14 day periods.
 
         """
         result: dict[str, dict[str, str]] = {
-            "outlook_6_10": {"title": "CPC 6-10 Day Outlook", "text": ""},
-            "outlook_8_14": {"title": "CPC 8-14 Day Outlook", "text": ""},
+            "outlook": {"title": "CPC 6-10 & 8-14 Day Outlook", "text": ""},
         }
 
-        for key, url, label in [
-            ("outlook_6_10", CPC_6_10_URL, "6-10 Day"),
-            ("outlook_8_14", CPC_8_14_URL, "8-14 Day"),
-        ]:
-            html_result = self._make_html_request(url)
-            if html_result["success"]:
-                text = self._extract_cpc_outlook_text(html_result["html"], label)
-                if text:
-                    result[key]["text"] = text
-                else:
-                    result[key]["text"] = f"CPC {label} Outlook is currently unavailable."
+        html_result = self._make_html_request(CPC_OUTLOOK_URL)
+        if html_result["success"]:
+            text = self._extract_cpc_outlook_text(html_result["html"], "6-10 & 8-14 Day")
+            if text:
+                result["outlook"]["text"] = text
             else:
-                result[key]["text"] = f"Error fetching CPC {label} outlook: {html_result['error']}"
+                result["outlook"]["text"] = "CPC outlook discussion is currently unavailable."
+        else:
+            result["outlook"]["text"] = f"Error fetching CPC outlook: {html_result['error']}"
 
         return result
 
