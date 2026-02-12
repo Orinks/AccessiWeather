@@ -299,15 +299,11 @@ class NationwideDiscussionDialog(wx.Dialog):
         self.explanation_display.SetValue(f"Generating summary of {tab_name} discussions...")
         self._set_status("Generating AI summary...")
 
-        thread = threading.Thread(
-            target=self._do_explain_thread,
-            args=(tab_name, tab_text),
-            daemon=True,
-        )
-        thread.start()
+        app = wx.GetApp()
+        app.run_async(self._do_explain(tab_name, tab_text))
 
-    def _do_explain_thread(self, tab_name: str, text: str) -> None:
-        """Run AI explanation in background thread."""
+    async def _do_explain(self, tab_name: str, text: str) -> None:
+        """Run AI explanation asynchronously."""
         try:
             from ...ai_explainer import AIExplainer, ExplanationStyle
             from ...config.secure_storage import SecureStorage
@@ -320,7 +316,6 @@ class NationwideDiscussionDialog(wx.Dialog):
                 )
                 return
 
-            # Get app reference for settings
             app = wx.GetApp()
             settings = app.config_manager.get_settings() if app else None
             model_pref = getattr(settings, "ai_model_preference", None) if settings else None
@@ -337,13 +332,13 @@ class NationwideDiscussionDialog(wx.Dialog):
                 else None,
             )
 
-            result = explainer.explain_discussion(
+            result = await explainer.explain_afd(
                 discussion_text=text,
                 location_name="the United States",
                 style=ExplanationStyle.STANDARD,
             )
 
-            wx.CallAfter(self._on_explain_complete, result)
+            wx.CallAfter(self._on_explain_complete, result.text)
 
         except Exception as e:
             logger.error(f"AI explanation failed: {e}")
