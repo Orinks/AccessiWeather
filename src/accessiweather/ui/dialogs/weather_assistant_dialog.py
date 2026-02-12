@@ -302,14 +302,15 @@ class WeatherAssistantDialog(wx.Dialog):
         try:
             from ...geocoding import GeocodingService
 
-            weather_service = getattr(self.app, "weather_service", None)
-            if weather_service is None:
+            weather_client = getattr(self.app, "weather_client", None)
+            if weather_client is None:
+                logger.warning("No weather_client on app; tools disabled")
                 return None
 
             geocoding_service = GeocodingService()
             config_manager = getattr(self.app, "config_manager", None)
             return WeatherToolExecutor(
-                weather_service, geocoding_service, config_manager=config_manager
+                weather_client, geocoding_service, config_manager=config_manager
             )
         except Exception:
             logger.debug("Could not create WeatherToolExecutor", exc_info=True)
