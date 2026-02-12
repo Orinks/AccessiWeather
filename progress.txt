@@ -56,3 +56,18 @@ Started: 2026-02-11 14:47 UTC
 - Files changed: src/accessiweather/ui/dialogs/weather_assistant_dialog.py, tests/test_weather_assistant_integration.py
 - **Learnings:** Use ast.parse + ast.literal_eval to extract module-level constants from files that have unresolvable imports
 ---
+
+## 2026-02-12T19:22Z - US-002: Create NOAA Weather Radio stream URL builder
+- Created src/accessiweather/noaa_radio/stream_url.py with StreamURLProvider class
+- get_stream_url(call_sign) returns primary URL or None
+- get_stream_urls(call_sign) returns list of URLs for fallback
+- Built-in database of 8 known station stream URLs from Broadcastify
+- Fallback URL generation for unknown stations (configurable)
+- Custom URL override support via constructor
+- Case-insensitive call sign handling with whitespace normalization
+- has_known_url() helper method
+- Updated __init__.py to export StreamURLProvider
+- 14 tests covering all acceptance criteria
+- Files: src/accessiweather/noaa_radio/stream_url.py, tests/test_noaa_radio_stream_url.py
+- **Learnings:** pre-commit hooks auto-fix ruff issues on first commit attempt; just re-add and commit again
+---
