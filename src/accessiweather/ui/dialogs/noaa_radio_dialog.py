@@ -1,0 +1,205 @@
+"""NOAA Weather Radio player dialog for AccessiWeather."""
+
+from __future__ import annotations
+
+import logging
+from typing import TYPE_CHECKING
+
+import wx
+
+from accessiweather.noaa_radio import Station, StationDatabase, StreamURLProvider
+from accessiweather.noaa_radio.player import RadioPlayer
+
+if TYPE_CHECKING:
+    pass
+
+logger = logging.getLogger(__name__)
+
+
+def show_noaa_radio_dialog(parent: wx.Window, lat: float, lon: float) -> NOAARadioDialog:
+    """
+    Show the NOAA Weather Radio player dialog.
+
+    Creates and shows a non-modal dialog for streaming NOAA Weather Radio.
+
+    Args:
+        parent: Parent window.
+        lat: Latitude for finding nearest stations.
+        lon: Longitude for finding nearest stations.
+
+    Returns:
+        The dialog instance (non-modal, caller may keep a reference).
+
+    """
+    dlg = NOAARadioDialog(parent, lat, lon)
+    dlg.Show()
+    return dlg
+
+
+class NOAARadioDialog(wx.Dialog):
+    """Non-modal dialog for streaming NOAA Weather Radio stations."""
+
+    def __init__(self, parent: wx.Window, lat: float, lon: float) -> None:
+        """
+        Initialize the NOAA Radio dialog.
+
+        Args:
+            parent: Parent window.
+            lat: Latitude for station lookup.
+            lon: Longitude for station lookup.
+
+        """
+        super().__init__(
+            parent,
+            title="NOAA Weather Radio",
+            size=(450, 350),
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+        )
+
+        self._lat = lat
+        self._lon = lon
+        self._stations: list[Station] = []
+        self._player = RadioPlayer(
+            on_playing=self._on_playing,
+            on_stopped=self._on_stopped,
+            on_error=self._on_error,
+        )
+        self._url_provider = StreamURLProvider()
+
+        self._init_ui()
+        self._load_stations()
+
+    def _init_ui(self) -> None:
+        """Create and layout all UI controls."""
+        panel = wx.Panel(self)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # Station selector
+        station_label = wx.StaticText(panel, label="Station:")
+        station_label.SetName("Station Label")
+        sizer.Add(station_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
+
+        self._station_choice = wx.Choice(panel, choices=[])
+        self._station_choice.SetName("Station")
+        sizer.Add(self._station_choice, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
+
+        # Button row
+        btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        self._play_btn = wx.Button(panel, label="Play")
+        self._play_btn.SetName("Play")
+        self._play_btn.Bind(wx.EVT_BUTTON, self._on_play)
+        btn_sizer.Add(self._play_btn, 0, wx.RIGHT, 5)
+
+        self._stop_btn = wx.Button(panel, label="Stop")
+        self._stop_btn.SetName("Stop")
+        self._stop_btn.Bind(wx.EVT_BUTTON, self._on_stop)
+        self._stop_btn.Enable(False)
+        btn_sizer.Add(self._stop_btn, 0, wx.RIGHT, 5)
+
+        sizer.Add(btn_sizer, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
+
+        # Volume slider
+        volume_label = wx.StaticText(panel, label="Volume:")
+        volume_label.SetName("Volume Label")
+        sizer.Add(volume_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
+
+        self._volume_slider = wx.Slider(
+            panel,
+            value=100,
+            minValue=0,
+            maxValue=100,
+            style=wx.SL_HORIZONTAL,
+        )
+        self._volume_slider.SetName("Volume")
+        self._volume_slider.Bind(wx.EVT_SLIDER, self._on_volume_change)
+        sizer.Add(self._volume_slider, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
+
+        # Status text
+        self._status_text = wx.StaticText(panel, label="Ready")
+        self._status_text.SetName("Status")
+        sizer.Add(self._status_text, 0, wx.ALL, 10)
+
+        # Close button
+        close_btn = wx.Button(panel, wx.ID_CLOSE, label="Close")
+        close_btn.Bind(wx.EVT_BUTTON, self._on_close)
+        sizer.Add(close_btn, 0, wx.ALIGN_RIGHT | wx.RIGHT | wx.BOTTOM, 10)
+
+        panel.SetSizer(sizer)
+
+        self.Bind(wx.EVT_CLOSE, self._on_close)
+
+    def _load_stations(self) -> None:
+        """Load nearest stations into the selector."""
+        try:
+            db = StationDatabase()
+            results = db.find_nearest(self._lat, self._lon, limit=10)
+            self._stations = [r.station for r in results]
+
+            choices = [f"{s.call_sign} - {s.name} ({s.frequency} MHz)" for s in self._stations]
+            self._station_choice.Set(choices)
+            if choices:
+                self._station_choice.SetSelection(0)
+        except Exception as e:
+            logger.error(f"Failed to load stations: {e}")
+            self._set_status(f"Error loading stations: {e}")
+
+    def _get_selected_station(self) -> Station | None:
+        """Return the currently selected station, or None."""
+        idx = self._station_choice.GetSelection()
+        if idx == wx.NOT_FOUND or idx >= len(self._stations):
+            return None
+        return self._stations[idx]
+
+    def _on_play(self, _event: wx.CommandEvent) -> None:
+        """Handle Play button click."""
+        station = self._get_selected_station()
+        if station is None:
+            self._set_status("No station selected")
+            return
+
+        url = self._url_provider.get_stream_url(station.call_sign)
+        if url is None:
+            self._set_status(f"No stream URL for {station.call_sign}")
+            return
+
+        self._set_status(f"Connecting to {station.call_sign}...")
+        self._player.play(url)
+
+    def _on_stop(self, _event: wx.CommandEvent) -> None:
+        """Handle Stop button click."""
+        self._player.stop()
+
+    def _on_volume_change(self, _event: wx.CommandEvent) -> None:
+        """Handle volume slider change."""
+        level = self._volume_slider.GetValue() / 100.0
+        self._player.set_volume(level)
+
+    def _on_playing(self) -> None:
+        """Handle playback started event."""
+        station = self._get_selected_station()
+        name = station.call_sign if station else "Unknown"
+        self._set_status(f"Playing: {name}")
+        self._play_btn.Enable(False)
+        self._stop_btn.Enable(True)
+
+    def _on_stopped(self) -> None:
+        """Handle playback stopped event."""
+        self._set_status("Stopped")
+        self._play_btn.Enable(True)
+        self._stop_btn.Enable(False)
+
+    def _on_error(self, message: str) -> None:
+        """Handle playback error event."""
+        self._set_status(f"Error: {message}")
+        self._play_btn.Enable(True)
+        self._stop_btn.Enable(False)
+
+    def _set_status(self, text: str) -> None:
+        """Update the status text."""
+        self._status_text.SetLabel(text)
+
+    def _on_close(self, _event: wx.Event) -> None:
+        """Handle dialog close."""
+        self._player.stop()
+        self.Destroy()
