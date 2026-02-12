@@ -205,8 +205,25 @@ class NationwideDiscussionDialog(wx.Dialog):
         self.cpc_panel.SetSizer(cpc_sizer)
         self.notebook.AddPage(self.cpc_panel, "CPC (Climate Prediction Center)")
 
+        # AI Explanation section
+        main_sizer.Add(wx.StaticText(panel, label="AI Summary:"), 0, wx.LEFT | wx.TOP, 10)
+        self.explanation_display = wx.TextCtrl(
+            panel,
+            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
+            size=(-1, 120),
+            name="AI-generated plain language summary",
+        )
+        self.explanation_display.SetValue(
+            "Click 'Summarize with AI' to generate a plain language summary "
+            "of the currently selected tab's discussions."
+        )
+        main_sizer.Add(self.explanation_display, 0, wx.ALL | wx.EXPAND, 10)
+
         # Button sizer
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.explain_button = wx.Button(panel, label="&Summarize with AI")
+        button_sizer.Add(self.explain_button, 0, wx.RIGHT, 5)
 
         self.refresh_button = wx.Button(panel, label="&Refresh")
         button_sizer.Add(self.refresh_button, 0, wx.RIGHT, 5)
@@ -226,6 +243,9 @@ class NationwideDiscussionDialog(wx.Dialog):
         """Bind event handlers."""
         self.close_button.Bind(wx.EVT_BUTTON, self._on_close)
         self.refresh_button.Bind(wx.EVT_BUTTON, self._on_refresh)
+        self.explain_button.Bind(wx.EVT_BUTTON, self._on_explain)
+        self._is_explaining = False
+        self._update_explain_button_state()
 
     def _on_close(self, event) -> None:
         """Handle close button press."""
@@ -234,6 +254,107 @@ class NationwideDiscussionDialog(wx.Dialog):
     def _on_refresh(self, event) -> None:
         """Handle refresh button press."""
         self._load_discussions(force_refresh=True)
+
+    def _update_explain_button_state(self) -> None:
+        """Enable or disable the explain button based on AI availability."""
+        try:
+            from ...config.secure_storage import SecureStorage
+
+            api_key = SecureStorage.get_password("openrouter_api_key")
+            if api_key:
+                self.explain_button.Enable()
+            else:
+                self.explain_button.Disable()
+        except Exception:
+            self.explain_button.Disable()
+
+    def _get_current_tab_text(self) -> tuple[str, str]:
+        """Get the discussion text from the currently selected tab."""
+        page_idx = self.notebook.GetSelection()
+        page_label = self.notebook.GetPageText(page_idx)
+
+        # Collect all non-empty text from the current tab's text controls
+        page = self.notebook.GetPage(page_idx)
+        texts = []
+        for child in page.GetChildren():
+            if isinstance(child, wx.TextCtrl):
+                text = child.GetValue().strip()
+                if text and text not in ("Loading...", "Not available", "Discussion not available"):
+                    texts.append(text)
+
+        return page_label, "\n\n".join(texts)
+
+    def _on_explain(self, event) -> None:
+        """Handle explain button press."""
+        if self._is_explaining:
+            return
+
+        tab_name, tab_text = self._get_current_tab_text()
+        if not tab_text:
+            self.explanation_display.SetValue("No discussion text available to summarize.")
+            return
+
+        self._is_explaining = True
+        self.explain_button.Disable()
+        self.explanation_display.SetValue(f"Generating summary of {tab_name} discussions...")
+        self._set_status("Generating AI summary...")
+
+        thread = threading.Thread(
+            target=self._do_explain_thread,
+            args=(tab_name, tab_text),
+            daemon=True,
+        )
+        thread.start()
+
+    def _do_explain_thread(self, tab_name: str, text: str) -> None:
+        """Run AI explanation in background thread."""
+        try:
+            from ...ai_explainer import AIExplainer, ExplanationStyle
+            from ...config.secure_storage import SecureStorage
+
+            api_key = SecureStorage.get_password("openrouter_api_key")
+            if not api_key:
+                wx.CallAfter(
+                    self._on_explain_complete,
+                    "OpenRouter API key not configured. Set it in Settings > AI.",
+                )
+                return
+
+            # Get app reference for settings
+            app = wx.GetApp()
+            settings = app.config_manager.get_settings() if app else None
+            model_pref = getattr(settings, "ai_model_preference", None) if settings else None
+            model = "openrouter/auto" if model_pref == "auto" else model_pref
+
+            explainer = AIExplainer(
+                api_key=api_key,
+                model=model if model else None,
+                custom_system_prompt=getattr(settings, "custom_system_prompt", None)
+                if settings
+                else None,
+                custom_instructions=getattr(settings, "custom_instructions", None)
+                if settings
+                else None,
+            )
+
+            result = explainer.explain_discussion(
+                discussion_text=text,
+                location_name="the United States",
+                style=ExplanationStyle.STANDARD,
+            )
+
+            wx.CallAfter(self._on_explain_complete, result)
+
+        except Exception as e:
+            logger.error(f"AI explanation failed: {e}")
+            wx.CallAfter(self._on_explain_complete, f"Error generating summary: {e}")
+
+    def _on_explain_complete(self, text: str) -> None:
+        """Handle AI explanation result."""
+        self.explanation_display.SetValue(text)
+        self._is_explaining = False
+        self.explain_button.Enable()
+        self._set_status("AI summary generated.")
 
     def _set_status(self, message: str) -> None:
         """Update the status label."""
