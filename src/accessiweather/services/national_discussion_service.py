@@ -37,8 +37,9 @@ NHC_ATLANTIC_OUTLOOK_URL = "https://www.nhc.noaa.gov/gtwo.php?basin=atlc"
 NHC_EAST_PACIFIC_OUTLOOK_URL = "https://www.nhc.noaa.gov/gtwo.php?basin=epac"
 
 # CPC outlook URLs
-CPC_6_10_URL = "https://www.cpc.ncep.noaa.gov/products/predictions/610day/"
-CPC_8_14_URL = "https://www.cpc.ncep.noaa.gov/products/predictions/814day/"
+CPC_6_10_URL = "https://www.cpc.ncep.noaa.gov/products/predictions/610day/fxus06.html"
+# 8-14 day discussion is in the same document as 6-10 day
+CPC_8_14_URL = CPC_6_10_URL
 
 # Default cache TTL (1 hour)
 DEFAULT_CACHE_TTL = 3600
