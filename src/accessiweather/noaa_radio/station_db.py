@@ -30,191 +30,192 @@ def _haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
 
 # ---------------------------------------------------------------------------
-# Embedded station data – comprehensive NOAA Weather Radio stations
-# covering all 50 US states with 150+ entries.
-# Data sourced from NOAA NWR station listings.
+# Embedded station data – real NOAA Weather Radio stations sourced from
+# weatherUSA.net/radio and NOAA NWR official listings.
+# Coordinates are transmitter-area city coordinates.
 # ---------------------------------------------------------------------------
 _STATIONS: list[Station] = [
     # Alabama
-    Station("WXK58", 162.550, "Birmingham, AL", 33.5207, -86.8025, "AL"),
-    Station("KIH22", 162.475, "Mobile, AL", 30.6954, -88.0399, "AL"),
-    Station("WXK59", 162.400, "Huntsville, AL", 34.7304, -86.5861, "AL"),
-    # Alaska
-    Station("KEC65", 162.550, "Anchorage, AK", 61.2181, -149.9003, "AK"),
-    Station("WXJ70", 162.475, "Fairbanks, AK", 64.8378, -147.7164, "AK"),
-    Station("KIH90", 162.400, "Juneau, AK", 58.3005, -134.4197, "AK"),
+    Station("KEC61", 162.550, "Mobile, AL", 30.6954, -88.0399, "AL"),
     # Arizona
-    Station("KZZ61", 162.400, "Phoenix, AZ", 33.4484, -112.0740, "AZ"),
-    Station("WXJ53", 162.550, "Tucson, AZ", 32.2226, -110.9747, "AZ"),
-    Station("KIH91", 162.475, "Flagstaff, AZ", 35.1983, -111.6513, "AZ"),
-    # Arkansas
-    Station("KIH57", 162.450, "Little Rock, AR", 34.7465, -92.2896, "AR"),
-    Station("WXK60", 162.525, "Fort Smith, AR", 35.3859, -94.3985, "AR"),
-    Station("KJY77", 162.550, "Jonesboro, AR", 35.8423, -90.7043, "AR"),
+    Station("KEC94", 162.550, "Phoenix, AZ", 33.4484, -112.0740, "AZ"),
+    Station("WWG42", 162.500, "Globe, AZ", 33.3942, -110.7865, "AZ"),
+    Station("WWG41", 162.425, "Payson, AZ", 34.2309, -111.3251, "AZ"),
+    Station("WXL87", 162.550, "Yuma, AZ", 32.6927, -114.6277, "AZ"),
     # California
-    Station("KEC62", 162.550, "Los Angeles, CA", 34.0522, -118.2437, "CA"),
-    Station("WXL29", 162.475, "San Francisco, CA", 37.7749, -122.4194, "CA"),
-    Station("KJY61", 162.400, "Sacramento, CA", 38.5816, -121.4944, "CA"),
-    Station("WXK34", 162.525, "San Diego, CA", 32.7157, -117.1611, "CA"),
+    Station("KEC49", 162.550, "San Francisco Bay, CA", 37.7749, -122.4194, "CA"),
+    Station("KIG78", 162.400, "Coachella, CA", 33.6803, -116.1739, "CA"),
+    Station("KIH62", 162.400, "Fresno, CA", 36.7378, -119.7871, "CA"),
+    Station("WWF64", 162.450, "Monterey Marine, CA", 36.6002, -121.8947, "CA"),
     # Colorado
-    Station("KEC60", 162.550, "Denver, CO", 39.7392, -104.9903, "CO"),
-    Station("WXJ54", 162.475, "Colorado Springs, CO", 38.8339, -104.8214, "CO"),
-    Station("KIH92", 162.400, "Grand Junction, CO", 39.0639, -108.5506, "CO"),
+    Station("KWN54", 162.425, "Durango, CO", 37.2753, -107.8801, "CO"),
     # Connecticut
-    Station("WXK48", 162.525, "Hartford, CT", 41.7658, -72.6734, "CT"),
-    Station("KEC50", 162.475, "New London, CT", 41.3557, -72.0995, "CT"),
-    # Delaware
-    Station("KIH23", 162.475, "Dover, DE", 39.1582, -75.5244, "DE"),
-    Station("WXK61", 162.400, "Wilmington, DE", 39.7391, -75.5398, "DE"),
+    Station("WXJ42", 162.400, "Meriden, CT", 41.5382, -72.8070, "CT"),
     # Florida
-    Station("KEC80", 162.550, "Miami, FL", 25.7617, -80.1918, "FL"),
-    Station("WXK63", 162.475, "Tampa, FL", 27.9506, -82.4572, "FL"),
-    Station("KJY78", 162.400, "Jacksonville, FL", 30.3322, -81.6557, "FL"),
-    Station("KIH25", 162.525, "Tallahassee, FL", 30.4383, -84.2807, "FL"),
+    Station("WXK83", 162.475, "Cape Coral, FL", 26.5629, -81.9495, "FL"),
+    Station("KIH63", 162.475, "Orlando, FL", 28.5383, -81.3792, "FL"),
+    Station("WNG522", 162.425, "Palatka, FL", 29.6486, -81.6376, "FL"),
+    Station("KPS505", 162.500, "Sumterville, FL", 28.7483, -82.0681, "FL"),
+    Station("KIH24", 162.400, "Tallahassee, FL", 30.4383, -84.2807, "FL"),
+    Station("KHB32", 162.550, "Tampa Bay, FL", 27.9506, -82.4572, "FL"),
     # Georgia
-    Station("WXK62", 162.475, "Atlanta, GA", 33.7490, -84.3880, "GA"),
-    Station("KIH26", 162.550, "Savannah, GA", 32.0809, -81.0912, "GA"),
-    Station("WXL30", 162.400, "Augusta, GA", 33.4735, -81.9748, "GA"),
+    Station("WXK56", 162.400, "Athens, GA", 33.9519, -83.3576, "GA"),
+    Station("KEC80", 162.550, "Atlanta, GA", 33.7490, -84.3880, "GA"),
+    Station("WWH23", 162.425, "Buchanan, GA", 33.8037, -85.1885, "GA"),
+    Station("WXM32", 162.400, "Columbus, GA", 32.4610, -84.9877, "GA"),
     # Hawaii
-    Station("WXJ71", 162.475, "Honolulu, HI", 21.3069, -157.8583, "HI"),
-    Station("KEC66", 162.550, "Hilo, HI", 19.7071, -155.0885, "HI"),
-    # Idaho
-    Station("KIH83", 162.450, "Boise, ID", 43.6150, -116.2023, "ID"),
-    Station("WXJ55", 162.550, "Pocatello, ID", 42.8713, -112.4455, "ID"),
-    # Illinois
-    Station("KEC57", 162.550, "Chicago, IL", 41.8781, -87.6298, "IL"),
-    Station("WXK64", 162.475, "Springfield, IL", 39.7817, -89.6501, "IL"),
-    Station("KJY79", 162.400, "Rockford, IL", 42.2711, -89.0940, "IL"),
-    # Indiana
-    Station("WXJ56", 162.550, "Indianapolis, IN", 39.7684, -86.1581, "IN"),
-    Station("KIH27", 162.475, "Fort Wayne, IN", 41.0793, -85.1394, "IN"),
-    Station("WXK65", 162.400, "Evansville, IN", 37.9716, -87.5711, "IN"),
+    Station("WWG75", 162.400, "Maui, HI", 20.7984, -156.3319, "HI"),
     # Iowa
-    Station("KZZ31", 162.550, "Des Moines, IA", 41.5868, -93.6250, "IA"),
-    Station("WXJ57", 162.475, "Cedar Rapids, IA", 41.9779, -91.6656, "IA"),
-    Station("KIH28", 162.400, "Sioux City, IA", 42.4963, -96.4049, "IA"),
+    Station("WXL57", 162.550, "Des Moines, IA", 41.5868, -93.6250, "IA"),
+    Station("KZZ80", 162.550, "Milford, IA", 43.3247, -95.1500, "IA"),
+    Station("WXL62", 162.475, "Sioux City, IA", 42.4963, -96.4049, "IA"),
+    Station("KXI68", 162.450, "St. Ansgar, IA", 43.3836, -92.9188, "IA"),
+    # Illinois
+    Station("WXJ76", 162.550, "Champaign, IL", 40.1164, -88.2434, "IL"),
+    Station("KXI41", 162.500, "Crystal Lake, IL", 42.2411, -88.3162, "IL"),
+    Station("KZZ55", 162.525, "Dixon, IL", 41.8389, -89.4795, "IL"),
+    Station("KZZ66", 162.400, "Galesburg, IL", 40.9478, -90.3712, "IL"),
+    Station("KZZ58", 162.525, "Kankakee, IL", 41.1200, -87.8612, "IL"),
+    Station("WXM49", 162.425, "Marion, IL", 37.7306, -88.9331, "IL"),
+    Station("WXJ71", 162.475, "Peoria, IL", 40.6936, -89.5890, "IL"),
+    Station("KXI58", 162.400, "Plano, IL", 41.6628, -88.5368, "IL"),
+    Station("WXJ73", 162.550, "Quad Cities, IL", 41.5236, -90.5776, "IL"),
+    Station("WXJ75", 162.400, "Springfield, IL", 39.7817, -89.6501, "IL"),
+    # Indiana
+    Station("KEC74", 162.550, "Indianapolis, IN", 39.7684, -86.1581, "IN"),
+    Station("WXJ57", 162.400, "South Bend, IN", 41.6764, -86.2520, "IN"),
     # Kansas
-    Station("WXK66", 162.550, "Wichita, KS", 37.6872, -97.3301, "KS"),
-    Station("KJY80", 162.475, "Topeka, KS", 39.0473, -95.6752, "KS"),
-    Station("WXL31", 162.400, "Dodge City, KS", 37.7528, -100.0171, "KS"),
+    Station("WXK91", 162.475, "Topeka, KS", 39.0473, -95.6752, "KS"),
     # Kentucky
-    Station("KIH29", 162.550, "Louisville, KY", 38.2527, -85.7585, "KY"),
-    Station("WXJ58", 162.475, "Lexington, KY", 38.0406, -84.5037, "KY"),
+    Station("WZ2523", 162.500, "Frankfort, KY", 38.2009, -84.8733, "KY"),
+    Station("KZZ48", 162.450, "Owenton, KY", 38.5365, -84.8419, "KY"),
     # Louisiana
-    Station("KJY76", 162.400, "New Orleans, LA", 29.9511, -90.0715, "LA"),
-    Station("WXK67", 162.550, "Baton Rouge, LA", 30.4515, -91.1871, "LA"),
-    Station("KIH30", 162.475, "Shreveport, LA", 32.5252, -93.7502, "LA"),
+    Station("KHB46", 162.400, "Baton Rouge, LA", 30.4515, -91.1871, "LA"),
+    Station("WXK80", 162.550, "Lafayette, LA", 30.2241, -92.0198, "LA"),
+    Station("WXJ96", 162.550, "Monroe, LA", 32.5093, -92.1193, "LA"),
+    Station("WXJ97", 162.400, "Shreveport, LA", 32.5252, -93.7502, "LA"),
     # Maine
-    Station("WXJ59", 162.550, "Portland, ME", 43.6591, -70.2568, "ME"),
-    Station("KZZ32", 162.475, "Caribou, ME", 46.8606, -68.0120, "ME"),
+    Station("WSM60", 162.475, "Dresden, ME", 44.0834, -69.7312, "ME"),
+    Station("KDO95", 162.550, "Portland, ME", 43.6591, -70.2568, "ME"),
     # Maryland
-    Station("WXK68", 162.550, "Baltimore, MD", 39.2904, -76.6122, "MD"),
-    Station("KIH31", 162.475, "Salisbury, MD", 38.3607, -75.5994, "MD"),
+    Station("KEC83", 162.400, "Baltimore, MD", 39.2904, -76.6122, "MD"),
+    Station("WXM42", 162.475, "Hagerstown, MD", 39.6418, -77.7200, "MD"),
     # Massachusetts
-    Station("WXJ90", 162.475, "Boston, MA", 42.3601, -71.0589, "MA"),
-    Station("KJY81", 162.550, "Worcester, MA", 42.2626, -71.8023, "MA"),
+    Station("KHB35", 162.475, "Boston, MA", 42.3601, -71.0589, "MA"),
+    Station("KEC73", 162.550, "Bourne, MA", 41.7415, -70.5989, "MA"),
+    Station("WNG574", 162.425, "Gloucester, MA", 42.6159, -70.6620, "MA"),
+    Station("WXL93", 162.550, "Worcester, MA", 42.2626, -71.8023, "MA"),
     # Michigan
-    Station("WNG634", 162.475, "Detroit, MI", 42.3314, -83.0458, "MI"),
-    Station("WXK69", 162.550, "Grand Rapids, MI", 42.9634, -85.6681, "MI"),
-    Station("KIH32", 162.400, "Marquette, MI", 46.5436, -87.3954, "MI"),
+    Station("KEC63", 162.550, "Detroit, MI", 42.3314, -83.0458, "MI"),
+    Station("KIH29", 162.475, "Flint, MI", 43.0125, -83.6875, "MI"),
+    Station("WWF70", 162.500, "Gaylord, MI", 45.0275, -84.6747, "MI"),
+    Station("WWF36", 162.475, "Hesperia, MI", 43.5672, -86.0403, "MI"),
+    Station("WWF34", 162.475, "Kalamazoo, MI", 42.2917, -85.5872, "MI"),
+    Station("KZZ33", 162.525, "Mount Pleasant, MI", 43.5978, -84.7675, "MI"),
+    Station("WXK81", 162.400, "Onondaga, MI", 42.4392, -84.5519, "MI"),
+    Station("KXI33", 162.450, "West Branch, MI", 44.2764, -84.2386, "MI"),
+    Station("WXN99", 162.425, "West Olive, MI", 42.9189, -86.1767, "MI"),
+    Station("WNG672", 162.425, "Wolf Lake, MI", 43.7786, -85.4942, "MI"),
     # Minnesota
-    Station("WXJ39", 162.400, "Minneapolis, MN", 44.9778, -93.2650, "MN"),
-    Station("KZZ33", 162.550, "Duluth, MN", 46.7867, -92.1005, "MN"),
-    Station("WXL32", 162.475, "Rochester, MN", 44.0121, -92.4802, "MN"),
+    Station("KEC65", 162.550, "Minneapolis, MN", 44.9778, -93.2650, "MN"),
+    Station("WXM99", 162.425, "Bemidji, MN", 47.4736, -94.8803, "MN"),
+    Station("WNG676", 162.500, "Clearwater, MN", 45.4183, -93.9810, "MN"),
+    Station("WXJ86", 162.550, "La Crescent, MN", 43.8280, -91.3040, "MN"),
+    Station("WWG98", 162.475, "Park Rapids, MN", 46.9222, -95.0536, "MN"),
+    Station("WXK41", 162.475, "Rochester, MN", 44.0121, -92.4802, "MN"),
     # Mississippi
-    Station("KIH33", 162.550, "Jackson, MS", 32.2988, -90.1848, "MS"),
-    Station("WXJ60", 162.475, "Biloxi, MS", 30.3960, -88.8853, "MS"),
+    Station("KIH53", 162.400, "Tupelo, MS", 34.2576, -88.7034, "MS"),
     # Missouri
-    Station("KZZ42", 162.525, "St. Louis, MO", 38.6270, -90.1994, "MO"),
-    Station("WXK70", 162.550, "Kansas City, MO", 39.0997, -94.5786, "MO"),
-    Station("KJY82", 162.475, "Springfield, MO", 37.2090, -93.2923, "MO"),
-    # Montana
-    Station("KIH34", 162.550, "Billings, MT", 45.7833, -108.5007, "MT"),
-    Station("WXJ61", 162.475, "Great Falls, MT", 47.5002, -111.3008, "MT"),
-    Station("WXK71", 162.400, "Missoula, MT", 46.8721, -113.9940, "MT"),
-    # Nebraska
-    Station("KZZ34", 162.550, "Omaha, NE", 41.2565, -95.9345, "NE"),
-    Station("WXL33", 162.475, "North Platte, NE", 41.1239, -100.7654, "NE"),
-    # Nevada
-    Station("KIH35", 162.550, "Las Vegas, NV", 36.1699, -115.1398, "NV"),
-    Station("WXJ62", 162.475, "Reno, NV", 39.5296, -119.8138, "NV"),
-    # New Hampshire
-    Station("WXK72", 162.550, "Concord, NH", 43.2081, -71.5376, "NH"),
-    Station("KJY83", 162.475, "Mount Washington, NH", 44.2706, -71.3033, "NH"),
-    # New Jersey
-    Station("KIH36", 162.550, "Atlantic City, NJ", 39.3643, -74.4229, "NJ"),
-    Station("WXL34", 162.475, "Newark, NJ", 40.7357, -74.1724, "NJ"),
-    # New Mexico
-    Station("WXK33", 162.525, "Albuquerque, NM", 35.0844, -106.6504, "NM"),
-    Station("KZZ35", 162.550, "Las Cruces, NM", 32.3199, -106.7637, "NM"),
-    # New York
-    Station("KEC49", 162.550, "New York City, NY", 40.7128, -74.0060, "NY"),
-    Station("WXJ63", 162.475, "Albany, NY", 42.6526, -73.7562, "NY"),
-    Station("KIH37", 162.400, "Buffalo, NY", 42.8864, -78.8784, "NY"),
-    Station("WXK73", 162.525, "Syracuse, NY", 43.0481, -76.1474, "NY"),
+    Station("KID77", 162.550, "Kansas City, MO", 39.0997, -94.5786, "MO"),
+    Station("KDO89", 162.550, "St. Louis, MO", 38.6270, -90.1994, "MO"),
+    Station("WXL46", 162.400, "Springfield, MO", 37.2090, -93.2923, "MO"),
     # North Carolina
-    Station("KIH24", 162.400, "Charlotte, NC", 35.2271, -80.8431, "NC"),
-    Station("WXL35", 162.550, "Raleigh, NC", 35.7796, -78.6382, "NC"),
-    Station("KJY84", 162.475, "Wilmington, NC", 34.2257, -77.9447, "NC"),
+    Station("WXL70", 162.475, "Charlotte, NC", 35.2271, -80.8431, "NC"),
+    Station("KHB31", 162.550, "Wilmington, NC", 34.2257, -77.9447, "NC"),
     # North Dakota
-    Station("KIH38", 162.550, "Bismarck, ND", 46.8083, -100.7837, "ND"),
-    Station("WXJ64", 162.475, "Fargo, ND", 46.8772, -96.7898, "ND"),
+    Station("WXL78", 162.475, "Bismarck, ND", 46.8083, -100.7837, "ND"),
+    # Nebraska
+    Station("KZZ69", 162.450, "Beatrice, NE", 40.2681, -96.7475, "NE"),
+    Station("WXL74", 162.400, "Grand Island, NE", 40.9264, -98.3420, "NE"),
+    Station("WXM20", 162.475, "Lincoln, NE", 40.8136, -96.7026, "NE"),
+    Station("KIH61", 162.400, "Omaha, NE", 41.2565, -95.9345, "NE"),
+    Station("WXL67", 162.475, "Scottsbluff, NE", 41.8666, -103.6672, "NE"),
+    # Nevada
+    Station("WWG20", 162.450, "Fernley, NV", 39.6080, -119.2518, "NV"),
+    Station("WXK58", 162.550, "Reno, NV", 39.5296, -119.8138, "NV"),
+    # New Mexico
+    Station("WXJ37", 162.475, "Farmington, NM", 36.7281, -108.2187, "NM"),
+    # New York
+    Station("KWO35", 162.550, "New York City, NY", 40.7128, -74.0060, "NY"),
+    Station("WXL34", 162.550, "Albany, NY", 42.6526, -73.7562, "NY"),
+    Station("KEB98", 162.550, "Buffalo, NY", 42.8864, -78.8784, "NY"),
+    Station("WXL37", 162.475, "Highland, NY", 41.7212, -73.9610, "NY"),
+    Station("WZ2536", 162.475, "Lyons, NY", 43.0642, -76.9905, "NY"),
+    Station("WXM45", 162.425, "Middleville, NY", 43.1198, -74.9790, "NY"),
+    Station("KHA53", 162.400, "Rochester, NY", 43.1566, -77.6088, "NY"),
+    Station("WXL31", 162.550, "Syracuse, NY", 43.0481, -76.1474, "NY"),
     # Ohio
-    Station("WXK76", 162.450, "Columbus, OH", 39.9612, -82.9988, "OH"),
-    Station("KZZ36", 162.550, "Cleveland, OH", 41.4993, -81.6944, "OH"),
-    Station("WXK74", 162.475, "Cincinnati, OH", 39.1031, -84.5120, "OH"),
+    Station("KDO94", 162.400, "Akron, OH", 41.0814, -81.5190, "OH"),
+    Station("KIG86", 162.550, "Columbus, OH", 39.9612, -82.9988, "OH"),
+    Station("WNG698", 162.500, "Grafton, OH", 41.1726, -82.0546, "OH"),
+    Station("WWG57", 162.450, "Mansfield, OH", 40.7589, -82.5155, "OH"),
+    Station("WXL51", 162.500, "Toledo, OH", 41.6528, -83.5379, "OH"),
     # Oklahoma
-    Station("WXK89", 162.525, "Oklahoma City, OK", 35.4676, -97.5164, "OK"),
-    Station("KIH39", 162.550, "Tulsa, OK", 36.1540, -95.9928, "OK"),
-    # Oregon
-    Station("WXK52", 162.525, "Portland, OR", 45.5152, -122.6784, "OR"),
-    Station("WXJ65", 162.550, "Eugene, OR", 44.0521, -123.0868, "OR"),
-    Station("KJY85", 162.475, "Medford, OR", 42.3265, -122.8756, "OR"),
+    Station("WXK85", 162.400, "Oklahoma City, OK", 35.4676, -97.5164, "OK"),
+    Station("WXK86", 162.550, "Lawton, OK", 34.6036, -98.3959, "OK"),
+    Station("WNG654", 162.500, "Stillwater, OK", 36.1156, -97.0584, "OK"),
+    Station("KIH27", 162.550, "Tulsa, OK", 36.1540, -95.9928, "OK"),
     # Pennsylvania
-    Station("KWO35", 162.400, "Philadelphia, PA", 39.9526, -75.1652, "PA"),
-    Station("WXK75", 162.550, "Pittsburgh, PA", 40.4406, -79.9959, "PA"),
-    Station("KIH40", 162.475, "Harrisburg, PA", 40.2732, -76.8867, "PA"),
-    # Rhode Island
-    Station("WXJ66", 162.550, "Providence, RI", 41.8240, -71.4128, "RI"),
+    Station("KIH28", 162.475, "Philadelphia, PA", 39.9526, -75.1652, "PA"),
+    Station("KIH35", 162.550, "Pittsburgh, PA", 40.4406, -79.9959, "PA"),
+    Station("WXL40", 162.550, "Harrisburg, PA", 40.2732, -76.8867, "PA"),
+    Station("WNG704", 162.425, "Hibernia Park, PA", 40.0521, -75.8166, "PA"),
+    Station("WXL43", 162.550, "Wilkes-Barre, PA", 41.2459, -75.8813, "PA"),
     # South Carolina
-    Station("KZZ37", 162.550, "Columbia, SC", 34.0007, -81.0348, "SC"),
-    Station("WXL36", 162.475, "Charleston, SC", 32.7765, -79.9311, "SC"),
-    # South Dakota
-    Station("KIH41", 162.550, "Sioux Falls, SD", 43.5446, -96.7311, "SD"),
-    Station("WXJ67", 162.475, "Rapid City, SD", 44.0805, -103.2310, "SD"),
+    Station("WXJ21", 162.550, "Greer, SC", 34.9388, -82.2271, "SC"),
+    Station("KEC85", 162.400, "Jasper County, SC", 32.4316, -81.0112, "SC"),
+    Station("KHC27", 162.425, "Rock Hill, SC", 34.9249, -81.0251, "SC"),
     # Tennessee
-    Station("WXL58", 162.525, "Nashville, TN", 36.1627, -86.7816, "TN"),
-    Station("WXK77", 162.550, "Memphis, TN", 35.1495, -90.0490, "TN"),
-    Station("KJY86", 162.475, "Knoxville, TN", 35.9606, -83.9207, "TN"),
+    Station("WXK47", 162.550, "Bristol, TN", 36.5951, -82.1887, "TN"),
+    Station("WXK49", 162.475, "Memphis, TN", 35.1495, -90.0490, "TN"),
+    Station("WXK63", 162.475, "Shelbyville, TN", 35.4834, -86.4603, "TN"),
+    Station("KIG79", 162.550, "White House, TN", 36.4706, -86.6514, "TN"),
     # Texas
-    Station("KEC58", 162.550, "Dallas, TX", 32.7767, -96.7970, "TX"),
-    Station("WXL41", 162.475, "Houston, TX", 29.7604, -95.3698, "TX"),
-    Station("KIH42", 162.400, "San Antonio, TX", 29.4241, -98.4936, "TX"),
-    Station("WXJ68", 162.525, "El Paso, TX", 31.7619, -106.4850, "TX"),
-    Station("KZZ38", 162.450, "Lubbock, TX", 33.5779, -101.8552, "TX"),
-    # Utah
-    Station("WXJ52", 162.475, "Salt Lake City, UT", 40.7608, -111.8910, "UT"),
-    Station("KIH43", 162.550, "St. George, UT", 37.0965, -113.5684, "UT"),
-    # Vermont
-    Station("KZZ30", 162.450, "Burlington, VT", 44.4759, -73.2121, "VT"),
+    Station("WXK38", 162.550, "Amarillo, TX", 35.2220, -101.8313, "TX"),
+    Station("WXK27", 162.400, "Austin, TX", 30.2672, -97.7431, "TX"),
+    Station("WXK30", 162.550, "College Station, TX", 30.6280, -96.3344, "TX"),
+    Station("KHB41", 162.550, "Corpus Christi, TX", 27.8006, -97.3964, "TX"),
+    Station("KXI87", 162.525, "Corsicana, TX", 32.0954, -96.4689, "TX"),
+    Station("KEC56", 162.400, "Dallas, TX", 32.7767, -96.7970, "TX"),
+    Station("KEC55", 162.550, "Fort Worth, TX", 32.7555, -97.3308, "TX"),
+    Station("KHB40", 162.550, "Galveston, TX", 29.3013, -94.7977, "TX"),
+    Station("KWN32", 162.425, "Gregg County, TX", 32.4638, -94.8374, "TX"),
+    Station("KGG68", 162.400, "Houston/Tomball, TX", 30.0972, -95.6161, "TX"),
+    Station("WXK23", 162.550, "Lufkin, TX", 31.3382, -94.7291, "TX"),
+    Station("WXK32", 162.400, "Odessa, TX", 31.8457, -102.3676, "TX"),
+    Station("KWN34", 162.450, "Palestine, TX", 31.7621, -95.6308, "TX"),
+    Station("WXK36", 162.475, "Tyler, TX", 32.3513, -95.3011, "TX"),
+    Station("WXK35", 162.475, "Waco, TX", 31.5493, -97.1467, "TX"),
     # Virginia
-    Station("KJY94", 162.450, "Richmond, VA", 37.5407, -77.4360, "VA"),
-    Station("WXK78", 162.550, "Norfolk, VA", 36.8508, -76.2859, "VA"),
-    Station("KIH44", 162.475, "Roanoke, VA", 37.2710, -79.9414, "VA"),
+    Station("KHB36", 162.550, "Manassas, VA", 38.7509, -77.4753, "VA"),
+    Station("WXL60", 162.475, "Roanoke, VA", 37.2710, -79.9414, "VA"),
+    Station("KHB37", 162.550, "Virginia Beach, VA", 36.8529, -75.9780, "VA"),
     # Washington
-    Station("KJY60", 162.400, "Seattle, WA", 47.6062, -122.3321, "WA"),
-    Station("WXL37", 162.550, "Spokane, WA", 47.6588, -117.4260, "WA"),
-    Station("WXJ69", 162.475, "Yakima, WA", 46.6021, -120.5059, "WA"),
+    Station("KHB60", 162.550, "Seattle, WA", 47.6062, -122.3321, "WA"),
+    Station("WNG604", 162.550, "Davis Peak, WA", 48.0294, -122.5422, "WA"),
+    Station("WWG24", 162.425, "Puget Sound Marine, WA", 47.6062, -122.3321, "WA"),
+    Station("WWF56", 162.450, "Richland, WA", 46.2856, -119.2845, "WA"),
     # West Virginia
-    Station("KIH45", 162.550, "Charleston, WV", 38.3498, -81.6326, "WV"),
-    Station("WXK79", 162.475, "Elkins, WV", 38.9262, -79.8467, "WV"),
+    Station("WXM70", 162.500, "Parkersburg, WV", 39.2667, -81.5615, "WV"),
     # Wisconsin
-    Station("KZZ39", 162.550, "Milwaukee, WI", 43.0389, -87.9065, "WI"),
-    Station("WXJ72", 162.475, "Madison, WI", 43.0731, -89.4012, "WI"),
-    Station("KIH46", 162.400, "Green Bay, WI", 44.5133, -88.0133, "WI"),
+    Station("KZZ78", 162.525, "Ashland, WI", 46.5925, -90.8838, "WI"),
+    Station("KIG65", 162.550, "Green Bay, WI", 44.5133, -88.0133, "WI"),
+    Station("WXJ88", 162.400, "Menomonie, WI", 44.8755, -91.9193, "WI"),
+    Station("WNG553", 162.400, "Wausaukee, WI", 45.3808, -87.9651, "WI"),
+    Station("KGG95", 162.425, "Winona, WI", 44.0461, -91.6393, "WI"),
+    Station("KZZ77", 162.425, "Withee, WI", 44.9572, -90.5932, "WI"),
     # Wyoming
-    Station("WXK80", 162.550, "Cheyenne, WY", 41.1400, -104.8202, "WY"),
-    Station("KJY87", 162.475, "Casper, WY", 42.8666, -106.3131, "WY"),
+    Station("WXM61", 162.475, "Lander, WY", 42.8330, -108.7307, "WY"),
 ]
 
 
