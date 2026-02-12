@@ -85,8 +85,10 @@ class SettingsDialogSimple(wx.Dialog):
         row1.Add(self._controls["update_interval"], 0)
         sizer.Add(row1, 0, wx.ALL, 5)
 
-        # Show Nationwide location
-        self._controls["show_nationwide"] = wx.CheckBox(panel, label="Show Nationwide location")
+        # Show Nationwide location (only available with Auto or NWS data source)
+        self._controls["show_nationwide"] = wx.CheckBox(
+            panel, label="Show Nationwide location (requires Auto or NWS data source)"
+        )
         sizer.Add(self._controls["show_nationwide"], 0, wx.ALL, 5)
 
         panel.SetSizer(sizer)
@@ -886,6 +888,13 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["show_nationwide"].SetValue(
                 getattr(self.config_manager.get_settings(), "show_nationwide_location", True)
             )
+            # Disable checkbox if data source isn't NWS-compatible
+            data_source = getattr(settings, "data_source", "auto")
+            if data_source not in ("auto", "nws"):
+                self._controls["show_nationwide"].SetValue(False)
+                self._controls["show_nationwide"].Enable(False)
+            else:
+                self._controls["show_nationwide"].Enable(True)
 
             # Display tab
             temp_unit = getattr(settings, "temperature_unit", "both")
