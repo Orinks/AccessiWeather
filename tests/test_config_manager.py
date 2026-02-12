@@ -67,8 +67,9 @@ class TestConfigManager:
         assert result is True
 
         locations = manager.get_all_locations()
-        assert len(locations) == 1
-        assert locations[0].name == "New York"
+        non_nationwide = [loc for loc in locations if loc.name != "Nationwide"]
+        assert len(non_nationwide) == 1
+        assert non_nationwide[0].name == "New York"
 
     def test_add_duplicate_location_fails(self, manager):
         """Test that adding duplicate location fails."""
@@ -81,7 +82,8 @@ class TestConfigManager:
         manager.add_location("Test", 40.0, -74.0)
         result = manager.remove_location("Test")
         assert result is True
-        assert len(manager.get_all_locations()) == 0
+        non_nationwide = [loc for loc in manager.get_all_locations() if loc.name != "Nationwide"]
+        assert len(non_nationwide) == 0
 
     def test_remove_nonexistent_location_fails(self, manager):
         """Test that removing non-existent location fails."""

@@ -45,7 +45,7 @@ class TestFetchAllDiscussions:
             patch.object(
                 service,
                 "fetch_cpc_discussions",
-                return_value={"outlook_6_10": {"title": "t", "text": "cpc text"}},
+                return_value={"outlook": {"title": "t", "text": "cpc text"}},
             ),
             patch.object(NationalDiscussionService, "is_hurricane_season", return_value=False),
         ):
@@ -551,20 +551,25 @@ class TestFetchProductText:
 class TestClassifyPmdDiscussion:
     """Tests for _classify_pmd_discussion."""
 
-    def test_short_range(self, service):
+    def test_short_range_wmo(self, service):
+        assert service._classify_pmd_discussion("PMDSPD\nShort Range") == "short_range"
+
+    def test_short_range_keyword(self, service):
         assert service._classify_pmd_discussion("Short Range Discussion") == "short_range"
-        assert service._classify_pmd_discussion("Day 1 forecast") == "short_range"
-        assert service._classify_pmd_discussion("SPD discussion") == "short_range"
 
-    def test_medium_range(self, service):
+    def test_medium_range_wmo(self, service):
+        assert service._classify_pmd_discussion("PMDEPD\nMedium Range") == "medium_range"
+
+    def test_medium_range_keyword(self, service):
         assert service._classify_pmd_discussion("Medium Range Discussion") == "medium_range"
-        assert service._classify_pmd_discussion("Days 3-7 forecast") == "medium_range"
-        assert service._classify_pmd_discussion("EPD discussion") == "medium_range"
-        assert service._classify_pmd_discussion("Extended Forecast Discussion") == "medium_range"
+        assert service._classify_pmd_discussion("3-7 day forecast") == "medium_range"
 
-    def test_extended(self, service):
-        assert service._classify_pmd_discussion("Day 8-10 Outlook") == "extended"
-        assert service._classify_pmd_discussion("Extended 8-10 day") == "extended"
+    def test_extended_wmo(self, service):
+        assert service._classify_pmd_discussion("PMDET4\nExtended forecast") == "extended"
+        assert service._classify_pmd_discussion("PMDET8\nDay 8 outlook") == "extended"
+
+    def test_extended_keyword(self, service):
+        assert service._classify_pmd_discussion("Extended 8-10 day outlook") == "extended"
 
     def test_none(self, service):
         assert service._classify_pmd_discussion("Random Product") is None
@@ -575,13 +580,22 @@ class TestClassifyPmdDiscussion:
 class TestClassifySwoOutlook:
     """Tests for _classify_swo_outlook."""
 
-    def test_day1(self, service):
+    def test_day1_wmo(self, service):
+        assert service._classify_swo_outlook("SWODY1\nDay 1 Outlook") == "day1"
+
+    def test_day1_keyword(self, service):
         assert service._classify_swo_outlook("Day 1 Convective Outlook") == "day1"
 
-    def test_day2(self, service):
+    def test_day2_wmo(self, service):
+        assert service._classify_swo_outlook("SWODY2\nDay 2 Outlook") == "day2"
+
+    def test_day2_keyword(self, service):
         assert service._classify_swo_outlook("Day 2 Convective Outlook") == "day2"
 
-    def test_day3(self, service):
+    def test_day3_wmo(self, service):
+        assert service._classify_swo_outlook("SWODY3\nDay 3 Outlook") == "day3"
+
+    def test_day3_keyword(self, service):
         assert service._classify_swo_outlook("Day 3 Convective Outlook") == "day3"
 
     def test_none(self, service):
@@ -595,10 +609,16 @@ class TestFetchWpcDiscussions:
 
     def test_success_with_products(self, service):
         products = [
-            {"issuingOffice": "WPC", "name": "Short Range Discussion", "id": "SR1"},
-            {"issuingOffice": "WPC", "name": "Medium Range Discussion", "id": "MR1"},
-            {"issuingOffice": "WPC", "name": "Day 8-10 Outlook", "id": "EX1"},
+            {"id": "SR1"},
+            {"id": "MR1"},
+            {"id": "EX1"},
         ]
+        # Text must contain WMO header codes for classification
+        text_map = {
+            "SR1": "PMDSPD\nShort Range Discussion text",
+            "MR1": "PMDEPD\nMedium Range Discussion text",
+            "EX1": "PMDET4\nExtended Discussion text",
+        }
         with (
             patch.object(
                 service,
@@ -608,13 +628,13 @@ class TestFetchWpcDiscussions:
             patch.object(
                 service,
                 "_fetch_product_text",
-                return_value={"success": True, "text": "Discussion text"},
+                side_effect=lambda pid: {"success": True, "text": text_map.get(pid, "")},
             ),
         ):
             result = service.fetch_wpc_discussions()
-        assert result["short_range"]["text"] == "Discussion text"
-        assert result["medium_range"]["text"] == "Discussion text"
-        assert result["extended"]["text"] == "Discussion text"
+        assert "Short Range" in result["short_range"]["text"]
+        assert "Medium Range" in result["medium_range"]["text"]
+        assert "Extended" in result["extended"]["text"]
 
     def test_fetch_failure(self, service):
         with patch.object(
@@ -627,7 +647,7 @@ class TestFetchWpcDiscussions:
 
     def test_product_text_failure(self, service):
         products = [
-            {"issuingOffice": "WPC", "name": "Short Range Discussion", "id": "SR1"},
+            {"id": "SR1"},
         ]
         with (
             patch.object(
@@ -642,7 +662,8 @@ class TestFetchWpcDiscussions:
             ),
         ):
             result = service.fetch_wpc_discussions()
-        assert "Error" in result["short_range"]["text"]
+        # When text fetch fails, product is skipped; no classification happens
+        assert result["short_range"]["text"] == "Discussion not available"
         assert result["medium_range"]["text"] == "Discussion not available"
 
     def test_product_id_from_at_id(self, service):
@@ -673,11 +694,17 @@ class TestFetchWpcDiscussions:
     def test_breaks_after_all_fetched(self, service):
         """Stops iterating after all 3 classifications found."""
         products = [
-            {"issuingOffice": "WPC", "name": "Short Range Discussion", "id": "SR1"},
-            {"issuingOffice": "WPC", "name": "Medium Range Discussion", "id": "MR1"},
-            {"issuingOffice": "WPC", "name": "Day 8-10 Outlook", "id": "EX1"},
-            {"issuingOffice": "WPC", "name": "Short Range Discussion", "id": "SR2"},
+            {"id": "SR1"},
+            {"id": "MR1"},
+            {"id": "EX1"},
+            {"id": "SR2"},
         ]
+        text_map = {
+            "SR1": "PMDSPD\nShort range text",
+            "MR1": "PMDEPD\nMedium range text",
+            "EX1": "PMDET4\nExtended text",
+            "SR2": "PMDSPD\nDuplicate",
+        }
         with (
             patch.object(
                 service,
@@ -687,7 +714,7 @@ class TestFetchWpcDiscussions:
             patch.object(
                 service,
                 "_fetch_product_text",
-                return_value={"success": True, "text": "txt"},
+                side_effect=lambda pid: {"success": True, "text": text_map.get(pid, "")},
             ) as mock_text,
         ):
             service.fetch_wpc_discussions()
@@ -699,10 +726,15 @@ class TestFetchSpcDiscussions:
 
     def test_success(self, service):
         products = [
-            {"issuingOffice": "SPC", "name": "Day 1 Convective Outlook", "id": "D1"},
-            {"issuingOffice": "SPC", "name": "Day 2 Convective Outlook", "id": "D2"},
-            {"issuingOffice": "SPC", "name": "Day 3 Convective Outlook", "id": "D3"},
+            {"id": "D1"},
+            {"id": "D2"},
+            {"id": "D3"},
         ]
+        text_map = {
+            "D1": "SWODY1\nDay 1 Outlook text",
+            "D2": "SWODY2\nDay 2 Outlook text",
+            "D3": "SWODY3\nDay 3 Outlook text",
+        }
         with (
             patch.object(
                 service,
@@ -712,13 +744,13 @@ class TestFetchSpcDiscussions:
             patch.object(
                 service,
                 "_fetch_product_text",
-                return_value={"success": True, "text": "Outlook text"},
+                side_effect=lambda pid: {"success": True, "text": text_map.get(pid, "")},
             ),
         ):
             result = service.fetch_spc_discussions()
-        assert result["day1"]["text"] == "Outlook text"
-        assert result["day2"]["text"] == "Outlook text"
-        assert result["day3"]["text"] == "Outlook text"
+        assert "Day 1" in result["day1"]["text"]
+        assert "Day 2" in result["day2"]["text"]
+        assert "Day 3" in result["day3"]["text"]
 
     def test_fetch_failure(self, service):
         with patch.object(
@@ -732,7 +764,7 @@ class TestFetchSpcDiscussions:
 
     def test_product_text_failure(self, service):
         products = [
-            {"issuingOffice": "SPC", "name": "Day 1 Convective Outlook", "id": "D1"},
+            {"id": "D1"},
         ]
         with (
             patch.object(
@@ -747,7 +779,7 @@ class TestFetchSpcDiscussions:
             ),
         ):
             result = service.fetch_spc_discussions()
-        assert "Error" in result["day1"]["text"]
+        assert result["day1"]["text"] == "Outlook not available"
         assert result["day2"]["text"] == "Outlook not available"
 
     def test_product_id_from_at_id(self, service):
@@ -776,11 +808,17 @@ class TestFetchSpcDiscussions:
 
     def test_breaks_after_all_fetched(self, service):
         products = [
-            {"issuingOffice": "SPC", "name": "Day 1 Convective Outlook", "id": "D1"},
-            {"issuingOffice": "SPC", "name": "Day 2 Convective Outlook", "id": "D2"},
-            {"issuingOffice": "SPC", "name": "Day 3 Convective Outlook", "id": "D3"},
-            {"issuingOffice": "SPC", "name": "Day 1 Convective Outlook", "id": "D1b"},
+            {"id": "D1"},
+            {"id": "D2"},
+            {"id": "D3"},
+            {"id": "D1b"},
         ]
+        text_map = {
+            "D1": "SWODY1\nDay 1 text",
+            "D2": "SWODY2\nDay 2 text",
+            "D3": "SWODY3\nDay 3 text",
+            "D1b": "SWODY1\nDuplicate",
+        }
         with (
             patch.object(
                 service,
@@ -790,7 +828,7 @@ class TestFetchSpcDiscussions:
             patch.object(
                 service,
                 "_fetch_product_text",
-                return_value={"success": True, "text": "txt"},
+                side_effect=lambda pid: {"success": True, "text": text_map.get(pid, "")},
             ) as mock_text,
         ):
             service.fetch_spc_discussions()
@@ -982,8 +1020,7 @@ class TestFetchCpcDiscussions:
             return_value={"success": True, "html": "<pre>CPC text</pre>"},
         ):
             result = service.fetch_cpc_discussions()
-        assert result["outlook_6_10"]["text"] == "CPC text"
-        assert result["outlook_8_14"]["text"] == "CPC text"
+        assert result["outlook"]["text"] == "CPC text"
 
     def test_failure(self, service):
         with patch.object(
@@ -992,8 +1029,7 @@ class TestFetchCpcDiscussions:
             return_value={"success": False, "error": "timeout"},
         ):
             result = service.fetch_cpc_discussions()
-        assert "Error" in result["outlook_6_10"]["text"]
-        assert "Error" in result["outlook_8_14"]["text"]
+        assert "Error" in result["outlook"]["text"]
 
     def test_extraction_returns_none(self, service):
         with (
@@ -1009,7 +1045,7 @@ class TestFetchCpcDiscussions:
             ),
         ):
             result = service.fetch_cpc_discussions()
-        assert "unavailable" in result["outlook_6_10"]["text"].lower()
+        assert "unavailable" in result["outlook"]["text"].lower()
 
 
 class TestServicesInit:
