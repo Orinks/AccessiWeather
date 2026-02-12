@@ -39,8 +39,10 @@ _STATIONS: list[Station] = [
     Station("KEC96", 162.550, "Anchorage, AK", 61.2181, -149.9003, "AK"),
     # Alabama
     Station("KEC61", 162.550, "Mobile, AL", 30.6954, -88.0399, "AL"),
+    Station("WNG642", 0.0, "Arab, AL", 34.3281, -86.4961, "AL"),
     # Arkansas
     Station("KZZ99", 162.550, "Little Rock, AR", 34.7465, -92.2896, "AR"),
+    Station("WNG694", 0.0, "Springdale, AR", 36.1867, -94.1288, "AR"),
     # Arizona
     Station("KEC94", 162.550, "Phoenix, AZ", 33.4484, -112.0740, "AZ"),
     Station("WWG42", 162.500, "Globe, AZ", 33.3942, -110.7865, "AZ"),
@@ -49,7 +51,10 @@ _STATIONS: list[Station] = [
     # California
     Station("KEC49", 162.550, "San Francisco Bay, CA", 37.7749, -122.4194, "CA"),
     Station("KIG78", 162.400, "Coachella, CA", 33.6803, -116.1739, "CA"),
+    Station("WNG712", 0.0, "Coachella (Spanish), CA", 33.6803, -116.1739, "CA"),
+    Station("WNG659", 0.0, "El Paso Mountains, CA", 35.4300, -117.5800, "CA"),
     Station("KIH62", 162.400, "Fresno, CA", 36.7378, -119.7871, "CA"),
+    Station("KWO37", 0.0, "Los Angeles, CA", 34.0522, -118.2437, "CA"),
     Station("WWF64", 162.450, "Monterey Marine, CA", 36.6002, -121.8947, "CA"),
     # Colorado
     Station("KWN54", 162.425, "Durango, CO", 37.2753, -107.8801, "CO"),
@@ -59,16 +64,25 @@ _STATIONS: list[Station] = [
     Station("WXJ42", 162.400, "Meriden, CT", 41.5382, -72.8070, "CT"),
     # Florida
     Station("WXK83", 162.475, "Cape Coral, FL", 26.5629, -81.9495, "FL"),
+    Station("KIH26", 0.0, "Daytona Beach, FL", 29.2108, -81.0228, "FL"),
+    Station("WZ2531", 0.0, "Hialeah (Spanish), FL", 25.8576, -80.2781, "FL"),
+    Station("KHB39", 0.0, "Jacksonville, FL", 30.3322, -81.6557, "FL"),
+    Station("KEC38", 0.0, "Largo, FL", 27.9095, -82.7873, "FL"),
+    Station("KHB34", 0.0, "Miami, FL", 25.7617, -80.1918, "FL"),
     Station("KIH63", 162.475, "Orlando, FL", 28.5383, -81.3792, "FL"),
     Station("WNG522", 162.425, "Palatka, FL", 29.6486, -81.6376, "FL"),
     Station("KPS505", 162.500, "Sumterville, FL", 28.7483, -82.0681, "FL"),
     Station("KIH24", 162.400, "Tallahassee, FL", 30.4383, -84.2807, "FL"),
+    Station("WNG663", 0.0, "Princeton, FL", 25.5384, -80.4089, "FL"),
     Station("KHB32", 162.550, "Tampa Bay, FL", 27.9506, -82.4572, "FL"),
     # Georgia
     Station("WXK56", 162.400, "Athens, GA", 33.9519, -83.3576, "GA"),
     Station("KEC80", 162.550, "Atlanta, GA", 33.7490, -84.3880, "GA"),
     Station("WWH23", 162.425, "Buchanan, GA", 33.8037, -85.1885, "GA"),
+    Station("KXI81", 0.0, "Clayton, GA", 34.8782, -83.4010, "GA"),
+    Station("WXJ53", 0.0, "Cleveland, GA", 34.5970, -83.7632, "GA"),
     Station("WXM32", 162.400, "Columbus, GA", 32.4610, -84.9877, "GA"),
+    Station("WWH24", 0.0, "Toccoa, GA", 34.5773, -83.3324, "GA"),
     # Idaho
     Station("WWG53", 162.550, "Boise, ID", 43.6150, -116.2023, "ID"),
     # Hawaii
@@ -89,8 +103,10 @@ _STATIONS: list[Station] = [
     Station("KXI58", 162.400, "Plano, IL", 41.6628, -88.5368, "IL"),
     Station("WXJ73", 162.550, "Quad Cities, IL", 41.5236, -90.5776, "IL"),
     Station("WXJ75", 162.400, "Springfield, IL", 39.7817, -89.6501, "IL"),
+    Station("KZZ81", 0.0, "Lockport, IL", 41.5895, -88.0573, "IL"),
     # Indiana
     Station("KEC74", 162.550, "Indianapolis, IN", 39.7684, -86.1581, "IN"),
+    Station("KIG76", 0.0, "Evansville, IN", 37.9716, -87.5711, "IN"),
     Station("WXJ57", 162.400, "South Bend, IN", 41.6764, -86.2520, "IN"),
     # Kansas
     Station("WXK91", 162.475, "Topeka, KS", 39.0473, -95.6752, "KS"),
@@ -115,6 +131,7 @@ _STATIONS: list[Station] = [
     Station("WXL93", 162.550, "Worcester, MA", 42.2626, -71.8023, "MA"),
     # Montana
     Station("KEC59", 162.550, "Great Falls, MT", 47.5063, -111.3008, "MT"),
+    Station("WXL25", 0.0, "Missoula, MT", 46.8721, -113.9940, "MT"),
     # Michigan
     Station("KEC63", 162.550, "Detroit, MI", 42.3314, -83.0458, "MI"),
     Station("KIH29", 162.475, "Flint, MI", 43.0125, -83.6875, "MI"),
@@ -126,24 +143,34 @@ _STATIONS: list[Station] = [
     Station("KXI33", 162.450, "West Branch, MI", 44.2764, -84.2386, "MI"),
     Station("WXN99", 162.425, "West Olive, MI", 42.9189, -86.1767, "MI"),
     Station("WNG672", 162.425, "Wolf Lake, MI", 43.7786, -85.4942, "MI"),
+    Station("WZ2560", 0.0, "Cannonsburg, MI", 43.0631, -85.4967, "MI"),
     # Minnesota
     Station("KEC65", 162.550, "Minneapolis, MN", 44.9778, -93.2650, "MN"),
     Station("WXM99", 162.425, "Bemidji, MN", 47.4736, -94.8803, "MN"),
     Station("WNG676", 162.500, "Clearwater, MN", 45.4183, -93.9810, "MN"),
     Station("WXJ86", 162.550, "La Crescent, MN", 43.8280, -91.3040, "MN"),
     Station("WWG98", 162.475, "Park Rapids, MN", 46.9222, -95.0536, "MN"),
+    Station("WNG678", 0.0, "Pine City, MN", 45.8261, -92.9688, "MN"),
     Station("WXK41", 162.475, "Rochester, MN", 44.0121, -92.4802, "MN"),
     # Mississippi
     Station("KIH53", 162.400, "Tupelo, MS", 34.2576, -88.7034, "MS"),
     # Missouri
     Station("KID77", 162.550, "Kansas City, MO", 39.0997, -94.5786, "MO"),
     Station("KDO89", 162.550, "St. Louis, MO", 38.6270, -90.1994, "MO"),
+    Station("WXJ61", 0.0, "Joplin, MO", 37.0842, -94.5133, "MO"),
     Station("WXL46", 162.400, "Springfield, MO", 37.2090, -93.2923, "MO"),
     # North Carolina
+    Station("WXL58", 0.0, "Chapel Hill, NC", 35.9132, -79.0558, "NC"),
     Station("WXL70", 162.475, "Charlotte, NC", 35.2271, -80.8431, "NC"),
+    Station("WNG706", 0.0, "Garner, NC", 35.7113, -78.6142, "NC"),
+    Station("KEC84", 0.0, "New Bern, NC", 35.1085, -77.0441, "NC"),
+    Station("WXL59", 0.0, "Rocky Mount, NC", 35.9382, -77.7905, "NC"),
+    Station("KXI95", 0.0, "Warsaw, NC", 34.9988, -78.0911, "NC"),
     Station("KHB31", 162.550, "Wilmington, NC", 34.2257, -77.9447, "NC"),
     # North Dakota
     Station("WXL78", 162.475, "Bismarck, ND", 46.8083, -100.7837, "ND"),
+    Station("WWF83", 0.0, "Grand Forks, ND", 47.9253, -97.0329, "ND"),
+    Station("WXM38", 0.0, "Petersburg, ND", 48.0158, -98.0018, "ND"),
     # Nebraska
     Station("KZZ69", 162.450, "Beatrice, NE", 40.2681, -96.7475, "NE"),
     Station("WXL74", 162.400, "Grand Island, NE", 40.9264, -98.3420, "NE"),
@@ -164,6 +191,7 @@ _STATIONS: list[Station] = [
     Station("WXL34", 162.550, "Albany, NY", 42.6526, -73.7562, "NY"),
     Station("KEB98", 162.550, "Buffalo, NY", 42.8864, -78.8784, "NY"),
     Station("WXL37", 162.475, "Highland, NY", 41.7212, -73.9610, "NY"),
+    Station("WXM80", 0.0, "Riverhead, NY", 40.9170, -72.6621, "NY"),
     Station("WZ2536", 162.475, "Lyons, NY", 43.0642, -76.9905, "NY"),
     Station("WXM45", 162.425, "Middleville, NY", 43.1198, -74.9790, "NY"),
     Station("KHA53", 162.400, "Rochester, NY", 43.1566, -77.6088, "NY"),
@@ -173,6 +201,7 @@ _STATIONS: list[Station] = [
     Station("KIG86", 162.550, "Columbus, OH", 39.9612, -82.9988, "OH"),
     Station("WNG698", 162.500, "Grafton, OH", 41.1726, -82.0546, "OH"),
     Station("WWG57", 162.450, "Mansfield, OH", 40.7589, -82.5155, "OH"),
+    Station("WXJ93", 0.0, "Lima, OH", 40.7428, -84.1052, "OH"),
     Station("WXL51", 162.500, "Toledo, OH", 41.6528, -83.5379, "OH"),
     # Oregon
     Station("KIG71", 162.550, "Portland, OR", 45.5152, -122.6784, "OR"),
@@ -184,6 +213,7 @@ _STATIONS: list[Station] = [
     # Pennsylvania
     Station("KIH28", 162.475, "Philadelphia, PA", 39.9526, -75.1652, "PA"),
     Station("KIH35", 162.550, "Pittsburgh, PA", 40.4406, -79.9959, "PA"),
+    Station("WXL39", 0.0, "Allentown, PA", 40.6084, -75.4902, "PA"),
     Station("WXL40", 162.550, "Harrisburg, PA", 40.2732, -76.8867, "PA"),
     Station("WNG704", 162.425, "Hibernia Park, PA", 40.0521, -75.8166, "PA"),
     Station("WXL43", 162.550, "Wilkes-Barre, PA", 41.2459, -75.8813, "PA"),
@@ -197,6 +227,7 @@ _STATIONS: list[Station] = [
     Station("WXL82", 162.400, "Sioux Falls, SD", 43.5446, -96.7311, "SD"),
     # Tennessee
     Station("WXK47", 162.550, "Bristol, TN", 36.5951, -82.1887, "TN"),
+    Station("KWN52", 0.0, "Lobelville, TN", 35.7753, -87.8142, "TN"),
     Station("WXK49", 162.475, "Memphis, TN", 35.1495, -90.0490, "TN"),
     Station("WXK63", 162.475, "Shelbyville, TN", 35.4834, -86.4603, "TN"),
     Station("KIG79", 162.550, "White House, TN", 36.4706, -86.6514, "TN"),
@@ -213,7 +244,10 @@ _STATIONS: list[Station] = [
     Station("KGG68", 162.400, "Houston/Tomball, TX", 30.0972, -95.6161, "TX"),
     Station("WXK23", 162.550, "Lufkin, TX", 31.3382, -94.7291, "TX"),
     Station("WXK32", 162.400, "Odessa, TX", 31.8457, -102.3676, "TX"),
+    Station("KXI55", 0.0, "Onalaska, TX", 30.8060, -95.1177, "TX"),
     Station("KWN34", 162.450, "Palestine, TX", 31.7621, -95.6308, "TX"),
+    Station("WXK33", 0.0, "San Angelo, TX", 31.4638, -100.4370, "TX"),
+    Station("WXK67", 0.0, "San Antonio, TX", 29.4241, -98.4936, "TX"),
     Station("WXK36", 162.475, "Tyler, TX", 32.3513, -95.3011, "TX"),
     Station("WXK35", 162.475, "Waco, TX", 31.5493, -97.1467, "TX"),
     # Utah
@@ -230,7 +264,10 @@ _STATIONS: list[Station] = [
     Station("WWG24", 162.425, "Puget Sound Marine, WA", 47.6062, -122.3321, "WA"),
     Station("WWF56", 162.450, "Richland, WA", 46.2856, -119.2845, "WA"),
     # West Virginia
+    Station("WXM71", 0.0, "Beckley, WV", 37.7782, -81.1882, "WV"),
+    Station("WXJ84", 0.0, "Charleston, WV", 38.3498, -81.6326, "WV"),
     Station("WXM70", 162.500, "Parkersburg, WV", 39.2667, -81.5615, "WV"),
+    Station("WXM74", 0.0, "Sutton, WV", 38.6646, -80.7098, "WV"),
     # Wisconsin
     Station("KZZ78", 162.525, "Ashland, WI", 46.5925, -90.8838, "WI"),
     Station("KIG65", 162.550, "Green Bay, WI", 44.5133, -88.0133, "WI"),
@@ -240,6 +277,14 @@ _STATIONS: list[Station] = [
     Station("KZZ77", 162.425, "Withee, WI", 44.9572, -90.5932, "WI"),
     # Wyoming
     Station("WXM61", 162.475, "Lander, WY", 42.8330, -108.7307, "WY"),
+    # Canada - Alberta
+    Station("XLF339", 0.0, "Calgary, AB", 51.0447, -114.0719, "AB"),
+    Station("XLM572", 0.0, "Edmonton, AB", 53.5461, -113.4938, "AB"),
+    # Canada - Ontario
+    Station("XMJ316", 0.0, "Collingwood, ON", 44.5001, -80.2169, "ON"),
+    Station("XMJ225", 0.0, "Toronto, ON", 43.6532, -79.3832, "ON"),
+    # Canada - Quebec
+    Station("XLM300", 0.0, "Montreal, QC", 45.5017, -73.5673, "QC"),
 ]
 
 
