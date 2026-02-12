@@ -40,7 +40,7 @@ class TestStationDatabase:
     def test_get_all_stations_default(self) -> None:
         db = StationDatabase()
         stations = db.get_all_stations()
-        assert len(stations) >= 20
+        assert len(stations) >= 100
 
     def test_get_all_stations_returns_copies(self) -> None:
         db = StationDatabase()
@@ -90,6 +90,89 @@ class TestStationDatabase:
         custom = [Station("TEST1", 162.5, "Test", 0.0, 0.0, "XX")]
         db = StationDatabase(stations=custom)
         assert len(db.get_all_stations()) == 1
+
+    def test_all_50_states_covered(self) -> None:
+        """Verify every US state has at least one station."""
+        db = StationDatabase()
+        all_50 = {
+            "AL",
+            "AK",
+            "AZ",
+            "AR",
+            "CA",
+            "CO",
+            "CT",
+            "DE",
+            "FL",
+            "GA",
+            "HI",
+            "ID",
+            "IL",
+            "IN",
+            "IA",
+            "KS",
+            "KY",
+            "LA",
+            "ME",
+            "MD",
+            "MA",
+            "MI",
+            "MN",
+            "MS",
+            "MO",
+            "MT",
+            "NE",
+            "NV",
+            "NH",
+            "NJ",
+            "NM",
+            "NY",
+            "NC",
+            "ND",
+            "OH",
+            "OK",
+            "OR",
+            "PA",
+            "RI",
+            "SC",
+            "SD",
+            "TN",
+            "TX",
+            "UT",
+            "VT",
+            "VA",
+            "WA",
+            "WV",
+            "WI",
+            "WY",
+        }
+        covered = {s.state for s in db.get_all_stations()}
+        missing = all_50 - covered
+        assert not missing, f"Missing states: {missing}"
+
+    def test_no_duplicate_call_signs(self) -> None:
+        """Verify all call signs are unique."""
+        db = StationDatabase()
+        call_signs = [s.call_sign for s in db.get_all_stations()]
+        assert len(call_signs) == len(set(call_signs)), (
+            f"Duplicate call signs: {[c for c in call_signs if call_signs.count(c) > 1]}"
+        )
+
+    def test_station_data_fields_complete(self) -> None:
+        """Verify every station has all required fields populated."""
+        db = StationDatabase()
+        for s in db.get_all_stations():
+            assert s.call_sign, f"Empty call_sign for {s.name}"
+            assert s.frequency > 0, f"Invalid frequency for {s.call_sign}"
+            assert s.name, f"Empty name for {s.call_sign}"
+            assert -90 <= s.lat <= 90, f"Invalid lat for {s.call_sign}: {s.lat}"
+            assert -180 <= s.lon <= 180, f"Invalid lon for {s.call_sign}: {s.lon}"
+            assert len(s.state) == 2, f"Invalid state for {s.call_sign}: {s.state}"
+
+    def test_at_least_100_stations(self) -> None:
+        """Verify database contains at least 100 stations."""
+        db = StationDatabase()
+        assert len(db.get_all_stations()) >= 100
 
     def test_all_stations_are_us(self) -> None:
         db = StationDatabase()
