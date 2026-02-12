@@ -263,6 +263,9 @@ class NOAARadioDialog(wx.Dialog):
         """Switch to the next available stream URL for the current station."""
         if not self._current_urls:
             return
+        self._health_timer.Stop()
+        self._player.stop(notify=False)  # Don't reset button states mid-switch
+
         self._current_url_index = (self._current_url_index + 1) % len(self._current_urls)
         url = self._current_urls[self._current_url_index]
         station = self._get_selected_station()
@@ -270,7 +273,6 @@ class NOAARadioDialog(wx.Dialog):
         idx = self._current_url_index + 1
         total = len(self._current_urls)
         self._set_status(f"Switching {name} to stream {idx} of {total}...")
-        self._player.stop()
         if self._player.play(url):
             self._health_timer.Start(5000)
 

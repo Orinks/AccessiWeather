@@ -156,8 +156,15 @@ class RadioPlayer:
             self._stream = None
         return self._start_stream(self._current_url)
 
-    def stop(self) -> None:
-        """Stop the currently playing stream and clean up."""
+    def stop(self, notify: bool = True) -> None:
+        """
+        Stop the currently playing stream and clean up.
+
+        Args:
+            notify: If True, fire the on_stopped callback. Set to False
+                    when switching streams to avoid UI flicker.
+
+        """
         was_playing = self.is_playing()
         if self._stream is not None:
             try:
@@ -167,7 +174,7 @@ class RadioPlayer:
                 logger.debug(f"Error stopping stream: {e}")
             finally:
                 self._stream = None
-        if was_playing and self._on_stopped:
+        if notify and was_playing and self._on_stopped:
             self._on_stopped()
 
     def set_volume(self, level: float) -> None:
