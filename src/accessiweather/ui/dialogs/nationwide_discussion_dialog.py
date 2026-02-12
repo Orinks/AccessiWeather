@@ -314,22 +314,47 @@ class NationwideDiscussionDialog(wx.Dialog):
             nhc.get("east_pacific_outlook", {}).get("text", "Not available")
         )
 
-        # Hide NHC tab if not hurricane season
-        if self._service is not None and not self._service.is_hurricane_season():
-            self._hide_nhc_tab()
+        # Hide tabs where no data is available
+        self._hide_empty_tabs(data)
 
         # CPC
         cpc = data.get("cpc", {})
         self.cpc_6_10_day.SetValue(cpc.get("outlook_6_10", {}).get("text", "Not available"))
         self.cpc_8_14_day.SetValue(cpc.get("outlook_8_14", {}).get("text", "Not available"))
 
-    def _hide_nhc_tab(self) -> None:
-        """Remove the NHC tab from the notebook if present."""
-        for i in range(self.notebook.GetPageCount()):
-            if self.notebook.GetPageText(i) == "NHC":
+    def _hide_empty_tabs(self, data: dict[str, Any]) -> None:
+        """Hide tabs where all discussions have no useful content."""
+        unavailable = {"", "Not available", "Discussion not available"}
+
+        def _has_data(section: dict, keys: list[str]) -> bool:
+            return any(
+                section.get(k, {}).get("text", "") not in unavailable
+                and not section.get(k, {}).get("text", "").startswith("Error")
+                for k in keys
+            )
+
+        tab_checks = {
+            "WPC (Weather Prediction Center)": _has_data(
+                data.get("wpc", {}), ["short_range", "medium_range", "extended"]
+            )
+            or _has_data(data.get("qpf", {}), ["qpf"]),
+            "SPC (Storm Prediction Center)": _has_data(
+                data.get("spc", {}), ["day1", "day2", "day3"]
+            ),
+            "NHC (National Hurricane Center)": _has_data(
+                data.get("nhc", {}), ["atlantic_outlook", "east_pacific_outlook"]
+            ),
+            "CPC (Climate Prediction Center)": _has_data(
+                data.get("cpc", {}), ["outlook_6_10", "outlook_8_14"]
+            ),
+        }
+
+        # Remove tabs with no data (iterate in reverse to preserve indices)
+        for i in range(self.notebook.GetPageCount() - 1, -1, -1):
+            label = self.notebook.GetPageText(i)
+            if label in tab_checks and not tab_checks[label]:
+                self.notebook.GetPage(i).Hide()
                 self.notebook.RemovePage(i)
-                self.nhc_panel.Hide()
-                break
 
     def _on_discussions_error(self, error: str) -> None:
         """Handle discussion loading error (called via wx.CallAfter)."""
