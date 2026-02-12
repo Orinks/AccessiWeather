@@ -67,6 +67,8 @@ class NOAARadioDialog(wx.Dialog):
             on_reconnecting=self._on_reconnecting,
         )
         self._url_provider = StreamURLProvider()
+        self._current_urls: list[str] = []
+        self._current_url_index: int = 0
         self._health_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self._on_health_check, self._health_timer)
 
@@ -100,6 +102,12 @@ class NOAARadioDialog(wx.Dialog):
         self._stop_btn.Bind(wx.EVT_BUTTON, self._on_stop)
         self._stop_btn.Enable(False)
         btn_sizer.Add(self._stop_btn, 0, wx.RIGHT, 5)
+
+        self._next_stream_btn = wx.Button(panel, label="Try Next Stream")
+        self._next_stream_btn.SetName("Try Next Stream")
+        self._next_stream_btn.Bind(wx.EVT_BUTTON, self._on_next_stream)
+        self._next_stream_btn.Enable(False)
+        btn_sizer.Add(self._next_stream_btn, 0, wx.RIGHT, 5)
 
         sizer.Add(btn_sizer, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
@@ -174,11 +182,12 @@ class NOAARadioDialog(wx.Dialog):
             )
             return
 
-        self._set_status(f"Connecting to {station.call_sign}...")
-        primary_url = urls[0]
-        fallback_urls = urls[1:] if len(urls) > 1 else []
-        if self._player.play(primary_url, fallback_urls=fallback_urls):
-            self._health_timer.Start(5000)  # Check health every 5 seconds
+        self._current_urls = urls
+        self._current_url_index = 0
+        self._set_status(f"Connecting to {station.call_sign} (stream 1 of {len(urls)})...")
+        if self._player.play(urls[0]):
+            self._health_timer.Start(5000)
+            self._next_stream_btn.Enable(len(urls) > 1)
 
     def _on_stop(self, _event: wx.CommandEvent) -> None:
         """Handle Stop button click."""
@@ -194,15 +203,20 @@ class NOAARadioDialog(wx.Dialog):
         """Handle playback started event."""
         station = self._get_selected_station()
         name = station.call_sign if station else "Unknown"
-        self._set_status(f"Playing: {name}")
+        total = len(self._current_urls)
+        idx = self._current_url_index + 1
+        stream_info = f" (stream {idx} of {total})" if total > 1 else ""
+        self._set_status(f"Playing: {name}{stream_info}")
         self._play_btn.Enable(False)
         self._stop_btn.Enable(True)
+        self._next_stream_btn.Enable(total > 1)
 
     def _on_stopped(self) -> None:
         """Handle playback stopped event."""
         self._set_status("Stopped")
         self._play_btn.Enable(True)
         self._stop_btn.Enable(False)
+        self._next_stream_btn.Enable(False)
 
     def _on_error(self, message: str) -> None:
         """Handle playback error event."""
@@ -210,6 +224,7 @@ class NOAARadioDialog(wx.Dialog):
         self._set_status(f"Error: {message}")
         self._play_btn.Enable(True)
         self._stop_btn.Enable(False)
+        self._next_stream_btn.Enable(len(self._current_urls) > 1)
 
     def _on_stalled(self) -> None:
         """Handle stream stall (buffering)."""
@@ -218,6 +233,21 @@ class NOAARadioDialog(wx.Dialog):
     def _on_reconnecting(self, attempt: int) -> None:
         """Handle reconnection attempt."""
         self._set_status(f"Reconnecting (attempt {attempt})...")
+
+    def _on_next_stream(self, _event: wx.CommandEvent) -> None:
+        """Switch to the next available stream URL for the current station."""
+        if not self._current_urls:
+            return
+        self._current_url_index = (self._current_url_index + 1) % len(self._current_urls)
+        url = self._current_urls[self._current_url_index]
+        station = self._get_selected_station()
+        name = station.call_sign if station else "Unknown"
+        idx = self._current_url_index + 1
+        total = len(self._current_urls)
+        self._set_status(f"Switching {name} to stream {idx} of {total}...")
+        self._player.stop()
+        if self._player.play(url):
+            self._health_timer.Start(5000)
 
     def _on_health_check(self, _event: wx.TimerEvent) -> None:
         """Periodic health check for stream stalls."""
