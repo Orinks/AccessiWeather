@@ -85,6 +85,10 @@ class SettingsDialogSimple(wx.Dialog):
         row1.Add(self._controls["update_interval"], 0)
         sizer.Add(row1, 0, wx.ALL, 5)
 
+        # Show Nationwide location
+        self._controls["show_nationwide"] = wx.CheckBox(panel, label="Show Nationwide location")
+        sizer.Add(self._controls["show_nationwide"], 0, wx.ALL, 5)
+
         panel.SetSizer(sizer)
         self.notebook.AddPage(panel, "General")
 
@@ -879,6 +883,9 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["update_interval"].SetValue(
                 getattr(settings, "update_interval_minutes", 10)
             )
+            self._controls["show_nationwide"].SetValue(
+                self.app.config_manager.location_manager.show_nationwide
+            )
 
             # Display tab
             temp_unit = getattr(settings, "temperature_unit", "both")
@@ -1069,9 +1076,14 @@ class SettingsDialogSimple(wx.Dialog):
             ]
             style_values = ["brief", "standard", "detailed"]
 
+            # Update nationwide visibility
+            show_nationwide = self._controls["show_nationwide"].GetValue()
+            self.app.config_manager.location_manager.set_show_nationwide(show_nationwide)
+
             settings_dict = {
                 # General
                 "update_interval_minutes": self._controls["update_interval"].GetValue(),
+                "show_nationwide_location": show_nationwide,
                 # Display
                 "temperature_unit": temp_values[self._controls["temp_unit"].GetSelection()],
                 "show_dewpoint": self._controls["show_dewpoint"].GetValue(),

@@ -645,6 +645,11 @@ class MainWindow(SizedFrame):
                 wx.CallAfter(self._on_weather_error, "No location selected")
                 return
 
+            # For Nationwide location, fetch discussion summaries instead of weather
+            if self.app.config_manager.location_manager.is_nationwide_location(location.name):
+                await self._fetch_nationwide_discussions(generation)
+                return
+
             # Fetch weather data - pass the Location object directly
             # force_refresh=True bypasses cache (used when switching locations)
             weather_data = await self.app.weather_client.get_weather_data(
@@ -669,6 +674,68 @@ class MainWindow(SizedFrame):
         except Exception as e:
             logger.error(f"Failed to fetch weather data: {e}")
             wx.CallAfter(self._on_weather_error, str(e))
+
+    async def _fetch_nationwide_discussions(self, generation: int) -> None:
+        """Fetch nationwide discussion summaries and display in weather fields."""
+        import asyncio
+
+        from ..services.national_discussion_service import NationalDiscussionService
+
+        try:
+            service = NationalDiscussionService()
+            # Run synchronous fetch in thread to avoid blocking
+            discussions = await asyncio.to_thread(service.fetch_all_discussions)
+
+            if generation != self._fetch_generation:
+                return
+
+            # Build current conditions text (short range + SPC day 1)
+            current_parts = ["=== Nationwide Weather Summary ===\n"]
+            wpc = discussions.get("wpc", {})
+            if wpc.get("short_range", {}).get("text"):
+                current_parts.append(
+                    f"--- {wpc['short_range']['title']} ---\n{wpc['short_range']['text']}\n"
+                )
+            spc = discussions.get("spc", {})
+            if spc.get("day1", {}).get("text"):
+                current_parts.append(f"--- {spc['day1']['title']} ---\n{spc['day1']['text']}\n")
+            current_text = "\n".join(current_parts)
+
+            # Build forecast text (extended + CPC outlooks)
+            forecast_parts = ["=== Extended Outlook ===\n"]
+            if wpc.get("extended", {}).get("text"):
+                forecast_parts.append(
+                    f"--- {wpc['extended']['title']} ---\n{wpc['extended']['text']}\n"
+                )
+            cpc = discussions.get("cpc", {})
+            if cpc.get("outlook_6_10", {}).get("text"):
+                forecast_parts.append(
+                    f"--- {cpc['outlook_6_10']['title']} ---\n{cpc['outlook_6_10']['text']}\n"
+                )
+            if cpc.get("outlook_8_14", {}).get("text"):
+                forecast_parts.append(
+                    f"--- {cpc['outlook_8_14']['title']} ---\n{cpc['outlook_8_14']['text']}\n"
+                )
+            forecast_text = "\n".join(forecast_parts)
+
+            wx.CallAfter(self._on_nationwide_data_received, current_text, forecast_text)
+
+        except Exception as e:
+            logger.error(f"Failed to fetch nationwide discussions: {e}")
+            wx.CallAfter(self._on_weather_error, str(e))
+
+    def _on_nationwide_data_received(self, current_text: str, forecast_text: str) -> None:
+        """Handle received nationwide discussion data (called on main thread)."""
+        try:
+            self.current_conditions.SetValue(current_text)
+            self.forecast_display.SetValue(forecast_text)
+            self.stale_warning_label.SetLabel("")
+            self.set_status("Nationwide discussions updated")
+        except Exception as e:
+            logger.error(f"Error updating nationwide display: {e}")
+        finally:
+            self.app.is_updating = False
+            self.refresh_button.Enable()
 
     async def _pre_warm_other_locations(self, current_location: Location) -> None:
         """Pre-warm cache for non-current locations so switching is instant."""
