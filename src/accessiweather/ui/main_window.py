@@ -218,6 +218,10 @@ class MainWindow(SizedFrame):
             wx.ID_ANY, "Air &Quality...", "View air quality information"
         )
         uv_index_item = view_menu.Append(wx.ID_ANY, "&UV Index...", "View UV index information")
+        view_menu.AppendSeparator()
+        weather_chat_item = view_menu.Append(
+            wx.ID_ANY, "Weather &Assistant...\tCtrl+T", "Chat with AI weather assistant"
+        )
         menu_bar.Append(view_menu, "&View")
 
         # Tools menu
@@ -258,6 +262,7 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_MENU, lambda e: self._on_aviation(), aviation_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_air_quality(), air_quality_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_uv_index(), uv_index_item)
+        self.Bind(wx.EVT_MENU, lambda e: self._on_weather_chat(), weather_chat_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_soundpack_manager(), soundpack_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_check_updates(), self._check_updates_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_report_issue(), report_issue_item)
@@ -395,6 +400,12 @@ class MainWindow(SizedFrame):
         from .dialogs import show_uv_index_dialog
 
         show_uv_index_dialog(self, self.app)
+
+    def _on_weather_chat(self) -> None:
+        """Open Weather Assistant dialog."""
+        from .dialogs import show_weather_assistant_dialog
+
+        show_weather_assistant_dialog(self, self.app)
 
     def _on_soundpack_manager(self) -> None:
         """Open the soundpack manager dialog."""
