@@ -119,11 +119,6 @@ class RadioPlayer:
             error_msg = f"Failed to start stream: {e}"
             logger.error(error_msg)
             self._stream = None
-            # Try fallback URLs before reporting error
-            if self._fallback_urls:
-                next_url = self._fallback_urls.pop(0)
-                logger.info(f"Trying fallback URL: {next_url}")
-                return self._start_stream(next_url)
             if self._on_error:
                 self._on_error(error_msg)
             return False

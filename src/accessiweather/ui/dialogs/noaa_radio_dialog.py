@@ -193,13 +193,28 @@ class NOAARadioDialog(wx.Dialog):
 
         self._current_urls = self._prefs.reorder_urls(station.call_sign, urls)
         self._current_url_index = 0
-        self._set_status(
-            f"Connecting to {station.call_sign} (stream 1 of {len(self._current_urls)})..."
-        )
-        if self._player.play(self._current_urls[0]):
+        self._try_play_current(station.call_sign)
+
+    def _try_play_current(self, call_sign: str) -> None:
+        """Try playing the current URL index, auto-advancing on failure."""
+        total = len(self._current_urls)
+        idx = self._current_url_index
+        self._set_status(f"Connecting to {call_sign} (stream {idx + 1} of {total})...")
+        url = self._current_urls[idx]
+        if self._player.play(url):
             self._health_timer.Start(5000)
-            self._next_stream_btn.Enable(len(self._current_urls) > 1)
+            self._next_stream_btn.Enable(total > 1)
             self._prefer_btn.Enable(True)
+        elif total > 1:
+            # Auto-advance to next stream on connection failure
+            self._current_url_index = (idx + 1) % total
+            if self._current_url_index == 0:
+                # Wrapped around, all streams failed
+                self._set_status(f"All streams failed for {call_sign}")
+                return
+            self._try_play_current(call_sign)
+        else:
+            self._set_status(f"Stream failed for {call_sign}")
 
     def _on_stop(self, _event: wx.CommandEvent) -> None:
         """Handle Stop button click."""
