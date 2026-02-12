@@ -147,38 +147,40 @@ class NationwideDiscussionDialog(wx.Dialog):
         self.spc_panel.SetSizer(spc_sizer)
         self.notebook.AddPage(self.spc_panel, "SPC (Storm Prediction Center)")
 
-        # --- NHC tab ---
-        self.nhc_panel = wx.Panel(self.notebook)
-        nhc_sizer = wx.BoxSizer(wx.VERTICAL)
+        # --- NHC tab (June-November only) ---
+        self._nhc_available = self._service is not None and self._service.is_hurricane_season()
+        if self._nhc_available:
+            self.nhc_panel = wx.Panel(self.notebook)
+            nhc_sizer = wx.BoxSizer(wx.VERTICAL)
 
-        nhc_sizer.Add(
-            wx.StaticText(self.nhc_panel, label="Atlantic Tropical Weather Outlook:"),
-            0,
-            wx.LEFT | wx.TOP,
-            5,
-        )
-        self.nhc_atlantic = wx.TextCtrl(
-            self.nhc_panel,
-            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
-            name="NHC Atlantic Tropical Weather Outlook",
-        )
-        nhc_sizer.Add(self.nhc_atlantic, 1, wx.ALL | wx.EXPAND, 5)
+            nhc_sizer.Add(
+                wx.StaticText(self.nhc_panel, label="Atlantic Tropical Weather Outlook:"),
+                0,
+                wx.LEFT | wx.TOP,
+                5,
+            )
+            self.nhc_atlantic = wx.TextCtrl(
+                self.nhc_panel,
+                style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
+                name="NHC Atlantic Tropical Weather Outlook",
+            )
+            nhc_sizer.Add(self.nhc_atlantic, 1, wx.ALL | wx.EXPAND, 5)
 
-        nhc_sizer.Add(
-            wx.StaticText(self.nhc_panel, label="East Pacific Tropical Weather Outlook:"),
-            0,
-            wx.LEFT,
-            5,
-        )
-        self.nhc_east_pacific = wx.TextCtrl(
-            self.nhc_panel,
-            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
-            name="NHC East Pacific Tropical Weather Outlook",
-        )
-        nhc_sizer.Add(self.nhc_east_pacific, 1, wx.ALL | wx.EXPAND, 5)
+            nhc_sizer.Add(
+                wx.StaticText(self.nhc_panel, label="East Pacific Tropical Weather Outlook:"),
+                0,
+                wx.LEFT,
+                5,
+            )
+            self.nhc_east_pacific = wx.TextCtrl(
+                self.nhc_panel,
+                style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
+                name="NHC East Pacific Tropical Weather Outlook",
+            )
+            nhc_sizer.Add(self.nhc_east_pacific, 1, wx.ALL | wx.EXPAND, 5)
 
-        self.nhc_panel.SetSizer(nhc_sizer)
-        self.notebook.AddPage(self.nhc_panel, "NHC (National Hurricane Center)")
+            self.nhc_panel.SetSizer(nhc_sizer)
+            self.notebook.AddPage(self.nhc_panel, "NHC (National Hurricane Center)")
 
         # Store NHC page index for hiding
         self._nhc_page_index = self.notebook.GetPageCount() - 1
@@ -244,7 +246,7 @@ class NationwideDiscussionDialog(wx.Dialog):
 
     def _set_all_loading(self) -> None:
         """Set all text controls to 'Loading...' state."""
-        for ctrl in [
+        controls = [
             self.wpc_short_range,
             self.wpc_medium_range,
             self.wpc_extended,
@@ -252,11 +254,12 @@ class NationwideDiscussionDialog(wx.Dialog):
             self.spc_day1,
             self.spc_day2,
             self.spc_day3,
-            self.nhc_atlantic,
-            self.nhc_east_pacific,
             self.cpc_6_10_day,
             self.cpc_8_14_day,
-        ]:
+        ]
+        if self._nhc_available:
+            controls.extend([self.nhc_atlantic, self.nhc_east_pacific])
+        for ctrl in controls:
             ctrl.SetValue("Loading...")
 
     def _load_discussions(self, force_refresh: bool = False) -> None:
@@ -307,12 +310,13 @@ class NationwideDiscussionDialog(wx.Dialog):
         self.spc_day2.SetValue(spc.get("day2", {}).get("text", "Not available"))
         self.spc_day3.SetValue(spc.get("day3", {}).get("text", "Not available"))
 
-        # NHC
-        nhc = data.get("nhc", {})
-        self.nhc_atlantic.SetValue(nhc.get("atlantic_outlook", {}).get("text", "Not available"))
-        self.nhc_east_pacific.SetValue(
-            nhc.get("east_pacific_outlook", {}).get("text", "Not available")
-        )
+        # NHC (only populated during hurricane season)
+        if self._nhc_available:
+            nhc = data.get("nhc", {})
+            self.nhc_atlantic.SetValue(nhc.get("atlantic_outlook", {}).get("text", "Not available"))
+            self.nhc_east_pacific.SetValue(
+                nhc.get("east_pacific_outlook", {}).get("text", "Not available")
+            )
 
         # Hide tabs where no data is available
         self._hide_empty_tabs(data)
@@ -363,7 +367,7 @@ class NationwideDiscussionDialog(wx.Dialog):
         self._set_status(f"Error loading discussions: {error}")
 
         error_msg = f"Failed to load discussions: {error}"
-        for ctrl in [
+        controls = [
             self.wpc_short_range,
             self.wpc_medium_range,
             self.wpc_extended,
@@ -371,11 +375,12 @@ class NationwideDiscussionDialog(wx.Dialog):
             self.spc_day1,
             self.spc_day2,
             self.spc_day3,
-            self.nhc_atlantic,
-            self.nhc_east_pacific,
             self.cpc_6_10_day,
             self.cpc_8_14_day,
-        ]:
+        ]
+        if self._nhc_available:
+            controls.extend([self.nhc_atlantic, self.nhc_east_pacific])
+        for ctrl in controls:
             ctrl.SetValue(error_msg)
 
     def set_discussion_text(self, tab: str, field: str, text: str) -> None:
