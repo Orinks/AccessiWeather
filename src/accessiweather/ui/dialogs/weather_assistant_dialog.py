@@ -302,13 +302,45 @@ class WeatherAssistantDialog(wx.Dialog):
         try:
             from ...api_client import NoaaApiClient
             from ...geocoding import GeocodingService
+            from ...openmeteo_client import OpenMeteoApiClient
 
-            # Use NoaaApiClient directly (sync, lat/lon based) rather than
-            # the app's async WeatherClient which has a different interface
-            nws_client = NoaaApiClient()
+            class _CombinedWeatherClient:
+                """Bridges NWS (US) and Open-Meteo (global) for tool executor."""
+
+                def __init__(self):
+                    self.nws = NoaaApiClient()
+                    self.openmeteo = OpenMeteoApiClient()
+
+                def get_current_conditions(self, lat, lon, **kw):
+                    try:
+                        return self.nws.get_current_conditions(lat, lon, **kw)
+                    except Exception:
+                        return self.openmeteo.get_current_weather(lat, lon)
+
+                def get_forecast(self, lat, lon, **kw):
+                    try:
+                        return self.nws.get_forecast(lat, lon, **kw)
+                    except Exception:
+                        return self.openmeteo.get_forecast(lat, lon)
+
+                def get_hourly_forecast(self, lat, lon, **kw):
+                    try:
+                        return self.nws.get_hourly_forecast(lat, lon, **kw)
+                    except Exception:
+                        return self.openmeteo.get_hourly_forecast(lat, lon)
+
+                def get_alerts(self, lat, lon, **kw):
+                    return self.nws.get_alerts(lat, lon, **kw)
+
+                def get_discussion(self, lat, lon, **kw):
+                    return self.nws.get_discussion(lat, lon, **kw)
+
+            weather_client = _CombinedWeatherClient()
             geocoding_service = GeocodingService()
             config_manager = getattr(self.app, "config_manager", None)
-            return WeatherToolExecutor(nws_client, geocoding_service, config_manager=config_manager)
+            return WeatherToolExecutor(
+                weather_client, geocoding_service, config_manager=config_manager
+            )
         except Exception:
             logger.debug("Could not create WeatherToolExecutor", exc_info=True)
             return None
