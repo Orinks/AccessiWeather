@@ -34,95 +34,113 @@ def _pkcs8_key():
 
 class TestValidateGitHubAppConfig:
     def test_missing_app_id(self):
-        manager, _ = _make_manager(AppSettings(
-            github_app_private_key=_pkcs1_key(),
-            github_app_installation_id="123",
-        ))
+        manager, _ = _make_manager(
+            AppSettings(
+                github_app_private_key=_pkcs1_key(),
+                github_app_installation_id="123",
+            )
+        )
         ops = GitHubConfigOperations(manager)
         valid, msg = ops.validate_github_app_config()
         assert not valid
         assert "App ID" in msg
 
     def test_missing_private_key(self):
-        manager, _ = _make_manager(AppSettings(
-            github_app_id="123",
-            github_app_installation_id="456",
-        ))
+        manager, _ = _make_manager(
+            AppSettings(
+                github_app_id="123",
+                github_app_installation_id="456",
+            )
+        )
         ops = GitHubConfigOperations(manager)
         valid, msg = ops.validate_github_app_config()
         assert not valid
         assert "private key" in msg
 
     def test_missing_installation_id(self):
-        manager, _ = _make_manager(AppSettings(
-            github_app_id="123",
-            github_app_private_key=_pkcs1_key(),
-        ))
+        manager, _ = _make_manager(
+            AppSettings(
+                github_app_id="123",
+                github_app_private_key=_pkcs1_key(),
+            )
+        )
         ops = GitHubConfigOperations(manager)
         valid, msg = ops.validate_github_app_config()
         assert not valid
         assert "installation ID" in msg
 
     def test_non_numeric_app_id(self):
-        manager, _ = _make_manager(AppSettings(
-            github_app_id="abc",
-            github_app_private_key=_pkcs1_key(),
-            github_app_installation_id="456",
-        ))
+        manager, _ = _make_manager(
+            AppSettings(
+                github_app_id="abc",
+                github_app_private_key=_pkcs1_key(),
+                github_app_installation_id="456",
+            )
+        )
         ops = GitHubConfigOperations(manager)
         valid, msg = ops.validate_github_app_config()
         assert not valid
         assert "numeric" in msg
 
     def test_non_numeric_installation_id(self):
-        manager, _ = _make_manager(AppSettings(
-            github_app_id="123",
-            github_app_private_key=_pkcs1_key(),
-            github_app_installation_id="abc",
-        ))
+        manager, _ = _make_manager(
+            AppSettings(
+                github_app_id="123",
+                github_app_private_key=_pkcs1_key(),
+                github_app_installation_id="abc",
+            )
+        )
         ops = GitHubConfigOperations(manager)
         valid, msg = ops.validate_github_app_config()
         assert not valid
         assert "installation ID must be numeric" in msg
 
     def test_valid_pkcs1_key(self):
-        manager, _ = _make_manager(AppSettings(
-            github_app_id="123",
-            github_app_private_key=_pkcs1_key(),
-            github_app_installation_id="456",
-        ))
+        manager, _ = _make_manager(
+            AppSettings(
+                github_app_id="123",
+                github_app_private_key=_pkcs1_key(),
+                github_app_installation_id="456",
+            )
+        )
         ops = GitHubConfigOperations(manager)
         valid, msg = ops.validate_github_app_config()
         assert valid
         assert "valid" in msg.lower()
 
     def test_valid_pkcs8_key(self):
-        manager, _ = _make_manager(AppSettings(
-            github_app_id="123",
-            github_app_private_key=_pkcs8_key(),
-            github_app_installation_id="456",
-        ))
+        manager, _ = _make_manager(
+            AppSettings(
+                github_app_id="123",
+                github_app_private_key=_pkcs8_key(),
+                github_app_installation_id="456",
+            )
+        )
         ops = GitHubConfigOperations(manager)
         valid, msg = ops.validate_github_app_config()
         assert valid
 
     def test_missing_pem_header(self):
-        manager, _ = _make_manager(AppSettings(
-            github_app_id="123",
-            github_app_private_key=f"badheader\n{GITHUB_APP_PRIVATE_KEY_FOOTER}",
-            github_app_installation_id="456",
-        ))
+        manager, _ = _make_manager(
+            AppSettings(
+                github_app_id="123",
+                github_app_private_key=f"badheader\n{GITHUB_APP_PRIVATE_KEY_FOOTER}",
+                github_app_installation_id="456",
+            )
+        )
         ops = GitHubConfigOperations(manager)
         valid, msg = ops.validate_github_app_config()
         assert not valid
         assert "header" in msg.lower()
 
     def test_missing_pem_footer(self):
-        manager, _ = _make_manager(AppSettings(
-            github_app_id="123",
-            github_app_private_key=f"{GITHUB_APP_PRIVATE_KEY_HEADER}\nkey\nbadfooter",
-            github_app_installation_id="456",
-        ))
+        manager, _ = _make_manager(
+            AppSettings(
+                github_app_id="123",
+                github_app_private_key=f"{GITHUB_APP_PRIVATE_KEY_HEADER}\nkey\nbadfooter",
+                github_app_installation_id="456",
+            )
+        )
         ops = GitHubConfigOperations(manager)
         valid, msg = ops.validate_github_app_config()
         assert not valid
@@ -130,11 +148,13 @@ class TestValidateGitHubAppConfig:
 
     def test_mismatched_headers_footers(self):
         # PKCS1 header with PKCS8 footer
-        manager, _ = _make_manager(AppSettings(
-            github_app_id="123",
-            github_app_private_key=f"{GITHUB_APP_PRIVATE_KEY_HEADER}\nkey\n{GITHUB_APP_PKCS8_PRIVATE_KEY_FOOTER}",
-            github_app_installation_id="456",
-        ))
+        manager, _ = _make_manager(
+            AppSettings(
+                github_app_id="123",
+                github_app_private_key=f"{GITHUB_APP_PRIVATE_KEY_HEADER}\nkey\n{GITHUB_APP_PKCS8_PRIVATE_KEY_FOOTER}",
+                github_app_installation_id="456",
+            )
+        )
         ops = GitHubConfigOperations(manager)
         valid, msg = ops.validate_github_app_config()
         assert not valid
@@ -164,11 +184,13 @@ class TestSetGitHubAppConfig:
 
 class TestGetGitHubAppConfig:
     def test_returns_settings_values(self):
-        manager, _ = _make_manager(AppSettings(
-            github_app_id="111",
-            github_app_private_key="pk",
-            github_app_installation_id="222",
-        ))
+        manager, _ = _make_manager(
+            AppSettings(
+                github_app_id="111",
+                github_app_private_key="pk",
+                github_app_installation_id="222",
+            )
+        )
         ops = GitHubConfigOperations(manager)
         app_id, pk, inst_id = ops.get_github_app_config()
         assert app_id == "111"
