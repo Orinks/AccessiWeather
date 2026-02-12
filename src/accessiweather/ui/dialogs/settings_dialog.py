@@ -85,6 +85,12 @@ class SettingsDialogSimple(wx.Dialog):
         row1.Add(self._controls["update_interval"], 0)
         sizer.Add(row1, 0, wx.ALL, 5)
 
+        # Show Nationwide location (only available with Auto or NWS data source)
+        self._controls["show_nationwide"] = wx.CheckBox(
+            panel, label="Show Nationwide location (requires Auto or NWS data source)"
+        )
+        sizer.Add(self._controls["show_nationwide"], 0, wx.ALL, 5)
+
         panel.SetSizer(sizer)
         self.notebook.AddPage(panel, "General")
 
@@ -879,6 +885,16 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["update_interval"].SetValue(
                 getattr(settings, "update_interval_minutes", 10)
             )
+            self._controls["show_nationwide"].SetValue(
+                getattr(self.config_manager.get_settings(), "show_nationwide_location", True)
+            )
+            # Disable checkbox if data source isn't NWS-compatible
+            data_source = getattr(settings, "data_source", "auto")
+            if data_source not in ("auto", "nws"):
+                self._controls["show_nationwide"].SetValue(False)
+                self._controls["show_nationwide"].Enable(False)
+            else:
+                self._controls["show_nationwide"].Enable(True)
 
             # Display tab
             temp_unit = getattr(settings, "temperature_unit", "both")
@@ -1069,9 +1085,14 @@ class SettingsDialogSimple(wx.Dialog):
             ]
             style_values = ["brief", "standard", "detailed"]
 
+            # Update nationwide visibility
+            show_nationwide = self._controls["show_nationwide"].GetValue()
+            # Nationwide visibility is persisted via settings_dict below
+
             settings_dict = {
                 # General
                 "update_interval_minutes": self._controls["update_interval"].GetValue(),
+                "show_nationwide_location": show_nationwide,
                 # Display
                 "temperature_unit": temp_values[self._controls["temp_unit"].GetSelection()],
                 "show_dewpoint": self._controls["show_dewpoint"].GetValue(),
