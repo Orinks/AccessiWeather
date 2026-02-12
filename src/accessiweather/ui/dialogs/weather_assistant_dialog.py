@@ -455,6 +455,7 @@ class WeatherAssistantDialog(wx.Dialog):
                             "meta-llama/llama-3.3-70b-instruct:free",
                         }
                         if effective_model in free_routers:
+                            effective_model = TOOL_CAPABLE_MODELS[0]
                             use_tool_fallback = True
                         logger.info(
                             "Tools enabled: %d tools, model: %s",
