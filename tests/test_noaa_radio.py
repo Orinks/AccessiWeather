@@ -109,7 +109,7 @@ class TestRadioPlayer:
     def test_play_without_sound_lib(self):
         on_error = MagicMock()
         player = RadioPlayer(on_error=on_error)
-        with patch("accessiweather.noaa_radio.player.SOUND_LIB_AVAILABLE", False):
+        with patch("accessiweather.noaa_radio.player._ensure_sound_lib", return_value=False):
             result = player.play("http://example.com/stream")
         assert result is False
         on_error.assert_called_once()

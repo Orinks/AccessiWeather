@@ -5,19 +5,29 @@ from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
-# Try to import sound_lib for URL streaming
-SOUND_LIB_AVAILABLE = False
-_sound_lib_output = None
+# Lazy initialization of sound_lib to avoid import-time failures.
+# The BASS audio library requires a valid audio device and may fail
+# if initialized before the application is fully set up.
+_sound_lib_initialized = False
+_sound_lib_available = False
 
-try:
-    from sound_lib import output
 
-    _sound_lib_output = output.Output()
-    SOUND_LIB_AVAILABLE = True
-except ImportError:
-    pass
-except Exception as e:
-    logger.debug(f"sound_lib initialization failed: {e}")
+def _ensure_sound_lib() -> bool:
+    """Lazily initialize sound_lib on first use. Returns True if available."""
+    global _sound_lib_initialized, _sound_lib_available
+    if _sound_lib_initialized:
+        return _sound_lib_available
+    _sound_lib_initialized = True
+    try:
+        from sound_lib import output
+
+        output.Output()
+        _sound_lib_available = True
+    except ImportError:
+        logger.warning("sound_lib is not installed")
+    except Exception as e:
+        logger.warning(f"sound_lib initialization failed: {e}")
+    return _sound_lib_available
 
 
 class RadioPlayer:
@@ -70,8 +80,8 @@ class RadioPlayer:
             True if playback started successfully, False otherwise.
 
         """
-        if not SOUND_LIB_AVAILABLE:
-            error_msg = "sound_lib is not available; cannot stream audio"
+        if not _ensure_sound_lib():
+            error_msg = "Audio playback is not available. Please ensure sound_lib is installed."
             logger.error(error_msg)
             if self._on_error:
                 self._on_error(error_msg)
