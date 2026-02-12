@@ -450,7 +450,6 @@ class WeatherAssistantDialog(wx.Dialog):
                         # fallback so rate-limit retry logic can kick in
                         # for free models
                         free_routers = {
-                            "openrouter/auto",
                             "openrouter/free",
                             "meta-llama/llama-3.3-70b-instruct:free",
                         }
