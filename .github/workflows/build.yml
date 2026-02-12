@@ -42,7 +42,7 @@ jobs:
         id: check
         run: |
           VERSION=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
-          
+
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             # Tagged release
             echo "is_nightly=false" >> $GITHUB_OUTPUT
@@ -54,7 +54,7 @@ jobs:
             echo "is_nightly=true" >> $GITHUB_OUTPUT
             echo "tag=nightly-$(date -u +%Y%m%d)" >> $GITHUB_OUTPUT
             echo "version=$VERSION" >> $GITHUB_OUTPUT
-            
+
             LAST_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -1)
             if [ -z "$LAST_TAG" ] || ! git diff --quiet "$LAST_TAG"..HEAD -- src/ pyproject.toml installer/; then
               echo "should_build=true" >> $GITHUB_OUTPUT
@@ -184,7 +184,7 @@ jobs:
         run: |
           mkdir -p assets
           TIMESTAMP=$(date -u +%Y%m%d)
-          
+
           # Rename assets based on release type
           for f in dist/*.exe dist/*.dmg dist/*.zip; do
             [ -f "$f" ] || continue
@@ -203,10 +203,10 @@ jobs:
               esac
             fi
           done
-          
+
           # Generate checksums
           cd assets && sha256sum * > checksums.txt 2>/dev/null || true
-          
+
           # Generate release notes
           cd ..
           if [ "$IS_NIGHTLY" = "true" ]; then
@@ -224,14 +224,14 @@ jobs:
               echo "Initial nightly build" > notes.md
             fi
           else
-            # Extract from CHANGELOG.md
-            python3 -c "
-          import re
-          with open('CHANGELOG.md') as f:
-              content = f.read()
-          match = re.search(r'## \[${VERSION}\].*?\n(.*?)(?=## \[|$)', content, re.DOTALL)
-          print(match.group(1).strip() if match else 'See CHANGELOG.md')
-          " > notes.md
+            # For stable releases, use git-cliff to generate user-facing changelog
+            PREV_TAG=$(git tag --list "v[0-9]*" --sort=-version:refname | grep -v "v${VERSION}" | head -1)
+            npx git-cliff@latest ${PREV_TAG:+"$PREV_TAG"..HEAD} --tag "v${VERSION}" \
+              --ignore-tags "nightly-.*" --strip header --strip all 2>/dev/null > notes.md || true
+            # Fallback if git-cliff fails or produces empty output
+            if [ ! -s notes.md ]; then
+              echo "See [CHANGELOG.md](https://github.com/Orinks/AccessiWeather/blob/main/CHANGELOG.md) for full release notes." > notes.md
+            fi
           fi
 
       - name: Create release
@@ -242,14 +242,20 @@ jobs:
           TAG: ${{ needs.prepare.outputs.tag }}
           VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          gh release delete "$TAG" -y --cleanup-tag 2>/dev/null || true
-
           if [ "$IS_NIGHTLY" = "true" ]; then
+            # Nightly: always recreate
+            gh release delete "$TAG" -y --cleanup-tag 2>/dev/null || true
             gh release create "$TAG" assets/* --notes-file notes.md \
               --title "Nightly $(date -u +%Y-%m-%d)" --prerelease --target dev
           else
-            gh release create "$TAG" assets/* --notes-file notes.md \
-              --title "AccessiWeather v${VERSION}"
+            # Stable: upload assets to existing release, or create new one
+            if gh release view "$TAG" &>/dev/null; then
+              # Release exists (created manually) — just upload assets
+              gh release upload "$TAG" assets/* --clobber
+            else
+              gh release create "$TAG" assets/* --notes-file notes.md \
+                --title "AccessiWeather v${VERSION}"
+            fi
           fi
 
       - name: Trigger pages update
