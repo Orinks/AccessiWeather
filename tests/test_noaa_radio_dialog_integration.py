@@ -130,6 +130,7 @@ def _make_dialog(module):
     dlg._volume_slider = MagicMock()
     dlg._volume_slider.GetValue.return_value = 100
     dlg._status_text = MagicMock()
+    dlg._health_timer = MagicMock()
     return dlg
 
 
@@ -139,11 +140,11 @@ class TestFullPlaybackFlow:
     def test_play_stop_cycle(self, noaa_dialog_module):
         """Test full play then stop cycle updates all UI elements."""
         dlg = _make_dialog(noaa_dialog_module)
-        dlg._url_provider.get_stream_url.return_value = "https://example.com/stream"
+        dlg._url_provider.get_stream_urls.return_value = ["https://example.com/stream"]
 
         # Play
         dlg._on_play(MagicMock())
-        dlg._player.play.assert_called_once_with("https://example.com/stream")
+        dlg._player.play.assert_called_once_with("https://example.com/stream", fallback_urls=[])
 
         # Simulate player callback
         dlg._on_playing()
@@ -162,7 +163,7 @@ class TestFullPlaybackFlow:
     def test_play_error_recovery(self, noaa_dialog_module):
         """Test error during play allows retry."""
         dlg = _make_dialog(noaa_dialog_module)
-        dlg._url_provider.get_stream_url.return_value = "https://example.com/stream"
+        dlg._url_provider.get_stream_urls.return_value = ["https://example.com/stream"]
 
         # Play triggers error callback
         dlg._on_play(MagicMock())
@@ -197,11 +198,11 @@ class TestStationSelection:
         """Test selecting and playing a different station."""
         dlg = _make_dialog(noaa_dialog_module)
         dlg._station_choice.GetSelection.return_value = 1
-        dlg._url_provider.get_stream_url.return_value = "https://example.com/wxj76"
+        dlg._url_provider.get_stream_urls.return_value = ["https://example.com/wxj76"]
 
         dlg._on_play(MagicMock())
-        dlg._url_provider.get_stream_url.assert_called_with("WXJ76")
-        dlg._player.play.assert_called_with("https://example.com/wxj76")
+        dlg._url_provider.get_stream_urls.assert_called_with("WXJ76")
+        dlg._player.play.assert_called_with("https://example.com/wxj76", fallback_urls=[])
 
     def test_playing_callback_shows_selected_station_name(self, noaa_dialog_module):
         """Test that playing callback shows the selected station call sign."""
@@ -283,11 +284,11 @@ class TestErrorStates:
     def test_no_stream_url_available(self, noaa_dialog_module):
         """Test play with no stream URL shows error in status."""
         dlg = _make_dialog(noaa_dialog_module)
-        dlg._url_provider.get_stream_url.return_value = None
+        dlg._url_provider.get_stream_urls.return_value = []
         dlg._on_play(MagicMock())
         dlg._player.play.assert_not_called()
         status = dlg._status_text.SetLabel.call_args[0][0]
-        assert "No stream URL" in status
+        assert "No stream" in status
 
     def test_no_station_selected(self, noaa_dialog_module):
         """Test play with no station selected shows error."""

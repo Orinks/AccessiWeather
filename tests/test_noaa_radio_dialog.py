@@ -144,6 +144,7 @@ def _make_dialog_instance(module):
     dlg._volume_slider = MagicMock()
     dlg._volume_slider.GetValue.return_value = 100
     dlg._status_text = MagicMock()
+    dlg._health_timer = MagicMock()
     return dlg
 
 
@@ -199,14 +200,14 @@ class TestPlaybackControls:
     def test_on_play_calls_player(self, noaa_dialog_module):
         """Test Play triggers player.play with stream URL."""
         dlg = _make_dialog_instance(noaa_dialog_module)
-        dlg._url_provider.get_stream_url.return_value = "https://example.com/stream"
+        dlg._url_provider.get_stream_urls.return_value = ["https://example.com/stream"]
         dlg._on_play(MagicMock())
-        dlg._player.play.assert_called_once_with("https://example.com/stream")
+        dlg._player.play.assert_called_once_with("https://example.com/stream", fallback_urls=[])
 
     def test_on_play_no_url_sets_status(self, noaa_dialog_module):
         """Test Play with no URL available sets status."""
         dlg = _make_dialog_instance(noaa_dialog_module)
-        dlg._url_provider.get_stream_url.return_value = None
+        dlg._url_provider.get_stream_urls.return_value = []
         dlg._on_play(MagicMock())
         dlg._player.play.assert_not_called()
         dlg._status_text.SetLabel.assert_called()

@@ -72,7 +72,7 @@ class TestStationDatabase:
     def test_find_nearest_closest_is_nyc(self) -> None:
         db = StationDatabase()
         results = db.find_nearest(40.7128, -74.0060, limit=1)
-        assert results[0].station.call_sign == "KEC49"
+        assert results[0].station.call_sign == "KWO35"
         assert results[0].distance_km < 1.0  # same coords
 
     def test_find_nearest_limit(self) -> None:

@@ -35,8 +35,12 @@ def _haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 # Coordinates are transmitter-area city coordinates.
 # ---------------------------------------------------------------------------
 _STATIONS: list[Station] = [
+    # Alaska
+    Station("KEC96", 162.550, "Anchorage, AK", 61.2181, -149.9003, "AK"),
     # Alabama
     Station("KEC61", 162.550, "Mobile, AL", 30.6954, -88.0399, "AL"),
+    # Arkansas
+    Station("KZZ99", 162.550, "Little Rock, AR", 34.7465, -92.2896, "AR"),
     # Arizona
     Station("KEC94", 162.550, "Phoenix, AZ", 33.4484, -112.0740, "AZ"),
     Station("WWG42", 162.500, "Globe, AZ", 33.3942, -110.7865, "AZ"),
@@ -49,6 +53,8 @@ _STATIONS: list[Station] = [
     Station("WWF64", 162.450, "Monterey Marine, CA", 36.6002, -121.8947, "CA"),
     # Colorado
     Station("KWN54", 162.425, "Durango, CO", 37.2753, -107.8801, "CO"),
+    # Delaware
+    Station("KIH30", 162.475, "Lewes, DE", 38.7746, -75.1393, "DE"),
     # Connecticut
     Station("WXJ42", 162.400, "Meriden, CT", 41.5382, -72.8070, "CT"),
     # Florida
@@ -63,6 +69,8 @@ _STATIONS: list[Station] = [
     Station("KEC80", 162.550, "Atlanta, GA", 33.7490, -84.3880, "GA"),
     Station("WWH23", 162.425, "Buchanan, GA", 33.8037, -85.1885, "GA"),
     Station("WXM32", 162.400, "Columbus, GA", 32.4610, -84.9877, "GA"),
+    # Idaho
+    Station("WWG53", 162.550, "Boise, ID", 43.6150, -116.2023, "ID"),
     # Hawaii
     Station("WWG75", 162.400, "Maui, HI", 20.7984, -156.3319, "HI"),
     # Iowa
@@ -105,6 +113,8 @@ _STATIONS: list[Station] = [
     Station("KEC73", 162.550, "Bourne, MA", 41.7415, -70.5989, "MA"),
     Station("WNG574", 162.425, "Gloucester, MA", 42.6159, -70.6620, "MA"),
     Station("WXL93", 162.550, "Worcester, MA", 42.2626, -71.8023, "MA"),
+    # Montana
+    Station("KEC59", 162.550, "Great Falls, MT", 47.5063, -111.3008, "MT"),
     # Michigan
     Station("KEC63", 162.550, "Detroit, MI", 42.3314, -83.0458, "MI"),
     Station("KIH29", 162.475, "Flint, MI", 43.0125, -83.6875, "MI"),
@@ -143,6 +153,10 @@ _STATIONS: list[Station] = [
     # Nevada
     Station("WWG20", 162.450, "Fernley, NV", 39.6080, -119.2518, "NV"),
     Station("WXK58", 162.550, "Reno, NV", 39.5296, -119.8138, "NV"),
+    # New Hampshire
+    Station("WXL29", 162.400, "Concord, NH", 43.2081, -71.5376, "NH"),
+    # New Jersey
+    Station("KWO72", 162.475, "Atlantic City, NJ", 39.3643, -74.4229, "NJ"),
     # New Mexico
     Station("WXJ37", 162.475, "Farmington, NM", 36.7281, -108.2187, "NM"),
     # New York
@@ -160,6 +174,8 @@ _STATIONS: list[Station] = [
     Station("WNG698", 162.500, "Grafton, OH", 41.1726, -82.0546, "OH"),
     Station("WWG57", 162.450, "Mansfield, OH", 40.7589, -82.5155, "OH"),
     Station("WXL51", 162.500, "Toledo, OH", 41.6528, -83.5379, "OH"),
+    # Oregon
+    Station("KIG71", 162.550, "Portland, OR", 45.5152, -122.6784, "OR"),
     # Oklahoma
     Station("WXK85", 162.400, "Oklahoma City, OK", 35.4676, -97.5164, "OK"),
     Station("WXK86", 162.550, "Lawton, OK", 34.6036, -98.3959, "OK"),
@@ -171,10 +187,14 @@ _STATIONS: list[Station] = [
     Station("WXL40", 162.550, "Harrisburg, PA", 40.2732, -76.8867, "PA"),
     Station("WNG704", 162.425, "Hibernia Park, PA", 40.0521, -75.8166, "PA"),
     Station("WXL43", 162.550, "Wilkes-Barre, PA", 41.2459, -75.8813, "PA"),
+    # Rhode Island
+    Station("WXJ24", 162.400, "Providence, RI", 41.8240, -71.4128, "RI"),
     # South Carolina
     Station("WXJ21", 162.550, "Greer, SC", 34.9388, -82.2271, "SC"),
     Station("KEC85", 162.400, "Jasper County, SC", 32.4316, -81.0112, "SC"),
     Station("KHC27", 162.425, "Rock Hill, SC", 34.9249, -81.0251, "SC"),
+    # South Dakota
+    Station("WXL82", 162.400, "Sioux Falls, SD", 43.5446, -96.7311, "SD"),
     # Tennessee
     Station("WXK47", 162.550, "Bristol, TN", 36.5951, -82.1887, "TN"),
     Station("WXK49", 162.475, "Memphis, TN", 35.1495, -90.0490, "TN"),
@@ -196,6 +216,10 @@ _STATIONS: list[Station] = [
     Station("KWN34", 162.450, "Palestine, TX", 31.7621, -95.6308, "TX"),
     Station("WXK36", 162.475, "Tyler, TX", 32.3513, -95.3011, "TX"),
     Station("WXK35", 162.475, "Waco, TX", 31.5493, -97.1467, "TX"),
+    # Utah
+    Station("KEC86", 162.550, "Salt Lake City, UT", 40.7608, -111.8910, "UT"),
+    # Vermont
+    Station("WXJ43", 162.550, "Burlington, VT", 44.4759, -73.2121, "VT"),
     # Virginia
     Station("KHB36", 162.550, "Manassas, VA", 38.7509, -77.4753, "VA"),
     Station("WXL60", 162.475, "Roanoke, VA", 37.2710, -79.9414, "VA"),

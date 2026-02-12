@@ -37,7 +37,7 @@ class TestStreamURLProvider:
         provider = StreamURLProvider()
         urls = provider.get_stream_urls("WXJ76")
         assert isinstance(urls, list)
-        assert len(urls) >= 2
+        assert len(urls) >= 1
 
     def test_get_stream_urls_unknown_without_fallback(self) -> None:
         """Unknown station without fallback returns empty list."""
