@@ -218,8 +218,9 @@ class MainWindow(SizedFrame):
             wx.ID_ANY, "Air &Quality...", "View air quality information"
         )
         uv_index_item = view_menu.Append(wx.ID_ANY, "&UV Index...", "View UV index information")
+        self._noaa_radio_id = wx.NewIdRef()
         noaa_radio_item = view_menu.Append(
-            wx.ID_ANY, "NOAA Weather &Radio...\tCtrl+R", "Listen to NOAA Weather Radio"
+            self._noaa_radio_id, "NOAA Weather &Radio...\tCtrl+R", "Listen to NOAA Weather Radio"
         )
         view_menu.AppendSeparator()
         weather_chat_item = view_menu.Append(
@@ -593,11 +594,20 @@ class MainWindow(SizedFrame):
         event.Skip()  # Allow normal minimize behavior
 
     def _setup_escape_accelerator(self) -> None:
-        """Set up accelerator table for Escape key to minimize to tray."""
-        # Create a unique ID for the escape action
+        """
+        Set up accelerator table for Escape key and menu shortcuts.
+
+        wxPython's SetAcceleratorTable replaces the implicit menu accelerators,
+        so we must include all Ctrl+ shortcuts here alongside Escape.
+        """
         self._escape_id = wx.NewIdRef()
-        # Create accelerator table with just Escape key
-        accel_tbl = wx.AcceleratorTable([(wx.ACCEL_NORMAL, wx.WXK_ESCAPE, self._escape_id)])
+        entries = [
+            (wx.ACCEL_NORMAL, wx.WXK_ESCAPE, self._escape_id),
+        ]
+        # Re-register menu accelerators that would otherwise be lost
+        if hasattr(self, "_noaa_radio_id"):
+            entries.append((wx.ACCEL_CTRL, ord("R"), self._noaa_radio_id))
+        accel_tbl = wx.AcceleratorTable(entries)
         self.SetAcceleratorTable(accel_tbl)
         # Bind the escape action
         self.Bind(wx.EVT_MENU, self._on_escape_pressed, id=self._escape_id)
