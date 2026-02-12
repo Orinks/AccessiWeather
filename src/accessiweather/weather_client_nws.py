@@ -1168,7 +1168,9 @@ def parse_nws_forecast(data: dict) -> Forecast:
     """Parse NWS forecast payload into a Forecast model."""
     periods = []
 
-    for period_data in data.get("properties", {}).get("periods", []):
+    raw_periods = data.get("properties", {}).get("periods", [])
+
+    for period_data in raw_periods:
         temperature, temperature_unit = _extract_temperature(
             period_data.get("temperature"), period_data.get("temperatureUnit")
         )
@@ -1204,6 +1206,19 @@ def parse_nws_forecast(data: dict) -> Forecast:
             end_time=end_time,
         )
         periods.append(period)
+
+    # Pair daytime/nighttime periods to populate high/low temperatures.
+    # NWS returns alternating day/night periods (isDaytime flag). Set the
+    # nighttime temperature as temperature_low on the preceding daytime period.
+    for i, period_data in enumerate(raw_periods):
+        if period_data.get("isDaytime") and i + 1 < len(raw_periods):
+            next_data = raw_periods[i + 1]
+            if not next_data.get("isDaytime"):
+                night_temp, _ = _extract_temperature(
+                    next_data.get("temperature"), next_data.get("temperatureUnit")
+                )
+                if night_temp is not None:
+                    periods[i].temperature_low = night_temp
 
     return Forecast(periods=periods, generated_at=datetime.now())
 
