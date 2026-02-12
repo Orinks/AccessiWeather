@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AccessiWeather Downloads</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .download-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .download-section:hover {
+            transform: translateY(-5px);
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #4a5568;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .stable {
+            border-left: 5px solid #48bb78;
+        }
+
+        .dev {
+            border-left: 5px solid #ed8936;
+        }
+
+        .version-info {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .version-info h3 {
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .version-info p {
+            color: #4a5568;
+            margin: 5px 0;
+        }
+
+        .download-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
+        }
+
+        .download-btn.secondary {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            box-shadow: 0 4px 15px rgba(74, 85, 104, 0.4);
+        }
+
+        .download-btn.secondary:hover {
+            box-shadow: 0 6px 20px rgba(74, 85, 104, 0.6);
+        }
+
+        .download-btn.macos {
+            background: linear-gradient(135deg, #1d1d1f 0%, #3a3a3c 100%);
+            box-shadow: 0 4px 15px rgba(29, 29, 31, 0.4);
+        }
+
+        .download-btn.macos:hover {
+            box-shadow: 0 6px 20px rgba(29, 29, 31, 0.6);
+        }
+
+        .download-btn.macos.secondary {
+            background: linear-gradient(135deg, #636366 0%, #48484a 100%);
+            box-shadow: 0 4px 15px rgba(99, 99, 102, 0.4);
+        }
+
+        .download-btn.macos.secondary:hover {
+            box-shadow: 0 6px 20px rgba(99, 99, 102, 0.6);
+        }
+
+        .download-btn svg {
+            margin-right: 8px;
+        }
+
+        .platform-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .platform-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #4a5568;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .platform-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .platform-buttons {
+                flex-direction: column;
+            }
+        }
+
+        .info-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .info-card {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-card h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .info-card p {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            margin-top: 40px;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .download-buttons {
+                flex-direction: column;
+            }
+
+            .download-btn {
+                justify-content: center;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .badge.stable {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge.dev {
+            background: #fed7cc;
+            color: #9c4221;
+        }
+
+        .loading {
+            opacity: 0.6;
+            font-style: italic;
+        }
+
+        .release-notes {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .release-notes h4 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .release-notes-content {
+            color: #4a5568;
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+
+        .release-notes-content ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .release-notes-content li {
+            margin-bottom: 5px;
+        }
+
+        .commit-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .commit-list li {
+            background: #f7fafc;
+            border-left: 3px solid #667eea;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 0 4px 4px 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+        }
+
+        .commit-list li:before {
+            content: "•";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .download-count {
+            font-size: 0.8rem;
+            opacity: 0.85;
+            font-weight: normal;
+        }
+
+        .download-stats {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .download-stats svg {
+            width: 16px;
+            height: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>AccessiWeather</h1>
+            <p>Accessible weather application with international support and screen reader compatibility</p>
+        </header>
+
+        <!-- Stable Release Section -->
+         <section class="download-section stable" id="main-section" data-has-release="true">
+             <h2 class="section-title">
+                 Stable Release
+                 <span class="badge stable">Recommended</span>
+             </h2>
+
+             <div class="version-info">
+                 <h3>Version <span id="main-version">0.4.3</span></h3>
+                 <p><strong>Released:</strong> <span id="main-date">2026-02-11 22:43 UTC</span></p>
+                 <p><strong>Commit:</strong> <span id="main-commit">main</span></p>
+                 <p><strong>Downloads:</strong> <span id="main-total-downloads">4</span> total</p>
+             </div>
+
+             <div class="download-buttons" id="main-downloads">
+                 <div class="platform-group">
+                     <span class="platform-label">Windows</span>
+                     <div class="platform-buttons">
+                         <a href="https://github.com/Orinks/AccessiWeather/releases/download/v0.4.3/AccessiWeather-0.4.3-windows-setup.exe" id="main-installer" class="download-btn" aria-label="Download Windows Installer, 1 downloads">
+                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                 <path d="M3,12V6.75L9,5.43V11.91L3,12M20,3V11.75L10,11.9V5.21L20,3M3,13L9,13.09V19.9L3,18.75V13M20,13.25V22L10,20.09V13.1L20,13.25Z" />
+                             </svg>
+                             Installer (.msi) <span class="download-count">(1)</span>
+                         </a>
+                         <a href="https://github.com/Orinks/AccessiWeather/releases/download/v0.4.3/AccessiWeather-0.4.3-windows-portable.zip" id="main-portable" class="download-btn secondary" aria-label="Download Windows Portable, 1 downloads">
+                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                 <path d="M12,17.5L10.25,16H13.75L12,17.5M10,4.5C10,3.67 10.67,3 11.5,3H12.5C13.33,3 14,3.67 14,4.5V5.5H10V4.5M4,7V6H20V7H19V19A2,2 0 0,1 17,21H7A2,2 0 0,1 5,19V7H4Z" />
+                             </svg>
+                             Portable (.zip) <span class="download-count">(1)</span>
+                         </a>
+                     </div>
+                 </div>
+                 <div class="platform-group">
+                     <span class="platform-label">macOS</span>
+                     <div class="platform-buttons">
+                         <a href="https://github.com/Orinks/AccessiWeather/releases/download/v0.4.3/AccessiWeather-0.4.3-macOS.dmg" id="main-macos-installer" class="download-btn macos" aria-label="Download macOS Installer, 1 downloads">
+                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                 <path d="M18.71,19.5C17.88,20.74 17,21.95 15.66,21.97C14.32,22 13.89,21.18 12.37,21.18C10.84,21.18 10.37,21.95 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.09,16.67C20.06,16.74 19.67,18.11 18.71,19.5M13,3.5C13.73,2.67 14.94,2.04 15.94,2C16.07,3.17 15.6,4.35 14.9,5.19C14.21,6.04 13.07,6.7 11.95,6.61C11.8,5.46 12.36,4.26 13,3.5Z" />
+                             </svg>
+                             Installer (.dmg) <span class="download-count">(1)</span>
+                         </a>
+                     </div>
+                 </div>
+             </div>
+
+            <!-- Release Notes Section -->
+            <div class="release-notes">
+                <h4>📋 Release Notes</h4>
+                <div class="release-notes-content">
+                    <h2 dir="auto">What's New in AccessiWeather 0.4.3</h2>
+<h3 dir="auto">Added</h3>
+<ul dir="auto">
+<li><strong>wxPython UI migration</strong> — Complete rebuild of the user interface using wxPython for improved accessibility and native feel</li>
+<li><strong>System tray minimize</strong> — Minimize to system tray with linked settings</li>
+<li><strong>Force Start dialog</strong> — Recover from stale lock files without manual intervention</li>
+<li><strong>AI model browser</strong> — Browse and select AI models with provider and moderation filters</li>
+<li><strong>OpenRouter Free Router</strong> — Added as default AI model option (free, no API key cost)</li>
+<li><strong>Regenerate explanations in-place</strong> — No need to reopen the explanation dialog</li>
+<li><strong>Token count and cost display</strong> — See token usage and cost in AI discussion dialogs</li>
+<li><strong>AFD update and severe risk level notifications</strong> — Get notified of forecast discussion updates and severe weather risk changes</li>
+<li><strong>Information Priority Ordering System</strong> — Smarter ordering of weather information</li>
+<li><strong>Sound improvements</strong> — Critical alert sound added to default soundpack, comprehensive alert categories in soundpack manager</li>
+<li><strong>Forecast enhancements</strong> — Added low temperature and hourly metric fields</li>
+<li><strong>Slogan</strong> — "Weather that speaks to you"</li>
+</ul>
+<h3 dir="auto">Changed</h3>
+<ul dir="auto">
+<li><strong>Replaced Nominatim with Open-Meteo geocoding</strong> — More reliable location search</li>
+<li><strong>Optimized startup</strong> — Lazy imports for services and keyring for faster load times</li>
+<li><strong>AI explanations enabled by default</strong> — When an API key is present</li>
+<li><strong>Migrated fully to httpx</strong> — Removed requests library dependency</li>
+<li><strong>Removed timezonefinder dependency</strong> — Lighter install</li>
+</ul>
+<h3 dir="auto">Fixed</h3>
+<ul dir="auto">
+<li><strong>Screen reader accessibility</strong> — Data source attribution in current conditions, improved alert dialog with text controls, better location search input labeling</li>
+<li><strong>Location switching</strong> — Cache refresh, debounce, and accessibility improvements</li>
+<li><strong>Visual Crossing</strong> — Improved data completeness, correct pressure unit conversion</li>
+<li><strong>Pressure and temperature display precision</strong> — More accurate readings</li>
+<li><strong>Sound playback</strong> — Prevent overlapping previews, cross-platform sound_lib support</li>
+<li><strong>AI model handling</strong> — Prevent crashes when cancelling generation, handle None model correctly</li>
+<li><strong>Alert improvements</strong> — Simplified precision dropdown, renamed label to "Alert Area:", improved location scoping</li>
+<li><strong>Lock file cleanup</strong> — Proper cleanup on process termination</li>
+<li><strong>AI explanations</strong> — Prevent markdown and preamble in plain-text output</li>
+<li><strong>Update service</strong> — Use MessageBox for feedback in settings, complete simple update implementation</li>
+</ul>
+<h3 dir="auto">Security</h3>
+<ul dir="auto">
+<li>Fixed Zip Slip vulnerability in update extraction</li>
+<li>Added SHA-256 integrity verification for auto-update downloads</li>
+<li>Removed shell=True from subprocess calls</li>
+<li>Enforced SSL certificate verification</li>
+</ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Development Build Section -->
+        <section class="download-section dev" id="dev-section" data-has-release="true">
+            <h2 class="section-title">
+                Development Build
+                <span class="badge dev">Latest Features</span>
+            </h2>
+
+            <div class="version-info">
+                <h3>Version <span id="dev-version">nightly-20260210</span></h3>
+                <p><strong>Built:</strong> <span id="dev-date">2026-02-10 04:25 UTC</span></p>
+                <p><strong>Commit:</strong> <span id="dev-commit">dev</span></p>
+                <p><strong>Downloads:</strong> <span id="dev-total-downloads">8</span> total</p>
+            </div>
+
+            <div class="download-buttons" id="dev-downloads">
+                <div class="platform-group">
+                    <span class="platform-label">Windows</span>
+                    <div class="platform-buttons">
+                        <a href="#" id="dev-installer" class="download-btn" aria-label="Download Windows Installer (Dev), 2 downloads">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M3,12V6.75L9,5.43V11.91L3,12M20,3V11.75L10,11.9V5.21L20,3M3,13L9,13.09V19.9L3,18.75V13M20,13.25V22L10,20.09V13.1L20,13.25Z" />
+                            </svg>
+                            Installer (.exe) <span class="download-count">(2)</span>
+                        </a>
+                        <a href="#" id="dev-portable" class="download-btn secondary" aria-label="Download Windows Portable (Dev), 6 downloads">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12,17.5L10.25,16H13.75L12,17.5M10,4.5C10,3.67 10.67,3 11.5,3H12.5C13.33,3 14,3.67 14,4.5V5.5H10V4.5M4,7V6H20V7H19V19A2,2 0 0,1 17,21H7A2,2 0 0,1 5,19V7H4Z" />
+                            </svg>
+                            Portable (.zip) <span class="download-count">(6)</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="platform-group">
+                    <span class="platform-label">macOS</span>
+                    <div class="platform-buttons">
+                        <a href="#" id="dev-macos-installer" class="download-btn macos" aria-label="Download macOS Installer (Dev), 0 downloads">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M18.71,19.5C17.88,20.74 17,21.95 15.66,21.97C14.32,22 13.89,21.18 12.37,21.18C10.84,21.18 10.37,21.95 9.1,22C7.79,22.05 6.8,20.68 5.96,19.47C4.25,17 2.94,12.45 4.7,9.39C5.57,7.87 7.13,6.91 8.82,6.88C10.1,6.86 11.32,7.75 12.11,7.75C12.89,7.75 14.37,6.68 15.92,6.84C16.57,6.87 18.39,7.1 19.56,8.82C19.47,8.88 17.39,10.1 17.41,12.63C17.44,15.65 20.06,16.66 20.09,16.67C20.06,16.74 19.67,18.11 18.71,19.5M13,3.5C13.73,2.67 14.94,2.04 15.94,2C16.07,3.17 15.6,4.35 14.9,5.19C14.21,6.04 13.07,6.7 11.95,6.61C11.8,5.46 12.36,4.26 13,3.5Z" />
+                            </svg>
+                            Installer (.dmg) <span class="download-count">(0)</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pre-release Notes Section -->
+            <div class="release-notes">
+                <h4>📋 Release Notes</h4>
+                <div class="release-notes-content">
+                    <ul dir="auto">
+<li><a class="commit-link" data-hovercard-type="commit" data-hovercard-url="https://github.com/Orinks/AccessiWeather/commit/6ace3763fa4b922867e7f27e5ea928f074db4a03/hovercard" href="https://github.com/Orinks/AccessiWeather/commit/6ace3763fa4b922867e7f27e5ea928f074db4a03"><tt>6ace376</tt></a> fix: deduplicate nightly changelog with --first-parent flag</li>
+<li><a class="commit-link" data-hovercard-type="commit" data-hovercard-url="https://github.com/Orinks/AccessiWeather/commit/365d005fb24b4e1420a68d9695977d55c4b7860f/hovercard" href="https://github.com/Orinks/AccessiWeather/commit/365d005fb24b4e1420a68d9695977d55c4b7860f"><tt>365d005</tt></a> feat: add forecast low temp and hourly metric fields (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="3918031218" data-permission-text="Title is private" data-url="https://github.com/Orinks/AccessiWeather/issues/283" data-hovercard-type="pull_request" data-hovercard-url="/Orinks/AccessiWeather/pull/283/hovercard" href="https://github.com/Orinks/AccessiWeather/pull/283">#283</a>)</li>
+<li><a class="commit-link" data-hovercard-type="commit" data-hovercard-url="https://github.com/Orinks/AccessiWeather/commit/f733959496618b5370114705737c7e5567257a5d/hovercard" href="https://github.com/Orinks/AccessiWeather/commit/f733959496618b5370114705737c7e5567257a5d"><tt>f733959</tt></a> fix: improve Visual Crossing data completeness (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="3917881286" data-permission-text="Title is private" data-url="https://github.com/Orinks/AccessiWeather/issues/282" data-hovercard-type="pull_request" data-hovercard-url="/Orinks/AccessiWeather/pull/282/hovercard" href="https://github.com/Orinks/AccessiWeather/pull/282">#282</a>)</li>
+<li><a class="commit-link" data-hovercard-type="commit" data-hovercard-url="https://github.com/Orinks/AccessiWeather/commit/4f993e319798d1770ee8e7878041b3e94eb8b3b7/hovercard" href="https://github.com/Orinks/AccessiWeather/commit/4f993e319798d1770ee8e7878041b3e94eb8b3b7"><tt>4f993e3</tt></a> fix: correct Visual Crossing pressure unit conversion (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="3917831800" data-permission-text="Title is private" data-url="https://github.com/Orinks/AccessiWeather/issues/281" data-hovercard-type="pull_request" data-hovercard-url="/Orinks/AccessiWeather/pull/281/hovercard" href="https://github.com/Orinks/AccessiWeather/pull/281">#281</a>)</li>
+<li><a class="commit-link" data-hovercard-type="commit" data-hovercard-url="https://github.com/Orinks/AccessiWeather/commit/5f4181062685b1dee66ff8bd4167c0245c6f385a/hovercard" href="https://github.com/Orinks/AccessiWeather/commit/5f4181062685b1dee66ff8bd4167c0245c6f385a"><tt>5f41810</tt></a> fix: improve pressure and temperature display precision (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="3917799692" data-permission-text="Title is private" data-url="https://github.com/Orinks/AccessiWeather/issues/280" data-hovercard-type="pull_request" data-hovercard-url="/Orinks/AccessiWeather/pull/280/hovercard" href="https://github.com/Orinks/AccessiWeather/pull/280">#280</a>)</li>
+<li><a class="commit-link" data-hovercard-type="commit" data-hovercard-url="https://github.com/Orinks/AccessiWeather/commit/a115c3e5b11af6d7e5e85eac6cd29b7281acdc51/hovercard" href="https://github.com/Orinks/AccessiWeather/commit/a115c3e5b11af6d7e5e85eac6cd29b7281acdc51"><tt>a115c3e</tt></a> fix: portable update extraction and restart (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="3916864528" data-permission-text="Title is private" data-url="https://github.com/Orinks/AccessiWeather/issues/278" data-hovercard-type="pull_request" data-hovercard-url="/Orinks/AccessiWeather/pull/278/hovercard" href="https://github.com/Orinks/AccessiWeather/pull/278">#278</a>)</li>
+<li><a class="commit-link" data-hovercard-type="commit" data-hovercard-url="https://github.com/Orinks/AccessiWeather/commit/ae9bebe56204756f3559aa6f44befc92565e448e/hovercard" href="https://github.com/Orinks/AccessiWeather/commit/ae9bebe56204756f3559aa6f44befc92565e448e"><tt>ae9bebe</tt></a> fix: use BUILD_TAG for nightly update version comparison (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="3914414562" data-permission-text="Title is private" data-url="https://github.com/Orinks/AccessiWeather/issues/277" data-hovercard-type="pull_request" data-hovercard-url="/Orinks/AccessiWeather/pull/277/hovercard" href="https://github.com/Orinks/AccessiWeather/pull/277">#277</a>)</li>
+</ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Information Section -->
+        <section class="info-section">
+            <h2 class="section-title">Download Information</h2>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>🛡️ Installer Version</h3>
+                    <p>Full installation package (.msi for Windows, .dmg for macOS). Includes system integration.
+                        Recommended for most users.</p>
+                </div>
+                <div class="info-card">
+                    <h3>📦 Portable Version</h3>
+                    <p>Standalone package that doesn't require installation. Available for Windows only. Perfect for USB
+                        drives or temporary use.</p>
+                </div>
+                <div class="info-card">
+                    <h3>🔄 Stable vs Development</h3>
+                    <p>Stable releases are thoroughly tested and recommended for daily use. Development builds contain
+                        the latest features but may have bugs.</p>
+                </div>
+                <div class="info-card">
+                    <h3>💻 System Requirements</h3>
+                    <p>Windows 10+ or macOS 11+ (64-bit). Requires internet connection for weather data. Screen reader
+                        compatible for accessibility.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="info-section">
+            <h2 class="section-title">Key Features</h2>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>🔊 Screen Reader Friendly</h3>
+                    <p>Designed with accessibility in mind, fully compatible with NVDA, JAWS, and other screen readers.
+                        Complete keyboard navigation support.</p>
+                </div>
+                <div class="info-card">
+                    <h3>🌍 International Weather Data</h3>
+                    <p>Multiple weather sources: NOAA/NWS for US locations with alerts, Open-Meteo for worldwide
+                        coverage, or automatic selection.</p>
+                </div>
+                <div class="info-card">
+                    <h3>⚡ Real-time Alerts & Notifications</h3>
+                    <p>Desktop notifications for severe weather alerts (US locations). System tray integration with
+                        customizable behavior.</p>
+                </div>
+                <div class="info-card">
+                    <h3>🎯 Smart Location Management</h3>
+                    <p>Save multiple locations, search by address or coordinates. Automatic weather provider selection
+                        based on location.</p>
+                </div>
+                <div class="info-card">
+                    <h3>🌡️ Flexible Display Options</h3>
+                    <p>Choose temperature units (Fahrenheit, Celsius, or both). Customizable taskbar icons and update
+                        intervals.</p>
+                </div>
+                <div class="info-card">
+                    <h3>💼 Portable & Installed Modes</h3>
+                    <p>Run as portable application or install system-wide. Automatic detection with appropriate
+                        configuration storage.</p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <p>
+                Last updated: <span id="last-updated">2026-02-11 23:03 UTC</span> |
+                <a href="https://github.com/Orinks/AccessiWeather" target="_blank">View on GitHub</a> |
+                <a href="https://github.com/Orinks/AccessiWeather/issues" target="_blank">Report Issues</a> |
+                <a href="https://github.com/Orinks/AccessiWeather/blob/main/docs/user_manual.md" target="_blank">User
+                    Manual</a> |
+                <a href="https://github.com/Orinks/AccessiWeather/blob/main/README.md" target="_blank">Documentation</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Build info configuration - values will be substituted by GitHub Actions
+         const buildInfo = {
+             main: {
+                 version: '0.4.3',
+                 date: '2026-02-11 22:43 UTC',
+                 commit: 'main',
+                 macosInstallerUrl: 'https://github.com/Orinks/AccessiWeather/releases/download/v0.4.3/AccessiWeather-0.4.3-macOS.dmg'
+             },
+             dev: {
+                 version: 'nightly-20260210',
+                 date: '2026-02-10 04:25 UTC',
+                 commit: 'dev',
+                 releaseUrl: 'https://github.com/Orinks/AccessiWeather/releases/tag/nightly-20260210',
+                 installerUrl: 'https://github.com/Orinks/AccessiWeather/releases/download/nightly-20260210/AccessiWeather-nightly-20260210-windows-setup.exe',
+                 portableUrl: 'https://github.com/Orinks/AccessiWeather/releases/download/nightly-20260210/AccessiWeather-nightly-20260210-windows-portable.zip',
+                 macosInstallerUrl: 'https://github.com/Orinks/AccessiWeather/releases/download/nightly-20260210/AccessiWeather-nightly-20260210-macOS.dmg'
+             },
+             lastUpdated: '2026-02-11 23:03 UTC'
+         };
+
+        // Update download links and version info
+        function updateDownloadInfo() {
+            console.log('Updating download info with:', buildInfo);
+
+            // Check if elements exist
+            const mainDateEl = document.getElementById('main-date');
+            const devDateEl = document.getElementById('dev-date');
+            const mainCommitEl = document.getElementById('main-commit');
+            const devCommitEl = document.getElementById('dev-commit');
+            const lastUpdatedEl = document.getElementById('last-updated');
+
+            console.log('DOM elements found:', {
+                mainDate: mainDateEl,
+                devDate: devDateEl,
+                mainCommit: mainCommitEl,
+                devCommit: devCommitEl,
+                lastUpdated: lastUpdatedEl
+            });
+
+            // Main branch
+            document.getElementById('main-version').textContent = buildInfo.main.version;
+            if (mainDateEl) {
+                mainDateEl.textContent = buildInfo.main.date;
+                console.log('Set main date to:', buildInfo.main.date);
+            }
+            if (mainCommitEl) {
+                mainCommitEl.textContent = buildInfo.main.commit ? buildInfo.main.commit.substring(0, 7) : 'N/A';
+            }
+
+            // Dev branch
+            const devInstallerLink = buildInfo.dev.installerUrl || buildInfo.dev.releaseUrl || '#';
+            const devPortableLink = buildInfo.dev.portableUrl || buildInfo.dev.releaseUrl || devInstallerLink;
+            const devMacosInstallerLink = buildInfo.dev.macosInstallerUrl || buildInfo.dev.releaseUrl || '#';
+            document.getElementById('dev-installer').href = devInstallerLink;
+            document.getElementById('dev-portable').href = devPortableLink;
+            document.getElementById('dev-macos-installer').href = devMacosInstallerLink;
+            document.getElementById('dev-version').textContent = buildInfo.dev.version;
+            if (devDateEl) {
+                devDateEl.textContent = buildInfo.dev.date;
+                console.log('Set dev date to:', buildInfo.dev.date);
+            }
+            if (devCommitEl) {
+                const devCommitValue = buildInfo.dev.commit && buildInfo.dev.commit.length >= 7
+                    ? buildInfo.dev.commit.substring(0, 7)
+                    : (buildInfo.dev.commit || 'N/A');
+                devCommitEl.textContent = devCommitValue;
+            }
+
+            // Last updated
+            if (lastUpdatedEl) {
+                lastUpdatedEl.textContent = buildInfo.lastUpdated;
+            }
+
+            console.log('Page updated successfully');
+        }
+
+
+
+        // Initialize the page immediately with template-substituted values
+         console.log('Starting page initialization...');
+         console.log('Build info from template substitution:', buildInfo);
+
+         // Check if template substitution worked (values don't contain {{}} anymore)
+         const hasTemplateValues = buildInfo.main.version.includes('{{') || buildInfo.dev.version.includes('{{');
+
+         if (hasTemplateValues) {
+             console.log('⚠ Template values not substituted, using fallback defaults');
+             // Fallback to default values if template substitution didn't work
+             buildInfo.main.version = 'Loading...';
+             buildInfo.main.date = 'Loading...';
+             buildInfo.dev.version = '0.9.3';
+             buildInfo.dev.date = 'Loading...';
+             buildInfo.lastUpdated = new Date().toISOString();
+         } else {
+             console.log('✓ Template values successfully substituted from GitHub Actions workflow');
+         }
+
+         // Update the page with template-substituted values
+          updateDownloadInfo();
+
+          // Hide download buttons if no release exists
+          function hideDownloadsIfNoRelease() {
+              const mainSection = document.getElementById('main-section');
+              const devSection = document.getElementById('dev-section');
+              const mainDownloads = document.getElementById('main-downloads');
+              const devDownloads = document.getElementById('dev-downloads');
+
+              if (mainSection && mainSection.dataset.hasRelease === 'false' && mainDownloads) {
+                  mainDownloads.style.display = 'none';
+                  const p = document.createElement('p');
+                  p.style.color = '#4a5568';
+                  p.textContent = 'No release available. Check GitHub for latest updates.';
+                  mainSection.querySelector('.version-info').parentElement.insertBefore(p, mainDownloads);
+              }
+
+              if (devSection && devSection.dataset.hasRelease === 'false' && devDownloads) {
+                  devDownloads.style.display = 'none';
+                  const p = document.createElement('p');
+                  p.style.color = '#4a5568';
+                  p.textContent = 'No pre-release available. Latest development builds are available from the main branch.';
+                  devSection.querySelector('.version-info').parentElement.insertBefore(p, devDownloads);
+              }
+          }
+
+          hideDownloadsIfNoRelease();
+         </script>
+</body>
+
+</html>

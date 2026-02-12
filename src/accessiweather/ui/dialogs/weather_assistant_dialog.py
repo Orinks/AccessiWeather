@@ -352,6 +352,9 @@ class WeatherAssistantDialog(wx.Dialog):
 
                 effective_model = model if model else "meta-llama/llama-3.3-70b-instruct:free"
 
+                # Model known for reliable function calling on free tier
+                TOOL_CAPABLE_MODEL = "qwen/qwen3-coder:free"
+
                 extra_kwargs: dict = {}
                 if tool_executor is not None:
                     # Get last user message for tool selection
@@ -360,7 +363,20 @@ class WeatherAssistantDialog(wx.Dialog):
                         if msg.get("role") == "user":
                             user_msg = msg.get("content", "")
                             break
-                    extra_kwargs["tools"] = get_tools_for_message(user_msg)
+                    tools = get_tools_for_message(user_msg)
+                    if tools:
+                        extra_kwargs["tools"] = tools
+                        # When tools are present, use a model known for
+                        # reliable function calling if user hasn't picked
+                        # a specific model (free router doesn't guarantee
+                        # tool support)
+                        free_routers = {
+                            "openrouter/auto",
+                            "openrouter/free",
+                            "meta-llama/llama-3.3-70b-instruct:free",
+                        }
+                        if effective_model in free_routers:
+                            effective_model = TOOL_CAPABLE_MODEL
 
                 max_tool_iterations = 5
                 for _iteration in range(max_tool_iterations + 1):
