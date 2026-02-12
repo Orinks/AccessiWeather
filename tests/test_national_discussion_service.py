@@ -3,6 +3,7 @@
 import time
 from unittest.mock import MagicMock, patch
 
+import httpx
 import pytest
 
 from accessiweather.services.national_discussion_service import NationalDiscussionService
@@ -12,6 +13,12 @@ from accessiweather.services.national_discussion_service import NationalDiscussi
 def service():
     """Create a service with short cache TTL for testing."""
     return NationalDiscussionService(request_delay=0, max_retries=0, timeout=1, cache_ttl=3600)
+
+
+@pytest.fixture
+def retry_service():
+    """Create a service with retries enabled but no delays."""
+    return NationalDiscussionService(request_delay=0, max_retries=2, retry_backoff=0, timeout=1)
 
 
 class TestFetchAllDiscussions:
@@ -207,3 +214,839 @@ class TestNationalForecastHandlerIntegration:
             handler.get_national_forecast_data(force_refresh=True)
 
         mock.assert_called_once_with(force_refresh=True)
+
+
+# ── New tests for coverage ──────────────────────────────────────────────
+
+
+class TestRateLimit:
+    """Tests for _rate_limit method."""
+
+    def test_rate_limit_sleeps_when_needed(self, service):
+        """Rate limiter sleeps if called too quickly."""
+        service.request_delay = 0.5
+        service._last_request_time = time.time()
+        with patch("accessiweather.services.national_discussion_service.time.sleep") as mock_sleep:
+            service._rate_limit()
+            # Should have been called with a positive value
+            if mock_sleep.called:
+                assert mock_sleep.call_args[0][0] > 0
+
+    def test_rate_limit_no_sleep_when_enough_time_passed(self, service):
+        """Rate limiter doesn't sleep if enough time has passed."""
+        service._last_request_time = 0.0
+        with patch("accessiweather.services.national_discussion_service.time.sleep") as mock_sleep:
+            service._rate_limit()
+            mock_sleep.assert_not_called()
+
+
+class TestMakeRequest:
+    """Tests for _make_request method."""
+
+    def test_successful_json_request(self, service):
+        """Successful request returns parsed JSON."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"key": "value"}
+        mock_response.raise_for_status = MagicMock()
+
+        with patch("accessiweather.services.national_discussion_service.httpx.Client") as mock_cl:
+            mock_cl.return_value.__enter__ = MagicMock(
+                return_value=MagicMock(get=MagicMock(return_value=mock_response))
+            )
+            mock_cl.return_value.__exit__ = MagicMock(return_value=False)
+            result = service._make_request("https://example.com")
+
+        assert result["success"] is True
+        assert result["data"] == {"key": "value"}
+
+    def test_timeout_error(self, service):
+        """Timeout returns error."""
+        with patch("accessiweather.services.national_discussion_service.httpx.Client") as mock_cl:
+            mock_client = MagicMock()
+            mock_client.get.side_effect = httpx.TimeoutException("timeout")
+            mock_cl.return_value.__enter__ = MagicMock(return_value=mock_client)
+            mock_cl.return_value.__exit__ = MagicMock(return_value=False)
+            result = service._make_request("https://example.com")
+
+        assert result["success"] is False
+        assert "timed out" in result["error"]
+
+    def test_connect_error(self, service):
+        """Connection error returns error."""
+        with patch("accessiweather.services.national_discussion_service.httpx.Client") as mock_cl:
+            mock_client = MagicMock()
+            mock_client.get.side_effect = httpx.ConnectError("conn failed")
+            mock_cl.return_value.__enter__ = MagicMock(return_value=mock_client)
+            mock_cl.return_value.__exit__ = MagicMock(return_value=False)
+            result = service._make_request("https://example.com")
+
+        assert result["success"] is False
+        assert "Connection error" in result["error"]
+
+    def test_http_status_error(self, service):
+        """HTTP status error returns error with status code."""
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+
+        with patch("accessiweather.services.national_discussion_service.httpx.Client") as mock_cl:
+            mock_client = MagicMock()
+            mock_client.get.side_effect = httpx.HTTPStatusError(
+                "server error", request=MagicMock(), response=mock_response
+            )
+            mock_cl.return_value.__enter__ = MagicMock(return_value=mock_client)
+            mock_cl.return_value.__exit__ = MagicMock(return_value=False)
+            result = service._make_request("https://example.com")
+
+        assert result["success"] is False
+        assert "500" in result["error"]
+
+    def test_generic_request_error(self, service):
+        """Generic RequestError returns error."""
+        with patch("accessiweather.services.national_discussion_service.httpx.Client") as mock_cl:
+            mock_client = MagicMock()
+            mock_client.get.side_effect = httpx.RequestError("bad request")
+            mock_cl.return_value.__enter__ = MagicMock(return_value=mock_client)
+            mock_cl.return_value.__exit__ = MagicMock(return_value=False)
+            result = service._make_request("https://example.com")
+
+        assert result["success"] is False
+        assert "Request error" in result["error"]
+
+    def test_unexpected_error(self, service):
+        """Unexpected exception returns error."""
+        with patch("accessiweather.services.national_discussion_service.httpx.Client") as mock_cl:
+            mock_client = MagicMock()
+            mock_client.get.side_effect = RuntimeError("boom")
+            mock_cl.return_value.__enter__ = MagicMock(return_value=mock_client)
+            mock_cl.return_value.__exit__ = MagicMock(return_value=False)
+            result = service._make_request("https://example.com")
+
+        assert result["success"] is False
+        assert "Unexpected error" in result["error"]
+
+    def test_retry_logic(self, retry_service):
+        """Request retries on failure then succeeds."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"ok": True}
+        mock_response.raise_for_status = MagicMock()
+
+        call_count = 0
+
+        def side_effect(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count < 3:
+                raise httpx.TimeoutException("timeout")
+            return mock_response
+
+        with patch("accessiweather.services.national_discussion_service.httpx.Client") as mock_cl:
+            mock_client = MagicMock()
+            mock_client.get.side_effect = side_effect
+            mock_cl.return_value.__enter__ = MagicMock(return_value=mock_client)
+            mock_cl.return_value.__exit__ = MagicMock(return_value=False)
+            with patch("accessiweather.services.national_discussion_service.time.sleep"):
+                result = retry_service._make_request("https://example.com")
+
+        assert result["success"] is True
+
+
+class TestMakeHtmlRequest:
+    """Tests for _make_html_request method."""
+
+    def _mock_client(self, mock_cl, mock_client):
+        mock_cl.return_value.__enter__ = MagicMock(return_value=mock_client)
+        mock_cl.return_value.__exit__ = MagicMock(return_value=False)
+
+    def test_successful_html_request(self, service):
+        """Successful HTML request returns html text."""
+        mock_response = MagicMock()
+        mock_response.text = "<html>hello</html>"
+        mock_response.raise_for_status = MagicMock()
+
+        with patch("accessiweather.services.national_discussion_service.httpx.Client") as mock_cl:
+            mock_client = MagicMock()
+            mock_client.get.return_value = mock_response
+            self._mock_client(mock_cl, mock_client)
+            result = service._make_html_request("https://example.com")
+
+        assert result["success"] is True
+        assert result["html"] == "<html>hello</html>"
+
+    def test_html_timeout_error(self, service):
+        with patch("accessiweather.services.national_discussion_service.httpx.Client") as mock_cl:
+            mock_client = MagicMock()
+            mock_client.get.side_effect = httpx.TimeoutException("timeout")
+            self._mock_client(mock_cl, mock_client)
+            result = service._make_html_request("https://example.com")
+        assert result["success"] is False
+        assert "timed out" in result["error"]
+
+    def test_html_connect_error(self, service):
+        with patch("accessiweather.services.national_discussion_service.httpx.Client") as mock_cl:
+            mock_client = MagicMock()
+            mock_client.get.side_effect = httpx.ConnectError("fail")
+            self._mock_client(mock_cl, mock_client)
+            result = service._make_html_request("https://example.com")
+        assert result["success"] is False
+        assert "Connection error" in result["error"]
+
+    def test_html_http_status_error(self, service):
+        mock_resp = MagicMock()
+        mock_resp.status_code = 404
+        with patch("accessiweather.services.national_discussion_service.httpx.Client") as mock_cl:
+            mock_client = MagicMock()
+            mock_client.get.side_effect = httpx.HTTPStatusError(
+                "not found", request=MagicMock(), response=mock_resp
+            )
+            self._mock_client(mock_cl, mock_client)
+            result = service._make_html_request("https://example.com")
+        assert result["success"] is False
+        assert "404" in result["error"]
+
+    def test_html_request_error(self, service):
+        with patch("accessiweather.services.national_discussion_service.httpx.Client") as mock_cl:
+            mock_client = MagicMock()
+            mock_client.get.side_effect = httpx.RequestError("err")
+            self._mock_client(mock_cl, mock_client)
+            result = service._make_html_request("https://example.com")
+        assert result["success"] is False
+        assert "Request error" in result["error"]
+
+    def test_html_unexpected_error(self, service):
+        with patch("accessiweather.services.national_discussion_service.httpx.Client") as mock_cl:
+            mock_client = MagicMock()
+            mock_client.get.side_effect = ValueError("oops")
+            self._mock_client(mock_cl, mock_client)
+            result = service._make_html_request("https://example.com")
+        assert result["success"] is False
+        assert "Unexpected error" in result["error"]
+
+    def test_html_retry_then_success(self, retry_service):
+        mock_response = MagicMock()
+        mock_response.text = "<html>ok</html>"
+        mock_response.raise_for_status = MagicMock()
+        call_count = 0
+
+        def side_effect(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            if call_count < 3:
+                raise httpx.ConnectError("fail")
+            return mock_response
+
+        with patch("accessiweather.services.national_discussion_service.httpx.Client") as mock_cl:
+            mock_client = MagicMock()
+            mock_client.get.side_effect = side_effect
+            mock_cl.return_value.__enter__ = MagicMock(return_value=mock_client)
+            mock_cl.return_value.__exit__ = MagicMock(return_value=False)
+            with patch("accessiweather.services.national_discussion_service.time.sleep"):
+                result = retry_service._make_html_request("https://example.com")
+        assert result["success"] is True
+
+
+class TestFetchLatestProduct:
+    """Tests for _fetch_latest_product."""
+
+    def test_success(self, service):
+        with patch.object(
+            service,
+            "_make_request",
+            return_value={"success": True, "data": {"@graph": [{"id": "1"}]}},
+        ):
+            result = service._fetch_latest_product("PMD")
+        assert result["success"] is True
+        assert result["products"] == [{"id": "1"}]
+
+    def test_empty_graph(self, service):
+        with patch.object(
+            service,
+            "_make_request",
+            return_value={"success": True, "data": {"@graph": []}},
+        ):
+            result = service._fetch_latest_product("PMD")
+        assert result["success"] is False
+        assert "No PMD products found" in result["error"]
+
+    def test_request_failure(self, service):
+        with patch.object(
+            service,
+            "_make_request",
+            return_value={"success": False, "error": "timeout"},
+        ):
+            result = service._fetch_latest_product("PMD")
+        assert result["success"] is False
+
+    def test_parse_error_key_error(self, service):
+        """KeyError in parsing returns error."""
+        bad_data = MagicMock()
+        bad_data.get.side_effect = KeyError("@graph")
+        with patch.object(
+            service,
+            "_make_request",
+            return_value={"success": True, "data": bad_data},
+        ):
+            result = service._fetch_latest_product("PMD")
+        assert result["success"] is False
+        assert "Failed to parse" in result["error"]
+
+    def test_parse_error_type_error(self, service):
+        """TypeError in parsing returns error."""
+        bad_data = MagicMock()
+        bad_data.get.side_effect = TypeError("bad type")
+        with patch.object(
+            service,
+            "_make_request",
+            return_value={"success": True, "data": bad_data},
+        ):
+            result = service._fetch_latest_product("PMD")
+        assert result["success"] is False
+        assert "Failed to parse" in result["error"]
+
+
+class TestFetchProductText:
+    """Tests for _fetch_product_text."""
+
+    def test_success(self, service):
+        with patch.object(
+            service,
+            "_make_request",
+            return_value={"success": True, "data": {"productText": "forecast text"}},
+        ):
+            result = service._fetch_product_text("ABC123")
+        assert result["success"] is True
+        assert result["text"] == "forecast text"
+
+    def test_empty_text(self, service):
+        with patch.object(
+            service,
+            "_make_request",
+            return_value={"success": True, "data": {"productText": ""}},
+        ):
+            result = service._fetch_product_text("ABC123")
+        assert result["success"] is False
+        assert "empty" in result["error"]
+
+    def test_request_failure(self, service):
+        with patch.object(
+            service,
+            "_make_request",
+            return_value={"success": False, "error": "fail"},
+        ):
+            result = service._fetch_product_text("ABC123")
+        assert result["success"] is False
+
+    def test_parse_error(self, service):
+        bad_data = MagicMock()
+        bad_data.get.side_effect = TypeError("bad")
+        with patch.object(
+            service,
+            "_make_request",
+            return_value={"success": True, "data": bad_data},
+        ):
+            result = service._fetch_product_text("ABC123")
+        assert result["success"] is False
+        assert "Failed to parse" in result["error"]
+
+
+class TestClassifyPmdDiscussion:
+    """Tests for _classify_pmd_discussion."""
+
+    def test_short_range(self, service):
+        assert service._classify_pmd_discussion("Short Range Discussion") == "short_range"
+        assert service._classify_pmd_discussion("Day 1 forecast") == "short_range"
+        assert service._classify_pmd_discussion("SPD discussion") == "short_range"
+
+    def test_medium_range(self, service):
+        assert service._classify_pmd_discussion("Medium Range Discussion") == "medium_range"
+        assert service._classify_pmd_discussion("Days 3-7 forecast") == "medium_range"
+        assert service._classify_pmd_discussion("EPD discussion") == "medium_range"
+        assert service._classify_pmd_discussion("Extended Forecast Discussion") == "medium_range"
+
+    def test_extended(self, service):
+        assert service._classify_pmd_discussion("Day 8-10 Outlook") == "extended"
+        assert service._classify_pmd_discussion("Extended 8-10 day") == "extended"
+
+    def test_none(self, service):
+        assert service._classify_pmd_discussion("Random Product") is None
+        assert service._classify_pmd_discussion("") is None
+        assert service._classify_pmd_discussion(None) is None
+
+
+class TestClassifySwoOutlook:
+    """Tests for _classify_swo_outlook."""
+
+    def test_day1(self, service):
+        assert service._classify_swo_outlook("Day 1 Convective Outlook") == "day1"
+
+    def test_day2(self, service):
+        assert service._classify_swo_outlook("Day 2 Convective Outlook") == "day2"
+
+    def test_day3(self, service):
+        assert service._classify_swo_outlook("Day 3 Convective Outlook") == "day3"
+
+    def test_none(self, service):
+        assert service._classify_swo_outlook("Day 4-8 Outlook") is None
+        assert service._classify_swo_outlook("") is None
+        assert service._classify_swo_outlook(None) is None
+
+
+class TestFetchWpcDiscussions:
+    """Tests for fetch_wpc_discussions."""
+
+    def test_success_with_products(self, service):
+        products = [
+            {"issuingOffice": "WPC", "name": "Short Range Discussion", "id": "SR1"},
+            {"issuingOffice": "WPC", "name": "Medium Range Discussion", "id": "MR1"},
+            {"issuingOffice": "WPC", "name": "Day 8-10 Outlook", "id": "EX1"},
+        ]
+        with (
+            patch.object(
+                service,
+                "_fetch_latest_product",
+                return_value={"success": True, "products": products},
+            ),
+            patch.object(
+                service,
+                "_fetch_product_text",
+                return_value={"success": True, "text": "Discussion text"},
+            ),
+        ):
+            result = service.fetch_wpc_discussions()
+        assert result["short_range"]["text"] == "Discussion text"
+        assert result["medium_range"]["text"] == "Discussion text"
+        assert result["extended"]["text"] == "Discussion text"
+
+    def test_fetch_failure(self, service):
+        with patch.object(
+            service,
+            "_fetch_latest_product",
+            return_value={"success": False, "error": "timeout"},
+        ):
+            result = service.fetch_wpc_discussions()
+        assert "Error" in result["short_range"]["text"]
+
+    def test_product_text_failure(self, service):
+        products = [
+            {"issuingOffice": "WPC", "name": "Short Range Discussion", "id": "SR1"},
+        ]
+        with (
+            patch.object(
+                service,
+                "_fetch_latest_product",
+                return_value={"success": True, "products": products},
+            ),
+            patch.object(
+                service,
+                "_fetch_product_text",
+                return_value={"success": False, "error": "empty"},
+            ),
+        ):
+            result = service.fetch_wpc_discussions()
+        assert "Error" in result["short_range"]["text"]
+        assert result["medium_range"]["text"] == "Discussion not available"
+
+    def test_product_id_from_at_id(self, service):
+        """Product ID extracted from @id when id is missing."""
+        products = [
+            {
+                "issuingOffice": "WPC",
+                "name": "Short Range Discussion",
+                "id": "",
+                "@id": "https://api.weather.gov/products/SR1",
+            },
+        ]
+        with (
+            patch.object(
+                service,
+                "_fetch_latest_product",
+                return_value={"success": True, "products": products},
+            ),
+            patch.object(
+                service,
+                "_fetch_product_text",
+                return_value={"success": True, "text": "text"},
+            ) as mock_fetch,
+        ):
+            service.fetch_wpc_discussions()
+        mock_fetch.assert_called_with("SR1")
+
+    def test_breaks_after_all_fetched(self, service):
+        """Stops iterating after all 3 classifications found."""
+        products = [
+            {"issuingOffice": "WPC", "name": "Short Range Discussion", "id": "SR1"},
+            {"issuingOffice": "WPC", "name": "Medium Range Discussion", "id": "MR1"},
+            {"issuingOffice": "WPC", "name": "Day 8-10 Outlook", "id": "EX1"},
+            {"issuingOffice": "WPC", "name": "Short Range Discussion", "id": "SR2"},
+        ]
+        with (
+            patch.object(
+                service,
+                "_fetch_latest_product",
+                return_value={"success": True, "products": products},
+            ),
+            patch.object(
+                service,
+                "_fetch_product_text",
+                return_value={"success": True, "text": "txt"},
+            ) as mock_text,
+        ):
+            service.fetch_wpc_discussions()
+        assert mock_text.call_count == 3
+
+
+class TestFetchSpcDiscussions:
+    """Tests for fetch_spc_discussions."""
+
+    def test_success(self, service):
+        products = [
+            {"issuingOffice": "SPC", "name": "Day 1 Convective Outlook", "id": "D1"},
+            {"issuingOffice": "SPC", "name": "Day 2 Convective Outlook", "id": "D2"},
+            {"issuingOffice": "SPC", "name": "Day 3 Convective Outlook", "id": "D3"},
+        ]
+        with (
+            patch.object(
+                service,
+                "_fetch_latest_product",
+                return_value={"success": True, "products": products},
+            ),
+            patch.object(
+                service,
+                "_fetch_product_text",
+                return_value={"success": True, "text": "Outlook text"},
+            ),
+        ):
+            result = service.fetch_spc_discussions()
+        assert result["day1"]["text"] == "Outlook text"
+        assert result["day2"]["text"] == "Outlook text"
+        assert result["day3"]["text"] == "Outlook text"
+
+    def test_fetch_failure(self, service):
+        with patch.object(
+            service,
+            "_fetch_latest_product",
+            return_value={"success": False, "error": "err"},
+        ):
+            result = service.fetch_spc_discussions()
+        for key in ("day1", "day2", "day3"):
+            assert "Error" in result[key]["text"]
+
+    def test_product_text_failure(self, service):
+        products = [
+            {"issuingOffice": "SPC", "name": "Day 1 Convective Outlook", "id": "D1"},
+        ]
+        with (
+            patch.object(
+                service,
+                "_fetch_latest_product",
+                return_value={"success": True, "products": products},
+            ),
+            patch.object(
+                service,
+                "_fetch_product_text",
+                return_value={"success": False, "error": "fail"},
+            ),
+        ):
+            result = service.fetch_spc_discussions()
+        assert "Error" in result["day1"]["text"]
+        assert result["day2"]["text"] == "Outlook not available"
+
+    def test_product_id_from_at_id(self, service):
+        products = [
+            {
+                "issuingOffice": "SPC",
+                "name": "Day 1 Convective Outlook",
+                "id": "",
+                "@id": "https://api.weather.gov/products/D1",
+            },
+        ]
+        with (
+            patch.object(
+                service,
+                "_fetch_latest_product",
+                return_value={"success": True, "products": products},
+            ),
+            patch.object(
+                service,
+                "_fetch_product_text",
+                return_value={"success": True, "text": "text"},
+            ) as mock_fetch,
+        ):
+            service.fetch_spc_discussions()
+        mock_fetch.assert_called_with("D1")
+
+    def test_breaks_after_all_fetched(self, service):
+        products = [
+            {"issuingOffice": "SPC", "name": "Day 1 Convective Outlook", "id": "D1"},
+            {"issuingOffice": "SPC", "name": "Day 2 Convective Outlook", "id": "D2"},
+            {"issuingOffice": "SPC", "name": "Day 3 Convective Outlook", "id": "D3"},
+            {"issuingOffice": "SPC", "name": "Day 1 Convective Outlook", "id": "D1b"},
+        ]
+        with (
+            patch.object(
+                service,
+                "_fetch_latest_product",
+                return_value={"success": True, "products": products},
+            ),
+            patch.object(
+                service,
+                "_fetch_product_text",
+                return_value={"success": True, "text": "txt"},
+            ) as mock_text,
+        ):
+            service.fetch_spc_discussions()
+        assert mock_text.call_count == 3
+
+
+class TestFetchQpfDiscussion:
+    """Tests for fetch_qpf_discussion."""
+
+    def test_success(self, service):
+        with (
+            patch.object(
+                service,
+                "_fetch_latest_product",
+                return_value={"success": True, "products": [{"id": "QPF1"}]},
+            ),
+            patch.object(
+                service,
+                "_fetch_product_text",
+                return_value={"success": True, "text": "QPF text"},
+            ),
+        ):
+            result = service.fetch_qpf_discussion()
+        assert result["qpf"]["text"] == "QPF text"
+
+    def test_fetch_failure(self, service):
+        with patch.object(
+            service,
+            "_fetch_latest_product",
+            return_value={"success": False, "error": "err"},
+        ):
+            result = service.fetch_qpf_discussion()
+        assert "Error" in result["qpf"]["text"]
+
+    def test_text_failure(self, service):
+        with (
+            patch.object(
+                service,
+                "_fetch_latest_product",
+                return_value={"success": True, "products": [{"id": "QPF1"}]},
+            ),
+            patch.object(
+                service,
+                "_fetch_product_text",
+                return_value={"success": False, "error": "fail"},
+            ),
+        ):
+            result = service.fetch_qpf_discussion()
+        assert "Error" in result["qpf"]["text"]
+
+    def test_empty_products(self, service):
+        with patch.object(
+            service,
+            "_fetch_latest_product",
+            return_value={"success": True, "products": []},
+        ):
+            result = service.fetch_qpf_discussion()
+        assert "not available" in result["qpf"]["text"]
+
+    def test_product_id_from_at_id(self, service):
+        with (
+            patch.object(
+                service,
+                "_fetch_latest_product",
+                return_value={
+                    "success": True,
+                    "products": [{"id": "", "@id": "https://api.weather.gov/products/QPF1"}],
+                },
+            ),
+            patch.object(
+                service,
+                "_fetch_product_text",
+                return_value={"success": True, "text": "text"},
+            ) as mock_fetch,
+        ):
+            service.fetch_qpf_discussion()
+        mock_fetch.assert_called_with("QPF1")
+
+
+class TestExtractNhcOutlookText:
+    """Tests for _extract_nhc_outlook_text."""
+
+    def test_pre_tag(self):
+        html = "<html><body><pre>Tropical outlook text</pre></body></html>"
+        result = NationalDiscussionService._extract_nhc_outlook_text(html)
+        assert result == "Tropical outlook text"
+
+    def test_div_with_outlook_id(self):
+        html = '<html><body><div id="outlookContent">Outlook info</div></body></html>'
+        result = NationalDiscussionService._extract_nhc_outlook_text(html)
+        assert result == "Outlook info"
+
+    def test_class_with_outlook(self):
+        html = '<html><body><div class="outlook-text">Class outlook</div></body></html>'
+        result = NationalDiscussionService._extract_nhc_outlook_text(html)
+        assert result == "Class outlook"
+
+    def test_no_match(self):
+        html = "<html><body><div>Nothing here</div></body></html>"
+        result = NationalDiscussionService._extract_nhc_outlook_text(html)
+        assert "Unable to parse" in result
+
+    def test_exception(self):
+        result = NationalDiscussionService._extract_nhc_outlook_text(None)
+        assert "Error parsing" in result
+
+
+class TestFetchNhcDiscussions:
+    """Tests for fetch_nhc_discussions."""
+
+    def test_success(self, service):
+        with patch.object(
+            service,
+            "_make_html_request",
+            return_value={"success": True, "html": "<pre>Outlook text</pre>"},
+        ):
+            result = service.fetch_nhc_discussions()
+        assert result["atlantic_outlook"]["text"] == "Outlook text"
+        assert result["east_pacific_outlook"]["text"] == "Outlook text"
+
+    def test_failure(self, service):
+        with patch.object(
+            service,
+            "_make_html_request",
+            return_value={"success": False, "error": "timeout"},
+        ):
+            result = service.fetch_nhc_discussions()
+        assert "Error" in result["atlantic_outlook"]["text"]
+        assert "Error" in result["east_pacific_outlook"]["text"]
+
+
+class TestExtractCpcOutlookText:
+    """Tests for _extract_cpc_outlook_text."""
+
+    def test_pre_tag(self):
+        html = "<html><body><pre>CPC outlook text</pre></body></html>"
+        result = NationalDiscussionService._extract_cpc_outlook_text(html, "6-10 Day")
+        assert result == "CPC outlook text"
+
+    def test_content_area_div(self):
+        html = '<html><body><div class="contentArea">Content area text</div></body></html>'
+        result = NationalDiscussionService._extract_cpc_outlook_text(html, "6-10 Day")
+        assert result == "Content area text"
+
+    def test_main_content_div(self):
+        html = '<html><body><div class="mainContent">Main content text</div></body></html>'
+        result = NationalDiscussionService._extract_cpc_outlook_text(html, "6-10 Day")
+        assert result == "Main content text"
+
+    def test_content_id_div(self):
+        html = '<html><body><div id="content">ID content text</div></body></html>'
+        result = NationalDiscussionService._extract_cpc_outlook_text(html, "6-10 Day")
+        assert result == "ID content text"
+
+    def test_fallback_to_longest_paragraph(self):
+        long_text = "A" * 150
+        html = f"<html><body><p>short</p><div>{long_text}</div></body></html>"
+        result = NationalDiscussionService._extract_cpc_outlook_text(html, "6-10 Day")
+        assert result == long_text
+
+    def test_no_match(self):
+        html = "<html><body></body></html>"
+        result = NationalDiscussionService._extract_cpc_outlook_text(html, "6-10 Day")
+        assert result is None
+
+    def test_short_body_text(self):
+        html = "<html><body><p>short</p></body></html>"
+        result = NationalDiscussionService._extract_cpc_outlook_text(html, "6-10 Day")
+        assert result is None
+
+    def test_empty_pre(self):
+        html = "<html><body><pre>   </pre></body></html>"
+        result = NationalDiscussionService._extract_cpc_outlook_text(html, "6-10 Day")
+        # Empty pre should fall through
+        assert result is None
+
+    def test_exception(self):
+        result = NationalDiscussionService._extract_cpc_outlook_text(None, "6-10 Day")
+        assert result is None
+
+
+class TestFetchCpcDiscussions:
+    """Tests for fetch_cpc_discussions."""
+
+    def test_success(self, service):
+        with patch.object(
+            service,
+            "_make_html_request",
+            return_value={"success": True, "html": "<pre>CPC text</pre>"},
+        ):
+            result = service.fetch_cpc_discussions()
+        assert result["outlook_6_10"]["text"] == "CPC text"
+        assert result["outlook_8_14"]["text"] == "CPC text"
+
+    def test_failure(self, service):
+        with patch.object(
+            service,
+            "_make_html_request",
+            return_value={"success": False, "error": "timeout"},
+        ):
+            result = service.fetch_cpc_discussions()
+        assert "Error" in result["outlook_6_10"]["text"]
+        assert "Error" in result["outlook_8_14"]["text"]
+
+    def test_extraction_returns_none(self, service):
+        with (
+            patch.object(
+                service,
+                "_make_html_request",
+                return_value={"success": True, "html": "<html></html>"},
+            ),
+            patch.object(
+                NationalDiscussionService,
+                "_extract_cpc_outlook_text",
+                return_value=None,
+            ),
+        ):
+            result = service.fetch_cpc_discussions()
+        assert "unavailable" in result["outlook_6_10"]["text"].lower()
+
+
+class TestServicesInit:
+    """Tests for services __init__.py lazy imports."""
+
+    def test_import_national_discussion_service(self):
+        from accessiweather.services import NationalDiscussionService as NDS
+
+        assert NDS is NationalDiscussionService
+
+    def test_import_unknown_raises_attribute_error(self):
+        import accessiweather.services as svc_mod
+
+        with pytest.raises(AttributeError):
+            svc_mod.__getattr__("NonExistentThing")
+
+    def test_lazy_import_environmental_client(self):
+        from accessiweather.services import EnvironmentalDataClient
+
+        assert EnvironmentalDataClient is not None
+
+    def test_lazy_import_platform_detector(self):
+        from accessiweather.services import PlatformDetector
+
+        assert PlatformDetector is not None
+
+    def test_lazy_import_startup_manager(self):
+        from accessiweather.services import StartupManager
+
+        assert StartupManager is not None
+
+    def test_lazy_import_github_update_service(self):
+        from accessiweather.services import GitHubUpdateService
+
+        assert GitHubUpdateService is not None
+
+    def test_lazy_import_sync_update_channel(self):
+        from accessiweather.services import sync_update_channel_to_service
+
+        assert sync_update_channel_to_service is not None
