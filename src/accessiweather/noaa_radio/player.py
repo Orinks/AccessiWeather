@@ -13,20 +13,24 @@ _sound_lib_available = False
 
 
 def _ensure_sound_lib() -> bool:
-    """Lazily initialize sound_lib on first use. Returns True if available."""
+    """
+    Check that sound_lib is available. Returns True if importable.
+
+    Does NOT create a new Output() — the app's sound pack system already
+    initializes BASS. Creating a second Output() causes BASS_ERROR_ALREADY (14).
+    """
     global _sound_lib_initialized, _sound_lib_available
     if _sound_lib_initialized:
         return _sound_lib_available
     _sound_lib_initialized = True
     try:
-        from sound_lib import output
+        from sound_lib.stream import URLStream  # noqa: F401
 
-        output.Output()
         _sound_lib_available = True
     except ImportError:
         logger.warning("sound_lib is not installed")
     except Exception as e:
-        logger.warning(f"sound_lib initialization failed: {e}")
+        logger.warning(f"sound_lib check failed: {e}")
     return _sound_lib_available
 
 
