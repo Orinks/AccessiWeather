@@ -223,50 +223,66 @@ class NationalDiscussionService:
         except (KeyError, TypeError) as e:
             return {"success": False, "error": f"Failed to parse product text: {e}"}
 
-    def _classify_pmd_discussion(self, product_name: str) -> str | None:
+    def _classify_pmd_discussion(self, text: str) -> str | None:
         """
         Classify a PMD product into short_range, medium_range, or extended.
 
+        Classifies by WMO header codes in the product text (e.g., PMDSPD,
+        PMDEPD) since the API productName is always generic.
+
         Args:
-            product_name: The product name/issuance text.
+            text: The product text content or header string.
 
         Returns:
             Classification key or None if not a target discussion.
 
         """
-        name_lower = product_name.lower() if product_name else ""
-        if "short range" in name_lower or "day 1" in name_lower or "spd" in name_lower:
+        text_upper = text.upper() if text else ""
+        # WMO header codes (most reliable)
+        if "PMDSPD" in text_upper:
             return "short_range"
-        if (
-            "medium range" in name_lower
-            or "3-7" in name_lower
-            or "epd" in name_lower
-            or "extended" in name_lower
-        ):
-            if "8-10" in name_lower or "day 8" in name_lower:
-                return "extended"
+        if "PMDEPD" in text_upper:
             return "medium_range"
-        if "8-10" in name_lower or "day 8" in name_lower:
+        if "PMDET" in text_upper:
+            return "extended"
+        # Fallback to keyword matching
+        text_lower = text.lower() if text else ""
+        if "short range" in text_lower:
+            return "short_range"
+        if "medium range" in text_lower or "3-7 day" in text_lower:
+            return "medium_range"
+        if "extended" in text_lower and ("8-10" in text_lower or "day 8" in text_lower):
             return "extended"
         return None
 
-    def _classify_swo_outlook(self, product_name: str) -> str | None:
+    def _classify_swo_outlook(self, text: str) -> str | None:
         """
         Classify a SWO product into day1, day2, or day3.
 
+        Classifies by WMO header codes in product text (e.g., SWODY1).
+
         Args:
-            product_name: The product name/issuance text.
+            text: The product text content or header string.
 
         Returns:
             Classification key or None if not a target outlook.
 
         """
-        name_lower = product_name.lower() if product_name else ""
-        if "day 1" in name_lower:
+        text_upper = text.upper() if text else ""
+        # WMO header codes
+        if "SWODY1" in text_upper:
             return "day1"
-        if "day 2" in name_lower:
+        if "SWODY2" in text_upper:
             return "day2"
-        if "day 3" in name_lower:
+        if "SWODY3" in text_upper:
+            return "day3"
+        # Fallback to keyword matching
+        text_lower = text.lower() if text else ""
+        if "day 1" in text_lower:
+            return "day1"
+        if "day 2" in text_lower:
+            return "day2"
+        if "day 3" in text_lower:
             return "day3"
         return None
 
@@ -295,20 +311,20 @@ class NationalDiscussionService:
         products = products_result["products"]
         fetched: set[str] = set()
         for product in products:
-            product_name = product.get("issuingOffice", "") + " " + product.get("name", "")
             product_id = product.get("id", "")
             if not product_id:
                 at_id = product.get("@id", "")
                 if at_id:
                     product_id = at_id.rsplit("/", 1)[-1]
 
-            classification = self._classify_pmd_discussion(product_name)
+            # Fetch text first, then classify by content (API name is generic)
+            text_result = self._fetch_product_text(product_id)
+            if not text_result["success"]:
+                continue
+
+            classification = self._classify_pmd_discussion(text_result["text"])
             if classification and classification not in fetched:
-                text_result = self._fetch_product_text(product_id)
-                if text_result["success"]:
-                    result[classification]["text"] = text_result["text"]
-                else:
-                    result[classification]["text"] = f"Error: {text_result['error']}"
+                result[classification]["text"] = text_result["text"]
                 fetched.add(classification)
 
             if len(fetched) == 3:
@@ -345,20 +361,20 @@ class NationalDiscussionService:
         products = products_result["products"]
         fetched: set[str] = set()
         for product in products:
-            product_name = product.get("issuingOffice", "") + " " + product.get("name", "")
             product_id = product.get("id", "")
             if not product_id:
                 at_id = product.get("@id", "")
                 if at_id:
                     product_id = at_id.rsplit("/", 1)[-1]
 
-            classification = self._classify_swo_outlook(product_name)
+            # Fetch text first, then classify by content
+            text_result = self._fetch_product_text(product_id)
+            if not text_result["success"]:
+                continue
+
+            classification = self._classify_swo_outlook(text_result["text"])
             if classification and classification not in fetched:
-                text_result = self._fetch_product_text(product_id)
-                if text_result["success"]:
-                    result[classification]["text"] = text_result["text"]
-                else:
-                    result[classification]["text"] = f"Error: {text_result['error']}"
+                result[classification]["text"] = text_result["text"]
                 fetched.add(classification)
 
             if len(fetched) == 3:
