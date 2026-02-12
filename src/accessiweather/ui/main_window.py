@@ -658,6 +658,12 @@ class MainWindow(SizedFrame):
 
             # For Nationwide location, fetch discussion summaries instead of weather
             if location.name == "Nationwide":
+                wx.CallAfter(
+                    self.current_conditions.SetValue,
+                    "Fetching nationwide weather discussions from NWS, SPC, NHC, and CPC...\n"
+                    "This may take a moment.",
+                )
+                wx.CallAfter(self.forecast_display.SetValue, "")
                 await self._fetch_nationwide_discussions(generation)
                 return
 

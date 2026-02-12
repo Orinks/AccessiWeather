@@ -108,7 +108,7 @@ class NationwideDiscussionDialog(wx.Dialog):
         wpc_sizer.Add(self.wpc_qpf, 1, wx.ALL | wx.EXPAND, 5)
 
         self.wpc_panel.SetSizer(wpc_sizer)
-        self.notebook.AddPage(self.wpc_panel, "WPC")
+        self.notebook.AddPage(self.wpc_panel, "WPC (Weather Prediction Center)")
 
         # --- SPC tab ---
         self.spc_panel = wx.Panel(self.notebook)
@@ -145,7 +145,7 @@ class NationwideDiscussionDialog(wx.Dialog):
         spc_sizer.Add(self.spc_day3, 1, wx.ALL | wx.EXPAND, 5)
 
         self.spc_panel.SetSizer(spc_sizer)
-        self.notebook.AddPage(self.spc_panel, "SPC")
+        self.notebook.AddPage(self.spc_panel, "SPC (Storm Prediction Center)")
 
         # --- NHC tab ---
         self.nhc_panel = wx.Panel(self.notebook)
@@ -178,7 +178,7 @@ class NationwideDiscussionDialog(wx.Dialog):
         nhc_sizer.Add(self.nhc_east_pacific, 1, wx.ALL | wx.EXPAND, 5)
 
         self.nhc_panel.SetSizer(nhc_sizer)
-        self.notebook.AddPage(self.nhc_panel, "NHC")
+        self.notebook.AddPage(self.nhc_panel, "NHC (National Hurricane Center)")
 
         # Store NHC page index for hiding
         self._nhc_page_index = self.notebook.GetPageCount() - 1
@@ -206,7 +206,7 @@ class NationwideDiscussionDialog(wx.Dialog):
         cpc_sizer.Add(self.cpc_8_14_day, 1, wx.ALL | wx.EXPAND, 5)
 
         self.cpc_panel.SetSizer(cpc_sizer)
-        self.notebook.AddPage(self.cpc_panel, "CPC")
+        self.notebook.AddPage(self.cpc_panel, "CPC (Climate Prediction Center)")
 
         # Button sizer
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
