@@ -154,6 +154,7 @@ class WeatherAssistantDialog(wx.Dialog):
 
         self.SetSize((650, 500))
         self.CenterOnParent()
+        self.input_ctrl.SetFocus()
 
     def _create_widgets(self) -> None:
         """Create all UI widgets."""
