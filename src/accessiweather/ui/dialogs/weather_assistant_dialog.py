@@ -481,15 +481,22 @@ class WeatherAssistantDialog(wx.Dialog):
                             last_error = None
                             break
                         except Exception as api_err:
-                            is_rate_limit = "429" in str(api_err) or "rate" in str(api_err).lower()
-                            if is_rate_limit and use_tool_fallback:
+                            err_str = str(api_err).lower()
+                            is_retryable = (
+                                "429" in str(api_err)
+                                or "rate" in err_str
+                                or "400" in str(api_err)
+                                or "tool_calls" in err_str
+                                or "provider returned error" in err_str
+                            )
+                            if is_retryable and use_tool_fallback:
                                 # Try next model in the fallback chain
                                 try:
                                     idx = TOOL_CAPABLE_MODELS.index(effective_model)
                                     if idx + 1 < len(TOOL_CAPABLE_MODELS):
                                         effective_model = TOOL_CAPABLE_MODELS[idx + 1]
                                         logger.info(
-                                            "Rate limited, falling back to %s", effective_model
+                                            "Provider error, falling back to %s", effective_model
                                         )
                                         last_error = api_err
                                         continue
