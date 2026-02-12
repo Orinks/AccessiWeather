@@ -354,10 +354,15 @@ class WeatherAssistantDialog(wx.Dialog):
 
                 effective_model = model if model else "meta-llama/llama-3.3-70b-instruct:free"
 
-                # Model known for reliable function calling on free tier
-                TOOL_CAPABLE_MODEL = "qwen/qwen3-coder:free"
+                # Models with reliable function calling on free tier (in preference order)
+                TOOL_CAPABLE_MODELS = [
+                    "qwen/qwen3-coder:free",
+                    "mistralai/mistral-small-3.1-24b-instruct:free",
+                    "meta-llama/llama-3.3-70b-instruct:free",
+                ]
 
                 extra_kwargs: dict = {}
+                use_tool_fallback = False
                 if tool_executor is not None:
                     # Get last user message for tool selection
                     user_msg = ""
@@ -378,7 +383,8 @@ class WeatherAssistantDialog(wx.Dialog):
                             "meta-llama/llama-3.3-70b-instruct:free",
                         }
                         if effective_model in free_routers:
-                            effective_model = TOOL_CAPABLE_MODEL
+                            effective_model = TOOL_CAPABLE_MODELS[0]
+                            use_tool_fallback = True
                         logger.info(
                             "Tools enabled: %d tools, model: %s",
                             len(tools),
@@ -387,16 +393,40 @@ class WeatherAssistantDialog(wx.Dialog):
 
                 max_tool_iterations = 5
                 for _iteration in range(max_tool_iterations + 1):
-                    response = client.chat.completions.create(
-                        model=effective_model,
-                        messages=messages,
-                        max_tokens=2000,
-                        extra_headers={
-                            "HTTP-Referer": "https://accessiweather.orinks.net",
-                            "X-Title": "AccessiWeather Weather Assistant",
-                        },
-                        **extra_kwargs,
-                    )
+                    # Try the API call, with fallback models on rate limit
+                    last_error = None
+                    for _model_attempt in range(3):
+                        try:
+                            response = client.chat.completions.create(
+                                model=effective_model,
+                                messages=messages,
+                                max_tokens=2000,
+                                extra_headers={
+                                    "HTTP-Referer": "https://accessiweather.orinks.net",
+                                    "X-Title": "AccessiWeather Weather Assistant",
+                                },
+                                **extra_kwargs,
+                            )
+                            last_error = None
+                            break
+                        except Exception as api_err:
+                            is_rate_limit = "429" in str(api_err) or "rate" in str(api_err).lower()
+                            if is_rate_limit and use_tool_fallback:
+                                # Try next model in the fallback chain
+                                try:
+                                    idx = TOOL_CAPABLE_MODELS.index(effective_model)
+                                    if idx + 1 < len(TOOL_CAPABLE_MODELS):
+                                        effective_model = TOOL_CAPABLE_MODELS[idx + 1]
+                                        logger.info(
+                                            "Rate limited, falling back to %s", effective_model
+                                        )
+                                        last_error = api_err
+                                        continue
+                                except ValueError:
+                                    pass
+                            raise
+                    if last_error is not None:
+                        raise last_error
 
                     model_used = response.model or effective_model
 
