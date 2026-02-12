@@ -186,16 +186,22 @@ class MainWindow(SizedFrame):
 
         # File menu
         file_menu = wx.Menu()
-        settings_item = file_menu.Append(wx.ID_PREFERENCES, "&Settings\tCtrl+S", "Open settings")
+        self._settings_id = wx.ID_PREFERENCES
+        settings_item = file_menu.Append(self._settings_id, "&Settings\tCtrl+S", "Open settings")
         file_menu.AppendSeparator()
-        exit_item = file_menu.Append(wx.ID_EXIT, "E&xit\tCtrl+Q", "Exit the application")
+        self._exit_id = wx.ID_EXIT
+        exit_item = file_menu.Append(self._exit_id, "E&xit\tCtrl+Q", "Exit the application")
         menu_bar.Append(file_menu, "&File")
 
         # Location menu
         location_menu = wx.Menu()
-        add_item = location_menu.Append(wx.ID_ANY, "&Add Location\tCtrl+L", "Add a new location")
+        self._add_location_id = wx.NewIdRef()
+        add_item = location_menu.Append(
+            self._add_location_id, "&Add Location\tCtrl+L", "Add a new location"
+        )
+        self._remove_location_id = wx.NewIdRef()
         remove_item = location_menu.Append(
-            wx.ID_ANY, "&Remove Location\tCtrl+D", "Remove selected location"
+            self._remove_location_id, "&Remove Location\tCtrl+D", "Remove selected location"
         )
         menu_bar.Append(location_menu, "&Location")
 
@@ -203,12 +209,14 @@ class MainWindow(SizedFrame):
         view_menu = wx.Menu()
         refresh_item = view_menu.Append(wx.ID_REFRESH, "&Refresh\tF5", "Refresh weather data")
         view_menu.AppendSeparator()
+        self._explain_id = wx.NewIdRef()
         explain_item = view_menu.Append(
-            wx.ID_ANY, "&Explain Weather\tCtrl+E", "Get AI explanation of weather"
+            self._explain_id, "&Explain Weather\tCtrl+E", "Get AI explanation of weather"
         )
         view_menu.AppendSeparator()
+        self._history_id = wx.NewIdRef()
         history_item = view_menu.Append(
-            wx.ID_ANY, "Weather &History\tCtrl+H", "View weather history"
+            self._history_id, "Weather &History\tCtrl+H", "View weather history"
         )
         discussion_item = view_menu.Append(
             wx.ID_ANY, "Forecast &Discussion...", "View NWS Area Forecast Discussion"
@@ -223,8 +231,9 @@ class MainWindow(SizedFrame):
             self._noaa_radio_id, "NOAA Weather &Radio...\tCtrl+R", "Listen to NOAA Weather Radio"
         )
         view_menu.AppendSeparator()
+        self._weather_chat_id = wx.NewIdRef()
         weather_chat_item = view_menu.Append(
-            wx.ID_ANY, "Weather &Assistant...\tCtrl+T", "Chat with AI weather assistant"
+            self._weather_chat_id, "Weather &Assistant...\tCtrl+T", "Chat with AI weather assistant"
         )
         menu_bar.Append(view_menu, "&View")
 
@@ -603,10 +612,22 @@ class MainWindow(SizedFrame):
         self._escape_id = wx.NewIdRef()
         entries = [
             (wx.ACCEL_NORMAL, wx.WXK_ESCAPE, self._escape_id),
+            (wx.ACCEL_NORMAL, wx.WXK_F5, wx.ID_REFRESH),
         ]
-        # Re-register menu accelerators that would otherwise be lost
-        if hasattr(self, "_noaa_radio_id"):
-            entries.append((wx.ACCEL_CTRL, ord("R"), self._noaa_radio_id))
+        # Re-register all Ctrl+ menu accelerators (SetAcceleratorTable replaces them)
+        ctrl_shortcuts = [
+            ("S", "_settings_id"),
+            ("Q", "_exit_id"),
+            ("L", "_add_location_id"),
+            ("D", "_remove_location_id"),
+            ("E", "_explain_id"),
+            ("H", "_history_id"),
+            ("R", "_noaa_radio_id"),
+            ("T", "_weather_chat_id"),
+        ]
+        for key, attr in ctrl_shortcuts:
+            if hasattr(self, attr):
+                entries.append((wx.ACCEL_CTRL, ord(key), getattr(self, attr)))
         accel_tbl = wx.AcceleratorTable(entries)
         self.SetAcceleratorTable(accel_tbl)
         # Bind the escape action
