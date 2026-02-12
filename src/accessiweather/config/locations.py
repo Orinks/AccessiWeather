@@ -86,6 +86,14 @@ class LocationOperations:
                 self.logger.info(f"Set current location: {name}")
                 return self._manager.save_config()
 
+        # Handle Nationwide (injected dynamically, not in config.locations)
+        if name == "Nationwide":
+            config.current_location = Location(
+                name="Nationwide", latitude=39.8283, longitude=-98.5795
+            )
+            self.logger.info("Set current location: Nationwide")
+            return self._manager.save_config()
+
         self.logger.warning(f"Location {name} not found")
         return False
 

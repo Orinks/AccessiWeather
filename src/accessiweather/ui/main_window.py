@@ -657,8 +657,17 @@ class MainWindow(SizedFrame):
                 return
 
             # For Nationwide location, fetch discussion summaries instead of weather
+            # Only works with NWS-compatible data sources (auto or nws)
             if location.name == "Nationwide":
-                await self._fetch_nationwide_discussions(generation)
+                data_source = getattr(self.app.config_manager.get_settings(), "data_source", "auto")
+                if data_source in ("auto", "nws"):
+                    await self._fetch_nationwide_discussions(generation)
+                else:
+                    wx.CallAfter(
+                        self._on_weather_error,
+                        "Nationwide discussions require the Auto or NWS data source. "
+                        "Change your data source in Settings.",
+                    )
                 return
 
             # Fetch weather data - pass the Location object directly
