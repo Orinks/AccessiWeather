@@ -78,3 +78,13 @@ Started: 2026-02-11 14:47 UTC
 - Files: tests/test_noaa_radio_dialog_integration.py
 - **Learnings:** US-004 was thorough enough to include the wiring; this story was mainly about verifying integration coverage
 ---
+
+## 2026-02-12T20:10Z - US-006: Add NOAA Weather Radio menu item to main window
+- Added 'NOAA Weather &Radio...\tCtrl+R' menu item to View menu after UV Index, before separator
+- Created _on_noaa_radio handler that gets current location via config_manager.get_current_location()
+- If no location selected, shows wx.MessageBox warning
+- If location exists, calls show_noaa_radio_dialog(self, lat, lon) with location.latitude/longitude
+- 8 tests covering menu item presence, shortcut, handler logic, ordering
+- Files: src/accessiweather/ui/main_window.py, tests/test_noaa_radio_menu_item.py
+- **Learnings:** Source-based testing (reading .py file as text) is a pragmatic alternative when wx mocking is too complex for menu integration tests
+---
