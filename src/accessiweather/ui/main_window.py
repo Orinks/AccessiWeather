@@ -381,11 +381,9 @@ class MainWindow(SizedFrame):
         """View NWS Area Forecast Discussion, or Nationwide discussions if Nationwide is selected."""
         current = self.app.config_manager.get_current_location()
         if current and current.name == "Nationwide":
-            from ..services.national_discussion_service import NationalDiscussionService
             from .dialogs.nationwide_discussion_dialog import NationwideDiscussionDialog
 
-            service = NationalDiscussionService()
-            dlg = NationwideDiscussionDialog(parent=self, service=service)
+            dlg = NationwideDiscussionDialog(parent=self, service=self._get_discussion_service())
             dlg.ShowModal()
             dlg.Destroy()
         else:
@@ -692,14 +690,20 @@ class MainWindow(SizedFrame):
             logger.error(f"Failed to fetch weather data: {e}")
             wx.CallAfter(self._on_weather_error, str(e))
 
+    def _get_discussion_service(self):
+        """Get or create the shared NationalDiscussionService instance."""
+        if not hasattr(self, "_discussion_service") or self._discussion_service is None:
+            from ..services.national_discussion_service import NationalDiscussionService
+
+            self._discussion_service = NationalDiscussionService()
+        return self._discussion_service
+
     async def _fetch_nationwide_discussions(self, generation: int) -> None:
         """Fetch nationwide discussion summaries and display in weather fields."""
         import asyncio
 
-        from ..services.national_discussion_service import NationalDiscussionService
-
         try:
-            service = NationalDiscussionService()
+            service = self._get_discussion_service()
             # Run synchronous fetch in thread to avoid blocking
             discussions = await asyncio.to_thread(service.fetch_all_discussions)
 
