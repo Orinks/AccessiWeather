@@ -333,7 +333,7 @@ class NationwideDiscussionDialog(wx.Dialog):
             )
 
             result = await explainer.explain_afd(
-                discussion_text=text,
+                afd_text=text,
                 location_name="the United States",
                 style=ExplanationStyle.STANDARD,
             )
