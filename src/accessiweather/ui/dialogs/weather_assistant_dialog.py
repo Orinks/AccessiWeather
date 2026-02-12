@@ -431,6 +431,14 @@ class WeatherAssistantDialog(wx.Dialog):
                     model_used = response.model or effective_model
 
                     if not response.choices:
+                        if extra_kwargs.get("tools") and use_tool_fallback:
+                            # Model returned empty with tools; retry without
+                            logger.warning(
+                                "Empty response with tools on %s, retrying without tools",
+                                effective_model,
+                            )
+                            extra_kwargs.pop("tools", None)
+                            continue
                         wx.CallAfter(
                             self._on_response_error,
                             "Received an empty response. Try again or switch models in Settings.",
