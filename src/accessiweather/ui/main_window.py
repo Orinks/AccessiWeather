@@ -228,7 +228,9 @@ class MainWindow(SizedFrame):
         uv_index_item = view_menu.Append(wx.ID_ANY, "&UV Index...", "View UV index information")
         self._noaa_radio_id = wx.NewIdRef()
         view_menu.Append(
-            self._noaa_radio_id, "NOAA Weather &Radio...\tCtrl+R", "Listen to NOAA Weather Radio"
+            self._noaa_radio_id,
+            "NOAA Weather &Radio...\tCtrl+Shift+R",
+            "Listen to NOAA Weather Radio",
         )
         view_menu.AppendSeparator()
         self._weather_chat_id = wx.NewIdRef()
@@ -616,18 +618,18 @@ class MainWindow(SizedFrame):
         ]
         # Re-register all Ctrl+ menu accelerators (SetAcceleratorTable replaces them)
         ctrl_shortcuts = [
-            ("S", "_settings_id"),
-            ("Q", "_exit_id"),
-            ("L", "_add_location_id"),
-            ("D", "_remove_location_id"),
-            ("E", "_explain_id"),
-            ("H", "_history_id"),
-            ("R", "_noaa_radio_id"),
-            ("T", "_weather_chat_id"),
+            (wx.ACCEL_CTRL, "S", "_settings_id"),
+            (wx.ACCEL_CTRL, "Q", "_exit_id"),
+            (wx.ACCEL_CTRL, "L", "_add_location_id"),
+            (wx.ACCEL_CTRL, "D", "_remove_location_id"),
+            (wx.ACCEL_CTRL, "E", "_explain_id"),
+            (wx.ACCEL_CTRL, "H", "_history_id"),
+            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, "R", "_noaa_radio_id"),
+            (wx.ACCEL_CTRL, "T", "_weather_chat_id"),
         ]
-        for key, attr in ctrl_shortcuts:
+        for flags, key, attr in ctrl_shortcuts:
             if hasattr(self, attr):
-                entries.append((wx.ACCEL_CTRL, ord(key), getattr(self, attr)))
+                entries.append((flags, ord(key), getattr(self, attr)))
         accel_tbl = wx.AcceleratorTable(entries)
         self.SetAcceleratorTable(accel_tbl)
         # Bind the escape action
