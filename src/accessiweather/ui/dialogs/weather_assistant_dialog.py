@@ -377,6 +377,11 @@ class WeatherAssistantDialog(wx.Dialog):
                         }
                         if effective_model in free_routers:
                             effective_model = TOOL_CAPABLE_MODEL
+                        logger.info(
+                            "Tools enabled: %d tools, model: %s",
+                            len(tools),
+                            effective_model,
+                        )
 
                 max_tool_iterations = 5
                 for _iteration in range(max_tool_iterations + 1):
@@ -404,6 +409,11 @@ class WeatherAssistantDialog(wx.Dialog):
                     assistant_message = choice.message
 
                     # Check for tool calls
+                    logger.info(
+                        "Response finish_reason=%s, tool_calls=%s",
+                        choice.finish_reason,
+                        bool(assistant_message.tool_calls),
+                    )
                     if assistant_message.tool_calls and tool_executor is not None:
                         # Append assistant message with tool calls to messages
                         tool_call_msg: dict = {
