@@ -71,3 +71,10 @@ Started: 2026-02-11 14:47 UTC
 - Files: src/accessiweather/noaa_radio/stream_url.py, tests/test_noaa_radio_stream_url.py
 - **Learnings:** pre-commit hooks auto-fix ruff issues on first commit attempt; just re-add and commit again
 ---
+
+## 2026-02-12T19:52Z - US-005: Wire dialog controls to RadioPlayer and StationDatabase
+- Dialog wiring was already implemented in US-004 (RadioPlayer, StationDatabase, StreamURLProvider all instantiated and connected)
+- Added 12 dedicated integration tests covering full play/stop cycle, error recovery, volume control, station selection, dialog cleanup, station loading, and all error states
+- Files: tests/test_noaa_radio_dialog_integration.py
+- **Learnings:** US-004 was thorough enough to include the wiring; this story was mainly about verifying integration coverage
+---
