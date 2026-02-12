@@ -339,6 +339,7 @@ class WeatherAssistantDialog(wx.Dialog):
         messages.extend(self._conversation)
 
         tool_executor = self._get_tool_executor()
+        logger.info("Tool executor: %s", "available" if tool_executor else "NONE")
 
         def do_generate():
             try:
