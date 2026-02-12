@@ -218,6 +218,9 @@ class MainWindow(SizedFrame):
             wx.ID_ANY, "Air &Quality...", "View air quality information"
         )
         uv_index_item = view_menu.Append(wx.ID_ANY, "&UV Index...", "View UV index information")
+        noaa_radio_item = view_menu.Append(
+            wx.ID_ANY, "NOAA Weather &Radio...\tCtrl+R", "Listen to NOAA Weather Radio"
+        )
         view_menu.AppendSeparator()
         weather_chat_item = view_menu.Append(
             wx.ID_ANY, "Weather &Assistant...\tCtrl+T", "Chat with AI weather assistant"
@@ -262,6 +265,7 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_MENU, lambda e: self._on_aviation(), aviation_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_air_quality(), air_quality_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_uv_index(), uv_index_item)
+        self.Bind(wx.EVT_MENU, lambda e: self._on_noaa_radio(), noaa_radio_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_weather_chat(), weather_chat_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_soundpack_manager(), soundpack_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_check_updates(), self._check_updates_item)
@@ -408,6 +412,21 @@ class MainWindow(SizedFrame):
         from .dialogs import show_uv_index_dialog
 
         show_uv_index_dialog(self, self.app)
+
+    def _on_noaa_radio(self) -> None:
+        """Open NOAA Weather Radio dialog."""
+        location = self.app.config_manager.get_current_location()
+        if not location:
+            wx.MessageBox(
+                "Please select a location first.",
+                "No Location Selected",
+                wx.OK | wx.ICON_WARNING,
+            )
+            return
+
+        from .dialogs import show_noaa_radio_dialog
+
+        show_noaa_radio_dialog(self, location.latitude, location.longitude)
 
     def _on_weather_chat(self) -> None:
         """Open Weather Assistant dialog."""
