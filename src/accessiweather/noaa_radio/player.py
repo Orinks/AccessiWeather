@@ -64,6 +64,7 @@ class RadioPlayer:
         self._current_url: str | None = None
         self._fallback_urls: list[str] = []
         self._retry_count: int = 0
+        self._silence_count: int = 0
         self._on_playing = on_playing
         self._on_stopped = on_stopped
         self._on_error = on_error
@@ -109,6 +110,7 @@ class RadioPlayer:
             self._stream.volume = self._volume
             self._stream.play()
             self._current_url = url
+            self._silence_count = 0
             logger.info(f"Started streaming: {url}")
             if self._on_playing:
                 self._on_playing()
@@ -232,12 +234,36 @@ class RadioPlayer:
                 pass
         return False
 
-    def check_health(self) -> None:
+    def get_level(self) -> int:
         """
-        Check stream health and auto-retry on stall.
+        Get the current audio output level.
+
+        Returns:
+            Combined left/right level as an int. 0 means silence.
+            Returns 0 if no stream or on error.
+
+        """
+        if self._stream is not None:
+            try:
+                return self._stream.get_level()
+            except Exception:
+                pass
+        return 0
+
+    # Number of consecutive silent health checks before auto-advancing.
+    # With a 5-second timer, 3 checks = 15 seconds of silence.
+    SILENCE_THRESHOLD = 3
+
+    def check_health(self, on_auto_advance: Callable[[], None] | None = None) -> None:
+        """
+        Check stream health and auto-advance on stall or silence.
 
         Call this periodically (e.g., from a wx.Timer) to detect stalls
-        and automatically attempt reconnection.
+        and silent streams, automatically advancing to the next stream.
+
+        Args:
+            on_auto_advance: Callback when auto-advancing to next stream.
+
         """
         if self._stream is None:
             return
@@ -246,3 +272,14 @@ class RadioPlayer:
             if self._on_stalled:
                 self._on_stalled()
             self.retry()
+            return
+        # Detect silence: if level is 0 for multiple consecutive checks
+        if self.is_playing() and self.get_level() == 0:
+            self._silence_count += 1
+            if self._silence_count >= self.SILENCE_THRESHOLD:
+                logger.warning(f"Stream silent for {self._silence_count} checks, auto-advancing")
+                self._silence_count = 0
+                if on_auto_advance:
+                    on_auto_advance()
+        else:
+            self._silence_count = 0

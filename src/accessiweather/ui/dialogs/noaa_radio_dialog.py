@@ -277,8 +277,25 @@ class NOAARadioDialog(wx.Dialog):
             self._health_timer.Start(5000)
 
     def _on_health_check(self, _event: wx.TimerEvent) -> None:
-        """Periodic health check for stream stalls."""
-        self._player.check_health()
+        """Periodic health check for stream stalls and silence."""
+        self._player.check_health(on_auto_advance=self._auto_advance_stream)
+
+    def _auto_advance_stream(self) -> None:
+        """Automatically advance to the next stream when current is silent."""
+        if not self._current_urls or len(self._current_urls) <= 1:
+            self._set_status("Stream has no audio")
+            return
+        self._current_url_index = (self._current_url_index + 1) % len(self._current_urls)
+        url = self._current_urls[self._current_url_index]
+        station = self._get_selected_station()
+        name = station.call_sign if station else "Unknown"
+        idx = self._current_url_index + 1
+        total = len(self._current_urls)
+        self._set_status(f"No audio detected, trying {name} stream {idx} of {total}...")
+        self._player.stop(notify=False)
+        if not self._player.play(url):
+            self._set_status("All streams failed")
+            self._health_timer.Stop()
 
     def _set_status(self, text: str) -> None:
         """Update the status text."""
