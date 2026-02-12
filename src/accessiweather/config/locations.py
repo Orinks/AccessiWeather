@@ -94,8 +94,24 @@ class LocationOperations:
         return self._manager.get_config().current_location
 
     def get_all_locations(self) -> list[Location]:
-        """Return a shallow copy of all configured locations."""
-        return self._manager.get_config().locations.copy()
+        """
+        Return a shallow copy of all configured locations.
+
+        If show_nationwide_location is enabled in settings, ensures the
+        Nationwide location is included. If disabled, filters it out.
+        """
+        locations = self._manager.get_config().locations.copy()
+        settings = self._manager.get_config().settings
+        show_nationwide = getattr(settings, "show_nationwide_location", True)
+
+        has_nationwide = any(loc.name == "Nationwide" for loc in locations)
+
+        if show_nationwide and not has_nationwide:
+            locations.insert(0, Location(name="Nationwide", latitude=39.8283, longitude=-98.5795))
+        elif not show_nationwide and has_nationwide:
+            locations = [loc for loc in locations if loc.name != "Nationwide"]
+
+        return locations
 
     def get_location_names(self) -> list[str]:
         """Return the list of configured location names."""
