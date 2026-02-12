@@ -9,6 +9,8 @@ import wx
 
 from accessiweather.noaa_radio import Station, StationDatabase, StreamURLProvider
 from accessiweather.noaa_radio.player import RadioPlayer
+from accessiweather.noaa_radio.preferences import RadioPreferences
+from accessiweather.paths import Paths
 
 if TYPE_CHECKING:
     pass
@@ -67,6 +69,7 @@ class NOAARadioDialog(wx.Dialog):
             on_reconnecting=self._on_reconnecting,
         )
         self._url_provider = StreamURLProvider()
+        self._prefs = RadioPreferences(config_dir=Paths().data)
         self._current_urls: list[str] = []
         self._current_url_index: int = 0
         self._health_timer = wx.Timer(self)
@@ -108,6 +111,12 @@ class NOAARadioDialog(wx.Dialog):
         self._next_stream_btn.Bind(wx.EVT_BUTTON, self._on_next_stream)
         self._next_stream_btn.Enable(False)
         btn_sizer.Add(self._next_stream_btn, 0, wx.RIGHT, 5)
+
+        self._prefer_btn = wx.Button(panel, label="Set as Preferred")
+        self._prefer_btn.SetName("Set as Preferred")
+        self._prefer_btn.Bind(wx.EVT_BUTTON, self._on_set_preferred)
+        self._prefer_btn.Enable(False)
+        btn_sizer.Add(self._prefer_btn, 0, wx.RIGHT, 5)
 
         sizer.Add(btn_sizer, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
@@ -182,12 +191,15 @@ class NOAARadioDialog(wx.Dialog):
             )
             return
 
-        self._current_urls = urls
+        self._current_urls = self._prefs.reorder_urls(station.call_sign, urls)
         self._current_url_index = 0
-        self._set_status(f"Connecting to {station.call_sign} (stream 1 of {len(urls)})...")
-        if self._player.play(urls[0]):
+        self._set_status(
+            f"Connecting to {station.call_sign} (stream 1 of {len(self._current_urls)})..."
+        )
+        if self._player.play(self._current_urls[0]):
             self._health_timer.Start(5000)
-            self._next_stream_btn.Enable(len(urls) > 1)
+            self._next_stream_btn.Enable(len(self._current_urls) > 1)
+            self._prefer_btn.Enable(True)
 
     def _on_stop(self, _event: wx.CommandEvent) -> None:
         """Handle Stop button click."""
@@ -217,6 +229,7 @@ class NOAARadioDialog(wx.Dialog):
         self._play_btn.Enable(True)
         self._stop_btn.Enable(False)
         self._next_stream_btn.Enable(False)
+        self._prefer_btn.Enable(False)
 
     def _on_error(self, message: str) -> None:
         """Handle playback error event."""
@@ -225,6 +238,7 @@ class NOAARadioDialog(wx.Dialog):
         self._play_btn.Enable(True)
         self._stop_btn.Enable(False)
         self._next_stream_btn.Enable(len(self._current_urls) > 1)
+        self._prefer_btn.Enable(False)
 
     def _on_stalled(self) -> None:
         """Handle stream stall (buffering)."""
@@ -233,6 +247,17 @@ class NOAARadioDialog(wx.Dialog):
     def _on_reconnecting(self, attempt: int) -> None:
         """Handle reconnection attempt."""
         self._set_status(f"Reconnecting (attempt {attempt})...")
+
+    def _on_set_preferred(self, _event: wx.CommandEvent) -> None:
+        """Save the current stream as preferred for this station."""
+        station = self._get_selected_station()
+        if station is None or not self._current_urls:
+            return
+        url = self._current_urls[self._current_url_index]
+        self._prefs.set_preferred_url(station.call_sign, url)
+        idx = self._current_url_index + 1
+        total = len(self._current_urls)
+        self._set_status(f"Preferred stream {idx} of {total} saved for {station.call_sign}")
 
     def _on_next_stream(self, _event: wx.CommandEvent) -> None:
         """Switch to the next available stream URL for the current station."""

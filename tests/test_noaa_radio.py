@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from accessiweather.noaa_radio import Station, StationDatabase, StreamURLProvider
 from accessiweather.noaa_radio.player import RadioPlayer
+from accessiweather.noaa_radio.preferences import RadioPreferences
 
 # ---------------------------------------------------------------------------
 # Station / StationDatabase tests
@@ -156,3 +157,57 @@ class TestRadioPlayer:
     def test_check_health_no_stream(self):
         player = RadioPlayer()
         player.check_health()  # Should not crash
+
+
+# ---------------------------------------------------------------------------
+# RadioPreferences tests
+# ---------------------------------------------------------------------------
+
+
+class TestRadioPreferences:
+    def test_no_preferred_by_default(self, tmp_path):
+        prefs = RadioPreferences(config_dir=tmp_path)
+        assert prefs.get_preferred_url("TEST1") is None
+
+    def test_set_and_get_preferred(self, tmp_path):
+        prefs = RadioPreferences(config_dir=tmp_path)
+        prefs.set_preferred_url("TEST1", "http://stream2.com")
+        assert prefs.get_preferred_url("TEST1") == "http://stream2.com"
+
+    def test_persistence(self, tmp_path):
+        prefs1 = RadioPreferences(config_dir=tmp_path)
+        prefs1.set_preferred_url("TEST1", "http://stream2.com")
+        prefs2 = RadioPreferences(config_dir=tmp_path)
+        assert prefs2.get_preferred_url("TEST1") == "http://stream2.com"
+
+    def test_clear_preferred(self, tmp_path):
+        prefs = RadioPreferences(config_dir=tmp_path)
+        prefs.set_preferred_url("TEST1", "http://stream2.com")
+        prefs.clear_preferred_url("TEST1")
+        assert prefs.get_preferred_url("TEST1") is None
+
+    def test_reorder_urls_with_preferred(self, tmp_path):
+        prefs = RadioPreferences(config_dir=tmp_path)
+        prefs.set_preferred_url("TEST1", "http://b.com")
+        urls = ["http://a.com", "http://b.com", "http://c.com"]
+        reordered = prefs.reorder_urls("TEST1", urls)
+        assert reordered[0] == "http://b.com"
+        assert len(reordered) == 3
+
+    def test_reorder_urls_no_preferred(self, tmp_path):
+        prefs = RadioPreferences(config_dir=tmp_path)
+        urls = ["http://a.com", "http://b.com"]
+        reordered = prefs.reorder_urls("TEST1", urls)
+        assert reordered == urls
+
+    def test_reorder_urls_preferred_not_in_list(self, tmp_path):
+        prefs = RadioPreferences(config_dir=tmp_path)
+        prefs.set_preferred_url("TEST1", "http://gone.com")
+        urls = ["http://a.com", "http://b.com"]
+        reordered = prefs.reorder_urls("TEST1", urls)
+        assert reordered == urls
+
+    def test_case_insensitive(self, tmp_path):
+        prefs = RadioPreferences(config_dir=tmp_path)
+        prefs.set_preferred_url("test1", "http://stream.com")
+        assert prefs.get_preferred_url("TEST1") == "http://stream.com"
