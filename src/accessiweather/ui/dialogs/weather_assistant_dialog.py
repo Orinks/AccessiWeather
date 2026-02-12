@@ -377,13 +377,15 @@ class WeatherAssistantDialog(wx.Dialog):
                         # reliable function calling if user hasn't picked
                         # a specific model (free router doesn't guarantee
                         # tool support)
+                        # Use whatever the user selected; only flag
+                        # fallback so rate-limit retry logic can kick in
+                        # for free models
                         free_routers = {
                             "openrouter/auto",
                             "openrouter/free",
                             "meta-llama/llama-3.3-70b-instruct:free",
                         }
                         if effective_model in free_routers:
-                            effective_model = TOOL_CAPABLE_MODELS[0]
                             use_tool_fallback = True
                         logger.info(
                             "Tools enabled: %d tools, model: %s",
