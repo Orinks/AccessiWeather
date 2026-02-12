@@ -227,7 +227,7 @@ class MainWindow(SizedFrame):
         )
         uv_index_item = view_menu.Append(wx.ID_ANY, "&UV Index...", "View UV index information")
         self._noaa_radio_id = wx.NewIdRef()
-        noaa_radio_item = view_menu.Append(
+        view_menu.Append(
             self._noaa_radio_id, "NOAA Weather &Radio...\tCtrl+R", "Listen to NOAA Weather Radio"
         )
         view_menu.AppendSeparator()
@@ -275,7 +275,7 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_MENU, lambda e: self._on_aviation(), aviation_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_air_quality(), air_quality_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_uv_index(), uv_index_item)
-        self.Bind(wx.EVT_MENU, lambda e: self._on_noaa_radio(), noaa_radio_item)
+        self.Bind(wx.EVT_MENU, lambda e: self._on_noaa_radio(), id=self._noaa_radio_id)
         self.Bind(wx.EVT_MENU, lambda e: self._on_weather_chat(), weather_chat_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_soundpack_manager(), soundpack_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_check_updates(), self._check_updates_item)
