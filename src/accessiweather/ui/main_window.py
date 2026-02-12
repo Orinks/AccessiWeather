@@ -657,7 +657,7 @@ class MainWindow(SizedFrame):
                 return
 
             # For Nationwide location, fetch discussion summaries instead of weather
-            if self.app.config_manager.location_manager.is_nationwide_location(location.name):
+            if location.name == "Nationwide":
                 await self._fetch_nationwide_discussions(generation)
                 return
 

@@ -884,7 +884,7 @@ class SettingsDialogSimple(wx.Dialog):
                 getattr(settings, "update_interval_minutes", 10)
             )
             self._controls["show_nationwide"].SetValue(
-                self.app.config_manager.location_manager.show_nationwide
+                getattr(self.config_manager.get_settings(), "show_nationwide_location", True)
             )
 
             # Display tab
@@ -1078,7 +1078,7 @@ class SettingsDialogSimple(wx.Dialog):
 
             # Update nationwide visibility
             show_nationwide = self._controls["show_nationwide"].GetValue()
-            self.app.config_manager.location_manager.set_show_nationwide(show_nationwide)
+            # Nationwide visibility is persisted via settings_dict below
 
             settings_dict = {
                 # General
