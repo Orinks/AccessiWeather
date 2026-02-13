@@ -173,7 +173,16 @@ class NOAARadioDialog(wx.Dialog):
         return self._stations[idx]
 
     def _on_play(self, _event: wx.CommandEvent) -> None:
-        """Handle Play button click."""
+        """
+        Handle Play button click.
+
+        If a stream is already playing, stop it first before starting the new one.
+        """
+        # Stop any currently playing stream
+        if self._player.is_playing():
+            self._health_timer.Stop()
+            self._player.stop()
+
         station = self._get_selected_station()
         if station is None:
             self._set_status("No station selected")
@@ -234,7 +243,8 @@ class NOAARadioDialog(wx.Dialog):
         idx = self._current_url_index + 1
         stream_info = f" (stream {idx} of {total})" if total > 1 else ""
         self._set_status(f"Playing: {name}{stream_info}")
-        self._play_btn.Enable(False)
+        # Keep Play enabled so user can switch stations without stopping first
+        self._play_btn.Enable(True)
         self._stop_btn.Enable(True)
         self._next_stream_btn.Enable(total > 1)
 
