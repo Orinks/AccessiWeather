@@ -62,7 +62,9 @@ def check_url(url: str, timeout: int = DEFAULT_TIMEOUT) -> dict:
     try:
         # Create a request object with a User-Agent and Icy-MetaData header
         # Icy-MetaData can help some Icecast servers negotiate stream details.
-        req = urllib.request.Request(url, method="GET", headers={"User-Agent": USER_AGENT, "Icy-MetaData": "1"})
+        req = urllib.request.Request(
+            url, method="GET", headers={"User-Agent": USER_AGENT, "Icy-MetaData": "1"}
+        )
 
         with urllib.request.urlopen(req, timeout=timeout) as response:
             # Read a small chunk (1KB) to confirm the stream is active and sending data.
@@ -78,10 +80,13 @@ def check_url(url: str, timeout: int = DEFAULT_TIMEOUT) -> dict:
                 result["content_type"] = response.headers.get("Content-Type", "N/A")
                 # Check for common non-streaming content types
                 content_type = result["content_type"].lower()
-                if "html" in content_type or "text/plain" in content_type and not "audio" in content_type:
-                     result["status"] = "non_stream_content"
-                     result["error"] = f"Expected audio, got content type: {result['content_type']}"
-
+                if (
+                    "html" in content_type
+                    or "text/plain" in content_type
+                    and not "audio" in content_type
+                ):
+                    result["status"] = "non_stream_content"
+                    result["error"] = f"Expected audio, got content type: {result['content_type']}"
 
     except urllib.error.HTTPError as e:
         result["status"] = "http_error"
@@ -106,23 +111,16 @@ def main():
     """Main function to parse arguments, run checks, and report results."""
     parser = argparse.ArgumentParser(
         description="Check NOAA Weather Radio stream health",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter # Show default values in help
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,  # Show default values in help
     )
     parser.add_argument(
-        "--timeout",
-        type=int,
-        default=DEFAULT_TIMEOUT,
-        help="Connection timeout per URL (seconds)"
+        "--timeout", type=int, default=DEFAULT_TIMEOUT, help="Connection timeout per URL (seconds)"
     )
-    parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Output results as JSON"
-    )
+    parser.add_argument("--json", action="store_true", help="Output results as JSON")
     parser.add_argument(
         "--fail-on-errors",
         action="store_true",
-        help="Exit with code 1 if any streams are dead or errored"
+        help="Exit with code 1 if any streams are dead or errored",
     )
     args = parser.parse_args()
 
@@ -139,7 +137,10 @@ def main():
     all_results = []
 
     station_count = len(all_stations_streams)
-    print(f"Checking {station_count} stations with {sum(len(urls) for urls in all_stations_streams.values())} total streams...\n", file=sys.stderr)
+    print(
+        f"Checking {station_count} stations with {sum(len(urls) for urls in all_stations_streams.values())} total streams...\n",
+        file=sys.stderr,
+    )
 
     # Sort stations by call sign for consistent output
     for call_sign in sorted(all_stations_streams.keys()):
@@ -157,7 +158,10 @@ def main():
                 errored_checks.append(result)
                 # Print live errors if not in JSON mode
                 if not args.json:
-                    print(f"  ✗ {result['call_sign']}: {result['url']} — {result['error']}", file=sys.stderr)
+                    print(
+                        f"  ✗ {result['call_sign']}: {result['url']} — {result['error']}",
+                        file=sys.stderr,
+                    )
 
     # Determine stations with no working streams
     dead_station_call_signs = set()
@@ -168,11 +172,11 @@ def main():
             if url_data["call_sign"] == station_call_sign:
                 if url_data["status"] == "ok":
                     all_station_urls_failed = False
-                    break # Found at least one working URL for this station
+                    break  # Found at least one working URL for this station
         if all_station_urls_failed:
-             # Ensure the station actually had URLs defined
-             if station_stream_urls:
-                 dead_station_call_signs.add(station_call_sign)
+            # Ensure the station actually had URLs defined
+            if station_stream_urls:
+                dead_station_call_signs.add(station_call_sign)
 
     # Prepare output
     output_data = {
@@ -184,8 +188,8 @@ def main():
         "all_errors": errored_checks,
         "summary": {
             "healthy_ratio": healthy_urls / total_urls_checked if total_urls_checked else 0,
-            "dead_station_count": len(dead_station_call_signs)
-        }
+            "dead_station_count": len(dead_station_call_signs),
+        },
     }
 
     if args.json:
@@ -193,7 +197,7 @@ def main():
         print(json.dumps(output_data, indent=2))
     else:
         # Print formatted text output to stderr for progress/errors, summary to stdout
-        print(f"\n{'='*60}", file=sys.stderr)
+        print(f"\n{'=' * 60}", file=sys.stderr)
         print(f"Stream Check Complete:", file=sys.stderr)
         print(f"  Total Stations: {output_data['total_stations']}", file=sys.stderr)
         print(f"  Total URLs Checked: {output_data['total_urls_checked']}", file=sys.stderr)
@@ -201,7 +205,10 @@ def main():
         print(f"  Errored URLs: {output_data['errored_urls']}", file=sys.stderr)
 
         if output_data["dead_station_call_signs"]:
-            print(f"\nStations with NO working streams ({len(output_data['dead_station_call_signs'])}):", file=sys.stderr)
+            print(
+                f"\nStations with NO working streams ({len(output_data['dead_station_call_signs'])}):",
+                file=sys.stderr,
+            )
             for cs in output_data["dead_station_call__signs"]:
                 print(f"  - {cs}", file=sys.stderr)
         elif not errored_checks:
@@ -210,8 +217,10 @@ def main():
         # Print all errors to stdout for easy review
         print("\n--- All Errored URLs ---")
         if errored_checks:
-            for error_info in output_data['all_errors']:
-                print(f"  {error_info['call_sign']}: {error_info['url']} — {error_info['error']} (Response Time: {error_info['response_time_ms']}ms)")
+            for error_info in output_data["all_errors"]:
+                print(
+                    f"  {error_info['call_sign']}: {error_info['url']} — {error_info['error']} (Response Time: {error_info['response_time_ms']}ms)"
+                )
         else:
             print("  No errors found.")
 
