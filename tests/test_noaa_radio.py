@@ -211,3 +211,33 @@ class TestRadioPreferences:
         prefs = RadioPreferences(config_dir=tmp_path)
         prefs.set_preferred_url("test1", "http://stream.com")
         assert prefs.get_preferred_url("TEST1") == "http://stream.com"
+
+
+class TestRadioPreferencesEdgeCases:
+    """Additional tests for RadioPreferences coverage."""
+
+    def test_init_no_config_dir(self):
+        """Test init with no config_dir sets path to None."""
+        prefs = RadioPreferences()
+        assert prefs._path is None
+        assert prefs.get_preferred_url("TEST") is None
+
+    def test_save_no_path(self):
+        """Test _save with no path does nothing."""
+        prefs = RadioPreferences()
+        prefs._prefs["TEST"] = "http://x.com"
+        prefs._save()  # Should not raise
+
+    def test_load_corrupt_file(self, tmp_path):
+        """Test _load handles corrupt JSON."""
+        f = tmp_path / "noaa_radio_prefs.json"
+        f.write_text("not json!!!", encoding="utf-8")
+        prefs = RadioPreferences(config_dir=tmp_path)
+        assert prefs._prefs == {} or isinstance(prefs._prefs, dict)
+
+    def test_save_creates_parent_dirs(self, tmp_path):
+        """Test _save creates parent directories."""
+        nested = tmp_path / "a" / "b"
+        prefs = RadioPreferences(config_dir=nested)
+        prefs.set_preferred_url("TEST", "http://x.com")
+        assert (nested / "noaa_radio_prefs.json").exists()

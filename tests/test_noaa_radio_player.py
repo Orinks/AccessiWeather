@@ -206,3 +206,239 @@ class TestRadioPlayerIsPlaying:
         player = RadioPlayer()
         player._stream = mock_stream
         assert player.is_playing() is False
+
+
+class TestEnsureSoundLib:
+    """Tests for _ensure_sound_lib() function."""
+
+    def test_ensure_sound_lib_success(self):
+        """Test _ensure_sound_lib when import succeeds."""
+        import accessiweather.noaa_radio.player as mod
+
+        old_init, old_avail = mod._sound_lib_initialized, mod._sound_lib_available
+        try:
+            mod._sound_lib_initialized = False
+            mod._sound_lib_available = False
+            with patch.dict(
+                "sys.modules",
+                {
+                    "sound_lib": MagicMock(),
+                    "sound_lib.stream": MagicMock(),
+                },
+            ):
+                result = mod._ensure_sound_lib()
+            assert result is True
+            assert mod._sound_lib_available is True
+        finally:
+            mod._sound_lib_initialized, mod._sound_lib_available = old_init, old_avail
+
+    def test_ensure_sound_lib_import_error(self):
+        """Test _ensure_sound_lib when ImportError raised."""
+        import accessiweather.noaa_radio.player as mod
+
+        old_init, old_avail = mod._sound_lib_initialized, mod._sound_lib_available
+        try:
+            mod._sound_lib_initialized = False
+            mod._sound_lib_available = False
+            with patch.dict("sys.modules", {"sound_lib": MagicMock()}):
+                # Remove sound_lib.stream so import fails
+                import sys
+
+                sys.modules.pop("sound_lib.stream", None)
+                with patch("builtins.__import__", side_effect=ImportError("no sound_lib")):
+                    result = mod._ensure_sound_lib()
+            assert result is False
+            assert mod._sound_lib_available is False
+        finally:
+            mod._sound_lib_initialized, mod._sound_lib_available = old_init, old_avail
+
+    def test_ensure_sound_lib_other_exception(self):
+        """Test _ensure_sound_lib when non-ImportError raised."""
+        import accessiweather.noaa_radio.player as mod
+
+        old_init, old_avail = mod._sound_lib_initialized, mod._sound_lib_available
+        try:
+            mod._sound_lib_initialized = False
+            mod._sound_lib_available = False
+            with patch("builtins.__import__", side_effect=RuntimeError("bass error")):
+                result = mod._ensure_sound_lib()
+            assert result is False
+            assert mod._sound_lib_available is False
+        finally:
+            mod._sound_lib_initialized, mod._sound_lib_available = old_init, old_avail
+
+    def test_ensure_sound_lib_cached(self):
+        """Test _ensure_sound_lib returns cached result."""
+        import accessiweather.noaa_radio.player as mod
+
+        old_init, old_avail = mod._sound_lib_initialized, mod._sound_lib_available
+        try:
+            mod._sound_lib_initialized = True
+            mod._sound_lib_available = True
+            result = mod._ensure_sound_lib()
+            assert result is True
+        finally:
+            mod._sound_lib_initialized, mod._sound_lib_available = old_init, old_avail
+
+
+class TestRetry:
+    """Tests for RadioPlayer.retry()."""
+
+    def test_retry_success(self, mock_sound_lib):
+        """Test successful retry reconnects."""
+        mock_cls, mock_stream = mock_sound_lib
+        on_reconnecting = MagicMock()
+        player = RadioPlayer(on_reconnecting=on_reconnecting)
+        player.play("http://example.com/stream")
+        mock_cls.reset_mock()
+        result = player.retry()
+        assert result is True
+        on_reconnecting.assert_called_once_with(1)
+        mock_cls.assert_called_once_with(url="http://example.com/stream")
+
+    def test_retry_cleans_old_stream(self, mock_sound_lib):
+        """Test retry cleans up the old stream."""
+        _, mock_stream = mock_sound_lib
+        player = RadioPlayer()
+        player.play("http://example.com/stream")
+        old_stop_count = mock_stream.stop.call_count
+        player.retry()
+        assert mock_stream.stop.call_count > old_stop_count
+        assert mock_stream.free.call_count > 0
+
+    def test_retry_old_stream_cleanup_exception(self, mock_sound_lib):
+        """Test retry handles exception during old stream cleanup."""
+        _, mock_stream = mock_sound_lib
+        player = RadioPlayer()
+        player.play("http://example.com/stream")
+        mock_stream.stop.side_effect = Exception("cleanup fail")
+        result = player.retry()
+        assert result is True  # Should still attempt reconnect
+
+
+class TestSetVolumeException:
+    """Tests for set_volume exception handling."""
+
+    def test_set_volume_stream_exception(self, mock_sound_lib):
+        """Test set_volume handles stream exception."""
+        _, mock_stream = mock_sound_lib
+        player = RadioPlayer()
+        player.play("http://example.com/stream")
+        type(mock_stream).volume = property(
+            lambda s: 1.0, lambda s, v: (_ for _ in ()).throw(Exception("vol err"))
+        )
+        player.set_volume(0.5)  # Should not raise
+        assert player.get_volume() == 0.5
+
+
+class TestIsStalled:
+    """Tests for is_stalled()."""
+
+    def test_is_stalled_true(self, mock_sound_lib):
+        """Test is_stalled returns True when stream is stalled."""
+        _, mock_stream = mock_sound_lib
+        mock_stream.is_stalled = True
+        player = RadioPlayer()
+        player.play("http://example.com/stream")
+        assert player.is_stalled() is True
+
+    def test_is_stalled_false(self, mock_sound_lib):
+        """Test is_stalled returns False when stream is not stalled."""
+        _, mock_stream = mock_sound_lib
+        mock_stream.is_stalled = False
+        player = RadioPlayer()
+        player.play("http://example.com/stream")
+        assert player.is_stalled() is False
+
+    def test_is_stalled_exception(self, mock_sound_lib):
+        """Test is_stalled handles exception."""
+        _, mock_stream = mock_sound_lib
+        type(mock_stream).is_stalled = property(
+            lambda self: (_ for _ in ()).throw(Exception("err"))
+        )
+        player = RadioPlayer()
+        player._stream = mock_stream
+        assert player.is_stalled() is False
+
+
+class TestGetLevel:
+    """Tests for get_level()."""
+
+    def test_get_level_with_stream(self, mock_sound_lib):
+        """Test get_level returns stream level."""
+        _, mock_stream = mock_sound_lib
+        mock_stream.get_level.return_value = 12345
+        player = RadioPlayer()
+        player.play("http://example.com/stream")
+        assert player.get_level() == 12345
+
+    def test_get_level_no_stream(self):
+        """Test get_level returns 0 with no stream."""
+        player = RadioPlayer()
+        assert player.get_level() == 0
+
+    def test_get_level_exception(self, mock_sound_lib):
+        """Test get_level handles exception."""
+        _, mock_stream = mock_sound_lib
+        mock_stream.get_level.side_effect = Exception("level err")
+        player = RadioPlayer()
+        player._stream = mock_stream
+        assert player.get_level() == 0
+
+
+class TestCheckHealth:
+    """Tests for check_health()."""
+
+    def test_check_health_stalled_triggers_retry(self, mock_sound_lib):
+        """Test check_health calls retry when stalled."""
+        _, mock_stream = mock_sound_lib
+        mock_stream.is_stalled = True
+        on_stalled = MagicMock()
+        player = RadioPlayer(on_stalled=on_stalled)
+        player.play("http://example.com/stream")
+        with patch.object(player, "retry") as mock_retry:
+            player.check_health()
+            mock_retry.assert_called_once()
+        on_stalled.assert_called_once()
+
+    def test_check_health_silence_counting(self, mock_sound_lib):
+        """Test check_health counts silence and auto-advances."""
+        _, mock_stream = mock_sound_lib
+        mock_stream.is_stalled = False
+        mock_stream.is_playing = True
+        mock_stream.get_level.return_value = 0
+        on_auto = MagicMock()
+        player = RadioPlayer()
+        player.play("http://example.com/stream")
+        # Call check_health SILENCE_THRESHOLD times
+        for _ in range(RadioPlayer.SILENCE_THRESHOLD):
+            player.check_health(on_auto_advance=on_auto)
+        on_auto.assert_called_once()
+        assert player._silence_count == 0  # Reset after auto-advance
+
+    def test_check_health_silence_reset_on_sound(self, mock_sound_lib):
+        """Test silence counter resets when sound detected."""
+        _, mock_stream = mock_sound_lib
+        mock_stream.is_stalled = False
+        mock_stream.is_playing = True
+        mock_stream.get_level.return_value = 0
+        player = RadioPlayer()
+        player.play("http://example.com/stream")
+        player.check_health()
+        player.check_health()
+        assert player._silence_count == 2
+        # Now sound returns
+        mock_stream.get_level.return_value = 100
+        player.check_health()
+        assert player._silence_count == 0
+
+    def test_check_health_not_playing_resets_silence(self, mock_sound_lib):
+        """Test silence counter resets when not playing."""
+        _, mock_stream = mock_sound_lib
+        mock_stream.is_stalled = False
+        mock_stream.is_playing = False
+        player = RadioPlayer()
+        player.play("http://example.com/stream")
+        player._silence_count = 2
+        player.check_health()
+        assert player._silence_count == 0
