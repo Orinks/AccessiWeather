@@ -68,7 +68,7 @@ class NOAARadioDialog(wx.Dialog):
             on_stalled=self._on_stalled,
             on_reconnecting=self._on_reconnecting,
         )
-        self._url_provider = StreamURLProvider()
+        self._url_provider = StreamURLProvider(use_fallback=False)
         self._prefs = RadioPreferences(config_dir=Paths().data)
         self._current_urls: list[str] = []
         self._current_url_index: int = 0
