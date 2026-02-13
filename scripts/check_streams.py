@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Check NOAA Weather Radio stream URLs for health.
+"""
+Check NOAA Weather Radio stream URLs for health.
 
 Tests each stream URL with a short connection attempt and reports
 dead/error streams. Can be run standalone or via CI/cron.
@@ -14,8 +15,8 @@ import argparse
 import json
 import sys
 import time
-import urllib.request
 import urllib.error
+import urllib.request
 from pathlib import Path
 
 # Add src to path so we can import the stream URL provider
@@ -43,7 +44,8 @@ USER_AGENT = "AccessiWeather-StreamCheck/1.0"
 
 
 def check_url(url: str, timeout: int = DEFAULT_TIMEOUT) -> dict:
-    """Check if a stream URL is reachable.
+    """
+    Check if a stream URL is reachable.
 
     Performs a GET request and reads a small chunk of data to confirm
     the stream is active. Returns a dictionary with the URL, status,
@@ -55,6 +57,7 @@ def check_url(url: str, timeout: int = DEFAULT_TIMEOUT) -> dict:
 
     Returns:
         A dictionary containing the check result.
+
     """
     start_time = time.monotonic()
     result = {"url": url, "status": "unknown", "error": None, "response_time_ms": 0}
@@ -83,7 +86,7 @@ def check_url(url: str, timeout: int = DEFAULT_TIMEOUT) -> dict:
                 if (
                     "html" in content_type
                     or "text/plain" in content_type
-                    and not "audio" in content_type
+                    and "audio" not in content_type
                 ):
                     result["status"] = "non_stream_content"
                     result["error"] = f"Expected audio, got content type: {result['content_type']}"
@@ -108,7 +111,7 @@ def check_url(url: str, timeout: int = DEFAULT_TIMEOUT) -> dict:
 
 
 def main():
-    """Main function to parse arguments, run checks, and report results."""
+    """Parse arguments, run checks, and report results."""
     parser = argparse.ArgumentParser(
         description="Check NOAA Weather Radio stream health",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,  # Show default values in help
@@ -169,14 +172,11 @@ def main():
         # Check if all URLs for this station resulted in an error
         all_station_urls_failed = True
         for url_data in all_results:
-            if url_data["call_sign"] == station_call_sign:
-                if url_data["status"] == "ok":
-                    all_station_urls_failed = False
-                    break  # Found at least one working URL for this station
-        if all_station_urls_failed:
-            # Ensure the station actually had URLs defined
-            if station_stream_urls:
-                dead_station_call_signs.add(station_call_sign)
+            if url_data["call_sign"] == station_call_sign and url_data["status"] == "ok":
+                all_station_urls_failed = False
+                break  # Found at least one working URL for this station
+        if all_station_urls_failed and station_stream_urls:
+            dead_station_call_signs.add(station_call_sign)
 
     # Prepare output
     output_data = {
@@ -184,7 +184,7 @@ def main():
         "total_urls_checked": total_urls_checked,
         "healthy_urls": healthy_urls,
         "errored_urls": len(errored_checks),
-        "dead_station_call_signs": sorted(list(dead_station_call_signs)),
+        "dead_station_call_signs": sorted(dead_station_call_signs),
         "all_errors": errored_checks,
         "summary": {
             "healthy_ratio": healthy_urls / total_urls_checked if total_urls_checked else 0,
