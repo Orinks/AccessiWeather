@@ -15,7 +15,7 @@ def mock_sound_lib():
     mock_stream_instance.volume = 1.0
 
     with (
-        patch("accessiweather.noaa_radio.player.SOUND_LIB_AVAILABLE", True),
+        patch("accessiweather.noaa_radio.player._sound_lib_available", True),
         patch("accessiweather.noaa_radio.player.URLStream", create=True),
     ):
         # Patch the import inside play()
@@ -33,7 +33,7 @@ def mock_sound_lib():
 @pytest.fixture
 def no_sound_lib():
     """Fixture that patches sound_lib as unavailable."""
-    with patch("accessiweather.noaa_radio.player.SOUND_LIB_AVAILABLE", False):
+    with patch("accessiweather.noaa_radio.player._sound_lib_available", False):
         yield
 
 

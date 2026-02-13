@@ -145,6 +145,10 @@ def _make_dialog_instance(module):
     dlg._volume_slider.GetValue.return_value = 100
     dlg._status_text = MagicMock()
     dlg._health_timer = MagicMock()
+    dlg._prefs = MagicMock()
+    dlg._current_urls = ["http://example.com/stream1", "http://example.com/stream2"]
+    dlg._current_url_index = 0
+    dlg._next_stream_btn = MagicMock()
     return dlg
 
 

@@ -43,7 +43,7 @@ _STATIONS: list[Station] = [
     Station("WWG41", 162.425, "Payson, AZ", 34.2309, -111.3251, "AZ"),
     # California
     Station("KEC49", 162.550, "San Francisco Bay, CA", 37.7749, -122.4194, "CA"),
-    Station("WNG659", 0.0, "El Paso Mountains, CA", 35.4300, -117.5800, "CA"),
+    Station("WNG659", 162.525, "El Paso Mountains, CA", 35.4300, -117.5800, "CA"),
     Station("KIH62", 162.400, "Fresno, CA", 36.7378, -119.7871, "CA"),
     Station("KWO37", 0.0, "Los Angeles, CA", 34.0522, -118.2437, "CA"),
     Station("WWF64", 162.450, "Monterey Marine, CA", 36.6002, -121.8947, "CA"),

@@ -40,7 +40,7 @@ class TestNoaaRadioMenuItemSource:
     def test_handler_bound_to_menu_item(self, source):
         """Test that the handler is bound to the menu item."""
         assert "_on_noaa_radio" in source
-        assert "noaa_radio_item" in source
+        assert "_noaa_radio_id" in source
 
     def test_no_location_check(self, source):
         """Test that handler checks for no location."""
