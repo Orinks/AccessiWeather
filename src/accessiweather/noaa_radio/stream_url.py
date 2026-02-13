@@ -210,7 +210,6 @@ class StreamURLProvider:
         "WXL39": ["https://wxr.gwes-cdn.net/WXL39"],
         "KIH28": [
             "https://wxr.gwes-cdn.net/KIH28",
-            "https://radio.weatherusa.net/NWR/KIH28_3.mp3",
             "https://wxradio.org/PA-Philadelphia-KIH28",
         ],
         "WXL40": ["https://wxradio.org/PA-Harrisburg-WXL40"],
