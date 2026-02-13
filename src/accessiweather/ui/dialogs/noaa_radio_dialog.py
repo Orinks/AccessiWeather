@@ -154,8 +154,11 @@ class NOAARadioDialog(wx.Dialog):
         """Load nearest stations into the selector."""
         try:
             db = StationDatabase()
-            results = db.find_nearest(self._lat, self._lon, limit=10)
-            self._stations = [r.station for r in results]
+            results = db.find_nearest(self._lat, self._lon, limit=25)
+            # Only show stations that have online streams available
+            self._stations = [
+                r.station for r in results if self._url_provider.has_known_url(r.station.call_sign)
+            ][:10]
 
             choices = [f"{s.call_sign} - {s.name} ({s.frequency} MHz)" for s in self._stations]
             self._station_choice.Set(choices)
