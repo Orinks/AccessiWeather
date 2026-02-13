@@ -174,7 +174,7 @@ class TestStationDatabase:
         db = StationDatabase()
         assert len(db.get_all_stations()) >= 100
 
-    def test_all_stations_are_us(self) -> None:
+    def test_all_stations_have_valid_region(self) -> None:
         db = StationDatabase()
         us_states = {
             "AL",
@@ -233,6 +233,20 @@ class TestStationDatabase:
             "GU",
             "AS",
             "MP",
+            # Canadian provinces
+            "AB",
+            "BC",
+            "MB",
+            "NB",
+            "NL",
+            "NS",
+            "NT",
+            "NU",
+            "ON",
+            "PE",
+            "QC",
+            "SK",
+            "YT",
         }
         for s in db.get_all_stations():
             assert s.state in us_states, f"{s.call_sign} has invalid state {s.state}"

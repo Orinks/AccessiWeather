@@ -165,6 +165,8 @@ class StreamURLProvider:
         # Nevada
         "WWG20": ["https://radio.weatherusa.net/NWR/WWG20.mp3"],
         "WXK58": ["https://radio.weatherusa.net/NWR/WXK58.mp3"],
+        "WXL58": ["https://radio.weatherusa.net/NWR/WXL58.mp3"],
+        "WXK78": ["https://radio.weatherusa.net/NWR/WXK78.mp3"],
         # New Mexico
         "WXJ37": ["https://wxr.gwes-cdn.net/WXJ37", "https://radio.weatherusa.net/NWR/WXJ37.mp3"],
         # New York

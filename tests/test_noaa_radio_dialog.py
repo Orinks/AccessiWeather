@@ -149,6 +149,8 @@ def _make_dialog_instance(module):
     dlg._current_urls = ["http://example.com/stream1", "http://example.com/stream2"]
     dlg._current_url_index = 0
     dlg._next_stream_btn = MagicMock()
+    dlg._prefer_btn = MagicMock()
+    dlg._auto_advance_stream = True
     return dlg
 
 
@@ -205,8 +207,9 @@ class TestPlaybackControls:
         """Test Play triggers player.play with stream URL."""
         dlg = _make_dialog_instance(noaa_dialog_module)
         dlg._url_provider.get_stream_urls.return_value = ["https://example.com/stream"]
+        dlg._prefs.reorder_urls.return_value = ["https://example.com/stream"]
         dlg._on_play(MagicMock())
-        dlg._player.play.assert_called_once_with("https://example.com/stream", fallback_urls=[])
+        dlg._player.play.assert_called_once_with("https://example.com/stream")
 
     def test_on_play_no_url_sets_status(self, noaa_dialog_module):
         """Test Play with no URL available sets status."""
@@ -252,7 +255,7 @@ class TestCallbacks:
         """Test playing callback updates buttons and status."""
         dlg = _make_dialog_instance(noaa_dialog_module)
         dlg._on_playing()
-        dlg._play_btn.Enable.assert_called_with(False)
+        dlg._play_btn.Enable.assert_called_with(True)
         dlg._stop_btn.Enable.assert_called_with(True)
         assert "KEC49" in dlg._status_text.SetLabel.call_args[0][0]
 
