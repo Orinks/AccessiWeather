@@ -6,7 +6,12 @@ using BeeWare/Toga best practices, replacing the complex service layer architect
 with straightforward, direct API calls and simple data models.
 """
 
-from .app import AccessiWeatherApp, main
+try:
+    from .app import AccessiWeatherApp, main
+except (ImportError, ModuleNotFoundError):
+    # wx may not be available in test/headless environments
+    AccessiWeatherApp = None  # type: ignore[assignment, misc]
+    main = None  # type: ignore[assignment]
 from .config import ConfigManager
 from .display import WeatherPresenter
 from .formatters import WeatherFormatter

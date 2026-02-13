@@ -186,16 +186,22 @@ class MainWindow(SizedFrame):
 
         # File menu
         file_menu = wx.Menu()
-        settings_item = file_menu.Append(wx.ID_PREFERENCES, "&Settings\tCtrl+S", "Open settings")
+        self._settings_id = wx.ID_PREFERENCES
+        settings_item = file_menu.Append(self._settings_id, "&Settings\tCtrl+S", "Open settings")
         file_menu.AppendSeparator()
-        exit_item = file_menu.Append(wx.ID_EXIT, "E&xit\tCtrl+Q", "Exit the application")
+        self._exit_id = wx.ID_EXIT
+        exit_item = file_menu.Append(self._exit_id, "E&xit\tCtrl+Q", "Exit the application")
         menu_bar.Append(file_menu, "&File")
 
         # Location menu
         location_menu = wx.Menu()
-        add_item = location_menu.Append(wx.ID_ANY, "&Add Location\tCtrl+L", "Add a new location")
+        self._add_location_id = wx.NewIdRef()
+        add_item = location_menu.Append(
+            self._add_location_id, "&Add Location\tCtrl+L", "Add a new location"
+        )
+        self._remove_location_id = wx.NewIdRef()
         remove_item = location_menu.Append(
-            wx.ID_ANY, "&Remove Location\tCtrl+D", "Remove selected location"
+            self._remove_location_id, "&Remove Location\tCtrl+D", "Remove selected location"
         )
         menu_bar.Append(location_menu, "&Location")
 
@@ -203,12 +209,14 @@ class MainWindow(SizedFrame):
         view_menu = wx.Menu()
         refresh_item = view_menu.Append(wx.ID_REFRESH, "&Refresh\tF5", "Refresh weather data")
         view_menu.AppendSeparator()
+        self._explain_id = wx.NewIdRef()
         explain_item = view_menu.Append(
-            wx.ID_ANY, "&Explain Weather\tCtrl+E", "Get AI explanation of weather"
+            self._explain_id, "&Explain Weather\tCtrl+E", "Get AI explanation of weather"
         )
         view_menu.AppendSeparator()
+        self._history_id = wx.NewIdRef()
         history_item = view_menu.Append(
-            wx.ID_ANY, "Weather &History\tCtrl+H", "View weather history"
+            self._history_id, "Weather &History\tCtrl+H", "View weather history"
         )
         discussion_item = view_menu.Append(
             wx.ID_ANY, "Forecast &Discussion...", "View NWS Area Forecast Discussion"
@@ -218,9 +226,16 @@ class MainWindow(SizedFrame):
             wx.ID_ANY, "Air &Quality...", "View air quality information"
         )
         uv_index_item = view_menu.Append(wx.ID_ANY, "&UV Index...", "View UV index information")
+        self._noaa_radio_id = wx.NewIdRef()
+        view_menu.Append(
+            self._noaa_radio_id,
+            "NOAA Weather &Radio...\tCtrl+Shift+R",
+            "Listen to NOAA Weather Radio",
+        )
         view_menu.AppendSeparator()
+        self._weather_chat_id = wx.NewIdRef()
         weather_chat_item = view_menu.Append(
-            wx.ID_ANY, "Weather &Assistant...\tCtrl+T", "Chat with AI weather assistant"
+            self._weather_chat_id, "Weather &Assistant...\tCtrl+T", "Chat with AI weather assistant"
         )
         menu_bar.Append(view_menu, "&View")
 
@@ -262,6 +277,7 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_MENU, lambda e: self._on_aviation(), aviation_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_air_quality(), air_quality_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_uv_index(), uv_index_item)
+        self.Bind(wx.EVT_MENU, lambda e: self._on_noaa_radio(), id=self._noaa_radio_id)
         self.Bind(wx.EVT_MENU, lambda e: self._on_weather_chat(), weather_chat_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_soundpack_manager(), soundpack_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_check_updates(), self._check_updates_item)
@@ -408,6 +424,21 @@ class MainWindow(SizedFrame):
         from .dialogs import show_uv_index_dialog
 
         show_uv_index_dialog(self, self.app)
+
+    def _on_noaa_radio(self) -> None:
+        """Open NOAA Weather Radio dialog."""
+        location = self.app.config_manager.get_current_location()
+        if not location:
+            wx.MessageBox(
+                "Please select a location first.",
+                "No Location Selected",
+                wx.OK | wx.ICON_WARNING,
+            )
+            return
+
+        from .dialogs import show_noaa_radio_dialog
+
+        show_noaa_radio_dialog(self, location.latitude, location.longitude)
 
     def _on_weather_chat(self) -> None:
         """Open Weather Assistant dialog."""
@@ -574,11 +605,32 @@ class MainWindow(SizedFrame):
         event.Skip()  # Allow normal minimize behavior
 
     def _setup_escape_accelerator(self) -> None:
-        """Set up accelerator table for Escape key to minimize to tray."""
-        # Create a unique ID for the escape action
+        """
+        Set up accelerator table for Escape key and menu shortcuts.
+
+        wxPython's SetAcceleratorTable replaces the implicit menu accelerators,
+        so we must include all Ctrl+ shortcuts here alongside Escape.
+        """
         self._escape_id = wx.NewIdRef()
-        # Create accelerator table with just Escape key
-        accel_tbl = wx.AcceleratorTable([(wx.ACCEL_NORMAL, wx.WXK_ESCAPE, self._escape_id)])
+        entries = [
+            (wx.ACCEL_NORMAL, wx.WXK_ESCAPE, self._escape_id),
+            (wx.ACCEL_NORMAL, wx.WXK_F5, wx.ID_REFRESH),
+        ]
+        # Re-register all Ctrl+ menu accelerators (SetAcceleratorTable replaces them)
+        ctrl_shortcuts = [
+            (wx.ACCEL_CTRL, "S", "_settings_id"),
+            (wx.ACCEL_CTRL, "Q", "_exit_id"),
+            (wx.ACCEL_CTRL, "L", "_add_location_id"),
+            (wx.ACCEL_CTRL, "D", "_remove_location_id"),
+            (wx.ACCEL_CTRL, "E", "_explain_id"),
+            (wx.ACCEL_CTRL, "H", "_history_id"),
+            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, "R", "_noaa_radio_id"),
+            (wx.ACCEL_CTRL, "T", "_weather_chat_id"),
+        ]
+        for flags, key, attr in ctrl_shortcuts:
+            if hasattr(self, attr):
+                entries.append((flags, ord(key), getattr(self, attr)))
+        accel_tbl = wx.AcceleratorTable(entries)
         self.SetAcceleratorTable(accel_tbl)
         # Bind the escape action
         self.Bind(wx.EVT_MENU, self._on_escape_pressed, id=self._escape_id)

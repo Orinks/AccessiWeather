@@ -7,6 +7,7 @@ from .discussion_dialog import show_discussion_dialog
 from .explanation_dialog import show_explanation_dialog
 from .location_dialog import show_add_location_dialog
 from .nationwide_discussion_dialog import show_nationwide_discussion_dialog
+from .noaa_radio_dialog import NOAARadioDialog, show_noaa_radio_dialog
 from .settings_dialog import show_settings_dialog
 from .soundpack_manager_dialog import show_soundpack_manager_dialog
 from .soundpack_wizard_dialog import SoundPackWizardDialog
@@ -27,5 +28,7 @@ __all__ = [
     "show_uv_index_dialog",
     "show_weather_assistant_dialog",
     "show_weather_history_dialog",
+    "NOAARadioDialog",
+    "show_noaa_radio_dialog",
     "SoundPackWizardDialog",
 ]
