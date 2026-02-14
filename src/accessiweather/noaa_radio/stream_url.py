@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from accessiweather.noaa_radio.wxradio_client import WxRadioClient
+
 
 class StreamURLProvider:
     """
@@ -295,6 +300,7 @@ class StreamURLProvider:
         self,
         custom_urls: dict[str, list[str]] | None = None,
         use_fallback: bool = True,
+        wxradio_client: WxRadioClient | None = None,
     ) -> None:
         """
         Initialize the stream URL provider.
@@ -304,6 +310,9 @@ class StreamURLProvider:
                 to override or supplement the built-in database.
             use_fallback: Whether to generate a fallback URL from the default
                 pattern when no known URL exists for a station.
+            wxradio_client: Optional WxRadioClient for dynamic stream discovery
+                from wxradio.org. When provided, live streams are checked first
+                and merged with static URLs (dynamic URLs take priority).
 
         """
         self._urls: dict[str, list[str]] = dict(self._STREAM_URLS)
@@ -311,6 +320,7 @@ class StreamURLProvider:
             for call_sign, urls in custom_urls.items():
                 self._urls[call_sign.upper()] = urls
         self._use_fallback = use_fallback
+        self._wxradio_client = wxradio_client
 
     def get_stream_url(self, call_sign: str) -> str | None:
         """
@@ -344,9 +354,29 @@ class StreamURLProvider:
         if not normalized:
             return []
 
-        urls = self._urls.get(normalized)
-        if urls:
-            return list(urls)
+        # Gather dynamic URLs from wxradio.org (if client configured)
+        dynamic_urls: list[str] = []
+        if self._wxradio_client is not None:
+            try:
+                dynamic_streams = self._wxradio_client.get_streams()
+                dynamic_urls = dynamic_streams.get(normalized, [])
+            except Exception:
+                pass
+
+        static_urls = list(self._urls.get(normalized, []))
+
+        # Merge: dynamic first, then static (deduplicated)
+        if dynamic_urls:
+            seen = set(dynamic_urls)
+            merged = list(dynamic_urls)
+            for url in static_urls:
+                if url not in seen:
+                    merged.append(url)
+                    seen.add(url)
+            return merged
+
+        if static_urls:
+            return static_urls
 
         if self._use_fallback:
             return [self._DEFAULT_PATTERN.format(call_sign=normalized)]
