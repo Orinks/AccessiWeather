@@ -10,6 +10,7 @@ import wx
 from accessiweather.noaa_radio import Station, StationDatabase, StreamURLProvider
 from accessiweather.noaa_radio.player import RadioPlayer
 from accessiweather.noaa_radio.preferences import RadioPreferences
+from accessiweather.noaa_radio.wxradio_client import WxRadioClient
 from accessiweather.paths import Paths
 
 if TYPE_CHECKING:
@@ -68,7 +69,7 @@ class NOAARadioDialog(wx.Dialog):
             on_stalled=self._on_stalled,
             on_reconnecting=self._on_reconnecting,
         )
-        self._url_provider = StreamURLProvider(use_fallback=False)
+        self._url_provider = StreamURLProvider(use_fallback=False, wxradio_client=WxRadioClient())
         self._prefs = RadioPreferences(config_dir=Paths().data)
         self._current_urls: list[str] = []
         self._current_url_index: int = 0
