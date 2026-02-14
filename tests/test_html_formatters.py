@@ -30,7 +30,7 @@ class TestEscapeHtml:
         assert _escape_html("<script>") == "&lt;script&gt;"
 
     def test_quotes(self):
-        assert _escape_html('"hello\'') == "&quot;hello&#x27;"
+        assert _escape_html("\"hello'") == "&quot;hello&#x27;"
 
     def test_all_special_chars(self):
         result = _escape_html('<a href="x">&\'')
@@ -168,7 +168,7 @@ class TestGenerateForecastHtml:
         # Tomorrow has no wind or details, so those classes appear only once in content
         # (excluding CSS which also contains the class names)
         # Check the actual HTML elements, not CSS rules
-        assert 'Wind: NW 5 mph' in html
+        assert "Wind: NW 5 mph" in html
         assert "Low near 55." in html
 
     def test_period_with_no_temp(self):
@@ -187,8 +187,12 @@ class TestGenerateForecastHtml:
         pres = ForecastPresentation(
             title="Forecast",
             hourly_periods=[
-                HourlyPeriodPresentation(time="3 PM", temperature="75°F", conditions="Sunny", wind=None),
-                HourlyPeriodPresentation(time="4 PM", temperature="74°F", conditions=None, wind=None),
+                HourlyPeriodPresentation(
+                    time="3 PM", temperature="75°F", conditions="Sunny", wind=None
+                ),
+                HourlyPeriodPresentation(
+                    time="4 PM", temperature="74°F", conditions=None, wind=None
+                ),
             ],
         )
         html = generate_forecast_html(pres)
