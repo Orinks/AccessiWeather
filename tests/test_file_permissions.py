@@ -25,7 +25,9 @@ class TestSetSecureFilePermissions:
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        with patch("accessiweather.config.file_permissions._set_posix_permissions", return_value=True):
+        with patch(
+            "accessiweather.config.file_permissions._set_posix_permissions", return_value=True
+        ):
             result = set_secure_file_permissions(str(test_file))
 
             assert result is True
@@ -44,7 +46,9 @@ class TestSetSecureFilePermissions:
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        with patch("accessiweather.config.file_permissions._set_posix_permissions", return_value=True) as mock_posix:
+        with patch(
+            "accessiweather.config.file_permissions._set_posix_permissions", return_value=True
+        ) as mock_posix:
             result = set_secure_file_permissions(test_file)
 
             assert result is True
@@ -56,7 +60,9 @@ class TestSetSecureFilePermissions:
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        with patch("accessiweather.config.file_permissions._set_windows_permissions", return_value=True) as mock_windows:
+        with patch(
+            "accessiweather.config.file_permissions._set_windows_permissions", return_value=True
+        ) as mock_windows:
             result = set_secure_file_permissions(test_file)
 
             assert result is True
@@ -67,8 +73,10 @@ class TestSetSecureFilePermissions:
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        with patch("accessiweather.config.file_permissions._set_posix_permissions",
-                  side_effect=RuntimeError("Unexpected error")):
+        with patch(
+            "accessiweather.config.file_permissions._set_posix_permissions",
+            side_effect=RuntimeError("Unexpected error"),
+        ):
             result = set_secure_file_permissions(test_file)
 
             assert result is False
@@ -132,20 +140,20 @@ class TestSetWindowsPermissions:
         test_file.write_text("test content")
 
         with patch.dict(os.environ, {"USERNAME": "testuser"}), patch("subprocess.run") as mock_run:
-                mock_run.return_value.returncode = 0
+            mock_run.return_value.returncode = 0
 
-                result = _set_windows_permissions(test_file)
+            result = _set_windows_permissions(test_file)
 
-                assert result is True
-                mock_run.assert_called_once()
+            assert result is True
+            mock_run.assert_called_once()
 
-                # Check command arguments
-                args = mock_run.call_args[0][0]
-                assert args[0] == "icacls"
-                assert str(test_file) in args
-                assert "/inheritance:r" in args
-                assert "/grant:r" in args
-                assert "testuser:(F)" in args
+            # Check command arguments
+            args = mock_run.call_args[0][0]
+            assert args[0] == "icacls"
+            assert str(test_file) in args
+            assert "/inheritance:r" in args
+            assert "/grant:r" in args
+            assert "testuser:(F)" in args
 
     def test_missing_username_environment_variable(self, tmp_path):
         """Test behavior when USERNAME environment variable is missing."""
@@ -162,40 +170,58 @@ class TestSetWindowsPermissions:
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        with patch.dict(os.environ, {"USERNAME": "testuser"}), patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, "icacls", stderr="Access denied")):
-                result = _set_windows_permissions(test_file)
+        with (
+            patch.dict(os.environ, {"USERNAME": "testuser"}),
+            patch(
+                "subprocess.run",
+                side_effect=subprocess.CalledProcessError(1, "icacls", stderr="Access denied"),
+            ),
+        ):
+            result = _set_windows_permissions(test_file)
 
-                assert result is False
+            assert result is False
 
     def test_timeout_expired_handled(self, tmp_path):
         """Test that TimeoutExpired is handled gracefully."""
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        with patch.dict(os.environ, {"USERNAME": "testuser"}), patch("subprocess.run", side_effect=subprocess.TimeoutExpired("icacls", SUBPROCESS_TIMEOUT)):
-                result = _set_windows_permissions(test_file)
+        with (
+            patch.dict(os.environ, {"USERNAME": "testuser"}),
+            patch(
+                "subprocess.run",
+                side_effect=subprocess.TimeoutExpired("icacls", SUBPROCESS_TIMEOUT),
+            ),
+        ):
+            result = _set_windows_permissions(test_file)
 
-                assert result is False
+            assert result is False
 
     def test_file_not_found_error_handled(self, tmp_path):
         """Test that FileNotFoundError is handled gracefully."""
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        with patch.dict(os.environ, {"USERNAME": "testuser"}), patch("subprocess.run", side_effect=FileNotFoundError("icacls.exe not found")):
-                result = _set_windows_permissions(test_file)
+        with (
+            patch.dict(os.environ, {"USERNAME": "testuser"}),
+            patch("subprocess.run", side_effect=FileNotFoundError("icacls.exe not found")),
+        ):
+            result = _set_windows_permissions(test_file)
 
-                assert result is False
+            assert result is False
 
     def test_unexpected_exception_handled(self, tmp_path):
         """Test that unexpected exceptions are handled gracefully."""
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        with patch.dict(os.environ, {"USERNAME": "testuser"}), patch("subprocess.run", side_effect=RuntimeError("Unexpected error")):
-                result = _set_windows_permissions(test_file)
+        with (
+            patch.dict(os.environ, {"USERNAME": "testuser"}),
+            patch("subprocess.run", side_effect=RuntimeError("Unexpected error")),
+        ):
+            result = _set_windows_permissions(test_file)
 
-                assert result is False
+            assert result is False
 
     def test_subprocess_arguments_correct(self, tmp_path):
         """Test that subprocess is called with correct arguments."""
@@ -203,24 +229,24 @@ class TestSetWindowsPermissions:
         test_file.write_text("test content")
 
         with patch.dict(os.environ, {"USERNAME": "testuser"}), patch("subprocess.run") as mock_run:
-                _set_windows_permissions(test_file)
+            _set_windows_permissions(test_file)
 
-                # Check all call arguments
-                args, kwargs = mock_run.call_args
-                command = args[0]
+            # Check all call arguments
+            args, kwargs = mock_run.call_args
+            command = args[0]
 
-                assert command == [
-                    "icacls",
-                    str(test_file),
-                    "/inheritance:r",
-                    "/grant:r",
-                    "testuser:(F)"
-                ]
+            assert command == [
+                "icacls",
+                str(test_file),
+                "/inheritance:r",
+                "/grant:r",
+                "testuser:(F)",
+            ]
 
-                assert kwargs["check"] is True
-                assert kwargs["capture_output"] is True
-                assert kwargs["text"] is True
-                assert kwargs["timeout"] == SUBPROCESS_TIMEOUT
+            assert kwargs["check"] is True
+            assert kwargs["capture_output"] is True
+            assert kwargs["text"] is True
+            assert kwargs["timeout"] == SUBPROCESS_TIMEOUT
 
     @patch("os.name", "nt")
     def test_creation_flags_on_windows(self, tmp_path):
@@ -229,12 +255,12 @@ class TestSetWindowsPermissions:
         test_file.write_text("test content")
 
         with patch.dict(os.environ, {"USERNAME": "testuser"}), patch("subprocess.run") as mock_run:
-                _set_windows_permissions(test_file)
+            _set_windows_permissions(test_file)
 
-                kwargs = mock_run.call_args[1]
-                # Should use the CREATE_NO_WINDOW flag
-                assert "creationflags" in kwargs
-                assert kwargs["creationflags"] != 0
+            kwargs = mock_run.call_args[1]
+            # Should use the CREATE_NO_WINDOW flag
+            assert "creationflags" in kwargs
+            assert kwargs["creationflags"] != 0
 
     @patch("os.name", "posix")
     def test_creation_flags_on_non_windows(self, tmp_path):
@@ -243,11 +269,11 @@ class TestSetWindowsPermissions:
         test_file.write_text("test content")
 
         with patch.dict(os.environ, {"USERNAME": "testuser"}), patch("subprocess.run") as mock_run:
-                _set_windows_permissions(test_file)
+            _set_windows_permissions(test_file)
 
-                kwargs = mock_run.call_args[1]
-                # Should use 0 for creation flags on non-Windows
-                assert kwargs["creationflags"] == 0
+            kwargs = mock_run.call_args[1]
+            # Should use 0 for creation flags on non-Windows
+            assert kwargs["creationflags"] == 0
 
 
 class TestConstants:

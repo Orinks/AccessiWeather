@@ -308,7 +308,7 @@ class TestUpdateSettings:
         assert result is True
         mock_manager.save_config.assert_called_once()
 
-    @patch('accessiweather.config.settings.SecureStorage.set_password')
+    @patch("accessiweather.config.settings.SecureStorage.set_password")
     def test_update_secure_setting(self, mock_set_password, operations, mock_manager):
         """Test updating a secure setting."""
         mock_set_password.return_value = True
@@ -320,7 +320,7 @@ class TestUpdateSettings:
         mock_set_password.assert_called_once_with("visual_crossing_api_key", "test_key")
         assert result is True
 
-    @patch('accessiweather.config.settings.SecureStorage.set_password')
+    @patch("accessiweather.config.settings.SecureStorage.set_password")
     def test_update_secure_setting_storage_fails(self, mock_set_password, operations, mock_manager):
         """Test updating a secure setting when secure storage fails."""
         mock_set_password.return_value = False
@@ -335,9 +335,7 @@ class TestUpdateSettings:
     def test_update_multiple_settings(self, operations, mock_manager):
         """Test updating multiple settings at once."""
         result = operations.update_settings(
-            temperature_unit="celsius",
-            update_interval_minutes=15,
-            data_source="openmeteo"
+            temperature_unit="celsius", update_interval_minutes=15, data_source="openmeteo"
         )
 
         config = mock_manager.get_config.return_value

@@ -94,7 +94,7 @@ class TestBackupRestore:
 
     def test_backup_config_permission_error(self, operations, mock_manager):
         """Test backup config with permission error."""
-        with patch('shutil.copy2', side_effect=PermissionError("Access denied")):
+        with patch("shutil.copy2", side_effect=PermissionError("Access denied")):
             result = operations.backup_config()
 
             assert result is False
@@ -123,7 +123,7 @@ class TestBackupRestore:
         backup_file = tmp_path / "backup.json"
         backup_file.write_text('{"test": "data"}')
 
-        with patch('shutil.copy2', side_effect=OSError("Copy failed")):
+        with patch("shutil.copy2", side_effect=OSError("Copy failed")):
             result = operations.restore_config(backup_file)
 
             assert result is False
@@ -414,7 +414,7 @@ class TestImportLocations:
         import_file.write_text(json.dumps(import_data))
 
         # Mock Location constructor to validate ranges
-        with patch('accessiweather.config.import_export.Location') as mock_location:
+        with patch("accessiweather.config.import_export.Location") as mock_location:
             mock_location.return_value = Location(name="Test", latitude=40.0, longitude=-80.0)
 
             result = operations.import_locations(import_file)
@@ -540,8 +540,9 @@ class TestImportSettings:
         }
         import_file.write_text(json.dumps(import_data))
 
-        with patch('accessiweather.models.AppSettings.from_dict',
-                  side_effect=Exception("Validation error")):
+        with patch(
+            "accessiweather.models.AppSettings.from_dict", side_effect=Exception("Validation error")
+        ):
             result = operations.import_settings(import_file)
 
             assert result is False

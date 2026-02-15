@@ -38,7 +38,7 @@ class TestSecureStorage:
         mock_keyring = MagicMock()
         mock_get_keyring.return_value = mock_keyring
 
-        with patch.object(SecureStorage, 'delete_password', return_value=True) as mock_delete:
+        with patch.object(SecureStorage, "delete_password", return_value=True) as mock_delete:
             result = SecureStorage.set_password("test_user", "")
 
             assert result is True
@@ -146,7 +146,7 @@ class TestLazySecureStorage:
         assert lazy_storage._value is None
         assert lazy_storage._loaded is False
 
-    @patch.object(SecureStorage, 'get_password', return_value="test_value")
+    @patch.object(SecureStorage, "get_password", return_value="test_value")
     def test_value_loads_from_keyring(self, mock_get_password):
         """Test that value property loads from keyring on first access."""
         lazy_storage = LazySecureStorage("test_key")
@@ -158,7 +158,7 @@ class TestLazySecureStorage:
         assert lazy_storage._value == "test_value"
         mock_get_password.assert_called_once_with("test_key")
 
-    @patch.object(SecureStorage, 'get_password', return_value="test_value")
+    @patch.object(SecureStorage, "get_password", return_value="test_value")
     def test_value_cached_after_first_access(self, mock_get_password):
         """Test that value is cached after first access."""
         lazy_storage = LazySecureStorage("test_key")
@@ -171,7 +171,7 @@ class TestLazySecureStorage:
         assert result1 == result2 == "test_value"
         mock_get_password.assert_called_once()  # Only called once
 
-    @patch.object(SecureStorage, 'get_password', return_value=None)
+    @patch.object(SecureStorage, "get_password", return_value=None)
     def test_value_returns_empty_string_when_none(self, mock_get_password):
         """Test that value returns empty string when keyring returns None."""
         lazy_storage = LazySecureStorage("test_key")
@@ -180,7 +180,7 @@ class TestLazySecureStorage:
 
         assert result == ""
 
-    @patch.object(SecureStorage, 'get_password', return_value="test_value")
+    @patch.object(SecureStorage, "get_password", return_value="test_value")
     def test_str_returns_value(self, mock_get_password):
         """Test that str() returns the value."""
         lazy_storage = LazySecureStorage("test_key")
@@ -189,7 +189,7 @@ class TestLazySecureStorage:
 
         assert result == "test_value"
 
-    @patch.object(SecureStorage, 'get_password', return_value="test_value")
+    @patch.object(SecureStorage, "get_password", return_value="test_value")
     def test_bool_true_for_non_empty(self, mock_get_password):
         """Test that bool() returns True for non-empty value."""
         lazy_storage = LazySecureStorage("test_key")
@@ -198,7 +198,7 @@ class TestLazySecureStorage:
 
         assert result is True
 
-    @patch.object(SecureStorage, 'get_password', return_value="")
+    @patch.object(SecureStorage, "get_password", return_value="")
     def test_bool_false_for_empty(self, mock_get_password):
         """Test that bool() returns False for empty value."""
         lazy_storage = LazySecureStorage("test_key")
@@ -207,7 +207,7 @@ class TestLazySecureStorage:
 
         assert result is False
 
-    @patch.object(SecureStorage, 'get_password', return_value=None)
+    @patch.object(SecureStorage, "get_password", return_value=None)
     def test_bool_false_for_none(self, mock_get_password):
         """Test that bool() returns False for None value."""
         lazy_storage = LazySecureStorage("test_key")
@@ -216,7 +216,7 @@ class TestLazySecureStorage:
 
         assert result is False
 
-    @patch.object(SecureStorage, 'get_password', return_value="  test_value  ")
+    @patch.object(SecureStorage, "get_password", return_value="  test_value  ")
     def test_strip_returns_stripped_value(self, mock_get_password):
         """Test that strip() returns stripped value."""
         lazy_storage = LazySecureStorage("test_key")
@@ -225,7 +225,7 @@ class TestLazySecureStorage:
 
         assert result == "test_value"
 
-    @patch.object(SecureStorage, 'get_password', return_value="test_value")
+    @patch.object(SecureStorage, "get_password", return_value="test_value")
     def test_equality_with_string(self, mock_get_password):
         """Test equality comparison with string."""
         lazy_storage = LazySecureStorage("test_key")
@@ -233,7 +233,7 @@ class TestLazySecureStorage:
         assert lazy_storage == "test_value"
         assert lazy_storage != "different_value"
 
-    @patch.object(SecureStorage, 'get_password')
+    @patch.object(SecureStorage, "get_password")
     def test_equality_with_lazy_storage(self, mock_get_password):
         """Test equality comparison between LazySecureStorage instances."""
         mock_get_password.return_value = "test_value"
@@ -251,7 +251,7 @@ class TestLazySecureStorage:
 
         assert result is NotImplemented
 
-    @patch.object(SecureStorage, 'get_password', return_value="test_value")
+    @patch.object(SecureStorage, "get_password", return_value="test_value")
     def test_reset_clears_cache(self, mock_get_password):
         """Test that reset() clears the cached value."""
         lazy_storage = LazySecureStorage("test_key")
@@ -300,6 +300,7 @@ class TestKeyringModule:
 
         # Patch the import inside _get_keyring to raise ImportError
         import builtins
+
         real_import = builtins.__import__
 
         def mock_import(name, *args, **kwargs):
