@@ -131,8 +131,7 @@ class TestSetWindowsPermissions:
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        with patch.dict(os.environ, {"USERNAME": "testuser"}):
-            with patch("subprocess.run") as mock_run:
+        with patch.dict(os.environ, {"USERNAME": "testuser"}), patch("subprocess.run") as mock_run:
                 mock_run.return_value.returncode = 0
 
                 result = _set_windows_permissions(test_file)
@@ -163,8 +162,7 @@ class TestSetWindowsPermissions:
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        with patch.dict(os.environ, {"USERNAME": "testuser"}):
-            with patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, "icacls", stderr="Access denied")):
+        with patch.dict(os.environ, {"USERNAME": "testuser"}), patch("subprocess.run", side_effect=subprocess.CalledProcessError(1, "icacls", stderr="Access denied")):
                 result = _set_windows_permissions(test_file)
 
                 assert result is False
@@ -174,8 +172,7 @@ class TestSetWindowsPermissions:
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        with patch.dict(os.environ, {"USERNAME": "testuser"}):
-            with patch("subprocess.run", side_effect=subprocess.TimeoutExpired("icacls", SUBPROCESS_TIMEOUT)):
+        with patch.dict(os.environ, {"USERNAME": "testuser"}), patch("subprocess.run", side_effect=subprocess.TimeoutExpired("icacls", SUBPROCESS_TIMEOUT)):
                 result = _set_windows_permissions(test_file)
 
                 assert result is False
@@ -185,8 +182,7 @@ class TestSetWindowsPermissions:
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        with patch.dict(os.environ, {"USERNAME": "testuser"}):
-            with patch("subprocess.run", side_effect=FileNotFoundError("icacls.exe not found")):
+        with patch.dict(os.environ, {"USERNAME": "testuser"}), patch("subprocess.run", side_effect=FileNotFoundError("icacls.exe not found")):
                 result = _set_windows_permissions(test_file)
 
                 assert result is False
@@ -196,8 +192,7 @@ class TestSetWindowsPermissions:
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        with patch.dict(os.environ, {"USERNAME": "testuser"}):
-            with patch("subprocess.run", side_effect=RuntimeError("Unexpected error")):
+        with patch.dict(os.environ, {"USERNAME": "testuser"}), patch("subprocess.run", side_effect=RuntimeError("Unexpected error")):
                 result = _set_windows_permissions(test_file)
 
                 assert result is False
@@ -207,8 +202,7 @@ class TestSetWindowsPermissions:
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        with patch.dict(os.environ, {"USERNAME": "testuser"}):
-            with patch("subprocess.run") as mock_run:
+        with patch.dict(os.environ, {"USERNAME": "testuser"}), patch("subprocess.run") as mock_run:
                 _set_windows_permissions(test_file)
 
                 # Check all call arguments
@@ -234,8 +228,7 @@ class TestSetWindowsPermissions:
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        with patch.dict(os.environ, {"USERNAME": "testuser"}):
-            with patch("subprocess.run") as mock_run:
+        with patch.dict(os.environ, {"USERNAME": "testuser"}), patch("subprocess.run") as mock_run:
                 _set_windows_permissions(test_file)
 
                 kwargs = mock_run.call_args[1]
@@ -249,8 +242,7 @@ class TestSetWindowsPermissions:
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        with patch.dict(os.environ, {"USERNAME": "testuser"}):
-            with patch("subprocess.run") as mock_run:
+        with patch.dict(os.environ, {"USERNAME": "testuser"}), patch("subprocess.run") as mock_run:
                 _set_windows_permissions(test_file)
 
                 kwargs = mock_run.call_args[1]

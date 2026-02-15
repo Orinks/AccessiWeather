@@ -275,20 +275,20 @@ class TestKeyringModule:
     """Tests for keyring module lazy loading."""
 
     def test_get_keyring_caches_result(self):
-        """Test that _get_keyring caches the keyring module."""
+        """Test that _get_keyring caches the keyring module after first call."""
         from accessiweather.config import secure_storage
 
         # Reset module state
         secure_storage._keyring_module = None
         secure_storage._keyring_checked = False
 
-        with patch('accessiweather.config.secure_storage.keyring', create=True) as mock_keyring:
-            # First call
-            result1 = secure_storage._get_keyring()
-            # Second call
-            result2 = secure_storage._get_keyring()
+        # First call imports keyring (real or mock doesn't matter)
+        result1 = secure_storage._get_keyring()
+        # Second call should return cached result
+        result2 = secure_storage._get_keyring()
 
-            assert result1 is result2 is mock_keyring
+        assert result1 is result2
+        assert secure_storage._keyring_checked is True
 
     def test_get_keyring_handles_import_error(self):
         """Test that _get_keyring handles ImportError gracefully."""
@@ -298,8 +298,21 @@ class TestKeyringModule:
         secure_storage._keyring_module = None
         secure_storage._keyring_checked = False
 
-        with patch('accessiweather.config.secure_storage.keyring', side_effect=ImportError):
+        # Patch the import inside _get_keyring to raise ImportError
+        import builtins
+        real_import = builtins.__import__
+
+        def mock_import(name, *args, **kwargs):
+            if name == "keyring":
+                raise ImportError("No keyring")
+            return real_import(name, *args, **kwargs)
+
+        with patch.object(builtins, "__import__", side_effect=mock_import):
             result = secure_storage._get_keyring()
 
-            assert result is None
-            assert secure_storage._keyring_checked is True
+        assert result is None
+        assert secure_storage._keyring_checked is True
+
+        # Restore state for other tests
+        secure_storage._keyring_module = None
+        secure_storage._keyring_checked = False

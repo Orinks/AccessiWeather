@@ -540,7 +540,7 @@ class TestImportSettings:
         }
         import_file.write_text(json.dumps(import_data))
 
-        with patch('accessiweather.config.import_export.AppSettings.from_dict',
+        with patch('accessiweather.models.AppSettings.from_dict',
                   side_effect=Exception("Validation error")):
             result = operations.import_settings(import_file)
 
@@ -561,8 +561,7 @@ class TestImportSettings:
 
         assert result is False
 
-    @patch('accessiweather.config.import_export.AppSettings')
-    def test_import_settings_preserves_locations(self, mock_appsettings, operations, mock_manager, tmp_path):
+    def test_import_settings_preserves_locations(self, operations, mock_manager, tmp_path):
         """Test that import_settings preserves existing locations."""
         import_file = tmp_path / "import.json"
         import_data = {
