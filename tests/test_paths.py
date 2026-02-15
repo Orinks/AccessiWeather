@@ -124,8 +124,9 @@ class TestAppPath:
 
     def test_app_frozen(self):
         p = Paths()
-        with patch.object(sys, "frozen", True, create=True), patch.object(
-            sys, "executable", "/usr/bin/myapp"
+        with (
+            patch.object(sys, "frozen", True, create=True),
+            patch.object(sys, "executable", "/usr/bin/myapp"),
         ):
             result = p.app
         assert result == Path("/usr/bin")

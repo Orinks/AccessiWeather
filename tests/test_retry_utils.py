@@ -67,28 +67,33 @@ class TestIsRetryableHttpError:
 
     def test_timeout_exception(self):
         import httpx
+
         assert is_retryable_http_error(httpx.ConnectTimeout("timeout")) is True
 
     def test_500_status_error(self):
         import httpx
+
         response = httpx.Response(500, request=httpx.Request("GET", "http://x"))
         exc = httpx.HTTPStatusError("fail", request=response.request, response=response)
         assert is_retryable_http_error(exc) is True
 
     def test_429_status_error(self):
         import httpx
+
         response = httpx.Response(429, request=httpx.Request("GET", "http://x"))
         exc = httpx.HTTPStatusError("fail", request=response.request, response=response)
         assert is_retryable_http_error(exc) is True
 
     def test_400_not_retryable(self):
         import httpx
+
         response = httpx.Response(400, request=httpx.Request("GET", "http://x"))
         exc = httpx.HTTPStatusError("fail", request=response.request, response=response)
         assert is_retryable_http_error(exc) is False
 
     def test_request_error_retryable(self):
         import httpx
+
         exc = httpx.ConnectError("connection refused")
         assert is_retryable_http_error(exc) is True
 
