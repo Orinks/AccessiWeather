@@ -403,21 +403,25 @@ class AccessiWeatherApp(wx.App):
 
                     update_info = asyncio.run(check())
 
-                    if update_info:
-                        # Show notification about available update
-                        channel_label = "nightly" if update_info.is_nightly else "stable"
+                    if update_info:  # pragma: no cover — UI prompt
+                        # Show changelog dialog for available update
+                        channel_label = "Nightly" if update_info.is_nightly else "Stable"
                         logger.info(f"Update available: {update_info.version} ({channel_label})")
 
                         def show_update_notification():
-                            result = wx.MessageBox(
-                                f"A new {channel_label} update is available!\n\n"
-                                f"Current: {display_version}\n"
-                                f"Latest: {update_info.version}\n\n"
-                                "Download now?",
-                                "Update Available",
-                                wx.YES_NO | wx.ICON_INFORMATION,
+                            from .ui.dialogs.update_dialog import UpdateAvailableDialog
+
+                            main_window = self.GetTopWindow()
+                            dlg = UpdateAvailableDialog(
+                                parent=main_window,
+                                current_version=display_version,
+                                new_version=update_info.version,
+                                channel_label=channel_label,
+                                release_notes=update_info.release_notes,
                             )
-                            if result == wx.YES:
+                            result = dlg.ShowModal()
+                            dlg.Destroy()
+                            if result == wx.ID_OK:
                                 self._download_and_apply_update(update_info)
 
                         wx.CallAfter(show_update_notification)

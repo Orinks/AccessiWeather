@@ -1486,17 +1486,19 @@ class SettingsDialogSimple(wx.Dialog):
                 )
 
                 def prompt_download():
+                    from .update_dialog import UpdateAvailableDialog
+
                     channel_label = "Nightly" if update_info.is_nightly else "Stable"
-                    result = wx.MessageBox(
-                        f"A new {channel_label} version is available!\n\n"
-                        f"Current: {current_version}\n"
-                        f"Latest: {update_info.version}\n\n"
-                        f"Download now?",
-                        "Update Available",
-                        wx.YES_NO | wx.ICON_INFORMATION,
+                    dlg = UpdateAvailableDialog(
+                        parent=self,
+                        current_version=current_version,
+                        new_version=update_info.version,
+                        channel_label=channel_label,
+                        release_notes=update_info.release_notes,
                     )
-                    if result == wx.YES:
-                        # Use app's download method
+                    result = dlg.ShowModal()
+                    dlg.Destroy()
+                    if result == wx.ID_OK:
                         self.app._download_and_apply_update(update_info)
 
                 wx.CallAfter(prompt_download)
