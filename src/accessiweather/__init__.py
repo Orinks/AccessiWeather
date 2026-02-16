@@ -51,9 +51,9 @@ def _get_version() -> str:
     """Get version from available sources."""
     # 1. Try generated _build_meta.py (works in PyInstaller builds)
     try:
-        from ._build_meta import __version__ as v
+        from ._build_meta import __version__ as v  # pragma: no cover — build only
 
-        return v
+        return v  # pragma: no cover
     except ImportError:
         pass
 

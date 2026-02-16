@@ -61,9 +61,9 @@ class AccessiWeatherApp(wx.App):
 
         # Build tag for nightly builds (from generated _build_meta.py or legacy _build_info.py)
         try:
-            from ._build_meta import BUILD_TAG
+            from ._build_meta import BUILD_TAG  # pragma: no cover — build only
 
-            self.build_tag: str | None = BUILD_TAG
+            self.build_tag: str | None = BUILD_TAG  # pragma: no cover
         except ImportError:
             try:
                 from ._build_info import BUILD_TAG
