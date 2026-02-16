@@ -10,6 +10,7 @@ import logging
 import httpx
 
 from .models import Location
+from .utils.log_sanitize import sanitize_log
 from .utils.retry_utils import (
     RETRYABLE_EXCEPTIONS,
     async_retry_with_backoff,
@@ -30,7 +31,7 @@ class LocationManager:
     @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=15.0)
     async def search_locations(self, query: str, limit: int = 5) -> list[Location]:
         """Search for locations using Open-Meteo geocoding API."""
-        logger.info(f"Searching for locations: {query}")
+        logger.info(f"Searching for locations: {sanitize_log(query)}")
 
         # Open-Meteo requires at least 2 characters
         if len(query.strip()) < 2:
@@ -53,7 +54,7 @@ class LocationManager:
 
                 results = data.get("results", [])
                 if not results:
-                    logger.info(f"No locations found for query: {query}")
+                    logger.info(f"No locations found for query: {sanitize_log(query)}")
                     return []
 
                 # Sort by population (higher first) for better relevance
@@ -71,7 +72,7 @@ class LocationManager:
                             break
 
                 locations = list(unique_locations.values())
-                logger.info(f"Found {len(locations)} locations for query: {query}")
+                logger.info(f"Found {len(locations)} locations for query: {sanitize_log(query)}")
                 return locations
 
         except Exception as e:
