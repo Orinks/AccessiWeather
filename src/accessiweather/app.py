@@ -403,7 +403,7 @@ class AccessiWeatherApp(wx.App):
 
                     update_info = asyncio.run(check())
 
-                    if update_info:
+                    if update_info:  # pragma: no cover — UI prompt
                         # Show changelog dialog for available update
                         channel_label = "Nightly" if update_info.is_nightly else "Stable"
                         logger.info(f"Update available: {update_info.version} ({channel_label})")
