@@ -523,19 +523,22 @@ class MainWindow(SizedFrame):
                         wx.OK | wx.ICON_INFORMATION,
                     )
                 else:
-                    # Update available
-                    channel_label = "nightly" if update_info.is_nightly else "stable"
+                    # Update available — show changelog dialog
+                    channel_label = "Nightly" if update_info.is_nightly else "Stable"
 
                     def prompt():
-                        result = wx.MessageBox(
-                            f"A new {channel_label} update is available!\n\n"
-                            f"Current: {display_version}\n"
-                            f"Latest: {update_info.version}\n\n"
-                            "Download now?",
-                            "Update Available",
-                            wx.YES_NO | wx.ICON_INFORMATION,
+                        from .dialogs.update_dialog import UpdateAvailableDialog
+
+                        dlg = UpdateAvailableDialog(
+                            parent=self,
+                            current_version=display_version,
+                            new_version=update_info.version,
+                            channel_label=channel_label,
+                            release_notes=update_info.release_notes,
                         )
-                        if result == wx.YES:
+                        result = dlg.ShowModal()
+                        dlg.Destroy()
+                        if result == wx.ID_OK:
                             self.app._download_and_apply_update(update_info)
 
                     wx.CallAfter(prompt)
