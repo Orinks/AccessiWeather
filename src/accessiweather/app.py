@@ -59,13 +59,18 @@ class AccessiWeatherApp(wx.App):
 
         self.version = __version__
 
-        # Build tag for nightly builds (from generated _build_info.py or None)
+        # Build tag for nightly builds (from generated _build_meta.py or legacy _build_info.py)
         try:
-            from ._build_info import BUILD_TAG
+            from ._build_meta import BUILD_TAG
 
             self.build_tag: str | None = BUILD_TAG
         except ImportError:
-            self.build_tag = None
+            try:
+                from ._build_info import BUILD_TAG
+
+                self.build_tag = BUILD_TAG
+            except ImportError:
+                self.build_tag = None
 
         # Set up paths (similar to Toga's paths API)
         self.paths = Paths()
