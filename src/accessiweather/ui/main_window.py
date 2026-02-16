@@ -990,19 +990,16 @@ class MainWindow(SizedFrame):
             # Send notifications for each event
             for event in events:
                 try:
+                    # Pass sound_event and let send_notification handle sound
+                    # to avoid double-playing (send_notification plays sound
+                    # internally when play_sound=True)
                     success = notifier.send_notification(
                         title=event.title,
                         message=event.message,
                         timeout=10,
+                        sound_event=event.sound_event,
+                        play_sound=settings.sound_enabled,
                     )
-
-                    if success and settings.sound_enabled:
-                        import contextlib
-
-                        from ..notifications.sound_player import play_notification_sound
-
-                        with contextlib.suppress(Exception):
-                            play_notification_sound(event.sound_event, settings.sound_pack)
 
                     if success:
                         logger.info("Sent %s notification: %s", event.event_type, event.title)
