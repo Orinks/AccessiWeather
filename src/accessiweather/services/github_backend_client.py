@@ -43,6 +43,9 @@ class GitHubBackendClient:
             timeout: Request timeout in seconds
 
         """
+        from ..utils.url_validation import validate_backend_url
+
+        validate_backend_url(backend_url)
         self.backend_url = backend_url.rstrip("/")
         self.user_agent = user_agent or f"AccessiWeather/{APP_VERSION}"
         self.timeout = timeout

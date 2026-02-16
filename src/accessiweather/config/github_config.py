@@ -125,7 +125,14 @@ class GitHubConfigOperations:
         return "https://soundpack-backend.fly.dev"
 
     def set_github_backend_url(self, backend_url: str) -> bool:
-        """Persist the GitHub backend URL."""
+        """
+        Persist the GitHub backend URL.
+
+        Raises SSRFError if the URL is unsafe (non-https, private IP, etc.).
+        """
+        from ..utils.url_validation import validate_backend_url
+
+        validate_backend_url(backend_url)
         try:
             config = self._manager.get_config()
             config.settings.github_backend_url = backend_url.strip()
