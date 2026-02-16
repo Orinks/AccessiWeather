@@ -23,6 +23,11 @@ def parse_args() -> argparse.Namespace:
         help="Run in portable mode",
     )
     parser.add_argument(
+        "--test-update",
+        action="store_true",
+        help="Force an old version/tag so the update checker always finds an update",
+    )
+    parser.add_argument(
         "--fake-version",
         metavar="VERSION",
         help="Override version for update testing (e.g., '0.1.0')",
@@ -38,11 +43,18 @@ def parse_args() -> argparse.Namespace:
 if __name__ == "__main__":
     args = parse_args()
 
+    fake_version = args.fake_version
+    fake_nightly = args.fake_nightly
+
+    if args.test_update:
+        fake_version = fake_version or "0.0.1"
+        fake_nightly = fake_nightly or "nightly-20200101"
+
     from accessiweather.app import main
 
     main(
         config_dir=args.config_dir,
         portable_mode=args.portable,
-        fake_version=args.fake_version,
-        fake_nightly=args.fake_nightly,
+        fake_version=fake_version,
+        fake_nightly=fake_nightly,
     )
