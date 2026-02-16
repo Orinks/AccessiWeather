@@ -85,8 +85,7 @@ jobs:
 
       - name: Build
         run: |
-          python scripts/generate_version.py
-          python scripts/generate_build_info.py ${{ needs.prepare.outputs.is_nightly == 'true' && needs.prepare.outputs.tag || '' }}
+          python scripts/generate_build_meta.py ${{ needs.prepare.outputs.is_nightly == 'true' && needs.prepare.outputs.tag || '' }}
           python installer/create_icons.py
           python -m PyInstaller --clean --noconfirm installer/accessiweather.spec
 
@@ -140,8 +139,7 @@ jobs:
 
       - name: Build
         run: |
-          python scripts/generate_version.py
-          python scripts/generate_build_info.py ${{ needs.prepare.outputs.is_nightly == 'true' && needs.prepare.outputs.tag || '' }}
+          python scripts/generate_build_meta.py ${{ needs.prepare.outputs.is_nightly == 'true' && needs.prepare.outputs.tag || '' }}
           python installer/create_icons.py
           python -m PyInstaller --clean --noconfirm installer/accessiweather.spec
 

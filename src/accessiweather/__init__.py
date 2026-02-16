@@ -49,7 +49,15 @@ from .weather_history import (
 # Package version: try _version.py (generated for builds), then metadata, then pyproject.toml
 def _get_version() -> str:
     """Get version from available sources."""
-    # 1. Try generated _version.py (works in PyInstaller builds)
+    # 1. Try generated _build_meta.py (works in PyInstaller builds)
+    try:
+        from ._build_meta import __version__ as v  # pragma: no cover — build only
+
+        return v  # pragma: no cover
+    except ImportError:
+        pass
+
+    # 1b. Legacy: try _version.py for backwards compatibility
     try:
         from ._version import __version__ as v
 
