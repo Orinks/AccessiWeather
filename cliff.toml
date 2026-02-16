@@ -63,7 +63,7 @@ commit_parsers = [
     # Skip noise - merge commits
     { message = "^Merge", skip = true },
     { message = "^merge", skip = true },
-    
+
     # Skip noise - conventional commit types users don't care about
     { message = "^chore\\(release\\)", skip = true },
     { message = "^chore\\(deps\\)", skip = true },
@@ -74,7 +74,7 @@ commit_parsers = [
     { message = "^chore", skip = true },
     { message = "^style", skip = true },
     { message = "^test", skip = true },
-    
+
     # Skip noise - dev/CI keywords in any commit message
     { message = "(?i)git-cliff", skip = true },
     { message = "(?i)github.pages", skip = true },
@@ -87,40 +87,40 @@ commit_parsers = [
     { message = "(?i)dependabot", skip = true },
     { message = "(?i)codecov", skip = true },
     { message = "(?i)coverage", skip = true },
-    { message = "(?i)\.github", skip = true },
+    { message = "(?i)[.]github", skip = true },
     { message = "(?i)release.notes", skip = true },
     { message = "(?i)changelog", skip = true },
     { message = "(?i)update-pages", skip = true },
     { message = "(?i)nightly", skip = true },
     { message = "(?i)build_tag", skip = true },
     { message = "(?i)app\\.version", skip = true },
-    
+
     # Added - new features
     { message = "^feat", group = "Added" },
     { message = "^[a|A]dd", group = "Added" },
     { message = "^[s|S]upport", group = "Added" },
     { message = "^.*: add", group = "Added" },
     { message = "^.*: support", group = "Added" },
-    
+
     # Fixed - bug fixes (user-facing only)
     { message = "^fix", group = "Fixed" },
     { message = "^.*: fix", group = "Fixed" },
     { message = "^hotfix", group = "Fixed" },
-    
+
     # Removed
     { message = "^[r|R]emove", group = "Removed" },
     { message = "^.*: remove", group = "Removed" },
     { message = "^.*: delete", group = "Removed" },
     { message = "^deprecate", group = "Deprecated" },
-    
+
     # Security
     { body = ".*security", group = "Security" },
     { message = "^security", group = "Security" },
-    
+
     # Changed - only conventional commits that aren't caught above
     { message = "^refactor", group = "Changed" },
     { message = "^perf", group = "Changed" },
-    
+
     # Skip everything else - if it's not conventional, it's probably dev noise
     { message = "^.*", skip = true },
 ]

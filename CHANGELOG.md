@@ -5,41 +5,28 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
-- Simplified auto-updater with one-click download and install - check for stable or nightly updates from Help menu or Settings, download with progress, and restart to apply
-- Startup update check - automatically checks for updates when the app launches (configurable in Settings > Updates)
-- "Check for Updates" in Help menu - shows your current channel (stable/nightly) and lets you check on demand
-- `--fake-version` and `--fake-nightly` CLI flags for testing the update flow without modifying code
-- AI model validation at startup - if your configured model was removed from OpenRouter, you'll be warned and offered to reset to default or open Settings
-- Auto-fallback for AI models - if your configured model fails, the app automatically tries the default model before giving up
-- AI model validation - invalid or removed models now show a clear error message directing you to Settings instead of cryptic API errors
-- Model validation methods in OpenRouter client - check if a model ID exists before using it
-- Report Issue dialog (Help menu) - quickly report bugs or request features directly to GitHub with auto-collected system info
-- Per-sound volume control in Sound Pack Manager - adjust volume for individual sounds directly in the UI, with live preview at the selected volume level
-- Model browser dialog - browse and select from 300+ OpenRouter AI models directly in Settings instead of opening a web browser. Filter by provider (OpenAI, Anthropic, Meta, Google, etc.), search by name, and toggle free-only models. Provider list updates dynamically based on your filters
-- Weather model selection for Open-Meteo - choose from 11 forecast models including ECMWF, GFS, ICON, Météo-France, and more. Find it in Settings > Data Sources when using Open-Meteo or Auto mode
-- Settings export and import - backup your preferences to a file and restore them on another machine, perfect for keeping your setup in sync across devices. Find it in Settings > Advanced. Your API keys stay secure in your system keyring and aren't included in the export file
-- Config file protection on Windows - your configuration file now has Windows-equivalent permissions (user-only access), matching the existing protection on macOS and Linux. This adds defense-in-depth for your location data and preferences
-- UV Index Dialog - dedicated view for detailed UV index information and sun protection recommendations accessible from the View menu
-- Data source attribution - now shows "Data from: National Weather Service, Open-Meteo" etc. so you always know where your weather data comes from
-- Stale data warnings - when you're seeing cached weather data, the app now tells you with messages like "Showing cached data from 2:30 PM (API timeout)"
+- Implemented Nationwide weather discussions feature, including:
+    - "Show Nationwide location" setting and dynamic filtering of the Nationwide location.
+    - Main window integration for displaying discussion summaries.
+    - AI summarization button in the nationwide dialog.
+    - Shared `NationalDiscussionService` instance with caching.
+- Bundled `prismatoid`/`prism` in PyInstaller nightly builds (PR #294).
+- Added missing tests for `national_discussion_service.py` to meet coverage gate requirements.
+- Updated Antfarm to v0.2.2 and configured feature-dev workflow for 80% diff-coverage.
+- Scheduled weekly disk cleanup cron job.
 
 ### Changed
--
+- Consolidated CPC outlooks into a single "6-10 & 8-14 Day Outlook" field.
+- Updated tab labels to show full names (e.g., "WPC (Weather Prediction Center)").
+- Tabs with no available data are now hidden, and the NHC tab is only shown during hurricane season.
+- Standardized classification of PMD/SWO discussions using WMO header codes.
 
 ### Fixed
-- Weather alerts now trigger desktop notifications - previously alerts showed in the UI but never sent notifications
-- Location switching now updates the weather display - switching locations was silently failing due to a type mismatch
-- Cleaned up Visual Crossing alert processing - removed orphaned AlertManager that was losing state between calls
-- Area Forecast Discussion AI summaries now respect your custom system prompt and instructions from Settings > AI
-- macOS PyInstaller builds on Apple Silicon now use an x86_64 toolchain and filter sound_lib binaries so the DMG build completes under Rosetta
-- AI explanation now correctly reads your configured model preference instead of always falling back to default
-- Canceling AI explanation generation no longer crashes the app
-- OpenRouter auto-router now works in Area Forecast Discussion dialog
-- Your chosen AI model won't silently fall back to other models when it returns short responses
-- Increased AI token limit for models with thinking/reasoning features (Gemini, Grok, etc.)
-
-### Removed
--
+- Fixed PyInstaller bundling for `prismatoid`/`prism` in nightly builds.
+- Enabled "Show Nationwide location" checkbox and correctly handled Nationwide location in `set_current_location()`.
+- Corrected CPC URLs to point to the actual discussion page (`fxus06.html`).
+- Ensured AI explanation logic correctly uses configured models and respects system prompt instructions.
+- Improved CI coverage gate to require >=80% on changed non-UI lines.
 
 ---
 

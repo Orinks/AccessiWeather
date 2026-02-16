@@ -86,6 +86,14 @@ class LocationOperations:
                 self.logger.info(f"Set current location: {name}")
                 return self._manager.save_config()
 
+        # Handle Nationwide (injected dynamically, not in config.locations)
+        if name == "Nationwide":
+            config.current_location = Location(
+                name="Nationwide", latitude=39.8283, longitude=-98.5795
+            )
+            self.logger.info("Set current location: Nationwide")
+            return self._manager.save_config()
+
         self.logger.warning(f"Location {name} not found")
         return False
 
@@ -94,8 +102,27 @@ class LocationOperations:
         return self._manager.get_config().current_location
 
     def get_all_locations(self) -> list[Location]:
-        """Return a shallow copy of all configured locations."""
-        return self._manager.get_config().locations.copy()
+        """
+        Return a shallow copy of all configured locations.
+
+        If show_nationwide_location is enabled in settings, ensures the
+        Nationwide location is included. If disabled, filters it out.
+        """
+        locations = self._manager.get_config().locations.copy()
+        settings = self._manager.get_config().settings
+        show_nationwide = getattr(settings, "show_nationwide_location", True)
+        data_source = getattr(settings, "data_source", "auto")
+        # Nationwide only works with NWS-compatible sources
+        nationwide_available = show_nationwide and data_source in ("auto", "nws")
+
+        has_nationwide = any(loc.name == "Nationwide" for loc in locations)
+
+        if nationwide_available and not has_nationwide:
+            locations.insert(0, Location(name="Nationwide", latitude=39.8283, longitude=-98.5795))
+        elif not nationwide_available and has_nationwide:
+            locations = [loc for loc in locations if loc.name != "Nationwide"]
+
+        return locations
 
     def get_location_names(self) -> list[str]:
         """Return the list of configured location names."""

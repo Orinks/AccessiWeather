@@ -104,6 +104,8 @@ class AppSettings:
     debug_mode: bool = False
     sound_enabled: bool = True
     sound_pack: str = "default"
+    # Nationwide location visibility
+    show_nationwide_location: bool = True
     # Event-based notifications (opt-in, disabled by default)
     notify_discussion_update: bool = False
     notify_severe_risk_change: bool = False

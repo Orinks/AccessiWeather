@@ -327,6 +327,135 @@ class NationalDiscussionScraper:
         logger.error(f"Failed to fetch SPC discussion after {self.max_retries + 1} attempts")
         return {"summary": "No discussion found. (SPC)", "full": ""}
 
+    # CPC URLs for extended outlooks
+    CPC_6_10_URL = "https://www.cpc.ncep.noaa.gov/products/predictions/610day/"
+    CPC_8_14_URL = "https://www.cpc.ncep.noaa.gov/products/predictions/814day/"
+
+    def fetch_cpc_discussions(self) -> dict[str, str]:
+        """
+        Fetch CPC 6-10 Day and 8-14 Day extended outlooks via scraping.
+
+        CPC does not provide a public API, so we scrape the outlook pages.
+
+        Returns
+        -------
+            Dictionary with keys 'outlook_6_10' and 'outlook_8_14',
+            each containing the outlook text or an error message string.
+
+        """
+        domain = "cpc.ncep.noaa.gov"
+        result: dict[str, str] = {}
+
+        for key, url, label in [
+            ("outlook_6_10", self.CPC_6_10_URL, "6-10 Day"),
+            ("outlook_8_14", self.CPC_8_14_URL, "8-14 Day"),
+        ]:
+            text = self._fetch_cpc_outlook(url, domain, label)
+            result[key] = text
+
+        return result
+
+    def _fetch_cpc_outlook(self, url: str, domain: str, label: str) -> str:
+        """
+        Fetch and parse a single CPC outlook page.
+
+        Args:
+        ----
+            url: URL of the CPC outlook page
+            domain: Domain for rate limiting
+            label: Human-readable label for logging (e.g. '6-10 Day')
+
+        Returns:
+        -------
+            The outlook text, or a descriptive error message string.
+
+        """
+        for retry in range(self.max_retries + 1):
+            backoff_delay = (
+                0 if retry == 0 else self.request_delay * (self.retry_backoff ** (retry - 1))
+            )
+            if retry > 0:
+                logger.info(
+                    f"Retrying CPC {label} outlook fetch "
+                    f"(attempt {retry + 1}/{self.max_retries + 1})"
+                )
+                if backoff_delay > 0:
+                    time.sleep(backoff_delay)
+
+            response = self._make_request(url, domain, retry)
+
+            if response.get("success"):
+                text = self._extract_cpc_outlook_text(response["text"], label)
+                if text:
+                    logger.info(f"Successfully fetched CPC {label} outlook")
+                    return text
+
+            error_msg = response.get("error", "Unknown error")
+            logger.warning(f"CPC {label} outlook fetch attempt {retry + 1} failed: {error_msg}")
+
+        logger.error(f"Failed to fetch CPC {label} outlook after {self.max_retries + 1} attempts")
+        return f"CPC {label} Outlook is currently unavailable."
+
+    def _extract_cpc_outlook_text(self, html_content: str, label: str) -> str | None:
+        """
+        Extract outlook text from a CPC outlook HTML page.
+
+        CPC outlook pages typically contain the discussion text in a <pre> tag
+        or within the main content area.
+
+        Args:
+        ----
+            html_content: Raw HTML content
+            label: Human-readable label for logging
+
+        Returns:
+        -------
+            Extracted text, or None if extraction failed.
+
+        """
+        try:
+            soup = BeautifulSoup(html_content, "html.parser")
+
+            # CPC outlook pages typically have the discussion in a <pre> tag
+            pre = soup.find("pre")
+            if pre:
+                text = pre.get_text().strip()
+                if text:
+                    return text
+
+            # Fallback: look for div with class 'contentArea' or similar
+            for selector in [
+                {"class_": "contentArea"},
+                {"class_": "mainContent"},
+                {"id": "content"},
+            ]:
+                div = soup.find("div", **selector)
+                if div:
+                    text = div.get_text().strip()
+                    if text:
+                        return text
+
+            # Last resort: try to find any substantial text block
+            body = soup.find("body")
+            if body:
+                # Look for the longest text block
+                texts = [
+                    p.get_text().strip()
+                    for p in body.find_all(["p", "div"])
+                    if p.get_text().strip()
+                ]
+                if texts:
+                    longest = max(texts, key=len)
+                    if len(longest) > 100:
+                        return longest
+
+            logger.error(f"Could not extract CPC {label} outlook text")
+            return None
+
+        except Exception as e:
+            logger.error(f"Error parsing CPC {label} outlook HTML: {e}")
+            return None
+
     def fetch_all_discussions(self) -> dict[str, dict[str, str]]:
         """
         Fetch all national discussions with parallel processing.

@@ -186,16 +186,22 @@ class MainWindow(SizedFrame):
 
         # File menu
         file_menu = wx.Menu()
-        settings_item = file_menu.Append(wx.ID_PREFERENCES, "&Settings\tCtrl+S", "Open settings")
+        self._settings_id = wx.ID_PREFERENCES
+        settings_item = file_menu.Append(self._settings_id, "&Settings\tCtrl+S", "Open settings")
         file_menu.AppendSeparator()
-        exit_item = file_menu.Append(wx.ID_EXIT, "E&xit\tCtrl+Q", "Exit the application")
+        self._exit_id = wx.ID_EXIT
+        exit_item = file_menu.Append(self._exit_id, "E&xit\tCtrl+Q", "Exit the application")
         menu_bar.Append(file_menu, "&File")
 
         # Location menu
         location_menu = wx.Menu()
-        add_item = location_menu.Append(wx.ID_ANY, "&Add Location\tCtrl+L", "Add a new location")
+        self._add_location_id = wx.NewIdRef()
+        add_item = location_menu.Append(
+            self._add_location_id, "&Add Location\tCtrl+L", "Add a new location"
+        )
+        self._remove_location_id = wx.NewIdRef()
         remove_item = location_menu.Append(
-            wx.ID_ANY, "&Remove Location\tCtrl+D", "Remove selected location"
+            self._remove_location_id, "&Remove Location\tCtrl+D", "Remove selected location"
         )
         menu_bar.Append(location_menu, "&Location")
 
@@ -203,12 +209,14 @@ class MainWindow(SizedFrame):
         view_menu = wx.Menu()
         refresh_item = view_menu.Append(wx.ID_REFRESH, "&Refresh\tF5", "Refresh weather data")
         view_menu.AppendSeparator()
+        self._explain_id = wx.NewIdRef()
         explain_item = view_menu.Append(
-            wx.ID_ANY, "&Explain Weather\tCtrl+E", "Get AI explanation of weather"
+            self._explain_id, "&Explain Weather\tCtrl+E", "Get AI explanation of weather"
         )
         view_menu.AppendSeparator()
+        self._history_id = wx.NewIdRef()
         history_item = view_menu.Append(
-            wx.ID_ANY, "Weather &History\tCtrl+H", "View weather history"
+            self._history_id, "Weather &History\tCtrl+H", "View weather history"
         )
         discussion_item = view_menu.Append(
             wx.ID_ANY, "Forecast &Discussion...", "View NWS Area Forecast Discussion"
@@ -218,6 +226,17 @@ class MainWindow(SizedFrame):
             wx.ID_ANY, "Air &Quality...", "View air quality information"
         )
         uv_index_item = view_menu.Append(wx.ID_ANY, "&UV Index...", "View UV index information")
+        self._noaa_radio_id = wx.NewIdRef()
+        view_menu.Append(
+            self._noaa_radio_id,
+            "NOAA Weather &Radio...\tCtrl+Shift+R",
+            "Listen to NOAA Weather Radio",
+        )
+        view_menu.AppendSeparator()
+        self._weather_chat_id = wx.NewIdRef()
+        weather_chat_item = view_menu.Append(
+            self._weather_chat_id, "Weather &Assistant...\tCtrl+T", "Chat with AI weather assistant"
+        )
         menu_bar.Append(view_menu, "&View")
 
         # Tools menu
@@ -258,6 +277,8 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_MENU, lambda e: self._on_aviation(), aviation_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_air_quality(), air_quality_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_uv_index(), uv_index_item)
+        self.Bind(wx.EVT_MENU, lambda e: self._on_noaa_radio(), id=self._noaa_radio_id)
+        self.Bind(wx.EVT_MENU, lambda e: self._on_weather_chat(), weather_chat_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_soundpack_manager(), soundpack_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_check_updates(), self._check_updates_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_report_issue(), report_issue_item)
@@ -373,10 +394,18 @@ class MainWindow(SizedFrame):
         show_explanation_dialog(self, self.app)
 
     def _on_discussion(self) -> None:
-        """View NWS Area Forecast Discussion."""
-        from .dialogs import show_discussion_dialog
+        """View NWS Area Forecast Discussion, or Nationwide discussions if Nationwide is selected."""
+        current = self.app.config_manager.get_current_location()
+        if current and current.name == "Nationwide":
+            from .dialogs.nationwide_discussion_dialog import NationwideDiscussionDialog
 
-        show_discussion_dialog(self, self.app)
+            dlg = NationwideDiscussionDialog(parent=self, service=self._get_discussion_service())
+            dlg.ShowModal()
+            dlg.Destroy()
+        else:
+            from .dialogs import show_discussion_dialog
+
+            show_discussion_dialog(self, self.app)
 
     def _on_aviation(self) -> None:
         """View aviation weather."""
@@ -395,6 +424,27 @@ class MainWindow(SizedFrame):
         from .dialogs import show_uv_index_dialog
 
         show_uv_index_dialog(self, self.app)
+
+    def _on_noaa_radio(self) -> None:
+        """Open NOAA Weather Radio dialog."""
+        location = self.app.config_manager.get_current_location()
+        if not location:
+            wx.MessageBox(
+                "Please select a location first.",
+                "No Location Selected",
+                wx.OK | wx.ICON_WARNING,
+            )
+            return
+
+        from .dialogs import show_noaa_radio_dialog
+
+        show_noaa_radio_dialog(self, location.latitude, location.longitude)
+
+    def _on_weather_chat(self) -> None:
+        """Open Weather Assistant dialog."""
+        from .dialogs import show_weather_assistant_dialog
+
+        show_weather_assistant_dialog(self, self.app)
 
     def _on_soundpack_manager(self) -> None:
         """Open the soundpack manager dialog."""
@@ -555,11 +605,32 @@ class MainWindow(SizedFrame):
         event.Skip()  # Allow normal minimize behavior
 
     def _setup_escape_accelerator(self) -> None:
-        """Set up accelerator table for Escape key to minimize to tray."""
-        # Create a unique ID for the escape action
+        """
+        Set up accelerator table for Escape key and menu shortcuts.
+
+        wxPython's SetAcceleratorTable replaces the implicit menu accelerators,
+        so we must include all Ctrl+ shortcuts here alongside Escape.
+        """
         self._escape_id = wx.NewIdRef()
-        # Create accelerator table with just Escape key
-        accel_tbl = wx.AcceleratorTable([(wx.ACCEL_NORMAL, wx.WXK_ESCAPE, self._escape_id)])
+        entries = [
+            (wx.ACCEL_NORMAL, wx.WXK_ESCAPE, self._escape_id),
+            (wx.ACCEL_NORMAL, wx.WXK_F5, wx.ID_REFRESH),
+        ]
+        # Re-register all Ctrl+ menu accelerators (SetAcceleratorTable replaces them)
+        ctrl_shortcuts = [
+            (wx.ACCEL_CTRL, "S", "_settings_id"),
+            (wx.ACCEL_CTRL, "Q", "_exit_id"),
+            (wx.ACCEL_CTRL, "L", "_add_location_id"),
+            (wx.ACCEL_CTRL, "D", "_remove_location_id"),
+            (wx.ACCEL_CTRL, "E", "_explain_id"),
+            (wx.ACCEL_CTRL, "H", "_history_id"),
+            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, "R", "_noaa_radio_id"),
+            (wx.ACCEL_CTRL, "T", "_weather_chat_id"),
+        ]
+        for flags, key, attr in ctrl_shortcuts:
+            if hasattr(self, attr):
+                entries.append((flags, ord(key), getattr(self, attr)))
+        accel_tbl = wx.AcceleratorTable(entries)
         self.SetAcceleratorTable(accel_tbl)
         # Bind the escape action
         self.Bind(wx.EVT_MENU, self._on_escape_pressed, id=self._escape_id)
@@ -635,6 +706,17 @@ class MainWindow(SizedFrame):
                 wx.CallAfter(self._on_weather_error, "No location selected")
                 return
 
+            # For Nationwide location, fetch discussion summaries instead of weather
+            if location.name == "Nationwide":
+                wx.CallAfter(
+                    self.current_conditions.SetValue,
+                    "Fetching nationwide weather discussions from NWS, SPC, NHC, and CPC...\n"
+                    "This may take a moment.",
+                )
+                wx.CallAfter(self.forecast_display.SetValue, "")
+                await self._fetch_nationwide_discussions(generation)
+                return
+
             # Fetch weather data - pass the Location object directly
             # force_refresh=True bypasses cache (used when switching locations)
             weather_data = await self.app.weather_client.get_weather_data(
@@ -659,6 +741,70 @@ class MainWindow(SizedFrame):
         except Exception as e:
             logger.error(f"Failed to fetch weather data: {e}")
             wx.CallAfter(self._on_weather_error, str(e))
+
+    def _get_discussion_service(self):
+        """Get or create the shared NationalDiscussionService instance."""
+        if not hasattr(self, "_discussion_service") or self._discussion_service is None:
+            from ..services.national_discussion_service import NationalDiscussionService
+
+            self._discussion_service = NationalDiscussionService()
+        return self._discussion_service
+
+    async def _fetch_nationwide_discussions(self, generation: int) -> None:
+        """Fetch nationwide discussion summaries and display in weather fields."""
+        import asyncio
+
+        try:
+            service = self._get_discussion_service()
+            # Run synchronous fetch in thread to avoid blocking
+            discussions = await asyncio.to_thread(service.fetch_all_discussions)
+
+            if generation != self._fetch_generation:
+                return
+
+            # Build current conditions text (short range + SPC day 1)
+            current_parts = ["=== Nationwide Weather Summary ===\n"]
+            wpc = discussions.get("wpc", {})
+            if wpc.get("short_range", {}).get("text"):
+                current_parts.append(
+                    f"--- {wpc['short_range']['title']} ---\n{wpc['short_range']['text']}\n"
+                )
+            spc = discussions.get("spc", {})
+            if spc.get("day1", {}).get("text"):
+                current_parts.append(f"--- {spc['day1']['title']} ---\n{spc['day1']['text']}\n")
+            current_text = "\n".join(current_parts)
+
+            # Build forecast text (extended + CPC outlooks)
+            forecast_parts = ["=== Extended Outlook ===\n"]
+            if wpc.get("extended", {}).get("text"):
+                forecast_parts.append(
+                    f"--- {wpc['extended']['title']} ---\n{wpc['extended']['text']}\n"
+                )
+            cpc = discussions.get("cpc", {})
+            if cpc.get("outlook", {}).get("text"):
+                forecast_parts.append(
+                    f"--- {cpc['outlook']['title']} ---\n{cpc['outlook']['text']}\n"
+                )
+            forecast_text = "\n".join(forecast_parts)
+
+            wx.CallAfter(self._on_nationwide_data_received, current_text, forecast_text)
+
+        except Exception as e:
+            logger.error(f"Failed to fetch nationwide discussions: {e}")
+            wx.CallAfter(self._on_weather_error, str(e))
+
+    def _on_nationwide_data_received(self, current_text: str, forecast_text: str) -> None:
+        """Handle received nationwide discussion data (called on main thread)."""
+        try:
+            self.current_conditions.SetValue(current_text)
+            self.forecast_display.SetValue(forecast_text)
+            self.stale_warning_label.SetLabel("")
+            self.set_status("Nationwide discussions updated")
+        except Exception as e:
+            logger.error(f"Error updating nationwide display: {e}")
+        finally:
+            self.app.is_updating = False
+            self.refresh_button.Enable()
 
     async def _pre_warm_other_locations(self, current_location: Location) -> None:
         """Pre-warm cache for non-current locations so switching is instant."""
