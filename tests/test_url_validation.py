@@ -79,7 +79,12 @@ class TestValidateBackendUrl:
     def test_rejects_hostname_resolving_to_private(self):
         """Hostname that resolves to a private IP should be rejected."""
         fake_addrinfo = [(socket.AF_INET, socket.SOCK_STREAM, 0, "", ("10.0.0.1", 0))]
-        with patch("accessiweather.utils.url_validation.socket.getaddrinfo", return_value=fake_addrinfo), pytest.raises(SSRFError, match="resolves to private"):
+        with (
+            patch(
+                "accessiweather.utils.url_validation.socket.getaddrinfo", return_value=fake_addrinfo
+            ),
+            pytest.raises(SSRFError, match="resolves to private"),
+        ):
             validate_backend_url("https://evil.example.com/api")
 
     def test_allows_unresolvable_hostname(self):
@@ -94,6 +99,8 @@ class TestValidateBackendUrl:
     def test_allows_public_ip(self):
         """Public IPs should be allowed."""
         fake_addrinfo = [(socket.AF_INET, socket.SOCK_STREAM, 0, "", ("8.8.8.8", 0))]
-        with patch("accessiweather.utils.url_validation.socket.getaddrinfo", return_value=fake_addrinfo):
+        with patch(
+            "accessiweather.utils.url_validation.socket.getaddrinfo", return_value=fake_addrinfo
+        ):
             result = validate_backend_url("https://dns.google.com")
             assert result == "https://dns.google.com"
