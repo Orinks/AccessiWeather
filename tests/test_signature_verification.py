@@ -24,6 +24,7 @@ class TestVerifyGpgSignature:
         with patch.dict("sys.modules", {"pgpy": None}):
             # Force ImportError by making import fail
             import builtins
+
             real_import = builtins.__import__
 
             def mock_import(name, *args, **kwargs):
@@ -32,9 +33,7 @@ class TestVerifyGpgSignature:
                 return real_import(name, *args, **kwargs)
 
             with patch("builtins.__import__", side_effect=mock_import):
-                result = SignatureVerifier._verify_gpg_signature(
-                    tmp_file, b"sig", "pubkey"
-                )
+                result = SignatureVerifier._verify_gpg_signature(tmp_file, b"sig", "pubkey")
                 assert result is False
 
     def test_verification_success(self, tmp_file):
@@ -47,6 +46,7 @@ class TestVerifyGpgSignature:
         mock_key.verify.return_value = True
 
         import builtins
+
         real_import = builtins.__import__
 
         def mock_import(name, *args, **kwargs):
@@ -55,9 +55,7 @@ class TestVerifyGpgSignature:
             return real_import(name, *args, **kwargs)
 
         with patch("builtins.__import__", side_effect=mock_import):
-            result = SignatureVerifier._verify_gpg_signature(
-                tmp_file, b"sig", "pubkey"
-            )
+            result = SignatureVerifier._verify_gpg_signature(tmp_file, b"sig", "pubkey")
             assert result is True
 
     def test_verification_failure_deletes_file(self, tmp_file):
@@ -69,6 +67,7 @@ class TestVerifyGpgSignature:
         mock_key.verify.return_value = False  # falsy = failed
 
         import builtins
+
         real_import = builtins.__import__
 
         def mock_import(name, *args, **kwargs):
@@ -77,9 +76,7 @@ class TestVerifyGpgSignature:
             return real_import(name, *args, **kwargs)
 
         with patch("builtins.__import__", side_effect=mock_import):
-            result = SignatureVerifier._verify_gpg_signature(
-                tmp_file, b"sig", "pubkey"
-            )
+            result = SignatureVerifier._verify_gpg_signature(tmp_file, b"sig", "pubkey")
             assert result is False
             assert not tmp_file.exists()
 
@@ -88,6 +85,7 @@ class TestVerifyGpgSignature:
         mock_pgpy.PGPKey.from_blob.side_effect = Exception("corrupt key")
 
         import builtins
+
         real_import = builtins.__import__
 
         def mock_import(name, *args, **kwargs):
@@ -96,9 +94,7 @@ class TestVerifyGpgSignature:
             return real_import(name, *args, **kwargs)
 
         with patch("builtins.__import__", side_effect=mock_import):
-            result = SignatureVerifier._verify_gpg_signature(
-                tmp_file, b"sig", "pubkey"
-            )
+            result = SignatureVerifier._verify_gpg_signature(tmp_file, b"sig", "pubkey")
             assert result is False
             assert not tmp_file.exists()
 
@@ -107,9 +103,7 @@ class TestDownloadAndVerifySignature:
     def test_file_not_exists(self, tmp_path):
         missing = tmp_path / "missing.zip"
         result = asyncio.get_event_loop().run_until_complete(
-            SignatureVerifier.download_and_verify_signature(
-                missing, "https://example.com/sig"
-            )
+            SignatureVerifier.download_and_verify_signature(missing, "https://example.com/sig")
         )
         assert result is False
 
@@ -123,10 +117,12 @@ class TestDownloadAndVerifySignature:
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("httpx.AsyncClient", return_value=mock_client), \
-             patch.object(
-                 SignatureVerifier, "_verify_gpg_signature", return_value=True
-             ) as mock_verify:
+        with (
+            patch("httpx.AsyncClient", return_value=mock_client),
+            patch.object(
+                SignatureVerifier, "_verify_gpg_signature", return_value=True
+            ) as mock_verify,
+        ):
             result = asyncio.get_event_loop().run_until_complete(
                 SignatureVerifier.download_and_verify_signature(
                     tmp_file, "https://example.com/sig", max_retries=1
@@ -144,12 +140,13 @@ class TestDownloadAndVerifySignature:
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("httpx.AsyncClient", return_value=mock_client), \
-             patch("asyncio.sleep", new_callable=AsyncMock):
+        with (
+            patch("httpx.AsyncClient", return_value=mock_client),
+            patch("asyncio.sleep", new_callable=AsyncMock),
+        ):
             result = asyncio.get_event_loop().run_until_complete(
                 SignatureVerifier.download_and_verify_signature(
-                    tmp_file, "https://example.com/sig",
-                    max_retries=2, retry_delay=0.0
+                    tmp_file, "https://example.com/sig", max_retries=2, retry_delay=0.0
                 )
             )
             assert result is False
@@ -178,12 +175,13 @@ class TestDownloadAndVerifySignature:
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("httpx.AsyncClient", return_value=mock_client), \
-             patch("asyncio.sleep", new_callable=AsyncMock):
+        with (
+            patch("httpx.AsyncClient", return_value=mock_client),
+            patch("asyncio.sleep", new_callable=AsyncMock),
+        ):
             result = asyncio.get_event_loop().run_until_complete(
                 SignatureVerifier.download_and_verify_signature(
-                    tmp_file, "https://example.com/sig",
-                    max_retries=2, retry_delay=0.0
+                    tmp_file, "https://example.com/sig", max_retries=2, retry_delay=0.0
                 )
             )
             assert result is False
@@ -194,12 +192,13 @@ class TestDownloadAndVerifySignature:
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
-        with patch("httpx.AsyncClient", return_value=mock_client), \
-             patch("asyncio.sleep", new_callable=AsyncMock):
+        with (
+            patch("httpx.AsyncClient", return_value=mock_client),
+            patch("asyncio.sleep", new_callable=AsyncMock),
+        ):
             result = asyncio.get_event_loop().run_until_complete(
                 SignatureVerifier.download_and_verify_signature(
-                    tmp_file, "https://example.com/sig",
-                    max_retries=2, retry_delay=0.0
+                    tmp_file, "https://example.com/sig", max_retries=2, retry_delay=0.0
                 )
             )
             assert result is False
