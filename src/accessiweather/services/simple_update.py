@@ -453,7 +453,8 @@ def plan_restart(
         return RestartPlan("windows_installer", [str(update_path)])
     if "darwin" in system or "mac" in system:
         # Use shell script for proper update handling
-        script_path = Path(tempfile.gettempdir()) / "accessiweather_update.sh"
+        secure_dir = Path(tempfile.mkdtemp(prefix="accessiweather_update_"))
+        script_path = secure_dir / "accessiweather_update.sh"
         return RestartPlan("macos_script", ["bash", str(script_path)], script_path=script_path)
     return RestartPlan("unsupported", [str(update_path)])
 
@@ -496,7 +497,7 @@ def apply_update(
         app_path = exe_path.parent.parent.parent
         script_content = build_macos_update_script(update_path, app_path)
         plan.script_path.write_text(script_content, encoding="utf-8")
-        plan.script_path.chmod(0o755)
+        plan.script_path.chmod(0o700)
         subprocess.Popen(["bash", str(plan.script_path)])
         os._exit(0)
 
