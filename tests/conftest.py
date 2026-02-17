@@ -8,7 +8,138 @@ All external API calls should be mocked - no live network requests in unit tests
 from __future__ import annotations
 
 import os
+import sys
 import tempfile
+
+# ---------------------------------------------------------------------------
+# Provide stub wx module when wxPython is not installed (headless servers).
+# This allows tests that mock wx to import accessiweather.ui submodules
+# without requiring a full wxPython build.
+# ---------------------------------------------------------------------------
+if "wx" not in sys.modules:
+    try:
+        import wx  # noqa: F401
+    except ImportError:
+        import types
+        from unittest.mock import MagicMock
+
+        # Build a minimal wx stub module with real base classes so that
+        # subclassing (e.g. class MainWindow(wx.Frame)) and patch.object work.
+        _wx = types.ModuleType("wx")
+        _wx.__package__ = "wx"
+        _wx.__path__ = []
+
+        class _WxStubBase:
+            """Patchable base class standing in for wx widgets."""
+
+            def __init__(self, *args, **kwargs):
+                pass
+
+        _wx.Frame = _WxStubBase
+        _wx.Panel = _WxStubBase
+        _wx.Dialog = _WxStubBase
+        _wx.App = _WxStubBase
+        _wx.Window = _WxStubBase
+        _wx.Control = _WxStubBase
+        _wx.TaskBarIcon = _WxStubBase
+        _wx.Menu = MagicMock
+        _wx.MenuBar = MagicMock
+        _wx.BoxSizer = MagicMock
+        _wx.StaticText = MagicMock
+        _wx.TextCtrl = MagicMock
+        _wx.Button = MagicMock
+        _wx.Choice = MagicMock
+        _wx.CheckBox = MagicMock
+        _wx.Timer = MagicMock
+        _wx.Icon = MagicMock
+        _wx.Bitmap = MagicMock
+        _wx.Image = MagicMock
+
+        # Common constants
+        _wx.EVT_CLOSE = MagicMock()
+        _wx.EVT_MENU = MagicMock()
+        _wx.EVT_BUTTON = MagicMock()
+        _wx.EVT_TIMER = MagicMock()
+        _wx.ID_ANY = -1
+        _wx.ID_OK = 5100
+        _wx.ID_CANCEL = 5101
+        _wx.OK = 0x0004
+        _wx.CANCEL = 0x0010
+        _wx.HORIZONTAL = 0x0004
+        _wx.VERTICAL = 0x0008
+        _wx.EXPAND = 0x2000
+        _wx.ALL = 0x0F
+        _wx.DEFAULT_FRAME_STYLE = 0
+        _wx.ICON_INFORMATION = 0
+        _wx.ICON_WARNING = 0
+        _wx.ICON_ERROR = 0
+        _wx.CallAfter = MagicMock()
+
+        # wx sub-modules
+        _wx_lib = types.ModuleType("wx.lib")
+        _wx_lib.__package__ = "wx.lib"
+        _wx_lib.__path__ = []
+
+        _wx_lib_sized = types.ModuleType("wx.lib.sized_controls")
+        _wx_lib_sized.SizedFrame = _WxStubBase
+        _wx_lib_sized.SizedPanel = _WxStubBase
+        _wx_lib_sized.SizedDialog = _WxStubBase
+
+        _wx_lib_newevent = types.ModuleType("wx.lib.newevent")
+        _wx_lib_newevent.NewEvent = lambda: (MagicMock, MagicMock())
+        _wx_lib_newevent.NewCommandEvent = lambda: (MagicMock, MagicMock())
+
+        _wx_adv = types.ModuleType("wx.adv")
+        _wx_adv.TaskBarIcon = _WxStubBase
+
+        _wx_html2 = types.ModuleType("wx.html2")
+        _wx_html2.WebView = MagicMock
+
+        # Wire sub-modules as attributes so `wx.adv`, `wx.lib` etc. resolve
+        _wx.lib = _wx_lib
+        _wx.adv = _wx_adv
+        _wx.html2 = _wx_html2
+
+        sys.modules["wx"] = _wx
+        sys.modules["wx.lib"] = _wx_lib
+        sys.modules["wx.lib.sized_controls"] = _wx_lib_sized
+        sys.modules["wx.lib.newevent"] = _wx_lib_newevent
+        sys.modules["wx.adv"] = _wx_adv
+        sys.modules["wx.html2"] = _wx_html2
+
+# Provide stub sound_lib when not installed
+if "sound_lib" not in sys.modules:
+    try:
+        import sound_lib  # noqa: F401
+    except ImportError:
+        import types
+        from unittest.mock import MagicMock
+
+        _sl = types.ModuleType("sound_lib")
+        _sl.__package__ = "sound_lib"
+        _sl.__path__ = []
+
+        _sl_output = types.ModuleType("sound_lib.output")
+        _sl_output.Output = MagicMock
+
+        _sl_stream = types.ModuleType("sound_lib.stream")
+        _sl_stream.FileStream = MagicMock()
+
+        _sl.output = _sl_output
+        _sl.stream = _sl_stream
+
+        sys.modules["sound_lib"] = _sl
+        sys.modules["sound_lib.output"] = _sl_output
+        sys.modules["sound_lib.stream"] = _sl_stream
+
+# Provide stub gui_builder when not installed
+if "gui_builder" not in sys.modules:
+    try:
+        import gui_builder  # noqa: F401
+    except ImportError:
+        from unittest.mock import MagicMock
+
+        sys.modules["gui_builder"] = MagicMock()
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
