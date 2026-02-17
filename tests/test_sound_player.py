@@ -59,7 +59,7 @@ class TestPreviewPlayerWithSoundLib:
 
             with (
                 patch.dict("sys.modules", {"sound_lib.stream": mock_stream_module}),
-                patch.object(_sl, "stream", mock_stream_module),
+                patch.object(_sl, "stream", mock_stream_module, create=True),
                 patch(
                     "accessiweather.notifications.sound_player.stream",
                     mock_stream_module,
@@ -93,7 +93,7 @@ class TestPreviewPlayerWithSoundLib:
 
             with (
                 patch.dict("sys.modules", {"sound_lib.stream": mock_stream_module}),
-                patch.object(_sl, "stream", mock_stream_module),
+                patch.object(_sl, "stream", mock_stream_module, create=True),
                 patch(
                     "accessiweather.notifications.sound_player.stream",
                     mock_stream_module,
