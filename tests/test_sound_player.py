@@ -55,8 +55,11 @@ class TestPreviewPlayerWithSoundLib:
             temp_path = Path(f.name)
 
         try:
+            import sound_lib as _sl
+
             with (
                 patch.dict("sys.modules", {"sound_lib.stream": mock_stream_module}),
+                patch.object(_sl, "stream", mock_stream_module),
                 patch(
                     "accessiweather.notifications.sound_player.stream",
                     mock_stream_module,
@@ -86,8 +89,11 @@ class TestPreviewPlayerWithSoundLib:
             temp_path = Path(f.name)
 
         try:
+            import sound_lib as _sl
+
             with (
                 patch.dict("sys.modules", {"sound_lib.stream": mock_stream_module}),
+                patch.object(_sl, "stream", mock_stream_module),
                 patch(
                     "accessiweather.notifications.sound_player.stream",
                     mock_stream_module,
