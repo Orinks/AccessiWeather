@@ -254,6 +254,13 @@ class MainWindow(SizedFrame):
             f"Check for &Updates ({channel.title()})...",
             "Check for application updates",
         )
+        self._test_notifications_item = None
+        if getattr(self.app, "debug_mode", False):
+            self._test_notifications_item = help_menu.Append(
+                wx.ID_ANY,
+                "Test &Notifications",
+                "Run debug notification tests",
+            )
         help_menu.AppendSeparator()
 
         report_issue_item = help_menu.Append(
@@ -281,6 +288,12 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_MENU, lambda e: self._on_weather_chat(), weather_chat_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_soundpack_manager(), soundpack_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_check_updates(), self._check_updates_item)
+        if self._test_notifications_item is not None:
+            self.Bind(
+                wx.EVT_MENU,
+                lambda e: self._on_test_notifications(),
+                self._test_notifications_item,
+            )
         self.Bind(wx.EVT_MENU, lambda e: self._on_report_issue(), report_issue_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_about(), about_item)
 
@@ -556,6 +569,36 @@ class MainWindow(SizedFrame):
 
         thread = threading.Thread(target=do_check, daemon=True)
         thread.start()
+
+    def _on_test_notifications(self) -> None:
+        """Run notification tests and show pass/fail results."""
+        from ..notifications.notification_test import run_notification_test
+
+        results = run_notification_test(self.app)
+        result_keys = [
+            "safe_desktop_notifier",
+            "alert_notification_system",
+            "discussion_update_path",
+        ]
+        lines = ["Notification test results:"]
+        for key in result_keys:
+            result = results.get(key, {})
+            label = key.replace("_", " ").title()
+            status = "PASS" if result.get("passed") else "FAIL"
+            detail = result.get("message", "")
+            lines.append(f"- {label}: {status}")
+            if detail:
+                lines.append(f"  {detail}")
+        summary = (
+            f"Summary: {results.get('passed_count', 0)}/{results.get('total_count', len(result_keys))} passed"
+        )
+        lines.append("")
+        lines.append(summary)
+        wx.MessageBox(
+            "\n".join(lines),
+            "Notification Test Results",
+            wx.OK | (wx.ICON_INFORMATION if results.get("all_passed") else wx.ICON_WARNING),
+        )
 
     def update_check_updates_menu_label(self) -> None:
         """Update the Check for Updates menu item label with current channel."""
