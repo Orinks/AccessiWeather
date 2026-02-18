@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import subprocess
 import sys
 import threading
 from typing import TYPE_CHECKING
@@ -593,44 +592,31 @@ class AccessiWeatherApp(wx.App):
         except Exception as e:
             logger.debug(f"Could not play startup sound: {e}")
 
-    def _play_exit_sound_detached(self, sound_pack: str) -> None:
-        """Play exit sound in a detached helper process (no shutdown delay)."""
+    def _play_exit_sound_fast(self, sound_pack: str) -> None:
+        """Play exit sound without blocking shutdown."""
+        # On Windows, use winsound async to avoid startup of a helper GUI process.
+        if sys.platform == "win32":
+            try:
+                import winsound
+
+                from .notifications.sound_player import get_sound_entry
+
+                sound_file, _ = get_sound_entry("exit", sound_pack)
+                if sound_file:
+                    winsound.PlaySound(
+                        str(sound_file),
+                        winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_NODEFAULT,
+                    )
+                    return
+            except Exception as e:
+                logger.debug("winsound exit playback failed, falling back: %s", e)
+
         try:
-            if getattr(sys, "frozen", False):
-                # Packaged app: call current executable directly.
-                cmd = [
-                    sys.executable,
-                    "--play-exit-sound-only",
-                    "--sound-pack",
-                    sound_pack,
-                ]
-            else:
-                # Source/dev: run module via Python.
-                cmd = [
-                    sys.executable,
-                    "-m",
-                    "accessiweather.main",
-                    "--play-exit-sound-only",
-                    "--sound-pack",
-                    sound_pack,
-                ]
+            from .notifications.sound_player import play_exit_sound
 
-            popen_kwargs: dict = {
-                "stdin": subprocess.DEVNULL,
-                "stdout": subprocess.DEVNULL,
-                "stderr": subprocess.DEVNULL,
-            }
-
-            if sys.platform == "win32":
-                popen_kwargs["creationflags"] = getattr(
-                    subprocess, "DETACHED_PROCESS", 0
-                ) | getattr(subprocess, "CREATE_NO_WINDOW", 0)
-            else:
-                popen_kwargs["start_new_session"] = True
-
-            subprocess.Popen(cmd, **popen_kwargs)
+            play_exit_sound(sound_pack)
         except Exception as e:
-            logger.debug("Could not launch detached exit sound player: %s", e)
+            logger.debug("Could not play exit sound: %s", e)
 
     def request_exit(self) -> None:
         """Request application exit with cleanup."""
@@ -645,7 +631,7 @@ class AccessiWeatherApp(wx.App):
             settings = self.config_manager.get_settings()
             if getattr(settings, "sound_enabled", True):
                 sound_pack = getattr(settings, "sound_pack", "default")
-                self._play_exit_sound_detached(sound_pack)
+                self._play_exit_sound_fast(sound_pack)
         except Exception:
             pass
 
