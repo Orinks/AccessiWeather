@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import subprocess
 import sys
 import threading
 from typing import TYPE_CHECKING
@@ -594,22 +595,39 @@ class AccessiWeatherApp(wx.App):
 
     def _play_exit_sound_fast(self, sound_pack: str) -> None:
         """Play exit sound without blocking shutdown."""
-        # On Windows, use winsound async to avoid startup of a helper GUI process.
+        # On Windows, spawn a hidden detached PowerShell helper that blocks on
+        # the WAV playback. This avoids any visible extra app window while still
+        # allowing sound to continue after the main process exits.
         if sys.platform == "win32":
             try:
-                import winsound
-
                 from .notifications.sound_player import get_sound_entry
 
                 sound_file, _ = get_sound_entry("exit", sound_pack)
                 if sound_file:
-                    winsound.PlaySound(
-                        str(sound_file),
-                        winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_NODEFAULT,
+                    sound_path = str(sound_file).replace("'", "''")
+                    ps_script = (
+                        f"$p = New-Object System.Media.SoundPlayer('{sound_path}'); $p.PlaySync();"
+                    )
+                    subprocess.Popen(
+                        [
+                            "powershell",
+                            "-NoProfile",
+                            "-WindowStyle",
+                            "Hidden",
+                            "-Command",
+                            ps_script,
+                        ],
+                        stdin=subprocess.DEVNULL,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        creationflags=(
+                            getattr(subprocess, "DETACHED_PROCESS", 0)
+                            | getattr(subprocess, "CREATE_NO_WINDOW", 0)
+                        ),
                     )
                     return
             except Exception as e:
-                logger.debug("winsound exit playback failed, falling back: %s", e)
+                logger.debug("Windows detached exit playback failed, falling back: %s", e)
 
         try:
             from .notifications.sound_player import play_exit_sound
