@@ -42,17 +42,24 @@ logger = logging.getLogger(__name__)
 class AccessiWeatherApp(wx.App):
     """AccessiWeather application using wxPython."""
 
-    def __init__(self, config_dir: str | None = None, portable_mode: bool = False):
+    def __init__(
+        self,
+        config_dir: str | None = None,
+        portable_mode: bool = False,
+        debug: bool = False,
+    ):
         """
         Initialize the AccessiWeather application.
 
         Args:
             config_dir: Optional custom configuration directory path
             portable_mode: If True, use portable mode (config in app directory)
+            debug: If True, enable debug mode (enables debug logging and extra UI tools)
 
         """
         self._config_dir = config_dir
         self._portable_mode = portable_mode
+        self.debug_mode = bool(debug)
 
         # App version and build info (import locally to avoid circular import)
         from . import __version__
@@ -665,6 +672,7 @@ class AccessiWeatherApp(wx.App):
 def main(
     config_dir: str | None = None,
     portable_mode: bool = False,
+    debug: bool = False,
     fake_version: str | None = None,
     fake_nightly: str | None = None,
 ):
@@ -674,11 +682,12 @@ def main(
     Args:
         config_dir: Custom configuration directory path.
         portable_mode: Run in portable mode.
+        debug: Enable debug mode.
         fake_version: Fake version for testing updates (e.g., '0.1.0').
         fake_nightly: Fake nightly tag for testing updates (e.g., 'nightly-20250101').
 
     """
-    app = AccessiWeatherApp(config_dir=config_dir, portable_mode=portable_mode)
+    app = AccessiWeatherApp(config_dir=config_dir, portable_mode=portable_mode, debug=debug)
 
     # Override version/build_tag for update testing
     if fake_version:
