@@ -56,10 +56,25 @@ jobs:
             echo "version=$VERSION" >> $GITHUB_OUTPUT
 
             LAST_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -1)
-            if [ -z "$LAST_TAG" ] || ! git diff --quiet "$LAST_TAG"..HEAD -- src/ pyproject.toml installer/; then
+
+            if [ -z "$LAST_TAG" ]; then
+              # No prior nightly: build once
               echo "should_build=true" >> $GITHUB_OUTPUT
             else
-              echo "should_build=false" >> $GITHUB_OUTPUT
+              RANGE="$LAST_TAG"..HEAD
+
+              # Build only when there is at least one user-facing commit.
+              # This avoids shipping nightlies for test/chore/ci-only changes.
+              USER_FACING_COUNT=$(git log "$RANGE" --pretty='%s' --no-merges --first-parent | \
+                grep -Ei '^(feat|fix|perf|security)(\([^)]+\))?:' | \
+                grep -Eiv '^fix\((test|ci|build|chore|docs|style|refactor)\):' | \
+                wc -l | tr -d ' ')
+
+              if [ "${USER_FACING_COUNT:-0}" -gt 0 ]; then
+                echo "should_build=true" >> $GITHUB_OUTPUT
+              else
+                echo "should_build=false" >> $GITHUB_OUTPUT
+              fi
             fi
           fi
 
@@ -210,14 +225,14 @@ jobs:
           if [ "$IS_NIGHTLY" = "true" ]; then
             LAST_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -1)
             if [ -n "$LAST_TAG" ]; then
-              # Filter out dev-only commits (test, chore, ci, build, style, refactor, docs)
-              # Use --first-parent to avoid duplicate entries from squash merges
+              # Keep nightly notes user-facing and consistent with build gating.
+              # Include only feat/fix/perf/security, excluding internal fix scopes.
               git log "$LAST_TAG"..HEAD --oneline --no-merges --first-parent | \
-                grep -viE '^[a-f0-9]+ (test|chore|ci|build|style|refactor|docs)(\(|:)' | \
-                grep -viE '^[a-f0-9]+ Merge' | \
+                grep -Ei '^[a-f0-9]+ (feat|fix|perf|security)(\([^)]+\))?:' | \
+                grep -Eiv '^[a-f0-9]+ fix\((test|ci|build|chore|docs|style|refactor)\):' | \
                 sed 's/^/- /' > notes.md
               # If all commits were filtered, add a placeholder
-              [ -s notes.md ] || echo "- Bug fixes and improvements" > notes.md
+              [ -s notes.md ] || echo "- No user-facing changes" > notes.md
             else
               echo "Initial nightly build" > notes.md
             fi

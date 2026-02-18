@@ -155,7 +155,7 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
         Create the context menu for the tray icon.
 
         Returns:
-            wx.Menu with Show and Quit options
+            wx.Menu with Show, optional Test Notifications (debug), and Quit options
 
         """
         menu = wx.Menu()
@@ -164,6 +164,12 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
         show_item = menu.Append(wx.ID_ANY, "&Show AccessiWeather")
         self.Bind(wx.EVT_MENU, self._on_show_menu, show_item)
 
+        # Debug-only: Test Notifications
+        if getattr(self.app, "debug_mode", False):
+            menu.AppendSeparator()
+            test_item = menu.Append(wx.ID_ANY, "&Test Notifications")
+            self.Bind(wx.EVT_MENU, self._on_test_notifications_menu, test_item)
+
         menu.AppendSeparator()
 
         # Quit item
@@ -171,6 +177,15 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
         self.Bind(wx.EVT_MENU, self._on_quit_menu, quit_item)
 
         return menu
+
+    def _on_test_notifications_menu(self, event: wx.CommandEvent) -> None:
+        """Handle Test Notifications menu item click (debug mode only)."""
+        from ..notifications.notification_test import run_notification_test
+
+        results = run_notification_test(self.app)
+        lines = [f"{'PASS' if v else 'FAIL'}: {k}" for k, v in results.items()]
+        msg = "\n".join(lines)
+        wx.MessageBox(msg, "Notification Test Results", wx.OK | wx.ICON_INFORMATION)
 
     def _on_show_menu(self, event: wx.CommandEvent) -> None:
         """Handle Show menu item click."""
