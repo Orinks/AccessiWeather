@@ -60,7 +60,6 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "auto_update_enabled",
     "update_channel",
     "update_check_interval_hours",
-    "debug_mode",
     "trend_insights_enabled",
     "trend_hours",
     "show_dewpoint",
@@ -101,7 +100,6 @@ class AppSettings:
     auto_update_enabled: bool = True
     update_channel: str = "stable"
     update_check_interval_hours: int = 24
-    debug_mode: bool = False
     sound_enabled: bool = True
     sound_pack: str = "default"
     # Nationwide location visibility
@@ -353,7 +351,6 @@ class AppSettings:
             "auto_update_enabled": self.auto_update_enabled,
             "update_channel": self.update_channel,
             "update_check_interval_hours": self.update_check_interval_hours,
-            "debug_mode": self.debug_mode,
             "sound_enabled": self.sound_enabled,
             "sound_pack": self.sound_pack,
             "notify_discussion_update": self.notify_discussion_update,
@@ -422,7 +419,6 @@ class AppSettings:
             auto_update_enabled=cls._as_bool(data.get("auto_update_enabled"), True),
             update_channel=data.get("update_channel", "stable"),
             update_check_interval_hours=data.get("update_check_interval_hours", 24),
-            debug_mode=cls._as_bool(data.get("debug_mode"), False),
             sound_enabled=cls._as_bool(data.get("sound_enabled"), True),
             sound_pack=data.get("sound_pack", "default"),
             notify_discussion_update=cls._as_bool(data.get("notify_discussion_update"), False),

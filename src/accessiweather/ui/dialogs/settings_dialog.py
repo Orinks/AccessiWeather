@@ -791,9 +791,6 @@ class SettingsDialogSimple(wx.Dialog):
         )
         sizer.Add(self._controls["weather_history"], 0, wx.LEFT | wx.BOTTOM, 5)
 
-        self._controls["debug"] = wx.CheckBox(panel, label="Enable Debug Mode")
-        sizer.Add(self._controls["debug"], 0, wx.LEFT | wx.BOTTOM, 5)
-
         # Reset Configuration Section
         sizer.Add(
             wx.StaticText(panel, label="Reset Configuration"),
@@ -1057,8 +1054,6 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["weather_history"].SetValue(
                 getattr(settings, "weather_history_enabled", True)
             )
-            self._controls["debug"].SetValue(getattr(settings, "debug_mode", False))
-
         except Exception as e:
             logger.error(f"Failed to load settings: {e}")
 
@@ -1156,7 +1151,6 @@ class SettingsDialogSimple(wx.Dialog):
                 "minimize_on_startup": self._controls["minimize_on_startup"].GetValue(),
                 "startup_enabled": self._controls["startup"].GetValue(),
                 "weather_history_enabled": self._controls["weather_history"].GetValue(),
-                "debug_mode": self._controls["debug"].GetValue(),
             }
 
             success = self.config_manager.update_settings(**settings_dict)
