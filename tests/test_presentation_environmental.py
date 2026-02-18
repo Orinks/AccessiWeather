@@ -54,13 +54,21 @@ class TestGetUvCategory:
     def test_none(self):
         assert _get_uv_category(None) is None
 
-    @pytest.mark.parametrize("val,expected", [
-        (0, "Low"), (2, "Low"),
-        (3, "Moderate"), (5, "Moderate"),
-        (6, "High"), (7, "High"),
-        (8, "Very High"), (10, "Very High"),
-        (11, "Extreme"), (15, "Extreme"),
-    ])
+    @pytest.mark.parametrize(
+        "val,expected",
+        [
+            (0, "Low"),
+            (2, "Low"),
+            (3, "Moderate"),
+            (5, "Moderate"),
+            (6, "High"),
+            (7, "High"),
+            (8, "Very High"),
+            (10, "Very High"),
+            (11, "Extreme"),
+            (15, "Extreme"),
+        ],
+    )
     def test_categories(self, val, expected):
         assert _get_uv_category(val) == expected
 
@@ -182,7 +190,9 @@ class TestBuildAirQualityPanel:
         assert build_air_quality_panel(_loc(), _env()) is None
 
     def test_basic_panel(self):
-        env = _env(air_quality_index=55.0, air_quality_category="Moderate", air_quality_pollutant="PM2_5")
+        env = _env(
+            air_quality_index=55.0, air_quality_category="Moderate", air_quality_pollutant="PM2_5"
+        )
         panel = build_air_quality_panel(_loc(), env)
         assert panel is not None
         assert isinstance(panel, AirQualityPresentation)
@@ -198,7 +208,9 @@ class TestBuildAirQualityPanel:
         assert panel is None  # no AQ data
 
     def test_with_sources(self):
-        env = _env(air_quality_index=30, air_quality_category="Good", sources=["EPA", "EPA", "OpenWeather"])
+        env = _env(
+            air_quality_index=30, air_quality_category="Good", sources=["EPA", "EPA", "OpenWeather"]
+        )
         panel = build_air_quality_panel(_loc(), env)
         assert panel is not None
         assert "EPA" in panel.sources
@@ -259,20 +271,30 @@ class TestFormatAirQualitySummary:
         assert "guidance" in result.lower() or "Monitor" in result
 
     def test_with_aqi_and_category(self):
-        env = _env(air_quality_index=150, air_quality_category="Unhealthy", air_quality_pollutant="O3")
+        env = _env(
+            air_quality_index=150, air_quality_category="Unhealthy", air_quality_pollutant="O3"
+        )
         result = format_air_quality_summary(env)
         assert "150" in result
         assert "Unhealthy" in result
         assert "Ozone" in result
 
     def test_with_updated_at(self):
-        env = _env(air_quality_index=50, air_quality_category="Good", updated_at=datetime(2026, 2, 17, 10, 0))
+        env = _env(
+            air_quality_index=50,
+            air_quality_category="Good",
+            updated_at=datetime(2026, 2, 17, 10, 0),
+        )
         result = format_air_quality_summary(env)
         assert "February" in result or "10:00" in result
 
     def test_24hour_format(self):
         settings = _FakeSettings(time_format_12hour=False)
-        env = _env(air_quality_index=50, air_quality_category="Good", updated_at=datetime(2026, 2, 17, 14, 30))
+        env = _env(
+            air_quality_index=50,
+            air_quality_category="Good",
+            updated_at=datetime(2026, 2, 17, 14, 30),
+        )
         result = format_air_quality_summary(env, settings)
         assert "14:30" in result
 
@@ -316,7 +338,7 @@ class TestFormatAirQualityBrief:
 
     def test_trend_worsening(self):
         hourly = [
-            HourlyAirQuality(timestamp=datetime(2026, 1, 1, 12+i), aqi=50 + i * 30, category="x")
+            HourlyAirQuality(timestamp=datetime(2026, 1, 1, 12 + i), aqi=50 + i * 30, category="x")
             for i in range(3)
         ]
         env = _env(air_quality_index=50, air_quality_category="Moderate", hourly_air_quality=hourly)
@@ -325,10 +347,12 @@ class TestFormatAirQualityBrief:
 
     def test_trend_improving(self):
         hourly = [
-            HourlyAirQuality(timestamp=datetime(2026, 1, 1, 12+i), aqi=100 - i * 30, category="x")
+            HourlyAirQuality(timestamp=datetime(2026, 1, 1, 12 + i), aqi=100 - i * 30, category="x")
             for i in range(3)
         ]
-        env = _env(air_quality_index=100, air_quality_category="Moderate", hourly_air_quality=hourly)
+        env = _env(
+            air_quality_index=100, air_quality_category="Moderate", hourly_air_quality=hourly
+        )
         result = format_air_quality_brief(env)
         assert "Improving" in result
 
@@ -349,7 +373,9 @@ class TestFormatHourlyAirQuality:
     def test_multiple_entries_with_peak(self):
         data = [
             HourlyAirQuality(timestamp=datetime(2026, 1, 1, 12 + i), aqi=aqi, category=cat)
-            for i, (aqi, cat) in enumerate([(40, "Good"), (60, "Moderate"), (80, "Moderate"), (30, "Good")])
+            for i, (aqi, cat) in enumerate(
+                [(40, "Good"), (60, "Moderate"), (80, "Moderate"), (30, "Good")]
+            )
         ]
         result = format_hourly_air_quality(data)
         assert "Peak:" in result
@@ -399,13 +425,17 @@ class TestFormatHourlyUvIndex:
         assert format_hourly_uv_index([]) is None
 
     def test_single_entry(self):
-        data = [HourlyUVIndex(timestamp=datetime(2026, 1, 1, 12), uv_index=3.5, category="Moderate")]
+        data = [
+            HourlyUVIndex(timestamp=datetime(2026, 1, 1, 12), uv_index=3.5, category="Moderate")
+        ]
         result = format_hourly_uv_index(data)
         assert "UV Index 3.5" in result
 
     def test_trend_rising(self):
         data = [
-            HourlyUVIndex(timestamp=datetime(2026, 1, 1, 10 + i), uv_index=2.0 + i * 3, category="x")
+            HourlyUVIndex(
+                timestamp=datetime(2026, 1, 1, 10 + i), uv_index=2.0 + i * 3, category="x"
+            )
             for i in range(4)
         ]
         result = format_hourly_uv_index(data)
@@ -413,7 +443,9 @@ class TestFormatHourlyUvIndex:
 
     def test_trend_falling(self):
         data = [
-            HourlyUVIndex(timestamp=datetime(2026, 1, 1, 10 + i), uv_index=10.0 - i * 3, category="x")
+            HourlyUVIndex(
+                timestamp=datetime(2026, 1, 1, 10 + i), uv_index=10.0 - i * 3, category="x"
+            )
             for i in range(4)
         ]
         result = format_hourly_uv_index(data)
@@ -445,8 +477,12 @@ class TestFormatPollutantDetails:
 
     def test_with_data(self):
         entry = HourlyAirQuality(
-            timestamp=datetime(2026, 1, 1, 12), aqi=50, category="Good",
-            pm2_5=12.3, pm10=25.0, ozone=40.0
+            timestamp=datetime(2026, 1, 1, 12),
+            aqi=50,
+            category="Good",
+            pm2_5=12.3,
+            pm10=25.0,
+            ozone=40.0,
         )
         result = format_pollutant_details([entry], "PM2_5")
         assert "PM2.5: 12.3" in result
