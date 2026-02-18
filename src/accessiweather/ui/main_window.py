@@ -589,9 +589,7 @@ class MainWindow(SizedFrame):
             lines.append(f"- {label}: {status}")
             if detail:
                 lines.append(f"  {detail}")
-        summary = (
-            f"Summary: {results.get('passed_count', 0)}/{results.get('total_count', len(result_keys))} passed"
-        )
+        summary = f"Summary: {results.get('passed_count', 0)}/{results.get('total_count', len(result_keys))} passed"
         lines.append("")
         lines.append(summary)
         wx.MessageBox(
