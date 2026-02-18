@@ -45,9 +45,25 @@ def main() -> None:
         help="Fake nightly tag for testing updates (e.g., 'nightly-20250101')",
         default=None,
     )
+    parser.add_argument(
+        "--play-exit-sound-only",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--sound-pack",
+        default="default",
+        help=argparse.SUPPRESS,
+    )
     args = parser.parse_args()
 
     setup_logging(debug=args.debug)
+
+    if args.play_exit_sound_only:
+        from .notifications.sound_player import play_exit_sound_blocking
+
+        play_exit_sound_blocking(args.sound_pack)
+        return
 
     from .app import main as app_main
 

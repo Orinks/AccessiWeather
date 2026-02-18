@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import subprocess
 import sys
 import threading
 from typing import TYPE_CHECKING
@@ -592,6 +593,45 @@ class AccessiWeatherApp(wx.App):
         except Exception as e:
             logger.debug(f"Could not play startup sound: {e}")
 
+    def _play_exit_sound_detached(self, sound_pack: str) -> None:
+        """Play exit sound in a detached helper process (no shutdown delay)."""
+        try:
+            if getattr(sys, "frozen", False):
+                # Packaged app: call current executable directly.
+                cmd = [
+                    sys.executable,
+                    "--play-exit-sound-only",
+                    "--sound-pack",
+                    sound_pack,
+                ]
+            else:
+                # Source/dev: run module via Python.
+                cmd = [
+                    sys.executable,
+                    "-m",
+                    "accessiweather.main",
+                    "--play-exit-sound-only",
+                    "--sound-pack",
+                    sound_pack,
+                ]
+
+            popen_kwargs: dict = {
+                "stdin": subprocess.DEVNULL,
+                "stdout": subprocess.DEVNULL,
+                "stderr": subprocess.DEVNULL,
+            }
+
+            if sys.platform == "win32":
+                popen_kwargs["creationflags"] = getattr(
+                    subprocess, "DETACHED_PROCESS", 0
+                ) | getattr(subprocess, "CREATE_NO_WINDOW", 0)
+            else:
+                popen_kwargs["start_new_session"] = True
+
+            subprocess.Popen(cmd, **popen_kwargs)
+        except Exception as e:
+            logger.debug("Could not launch detached exit sound player: %s", e)
+
     def request_exit(self) -> None:
         """Request application exit with cleanup."""
         logger.info("Application exit requested")
@@ -600,14 +640,12 @@ class AccessiWeatherApp(wx.App):
         if self._update_timer:
             self._update_timer.Stop()
 
-        # Play exit sound and wait for playback so it is not cut off on shutdown.
+        # Play exit sound without delaying shutdown.
         try:
             settings = self.config_manager.get_settings()
             if getattr(settings, "sound_enabled", True):
-                from .notifications.sound_player import play_exit_sound_blocking
-
                 sound_pack = getattr(settings, "sound_pack", "default")
-                play_exit_sound_blocking(sound_pack)
+                self._play_exit_sound_detached(sound_pack)
         except Exception:
             pass
 
