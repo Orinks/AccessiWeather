@@ -120,15 +120,6 @@ class AccessiWeatherApp(wx.App):
 
         super().__init__()
 
-    @property
-    def notifier(self):
-        """Public accessor for the app-level notifier (used by notification subsystems)."""
-        return self._notifier
-
-    @notifier.setter
-    def notifier(self, value) -> None:
-        self._notifier = value
-
     def OnInit(self) -> bool:
         """Initialize the application (wxPython entry point)."""
         logger.info("Starting AccessiWeather application (wxPython)")
