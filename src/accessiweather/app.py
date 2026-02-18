@@ -54,6 +54,7 @@ class AccessiWeatherApp(wx.App):
         Args:
             config_dir: Optional custom configuration directory path
             portable_mode: If True, use portable mode (config in app directory)
+            debug: If True, enable debug mode (enables debug logging and extra UI tools)
 
         """
         self._config_dir = config_dir
