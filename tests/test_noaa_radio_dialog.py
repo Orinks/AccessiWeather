@@ -139,7 +139,8 @@ def _make_dialog_instance(module):
     dlg._url_provider = MagicMock()
     dlg._station_choice = MagicMock()
     dlg._station_choice.GetSelection.return_value = 0
-    dlg._play_stop_btn = MagicMock()
+    dlg._play_btn = MagicMock()
+    dlg._stop_btn = MagicMock()
     dlg._volume_slider = MagicMock()
     dlg._volume_slider.GetValue.return_value = 100
     dlg._status_text = MagicMock()
@@ -254,24 +255,24 @@ class TestCallbacks:
         """Test playing callback updates buttons and status."""
         dlg = _make_dialog_instance(noaa_dialog_module)
         dlg._on_playing()
-        dlg._play_stop_btn.Enable.assert_called_with(True)
-        dlg._play_stop_btn.SetLabel.assert_called_with("Stop")
+        dlg._play_btn.Enable.assert_called_with(True)
+        dlg._stop_btn.Enable.assert_called_with(True)
         assert "KEC49" in dlg._status_text.SetLabel.call_args[0][0]
 
     def test_on_stopped_updates_ui(self, noaa_dialog_module):
         """Test stopped callback updates buttons and status."""
         dlg = _make_dialog_instance(noaa_dialog_module)
         dlg._on_stopped()
-        dlg._play_stop_btn.Enable.assert_called_with(True)
-        dlg._play_stop_btn.SetLabel.assert_called_with("Play")
+        dlg._play_btn.Enable.assert_called_with(True)
+        dlg._stop_btn.Enable.assert_called_with(False)
         dlg._status_text.SetLabel.assert_called_with("Stopped")
 
     def test_on_error_updates_ui(self, noaa_dialog_module):
         """Test error callback updates buttons and status."""
         dlg = _make_dialog_instance(noaa_dialog_module)
         dlg._on_error("Connection failed")
-        dlg._play_stop_btn.Enable.assert_called_with(True)
-        dlg._play_stop_btn.SetLabel.assert_called_with("Play")
+        dlg._play_btn.Enable.assert_called_with(True)
+        dlg._stop_btn.Enable.assert_called_with(False)
         dlg._status_text.SetLabel.assert_called_with("Error: Connection failed")
 
 
