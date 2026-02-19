@@ -625,10 +625,8 @@ class AccessiWeatherApp(wx.App):
         if self._async_loop:
             self._async_loop.call_soon_threadsafe(self._async_loop.stop)
 
-        # Close main window and exit
-        if self.main_window:
-            self.main_window.Destroy()
-
+        # Let wx handle window teardown via main loop exit (closer to old Toga flow)
+        # instead of force-destroying the window first.
         self.ExitMainLoop()
 
     def refresh_runtime_settings(self) -> None:
