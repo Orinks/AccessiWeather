@@ -96,16 +96,10 @@ class NOAARadioDialog(wx.Dialog):
         # Button row
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        self._play_btn = wx.Button(panel, label="Play")
-        self._play_btn.SetName("Play")
-        self._play_btn.Bind(wx.EVT_BUTTON, self._on_play)
-        btn_sizer.Add(self._play_btn, 0, wx.RIGHT, 5)
-
-        self._stop_btn = wx.Button(panel, label="Stop")
-        self._stop_btn.SetName("Stop")
-        self._stop_btn.Bind(wx.EVT_BUTTON, self._on_stop)
-        self._stop_btn.Enable(False)
-        btn_sizer.Add(self._stop_btn, 0, wx.RIGHT, 5)
+        self._play_stop_btn = wx.Button(panel, label="Play")
+        self._play_stop_btn.SetName("Play/Stop")
+        self._play_stop_btn.Bind(wx.EVT_BUTTON, self._on_play_stop)
+        btn_sizer.Add(self._play_stop_btn, 0, wx.RIGHT, 5)
 
         self._next_stream_btn = wx.Button(panel, label="Try Next Stream")
         self._next_stream_btn.SetName("Try Next Stream")
@@ -176,12 +170,15 @@ class NOAARadioDialog(wx.Dialog):
             return None
         return self._stations[idx]
 
-    def _on_play(self, _event: wx.CommandEvent) -> None:
-        """
-        Handle Play button click.
+    def _on_play_stop(self, event: wx.CommandEvent) -> None:
+        """Toggle playback from a single Play/Stop button."""
+        if self._player.is_playing():
+            self._on_stop(event)
+        else:
+            self._on_play(event)
 
-        If a stream is already playing, stop it first before starting the new one.
-        """
+    def _on_play(self, _event: wx.CommandEvent) -> None:
+        """Handle Play action."""
         # Stop any currently playing stream
         if self._player.is_playing():
             self._health_timer.Stop()
@@ -230,9 +227,10 @@ class NOAARadioDialog(wx.Dialog):
             self._set_status(f"Stream failed for {call_sign}")
 
     def _on_stop(self, _event: wx.CommandEvent) -> None:
-        """Handle Stop button click."""
+        """Handle Stop action."""
         self._health_timer.Stop()
         self._player.stop()
+        self._play_stop_btn.SetLabel("Play")
 
     def _on_volume_change(self, _event: wx.CommandEvent) -> None:
         """Handle volume slider change."""
@@ -247,16 +245,15 @@ class NOAARadioDialog(wx.Dialog):
         idx = self._current_url_index + 1
         stream_info = f" (stream {idx} of {total})" if total > 1 else ""
         self._set_status(f"Playing: {name}{stream_info}")
-        # Keep Play enabled so user can switch stations without stopping first
-        self._play_btn.Enable(True)
-        self._stop_btn.Enable(True)
+        self._play_stop_btn.Enable(True)
+        self._play_stop_btn.SetLabel("Stop")
         self._next_stream_btn.Enable(total > 1)
 
     def _on_stopped(self) -> None:
         """Handle playback stopped event."""
         self._set_status("Stopped")
-        self._play_btn.Enable(True)
-        self._stop_btn.Enable(False)
+        self._play_stop_btn.Enable(True)
+        self._play_stop_btn.SetLabel("Play")
         self._next_stream_btn.Enable(False)
         self._prefer_btn.Enable(False)
 
@@ -264,8 +261,8 @@ class NOAARadioDialog(wx.Dialog):
         """Handle playback error event."""
         self._health_timer.Stop()
         self._set_status(f"Error: {message}")
-        self._play_btn.Enable(True)
-        self._stop_btn.Enable(False)
+        self._play_stop_btn.Enable(True)
+        self._play_stop_btn.SetLabel("Play")
         self._next_stream_btn.Enable(len(self._current_urls) > 1)
         self._prefer_btn.Enable(False)
 
