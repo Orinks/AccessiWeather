@@ -304,3 +304,7 @@ src/accessiweather/_version.py
 src/accessiweather/_build_info.py
 src/accessiweather/_build_meta.py
 progress.txt
+
+# Private keys and certificates
+*.key
+*.pem
