@@ -2,15 +2,35 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ...models import AppSettings, Location, WeatherAlert, WeatherAlerts
 from ..weather_presenter import AlertPresentation, AlertsPresentation
 from .formatters import format_display_datetime, truncate, wrap_text
 
+if TYPE_CHECKING:
+    from accessiweather.alert_lifecycle import AlertLifecycleDiff
+
 
 def build_alerts(
-    alerts: WeatherAlerts, location: Location, settings: AppSettings | None = None
+    alerts: WeatherAlerts,
+    location: Location,
+    settings: AppSettings | None = None,
+    *,
+    lifecycle_diff: AlertLifecycleDiff | None = None,
 ) -> AlertsPresentation:
-    """Create an alerts presentation for a given location."""
+    """
+    Create an alerts presentation for a given location.
+
+    Args:
+        alerts: Current weather alerts snapshot.
+        location: Location being presented.
+        settings: Optional app settings for time formatting.
+        lifecycle_diff: Optional diff from the previous alert snapshot.
+            When provided and has changes, a concise change summary is
+            prepended to the fallback text and stored on the presentation.
+
+    """
     title = f"Weather alerts for {location.name}"
     if not alerts.has_alerts():
         return AlertsPresentation(title=title, fallback_text=f"{title}:\nNo active weather alerts.")
@@ -28,7 +48,18 @@ def build_alerts(
         fallback_lines.append(presentation.fallback_text)
 
     fallback_text = "\n\n".join(fallback_lines)
-    return AlertsPresentation(title=title, alerts=presentations, fallback_text=fallback_text)
+
+    change_summary: str | None = None
+    if lifecycle_diff is not None and lifecycle_diff.has_changes:
+        change_summary = lifecycle_diff.summary
+        fallback_text = f"Alert changes: {lifecycle_diff.summary}\n{fallback_text}"
+
+    return AlertsPresentation(
+        title=title,
+        alerts=presentations,
+        fallback_text=fallback_text,
+        change_summary=change_summary,
+    )
 
 
 def build_single_alert(

@@ -425,7 +425,17 @@ class AlertManager:
             return True
 
         cooldown_period = timedelta(minutes=self.settings.global_cooldown)
-        return datetime.now(UTC) - self.last_global_notification > cooldown_period
+        elapsed = datetime.now(UTC) - self.last_global_notification
+        can_send = elapsed > cooldown_period
+        if not can_send:
+            remaining = cooldown_period - elapsed
+            logger.debug(
+                "[alertmgr] global cooldown active: elapsed=%.1fm, cooldown=%.0fm, remaining=%.1fm",
+                elapsed.total_seconds() / 60,
+                self.settings.global_cooldown,
+                remaining.total_seconds() / 60,
+            )
+        return can_send
 
     def _is_alert_fresh(self, alert_sent_time: datetime | None) -> bool:
         """
@@ -480,8 +490,19 @@ class AlertManager:
             self.settings.escalation_cooldown if is_escalation else self.settings.per_alert_cooldown
         )
         cooldown_period = timedelta(minutes=cooldown_minutes)
-
-        return datetime.now(UTC) - alert_state.last_notified > cooldown_period
+        elapsed = datetime.now(UTC) - alert_state.last_notified
+        can_send = elapsed > cooldown_period
+        if not can_send:
+            remaining = cooldown_period - elapsed
+            logger.debug(
+                "[alertmgr] per-alert cooldown active for %r: "
+                "elapsed=%.1fm, cooldown=%.0fm, remaining=%.1fm",
+                alert_state.alert_id,
+                elapsed.total_seconds() / 60,
+                cooldown_minutes,
+                remaining.total_seconds() / 60,
+            )
+        return can_send
 
     def _should_notify_alert(self, alert: WeatherAlert) -> tuple[bool, str]:
         """Determine if we should notify for this alert and why."""
@@ -541,7 +562,12 @@ class AlertManager:
             # Check if we should notify for this alert
             should_notify, reason = self._should_notify_alert(alert)
             if not should_notify:
-                logger.debug(f"Skipping notification for alert {alert_id}: {reason}")
+                logger.info(
+                    "[alertmgr] Skipping alert %r: %s (severity=%s)",
+                    alert_id,
+                    reason,
+                    alert.severity,
+                )
                 continue
 
             # Get existing state or create new one
@@ -576,7 +602,7 @@ class AlertManager:
                 else:
                     # Update hash even if we don't notify (track the change)
                     existing_state.add_hash(content_hash, severity_priority)
-                    logger.debug(f"Alert changed but in cooldown: {alert_id}")
+                    logger.info("[alertmgr] Alert content changed but per-alert cooldown active: %r", alert_id)
 
             else:
                 # Same alert, no changes - check freshness bypass

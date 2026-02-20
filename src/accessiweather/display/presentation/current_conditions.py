@@ -453,10 +453,10 @@ def build_current_conditions(
     metrics.extend(_build_trend_metrics(trends, current, hourly_forecast, show_pressure_trend))
 
     # Build fallback text
-    temperature_value = metrics[0].value if metrics else "N/A"
+    # Use metric.label for all metrics — after priority reordering, metrics[0]
+    # may no longer be the Temperature metric (e.g. Visibility moves first during fog alerts)
     fallback_lines = [f"Current Conditions: {description}"]
-    fallback_lines.append(f"Temperature: {temperature_value}")
-    for metric in metrics[1:]:  # already added temperature
+    for metric in metrics:
         fallback_lines.append(f"{metric.label}: {metric.value}")
     fallback_text = "\n".join(fallback_lines)
 
