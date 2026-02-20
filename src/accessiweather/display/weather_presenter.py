@@ -10,7 +10,10 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from accessiweather.alert_lifecycle import AlertLifecycleDiff
 
 from ..models import (
     AppSettings,
@@ -216,7 +219,11 @@ class WeatherPresenter:
             else None
         )
         alerts = (
-            self._build_alerts(weather_data.alerts, weather_data.location)
+            self._build_alerts(
+                weather_data.alerts,
+                weather_data.location,
+                lifecycle_diff=weather_data.alert_lifecycle_diff,
+            )
             if weather_data.alerts
             else None
         )
@@ -332,8 +339,13 @@ class WeatherPresenter:
             forecast, hourly_forecast, location, unit_pref, settings=self.settings
         )
 
-    def _build_alerts(self, alerts: WeatherAlerts, location: Location) -> AlertsPresentation:
-        return build_alerts(alerts, location, settings=self.settings)
+    def _build_alerts(
+        self,
+        alerts: WeatherAlerts,
+        location: Location,
+        lifecycle_diff: AlertLifecycleDiff | None = None,
+    ) -> AlertsPresentation:
+        return build_alerts(alerts, location, settings=self.settings, lifecycle_diff=lifecycle_diff)
 
     def _build_aviation(
         self, aviation: AviationData | None, location: Location

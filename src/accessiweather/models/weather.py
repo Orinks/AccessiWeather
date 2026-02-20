@@ -6,9 +6,12 @@ import asyncio
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .alerts import WeatherAlerts
+
+if TYPE_CHECKING:
+    from accessiweather.alert_lifecycle import AlertLifecycleDiff
 
 # Note: CurrentConditions, Forecast, HourlyForecast are defined later in this file
 # and used in SourceData via forward references (string annotations)
@@ -507,6 +510,9 @@ class WeatherData:
     # Smart auto source fields
     source_attribution: SourceAttribution | None = None
     incomplete_sections: set[str] = field(default_factory=set)
+
+    # Alert lifecycle diff (computed per-fetch from cached previous alerts)
+    alert_lifecycle_diff: AlertLifecycleDiff | None = None
 
     @property
     def current_conditions(self) -> CurrentConditions | None:
