@@ -126,6 +126,7 @@ class AlertsPresentation:
     title: str
     alerts: list[AlertPresentation] = field(default_factory=list)
     fallback_text: str = ""
+    change_summary: str | None = None
 
 
 @dataclass(slots=True)
