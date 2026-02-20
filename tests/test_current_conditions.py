@@ -30,6 +30,8 @@ from accessiweather.models import (
     HourlyForecastPeriod,
     Location,
     TrendInsight,
+    WeatherAlert,
+    WeatherAlerts,
 )
 from accessiweather.utils import TemperatureUnit
 
@@ -647,3 +649,57 @@ class TestBuildCurrentConditions:
             current, location, TemperatureUnit.FAHRENHEIT, trends=trends
         )
         assert len(result.trends) > 0
+
+    def test_priority_reorder_preserves_labels_in_fallback_text(self):
+        """
+        Regression test: when a fog alert reorders Visibility to the top,
+        fallback_text must use each metric's real label — not hard-code "Temperature:"
+        for metrics[0].
+        """
+        from datetime import timezone
+
+        current = CurrentConditions(
+            temperature_f=40.5,
+            temperature_c=4.7,
+            condition="Fog/Mist",
+            humidity=100,
+            wind_speed_mph=6.9,
+            wind_direction="ESE",
+            visibility_miles=2.0,
+        )
+        location = Location(name="Holt Michigan", latitude=42.63, longitude=-84.52)
+        fog_alert = WeatherAlert(
+            title="Dense Fog Advisory",
+            description="Dense fog advisory in effect.",
+            severity="Moderate",
+            urgency="Expected",
+            certainty="Likely",
+            event="Dense Fog Advisory",
+            id="fog-test-001",
+            expires=datetime(2099, 1, 1, tzinfo=timezone.utc),
+        )
+        alerts = WeatherAlerts(alerts=[fog_alert])
+
+        result = build_current_conditions(
+            current,
+            location,
+            TemperatureUnit.FAHRENHEIT,
+            alerts=alerts,
+        )
+
+        # Visibility should be first after fog-alert priority reorder
+        assert result.metrics[0].label == "Visibility"
+
+        # Every line in fallback_text must use the metric's real label.
+        # Before the fix, metrics[0] was mislabeled "Temperature:" even when
+        # it was Visibility (or Wind), producing e.g. "Temperature: 2.0 mi".
+        lines = result.fallback_text.splitlines()
+        metric_lines = [l for l in lines if ":" in l and not l.startswith("Current Conditions")]
+        labels_in_text = [l.split(":")[0] for l in metric_lines]
+        assert "Temperature" not in labels_in_text[:1] or result.metrics[0].label == "Temperature", (
+            "First fallback_text metric line has wrong label after priority reorder"
+        )
+        # More direct: Visibility value must NOT appear under a "Temperature:" label
+        assert not any(
+            l.startswith("Temperature:") and "mi" in l for l in lines
+        ), "Visibility value incorrectly labelled as Temperature in fallback_text"
