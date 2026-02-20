@@ -23,6 +23,7 @@ from . import (
 )
 from .cache import WeatherDataCache
 from .config.source_priority import SourcePriorityConfig
+from .forecast_confidence import calculate_forecast_confidence
 from .models import (
     AppSettings,
     AviationData,
@@ -680,6 +681,9 @@ class WeatherClient:
             discussion = "Forecast discussion not available from Open-Meteo."
             discussion_issuance_time = None
 
+        # Compute cross-source forecast confidence
+        confidence = calculate_forecast_confidence(source_results)
+
         # Create the merged WeatherData
         weather_data = WeatherData(
             location=location,
@@ -691,6 +695,7 @@ class WeatherClient:
             alerts=merged_alerts,
             source_attribution=attribution,
             incomplete_sections=incomplete_sections,
+            forecast_confidence=confidence,
         )
 
         # Run enrichment tasks
