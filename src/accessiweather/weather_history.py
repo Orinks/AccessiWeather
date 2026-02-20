@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .models import CurrentConditions, Location
+    from .temperature_anomaly import HistoricalBaseline
 
 logger = logging.getLogger(__name__)
 
@@ -308,3 +309,61 @@ class WeatherHistoryService:
             return None
 
         return WeatherComparison.compare(current_conditions, historical, days_ago=days_ago)
+
+    def fetch_same_date_baseline(
+        self,
+        location: Location,
+        target_date: date,
+        years_back: int = 3,
+        temperature_unit: str = "fahrenheit",
+    ) -> HistoricalBaseline | None:
+        """
+        Fetch archive data for the same calendar date across multiple prior years.
+
+        Collects historical records for the same month/day from ``years_back``
+        prior years and computes a baseline using :func:`build_historical_baseline`.
+        Years for which data is unavailable (or Feb 29 on non-leap years) are
+        silently skipped.
+
+        Args:
+        ----
+            location: The location to fetch historical data for.
+            target_date: The reference calendar date (month and day are used).
+            years_back: How many prior years to sample (default 3).
+            temperature_unit: Temperature unit for the API request.
+
+        Returns:
+        -------
+            A :class:`HistoricalBaseline` if sufficient data is available
+            (at least 2 valid samples), otherwise ``None``.
+
+        """
+        from .temperature_anomaly import build_historical_baseline
+
+        samples: list[HistoricalWeatherData] = []
+
+        for i in range(1, years_back + 1):
+            try:
+                prior_date = date(target_date.year - i, target_date.month, target_date.day)
+            except ValueError:
+                # Handles Feb 29 on non-leap years — skip with a debug log
+                logger.debug(
+                    "Skipping year %d: %s-%02d-%02d does not exist",
+                    target_date.year - i,
+                    target_date.year - i,
+                    target_date.month,
+                    target_date.day,
+                )
+                continue
+
+            historical = self.get_historical_weather(
+                location.latitude,
+                location.longitude,
+                prior_date,
+                temperature_unit,
+            )
+
+            if historical is not None:
+                samples.append(historical)
+
+        return build_historical_baseline(samples)

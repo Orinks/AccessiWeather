@@ -301,3 +301,145 @@ class TestHistoricalWeatherData:
         assert data.temperature_min == 60.0
         assert data.humidity is None
         assert data.pressure is None
+
+
+# --- WeatherHistoryService.fetch_same_date_baseline ---
+
+
+def _make_archive_response(temp_mean: float, temp_max: float = 80.0, temp_min: float = 60.0) -> dict:
+    """Build a minimal Open-Meteo archive API response dict."""
+    return {
+        "daily": {
+            "time": ["2023-07-04"],
+            "weather_code": [1],
+            "temperature_2m_max": [temp_max],
+            "temperature_2m_min": [temp_min],
+            "temperature_2m_mean": [temp_mean],
+            "wind_speed_10m_max": [10.0],
+            "wind_direction_10m_dominant": [270],
+        }
+    }
+
+
+class TestFetchSameDateBaseline:
+    """Tests for WeatherHistoryService.fetch_same_date_baseline()."""
+
+    def _make_service(self, request_side_effect=None, request_return=None):
+        """Create a WeatherHistoryService with a mocked openmeteo_client."""
+        mock_client = MagicMock()
+        mock_client.get_weather_description.return_value = "Clear"
+        if request_side_effect is not None:
+            mock_client._make_request.side_effect = request_side_effect
+        else:
+            mock_client._make_request.return_value = request_return
+        return WeatherHistoryService(openmeteo_client=mock_client)
+
+    def test_returns_baseline_from_three_years(self):
+        """Baseline is returned when all 3 prior years have data."""
+        service = self._make_service(
+            request_side_effect=[
+                _make_archive_response(70.0),
+                _make_archive_response(72.0),
+                _make_archive_response(68.0),
+            ]
+        )
+        location = _make_location(40.0, -74.0)
+        target = date(2026, 7, 4)
+        result = service.fetch_same_date_baseline(location, target, years_back=3)
+
+        assert result is not None
+        # Mean of [70, 72, 68] = 70.0
+        assert abs(result.baseline_mean_temp - 70.0) < 0.01
+        assert result.sample_count == 3
+
+    def test_returns_baseline_when_one_year_missing(self):
+        """Baseline is returned using remaining years when one year fails."""
+        service = self._make_service(
+            request_side_effect=[
+                _make_archive_response(70.0),
+                None,  # year 2 returns no data
+                _make_archive_response(68.0),
+            ]
+        )
+        location = _make_location(40.0, -74.0)
+        target = date(2026, 7, 4)
+        result = service.fetch_same_date_baseline(location, target, years_back=3)
+
+        assert result is not None
+        assert result.sample_count == 2
+        assert abs(result.baseline_mean_temp - 69.0) < 0.01
+
+    def test_returns_none_when_all_years_fail(self):
+        """Returns None when all API calls fail."""
+        service = self._make_service(request_return=None)
+        location = _make_location(40.0, -74.0)
+        target = date(2026, 7, 4)
+        result = service.fetch_same_date_baseline(location, target, years_back=3)
+
+        assert result is None
+
+    def test_returns_none_when_only_one_year_succeeds(self):
+        """Returns None when fewer than 2 valid samples are available."""
+        service = self._make_service(
+            request_side_effect=[
+                _make_archive_response(70.0),
+                None,
+                None,
+            ]
+        )
+        location = _make_location(40.0, -74.0)
+        target = date(2026, 7, 4)
+        result = service.fetch_same_date_baseline(location, target, years_back=3)
+
+        assert result is None
+
+    def test_handles_feb29_on_non_leap_year(self):
+        """Feb 29 on a non-leap prior year is skipped gracefully."""
+        service = self._make_service(
+            request_side_effect=[
+                _make_archive_response(32.0),  # 2024 → Feb 29 exists (leap)
+                _make_archive_response(30.0),  # 2023 → Feb 29 skipped (non-leap)
+                _make_archive_response(28.0),  # 2022 → Feb 29 skipped
+            ]
+        )
+        location = _make_location(40.0, -74.0)
+        # Feb 29 on a leap year
+        target = date(2028, 2, 29)
+        # For years_back=3: 2027 (non-leap → skip), 2026 (non-leap → skip), 2025 (non-leap → skip)
+        # All 3 years lack Feb 29 → no API calls → insufficient data → None
+        result = service.fetch_same_date_baseline(location, target, years_back=3)
+
+        # No valid years (all non-leap), so build_historical_baseline returns None
+        assert result is None
+
+    def test_years_back_controls_sample_count(self):
+        """years_back parameter determines how many prior years are queried."""
+        mock_client = MagicMock()
+        mock_client.get_weather_description.return_value = "Clear"
+        mock_client._make_request.return_value = _make_archive_response(70.0)
+        service = WeatherHistoryService(openmeteo_client=mock_client)
+
+        location = _make_location(40.0, -74.0)
+        target = date(2026, 7, 4)
+        result = service.fetch_same_date_baseline(location, target, years_back=2)
+
+        assert result is not None
+        assert mock_client._make_request.call_count == 2
+        assert result.sample_count == 2
+
+    def test_location_lat_lon_used_for_api_call(self):
+        """Verifies the correct lat/lon from the location object is used."""
+        mock_client = MagicMock()
+        mock_client.get_weather_description.return_value = "Clear"
+        mock_client._make_request.return_value = _make_archive_response(70.0)
+        service = WeatherHistoryService(openmeteo_client=mock_client)
+
+        location = _make_location(lat=51.5, lon=-0.1)
+        target = date(2026, 6, 15)
+        service.fetch_same_date_baseline(location, target, years_back=2)
+
+        # Verify each request used the correct coordinates
+        for call in mock_client._make_request.call_args_list:
+            params = call[0][1]  # second positional arg is the params dict
+            assert params["latitude"] == 51.5
+            assert params["longitude"] == -0.1
