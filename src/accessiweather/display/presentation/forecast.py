@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+from ...forecast_confidence import ForecastConfidence
 from ...models import AppSettings, Forecast, HourlyForecast, Location
 from ...utils import TemperatureUnit
 from ..weather_presenter import (
@@ -30,6 +31,8 @@ def build_forecast(
     location: Location,
     unit_pref: TemperatureUnit,
     settings: AppSettings | None = None,
+    *,
+    confidence: ForecastConfidence | None = None,
 ) -> ForecastPresentation:
     """Create a structured forecast including optional hourly highlights."""
     title = f"Forecast for {location.name}"
@@ -136,6 +139,15 @@ def build_forecast(
     if hourly:
         fallback_lines.insert(1, render_hourly_fallback(hourly))
 
+    # Append cross-source confidence summary when available
+    confidence_label: str | None = None
+    if confidence is not None:
+        level_str = confidence.level.value  # 'High', 'Medium', 'Low'
+        fallback_lines.append(
+            f"\nForecast confidence: {level_str}. {confidence.rationale}."
+        )
+        confidence_label = f"Confidence: {level_str}"
+
     fallback_text = "\n".join(fallback_lines).rstrip()
 
     return ForecastPresentation(
@@ -144,6 +156,7 @@ def build_forecast(
         hourly_periods=hourly,
         generated_at=generated_at,
         fallback_text=fallback_text,
+        confidence_label=confidence_label,
     )
 
 

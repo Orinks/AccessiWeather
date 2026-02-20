@@ -10,7 +10,10 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from ..forecast_confidence import ForecastConfidence
 
 from ..models import (
     AppSettings,
@@ -88,6 +91,7 @@ class ForecastPresentation:
     hourly_periods: list[HourlyPeriodPresentation] = field(default_factory=list)
     generated_at: str | None = None
     fallback_text: str = ""
+    confidence_label: str | None = None
 
 
 @dataclass(slots=True)
@@ -210,6 +214,7 @@ class WeatherPresenter:
                 weather_data.hourly_forecast,
                 weather_data.location,
                 unit_pref,
+                confidence=weather_data.forecast_confidence,
             )
             if weather_data.forecast
             else None
@@ -278,11 +283,13 @@ class WeatherPresenter:
         forecast: Forecast | None,
         location: Location,
         hourly_forecast: HourlyForecast | None = None,
+        confidence: ForecastConfidence | None = None,
     ) -> ForecastPresentation | None:
         if not forecast or not forecast.has_data():
             return None
         unit_pref = self._get_temperature_unit_preference()
-        return self._build_forecast(forecast, hourly_forecast, location, unit_pref)
+        return self._build_forecast(forecast, hourly_forecast, location, unit_pref,
+                                    confidence=confidence)
 
     def present_alerts(
         self, alerts: WeatherAlerts | None, location: Location
@@ -326,9 +333,11 @@ class WeatherPresenter:
         hourly_forecast: HourlyForecast | None,
         location: Location,
         unit_pref: TemperatureUnit,
+        confidence: ForecastConfidence | None = None,
     ) -> ForecastPresentation:
         return build_forecast(
-            forecast, hourly_forecast, location, unit_pref, settings=self.settings
+            forecast, hourly_forecast, location, unit_pref,
+            settings=self.settings, confidence=confidence,
         )
 
     def _build_alerts(self, alerts: WeatherAlerts, location: Location) -> AlertsPresentation:
