@@ -1016,24 +1016,52 @@ class MainWindow(SizedFrame):
 
             # Skip if neither notification type is enabled
             if not settings.notify_discussion_update and not settings.notify_severe_risk_change:
+                logger.debug(
+                    "[events] _process_notification_events: both discuss_update=%s and "
+                    "severe_risk=%s disabled — skipping",
+                    settings.notify_discussion_update,
+                    settings.notify_severe_risk_change,
+                )
                 return
 
             location = self.app.config_manager.get_current_location()
             if not location:
+                logger.warning("[events] _process_notification_events: no current location")
                 return
 
             # Get notifier from app or use cached fallback
             notifier = getattr(self.app, "notifier", None)
+            notifier_source = "app.notifier"
             if not notifier:
                 notifier = self._get_fallback_notifier()
+                notifier_source = "fallback_notifier"
+            logger.debug(
+                "[events] _process_notification_events: notifier=%s (%s), sound_enabled=%s",
+                type(notifier).__name__,
+                notifier_source,
+                settings.sound_enabled,
+            )
 
             # Get event manager and check for events
             event_manager = self._get_notification_event_manager()
             events = event_manager.check_for_events(weather_data, settings, location.name)
 
+            logger.debug(
+                "[events] check_for_events returned %d event(s) for location %r",
+                len(events),
+                location.name,
+            )
+
             # Send notifications for each event
             for event in events:
                 try:
+                    logger.debug(
+                        "[events] Sending %s notification: title=%r, sound_event=%r, play_sound=%s",
+                        event.event_type,
+                        event.title,
+                        event.sound_event,
+                        settings.sound_enabled,
+                    )
                     # Pass sound_event and let send_notification handle sound
                     # to avoid double-playing (send_notification plays sound
                     # internally when play_sound=True)
@@ -1046,10 +1074,18 @@ class MainWindow(SizedFrame):
                     )
 
                     if success:
-                        logger.info("Sent %s notification: %s", event.event_type, event.title)
+                        logger.info(
+                            "[events] Sent %s notification: %s", event.event_type, event.title
+                        )
+                    else:
+                        logger.warning(
+                            "[events] send_notification returned False for %s: %r",
+                            event.event_type,
+                            event.title,
+                        )
 
                 except Exception as e:
-                    logger.warning("Failed to send event notification: %s", e)
+                    logger.warning("[events] Failed to send event notification: %s", e)
 
         except Exception as e:
-            logger.debug("Error processing notification events: %s", e)
+            logger.warning("[events] Error processing notification events: %s", e)

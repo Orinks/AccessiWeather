@@ -104,25 +104,40 @@ class SafeDesktopNotifier:
 
     def _send_in_worker(self, title: str, message: str, timeout: int = 10) -> bool:
         """Send a notification via the persistent worker thread."""
-        if not self._ensure_worker():
+        worker_ok = self._ensure_worker()
+        logger.debug(
+            f"[toast] _send_in_worker: ensure_worker={worker_ok}, "
+            f"loop_alive={self._worker_loop is not None and self._worker_loop.is_running()}, "
+            f"thread_alive={self._worker_thread is not None and self._worker_thread.is_alive()}, "
+            f"notifier_ready={self._worker_notifier is not None}"
+        )
+        if not worker_ok:
+            logger.warning("[toast] _send_in_worker: worker thread not ready, toast skipped")
             return False
 
         loop = self._worker_loop
         notifier = self._worker_notifier
         if loop is None or notifier is None:
+            logger.warning(
+                f"[toast] _send_in_worker: loop={loop is not None}, notifier={notifier is not None} — aborting"
+            )
             return False
 
+        logger.debug(f"[toast] Submitting toast to worker loop: title={title!r}")
         future = asyncio.run_coroutine_threadsafe(
             notifier.send(title=title, message=message, timeout=timeout),
             loop,
         )
 
         try:
-            future.result(timeout=10)
-            logger.debug("Notification sent successfully via worker thread")
+            result = future.result(timeout=10)
+            logger.debug(f"[toast] Worker returned: {result!r} — toast sent successfully")
             return True
+        except TimeoutError:
+            logger.error("[toast] _send_in_worker: future timed out after 10s — toast NOT shown")
+            return False
         except Exception as e:
-            logger.error(f"Failed to send notification via worker: {e}")
+            logger.error(f"[toast] _send_in_worker: future raised {type(e).__name__}: {e}")
             return False
 
     def send_notification(
@@ -152,26 +167,49 @@ class SafeDesktopNotifier:
                        multiple alerts to avoid overlapping sounds).
 
         """
+        import threading
+
+        logger.debug(
+            f"[toast] send_notification called: title={title!r}, "
+            f"play_sound={play_sound}, sound_enabled={self.sound_enabled}, "
+            f"desktop_notifier_available={DESKTOP_NOTIFIER_AVAILABLE}, "
+            f"thread={threading.current_thread().name}"
+        )
+
         if not DESKTOP_NOTIFIER_AVAILABLE:
-            logger.info(f"Notification (desktop notifier unavailable): {title} - {message}")
+            logger.warning(
+                f"[toast] desktop-notifier NOT available — toast skipped, sound_only={play_sound}: {title!r}"
+            )
             # Still play sound if configured and requested, as a basic cue
             if self.sound_enabled and play_sound:
                 self._play_sound(sound_event, sound_candidates)
             return True
 
         try:
+            logger.debug(f"[toast] Calling _send_in_worker for: {title!r}")
             success = self._send_in_worker(title, message, timeout)
             if not success:
-                logger.info(f"Notification (fallback): {title} - {message}")
+                logger.warning(
+                    f"[toast] _send_in_worker returned False — toast NOT shown: {title!r}"
+                )
+            else:
+                logger.debug(f"[toast] Toast dispatched successfully: {title!r}")
 
             # Play alert sound when enabled and requested
             if self.sound_enabled and play_sound:
+                logger.debug(
+                    f"[toast] Playing sound: event={sound_event!r}, candidates={sound_candidates!r}"
+                )
                 self._play_sound(sound_event, sound_candidates)
+            else:
+                logger.debug(
+                    f"[toast] Sound skipped: sound_enabled={self.sound_enabled}, play_sound={play_sound}"
+                )
 
             return success
         except Exception as e:
-            logger.warning(f"Failed to send notification: {str(e)}")
-            logger.info(f"Notification (fallback): {title} - {message}")
+            logger.warning(f"[toast] send_notification raised {type(e).__name__}: {e}")
+            logger.info(f"[toast] Notification (fallback): {title} - {message}")
             return False
 
     def _play_sound(self, sound_event: str | None, sound_candidates: list[str] | None) -> None:
