@@ -1036,8 +1036,7 @@ class MainWindow(SizedFrame):
                 notifier = self._get_fallback_notifier()
                 notifier_source = "fallback_notifier"
             logger.debug(
-                "[events] _process_notification_events: notifier=%s (%s), "
-                "sound_enabled=%s",
+                "[events] _process_notification_events: notifier=%s (%s), sound_enabled=%s",
                 type(notifier).__name__,
                 notifier_source,
                 settings.sound_enabled,
@@ -1057,8 +1056,7 @@ class MainWindow(SizedFrame):
             for event in events:
                 try:
                     logger.debug(
-                        "[events] Sending %s notification: title=%r, sound_event=%r, "
-                        "play_sound=%s",
+                        "[events] Sending %s notification: title=%r, sound_event=%r, play_sound=%s",
                         event.event_type,
                         event.title,
                         event.sound_event,
@@ -1076,7 +1074,9 @@ class MainWindow(SizedFrame):
                     )
 
                     if success:
-                        logger.info("[events] Sent %s notification: %s", event.event_type, event.title)
+                        logger.info(
+                            "[events] Sent %s notification: %s", event.event_type, event.title
+                        )
                     else:
                         logger.warning(
                             "[events] send_notification returned False for %s: %r",

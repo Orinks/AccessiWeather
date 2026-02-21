@@ -602,7 +602,10 @@ class AlertManager:
                 else:
                     # Update hash even if we don't notify (track the change)
                     existing_state.add_hash(content_hash, severity_priority)
-                    logger.info("[alertmgr] Alert content changed but per-alert cooldown active: %r", alert_id)
+                    logger.info(
+                        "[alertmgr] Alert content changed but per-alert cooldown active: %r",
+                        alert_id,
+                    )
 
             else:
                 # Same alert, no changes - check freshness bypass

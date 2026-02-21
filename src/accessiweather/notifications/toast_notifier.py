@@ -189,13 +189,17 @@ class SafeDesktopNotifier:
             logger.debug(f"[toast] Calling _send_in_worker for: {title!r}")
             success = self._send_in_worker(title, message, timeout)
             if not success:
-                logger.warning(f"[toast] _send_in_worker returned False — toast NOT shown: {title!r}")
+                logger.warning(
+                    f"[toast] _send_in_worker returned False — toast NOT shown: {title!r}"
+                )
             else:
                 logger.debug(f"[toast] Toast dispatched successfully: {title!r}")
 
             # Play alert sound when enabled and requested
             if self.sound_enabled and play_sound:
-                logger.debug(f"[toast] Playing sound: event={sound_event!r}, candidates={sound_candidates!r}")
+                logger.debug(
+                    f"[toast] Playing sound: event={sound_event!r}, candidates={sound_candidates!r}"
+                )
                 self._play_sound(sound_event, sound_candidates)
             else:
                 logger.debug(

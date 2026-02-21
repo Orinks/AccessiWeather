@@ -696,10 +696,10 @@ class TestBuildCurrentConditions:
         lines = result.fallback_text.splitlines()
         metric_lines = [l for l in lines if ":" in l and not l.startswith("Current Conditions")]
         labels_in_text = [l.split(":")[0] for l in metric_lines]
-        assert "Temperature" not in labels_in_text[:1] or result.metrics[0].label == "Temperature", (
-            "First fallback_text metric line has wrong label after priority reorder"
-        )
+        assert (
+            "Temperature" not in labels_in_text[:1] or result.metrics[0].label == "Temperature"
+        ), "First fallback_text metric line has wrong label after priority reorder"
         # More direct: Visibility value must NOT appear under a "Temperature:" label
-        assert not any(
-            l.startswith("Temperature:") and "mi" in l for l in lines
-        ), "Visibility value incorrectly labelled as Temperature in fallback_text"
+        assert not any(l.startswith("Temperature:") and "mi" in l for l in lines), (
+            "Visibility value incorrectly labelled as Temperature in fallback_text"
+        )

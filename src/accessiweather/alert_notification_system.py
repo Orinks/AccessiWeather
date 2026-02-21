@@ -166,7 +166,9 @@ class AlertNotificationSystem:
                 )
                 return 0
 
-            logger.info(f"[notify] AlertManager queued {len(notifications_to_send)} notification(s) to send")
+            logger.info(
+                f"[notify] AlertManager queued {len(notifications_to_send)} notification(s) to send"
+            )
 
             # Sort notifications by severity (highest first) to play sound for most severe
             # Higher priority number = more severe
@@ -260,7 +262,9 @@ class AlertNotificationSystem:
             if success:
                 logger.info(f"[notify] Alert notification sent: {title[:60]!r}")
             else:
-                logger.warning(f"[notify] notifier.send_notification returned False: {title[:60]!r}")
+                logger.warning(
+                    f"[notify] notifier.send_notification returned False: {title[:60]!r}"
+                )
 
             return success
 
