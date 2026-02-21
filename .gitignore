@@ -291,11 +291,9 @@ accessiweather-soundpacks/
 .auto-claude/worktrees/
 .auto-claude/
 
-# Claude temporary files
 tmpclaude*
 .auto-claude-security.json
 .claude_settings.json
-.claude/
 # UV package manager
 uv.lock
 .uv/
