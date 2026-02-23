@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from accessiweather.display.presentation.forecast import build_forecast
 from accessiweather.display.weather_presenter import ForecastPresentation
 from accessiweather.forecast_confidence import (
@@ -13,10 +11,10 @@ from accessiweather.forecast_confidence import (
 from accessiweather.models.weather import Forecast, ForecastPeriod, Location
 from accessiweather.utils import TemperatureUnit
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def make_location() -> Location:
     return Location(name="TestCity", latitude=40.0, longitude=-75.0)
@@ -65,6 +63,7 @@ def call_build(confidence: ForecastConfidence | None = None) -> ForecastPresenta
 # ForecastPresentation.confidence_label field
 # ---------------------------------------------------------------------------
 
+
 class TestForecastPresentationConfidenceLabelField:
     def test_field_exists_defaults_none(self):
         fp = ForecastPresentation(title="Test")
@@ -80,6 +79,7 @@ class TestForecastPresentationConfidenceLabelField:
 # build_forecast with confidence=None (no change to existing behaviour)
 # ---------------------------------------------------------------------------
 
+
 class TestBuildForecastNoConfidence:
     def test_confidence_label_is_none_when_not_passed(self):
         result = call_build(confidence=None)
@@ -93,6 +93,7 @@ class TestBuildForecastNoConfidence:
 # ---------------------------------------------------------------------------
 # build_forecast with HIGH confidence
 # ---------------------------------------------------------------------------
+
 
 class TestBuildForecastHighConfidence:
     def test_confidence_label_is_confidence_high(self):
@@ -118,6 +119,7 @@ class TestBuildForecastHighConfidence:
 # build_forecast with MEDIUM confidence
 # ---------------------------------------------------------------------------
 
+
 class TestBuildForecastMediumConfidence:
     def test_confidence_label_is_confidence_medium(self):
         result = call_build(confidence=medium_confidence())
@@ -135,6 +137,7 @@ class TestBuildForecastMediumConfidence:
 # ---------------------------------------------------------------------------
 # build_forecast with LOW confidence
 # ---------------------------------------------------------------------------
+
 
 class TestBuildForecastLowConfidence:
     def test_confidence_label_is_confidence_low(self):
@@ -154,19 +157,19 @@ class TestBuildForecastLowConfidence:
 # WeatherPresenter.present() propagation
 # ---------------------------------------------------------------------------
 
+
 class TestWeatherPresenterPropagation:
     def _make_presenter(self):
         from accessiweather.display.weather_presenter import WeatherPresenter
         from accessiweather.models import AppSettings
+
         return WeatherPresenter(settings=AppSettings())
 
     def test_present_forecast_with_confidence(self):
         """present_forecast() with confidence kwarg returns confidence_label."""
         presenter = self._make_presenter()
         fc = high_confidence()
-        result = presenter.present_forecast(
-            make_forecast(), make_location(), confidence=fc
-        )
+        result = presenter.present_forecast(make_forecast(), make_location(), confidence=fc)
         assert result is not None
         assert result.confidence_label == "Confidence: High"
 

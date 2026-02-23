@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from accessiweather.forecast_confidence import (
     ForecastConfidence,
     ForecastConfidenceLevel,
@@ -17,10 +15,10 @@ from accessiweather.models.weather import (
     WeatherData,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def make_source(
     temp: float,
@@ -40,6 +38,7 @@ def make_location() -> Location:
 # ---------------------------------------------------------------------------
 # WeatherData field presence
 # ---------------------------------------------------------------------------
+
 
 class TestWeatherDataForecastConfidenceField:
     def test_field_exists_and_defaults_none(self):
@@ -63,6 +62,7 @@ class TestWeatherDataForecastConfidenceField:
 # ---------------------------------------------------------------------------
 # Pipeline: calculate_forecast_confidence with SourceData
 # ---------------------------------------------------------------------------
+
 
 class TestConfidencePipelineCalculation:
     def test_two_sources_high_agreement_gives_high(self):
@@ -118,6 +118,7 @@ class TestConfidencePipelineCalculation:
 # ---------------------------------------------------------------------------
 # Integration: WeatherData with confidence attached
 # ---------------------------------------------------------------------------
+
 
 class TestWeatherDataWithConfidenceAttached:
     def test_high_confidence_stored_on_weather_data(self):

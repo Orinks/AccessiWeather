@@ -143,9 +143,7 @@ def build_forecast(
     confidence_label: str | None = None
     if confidence is not None:
         level_str = confidence.level.value  # 'High', 'Medium', 'Low'
-        fallback_lines.append(
-            f"\nForecast confidence: {level_str}. {confidence.rationale}."
-        )
+        fallback_lines.append(f"\nForecast confidence: {level_str}. {confidence.rationale}.")
         confidence_label = f"Confidence: {level_str}"
 
     fallback_text = "\n".join(fallback_lines).rstrip()

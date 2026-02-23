@@ -19,10 +19,10 @@ __all__ = [
 ]
 
 # Thresholds for HIGH / MEDIUM confidence
-_TEMP_HIGH = 5.0   # °F — both temp and precip within this → HIGH
-_TEMP_MED = 10.0   # °F — only temp considered → MEDIUM
+_TEMP_HIGH = 5.0  # °F — both temp and precip within this → HIGH
+_TEMP_MED = 10.0  # °F — only temp considered → MEDIUM
 _PRECIP_HIGH = 15.0  # % — precip spread for HIGH
-_PRECIP_MED = 25.0   # % — precip spread for MEDIUM
+_PRECIP_MED = 25.0  # % — precip spread for MEDIUM
 
 
 class ForecastConfidenceLevel(Enum):
@@ -44,10 +44,7 @@ class ForecastConfidence:
 
 def _valid_sources(sources: list[SourceData]) -> list[SourceData]:
     """Return only sources that have usable forecast data."""
-    return [
-        s for s in sources
-        if s.success and s.forecast is not None and s.forecast.has_data()
-    ]
+    return [s for s in sources if s.success and s.forecast is not None and s.forecast.has_data()]
 
 
 def calculate_forecast_confidence(sources: list[SourceData]) -> ForecastConfidence:

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from accessiweather.forecast_confidence import (
     ForecastConfidence,
     ForecastConfidenceLevel,
@@ -11,13 +9,15 @@ from accessiweather.forecast_confidence import (
 )
 from accessiweather.models.weather import Forecast, ForecastPeriod, SourceData
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def make_period(temperature: float, precip: float | None = None) -> ForecastPeriod:
-    return ForecastPeriod(name="Period 1", temperature=temperature, precipitation_probability=precip)
+    return ForecastPeriod(
+        name="Period 1", temperature=temperature, precipitation_probability=precip
+    )
 
 
 def make_source(temperature: float, precip: float | None = None, source: str = "nws") -> SourceData:
@@ -38,6 +38,7 @@ def make_empty_forecast_source(source: str = "visualcrossing") -> SourceData:
 # ForecastConfidenceLevel enum
 # ---------------------------------------------------------------------------
 
+
 class TestForecastConfidenceLevel:
     def test_has_exactly_three_members(self):
         assert len(list(ForecastConfidenceLevel)) == 3
@@ -55,6 +56,7 @@ class TestForecastConfidenceLevel:
 # ---------------------------------------------------------------------------
 # Zero / one source edge cases
 # ---------------------------------------------------------------------------
+
 
 class TestZeroAndOneSources:
     def test_zero_sources_returns_low(self):
@@ -99,6 +101,7 @@ class TestZeroAndOneSources:
 # ---------------------------------------------------------------------------
 # Temperature-only scenarios (no precip data)
 # ---------------------------------------------------------------------------
+
 
 class TestTemperatureOnlyConfidence:
     def test_high_confidence_temp_spread_3(self):
@@ -147,6 +150,7 @@ class TestTemperatureOnlyConfidence:
 # Mixed temperature + precipitation scenarios
 # ---------------------------------------------------------------------------
 
+
 class TestMixedConfidence:
     def test_high_both_within_thresholds(self):
         """temp_spread ≤ 5 AND precip_spread ≤ 15 → HIGH."""
@@ -164,21 +168,21 @@ class TestMixedConfidence:
     def test_medium_temp_ok_precip_borderline(self):
         """temp_spread ≤ 10 but precip_spread > 15 → MEDIUM (temp satisfies OR)."""
         s1 = make_source(72.0, precip=20.0)
-        s2 = make_source(79.0, precip=50.0)   # precip_spread=30, temp_spread=7
+        s2 = make_source(79.0, precip=50.0)  # precip_spread=30, temp_spread=7
         result = calculate_forecast_confidence([s1, s2])
         assert result.level == ForecastConfidenceLevel.MEDIUM
 
     def test_medium_precip_ok_temp_borderline(self):
         """temp_spread > 10 but precip_spread ≤ 25 → MEDIUM (precip satisfies OR)."""
         s1 = make_source(60.0, precip=30.0)
-        s2 = make_source(75.0, precip=40.0)   # temp_spread=15 (>10), precip_spread=10 (≤25)
+        s2 = make_source(75.0, precip=40.0)  # temp_spread=15 (>10), precip_spread=10 (≤25)
         result = calculate_forecast_confidence([s1, s2])
         assert result.level == ForecastConfidenceLevel.MEDIUM
 
     def test_low_both_exceed_thresholds(self):
         """temp_spread > 10 AND precip_spread > 25 → LOW."""
         s1 = make_source(60.0, precip=10.0)
-        s2 = make_source(80.0, precip=70.0)   # temp_spread=20, precip_spread=60
+        s2 = make_source(80.0, precip=70.0)  # temp_spread=20, precip_spread=60
         result = calculate_forecast_confidence([s1, s2])
         assert result.level == ForecastConfidenceLevel.LOW
 
@@ -193,6 +197,7 @@ class TestMixedConfidence:
 # ForecastConfidence dataclass
 # ---------------------------------------------------------------------------
 
+
 class TestForecastConfidenceDataclass:
     def test_is_dataclass(self):
         fc = ForecastConfidence(
@@ -206,6 +211,7 @@ class TestForecastConfidenceDataclass:
 
     def test_exported_in_all(self):
         from accessiweather import forecast_confidence as mod
+
         assert "ForecastConfidenceLevel" in mod.__all__
         assert "ForecastConfidence" in mod.__all__
         assert "calculate_forecast_confidence" in mod.__all__

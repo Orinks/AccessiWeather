@@ -294,8 +294,9 @@ class WeatherPresenter:
         if not forecast or not forecast.has_data():
             return None
         unit_pref = self._get_temperature_unit_preference()
-        return self._build_forecast(forecast, hourly_forecast, location, unit_pref,
-                                    confidence=confidence)
+        return self._build_forecast(
+            forecast, hourly_forecast, location, unit_pref, confidence=confidence
+        )
 
     def present_alerts(
         self, alerts: WeatherAlerts | None, location: Location
@@ -342,8 +343,12 @@ class WeatherPresenter:
         confidence: ForecastConfidence | None = None,
     ) -> ForecastPresentation:
         return build_forecast(
-            forecast, hourly_forecast, location, unit_pref,
-            settings=self.settings, confidence=confidence,
+            forecast,
+            hourly_forecast,
+            location,
+            unit_pref,
+            settings=self.settings,
+            confidence=confidence,
         )
 
     def _build_alerts(
