@@ -652,7 +652,8 @@ class TestBuildCurrentConditions:
 
     def test_priority_reorder_preserves_labels_in_fallback_text(self):
         """
-        Regression test: when a fog alert reorders Visibility to the top,
+        Regression test: when a fog alert reorders Visibility to the top.
+
         fallback_text must use each metric's real label — not hard-code "Temperature:"
         for metrics[0].
         """
@@ -694,12 +695,14 @@ class TestBuildCurrentConditions:
         # Before the fix, metrics[0] was mislabeled "Temperature:" even when
         # it was Visibility (or Wind), producing e.g. "Temperature: 2.0 mi".
         lines = result.fallback_text.splitlines()
-        metric_lines = [l for l in lines if ":" in l and not l.startswith("Current Conditions")]
-        labels_in_text = [l.split(":")[0] for l in metric_lines]
+        metric_lines = [
+            line for line in lines if ":" in line and not line.startswith("Current Conditions")
+        ]
+        labels_in_text = [line.split(":")[0] for line in metric_lines]
         assert (
             "Temperature" not in labels_in_text[:1] or result.metrics[0].label == "Temperature"
         ), "First fallback_text metric line has wrong label after priority reorder"
         # More direct: Visibility value must NOT appear under a "Temperature:" label
-        assert not any(l.startswith("Temperature:") and "mi" in l for l in lines), (
+        assert not any(line.startswith("Temperature:") and "mi" in line for line in lines), (
             "Visibility value incorrectly labelled as Temperature in fallback_text"
         )
