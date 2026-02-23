@@ -203,15 +203,13 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
 
     def _on_tray_test_alert(self, event: wx.CommandEvent) -> None:
         """Open the alert test dialog from the tray menu."""
-        win = self._get_main_window()
-        if win is not None:
-            win._on_test_alert_notification()
-        else:
-            wx.MessageBox(
-                "Open the main window first to use the alert test dialog.",
-                "Debug",
-                wx.OK | wx.ICON_INFORMATION,
-            )
+        from .dialogs.debug_alert_dialog import DebugAlertDialog
+
+        # Use main window as parent if available, otherwise use None (dialog is top-level)
+        parent = self._get_main_window()
+        dlg = DebugAlertDialog(parent, self.app)
+        dlg.ShowModal()
+        dlg.Destroy()
 
     def _get_main_window(self):
         """Return the main window if it exists, else None."""

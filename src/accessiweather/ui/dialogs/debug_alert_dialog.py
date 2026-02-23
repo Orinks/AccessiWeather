@@ -147,7 +147,10 @@ class DebugAlertDialog(wx.Dialog):
         self._build_ui()
         self._update_candidates()
         self.SetSize((520, 440))
-        self.CentreOnParent()
+        if self.GetParent() is not None:
+            self.CentreOnParent()
+        else:
+            self.Centre()
 
     # ------------------------------------------------------------------
     # UI construction
