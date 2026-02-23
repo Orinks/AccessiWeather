@@ -135,7 +135,7 @@ class AccessiWeatherApp(wx.App):
 
         # Set Windows App User Model ID so balloon/toast notifications say
         # "AccessiWeather" instead of "notification from Python".
-        try:
+        try:  # pragma: no cover
             import ctypes
 
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("AccessiWeather")
@@ -345,7 +345,7 @@ class AccessiWeatherApp(wx.App):
             # Wire tray balloon fallback into the notifier so toast failures
             # (e.g. WinRT silent drop when window is hidden) still show a visual.
             notifier = getattr(self, "_notifier", None)
-            if notifier is not None and hasattr(notifier, "balloon_fn"):
+            if notifier is not None and hasattr(notifier, "balloon_fn"):  # pragma: no cover
                 import wx
 
                 tray = self.tray_icon
