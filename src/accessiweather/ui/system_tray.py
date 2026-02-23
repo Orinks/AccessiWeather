@@ -164,11 +164,18 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
         show_item = menu.Append(wx.ID_ANY, "&Show AccessiWeather")
         self.Bind(wx.EVT_MENU, self._on_show_menu, show_item)
 
-        # Debug-only: Test Notifications
+        # Debug-only: notification test submenu
         if getattr(self.app, "debug_mode", False):
             menu.AppendSeparator()
-            test_item = menu.Append(wx.ID_ANY, "&Test Notifications")
-            self.Bind(wx.EVT_MENU, self._on_test_notifications_menu, test_item)
+            debug_menu = wx.Menu()
+            discussion_item = debug_menu.Append(wx.ID_ANY, "Test: &Discussion Updated")
+            alert_item = debug_menu.Append(wx.ID_ANY, "Test: &Alert Notification...")
+            debug_menu.AppendSeparator()
+            diag_item = debug_menu.Append(wx.ID_ANY, "Run Notification &Diagnostics")
+            menu.AppendSubMenu(debug_menu, "&Debug")
+            self.Bind(wx.EVT_MENU, self._on_tray_test_discussion, discussion_item)
+            self.Bind(wx.EVT_MENU, self._on_tray_test_alert, alert_item)
+            self.Bind(wx.EVT_MENU, self._on_test_notifications_menu, diag_item)
 
         menu.AppendSeparator()
 
@@ -178,8 +185,45 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
 
         return menu
 
+    def _on_tray_test_discussion(self, event: wx.CommandEvent) -> None:
+        """Fire a test discussion-update notification from the tray menu."""
+        win = self._get_main_window()
+        if win is not None:
+            win._on_test_discussion_notification()
+        else:
+            from ..notifications.toast_notifier import SafeDesktopNotifier
+
+            SafeDesktopNotifier().send_notification(
+                title="NWS Discussion Updated",
+                message="Area Forecast Discussion updated. (debug test)",
+                timeout=10,
+                sound_candidates=["discussion_update", "notify"],
+                play_sound=True,
+            )
+
+    def _on_tray_test_alert(self, event: wx.CommandEvent) -> None:
+        """Open the alert test dialog from the tray menu."""
+        win = self._get_main_window()
+        if win is not None:
+            win._on_test_alert_notification()
+        else:
+            wx.MessageBox(
+                "Open the main window first to use the alert test dialog.",
+                "Debug",
+                wx.OK | wx.ICON_INFORMATION,
+            )
+
+    def _get_main_window(self):
+        """Return the main window if it exists, else None."""
+        for win in wx.GetTopLevelWindows():
+            from .main_window import MainWindow
+
+            if isinstance(win, MainWindow):
+                return win
+        return None
+
     def _on_test_notifications_menu(self, event: wx.CommandEvent) -> None:
-        """Handle Test Notifications menu item click (debug mode only)."""
+        """Handle Run Notification Diagnostics menu item click (debug mode only)."""
         from ..notifications.notification_test import run_notification_test
 
         results = run_notification_test(self.app)
