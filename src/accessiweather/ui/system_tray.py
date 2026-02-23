@@ -211,12 +211,15 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
                 "Tray Balloon Test",
                 "balloon_fn is wired — fallback will work when WinRT drops the toast.",
             )
+            # Mirror what send_notification does after balloon_fn: play our custom sound
+            if getattr(notifier, "sound_enabled", True):
+                notifier._play_sound("notify", None)
         else:
             self.ShowBalloon(
                 "Tray Balloon Test",
                 "balloon_fn not set — tray balloon called directly from tray icon.",
                 5000,
-                wx.ICON_INFORMATION,
+                0x11,  # NIIF_INFO | NIIF_NOSOUND
             )
 
     def _on_tray_test_alert(self, event: wx.CommandEvent) -> None:

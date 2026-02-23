@@ -643,12 +643,15 @@ class MainWindow(SizedFrame):
                 "Tray Balloon Test",
                 "balloon_fn is wired — fallback will work when WinRT drops the toast.",
             )
+            # Mirror what send_notification does after balloon_fn: play our custom sound
+            if getattr(notifier, "sound_enabled", True):
+                notifier._play_sound("notify", None)
         elif self.app.tray_icon is not None:
             self.app.tray_icon.ShowBalloon(
                 "Tray Balloon Test",
                 "balloon_fn not set — tray balloon called directly.",
                 5000,
-                wx.ICON_INFORMATION,
+                0x11,  # NIIF_INFO | NIIF_NOSOUND
             )
         else:
             wx.MessageBox(
