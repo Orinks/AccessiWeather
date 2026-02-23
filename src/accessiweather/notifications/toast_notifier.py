@@ -47,6 +47,11 @@ class SafeDesktopNotifier:
         self.sound_enabled: bool = bool(sound_enabled)
         self.soundpack: str = soundpack or "default"
 
+        # Optional fallback callable: balloon_fn(title, message) is called when the
+        # WinRT/desktop-notifier toast fails (e.g. window hidden in system tray).
+        # Set this after init — typically wired to tray_icon.ShowBalloon().
+        self.balloon_fn = None  # Optional[Callable[[str, str], None]] — set after init
+
         # Persistent worker thread state
         self._worker_loop: asyncio.AbstractEventLoop | None = None
         self._worker_thread: threading.Thread | None = None
@@ -192,6 +197,13 @@ class SafeDesktopNotifier:
                 logger.warning(
                     f"[toast] _send_in_worker returned False — toast NOT shown: {title!r}"
                 )
+                # Fallback to tray balloon when available (e.g. window hidden in system tray)
+                if self.balloon_fn is not None:
+                    try:
+                        self.balloon_fn(title, message)
+                        logger.debug(f"[toast] Tray balloon fallback used for: {title!r}")
+                    except Exception as bf_exc:
+                        logger.debug(f"[toast] Tray balloon fallback failed: {bf_exc}")
             else:
                 logger.debug(f"[toast] Toast dispatched successfully: {title!r}")
 
