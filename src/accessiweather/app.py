@@ -133,6 +133,16 @@ class AccessiWeatherApp(wx.App):
         """Initialize the application (wxPython entry point)."""
         logger.info("Starting AccessiWeather application (wxPython)")
 
+        # Set Windows App User Model ID so balloon/toast notifications say
+        # "AccessiWeather" instead of "notification from Python".
+        try:  # pragma: no cover
+            import ctypes
+
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("AccessiWeather")
+            logger.debug("App User Model ID set: AccessiWeather")
+        except Exception:  # pragma: no cover
+            pass  # Non-Windows or ctypes unavailable — silently skip
+
         try:
             # Check for single instance
             self.single_instance_manager = SingleInstanceManager(self)
@@ -331,6 +341,22 @@ class AccessiWeatherApp(wx.App):
 
             self.tray_icon = SystemTrayIcon(self)
             logger.info("System tray icon initialized")
+
+            # Wire tray balloon fallback into the notifier so toast failures
+            # (e.g. WinRT silent drop when window is hidden) still show a visual.
+            notifier = getattr(self, "_notifier", None)  # pragma: no cover
+            if notifier is not None and hasattr(notifier, "balloon_fn"):  # pragma: no cover
+                import wx
+
+                tray = self.tray_icon
+
+                def _balloon(title: str, message: str) -> None:
+                    # NIIF_INFO (0x1) | NIIF_NOSOUND (0x10) — show info icon,
+                    # suppress the default Windows chime (our soundpack plays instead).
+                    wx.CallAfter(tray.ShowBalloon, title, message, 5000, 0x11)
+
+                notifier.balloon_fn = _balloon
+                logger.debug("Tray balloon fallback wired into notifier")
         except Exception as e:
             logger.warning(f"Failed to initialize system tray icon: {e}")
             self.tray_icon = None

@@ -254,13 +254,31 @@ class MainWindow(SizedFrame):
             f"Check for &Updates ({channel.title()})...",
             "Check for application updates",
         )
-        self._test_notifications_item = None
+        self._debug_menu_items: dict[str, wx.MenuItem] = {}
         if getattr(self.app, "debug_mode", False):
-            self._test_notifications_item = help_menu.Append(
+            debug_menu = wx.Menu()
+            self._debug_menu_items["discussion"] = debug_menu.Append(
                 wx.ID_ANY,
-                "Test &Notifications",
-                "Run debug notification tests",
+                "Test: &Discussion Updated",
+                "Fire a test notification as if the NWS discussion was updated",
             )
+            self._debug_menu_items["alert"] = debug_menu.Append(
+                wx.ID_ANY,
+                "Test: &Alert Notification...",
+                "Send a test alert notification (choose type and severity)",
+            )
+            self._debug_menu_items["balloon"] = debug_menu.Append(
+                wx.ID_ANY,
+                "Test: Tray &Balloon (direct)",
+                "Directly invoke the tray balloon fallback to verify it is wired up",
+            )
+            debug_menu.AppendSeparator()
+            self._debug_menu_items["diagnostics"] = debug_menu.Append(
+                wx.ID_ANY,
+                "Run Notification &Diagnostics",
+                "Run pass/fail notification system diagnostics",
+            )
+            help_menu.AppendSubMenu(debug_menu, "&Debug", "Debug and test tools")
         help_menu.AppendSeparator()
 
         report_issue_item = help_menu.Append(
@@ -288,11 +306,26 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_MENU, lambda e: self._on_weather_chat(), weather_chat_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_soundpack_manager(), soundpack_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_check_updates(), self._check_updates_item)
-        if self._test_notifications_item is not None:
+        if self._debug_menu_items:
+            self.Bind(
+                wx.EVT_MENU,
+                lambda e: self._on_test_discussion_notification(),
+                self._debug_menu_items["discussion"],
+            )
+            self.Bind(
+                wx.EVT_MENU,
+                lambda e: self._on_test_alert_notification(),
+                self._debug_menu_items["alert"],
+            )
+            self.Bind(
+                wx.EVT_MENU,
+                lambda e: self._on_test_tray_balloon(),
+                self._debug_menu_items["balloon"],
+            )
             self.Bind(
                 wx.EVT_MENU,
                 lambda e: self._on_test_notifications(),
-                self._test_notifications_item,
+                self._debug_menu_items["diagnostics"],
             )
         self.Bind(wx.EVT_MENU, lambda e: self._on_report_issue(), report_issue_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_about(), about_item)
@@ -569,6 +602,71 @@ class MainWindow(SizedFrame):
 
         thread = threading.Thread(target=do_check, daemon=True)
         thread.start()
+
+    def _on_test_discussion_notification(self) -> None:
+        """Fire a real test notification simulating an NWS discussion update."""
+        from ..notifications.toast_notifier import SafeDesktopNotifier
+
+        try:
+            settings = self.app.config_manager.get_settings()
+        except Exception:
+            from ..models import AppSettings
+
+            settings = AppSettings()
+
+        notifier = getattr(self.app, "notifier", None) or SafeDesktopNotifier(
+            app_name="AccessiWeather",
+            sound_enabled=bool(getattr(settings, "sound_enabled", True)),
+            soundpack=getattr(settings, "sound_pack", "default"),
+        )
+        sent = notifier.send_notification(
+            title="NWS Discussion Updated",
+            message="The Area Forecast Discussion for your location has been updated. "
+            "This is a debug test notification.",
+            timeout=10,
+            sound_candidates=["discussion_update", "notify"],
+            play_sound=True,
+        )
+        if not sent:
+            wx.MessageBox(
+                "Discussion notification could not be sent.\n"
+                "Check that desktop notifications are enabled on your system.",
+                "Debug: Discussion Notification",
+                wx.OK | wx.ICON_WARNING,
+            )
+
+    def _on_test_tray_balloon(self) -> None:
+        """Directly invoke the tray balloon fallback to verify it is wired up."""
+        notifier = getattr(self.app, "_notifier", None)
+        if notifier is not None and getattr(notifier, "balloon_fn", None) is not None:
+            notifier.balloon_fn(
+                "Tray Balloon Test",
+                "balloon_fn is wired — fallback will work when WinRT drops the toast.",
+            )
+            # Mirror what send_notification does after balloon_fn: play our custom sound
+            if getattr(notifier, "sound_enabled", True):
+                notifier._play_sound("notify", None)
+        elif self.app.tray_icon is not None:
+            self.app.tray_icon.ShowBalloon(
+                "Tray Balloon Test",
+                "balloon_fn not set — tray balloon called directly.",
+                5000,
+                0x11,  # NIIF_INFO | NIIF_NOSOUND
+            )
+        else:
+            wx.MessageBox(
+                "No tray icon available. Run with --debug and a system tray to test this.",
+                "Debug: Tray Balloon",
+                wx.OK | wx.ICON_WARNING,
+            )
+
+    def _on_test_alert_notification(self) -> None:
+        """Open the alert notification test dialog."""
+        from .dialogs.debug_alert_dialog import DebugAlertDialog
+
+        dlg = DebugAlertDialog(self, self.app)
+        dlg.ShowModal()
+        dlg.Destroy()
 
     def _on_test_notifications(self) -> None:
         """Run notification tests and show pass/fail results."""
@@ -1016,24 +1114,52 @@ class MainWindow(SizedFrame):
 
             # Skip if neither notification type is enabled
             if not settings.notify_discussion_update and not settings.notify_severe_risk_change:
+                logger.debug(
+                    "[events] _process_notification_events: both discuss_update=%s and "
+                    "severe_risk=%s disabled — skipping",
+                    settings.notify_discussion_update,
+                    settings.notify_severe_risk_change,
+                )
                 return
 
             location = self.app.config_manager.get_current_location()
             if not location:
+                logger.warning("[events] _process_notification_events: no current location")
                 return
 
             # Get notifier from app or use cached fallback
             notifier = getattr(self.app, "notifier", None)
+            notifier_source = "app.notifier"
             if not notifier:
                 notifier = self._get_fallback_notifier()
+                notifier_source = "fallback_notifier"
+            logger.debug(
+                "[events] _process_notification_events: notifier=%s (%s), sound_enabled=%s",
+                type(notifier).__name__,
+                notifier_source,
+                settings.sound_enabled,
+            )
 
             # Get event manager and check for events
             event_manager = self._get_notification_event_manager()
             events = event_manager.check_for_events(weather_data, settings, location.name)
 
+            logger.debug(
+                "[events] check_for_events returned %d event(s) for location %r",
+                len(events),
+                location.name,
+            )
+
             # Send notifications for each event
             for event in events:
                 try:
+                    logger.debug(
+                        "[events] Sending %s notification: title=%r, sound_event=%r, play_sound=%s",
+                        event.event_type,
+                        event.title,
+                        event.sound_event,
+                        settings.sound_enabled,
+                    )
                     # Pass sound_event and let send_notification handle sound
                     # to avoid double-playing (send_notification plays sound
                     # internally when play_sound=True)
@@ -1046,10 +1172,18 @@ class MainWindow(SizedFrame):
                     )
 
                     if success:
-                        logger.info("Sent %s notification: %s", event.event_type, event.title)
+                        logger.info(
+                            "[events] Sent %s notification: %s", event.event_type, event.title
+                        )
+                    else:
+                        logger.warning(
+                            "[events] send_notification returned False for %s: %r",
+                            event.event_type,
+                            event.title,
+                        )
 
                 except Exception as e:
-                    logger.warning("Failed to send event notification: %s", e)
+                    logger.warning("[events] Failed to send event notification: %s", e)
 
         except Exception as e:
-            logger.debug("Error processing notification events: %s", e)
+            logger.warning("[events] Error processing notification events: %s", e)
