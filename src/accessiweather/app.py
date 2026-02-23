@@ -351,7 +351,9 @@ class AccessiWeatherApp(wx.App):
                 tray = self.tray_icon
 
                 def _balloon(title: str, message: str) -> None:
-                    wx.CallAfter(tray.ShowBalloon, title, message, 5000, wx.ICON_INFORMATION)
+                    # NIIF_INFO (0x1) | NIIF_NOSOUND (0x10) — show info icon,
+                    # suppress the default Windows chime (our soundpack plays instead).
+                    wx.CallAfter(tray.ShowBalloon, title, message, 5000, 0x11)
 
                 notifier.balloon_fn = _balloon
                 logger.debug("Tray balloon fallback wired into notifier")
