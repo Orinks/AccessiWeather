@@ -133,6 +133,16 @@ class AccessiWeatherApp(wx.App):
         """Initialize the application (wxPython entry point)."""
         logger.info("Starting AccessiWeather application (wxPython)")
 
+        # Set Windows App User Model ID so balloon/toast notifications say
+        # "AccessiWeather" instead of "notification from Python".
+        try:
+            import ctypes
+
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Orinks.AccessiWeather")
+            logger.debug("App User Model ID set: Orinks.AccessiWeather")
+        except Exception:
+            pass  # Non-Windows or ctypes unavailable — silently skip
+
         try:
             # Check for single instance
             self.single_instance_manager = SingleInstanceManager(self)
