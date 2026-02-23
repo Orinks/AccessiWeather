@@ -170,11 +170,13 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
             debug_menu = wx.Menu()
             discussion_item = debug_menu.Append(wx.ID_ANY, "Test: &Discussion Updated")
             alert_item = debug_menu.Append(wx.ID_ANY, "Test: &Alert Notification...")
+            balloon_item = debug_menu.Append(wx.ID_ANY, "Test: Tray &Balloon (direct)")
             debug_menu.AppendSeparator()
             diag_item = debug_menu.Append(wx.ID_ANY, "Run Notification &Diagnostics")
             menu.AppendSubMenu(debug_menu, "&Debug")
             self.Bind(wx.EVT_MENU, self._on_tray_test_discussion, discussion_item)
             self.Bind(wx.EVT_MENU, self._on_tray_test_alert, alert_item)
+            self.Bind(wx.EVT_MENU, self._on_tray_test_balloon, balloon_item)
             self.Bind(wx.EVT_MENU, self._on_test_notifications_menu, diag_item)
 
         menu.AppendSeparator()
@@ -199,6 +201,22 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
                 timeout=10,
                 sound_candidates=["discussion_update", "notify"],
                 play_sound=True,
+            )
+
+    def _on_tray_test_balloon(self, event: wx.CommandEvent) -> None:
+        """Directly invoke the tray balloon fallback to verify it's wired up."""
+        notifier = getattr(self.app, "_notifier", None)
+        if notifier is not None and getattr(notifier, "balloon_fn", None) is not None:
+            notifier.balloon_fn(
+                "Tray Balloon Test",
+                "balloon_fn is wired — fallback will work when WinRT drops the toast.",
+            )
+        else:
+            self.ShowBalloon(
+                "Tray Balloon Test",
+                "balloon_fn not set — tray balloon called directly from tray icon.",
+                5000,
+                wx.ICON_INFORMATION,
             )
 
     def _on_tray_test_alert(self, event: wx.CommandEvent) -> None:

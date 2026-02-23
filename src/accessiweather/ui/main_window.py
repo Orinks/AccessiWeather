@@ -267,6 +267,11 @@ class MainWindow(SizedFrame):
                 "Test: &Alert Notification...",
                 "Send a test alert notification (choose type and severity)",
             )
+            self._debug_menu_items["balloon"] = debug_menu.Append(
+                wx.ID_ANY,
+                "Test: Tray &Balloon (direct)",
+                "Directly invoke the tray balloon fallback to verify it is wired up",
+            )
             debug_menu.AppendSeparator()
             self._debug_menu_items["diagnostics"] = debug_menu.Append(
                 wx.ID_ANY,
@@ -311,6 +316,11 @@ class MainWindow(SizedFrame):
                 wx.EVT_MENU,
                 lambda e: self._on_test_alert_notification(),
                 self._debug_menu_items["alert"],
+            )
+            self.Bind(
+                wx.EVT_MENU,
+                lambda e: self._on_test_tray_balloon(),
+                self._debug_menu_items["balloon"],
             )
             self.Bind(
                 wx.EVT_MENU,
@@ -622,6 +632,28 @@ class MainWindow(SizedFrame):
                 "Discussion notification could not be sent.\n"
                 "Check that desktop notifications are enabled on your system.",
                 "Debug: Discussion Notification",
+                wx.OK | wx.ICON_WARNING,
+            )
+
+    def _on_test_tray_balloon(self) -> None:
+        """Directly invoke the tray balloon fallback to verify it is wired up."""
+        notifier = getattr(self.app, "_notifier", None)
+        if notifier is not None and getattr(notifier, "balloon_fn", None) is not None:
+            notifier.balloon_fn(
+                "Tray Balloon Test",
+                "balloon_fn is wired — fallback will work when WinRT drops the toast.",
+            )
+        elif self.app.tray_icon is not None:
+            self.app.tray_icon.ShowBalloon(
+                "Tray Balloon Test",
+                "balloon_fn not set — tray balloon called directly.",
+                5000,
+                wx.ICON_INFORMATION,
+            )
+        else:
+            wx.MessageBox(
+                "No tray icon available. Run with --debug and a system tray to test this.",
+                "Debug: Tray Balloon",
                 wx.OK | wx.ICON_WARNING,
             )
 
