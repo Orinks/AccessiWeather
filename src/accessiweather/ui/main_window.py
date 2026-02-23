@@ -254,13 +254,26 @@ class MainWindow(SizedFrame):
             f"Check for &Updates ({channel.title()})...",
             "Check for application updates",
         )
-        self._test_notifications_item = None
+        self._debug_menu_items: dict[str, wx.MenuItem] = {}
         if getattr(self.app, "debug_mode", False):
-            self._test_notifications_item = help_menu.Append(
+            debug_menu = wx.Menu()
+            self._debug_menu_items["discussion"] = debug_menu.Append(
                 wx.ID_ANY,
-                "Test &Notifications",
-                "Run debug notification tests",
+                "Test: &Discussion Updated",
+                "Fire a test notification as if the NWS discussion was updated",
             )
+            self._debug_menu_items["alert"] = debug_menu.Append(
+                wx.ID_ANY,
+                "Test: &Alert Notification...",
+                "Send a test alert notification (choose type and severity)",
+            )
+            debug_menu.AppendSeparator()
+            self._debug_menu_items["diagnostics"] = debug_menu.Append(
+                wx.ID_ANY,
+                "Run Notification &Diagnostics",
+                "Run pass/fail notification system diagnostics",
+            )
+            help_menu.AppendSubMenu(debug_menu, "&Debug", "Debug and test tools")
         help_menu.AppendSeparator()
 
         report_issue_item = help_menu.Append(
@@ -288,11 +301,21 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_MENU, lambda e: self._on_weather_chat(), weather_chat_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_soundpack_manager(), soundpack_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_check_updates(), self._check_updates_item)
-        if self._test_notifications_item is not None:
+        if self._debug_menu_items:
+            self.Bind(
+                wx.EVT_MENU,
+                lambda e: self._on_test_discussion_notification(),
+                self._debug_menu_items["discussion"],
+            )
+            self.Bind(
+                wx.EVT_MENU,
+                lambda e: self._on_test_alert_notification(),
+                self._debug_menu_items["alert"],
+            )
             self.Bind(
                 wx.EVT_MENU,
                 lambda e: self._on_test_notifications(),
-                self._test_notifications_item,
+                self._debug_menu_items["diagnostics"],
             )
         self.Bind(wx.EVT_MENU, lambda e: self._on_report_issue(), report_issue_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_about(), about_item)
@@ -569,6 +592,46 @@ class MainWindow(SizedFrame):
 
         thread = threading.Thread(target=do_check, daemon=True)
         thread.start()
+
+    def _on_test_discussion_notification(self) -> None:
+        """Fire a real test notification simulating an NWS discussion update."""
+        from ..notifications.toast_notifier import SafeDesktopNotifier
+
+        try:
+            settings = self.app.config_manager.get_settings()
+        except Exception:
+            from ..models import AppSettings
+
+            settings = AppSettings()
+
+        notifier = getattr(self.app, "notifier", None) or SafeDesktopNotifier(
+            app_name="AccessiWeather",
+            sound_enabled=bool(getattr(settings, "sound_enabled", True)),
+            soundpack=getattr(settings, "sound_pack", "default"),
+        )
+        sent = notifier.send_notification(
+            title="NWS Discussion Updated",
+            message="The Area Forecast Discussion for your location has been updated. "
+            "This is a debug test notification.",
+            timeout=10,
+            sound_candidates=["discussion_update", "notify"],
+            play_sound=True,
+        )
+        if not sent:
+            wx.MessageBox(
+                "Discussion notification could not be sent.\n"
+                "Check that desktop notifications are enabled on your system.",
+                "Debug: Discussion Notification",
+                wx.OK | wx.ICON_WARNING,
+            )
+
+    def _on_test_alert_notification(self) -> None:
+        """Open the alert notification test dialog."""
+        from .dialogs.debug_alert_dialog import DebugAlertDialog
+
+        dlg = DebugAlertDialog(self, self.app)
+        dlg.ShowModal()
+        dlg.Destroy()
 
     def _on_test_notifications(self) -> None:
         """Run notification tests and show pass/fail results."""
