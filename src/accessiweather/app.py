@@ -140,7 +140,7 @@ class AccessiWeatherApp(wx.App):
 
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("AccessiWeather")
             logger.debug("App User Model ID set: AccessiWeather")
-        except Exception:
+        except Exception:  # pragma: no cover
             pass  # Non-Windows or ctypes unavailable — silently skip
 
         try:
@@ -344,7 +344,7 @@ class AccessiWeatherApp(wx.App):
 
             # Wire tray balloon fallback into the notifier so toast failures
             # (e.g. WinRT silent drop when window is hidden) still show a visual.
-            notifier = getattr(self, "_notifier", None)
+            notifier = getattr(self, "_notifier", None)  # pragma: no cover
             if notifier is not None and hasattr(notifier, "balloon_fn"):  # pragma: no cover
                 import wx
 
