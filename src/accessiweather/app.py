@@ -138,8 +138,8 @@ class AccessiWeatherApp(wx.App):
         try:
             import ctypes
 
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("Orinks.AccessiWeather")
-            logger.debug("App User Model ID set: Orinks.AccessiWeather")
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("AccessiWeather")
+            logger.debug("App User Model ID set: AccessiWeather")
         except Exception:
             pass  # Non-Windows or ctypes unavailable — silently skip
 
