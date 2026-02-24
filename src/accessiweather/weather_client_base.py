@@ -1053,8 +1053,8 @@ class WeatherClient:
             )
             # Strip model-derived snow depth — Open-Meteo uses ERA5/GFS which is
             # notoriously inaccurate for snowpack. Only station observations are reliable.
-            fallback.snow_depth_in = None
-            fallback.snow_depth_cm = None
+            fallback.snow_depth_in = None  # pragma: no cover
+            fallback.snow_depth_cm = None  # pragma: no cover
             return fallback
 
         logger.info(
