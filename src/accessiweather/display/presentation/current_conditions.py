@@ -455,7 +455,7 @@ def build_current_conditions(
     # Build fallback text
     # Use metric.label for all metrics — after priority reordering, metrics[0]
     # may no longer be the Temperature metric (e.g. Visibility moves first during fog alerts)
-    fallback_lines = [f"Current Conditions: {description}"]
+    fallback_lines = [f"Current conditions for {location.name}: {description}"]
     for metric in metrics:
         fallback_lines.append(f"{metric.label}: {metric.value}")
     fallback_text = "\n".join(fallback_lines)
