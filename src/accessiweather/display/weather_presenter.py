@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from accessiweather.alert_lifecycle import AlertLifecycleDiff
+
     from ..forecast_confidence import ForecastConfidence
 
 from ..models import (
