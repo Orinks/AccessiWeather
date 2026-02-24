@@ -375,57 +375,77 @@ class TestDiffAlertsSummary:
 
 
 class TestComputeLifecycleLabels:
-    def _make_change(self, kind: AlertChangeKind, alert_id: str = "a1") -> AlertChange:
-        return AlertChange(kind=kind, alert_id=alert_id)
+    def _make_nws_alert(
+        self,
+        alert_id: str = "nws-1",
+        message_type: str | None = "Alert",
+    ) -> WeatherAlert:
+        return WeatherAlert(
+            title="Test Alert",
+            description="A description.",
+            severity="Moderate",
+            urgency="Expected",
+            id=alert_id,
+            source="NWS",
+            message_type=message_type,
+        )
 
-    def test_empty_diff_returns_empty_dict(self):
-        diff = AlertLifecycleDiff()
-        assert compute_lifecycle_labels(diff) == {}
+    def _make_vc_alert(self, alert_id: str = "vc-1") -> WeatherAlert:
+        return WeatherAlert(
+            title="VC Alert",
+            description="A VC description.",
+            severity="Moderate",
+            urgency="Expected",
+            id=alert_id,
+            source="VisualCrossing",
+        )
 
-    def test_new_alert_labeled_new(self):
-        change = self._make_change(AlertChangeKind.NEW, "new-1")
-        diff = AlertLifecycleDiff(new_alerts=[change])
-        labels = compute_lifecycle_labels(diff)
-        assert labels == {"new-1": "New"}
+    def test_empty_list_returns_empty_dict(self):
+        assert compute_lifecycle_labels([]) == {}
 
-    def test_updated_alert_labeled_updated(self):
-        change = self._make_change(AlertChangeKind.UPDATED, "upd-1")
-        diff = AlertLifecycleDiff(updated_alerts=[change])
-        labels = compute_lifecycle_labels(diff)
-        assert labels == {"upd-1": "Updated"}
+    def test_nws_alert_type_labeled_new(self):
+        alert = self._make_nws_alert(alert_id="nws-new", message_type="Alert")
+        labels = compute_lifecycle_labels([alert])
+        assert labels == {"nws-new": "New"}
 
-    def test_escalated_alert_labeled_escalated(self):
-        change = self._make_change(AlertChangeKind.ESCALATED, "esc-1")
-        diff = AlertLifecycleDiff(escalated_alerts=[change])
-        labels = compute_lifecycle_labels(diff)
-        assert labels == {"esc-1": "Escalated"}
+    def test_nws_update_type_labeled_updated(self):
+        alert = self._make_nws_alert(alert_id="nws-upd", message_type="Update")
+        labels = compute_lifecycle_labels([alert])
+        assert labels == {"nws-upd": "Updated"}
 
-    def test_extended_alert_labeled_extended(self):
-        change = self._make_change(AlertChangeKind.EXTENDED, "ext-1")
-        diff = AlertLifecycleDiff(extended_alerts=[change])
-        labels = compute_lifecycle_labels(diff)
-        assert labels == {"ext-1": "Extended"}
+    def test_nws_alert_type_case_insensitive(self):
+        alert = self._make_nws_alert(alert_id="nws-ci", message_type="ALERT")
+        labels = compute_lifecycle_labels([alert])
+        assert labels == {"nws-ci": "New"}
 
-    def test_cancelled_alerts_not_in_labels(self):
-        """Cancelled alerts are omitted -- they are no longer active."""
-        change = self._make_change(AlertChangeKind.CANCELLED, "can-1")
-        diff = AlertLifecycleDiff(cancelled_alerts=[change])
-        labels = compute_lifecycle_labels(diff)
+    def test_nws_cancel_type_omitted(self):
+        """Cancel messageType means the alert is no longer active — omit from labels."""
+        alert = self._make_nws_alert(alert_id="nws-can", message_type="Cancel")
+        labels = compute_lifecycle_labels([alert])
         assert labels == {}
 
-    def test_mixed_diff_returns_all_active_labels(self):
-        diff = AlertLifecycleDiff(
-            new_alerts=[self._make_change(AlertChangeKind.NEW, "n1")],
-            updated_alerts=[self._make_change(AlertChangeKind.UPDATED, "u1")],
-            escalated_alerts=[self._make_change(AlertChangeKind.ESCALATED, "e1")],
-            extended_alerts=[self._make_change(AlertChangeKind.EXTENDED, "x1")],
-            cancelled_alerts=[self._make_change(AlertChangeKind.CANCELLED, "c1")],
-        )
-        labels = compute_lifecycle_labels(diff)
+    def test_nws_no_message_type_omitted(self):
+        alert = self._make_nws_alert(alert_id="nws-none", message_type=None)
+        labels = compute_lifecycle_labels([alert])
+        assert labels == {}
+
+    def test_vc_alert_gets_no_label(self):
+        """VisualCrossing alerts have no messageType equivalent."""
+        alert = self._make_vc_alert(alert_id="vc-1")
+        labels = compute_lifecycle_labels([alert])
+        assert labels == {}
+
+    def test_mixed_alerts_returns_nws_labels_only(self):
+        alerts = [
+            self._make_nws_alert(alert_id="nws-a", message_type="Alert"),
+            self._make_nws_alert(alert_id="nws-u", message_type="Update"),
+            self._make_nws_alert(alert_id="nws-c", message_type="Cancel"),
+            self._make_vc_alert(alert_id="vc-1"),
+        ]
+        labels = compute_lifecycle_labels(alerts)
         assert labels == {
-            "n1": "New",
-            "u1": "Updated",
-            "e1": "Escalated",
-            "x1": "Extended",
+            "nws-a": "New",
+            "nws-u": "Updated",
         }
-        assert "c1" not in labels
+        assert "nws-c" not in labels
+        assert "vc-1" not in labels

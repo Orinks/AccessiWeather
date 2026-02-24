@@ -1001,15 +1001,12 @@ class MainWindow(SizedFrame):
             else:
                 self.forecast_display.SetValue("No forecast available.")
 
-            # Update lifecycle label map from the latest diff, then refresh the alerts list.
-            if weather_data.alert_lifecycle_diff is not None:
+            # Update lifecycle label map from the current active alerts, then refresh the alerts list.
+            if weather_data.alerts is not None:
                 from accessiweather.alert_lifecycle import compute_lifecycle_labels
 
-                new_labels = compute_lifecycle_labels(weather_data.alert_lifecycle_diff)
-                self._alert_lifecycle_labels.update(new_labels)
-                # Remove cancelled alert IDs so stale labels don't persist
-                for change in weather_data.alert_lifecycle_diff.cancelled_alerts:
-                    self._alert_lifecycle_labels.pop(change.alert_id, None)
+                active_alerts = weather_data.alerts.get_active_alerts()
+                self._alert_lifecycle_labels = compute_lifecycle_labels(active_alerts)
 
             # Update alerts
             self._update_alerts(weather_data.alerts, self._alert_lifecycle_labels)

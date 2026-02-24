@@ -62,29 +62,30 @@ class AlertLifecycleDiff:
         )
 
 
-def compute_lifecycle_labels(diff: AlertLifecycleDiff) -> dict[str, str]:
+def compute_lifecycle_labels(alerts: list[WeatherAlert]) -> dict[str, str]:
     """
-    Build a mapping of alert_id to lifecycle label string from a diff.
+    Build alert_id → label mapping using messageType for NWS alerts.
 
-    Labels are: "New", "Updated", "Escalated", "Extended".
-    Cancelled alerts are omitted (they are no longer active).
+    VisualCrossing alerts have no messageType equivalent — no label returned for them.
 
     Args:
-        diff: The diff produced by diff_alerts().
+        alerts: List of current active WeatherAlert objects.
 
     Returns:
         A dict mapping alert IDs to their display label strings.
 
     """
     labels: dict[str, str] = {}
-    for change in diff.new_alerts:
-        labels[change.alert_id] = "New"
-    for change in diff.updated_alerts:
-        labels[change.alert_id] = "Updated"
-    for change in diff.escalated_alerts:
-        labels[change.alert_id] = "Escalated"
-    for change in diff.extended_alerts:
-        labels[change.alert_id] = "Extended"
+    for alert in alerts:
+        alert_id = alert.get_unique_id()
+        if alert.source != "NWS" or not alert.message_type:
+            continue  # VC and unknown sources: no label
+        mt = alert.message_type.lower()
+        if mt == "alert":
+            labels[alert_id] = "New"
+        elif mt == "update":
+            labels[alert_id] = "Updated"
+        # Cancel: alert is no longer active, omit
     return labels
 
 
