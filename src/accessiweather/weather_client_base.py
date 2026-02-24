@@ -24,6 +24,7 @@ from . import (
 from .alert_lifecycle import diff_alerts
 from .cache import WeatherDataCache
 from .config.source_priority import SourcePriorityConfig
+from .forecast_confidence import calculate_forecast_confidence
 from .models import (
     AppSettings,
     AviationData,
@@ -704,6 +705,9 @@ class WeatherClient:
             discussion = "Forecast discussion not available from Open-Meteo."
             discussion_issuance_time = None
 
+        # Compute cross-source forecast confidence
+        confidence = calculate_forecast_confidence(source_results)
+
         # Create the merged WeatherData
         weather_data = WeatherData(
             location=location,
@@ -715,6 +719,7 @@ class WeatherClient:
             alerts=merged_alerts,
             source_attribution=attribution,
             incomplete_sections=incomplete_sections,
+            forecast_confidence=confidence,
         )
         weather_data.alert_lifecycle_diff = _alert_diff
 
@@ -1046,6 +1051,10 @@ class WeatherClient:
             logger.info(
                 "Using Open-Meteo current conditions for %s due to missing NWS data", location.name
             )
+            # Strip model-derived snow depth — Open-Meteo uses ERA5/GFS which is
+            # notoriously inaccurate for snowpack. Only station observations are reliable.
+            fallback.snow_depth_in = None  # pragma: no cover
+            fallback.snow_depth_cm = None  # pragma: no cover
             return fallback
 
         logger.info(
