@@ -278,11 +278,12 @@ class AlertNotificationSystem:
         diff: AlertLifecycleDiff,
     ) -> int:
         """
-        Fire desktop notifications for updated and cancelled alerts.
+        Fire desktop notifications for updated, escalated, extended, and cancelled alerts.
 
         New alerts are handled by :meth:`process_and_notify`.  This method
-        covers the other two lifecycle events so users hear about alerts that
-        changed severity or were withdrawn.
+        covers the remaining lifecycle events so users hear about alerts that
+        changed content, escalated in severity, had their expiry extended, or
+        were withdrawn.
 
         Args:
         ----
@@ -303,14 +304,14 @@ class AlertNotificationSystem:
 
         sent = 0
 
-        # --- Updated alerts ---
+        # --- Updated alerts (content changed, not escalated) ---
         for change in diff.updated_alerts:
             if change.alert is None:
                 continue
-            reason = "escalation" if change.is_severity_upgrade else "content_changed"
+            reason = "content_changed"
             try:
                 success = await self._send_alert_notification(
-                    change.alert, reason, play_sound=change.is_severity_upgrade
+                    change.alert, reason, play_sound=False
                 )
                 if success:
                     sent += 1
@@ -321,6 +322,43 @@ class AlertNotificationSystem:
             except Exception as exc:
                 logger.error(
                     f"[notify] lifecycle update notification failed for {change.alert_id!r}: {exc}"
+                )
+
+        # --- Escalated alerts (severity upgraded -- play sound) ---
+        for change in diff.escalated_alerts:
+            if change.alert is None:
+                continue
+            try:
+                success = await self._send_alert_notification(
+                    change.alert, "escalation", play_sound=True
+                )
+                if success:
+                    sent += 1
+                    logger.info(
+                        f"[notify] lifecycle escalation notification sent: {change.title!r} "
+                        f"({change.old_severity} -> {change.new_severity})"
+                    )
+            except Exception as exc:
+                logger.error(
+                    f"[notify] lifecycle escalation notification failed for "
+                    f"{change.alert_id!r}: {exc}"
+                )
+
+        # --- Extended alerts (expiry pushed out -- informational, no sound) ---
+        for change in diff.extended_alerts:
+            if change.alert is None:
+                continue
+            try:
+                success = await self._send_alert_notification(
+                    change.alert, "extended", play_sound=False
+                )
+                if success:
+                    sent += 1
+                    logger.info(f"[notify] lifecycle extended notification sent: {change.title!r}")
+            except Exception as exc:
+                logger.error(
+                    f"[notify] lifecycle extended notification failed for "
+                    f"{change.alert_id!r}: {exc}"
                 )
 
         # --- Cancelled alerts ---

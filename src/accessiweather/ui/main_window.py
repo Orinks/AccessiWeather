@@ -46,6 +46,9 @@ class MainWindow(SizedFrame):
         self.app = app
         self._escape_id = None
         self._fetch_generation = 0  # Tracks which fetch is current (prevents stale updates)
+        # Persistent map of alert_id -> lifecycle label ("New", "Updated", "Escalated", "Extended").
+        # Updated on each successful weather fetch; cleared when the location changes.
+        self._alert_lifecycle_labels: dict[str, str] = {}
 
         # Create the UI
         self._create_widgets()
@@ -337,6 +340,8 @@ class MainWindow(SizedFrame):
             return
 
         logger.info(f"Location changed to: {selected}")
+        # Clear lifecycle labels when switching locations so stale labels never bleed across
+        self._alert_lifecycle_labels = {}
         self._set_current_location(selected)
 
         # Show cached data instantly if available
@@ -996,8 +1001,18 @@ class MainWindow(SizedFrame):
             else:
                 self.forecast_display.SetValue("No forecast available.")
 
+            # Update lifecycle label map from the latest diff, then refresh the alerts list.
+            if weather_data.alert_lifecycle_diff is not None:
+                from accessiweather.alert_lifecycle import compute_lifecycle_labels
+
+                new_labels = compute_lifecycle_labels(weather_data.alert_lifecycle_diff)
+                self._alert_lifecycle_labels.update(new_labels)
+                # Remove cancelled alert IDs so stale labels don't persist
+                for change in weather_data.alert_lifecycle_diff.cancelled_alerts:
+                    self._alert_lifecycle_labels.pop(change.alert_id, None)
+
             # Update alerts
-            self._update_alerts(weather_data.alerts)
+            self._update_alerts(weather_data.alerts, self._alert_lifecycle_labels)
 
             # Process alerts for desktop notifications
             if (
@@ -1045,8 +1060,18 @@ class MainWindow(SizedFrame):
         self.app.is_updating = False
         self.refresh_button.Enable()
 
-    def _update_alerts(self, alerts) -> None:
-        """Update the alerts list."""
+    def _update_alerts(self, alerts, lifecycle_labels: dict[str, str] | None = None) -> None:
+        """
+        Update the alerts list.
+
+        Args:
+            alerts: WeatherAlerts, a list of WeatherAlert, or None.
+            lifecycle_labels: Optional mapping of alert_id -> label (e.g.
+                "New", "Updated", "Escalated", "Extended").  When provided,
+                the label is appended to each matching list item:
+                "Dense Fog Advisory (Moderate) (Extended)".
+
+        """
         alert_items = []
         alert_list = []
 
@@ -1062,7 +1087,14 @@ class MainWindow(SizedFrame):
         for alert in alert_list:
             event = getattr(alert, "event", "Unknown")
             severity = getattr(alert, "severity", "Unknown")
-            alert_items.append(f"{event} ({severity})")
+            item = f"{event} ({severity})"
+            if lifecycle_labels:
+                get_uid = getattr(alert, "get_unique_id", None)
+                if callable(get_uid):
+                    label = lifecycle_labels.get(get_uid())
+                    if label:
+                        item = f"{item} ({label})"
+            alert_items.append(item)
 
         self.alerts_list.Clear()
         if alert_items:

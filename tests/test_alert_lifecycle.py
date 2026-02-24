@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
 from accessiweather.alert_lifecycle import (
     AlertChange,
     AlertChangeKind,
     AlertLifecycleDiff,
+    compute_lifecycle_labels,
     diff_alerts,
 )
 from accessiweather.models.alerts import WeatherAlert, WeatherAlerts
@@ -41,15 +44,21 @@ def alerts(*alert_list: WeatherAlert) -> WeatherAlerts:
 
 
 class TestAlertChangeKind:
-    def test_has_three_members(self):
+    def test_has_five_members(self):
         members = list(AlertChangeKind)
-        assert len(members) == 3
+        assert len(members) == 5
 
     def test_has_new(self):
         assert AlertChangeKind.NEW.value == "new"
 
     def test_has_updated(self):
         assert AlertChangeKind.UPDATED.value == "updated"
+
+    def test_has_escalated(self):
+        assert AlertChangeKind.ESCALATED.value == "escalated"
+
+    def test_has_extended(self):
+        assert AlertChangeKind.EXTENDED.value == "extended"
 
     def test_has_cancelled(self):
         assert AlertChangeKind.CANCELLED.value == "cancelled"
@@ -122,6 +131,16 @@ class TestAlertLifecycleDiffHasChanges:
         diff = AlertLifecycleDiff(updated_alerts=[change])
         assert diff.has_changes is True
 
+    def test_escalated_alerts_has_changes(self):
+        change = AlertChange(kind=AlertChangeKind.ESCALATED)
+        diff = AlertLifecycleDiff(escalated_alerts=[change])
+        assert diff.has_changes is True
+
+    def test_extended_alerts_has_changes(self):
+        change = AlertChange(kind=AlertChangeKind.EXTENDED)
+        diff = AlertLifecycleDiff(extended_alerts=[change])
+        assert diff.has_changes is True
+
     def test_cancelled_alerts_has_changes(self):
         change = AlertChange(kind=AlertChangeKind.CANCELLED)
         diff = AlertLifecycleDiff(cancelled_alerts=[change])
@@ -185,13 +204,14 @@ class TestDiffAlertsUpdated:
         assert len(diff.updated_alerts) == 1
         assert diff.updated_alerts[0].kind == AlertChangeKind.UPDATED
 
-    def test_severity_change_detected(self):
-        """Alert with changed severity should appear in updated_alerts."""
-        a_prev = make_alert("Ice Storm Warning", severity="Moderate", alert_id="is1")
-        a_curr = make_alert("Ice Storm Warning", severity="Extreme", alert_id="is1")
+    def test_severity_downgrade_goes_to_updated(self):
+        """Severity downgrade (not an escalation) should appear in updated_alerts."""
+        a_prev = make_alert("Ice Storm Warning", severity="Extreme", alert_id="is1")
+        a_curr = make_alert("Ice Storm Warning", severity="Minor", alert_id="is1")
         diff = diff_alerts(alerts(a_prev), alerts(a_curr))
         assert len(diff.updated_alerts) == 1
         assert diff.updated_alerts[0].kind == AlertChangeKind.UPDATED
+        assert len(diff.escalated_alerts) == 0
 
     def test_urgency_change_detected(self):
         """Alert with changed urgency should appear in updated_alerts."""
@@ -200,28 +220,94 @@ class TestDiffAlertsUpdated:
         diff = diff_alerts(alerts(a_prev), alerts(a_curr))
         assert len(diff.updated_alerts) == 1
 
-    def test_severity_upgrade_flag(self):
-        """is_severity_upgrade should be True when severity went up."""
-        a_prev = make_alert("Storm Warning", severity="Minor", alert_id="sw1")
-        a_curr = make_alert("Storm Warning", severity="Extreme", alert_id="sw1")
-        diff = diff_alerts(alerts(a_prev), alerts(a_curr))
-        assert len(diff.updated_alerts) == 1
-        assert diff.updated_alerts[0].is_severity_upgrade is True
-
-    def test_severity_downgrade_flag(self):
-        """is_severity_upgrade should be False when severity went down."""
-        a_prev = make_alert("Storm Warning", severity="Extreme", alert_id="sw2")
-        a_curr = make_alert("Storm Warning", severity="Minor", alert_id="sw2")
-        diff = diff_alerts(alerts(a_prev), alerts(a_curr))
-        assert len(diff.updated_alerts) == 1
-        assert diff.updated_alerts[0].is_severity_upgrade is False
-
     def test_identical_alert_no_update(self):
         """Identical alerts should not appear in any change list."""
         a = make_alert("Dense Fog Advisory", alert_id="df1")
         diff = diff_alerts(alerts(a), alerts(a))
         assert diff.has_changes is False
         assert diff.summary == "No changes"
+
+
+class TestDiffAlertsEscalated:
+    def test_severity_escalation_goes_to_escalated_alerts(self):
+        """Severity upgrade should go to escalated_alerts, not updated_alerts."""
+        a_prev = make_alert("Storm Warning", severity="Minor", alert_id="sw1")
+        a_curr = make_alert("Storm Warning", severity="Extreme", alert_id="sw1")
+        diff = diff_alerts(alerts(a_prev), alerts(a_curr))
+        assert len(diff.escalated_alerts) == 1
+        assert diff.escalated_alerts[0].kind == AlertChangeKind.ESCALATED
+        assert len(diff.updated_alerts) == 0
+
+    def test_escalated_is_severity_upgrade_true(self):
+        """is_severity_upgrade should be True on ESCALATED changes."""
+        a_prev = make_alert("Storm Warning", severity="Minor", alert_id="sw1")
+        a_curr = make_alert("Storm Warning", severity="Extreme", alert_id="sw1")
+        diff = diff_alerts(alerts(a_prev), alerts(a_curr))
+        assert diff.escalated_alerts[0].is_severity_upgrade is True
+
+    def test_escalated_has_old_and_new_severity(self):
+        """Escalated change should record old and new severity."""
+        a_prev = make_alert("Ice Storm", severity="Moderate", alert_id="is1")
+        a_curr = make_alert("Ice Storm", severity="Extreme", alert_id="is1")
+        diff = diff_alerts(alerts(a_prev), alerts(a_curr))
+        change = diff.escalated_alerts[0]
+        assert change.old_severity == "Moderate"
+        assert change.new_severity == "Extreme"
+
+    def test_same_severity_not_escalated(self):
+        """Same severity level (no change) should not go to escalated_alerts."""
+        a_prev = make_alert("Storm", severity="Moderate", alert_id="s1")
+        a_curr = make_alert("Storm", severity="Moderate", alert_id="s1")
+        diff = diff_alerts(alerts(a_prev), alerts(a_curr))
+        assert len(diff.escalated_alerts) == 0
+
+
+class TestDiffAlertsExtended:
+    def _make_alert_with_expires(
+        self,
+        alert_id: str = "ext1",
+        expires_offset_hours: float = 12.0,
+        **kwargs,
+    ) -> WeatherAlert:
+        return WeatherAlert(
+            title=kwargs.get("title", "Fog Advisory"),
+            description=kwargs.get("description", "Fog in the area."),
+            severity=kwargs.get("severity", "Moderate"),
+            urgency=kwargs.get("urgency", "Expected"),
+            id=alert_id,
+            expires=datetime.now(UTC) + timedelta(hours=expires_offset_hours),
+        )
+
+    def test_expiry_pushed_later_goes_to_extended_alerts(self):
+        """Alert with same content but later expires goes to extended_alerts."""
+        a_prev = self._make_alert_with_expires("fog1", expires_offset_hours=6.0)
+        a_curr = self._make_alert_with_expires("fog1", expires_offset_hours=24.0)
+        diff = diff_alerts(alerts(a_prev), alerts(a_curr))
+        assert len(diff.extended_alerts) == 1
+        assert diff.extended_alerts[0].kind == AlertChangeKind.EXTENDED
+        assert len(diff.updated_alerts) == 0
+        assert len(diff.escalated_alerts) == 0
+
+    def test_expiry_not_changed_not_extended(self):
+        """Identical alert (same expires) produces no extended entry."""
+        a = self._make_alert_with_expires("fog1", expires_offset_hours=12.0)
+        diff = diff_alerts(alerts(a), alerts(a))
+        assert len(diff.extended_alerts) == 0
+        assert diff.has_changes is False
+
+    def test_expiry_moved_earlier_not_extended(self):
+        """Alert with expires moved to a sooner time is NOT extended."""
+        a_prev = self._make_alert_with_expires("fog1", expires_offset_hours=24.0)
+        a_curr = self._make_alert_with_expires("fog1", expires_offset_hours=6.0)
+        diff = diff_alerts(alerts(a_prev), alerts(a_curr))
+        assert len(diff.extended_alerts) == 0
+
+    def test_no_expires_not_extended(self):
+        """Alert without an expires field is not classified as extended."""
+        a_prev = make_alert("Dense Fog Advisory", alert_id="df1")
+        a_curr = make_alert("Dense Fog Advisory", alert_id="df1")
+        diff = diff_alerts(alerts(a_prev), alerts(a_curr))
+        assert len(diff.extended_alerts) == 0
 
 
 class TestDiffAlertsSummary:
@@ -252,8 +338,94 @@ class TestDiffAlertsSummary:
         diff = AlertLifecycleDiff()
         assert diff.summary == "No changes"
 
-    def test_summary_severity_upgrade_mentioned(self):
+    def test_summary_escalated_mentioned(self):
+        """Escalated alerts appear as 'escalated' in the summary."""
         a_prev = make_alert("Storm", severity="Minor", alert_id="s1")
         a_curr = make_alert("Storm", severity="Extreme", alert_id="s1")
         diff = diff_alerts(alerts(a_prev), alerts(a_curr))
-        assert "severity upgraded" in diff.summary.lower()
+        assert "escalated" in diff.summary.lower()
+
+    def test_summary_extended_mentioned(self):
+        """Extended alert appears as 'extended' in the summary."""
+        expires_prev = datetime.now(UTC) + timedelta(hours=6)
+        expires_later = datetime.now(UTC) + timedelta(hours=24)
+        a_prev = WeatherAlert(
+            title="Fog Advisory",
+            description="Fog.",
+            severity="Moderate",
+            urgency="Expected",
+            id="fog1",
+            expires=expires_prev,
+        )
+        a_curr = WeatherAlert(
+            title="Fog Advisory",
+            description="Fog.",
+            severity="Moderate",
+            urgency="Expected",
+            id="fog1",
+            expires=expires_later,
+        )
+        diff = diff_alerts(alerts(a_prev), alerts(a_curr))
+        assert "extended" in diff.summary.lower()
+
+
+# ---------------------------------------------------------------------------
+# compute_lifecycle_labels
+# ---------------------------------------------------------------------------
+
+
+class TestComputeLifecycleLabels:
+    def _make_change(self, kind: AlertChangeKind, alert_id: str = "a1") -> AlertChange:
+        return AlertChange(kind=kind, alert_id=alert_id)
+
+    def test_empty_diff_returns_empty_dict(self):
+        diff = AlertLifecycleDiff()
+        assert compute_lifecycle_labels(diff) == {}
+
+    def test_new_alert_labeled_new(self):
+        change = self._make_change(AlertChangeKind.NEW, "new-1")
+        diff = AlertLifecycleDiff(new_alerts=[change])
+        labels = compute_lifecycle_labels(diff)
+        assert labels == {"new-1": "New"}
+
+    def test_updated_alert_labeled_updated(self):
+        change = self._make_change(AlertChangeKind.UPDATED, "upd-1")
+        diff = AlertLifecycleDiff(updated_alerts=[change])
+        labels = compute_lifecycle_labels(diff)
+        assert labels == {"upd-1": "Updated"}
+
+    def test_escalated_alert_labeled_escalated(self):
+        change = self._make_change(AlertChangeKind.ESCALATED, "esc-1")
+        diff = AlertLifecycleDiff(escalated_alerts=[change])
+        labels = compute_lifecycle_labels(diff)
+        assert labels == {"esc-1": "Escalated"}
+
+    def test_extended_alert_labeled_extended(self):
+        change = self._make_change(AlertChangeKind.EXTENDED, "ext-1")
+        diff = AlertLifecycleDiff(extended_alerts=[change])
+        labels = compute_lifecycle_labels(diff)
+        assert labels == {"ext-1": "Extended"}
+
+    def test_cancelled_alerts_not_in_labels(self):
+        """Cancelled alerts are omitted -- they are no longer active."""
+        change = self._make_change(AlertChangeKind.CANCELLED, "can-1")
+        diff = AlertLifecycleDiff(cancelled_alerts=[change])
+        labels = compute_lifecycle_labels(diff)
+        assert labels == {}
+
+    def test_mixed_diff_returns_all_active_labels(self):
+        diff = AlertLifecycleDiff(
+            new_alerts=[self._make_change(AlertChangeKind.NEW, "n1")],
+            updated_alerts=[self._make_change(AlertChangeKind.UPDATED, "u1")],
+            escalated_alerts=[self._make_change(AlertChangeKind.ESCALATED, "e1")],
+            extended_alerts=[self._make_change(AlertChangeKind.EXTENDED, "x1")],
+            cancelled_alerts=[self._make_change(AlertChangeKind.CANCELLED, "c1")],
+        )
+        labels = compute_lifecycle_labels(diff)
+        assert labels == {
+            "n1": "New",
+            "u1": "Updated",
+            "e1": "Escalated",
+            "x1": "Extended",
+        }
+        assert "c1" not in labels
