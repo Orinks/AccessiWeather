@@ -7,7 +7,7 @@ multiple forecast sources and produces a human-readable confidence level.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 from accessiweather.models.weather import SourceData
@@ -23,6 +23,29 @@ _TEMP_HIGH = 5.0  # °F — both temp and precip within this → HIGH
 _TEMP_MED = 10.0  # °F — only temp considered → MEDIUM
 _PRECIP_HIGH = 15.0  # % — precip spread for HIGH
 _PRECIP_MED = 25.0  # % — precip spread for MEDIUM
+
+# Human-readable display names for source identifiers
+_SOURCE_DISPLAY_NAMES: dict[str, str] = {
+    "nws": "NWS",
+    "openmeteo": "Open-Meteo",
+    "visualcrossing": "Visual Crossing",
+}
+
+
+def _display_name(source_id: str) -> str:
+    """Return a human-readable name for a source identifier."""
+    return _SOURCE_DISPLAY_NAMES.get(source_id.lower(), source_id.title())
+
+
+def _join_sources(names: list[str]) -> str:
+    """Join source names naturally: 'A and B' or 'A, B, and C'."""
+    if len(names) == 0:
+        return ""
+    if len(names) == 1:
+        return names[0]
+    if len(names) == 2:
+        return f"{names[0]} and {names[1]}"
+    return ", ".join(names[:-1]) + f", and {names[-1]}"
 
 
 class ForecastConfidenceLevel(Enum):
@@ -40,6 +63,7 @@ class ForecastConfidence:
     level: ForecastConfidenceLevel
     rationale: str
     sources_compared: int
+    source_names: list[str] = field(default_factory=list)
 
 
 def _valid_sources(sources: list[SourceData]) -> list[SourceData]:
@@ -62,19 +86,23 @@ def calculate_forecast_confidence(sources: list[SourceData]) -> ForecastConfiden
     """
     valid = _valid_sources(sources)
     n = len(valid)
+    names = [_display_name(s.source) for s in valid]
+    joined = _join_sources(names)
 
     if n == 0:
         return ForecastConfidence(
             level=ForecastConfidenceLevel.LOW,
             rationale="No forecast sources available",
             sources_compared=0,
+            source_names=[],
         )
 
     if n == 1:
         return ForecastConfidence(
             level=ForecastConfidenceLevel.MEDIUM,
-            rationale="Based on a single forecast source",
+            rationale=f"Based on {joined} — single source, no cross-reference available",
             sources_compared=1,
+            source_names=names,
         )
 
     # --- 2+ sources: extract first-period metrics ---
@@ -99,35 +127,42 @@ def calculate_forecast_confidence(sources: list[SourceData]) -> ForecastConfiden
         if temp_spread <= _TEMP_HIGH and precip_spread <= _PRECIP_HIGH:
             return ForecastConfidence(
                 level=ForecastConfidenceLevel.HIGH,
-                rationale="Sources agree on temperature and precipitation",
+                rationale=f"{joined} agree on temperature and precipitation",
                 sources_compared=n,
+                source_names=names,
             )
         if temp_spread <= _TEMP_MED or precip_spread <= _PRECIP_MED:
             return ForecastConfidence(
                 level=ForecastConfidenceLevel.MEDIUM,
-                rationale="Moderate agreement between sources",
+                rationale=f"Moderate agreement between {joined}",
                 sources_compared=n,
+                source_names=names,
             )
         return ForecastConfidence(
             level=ForecastConfidenceLevel.LOW,
-            rationale="Sources show significant disagreement on temperature or precipitation",
+            rationale=f"{joined} show significant disagreement on temperature or precipitation",
             sources_compared=n,
+            source_names=names,
         )
+
     # Temperature-only comparison
     if temp_spread <= _TEMP_HIGH:
         return ForecastConfidence(
             level=ForecastConfidenceLevel.HIGH,
-            rationale="Sources agree on temperature and precipitation",
+            rationale=f"{joined} agree on temperature",
             sources_compared=n,
+            source_names=names,
         )
     if temp_spread <= _TEMP_MED:
         return ForecastConfidence(
             level=ForecastConfidenceLevel.MEDIUM,
-            rationale="Moderate agreement between sources",
+            rationale=f"Moderate temperature agreement between {joined}",
             sources_compared=n,
+            source_names=names,
         )
     return ForecastConfidence(
         level=ForecastConfidenceLevel.LOW,
-        rationale="Sources show significant disagreement on temperature or precipitation",
+        rationale=f"{joined} show significant temperature disagreement",
         sources_compared=n,
+        source_names=names,
     )
