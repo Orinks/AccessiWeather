@@ -1311,21 +1311,23 @@ class SettingsDialogSimple(wx.Dialog):
 
         if selected_model_id:
             # Update the model preference based on selection
-            # Check if it's a known preset
-            if selected_model_id == "meta-llama/llama-3.3-70b-instruct:free":
+            # Check if it's a known preset (indices must match _get_ai_model_preference)
+            if selected_model_id == "openrouter/free":
                 self._controls["ai_model"].SetSelection(0)
-            elif selected_model_id == "openrouter/auto":
+            elif selected_model_id == "meta-llama/llama-3.3-70b-instruct:free":
                 self._controls["ai_model"].SetSelection(1)
+            elif selected_model_id == "openrouter/auto":
+                self._controls["ai_model"].SetSelection(2)
             else:
-                # Add as "Specific Model" option or update existing
+                # Add as "Specific Model" option at index 3 (after the 3 built-in presets)
                 model_display = f"Selected: {selected_model_id.split('/')[-1]}"
-                if self._controls["ai_model"].GetCount() > 2:
+                if self._controls["ai_model"].GetCount() > 3:
                     # Replace existing specific model choice
-                    self._controls["ai_model"].SetString(2, model_display)
+                    self._controls["ai_model"].SetString(3, model_display)
                 else:
                     # Add new specific model choice
                     self._controls["ai_model"].Append(model_display)
-                self._controls["ai_model"].SetSelection(2)
+                self._controls["ai_model"].SetSelection(3)
                 # Store the full model ID for saving
                 self._selected_specific_model = selected_model_id
 
