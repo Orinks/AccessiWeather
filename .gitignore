@@ -5,3 +5,22 @@ progress.txt
 .claude/
 clawd/
 progress.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Test / coverage
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+
+# uv
+uv.lock
