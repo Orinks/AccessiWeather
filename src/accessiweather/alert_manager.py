@@ -478,32 +478,6 @@ class AlertManager:
             )
         return is_fresh
 
-    def _can_send_alert_notification(
-        self, alert_state: AlertState, is_escalation: bool = False
-    ) -> bool:
-        """Check if we can send a notification for a specific alert."""
-        if not alert_state.last_notified:
-            return True
-
-        # Use shorter cooldown for escalations
-        cooldown_minutes = (
-            self.settings.escalation_cooldown if is_escalation else self.settings.per_alert_cooldown
-        )
-        cooldown_period = timedelta(minutes=cooldown_minutes)
-        elapsed = datetime.now(UTC) - alert_state.last_notified
-        can_send = elapsed > cooldown_period
-        if not can_send:
-            remaining = cooldown_period - elapsed
-            logger.debug(
-                "[alertmgr] per-alert cooldown active for %r: "
-                "elapsed=%.1fm, cooldown=%.0fm, remaining=%.1fm",
-                alert_state.alert_id,
-                elapsed.total_seconds() / 60,
-                cooldown_minutes,
-                remaining.total_seconds() / 60,
-            )
-        return can_send
-
     def _should_notify_alert(self, alert: WeatherAlert) -> tuple[bool, str]:
         """Determine if we should notify for this alert and why."""
         # Check if notifications are enabled
@@ -587,25 +561,16 @@ class AlertManager:
                 logger.info(f"New alert detected: {alert_id}")
 
             elif existing_state.has_changed(content_hash):
-                # Alert content changed - check if we should notify
+                # Alert content changed - always notify
                 is_escalation = existing_state.is_escalated(severity_priority)
-
-                if self._can_send_alert_notification(existing_state, is_escalation):
-                    # Add new state to history
-                    existing_state.add_hash(content_hash, severity_priority)
-                    # Update sent time if changed
-                    if alert_sent_time and alert_sent_time != existing_state.alert_sent_time:
-                        existing_state.alert_sent_time = alert_sent_time
-                    notification_reason = "escalation" if is_escalation else "content_changed"
-                    notifications_to_send.append((alert, notification_reason))
-                    logger.info(f"Alert content changed: {alert_id} ({notification_reason})")
-                else:
-                    # Update hash even if we don't notify (track the change)
-                    existing_state.add_hash(content_hash, severity_priority)
-                    logger.info(
-                        "[alertmgr] Alert content changed but per-alert cooldown active: %r",
-                        alert_id,
-                    )
+                # Add new state to history
+                existing_state.add_hash(content_hash, severity_priority)
+                # Update sent time if changed
+                if alert_sent_time and alert_sent_time != existing_state.alert_sent_time:
+                    existing_state.alert_sent_time = alert_sent_time
+                notification_reason = "escalation" if is_escalation else "content_changed"
+                notifications_to_send.append((alert, notification_reason))
+                logger.info(f"Alert content changed: {alert_id} ({notification_reason})")
 
             else:
                 # Same alert, no changes - only notify if never notified yet (e.g. first startup)
