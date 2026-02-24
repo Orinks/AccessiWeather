@@ -531,8 +531,17 @@ class VisualCrossingClient:
             # Map Visual Crossing severity to standard levels
             severity = self._map_visual_crossing_severity(alert_data.get("severity"))
 
-            # Generate a unique ID for the alert
-            alert_id = alert_data.get("id") or f"vc-{hash(f'{event}-{headline}')}"
+            # Generate a unique ID for the alert.
+            # The stable key uses event + area + severity (NOT headline, which changes
+            # during updates like "in effect until 3 PM" → "...until 5 PM"). Using
+            # headline would cause the lifecycle diff to emit cancel+new instead of updated.
+            _area_str = alert_data.get("areas") or alert_data.get("area") or ""
+            if isinstance(_area_str, list):
+                _area_str = ",".join(sorted(_area_str))
+            _severity_str = str(alert_data.get("severity") or "")
+            alert_id = alert_data.get("id") or (
+                f"vc-{hash(f'{event}-{_area_str}-{_severity_str}')}"
+            )
 
             # Parse time fields
             onset = self._parse_alert_time(alert_data.get("onset") or alert_data.get("start"))
