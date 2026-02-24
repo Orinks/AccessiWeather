@@ -1046,6 +1046,10 @@ class WeatherClient:
             logger.info(
                 "Using Open-Meteo current conditions for %s due to missing NWS data", location.name
             )
+            # Strip model-derived snow depth — Open-Meteo uses ERA5/GFS which is
+            # notoriously inaccurate for snowpack. Only station observations are reliable.
+            fallback.snow_depth_in = None
+            fallback.snow_depth_cm = None
             return fallback
 
         logger.info(
