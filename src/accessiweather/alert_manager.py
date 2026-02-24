@@ -608,18 +608,15 @@ class AlertManager:
                     )
 
             else:
-                # Same alert, no changes - check freshness bypass
-                # Only apply freshness bypass if content is identical AND alert never notified
+                # Same alert, no changes - only notify if never notified yet (e.g. first startup)
                 is_fresh = self._is_alert_fresh(alert_sent_time)
 
                 if is_fresh and existing_state.last_notified is None:
-                    # Fresh alert that was never notified - bypass per-alert cooldown
+                    # Fresh alert that was never notified - notify once
                     notifications_to_send.append((alert, "fresh_alert"))
                     logger.info(f"Fresh alert detected (never notified): {alert_id}")
-                elif self._can_send_alert_notification(existing_state, False):
-                    # Standard reminder after cooldown period
-                    notifications_to_send.append((alert, "reminder"))
-                    logger.debug(f"Alert reminder: {alert_id}")
+                else:
+                    logger.debug(f"Alert unchanged, skipping reminder: {alert_id}")
 
         # Update notification timestamps for alerts we're about to notify
         for alert, _reason in notifications_to_send:

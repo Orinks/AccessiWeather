@@ -1,0 +1,5 @@
+[console_scripts]
+accessiweather = accessiweather.main:main
+
+[gui_scripts]
+accessiweather-gui = accessiweather.main:main
