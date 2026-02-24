@@ -120,11 +120,11 @@ class DataFusionEngine:
         # Check for temperature conflicts
         self._check_temperature_conflicts(valid_sources, merged_values, attribution, is_us)
 
-        # Snow depth from model sources (Open-Meteo, Visual Crossing) is ERA5/GFS-derived
-        # and unreliable for US locations. Only accept it if NWS is the field source.
+        # Open-Meteo snow depth is ERA5/GFS model output — unreliable for US locations.
+        # Visual Crossing mirrors NWS station data for US, so it's acceptable.
         if is_us:
             snow_source = attribution.field_sources.get("snow_depth_in")
-            if snow_source and snow_source != "nws":
+            if snow_source == "openmeteo":
                 merged_values.pop("snow_depth_in", None)
                 merged_values.pop("snow_depth_cm", None)
                 attribution.field_sources.pop("snow_depth_in", None)
