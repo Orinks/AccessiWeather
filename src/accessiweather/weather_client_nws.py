@@ -1283,6 +1283,7 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
             areas=props.get("areaDesc", "").split("; ") if props.get("areaDesc") else [],
             id=alert_id,
             source="NWS",
+            message_type=props.get("messageType"),
         )
         alerts.append(alert)
 

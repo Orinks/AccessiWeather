@@ -202,3 +202,84 @@ class TestBuildAlertsEdgeCases:
         empty = WeatherAlerts(alerts=[])
         result = build_alerts(empty, _loc())
         assert result.change_summary is None
+
+
+# ---------------------------------------------------------------------------
+# build_alerts: lifecycle_states labels appended to alert header lines
+# ---------------------------------------------------------------------------
+
+
+class TestBuildAlertsWithLifecycleStates:
+    def _alert_with_id(
+        self,
+        alert_id: str,
+        title: str = "Dense Fog Advisory",
+        severity: str = "Moderate",
+    ) -> WeatherAlert:
+        return WeatherAlert(
+            title=title,
+            description=f"{title} in effect.",
+            severity=severity,
+            urgency="Expected",
+            id=alert_id,
+        )
+
+    def test_new_label_appended_to_fallback(self):
+        """lifecycle_states 'New' label appears in fallback_text for the matching alert."""
+        alert = self._alert_with_id("fog-1")
+        result = build_alerts(
+            WeatherAlerts(alerts=[alert]),
+            _loc(),
+            lifecycle_states={"fog-1": "New"},
+        )
+        assert "(New)" in result.fallback_text
+
+    def test_extended_label_appended_to_fallback(self):
+        """lifecycle_states 'Extended' label appears in fallback_text."""
+        alert = self._alert_with_id("fog-1")
+        result = build_alerts(
+            WeatherAlerts(alerts=[alert]),
+            _loc(),
+            lifecycle_states={"fog-1": "Extended"},
+        )
+        assert "(Extended)" in result.fallback_text
+
+    def test_escalated_label_appended_to_fallback(self):
+        """lifecycle_states 'Escalated' label appears in fallback_text."""
+        alert = self._alert_with_id("warn-1", severity="Extreme")
+        result = build_alerts(
+            WeatherAlerts(alerts=[alert]),
+            _loc(),
+            lifecycle_states={"warn-1": "Escalated"},
+        )
+        assert "(Escalated)" in result.fallback_text
+
+    def test_label_only_for_matching_id(self):
+        """Label is applied only to the alert whose ID matches."""
+        fog = self._alert_with_id("fog-1", title="Dense Fog Advisory")
+        wind = self._alert_with_id("wind-1", title="Wind Advisory")
+        result = build_alerts(
+            WeatherAlerts(alerts=[fog, wind]),
+            _loc(),
+            lifecycle_states={"fog-1": "Extended"},
+        )
+        assert "(Extended)" in result.fallback_text
+        # Exactly one occurrence (the fog alert, not the wind alert)
+        assert result.fallback_text.count("(Extended)") == 1
+
+    def test_no_states_no_label(self):
+        """Without lifecycle_states, no lifecycle labels appear in fallback_text."""
+        alert = self._alert_with_id("fog-1")
+        result = build_alerts(WeatherAlerts(alerts=[alert]), _loc())
+        for label in ("(New)", "(Updated)", "(Escalated)", "(Extended)"):
+            assert label not in result.fallback_text
+
+    def test_unknown_id_in_states_no_label(self):
+        """An ID in lifecycle_states that doesn't match any alert produces no label."""
+        alert = self._alert_with_id("fog-1")
+        result = build_alerts(
+            WeatherAlerts(alerts=[alert]),
+            _loc(),
+            lifecycle_states={"other-id": "New"},
+        )
+        assert "(New)" not in result.fallback_text

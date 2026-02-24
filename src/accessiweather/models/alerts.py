@@ -27,6 +27,7 @@ class WeatherAlert:
     areas: list[str] = field(default_factory=list)
     id: str | None = None
     source: str | None = None
+    message_type: str | None = None  # e.g. "Alert", "Update", "Cancel"
 
     def __post_init__(self):
         if self.areas is None:
