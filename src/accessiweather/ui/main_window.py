@@ -1009,6 +1009,18 @@ class MainWindow(SizedFrame):
                     self.app.alert_notification_system.process_and_notify(weather_data.alerts)
                 )
 
+            # Fire notifications for updated / cancelled alerts via lifecycle diff
+            if (
+                self.app.alert_notification_system
+                and weather_data.alert_lifecycle_diff is not None
+                and weather_data.alert_lifecycle_diff.has_changes
+            ):
+                self.app.run_async(
+                    self.app.alert_notification_system.notify_lifecycle_changes(
+                        weather_data.alert_lifecycle_diff
+                    )
+                )
+
             location = self.app.config_manager.get_current_location()
             location_name = location.name if location else "Unknown"
             self.set_status(f"Weather updated for {location_name}")
