@@ -24,7 +24,9 @@ from accessiweather.weather_client import WeatherClient
 # ---------------------------------------------------------------------------
 
 
-def _make_alert(alert_id: str, title: str = "Test Alert", severity: str = "Moderate") -> WeatherAlert:
+def _make_alert(
+    alert_id: str, title: str = "Test Alert", severity: str = "Moderate"
+) -> WeatherAlert:
     """Create a minimal WeatherAlert with a fixed id."""
     return WeatherAlert(
         title=title,

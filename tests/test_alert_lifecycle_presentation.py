@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-import pytest
-
 from accessiweather.alert_lifecycle import AlertChange, AlertChangeKind, AlertLifecycleDiff
 from accessiweather.display.presentation.alerts import build_alerts
 from accessiweather.display.weather_presenter import AlertsPresentation
 from accessiweather.models.alerts import WeatherAlert, WeatherAlerts
 from accessiweather.models.weather import Location
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -48,9 +45,7 @@ def _make_diff(
         for i in range(new_count)
     ]
     updated_changes = [
-        AlertChange(
-            kind=AlertChangeKind.UPDATED, alert_id=f"upd-{i}", title=f"Updated Alert {i}"
-        )
+        AlertChange(kind=AlertChangeKind.UPDATED, alert_id=f"upd-{i}", title=f"Updated Alert {i}")
         for i in range(updated_count)
     ]
     cancelled_changes = [
@@ -149,7 +144,9 @@ class TestBuildAlertsWithLifecycleDiff:
     def test_fallback_text_still_includes_alert_content(self):
         """Alert content appears after the change summary prefix."""
         diff = _make_diff(new_count=1, summary="1 new alert")
-        result = build_alerts(_make_alerts([_make_alert("Tornado Warning")]), _loc(), lifecycle_diff=diff)
+        result = build_alerts(
+            _make_alerts([_make_alert("Tornado Warning")]), _loc(), lifecycle_diff=diff
+        )
         assert "Tornado Warning" in result.fallback_text
 
     def test_updated_alert_change_summary(self):

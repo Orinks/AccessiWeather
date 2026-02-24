@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from accessiweather.alert_lifecycle import (
     AlertChange,
     AlertChangeKind,
@@ -12,10 +10,10 @@ from accessiweather.alert_lifecycle import (
 )
 from accessiweather.models.alerts import WeatherAlert, WeatherAlerts
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def make_alert(
     title: str = "Test Alert",
@@ -41,6 +39,7 @@ def alerts(*alert_list: WeatherAlert) -> WeatherAlerts:
 # AlertChangeKind
 # ---------------------------------------------------------------------------
 
+
 class TestAlertChangeKind:
     def test_has_three_members(self):
         members = list(AlertChangeKind)
@@ -59,6 +58,7 @@ class TestAlertChangeKind:
 # ---------------------------------------------------------------------------
 # AlertChange.is_severity_upgrade
 # ---------------------------------------------------------------------------
+
 
 class TestAlertChangeIsSeverityUpgrade:
     def test_upgrade_moderate_to_extreme(self):
@@ -106,6 +106,7 @@ class TestAlertChangeIsSeverityUpgrade:
 # AlertLifecycleDiff.has_changes
 # ---------------------------------------------------------------------------
 
+
 class TestAlertLifecycleDiffHasChanges:
     def test_empty_has_no_changes(self):
         diff = AlertLifecycleDiff()
@@ -130,6 +131,7 @@ class TestAlertLifecycleDiffHasChanges:
 # ---------------------------------------------------------------------------
 # diff_alerts
 # ---------------------------------------------------------------------------
+
 
 class TestDiffAlertsNewAlert:
     def test_new_alert_detected(self):
