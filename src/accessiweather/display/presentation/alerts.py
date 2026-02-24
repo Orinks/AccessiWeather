@@ -18,6 +18,7 @@ def build_alerts(
     settings: AppSettings | None = None,
     *,
     lifecycle_diff: AlertLifecycleDiff | None = None,
+    lifecycle_states: dict[str, str] | None = None,
 ) -> AlertsPresentation:
     """
     Create an alerts presentation for a given location.
@@ -29,6 +30,10 @@ def build_alerts(
         lifecycle_diff: Optional diff from the previous alert snapshot.
             When provided and has changes, a concise change summary is
             prepended to the fallback text and stored on the presentation.
+        lifecycle_states: Optional mapping of alert_id to label (e.g.
+            {"alert-1": "New", "alert-2": "Extended"}).  When provided,
+            labels are appended to each alert's header line in the
+            presentation (e.g. "Alert 1: Dense Fog Advisory (Extended)").
 
     """
     title = f"Weather alerts for {location.name}"
@@ -43,7 +48,11 @@ def build_alerts(
     fallback_lines = [title + ":"]
 
     for idx, alert in enumerate(active, start=1):
-        presentation = build_single_alert(alert, idx, settings)
+        lifecycle_label: str | None = None
+        if lifecycle_states:
+            alert_id = alert.get_unique_id()
+            lifecycle_label = lifecycle_states.get(alert_id)
+        presentation = build_single_alert(alert, idx, settings, lifecycle_label=lifecycle_label)
         presentations.append(presentation)
         fallback_lines.append(presentation.fallback_text)
 
@@ -63,9 +72,24 @@ def build_alerts(
 
 
 def build_single_alert(
-    alert: WeatherAlert, index: int, settings: AppSettings | None = None
+    alert: WeatherAlert,
+    index: int,
+    settings: AppSettings | None = None,
+    *,
+    lifecycle_label: str | None = None,
 ) -> AlertPresentation:
-    """Create a single alert presentation with truncated text for readability."""
+    """
+    Create a single alert presentation with truncated text for readability.
+
+    Args:
+        alert: The weather alert to present.
+        index: 1-based display index.
+        settings: Optional app settings for time formatting.
+        lifecycle_label: Optional lifecycle status label (e.g. "New", "Updated",
+            "Escalated", "Extended").  When provided it is appended to the header
+            line: "Alert 1: Dense Fog Advisory (Extended)".
+
+    """
     severity = alert.severity if alert.severity != "Unknown" else None
     urgency = alert.urgency if alert.urgency != "Unknown" else None
     areas = alert.areas[:3] if alert.areas else []
@@ -93,7 +117,10 @@ def build_single_alert(
     description = truncate(alert.description, 200) if alert.description else None
     instruction = truncate(alert.instruction, 150) if alert.instruction else None
 
-    parts: list[str] = [f"Alert {index}: {alert.title}" if alert.title else f"Alert {index}"]
+    alert_header = f"Alert {index}: {alert.title}" if alert.title else f"Alert {index}"
+    if lifecycle_label:
+        alert_header = f"{alert_header} ({lifecycle_label})"
+    parts: list[str] = [alert_header]
     if severity or urgency:
         sev_bits = []
         if severity:

@@ -274,7 +274,7 @@ class TestNotifyLifecycleChanges:
             expires=datetime.now(UTC) + timedelta(hours=2),
         )
 
-    def _make_diff(self, *, new=None, updated=None, cancelled=None):
+    def _make_diff(self, *, new=None, updated=None, escalated=None, extended=None, cancelled=None):
         from accessiweather.alert_lifecycle import (
             AlertLifecycleDiff,
         )
@@ -282,6 +282,8 @@ class TestNotifyLifecycleChanges:
         return AlertLifecycleDiff(
             new_alerts=new or [],
             updated_alerts=updated or [],
+            escalated_alerts=escalated or [],
+            extended_alerts=extended or [],
             cancelled_alerts=cancelled or [],
         )
 
@@ -327,14 +329,14 @@ class TestNotifyLifecycleChanges:
 
         alert = self._make_alert("esc-1", "Severe Thunderstorm Warning", severity="Severe")
         change = AlertChange(
-            kind=AlertChangeKind.UPDATED,
+            kind=AlertChangeKind.ESCALATED,
             alert=alert,
             alert_id="esc-1",
             title="Severe Thunderstorm Warning",
             old_severity="Moderate",
             new_severity="Severe",
         )
-        diff = self._make_diff(updated=[change])
+        diff = self._make_diff(escalated=[change])
 
         result = await notification_system.notify_lifecycle_changes(diff)
 

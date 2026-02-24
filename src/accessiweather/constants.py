@@ -123,8 +123,8 @@ SEVERITY_PRIORITY_MAP: dict[str, int] = {
 # Global cooldown: minimum time between any notifications
 DEFAULT_GLOBAL_COOLDOWN_MINUTES = 5
 
-# Per-alert cooldown: minimum time before re-notifying about same alert
-DEFAULT_PER_ALERT_COOLDOWN_MINUTES = 60
+# Per-alert cooldown: no longer used; set to 0 to signal removal
+DEFAULT_PER_ALERT_COOLDOWN_MINUTES = 0
 
 # Escalation cooldown: reduced cooldown when alert severity increases
 DEFAULT_ESCALATION_COOLDOWN_MINUTES = 15
