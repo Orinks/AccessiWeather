@@ -195,6 +195,50 @@ class TestMergeCurrentConditions:
         assert result is not None
         assert result.temperature_f == 65.0
 
+    def test_us_strips_openmeteo_snow_depth(self, engine, us_location):
+        """Open-Meteo snow depth (ERA5/GFS model) is stripped for US locations."""
+        nws_cc = CurrentConditions(temperature_f=32.0, snow_depth_in=None, snow_depth_cm=None)
+        om_cc = CurrentConditions(temperature_f=31.0, snow_depth_in=17.3, snow_depth_cm=44.0)
+        sources = [
+            _make_source("nws", current=nws_cc),
+            _make_source("openmeteo", current=om_cc),
+        ]
+        result, attr = engine.merge_current_conditions(sources, us_location)
+        assert result is not None
+        assert result.snow_depth_in is None
+        assert result.snow_depth_cm is None
+
+    def test_us_strips_visualcrossing_snow_depth(self, engine, us_location):
+        """Visual Crossing snow depth is also stripped for US locations (likely SNODAS-derived)."""
+        nws_cc = CurrentConditions(temperature_f=32.0, snow_depth_in=None, snow_depth_cm=None)
+        vc_cc = CurrentConditions(temperature_f=31.5, snow_depth_in=12.0, snow_depth_cm=30.5)
+        sources = [
+            _make_source("nws", current=nws_cc),
+            _make_source("visualcrossing", current=vc_cc),
+        ]
+        result, attr = engine.merge_current_conditions(sources, us_location)
+        assert result is not None
+        assert result.snow_depth_in is None
+        assert result.snow_depth_cm is None
+
+    def test_us_keeps_nws_snow_depth(self, engine, us_location):
+        """NWS snow depth is preserved for US locations."""
+        nws_cc = CurrentConditions(temperature_f=28.0, snow_depth_in=5.0, snow_depth_cm=12.7)
+        sources = [_make_source("nws", current=nws_cc)]
+        result, attr = engine.merge_current_conditions(sources, us_location)
+        assert result is not None
+        assert result.snow_depth_in == 5.0
+        assert result.snow_depth_cm == 12.7
+
+    def test_international_keeps_openmeteo_snow_depth(self, engine, intl_location):
+        """Open-Meteo snow depth is preserved for international locations (ECMWF reliable)."""
+        om_cc = CurrentConditions(temperature_f=25.0, snow_depth_in=8.0, snow_depth_cm=20.3)
+        sources = [_make_source("openmeteo", current=om_cc)]
+        result, attr = engine.merge_current_conditions(sources, intl_location)
+        assert result is not None
+        assert result.snow_depth_in == 8.0
+        assert result.snow_depth_cm == 20.3
+
 
 # --- Temperature conflict detection ---
 

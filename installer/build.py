@@ -411,32 +411,38 @@ def generate_build_metadata(args: argparse.Namespace) -> None:
     print("Generating build metadata...")
     print("=" * 60 + "\n")
 
-    # Generate version file
-    version_script = ROOT / "scripts" / "generate_version.py"
-    if version_script.exists():
-        run_command([sys.executable, str(version_script)], cwd=ROOT)
-    else:
-        print(f"Warning: {version_script} not found, skipping version generation")
-
-    # Generate build info (_build_info.py with BUILD_TAG)
-    build_info_script = ROOT / "scripts" / "generate_build_info.py"
-    if build_info_script.exists():
+    # Generate unified build metadata (_build_meta.py with version + BUILD_TAG)
+    build_meta_script = ROOT / "scripts" / "generate_build_meta.py"
+    if build_meta_script.exists():
         tag = args.tag
         if not tag and args.nightly:
             from datetime import datetime, timezone
 
             tag = f"nightly-{datetime.now(timezone.utc).strftime('%Y%m%d')}"
 
-        cmd = [sys.executable, str(build_info_script)]
+        cmd = [sys.executable, str(build_meta_script)]
         if tag:
             cmd.append(tag)
-            print(f"  Build tag: {tag}")
-        else:
-            print("  Build tag: None (stable)")
 
         run_command(cmd, cwd=ROOT)
     else:
-        print(f"Warning: {build_info_script} not found, skipping build info generation")
+        # Fall back to legacy separate scripts
+        print(f"Warning: {build_meta_script} not found, trying legacy scripts")
+        version_script = ROOT / "scripts" / "generate_version.py"
+        if version_script.exists():
+            run_command([sys.executable, str(version_script)], cwd=ROOT)
+
+        build_info_script = ROOT / "scripts" / "generate_build_info.py"
+        if build_info_script.exists():
+            tag = args.tag
+            if not tag and args.nightly:
+                from datetime import datetime, timezone
+
+                tag = f"nightly-{datetime.now(timezone.utc).strftime('%Y%m%d')}"
+            cmd = [sys.executable, str(build_info_script)]
+            if tag:
+                cmd.append(tag)
+            run_command(cmd, cwd=ROOT)
 
 
 def main() -> int:

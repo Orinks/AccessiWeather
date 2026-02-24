@@ -54,6 +54,7 @@ def main() -> None:
     app_main(
         config_dir=args.config_dir,
         portable_mode=args.portable,
+        debug=args.debug,
         fake_version=args.fake_version,
         fake_nightly=args.fake_nightly,
     )

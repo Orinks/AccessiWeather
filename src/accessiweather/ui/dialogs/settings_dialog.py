@@ -791,9 +791,6 @@ class SettingsDialogSimple(wx.Dialog):
         )
         sizer.Add(self._controls["weather_history"], 0, wx.LEFT | wx.BOTTOM, 5)
 
-        self._controls["debug"] = wx.CheckBox(panel, label="Enable Debug Mode")
-        sizer.Add(self._controls["debug"], 0, wx.LEFT | wx.BOTTOM, 5)
-
         # Reset Configuration Section
         sizer.Add(
             wx.StaticText(panel, label="Reset Configuration"),
@@ -1057,8 +1054,6 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["weather_history"].SetValue(
                 getattr(settings, "weather_history_enabled", True)
             )
-            self._controls["debug"].SetValue(getattr(settings, "debug_mode", False))
-
         except Exception as e:
             logger.error(f"Failed to load settings: {e}")
 
@@ -1156,7 +1151,6 @@ class SettingsDialogSimple(wx.Dialog):
                 "minimize_on_startup": self._controls["minimize_on_startup"].GetValue(),
                 "startup_enabled": self._controls["startup"].GetValue(),
                 "weather_history_enabled": self._controls["weather_history"].GetValue(),
-                "debug_mode": self._controls["debug"].GetValue(),
             }
 
             success = self.config_manager.update_settings(**settings_dict)
@@ -1486,17 +1480,19 @@ class SettingsDialogSimple(wx.Dialog):
                 )
 
                 def prompt_download():
+                    from .update_dialog import UpdateAvailableDialog
+
                     channel_label = "Nightly" if update_info.is_nightly else "Stable"
-                    result = wx.MessageBox(
-                        f"A new {channel_label} version is available!\n\n"
-                        f"Current: {current_version}\n"
-                        f"Latest: {update_info.version}\n\n"
-                        f"Download now?",
-                        "Update Available",
-                        wx.YES_NO | wx.ICON_INFORMATION,
+                    dlg = UpdateAvailableDialog(
+                        parent=self,
+                        current_version=current_version,
+                        new_version=update_info.version,
+                        channel_label=channel_label,
+                        release_notes=update_info.release_notes,
                     )
-                    if result == wx.YES:
-                        # Use app's download method
+                    result = dlg.ShowModal()
+                    dlg.Destroy()
+                    if result == wx.ID_OK:
                         self.app._download_and_apply_update(update_info)
 
                 wx.CallAfter(prompt_download)

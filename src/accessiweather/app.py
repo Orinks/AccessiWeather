@@ -42,30 +42,42 @@ logger = logging.getLogger(__name__)
 class AccessiWeatherApp(wx.App):
     """AccessiWeather application using wxPython."""
 
-    def __init__(self, config_dir: str | None = None, portable_mode: bool = False):
+    def __init__(
+        self,
+        config_dir: str | None = None,
+        portable_mode: bool = False,
+        debug: bool = False,
+    ):
         """
         Initialize the AccessiWeather application.
 
         Args:
             config_dir: Optional custom configuration directory path
             portable_mode: If True, use portable mode (config in app directory)
+            debug: If True, enable debug mode (enables debug logging and extra UI tools)
 
         """
         self._config_dir = config_dir
         self._portable_mode = portable_mode
+        self.debug_mode = bool(debug)
 
         # App version and build info (import locally to avoid circular import)
         from . import __version__
 
         self.version = __version__
 
-        # Build tag for nightly builds (from generated _build_info.py or None)
+        # Build tag for nightly builds (from generated _build_meta.py or legacy _build_info.py)
         try:
-            from ._build_info import BUILD_TAG
+            from ._build_meta import BUILD_TAG  # pragma: no cover — build only
 
-            self.build_tag: str | None = BUILD_TAG
+            self.build_tag: str | None = BUILD_TAG  # pragma: no cover
         except ImportError:
-            self.build_tag = None
+            try:
+                from ._build_info import BUILD_TAG
+
+                self.build_tag = BUILD_TAG
+            except ImportError:
+                self.build_tag = None
 
         # Set up paths (similar to Toga's paths API)
         self.paths = Paths()
@@ -108,9 +120,28 @@ class AccessiWeatherApp(wx.App):
 
         super().__init__()
 
+    @property
+    def notifier(self):
+        """Public accessor for the app-level notifier (used by notification subsystems)."""
+        return self._notifier
+
+    @notifier.setter
+    def notifier(self, value) -> None:
+        self._notifier = value
+
     def OnInit(self) -> bool:
         """Initialize the application (wxPython entry point)."""
         logger.info("Starting AccessiWeather application (wxPython)")
+
+        # Set Windows App User Model ID so balloon/toast notifications say
+        # "AccessiWeather" instead of "notification from Python".
+        try:  # pragma: no cover
+            import ctypes
+
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("AccessiWeather")
+            logger.debug("App User Model ID set: AccessiWeather")
+        except Exception:  # pragma: no cover
+            pass  # Non-Windows or ctypes unavailable — silently skip
 
         try:
             # Check for single instance
@@ -310,6 +341,22 @@ class AccessiWeatherApp(wx.App):
 
             self.tray_icon = SystemTrayIcon(self)
             logger.info("System tray icon initialized")
+
+            # Wire tray balloon fallback into the notifier so toast failures
+            # (e.g. WinRT silent drop when window is hidden) still show a visual.
+            notifier = getattr(self, "_notifier", None)  # pragma: no cover
+            if notifier is not None and hasattr(notifier, "balloon_fn"):  # pragma: no cover
+                import wx
+
+                tray = self.tray_icon
+
+                def _balloon(title: str, message: str) -> None:
+                    # NIIF_INFO (0x1) | NIIF_NOSOUND (0x10) — show info icon,
+                    # suppress the default Windows chime (our soundpack plays instead).
+                    wx.CallAfter(tray.ShowBalloon, title, message, 5000, 0x11)
+
+                notifier.balloon_fn = _balloon
+                logger.debug("Tray balloon fallback wired into notifier")
         except Exception as e:
             logger.warning(f"Failed to initialize system tray icon: {e}")
             self.tray_icon = None
@@ -403,21 +450,25 @@ class AccessiWeatherApp(wx.App):
 
                     update_info = asyncio.run(check())
 
-                    if update_info:
-                        # Show notification about available update
-                        channel_label = "nightly" if update_info.is_nightly else "stable"
+                    if update_info:  # pragma: no cover — UI prompt
+                        # Show changelog dialog for available update
+                        channel_label = "Nightly" if update_info.is_nightly else "Stable"
                         logger.info(f"Update available: {update_info.version} ({channel_label})")
 
                         def show_update_notification():
-                            result = wx.MessageBox(
-                                f"A new {channel_label} update is available!\n\n"
-                                f"Current: {display_version}\n"
-                                f"Latest: {update_info.version}\n\n"
-                                "Download now?",
-                                "Update Available",
-                                wx.YES_NO | wx.ICON_INFORMATION,
+                            from .ui.dialogs.update_dialog import UpdateAvailableDialog
+
+                            main_window = self.GetTopWindow()
+                            dlg = UpdateAvailableDialog(
+                                parent=main_window,
+                                current_version=display_version,
+                                new_version=update_info.version,
+                                channel_label=channel_label,
+                                release_notes=update_info.release_notes,
                             )
-                            if result == wx.YES:
+                            result = dlg.ShowModal()
+                            dlg.Destroy()
+                            if result == wx.ID_OK:
                                 self._download_and_apply_update(update_info)
 
                         wx.CallAfter(show_update_notification)
@@ -647,6 +698,7 @@ class AccessiWeatherApp(wx.App):
 def main(
     config_dir: str | None = None,
     portable_mode: bool = False,
+    debug: bool = False,
     fake_version: str | None = None,
     fake_nightly: str | None = None,
 ):
@@ -656,11 +708,12 @@ def main(
     Args:
         config_dir: Custom configuration directory path.
         portable_mode: Run in portable mode.
+        debug: Enable debug mode.
         fake_version: Fake version for testing updates (e.g., '0.1.0').
         fake_nightly: Fake nightly tag for testing updates (e.g., 'nightly-20250101').
 
     """
-    app = AccessiWeatherApp(config_dir=config_dir, portable_mode=portable_mode)
+    app = AccessiWeatherApp(config_dir=config_dir, portable_mode=portable_mode, debug=debug)
 
     # Override version/build_tag for update testing
     if fake_version:

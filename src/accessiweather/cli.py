@@ -8,7 +8,8 @@ import argparse
 import logging
 import sys
 
-from accessiweather.main import main as app_main
+from accessiweather.app import main as app_main
+from accessiweather.main import setup_logging
 
 
 def parse_args(args: list[str] | None = None) -> argparse.Namespace:
@@ -34,15 +35,10 @@ def parse_args(args: list[str] | None = None) -> argparse.Namespace:
         help="Enable debug mode with additional logging and alert testing features",
     )
     parser.add_argument("-c", "--config", help="Path to configuration directory")
-    parser.add_argument("--no-cache", action="store_true", help="Disable API response caching")
     parser.add_argument(
         "--portable",
         action="store_true",
         help="Run in portable mode (saves configuration to local directory instead of user directory)",
-    )
-    parser.epilog = (
-        "Note: The --config and --portable flags now control configuration directory location. "
-        "The --no-cache and --debug flags are accepted but not yet fully wired."
     )
 
     return parser.parse_args(args)
@@ -59,15 +55,14 @@ def main() -> int:
     """
     args = parse_args()
 
-    # Logging setup is now handled in main.py
+    setup_logging(debug=args.debug)
 
     try:
         # Pass arguments to main application entry point
         app_main(
             config_dir=args.config,
-            debug_mode=args.debug,
-            enable_caching=not args.no_cache,
             portable_mode=args.portable,
+            debug=args.debug,
         )
         return 0
     except Exception as e:

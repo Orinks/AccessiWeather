@@ -10,7 +10,12 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from accessiweather.alert_lifecycle import AlertLifecycleDiff
+
+    from ..forecast_confidence import ForecastConfidence
 
 from ..models import (
     AppSettings,
@@ -88,6 +93,7 @@ class ForecastPresentation:
     hourly_periods: list[HourlyPeriodPresentation] = field(default_factory=list)
     generated_at: str | None = None
     fallback_text: str = ""
+    confidence_label: str | None = None
 
 
 @dataclass(slots=True)
@@ -126,6 +132,7 @@ class AlertsPresentation:
     title: str
     alerts: list[AlertPresentation] = field(default_factory=list)
     fallback_text: str = ""
+    change_summary: str | None = None
 
 
 @dataclass(slots=True)
@@ -210,12 +217,17 @@ class WeatherPresenter:
                 weather_data.hourly_forecast,
                 weather_data.location,
                 unit_pref,
+                confidence=weather_data.forecast_confidence,
             )
             if weather_data.forecast
             else None
         )
         alerts = (
-            self._build_alerts(weather_data.alerts, weather_data.location)
+            self._build_alerts(
+                weather_data.alerts,
+                weather_data.location,
+                lifecycle_diff=weather_data.alert_lifecycle_diff,
+            )
             if weather_data.alerts
             else None
         )
@@ -278,11 +290,14 @@ class WeatherPresenter:
         forecast: Forecast | None,
         location: Location,
         hourly_forecast: HourlyForecast | None = None,
+        confidence: ForecastConfidence | None = None,
     ) -> ForecastPresentation | None:
         if not forecast or not forecast.has_data():
             return None
         unit_pref = self._get_temperature_unit_preference()
-        return self._build_forecast(forecast, hourly_forecast, location, unit_pref)
+        return self._build_forecast(
+            forecast, hourly_forecast, location, unit_pref, confidence=confidence
+        )
 
     def present_alerts(
         self, alerts: WeatherAlerts | None, location: Location
@@ -326,13 +341,24 @@ class WeatherPresenter:
         hourly_forecast: HourlyForecast | None,
         location: Location,
         unit_pref: TemperatureUnit,
+        confidence: ForecastConfidence | None = None,
     ) -> ForecastPresentation:
         return build_forecast(
-            forecast, hourly_forecast, location, unit_pref, settings=self.settings
+            forecast,
+            hourly_forecast,
+            location,
+            unit_pref,
+            settings=self.settings,
+            confidence=confidence,
         )
 
-    def _build_alerts(self, alerts: WeatherAlerts, location: Location) -> AlertsPresentation:
-        return build_alerts(alerts, location, settings=self.settings)
+    def _build_alerts(
+        self,
+        alerts: WeatherAlerts,
+        location: Location,
+        lifecycle_diff: AlertLifecycleDiff | None = None,
+    ) -> AlertsPresentation:
+        return build_alerts(alerts, location, settings=self.settings, lifecycle_diff=lifecycle_diff)
 
     def _build_aviation(
         self, aviation: AviationData | None, location: Location

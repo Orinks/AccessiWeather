@@ -118,6 +118,7 @@ commit_parsers = [
     { message = "^security", group = "Security" },
 
     # Changed - only conventional commits that aren't caught above
+    { message = "(?i)refactor.*build", skip = true },
     { message = "^refactor", group = "Changed" },
     { message = "^perf", group = "Changed" },
 

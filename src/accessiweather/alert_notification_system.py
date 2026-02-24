@@ -9,6 +9,7 @@ with proper cooldown and filtering capabilities.
 import asyncio
 import logging
 
+from .alert_lifecycle import AlertLifecycleDiff
 from .alert_manager import AlertManager, AlertSettings
 from .constants import (
     MAX_DISPLAYED_AREAS,
@@ -153,12 +154,22 @@ class AlertNotificationSystem:
 
         """
         try:
+            alert_count = len(alerts.alerts) if alerts else 0
+            logger.debug(f"[notify] process_and_notify: {alert_count} alert(s) received")
+
             # Use AlertManager to determine which alerts need notifications
             notifications_to_send = self.alert_manager.process_alerts(alerts)
 
             if not notifications_to_send:
-                logger.debug("No notifications to send")
+                logger.debug(
+                    f"[notify] AlertManager returned 0 notifications to send "
+                    f"(all {alert_count} alert(s) already seen / in cooldown)"
+                )
                 return 0
+
+            logger.info(
+                f"[notify] AlertManager queued {len(notifications_to_send)} notification(s) to send"
+            )
 
             # Sort notifications by severity (highest first) to play sound for most severe
             # Higher priority number = more severe
@@ -222,6 +233,12 @@ class AlertNotificationSystem:
                 settings=self.settings,
             )
 
+            logger.debug(
+                f"[notify] _send_alert_notification: reason={reason!r}, "
+                f"play_sound={play_sound}, alert_id={alert.get_unique_id()!r}, "
+                f"title={title!r}"
+            )
+
             # Compute sound candidates based on alert content (only if playing sound)
             sound_candidates = None
             if play_sound:
@@ -229,11 +246,12 @@ class AlertNotificationSystem:
                     from .notifications.alert_sound_mapper import get_candidate_sound_events
 
                     sound_candidates = get_candidate_sound_events(alert)
-                except Exception:
-                    # Fallback if mapper not available
-                    pass
+                    logger.debug(f"[notify] Sound candidates for alert: {sound_candidates}")
+                except Exception as e:
+                    logger.debug(f"[notify] Sound mapper unavailable: {e}")
 
             # Send the notification, providing candidate-based sound selection
+            logger.debug(f"[notify] Calling notifier.send_notification for: {title!r}")
             success = self.notifier.send_notification(
                 title=title,
                 message=message,
@@ -243,15 +261,92 @@ class AlertNotificationSystem:
             )
 
             if success:
-                logger.info(f"Alert notification sent: {title[:50]}...")
+                logger.info(f"[notify] Alert notification sent: {title[:60]!r}")
             else:
-                logger.warning(f"Failed to send alert notification: {title[:50]}...")
+                logger.warning(
+                    f"[notify] notifier.send_notification returned False: {title[:60]!r}"
+                )
 
             return success
 
         except Exception as e:
-            logger.error(f"Error formatting/sending alert notification: {e}")
+            logger.error(f"[notify] Error in _send_alert_notification: {type(e).__name__}: {e}")
             return False
+
+    async def notify_lifecycle_changes(
+        self,
+        diff: AlertLifecycleDiff,
+    ) -> int:
+        """
+        Fire desktop notifications for updated and cancelled alerts.
+
+        New alerts are handled by :meth:`process_and_notify`.  This method
+        covers the other two lifecycle events so users hear about alerts that
+        changed severity or were withdrawn.
+
+        Args:
+        ----
+            diff: The :class:`~accessiweather.alert_lifecycle.AlertLifecycleDiff`
+                produced by the most recent fetch.
+
+        Returns:
+        -------
+            Number of notifications sent.
+
+        """
+        if not diff.has_changes:
+            return 0
+
+        if not self.alert_manager.settings.notifications_enabled:
+            logger.debug("[notify] lifecycle notifications skipped — notifications disabled")
+            return 0
+
+        sent = 0
+
+        # --- Updated alerts ---
+        for change in diff.updated_alerts:
+            if change.alert is None:
+                continue
+            reason = "escalation" if change.is_severity_upgrade else "content_changed"
+            try:
+                success = await self._send_alert_notification(
+                    change.alert, reason, play_sound=change.is_severity_upgrade
+                )
+                if success:
+                    sent += 1
+                    logger.info(
+                        f"[notify] lifecycle update notification sent: "
+                        f"{change.title!r} reason={reason}"
+                    )
+            except Exception as exc:
+                logger.error(
+                    f"[notify] lifecycle update notification failed for {change.alert_id!r}: {exc}"
+                )
+
+        # --- Cancelled alerts ---
+        for change in diff.cancelled_alerts:
+            try:
+                title = f"CANCELLED: {change.title}" if change.title else "Alert Cancelled"
+                message = (
+                    f"The alert '{change.title}' has been cancelled or expired."
+                    if change.title
+                    else "A weather alert has been cancelled."
+                )
+                success = self.notifier.send_notification(
+                    title=title,
+                    message=message,
+                    timeout=10,
+                    play_sound=False,
+                )
+                if success:
+                    sent += 1
+                    logger.info(f"[notify] lifecycle cancel notification sent: {change.title!r}")
+            except Exception as exc:
+                logger.error(
+                    f"[notify] lifecycle cancel notification failed for {change.alert_id!r}: {exc}"
+                )
+
+        return sent
 
     def update_settings(
         self,

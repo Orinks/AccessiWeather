@@ -28,8 +28,10 @@ class SafeDesktopNotifier:
     """
     A wrapper around desktop-notifier that provides synchronous interface.
 
-    This class wraps the async desktop-notifier API to provide a synchronous
-    interface compatible with the existing codebase.
+    Uses a single persistent background thread with its own event loop and
+    DesktopNotifier instance to avoid COM threading issues on Windows.
+    The notifier is created once in the worker thread and reused for all
+    subsequent notifications.
     """
 
     def __init__(
@@ -40,96 +42,108 @@ class SafeDesktopNotifier:
     ):
         """Initialize the desktop notifier wrapper."""
         self.app_name = app_name
-        self._loop = None
-        self._thread = None
 
         # Sound configuration
         self.sound_enabled: bool = bool(sound_enabled)
         self.soundpack: str = soundpack or "default"
 
+        # Optional fallback callable: balloon_fn(title, message) is called when the
+        # WinRT/desktop-notifier toast fails (e.g. window hidden in system tray).
+        # Set this after init — typically wired to tray_icon.ShowBalloon().
+        self.balloon_fn = None  # Optional[Callable[[str, str], None]] — set after init
+
+        # Persistent worker thread state
+        self._worker_loop: asyncio.AbstractEventLoop | None = None
+        self._worker_thread: threading.Thread | None = None
+        self._worker_notifier: DesktopNotifier | None = None  # lives in worker thread
+        self._worker_ready = threading.Event()
+        self._lock = threading.Lock()
+
         if not DESKTOP_NOTIFIER_AVAILABLE:
             logger.warning("Desktop notifier not available, notifications will be logged only")
-            self._notifier = None
             return
 
-        # Don't create the notifier here - create it in the worker thread
-        # to avoid COM threading issues
-        self._notifier = None
-        logger.info("SafeDesktopNotifier initialized (notifier will be created per-thread)")
+        logger.info("SafeDesktopNotifier initialized")
 
-    def _run_async(self, coro):
-        """Run an async coroutine in a thread-safe way."""
-        current_thread = threading.current_thread()
-        logger.debug(
-            f"_run_async called from thread: {current_thread.name} (ID: {current_thread.ident})"
-        )
-
-        try:
-            # Try to get the current event loop
-            loop = asyncio.get_running_loop()
-            logger.debug(f"Found running event loop: {loop}")
-            logger.debug(f"Loop is running: {loop.is_running()}")
-
-            # If we're already in an event loop, we need to run in a thread
-            if loop.is_running():
-                # Create a new event loop in a separate thread
-                logger.debug("Creating separate thread for async operation")
-                result = None
-                exception = None
-
-                def run_in_thread():
-                    nonlocal result, exception
-                    thread_info = threading.current_thread()
-                    logger.debug(
-                        f"Notification thread started: {thread_info.name} (ID: {thread_info.ident})"
-                    )
-
-                    try:
-                        new_loop = asyncio.new_event_loop()
-                        asyncio.set_event_loop(new_loop)
-                        logger.debug(f"Created new event loop in thread: {new_loop}")
-                        result = new_loop.run_until_complete(coro)
-                        new_loop.close()
-                        logger.debug("Notification completed successfully")
-                    except Exception as e:
-                        logger.error(f"Exception in notification thread: {e}")
-                        exception = e
-
-                thread = threading.Thread(target=run_in_thread, name="DesktopNotifierWorker")
-                thread.start()
-                thread.join()
-
-                if exception:
-                    logger.error(f"Notification thread failed: {exception}")
-                    raise exception from None
-                return result
-            # We can run directly in the current loop
-            logger.debug("Running directly in current loop")
-            return loop.run_until_complete(coro)
-        except RuntimeError as e:
-            # No event loop running, create a new one
-            logger.debug(f"No event loop found ({e}), creating new one")
-            return asyncio.run(coro)
-
-    async def _send_notification_async(self, title: str, message: str, timeout: int = 10):
-        """Send notification asynchronously."""
+    def _ensure_worker(self) -> bool:
+        """Start the persistent worker thread if not already running."""
         if not DESKTOP_NOTIFIER_AVAILABLE:
-            return
+            return False
 
-        # Create the notifier in this thread to avoid COM threading issues
-        current_thread = threading.current_thread()
+        with self._lock:
+            if self._worker_thread is not None and self._worker_thread.is_alive():
+                return True
+
+            self._worker_ready.clear()
+            self._worker_thread = threading.Thread(
+                target=self._worker_run, name="DesktopNotifierWorker", daemon=True
+            )
+            self._worker_thread.start()
+
+        # Wait for worker to be ready (notifier created, loop running)
+        if not self._worker_ready.wait(timeout=5):
+            logger.error("Worker thread failed to start within timeout")
+            return False
+
+        return self._worker_loop is not None
+
+    def _worker_run(self) -> None:
+        """Run the persistent worker thread with its own event loop."""
+        try:
+            self._worker_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self._worker_loop)
+
+            # Create the notifier once in this thread (proper COM init on Windows)
+            self._worker_notifier = DesktopNotifier(app_name=self.app_name)
+            logger.debug("Desktop notifier created in worker thread")
+
+            self._worker_ready.set()
+
+            # Keep the loop running so the notifier stays alive
+            self._worker_loop.run_forever()
+        except Exception as e:
+            logger.error(f"Worker thread failed: {e}")
+            self._worker_loop = None
+            self._worker_notifier = None
+            self._worker_ready.set()  # unblock waiters
+
+    def _send_in_worker(self, title: str, message: str, timeout: int = 10) -> bool:
+        """Send a notification via the persistent worker thread."""
+        worker_ok = self._ensure_worker()
         logger.debug(
-            f"Creating notifier in thread: {current_thread.name} (ID: {current_thread.ident})"
+            f"[toast] _send_in_worker: ensure_worker={worker_ok}, "
+            f"loop_alive={self._worker_loop is not None and self._worker_loop.is_running()}, "
+            f"thread_alive={self._worker_thread is not None and self._worker_thread.is_alive()}, "
+            f"notifier_ready={self._worker_notifier is not None}"
+        )
+        if not worker_ok:
+            logger.warning("[toast] _send_in_worker: worker thread not ready, toast skipped")
+            return False
+
+        loop = self._worker_loop
+        notifier = self._worker_notifier
+        if loop is None or notifier is None:
+            logger.warning(
+                f"[toast] _send_in_worker: loop={loop is not None}, notifier={notifier is not None} — aborting"
+            )
+            return False
+
+        logger.debug(f"[toast] Submitting toast to worker loop: title={title!r}")
+        future = asyncio.run_coroutine_threadsafe(
+            notifier.send(title=title, message=message, timeout=timeout),
+            loop,
         )
 
         try:
-            notifier = DesktopNotifier(app_name=self.app_name)
-            logger.debug("Desktop notifier created successfully in worker thread")
-            await notifier.send(title=title, message=message, timeout=timeout)
-            logger.debug("Notification sent successfully")
+            result = future.result(timeout=10)
+            logger.debug(f"[toast] Worker returned: {result!r} — toast sent successfully")
+            return True
+        except TimeoutError:
+            logger.error("[toast] _send_in_worker: future timed out after 10s — toast NOT shown")
+            return False
         except Exception as e:
-            logger.error(f"Failed to create or use notifier in worker thread: {e}")
-            raise
+            logger.error(f"[toast] _send_in_worker: future raised {type(e).__name__}: {e}")
+            return False
 
     def send_notification(
         self,
@@ -158,35 +172,67 @@ class SafeDesktopNotifier:
                        multiple alerts to avoid overlapping sounds).
 
         """
+        import threading
+
+        logger.debug(
+            f"[toast] send_notification called: title={title!r}, "
+            f"play_sound={play_sound}, sound_enabled={self.sound_enabled}, "
+            f"desktop_notifier_available={DESKTOP_NOTIFIER_AVAILABLE}, "
+            f"thread={threading.current_thread().name}"
+        )
+
         if not DESKTOP_NOTIFIER_AVAILABLE:
-            logger.info(f"Notification (desktop notifier unavailable): {title} - {message}")
+            logger.warning(
+                f"[toast] desktop-notifier NOT available — toast skipped, sound_only={play_sound}: {title!r}"
+            )
             # Still play sound if configured and requested, as a basic cue
             if self.sound_enabled and play_sound:
-                try:
-                    if sound_candidates:
-                        play_notification_sound_candidates(sound_candidates, self.soundpack)
-                    else:
-                        play_notification_sound(sound_event or "alert", self.soundpack)
-                except Exception as e:
-                    logger.debug(f"Sound playback failed (no notifier): {e}")
+                self._play_sound(sound_event, sound_candidates)
             return True
 
         try:
-            self._run_async(self._send_notification_async(title, message, timeout))
-            # Play alert sound for weather alerts when enabled and requested
+            logger.debug(f"[toast] Calling _send_in_worker for: {title!r}")
+            success = self._send_in_worker(title, message, timeout)
+            if not success:
+                logger.warning(
+                    f"[toast] _send_in_worker returned False — toast NOT shown: {title!r}"
+                )
+                # Fallback to tray balloon when available (e.g. window hidden in system tray)
+                if self.balloon_fn is not None:
+                    try:
+                        self.balloon_fn(title, message)
+                        logger.debug(f"[toast] Tray balloon fallback used for: {title!r}")
+                    except Exception as bf_exc:
+                        logger.debug(f"[toast] Tray balloon fallback failed: {bf_exc}")
+            else:
+                logger.debug(f"[toast] Toast dispatched successfully: {title!r}")
+
+            # Play alert sound when enabled and requested
             if self.sound_enabled and play_sound:
-                try:
-                    if sound_candidates:
-                        play_notification_sound_candidates(sound_candidates, self.soundpack)
-                    else:
-                        play_notification_sound(sound_event or "alert", self.soundpack)
-                except Exception as e:
-                    logger.debug(f"Sound playback failed: {e}")
-            return True
+                logger.debug(
+                    f"[toast] Playing sound: event={sound_event!r}, candidates={sound_candidates!r}"
+                )
+                self._play_sound(sound_event, sound_candidates)
+            else:
+                logger.debug(
+                    f"[toast] Sound skipped: sound_enabled={self.sound_enabled}, play_sound={play_sound}"
+                )
+
+            return success
         except Exception as e:
-            logger.warning(f"Failed to send notification: {str(e)}")
-            logger.info(f"Notification (fallback): {title} - {message}")
+            logger.warning(f"[toast] send_notification raised {type(e).__name__}: {e}")
+            logger.info(f"[toast] Notification (fallback): {title} - {message}")
             return False
+
+    def _play_sound(self, sound_event: str | None, sound_candidates: list[str] | None) -> None:
+        """Play a notification sound."""
+        try:
+            if sound_candidates:
+                play_notification_sound_candidates(sound_candidates, self.soundpack)
+            else:
+                play_notification_sound(sound_event or "alert", self.soundpack)
+        except Exception as e:
+            logger.debug(f"Sound playback failed: {e}")
 
 
 class SafeToastNotifier:

@@ -155,7 +155,7 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
         Create the context menu for the tray icon.
 
         Returns:
-            wx.Menu with Show and Quit options
+            wx.Menu with Show, optional Test Notifications (debug), and Quit options
 
         """
         menu = wx.Menu()
@@ -164,6 +164,21 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
         show_item = menu.Append(wx.ID_ANY, "&Show AccessiWeather")
         self.Bind(wx.EVT_MENU, self._on_show_menu, show_item)
 
+        # Debug-only: notification test submenu
+        if getattr(self.app, "debug_mode", False):
+            menu.AppendSeparator()
+            debug_menu = wx.Menu()
+            discussion_item = debug_menu.Append(wx.ID_ANY, "Test: &Discussion Updated")
+            alert_item = debug_menu.Append(wx.ID_ANY, "Test: &Alert Notification...")
+            balloon_item = debug_menu.Append(wx.ID_ANY, "Test: Tray &Balloon (direct)")
+            debug_menu.AppendSeparator()
+            diag_item = debug_menu.Append(wx.ID_ANY, "Run Notification &Diagnostics")
+            menu.AppendSubMenu(debug_menu, "&Debug")
+            self.Bind(wx.EVT_MENU, self._on_tray_test_discussion, discussion_item)
+            self.Bind(wx.EVT_MENU, self._on_tray_test_alert, alert_item)
+            self.Bind(wx.EVT_MENU, self._on_tray_test_balloon, balloon_item)
+            self.Bind(wx.EVT_MENU, self._on_test_notifications_menu, diag_item)
+
         menu.AppendSeparator()
 
         # Quit item
@@ -171,6 +186,69 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
         self.Bind(wx.EVT_MENU, self._on_quit_menu, quit_item)
 
         return menu
+
+    def _on_tray_test_discussion(self, event: wx.CommandEvent) -> None:
+        """Fire a test discussion-update notification from the tray menu."""
+        win = self._get_main_window()
+        if win is not None:
+            win._on_test_discussion_notification()
+        else:
+            from ..notifications.toast_notifier import SafeDesktopNotifier
+
+            SafeDesktopNotifier().send_notification(
+                title="NWS Discussion Updated",
+                message="Area Forecast Discussion updated. (debug test)",
+                timeout=10,
+                sound_candidates=["discussion_update", "notify"],
+                play_sound=True,
+            )
+
+    def _on_tray_test_balloon(self, event: wx.CommandEvent) -> None:
+        """Directly invoke the tray balloon fallback to verify it's wired up."""
+        notifier = getattr(self.app, "_notifier", None)
+        if notifier is not None and getattr(notifier, "balloon_fn", None) is not None:
+            notifier.balloon_fn(
+                "Tray Balloon Test",
+                "balloon_fn is wired — fallback will work when WinRT drops the toast.",
+            )
+            # Mirror what send_notification does after balloon_fn: play our custom sound
+            if getattr(notifier, "sound_enabled", True):
+                notifier._play_sound("notify", None)
+        else:
+            self.ShowBalloon(
+                "Tray Balloon Test",
+                "balloon_fn not set — tray balloon called directly from tray icon.",
+                5000,
+                0x11,  # NIIF_INFO | NIIF_NOSOUND
+            )
+
+    def _on_tray_test_alert(self, event: wx.CommandEvent) -> None:
+        """Open the alert test dialog from the tray menu."""
+        from .dialogs.debug_alert_dialog import DebugAlertDialog
+
+        # Use main window as parent if available, otherwise use None (dialog is top-level)
+        parent = self._get_main_window()
+        dlg = DebugAlertDialog(parent, self.app)
+        dlg.ShowModal()
+        dlg.Destroy()
+
+    def _get_main_window(self):
+        """Return the main window if it exists, else None."""
+        for win in wx.GetTopLevelWindows():
+            from .main_window import MainWindow
+
+            if isinstance(win, MainWindow):
+                return win
+        return None
+
+    def _on_test_notifications_menu(self, event: wx.CommandEvent) -> None:
+        """Handle Run Notification Diagnostics menu item click (debug mode only)."""
+        from ..notifications.notification_test import run_notification_test
+
+        results = run_notification_test(self.app)
+        lines = [f"{'PASS' if v else 'FAIL'}: {k}" for k, v in results.items()]
+        msg = "\n".join(lines)
+        wx.MessageBox(msg, "Notification Test Results", wx.OK | wx.ICON_INFORMATION)
 
     def _on_show_menu(self, event: wx.CommandEvent) -> None:
         """Handle Show menu item click."""

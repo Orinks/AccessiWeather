@@ -57,7 +57,7 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     from .cache import WeatherDataCache
 
     offline_cache = WeatherDataCache(cache_dir)
-    debug_enabled = bool(getattr(config.settings, "debug_mode", False))
+    debug_enabled = bool(getattr(app, "debug_mode", False))
     log_level = logging.DEBUG if debug_enabled else logging.INFO
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)

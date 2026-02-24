@@ -126,8 +126,7 @@ def _make_dialog(module):
     dlg._url_provider = MagicMock()
     dlg._station_choice = MagicMock()
     dlg._station_choice.GetSelection.return_value = 0
-    dlg._play_btn = MagicMock()
-    dlg._stop_btn = MagicMock()
+    dlg._play_stop_btn = MagicMock()
     dlg._volume_slider = MagicMock()
     dlg._volume_slider.GetValue.return_value = 100
     dlg._status_text = MagicMock()
@@ -156,8 +155,8 @@ class TestFullPlaybackFlow:
 
         # Simulate player callback
         dlg._on_playing()
-        dlg._play_btn.Enable.assert_called_with(True)
-        dlg._stop_btn.Enable.assert_called_with(True)
+        dlg._play_stop_btn.Enable.assert_called_with(True)
+        dlg._play_stop_btn.SetLabel.assert_called_with("Stop")
 
         # Stop
         dlg._on_stop(MagicMock())
@@ -165,8 +164,8 @@ class TestFullPlaybackFlow:
 
         # Simulate stopped callback
         dlg._on_stopped()
-        dlg._play_btn.Enable.assert_called_with(True)
-        dlg._stop_btn.Enable.assert_called_with(False)
+        dlg._play_stop_btn.Enable.assert_called_with(True)
+        dlg._play_stop_btn.SetLabel.assert_called_with("Play")
 
     def test_play_error_recovery(self, noaa_dialog_module):
         """Test error during play allows retry."""
@@ -179,8 +178,8 @@ class TestFullPlaybackFlow:
         dlg._on_error("Connection refused")
 
         # Buttons should allow retry
-        dlg._play_btn.Enable.assert_called_with(True)
-        dlg._stop_btn.Enable.assert_called_with(False)
+        dlg._play_stop_btn.Enable.assert_called_with(True)
+        dlg._play_stop_btn.SetLabel.assert_called_with("Play")
         assert "Error: Connection refused" in dlg._status_text.SetLabel.call_args[0][0]
 
     def test_volume_change_during_playback(self, noaa_dialog_module):
@@ -313,5 +312,5 @@ class TestErrorStates:
         dlg = _make_dialog(noaa_dialog_module)
         dlg._on_error("Network unreachable")
         dlg._status_text.SetLabel.assert_called_with("Error: Network unreachable")
-        dlg._play_btn.Enable.assert_called_with(True)
-        dlg._stop_btn.Enable.assert_called_with(False)
+        dlg._play_stop_btn.Enable.assert_called_with(True)
+        dlg._play_stop_btn.SetLabel.assert_called_with("Play")
