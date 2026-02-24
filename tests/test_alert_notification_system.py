@@ -240,3 +240,175 @@ class TestAlertNotificationSoundControl:
         mock_notifier.send_notification.assert_called_once()
         call_kwargs = mock_notifier.send_notification.call_args.kwargs
         assert call_kwargs.get("play_sound") is False
+
+
+class TestNotifyLifecycleChanges:
+    """Tests for AlertNotificationSystem.notify_lifecycle_changes()."""
+
+    @pytest.fixture
+    def mock_notifier(self):
+        notifier = MagicMock()
+        notifier.send_notification = MagicMock(return_value=True)
+        notifier.sound_enabled = True
+        return notifier
+
+    @pytest.fixture
+    def notification_system(self, tmp_path, mock_notifier):
+        alert_manager = AlertManager(str(tmp_path / "alerts"))
+        return AlertNotificationSystem(
+            alert_manager=alert_manager,
+            notifier=mock_notifier,
+        )
+
+    def _make_alert(self, alert_id: str, title: str, severity: str = "Moderate") -> WeatherAlert:
+        from datetime import UTC, datetime, timedelta
+
+        return WeatherAlert(
+            id=alert_id,
+            title=title,
+            description=f"Description for {title}.",
+            severity=severity,
+            urgency="Expected",
+            certainty="Likely",
+            event="Weather Alert",
+            expires=datetime.now(UTC) + timedelta(hours=2),
+        )
+
+    def _make_diff(self, *, new=None, updated=None, cancelled=None):
+        from accessiweather.alert_lifecycle import (
+            AlertLifecycleDiff,
+        )
+
+        return AlertLifecycleDiff(
+            new_alerts=new or [],
+            updated_alerts=updated or [],
+            cancelled_alerts=cancelled or [],
+        )
+
+    @pytest.mark.asyncio
+    async def test_no_changes_sends_nothing(self, notification_system, mock_notifier):
+        """A diff with no changes should send zero notifications."""
+        diff = self._make_diff()
+        result = await notification_system.notify_lifecycle_changes(diff)
+        assert result == 0
+        mock_notifier.send_notification.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_updated_alert_sends_content_changed_notification(
+        self, notification_system, mock_notifier
+    ):
+        """An updated (non-escalated) alert fires a content_changed notification."""
+        from accessiweather.alert_lifecycle import AlertChange, AlertChangeKind
+
+        alert = self._make_alert("upd-1", "Dense Fog Advisory")
+        change = AlertChange(
+            kind=AlertChangeKind.UPDATED,
+            alert=alert,
+            alert_id="upd-1",
+            title="Dense Fog Advisory",
+            old_severity="Minor",
+            new_severity="Minor",
+        )
+        diff = self._make_diff(updated=[change])
+
+        result = await notification_system.notify_lifecycle_changes(diff)
+
+        assert result == 1
+        mock_notifier.send_notification.assert_called_once()
+        call_kwargs = mock_notifier.send_notification.call_args.kwargs
+        assert "UPDATED" in call_kwargs["title"]
+        # No sound for a plain update (not an escalation)
+        assert call_kwargs.get("play_sound") is False
+
+    @pytest.mark.asyncio
+    async def test_escalated_alert_plays_sound(self, notification_system, mock_notifier):
+        """A severity-escalated alert fires with sound."""
+        from accessiweather.alert_lifecycle import AlertChange, AlertChangeKind
+
+        alert = self._make_alert("esc-1", "Severe Thunderstorm Warning", severity="Severe")
+        change = AlertChange(
+            kind=AlertChangeKind.UPDATED,
+            alert=alert,
+            alert_id="esc-1",
+            title="Severe Thunderstorm Warning",
+            old_severity="Moderate",
+            new_severity="Severe",
+        )
+        diff = self._make_diff(updated=[change])
+
+        result = await notification_system.notify_lifecycle_changes(diff)
+
+        assert result == 1
+        mock_notifier.send_notification.assert_called_once()
+        call_kwargs = mock_notifier.send_notification.call_args.kwargs
+        assert "ESCALATED" in call_kwargs["title"]
+        assert call_kwargs.get("play_sound") is True
+
+    @pytest.mark.asyncio
+    async def test_cancelled_alert_sends_cancellation_notification(
+        self, notification_system, mock_notifier
+    ):
+        """A cancelled alert fires a CANCELLED notification without sound."""
+        from accessiweather.alert_lifecycle import AlertChange, AlertChangeKind
+
+        change = AlertChange(
+            kind=AlertChangeKind.CANCELLED,
+            alert_id="cxl-1",
+            title="Winter Storm Warning",
+        )
+        diff = self._make_diff(cancelled=[change])
+
+        result = await notification_system.notify_lifecycle_changes(diff)
+
+        assert result == 1
+        mock_notifier.send_notification.assert_called_once()
+        call_kwargs = mock_notifier.send_notification.call_args.kwargs
+        assert "CANCELLED" in call_kwargs["title"]
+        assert "Winter Storm Warning" in call_kwargs["title"]
+        assert call_kwargs.get("play_sound") is False
+
+    @pytest.mark.asyncio
+    async def test_notifications_disabled_sends_nothing(self, notification_system, mock_notifier):
+        """When notifications are disabled, nothing is sent."""
+        from accessiweather.alert_lifecycle import AlertChange, AlertChangeKind
+
+        notification_system.alert_manager.settings.notifications_enabled = False
+        change = AlertChange(
+            kind=AlertChangeKind.CANCELLED,
+            alert_id="cxl-2",
+            title="Flood Watch",
+        )
+        diff = self._make_diff(cancelled=[change])
+
+        result = await notification_system.notify_lifecycle_changes(diff)
+
+        assert result == 0
+        mock_notifier.send_notification.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_mixed_diff_sends_multiple_notifications(
+        self, notification_system, mock_notifier
+    ):
+        """Updated + cancelled in same diff both get notifications."""
+        from accessiweather.alert_lifecycle import AlertChange, AlertChangeKind
+
+        updated_alert = self._make_alert("upd-2", "Flash Flood Watch")
+        updated_change = AlertChange(
+            kind=AlertChangeKind.UPDATED,
+            alert=updated_alert,
+            alert_id="upd-2",
+            title="Flash Flood Watch",
+            old_severity="Minor",
+            new_severity="Minor",
+        )
+        cancelled_change = AlertChange(
+            kind=AlertChangeKind.CANCELLED,
+            alert_id="cxl-3",
+            title="Dense Fog Advisory",
+        )
+        diff = self._make_diff(updated=[updated_change], cancelled=[cancelled_change])
+
+        result = await notification_system.notify_lifecycle_changes(diff)
+
+        assert result == 2
+        assert mock_notifier.send_notification.call_count == 2

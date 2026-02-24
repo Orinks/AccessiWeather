@@ -9,6 +9,7 @@ with proper cooldown and filtering capabilities.
 import asyncio
 import logging
 
+from .alert_lifecycle import AlertLifecycleDiff
 from .alert_manager import AlertManager, AlertSettings
 from .constants import (
     MAX_DISPLAYED_AREAS,
@@ -271,6 +272,81 @@ class AlertNotificationSystem:
         except Exception as e:
             logger.error(f"[notify] Error in _send_alert_notification: {type(e).__name__}: {e}")
             return False
+
+    async def notify_lifecycle_changes(
+        self,
+        diff: AlertLifecycleDiff,
+    ) -> int:
+        """
+        Fire desktop notifications for updated and cancelled alerts.
+
+        New alerts are handled by :meth:`process_and_notify`.  This method
+        covers the other two lifecycle events so users hear about alerts that
+        changed severity or were withdrawn.
+
+        Args:
+        ----
+            diff: The :class:`~accessiweather.alert_lifecycle.AlertLifecycleDiff`
+                produced by the most recent fetch.
+
+        Returns:
+        -------
+            Number of notifications sent.
+
+        """
+        if not diff.has_changes:
+            return 0
+
+        if not self.alert_manager.settings.notifications_enabled:
+            logger.debug("[notify] lifecycle notifications skipped — notifications disabled")
+            return 0
+
+        sent = 0
+
+        # --- Updated alerts ---
+        for change in diff.updated_alerts:
+            if change.alert is None:
+                continue
+            reason = "escalation" if change.is_severity_upgrade else "content_changed"
+            try:
+                success = await self._send_alert_notification(
+                    change.alert, reason, play_sound=change.is_severity_upgrade
+                )
+                if success:
+                    sent += 1
+                    logger.info(
+                        f"[notify] lifecycle update notification sent: "
+                        f"{change.title!r} reason={reason}"
+                    )
+            except Exception as exc:
+                logger.error(
+                    f"[notify] lifecycle update notification failed for {change.alert_id!r}: {exc}"
+                )
+
+        # --- Cancelled alerts ---
+        for change in diff.cancelled_alerts:
+            try:
+                title = f"CANCELLED: {change.title}" if change.title else "Alert Cancelled"
+                message = (
+                    f"The alert '{change.title}' has been cancelled or expired."
+                    if change.title
+                    else "A weather alert has been cancelled."
+                )
+                success = self.notifier.send_notification(
+                    title=title,
+                    message=message,
+                    timeout=10,
+                    play_sound=False,
+                )
+                if success:
+                    sent += 1
+                    logger.info(f"[notify] lifecycle cancel notification sent: {change.title!r}")
+            except Exception as exc:
+                logger.error(
+                    f"[notify] lifecycle cancel notification failed for {change.alert_id!r}: {exc}"
+                )
+
+        return sent
 
     def update_settings(
         self,

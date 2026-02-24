@@ -21,6 +21,7 @@ from . import (
     weather_client_trends as trends,
     weather_client_visualcrossing as vc_alerts,
 )
+from .alert_lifecycle import diff_alerts
 from .cache import WeatherDataCache
 from .config.source_priority import SourcePriorityConfig
 from .models import (
@@ -100,6 +101,9 @@ class WeatherClient:
 
         # Track in-flight requests to deduplicate concurrent calls
         self._in_flight_requests: dict[str, asyncio.Task[WeatherData]] = {}
+
+        # Cache of previous alerts per location key (for lifecycle diff)
+        self._previous_alerts: dict[str, WeatherAlerts] = {}
 
     @property
     def visual_crossing_api_key(self) -> str:
@@ -447,6 +451,13 @@ class WeatherClient:
                 weather_data.discussion_issuance_time = None
                 weather_data.alerts = alerts
 
+                # Compute alert lifecycle diff for VC single-source path
+                _vc_loc_key = self._location_key(location)
+                _vc_prev = self._previous_alerts.get(_vc_loc_key)
+                weather_data.alert_lifecycle_diff = diff_alerts(_vc_prev, alerts)
+                if alerts is not None:
+                    self._previous_alerts[_vc_loc_key] = alerts
+
                 # Set source attribution for single-source mode
                 weather_data.source_attribution = SourceAttribution(
                     contributing_sources={"visualcrossing"},
@@ -505,6 +516,13 @@ class WeatherClient:
                 weather_data.discussion = discussion
                 weather_data.discussion_issuance_time = discussion_issuance_time
                 weather_data.alerts = alerts
+
+                # Compute alert lifecycle diff for NWS single-source path
+                _nws_loc_key = self._location_key(location)
+                _nws_prev = self._previous_alerts.get(_nws_loc_key)
+                weather_data.alert_lifecycle_diff = diff_alerts(_nws_prev, alerts)
+                if alerts is not None:
+                    self._previous_alerts[_nws_loc_key] = alerts
 
                 # Set source attribution for single-source mode
                 weather_data.source_attribution = SourceAttribution(
@@ -655,6 +673,12 @@ class WeatherClient:
         else:
             merged_alerts = alert_aggregator.aggregate_alerts(nws_alerts, vc_alerts_data)
 
+        # Compute alert lifecycle diff (compare against previous fetch for this location)
+        _loc_key = self._location_key(location)
+        _prev_alerts = self._previous_alerts.get(_loc_key)
+        _alert_diff = diff_alerts(_prev_alerts, merged_alerts)
+        self._previous_alerts[_loc_key] = merged_alerts
+
         # Build source attribution
         attribution = SourceAttribution(
             field_sources=current_attribution.field_sources,
@@ -692,6 +716,7 @@ class WeatherClient:
             source_attribution=attribution,
             incomplete_sections=incomplete_sections,
         )
+        weather_data.alert_lifecycle_diff = _alert_diff
 
         # Run enrichment tasks
         if weather_data.has_any_data():
@@ -861,6 +886,11 @@ class WeatherClient:
         # Fallback for any unexpected cases
         logger.warning(f"Unexpected data source '{self.data_source}', defaulting to auto")
         return "nws" if self._is_us_location(location) else "openmeteo"
+
+    @staticmethod
+    def _location_key(location: Location) -> str:
+        """Return a stable string key for a location (used for alert caching)."""
+        return f"{location.latitude:.4f},{location.longitude:.4f}"
 
     def _is_us_location(self, location: Location) -> bool:
         """
