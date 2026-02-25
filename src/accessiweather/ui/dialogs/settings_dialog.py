@@ -953,9 +953,7 @@ class SettingsDialogSimple(wx.Dialog):
                 ("openmeteo", "visualcrossing"): 0,
                 ("visualcrossing", "openmeteo"): 1,
             }
-            self._controls["intl_priority"].SetSelection(
-                intl_map.get(tuple(intl_priority[:2]), 0)
-            )
+            self._controls["intl_priority"].SetSelection(intl_map.get(tuple(intl_priority[:2]), 0))
 
             # Open-Meteo model
             model = getattr(settings, "openmeteo_weather_model", "best_match")
