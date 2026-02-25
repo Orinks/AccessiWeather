@@ -440,11 +440,17 @@ class VisualCrossingClient:
                         # Add timezone info if available
                         if location_tz and start_time:
                             start_time = start_time.replace(tzinfo=location_tz)
+                        elif start_time and start_time.tzinfo is None:
+                            from datetime import timezone as dt_timezone
+
+                            start_time = start_time.replace(tzinfo=dt_timezone.utc)
                     except (ValueError, TypeError):
                         logger.warning(
                             f"Failed to parse Visual Crossing datetime: {full_datetime_str}"
                         )
-                        start_time = datetime.now()
+                        from datetime import timezone as dt_timezone
+
+                        start_time = datetime.now(dt_timezone.utc)
 
                 # Seasonal fields
                 precip_type = hour_data.get("preciptype")
