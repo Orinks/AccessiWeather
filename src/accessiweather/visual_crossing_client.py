@@ -421,7 +421,9 @@ class VisualCrossingClient:
             try:
                 location_tz = ZoneInfo(timezone_str)
             except Exception:
-                logger.warning(f"Failed to load ZoneInfo for {timezone_str!r}, falling back to tzoffset")
+                logger.warning(
+                    f"Failed to load ZoneInfo for {timezone_str!r}, falling back to tzoffset"
+                )
 
         # Fallback: use tzoffset (float hours) when ZoneInfo is unavailable.
         # This matches _parse_current_conditions which always uses tzoffset.
