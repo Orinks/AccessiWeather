@@ -447,7 +447,9 @@ class VisualCrossingClient:
                         date_str = day_data.get("datetime", "")
                         full_datetime_str = f"{date_str}T{datetime_str}"
                         start_time = datetime.fromisoformat(full_datetime_str)
-                        # Add timezone info if available
+                        # Add the location timezone when available.
+                        # If timezone resolution fails, keep the parsed datetime naive.
+                        # Do not tag unknown-local timestamps as UTC.
                         if location_tz and start_time:
                             start_time = start_time.replace(tzinfo=location_tz)
                     except (ValueError, TypeError):

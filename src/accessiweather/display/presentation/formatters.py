@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import textwrap
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from ...models import CurrentConditions, ForecastPeriod, HourlyForecastPeriod
 from ...utils import (
@@ -371,7 +371,9 @@ def format_display_time(
     time_str = _fmt(start_time)
     if show_timezone:
         tz_abbr = _get_timezone_abbreviation(start_time)
-        if tz_abbr:
+        # Defensive guard: if upstream lost the location timezone and attached UTC,
+        # avoid labeling "local" mode as UTC. The canonical fix is upstream.
+        if tz_abbr and start_time.utcoffset() != timedelta(0):
             time_str += f" {tz_abbr}"
     return time_str
 
