@@ -10,6 +10,7 @@ import logging
 import sys
 import threading
 
+from ..constants import WINDOWS_APP_USER_MODEL_ID
 from .sound_player import play_notification_sound, play_notification_sound_candidates
 
 logger = logging.getLogger(__name__)
@@ -94,7 +95,16 @@ class SafeDesktopNotifier:
             asyncio.set_event_loop(self._worker_loop)
 
             # Create the notifier once in this thread (proper COM init on Windows)
-            self._worker_notifier = DesktopNotifier(app_name=self.app_name)
+            if sys.platform == "win32":
+                try:
+                    self._worker_notifier = DesktopNotifier(
+                        app_name=self.app_name,
+                        app_id=WINDOWS_APP_USER_MODEL_ID,
+                    )
+                except TypeError:
+                    self._worker_notifier = DesktopNotifier(app_name=self.app_name)
+            else:
+                self._worker_notifier = DesktopNotifier(app_name=self.app_name)
             logger.debug("Desktop notifier created in worker thread")
 
             self._worker_ready.set()

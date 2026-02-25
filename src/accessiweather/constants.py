@@ -60,6 +60,7 @@ DEFAULT_DATA_SOURCE = DATA_SOURCE_AUTO
 
 # UI Configuration
 DEFAULT_TASKBAR_FORMAT = "{temp} {condition}"
+WINDOWS_APP_USER_MODEL_ID = "Orinks.AccessiWeather"
 
 # Default values for intervals
 UPDATE_INTERVAL = 15  # Default update interval in minutes
