@@ -6,6 +6,7 @@ Tests the Visual Crossing weather API client.
 
 from __future__ import annotations
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -137,6 +138,31 @@ class TestVisualCrossingParsers:
         assert len(hourly.periods) == 2
         assert hourly.periods[0].temperature == 72.0
         assert hourly.periods[1].temperature == 74.0
+        assert hourly.periods[0].start_time.tzinfo is not None
+
+    def test_parse_hourly_forecast_fallback_to_tzoffset(self, client):
+        """Hourly datetimes remain aware when timezone name is missing."""
+        data = {
+            "tzoffset": -5,
+            "days": [
+                {
+                    "datetime": "2024-01-01",
+                    "hours": [
+                        {
+                            "datetime": "08:00:00",
+                            "temp": 60.0,
+                            "conditions": "Cloudy",
+                        }
+                    ],
+                }
+            ],
+        }
+
+        hourly = client._parse_hourly_forecast(data)
+
+        assert len(hourly.periods) == 1
+        assert hourly.periods[0].start_time.tzinfo is not None
+        assert hourly.periods[0].start_time.utcoffset() == timedelta(hours=-5)
 
     def test_parse_alerts(self, client):
         """Test parsing alerts."""

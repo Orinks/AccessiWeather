@@ -6,7 +6,7 @@ implementing methods to fetch current conditions, forecast, and hourly data.
 """
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, tzinfo
 
 import httpx
 
@@ -408,20 +408,12 @@ class VisualCrossingClient:
 
     def _parse_hourly_forecast(self, data: dict) -> HourlyForecast:
         """Parse Visual Crossing hourly forecast data."""
-        from zoneinfo import ZoneInfo
-
         periods = []
         days = data.get("days", [])
 
-        # Get timezone info from the response
-        # Visual Crossing returns timezone name (e.g., "America/New_York")
-        location_tz = None
-        timezone_str = data.get("timezone")
-        if timezone_str:
-            try:
-                location_tz = ZoneInfo(timezone_str)
-            except Exception:
-                logger.warning(f"Failed to load timezone: {timezone_str}")
+        # Resolve location timezone for all hourly timestamps. If IANA timezone
+        # cannot be loaded, fall back to tzoffset to avoid naive times.
+        location_tz = self._resolve_location_timezone(data)
 
         # Extract hourly data from all days
         for day_data in days:
@@ -491,6 +483,32 @@ class VisualCrossingClient:
                 periods.append(period)
 
         return HourlyForecast(periods=periods, generated_at=datetime.now())
+
+    def _resolve_location_timezone(self, data: dict) -> tzinfo:
+        """
+        Resolve a timezone for Visual Crossing response data.
+
+        Visual Crossing usually returns an IANA timezone name (e.g. `America/New_York`)
+        and also provides `tzoffset` in hours. We prefer the named timezone for DST
+        correctness and fall back to `tzoffset` when needed so parsed datetimes remain
+        timezone-aware.
+        """
+        from zoneinfo import ZoneInfo
+
+        timezone_str = data.get("timezone")
+        if timezone_str:
+            try:
+                return ZoneInfo(timezone_str)
+            except Exception:
+                logger.warning(f"Failed to load timezone: {timezone_str}")
+
+        tz_offset_raw = data.get("tzoffset", 0)
+        try:
+            tz_offset_hours = float(tz_offset_raw)
+        except (TypeError, ValueError):
+            logger.warning(f"Invalid tzoffset from Visual Crossing response: {tz_offset_raw}")
+            tz_offset_hours = 0.0
+        return timezone(timedelta(hours=tz_offset_hours))
 
     def _parse_alerts(self, data: dict) -> WeatherAlerts:
         """Parse Visual Crossing alerts data."""
