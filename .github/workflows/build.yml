@@ -194,6 +194,7 @@ jobs:
           IS_NIGHTLY: ${{ needs.prepare.outputs.is_nightly }}
           VERSION: ${{ needs.prepare.outputs.version }}
           TAG: ${{ needs.prepare.outputs.tag }}
+          CLIFF_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p assets
           TIMESTAMP=$(date -u +%Y%m%d)
@@ -220,28 +221,22 @@ jobs:
           # Generate checksums
           cd assets && sha256sum * > checksums.txt 2>/dev/null || true
 
-          # Generate release notes
+          # Generate release notes via git-cliff (nightly and stable)
           cd ..
           if [ "$IS_NIGHTLY" = "true" ]; then
             LAST_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -1)
             if [ -n "$LAST_TAG" ]; then
-              # Keep nightly notes user-facing and consistent with build gating.
-              # Include only feat/fix/perf/security, excluding internal fix scopes.
-              git log "$LAST_TAG"..HEAD --oneline --no-merges --first-parent | \
-                grep -Ei '^[a-f0-9]+ (feat|fix|perf|security)(\([^)]+\))?:' | \
-                grep -Eiv '^[a-f0-9]+ fix\((test|ci|build|chore|docs|style|refactor)\):' | \
-                sed 's/^/- /' > notes.md
-              # If all commits were filtered, add a placeholder
+              npx git-cliff@latest "$LAST_TAG"..HEAD --strip all > notes.md.tmp || true
+              awk '!seen[$0]++' notes.md.tmp > notes.md && rm -f notes.md.tmp
               [ -s notes.md ] || echo "- No user-facing changes" > notes.md
             else
               echo "Initial nightly build" > notes.md
             fi
           else
-            # For stable releases, use git-cliff to generate user-facing changelog
             PREV_TAG=$(git tag --list "v[0-9]*" --sort=-version:refname | grep -v "v${VERSION}" | head -1)
             npx git-cliff@latest ${PREV_TAG:+"$PREV_TAG"..HEAD} --tag "v${VERSION}" \
-              --ignore-tags "nightly-.*" --strip header --strip all 2>/dev/null > notes.md || true
-            # Fallback if git-cliff fails or produces empty output
+              --ignore-tags "nightly-.*" --strip all > notes.md.tmp || true
+            awk '!seen[$0]++' notes.md.tmp > notes.md && rm -f notes.md.tmp
             if [ ! -s notes.md ]; then
               echo "See [CHANGELOG.md](https://github.com/Orinks/AccessiWeather/blob/main/CHANGELOG.md) for full release notes." > notes.md
             fi
