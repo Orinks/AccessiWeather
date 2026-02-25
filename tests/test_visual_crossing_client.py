@@ -165,6 +165,24 @@ class TestVisualCrossingParsers:
         assert period.start_time.tzinfo is not None
         assert period.start_time.utcoffset() == timedelta(hours=-5)
 
+    def test_parse_hourly_forecast_attaches_zoneinfo_timezone(self, client):
+        """Parsed hourly timestamps should use IANA location timezone when ZoneInfo is available."""
+        data = {
+            "timezone": "America/New_York",
+            "days": [
+                {
+                    "datetime": "2024-01-01",
+                    "hours": [{"datetime": "12:00:00", "temp": 72.0, "conditions": "Sunny"}],
+                }
+            ],
+        }
+
+        hourly = client._parse_hourly_forecast(data)
+
+        first = hourly.periods[0]
+        assert first.start_time.tzinfo is not None
+        assert getattr(first.start_time.tzinfo, "key", None) == "America/New_York"
+
     def test_parse_hourly_forecast_uses_tzoffset_offset(self, client):
         """Tzoffset should be reflected in parsed timestamp offsets."""
         data = {
@@ -187,6 +205,24 @@ class TestVisualCrossingParsers:
         period = hourly.periods[0]
         assert period.start_time.tzinfo is not None
         assert period.start_time.utcoffset() == timedelta(hours=-5)
+
+    def test_parse_hourly_forecast_unknown_timezone_falls_back_to_utc(self, client):
+        """Unknown timezone names fall back to UTC (tzoffset=0) — timestamps are still aware."""
+        data = {
+            "timezone": "Invalid/Timezone",
+            "days": [
+                {
+                    "datetime": "2024-01-01",
+                    "hours": [{"datetime": "12:00:00", "temp": 72.0, "conditions": "Sunny"}],
+                }
+            ],
+        }
+
+        hourly = client._parse_hourly_forecast(data)
+
+        first = hourly.periods[0]
+        assert first.start_time.tzinfo is not None
+        assert first.start_time.utcoffset() == timedelta(0)
 
     def test_get_next_hours_uses_epoch_with_mixed_timezones(self):
         """Mixed timezone periods should be ordered/filtered by absolute time."""
