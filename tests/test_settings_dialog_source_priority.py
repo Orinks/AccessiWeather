@@ -5,6 +5,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+
 def _load_settings_dialog_class():
     module_path = (
         Path(__file__).resolve().parents[1]
