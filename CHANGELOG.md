@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.4.4] - 2026-02-25
+## Unreleased
 
 ### Added
 - Implemented Nationwide weather discussions feature, including:
