@@ -27,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - Corrected CPC URLs to point to the actual discussion page (`fxus06.html`).
 - Ensured AI explanation logic correctly uses configured models and respects system prompt instructions.
 - Improved CI coverage gate to require >=80% on changed non-UI lines.
+- Fixed packaged Windows launches dropping discussion/alert toasts by no longer overriding the installer's AppUserModelID at runtime.
 
 ---
 

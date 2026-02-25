@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 
 import wx
 
+from .constants import WINDOWS_APP_USER_MODEL_ID
 from .models import WeatherData
 from .paths import Paths
 from .single_instance import SingleInstanceManager
@@ -37,6 +38,29 @@ if not logging.getLogger().handlers:
     )
 
 logger = logging.getLogger(__name__)
+
+
+def set_windows_app_user_model_id(app_id: str = WINDOWS_APP_USER_MODEL_ID) -> None:
+    """
+    Register a Windows AppUserModelID when running from source.
+
+    For frozen/installer builds, Windows uses the installed shortcut's
+    identity. Overriding it here can cause toast notifications to be dropped.
+    """
+    if sys.platform != "win32":
+        return
+
+    if getattr(sys, "frozen", False):
+        logger.debug("Skipping explicit AppUserModelID registration in frozen build")
+        return
+
+    try:  # pragma: no cover
+        import ctypes
+
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
+        logger.debug("App User Model ID set: %s", app_id)
+    except Exception as exc:  # pragma: no cover
+        logger.debug("Failed to set App User Model ID: %s", exc)
 
 
 class AccessiWeatherApp(wx.App):
@@ -133,15 +157,9 @@ class AccessiWeatherApp(wx.App):
         """Initialize the application (wxPython entry point)."""
         logger.info("Starting AccessiWeather application (wxPython)")
 
-        # Set Windows App User Model ID so balloon/toast notifications say
-        # "AccessiWeather" instead of "notification from Python".
-        try:  # pragma: no cover
-            import ctypes
-
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("AccessiWeather")
-            logger.debug("App User Model ID set: AccessiWeather")
-        except Exception:  # pragma: no cover
-            pass  # Non-Windows or ctypes unavailable — silently skip
+        # Register AppUserModelID for source/debug runs without overriding
+        # installer shortcut identity in packaged builds.
+        set_windows_app_user_model_id()  # pragma: no cover
 
         try:
             # Check for single instance
@@ -713,6 +731,9 @@ def main(
         fake_nightly: Fake nightly tag for testing updates (e.g., 'nightly-20250101').
 
     """
+    # Register AppUserModelID before wx app initialization and any notifications.
+    set_windows_app_user_model_id()  # pragma: no cover
+
     app = AccessiWeatherApp(config_dir=config_dir, portable_mode=portable_mode, debug=debug)
 
     # Override version/build_tag for update testing

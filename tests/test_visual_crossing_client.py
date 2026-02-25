@@ -6,11 +6,12 @@ Tests the Visual Crossing weather API client.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from accessiweather.models import Location
+from accessiweather.models import HourlyForecast, HourlyForecastPeriod, Location
 from accessiweather.visual_crossing_client import (
     VisualCrossingApiError,
     VisualCrossingClient,
@@ -137,6 +138,119 @@ class TestVisualCrossingParsers:
         assert len(hourly.periods) == 2
         assert hourly.periods[0].temperature == 72.0
         assert hourly.periods[1].temperature == 74.0
+
+    def test_parse_hourly_forecast_falls_back_to_tzoffset_when_zoneinfo_fails(self, client):
+        """ZoneInfo failures should still produce timezone-aware hourly timestamps."""
+        data = {
+            "timezone": "America/New_York",
+            "tzoffset": -5,
+            "days": [
+                {
+                    "datetime": "2024-01-01",
+                    "hours": [
+                        {
+                            "datetime": "12:00:00",
+                            "temp": 72.0,
+                            "conditions": "Sunny",
+                        }
+                    ],
+                }
+            ],
+        }
+
+        with patch("zoneinfo.ZoneInfo", side_effect=Exception("tzdata unavailable")):
+            hourly = client._parse_hourly_forecast(data)
+
+        period = hourly.periods[0]
+        assert period.start_time.tzinfo is not None
+        assert period.start_time.utcoffset() == timedelta(hours=-5)
+
+    def test_parse_hourly_forecast_attaches_zoneinfo_timezone(self, client):
+        """Parsed hourly timestamps should use IANA location timezone when ZoneInfo is available."""
+        data = {
+            "timezone": "America/New_York",
+            "days": [
+                {
+                    "datetime": "2024-01-01",
+                    "hours": [{"datetime": "12:00:00", "temp": 72.0, "conditions": "Sunny"}],
+                }
+            ],
+        }
+
+        hourly = client._parse_hourly_forecast(data)
+
+        first = hourly.periods[0]
+        assert first.start_time.tzinfo is not None
+        assert getattr(first.start_time.tzinfo, "key", None) == "America/New_York"
+
+    def test_parse_hourly_forecast_uses_tzoffset_offset(self, client):
+        """Tzoffset should be reflected in parsed timestamp offsets."""
+        data = {
+            "tzoffset": -5,
+            "days": [
+                {
+                    "datetime": "2024-01-01",
+                    "hours": [
+                        {
+                            "datetime": "06:00:00",
+                            "temp": 55.0,
+                            "conditions": "Clear",
+                        }
+                    ],
+                }
+            ],
+        }
+
+        hourly = client._parse_hourly_forecast(data)
+        period = hourly.periods[0]
+        assert period.start_time.tzinfo is not None
+        assert period.start_time.utcoffset() == timedelta(hours=-5)
+
+    def test_parse_hourly_forecast_unknown_timezone_falls_back_to_utc(self, client):
+        """Unknown timezone names fall back to UTC (tzoffset=0) — timestamps are still aware."""
+        data = {
+            "timezone": "Invalid/Timezone",
+            "days": [
+                {
+                    "datetime": "2024-01-01",
+                    "hours": [{"datetime": "12:00:00", "temp": 72.0, "conditions": "Sunny"}],
+                }
+            ],
+        }
+
+        hourly = client._parse_hourly_forecast(data)
+
+        first = hourly.periods[0]
+        assert first.start_time.tzinfo is not None
+        assert first.start_time.utcoffset() == timedelta(0)
+
+    def test_get_next_hours_uses_epoch_with_mixed_timezones(self):
+        """Mixed timezone periods should be ordered/filtered by absolute time."""
+        now_utc = datetime.now(UTC)
+        pst = timezone(timedelta(hours=-8))
+
+        periods = [
+            HourlyForecastPeriod(
+                start_time=(now_utc - timedelta(minutes=30)).astimezone(pst),
+                temperature=1,
+            ),
+            HourlyForecastPeriod(
+                start_time=now_utc + timedelta(minutes=10),
+                temperature=2,
+            ),
+            HourlyForecastPeriod(
+                start_time=(now_utc + timedelta(minutes=70)).astimezone(pst),
+                temperature=3,
+            ),
+            HourlyForecastPeriod(
+                start_time=now_utc + timedelta(hours=2),
+                temperature=4,
+            ),
+        ]
+        hourly = HourlyForecast(periods=periods)
+
+        next_hours = hourly.get_next_hours(3)
+        assert [period.temperature for period in next_hours] == [1, 2, 3]
 
     def test_parse_alerts(self, client):
         """Test parsing alerts."""

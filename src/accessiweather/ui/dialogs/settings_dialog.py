@@ -935,9 +935,25 @@ class SettingsDialogSimple(wx.Dialog):
             vc_key = getattr(settings, "visual_crossing_api_key", "") or ""
             self._controls["vc_key"].SetValue(str(vc_key))
 
-            # Source priority (simplified - just use defaults for now)
-            self._controls["us_priority"].SetSelection(0)
-            self._controls["intl_priority"].SetSelection(0)
+            # Source priority
+            us_priority = getattr(
+                settings, "source_priority_us", ["nws", "openmeteo", "visualcrossing"]
+            )
+            us_map = {
+                ("nws", "openmeteo", "visualcrossing"): 0,
+                ("nws", "visualcrossing", "openmeteo"): 1,
+                ("openmeteo", "nws", "visualcrossing"): 2,
+            }
+            self._controls["us_priority"].SetSelection(us_map.get(tuple(us_priority[:3]), 0))
+
+            intl_priority = getattr(
+                settings, "source_priority_international", ["openmeteo", "visualcrossing"]
+            )
+            intl_map = {
+                ("openmeteo", "visualcrossing"): 0,
+                ("visualcrossing", "openmeteo"): 1,
+            }
+            self._controls["intl_priority"].SetSelection(intl_map.get(tuple(intl_priority[:2]), 0))
 
             # Open-Meteo model
             model = getattr(settings, "openmeteo_weather_model", "best_match")
@@ -1107,6 +1123,15 @@ class SettingsDialogSimple(wx.Dialog):
                 # Data sources
                 "data_source": source_values[self._controls["data_source"].GetSelection()],
                 "visual_crossing_api_key": self._controls["vc_key"].GetValue(),
+                "source_priority_us": [
+                    ["nws", "openmeteo", "visualcrossing"],
+                    ["nws", "visualcrossing", "openmeteo"],
+                    ["openmeteo", "nws", "visualcrossing"],
+                ][max(0, self._controls["us_priority"].GetSelection())],
+                "source_priority_international": [
+                    ["openmeteo", "visualcrossing"],
+                    ["visualcrossing", "openmeteo"],
+                ][max(0, self._controls["intl_priority"].GetSelection())],
                 "openmeteo_weather_model": model_values[
                     self._controls["openmeteo_model"].GetSelection()
                 ],
@@ -1152,6 +1177,24 @@ class SettingsDialogSimple(wx.Dialog):
                 "startup_enabled": self._controls["startup"].GetValue(),
                 "weather_history_enabled": self._controls["weather_history"].GetValue(),
             }
+
+            # Source priority
+            us_idx = self._controls["us_priority"].GetSelection()
+            us_priorities = [
+                ["nws", "openmeteo", "visualcrossing"],
+                ["nws", "visualcrossing", "openmeteo"],
+                ["openmeteo", "nws", "visualcrossing"],
+            ]
+            settings_dict["source_priority_us"] = us_priorities[us_idx if us_idx >= 0 else 0]
+
+            intl_idx = self._controls["intl_priority"].GetSelection()
+            intl_priorities = [
+                ["openmeteo", "visualcrossing"],
+                ["visualcrossing", "openmeteo"],
+            ]
+            settings_dict["source_priority_international"] = intl_priorities[
+                intl_idx if intl_idx >= 0 else 0
+            ]
 
             success = self.config_manager.update_settings(**settings_dict)
             if success:
