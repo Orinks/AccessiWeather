@@ -94,7 +94,10 @@ class SafeDesktopNotifier:
             asyncio.set_event_loop(self._worker_loop)
 
             # Create the notifier once in this thread (proper COM init on Windows)
-            self._worker_notifier = DesktopNotifier(app_name=self.app_name)
+            self._worker_notifier = DesktopNotifier(
+                app_name=self.app_name,
+                app_id="Orinks.AccessiWeather",
+            )
             logger.debug("Desktop notifier created in worker thread")
 
             self._worker_ready.set()

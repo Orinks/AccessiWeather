@@ -713,6 +713,16 @@ def main(
         fake_nightly: Fake nightly tag for testing updates (e.g., 'nightly-20250101').
 
     """
+    if sys.platform == "win32":
+        try:
+            import ctypes
+
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+                "Orinks.AccessiWeather"
+            )
+        except Exception:
+            pass
+
     app = AccessiWeatherApp(config_dir=config_dir, portable_mode=portable_mode, debug=debug)
 
     # Override version/build_tag for update testing
