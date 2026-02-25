@@ -352,20 +352,15 @@ class HourlyForecast:
         if not self.periods:
             return []
 
-        def _to_timestamp(dt: datetime | None, *, as_utc: bool) -> float | None:
+        def _to_timestamp(dt: datetime | None) -> float | None:
             if dt is None:
                 return None
-            if as_utc:
-                dt = dt.replace(tzinfo=UTC) if dt.tzinfo is None else dt.astimezone(UTC)
-                return dt.timestamp()
             if dt.tzinfo is not None:
-                dt = dt.astimezone()
+                # Compare using wall-clock hour to avoid anchoring to the location offset.
+                dt = dt.replace(tzinfo=None)
             return dt.timestamp()
 
-        has_aware_times = any(
-            p.start_time and p.start_time.tzinfo is not None for p in self.periods
-        )
-        now_reference = datetime.now(UTC) if has_aware_times else datetime.now()
+        now_reference = datetime.now()
         now_ts = now_reference.timestamp()
         tolerance = timedelta(hours=1)
         tolerance_seconds = tolerance.total_seconds()
@@ -373,7 +368,7 @@ class HourlyForecast:
         sortable_periods: list[tuple[HourlyForecastPeriod, float]] = []
         unordered_periods: list[HourlyForecastPeriod] = []
         for period in self.periods:
-            ts = _to_timestamp(period.start_time, as_utc=has_aware_times)
+            ts = _to_timestamp(period.start_time)
             if ts is None:
                 unordered_periods.append(period)
             else:

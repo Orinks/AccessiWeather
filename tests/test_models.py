@@ -6,7 +6,7 @@ Tests the core data models used throughout the application.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 
 from accessiweather.models import (
     AppConfig,
@@ -171,6 +171,53 @@ class TestHourlyForecast:
             ]
         )
         assert with_periods.has_data() is True
+
+    def test_get_next_hours_anchors_to_user_local_time_not_location_time(self, monkeypatch):
+        """Aware location times should be compared using local wall-clock now."""
+        import os
+        import time
+
+        import accessiweather.models.weather as weather_models
+
+        class _MockDateTime(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                # Simulate user local time in EST: 8:30 PM.
+                if tz is None:
+                    return cls(2026, 1, 1, 20, 30, 0)
+                # Older UTC-based behavior would effectively align with 5:30 PM PST.
+                if tz is UTC:
+                    return cls(2026, 1, 2, 1, 30, 0, tzinfo=UTC)
+                return cls(2026, 1, 1, 20, 30, 0, tzinfo=tz)
+
+        monkeypatch.setattr(weather_models, "datetime", _MockDateTime)
+
+        original_tz = os.environ.get("TZ")
+        monkeypatch.setenv("TZ", "EST5EDT")
+        if hasattr(time, "tzset"):
+            time.tzset()
+
+        try:
+            pst = timezone(timedelta(hours=-8))
+            base = datetime(2026, 1, 1, 17, 0, 0, tzinfo=pst)
+            periods = [
+                HourlyForecastPeriod(start_time=base + timedelta(hours=i), temperature=60 + i)
+                for i in range(10)
+            ]
+
+            hourly = HourlyForecast(periods=periods)
+            next_hours = hourly.get_next_hours(6)
+
+            assert len(next_hours) == 6
+            # 8:30 PM local should align to the 8 PM hour in user's local timezone.
+            assert next_hours[0].start_time.hour == 20
+        finally:
+            if original_tz is None:
+                monkeypatch.delenv("TZ", raising=False)
+            else:
+                monkeypatch.setenv("TZ", original_tz)
+            if hasattr(time, "tzset"):
+                time.tzset()
 
 
 class TestWeatherAlert:
