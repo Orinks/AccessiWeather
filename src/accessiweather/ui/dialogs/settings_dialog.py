@@ -13,6 +13,35 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+US_PRIORITY_OPTIONS: list[list[str]] = [
+    ["nws", "openmeteo", "visualcrossing"],
+    ["nws", "visualcrossing", "openmeteo"],
+    ["openmeteo", "nws", "visualcrossing"],
+]
+
+INTL_PRIORITY_OPTIONS: list[list[str]] = [
+    ["openmeteo", "visualcrossing"],
+    ["visualcrossing", "openmeteo"],
+]
+
+
+def _priority_selection_from_value(
+    value: list[str] | tuple[str, ...] | None, options: list[list[str]], default: int = 0
+) -> int:
+    """Map saved source priority ordering to combo selection index."""
+    normalized = list(value) if value else None
+    for idx, option in enumerate(options):
+        if normalized == option:
+            return idx
+    return default
+
+
+def _priority_value_from_selection(selection: int, options: list[list[str]]) -> list[str]:
+    """Map combo selection index to persisted source priority ordering."""
+    if 0 <= selection < len(options):
+        return list(options[selection])
+    return list(options[0]) if options else []
+
 
 class SettingsDialogSimple(wx.Dialog):
     """Comprehensive settings dialog matching Toga version functionality."""
@@ -936,8 +965,19 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["vc_key"].SetValue(str(vc_key))
 
             # Source priority (simplified - just use defaults for now)
-            self._controls["us_priority"].SetSelection(0)
-            self._controls["intl_priority"].SetSelection(0)
+            us_priority = getattr(
+                settings, "source_priority_us", ["nws", "openmeteo", "visualcrossing"]
+            )
+            self._controls["us_priority"].SetSelection(
+                _priority_selection_from_value(us_priority, US_PRIORITY_OPTIONS)
+            )
+
+            intl_priority = getattr(
+                settings, "source_priority_international", ["openmeteo", "visualcrossing"]
+            )
+            self._controls["intl_priority"].SetSelection(
+                _priority_selection_from_value(intl_priority, INTL_PRIORITY_OPTIONS)
+            )
 
             # Open-Meteo model
             model = getattr(settings, "openmeteo_weather_model", "best_match")
@@ -1110,6 +1150,14 @@ class SettingsDialogSimple(wx.Dialog):
                 "openmeteo_weather_model": model_values[
                     self._controls["openmeteo_model"].GetSelection()
                 ],
+                "source_priority_us": _priority_value_from_selection(
+                    self._controls["us_priority"].GetSelection(),
+                    US_PRIORITY_OPTIONS,
+                ),
+                "source_priority_international": _priority_value_from_selection(
+                    self._controls["intl_priority"].GetSelection(),
+                    INTL_PRIORITY_OPTIONS,
+                ),
                 # Notifications
                 "enable_alerts": self._controls["enable_alerts"].GetValue(),
                 "alert_notifications_enabled": self._controls["alert_notif"].GetValue(),
