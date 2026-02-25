@@ -421,7 +421,15 @@ class VisualCrossingClient:
             try:
                 location_tz = ZoneInfo(timezone_str)
             except Exception:
-                logger.warning(f"Failed to load timezone: {timezone_str}")
+                logger.warning(f"Failed to load ZoneInfo for {timezone_str!r}, falling back to tzoffset")
+
+        # Fallback: use tzoffset (float hours) when ZoneInfo is unavailable.
+        # This matches _parse_current_conditions which always uses tzoffset.
+        # Without this, naive timestamps get misinterpreted as user-local time
+        # in get_next_hours(), anchoring the 6-hour window to the wrong hour.
+        if location_tz is None:
+            tz_offset_hours = data.get("tzoffset", 0)
+            location_tz = timezone(timedelta(hours=tz_offset_hours))
 
         # Extract hourly data from all days
         for day_data in days:
@@ -444,7 +452,7 @@ class VisualCrossingClient:
                         logger.warning(
                             f"Failed to parse Visual Crossing datetime: {full_datetime_str}"
                         )
-                        start_time = datetime.now()
+                        start_time = datetime.now(location_tz)
 
                 # Seasonal fields
                 precip_type = hour_data.get("preciptype")
