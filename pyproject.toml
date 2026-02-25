@@ -25,6 +25,7 @@ dependencies = [
     "openai>=1.0.0",
     "playsound3",
     "prismatoid>=0.7.0",
+    "tzdata",
 ]
 readme = "README.md"
 classifiers = [
