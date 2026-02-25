@@ -149,7 +149,7 @@ class AccessiWeatherApp(wx.App):
         logger.info("Starting AccessiWeather application (wxPython)")
 
         # Ensure Windows can route toasts from installed shortcuts correctly.
-        set_windows_app_user_model_id()
+        set_windows_app_user_model_id()  # pragma: no cover
 
         try:
             # Check for single instance
@@ -722,7 +722,7 @@ def main(
 
     """
     # Register AppUserModelID before wx app initialization and any notifications.
-    set_windows_app_user_model_id()
+    set_windows_app_user_model_id()  # pragma: no cover
 
     app = AccessiWeatherApp(config_dir=config_dir, portable_mode=portable_mode, debug=debug)
 
