@@ -1123,6 +1123,15 @@ class SettingsDialogSimple(wx.Dialog):
                 # Data sources
                 "data_source": source_values[self._controls["data_source"].GetSelection()],
                 "visual_crossing_api_key": self._controls["vc_key"].GetValue(),
+                "source_priority_us": [
+                    ["nws", "openmeteo", "visualcrossing"],
+                    ["nws", "visualcrossing", "openmeteo"],
+                    ["openmeteo", "nws", "visualcrossing"],
+                ][max(0, self._controls["us_priority"].GetSelection())],
+                "source_priority_international": [
+                    ["openmeteo", "visualcrossing"],
+                    ["visualcrossing", "openmeteo"],
+                ][max(0, self._controls["intl_priority"].GetSelection())],
                 "openmeteo_weather_model": model_values[
                     self._controls["openmeteo_model"].GetSelection()
                 ],
