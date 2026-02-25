@@ -41,8 +41,17 @@ logger = logging.getLogger(__name__)
 
 
 def set_windows_app_user_model_id(app_id: str = WINDOWS_APP_USER_MODEL_ID) -> None:
-    """Register a stable Windows AppUserModelID for installer-launched notifications."""
+    """
+    Register a Windows AppUserModelID when running from source.
+
+    For frozen/installer builds, Windows uses the installed shortcut's
+    identity. Overriding it here can cause toast notifications to be dropped.
+    """
     if sys.platform != "win32":
+        return
+
+    if getattr(sys, "frozen", False):
+        logger.debug("Skipping explicit AppUserModelID registration in frozen build")
         return
 
     try:  # pragma: no cover
@@ -148,7 +157,8 @@ class AccessiWeatherApp(wx.App):
         """Initialize the application (wxPython entry point)."""
         logger.info("Starting AccessiWeather application (wxPython)")
 
-        # Ensure Windows can route toasts from installed shortcuts correctly.
+        # Register AppUserModelID for source/debug runs without overriding
+        # installer shortcut identity in packaged builds.
         set_windows_app_user_model_id()  # pragma: no cover
 
         try:
