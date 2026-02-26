@@ -722,10 +722,18 @@ class MainWindow(SizedFrame):
 
     def _on_about(self) -> None:
         """Show about dialog."""
+        from accessiweather.config_utils import is_portable_mode
+
+        portable = is_portable_mode()
+        mode_label = "Portable" if portable else "Installed"
+        config_path = str(self.app.config_manager.config_dir) if self.app.config_manager else "unknown"
+
         wx.MessageBox(
             "AccessiWeather\n\n"
             "An accessible weather application with NOAA and Open-Meteo support.\n\n"
             "Built with wxPython for screen reader compatibility.\n\n"
+            f"Mode: {mode_label}\n"
+            f"Config path: {config_path}\n\n"
             "https://github.com/Orinks/AccessiWeather",
             "About AccessiWeather",
             wx.OK | wx.ICON_INFORMATION,

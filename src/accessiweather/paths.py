@@ -41,6 +41,20 @@ class Paths:
         if self._base_path is not None:
             return self._base_path
 
+        # Portable mode override for frozen builds:
+        # if explicit marker exists (or forced), keep all app data beside the exe.
+        if getattr(sys, "frozen", False):
+            exe_dir = Path(sys.executable).parent
+            forced_portable = os.environ.get("ACCESSIWEATHER_FORCE_PORTABLE", "").lower() in {
+                "1",
+                "true",
+                "yes",
+            }
+            marker_portable = (exe_dir / ".portable").exists() or (exe_dir / "config").is_dir()
+            if forced_portable or marker_portable:
+                self._base_path = exe_dir
+                return self._base_path
+
         if sys.platform == "win32":
             # Windows: %LOCALAPPDATA%/Author/AppName/
             local_app_data = os.environ.get("LOCALAPPDATA")
