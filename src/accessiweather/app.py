@@ -62,7 +62,11 @@ def _cleanup_local_appdata_dirs_in_portable_mode() -> None:
     if not local_appdata:
         return
 
-    root = Path(local_appdata) / "Orinks" / "AccessiWeather"
+    # Resolve appdata location from Paths metadata (avoid hardcoded author/app names).
+    paths = Paths()
+    author = getattr(paths, "_author", "Orinks")
+    app_name = getattr(paths, "_app_name", "AccessiWeather")
+    root = Path(local_appdata) / str(author) / str(app_name)
     if not root.exists():
         return
 
