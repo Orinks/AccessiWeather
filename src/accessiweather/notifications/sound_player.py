@@ -1,6 +1,7 @@
 import json
 import logging
 import platform
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -35,6 +36,23 @@ logger = logging.getLogger(__name__)
 SOUNDPACKS_DIR = get_soundpacks_dir()
 DEFAULT_PACK = "default"
 DEFAULT_EVENT = "alert"
+
+
+def _log_packaging_sound_diagnostics() -> None:
+    """Emit debug-only sound dependency/path diagnostics for packaged troubleshooting."""
+    logger.debug(
+        "[packaging-diag] sound deps: sound_lib_available=%s playsound_available=%s "
+        "frozen=%s meipass=%s soundpacks_dir=%s exists=%s",
+        SOUND_LIB_AVAILABLE,
+        PLAYSOUND_AVAILABLE,
+        getattr(sys, "frozen", False),
+        getattr(sys, "_MEIPASS", None),
+        SOUNDPACKS_DIR,
+        SOUNDPACKS_DIR.exists(),
+    )
+
+
+_log_packaging_sound_diagnostics()
 
 
 def _parse_sound_entry(
