@@ -100,168 +100,120 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName}"; Flags: uninsdeletekey
 
 [Code]
-// Custom code for accessibility announcements and checks
+{
+  Post-install: set System.AppUserModel.ID on the Start Menu shortcut.
+  Required for WinRT toast notifications to surface in Action Center and
+  for screen readers to announce notification text.
+  Uses a temporary PowerShell script (Add-Type/C#) to call IPropertyStore
+  via SHGetPropertyStoreFromParsingName — simpler than Pascal COM bindings.
+}
 
 const
-  AppUserModelIDValue = 'Orinks.AccessiWeather';
-  CLSID_ShellLink: TGUID = '{00021401-0000-0000-C000-000000000046}';
-  IID_IPersistFile: TGUID = '{0000010B-0000-0000-C000-000000000046}';
-  IID_IPropertyStore: TGUID = '{886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99}';
-  AppUserModelIDFmtID: TGUID = '{9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3}';
-  AppUserModelIDPID = 5;
-  STGM_READWRITE = $00000002;
-  VT_LPWSTR = $001F;
-  COINIT_APARTMENTTHREADED = $00000002;
-  S_OK = 0;
-  S_FALSE = 1;
+  AppUserModelIDStr = 'Orinks.AccessiWeather';
 
-type
-  HRESULT = Longint;
-
-  TPropertyKey = record
-    fmtid: TGUID;
-    pid: Cardinal;
-  end;
-
-  PROPVARIANT = record
-    vt: Word;
-    wReserved1: Word;
-    wReserved2: Word;
-    wReserved3: Word;
-    case Integer of
-      0: (pwszVal: PWideChar);
-  end;
-
-  IPropertyStore = interface(IUnknown)
-    ['{886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99}']
-    function GetCount(out cProps: Cardinal): HRESULT; stdcall;
-    function GetAt(iProp: Cardinal; out key: TPropertyKey): HRESULT; stdcall;
-    function GetValue(const key: TPropertyKey; out pv: PROPVARIANT): HRESULT; stdcall;
-    function SetValue(const key: TPropertyKey; const pv: PROPVARIANT): HRESULT; stdcall;
-    function Commit: HRESULT; stdcall;
-  end;
-
-  IPersistFile = interface(IUnknown)
-    ['{0000010B-0000-0000-C000-000000000046}']
-    function GetClassID(out clsid: TGUID): HRESULT; stdcall;
-    function IsDirty: HRESULT; stdcall;
-    function Load(pszFileName: WideString; dwMode: Cardinal): HRESULT; stdcall;
-    function Save(pszFileName: WideString; fRemember: BOOL): HRESULT; stdcall;
-    function SaveCompleted(pszFileName: WideString): HRESULT; stdcall;
-    function GetCurFile(out ppszFileName: WideString): HRESULT; stdcall;
-  end;
-
-function CoInitializeEx(pvReserved: Pointer; dwCoInit: Cardinal): HRESULT;
-  external 'CoInitializeEx@ole32.dll stdcall';
-procedure CoUninitialize; external 'CoUninitialize@ole32.dll stdcall';
-function CoTaskMemAlloc(cb: Cardinal): Pointer; external 'CoTaskMemAlloc@ole32.dll stdcall';
-function PropVariantClear(var propvar: PROPVARIANT): HRESULT;
-  external 'PropVariantClear@propsys.dll stdcall';
-
-procedure SetLinkAppUserModelID(const ShortcutPath, AppID: string);
+function WriteSetAppIdScript(const ScriptPath: string): Boolean;
 var
-  ShellLink: IUnknown;
-  PersistFile: IPersistFile;
-  PropStore: IPropertyStore;
-  PropValue: PROPVARIANT;
-  Key: TPropertyKey;
-  CoInitResult: HRESULT;
-  ShouldUninitialize: Boolean;
-  HRes: HRESULT;
-  BufferSize: Cardinal;
-  AppIDPointer: PWideChar;
+  Lines: TArrayOfString;
 begin
-  ShouldUninitialize := False;
-  AppIDPointer := nil;
-  FillChar(PropValue, SizeOf(PropValue), 0);
-
-  CoInitResult := CoInitializeEx(nil, COINIT_APARTMENTTHREADED);
-  if (CoInitResult <> S_OK) and (CoInitResult <> S_FALSE) then
-    raise Exception.CreateFmt('CoInitializeEx failed: 0x%.8x', [CoInitResult]);
-  ShouldUninitialize := True;
-
-  try
-    ShellLink := CreateComObject(CLSID_ShellLink);
-    PersistFile := ShellLink as IPersistFile;
-    HRes := PersistFile.Load(ShortcutPath, STGM_READWRITE);
-    if HRes <> S_OK then
-      raise Exception.CreateFmt('IPersistFile.Load failed: 0x%.8x', [HRes]);
-
-    PropStore := ShellLink as IPropertyStore;
-
-    BufferSize := (Length(AppID) + 1) * SizeOf(WideChar);
-    AppIDPointer := CoTaskMemAlloc(BufferSize);
-    if AppIDPointer = nil then
-      raise Exception.Create('Failed to allocate memory for AppUserModelID');
-
-    StringToWideChar(AppID, AppIDPointer, Length(AppID) + 1);
-
-    PropValue.vt := VT_LPWSTR;
-    PropValue.pwszVal := AppIDPointer;
-    Key.fmtid := AppUserModelIDFmtID;
-    Key.pid := AppUserModelIDPID;
-
-    HRes := PropStore.SetValue(Key, PropValue);
-    if HRes <> S_OK then
-      raise Exception.CreateFmt('IPropertyStore.SetValue failed: 0x%.8x', [HRes]);
-
-    HRes := PropStore.Commit;
-    if HRes <> S_OK then
-      raise Exception.CreateFmt('IPropertyStore.Commit failed: 0x%.8x', [HRes]);
-
-    HRes := PersistFile.Save(ShortcutPath, True);
-    if HRes <> S_OK then
-      raise Exception.CreateFmt('IPersistFile.Save failed: 0x%.8x', [HRes]);
-  finally
-    PropVariantClear(PropValue);
-    if ShouldUninitialize then
-      CoUninitialize;
-  end;
+  SetArrayLength(Lines, 44);
+  Lines[0]  := 'param([string]$Path, [string]$AppId)';
+  Lines[1]  := 'if (-not (Test-Path $Path)) { Write-Host "Shortcut not found: $Path"; exit 0 }';
+  Lines[2]  := 'try {';
+  Lines[3]  := 'Add-Type -TypeDefinition @"';
+  Lines[4]  := 'using System;';
+  Lines[5]  := 'using System.Runtime.InteropServices;';
+  Lines[6]  := '[Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99")]';
+  Lines[7]  := '[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]';
+  Lines[8]  := 'public interface IPropertyStore {';
+  Lines[9]  := '    void GetCount(out uint c);';
+  Lines[10] := '    void GetAt(uint i, out PropKey k);';
+  Lines[11] := '    void GetValue(ref PropKey k, out object v);';
+  Lines[12] := '    void SetValue(ref PropKey k, ref PropVariantW v);';
+  Lines[13] := '    void Commit();';
+  Lines[14] := '}';
+  Lines[15] := '[StructLayout(LayoutKind.Sequential, Pack=4)]';
+  Lines[16] := 'public struct PropKey { public Guid fmt; public uint pid; }';
+  Lines[17] := '[StructLayout(LayoutKind.Explicit)]';
+  Lines[18] := 'public struct PropVariantW {';
+  Lines[19] := '    [FieldOffset(0)] public ushort vt;';
+  Lines[20] := '    [FieldOffset(8)] public IntPtr pwszVal;';
+  Lines[21] := '}';
+  Lines[22] := 'public class PropStoreHelper {';
+  Lines[23] := '    [DllImport("shell32.dll", CharSet=CharSet.Unicode)]';
+  Lines[24] := '    public static extern int SHGetPropertyStoreFromParsingName(';
+  Lines[25] := '        string path, IntPtr pbc, int flags,';
+  Lines[26] := '        [MarshalAs(UnmanagedType.LPStruct)] Guid riid,';
+  Lines[27] := '        [MarshalAs(UnmanagedType.Interface)] out IPropertyStore ppv);';
+  Lines[28] := '}';
+  Lines[29] := '"@ -Language CSharp';
+  Lines[30] := '$iid = [Guid]"886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99"';
+  Lines[31] := '$store = $null';
+  Lines[32] := '$hr = [PropStoreHelper]::SHGetPropertyStoreFromParsingName($Path, [IntPtr]::Zero, 2, $iid, [ref]$store)';
+  Lines[33] := 'if ($hr -ne 0) { throw "SHGetPropertyStoreFromParsingName hr=0x$($hr.ToString(''X''))" }';
+  Lines[34] := '$key = [PropKey]@{ fmt = [Guid]"9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"; pid = 5 }';
+  Lines[35] := '$ptr = [System.Runtime.InteropServices.Marshal]::StringToCoTaskMemUni($AppId)';
+  Lines[36] := 'try {';
+  Lines[37] := '    $pv = [PropVariantW]@{ vt = 0x1F; pwszVal = $ptr }';
+  Lines[38] := '    $store.SetValue([ref]$key, [ref]$pv)';
+  Lines[39] := '    $store.Commit()';
+  Lines[40] := '    Write-Host "AppUserModel.ID set: $AppId -> $Path"';
+  Lines[41] := '} finally { [System.Runtime.InteropServices.Marshal]::FreeCoTaskMem($ptr) }';
+  Lines[42] := '} catch { Write-Warning "Failed: $_"; exit 0 }';
+  Lines[43] := '';
+  Result := SaveStringsToFile(ScriptPath, Lines, False);
 end;
 
-procedure SetShortcutProp(const ShortcutPath: string);
+procedure SetShortcutAppUserModelID(const ShortcutPath: string);
+var
+  ScriptPath: string;
+  ResultCode: Integer;
 begin
   if not FileExists(ShortcutPath) then
   begin
-    Log(Format('Shortcut not found, skipping AppUserModel.ID registration: %s', [ShortcutPath]));
+    Log('AppUserModel.ID: shortcut not found, skipping: ' + ShortcutPath);
     Exit;
   end;
 
-  try
-    SetLinkAppUserModelID(ShortcutPath, AppUserModelIDValue);
-    Log(Format('Set System.AppUserModel.ID "%s" on shortcut %s', [AppUserModelIDValue, ShortcutPath]));
-  except
-    on E: Exception do
-      Log(Format('Failed to set AppUserModel.ID on %s: %s', [ShortcutPath, E.Message]));
+  ScriptPath := ExpandConstant('{tmp}\set_appid.ps1');
+  if not WriteSetAppIdScript(ScriptPath) then
+  begin
+    Log('AppUserModel.ID: failed to write temp script');
+    Exit;
   end;
-end;
 
-function InitializeSetup(): Boolean;
-begin
-  Result := True;
-  // Could add accessibility checks here
+  Exec(
+    'powershell.exe',
+    '-NoProfile -ExecutionPolicy Bypass -File "' + ScriptPath + '"'
+      + ' -Path "' + ShortcutPath + '"'
+      + ' -AppId "' + AppUserModelIDStr + '"',
+    '',
+    SW_HIDE,
+    ewWaitUntilTerminated,
+    ResultCode
+  );
+
+  if ResultCode = 0 then
+    Log('AppUserModel.ID: success on ' + ShortcutPath)
+  else
+    Log('AppUserModel.ID: PowerShell returned ' + IntToStr(ResultCode) + ' for ' + ShortcutPath);
+
+  DeleteFile(ScriptPath);
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 var
-  StartMenuShortcut: string;
-  DesktopShortcut: string;
-  CommonDesktopShortcut: string;
+  StartMenuLnk: string;
+  DesktopLnk: string;
 begin
   if CurStep = ssPostInstall then
   begin
-    // Post-installation tasks
-    // Could add first-run setup here
-    StartMenuShortcut := ExpandConstant('{group}\{#MyAppName}.lnk');
-    SetShortcutProp(StartMenuShortcut);
+    StartMenuLnk := ExpandConstant('{group}\{#MyAppName}.lnk');
+    SetShortcutAppUserModelID(StartMenuLnk);
 
     if IsTaskSelected('desktopicon') then
     begin
-      DesktopShortcut := ExpandConstant('{autodesktop}\{#MyAppName}.lnk');
-      SetShortcutProp(DesktopShortcut);
-
-      CommonDesktopShortcut := ExpandConstant('{commondesktop}\{#MyAppName}.lnk');
-      SetShortcutProp(CommonDesktopShortcut);
+      DesktopLnk := ExpandConstant('{autodesktop}\{#MyAppName}.lnk');
+      SetShortcutAppUserModelID(DesktopLnk);
     end;
   end;
 end;
