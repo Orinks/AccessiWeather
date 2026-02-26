@@ -118,6 +118,17 @@ def is_portable_mode() -> bool:
     return False
 
 
+def _explicit_portable_config_dir() -> str | None:
+    """Return explicit portable config dir when marker file is present beside exe."""
+    if not getattr(sys, "frozen", False):
+        return None
+
+    app_dir = os.path.dirname(sys.executable)
+    if os.path.exists(os.path.join(app_dir, ".portable")):
+        return os.path.join(app_dir, "config")
+    return None
+
+
 def get_config_dir(custom_dir: str | None = None) -> str:
     """
     Get the configuration directory path.
@@ -134,6 +145,13 @@ def get_config_dir(custom_dir: str | None = None) -> str:
     if custom_dir is not None:
         logger.debug(f"Using custom config directory: {custom_dir}")
         return custom_dir
+
+    explicit_portable_dir = _explicit_portable_config_dir()
+    if explicit_portable_dir:
+        logger.info(
+            f"Running in explicit portable mode (.portable marker), using config directory: {explicit_portable_dir}"
+        )
+        return explicit_portable_dir
 
     # Check if we're running in portable mode
     portable_mode = is_portable_mode()

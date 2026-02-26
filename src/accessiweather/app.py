@@ -1162,6 +1162,17 @@ def main(
         fake_nightly: Fake nightly tag for testing updates (e.g., 'nightly-20250101').
 
     """
+    if config_dir is None:
+        try:
+            from .config_utils import _explicit_portable_config_dir
+
+            explicit_portable_dir = _explicit_portable_config_dir()
+            if explicit_portable_dir:
+                config_dir = explicit_portable_dir
+                portable_mode = True
+        except Exception:
+            pass
+
     app = AccessiWeatherApp(config_dir=config_dir, portable_mode=portable_mode, debug=debug)
 
     # Override version/build_tag for update testing
