@@ -26,7 +26,8 @@ def test_sets_app_user_model_id_on_windows_non_frozen(monkeypatch):
 
 
 def test_sets_app_user_model_id_on_windows_frozen(monkeypatch):
-    """Frozen builds (including portable) must also register the AppID.
+    """
+    Frozen builds (including portable) must also register the AppID.
 
     Previously this was skipped for frozen builds on the assumption the
     installer shortcut handled it — but portable builds have no installer
