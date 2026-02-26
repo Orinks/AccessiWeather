@@ -51,10 +51,16 @@ if __name__ == "__main__":
         fake_nightly = fake_nightly or "nightly-20200101"
 
     from accessiweather.app import main
+    from accessiweather.config_utils import is_portable_mode
+
+    # Auto-detect portable mode if --portable flag wasn't explicitly passed.
+    # is_portable_mode() checks for uninstaller, Program Files location, and
+    # directory writability — so extracted ZIPs are detected without a flag.
+    portable_mode = args.portable or is_portable_mode()
 
     main(
         config_dir=args.config_dir,
-        portable_mode=args.portable,
+        portable_mode=portable_mode,
         fake_version=fake_version,
         fake_nightly=fake_nightly,
     )
