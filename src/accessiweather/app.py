@@ -373,6 +373,13 @@ class AccessiWeatherApp(wx.App):
 
                 notifier.balloon_fn = _balloon
                 logger.debug("Tray balloon fallback wired into notifier")
+
+                # Portable builds have no Start Menu shortcut, so WinRT toasts
+                # are silently dropped regardless of SetCurrentProcessExplicitAppUserModelID.
+                # Use balloon tips as the primary path in portable mode.
+                if self._portable_mode:
+                    notifier.prefer_balloon = True
+                    logger.debug("Portable mode: prefer_balloon set — skipping WinRT toasts")
         except Exception as e:
             logger.warning(f"Failed to initialize system tray icon: {e}")
             self.tray_icon = None

@@ -53,6 +53,12 @@ class SafeDesktopNotifier:
         # Set this after init — typically wired to tray_icon.ShowBalloon().
         self.balloon_fn = None  # Optional[Callable[[str, str], None]] — set after init
 
+        # When True, skip WinRT entirely and always use balloon_fn directly.
+        # Portable builds have no Start Menu shortcut, so WinRT silently drops
+        # toasts even after SetCurrentProcessExplicitAppUserModelID is called.
+        # Shell_NotifyIcon balloon tips require no registration and always work.
+        self.prefer_balloon: bool = False
+
         # Persistent worker thread state
         self._worker_loop: asyncio.AbstractEventLoop | None = None
         self._worker_thread: threading.Thread | None = None
@@ -196,6 +202,18 @@ class SafeDesktopNotifier:
                 f"[toast] desktop-notifier NOT available — toast skipped, sound_only={play_sound}: {title!r}"
             )
             # Still play sound if configured and requested, as a basic cue
+            if self.sound_enabled and play_sound:
+                self._play_sound(sound_event, sound_candidates)
+            return True
+
+        # Portable mode: WinRT requires a registered Start Menu shortcut which
+        # portable builds never have. Skip WinRT and go straight to balloon tip.
+        if self.prefer_balloon and self.balloon_fn is not None:
+            try:
+                self.balloon_fn(title, message)
+                logger.debug(f"[toast] Portable mode — balloon tip used directly: {title!r}")
+            except Exception as bf_exc:
+                logger.warning(f"[toast] Portable balloon failed: {bf_exc}")
             if self.sound_enabled and play_sound:
                 self._play_sound(sound_event, sound_candidates)
             return True
