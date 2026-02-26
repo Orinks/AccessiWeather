@@ -14,7 +14,6 @@ import os
 import subprocess
 import sys
 import threading
-from contextlib import suppress
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -43,54 +42,6 @@ if not logging.getLogger().handlers:
     )
 
 logger = logging.getLogger(__name__)
-
-
-def _cleanup_local_appdata_dirs_in_portable_mode() -> None:
-    """Remove empty LocalAppData app folders when running in portable mode."""
-    if sys.platform != "win32":
-        return
-
-    try:
-        from .config_utils import is_portable_mode
-
-        if not is_portable_mode():
-            return
-    except Exception:
-        return
-
-    local_appdata = os.environ.get("LOCALAPPDATA")
-    if not local_appdata:
-        return
-
-    # Resolve appdata location from Paths metadata (avoid hardcoded author/app names).
-    paths = Paths()
-    author = getattr(paths, "_author", "Orinks")
-    app_name = getattr(paths, "_app_name", "AccessiWeather")
-    root = Path(local_appdata) / str(author) / str(app_name)
-    if not root.exists():
-        return
-
-    # Only remove if effectively empty (allows harmless cleanup without data loss).
-    contents = [p for p in root.rglob("*") if p.exists()]
-    if not contents:
-        root.rmdir()
-        return
-
-    non_empty_files = [p for p in contents if p.is_file() and p.stat().st_size > 0]
-    if non_empty_files:
-        return
-
-    # Remove empty/zero-byte scaffold folders and files.
-    for p in sorted(contents, key=lambda x: len(x.parts), reverse=True):
-        try:
-            if p.is_file():
-                p.unlink(missing_ok=True)
-            elif p.is_dir():
-                p.rmdir()
-        except Exception:
-            pass
-    with suppress(Exception):
-        root.rmdir()
 
 
 def set_windows_app_user_model_id(app_id: str = WINDOWS_APP_USER_MODEL_ID) -> None:
@@ -624,9 +575,6 @@ class AccessiWeatherApp(wx.App):
     def OnInit(self) -> bool:
         """Initialize the application (wxPython entry point)."""
         logger.info("Starting AccessiWeather application (wxPython)")
-
-        # Keep portable mode fully self-contained.
-        _cleanup_local_appdata_dirs_in_portable_mode()
 
         # Startup identity repair disabled to avoid visible terminal popups.
         # Toast behavior now relies on installer/runtime defaults without shelling out.
