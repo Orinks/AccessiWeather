@@ -103,7 +103,7 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\{#MyApp
 // Custom code for accessibility announcements and checks
 
 const
-  AppUserModelIDValue = "Orinks.AccessiWeather";
+  AppUserModelIDValue = 'Orinks.AccessiWeather';
   CLSID_ShellLink: TGUID = '{00021401-0000-0000-C000-000000000046}';
   IID_IPersistFile: TGUID = '{0000010B-0000-0000-C000-000000000046}';
   IID_IPropertyStore: TGUID = '{886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99}';
