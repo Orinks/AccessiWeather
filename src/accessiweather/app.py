@@ -490,6 +490,17 @@ class AccessiWeatherApp(wx.App):
 
         """
         self._config_dir = config_dir
+
+        # Auto-detect portable mode for frozen builds unless explicitly overridden
+        # via --portable or --config-dir.
+        if not portable_mode and config_dir is None:
+            try:
+                from .config_utils import is_portable_mode
+
+                portable_mode = is_portable_mode()
+            except Exception:
+                portable_mode = False
+
         self._portable_mode = portable_mode
         self.debug_mode = bool(debug)
 
