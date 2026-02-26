@@ -138,20 +138,74 @@ def _resolve_start_menu_shortcut_path(display_name: str) -> Path:
     nested_default = programs_dir / display_name / f"{display_name}.lnk"
     top_level_default = programs_dir / f"{display_name}.lnk"
 
-    # Prefer the known installer layout first (Programs\AppName\AppName.lnk).
     if nested_default.exists():
         return nested_default
     if top_level_default.exists():
         return top_level_default
 
-    # Fall back to recursive search in Programs for matching link name.
-    pattern = f"{display_name}.lnk"
-    for candidate in programs_dir.rglob(pattern):
+    for candidate in sorted(programs_dir.rglob(f"{display_name}.lnk")):
         if candidate.is_file():
             return candidate
 
-    # If nothing exists yet, create/repair the expected installer layout path.
     return nested_default
+
+
+def _toast_identity_stamp_path(appdata: Path, display_name: str) -> Path:
+    return appdata / display_name / "toast_identity_stamp.json"
+
+
+def _load_toast_identity_stamp(stamp_path: Path) -> dict[str, str | bool] | None:
+    try:
+        payload = json.loads(stamp_path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    return payload
+
+
+def _should_repair_shortcut(
+    *,
+    stamp: dict[str, str | bool] | None,
+    shortcut_path: Path,
+    exe_path: str,
+    app_version: str,
+) -> bool:
+    if not shortcut_path.exists():
+        return True
+    if not stamp:
+        return True
+
+    return not (
+        bool(stamp.get("verified"))
+        and stamp.get("exe_path") == exe_path
+        and stamp.get("app_version") == app_version
+        and stamp.get("shortcut_path") == str(shortcut_path)
+    )
+
+
+def _write_toast_identity_stamp(
+    *,
+    stamp_path: Path,
+    shortcut_path: Path,
+    exe_path: str,
+    app_version: str,
+    verified: bool,
+    readback_app_id: str | None,
+) -> None:
+    stamp_path.parent.mkdir(parents=True, exist_ok=True)
+    stamp_path.write_text(
+        json.dumps(
+            {
+                "verified": bool(verified),
+                "exe_path": exe_path,
+                "app_version": app_version,
+                "shortcut_path": str(shortcut_path),
+                "readback_app_id": readback_app_id,
+            }
+        ),
+        encoding="utf-8",
+    )
 
 
 def ensure_windows_toast_identity(
@@ -162,8 +216,13 @@ def ensure_windows_toast_identity(
     if sys.platform != "win32":
         return
 
+    from . import __version__
+
     exe_path = str(Path(sys.executable).resolve())
+    appdata = Path.home() / "AppData" / "Roaming"
     shortcut_path = _resolve_start_menu_shortcut_path(display_name)
+    stamp_path = _toast_identity_stamp_path(appdata, display_name)
+    app_version = __version__
 
     logger.info(
         "[notify-init] Windows toast identity: exe_path=%s shortcut_path=%s exe_is_unc=%s",
@@ -175,9 +234,21 @@ def ensure_windows_toast_identity(
     register_app_id_in_registry(app_id=app_id, display_name=display_name, icon_path=exe_path)
     set_windows_app_user_model_id(app_id=app_id)
 
+    stamp = _load_toast_identity_stamp(stamp_path)
+    if not _should_repair_shortcut(
+        stamp=stamp,
+        shortcut_path=shortcut_path,
+        exe_path=exe_path,
+        app_version=app_version,
+    ):
+        logger.info(
+            "[notify-init] Windows toast identity: verified stamp valid, skipping shortcut repair"
+        )
+        return
+
     script = r"""
 param([string]$ShortcutPath,[string]$TargetPath,[string]$AppId,[string]$DisplayName)
-$state = [ordered]@{ shortcut_exists = $false; current_target = $null; current_app_id = $null; repaired = $false; verified = $false; set_error = $null }
+$state = [ordered]@{ shortcut_path = $ShortcutPath; shortcut_exists = $false; current_target = $null; readback_app_id = $null; repaired = $false; verified = $false; set_error = $null }
 $dir = Split-Path -Parent $ShortcutPath
 if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
 if (Test-Path $ShortcutPath) {
@@ -192,11 +263,11 @@ if (Test-Path $ShortcutPath) {
     $folder = $shell.Namespace((Split-Path -Parent $ShortcutPath))
     if ($folder) {
       $item = $folder.ParseName((Split-Path -Leaf $ShortcutPath))
-      if ($item) { $state.current_app_id = $item.ExtendedProperty('System.AppUserModel.ID') }
+      if ($item) { $state.readback_app_id = $item.ExtendedProperty('System.AppUserModel.ID') }
     }
   } catch {}
 }
-$needsRepair = (-not $state.current_target) -or (([IO.Path]::GetFullPath($state.current_target)) -ne ([IO.Path]::GetFullPath($TargetPath))) -or (($state.current_app_id ?? '') -ne $AppId)
+$needsRepair = (-not $state.current_target) -or (([IO.Path]::GetFullPath($state.current_target)) -ne ([IO.Path]::GetFullPath($TargetPath))) -or (($state.readback_app_id ?? '') -ne $AppId)
 if ($needsRepair) {
   try {
     $w = New-Object -ComObject WScript.Shell
@@ -243,10 +314,10 @@ public class PropStoreHelper {
     $folder = $shell.Namespace((Split-Path -Parent $ShortcutPath))
     if ($folder) {
       $item = $folder.ParseName((Split-Path -Leaf $ShortcutPath))
-      if ($item) { $state.current_app_id = $item.ExtendedProperty('System.AppUserModel.ID') }
+      if ($item) { $state.readback_app_id = $item.ExtendedProperty('System.AppUserModel.ID') }
     }
 
-    $state.verified = (($state.current_app_id ?? '') -eq $AppId)
+    $state.verified = (($state.readback_app_id ?? '') -eq $AppId)
     $state.repaired = $state.verified
     if (-not $state.verified -and -not $state.set_error) {
       $state.set_error = "AppUserModelID verification failed after property-store commit"
@@ -260,7 +331,7 @@ $state | ConvertTo-Json -Compress
 
     fallback_script = r"""
 param([string]$ShortcutPath,[string]$AppId)
-$state = [ordered]@{ current_app_id = $null; verified = $false; set_error = $null }
+$state = [ordered]@{ readback_app_id = $null; verified = $false; set_error = $null }
 try {
   Add-Type -TypeDefinition @"
 using System;
@@ -297,9 +368,9 @@ public class PropStoreHelper {
     $folder = $shell.Namespace((Split-Path -Parent $ShortcutPath))
     if ($folder) {
       $item = $folder.ParseName((Split-Path -Leaf $ShortcutPath))
-      if ($item) { $state.current_app_id = $item.ExtendedProperty('System.AppUserModel.ID') }
+      if ($item) { $state.readback_app_id = $item.ExtendedProperty('System.AppUserModel.ID') }
     }
-    $state.verified = (($state.current_app_id ?? '') -eq $AppId)
+    $state.verified = (($state.readback_app_id ?? '') -eq $AppId)
     if (-not $state.verified) {
       $state.set_error = "fallback verification failed after property-store commit"
     }
@@ -331,18 +402,18 @@ $state | ConvertTo-Json -Compress
             )
             state["fallback_verified"] = fallback_state.get("verified")
             state["fallback_error"] = fallback_state.get("set_error")
-            state["current_app_id"] = fallback_state.get("current_app_id") or state.get(
-                "current_app_id"
+            state["readback_app_id"] = fallback_state.get("readback_app_id") or state.get(
+                "readback_app_id"
             )
 
         logger.info(
-            "[notify-init] Windows toast identity result: shortcut_exists=%s repaired=%s verified=%s fallback_verified=%s current_target=%s shortcut_app_id=%s notifier_app_id=%s",
+            "[notify-init] Windows toast identity result: shortcut=%s exists=%s repaired=%s verified=%s fallback_verified=%s readback_app_id=%s notifier_app_id=%s",
+            state.get("shortcut_path"),
             state.get("shortcut_exists"),
             state.get("repaired"),
             state.get("verified"),
             state.get("fallback_verified"),
-            state.get("current_target"),
-            state.get("current_app_id"),
+            state.get("readback_app_id"),
             app_id,
         )
 
@@ -351,6 +422,22 @@ $state | ConvertTo-Json -Compress
                 "[notify-init] Fallback shortcut AppID set failed: %s",
                 state.get("fallback_error") or state.get("set_error") or "unknown error",
             )
+
+        verified = (
+            state.get("verified") is True and state.get("readback_app_id") == app_id
+        ) or (
+            state.get("fallback_verified") is True and state.get("readback_app_id") == app_id
+        )
+        _write_toast_identity_stamp(
+            stamp_path=stamp_path,
+            shortcut_path=Path(str(state.get("shortcut_path") or shortcut_path)),
+            exe_path=exe_path,
+            app_version=app_version,
+            verified=verified,
+            readback_app_id=(
+                None if state.get("readback_app_id") is None else str(state.get("readback_app_id"))
+            ),
+        )
     except Exception as exc:  # pragma: no cover
         logger.warning("[notify-init] Failed to validate/repair Start menu shortcut: %s", exc)
 

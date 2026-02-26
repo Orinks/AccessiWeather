@@ -10,6 +10,7 @@ from accessiweather.app import (
     _is_unc_path,
     _needs_shortcut_repair,
     _resolve_start_menu_shortcut_path,
+    _should_repair_shortcut,
     ensure_windows_toast_identity,
     register_app_id_in_registry,
     set_windows_app_user_model_id,
@@ -186,6 +187,116 @@ def test_needs_shortcut_repair_target_or_appid_mismatch(tmp_path):
         current_app_id=WINDOWS_APP_USER_MODEL_ID,
         app_id=WINDOWS_APP_USER_MODEL_ID,
     )
+
+
+def test_should_repair_shortcut_cache_logic(tmp_path):
+    shortcut = tmp_path / "AccessiWeather" / "AccessiWeather.lnk"
+    shortcut.parent.mkdir(parents=True)
+    shortcut.write_text("x")
+    exe = r"C:\Apps\AccessiWeather.exe"
+    version = "1.2.3"
+
+    good_stamp = {
+        "verified": True,
+        "exe_path": exe,
+        "app_version": version,
+        "shortcut_path": str(shortcut),
+    }
+    assert not _should_repair_shortcut(
+        stamp=good_stamp,
+        shortcut_path=shortcut,
+        exe_path=exe,
+        app_version=version,
+    )
+
+    assert _should_repair_shortcut(
+        stamp={**good_stamp, "verified": False},
+        shortcut_path=shortcut,
+        exe_path=exe,
+        app_version=version,
+    )
+    assert _should_repair_shortcut(
+        stamp={**good_stamp, "exe_path": r"C:\Other.exe"},
+        shortcut_path=shortcut,
+        exe_path=exe,
+        app_version=version,
+    )
+    assert _should_repair_shortcut(
+        stamp={**good_stamp, "app_version": "2.0.0"},
+        shortcut_path=shortcut,
+        exe_path=exe,
+        app_version=version,
+    )
+
+
+def test_ensure_windows_toast_identity_verification_success_writes_stamp(monkeypatch, tmp_path):
+    monkeypatch.setattr("accessiweather.app.sys.platform", "win32")
+    monkeypatch.setattr("accessiweather.app.sys.executable", str(tmp_path / "AccessiWeather.exe"))
+    monkeypatch.setattr("accessiweather.app.Path.home", lambda: tmp_path)
+    monkeypatch.setattr("accessiweather.app.register_app_id_in_registry", MagicMock())
+    monkeypatch.setattr("accessiweather.app.set_windows_app_user_model_id", MagicMock())
+
+    written: list[dict] = []
+    monkeypatch.setattr("accessiweather.app._load_toast_identity_stamp", lambda _: None)
+    monkeypatch.setattr(
+        "accessiweather.app._write_toast_identity_stamp", lambda **kwargs: written.append(kwargs)
+    )
+    monkeypatch.setattr(
+        "accessiweather.app._run_powershell_json",
+        lambda *_args, **_kwargs: {
+            "shortcut_path": str(
+                tmp_path
+                / "AppData"
+                / "Roaming"
+                / "Microsoft"
+                / "Windows"
+                / "Start Menu"
+                / "Programs"
+                / "AccessiWeather"
+                / "AccessiWeather.lnk"
+            ),
+            "verified": True,
+            "readback_app_id": WINDOWS_APP_USER_MODEL_ID,
+            "shortcut_exists": True,
+            "repaired": True,
+        },
+    )
+
+    ensure_windows_toast_identity()
+
+    assert written and written[0]["verified"] is True
+    assert written[0]["readback_app_id"] == WINDOWS_APP_USER_MODEL_ID
+
+
+def test_ensure_windows_toast_identity_verification_failure_writes_failed_stamp(
+    monkeypatch, tmp_path
+):
+    monkeypatch.setattr("accessiweather.app.sys.platform", "win32")
+    monkeypatch.setattr("accessiweather.app.sys.executable", str(tmp_path / "AccessiWeather.exe"))
+    monkeypatch.setattr("accessiweather.app.Path.home", lambda: tmp_path)
+    monkeypatch.setattr("accessiweather.app.register_app_id_in_registry", MagicMock())
+    monkeypatch.setattr("accessiweather.app.set_windows_app_user_model_id", MagicMock())
+
+    written: list[dict] = []
+    monkeypatch.setattr("accessiweather.app._load_toast_identity_stamp", lambda _: None)
+    monkeypatch.setattr(
+        "accessiweather.app._write_toast_identity_stamp", lambda **kwargs: written.append(kwargs)
+    )
+    monkeypatch.setattr(
+        "accessiweather.app._run_powershell_json",
+        lambda *_args, **_kwargs: {
+            "shortcut_path": str(tmp_path / "bad.lnk"),
+            "verified": False,
+            "readback_app_id": "Wrong.AppId",
+            "shortcut_exists": True,
+            "repaired": True,
+        },
+    )
+
+    ensure_windows_toast_identity()
+
+    assert written and written[0]["verified"] is False
+    assert written[0]["readback_app_id"] == "Wrong.AppId"
 
 
 def test_ensure_windows_toast_identity_skips_non_windows(monkeypatch):
