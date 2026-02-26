@@ -11,6 +11,7 @@ import asyncio
 import logging
 import sys
 import threading
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import wx
@@ -59,6 +60,36 @@ def set_windows_app_user_model_id(app_id: str = WINDOWS_APP_USER_MODEL_ID) -> No
         logger.debug("App User Model ID set: %s", app_id)
     except Exception as exc:  # pragma: no cover
         logger.debug("Failed to set App User Model ID: %s", exc)
+
+
+def register_app_id_in_registry(
+    app_id: str = WINDOWS_APP_USER_MODEL_ID,
+    display_name: str = "AccessiWeather",
+    icon_path: str | None = None,
+) -> None:
+    r"""
+    Register the AppUserModelID in HKCU registry for portable/unpackaged builds.
+
+    Windows 10 v1903+ converts Shell_NotifyIcon balloon tips to WinRT toasts.
+    Without a registered AppID (via Start Menu shortcut OR registry), those toasts
+    are silently dropped. Writing to HKCU\\Software\\Classes\\AppUserModelId\\{app_id}
+    satisfies Windows without requiring a Start Menu shortcut — enabling toast
+    notifications in portable builds.
+    """
+    if sys.platform != "win32":
+        return
+
+    try:  # pragma: no cover
+        import winreg
+
+        key_path = rf"Software\Classes\AppUserModelId\{app_id}"
+        with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as key:
+            winreg.SetValueEx(key, "DisplayName", 0, winreg.REG_SZ, display_name)
+            if icon_path:
+                winreg.SetValueEx(key, "IconUri", 0, winreg.REG_SZ, icon_path)
+        logger.debug("Registered AppUserModelID in registry: %s", app_id)
+    except Exception as exc:  # pragma: no cover
+        logger.debug("Failed to register AppUserModelID in registry: %s", exc)
 
 
 class AccessiWeatherApp(wx.App):
@@ -155,8 +186,17 @@ class AccessiWeatherApp(wx.App):
         """Initialize the application (wxPython entry point)."""
         logger.info("Starting AccessiWeather application (wxPython)")
 
-        # Ensure AppUserModelID matches the shortcut identity for source, portable,
-        # and installed builds so toast notifications stay linked to the app.
+        # Ensure AppUserModelID is registered and process identity is set before
+        # any windows/notifications are created.
+        icon_uri = None
+        if getattr(sys, "frozen", False):
+            icon_uri = sys.executable
+        else:
+            resource_icon = Path(__file__).parent / "resources" / "app.ico"
+            if resource_icon.exists():
+                icon_uri = str(resource_icon)
+
+        register_app_id_in_registry(icon_path=icon_uri)  # pragma: no cover
         set_windows_app_user_model_id()  # pragma: no cover
 
         try:
@@ -373,13 +413,6 @@ class AccessiWeatherApp(wx.App):
 
                 notifier.balloon_fn = _balloon
                 logger.debug("Tray balloon fallback wired into notifier")
-
-                # Portable builds have no Start Menu shortcut, so WinRT toasts
-                # are silently dropped regardless of SetCurrentProcessExplicitAppUserModelID.
-                # Use balloon tips as the primary path in portable mode.
-                if self._portable_mode:
-                    notifier.prefer_balloon = True
-                    logger.debug("Portable mode: prefer_balloon set — skipping WinRT toasts")
         except Exception as e:
             logger.warning(f"Failed to initialize system tray icon: {e}")
             self.tray_icon = None
@@ -737,6 +770,15 @@ def main(
 
     """
     # Register AppUserModelID before wx app initialization and any notifications.
+    icon_uri = None
+    if getattr(sys, "frozen", False):
+        icon_uri = sys.executable
+    else:
+        resource_icon = Path(__file__).parent / "resources" / "app.ico"
+        if resource_icon.exists():
+            icon_uri = str(resource_icon)
+
+    register_app_id_in_registry(icon_path=icon_uri)  # pragma: no cover
     set_windows_app_user_model_id()  # pragma: no cover
 
     app = AccessiWeatherApp(config_dir=config_dir, portable_mode=portable_mode, debug=debug)
