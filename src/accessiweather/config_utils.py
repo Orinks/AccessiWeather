@@ -9,23 +9,105 @@ import logging
 import os
 import platform
 import sys
+from pathlib import Path
 from typing import Any
 
 # Get logger
 logger = logging.getLogger(__name__)
+
+_PORTABLE_MARKER_FILE = ".portable"
+
+
+def _is_program_files_path(app_dir: Path) -> bool:
+    """Return True when app_dir is under Program Files on Windows."""
+    if platform.system() != "Windows":
+        return False
+
+    app_dir_norm = os.path.normcase(str(app_dir.resolve()))
+    roots = [os.environ.get("PROGRAMFILES"), os.environ.get("PROGRAMFILES(X86)")]
+    for root in roots:
+        if not root:
+            continue
+        root_norm = os.path.normcase(os.path.normpath(root))
+        if app_dir_norm.startswith(root_norm + os.sep) or app_dir_norm == root_norm:
+            return True
+    return False
+
+
+def _has_windows_uninstall_entry(executable_path: Path) -> bool:
+    """Best-effort check for an uninstall registry entry for this install."""
+    if platform.system() != "Windows":
+        return False
+
+    try:
+        import winreg
+    except Exception:
+        return False
+
+    exe_norm = os.path.normcase(str(executable_path.resolve()))
+    app_dir_norm = os.path.normcase(str(executable_path.parent.resolve()))
+    uninstall_roots = (
+        r"Software\Microsoft\Windows\CurrentVersion\Uninstall",
+        r"Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall",
+    )
+
+    for root in uninstall_roots:
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, root) as uninstall_key:
+                subkey_count, _, _ = winreg.QueryInfoKey(uninstall_key)
+                for idx in range(subkey_count):
+                    try:
+                        subkey_name = winreg.EnumKey(uninstall_key, idx)
+                        with winreg.OpenKey(uninstall_key, subkey_name) as subkey:
+                            values = {}
+                            value_count = winreg.QueryInfoKey(subkey)[1]
+                            for v_idx in range(value_count):
+                                try:
+                                    name, value, _ = winreg.EnumValue(subkey, v_idx)
+                                    values[name] = value
+                                except OSError:
+                                    continue
+
+                            display_name = str(values.get("DisplayName", "")).lower()
+                            install_location = os.path.normcase(
+                                str(values.get("InstallLocation", ""))
+                            )
+                            display_icon = os.path.normcase(str(values.get("DisplayIcon", "")))
+
+                            if (
+                                "accessiweather" not in display_name
+                                and "accessiweather" not in subkey_name.lower()
+                            ):
+                                continue
+
+                            if display_icon and exe_norm in display_icon:
+                                return True
+                            if install_location and (
+                                app_dir_norm.startswith(install_location)
+                                or install_location.startswith(app_dir_norm)
+                            ):
+                                return True
+                    except OSError:
+                        continue
+        except OSError:
+            continue
+
+    return False
 
 
 def is_portable_mode() -> bool:
     """
     Determine if the application is running in portable mode.
 
-    Portable mode is detected by the presence of a ``config`` directory next to
-    the executable (for frozen builds) or next to the current working directory
-    (for source runs with ACCESSIWEATHER_FORCE_PORTABLE set).
+    Portable mode is detected with explicit, conservative signals for frozen
+    builds:
 
-    The portable ZIP ships with an empty ``config/`` folder pre-created inside
-    it. Installed builds do not include this folder, so its presence
-    unambiguously signals portable mode — no heuristics required.
+    - Preferred marker: a ``.portable`` file next to the executable.
+    - Installed indicators (Program Files path / uninstall registry entry)
+      override ambiguous markers.
+    - Back-compat fallback: when explicit marker is absent, a neighboring
+      ``config`` folder is only considered when no installed indicators are
+      present.
 
     For testing purposes, portable mode can be forced by setting the
     ACCESSIWEATHER_FORCE_PORTABLE environment variable to "1" or "true".
@@ -46,15 +128,34 @@ def is_portable_mode() -> bool:
         logger.debug("Not in portable mode: running from source code")
         return False
 
-    # Frozen build: portable mode is signalled by a 'config' folder next to the exe.
-    # The portable ZIP ships with this folder pre-created; the installer does not.
-    app_dir = os.path.dirname(sys.executable)
-    config_marker = os.path.join(app_dir, "config")
-    if os.path.isdir(config_marker):
-        logger.debug(f"Portable mode detected: config marker found at {config_marker}")
+    executable_path = Path(sys.executable)
+    app_dir = executable_path.parent
+
+    # Installed context should always win over marker ambiguity.
+    installed_by_path = _is_program_files_path(app_dir)
+    installed_by_registry = _has_windows_uninstall_entry(executable_path)
+    if installed_by_path or installed_by_registry:
+        logger.debug(
+            "Not in portable mode: installed indicators detected "
+            f"(path={installed_by_path}, registry={installed_by_registry})"
+        )
+        return False
+
+    portable_marker = app_dir / _PORTABLE_MARKER_FILE
+    if portable_marker.is_file():
+        logger.debug(f"Portable mode detected: marker file found at {portable_marker}")
         return True
 
-    logger.debug(f"Not in portable mode: no config marker at {config_marker}")
+    # Conservative fallback for older portable builds.
+    config_marker = app_dir / "config"
+    if config_marker.is_dir():
+        logger.debug(f"Portable mode detected using legacy config folder marker at {config_marker}")
+        return True
+
+    logger.debug(
+        f"Not in portable mode: no marker file ({portable_marker}) or legacy config marker "
+        f"({config_marker})"
+    )
     return False
 
 

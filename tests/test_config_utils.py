@@ -40,29 +40,59 @@ class TestIsPortableMode:
             # Not frozen, so returns False
             assert is_portable_mode() is False
 
-    def test_frozen_with_config_dir_is_portable(self, tmp_path):
-        """
-        Frozen app with a 'config' directory next to the exe should be portable.
-
-        The portable ZIP ships with an empty config/ folder pre-created; its
-        presence is the marker for portable mode.
-        """
-        config_dir = tmp_path / "config"
-        config_dir.mkdir()
+    def test_frozen_portable_marker_is_portable(self, tmp_path):
+        """Frozen app with .portable marker next to exe should be portable."""
+        (tmp_path / ".portable").write_text("")
         exe_path = str(tmp_path / "app.exe")
 
         with (
             mock.patch.object(sys, "frozen", True, create=True),
             mock.patch.object(sys, "executable", exe_path),
             mock.patch.dict(os.environ, {"ACCESSIWEATHER_FORCE_PORTABLE": ""}),
+            mock.patch("accessiweather.config_utils._is_program_files_path", return_value=False),
+            mock.patch(
+                "accessiweather.config_utils._has_windows_uninstall_entry", return_value=False
+            ),
+        ):
+            assert is_portable_mode() is True
+
+    def test_installed_path_with_marker_forces_installed(self, tmp_path):
+        """Installed indicators must override marker ambiguity."""
+        (tmp_path / ".portable").write_text("")
+        exe_path = str(tmp_path / "app.exe")
+
+        with (
+            mock.patch.object(sys, "frozen", True, create=True),
+            mock.patch.object(sys, "executable", exe_path),
+            mock.patch.dict(os.environ, {"ACCESSIWEATHER_FORCE_PORTABLE": ""}),
+            mock.patch("accessiweather.config_utils._is_program_files_path", return_value=True),
+            mock.patch(
+                "accessiweather.config_utils._has_windows_uninstall_entry", return_value=False
+            ),
+        ):
+            assert is_portable_mode() is False
+
+    def test_frozen_with_config_dir_uses_legacy_fallback(self, tmp_path):
+        """Legacy config folder fallback remains for older portable bundles."""
+        (tmp_path / "config").mkdir()
+        exe_path = str(tmp_path / "app.exe")
+
+        with (
+            mock.patch.object(sys, "frozen", True, create=True),
+            mock.patch.object(sys, "executable", exe_path),
+            mock.patch.dict(os.environ, {"ACCESSIWEATHER_FORCE_PORTABLE": ""}),
+            mock.patch("accessiweather.config_utils._is_program_files_path", return_value=False),
+            mock.patch(
+                "accessiweather.config_utils._has_windows_uninstall_entry", return_value=False
+            ),
         ):
             assert is_portable_mode() is True
 
     def test_frozen_without_config_dir_not_portable(self, tmp_path):
         """
-        Frozen app without a 'config' directory next to the exe is not portable.
+        Frozen app without markers is not portable.
 
-        Installed builds don't include the config/ marker folder.
+        Installed builds don't include portable marker files.
         """
         exe_path = str(tmp_path / "app.exe")
 
@@ -70,6 +100,25 @@ class TestIsPortableMode:
             mock.patch.object(sys, "frozen", True, create=True),
             mock.patch.object(sys, "executable", exe_path),
             mock.patch.dict(os.environ, {"ACCESSIWEATHER_FORCE_PORTABLE": ""}),
+            mock.patch("accessiweather.config_utils._is_program_files_path", return_value=False),
+            mock.patch(
+                "accessiweather.config_utils._has_windows_uninstall_entry", return_value=False
+            ),
+        ):
+            assert is_portable_mode() is False
+
+    def test_no_marker_in_installed_context_is_installed(self, tmp_path):
+        """No marker + installed indicator should stay installed mode."""
+        exe_path = str(tmp_path / "app.exe")
+
+        with (
+            mock.patch.object(sys, "frozen", True, create=True),
+            mock.patch.object(sys, "executable", exe_path),
+            mock.patch.dict(os.environ, {"ACCESSIWEATHER_FORCE_PORTABLE": ""}),
+            mock.patch("accessiweather.config_utils._is_program_files_path", return_value=True),
+            mock.patch(
+                "accessiweather.config_utils._has_windows_uninstall_entry", return_value=False
+            ),
         ):
             assert is_portable_mode() is False
 
