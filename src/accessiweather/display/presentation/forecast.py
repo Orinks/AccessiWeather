@@ -26,6 +26,31 @@ from .formatters import (
 )
 
 
+def _is_us_location(location: Location) -> bool:
+    """Determine whether a location should use US/NWS forecast limits."""
+    country_code = getattr(location, "country_code", None)
+    if country_code:
+        return country_code.upper() == "US"
+
+    lat = location.latitude
+    lon = location.longitude
+    in_continental_bounds = 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0
+    in_alaska_bounds = 51.0 <= lat <= 71.5 and -172.0 <= lon <= -130.0
+    in_hawaii_bounds = 18.0 <= lat <= 23.0 and -161.0 <= lon <= -154.0
+    return in_continental_bounds or in_alaska_bounds or in_hawaii_bounds
+
+
+def _resolve_forecast_period_limit(settings: AppSettings | None, location: Location) -> int:
+    """Get the configured forecast duration with source-aware caps."""
+    configured_days = getattr(settings, "forecast_duration_days", 7) if settings else 7
+    if not isinstance(configured_days, int):
+        configured_days = 7
+    configured_days = max(3, min(configured_days, 16))
+    if _is_us_location(location):
+        return min(configured_days, 7)
+    return configured_days
+
+
 def build_forecast(
     forecast: Forecast,
     hourly_forecast: HourlyForecast | None,
@@ -68,8 +93,9 @@ def build_forecast(
     include_uv = verbosity_level == "detailed"
     include_snowfall = verbosity_level == "detailed"
     include_details = verbosity_level == "detailed"
+    period_limit = _resolve_forecast_period_limit(settings, location)
 
-    for period in forecast.periods[:14]:
+    for period in forecast.periods[:period_limit]:
         temp_pair = format_forecast_temperature(period, unit_pref, precision)
         wind_value = format_period_wind(period) if include_wind else None
         details = (

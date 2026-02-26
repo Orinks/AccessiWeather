@@ -8,6 +8,7 @@ from accessiweather.forecast_confidence import (
     ForecastConfidence,
     ForecastConfidenceLevel,
 )
+from accessiweather.models import AppSettings
 from accessiweather.models.weather import Forecast, ForecastPeriod, Location
 from accessiweather.utils import TemperatureUnit
 
@@ -194,3 +195,47 @@ class TestWeatherPresenterPropagation:
         presentation = presenter.present(wd)
         assert presentation.forecast is not None
         assert presentation.forecast.confidence_label == "Confidence: High"
+
+
+class TestBuildForecastDuration:
+    def test_uses_configured_duration_for_international_location(self):
+        forecast = Forecast(
+            periods=[
+                ForecastPeriod(name=f"Day {i}", temperature=70 + i, short_forecast="Clear")
+                for i in range(1, 20)
+            ]
+        )
+        settings = AppSettings(forecast_duration_days=10)
+        location = Location(name="London", latitude=51.5074, longitude=-0.1278, country_code="GB")
+
+        result = build_forecast(
+            forecast,
+            None,
+            location,
+            TemperatureUnit.FAHRENHEIT,
+            settings=settings,
+        )
+
+        assert len(result.periods) == 10
+
+    def test_caps_to_seven_days_for_us_locations(self):
+        forecast = Forecast(
+            periods=[
+                ForecastPeriod(name=f"Day {i}", temperature=70 + i, short_forecast="Clear")
+                for i in range(1, 20)
+            ]
+        )
+        settings = AppSettings(forecast_duration_days=15)
+        location = Location(
+            name="New York", latitude=40.7128, longitude=-74.0060, country_code="US"
+        )
+
+        result = build_forecast(
+            forecast,
+            None,
+            location,
+            TemperatureUnit.FAHRENHEIT,
+            settings=settings,
+        )
+
+        assert len(result.periods) == 7

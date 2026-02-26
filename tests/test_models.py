@@ -340,6 +340,7 @@ class TestAppSettings:
         settings = AppSettings()
         assert settings.update_interval_minutes == 10
         assert settings.enable_alerts is True
+        assert settings.forecast_duration_days == 7
         assert settings.forecast_time_reference == "location"
 
     def test_custom_settings(self):
@@ -360,6 +361,14 @@ class TestAppSettings:
 
         assert settings.validate_on_access("forecast_time_reference") is True
         assert settings.forecast_time_reference == "location"
+
+    def test_forecast_duration_days_validation(self):
+        """Ensure invalid forecast duration values fall back to default."""
+        settings = AppSettings()
+        settings.forecast_duration_days = 99
+
+        assert settings.validate_on_access("forecast_duration_days") is True
+        assert settings.forecast_duration_days == 7
 
 
 class TestAppConfig:

@@ -72,6 +72,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "offline_cache_enabled",
     "offline_cache_max_age_minutes",
     "weather_history_enabled",
+    "forecast_duration_days",
     "forecast_time_reference",
     "time_display_mode",
     "time_format_12hour",
@@ -137,6 +138,7 @@ class AppSettings:
     offline_cache_enabled: bool = True
     offline_cache_max_age_minutes: int = 180
     weather_history_enabled: bool = True
+    forecast_duration_days: int = 7
     forecast_time_reference: str = "location"
     time_display_mode: str = "local"
     time_format_12hour: bool = True
@@ -234,6 +236,10 @@ class AppSettings:
             valid_references = {"location", "user_local"}
             if value not in valid_references:
                 setattr(self, setting_name, "location")
+
+        elif setting_name == "forecast_duration_days":
+            if not isinstance(value, int) or value < 3 or value > 16:
+                setattr(self, setting_name, 7)
 
         elif setting_name == "sound_pack":
             # Ensure sound_pack is a non-empty string
@@ -388,6 +394,7 @@ class AppSettings:
             "offline_cache_enabled": self.offline_cache_enabled,
             "offline_cache_max_age_minutes": self.offline_cache_max_age_minutes,
             "weather_history_enabled": self.weather_history_enabled,
+            "forecast_duration_days": self.forecast_duration_days,
             "forecast_time_reference": self.forecast_time_reference,
             "time_display_mode": self.time_display_mode,
             "time_format_12hour": self.time_format_12hour,
@@ -457,6 +464,7 @@ class AppSettings:
             offline_cache_enabled=cls._as_bool(data.get("offline_cache_enabled"), True),
             offline_cache_max_age_minutes=data.get("offline_cache_max_age_minutes", 180),
             weather_history_enabled=cls._as_bool(data.get("weather_history_enabled"), True),
+            forecast_duration_days=data.get("forecast_duration_days", 7),
             forecast_time_reference=data.get("forecast_time_reference", "location"),
             time_display_mode=data.get("time_display_mode", "local"),
             time_format_12hour=cls._as_bool(data.get("time_format_12hour"), True),

@@ -306,6 +306,24 @@ class TestWeatherClientHelpers:
         assert data.alerts is not None
         assert data.discussion == "Weather data not available."
 
+    def test_forecast_days_respects_source_caps(self):
+        """Forecast day helper should enforce API/source limits."""
+        client = WeatherClient(settings=AppSettings(forecast_duration_days=15))
+        intl_location = Location(
+            name="London", latitude=51.5074, longitude=-0.1278, country_code="GB"
+        )
+
+        assert client._get_forecast_days_for_source(intl_location, "openmeteo") == 15
+        assert client._get_forecast_days_for_source(intl_location, "visualcrossing") == 15
+
+    def test_forecast_days_caps_us_locations_to_seven(self):
+        """US locations should always cap to 7 days."""
+        client = WeatherClient(settings=AppSettings(forecast_duration_days=15))
+        us_location = Location(name="NYC", latitude=40.7128, longitude=-74.0060, country_code="US")
+
+        assert client._get_forecast_days_for_source(us_location, "openmeteo") == 7
+        assert client._get_forecast_days_for_source(us_location, "visualcrossing") == 7
+
 
 class TestWeatherClientContextManager:
     """Tests for async context manager."""

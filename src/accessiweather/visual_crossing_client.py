@@ -90,10 +90,18 @@ class VisualCrossingClient:
             raise VisualCrossingApiError(f"Unexpected error: {e}") from e
 
     @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
-    async def get_forecast(self, location: Location) -> Forecast | None:
+    async def get_forecast(self, location: Location, days: int = 7) -> Forecast | None:
         """Get weather forecast from Visual Crossing API."""
         try:
-            url = f"{self.base_url}/{location.latitude},{location.longitude}"
+            forecast_days = min(max(days, 1), 15)
+            if forecast_days == 7:
+                # Keep legacy endpoint for default behavior and cassette compatibility.
+                url = f"{self.base_url}/{location.latitude},{location.longitude}"
+            else:
+                end_date = (
+                    datetime.now(timezone.utc).date() + timedelta(days=forecast_days - 1)
+                ).isoformat()
+                url = f"{self.base_url}/{location.latitude},{location.longitude}/today/{end_date}"
             params = {
                 "key": self.api_key,
                 "include": "days",
