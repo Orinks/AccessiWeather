@@ -155,7 +155,7 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
         Create the context menu for the tray icon.
 
         Returns:
-            wx.Menu with Show, optional Test Notifications (debug), and Quit options
+            wx.Menu with Show, Test Notification, optional Debug submenu, and Quit options
 
         """
         menu = wx.Menu()
@@ -180,12 +180,19 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
             self.Bind(wx.EVT_MENU, self._on_test_notifications_menu, diag_item)
 
         menu.AppendSeparator()
+        test_notification_item = menu.Append(wx.ID_ANY, "&Test Notification")
+        self.Bind(wx.EVT_MENU, self._on_test_notification_menu, test_notification_item)
+        menu.AppendSeparator()
 
         # Quit item
         quit_item = menu.Append(wx.ID_EXIT, "&Quit")
         self.Bind(wx.EVT_MENU, self._on_quit_menu, quit_item)
 
         return menu
+
+    def _on_test_notification_menu(self, event: wx.CommandEvent) -> None:
+        """Handle Test Notification menu item click."""
+        self._on_tray_test_discussion(event)
 
     def _on_tray_test_discussion(self, event: wx.CommandEvent) -> None:
         """Fire a test discussion-update notification from the tray menu."""

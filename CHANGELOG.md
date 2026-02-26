@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
     - Main window integration for displaying discussion summaries.
     - AI summarization button in the nationwide dialog.
     - Shared `NationalDiscussionService` instance with caching.
+- Added a `Test Notification` item to the regular system tray menu so you can verify notifications from installed builds without launching in debug mode.
 - Bundled `prismatoid`/`prism` in PyInstaller nightly builds (PR #294).
 - Added missing tests for `national_discussion_service.py` to meet coverage gate requirements.
 - Updated Antfarm to v0.2.2 and configured feature-dev workflow for 80% diff-coverage.
