@@ -860,9 +860,12 @@ class SettingsDialogSimple(wx.Dialog):
         open_installed_config_btn.Bind(wx.EVT_BUTTON, self._on_open_installed_config_dir)
         sizer.Add(open_installed_config_btn, 0, wx.LEFT | wx.TOP, 10)
 
-        migrate_config_btn = wx.Button(panel, label="Copy installed config to portable")
-        migrate_config_btn.Bind(wx.EVT_BUTTON, self._on_copy_installed_config_to_portable)
-        sizer.Add(migrate_config_btn, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
+        from ...config_utils import is_portable_mode
+
+        if is_portable_mode():
+            migrate_config_btn = wx.Button(panel, label="Copy installed config to portable")
+            migrate_config_btn.Bind(wx.EVT_BUTTON, self._on_copy_installed_config_to_portable)
+            sizer.Add(migrate_config_btn, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
 
         # Settings Backup
         sizer.Add(
@@ -1723,6 +1726,15 @@ class SettingsDialogSimple(wx.Dialog):
         if not installed_config_dir.exists():
             wx.MessageBox(
                 f"Installed config directory not found:\n{installed_config_dir}",
+                "Nothing to copy",
+                wx.OK | wx.ICON_INFORMATION,
+            )
+            return
+
+        if installed_config_dir.resolve() == portable_config_dir.resolve():
+            wx.MessageBox(
+                "Installed and portable config directories are the same location."
+                "\n\nNo copy is needed.",
                 "Nothing to copy",
                 wx.OK | wx.ICON_INFORMATION,
             )
