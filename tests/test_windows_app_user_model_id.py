@@ -120,13 +120,7 @@ def test_resolve_start_menu_shortcut_path_prefers_nested_installer_shortcut(tmp_
     monkeypatch.setattr("accessiweather.app.Path.home", lambda: tmp_path)
 
     programs = (
-        tmp_path
-        / "AppData"
-        / "Roaming"
-        / "Microsoft"
-        / "Windows"
-        / "Start Menu"
-        / "Programs"
+        tmp_path / "AppData" / "Roaming" / "Microsoft" / "Windows" / "Start Menu" / "Programs"
     )
     nested = programs / "AccessiWeather" / "AccessiWeather.lnk"
     nested.parent.mkdir(parents=True)
@@ -141,13 +135,7 @@ def test_resolve_start_menu_shortcut_path_finds_recursive_candidate(tmp_path, mo
     monkeypatch.setattr("accessiweather.app.Path.home", lambda: tmp_path)
 
     programs = (
-        tmp_path
-        / "AppData"
-        / "Roaming"
-        / "Microsoft"
-        / "Windows"
-        / "Start Menu"
-        / "Programs"
+        tmp_path / "AppData" / "Roaming" / "Microsoft" / "Windows" / "Start Menu" / "Programs"
     )
     deep = programs / "Utilities" / "Weather" / "AccessiWeather.lnk"
     deep.parent.mkdir(parents=True)
@@ -327,7 +315,9 @@ def test_run_powershell_json_uses_hidden_window_flags_on_windows(monkeypatch):
             self.dwFlags = 0
             self.wShowWindow = None
 
-    fake_run = MagicMock(return_value=SimpleNamespace(returncode=0, stdout='{"ok":true}', stderr=""))
+    fake_run = MagicMock(
+        return_value=SimpleNamespace(returncode=0, stdout='{"ok":true}', stderr="")
+    )
 
     monkeypatch.setattr("accessiweather.app.subprocess.STARTUPINFO", _StartupInfo, raising=False)
     monkeypatch.setattr("accessiweather.app.subprocess.STARTF_USESHOWWINDOW", 0x1, raising=False)

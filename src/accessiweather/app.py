@@ -452,9 +452,7 @@ $state | ConvertTo-Json -Compress
                 state.get("fallback_error") or state.get("set_error") or "unknown error",
             )
 
-        verified = (
-            state.get("verified") is True and state.get("readback_app_id") == app_id
-        ) or (
+        verified = (state.get("verified") is True and state.get("readback_app_id") == app_id) or (
             state.get("fallback_verified") is True and state.get("readback_app_id") == app_id
         )
         _write_toast_identity_stamp(

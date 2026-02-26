@@ -726,7 +726,9 @@ class MainWindow(SizedFrame):
 
         portable = is_portable_mode()
         mode_label = "Portable" if portable else "Installed"
-        config_path = str(self.app.config_manager.config_dir) if self.app.config_manager else "unknown"
+        config_path = (
+            str(self.app.config_manager.config_dir) if self.app.config_manager else "unknown"
+        )
 
         wx.MessageBox(
             "AccessiWeather\n\n"
