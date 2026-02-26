@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import importlib
 import logging
+import platform
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -88,12 +90,31 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     app.presenter = WeatherPresenter(config.settings)
 
     # Lazy import notifier
-    from .notifications.toast_notifier import SafeDesktopNotifier
+    from .notifications.toast_notifier import (
+        DESKTOP_NOTIFIER_AVAILABLE,
+        SafeDesktopNotifier,
+    )
+
+    if debug_enabled and platform.system() == "Windows":
+        try:
+            importlib.import_module("desktop_notifier.backends.winrt")
+            logger.debug("[notify-init] desktop_notifier WinRT backend import: ok")
+        except Exception as exc:
+            logger.debug("[notify-init] desktop_notifier WinRT backend import failed: %s", exc)
 
     app._notifier = SafeDesktopNotifier(
         sound_enabled=bool(getattr(config.settings, "sound_enabled", True)),
         soundpack=getattr(config.settings, "sound_pack", "default"),
     )
+
+    if debug_enabled:
+        logger.debug(
+            "[notify-init] notifier initialized: desktop_notifier_available=%s notifier_class=%s",
+            DESKTOP_NOTIFIER_AVAILABLE,
+            type(app._notifier).__name__,
+        )
+        if not DESKTOP_NOTIFIER_AVAILABLE:
+            logger.debug("[notify-init] desktop notifications running in fallback/log-only mode")
 
     # Initialize AI explanation cache (lazy import)
     from .cache import Cache
