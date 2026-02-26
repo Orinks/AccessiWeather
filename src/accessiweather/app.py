@@ -8,7 +8,9 @@ screen reader accessibility.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+import subprocess
 import sys
 import threading
 from pathlib import Path
@@ -90,6 +92,156 @@ def register_app_id_in_registry(
         logger.debug("Registered AppUserModelID in registry: %s", app_id)
     except Exception as exc:  # pragma: no cover
         logger.debug("Failed to register AppUserModelID in registry: %s", exc)
+
+
+def _is_unc_path(path: str) -> bool:
+    """Return True when *path* points to a UNC/network location."""
+    normalized = path.replace("/", "\\")
+    return normalized.startswith("\\\\")
+
+
+def _needs_shortcut_repair(
+    *, expected_target: str, current_target: str | None, current_app_id: str | None, app_id: str
+) -> bool:
+    """Determine whether Start Menu shortcut should be recreated/repaired."""
+    if not current_target:
+        return True
+    if Path(current_target).resolve() != Path(expected_target).resolve():
+        return True
+    return (current_app_id or "") != app_id
+
+
+def _run_powershell_json(script: str, **args: str) -> dict[str, str | bool | None]:
+    """Run a small PowerShell script and parse JSON output."""
+    if sys.platform != "win32":
+        return {}
+
+    cmd = ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script]
+    for key, value in args.items():
+        cmd.extend([f"-{key}", value])
+
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr.strip() or f"powershell exit {result.returncode}")
+
+    payload = (result.stdout or "").strip()
+    if not payload:
+        return {}
+    return json.loads(payload)
+
+
+def ensure_windows_toast_identity(
+    app_id: str = WINDOWS_APP_USER_MODEL_ID,
+    display_name: str = "AccessiWeather",
+) -> None:
+    """Ensure registry + Start Menu shortcut identity for reliable Windows toasts."""
+    if sys.platform != "win32":
+        return
+
+    exe_path = str(Path(sys.executable).resolve())
+    appdata = Path.home() / "AppData" / "Roaming"
+    shortcut_path = appdata / "Microsoft" / "Windows" / "Start Menu" / "Programs" / f"{display_name}.lnk"
+
+    logger.info(
+        "[notify-init] Windows toast identity: exe_path=%s shortcut_path=%s exe_is_unc=%s",
+        exe_path,
+        shortcut_path,
+        _is_unc_path(exe_path),
+    )
+
+    register_app_id_in_registry(app_id=app_id, display_name=display_name, icon_path=exe_path)
+    set_windows_app_user_model_id(app_id=app_id)
+
+    script = r"""
+param([string]$ShortcutPath,[string]$TargetPath,[string]$AppId,[string]$DisplayName)
+$state = [ordered]@{ shortcut_exists = $false; current_target = $null; current_app_id = $null; repaired = $false }
+$dir = Split-Path -Parent $ShortcutPath
+if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
+if (Test-Path $ShortcutPath) {
+  $state.shortcut_exists = $true
+  try {
+    $w = New-Object -ComObject WScript.Shell
+    $s = $w.CreateShortcut($ShortcutPath)
+    $state.current_target = $s.TargetPath
+  } catch {}
+  try {
+    $shell = New-Object -ComObject Shell.Application
+    $folder = $shell.Namespace((Split-Path -Parent $ShortcutPath))
+    if ($folder) {
+      $item = $folder.ParseName((Split-Path -Leaf $ShortcutPath))
+      if ($item) { $state.current_app_id = $item.ExtendedProperty('System.AppUserModel.ID') }
+    }
+  } catch {}
+}
+$needsRepair = (-not $state.current_target) -or (([IO.Path]::GetFullPath($state.current_target)) -ne ([IO.Path]::GetFullPath($TargetPath))) -or (($state.current_app_id ?? '') -ne $AppId)
+if ($needsRepair) {
+  $w = New-Object -ComObject WScript.Shell
+  $s = $w.CreateShortcut($ShortcutPath)
+  $s.TargetPath = $TargetPath
+  $s.WorkingDirectory = [IO.Path]::GetDirectoryName($TargetPath)
+  $s.IconLocation = "$TargetPath,0"
+  $s.Description = $DisplayName
+  $s.Save()
+
+  Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+[Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99")]
+[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+public interface IPropertyStore { void GetCount(out uint c); void GetAt(uint i, out PropKey k); void GetValue(ref PropKey k, out object v); void SetValue(ref PropKey k, ref PropVariantW v); void Commit(); }
+[StructLayout(LayoutKind.Sequential, Pack=4)]
+public struct PropKey { public Guid fmt; public uint pid; }
+[StructLayout(LayoutKind.Explicit)]
+public struct PropVariantW { [FieldOffset(0)] public ushort vt; [FieldOffset(8)] public IntPtr pwszVal; }
+public class PropStoreHelper {
+  [DllImport("shell32.dll", CharSet=CharSet.Unicode)]
+  public static extern int SHGetPropertyStoreFromParsingName(string path, IntPtr pbc, int flags, [MarshalAs(UnmanagedType.LPStruct)] Guid riid, [MarshalAs(UnmanagedType.Interface)] out IPropertyStore ppv);
+}
+"@ -Language CSharp
+  $iid = [Guid]"886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99"
+  $store = $null
+  $hr = [PropStoreHelper]::SHGetPropertyStoreFromParsingName($ShortcutPath, [IntPtr]::Zero, 2, $iid, [ref]$store)
+  if ($hr -eq 0) {
+    $key = [PropKey]@{ fmt = [Guid]"9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"; pid = 5 }
+    $ptr = [Runtime.InteropServices.Marshal]::StringToCoTaskMemUni($AppId)
+    try {
+      $pv = [PropVariantW]@{ vt = 0x1F; pwszVal = $ptr }
+      $store.SetValue([ref]$key, [ref]$pv)
+      $store.Commit()
+      $state.repaired = $true
+    } finally {
+      [Runtime.InteropServices.Marshal]::FreeCoTaskMem($ptr)
+    }
+  }
+
+  $shell = New-Object -ComObject Shell.Application
+  $folder = $shell.Namespace((Split-Path -Parent $ShortcutPath))
+  if ($folder) {
+    $item = $folder.ParseName((Split-Path -Leaf $ShortcutPath))
+    if ($item) { $state.current_app_id = $item.ExtendedProperty('System.AppUserModel.ID') }
+  }
+}
+$state | ConvertTo-Json -Compress
+"""
+
+    try:  # pragma: no cover - windows only integration path
+        state = _run_powershell_json(
+            script,
+            ShortcutPath=str(shortcut_path),
+            TargetPath=exe_path,
+            AppId=app_id,
+            DisplayName=display_name,
+        )
+        logger.info(
+            "[notify-init] Windows toast identity result: shortcut_exists=%s repaired=%s current_target=%s shortcut_app_id=%s notifier_app_id=%s",
+            state.get("shortcut_exists"),
+            state.get("repaired"),
+            state.get("current_target"),
+            state.get("current_app_id"),
+            app_id,
+        )
+    except Exception as exc:  # pragma: no cover
+        logger.warning("[notify-init] Failed to validate/repair Start menu shortcut: %s", exc)
 
 
 class AccessiWeatherApp(wx.App):
@@ -186,18 +338,8 @@ class AccessiWeatherApp(wx.App):
         """Initialize the application (wxPython entry point)."""
         logger.info("Starting AccessiWeather application (wxPython)")
 
-        # Ensure AppUserModelID is registered and process identity is set before
-        # any windows/notifications are created.
-        icon_uri = None
-        if getattr(sys, "frozen", False):
-            icon_uri = sys.executable
-        else:
-            resource_icon = Path(__file__).parent / "resources" / "app.ico"
-            if resource_icon.exists():
-                icon_uri = str(resource_icon)
-
-        register_app_id_in_registry(icon_path=icon_uri)  # pragma: no cover
-        set_windows_app_user_model_id()  # pragma: no cover
+        # Ensure AppUserModelID + Start menu shortcut identity before notifications init.
+        ensure_windows_toast_identity()
 
         try:
             # Check for single instance
@@ -769,17 +911,8 @@ def main(
         fake_nightly: Fake nightly tag for testing updates (e.g., 'nightly-20250101').
 
     """
-    # Register AppUserModelID before wx app initialization and any notifications.
-    icon_uri = None
-    if getattr(sys, "frozen", False):
-        icon_uri = sys.executable
-    else:
-        resource_icon = Path(__file__).parent / "resources" / "app.ico"
-        if resource_icon.exists():
-            icon_uri = str(resource_icon)
-
-    register_app_id_in_registry(icon_path=icon_uri)  # pragma: no cover
-    set_windows_app_user_model_id()  # pragma: no cover
+    # Register process + shortcut identity before wx app initialization.
+    ensure_windows_toast_identity()
 
     app = AccessiWeatherApp(config_dir=config_dir, portable_mode=portable_mode, debug=debug)
 

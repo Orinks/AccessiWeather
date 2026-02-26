@@ -95,6 +95,7 @@ class SafeDesktopNotifier:
             asyncio.set_event_loop(self._worker_loop)
 
             # Create the notifier once in this thread (proper COM init on Windows)
+            used_app_id = WINDOWS_APP_USER_MODEL_ID if sys.platform == "win32" else None
             if sys.platform == "win32":
                 try:
                     self._worker_notifier = DesktopNotifier(
@@ -102,10 +103,15 @@ class SafeDesktopNotifier:
                         app_id=WINDOWS_APP_USER_MODEL_ID,
                     )
                 except TypeError:
+                    used_app_id = None
                     self._worker_notifier = DesktopNotifier(app_name=self.app_name)
             else:
                 self._worker_notifier = DesktopNotifier(app_name=self.app_name)
-            logger.debug("Desktop notifier created in worker thread")
+            logger.info(
+                "[notify-init] desktop notifier created: intended_app_id=%s used_app_id=%s",
+                WINDOWS_APP_USER_MODEL_ID if sys.platform == "win32" else None,
+                used_app_id,
+            )
 
             self._worker_ready.set()
 

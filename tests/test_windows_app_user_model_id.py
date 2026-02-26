@@ -6,7 +6,13 @@ import sys
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from accessiweather.app import register_app_id_in_registry, set_windows_app_user_model_id
+from accessiweather.app import (
+    _is_unc_path,
+    _needs_shortcut_repair,
+    ensure_windows_toast_identity,
+    register_app_id_in_registry,
+    set_windows_app_user_model_id,
+)
 from accessiweather.constants import WINDOWS_APP_USER_MODEL_ID
 
 
@@ -99,3 +105,55 @@ def test_register_app_id_skips_registry_on_non_windows(monkeypatch):
 
     fake_winreg.CreateKeyEx.assert_not_called()
     fake_winreg.SetValueEx.assert_not_called()
+
+
+def test_is_unc_path_detects_network_paths():
+    assert _is_unc_path(r"\\server\share\AccessiWeather.exe") is True
+    assert _is_unc_path(r"C:\Apps\AccessiWeather.exe") is False
+
+
+def test_needs_shortcut_repair_target_or_appid_mismatch(tmp_path):
+    exe = tmp_path / "AccessiWeather.exe"
+    exe.write_text("x")
+
+    assert _needs_shortcut_repair(
+        expected_target=str(exe),
+        current_target=None,
+        current_app_id=WINDOWS_APP_USER_MODEL_ID,
+        app_id=WINDOWS_APP_USER_MODEL_ID,
+    )
+
+    assert _needs_shortcut_repair(
+        expected_target=str(exe),
+        current_target=str(tmp_path / "other.exe"),
+        current_app_id=WINDOWS_APP_USER_MODEL_ID,
+        app_id=WINDOWS_APP_USER_MODEL_ID,
+    )
+
+    assert _needs_shortcut_repair(
+        expected_target=str(exe),
+        current_target=str(exe),
+        current_app_id="Wrong.AppId",
+        app_id=WINDOWS_APP_USER_MODEL_ID,
+    )
+
+    assert not _needs_shortcut_repair(
+        expected_target=str(exe),
+        current_target=str(exe),
+        current_app_id=WINDOWS_APP_USER_MODEL_ID,
+        app_id=WINDOWS_APP_USER_MODEL_ID,
+    )
+
+
+def test_ensure_windows_toast_identity_skips_non_windows(monkeypatch):
+    reg = MagicMock()
+    set_id = MagicMock()
+
+    monkeypatch.setattr("accessiweather.app.sys.platform", "linux")
+    monkeypatch.setattr("accessiweather.app.register_app_id_in_registry", reg)
+    monkeypatch.setattr("accessiweather.app.set_windows_app_user_model_id", set_id)
+
+    ensure_windows_toast_identity()
+
+    reg.assert_not_called()
+    set_id.assert_not_called()
