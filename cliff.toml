@@ -60,9 +60,10 @@ commit_preprocessors = [
 ]
 # Map commits to Keep a Changelog groups
 commit_parsers = [
-    # Skip noise - merge commits
+    # Skip noise - merge commits and reverts
     { message = "^Merge", skip = true },
     { message = "^merge", skip = true },
+    { message = "^[Rr]evert", skip = true },
 
     # Skip noise - conventional commit types users don't care about
     { message = "^chore\\(release\\)", skip = true },

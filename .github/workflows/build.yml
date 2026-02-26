@@ -233,9 +233,7 @@ jobs:
               echo "Initial nightly build" > notes.md
             fi
           else
-            PREV_TAG=$(git tag --list "v[0-9]*" --sort=-version:refname | grep -v "v${VERSION}" | head -1)
-            npx git-cliff@latest ${PREV_TAG:+"$PREV_TAG"..HEAD} --tag "v${VERSION}" \
-              --ignore-tags "nightly-.*" --strip all > notes.md.tmp || true
+            npx git-cliff@latest --latest --ignore-tags "nightly-.*" --strip all > notes.md.tmp || true
             awk '!seen[$0]++' notes.md.tmp > notes.md && rm -f notes.md.tmp
             if [ ! -s notes.md ]; then
               echo "See [CHANGELOG.md](https://github.com/Orinks/AccessiWeather/blob/main/CHANGELOG.md) for full release notes." > notes.md
