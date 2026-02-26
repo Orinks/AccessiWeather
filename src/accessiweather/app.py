@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from .location_manager import LocationManager
     from .ui.main_window import MainWindow
     from .weather_client import WeatherClient
+    from .weather_event_pipeline import WeatherEvent, WeatherEventChannel, WeatherEventDispatcher
 
 # Configure logging
 if not logging.getLogger().handlers:
@@ -132,6 +133,9 @@ class AccessiWeatherApp(wx.App):
         # Notification system
         self._notifier = None
 
+        # Event pipeline (Phase 1)
+        self.event_dispatcher: WeatherEventDispatcher | None = None
+
         # System tray icon (initialized after main window)
         self.tray_icon = None
 
@@ -152,6 +156,26 @@ class AccessiWeatherApp(wx.App):
     @notifier.setter
     def notifier(self, value) -> None:
         self._notifier = value
+
+    def get_latest_event(self, channel: WeatherEventChannel | None = None) -> WeatherEvent | None:
+        """Return latest event, optionally constrained to a channel."""
+        if not self.event_dispatcher:
+            return None
+        return self.event_dispatcher.store.latest(channel=channel)
+
+    def get_unread_summary(self) -> dict[str, int]:
+        """Return unread event counts for all channels."""
+        if not self.event_dispatcher:
+            return {
+                "urgent": 0,
+                "now": 0,
+                "hourly": 0,
+                "daily": 0,
+                "discussion": 0,
+                "system": 0,
+                "total": 0,
+            }
+        return self.event_dispatcher.store.unread_counts()
 
     def OnInit(self) -> bool:
         """Initialize the application (wxPython entry point)."""
