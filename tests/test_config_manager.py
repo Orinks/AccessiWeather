@@ -28,6 +28,7 @@ class TestConfigManager:
         app = MagicMock()
         app.paths = MagicMock()
         app.paths.config = config_dir
+        app.build_tag = None
         return app
 
     @pytest.fixture
@@ -188,3 +189,28 @@ class TestConfigManager:
         # Verify the config file exists (not a temp file)
         assert manager.config_file.exists()
         assert not manager.config_file.with_suffix(".json.tmp").exists()
+
+    def test_default_update_channel_is_nightly_for_nightly_build(self, mock_app, config_dir):
+        """Nightly builds should default to nightly channel on new config."""
+        mock_app.build_tag = "nightly-20260226"
+        manager = ConfigManager(mock_app, config_dir=config_dir)
+
+        config = manager.load_config()
+
+        assert config.settings.update_channel == "nightly"
+
+    def test_missing_update_channel_in_legacy_config_uses_build_default(self, mock_app, config_dir):
+        """Legacy config without update_channel should get build-aware default."""
+        mock_app.build_tag = "nightly-20260226"
+        manager = ConfigManager(mock_app, config_dir=config_dir)
+
+        # Write legacy config payload missing update_channel in settings.
+        manager.config_file.parent.mkdir(parents=True, exist_ok=True)
+        manager.config_file.write_text(
+            '{"settings": {"temperature_unit": "both"}, "locations": [], "current_location": null}',
+            encoding="utf-8",
+        )
+
+        config = manager.load_config()
+
+        assert config.settings.update_channel == "nightly"
