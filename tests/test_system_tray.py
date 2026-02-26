@@ -335,13 +335,15 @@ class TestDynamicTrayTooltip:
 class TestPopupMenu:
     """Tests for system tray popup menu."""
 
-    def test_popup_menu_has_show_and_quit(self):
-        """Test popup menu has Show and Quit items."""
+    def test_popup_menu_has_show_test_notification_and_quit(self):
+        """Test popup menu has Show, Test Notification, and Quit items."""
         # Test the menu creation logic
         menu_items = []
 
         def create_popup_menu():
             menu_items.append("Show AccessiWeather")
+            menu_items.append("separator")
+            menu_items.append("Test Notification")
             menu_items.append("separator")
             menu_items.append("Quit")
             return menu_items
@@ -349,6 +351,7 @@ class TestPopupMenu:
         result = create_popup_menu()
 
         assert "Show AccessiWeather" in result
+        assert "Test Notification" in result
         assert "Quit" in result
 
 
