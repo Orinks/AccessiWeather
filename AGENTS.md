@@ -12,7 +12,7 @@ You are responsible for the entire lifecycle of a task: understanding requiremen
 pre-commit install                    # Install git hooks — required or lint won't run on commit
 
 # Development
-briefcase dev                          # Run app with hot reload
+python installer/build.py --dev        # Run app in development mode
 pytest -v                             # Run all tests (serial)
 pytest -n auto                        # Run all tests (parallel, ~4x faster)
 pytest tests/test_file.py::test_func  # Run single test
@@ -24,10 +24,9 @@ ruff check --fix . && ruff format .   # Lint + format code (line length: 100)
 pyright                               # Type checking (excludes tests/)
 
 # Build & Package
-briefcase create                      # Create platform-specific skeleton
-briefcase build                       # Build app bundle
-briefcase package                     # Generate installers (MSI/DMG/AppImage)
-python installer/build.py --dev      # Run in development mode
+python installer/build.py             # Full build (PyInstaller + Inno Setup installer)
+python installer/build.py --skip-installer  # Build exe/zip only, skip installer
+python installer/build.py --clean     # Clean build artifacts
 
 # Git (Windows)
 # Use --no-pager BEFORE the subcommand to prevent hanging on Windows
@@ -251,8 +250,7 @@ def test_weather_fetch(mock_simple_weather_apis):
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | `ci.yml` | Push to main/dev, PRs | Linting, tests on Ubuntu/Windows/macOS |
-| `briefcase-build.yml` | After CI passes on dev | Build MSI/DMG installers |
-| `briefcase-release.yml` | Tags (v*.*.*) | Create GitHub releases |
+| `build.yml` | Nightly (3:30 UTC) + tags (v*.*.*) | PyInstaller builds, MSI installer, portable ZIP, GitHub releases |
 | `integration-tests.yml` | Nightly | Record VCR cassettes |
 | `update-pages.yml` | After builds | Update GitHub Pages downloads |
 
