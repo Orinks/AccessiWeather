@@ -565,8 +565,8 @@ class AccessiWeatherApp(wx.App):
         """Initialize the application (wxPython entry point)."""
         logger.info("Starting AccessiWeather application (wxPython)")
 
-        # Ensure AppUserModelID + Start menu shortcut identity before notifications init.
-        ensure_windows_toast_identity()
+        # Startup identity repair disabled to avoid visible terminal popups.
+        # Toast behavior now relies on installer/runtime defaults without shelling out.
 
         try:
             # Check for single instance
@@ -1151,9 +1151,6 @@ def main(
         fake_nightly: Fake nightly tag for testing updates (e.g., 'nightly-20250101').
 
     """
-    # Register process + shortcut identity before wx app initialization.
-    ensure_windows_toast_identity()
-
     app = AccessiWeatherApp(config_dir=config_dir, portable_mode=portable_mode, debug=debug)
 
     # Override version/build_tag for update testing
