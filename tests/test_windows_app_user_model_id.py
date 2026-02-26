@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 from accessiweather.app import (
     AccessiWeatherApp,
     _is_unc_path,
+    _load_toast_identity_stamp,
     _needs_shortcut_repair,
     _resolve_start_menu_shortcut_path,
     _run_powershell_json,
@@ -334,6 +335,34 @@ def test_run_powershell_json_uses_hidden_window_flags_on_windows(monkeypatch):
     assert kwargs["startupinfo"].wShowWindow == 0
 
 
+def test_run_powershell_json_passes_named_args_and_empty_stdout_returns_empty_dict(monkeypatch):
+    monkeypatch.setattr("accessiweather.app.sys.platform", "win32")
+    monkeypatch.setattr("accessiweather.app.os", SimpleNamespace(name="posix"))
+
+    fake_run = MagicMock(return_value=SimpleNamespace(returncode=0, stdout="", stderr=""))
+    monkeypatch.setattr("accessiweather.app.subprocess.run", fake_run)
+
+    payload = _run_powershell_json("Write-Output ''", ShortcutPath="C:/x.lnk")
+
+    assert payload == {}
+    called_cmd = fake_run.call_args.args[0]
+    assert "-ShortcutPath" in called_cmd
+    assert "C:/x.lnk" in called_cmd
+
+
+def test_run_powershell_json_raises_on_nonzero_exit(monkeypatch):
+    monkeypatch.setattr("accessiweather.app.sys.platform", "win32")
+    monkeypatch.setattr("accessiweather.app.os", SimpleNamespace(name="posix"))
+
+    fake_run = MagicMock(return_value=SimpleNamespace(returncode=7, stdout="", stderr="boom"))
+    monkeypatch.setattr("accessiweather.app.subprocess.run", fake_run)
+
+    import pytest
+
+    with pytest.raises(RuntimeError, match="boom"):
+        _run_powershell_json("Write-Error boom")
+
+
 def test_ensure_windows_toast_identity_runs_repair_only_once_per_startup(monkeypatch, tmp_path):
     monkeypatch.setattr("accessiweather.app.sys.platform", "win32")
     monkeypatch.setattr("accessiweather.app.sys.executable", str(tmp_path / "AccessiWeather.exe"))
@@ -359,6 +388,72 @@ def test_ensure_windows_toast_identity_runs_repair_only_once_per_startup(monkeyp
 
     # Primary repair script should only execute once in a process startup.
     assert run_mock.call_count == 1
+
+
+def test_load_toast_identity_stamp_invalid_payload_returns_none(tmp_path):
+    stamp = tmp_path / "toast_identity_stamp.json"
+    stamp.write_text("[]", encoding="utf-8")
+
+    assert _load_toast_identity_stamp(stamp) is None
+
+
+def test_load_toast_identity_stamp_bad_json_returns_none(tmp_path):
+    stamp = tmp_path / "toast_identity_stamp.json"
+    stamp.write_text("{not json", encoding="utf-8")
+
+    assert _load_toast_identity_stamp(stamp) is None
+
+
+def test_ensure_windows_toast_identity_skips_repair_when_stamp_valid(monkeypatch, tmp_path):
+    monkeypatch.setattr("accessiweather.app._TOAST_IDENTITY_ENSURED_THIS_STARTUP", False)
+    monkeypatch.setattr("accessiweather.app.sys.platform", "win32")
+    monkeypatch.setattr("accessiweather.app.sys.executable", str(tmp_path / "AccessiWeather.exe"))
+    monkeypatch.setattr("accessiweather.app.Path.home", lambda: tmp_path)
+    monkeypatch.setattr("accessiweather.app.register_app_id_in_registry", MagicMock())
+    monkeypatch.setattr("accessiweather.app.set_windows_app_user_model_id", MagicMock())
+
+    shortcut = (
+        tmp_path
+        / "AppData"
+        / "Roaming"
+        / "Microsoft"
+        / "Windows"
+        / "Start Menu"
+        / "Programs"
+        / "AccessiWeather"
+        / "AccessiWeather.lnk"
+    )
+    shortcut.parent.mkdir(parents=True)
+    shortcut.write_text("lnk")
+
+    monkeypatch.setattr(
+        "accessiweather.app._load_toast_identity_stamp",
+        lambda _p: {
+            "verified": True,
+            "exe_path": str(tmp_path / "AccessiWeather.exe"),
+            "app_version": "1.0.0",
+            "shortcut_path": str(shortcut),
+        },
+    )
+    monkeypatch.setattr("accessiweather.__version__", "1.0.0")
+    run_mock = MagicMock()
+    monkeypatch.setattr("accessiweather.app._run_powershell_json", run_mock)
+
+    ensure_windows_toast_identity()
+
+    assert run_mock.call_count == 0
+
+
+def test_accessiweather_app_init_falls_back_when_portable_detection_errors(monkeypatch):
+    monkeypatch.setattr(
+        "accessiweather.config_utils.is_portable_mode", MagicMock(side_effect=RuntimeError("oops"))
+    )
+    init_mock = MagicMock(return_value=None)
+    monkeypatch.setattr("wx.App.__init__", init_mock)
+
+    app = AccessiWeatherApp(config_dir=None, portable_mode=False)
+
+    assert app._portable_mode is False
 
 
 def test_request_exit_does_not_use_blocking_sound_in_frozen_build(monkeypatch):
