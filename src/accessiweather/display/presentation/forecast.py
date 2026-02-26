@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import datetime, tzinfo
 
 from ...forecast_confidence import ForecastConfidence
 from ...models import AppSettings, Forecast, HourlyForecast, Location
@@ -172,11 +173,13 @@ def build_hourly_summary(
         time_display_mode = getattr(settings, "time_display_mode", "local")
         time_format_12hour = getattr(settings, "time_format_12hour", True)
         show_timezone_suffix = getattr(settings, "show_timezone_suffix", False)
+        forecast_time_reference = getattr(settings, "forecast_time_reference", "location")
         verbosity_level = getattr(settings, "verbosity_level", "standard")
     else:
         time_display_mode = "local"
         time_format_12hour = True
         show_timezone_suffix = False
+        forecast_time_reference = "location"
         verbosity_level = "standard"
 
     # Determine which fields to include based on verbosity level
@@ -195,8 +198,12 @@ def build_hourly_summary(
         wind = format_hourly_wind(period) if include_wind else None
 
         # Use enhanced time formatter with user preferences
-        time_str = format_display_time(
+        display_time = _resolve_forecast_display_time(
             period.start_time,
+            forecast_time_reference=forecast_time_reference,
+        )
+        time_str = format_display_time(
+            display_time,
             time_display_mode=time_display_mode,
             use_12hour=time_format_12hour,
             show_timezone=show_timezone_suffix,
@@ -231,6 +238,29 @@ def build_hourly_summary(
             )
         )
     return summary
+
+
+def _resolve_forecast_display_time(
+    start_time: datetime,
+    *,
+    forecast_time_reference: str,
+    local_timezone: tzinfo | None = None,
+) -> datetime:
+    """
+    Resolve forecast hour display time to the configured timezone reference.
+
+    Location mode keeps the source timestamp unchanged. My-local mode converts
+    timezone-aware values to the system's local timezone.
+    """
+    if forecast_time_reference != "user_local":
+        return start_time
+    if start_time.tzinfo is None:
+        return start_time
+
+    target_tz = local_timezone or datetime.now().astimezone().tzinfo
+    if target_tz is None:
+        return start_time.astimezone()
+    return start_time.astimezone(target_tz)
 
 
 def render_hourly_fallback(hourly: Iterable[HourlyPeriodPresentation]) -> str:

@@ -340,6 +340,7 @@ class TestAppSettings:
         settings = AppSettings()
         assert settings.update_interval_minutes == 10
         assert settings.enable_alerts is True
+        assert settings.forecast_time_reference == "location"
 
     def test_custom_settings(self):
         """Test custom settings."""
@@ -351,6 +352,14 @@ class TestAppSettings:
         assert settings.update_interval_minutes == 30
         assert settings.enable_alerts is False
         assert settings.data_source == "openmeteo"
+
+    def test_forecast_time_reference_validation(self):
+        """Ensure invalid forecast_time_reference values fall back to location."""
+        settings = AppSettings()
+        settings.forecast_time_reference = "invalid"
+
+        assert settings.validate_on_access("forecast_time_reference") is True
+        assert settings.forecast_time_reference == "location"
 
 
 class TestAppConfig:
