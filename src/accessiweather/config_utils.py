@@ -52,6 +52,20 @@ def is_portable_mode() -> bool:
 
         logger.debug(f"Checking portable mode for executable directory: {app_dir}")
 
+        # Explicit portable marker wins for portable ZIP builds.
+        portable_marker = os.path.join(app_dir, ".portable")
+        if os.path.exists(portable_marker):
+            logger.debug(f"Portable mode detected: marker file found at {portable_marker}")
+            return True
+
+        # Legacy portable marker: local config directory next to executable.
+        legacy_config_marker = os.path.join(app_dir, "config")
+        if os.path.isdir(legacy_config_marker):
+            logger.debug(
+                f"Portable mode detected: legacy config marker found at {legacy_config_marker}"
+            )
+            return True
+
         # Check for uninstaller (Inno Setup leaves unins*.exe in app directory)
         # This reliably detects installed copies regardless of install location
         app_dir_path = os.path.dirname(sys.executable)
