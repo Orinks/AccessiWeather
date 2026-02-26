@@ -15,7 +15,7 @@ from pathlib import Path
 # Ensure installer/ directory is on Python path so spec_utils can be imported
 sys.path.insert(0, SPECPATH)
 from spec_utils import filter_platform_binaries, filter_sound_lib_entries
-from PyInstaller.utils.hooks import collect_dynamic_libs
+from PyInstaller.utils.hooks import collect_dynamic_libs, collect_submodules
 
 # Determine paths
 SPEC_DIR = Path(SPECPATH).resolve()
@@ -111,6 +111,10 @@ if IS_WINDOWS:
         "win32gui",
         "winsound",
     ])
+    # winrt packages required by desktop-notifier on Windows.
+    # PyInstaller can't auto-detect these because they're imported dynamically
+    # inside desktop_notifier's Windows backend.
+    hiddenimports.extend(collect_submodules("winrt"))
 
 # Excludes to reduce size
 excludes = [
@@ -133,7 +137,7 @@ excludes = [
 a = Analysis(
     [str(SRC_DIR / "accessiweather" / "__main__.py")],
     pathex=[str(SRC_DIR)],
-    binaries=collect_dynamic_libs("prism"),
+    binaries=collect_dynamic_libs("prism") + (collect_dynamic_libs("winrt") if IS_WINDOWS else []),
     datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[str(SPEC_DIR / "hooks")],
