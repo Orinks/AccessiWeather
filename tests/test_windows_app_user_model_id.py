@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 from accessiweather.app import (
     _is_unc_path,
     _needs_shortcut_repair,
+    _resolve_start_menu_shortcut_path,
     ensure_windows_toast_identity,
     register_app_id_in_registry,
     set_windows_app_user_model_id,
@@ -110,6 +111,48 @@ def test_register_app_id_skips_registry_on_non_windows(monkeypatch):
 def test_is_unc_path_detects_network_paths():
     assert _is_unc_path(r"\\server\share\AccessiWeather.exe") is True
     assert _is_unc_path(r"C:\Apps\AccessiWeather.exe") is False
+
+
+def test_resolve_start_menu_shortcut_path_prefers_nested_installer_shortcut(tmp_path, monkeypatch):
+    monkeypatch.setattr("accessiweather.app.Path.home", lambda: tmp_path)
+
+    programs = (
+        tmp_path
+        / "AppData"
+        / "Roaming"
+        / "Microsoft"
+        / "Windows"
+        / "Start Menu"
+        / "Programs"
+    )
+    nested = programs / "AccessiWeather" / "AccessiWeather.lnk"
+    nested.parent.mkdir(parents=True)
+    nested.write_text("lnk")
+
+    resolved = _resolve_start_menu_shortcut_path("AccessiWeather")
+
+    assert resolved == nested
+
+
+def test_resolve_start_menu_shortcut_path_finds_recursive_candidate(tmp_path, monkeypatch):
+    monkeypatch.setattr("accessiweather.app.Path.home", lambda: tmp_path)
+
+    programs = (
+        tmp_path
+        / "AppData"
+        / "Roaming"
+        / "Microsoft"
+        / "Windows"
+        / "Start Menu"
+        / "Programs"
+    )
+    deep = programs / "Utilities" / "Weather" / "AccessiWeather.lnk"
+    deep.parent.mkdir(parents=True)
+    deep.write_text("lnk")
+
+    resolved = _resolve_start_menu_shortcut_path("AccessiWeather")
+
+    assert resolved == deep
 
 
 def test_needs_shortcut_repair_target_or_appid_mismatch(tmp_path):
