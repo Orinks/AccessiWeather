@@ -25,7 +25,13 @@ def test_sets_app_user_model_id_on_windows_non_frozen(monkeypatch):
     )
 
 
-def test_skips_app_user_model_id_on_windows_frozen(monkeypatch):
+def test_sets_app_user_model_id_on_windows_frozen(monkeypatch):
+    """Frozen builds (including portable) must also register the AppID.
+
+    Previously this was skipped for frozen builds on the assumption the
+    installer shortcut handled it — but portable builds have no installer
+    shortcut, so the programmatic call is required in all cases.
+    """
     shell32 = MagicMock()
     fake_ctypes = SimpleNamespace(windll=SimpleNamespace(shell32=shell32))
 
@@ -35,7 +41,9 @@ def test_skips_app_user_model_id_on_windows_frozen(monkeypatch):
 
     set_windows_app_user_model_id()
 
-    shell32.SetCurrentProcessExplicitAppUserModelID.assert_not_called()
+    shell32.SetCurrentProcessExplicitAppUserModelID.assert_called_once_with(
+        WINDOWS_APP_USER_MODEL_ID
+    )
 
 
 def test_skips_app_user_model_id_on_non_windows(monkeypatch):
