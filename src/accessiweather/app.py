@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import subprocess
 import sys
 import threading
@@ -120,7 +121,22 @@ def _run_powershell_json(script: str, **args: str) -> dict[str, str | bool | Non
     for key, value in args.items():
         cmd.extend([f"-{key}", value])
 
-    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    startupinfo = None
+    creationflags = 0
+    if os.name == "nt":
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = getattr(subprocess, "SW_HIDE", 0)
+        creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        check=False,
+        startupinfo=startupinfo,
+        creationflags=creationflags,
+    )
     if result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or f"powershell exit {result.returncode}")
 
@@ -208,12 +224,21 @@ def _write_toast_identity_stamp(
     )
 
 
+_TOAST_IDENTITY_ENSURED_THIS_STARTUP = False
+
+
 def ensure_windows_toast_identity(
     app_id: str = WINDOWS_APP_USER_MODEL_ID,
     display_name: str = "AccessiWeather",
 ) -> None:
     """Ensure registry + Start Menu shortcut identity for reliable Windows toasts."""
+    global _TOAST_IDENTITY_ENSURED_THIS_STARTUP
+
     if sys.platform != "win32":
+        return
+
+    if _TOAST_IDENTITY_ENSURED_THIS_STARTUP:
+        logger.debug("[notify-init] Windows toast identity already ensured this startup; skipping")
         return
 
     from . import __version__
@@ -241,10 +266,14 @@ def ensure_windows_toast_identity(
         exe_path=exe_path,
         app_version=app_version,
     ):
+        _TOAST_IDENTITY_ENSURED_THIS_STARTUP = True
         logger.info(
             "[notify-init] Windows toast identity: verified stamp valid, skipping shortcut repair"
         )
         return
+
+    # Do not run repair more than once in the same process startup.
+    _TOAST_IDENTITY_ENSURED_THIS_STARTUP = True
 
     script = r"""
 param([string]$ShortcutPath,[string]$TargetPath,[string]$AppId,[string]$DisplayName)
@@ -1022,14 +1051,31 @@ class AccessiWeatherApp(wx.App):
         if self._update_timer:
             self._update_timer.Stop()
 
-        # Play exit sound (non-blocking, app exits immediately)
+        # Play exit sound. In frozen builds, block so process teardown doesn't cut playback.
         try:
             settings = self.config_manager.get_settings()
             if getattr(settings, "sound_enabled", True):
-                from .notifications.sound_player import play_exit_sound
+                from .notifications.sound_player import (
+                    PLAYSOUND_AVAILABLE,
+                    SOUND_LIB_AVAILABLE,
+                    play_exit_sound,
+                    play_exit_sound_blocking,
+                )
 
                 sound_pack = getattr(settings, "sound_pack", "default")
-                play_exit_sound(sound_pack)
+                frozen = bool(getattr(sys, "frozen", False))
+                logger.debug(
+                    "[packaging-diag] exit sound: frozen=%s sound_pack=%s sound_lib=%s playsound3=%s",
+                    frozen,
+                    sound_pack,
+                    SOUND_LIB_AVAILABLE,
+                    PLAYSOUND_AVAILABLE,
+                )
+
+                if frozen:
+                    play_exit_sound_blocking(sound_pack)
+                else:
+                    play_exit_sound(sound_pack)
         except Exception:
             pass
 

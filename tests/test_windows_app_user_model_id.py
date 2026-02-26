@@ -10,6 +10,7 @@ from accessiweather.app import (
     _is_unc_path,
     _needs_shortcut_repair,
     _resolve_start_menu_shortcut_path,
+    _run_powershell_json,
     _should_repair_shortcut,
     ensure_windows_toast_identity,
     register_app_id_in_registry,
@@ -230,6 +231,7 @@ def test_should_repair_shortcut_cache_logic(tmp_path):
 
 
 def test_ensure_windows_toast_identity_verification_success_writes_stamp(monkeypatch, tmp_path):
+    monkeypatch.setattr("accessiweather.app._TOAST_IDENTITY_ENSURED_THIS_STARTUP", False)
     monkeypatch.setattr("accessiweather.app.sys.platform", "win32")
     monkeypatch.setattr("accessiweather.app.sys.executable", str(tmp_path / "AccessiWeather.exe"))
     monkeypatch.setattr("accessiweather.app.Path.home", lambda: tmp_path)
@@ -271,6 +273,7 @@ def test_ensure_windows_toast_identity_verification_success_writes_stamp(monkeyp
 def test_ensure_windows_toast_identity_verification_failure_writes_failed_stamp(
     monkeypatch, tmp_path
 ):
+    monkeypatch.setattr("accessiweather.app._TOAST_IDENTITY_ENSURED_THIS_STARTUP", False)
     monkeypatch.setattr("accessiweather.app.sys.platform", "win32")
     monkeypatch.setattr("accessiweather.app.sys.executable", str(tmp_path / "AccessiWeather.exe"))
     monkeypatch.setattr("accessiweather.app.Path.home", lambda: tmp_path)
@@ -300,6 +303,7 @@ def test_ensure_windows_toast_identity_verification_failure_writes_failed_stamp(
 
 
 def test_ensure_windows_toast_identity_skips_non_windows(monkeypatch):
+    monkeypatch.setattr("accessiweather.app._TOAST_IDENTITY_ENSURED_THIS_STARTUP", False)
     reg = MagicMock()
     set_id = MagicMock()
 
@@ -311,3 +315,56 @@ def test_ensure_windows_toast_identity_skips_non_windows(monkeypatch):
 
     reg.assert_not_called()
     set_id.assert_not_called()
+
+
+def test_run_powershell_json_uses_hidden_window_flags_on_windows(monkeypatch):
+    monkeypatch.setattr("accessiweather.app.sys.platform", "win32")
+    monkeypatch.setattr("accessiweather.app.os", SimpleNamespace(name="nt"))
+
+    class _StartupInfo:
+        def __init__(self):
+            self.dwFlags = 0
+            self.wShowWindow = None
+
+    fake_run = MagicMock(return_value=SimpleNamespace(returncode=0, stdout='{"ok":true}', stderr=""))
+
+    monkeypatch.setattr("accessiweather.app.subprocess.STARTUPINFO", _StartupInfo, raising=False)
+    monkeypatch.setattr("accessiweather.app.subprocess.STARTF_USESHOWWINDOW", 0x1, raising=False)
+    monkeypatch.setattr("accessiweather.app.subprocess.SW_HIDE", 0, raising=False)
+    monkeypatch.setattr("accessiweather.app.subprocess.CREATE_NO_WINDOW", 0x08000000, raising=False)
+    monkeypatch.setattr("accessiweather.app.subprocess.run", fake_run)
+
+    payload = _run_powershell_json("$state = @{ok=$true}; $state | ConvertTo-Json -Compress")
+
+    assert payload == {"ok": True}
+    kwargs = fake_run.call_args.kwargs
+    assert kwargs["creationflags"] == 0x08000000
+    assert kwargs["startupinfo"].dwFlags & 0x1
+    assert kwargs["startupinfo"].wShowWindow == 0
+
+
+def test_ensure_windows_toast_identity_runs_repair_only_once_per_startup(monkeypatch, tmp_path):
+    monkeypatch.setattr("accessiweather.app.sys.platform", "win32")
+    monkeypatch.setattr("accessiweather.app.sys.executable", str(tmp_path / "AccessiWeather.exe"))
+    monkeypatch.setattr("accessiweather.app.Path.home", lambda: tmp_path)
+    monkeypatch.setattr("accessiweather.app.register_app_id_in_registry", MagicMock())
+    monkeypatch.setattr("accessiweather.app.set_windows_app_user_model_id", MagicMock())
+    monkeypatch.setattr("accessiweather.app._TOAST_IDENTITY_ENSURED_THIS_STARTUP", False)
+    monkeypatch.setattr("accessiweather.app._load_toast_identity_stamp", lambda _: None)
+
+    run_mock = MagicMock(
+        return_value={
+            "shortcut_path": str(tmp_path / "AccessiWeather.lnk"),
+            "verified": True,
+            "readback_app_id": WINDOWS_APP_USER_MODEL_ID,
+            "shortcut_exists": True,
+            "repaired": True,
+        }
+    )
+    monkeypatch.setattr("accessiweather.app._run_powershell_json", run_mock)
+
+    ensure_windows_toast_identity()
+    ensure_windows_toast_identity()
+
+    # Primary repair script should only execute once in a process startup.
+    assert run_mock.call_count == 1

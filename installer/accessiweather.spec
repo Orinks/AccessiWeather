@@ -129,6 +129,8 @@ hiddenimports = [
 
 # Desktop notifier backends and metadata are dynamically loaded.
 hiddenimports += _safe_collect_submodules("desktop_notifier")
+hiddenimports += _safe_collect_submodules("sound_lib")
+hiddenimports += _safe_collect_submodules("playsound3")
 hiddenimports += _safe_collect_submodules("winsdk")
 hiddenimports += _safe_collect_submodules("winrt")
 
