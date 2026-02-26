@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 - Ensured AI explanation logic correctly uses configured models and respects system prompt instructions.
 - Improved CI coverage gate to require >=80% on changed non-UI lines.
 - Fixed packaged Windows launches dropping discussion/alert toasts by no longer overriding the installer's AppUserModelID at runtime.
+- Added a forecast time reference setting so hourly forecasts can show either the location's timezone (default) or your local system timezone.
 
 ---
 

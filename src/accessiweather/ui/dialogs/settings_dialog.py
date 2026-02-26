@@ -156,6 +156,20 @@ class SettingsDialogSimple(wx.Dialog):
             5,
         )
 
+        row_time_ref = wx.BoxSizer(wx.HORIZONTAL)
+        row_time_ref.Add(
+            wx.StaticText(panel, label="Forecast time display:"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["forecast_time_reference"] = wx.Choice(
+            panel,
+            choices=["Location's timezone (default)", "My local timezone"],
+        )
+        row_time_ref.Add(self._controls["forecast_time_reference"], 0)
+        sizer.Add(row_time_ref, 0, wx.LEFT, 10)
+
         row_tz = wx.BoxSizer(wx.HORIZONTAL)
         row_tz.Add(
             wx.StaticText(panel, label="Time zone display:"),
@@ -908,6 +922,12 @@ class SettingsDialogSimple(wx.Dialog):
                 getattr(settings, "show_detailed_forecast", True)
             )
 
+            forecast_time_reference = getattr(settings, "forecast_time_reference", "location")
+            forecast_time_reference_map = {"location": 0, "user_local": 1}
+            self._controls["forecast_time_reference"].SetSelection(
+                forecast_time_reference_map.get(forecast_time_reference, 0)
+            )
+
             time_mode = getattr(settings, "time_display_mode", "local")
             time_mode_map = {"local": 0, "utc": 1, "both": 2}
             self._controls["time_display_mode"].SetSelection(time_mode_map.get(time_mode, 0))
@@ -1079,6 +1099,7 @@ class SettingsDialogSimple(wx.Dialog):
             # Map selections back to values
             source_values = ["auto", "nws", "openmeteo", "visualcrossing"]
             temp_values = ["f", "c", "both"]
+            forecast_time_reference_values = ["location", "user_local"]
             time_mode_values = ["local", "utc", "both"]
             verbosity_values = ["minimal", "standard", "detailed"]
             model_values = [
@@ -1111,6 +1132,9 @@ class SettingsDialogSimple(wx.Dialog):
                 "show_uv_index": self._controls["show_uv_index"].GetValue(),
                 "show_pressure_trend": self._controls["show_pressure_trend"].GetValue(),
                 "show_detailed_forecast": self._controls["detailed_forecast"].GetValue(),
+                "forecast_time_reference": forecast_time_reference_values[
+                    self._controls["forecast_time_reference"].GetSelection()
+                ],
                 "time_display_mode": time_mode_values[
                     self._controls["time_display_mode"].GetSelection()
                 ],

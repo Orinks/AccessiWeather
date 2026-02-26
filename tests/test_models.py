@@ -340,6 +340,7 @@ class TestAppSettings:
         settings = AppSettings()
         assert settings.update_interval_minutes == 10
         assert settings.enable_alerts is True
+        assert settings.forecast_time_reference == "location"
 
     def test_custom_settings(self):
         """Test custom settings."""
