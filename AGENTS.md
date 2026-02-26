@@ -8,6 +8,9 @@ You are responsible for the entire lifecycle of a task: understanding requiremen
 ## Quick Reference Commands
 
 ```bash
+# First-time setup (run once after cloning)
+pre-commit install                    # Install git hooks — required or lint won't run on commit
+
 # Development
 briefcase dev                          # Run app with hot reload
 pytest -v                             # Run all tests (serial)
