@@ -360,9 +360,8 @@ def create_portable_zip() -> bool:
 
     zip_path = DIST_DIR / zip_name
 
-    # Ensure portable markers for Windows portable artifacts.
+    # Ensure portable marker directory for Windows portable artifacts.
     if IS_WINDOWS:
-        (source_dir / ".portable").touch(exist_ok=True)
         (source_dir / "config").mkdir(exist_ok=True)
 
     # Remove existing zip
