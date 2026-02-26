@@ -360,6 +360,14 @@ def create_portable_zip() -> bool:
 
     zip_path = DIST_DIR / zip_name
 
+    # Portable mode marker: pre-create empty 'config' dir inside the source dir.
+    # is_portable_mode() checks for this folder — its presence signals portable mode.
+    # Installed builds don't include it, so there's no ambiguity.
+    if IS_WINDOWS:
+        portable_config = source_dir / "config"
+        portable_config.mkdir(exist_ok=True)
+        print(f"  Created portable config marker: {portable_config}")
+
     # Remove existing zip
     if Path(f"{zip_path}.zip").exists():
         Path(f"{zip_path}.zip").unlink()

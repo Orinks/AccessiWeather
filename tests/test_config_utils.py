@@ -40,93 +40,36 @@ class TestIsPortableMode:
             # Not frozen, so returns False
             assert is_portable_mode() is False
 
-    def test_frozen_uninstaller_detected(self, tmp_path):
-        """Frozen app with uninstaller present should not be portable."""
-        # Create a fake uninstaller
-        uninstaller = tmp_path / "unins000.exe"
-        uninstaller.write_text("fake")
+    def test_frozen_with_config_dir_is_portable(self, tmp_path):
+        """
+        Frozen app with a 'config' directory next to the exe should be portable.
+
+        The portable ZIP ships with an empty config/ folder pre-created; its
+        presence is the marker for portable mode.
+        """
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
         exe_path = str(tmp_path / "app.exe")
 
         with (
             mock.patch.object(sys, "frozen", True, create=True),
             mock.patch.object(sys, "executable", exe_path),
-            mock.patch.dict(
-                os.environ,
-                {"ACCESSIWEATHER_FORCE_PORTABLE": "", "PROGRAMFILES": "", "PROGRAMFILES(X86)": ""},
-            ),
-        ):
-            assert is_portable_mode() is False
-
-    def test_frozen_in_program_files(self, tmp_path):
-        """Frozen app under Program Files should not be portable."""
-        pf = tmp_path / "Program Files" / "AccessiWeather"
-        pf.mkdir(parents=True)
-        exe_path = str(pf / "app.exe")
-
-        with (
-            mock.patch.object(sys, "frozen", True, create=True),
-            mock.patch.object(sys, "executable", exe_path),
-            mock.patch.dict(
-                os.environ,
-                {
-                    "ACCESSIWEATHER_FORCE_PORTABLE": "",
-                    "PROGRAMFILES": str(tmp_path / "Program Files"),
-                    "PROGRAMFILES(X86)": "",
-                },
-            ),
-            mock.patch("os.listdir", return_value=[]),
-        ):
-            assert is_portable_mode() is False
-
-    def test_frozen_in_program_files_x86(self, tmp_path):
-        """Frozen app under Program Files (x86) should not be portable."""
-        pf = tmp_path / "Program Files (x86)" / "AccessiWeather"
-        pf.mkdir(parents=True)
-        exe_path = str(pf / "app.exe")
-
-        with (
-            mock.patch.object(sys, "frozen", True, create=True),
-            mock.patch.object(sys, "executable", exe_path),
-            mock.patch.dict(
-                os.environ,
-                {
-                    "ACCESSIWEATHER_FORCE_PORTABLE": "",
-                    "PROGRAMFILES": "",
-                    "PROGRAMFILES(X86)": str(tmp_path / "Program Files (x86)"),
-                },
-            ),
-            mock.patch("os.listdir", return_value=[]),
-        ):
-            assert is_portable_mode() is False
-
-    def test_frozen_writable_directory_is_portable(self, tmp_path):
-        """Frozen app in writable non-Program Files dir should be portable."""
-        exe_path = str(tmp_path / "app.exe")
-
-        with (
-            mock.patch.object(sys, "frozen", True, create=True),
-            mock.patch.object(sys, "executable", exe_path),
-            mock.patch.dict(
-                os.environ,
-                {"ACCESSIWEATHER_FORCE_PORTABLE": "", "PROGRAMFILES": "", "PROGRAMFILES(X86)": ""},
-            ),
-            mock.patch("os.listdir", return_value=[]),
+            mock.patch.dict(os.environ, {"ACCESSIWEATHER_FORCE_PORTABLE": ""}),
         ):
             assert is_portable_mode() is True
 
-    def test_frozen_non_writable_directory_not_portable(self, tmp_path):
-        """Frozen app in non-writable dir should not be portable."""
+    def test_frozen_without_config_dir_not_portable(self, tmp_path):
+        """
+        Frozen app without a 'config' directory next to the exe is not portable.
+
+        Installed builds don't include the config/ marker folder.
+        """
         exe_path = str(tmp_path / "app.exe")
 
         with (
             mock.patch.object(sys, "frozen", True, create=True),
             mock.patch.object(sys, "executable", exe_path),
-            mock.patch.dict(
-                os.environ,
-                {"ACCESSIWEATHER_FORCE_PORTABLE": "", "PROGRAMFILES": "", "PROGRAMFILES(X86)": ""},
-            ),
-            mock.patch("os.listdir", return_value=[]),
-            mock.patch("builtins.open", side_effect=PermissionError("no write")),
+            mock.patch.dict(os.environ, {"ACCESSIWEATHER_FORCE_PORTABLE": ""}),
         ):
             assert is_portable_mode() is False
 

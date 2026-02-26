@@ -19,8 +19,13 @@ def is_portable_mode() -> bool:
     """
     Determine if the application is running in portable mode.
 
-    Portable mode is detected by checking if the executable is running from a
-    non-standard location (not Program Files) and if the directory is writable.
+    Portable mode is detected by the presence of a ``config`` directory next to
+    the executable (for frozen builds) or next to the current working directory
+    (for source runs with ACCESSIWEATHER_FORCE_PORTABLE set).
+
+    The portable ZIP ships with an empty ``config/`` folder pre-created inside
+    it. Installed builds do not include this folder, so its presence
+    unambiguously signals portable mode — no heuristics required.
 
     For testing purposes, portable mode can be forced by setting the
     ACCESSIWEATHER_FORCE_PORTABLE environment variable to "1" or "true".
@@ -36,71 +41,20 @@ def is_portable_mode() -> bool:
         logger.debug("Portable mode forced via ACCESSIWEATHER_FORCE_PORTABLE environment variable")
         return True
 
-    # If running from source code, not portable (unless forced)
+    # Running from source — never portable unless forced above
     if not getattr(sys, "frozen", False):
         logger.debug("Not in portable mode: running from source code")
         return False
 
-    # Check for briefcase portable app marker file (e.g., AccessiWeather.exe exists but no Program Files)
-    if getattr(sys, "frozen", False):
-        # Use ntpath for Windows path operations to ensure cross-platform test compatibility
-        import ntpath
+    # Frozen build: portable mode is signalled by a 'config' folder next to the exe.
+    # The portable ZIP ships with this folder pre-created; the installer does not.
+    app_dir = os.path.dirname(sys.executable)
+    config_marker = os.path.join(app_dir, "config")
+    if os.path.isdir(config_marker):
+        logger.debug(f"Portable mode detected: config marker found at {config_marker}")
+        return True
 
-        # Get the directory where the executable is located
-        # Use ntpath.dirname to handle Windows paths correctly even on non-Windows systems
-        app_dir = ntpath.dirname(sys.executable)
-
-        logger.debug(f"Checking portable mode for executable directory: {app_dir}")
-
-        # Check for uninstaller (Inno Setup leaves unins*.exe in app directory)
-        # This reliably detects installed copies regardless of install location
-        app_dir_path = os.path.dirname(sys.executable)
-        uninstaller_exists = any(
-            f.startswith("unins") and f.endswith(".exe")
-            for f in os.listdir(app_dir_path)
-            if os.path.isfile(os.path.join(app_dir_path, f))
-        )
-        if uninstaller_exists:
-            logger.debug(f"Not in portable mode: uninstaller found in {app_dir_path}")
-            return False
-
-        # Check if we're running from Program Files (standard installation)
-        program_files = os.environ.get("PROGRAMFILES", "")
-        program_files_x86 = os.environ.get("PROGRAMFILES(X86)", "")
-
-        # Normalize paths for comparison (handle case sensitivity and path separators)
-        app_dir_normalized = ntpath.normpath(app_dir).lower().replace("\\", "/")
-
-        # Check if app_dir is under Program Files
-        program_files_paths = []
-        if program_files:
-            program_files_paths.append(ntpath.normpath(program_files).lower().replace("\\", "/"))
-        if program_files_x86:
-            program_files_paths.append(
-                ntpath.normpath(program_files_x86).lower().replace("\\", "/")
-            )
-
-        for pf_path in program_files_paths:
-            if app_dir_normalized.startswith(pf_path + "/") or app_dir_normalized == pf_path:
-                logger.debug(
-                    f"Not in portable mode: app directory is under Program Files ({pf_path})"
-                )
-                return False
-
-        # Check if the directory is writable (portable installations should be)
-        try:
-            test_file = os.path.join(app_dir, ".write_test")
-            with open(test_file, "w") as f:
-                f.write("test")
-            os.remove(test_file)
-            logger.debug(f"Portable mode detected: directory {app_dir} is writable")
-            return True
-        except (OSError, PermissionError) as e:
-            # If we can't write to the directory, assume it's not portable
-            logger.debug(f"Not in portable mode: directory {app_dir} is not writable ({e})")
-            return False
-
-    logger.debug("Not in portable mode: default fallback")
+    logger.debug(f"Not in portable mode: no config marker at {config_marker}")
     return False
 
 
