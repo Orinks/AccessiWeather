@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from accessiweather.app import (
+    AccessiWeatherApp,
     _is_unc_path,
     _needs_shortcut_repair,
     _resolve_start_menu_shortcut_path,
@@ -368,3 +369,35 @@ def test_ensure_windows_toast_identity_runs_repair_only_once_per_startup(monkeyp
 
     # Primary repair script should only execute once in a process startup.
     assert run_mock.call_count == 1
+
+
+def test_request_exit_does_not_use_blocking_sound_in_frozen_build(monkeypatch):
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._update_timer = None
+    app.config_manager = SimpleNamespace(
+        get_settings=lambda: SimpleNamespace(sound_enabled=True, sound_pack="default")
+    )
+    app.tray_icon = None
+    app.single_instance_manager = None
+    app._async_loop = None
+    app.main_window = None
+    app.ExitMainLoop = MagicMock()
+
+    mock_play_exit_sound = MagicMock()
+    mock_play_exit_sound_blocking = MagicMock()
+
+    monkeypatch.setattr("accessiweather.app.sys.frozen", True, raising=False)
+    monkeypatch.setattr(
+        "accessiweather.notifications.sound_player.play_exit_sound",
+        mock_play_exit_sound,
+    )
+    monkeypatch.setattr(
+        "accessiweather.notifications.sound_player.play_exit_sound_blocking",
+        mock_play_exit_sound_blocking,
+    )
+
+    app.request_exit()
+
+    mock_play_exit_sound.assert_called_once_with("default")
+    mock_play_exit_sound_blocking.assert_not_called()
+    app.ExitMainLoop.assert_called_once()

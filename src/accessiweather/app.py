@@ -1051,7 +1051,7 @@ class AccessiWeatherApp(wx.App):
         if self._update_timer:
             self._update_timer.Stop()
 
-        # Play exit sound. In frozen builds, block so process teardown doesn't cut playback.
+        # Play exit sound without blocking shutdown.
         try:
             settings = self.config_manager.get_settings()
             if getattr(settings, "sound_enabled", True):
@@ -1059,7 +1059,6 @@ class AccessiWeatherApp(wx.App):
                     PLAYSOUND_AVAILABLE,
                     SOUND_LIB_AVAILABLE,
                     play_exit_sound,
-                    play_exit_sound_blocking,
                 )
 
                 sound_pack = getattr(settings, "sound_pack", "default")
@@ -1072,10 +1071,7 @@ class AccessiWeatherApp(wx.App):
                     PLAYSOUND_AVAILABLE,
                 )
 
-                if frozen:
-                    play_exit_sound_blocking(sound_pack)
-                else:
-                    play_exit_sound(sound_pack)
+                play_exit_sound(sound_pack)
         except Exception:
             pass
 
