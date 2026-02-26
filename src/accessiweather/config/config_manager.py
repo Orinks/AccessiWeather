@@ -80,6 +80,11 @@ class ConfigManager:
             return package.logger  # type: ignore[return-value]
         return logger
 
+    def _default_update_channel_for_current_build(self) -> str:
+        """Return default update channel based on current build tag."""
+        build_tag = (getattr(self.app, "build_tag", None) or "").lower()
+        return "nightly" if build_tag.startswith("nightly-") else "stable"
+
     def load_config(self) -> AppConfig:
         """Load configuration from file or create default."""
         if self._config is not None:
@@ -104,6 +109,17 @@ class ConfigManager:
                 deserialize_elapsed = time.perf_counter() - deserialize_start
                 logger.debug(f"AppConfig deserialization took {deserialize_elapsed:.4f}s")
 
+                # If update_channel is missing, apply build-aware default.
+                settings_data = data.get("settings") if isinstance(data, dict) else None
+                if isinstance(settings_data, dict) and "update_channel" not in settings_data:
+                    default_channel = self._default_update_channel_for_current_build()
+                    self._config.settings.update_channel = default_channel
+                    logger.info(
+                        "Applying build-aware default update channel for legacy config: %s",
+                        default_channel,
+                    )
+                    self.save_config()
+
                 # Time secure keys loading from SecureStorage
                 secure_keys_start = time.perf_counter()
                 self._load_secure_keys()
@@ -120,6 +136,9 @@ class ConfigManager:
             else:
                 logger.info("No config file found, creating default configuration")
                 self._config = AppConfig.default()
+                self._config.settings.update_channel = (
+                    self._default_update_channel_for_current_build()
+                )
                 self.save_config()  # Save default config
 
         except Exception as e:
