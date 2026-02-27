@@ -748,7 +748,7 @@ class AccessiWeatherApp(wx.App):
             "OpenRouter API key (optional)",
             "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip.",
             "https://openrouter.ai/keys",
-            "Open OpenRouter API key page",
+            "Get OpenRouter API key",
         )
         if openrouter_key is not None and openrouter_key:
             self.config_manager.update_settings(openrouter_api_key=openrouter_key)
@@ -757,7 +757,7 @@ class AccessiWeatherApp(wx.App):
             "Visual Crossing API key (optional)",
             "Step 3 of 4: Enter your Visual Crossing API key now, or leave blank to skip.",
             "https://www.visualcrossing.com/sign-up",
-            "Open Visual Crossing API key page",
+            "Get Visual Crossing API key",
         )
         if visual_crossing_key is not None and visual_crossing_key:
             self.config_manager.update_settings(visual_crossing_api_key=visual_crossing_key)
