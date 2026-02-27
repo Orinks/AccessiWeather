@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import fields
+from dataclasses import fields, replace
 from datetime import date
 from typing import Any
 
@@ -219,6 +219,12 @@ class DataFusionEngine:
         ]
         if not tail_periods:
             return nws_forecast
+
+        # Label the first appended period so users can hear where extended data starts.
+        first_tail = tail_periods[0]
+        marker = "Extended outlook (Open-Meteo): "
+        if not (first_tail.name or "").startswith(marker):
+            tail_periods[0] = replace(first_tail, name=f"{marker}{first_tail.name or 'Day 8+'}")
 
         return Forecast(
             periods=[*nws_forecast.periods, *tail_periods],

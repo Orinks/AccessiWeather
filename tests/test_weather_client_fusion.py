@@ -388,6 +388,9 @@ class TestMergeForecasts:
         assert result is not None
         assert len(result.periods) > len(nws_periods)
         assert field_sources["forecast_source"] == "nws+openmeteo-tail"
+        assert any(
+            (p.name or "").startswith("Extended outlook (Open-Meteo):") for p in result.periods
+        )
 
 
 # --- merge_hourly_forecasts ---
