@@ -313,7 +313,9 @@ def test_onboarding_summary_includes_readiness_status(monkeypatch):
         lambda *args, **kwargs: _FakeTextEntryDialog([]),
         raising=False,
     )
-    monkeypatch.setattr(app, "_has_saved_api_key", lambda key_name: key_name == "openrouter_api_key")
+    monkeypatch.setattr(
+        app, "_has_saved_api_key", lambda key_name: key_name == "openrouter_api_key"
+    )
 
     app._maybe_show_first_start_onboarding()
 
