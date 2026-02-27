@@ -81,6 +81,44 @@ class TestPortableSecretsImportExportWiring:
         assert imported_store["openrouter_api_key"] == "sk-exported"
         assert imported_store["visual_crossing_api_key"] == "vc-exported"
 
+    def test_export_encrypted_api_keys_returns_false_when_no_keys(self, tmp_path):
+        manager = MagicMock()
+        manager._get_logger.return_value = MagicMock()
+        operations = ImportExportOperations(manager)
+
+        export_file = tmp_path / "keys.awkeys"
+
+        with patch(
+            "accessiweather.config.import_export.SecureStorage.get_password",
+            lambda _key_name: None,
+        ):
+            assert operations.export_encrypted_api_keys(export_file, "bundle-pass") is False
+
+    def test_import_encrypted_api_keys_rejects_non_dict_bundle(self, tmp_path):
+        manager = MagicMock()
+        manager._get_logger.return_value = MagicMock()
+        operations = ImportExportOperations(manager)
+
+        export_file = tmp_path / "keys.awkeys"
+        export_file.write_text("[]", encoding="utf-8")
+
+        with patch("accessiweather.config.import_export.SecureStorage.set_password") as mock_set:
+            assert operations.import_encrypted_api_keys(export_file, "bundle-pass") is False
+            mock_set.assert_not_called()
+
+    def test_import_encrypted_api_keys_returns_false_when_no_supported_keys(self, tmp_path):
+        manager = MagicMock()
+        manager._get_logger.return_value = MagicMock()
+        operations = ImportExportOperations(manager)
+
+        export_file = tmp_path / "keys.awkeys"
+        envelope = encrypt_secret_bundle({"other": "value"}, "right-pass")
+        export_file.write_text(json.dumps(envelope), encoding="utf-8")
+
+        with patch("accessiweather.config.import_export.SecureStorage.set_password") as mock_set:
+            assert operations.import_encrypted_api_keys(export_file, "right-pass") is False
+            mock_set.assert_not_called()
+
     def test_import_encrypted_api_keys_wrong_passphrase_returns_false(self, tmp_path):
         manager = MagicMock()
         manager._get_logger.return_value = MagicMock()

@@ -210,6 +210,23 @@ class TestConfigManager:
 
         assert config.settings.update_channel == "nightly"
 
+    def test_encrypted_api_key_wrapper_methods_delegate(self, manager):
+        manager._import_export = MagicMock()
+        manager._import_export.export_encrypted_api_keys.return_value = True
+        manager._import_export.import_encrypted_api_keys.return_value = True
+
+        export_path = manager.config_dir / "keys.awkeys"
+
+        assert manager.export_encrypted_api_keys(export_path, "pass") is True
+        manager._import_export.export_encrypted_api_keys.assert_called_once_with(
+            export_path, "pass"
+        )
+
+        assert manager.import_encrypted_api_keys(export_path, "pass") is True
+        manager._import_export.import_encrypted_api_keys.assert_called_once_with(
+            export_path, "pass"
+        )
+
     def test_missing_update_channel_in_legacy_config_uses_build_default(self, mock_app, config_dir):
         """Legacy config without update_channel should get build-aware default."""
         mock_app.build_tag = "nightly-20260226"
