@@ -825,9 +825,9 @@ class AccessiWeatherApp(wx.App):
                 "Enable an encrypted key bundle for this portable folder?\n"
                 "If enabled, AccessiWeather can auto-refresh api-keys.awkeys when keys change.",
                 "Portable API key portability",
-                wx.YES_NO | wx.CANCEL | wx.ICON_INFORMATION,
+                wx.YES_NO | wx.ICON_INFORMATION,
             )
-            portable_bundle_prompt.SetYesNoCancelLabels("Enable", "Skip", "Skip")
+            portable_bundle_prompt.SetYesNoLabels("Enable", "Skip")
             bundle_choice = portable_bundle_prompt.ShowModal()
             portable_bundle_prompt.Destroy()
 
