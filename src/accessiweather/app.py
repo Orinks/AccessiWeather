@@ -14,6 +14,7 @@ import os
 import subprocess
 import sys
 import threading
+import webbrowser
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -689,6 +690,35 @@ class AccessiWeatherApp(wx.App):
                 return None
             return dlg.GetValue().strip() or ""
 
+    def _prompt_optional_secret_with_link(
+        self,
+        title: str,
+        message: str,
+        key_page_url: str,
+        key_page_action_label: str,
+    ) -> str | None:
+        """Prompt for an optional secret with an action to open its key page."""
+        while True:
+            choice_dialog = wx.MessageDialog(
+                self.main_window,
+                f"{message}\n\nChoose Enter key to type it now, {key_page_action_label}, or Skip.",
+                title,
+                wx.YES_NO | wx.CANCEL | wx.ICON_INFORMATION,
+            )
+            choice_dialog.SetYesNoCancelLabels("Enter key", key_page_action_label, "Skip")
+            result = choice_dialog.ShowModal()
+            choice_dialog.Destroy()
+
+            if result == wx.ID_YES:
+                return self._prompt_optional_secret(title, message)
+            if result == wx.ID_NO:
+                try:
+                    webbrowser.open(key_page_url)
+                except Exception as exc:
+                    logger.warning("Failed opening API key page %s: %s", key_page_url, exc)
+                continue
+            return ""
+
     def _maybe_show_first_start_onboarding(self) -> None:
         """Show a minimal onboarding wizard once on fresh setup."""
         if not self.main_window or not self.config_manager:
@@ -714,16 +744,20 @@ class AccessiWeatherApp(wx.App):
         if step1_result == wx.ID_YES and self.main_window:
             self.main_window.on_add_location()
 
-        openrouter_key = self._prompt_optional_secret(
+        openrouter_key = self._prompt_optional_secret_with_link(
             "OpenRouter API key (optional)",
             "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip.",
+            "https://openrouter.ai/keys",
+            "Get OpenRouter API key",
         )
         if openrouter_key is not None and openrouter_key:
             self.config_manager.update_settings(openrouter_api_key=openrouter_key)
 
-        visual_crossing_key = self._prompt_optional_secret(
+        visual_crossing_key = self._prompt_optional_secret_with_link(
             "Visual Crossing API key (optional)",
             "Step 3 of 4: Enter your Visual Crossing API key now, or leave blank to skip.",
+            "https://www.visualcrossing.com/sign-up",
+            "Get Visual Crossing API key",
         )
         if visual_crossing_key is not None and visual_crossing_key:
             self.config_manager.update_settings(visual_crossing_api_key=visual_crossing_key)
