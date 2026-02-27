@@ -967,6 +967,30 @@ class SettingsDialogSimple(wx.Dialog):
         import_api_keys_btn.Bind(wx.EVT_BUTTON, self._on_import_encrypted_api_keys)
         sizer.Add(import_api_keys_btn, 0, wx.LEFT | wx.TOP, 10)
 
+        if self._is_runtime_portable_mode():
+            self._controls["portable_auto_bundle_enabled"] = wx.CheckBox(
+                panel,
+                label="Keep encrypted API key bundle with this portable folder",
+            )
+            sizer.Add(self._controls["portable_auto_bundle_enabled"], 0, wx.LEFT | wx.TOP, 10)
+
+            set_passphrase_btn = wx.Button(panel, label="Set bundle passphrase for this session")
+            set_passphrase_btn.Bind(wx.EVT_BUTTON, self._on_set_portable_bundle_passphrase)
+            sizer.Add(set_passphrase_btn, 0, wx.LEFT | wx.TOP, 10)
+
+            sizer.Add(
+                wx.StaticText(
+                    panel,
+                    label=(
+                        "Passphrase is kept in memory for this app session only and never written "
+                        "to disk. Auto-bundle refresh requires setting it each launch."
+                    ),
+                ),
+                0,
+                wx.LEFT | wx.TOP,
+                10,
+            )
+
         # Sound Pack Files
         sizer.Add(
             wx.StaticText(panel, label="Sound Pack Files"),
@@ -1201,6 +1225,10 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["weather_history"].SetValue(
                 getattr(settings, "weather_history_enabled", True)
             )
+            if "portable_auto_bundle_enabled" in self._controls:
+                self._controls["portable_auto_bundle_enabled"].SetValue(
+                    getattr(settings, "portable_auto_bundle_enabled", False)
+                )
         except Exception as e:
             logger.error(f"Failed to load settings: {e}")
 
@@ -1321,6 +1349,10 @@ class SettingsDialogSimple(wx.Dialog):
                 "startup_enabled": self._controls["startup"].GetValue(),
                 "weather_history_enabled": self._controls["weather_history"].GetValue(),
             }
+            if "portable_auto_bundle_enabled" in self._controls:
+                settings_dict["portable_auto_bundle_enabled"] = self._controls[
+                    "portable_auto_bundle_enabled"
+                ].GetValue()
 
             # Source priority
             us_idx = self._controls["us_priority"].GetSelection()
@@ -1340,7 +1372,21 @@ class SettingsDialogSimple(wx.Dialog):
                 intl_idx if intl_idx >= 0 else 0
             ]
 
+            if (
+                settings_dict.get("portable_auto_bundle_enabled")
+                and not self.config_manager.has_portable_bundle_passphrase()
+            ):
+                wx.MessageBox(
+                    "Portable auto-bundle requires a session passphrase. "
+                    "Click 'Set bundle passphrase for this session' first.",
+                    "Passphrase required",
+                    wx.OK | wx.ICON_WARNING,
+                )
+                return False
+
             success = self.config_manager.update_settings(**settings_dict)
+            if success and settings_dict.get("portable_auto_bundle_enabled"):
+                self.config_manager.refresh_portable_api_key_bundle()
             if success:
                 logger.info("Settings saved successfully")
             return success
@@ -2071,6 +2117,34 @@ class SettingsDialogSimple(wx.Dialog):
                 return None
             value = dlg.GetValue().strip()
             return value or None
+
+    def _on_set_portable_bundle_passphrase(self, event):
+        """Set in-memory passphrase used for portable auto-bundle refresh."""
+        passphrase = self._prompt_passphrase(
+            "Portable bundle passphrase",
+            "Enter passphrase for automatic portable API key bundle refresh.",
+        )
+        if passphrase is None:
+            return
+
+        confirm = self._prompt_passphrase(
+            "Confirm passphrase",
+            "Re-enter passphrase to confirm.",
+        )
+        if confirm is None:
+            return
+        if passphrase != confirm:
+            wx.MessageBox(
+                "Passphrases do not match.", "Passphrase not set", wx.OK | wx.ICON_WARNING
+            )
+            return
+
+        self.config_manager.set_portable_bundle_passphrase(passphrase)
+        wx.MessageBox(
+            "Passphrase saved for this session only.",
+            "Portable bundle passphrase",
+            wx.OK | wx.ICON_INFORMATION,
+        )
 
     def _on_export_encrypted_api_keys(self, event):
         """Export API keys from keyring to encrypted bundle file."""

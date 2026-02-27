@@ -68,6 +68,7 @@ class ConfigManager:
         self._settings = SettingsOperations(self)
         self._github = GitHubConfigOperations(self)
         self._import_export = ImportExportOperations(self)
+        self._portable_bundle_passphrase: str | None = None
 
         # Ensure config directory exists
         self.config_file.parent.mkdir(parents=True, exist_ok=True)
@@ -308,6 +309,45 @@ class ConfigManager:
     def import_encrypted_api_keys(self, import_path: Path, passphrase: str) -> bool:
         """Import encrypted API key bundle into secure keyring."""
         return self._import_export.import_encrypted_api_keys(import_path, passphrase)
+
+    def get_portable_api_key_bundle_path(self) -> Path:
+        """Return the default portable encrypted API key bundle path."""
+        return self.config_dir / "api-keys.awkeys"
+
+    def set_portable_bundle_passphrase(self, passphrase: str | None) -> None:
+        """Set in-memory passphrase for this app session (never persisted to disk)."""
+        self._portable_bundle_passphrase = (passphrase or "").strip() or None
+
+    def has_portable_bundle_passphrase(self) -> bool:
+        """Return whether an in-memory portable bundle passphrase is currently available."""
+        return bool(self._portable_bundle_passphrase)
+
+    def refresh_portable_api_key_bundle(self) -> bool:
+        """Refresh portable encrypted API key bundle when opt-in is enabled."""
+        config = self.get_config()
+        if not getattr(self.app, "_portable_mode", False):
+            return False
+        if not getattr(config.settings, "portable_auto_bundle_enabled", False):
+            return False
+        if not self._portable_bundle_passphrase:
+            logger.info("Portable auto-bundle skipped: no session passphrase available")
+            return False
+
+        return self.export_encrypted_api_keys(
+            self.get_portable_api_key_bundle_path(), self._portable_bundle_passphrase
+        )
+
+    def disable_portable_api_key_bundle(self) -> bool:
+        """Disable portable auto-bundle and remove generated portable bundle file."""
+        self.set_portable_bundle_passphrase(None)
+        bundle_path = self.get_portable_api_key_bundle_path()
+        try:
+            if bundle_path.exists():
+                bundle_path.unlink()
+            return True
+        except Exception as exc:
+            logger.error("Failed to remove portable bundle file %s: %s", bundle_path, exc)
+            return False
 
     def _get_startup_manager(self):
         """Get startup manager, initializing lazily on first access."""

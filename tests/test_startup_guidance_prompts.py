@@ -13,6 +13,10 @@ def _ensure_wx_dialog_constants() -> None:
         "YES_NO": 0,
         "CANCEL": 0,
         "ICON_INFORMATION": 0,
+        "ICON_WARNING": 0,
+        "OK": 0,
+        "ID_OK": 1,
+        "TE_PASSWORD": 0,
         "ID_YES": 1,
         "ID_NO": 0,
     }.items():
@@ -35,6 +39,23 @@ class _FakeDialog:
 
     def Destroy(self):
         return None
+
+
+class _FakeTextEntryDialog:
+    def __init__(self, responses: list[str]):
+        self._responses = responses
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+    def ShowModal(self):
+        return getattr(wx, "ID_OK", 1)
+
+    def GetValue(self):
+        return self._responses.pop(0)
 
 
 def test_portable_missing_api_keys_hint_shown_once_and_persists(monkeypatch):
@@ -63,7 +84,6 @@ def test_portable_missing_api_keys_hint_shown_once_and_persists(monkeypatch):
     )
     app.main_window.open_settings.assert_called_once_with(tab="AI")
 
-    # Once persisted, prompt should no longer show.
     settings.portable_missing_api_keys_hint_shown = True
     app.config_manager.update_settings.reset_mock()
     app.main_window.open_settings.reset_mock()
@@ -117,32 +137,9 @@ def test_portable_missing_api_keys_hint_noops_when_not_portable():
     app.config_manager.update_settings.assert_not_called()
 
 
-def test_onboarding_wizard_can_open_ai_and_data_sources(monkeypatch):
-    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
-    app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
-    settings = SimpleNamespace(onboarding_wizard_shown=False)
-    app.config_manager = SimpleNamespace(
-        get_config=lambda: SimpleNamespace(locations=[], settings=settings),
-        update_settings=MagicMock(),
-    )
-
-    _ensure_wx_dialog_constants()
-    responses = [getattr(wx, "ID_NO", 0), getattr(wx, "ID_YES", 1), getattr(wx, "ID_YES", 1)]
-    monkeypatch.setattr(
-        "accessiweather.app.wx.MessageDialog",
-        lambda *args, **kwargs: _FakeDialog(responses),
-        raising=False,
-    )
-
-    app._maybe_show_first_start_onboarding()
-
-    app.main_window.open_settings.assert_any_call(tab="AI")
-    app.main_window.open_settings.assert_any_call(tab="Data Sources")
-    app.config_manager.update_settings.assert_called_once_with(onboarding_wizard_shown=True)
-
-
 def test_onboarding_wizard_shown_once_with_skip_path(monkeypatch):
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._portable_mode = False
     app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
     settings = SimpleNamespace(onboarding_wizard_shown=False)
     app.config_manager = SimpleNamespace(
@@ -152,10 +149,16 @@ def test_onboarding_wizard_shown_once_with_skip_path(monkeypatch):
 
     _ensure_wx_dialog_constants()
     skip_id = getattr(wx, "ID_NO", 0)
-    responses = [skip_id, skip_id, skip_id]  # skip location, AI, and Visual Crossing
+    responses = [skip_id]
     monkeypatch.setattr(
         "accessiweather.app.wx.MessageDialog",
         lambda *args, **kwargs: _FakeDialog(responses),
+        raising=False,
+    )
+    text_responses = ["", ""]
+    monkeypatch.setattr(
+        "accessiweather.app.wx.TextEntryDialog",
+        lambda *args, **kwargs: _FakeTextEntryDialog(text_responses),
         raising=False,
     )
 
@@ -163,10 +166,48 @@ def test_onboarding_wizard_shown_once_with_skip_path(monkeypatch):
 
     app.main_window.on_add_location.assert_not_called()
     app.main_window.open_settings.assert_not_called()
-    app.config_manager.update_settings.assert_called_once_with(onboarding_wizard_shown=True)
+    assert app.config_manager.update_settings.call_args_list[-1].kwargs == {
+        "onboarding_wizard_shown": True
+    }
 
-    # Once marked shown, it should not display again.
     settings.onboarding_wizard_shown = True
     app.config_manager.update_settings.reset_mock()
     app._maybe_show_first_start_onboarding()
     app.config_manager.update_settings.assert_not_called()
+
+
+def test_onboarding_wizard_portable_happy_path_sets_keys_and_bundle(monkeypatch):
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._portable_mode = True
+    app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
+    settings = SimpleNamespace(onboarding_wizard_shown=False)
+    app.config_manager = SimpleNamespace(
+        get_config=lambda: SimpleNamespace(locations=[], settings=settings),
+        update_settings=MagicMock(),
+        set_portable_bundle_passphrase=MagicMock(),
+        refresh_portable_api_key_bundle=MagicMock(),
+    )
+
+    _ensure_wx_dialog_constants()
+    responses = [getattr(wx, "ID_NO", 0), getattr(wx, "ID_YES", 1)]
+    monkeypatch.setattr(
+        "accessiweather.app.wx.MessageDialog",
+        lambda *args, **kwargs: _FakeDialog(responses),
+        raising=False,
+    )
+    text_responses = ["sk-or", "vc-key", "bundle-pass", "bundle-pass"]
+    monkeypatch.setattr(
+        "accessiweather.app.wx.TextEntryDialog",
+        lambda *args, **kwargs: _FakeTextEntryDialog(text_responses),
+        raising=False,
+    )
+
+    app._maybe_show_first_start_onboarding()
+
+    calls = app.config_manager.update_settings.call_args_list
+    assert calls[0].kwargs == {"openrouter_api_key": "sk-or"}
+    assert calls[1].kwargs == {"visual_crossing_api_key": "vc-key"}
+    assert calls[2].kwargs == {"portable_auto_bundle_enabled": True}
+    assert calls[3].kwargs == {"onboarding_wizard_shown": True}
+    app.config_manager.set_portable_bundle_passphrase.assert_called_once_with("bundle-pass")
+    app.config_manager.refresh_portable_api_key_bundle.assert_called_once()
