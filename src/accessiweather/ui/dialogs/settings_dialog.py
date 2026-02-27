@@ -1849,6 +1849,35 @@ class SettingsDialogSimple(wx.Dialog):
             return False, messages
         return True, []
 
+    def _build_portable_copy_summary(self, portable_config_dir: Path) -> list[str]:
+        """Build concise summary lines describing migrated non-secret config values."""
+        config_data = self._read_config_json(portable_config_dir)
+        settings = (
+            config_data.get("settings") if isinstance(config_data.get("settings"), dict) else {}
+        )
+        locations = (
+            config_data.get("locations") if isinstance(config_data.get("locations"), list) else []
+        )
+
+        custom_prompt_present = any(
+            bool(str(settings.get(key, "")).strip())
+            for key in (
+                "custom_system_prompt",
+                "custom_instructions",
+                "prompt",
+                "assistant_prompt",
+            )
+            if key in settings
+        )
+
+        return [
+            f"• locations: {len(locations)}",
+            f"• data source: {settings.get('data_source', 'not set')}",
+            f"• AI model preference: {settings.get('ai_model_preference', 'not set')}",
+            f"• temperature unit: {settings.get('temperature_unit', 'not set')}",
+            f"• custom prompt: {'yes' if custom_prompt_present else 'no'}",
+        ]
+
     def _on_copy_installed_config_to_portable(self, event):
         """Copy installed config files into the current portable config directory."""
         import shutil
@@ -1935,9 +1964,13 @@ class SettingsDialogSimple(wx.Dialog):
             self._load_settings()
 
             copied_list = "\n".join(f"• {name}" for name in copied_items)
+            summary_lines = self._build_portable_copy_summary(portable_config_dir)
+            summary_block = "\n".join(summary_lines)
             wx.MessageBox(
                 "Copied these config item(s):\n"
                 f"{copied_list}\n\n"
+                "Copied settings summary:\n"
+                f"{summary_block}\n\n"
                 f"From:\n{installed_config_dir}\n\n"
                 f"To:\n{portable_config_dir}"
                 "\n\nImportant: API keys are stored in your system keyring and cannot be migrated "

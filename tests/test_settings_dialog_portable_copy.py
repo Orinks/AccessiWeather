@@ -112,6 +112,12 @@ def test_copy_installed_config_to_portable_success_reloads_and_mentions_keyring(
     final_message = calls[-1][0]
     assert calls[-1][1] == "Copy complete"
     assert "• accessiweather.json" in final_message
+    assert "Copied settings summary:" in final_message
+    assert "• locations: 1" in final_message
+    assert "• data source: auto" in final_message
+    assert "• AI model preference: openrouter/auto" in final_message
+    assert "• temperature unit: f" in final_message
+    assert "• custom prompt: no" in final_message
     assert "cache.db" not in final_message
     assert "API keys are stored in your system keyring" in final_message
     assert "Please re-enter your API keys in Settings." in final_message
