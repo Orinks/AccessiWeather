@@ -1889,7 +1889,8 @@ class SettingsDialogSimple(wx.Dialog):
             return
 
         result = wx.MessageBox(
-            "Copy settings, locations, and cache files from installed config to this portable config?\n\n"
+            "Copy settings and locations from installed config to this portable config?\n\n"
+            "Only core config files are copied. Cache files are skipped and will regenerate.\n\n"
             "Existing files in portable config with the same name will be overwritten.",
             "Copy installed config to portable",
             wx.YES_NO | wx.ICON_QUESTION,
@@ -1902,14 +1903,30 @@ class SettingsDialogSimple(wx.Dialog):
 
         try:
             portable_config_dir.mkdir(parents=True, exist_ok=True)
-            copied = 0
-            for item in installed_config_dir.iterdir():
+
+            transferable_items = ["accessiweather.json"]
+            copied_items: list[str] = []
+
+            for name in transferable_items:
+                item = installed_config_dir / name
+                if not item.exists():
+                    continue
+
                 dst = portable_config_dir / item.name
                 if item.is_dir():
                     shutil.copytree(item, dst, dirs_exist_ok=True)
                 else:
                     shutil.copy2(item, dst)
-                copied += 1
+                copied_items.append(item.name)
+
+            if not copied_items:
+                wx.MessageBox(
+                    "Nothing to transfer from installed config."
+                    "\n\nNo transferable config files were found.",
+                    "Nothing to copy",
+                    wx.OK | wx.ICON_WARNING,
+                )
+                return
 
             valid, validation_errors = self._validate_portable_copy(
                 installed_config_dir, portable_config_dir
@@ -1930,8 +1947,12 @@ class SettingsDialogSimple(wx.Dialog):
             self.config_manager.load_config()
             self._load_settings()
 
+            copied_list = "\n".join(f"• {name}" for name in copied_items)
             wx.MessageBox(
-                f"Copied {copied} item(s) from:\n{installed_config_dir}\n\nto:\n{portable_config_dir}"
+                "Copied these config item(s):\n"
+                f"{copied_list}\n\n"
+                f"From:\n{installed_config_dir}\n\n"
+                f"To:\n{portable_config_dir}"
                 "\n\nImportant: API keys are stored in your system keyring and cannot be migrated "
                 "into a portable install. Please re-enter your API keys in Settings > AI.",
                 "Copy complete",

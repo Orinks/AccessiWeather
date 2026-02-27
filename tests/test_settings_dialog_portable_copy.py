@@ -82,6 +82,8 @@ def test_copy_installed_config_to_portable_success_reloads_and_mentions_keyring(
     portable = tmp_path / "portable"
     _write_config(installed, ai_model="openrouter/auto", locations=[{"name": "Seattle"}])
     (installed / "cache.db").write_text("cache", encoding="utf-8")
+    (installed / "weather_cache").mkdir(parents=True, exist_ok=True)
+    (installed / "weather_cache" / "foo.txt").write_text("x", encoding="utf-8")
 
     dialog = _make_dialog(portable)
     dialog._get_installed_config_dir = lambda: installed
@@ -104,10 +106,13 @@ def test_copy_installed_config_to_portable_success_reloads_and_mentions_keyring(
     dialog._load_settings.assert_called_once()
     assert dialog.config_manager._config is None
     assert (portable / "accessiweather.json").exists()
-    assert (portable / "cache.db").exists()
+    assert not (portable / "cache.db").exists()
+    assert not (portable / "weather_cache").exists()
 
     final_message = calls[-1][0]
     assert calls[-1][1] == "Copy complete"
+    assert "• accessiweather.json" in final_message
+    assert "cache.db" not in final_message
     assert "API keys are stored in your system keyring" in final_message
     assert "Please re-enter your API keys" in final_message
 
