@@ -93,6 +93,34 @@ class SettingsDialogSimple(wx.Dialog):
         )
         sizer.Add(self._controls["show_nationwide"], 0, wx.ALL, 5)
 
+        sizer.Add(wx.StaticLine(panel), 0, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(wx.StaticText(panel, label="Taskbar icon text:"), 0, wx.LEFT | wx.TOP, 5)
+
+        self._controls["taskbar_icon_text_enabled"] = wx.CheckBox(
+            panel, label="Show weather text on tray icon"
+        )
+        self._controls["taskbar_icon_text_enabled"].Bind(
+            wx.EVT_CHECKBOX,
+            self._on_taskbar_icon_text_enabled_changed,
+        )
+        sizer.Add(self._controls["taskbar_icon_text_enabled"], 0, wx.ALL, 5)
+
+        self._controls["taskbar_icon_dynamic_enabled"] = wx.CheckBox(
+            panel, label="Update tray text dynamically"
+        )
+        sizer.Add(self._controls["taskbar_icon_dynamic_enabled"], 0, wx.LEFT | wx.BOTTOM, 15)
+
+        row_taskbar_format = wx.BoxSizer(wx.HORIZONTAL)
+        row_taskbar_format.Add(
+            wx.StaticText(panel, label="Tray text format:"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["taskbar_icon_text_format"] = wx.TextCtrl(panel, size=(280, -1))
+        row_taskbar_format.Add(self._controls["taskbar_icon_text_format"], 1)
+        sizer.Add(row_taskbar_format, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 15)
+
         panel.SetSizer(sizer)
         self.notebook.AddPage(panel, "General")
 
@@ -1125,6 +1153,17 @@ class SettingsDialogSimple(wx.Dialog):
             )
             # Link settings: disable minimize_on_startup if minimize_to_tray is disabled
             self._update_minimize_on_startup_state(minimize_to_tray)
+
+            # General tab - taskbar icon text options
+            taskbar_text_enabled = getattr(settings, "taskbar_icon_text_enabled", False)
+            self._controls["taskbar_icon_text_enabled"].SetValue(taskbar_text_enabled)
+            self._controls["taskbar_icon_dynamic_enabled"].SetValue(
+                getattr(settings, "taskbar_icon_dynamic_enabled", True)
+            )
+            self._controls["taskbar_icon_text_format"].SetValue(
+                getattr(settings, "taskbar_icon_text_format", "{temp} {condition}")
+            )
+            self._update_taskbar_text_controls_state(taskbar_text_enabled)
             self._controls["startup"].SetValue(getattr(settings, "startup_enabled", False))
             self._controls["weather_history"].SetValue(
                 getattr(settings, "weather_history_enabled", True)
@@ -1165,6 +1204,11 @@ class SettingsDialogSimple(wx.Dialog):
                 # General
                 "update_interval_minutes": self._controls["update_interval"].GetValue(),
                 "show_nationwide_location": show_nationwide,
+                "taskbar_icon_text_enabled": self._controls["taskbar_icon_text_enabled"].GetValue(),
+                "taskbar_icon_dynamic_enabled": self._controls[
+                    "taskbar_icon_dynamic_enabled"
+                ].GetValue(),
+                "taskbar_icon_text_format": self._controls["taskbar_icon_text_format"].GetValue(),
                 # Display
                 "temperature_unit": temp_values[self._controls["temp_unit"].GetSelection()],
                 "show_dewpoint": self._controls["show_dewpoint"].GetValue(),
@@ -2072,6 +2116,12 @@ class SettingsDialogSimple(wx.Dialog):
         self._update_minimize_on_startup_state(minimize_to_tray_enabled)
         event.Skip()
 
+    def _on_taskbar_icon_text_enabled_changed(self, event):
+        """Enable/disable taskbar text controls when main toggle changes."""
+        taskbar_text_enabled = self._controls["taskbar_icon_text_enabled"].GetValue()
+        self._update_taskbar_text_controls_state(taskbar_text_enabled)
+        event.Skip()
+
     def _update_minimize_on_startup_state(self, minimize_to_tray_enabled: bool):
         """
         Update the enabled state of minimize_on_startup based on minimize_to_tray.
@@ -2084,6 +2134,11 @@ class SettingsDialogSimple(wx.Dialog):
         if not minimize_to_tray_enabled:
             # If minimize to tray is disabled, also uncheck minimize on startup
             self._controls["minimize_on_startup"].SetValue(False)
+
+    def _update_taskbar_text_controls_state(self, taskbar_text_enabled: bool):
+        """Enable/disable dependent taskbar text controls."""
+        self._controls["taskbar_icon_dynamic_enabled"].Enable(taskbar_text_enabled)
+        self._controls["taskbar_icon_text_format"].Enable(taskbar_text_enabled)
 
     def _on_open_soundpacks_dir(self, event):
         """Open sound packs directory."""
