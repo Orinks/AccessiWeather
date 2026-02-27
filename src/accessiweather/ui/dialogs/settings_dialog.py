@@ -1765,25 +1765,12 @@ class SettingsDialogSimple(wx.Dialog):
         except Exception:
             return False, "Config file accessiweather.json is invalid or unreadable."
 
-        settings = (
-            config_data.get("settings") if isinstance(config_data.get("settings"), dict) else {}
-        )
         locations = (
             config_data.get("locations") if isinstance(config_data.get("locations"), list) else []
         )
 
-        has_meaningful_settings = any(
-            settings.get(key) not in (None, "", [], {})
-            for key in (
-                "ai_model_preference",
-                "data_source",
-                "temperature_unit",
-            )
-        )
-        has_meaningful_locations = len(locations) > 0
-
-        if not (has_meaningful_settings or has_meaningful_locations):
-            return False, "Installed config does not contain transferable settings or locations."
+        if len(locations) == 0:
+            return False, "Installed config has no saved locations to transfer."
 
         return True, None
 

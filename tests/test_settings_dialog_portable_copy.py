@@ -233,3 +233,29 @@ def test_runtime_portable_mode_prefers_app_runtime_flag_over_heuristic(monkeypat
     )
 
     assert dialog._is_runtime_portable_mode() is True
+
+
+def test_copy_installed_config_to_portable_no_locations_warns_and_stops(tmp_path, monkeypatch):
+    installed = tmp_path / "installed"
+    portable = tmp_path / "portable"
+    _write_config(installed, ai_model="openrouter/auto", locations=[])
+
+    dialog = _make_dialog(portable)
+    dialog._get_installed_config_dir = lambda: installed
+
+    _ensure_wx_constants()
+    calls: list[tuple] = []
+
+    monkeypatch.setattr(
+        module.wx,
+        "MessageBox",
+        lambda message, title, style: calls.append((message, title, style)) or module.wx.OK,
+        raising=False,
+    )
+
+    dialog._on_copy_installed_config_to_portable(None)
+
+    assert any(title == "Nothing to copy" for _, title, _ in calls)
+    assert any("no saved locations" in message.lower() for message, _, _ in calls)
+    assert not any(title == "Copy installed config to portable" for _, title, _ in calls)
+    dialog.config_manager.save_config.assert_not_called()
