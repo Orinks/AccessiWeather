@@ -108,8 +108,8 @@ def test_copy_installed_config_to_portable_success_reloads_and_mentions_keyring(
 
     final_message = calls[-1][0]
     assert calls[-1][1] == "Copy complete"
-    assert "OpenRouter API keys are stored in your system keyring" in final_message
-    assert "Please re-enter your OpenRouter key" in final_message
+    assert "API keys are stored in your system keyring" in final_message
+    assert "Please re-enter your API keys" in final_message
 
 
 def test_copy_installed_config_to_portable_validation_failure_reports_incomplete(

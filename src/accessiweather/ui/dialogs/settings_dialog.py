@@ -875,11 +875,13 @@ class SettingsDialogSimple(wx.Dialog):
             5,
         )
 
-        open_config_btn = wx.Button(panel, label="Open config directory")
+        open_config_btn = wx.Button(panel, label="Open current config directory")
         open_config_btn.Bind(wx.EVT_BUTTON, self._on_open_config_dir)
         sizer.Add(open_config_btn, 0, wx.LEFT | wx.TOP, 10)
 
-        open_installed_config_btn = wx.Button(panel, label="Open installed config directory")
+        open_installed_config_btn = wx.Button(
+            panel, label="Open installed config directory (source)"
+        )
         open_installed_config_btn.Bind(wx.EVT_BUTTON, self._on_open_installed_config_dir)
         sizer.Add(open_installed_config_btn, 0, wx.LEFT | wx.TOP, 10)
 
@@ -1865,8 +1867,8 @@ class SettingsDialogSimple(wx.Dialog):
 
             wx.MessageBox(
                 f"Copied {copied} item(s) from:\n{installed_config_dir}\n\nto:\n{portable_config_dir}"
-                "\n\nImportant: OpenRouter API keys are stored in your system keyring and cannot be "
-                "migrated into a portable install. Please re-enter your OpenRouter key in Settings > AI.",
+                "\n\nImportant: API keys are stored in your system keyring and cannot be migrated "
+                "into a portable install. Please re-enter your API keys in Settings > AI.",
                 "Copy complete",
                 wx.OK | wx.ICON_INFORMATION,
             )
