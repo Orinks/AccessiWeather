@@ -19,6 +19,7 @@ def _ensure_wx_dialog_constants() -> None:
         "TE_PASSWORD": 0,
         "ID_YES": 1,
         "ID_NO": 0,
+        "ID_CANCEL": 2,
     }.items():
         if not hasattr(wx, name):
             setattr(wx, name, value)
@@ -149,7 +150,8 @@ def test_onboarding_wizard_shown_once_with_skip_path(monkeypatch):
 
     _ensure_wx_dialog_constants()
     skip_id = getattr(wx, "ID_NO", 0)
-    responses = [skip_id]
+    cancel_id = getattr(wx, "ID_CANCEL", 2)
+    responses = [skip_id, cancel_id, cancel_id]
     monkeypatch.setattr(
         "accessiweather.app.wx.MessageDialog",
         lambda *args, **kwargs: _FakeDialog(responses),
@@ -189,7 +191,12 @@ def test_onboarding_wizard_portable_happy_path_sets_keys_and_bundle(monkeypatch)
     )
 
     _ensure_wx_dialog_constants()
-    responses = [getattr(wx, "ID_NO", 0), getattr(wx, "ID_YES", 1)]
+    responses = [
+        getattr(wx, "ID_NO", 0),
+        getattr(wx, "ID_YES", 1),
+        getattr(wx, "ID_YES", 1),
+        getattr(wx, "ID_YES", 1),
+    ]
     monkeypatch.setattr(
         "accessiweather.app.wx.MessageDialog",
         lambda *args, **kwargs: _FakeDialog(responses),
@@ -211,3 +218,51 @@ def test_onboarding_wizard_portable_happy_path_sets_keys_and_bundle(monkeypatch)
     assert calls[3].kwargs == {"onboarding_wizard_shown": True}
     app.config_manager.set_portable_bundle_passphrase.assert_called_once_with("bundle-pass")
     app.config_manager.refresh_portable_api_key_bundle.assert_called_once()
+
+
+def test_onboarding_wizard_api_key_link_actions_open_browser(monkeypatch):
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._portable_mode = False
+    app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
+    settings = SimpleNamespace(onboarding_wizard_shown=False)
+    app.config_manager = SimpleNamespace(
+        get_config=lambda: SimpleNamespace(locations=[], settings=settings),
+        update_settings=MagicMock(),
+    )
+
+    _ensure_wx_dialog_constants()
+    responses = [
+        getattr(wx, "ID_NO", 0),
+        getattr(wx, "ID_NO", 0),
+        getattr(wx, "ID_YES", 1),
+        getattr(wx, "ID_NO", 0),
+        getattr(wx, "ID_CANCEL", 2),
+    ]
+    monkeypatch.setattr(
+        "accessiweather.app.wx.MessageDialog",
+        lambda *args, **kwargs: _FakeDialog(responses),
+        raising=False,
+    )
+    text_responses = ["sk-or"]
+    monkeypatch.setattr(
+        "accessiweather.app.wx.TextEntryDialog",
+        lambda *args, **kwargs: _FakeTextEntryDialog(text_responses),
+        raising=False,
+    )
+
+    opened_urls: list[str] = []
+    monkeypatch.setattr(
+        "accessiweather.app.webbrowser.open",
+        lambda url: opened_urls.append(url),
+        raising=False,
+    )
+
+    app._maybe_show_first_start_onboarding()
+
+    assert opened_urls == [
+        "https://openrouter.ai/keys",
+        "https://www.visualcrossing.com/sign-up",
+    ]
+    calls = app.config_manager.update_settings.call_args_list
+    assert calls[0].kwargs == {"openrouter_api_key": "sk-or"}
+    assert calls[1].kwargs == {"onboarding_wizard_shown": True}
