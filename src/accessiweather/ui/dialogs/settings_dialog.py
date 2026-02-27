@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import webbrowser
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import wx
@@ -1746,6 +1748,55 @@ class SettingsDialogSimple(wx.Dialog):
                 wx.OK | wx.ICON_INFORMATION,
             )
 
+    def _read_config_json(self, config_dir: Path) -> dict:
+        """Read accessiweather.json from a config directory."""
+        config_file = config_dir / "accessiweather.json"
+        if not config_file.exists():
+            raise FileNotFoundError(f"Required config file not found: {config_file}")
+        with open(config_file, encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid config payload in {config_file}: expected object")
+        return data
+
+    def _validate_portable_copy(
+        self, installed_config_dir: Path, portable_config_dir: Path
+    ) -> tuple[bool, list[str]]:
+        """Validate copied portable config has required non-secret settings/state."""
+        messages: list[str] = []
+        try:
+            src_cfg = self._read_config_json(installed_config_dir)
+            dst_cfg = self._read_config_json(portable_config_dir)
+        except Exception as e:
+            return False, [str(e)]
+
+        src_settings = src_cfg.get("settings") if isinstance(src_cfg.get("settings"), dict) else {}
+        dst_settings = dst_cfg.get("settings") if isinstance(dst_cfg.get("settings"), dict) else {}
+
+        required_setting_keys = ["ai_model_preference", "data_source", "temperature_unit"]
+        for key in required_setting_keys:
+            src_value = src_settings.get(key)
+            dst_value = dst_settings.get(key)
+            if src_value != dst_value:
+                messages.append(
+                    f"Setting '{key}' did not copy correctly (installed={src_value!r}, portable={dst_value!r})."
+                )
+
+        src_locations = (
+            src_cfg.get("locations") if isinstance(src_cfg.get("locations"), list) else []
+        )
+        dst_locations = (
+            dst_cfg.get("locations") if isinstance(dst_cfg.get("locations"), list) else []
+        )
+        if len(src_locations) != len(dst_locations):
+            messages.append(
+                f"Location count mismatch after copy (installed={len(src_locations)}, portable={len(dst_locations)})."
+            )
+
+        if messages:
+            return False, messages
+        return True, []
+
     def _on_copy_installed_config_to_portable(self, event):
         """Copy installed config files into the current portable config directory."""
         import shutil
@@ -1779,6 +1830,9 @@ class SettingsDialogSimple(wx.Dialog):
         if result != wx.YES:
             return
 
+        # Flush pending in-memory state before filesystem mutation.
+        self.config_manager.save_config()
+
         try:
             portable_config_dir.mkdir(parents=True, exist_ok=True)
             copied = 0
@@ -1790,8 +1844,29 @@ class SettingsDialogSimple(wx.Dialog):
                     shutil.copy2(item, dst)
                 copied += 1
 
+            valid, validation_errors = self._validate_portable_copy(
+                installed_config_dir, portable_config_dir
+            )
+            if not valid:
+                details = "\n".join(f"• {msg}" for msg in validation_errors)
+                wx.MessageBox(
+                    "Config copy completed, but validation found problems."
+                    "\n\nPortable data may be incomplete."
+                    f"\n\n{details}",
+                    "Copy incomplete",
+                    wx.OK | wx.ICON_WARNING,
+                )
+                return
+
+            # Reload from copied files so future saves preserve migrated data.
+            self.config_manager._config = None
+            self.config_manager.load_config()
+            self._load_settings()
+
             wx.MessageBox(
-                f"Copied {copied} item(s) from:\n{installed_config_dir}\n\nto:\n{portable_config_dir}",
+                f"Copied {copied} item(s) from:\n{installed_config_dir}\n\nto:\n{portable_config_dir}"
+                "\n\nImportant: OpenRouter API keys are stored in your system keyring and cannot be "
+                "migrated into a portable install. Please re-enter your OpenRouter key in Settings > AI.",
                 "Copy complete",
                 wx.OK | wx.ICON_INFORMATION,
             )
