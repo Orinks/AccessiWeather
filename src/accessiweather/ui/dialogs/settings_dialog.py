@@ -15,6 +15,12 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+API_KEYS_TRANSFER_NOTE = (
+    "API keys are not included here. API keys stay in this machine's secure keyring by "
+    "default. To transfer them, use 'Export API keys (encrypted)' and then "
+    "'Import API keys (encrypted)'."
+)
+
 
 class SettingsDialogSimple(wx.Dialog):
     """Comprehensive settings dialog matching Toga version functionality."""
@@ -2043,10 +2049,8 @@ class SettingsDialogSimple(wx.Dialog):
                 "Copied settings summary:\n"
                 f"{summary_block}\n\n"
                 f"From:\n{installed_config_dir}\n\n"
-                f"To:\n{portable_config_dir}"
-                "\n\nImportant: API keys stay in your system keyring by default and are not "
-                "copied automatically. To move them, use 'Export API keys (encrypted)' "
-                "and then 'Import API keys (encrypted)' with your passphrase.",
+                f"To:\n{portable_config_dir}\n\n"
+                f"Important: {API_KEYS_TRANSFER_NOTE}",
                 "Copy complete",
                 wx.OK | wx.ICON_INFORMATION,
             )
@@ -2164,7 +2168,7 @@ class SettingsDialogSimple(wx.Dialog):
                     if self.config_manager.export_settings(export_path):
                         wx.MessageBox(
                             f"Settings exported successfully to:\n{export_path}\n\n"
-                            "Note: API keys are NOT included in the export for security.",
+                            f"Note: {API_KEYS_TRANSFER_NOTE}",
                             "Export Complete",
                             wx.OK | wx.ICON_INFORMATION,
                         )
@@ -2197,6 +2201,7 @@ class SettingsDialogSimple(wx.Dialog):
                 result = wx.MessageBox(
                     "Importing settings will overwrite your current preferences.\n\n"
                     "Your saved locations will NOT be affected.\n\n"
+                    f"Important: {API_KEYS_TRANSFER_NOTE}\n\n"
                     "Do you want to continue?",
                     "Confirm Import",
                     wx.YES_NO | wx.ICON_QUESTION,
@@ -2208,7 +2213,7 @@ class SettingsDialogSimple(wx.Dialog):
                             self._load_settings()
                             wx.MessageBox(
                                 "Settings imported successfully!\n\n"
-                                "Note: API keys must be configured separately.",
+                                f"Note: {API_KEYS_TRANSFER_NOTE}",
                                 "Import Complete",
                                 wx.OK | wx.ICON_INFORMATION,
                             )

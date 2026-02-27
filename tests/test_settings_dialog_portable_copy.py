@@ -119,7 +119,7 @@ def test_copy_installed_config_to_portable_success_reloads_and_mentions_keyring(
     assert "• temperature unit: f" in final_message
     assert "• custom prompt: no" in final_message
     assert "cache.db" not in final_message
-    assert "API keys stay in your system keyring by default" in final_message
+    assert "API keys stay in this machine's secure keyring by default" in final_message
     assert "Export API keys (encrypted)" in final_message
     assert "Import API keys (encrypted)" in final_message
 
@@ -240,6 +240,101 @@ def test_runtime_portable_mode_prefers_app_runtime_flag_over_heuristic(monkeypat
     )
 
     assert dialog._is_runtime_portable_mode() is True
+
+
+def test_export_settings_message_mentions_encrypted_api_key_transfer(monkeypatch, tmp_path):
+    dialog = _make_dialog(tmp_path / "portable")
+    dialog.config_manager.export_settings = MagicMock(return_value=True)
+
+    _ensure_wx_constants()
+    if not hasattr(module.wx, "ID_OK"):
+        module.wx.ID_OK = 1
+    if not hasattr(module.wx, "FD_SAVE"):
+        module.wx.FD_SAVE = 0
+    if not hasattr(module.wx, "FD_OVERWRITE_PROMPT"):
+        module.wx.FD_OVERWRITE_PROMPT = 0
+
+    messages: list[tuple] = []
+
+    class _FakeFileDialog:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def ShowModal(self):
+            return module.wx.ID_OK
+
+        def GetPath(self):
+            return str(tmp_path / "settings.json")
+
+    monkeypatch.setattr(
+        module.wx, "FileDialog", lambda *args, **kwargs: _FakeFileDialog(), raising=False
+    )
+    monkeypatch.setattr(
+        module.wx,
+        "MessageBox",
+        lambda message, title, style: messages.append((message, title, style)) or module.wx.OK,
+        raising=False,
+    )
+
+    dialog._on_export_settings(None)
+
+    assert messages
+    export_message = messages[-1][0]
+    assert "API keys are not included here" in export_message
+    assert "Export API keys (encrypted)" in export_message
+    assert "Import API keys (encrypted)" in export_message
+
+
+def test_import_settings_confirm_and_success_messages_mention_encrypted_key_transfer(
+    monkeypatch, tmp_path
+):
+    dialog = _make_dialog(tmp_path / "portable")
+    dialog.config_manager.import_settings = MagicMock(return_value=True)
+
+    _ensure_wx_constants()
+    if not hasattr(module.wx, "ID_OK"):
+        module.wx.ID_OK = 1
+    if not hasattr(module.wx, "FD_OPEN"):
+        module.wx.FD_OPEN = 0
+    if not hasattr(module.wx, "FD_FILE_MUST_EXIST"):
+        module.wx.FD_FILE_MUST_EXIST = 0
+
+    calls: list[tuple] = []
+
+    class _FakeFileDialog:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def ShowModal(self):
+            return module.wx.ID_OK
+
+        def GetPath(self):
+            return str(tmp_path / "settings.json")
+
+    def _fake_message_box(message, title, style):
+        calls.append((message, title, style))
+        if title == "Confirm Import":
+            return module.wx.YES
+        return module.wx.OK
+
+    monkeypatch.setattr(
+        module.wx, "FileDialog", lambda *args, **kwargs: _FakeFileDialog(), raising=False
+    )
+    monkeypatch.setattr(module.wx, "MessageBox", _fake_message_box, raising=False)
+
+    dialog._on_import_settings(None)
+
+    confirm_message = next(msg for msg, title, _ in calls if title == "Confirm Import")
+    complete_message = next(msg for msg, title, _ in calls if title == "Import Complete")
+    assert "API keys are not included here" in confirm_message
+    assert "Export API keys (encrypted)" in confirm_message
+    assert "Import API keys (encrypted)" in complete_message
 
 
 def test_copy_installed_config_to_portable_no_locations_warns_and_stops(tmp_path, monkeypatch):
