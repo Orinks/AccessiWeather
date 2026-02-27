@@ -60,6 +60,17 @@ class TestConfigManager:
         loaded = manager2.load_config()
         assert loaded.settings.update_interval_minutes == 30
 
+    def test_show_nationwide_location_persists_roundtrip(self, manager):
+        """show_nationwide_location should persist across save/load."""
+        config = manager.load_config()
+        config.settings.show_nationwide_location = False
+        manager.save_config()
+
+        manager2 = ConfigManager(manager.app, config_dir=manager.config_dir)
+        loaded = manager2.load_config()
+
+        assert loaded.settings.show_nationwide_location is False
+
     def test_add_location(self, manager):
         """Test adding a location."""
         result = manager.add_location(

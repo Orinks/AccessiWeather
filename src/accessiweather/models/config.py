@@ -34,6 +34,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     # Sound settings
     "sound_enabled",
     "sound_pack",
+    "show_nationwide_location",
     # Event notifications
     "notify_discussion_update",
     "notify_severe_risk_change",
@@ -366,6 +367,7 @@ class AppSettings:
             "update_check_interval_hours": self.update_check_interval_hours,
             "sound_enabled": self.sound_enabled,
             "sound_pack": self.sound_pack,
+            "show_nationwide_location": self.show_nationwide_location,
             "notify_discussion_update": self.notify_discussion_update,
             "notify_severe_risk_change": self.notify_severe_risk_change,
             "github_backend_url": self.github_backend_url,
@@ -436,6 +438,7 @@ class AppSettings:
             update_check_interval_hours=data.get("update_check_interval_hours", 24),
             sound_enabled=cls._as_bool(data.get("sound_enabled"), True),
             sound_pack=data.get("sound_pack", "default"),
+            show_nationwide_location=cls._as_bool(data.get("show_nationwide_location"), True),
             notify_discussion_update=cls._as_bool(data.get("notify_discussion_update"), False),
             notify_severe_risk_change=cls._as_bool(data.get("notify_severe_risk_change"), False),
             github_backend_url=data.get("github_backend_url", ""),
