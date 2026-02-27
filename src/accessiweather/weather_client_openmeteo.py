@@ -451,11 +451,13 @@ def parse_openmeteo_forecast(data: dict) -> Forecast:
             precip_prob = precip_probs[i] if i < len(precip_probs) else None
             snowfall = snowfall_sums[i] if i < len(snowfall_sums) else None
             uv_index = uv_indices[i] if i < len(uv_indices) else None
+            start_time = _parse_iso_datetime(f"{date}T12:00:00") or datetime.now()
             period = ForecastPeriod(
                 name=format_date_name(date, i),
                 temperature=max_temps[i],
                 temperature_unit="F",
                 short_forecast=weather_code_to_description(weather_codes[i]),
+                start_time=start_time,
                 precipitation_probability=precip_prob,
                 snowfall=snowfall,
                 uv_index=uv_index,
