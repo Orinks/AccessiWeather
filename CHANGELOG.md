@@ -31,6 +31,7 @@ All notable changes to this project will be documented in this file.
 - Fixed packaged Windows launches dropping discussion/alert toasts by no longer overriding the installer's AppUserModelID at runtime.
 - Added a forecast time reference setting so hourly forecasts can show either the location's timezone (default) or your local system timezone.
 - Forecast length now follows your configured duration, with automatic source caps (Open-Meteo up to 16, Visual Crossing up to 15, and US/NWS locations capped at 7).
+- Hardened Windows Inno installer scope handling to reduce duplicate Add/Remove Programs entries from mixed per-user/per-machine installs while preserving AppId-based upgrades.
 
 ---
 
