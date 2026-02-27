@@ -99,6 +99,12 @@ The `accessiweather.iss` script creates:
 - Proper uninstaller
 - Per-user installation (no admin required)
 
+Installer scope policy (ARP hardening):
+- Default scope is per-user (`PrivilegesRequired=lowest`).
+- Upgrades reuse the previous install privilege mode (`UsePreviousPrivileges=yes`) so users stay on one logical install identity.
+- Interactive privilege switching is disabled to reduce accidental HKCU/HKLM split installs.
+- When running as admin, setup removes stale per-user uninstall keys for AccessiWeather to prevent duplicate Add/Remove Programs entries.
+
 To modify installer behavior, edit `accessiweather.iss`.
 
 ## Troubleshooting
@@ -140,3 +146,26 @@ installer/
 ├── accessiweather.iss     # Inno Setup script
 ├── app.ico                # Generated Windows icon
 ```
+
+## Installer Validation (Windows ARP dedupe)
+
+Use these deterministic smoke checks after generating a setup EXE:
+
+1. Install current build in per-user mode.
+2. (Optional) Install an older build in elevated/per-machine mode to simulate mixed scope history.
+3. Install the new setup and confirm only one AccessiWeather entry remains in Add/Remove Programs for the active scope.
+
+PowerShell registry checks:
+
+```powershell
+$hkcu = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall'
+$hklm = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall'
+
+Get-ChildItem $hkcu, $hklm |
+  Where-Object { $_.PSChildName -match 'B8F4D7A2-9E3C-4B5A-8D1F-6C2E7A9B0D3E' } |
+  Select-Object PSPath
+```
+
+Expected:
+- Fresh installs: one uninstall key for AccessiWeather.
+- Admin upgrades from mixed history: HKCU stale key removed by installer cleanup.

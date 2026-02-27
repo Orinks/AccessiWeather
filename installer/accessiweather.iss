@@ -50,9 +50,14 @@ SolidCompression=yes
 LZMAUseSeparateProcess=yes
 LZMANumBlockThreads=4
 
-; Privileges (no admin required for per-user install)
+; Privileges and install scope
+; - Default to per-user installs (safest for accessibility/non-admin users)
+; - Keep using previous privilege mode for upgrades so install scope stays stable
+; - Disable interactive override dialog to avoid accidental scope switching and
+;   duplicate ARP entries from mixed HKCU/HKLM installs
 PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=dialog
+UsePreviousPrivileges=yes
+PrivilegesRequiredOverridesAllowed=commandline
 
 ; Modern installer appearance
 WizardStyle=modern
@@ -100,7 +105,36 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName}"; Flags: uninsdeletekey
 
 [Code]
-// Custom code for accessibility announcements and checks
+// Installer scope hardening:
+// If setup is running in admin install mode, remove a stale per-user uninstall
+// entry for this AppId to avoid duplicate Add/Remove Programs rows.
+// (Per-user mode intentionally does not touch HKLM for safety/permissions.)
+const
+  UninstallKeyWithBraces = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{B8F4D7A2-9E3C-4B5A-8D1F-6C2E7A9B0D3E}_is1';
+  UninstallKeyWithoutBraces = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\B8F4D7A2-9E3C-4B5A-8D1F-6C2E7A9B0D3E_is1';
+
+procedure RemoveStalePerUserArpEntriesForAdminInstall();
+begin
+  if not IsAdminInstallMode then
+    exit;
+
+  if RegKeyExists(HKCU, UninstallKeyWithBraces) then
+  begin
+    if RegDeleteKeyIncludingSubkeys(HKCU, UninstallKeyWithBraces) then
+      Log('Removed stale HKCU uninstall key: ' + UninstallKeyWithBraces)
+    else
+      Log('Failed to remove HKCU uninstall key: ' + UninstallKeyWithBraces);
+  end;
+
+  // Older/legacy builds may have emitted a key without braces around the GUID.
+  if RegKeyExists(HKCU, UninstallKeyWithoutBraces) then
+  begin
+    if RegDeleteKeyIncludingSubkeys(HKCU, UninstallKeyWithoutBraces) then
+      Log('Removed stale HKCU uninstall key: ' + UninstallKeyWithoutBraces)
+    else
+      Log('Failed to remove HKCU uninstall key: ' + UninstallKeyWithoutBraces);
+  end;
+end;
 
 function InitializeSetup(): Boolean;
 begin
@@ -110,6 +144,9 @@ end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
+  if CurStep = ssInstall then
+    RemoveStalePerUserArpEntriesForAdminInstall();
+
   if CurStep = ssPostInstall then
   begin
     // Post-installation tasks
