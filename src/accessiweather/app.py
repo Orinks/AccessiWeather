@@ -694,8 +694,7 @@ class AccessiWeatherApp(wx.App):
 
         step1 = wx.MessageDialog(
             self.main_window,
-            "Welcome to AccessiWeather.\n\n"
-            "Step 1 of 2: Add your first location now?",
+            "Welcome to AccessiWeather.\n\nStep 1 of 2: Add your first location now?",
             "Getting started",
             wx.YES_NO | wx.CANCEL | wx.ICON_INFORMATION,
         )
