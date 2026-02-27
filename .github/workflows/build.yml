@@ -118,10 +118,14 @@ jobs:
           cd dist
           if exist "AccessiWeather_dir" (
             cd AccessiWeather_dir
+            if not exist "config" mkdir config
             7z a -tzip "..\AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip" *
             cd ..
           ) else (
-            7z a -tzip "AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip" "AccessiWeather.exe"
+            mkdir AccessiWeather_portable
+            copy "AccessiWeather.exe" "AccessiWeather_portable\AccessiWeather.exe"
+            mkdir "AccessiWeather_portable\config"
+            7z a -tzip "AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip" "AccessiWeather_portable\*"
           )
 
       - uses: actions/upload-artifact@v6

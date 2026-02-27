@@ -130,3 +130,50 @@ class TestAppPath:
         ):
             result = p.app
         assert result == Path("/usr/bin")
+
+
+class TestPortableFrozenBasePath:
+    """Test frozen portable-marker and force override branches."""
+
+    def test_frozen_with_force_portable_uses_exe_dir(self, tmp_path):
+        exe = tmp_path / "AccessiWeather.exe"
+        exe.write_text("x")
+        p = Paths()
+        with (
+            patch.object(sys, "frozen", True, create=True),
+            patch.object(sys, "executable", str(exe)),
+            patch.dict("os.environ", {"ACCESSIWEATHER_FORCE_PORTABLE": "1"}, clear=False),
+            patch.object(sys, "platform", "win32"),
+        ):
+            result = p._get_base_path()
+        assert result == tmp_path
+
+    def test_frozen_with_portable_marker_uses_exe_dir(self, tmp_path):
+        exe = tmp_path / "AccessiWeather.exe"
+        exe.write_text("x")
+        (tmp_path / ".portable").write_text("1")
+
+        p = Paths()
+        with (
+            patch.object(sys, "frozen", True, create=True),
+            patch.object(sys, "executable", str(exe)),
+            patch.dict("os.environ", {}, clear=True),
+            patch.object(sys, "platform", "win32"),
+        ):
+            result = p._get_base_path()
+        assert result == tmp_path
+
+    def test_frozen_with_config_dir_marker_uses_exe_dir(self, tmp_path):
+        exe = tmp_path / "AccessiWeather.exe"
+        exe.write_text("x")
+        (tmp_path / "config").mkdir()
+
+        p = Paths()
+        with (
+            patch.object(sys, "frozen", True, create=True),
+            patch.object(sys, "executable", str(exe)),
+            patch.dict("os.environ", {}, clear=True),
+            patch.object(sys, "platform", "win32"),
+        ):
+            result = p._get_base_path()
+        assert result == tmp_path

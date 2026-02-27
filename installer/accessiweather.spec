@@ -15,7 +15,7 @@ from pathlib import Path
 # Ensure installer/ directory is on Python path so spec_utils can be imported
 sys.path.insert(0, SPECPATH)
 from spec_utils import filter_platform_binaries, filter_sound_lib_entries
-from PyInstaller.utils.hooks import collect_dynamic_libs
+from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs, collect_submodules
 
 # Determine paths
 SPEC_DIR = Path(SPECPATH).resolve()
@@ -23,6 +23,22 @@ PROJECT_ROOT = SPEC_DIR.parent
 SRC_DIR = PROJECT_ROOT / "src"
 RESOURCES_DIR = SRC_DIR / "accessiweather" / "resources"
 SOUNDPACKS_DIR = PROJECT_ROOT / "soundpacks"
+
+
+def _safe_collect_submodules(package_name: str) -> list[str]:
+    """Collect submodules when package is present in build environment."""
+    try:
+        return collect_submodules(package_name)
+    except Exception:
+        return []
+
+
+def _safe_collect_data_files(package_name: str) -> list[tuple[str, str]]:
+    """Collect package data files when available."""
+    try:
+        return collect_data_files(package_name)
+    except Exception:
+        return []
 
 # Platform-specific settings
 IS_WINDOWS = platform.system() == "Windows"
@@ -58,6 +74,11 @@ datas = [
     (str(RESOURCES_DIR), "accessiweather/resources"),
 ]
 
+# Include backend package data used by notification and timezone logic
+# (best-effort: no-op when dependency isn't installed in builder env)
+datas += _safe_collect_data_files("desktop_notifier")
+datas += _safe_collect_data_files("tzdata")
+
 # Add soundpacks if they exist
 if SOUNDPACKS_DIR.exists():
     # Only include default soundpack to reduce size
@@ -88,6 +109,9 @@ hiddenimports = [
     "keyring.backends.SecretService",
     "desktop_notifier",
     "playsound3",
+    "sound_lib",
+    "sound_lib.stream",
+    "sound_lib.output",
     "openai",
     "attrs",
     "dateutil",
@@ -102,6 +126,13 @@ hiddenimports = [
     "prism",
     "prismatoid",
 ]
+
+# Desktop notifier backends and metadata are dynamically loaded.
+hiddenimports += _safe_collect_submodules("desktop_notifier")
+hiddenimports += _safe_collect_submodules("sound_lib")
+hiddenimports += _safe_collect_submodules("playsound3")
+hiddenimports += _safe_collect_submodules("winsdk")
+hiddenimports += _safe_collect_submodules("winrt")
 
 # Platform-specific hidden imports
 if IS_WINDOWS:

@@ -1,6 +1,7 @@
 import json
 import logging
 import platform
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -35,6 +36,23 @@ logger = logging.getLogger(__name__)
 SOUNDPACKS_DIR = get_soundpacks_dir()
 DEFAULT_PACK = "default"
 DEFAULT_EVENT = "alert"
+
+
+def _log_packaging_sound_diagnostics() -> None:
+    """Emit debug-only sound dependency/path diagnostics for packaged troubleshooting."""
+    logger.debug(
+        "[packaging-diag] sound deps: sound_lib_available=%s playsound_available=%s "
+        "frozen=%s meipass=%s soundpacks_dir=%s exists=%s",
+        SOUND_LIB_AVAILABLE,
+        PLAYSOUND_AVAILABLE,
+        getattr(sys, "frozen", False),
+        getattr(sys, "_MEIPASS", None),
+        SOUNDPACKS_DIR,
+        SOUNDPACKS_DIR.exists(),
+    )
+
+
+_log_packaging_sound_diagnostics()
 
 
 def _parse_sound_entry(
@@ -409,7 +427,20 @@ def play_startup_sound(pack_dir: str = DEFAULT_PACK) -> None:
 def play_exit_sound(pack_dir: str = DEFAULT_PACK) -> None:
     """Play the application exit sound."""
     try:
-        play_notification_sound("exit", pack_dir)
+        sound_file, volume = get_sound_entry("exit", pack_dir)
+        logger.debug(
+            "[packaging-diag] exit sound async: pack=%s file=%s exists=%s volume=%s sound_lib=%s playsound3=%s",
+            pack_dir,
+            sound_file,
+            bool(sound_file and sound_file.exists()),
+            volume,
+            SOUND_LIB_AVAILABLE,
+            PLAYSOUND_AVAILABLE,
+        )
+        if not sound_file:
+            logger.warning("Exit sound file not found.")
+            return
+        _play_sound_file(sound_file, volume=volume)
         logger.debug(f"Played exit sound from pack: {pack_dir}")
     except Exception as e:
         logger.debug(f"Failed to play exit sound: {e}")
@@ -418,13 +449,21 @@ def play_exit_sound(pack_dir: str = DEFAULT_PACK) -> None:
 def play_exit_sound_blocking(pack_dir: str = DEFAULT_PACK) -> None:
     """Play the application exit sound and wait for it to finish."""
     try:
-        sound_file = get_sound_file("exit", pack_dir)
+        sound_file, volume = get_sound_entry("exit", pack_dir)
+        logger.debug(
+            "[packaging-diag] exit sound blocking: pack=%s file=%s exists=%s volume=%s sound_lib=%s playsound3=%s",
+            pack_dir,
+            sound_file,
+            bool(sound_file and sound_file.exists()),
+            volume,
+            SOUND_LIB_AVAILABLE,
+            PLAYSOUND_AVAILABLE,
+        )
         if not sound_file:
             logger.warning("Exit sound file not found.")
             return
 
-        # Use playsound3 with blocking playback
-        if _play_sound_file(sound_file, block=True):
+        if _play_sound_file(sound_file, block=True, volume=volume):
             logger.debug(f"Played exit sound (blocking) from pack: {pack_dir}")
     except Exception as e:
         logger.debug(f"Failed to play exit sound: {e}")
