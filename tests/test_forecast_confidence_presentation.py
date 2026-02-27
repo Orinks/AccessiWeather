@@ -239,3 +239,25 @@ class TestBuildForecastDuration:
         )
 
         assert len(result.periods) == 7
+
+    def test_us_half_day_periods_show_full_requested_days(self):
+        periods = []
+        for i in range(14):
+            name = f"Period {i + 1}"
+            if i % 2 == 1:
+                name = f"Night {i // 2 + 1}"
+            periods.append(ForecastPeriod(name=name, temperature=60 + i, short_forecast="Clear"))
+
+        forecast = Forecast(periods=periods)
+        settings = AppSettings(forecast_duration_days=7)
+        location = Location(name="Boston", latitude=42.3601, longitude=-71.0589, country_code="US")
+
+        result = build_forecast(
+            forecast,
+            None,
+            location,
+            TemperatureUnit.FAHRENHEIT,
+            settings=settings,
+        )
+
+        assert len(result.periods) == 14

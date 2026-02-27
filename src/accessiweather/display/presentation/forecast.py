@@ -40,15 +40,45 @@ def _is_us_location(location: Location) -> bool:
     return in_continental_bounds or in_alaska_bounds or in_hawaii_bounds
 
 
-def _resolve_forecast_period_limit(settings: AppSettings | None, location: Location) -> int:
-    """Get the configured forecast duration with source-aware caps."""
+def _looks_like_half_day_periods(forecast: Forecast) -> bool:
+    """Heuristic: identify NWS-style day/night period lists."""
+    periods = forecast.periods or []
+
+    # If we have timestamped periods with ~12-hour spacing, treat as half-day periods.
+    starts = [p.start_time for p in periods if p.start_time is not None]
+    if len(starts) >= 3:
+        diffs = []
+        for i in range(1, len(starts)):
+            diff_hours = abs((starts[i] - starts[i - 1]).total_seconds()) / 3600.0
+            diffs.append(diff_hours)
+        if diffs:
+            avg = sum(diffs) / len(diffs)
+            if avg <= 14:
+                return True
+
+    # Name fallback for common NWS period labels.
+    nwsish_tokens = ("tonight", "overnight", "this afternoon", "this evening", "night ")
+    return any(
+        (p.name or "").strip().lower().find(tok) >= 0 for p in periods for tok in nwsish_tokens
+    )
+
+
+def _resolve_forecast_period_limit(
+    settings: AppSettings | None, location: Location, forecast: Forecast
+) -> int:
+    """Get display period limit from configured days with source-aware interpretation."""
     configured_days = getattr(settings, "forecast_duration_days", 7) if settings else 7
     if not isinstance(configured_days, int):
         configured_days = 7
     configured_days = max(3, min(configured_days, 16))
-    if _is_us_location(location):
-        return min(configured_days, 7)
-    return configured_days
+
+    if _looks_like_half_day_periods(forecast):
+        capped_days = min(configured_days, 7) if _is_us_location(location) else configured_days
+        return min(capped_days * 2, len(forecast.periods))
+
+    # Daily-period forecasts: preserve day-based cap semantics.
+    capped_days = min(configured_days, 7) if _is_us_location(location) else configured_days
+    return min(capped_days, len(forecast.periods))
 
 
 def build_forecast(
@@ -93,7 +123,7 @@ def build_forecast(
     include_uv = verbosity_level == "detailed"
     include_snowfall = verbosity_level == "detailed"
     include_details = verbosity_level == "detailed"
-    period_limit = _resolve_forecast_period_limit(settings, location)
+    period_limit = _resolve_forecast_period_limit(settings, location, forecast)
 
     for period in forecast.periods[:period_limit]:
         temp_pair = format_forecast_temperature(period, unit_pref, precision)
