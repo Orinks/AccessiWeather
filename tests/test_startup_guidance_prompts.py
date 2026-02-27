@@ -324,3 +324,37 @@ def test_onboarding_summary_includes_readiness_status(monkeypatch):
     assert "OpenRouter key set: Yes" in summary
     assert "Visual Crossing weather provider key set: No" in summary
     assert "Portable encrypted bundle enabled: No" in summary
+
+
+def test_onboarding_completion_triggers_deferred_startup_update_check(monkeypatch):
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._portable_mode = False
+    app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
+    settings = SimpleNamespace(onboarding_wizard_shown=False)
+    app.config_manager = SimpleNamespace(
+        get_config=lambda: SimpleNamespace(locations=[], settings=settings),
+        update_settings=MagicMock(),
+    )
+    app._run_deferred_startup_update_check = MagicMock()
+
+    _ensure_wx_dialog_constants()
+    responses = [
+        getattr(wx, "ID_NO", 0),
+        getattr(wx, "ID_CANCEL", 2),
+        getattr(wx, "ID_CANCEL", 2),
+        getattr(wx, "ID_OK", 1),
+    ]
+    monkeypatch.setattr(
+        "accessiweather.app.wx.MessageDialog",
+        lambda *args, **kwargs: _FakeDialog(responses),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "accessiweather.app.wx.TextEntryDialog",
+        lambda *args, **kwargs: _FakeTextEntryDialog([]),
+        raising=False,
+    )
+
+    app._maybe_show_first_start_onboarding()
+
+    app._run_deferred_startup_update_check.assert_called_once()

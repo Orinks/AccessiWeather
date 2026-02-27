@@ -539,6 +539,7 @@ class AccessiWeatherApp(wx.App):
         # Background update
         self._update_timer: wx.Timer | None = None
         self._auto_update_check_timer: wx.Timer | None = None
+        self._startup_update_check_deferred: bool = False
         self.is_updating: bool = False
 
         # Weather data storage
@@ -625,8 +626,8 @@ class AccessiWeatherApp(wx.App):
             # Start periodic automatic update checks
             self._start_auto_update_checks()
 
-            # Check for updates on startup (if enabled)
-            self._check_for_updates_on_startup()
+            # Check for updates on startup, after onboarding completes when shown.
+            self._check_for_updates_after_startup_guidance()
 
             logger.info("AccessiWeather application started successfully")
             return True
@@ -644,6 +645,29 @@ class AccessiWeatherApp(wx.App):
         """Schedule lightweight first-run and portable hints after startup."""
         wx.CallLater(800, self._maybe_show_first_start_onboarding)
         wx.CallLater(1400, self._maybe_show_portable_missing_keys_hint)
+
+    def _should_show_first_start_onboarding(self) -> bool:
+        """Return True when first-start onboarding should be shown."""
+        if not self.main_window or not self.config_manager:
+            return False
+
+        config = self.config_manager.get_config()
+        settings = config.settings
+        return not getattr(settings, "onboarding_wizard_shown", False) and not bool(config.locations)
+
+    def _check_for_updates_after_startup_guidance(self) -> None:
+        """Run startup update checks now, or defer until onboarding closes."""
+        self._startup_update_check_deferred = self._should_show_first_start_onboarding()
+        if self._startup_update_check_deferred:
+            return
+        self._check_for_updates_on_startup()
+
+    def _run_deferred_startup_update_check(self) -> None:
+        """Run the deferred startup update check once after onboarding finishes."""
+        if not getattr(self, "_startup_update_check_deferred", False):
+            return
+        self._startup_update_check_deferred = False
+        self._check_for_updates_on_startup()
 
     def _has_any_saved_api_keys(self) -> bool:
         """Return True when at least one API key exists in secure storage."""
@@ -775,14 +799,8 @@ class AccessiWeatherApp(wx.App):
 
     def _maybe_show_first_start_onboarding(self) -> None:
         """Show a minimal onboarding wizard once on fresh setup."""
-        if not self.main_window or not self.config_manager:
-            return
-
-        config = self.config_manager.get_config()
-        settings = config.settings
-        if getattr(settings, "onboarding_wizard_shown", False):
-            return
-        if config.locations:
+        if not self._should_show_first_start_onboarding():
+            self._run_deferred_startup_update_check()
             return
 
         step1 = wx.MessageDialog(
@@ -849,6 +867,7 @@ class AccessiWeatherApp(wx.App):
 
         self._show_onboarding_readiness_summary()
         self.config_manager.update_settings(onboarding_wizard_shown=True)
+        self._run_deferred_startup_update_check()
 
     def _show_force_start_dialog(self) -> bool:
         """
