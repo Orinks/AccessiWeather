@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from datetime import datetime, tzinfo
 
 from ...forecast_confidence import ForecastConfidence
-from ...models import AppSettings, Forecast, HourlyForecast, Location
+from ...models import AppSettings, Forecast, ForecastPeriod, HourlyForecast, Location
 from ...utils import TemperatureUnit
 from ..weather_presenter import (
     ForecastPeriodPresentation,
@@ -63,20 +63,37 @@ def _looks_like_half_day_periods(forecast: Forecast) -> bool:
     )
 
 
-def _resolve_forecast_period_limit(
-    settings: AppSettings | None, location: Location, forecast: Forecast
-) -> int:
-    """Get display period limit from configured days with source-aware interpretation."""
+def _configured_forecast_days(settings: AppSettings | None) -> int:
     configured_days = getattr(settings, "forecast_duration_days", 7) if settings else 7
     if not isinstance(configured_days, int):
         configured_days = 7
-    configured_days = max(3, min(configured_days, 16))
+    return max(3, min(configured_days, 16))
 
-    if _looks_like_half_day_periods(forecast):
-        return min(configured_days * 2, len(forecast.periods))
 
-    # Daily-period forecasts: use configured day count.
-    return min(configured_days, len(forecast.periods))
+def _select_periods_by_day_window(forecast: Forecast, configured_days: int) -> list[ForecastPeriod]:
+    """Select periods within a strict calendar-day window when timestamps are available."""
+    periods = forecast.periods or []
+    dated_periods = [p for p in periods if p.start_time is not None]
+
+    # If timestamps are missing for most periods, fall back to count-based behavior.
+    if len(dated_periods) < max(3, len(periods) // 2):
+        if _looks_like_half_day_periods(forecast):
+            return periods[: min(configured_days * 2, len(periods))]
+        return periods[: min(configured_days, len(periods))]
+
+    unique_days: list = []
+    for p in sorted(dated_periods, key=lambda x: x.start_time):
+        day = p.start_time.date()
+        if day not in unique_days:
+            unique_days.append(day)
+        if len(unique_days) >= configured_days:
+            break
+
+    if not unique_days:
+        return periods[: min(configured_days, len(periods))]
+
+    allowed_days = set(unique_days)
+    return [p for p in periods if p.start_time is not None and p.start_time.date() in allowed_days]
 
 
 def build_forecast(
@@ -121,9 +138,10 @@ def build_forecast(
     include_uv = verbosity_level == "detailed"
     include_snowfall = verbosity_level == "detailed"
     include_details = verbosity_level == "detailed"
-    period_limit = _resolve_forecast_period_limit(settings, location, forecast)
+    configured_days = _configured_forecast_days(settings)
+    selected_periods = _select_periods_by_day_window(forecast, configured_days)
 
-    for period in forecast.periods[:period_limit]:
+    for period in selected_periods:
         temp_pair = format_forecast_temperature(period, unit_pref, precision)
         wind_value = format_period_wind(period) if include_wind else None
         details = (

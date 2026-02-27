@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
 from accessiweather.display.presentation.forecast import build_forecast
 from accessiweather.display.weather_presenter import ForecastPresentation
 from accessiweather.forecast_confidence import (
@@ -261,3 +263,45 @@ class TestBuildForecastDuration:
         )
 
         assert len(result.periods) == 14
+
+    def test_mixed_nws_and_openmeteo_periods_are_limited_by_unique_days(self):
+        start = datetime(2026, 2, 27, 0, 0, tzinfo=UTC)
+        periods: list[ForecastPeriod] = []
+
+        # NWS-like 7 days (day/night) => 14 periods
+        for i in range(14):
+            periods.append(
+                ForecastPeriod(
+                    name=f"NWS {i + 1}",
+                    start_time=start + timedelta(hours=12 * i),
+                    temperature=50 + i,
+                    short_forecast="Cloudy",
+                )
+            )
+
+        # Open-Meteo tail days
+        for i in range(7, 16):
+            periods.append(
+                ForecastPeriod(
+                    name=f"OM Day {i + 1}",
+                    start_time=start + timedelta(days=i, hours=12),
+                    temperature=60 + i,
+                    short_forecast="Rain",
+                )
+            )
+
+        forecast = Forecast(periods=periods)
+        settings = AppSettings(forecast_duration_days=15)
+        location = Location(name="Lumberton", latitude=39.97, longitude=-74.8, country_code="US")
+
+        result = build_forecast(
+            forecast,
+            None,
+            location,
+            TemperatureUnit.FAHRENHEIT,
+            settings=settings,
+        )
+
+        # 15 calendar days in window: first 7 days from NWS day/night (14 periods)
+        # plus 8 additional Open-Meteo daily periods.
+        assert len(result.periods) == 22
