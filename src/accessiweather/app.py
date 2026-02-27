@@ -1094,11 +1094,13 @@ class AccessiWeatherApp(wx.App):
         logger.info("Application exit requested")
 
         # Stop background updates
-        if self._update_timer:
-            self._update_timer.Stop()
+        update_timer = getattr(self, "_update_timer", None)
+        if update_timer:
+            update_timer.Stop()
 
-        if self._auto_update_check_timer:
-            self._auto_update_check_timer.Stop()
+        auto_update_timer = getattr(self, "_auto_update_check_timer", None)
+        if auto_update_timer:
+            auto_update_timer.Stop()
 
         # Play exit sound without blocking shutdown.
         try:
