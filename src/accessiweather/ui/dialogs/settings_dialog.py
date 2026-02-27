@@ -934,6 +934,33 @@ class SettingsDialogSimple(wx.Dialog):
         import_btn.Bind(wx.EVT_BUTTON, self._on_import_settings)
         sizer.Add(import_btn, 0, wx.LEFT | wx.TOP, 10)
 
+        sizer.Add(
+            wx.StaticText(panel, label="API Key Portability (Encrypted)"),
+            0,
+            wx.LEFT | wx.TOP,
+            5,
+        )
+        sizer.Add(
+            wx.StaticText(
+                panel,
+                label=(
+                    "Optional: export API keys to an encrypted bundle for transfer. "
+                    "Import requires your passphrase and stores keys in this machine's keyring."
+                ),
+            ),
+            0,
+            wx.LEFT,
+            5,
+        )
+
+        export_api_keys_btn = wx.Button(panel, label="Export API keys (encrypted)")
+        export_api_keys_btn.Bind(wx.EVT_BUTTON, self._on_export_encrypted_api_keys)
+        sizer.Add(export_api_keys_btn, 0, wx.LEFT | wx.TOP, 10)
+
+        import_api_keys_btn = wx.Button(panel, label="Import API keys (encrypted)")
+        import_api_keys_btn.Bind(wx.EVT_BUTTON, self._on_import_encrypted_api_keys)
+        sizer.Add(import_api_keys_btn, 0, wx.LEFT | wx.TOP, 10)
+
         # Sound Pack Files
         sizer.Add(
             wx.StaticText(panel, label="Sound Pack Files"),
@@ -2017,8 +2044,9 @@ class SettingsDialogSimple(wx.Dialog):
                 f"{summary_block}\n\n"
                 f"From:\n{installed_config_dir}\n\n"
                 f"To:\n{portable_config_dir}"
-                "\n\nImportant: API keys are stored in your system keyring and cannot be migrated "
-                "into a portable install. Please re-enter your API keys in Settings.",
+                "\n\nImportant: API keys stay in your system keyring by default and are not "
+                "copied automatically. To move them, use 'Export API keys (encrypted)' "
+                "and then 'Import API keys (encrypted)' with your passphrase.",
                 "Copy complete",
                 wx.OK | wx.ICON_INFORMATION,
             )
@@ -2027,6 +2055,95 @@ class SettingsDialogSimple(wx.Dialog):
             wx.MessageBox(
                 f"Failed to copy config: {e}",
                 "Copy failed",
+                wx.OK | wx.ICON_ERROR,
+            )
+
+    def _prompt_passphrase(self, title: str, message: str) -> str | None:
+        """Prompt for passphrase using masked text entry."""
+        with wx.TextEntryDialog(
+            self, message, title, style=wx.OK | wx.CANCEL | wx.TE_PASSWORD
+        ) as dlg:
+            if dlg.ShowModal() != wx.ID_OK:
+                return None
+            value = dlg.GetValue().strip()
+            return value or None
+
+    def _on_export_encrypted_api_keys(self, event):
+        """Export API keys from keyring to encrypted bundle file."""
+        from pathlib import Path
+
+        passphrase = self._prompt_passphrase(
+            "Export API keys (encrypted)",
+            "Enter a passphrase to encrypt exported API keys.",
+        )
+        if passphrase is None:
+            return
+
+        confirm = self._prompt_passphrase(
+            "Confirm passphrase",
+            "Re-enter the passphrase to confirm encrypted export.",
+        )
+        if confirm is None:
+            return
+        if passphrase != confirm:
+            wx.MessageBox("Passphrases do not match.", "Export Cancelled", wx.OK | wx.ICON_WARNING)
+            return
+
+        with wx.FileDialog(
+            self,
+            "Export API keys (encrypted)",
+            wildcard="Encrypted bundle (*.awkeys)|*.awkeys|JSON files (*.json)|*.json",
+            defaultFile="accessiweather_api_keys.awkeys",
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+        ) as dlg:
+            if dlg.ShowModal() != wx.ID_OK:
+                return
+            export_path = Path(dlg.GetPath())
+            if self.config_manager.export_encrypted_api_keys(export_path, passphrase):
+                wx.MessageBox(
+                    f"Encrypted API key bundle exported successfully to:\n{export_path}",
+                    "Export Complete",
+                    wx.OK | wx.ICON_INFORMATION,
+                )
+            else:
+                wx.MessageBox(
+                    "Failed to export encrypted API keys. Ensure at least one API key is saved.",
+                    "Export Failed",
+                    wx.OK | wx.ICON_ERROR,
+                )
+
+    def _on_import_encrypted_api_keys(self, event):
+        """Import encrypted API key bundle into local secure storage."""
+        from pathlib import Path
+
+        with wx.FileDialog(
+            self,
+            "Import API keys (encrypted)",
+            wildcard="Encrypted bundle (*.awkeys)|*.awkeys|JSON files (*.json)|*.json",
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+        ) as dlg:
+            if dlg.ShowModal() != wx.ID_OK:
+                return
+            import_path = Path(dlg.GetPath())
+
+        passphrase = self._prompt_passphrase(
+            "Import API keys (encrypted)",
+            "Enter the passphrase used when exporting this encrypted bundle.",
+        )
+        if passphrase is None:
+            return
+
+        if self.config_manager.import_encrypted_api_keys(import_path, passphrase):
+            self._load_settings()
+            wx.MessageBox(
+                "Encrypted API keys imported successfully into this machine's secure keyring.",
+                "Import Complete",
+                wx.OK | wx.ICON_INFORMATION,
+            )
+        else:
+            wx.MessageBox(
+                "Failed to import encrypted API keys. Check passphrase and bundle file.",
+                "Import Failed",
                 wx.OK | wx.ICON_ERROR,
             )
 

@@ -7,14 +7,25 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from ..models import Location
+from .portable_secrets import (
+    PortableSecretsError,
+    decrypt_secret_bundle,
+    encrypt_secret_bundle,
+)
+from .secure_storage import SecureStorage
 
 if TYPE_CHECKING:
     from .config_manager import ConfigManager
 
 logger = logging.getLogger("accessiweather.config")
+
+PORTABLE_API_SECRET_KEYS: Final[tuple[str, ...]] = (
+    "visual_crossing_api_key",
+    "openrouter_api_key",
+)
 
 
 class ImportExportOperations:
@@ -175,6 +186,67 @@ class ImportExportOperations:
             return True
         except Exception as exc:
             self.logger.error(f"Failed to export settings: {exc}")
+            return False
+
+    def export_encrypted_api_keys(self, export_path: Path, passphrase: str) -> bool:
+        """Export API keys from keyring to an encrypted portable bundle file."""
+        try:
+            secrets: dict[str, str] = {}
+            for key_name in PORTABLE_API_SECRET_KEYS:
+                value = SecureStorage.get_password(key_name)
+                if value:
+                    secrets[key_name] = value
+
+            if not secrets:
+                self.logger.warning("No API keys available in secure storage to export")
+                return False
+
+            envelope = encrypt_secret_bundle(secrets, passphrase)
+            with open(export_path, "w", encoding="utf-8") as outfile:
+                json.dump(envelope, outfile, indent=2, ensure_ascii=False)
+
+            self.logger.info(f"Encrypted API keys exported to {export_path}")
+            return True
+        except PortableSecretsError as exc:
+            self.logger.error(f"Failed to export encrypted API keys: {exc}")
+            return False
+        except Exception as exc:
+            self.logger.error(f"Failed to export encrypted API keys: {exc}")
+            return False
+
+    def import_encrypted_api_keys(self, import_path: Path, passphrase: str) -> bool:
+        """Import encrypted API keys bundle into current machine keyring."""
+        try:
+            with open(import_path, encoding="utf-8") as infile:
+                envelope = json.load(infile)
+
+            if not isinstance(envelope, dict):
+                self.logger.error("Invalid encrypted API key bundle format")
+                return False
+
+            secrets = decrypt_secret_bundle(envelope, passphrase)
+
+            imported = 0
+            for key_name in PORTABLE_API_SECRET_KEYS:
+                value = secrets.get(key_name)
+                if not value:
+                    continue
+                if not SecureStorage.set_password(key_name, value):
+                    self.logger.error(f"Failed to import API key into secure storage: {key_name}")
+                    return False
+                imported += 1
+
+            if imported == 0:
+                self.logger.warning("Encrypted API key bundle did not contain supported keys")
+                return False
+
+            self.logger.info("Imported %d API keys into secure storage", imported)
+            return True
+        except PortableSecretsError as exc:
+            self.logger.error(f"Failed to import encrypted API keys: {exc}")
+            return False
+        except Exception as exc:
+            self.logger.error(f"Failed to import encrypted API keys: {exc}")
             return False
 
     def export_locations(self, export_path: Path) -> bool:

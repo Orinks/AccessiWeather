@@ -301,6 +301,14 @@ class ConfigManager:
         """Import application settings from a file."""
         return self._import_export.import_settings(import_path)
 
+    def export_encrypted_api_keys(self, export_path: Path, passphrase: str) -> bool:
+        """Export API keys from secure keyring into encrypted bundle."""
+        return self._import_export.export_encrypted_api_keys(export_path, passphrase)
+
+    def import_encrypted_api_keys(self, import_path: Path, passphrase: str) -> bool:
+        """Import encrypted API key bundle into secure keyring."""
+        return self._import_export.import_encrypted_api_keys(import_path, passphrase)
+
     def _get_startup_manager(self):
         """Get startup manager, initializing lazily on first access."""
         if self._startup_manager is None:

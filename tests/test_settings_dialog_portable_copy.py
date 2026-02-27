@@ -119,8 +119,9 @@ def test_copy_installed_config_to_portable_success_reloads_and_mentions_keyring(
     assert "• temperature unit: f" in final_message
     assert "• custom prompt: no" in final_message
     assert "cache.db" not in final_message
-    assert "API keys are stored in your system keyring" in final_message
-    assert "Please re-enter your API keys in Settings." in final_message
+    assert "API keys stay in your system keyring by default" in final_message
+    assert "Export API keys (encrypted)" in final_message
+    assert "Import API keys (encrypted)" in final_message
 
 
 def test_copy_installed_config_to_portable_validation_failure_reports_incomplete(
