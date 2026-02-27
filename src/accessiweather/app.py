@@ -653,7 +653,9 @@ class AccessiWeatherApp(wx.App):
 
         config = self.config_manager.get_config()
         settings = config.settings
-        return not getattr(settings, "onboarding_wizard_shown", False) and not bool(config.locations)
+        return not getattr(settings, "onboarding_wizard_shown", False) and not bool(
+            config.locations
+        )
 
     def _check_for_updates_after_startup_guidance(self) -> None:
         """Run startup update checks now, or defer until onboarding closes."""
