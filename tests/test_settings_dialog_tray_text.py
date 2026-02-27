@@ -1,0 +1,119 @@
+from __future__ import annotations
+
+import importlib.util
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import MagicMock
+
+
+def _load_settings_dialog_class():
+    module_path = (
+        Path(__file__).resolve().parents[1]
+        / "src"
+        / "accessiweather"
+        / "ui"
+        / "dialogs"
+        / "settings_dialog.py"
+    )
+    spec = importlib.util.spec_from_file_location("test_settings_dialog_module", module_path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.SettingsDialogSimple
+
+
+SettingsDialogSimple = _load_settings_dialog_class()
+
+
+class _DummyControl:
+    def __init__(self) -> None:
+        self._selection = 0
+        self._value = False
+        self.enabled = True
+
+    def SetSelection(self, value: int) -> None:
+        self._selection = value
+
+    def GetSelection(self) -> int:
+        return self._selection
+
+    def SetValue(self, value):
+        self._value = value
+
+    def GetValue(self):
+        return self._value
+
+    def Enable(self, value: bool) -> None:
+        self.enabled = value
+
+    def Append(self, _value: str) -> None:
+        return None
+
+    def __getattr__(self, _name: str):
+        return lambda *args, **kwargs: None
+
+
+class _Controls(dict):
+    def __missing__(self, key: str) -> _DummyControl:
+        value = _DummyControl()
+        self[key] = value
+        return value
+
+
+def _make_dialog_for_settings(settings: SimpleNamespace) -> SettingsDialogSimple:
+    dialog = SettingsDialogSimple.__new__(SettingsDialogSimple)
+    dialog._controls = _Controls()
+    dialog._sound_pack_ids = ["default"]
+    dialog._selected_specific_model = None
+    dialog.config_manager = MagicMock()
+    dialog.config_manager.get_settings.return_value = settings
+    return dialog
+
+
+def test_load_settings_populates_tray_text_controls_and_disables_dependents_when_off():
+    settings = SimpleNamespace(
+        taskbar_icon_text_enabled=False,
+        taskbar_icon_dynamic_enabled=True,
+        taskbar_icon_text_format="{temp}",
+    )
+    dialog = _make_dialog_for_settings(settings)
+
+    dialog._load_settings()
+
+    assert dialog._controls["taskbar_icon_text_enabled"].GetValue() is False
+    assert dialog._controls["taskbar_icon_dynamic_enabled"].GetValue() is True
+    assert dialog._controls["taskbar_icon_text_format"].GetValue() == "{temp}"
+    assert dialog._controls["taskbar_icon_dynamic_enabled"].enabled is False
+    assert dialog._controls["taskbar_icon_text_format"].enabled is False
+
+
+def test_load_settings_enables_dependents_when_tray_text_on():
+    settings = SimpleNamespace(
+        taskbar_icon_text_enabled=True,
+        taskbar_icon_dynamic_enabled=False,
+        taskbar_icon_text_format="{temp} {condition}",
+    )
+    dialog = _make_dialog_for_settings(settings)
+
+    dialog._load_settings()
+
+    assert dialog._controls["taskbar_icon_dynamic_enabled"].enabled is True
+    assert dialog._controls["taskbar_icon_text_format"].enabled is True
+
+
+def test_save_settings_persists_tray_text_fields():
+    dialog = _make_dialog_for_settings(SimpleNamespace())
+    dialog._get_ai_model_preference = lambda: "openrouter/free"
+    dialog.config_manager.update_settings.return_value = True
+
+    dialog._controls["taskbar_icon_text_enabled"].SetValue(True)
+    dialog._controls["taskbar_icon_dynamic_enabled"].SetValue(False)
+    dialog._controls["taskbar_icon_text_format"].SetValue("{temp}")
+
+    success = dialog._save_settings()
+
+    assert success is True
+    kwargs = dialog.config_manager.update_settings.call_args.kwargs
+    assert kwargs["taskbar_icon_text_enabled"] is True
+    assert kwargs["taskbar_icon_dynamic_enabled"] is False
+    assert kwargs["taskbar_icon_text_format"] == "{temp}"
