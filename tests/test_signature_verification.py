@@ -102,7 +102,7 @@ class TestVerifyGpgSignature:
 class TestDownloadAndVerifySignature:
     def test_file_not_exists(self, tmp_path):
         missing = tmp_path / "missing.zip"
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             SignatureVerifier.download_and_verify_signature(missing, "https://example.com/sig")
         )
         assert result is False
@@ -123,7 +123,7 @@ class TestDownloadAndVerifySignature:
                 SignatureVerifier, "_verify_gpg_signature", return_value=True
             ) as mock_verify,
         ):
-            result = asyncio.get_event_loop().run_until_complete(
+            result = asyncio.run(
                 SignatureVerifier.download_and_verify_signature(
                     tmp_file, "https://example.com/sig", max_retries=1
                 )
@@ -144,7 +144,7 @@ class TestDownloadAndVerifySignature:
             patch("httpx.AsyncClient", return_value=mock_client),
             patch("asyncio.sleep", new_callable=AsyncMock),
         ):
-            result = asyncio.get_event_loop().run_until_complete(
+            result = asyncio.run(
                 SignatureVerifier.download_and_verify_signature(
                     tmp_file, "https://example.com/sig", max_retries=2, retry_delay=0.0
                 )
@@ -162,7 +162,7 @@ class TestDownloadAndVerifySignature:
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
         with patch("httpx.AsyncClient", return_value=mock_client):
-            result = asyncio.get_event_loop().run_until_complete(
+            result = asyncio.run(
                 SignatureVerifier.download_and_verify_signature(
                     tmp_file, "https://example.com/sig", max_retries=1
                 )
@@ -179,7 +179,7 @@ class TestDownloadAndVerifySignature:
             patch("httpx.AsyncClient", return_value=mock_client),
             patch("asyncio.sleep", new_callable=AsyncMock),
         ):
-            result = asyncio.get_event_loop().run_until_complete(
+            result = asyncio.run(
                 SignatureVerifier.download_and_verify_signature(
                     tmp_file, "https://example.com/sig", max_retries=2, retry_delay=0.0
                 )
@@ -196,7 +196,7 @@ class TestDownloadAndVerifySignature:
             patch("httpx.AsyncClient", return_value=mock_client),
             patch("asyncio.sleep", new_callable=AsyncMock),
         ):
-            result = asyncio.get_event_loop().run_until_complete(
+            result = asyncio.run(
                 SignatureVerifier.download_and_verify_signature(
                     tmp_file, "https://example.com/sig", max_retries=2, retry_delay=0.0
                 )
@@ -210,7 +210,7 @@ class TestDownloadAndVerifySignature:
         mock_client.__aexit__ = AsyncMock(return_value=False)
 
         with patch("httpx.AsyncClient", return_value=mock_client):
-            result = asyncio.get_event_loop().run_until_complete(
+            result = asyncio.run(
                 SignatureVerifier.download_and_verify_signature(
                     tmp_file, "https://example.com/sig", max_retries=1
                 )
