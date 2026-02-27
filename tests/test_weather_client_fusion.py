@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -366,6 +366,31 @@ class TestMergeForecasts:
         ]
         result, field_sources = engine.merge_forecasts(sources, us_location)
         assert field_sources["forecast_source"] == "openmeteo"
+
+    def test_us_auto_appends_openmeteo_tail_when_requested_days_exceed_seven(
+        self, engine, us_location
+    ):
+        start = datetime(2026, 2, 1, tzinfo=UTC)
+        nws_periods = [
+            ForecastPeriod(name=f"NWS {i}", start_time=start + timedelta(hours=12 * i))
+            for i in range(14)
+        ]
+        om_periods = [
+            ForecastPeriod(name=f"OM {i}", start_time=start + timedelta(days=i)) for i in range(16)
+        ]
+        sources = [
+            _make_source("nws", forecast=Forecast(periods=nws_periods)),
+            _make_source("openmeteo", forecast=Forecast(periods=om_periods)),
+        ]
+
+        result, field_sources = engine.merge_forecasts(sources, us_location, requested_days=15)
+
+        assert result is not None
+        assert len(result.periods) > len(nws_periods)
+        assert field_sources["forecast_source"] == "nws+openmeteo-tail"
+        assert any(
+            (p.name or "").startswith("Extended outlook (Open-Meteo):") for p in result.periods
+        )
 
 
 # --- merge_hourly_forecasts ---

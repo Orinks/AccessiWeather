@@ -148,6 +148,27 @@ class SettingsDialogSimple(wx.Dialog):
         )
         sizer.Add(self._controls["detailed_forecast"], 0, wx.LEFT | wx.TOP, 10)
 
+        row_forecast_duration = wx.BoxSizer(wx.HORIZONTAL)
+        row_forecast_duration.Add(
+            wx.StaticText(panel, label="Forecast duration:"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["forecast_duration_days"] = wx.Choice(
+            panel,
+            choices=[
+                "3 days",
+                "5 days",
+                "7 days (default)",
+                "10 days",
+                "14 days",
+                "15 days",
+            ],
+        )
+        row_forecast_duration.Add(self._controls["forecast_duration_days"], 0)
+        sizer.Add(row_forecast_duration, 0, wx.LEFT | wx.TOP, 10)
+
         # Time & Date Display Section
         sizer.Add(
             wx.StaticText(panel, label="Time & Date Display:"),
@@ -932,6 +953,11 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["detailed_forecast"].SetValue(
                 getattr(settings, "show_detailed_forecast", True)
             )
+            forecast_duration_days = getattr(settings, "forecast_duration_days", 7)
+            forecast_duration_map = {3: 0, 5: 1, 7: 2, 10: 3, 14: 4, 15: 5}
+            self._controls["forecast_duration_days"].SetSelection(
+                forecast_duration_map.get(forecast_duration_days, 2)
+            )
 
             forecast_time_reference = getattr(settings, "forecast_time_reference", "location")
             forecast_time_reference_map = {"location": 0, "user_local": 1}
@@ -1110,6 +1136,7 @@ class SettingsDialogSimple(wx.Dialog):
             # Map selections back to values
             source_values = ["auto", "nws", "openmeteo", "visualcrossing"]
             temp_values = ["f", "c", "both"]
+            forecast_duration_values = [3, 5, 7, 10, 14, 15]
             forecast_time_reference_values = ["location", "user_local"]
             time_mode_values = ["local", "utc", "both"]
             verbosity_values = ["minimal", "standard", "detailed"]
@@ -1143,6 +1170,9 @@ class SettingsDialogSimple(wx.Dialog):
                 "show_uv_index": self._controls["show_uv_index"].GetValue(),
                 "show_pressure_trend": self._controls["show_pressure_trend"].GetValue(),
                 "show_detailed_forecast": self._controls["detailed_forecast"].GetValue(),
+                "forecast_duration_days": forecast_duration_values[
+                    self._controls["forecast_duration_days"].GetSelection()
+                ],
                 "forecast_time_reference": forecast_time_reference_values[
                     self._controls["forecast_time_reference"].GetSelection()
                 ],

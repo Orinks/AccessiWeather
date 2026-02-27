@@ -258,12 +258,14 @@ class WeatherClient:
         if not self._methods_overridden(method_names) and not client_is_mock:
             # Use retry wrapper for the parallel fetch
             try:
+                forecast_days = self._get_forecast_days_for_source(location, source="openmeteo")
                 return await retry_with_backoff(
                     openmeteo_client.get_openmeteo_all_data_parallel,
                     location,
                     self.openmeteo_base_url,
                     self.timeout,
                     client,
+                    forecast_days,
                     max_retries=1,
                     initial_delay=1.0,
                 )
@@ -440,7 +442,10 @@ class WeatherClient:
                 # Parallelize API calls for better performance
                 current, forecast, hourly_forecast, alerts = await asyncio.gather(
                     self.visual_crossing_client.get_current_conditions(location),
-                    self.visual_crossing_client.get_forecast(location),
+                    self.visual_crossing_client.get_forecast(
+                        location,
+                        days=self._get_forecast_days_for_source(location, source="visualcrossing"),
+                    ),
                     self.visual_crossing_client.get_hourly_forecast(location),
                     self.visual_crossing_client.get_alerts(location),
                 )
@@ -612,7 +617,10 @@ class WeatherClient:
             if not self.visual_crossing_client:
                 return (None, None, None, None)
             current = await self.visual_crossing_client.get_current_conditions(location)
-            forecast = await self.visual_crossing_client.get_forecast(location)
+            forecast = await self.visual_crossing_client.get_forecast(
+                location,
+                days=self._get_forecast_days_for_source(location, source="visualcrossing"),
+            )
             hourly = await self.visual_crossing_client.get_hourly_forecast(location)
             alerts = await self.visual_crossing_client.get_alerts(location)
             return (current, forecast, hourly, alerts)
@@ -637,8 +645,9 @@ class WeatherClient:
         )
 
         # Merge forecasts
+        requested_days = getattr(self.settings, "forecast_duration_days", 7)
         merged_forecast, forecast_attribution = fusion_engine.merge_forecasts(
-            source_results, location
+            source_results, location, requested_days=requested_days
         )
 
         # Merge hourly forecasts
@@ -990,8 +999,31 @@ class WeatherClient:
     async def _get_openmeteo_forecast(self, location: Location) -> Forecast | None:
         """Delegate to the Open-Meteo client module."""
         return await openmeteo_client.get_openmeteo_forecast(
-            location, self.openmeteo_base_url, self.timeout, self._get_http_client()
+            location,
+            self.openmeteo_base_url,
+            self.timeout,
+            self._get_http_client(),
+            days=self._get_forecast_days_for_source(location, source="openmeteo"),
         )
+
+    def _get_forecast_days_for_source(self, location: Location, source: str) -> int:
+        """
+        Return configured forecast days with location/source caps.
+
+        US locations are capped at 7 days to align with NWS limitations.
+        Other sources are capped by their API limits.
+        """
+        configured = getattr(self.settings, "forecast_duration_days", 7)
+        if not isinstance(configured, int):
+            configured = 7
+        configured = max(3, min(configured, 16))
+
+        source_limits = {
+            "openmeteo": 16,
+            "visualcrossing": 15,
+            "nws": 7,
+        }
+        return min(configured, source_limits.get(source, 16))
 
     async def _get_openmeteo_hourly_forecast(self, location: Location) -> HourlyForecast | None:
         """Delegate to the Open-Meteo client module."""

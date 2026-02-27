@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from datetime import datetime, tzinfo
 
 from ...forecast_confidence import ForecastConfidence
-from ...models import AppSettings, Forecast, HourlyForecast, Location
+from ...models import AppSettings, Forecast, ForecastPeriod, HourlyForecast, Location
 from ...utils import TemperatureUnit
 from ..weather_presenter import (
     ForecastPeriodPresentation,
@@ -24,6 +24,76 @@ from .formatters import (
     get_uv_description,
     wrap_text,
 )
+
+
+def _is_us_location(location: Location) -> bool:
+    """Determine whether a location should use US/NWS forecast limits."""
+    country_code = getattr(location, "country_code", None)
+    if country_code:
+        return country_code.upper() == "US"
+
+    lat = location.latitude
+    lon = location.longitude
+    in_continental_bounds = 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0
+    in_alaska_bounds = 51.0 <= lat <= 71.5 and -172.0 <= lon <= -130.0
+    in_hawaii_bounds = 18.0 <= lat <= 23.0 and -161.0 <= lon <= -154.0
+    return in_continental_bounds or in_alaska_bounds or in_hawaii_bounds
+
+
+def _looks_like_half_day_periods(forecast: Forecast) -> bool:
+    """Heuristic: identify NWS-style day/night period lists."""
+    periods = forecast.periods or []
+
+    # If we have timestamped periods with ~12-hour spacing, treat as half-day periods.
+    starts = [p.start_time for p in periods if p.start_time is not None]
+    if len(starts) >= 3:
+        diffs = []
+        for i in range(1, len(starts)):
+            diff_hours = abs((starts[i] - starts[i - 1]).total_seconds()) / 3600.0
+            diffs.append(diff_hours)
+        if diffs:
+            avg = sum(diffs) / len(diffs)
+            if avg <= 14:
+                return True
+
+    # Name fallback for common NWS period labels.
+    nwsish_tokens = ("tonight", "overnight", "this afternoon", "this evening", "night ")
+    return any(
+        (p.name or "").strip().lower().find(tok) >= 0 for p in periods for tok in nwsish_tokens
+    )
+
+
+def _configured_forecast_days(settings: AppSettings | None) -> int:
+    configured_days = getattr(settings, "forecast_duration_days", 7) if settings else 7
+    if not isinstance(configured_days, int):
+        configured_days = 7
+    return max(3, min(configured_days, 16))
+
+
+def _select_periods_by_day_window(forecast: Forecast, configured_days: int) -> list[ForecastPeriod]:
+    """Select periods within a strict calendar-day window when timestamps are available."""
+    periods = forecast.periods or []
+    dated_periods = [p for p in periods if p.start_time is not None]
+
+    # If timestamps are missing for most periods, fall back to count-based behavior.
+    if len(dated_periods) < max(3, len(periods) // 2):
+        if _looks_like_half_day_periods(forecast):
+            return periods[: min(configured_days * 2, len(periods))]
+        return periods[: min(configured_days, len(periods))]
+
+    unique_days: list = []
+    for p in sorted(dated_periods, key=lambda x: x.start_time):
+        day = p.start_time.date()
+        if day not in unique_days:
+            unique_days.append(day)
+        if len(unique_days) >= configured_days:
+            break
+
+    if not unique_days:
+        return periods[: min(configured_days, len(periods))]
+
+    allowed_days = set(unique_days)
+    return [p for p in periods if p.start_time is not None and p.start_time.date() in allowed_days]
 
 
 def build_forecast(
@@ -68,8 +138,10 @@ def build_forecast(
     include_uv = verbosity_level == "detailed"
     include_snowfall = verbosity_level == "detailed"
     include_details = verbosity_level == "detailed"
+    configured_days = _configured_forecast_days(settings)
+    selected_periods = _select_periods_by_day_window(forecast, configured_days)
 
-    for period in forecast.periods[:14]:
+    for period in selected_periods:
         temp_pair = format_forecast_temperature(period, unit_pref, precision)
         wind_value = format_period_wind(period) if include_wind else None
         details = (

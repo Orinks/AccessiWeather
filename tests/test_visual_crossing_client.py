@@ -424,6 +424,26 @@ class TestVisualCrossingApiCalls:
 
             assert forecast is not None
             assert len(forecast.periods) == 1
+            called_url = mock_client.get.call_args.args[0]
+            assert called_url.endswith(f"/{location.latitude},{location.longitude}")
+
+    @pytest.mark.asyncio
+    async def test_get_forecast_caps_days_to_visual_crossing_limit(self, client, location):
+        """Forecast requests should clamp day range to Visual Crossing's 15-day limit."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"days": []}
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client.get.return_value = mock_response
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+
+            await client.get_forecast(location, days=30)
+
+            called_url = mock_client.get.call_args.args[0]
+            expected_end = (datetime.now(timezone.utc).date() + timedelta(days=14)).isoformat()
+            assert called_url.endswith(f"/today/{expected_end}")
 
     @pytest.mark.asyncio
     async def test_get_alerts_returns_empty_on_error(self, client, location):

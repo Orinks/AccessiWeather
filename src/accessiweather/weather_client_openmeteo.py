@@ -110,6 +110,7 @@ async def get_openmeteo_all_data_parallel(
     openmeteo_base_url: str,
     timeout: float,
     client: httpx.AsyncClient,
+    forecast_days: int = 7,
     model: str = "best_match",
 ) -> tuple[CurrentConditions | None, Forecast | None, HourlyForecast | None]:
     """
@@ -123,7 +124,14 @@ async def get_openmeteo_all_data_parallel(
             get_openmeteo_current_conditions(location, openmeteo_base_url, timeout, client, model)
         )
         forecast_task = asyncio.create_task(
-            get_openmeteo_forecast(location, openmeteo_base_url, timeout, client, model)
+            get_openmeteo_forecast(
+                location,
+                openmeteo_base_url,
+                timeout,
+                client,
+                days=forecast_days,
+                model=model,
+            )
         )
         hourly_task = asyncio.create_task(
             get_openmeteo_hourly_forecast(location, openmeteo_base_url, timeout, client, model)
@@ -207,6 +215,7 @@ async def get_openmeteo_forecast(
     openmeteo_base_url: str,
     timeout: float,
     client: httpx.AsyncClient | None = None,
+    days: int = 7,
     model: str = "best_match",
 ) -> Forecast | None:
     """Fetch daily forecast from the Open-Meteo API."""
@@ -224,7 +233,7 @@ async def get_openmeteo_forecast(
             "wind_speed_unit": "mph",
             "precipitation_unit": "inch",
             "timezone": "auto",
-            "forecast_days": 7,
+            "forecast_days": min(max(days, 1), 16),
         }
 
         # Add model parameter if not using default
@@ -442,11 +451,13 @@ def parse_openmeteo_forecast(data: dict) -> Forecast:
             precip_prob = precip_probs[i] if i < len(precip_probs) else None
             snowfall = snowfall_sums[i] if i < len(snowfall_sums) else None
             uv_index = uv_indices[i] if i < len(uv_indices) else None
+            start_time = _parse_iso_datetime(f"{date}T12:00:00") or datetime.now()
             period = ForecastPeriod(
                 name=format_date_name(date, i),
                 temperature=max_temps[i],
                 temperature_unit="F",
                 short_forecast=weather_code_to_description(weather_codes[i]),
+                start_time=start_time,
                 precipitation_probability=precip_prob,
                 snowfall=snowfall,
                 uv_index=uv_index,

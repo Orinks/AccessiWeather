@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
+
 from accessiweather.display.presentation.forecast import build_forecast
 from accessiweather.display.weather_presenter import ForecastPresentation
 from accessiweather.forecast_confidence import (
     ForecastConfidence,
     ForecastConfidenceLevel,
 )
+from accessiweather.models import AppSettings
 from accessiweather.models.weather import Forecast, ForecastPeriod, Location
 from accessiweather.utils import TemperatureUnit
 
@@ -194,3 +197,111 @@ class TestWeatherPresenterPropagation:
         presentation = presenter.present(wd)
         assert presentation.forecast is not None
         assert presentation.forecast.confidence_label == "Confidence: High"
+
+
+class TestBuildForecastDuration:
+    def test_uses_configured_duration_for_international_location(self):
+        forecast = Forecast(
+            periods=[
+                ForecastPeriod(name=f"Day {i}", temperature=70 + i, short_forecast="Clear")
+                for i in range(1, 20)
+            ]
+        )
+        settings = AppSettings(forecast_duration_days=10)
+        location = Location(name="London", latitude=51.5074, longitude=-0.1278, country_code="GB")
+
+        result = build_forecast(
+            forecast,
+            None,
+            location,
+            TemperatureUnit.FAHRENHEIT,
+            settings=settings,
+        )
+
+        assert len(result.periods) == 10
+
+    def test_uses_configured_duration_for_us_daily_periods(self):
+        forecast = Forecast(
+            periods=[
+                ForecastPeriod(name=f"Day {i}", temperature=70 + i, short_forecast="Clear")
+                for i in range(1, 20)
+            ]
+        )
+        settings = AppSettings(forecast_duration_days=15)
+        location = Location(
+            name="New York", latitude=40.7128, longitude=-74.0060, country_code="US"
+        )
+
+        result = build_forecast(
+            forecast,
+            None,
+            location,
+            TemperatureUnit.FAHRENHEIT,
+            settings=settings,
+        )
+
+        assert len(result.periods) == 15
+
+    def test_us_half_day_periods_show_full_requested_days(self):
+        periods = []
+        for i in range(14):
+            name = f"Period {i + 1}"
+            if i % 2 == 1:
+                name = f"Night {i // 2 + 1}"
+            periods.append(ForecastPeriod(name=name, temperature=60 + i, short_forecast="Clear"))
+
+        forecast = Forecast(periods=periods)
+        settings = AppSettings(forecast_duration_days=7)
+        location = Location(name="Boston", latitude=42.3601, longitude=-71.0589, country_code="US")
+
+        result = build_forecast(
+            forecast,
+            None,
+            location,
+            TemperatureUnit.FAHRENHEIT,
+            settings=settings,
+        )
+
+        assert len(result.periods) == 14
+
+    def test_mixed_nws_and_openmeteo_periods_are_limited_by_unique_days(self):
+        start = datetime(2026, 2, 27, 0, 0, tzinfo=UTC)
+        periods: list[ForecastPeriod] = []
+
+        # NWS-like 7 days (day/night) => 14 periods
+        for i in range(14):
+            periods.append(
+                ForecastPeriod(
+                    name=f"NWS {i + 1}",
+                    start_time=start + timedelta(hours=12 * i),
+                    temperature=50 + i,
+                    short_forecast="Cloudy",
+                )
+            )
+
+        # Open-Meteo tail days
+        for i in range(7, 16):
+            periods.append(
+                ForecastPeriod(
+                    name=f"OM Day {i + 1}",
+                    start_time=start + timedelta(days=i, hours=12),
+                    temperature=60 + i,
+                    short_forecast="Rain",
+                )
+            )
+
+        forecast = Forecast(periods=periods)
+        settings = AppSettings(forecast_duration_days=15)
+        location = Location(name="Lumberton", latitude=39.97, longitude=-74.8, country_code="US")
+
+        result = build_forecast(
+            forecast,
+            None,
+            location,
+            TemperatureUnit.FAHRENHEIT,
+            settings=settings,
+        )
+
+        # 15 calendar days in window: first 7 days from NWS day/night (14 periods)
+        # plus 8 additional Open-Meteo daily periods.
+        assert len(result.periods) == 22
