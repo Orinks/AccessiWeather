@@ -84,6 +84,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "source_priority_us",
     "source_priority_international",
     "openmeteo_weather_model",
+    "portable_auto_bundle_enabled",
 }
 
 
@@ -178,6 +179,10 @@ class AppSettings:
         ]
     )
     severe_weather_override: bool = True
+    # Startup UX guidance flags
+    onboarding_wizard_shown: bool = False
+    portable_missing_api_keys_hint_shown: bool = False
+    portable_auto_bundle_enabled: bool = False
 
     @staticmethod
     def _as_bool(value, default: bool) -> bool:
@@ -418,6 +423,9 @@ class AppSettings:
             "verbosity_level": self.verbosity_level,
             "category_order": self.category_order,
             "severe_weather_override": self.severe_weather_override,
+            "onboarding_wizard_shown": self.onboarding_wizard_shown,
+            "portable_missing_api_keys_hint_shown": self.portable_missing_api_keys_hint_shown,
+            "portable_auto_bundle_enabled": self.portable_auto_bundle_enabled,
         }
 
     @classmethod
@@ -506,6 +514,13 @@ class AppSettings:
                 ],
             ),
             severe_weather_override=cls._as_bool(data.get("severe_weather_override"), True),
+            onboarding_wizard_shown=cls._as_bool(data.get("onboarding_wizard_shown"), False),
+            portable_missing_api_keys_hint_shown=cls._as_bool(
+                data.get("portable_missing_api_keys_hint_shown"), False
+            ),
+            portable_auto_bundle_enabled=cls._as_bool(
+                data.get("portable_auto_bundle_enabled"), False
+            ),
         )
 
     def to_alert_settings(self):

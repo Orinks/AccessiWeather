@@ -618,6 +618,9 @@ class AccessiWeatherApp(wx.App):
             # Show window (or minimize to tray if setting enabled)
             self._show_or_minimize_window()
 
+            # Show one-time startup guidance prompts (non-blocking).
+            self._schedule_startup_guidance_prompts()
+
             # Start periodic automatic update checks
             self._start_auto_update_checks()
 
@@ -635,6 +638,130 @@ class AccessiWeatherApp(wx.App):
                 wx.OK | wx.ICON_ERROR,
             )
             return False
+
+    def _schedule_startup_guidance_prompts(self) -> None:
+        """Schedule lightweight first-run and portable hints after startup."""
+        wx.CallLater(800, self._maybe_show_first_start_onboarding)
+        wx.CallLater(1400, self._maybe_show_portable_missing_keys_hint)
+
+    def _has_any_saved_api_keys(self) -> bool:
+        """Return True when at least one API key exists in secure storage."""
+        from .config.secure_storage import SecureStorage
+
+        key_names = ("openrouter_api_key", "visual_crossing_api_key")
+        return any(bool((SecureStorage.get_password(name) or "").strip()) for name in key_names)
+
+    def _maybe_show_portable_missing_keys_hint(self) -> None:
+        """Show a one-time hint when portable mode starts with empty local keyring keys."""
+        if not self.main_window or not self.config_manager or not self._portable_mode:
+            return
+
+        settings = self.config_manager.get_settings()
+        if getattr(settings, "portable_missing_api_keys_hint_shown", False):
+            return
+        if self._has_any_saved_api_keys():
+            return
+
+        dialog = wx.MessageDialog(
+            self.main_window,
+            "It looks like this portable copy has no API keys on this machine yet.\n\n"
+            "If you moved or copied your AccessiWeather folder, settings transfer but API keys "
+            "stay machine-local by default.\n\n"
+            "You can re-enter keys in Settings > AI now, or import your encrypted API key bundle.",
+            "Portable setup hint",
+            wx.YES_NO | wx.CANCEL | wx.ICON_INFORMATION,
+        )
+        dialog.SetYesNoCancelLabels("Open Settings > AI", "Later", "Cancel")
+        result = dialog.ShowModal()
+        dialog.Destroy()
+
+        self.config_manager.update_settings(portable_missing_api_keys_hint_shown=True)
+
+        if result == wx.ID_YES and self.main_window:
+            self.main_window.open_settings(tab="AI")
+
+    def _prompt_optional_secret(self, title: str, message: str) -> str | None:
+        """Prompt for optional secret text value. Empty input means skip."""
+        with wx.TextEntryDialog(
+            self.main_window, message, title, style=wx.OK | wx.CANCEL | wx.TE_PASSWORD
+        ) as dlg:
+            if dlg.ShowModal() != wx.ID_OK:
+                return None
+            return dlg.GetValue().strip() or ""
+
+    def _maybe_show_first_start_onboarding(self) -> None:
+        """Show a minimal onboarding wizard once on fresh setup."""
+        if not self.main_window or not self.config_manager:
+            return
+
+        config = self.config_manager.get_config()
+        settings = config.settings
+        if getattr(settings, "onboarding_wizard_shown", False):
+            return
+        if config.locations:
+            return
+
+        step1 = wx.MessageDialog(
+            self.main_window,
+            "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?",
+            "Getting started",
+            wx.YES_NO | wx.ICON_INFORMATION,
+        )
+        step1.SetYesNoLabels("Add location", "Skip")
+        step1_result = step1.ShowModal()
+        step1.Destroy()
+
+        if step1_result == wx.ID_YES and self.main_window:
+            self.main_window.on_add_location()
+
+        openrouter_key = self._prompt_optional_secret(
+            "OpenRouter API key (optional)",
+            "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip.",
+        )
+        if openrouter_key is not None and openrouter_key:
+            self.config_manager.update_settings(openrouter_api_key=openrouter_key)
+
+        visual_crossing_key = self._prompt_optional_secret(
+            "Visual Crossing API key (optional)",
+            "Step 3 of 4: Enter your Visual Crossing API key now, or leave blank to skip.",
+        )
+        if visual_crossing_key is not None and visual_crossing_key:
+            self.config_manager.update_settings(visual_crossing_api_key=visual_crossing_key)
+
+        if self._portable_mode:
+            portable_bundle_prompt = wx.MessageDialog(
+                self.main_window,
+                "Step 4 of 4 (portable): Keep an encrypted API key bundle with this portable folder?\n\n"
+                "If enabled, AccessiWeather can auto-refresh api-keys.awkeys when keys change.\n"
+                "Passphrase is kept in memory for this app session only.",
+                "Portable encrypted API key bundle",
+                wx.YES_NO | wx.CANCEL | wx.ICON_INFORMATION,
+            )
+            portable_bundle_prompt.SetYesNoCancelLabels("Enable", "Skip", "Skip")
+            bundle_choice = portable_bundle_prompt.ShowModal()
+            portable_bundle_prompt.Destroy()
+
+            if bundle_choice == wx.ID_YES:
+                passphrase = self._prompt_optional_secret(
+                    "Set bundle passphrase",
+                    "Enter passphrase for portable encrypted API key bundle.",
+                )
+                confirm = self._prompt_optional_secret(
+                    "Confirm bundle passphrase",
+                    "Re-enter passphrase to confirm.",
+                )
+                if passphrase and confirm and passphrase == confirm:
+                    self.config_manager.set_portable_bundle_passphrase(passphrase)
+                    self.config_manager.update_settings(portable_auto_bundle_enabled=True)
+                    self.config_manager.refresh_portable_api_key_bundle()
+                else:
+                    wx.MessageBox(
+                        "Portable auto-bundle was not enabled because passphrases were empty or did not match.",
+                        "Portable auto-bundle skipped",
+                        wx.OK | wx.ICON_WARNING,
+                    )
+
+        self.config_manager.update_settings(onboarding_wizard_shown=True)
 
     def _show_force_start_dialog(self) -> bool:
         """

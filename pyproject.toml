@@ -26,6 +26,7 @@ dependencies = [
     "playsound3",
     "prismatoid>=0.7.0",
     "tzdata",
+    "cryptography>=42.0.0",
 ]
 readme = "README.md"
 classifiers = [

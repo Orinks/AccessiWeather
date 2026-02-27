@@ -6,7 +6,7 @@ Tests configuration loading, saving, and location management.
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -210,6 +210,23 @@ class TestConfigManager:
 
         assert config.settings.update_channel == "nightly"
 
+    def test_encrypted_api_key_wrapper_methods_delegate(self, manager):
+        manager._import_export = MagicMock()
+        manager._import_export.export_encrypted_api_keys.return_value = True
+        manager._import_export.import_encrypted_api_keys.return_value = True
+
+        export_path = manager.config_dir / "keys.awkeys"
+
+        assert manager.export_encrypted_api_keys(export_path, "pass") is True
+        manager._import_export.export_encrypted_api_keys.assert_called_once_with(
+            export_path, "pass"
+        )
+
+        assert manager.import_encrypted_api_keys(export_path, "pass") is True
+        manager._import_export.import_encrypted_api_keys.assert_called_once_with(
+            export_path, "pass"
+        )
+
     def test_missing_update_channel_in_legacy_config_uses_build_default(self, mock_app, config_dir):
         """Legacy config without update_channel should get build-aware default."""
         mock_app.build_tag = "nightly-20260226"
@@ -225,3 +242,51 @@ class TestConfigManager:
         config = manager.load_config()
 
         assert config.settings.update_channel == "nightly"
+
+
+class TestPortableAutoBundleConfigManager:
+    @pytest.fixture
+    def config_dir(self, tmp_path):
+        return tmp_path / "config"
+
+    @pytest.fixture
+    def mock_app(self, config_dir):
+        app = MagicMock()
+        app.paths = MagicMock()
+        app.paths.config = config_dir
+        app.build_tag = None
+        return app
+
+    @pytest.fixture
+    def manager(self, mock_app, config_dir):
+        return ConfigManager(mock_app, config_dir=config_dir)
+
+    def test_refresh_requires_session_passphrase(self, manager):
+        manager.load_config()
+        manager._config.settings.portable_auto_bundle_enabled = True
+        manager.app._portable_mode = True
+
+        with patch.object(manager, "export_encrypted_api_keys", return_value=True) as export_mock:
+            assert manager.refresh_portable_api_key_bundle() is False
+            export_mock.assert_not_called()
+
+    def test_refresh_exports_to_default_awkeys_path_when_enabled(self, manager):
+        manager.load_config()
+        manager._config.settings.portable_auto_bundle_enabled = True
+        manager.app._portable_mode = True
+        manager.set_portable_bundle_passphrase("session-pass")
+
+        with patch.object(manager, "export_encrypted_api_keys", return_value=True) as export_mock:
+            assert manager.refresh_portable_api_key_bundle() is True
+            export_mock.assert_called_once_with(
+                manager.config_dir / "api-keys.awkeys", "session-pass"
+            )
+
+    def test_disable_portable_auto_bundle_deletes_bundle_file(self, manager):
+        bundle_path = manager.get_portable_api_key_bundle_path()
+        bundle_path.parent.mkdir(parents=True, exist_ok=True)
+        bundle_path.write_text("{}", encoding="utf-8")
+        assert bundle_path.exists()
+
+        assert manager.disable_portable_api_key_bundle() is True
+        assert not bundle_path.exists()
