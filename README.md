@@ -58,6 +58,8 @@ AccessiWeather stores your settings and locations in:
 
 You can export and import your configuration from the Settings dialog.
 
+> Note: Config export/import does **not** include API keys. API keys stay in your machine's secure keyring by default.
+
 ## API Keys (Optional)
 
 AccessiWeather works out of the box with free data sources (NWS and Open-Meteo). For enhanced features, you can add:
@@ -65,6 +67,18 @@ AccessiWeather works out of the box with free data sources (NWS and Open-Meteo).
 - **Visual Crossing API**: Historical weather data and extended forecasts
   - Get a free key at [visualcrossing.com](https://www.visualcrossing.com/weather-api)
   - Add in Settings → Weather Sources
+- **OpenRouter API**: Optional AI weather explanations
+  - Add in Settings → AI
+
+### Portable API Key Transfer (Optional)
+
+If you want API keys to travel with a portable folder between machines:
+1. In Settings → Advanced, choose **Export API keys (encrypted)**.
+2. Save the encrypted bundle file and remember the passphrase.
+3. Move/copy that encrypted bundle with your portable folder.
+4. On the destination machine, use **Import API keys (encrypted)** and enter the passphrase.
+
+This keeps plaintext keys out of config files while still allowing portable transfer when you opt in.
 
 ## Documentation
 
@@ -174,4 +188,3 @@ Built with [wxPython](https://wxpython.org/) for accessible cross-platform GUI d
 ## Related Projects
 
 - [AccessiSky](https://github.com/Orinks/AccessiSky) - Accessible sky tracking app (ISS passes, moon phases, aurora forecasts)
-

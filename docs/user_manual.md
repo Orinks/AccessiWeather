@@ -519,10 +519,22 @@ accessiweather --portable
 ```
 
 ### Portable Mode Features
-- **Self-contained**: All configuration files stored in application directory
+- **Self-contained config**: Settings and locations are stored in the application directory
+- **Secure secrets by default**: API keys stay in the local machine keyring unless you export them explicitly
 - **No Registry Changes**: No system modifications required
 - **Removable Media**: Run from USB drives or network locations
 - **Multiple Instances**: Different portable installations can have separate configurations
+
+### Portable API Key Transfer (Optional)
+To make API keys portable between machines while keeping them encrypted:
+1. Open **Settings → Advanced**.
+2. Select **Export API keys (encrypted)** and set a passphrase.
+3. Keep the encrypted bundle file with your portable folder.
+4. On the destination machine, use **Import API keys (encrypted)** and enter the same passphrase.
+
+Notes:
+- Regular config export/import and installed→portable config copy do **not** include API keys.
+- If you move a portable folder without importing keys, AccessiWeather will prompt you to reconfigure/import keys on first run.
 
 ## Troubleshooting
 
