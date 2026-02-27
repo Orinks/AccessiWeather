@@ -537,6 +537,7 @@ class AccessiWeatherApp(wx.App):
 
         # Background update
         self._update_timer: wx.Timer | None = None
+        self._auto_update_check_timer: wx.Timer | None = None
         self.is_updating: bool = False
 
         # Weather data storage
@@ -616,6 +617,9 @@ class AccessiWeatherApp(wx.App):
 
             # Show window (or minimize to tray if setting enabled)
             self._show_or_minimize_window()
+
+            # Start periodic automatic update checks
+            self._start_auto_update_checks()
 
             # Check for updates on startup (if enabled)
             self._check_for_updates_on_startup()
@@ -833,6 +837,39 @@ class AccessiWeatherApp(wx.App):
             # On error, show the window to avoid invisible app
             logger.warning(f"Failed to check minimize setting, showing window: {e}")
             self.main_window.Show()
+
+    def _start_auto_update_checks(self) -> None:
+        """Start periodic automatic update checks based on user settings."""
+        try:
+            settings = self.config_manager.get_settings()
+            auto_enabled = bool(getattr(settings, "auto_update_enabled", True))
+
+            # Stop existing timer before reconfiguring
+            if self._auto_update_check_timer:
+                self._auto_update_check_timer.Stop()
+                self._auto_update_check_timer = None
+
+            if not auto_enabled:
+                logger.debug("Automatic update checks disabled")
+                return
+
+            interval_hours = max(1, int(getattr(settings, "update_check_interval_hours", 24)))
+            interval_ms = interval_hours * 60 * 60 * 1000
+
+            self._auto_update_check_timer = wx.Timer()
+            self._auto_update_check_timer.Bind(wx.EVT_TIMER, self._on_auto_update_check_timer)
+            self._auto_update_check_timer.Start(interval_ms)
+
+            logger.info(
+                "Automatic update checks scheduled every %s hour(s)",
+                interval_hours,
+            )
+        except Exception as e:
+            logger.warning(f"Failed to start automatic update checks: {e}")
+
+    def _on_auto_update_check_timer(self, event) -> None:
+        """Run an automatic update check on timer ticks."""
+        self._check_for_updates_on_startup()
 
     def _check_for_updates_on_startup(self) -> None:
         """Check for updates on startup if enabled in settings."""
@@ -1057,8 +1094,13 @@ class AccessiWeatherApp(wx.App):
         logger.info("Application exit requested")
 
         # Stop background updates
-        if self._update_timer:
-            self._update_timer.Stop()
+        update_timer = getattr(self, "_update_timer", None)
+        if update_timer:
+            update_timer.Stop()
+
+        auto_update_timer = getattr(self, "_auto_update_check_timer", None)
+        if auto_update_timer:
+            auto_update_timer.Stop()
 
         # Play exit sound without blocking shutdown.
         try:
@@ -1136,6 +1178,8 @@ class AccessiWeatherApp(wx.App):
                     temperature_unit=getattr(settings, "temperature_unit", "both"),
                     verbosity_level=getattr(settings, "verbosity_level", "standard"),
                 )
+
+            self._start_auto_update_checks()
 
             logger.info("Runtime settings refreshed successfully")
         except Exception as e:
