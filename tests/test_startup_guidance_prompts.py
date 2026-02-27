@@ -117,6 +117,30 @@ def test_portable_missing_api_keys_hint_noops_when_not_portable():
     app.config_manager.update_settings.assert_not_called()
 
 
+def test_onboarding_wizard_can_open_ai_and_data_sources(monkeypatch):
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
+    settings = SimpleNamespace(onboarding_wizard_shown=False)
+    app.config_manager = SimpleNamespace(
+        get_config=lambda: SimpleNamespace(locations=[], settings=settings),
+        update_settings=MagicMock(),
+    )
+
+    _ensure_wx_dialog_constants()
+    responses = [getattr(wx, "ID_NO", 0), getattr(wx, "ID_YES", 1), getattr(wx, "ID_YES", 1)]
+    monkeypatch.setattr(
+        "accessiweather.app.wx.MessageDialog",
+        lambda *args, **kwargs: _FakeDialog(responses),
+        raising=False,
+    )
+
+    app._maybe_show_first_start_onboarding()
+
+    app.main_window.open_settings.assert_any_call(tab="AI")
+    app.main_window.open_settings.assert_any_call(tab="Data Sources")
+    app.config_manager.update_settings.assert_called_once_with(onboarding_wizard_shown=True)
+
+
 def test_onboarding_wizard_shown_once_with_skip_path(monkeypatch):
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
@@ -128,7 +152,7 @@ def test_onboarding_wizard_shown_once_with_skip_path(monkeypatch):
 
     _ensure_wx_dialog_constants()
     skip_id = getattr(wx, "ID_NO", 0)
-    responses = [skip_id, skip_id]  # skip location, skip AI
+    responses = [skip_id, skip_id, skip_id]  # skip location, AI, and Visual Crossing
     monkeypatch.setattr(
         "accessiweather.app.wx.MessageDialog",
         lambda *args, **kwargs: _FakeDialog(responses),

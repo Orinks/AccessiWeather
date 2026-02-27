@@ -707,8 +707,8 @@ class AccessiWeatherApp(wx.App):
 
         step2 = wx.MessageDialog(
             self.main_window,
-            "Step 2 of 2: AI features are optional.\n\n"
-            "Open Settings > AI to add API keys now?\n\n"
+            "Step 2 of 3: AI features are optional.\n\n"
+            "Open Settings > AI to add your OpenRouter API key now?\n\n"
             "You can skip this and use non-AI features normally.",
             "AI setup (optional)",
             wx.YES_NO | wx.ICON_INFORMATION,
@@ -719,6 +719,21 @@ class AccessiWeatherApp(wx.App):
 
         if step2_result == wx.ID_YES and self.main_window:
             self.main_window.open_settings(tab="AI")
+
+        step3 = wx.MessageDialog(
+            self.main_window,
+            "Step 3 of 3: Visual Crossing key is optional.\n\n"
+            "Open Settings > Data Sources to add your Visual Crossing API key now?\n\n"
+            "You can skip this and continue with other weather sources.",
+            "Weather provider setup (optional)",
+            wx.YES_NO | wx.ICON_INFORMATION,
+        )
+        step3.SetYesNoLabels("Open Data Sources", "Skip")
+        step3_result = step3.ShowModal()
+        step3.Destroy()
+
+        if step3_result == wx.ID_YES and self.main_window:
+            self.main_window.open_settings(tab="Data Sources")
 
         self.config_manager.update_settings(onboarding_wizard_shown=True)
 
