@@ -1712,7 +1712,7 @@ class SettingsDialogSimple(wx.Dialog):
         import os
         import subprocess
 
-        config_dir = str(self.app.paths.config)
+        config_dir = str(self.config_manager.config_dir)
         if os.path.exists(config_dir):
             subprocess.Popen(["explorer", config_dir])
         else:
