@@ -696,9 +696,9 @@ class AccessiWeatherApp(wx.App):
             self.main_window,
             "Welcome to AccessiWeather.\n\nStep 1 of 2: Add your first location now?",
             "Getting started",
-            wx.YES_NO | wx.CANCEL | wx.ICON_INFORMATION,
+            wx.YES_NO | wx.ICON_INFORMATION,
         )
-        step1.SetYesNoCancelLabels("Add location", "Skip", "Skip")
+        step1.SetYesNoLabels("Add location", "Skip")
         step1_result = step1.ShowModal()
         step1.Destroy()
 
@@ -711,9 +711,9 @@ class AccessiWeatherApp(wx.App):
             "Open Settings > AI to add API keys now?\n\n"
             "You can skip this and use non-AI features normally.",
             "AI setup (optional)",
-            wx.YES_NO | wx.CANCEL | wx.ICON_INFORMATION,
+            wx.YES_NO | wx.ICON_INFORMATION,
         )
-        step2.SetYesNoCancelLabels("Open Settings > AI", "Skip", "Skip")
+        step2.SetYesNoLabels("Open Settings > AI", "Skip")
         step2_result = step2.ShowModal()
         step2.Destroy()
 

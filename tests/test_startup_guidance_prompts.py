@@ -27,6 +27,9 @@ class _FakeDialog:
     def SetYesNoCancelLabels(self, *_args):
         return None
 
+    def SetYesNoLabels(self, *_args):
+        return None
+
     def ShowModal(self):
         return self._responses.pop(0)
 
