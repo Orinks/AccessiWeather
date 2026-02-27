@@ -218,7 +218,7 @@ class TestBuildForecastDuration:
 
         assert len(result.periods) == 10
 
-    def test_caps_to_seven_days_for_us_locations(self):
+    def test_uses_configured_duration_for_us_daily_periods(self):
         forecast = Forecast(
             periods=[
                 ForecastPeriod(name=f"Day {i}", temperature=70 + i, short_forecast="Clear")
@@ -238,7 +238,7 @@ class TestBuildForecastDuration:
             settings=settings,
         )
 
-        assert len(result.periods) == 7
+        assert len(result.periods) == 15
 
     def test_us_half_day_periods_show_full_requested_days(self):
         periods = []

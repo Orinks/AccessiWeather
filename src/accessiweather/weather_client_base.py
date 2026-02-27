@@ -645,8 +645,9 @@ class WeatherClient:
         )
 
         # Merge forecasts
+        requested_days = getattr(self.settings, "forecast_duration_days", 7)
         merged_forecast, forecast_attribution = fusion_engine.merge_forecasts(
-            source_results, location
+            source_results, location, requested_days=requested_days
         )
 
         # Merge hourly forecasts
@@ -1016,9 +1017,6 @@ class WeatherClient:
         if not isinstance(configured, int):
             configured = 7
         configured = max(3, min(configured, 16))
-
-        if self._is_us_location(location):
-            return min(configured, 7)
 
         source_limits = {
             "openmeteo": 16,

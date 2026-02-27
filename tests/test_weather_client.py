@@ -316,13 +316,14 @@ class TestWeatherClientHelpers:
         assert client._get_forecast_days_for_source(intl_location, "openmeteo") == 15
         assert client._get_forecast_days_for_source(intl_location, "visualcrossing") == 15
 
-    def test_forecast_days_caps_us_locations_to_seven(self):
-        """US locations should always cap to 7 days."""
+    def test_forecast_days_uses_source_caps_for_us_locations(self):
+        """US locations should use per-source caps (NWS 7, others their API caps)."""
         client = WeatherClient(settings=AppSettings(forecast_duration_days=15))
         us_location = Location(name="NYC", latitude=40.7128, longitude=-74.0060, country_code="US")
 
-        assert client._get_forecast_days_for_source(us_location, "openmeteo") == 7
-        assert client._get_forecast_days_for_source(us_location, "visualcrossing") == 7
+        assert client._get_forecast_days_for_source(us_location, "nws") == 7
+        assert client._get_forecast_days_for_source(us_location, "openmeteo") == 15
+        assert client._get_forecast_days_for_source(us_location, "visualcrossing") == 15
 
 
 class TestWeatherClientContextManager:

@@ -73,12 +73,10 @@ def _resolve_forecast_period_limit(
     configured_days = max(3, min(configured_days, 16))
 
     if _looks_like_half_day_periods(forecast):
-        capped_days = min(configured_days, 7) if _is_us_location(location) else configured_days
-        return min(capped_days * 2, len(forecast.periods))
+        return min(configured_days * 2, len(forecast.periods))
 
-    # Daily-period forecasts: preserve day-based cap semantics.
-    capped_days = min(configured_days, 7) if _is_us_location(location) else configured_days
-    return min(capped_days, len(forecast.periods))
+    # Daily-period forecasts: use configured day count.
+    return min(configured_days, len(forecast.periods))
 
 
 def build_forecast(
