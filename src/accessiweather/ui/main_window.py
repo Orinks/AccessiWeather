@@ -130,6 +130,8 @@ class MainWindow(SizedFrame):
         self.refresh_button = wx.Button(button_panel, label="&Refresh")
         self.explain_button = wx.Button(button_panel, label="&Explain")
         self.discussion_button = wx.Button(button_panel, label="&Discussion")
+        self.send_notification_button = wx.Button(button_panel, label="Send Notification")
+        self.send_notification_button.SetName("Send Notification")
         self.settings_button = wx.Button(button_panel, label="&Settings")
 
     def _bind_events(self) -> None:
@@ -148,6 +150,10 @@ class MainWindow(SizedFrame):
         self.refresh_button.Bind(wx.EVT_BUTTON, lambda e: self.on_refresh())
         self.explain_button.Bind(wx.EVT_BUTTON, lambda e: self._on_explain_weather())
         self.discussion_button.Bind(wx.EVT_BUTTON, lambda e: self._on_discussion())
+        self.send_notification_button.Bind(
+            wx.EVT_BUTTON,
+            lambda e: self._on_test_discussion_notification(),
+        )
         self.settings_button.Bind(wx.EVT_BUTTON, lambda e: self.on_settings())
         self.view_alert_button.Bind(wx.EVT_BUTTON, self._on_view_alert)
 
@@ -716,10 +722,20 @@ class MainWindow(SizedFrame):
 
     def _on_about(self) -> None:
         """Show about dialog."""
+        from accessiweather.config_utils import is_portable_mode
+
+        portable = is_portable_mode()
+        mode_label = "Portable" if portable else "Installed"
+        config_path = (
+            str(self.app.config_manager.config_dir) if self.app.config_manager else "unknown"
+        )
+
         wx.MessageBox(
             "AccessiWeather\n\n"
             "An accessible weather application with NOAA and Open-Meteo support.\n\n"
             "Built with wxPython for screen reader compatibility.\n\n"
+            f"Mode: {mode_label}\n"
+            f"Config path: {config_path}\n\n"
             "https://github.com/Orinks/AccessiWeather",
             "About AccessiWeather",
             wx.OK | wx.ICON_INFORMATION,

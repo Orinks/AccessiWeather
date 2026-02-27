@@ -25,6 +25,17 @@ except ImportError as e:
     DESKTOP_NOTIFIER_AVAILABLE = False
 
 
+def _log_packaging_notifier_diagnostics() -> None:
+    """Emit debug-only notifier dependency diagnostics for packaged troubleshooting."""
+    logger.debug(
+        "[packaging-diag] notifier deps: desktop_notifier_available=%s frozen=%s meipass=%s executable=%s",
+        DESKTOP_NOTIFIER_AVAILABLE,
+        getattr(sys, "frozen", False),
+        getattr(sys, "_MEIPASS", None),
+        getattr(sys, "executable", None),
+    )
+
+
 class SafeDesktopNotifier:
     """
     A wrapper around desktop-notifier that provides synchronous interface.
@@ -43,6 +54,7 @@ class SafeDesktopNotifier:
     ):
         """Initialize the desktop notifier wrapper."""
         self.app_name = app_name
+        _log_packaging_notifier_diagnostics()
 
         # Sound configuration
         self.sound_enabled: bool = bool(sound_enabled)

@@ -114,6 +114,36 @@ class TestIsPortableMode:
         ):
             assert is_portable_mode() is True
 
+    def test_frozen_portable_marker_file_is_portable(self, tmp_path):
+        """A .portable marker should force portable mode."""
+        exe_path = str(tmp_path / "app.exe")
+        (tmp_path / ".portable").write_text("1")
+
+        with (
+            mock.patch.object(sys, "frozen", True, create=True),
+            mock.patch.object(sys, "executable", exe_path),
+            mock.patch.dict(
+                os.environ,
+                {"ACCESSIWEATHER_FORCE_PORTABLE": "", "PROGRAMFILES": "", "PROGRAMFILES(X86)": ""},
+            ),
+        ):
+            assert is_portable_mode() is True
+
+    def test_frozen_legacy_config_marker_is_portable(self, tmp_path):
+        """A config directory marker should force portable mode."""
+        exe_path = str(tmp_path / "app.exe")
+        (tmp_path / "config").mkdir()
+
+        with (
+            mock.patch.object(sys, "frozen", True, create=True),
+            mock.patch.object(sys, "executable", exe_path),
+            mock.patch.dict(
+                os.environ,
+                {"ACCESSIWEATHER_FORCE_PORTABLE": "", "PROGRAMFILES": "", "PROGRAMFILES(X86)": ""},
+            ),
+        ):
+            assert is_portable_mode() is True
+
     def test_frozen_non_writable_directory_not_portable(self, tmp_path):
         """Frozen app in non-writable dir should not be portable."""
         exe_path = str(tmp_path / "app.exe")
@@ -196,6 +226,19 @@ class TestGetConfigDir:
             mock_platform.system.return_value = "Windows"
             result = get_config_dir()
             assert result == os.path.expanduser("~/.accessiweather")
+
+    def test_explicit_portable_marker_config_dir(self, tmp_path):
+        """When frozen with .portable marker, get_config_dir should use exe-dir config."""
+        exe_path = str(tmp_path / "app.exe")
+        (tmp_path / ".portable").write_text("1")
+
+        with (
+            mock.patch.object(sys, "frozen", True, create=True),
+            mock.patch.object(sys, "executable", exe_path),
+        ):
+            result = get_config_dir()
+
+        assert result == os.path.join(str(tmp_path), "config")
 
 
 class TestEnsureConfigDefaults:

@@ -52,6 +52,20 @@ def is_portable_mode() -> bool:
 
         logger.debug(f"Checking portable mode for executable directory: {app_dir}")
 
+        # Explicit portable marker wins for portable ZIP builds.
+        portable_marker = os.path.join(app_dir, ".portable")
+        if os.path.exists(portable_marker):
+            logger.debug(f"Portable mode detected: marker file found at {portable_marker}")
+            return True
+
+        # Legacy portable marker: local config directory next to executable.
+        legacy_config_marker = os.path.join(app_dir, "config")
+        if os.path.isdir(legacy_config_marker):
+            logger.debug(
+                f"Portable mode detected: legacy config marker found at {legacy_config_marker}"
+            )
+            return True
+
         # Check for uninstaller (Inno Setup leaves unins*.exe in app directory)
         # This reliably detects installed copies regardless of install location
         app_dir_path = os.path.dirname(sys.executable)
@@ -104,6 +118,17 @@ def is_portable_mode() -> bool:
     return False
 
 
+def _explicit_portable_config_dir() -> str | None:
+    """Return explicit portable config dir when marker file is present beside exe."""
+    if not getattr(sys, "frozen", False):
+        return None
+
+    app_dir = os.path.dirname(sys.executable)
+    if os.path.exists(os.path.join(app_dir, ".portable")):
+        return os.path.join(app_dir, "config")
+    return None
+
+
 def get_config_dir(custom_dir: str | None = None) -> str:
     """
     Get the configuration directory path.
@@ -120,6 +145,13 @@ def get_config_dir(custom_dir: str | None = None) -> str:
     if custom_dir is not None:
         logger.debug(f"Using custom config directory: {custom_dir}")
         return custom_dir
+
+    explicit_portable_dir = _explicit_portable_config_dir()
+    if explicit_portable_dir:
+        logger.info(
+            f"Running in explicit portable mode (.portable marker), using config directory: {explicit_portable_dir}"
+        )
+        return explicit_portable_dir
 
     # Check if we're running in portable mode
     portable_mode = is_portable_mode()

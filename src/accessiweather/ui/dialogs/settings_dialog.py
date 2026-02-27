@@ -877,6 +877,17 @@ class SettingsDialogSimple(wx.Dialog):
         open_config_btn.Bind(wx.EVT_BUTTON, self._on_open_config_dir)
         sizer.Add(open_config_btn, 0, wx.LEFT | wx.TOP, 10)
 
+        open_installed_config_btn = wx.Button(panel, label="Open installed config directory")
+        open_installed_config_btn.Bind(wx.EVT_BUTTON, self._on_open_installed_config_dir)
+        sizer.Add(open_installed_config_btn, 0, wx.LEFT | wx.TOP, 10)
+
+        from ...config_utils import is_portable_mode
+
+        if is_portable_mode():
+            migrate_config_btn = wx.Button(panel, label="Copy installed config to portable")
+            migrate_config_btn.Bind(wx.EVT_BUTTON, self._on_copy_installed_config_to_portable)
+            sizer.Add(migrate_config_btn, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
+
         # Settings Backup
         sizer.Add(
             wx.StaticText(panel, label="Settings Backup"),
@@ -1706,6 +1717,89 @@ class SettingsDialogSimple(wx.Dialog):
             wx.MessageBox(
                 f"Config directory not found: {config_dir}",
                 "Error",
+                wx.OK | wx.ICON_ERROR,
+            )
+
+    def _get_installed_config_dir(self):
+        """Return the standard installed config directory path."""
+        import os
+        from pathlib import Path
+
+        local_appdata = os.environ.get("LOCALAPPDATA")
+        author = getattr(self.app.paths, "_author", "Orinks")
+        app_name = getattr(self.app.paths, "_app_name", "AccessiWeather")
+        if local_appdata:
+            return Path(local_appdata) / str(author) / str(app_name) / "Config"
+        return Path.home() / "AppData" / "Local" / str(author) / str(app_name) / "Config"
+
+    def _on_open_installed_config_dir(self, event):
+        """Open installed config directory."""
+        import subprocess
+
+        installed_config_dir = self._get_installed_config_dir()
+        if installed_config_dir.exists():
+            subprocess.Popen(["explorer", str(installed_config_dir)])
+        else:
+            wx.MessageBox(
+                f"Installed config directory not found: {installed_config_dir}",
+                "Info",
+                wx.OK | wx.ICON_INFORMATION,
+            )
+
+    def _on_copy_installed_config_to_portable(self, event):
+        """Copy installed config files into the current portable config directory."""
+        import shutil
+
+        portable_config_dir = self.config_manager.config_dir
+        installed_config_dir = self._get_installed_config_dir()
+
+        if not installed_config_dir.exists():
+            wx.MessageBox(
+                f"Installed config directory not found:\n{installed_config_dir}",
+                "Nothing to copy",
+                wx.OK | wx.ICON_INFORMATION,
+            )
+            return
+
+        if installed_config_dir.resolve() == portable_config_dir.resolve():
+            wx.MessageBox(
+                "Installed and portable config directories are the same location."
+                "\n\nNo copy is needed.",
+                "Nothing to copy",
+                wx.OK | wx.ICON_INFORMATION,
+            )
+            return
+
+        result = wx.MessageBox(
+            "Copy settings, locations, and cache files from installed config to this portable config?\n\n"
+            "Existing files in portable config with the same name will be overwritten.",
+            "Copy installed config to portable",
+            wx.YES_NO | wx.ICON_QUESTION,
+        )
+        if result != wx.YES:
+            return
+
+        try:
+            portable_config_dir.mkdir(parents=True, exist_ok=True)
+            copied = 0
+            for item in installed_config_dir.iterdir():
+                dst = portable_config_dir / item.name
+                if item.is_dir():
+                    shutil.copytree(item, dst, dirs_exist_ok=True)
+                else:
+                    shutil.copy2(item, dst)
+                copied += 1
+
+            wx.MessageBox(
+                f"Copied {copied} item(s) from:\n{installed_config_dir}\n\nto:\n{portable_config_dir}",
+                "Copy complete",
+                wx.OK | wx.ICON_INFORMATION,
+            )
+        except Exception as e:
+            logger.error(f"Failed to copy installed config to portable: {e}")
+            wx.MessageBox(
+                f"Failed to copy config: {e}",
+                "Copy failed",
                 wx.OK | wx.ICON_ERROR,
             )
 
