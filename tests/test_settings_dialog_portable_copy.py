@@ -114,7 +114,7 @@ def test_copy_installed_config_to_portable_success_reloads_and_mentions_keyring(
     assert "• accessiweather.json" in final_message
     assert "cache.db" not in final_message
     assert "API keys are stored in your system keyring" in final_message
-    assert "Please re-enter your API keys" in final_message
+    assert "Please re-enter your API keys in Settings." in final_message
 
 
 def test_copy_installed_config_to_portable_validation_failure_reports_incomplete(

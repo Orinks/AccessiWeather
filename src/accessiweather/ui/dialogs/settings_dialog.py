@@ -1954,7 +1954,7 @@ class SettingsDialogSimple(wx.Dialog):
                 f"From:\n{installed_config_dir}\n\n"
                 f"To:\n{portable_config_dir}"
                 "\n\nImportant: API keys are stored in your system keyring and cannot be migrated "
-                "into a portable install. Please re-enter your API keys in Settings > AI.",
+                "into a portable install. Please re-enter your API keys in Settings.",
                 "Copy complete",
                 wx.OK | wx.ICON_INFORMATION,
             )
