@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import webbrowser
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import wx
@@ -873,17 +875,17 @@ class SettingsDialogSimple(wx.Dialog):
             5,
         )
 
-        open_config_btn = wx.Button(panel, label="Open config directory")
+        open_config_btn = wx.Button(panel, label="Open current config directory")
         open_config_btn.Bind(wx.EVT_BUTTON, self._on_open_config_dir)
         sizer.Add(open_config_btn, 0, wx.LEFT | wx.TOP, 10)
 
-        open_installed_config_btn = wx.Button(panel, label="Open installed config directory")
+        open_installed_config_btn = wx.Button(
+            panel, label="Open installed config directory (source)"
+        )
         open_installed_config_btn.Bind(wx.EVT_BUTTON, self._on_open_installed_config_dir)
         sizer.Add(open_installed_config_btn, 0, wx.LEFT | wx.TOP, 10)
 
-        from ...config_utils import is_portable_mode
-
-        if is_portable_mode():
+        if self._is_runtime_portable_mode():
             migrate_config_btn = wx.Button(panel, label="Copy installed config to portable")
             migrate_config_btn.Bind(wx.EVT_BUTTON, self._on_copy_installed_config_to_portable)
             sizer.Add(migrate_config_btn, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
@@ -1710,7 +1712,7 @@ class SettingsDialogSimple(wx.Dialog):
         import os
         import subprocess
 
-        config_dir = str(self.app.paths.config)
+        config_dir = str(self.config_manager.config_dir)
         if os.path.exists(config_dir):
             subprocess.Popen(["explorer", config_dir])
         else:
@@ -1719,6 +1721,58 @@ class SettingsDialogSimple(wx.Dialog):
                 "Error",
                 wx.OK | wx.ICON_ERROR,
             )
+
+    def _is_runtime_portable_mode(self) -> bool:
+        """Return portable mode using runtime app/config state (single source of truth)."""
+        app_portable = getattr(self.app, "_portable_mode", None)
+        if app_portable is not None:
+            return bool(app_portable)
+
+        # Fallback for tests/edge cases where app flag is unavailable.
+        try:
+            from ...config_utils import is_portable_mode
+
+            return bool(is_portable_mode())
+        except Exception:
+            return False
+
+    def _has_meaningful_installed_config_data(
+        self, installed_config_dir: Path
+    ) -> tuple[bool, str | None]:
+        """Pre-check whether installed config has meaningful data to transfer."""
+        if not installed_config_dir.exists() or not installed_config_dir.is_dir():
+            return False, "Installed config directory not found."
+
+        try:
+            has_any_entries = any(installed_config_dir.iterdir())
+        except Exception:
+            has_any_entries = False
+        if not has_any_entries:
+            return False, "Installed config directory is empty."
+
+        config_file = installed_config_dir / "accessiweather.json"
+        if not config_file.exists() or not config_file.is_file():
+            return False, "Required config file accessiweather.json is missing."
+
+        try:
+            if config_file.stat().st_size <= 0:
+                return False, "Config file accessiweather.json is empty."
+        except Exception:
+            return False, "Could not read accessiweather.json."
+
+        try:
+            config_data = self._read_config_json(installed_config_dir)
+        except Exception:
+            return False, "Config file accessiweather.json is invalid or unreadable."
+
+        locations = (
+            config_data.get("locations") if isinstance(config_data.get("locations"), list) else []
+        )
+
+        if len(locations) == 0:
+            return False, "Installed config has no saved locations to transfer."
+
+        return True, None
 
     def _get_installed_config_dir(self):
         """Return the standard installed config directory path."""
@@ -1746,6 +1800,84 @@ class SettingsDialogSimple(wx.Dialog):
                 wx.OK | wx.ICON_INFORMATION,
             )
 
+    def _read_config_json(self, config_dir: Path) -> dict:
+        """Read accessiweather.json from a config directory."""
+        config_file = config_dir / "accessiweather.json"
+        if not config_file.exists():
+            raise FileNotFoundError(f"Required config file not found: {config_file}")
+        with open(config_file, encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid config payload in {config_file}: expected object")
+        return data
+
+    def _validate_portable_copy(
+        self, installed_config_dir: Path, portable_config_dir: Path
+    ) -> tuple[bool, list[str]]:
+        """Validate copied portable config has required non-secret settings/state."""
+        messages: list[str] = []
+        try:
+            src_cfg = self._read_config_json(installed_config_dir)
+            dst_cfg = self._read_config_json(portable_config_dir)
+        except Exception as e:
+            return False, [str(e)]
+
+        src_settings = src_cfg.get("settings") if isinstance(src_cfg.get("settings"), dict) else {}
+        dst_settings = dst_cfg.get("settings") if isinstance(dst_cfg.get("settings"), dict) else {}
+
+        required_setting_keys = ["ai_model_preference", "data_source", "temperature_unit"]
+        for key in required_setting_keys:
+            src_value = src_settings.get(key)
+            dst_value = dst_settings.get(key)
+            if src_value != dst_value:
+                messages.append(
+                    f"Setting '{key}' did not copy correctly (installed={src_value!r}, portable={dst_value!r})."
+                )
+
+        src_locations = (
+            src_cfg.get("locations") if isinstance(src_cfg.get("locations"), list) else []
+        )
+        dst_locations = (
+            dst_cfg.get("locations") if isinstance(dst_cfg.get("locations"), list) else []
+        )
+        if len(src_locations) != len(dst_locations):
+            messages.append(
+                f"Location count mismatch after copy (installed={len(src_locations)}, portable={len(dst_locations)})."
+            )
+
+        if messages:
+            return False, messages
+        return True, []
+
+    def _build_portable_copy_summary(self, portable_config_dir: Path) -> list[str]:
+        """Build concise summary lines describing migrated non-secret config values."""
+        config_data = self._read_config_json(portable_config_dir)
+        settings = (
+            config_data.get("settings") if isinstance(config_data.get("settings"), dict) else {}
+        )
+        locations = (
+            config_data.get("locations") if isinstance(config_data.get("locations"), list) else []
+        )
+
+        custom_prompt_present = any(
+            bool(str(settings.get(key, "")).strip())
+            for key in (
+                "custom_system_prompt",
+                "custom_instructions",
+                "prompt",
+                "assistant_prompt",
+            )
+            if key in settings
+        )
+
+        return [
+            f"• locations: {len(locations)}",
+            f"• data source: {settings.get('data_source', 'not set')}",
+            f"• AI model preference: {settings.get('ai_model_preference', 'not set')}",
+            f"• temperature unit: {settings.get('temperature_unit', 'not set')}",
+            f"• custom prompt: {'yes' if custom_prompt_present else 'no'}",
+        ]
+
     def _on_copy_installed_config_to_portable(self, event):
         """Copy installed config files into the current portable config directory."""
         import shutil
@@ -1753,11 +1885,13 @@ class SettingsDialogSimple(wx.Dialog):
         portable_config_dir = self.config_manager.config_dir
         installed_config_dir = self._get_installed_config_dir()
 
-        if not installed_config_dir.exists():
+        has_data, precheck_reason = self._has_meaningful_installed_config_data(installed_config_dir)
+        if not has_data:
+            detail = f"\n\nDetails: {precheck_reason}" if precheck_reason else ""
             wx.MessageBox(
-                f"Installed config directory not found:\n{installed_config_dir}",
+                f"Nothing to transfer from installed config.\n{installed_config_dir}{detail}",
                 "Nothing to copy",
-                wx.OK | wx.ICON_INFORMATION,
+                wx.OK | wx.ICON_WARNING,
             )
             return
 
@@ -1771,7 +1905,8 @@ class SettingsDialogSimple(wx.Dialog):
             return
 
         result = wx.MessageBox(
-            "Copy settings, locations, and cache files from installed config to this portable config?\n\n"
+            "Copy settings and locations from installed config to this portable config?\n\n"
+            "Only core config files are copied. Cache files are skipped and will regenerate.\n\n"
             "Existing files in portable config with the same name will be overwritten.",
             "Copy installed config to portable",
             wx.YES_NO | wx.ICON_QUESTION,
@@ -1779,19 +1914,67 @@ class SettingsDialogSimple(wx.Dialog):
         if result != wx.YES:
             return
 
+        # Flush pending in-memory state before filesystem mutation.
+        self.config_manager.save_config()
+
         try:
             portable_config_dir.mkdir(parents=True, exist_ok=True)
-            copied = 0
-            for item in installed_config_dir.iterdir():
+
+            transferable_items = ["accessiweather.json"]
+            copied_items: list[str] = []
+
+            for name in transferable_items:
+                item = installed_config_dir / name
+                if not item.exists():
+                    continue
+
                 dst = portable_config_dir / item.name
                 if item.is_dir():
                     shutil.copytree(item, dst, dirs_exist_ok=True)
                 else:
                     shutil.copy2(item, dst)
-                copied += 1
+                copied_items.append(item.name)
 
+            if not copied_items:
+                wx.MessageBox(
+                    "Nothing to transfer from installed config."
+                    "\n\nNo transferable config files were found.",
+                    "Nothing to copy",
+                    wx.OK | wx.ICON_WARNING,
+                )
+                return
+
+            valid, validation_errors = self._validate_portable_copy(
+                installed_config_dir, portable_config_dir
+            )
+            if not valid:
+                details = "\n".join(f"• {msg}" for msg in validation_errors)
+                wx.MessageBox(
+                    "Config copy completed, but validation found problems."
+                    "\n\nPortable data may be incomplete."
+                    f"\n\n{details}",
+                    "Copy incomplete",
+                    wx.OK | wx.ICON_WARNING,
+                )
+                return
+
+            # Reload from copied files so future saves preserve migrated data.
+            self.config_manager._config = None
+            self.config_manager.load_config()
+            self._load_settings()
+
+            copied_list = "\n".join(f"• {name}" for name in copied_items)
+            summary_lines = self._build_portable_copy_summary(portable_config_dir)
+            summary_block = "\n".join(summary_lines)
             wx.MessageBox(
-                f"Copied {copied} item(s) from:\n{installed_config_dir}\n\nto:\n{portable_config_dir}",
+                "Copied these config item(s):\n"
+                f"{copied_list}\n\n"
+                "Copied settings summary:\n"
+                f"{summary_block}\n\n"
+                f"From:\n{installed_config_dir}\n\n"
+                f"To:\n{portable_config_dir}"
+                "\n\nImportant: API keys are stored in your system keyring and cannot be migrated "
+                "into a portable install. Please re-enter your API keys in Settings.",
                 "Copy complete",
                 wx.OK | wx.ICON_INFORMATION,
             )
