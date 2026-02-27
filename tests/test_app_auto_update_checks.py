@@ -39,6 +39,69 @@ def test_start_auto_update_checks_uses_configured_interval(monkeypatch):
     assert app._auto_update_check_timer is timer
 
 
+def test_start_auto_update_checks_replaces_existing_timer_and_honors_disabled(monkeypatch):
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app.config_manager = MagicMock()
+    app.config_manager.get_settings.return_value = SimpleNamespace(
+        auto_update_enabled=False,
+        update_check_interval_hours=6,
+    )
+
+    old_timer = MagicMock()
+    app._auto_update_check_timer = old_timer
+
+    app._start_auto_update_checks()
+
+    old_timer.Stop.assert_called_once()
+    assert app._auto_update_check_timer is None
+
+
+def test_request_exit_stops_timers_when_present():
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._update_timer = MagicMock()
+    app._auto_update_check_timer = MagicMock()
+    app.config_manager = MagicMock()
+    app.config_manager.get_settings.return_value = SimpleNamespace(sound_enabled=False)
+    app.tray_icon = None
+    app.single_instance_manager = None
+    app._async_loop = None
+    app.main_window = None
+    app.ExitMainLoop = MagicMock()
+
+    app.request_exit()
+
+    app._update_timer.Stop.assert_called_once()
+    app._auto_update_check_timer.Stop.assert_called_once()
+    app.ExitMainLoop.assert_called_once()
+
+
+def test_refresh_runtime_settings_restarts_auto_update_checks():
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    settings = SimpleNamespace(
+        data_source="auto",
+        enable_alerts=True,
+        sound_enabled=True,
+        sound_pack="default",
+        taskbar_icon_text_enabled=False,
+        taskbar_icon_dynamic_enabled=True,
+        taskbar_icon_text_format="{temp} {condition}",
+        temperature_unit="both",
+        verbosity_level="standard",
+    )
+    app.config_manager = MagicMock()
+    app.config_manager.get_settings.return_value = settings
+    app.weather_client = None
+    app.presenter = None
+    app._notifier = None
+    app.alert_notification_system = None
+    app.taskbar_icon_updater = None
+    app._start_auto_update_checks = MagicMock()
+
+    app.refresh_runtime_settings()
+
+    app._start_auto_update_checks.assert_called_once()
+
+
 def test_check_for_updates_on_startup_surfaces_update_dialog(monkeypatch):
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app.config_manager = MagicMock()
