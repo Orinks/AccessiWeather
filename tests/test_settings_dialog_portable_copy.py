@@ -143,3 +143,88 @@ def test_copy_installed_config_to_portable_validation_failure_reports_incomplete
     assert any(title == "Copy incomplete" for _, title, _ in calls)
     dialog.config_manager.load_config.assert_not_called()
     dialog._load_settings.assert_not_called()
+
+
+def test_copy_installed_config_to_portable_empty_source_dir_warns_and_stops(tmp_path, monkeypatch):
+    installed = tmp_path / "installed"
+    installed.mkdir(parents=True, exist_ok=True)
+    portable = tmp_path / "portable"
+
+    dialog = _make_dialog(portable)
+    dialog._get_installed_config_dir = lambda: installed
+
+    _ensure_wx_constants()
+    calls: list[tuple] = []
+
+    monkeypatch.setattr(
+        module.wx,
+        "MessageBox",
+        lambda message, title, style: calls.append((message, title, style)) or module.wx.OK,
+        raising=False,
+    )
+
+    dialog._on_copy_installed_config_to_portable(None)
+
+    assert any(title == "Nothing to copy" for _, title, _ in calls)
+    assert not any(title == "Copy installed config to portable" for _, title, _ in calls)
+    dialog.config_manager.save_config.assert_not_called()
+    dialog.config_manager.load_config.assert_not_called()
+
+
+def test_copy_installed_config_to_portable_missing_or_empty_config_warns_and_stops(
+    tmp_path, monkeypatch
+):
+    installed = tmp_path / "installed"
+    portable = tmp_path / "portable"
+
+    dialog = _make_dialog(portable)
+    dialog._get_installed_config_dir = lambda: installed
+
+    _ensure_wx_constants()
+
+    # Missing config file
+    installed.mkdir(parents=True, exist_ok=True)
+    (installed / "cache.db").write_text("cache", encoding="utf-8")
+    calls_missing: list[tuple] = []
+    monkeypatch.setattr(
+        module.wx,
+        "MessageBox",
+        lambda message, title, style: calls_missing.append((message, title, style)) or module.wx.OK,
+        raising=False,
+    )
+    dialog._on_copy_installed_config_to_portable(None)
+    assert any(title == "Nothing to copy" for _, title, _ in calls_missing)
+    assert not any(title == "Copy installed config to portable" for _, title, _ in calls_missing)
+
+    # Empty config file
+    for item in installed.iterdir():
+        if item.is_file():
+            item.unlink()
+    (installed / "accessiweather.json").write_text("", encoding="utf-8")
+    calls_empty: list[tuple] = []
+    monkeypatch.setattr(
+        module.wx,
+        "MessageBox",
+        lambda message, title, style: calls_empty.append((message, title, style)) or module.wx.OK,
+        raising=False,
+    )
+    dialog._on_copy_installed_config_to_portable(None)
+    assert any(title == "Nothing to copy" for _, title, _ in calls_empty)
+    assert not any(title == "Copy installed config to portable" for _, title, _ in calls_empty)
+
+    dialog.config_manager.save_config.assert_not_called()
+    dialog.config_manager.load_config.assert_not_called()
+
+
+def test_runtime_portable_mode_prefers_app_runtime_flag_over_heuristic(monkeypatch):
+    dialog = _make_dialog(Path("/tmp/portable"))
+    dialog.app._portable_mode = True
+
+    monkeypatch.setattr(
+        module,
+        "is_portable_mode",
+        lambda: (_ for _ in ()).throw(AssertionError("heuristic should not be used")),
+        raising=False,
+    )
+
+    assert dialog._is_runtime_portable_mode() is True

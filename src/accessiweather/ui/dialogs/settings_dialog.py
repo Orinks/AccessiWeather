@@ -885,9 +885,7 @@ class SettingsDialogSimple(wx.Dialog):
         open_installed_config_btn.Bind(wx.EVT_BUTTON, self._on_open_installed_config_dir)
         sizer.Add(open_installed_config_btn, 0, wx.LEFT | wx.TOP, 10)
 
-        from ...config_utils import is_portable_mode
-
-        if is_portable_mode():
+        if self._is_runtime_portable_mode():
             migrate_config_btn = wx.Button(panel, label="Copy installed config to portable")
             migrate_config_btn.Bind(wx.EVT_BUTTON, self._on_copy_installed_config_to_portable)
             sizer.Add(migrate_config_btn, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
@@ -1724,6 +1722,71 @@ class SettingsDialogSimple(wx.Dialog):
                 wx.OK | wx.ICON_ERROR,
             )
 
+    def _is_runtime_portable_mode(self) -> bool:
+        """Return portable mode using runtime app/config state (single source of truth)."""
+        app_portable = getattr(self.app, "_portable_mode", None)
+        if app_portable is not None:
+            return bool(app_portable)
+
+        # Fallback for tests/edge cases where app flag is unavailable.
+        try:
+            from ...config_utils import is_portable_mode
+
+            return bool(is_portable_mode())
+        except Exception:
+            return False
+
+    def _has_meaningful_installed_config_data(
+        self, installed_config_dir: Path
+    ) -> tuple[bool, str | None]:
+        """Pre-check whether installed config has meaningful data to transfer."""
+        if not installed_config_dir.exists() or not installed_config_dir.is_dir():
+            return False, "Installed config directory not found."
+
+        try:
+            has_any_entries = any(installed_config_dir.iterdir())
+        except Exception:
+            has_any_entries = False
+        if not has_any_entries:
+            return False, "Installed config directory is empty."
+
+        config_file = installed_config_dir / "accessiweather.json"
+        if not config_file.exists() or not config_file.is_file():
+            return False, "Required config file accessiweather.json is missing."
+
+        try:
+            if config_file.stat().st_size <= 0:
+                return False, "Config file accessiweather.json is empty."
+        except Exception:
+            return False, "Could not read accessiweather.json."
+
+        try:
+            config_data = self._read_config_json(installed_config_dir)
+        except Exception:
+            return False, "Config file accessiweather.json is invalid or unreadable."
+
+        settings = (
+            config_data.get("settings") if isinstance(config_data.get("settings"), dict) else {}
+        )
+        locations = (
+            config_data.get("locations") if isinstance(config_data.get("locations"), list) else []
+        )
+
+        has_meaningful_settings = any(
+            settings.get(key) not in (None, "", [], {})
+            for key in (
+                "ai_model_preference",
+                "data_source",
+                "temperature_unit",
+            )
+        )
+        has_meaningful_locations = len(locations) > 0
+
+        if not (has_meaningful_settings or has_meaningful_locations):
+            return False, "Installed config does not contain transferable settings or locations."
+
+        return True, None
+
     def _get_installed_config_dir(self):
         """Return the standard installed config directory path."""
         import os
@@ -1806,11 +1869,13 @@ class SettingsDialogSimple(wx.Dialog):
         portable_config_dir = self.config_manager.config_dir
         installed_config_dir = self._get_installed_config_dir()
 
-        if not installed_config_dir.exists():
+        has_data, precheck_reason = self._has_meaningful_installed_config_data(installed_config_dir)
+        if not has_data:
+            detail = f"\n\nDetails: {precheck_reason}" if precheck_reason else ""
             wx.MessageBox(
-                f"Installed config directory not found:\n{installed_config_dir}",
+                f"Nothing to transfer from installed config.\n{installed_config_dir}{detail}",
                 "Nothing to copy",
-                wx.OK | wx.ICON_INFORMATION,
+                wx.OK | wx.ICON_WARNING,
             )
             return
 
