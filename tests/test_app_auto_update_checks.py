@@ -102,6 +102,52 @@ def test_refresh_runtime_settings_restarts_auto_update_checks():
     app._start_auto_update_checks.assert_called_once()
 
 
+def test_check_for_updates_after_startup_guidance_runs_immediately_when_onboarding_not_needed():
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app.main_window = SimpleNamespace()
+    app.config_manager = MagicMock()
+    app.config_manager.get_config.return_value = SimpleNamespace(
+        locations=[SimpleNamespace(name="Home")],
+        settings=SimpleNamespace(onboarding_wizard_shown=False),
+    )
+    app._startup_update_check_deferred = False
+    app._check_for_updates_on_startup = MagicMock()
+
+    app._check_for_updates_after_startup_guidance()
+
+    app._check_for_updates_on_startup.assert_called_once()
+    assert app._startup_update_check_deferred is False
+
+
+def test_check_for_updates_after_startup_guidance_defers_when_onboarding_will_show():
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app.main_window = SimpleNamespace()
+    app.config_manager = MagicMock()
+    app.config_manager.get_config.return_value = SimpleNamespace(
+        locations=[],
+        settings=SimpleNamespace(onboarding_wizard_shown=False),
+    )
+    app._startup_update_check_deferred = False
+    app._check_for_updates_on_startup = MagicMock()
+
+    app._check_for_updates_after_startup_guidance()
+
+    app._check_for_updates_on_startup.assert_not_called()
+    assert app._startup_update_check_deferred is True
+
+
+def test_run_deferred_startup_update_check_runs_once():
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._startup_update_check_deferred = True
+    app._check_for_updates_on_startup = MagicMock()
+
+    app._run_deferred_startup_update_check()
+    app._run_deferred_startup_update_check()
+
+    app._check_for_updates_on_startup.assert_called_once()
+    assert app._startup_update_check_deferred is False
+
+
 def test_check_for_updates_on_startup_surfaces_update_dialog(monkeypatch):
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app.config_manager = MagicMock()

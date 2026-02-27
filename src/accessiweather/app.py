@@ -539,6 +539,7 @@ class AccessiWeatherApp(wx.App):
         # Background update
         self._update_timer: wx.Timer | None = None
         self._auto_update_check_timer: wx.Timer | None = None
+        self._startup_update_check_deferred: bool = False
         self.is_updating: bool = False
 
         # Weather data storage
@@ -625,8 +626,8 @@ class AccessiWeatherApp(wx.App):
             # Start periodic automatic update checks
             self._start_auto_update_checks()
 
-            # Check for updates on startup (if enabled)
-            self._check_for_updates_on_startup()
+            # Check for updates on startup, after onboarding completes when shown.
+            self._check_for_updates_after_startup_guidance()
 
             logger.info("AccessiWeather application started successfully")
             return True
@@ -644,6 +645,31 @@ class AccessiWeatherApp(wx.App):
         """Schedule lightweight first-run and portable hints after startup."""
         wx.CallLater(800, self._maybe_show_first_start_onboarding)
         wx.CallLater(1400, self._maybe_show_portable_missing_keys_hint)
+
+    def _should_show_first_start_onboarding(self) -> bool:
+        """Return True when first-start onboarding should be shown."""
+        if not self.main_window or not self.config_manager:
+            return False
+
+        config = self.config_manager.get_config()
+        settings = config.settings
+        return not getattr(settings, "onboarding_wizard_shown", False) and not bool(
+            config.locations
+        )
+
+    def _check_for_updates_after_startup_guidance(self) -> None:
+        """Run startup update checks now, or defer until onboarding closes."""
+        self._startup_update_check_deferred = self._should_show_first_start_onboarding()
+        if self._startup_update_check_deferred:
+            return
+        self._check_for_updates_on_startup()
+
+    def _run_deferred_startup_update_check(self) -> None:
+        """Run the deferred startup update check once after onboarding finishes."""
+        if not getattr(self, "_startup_update_check_deferred", False):
+            return
+        self._startup_update_check_deferred = False
+        self._check_for_updates_on_startup()
 
     def _has_any_saved_api_keys(self) -> bool:
         """Return True when at least one API key exists in secure storage."""
@@ -719,16 +745,64 @@ class AccessiWeatherApp(wx.App):
                 continue
             return ""
 
-    def _maybe_show_first_start_onboarding(self) -> None:
-        """Show a minimal onboarding wizard once on fresh setup."""
+    def _maybe_offer_test_key_now(self, key_name: str) -> None:
+        """Offer to open settings so users can validate the entered key immediately."""
+        if not self.main_window:
+            return
+
+        test_dialog = wx.MessageDialog(
+            self.main_window,
+            f"{key_name} saved. Test key now in Settings > AI?",
+            "Key saved",
+            wx.YES_NO | wx.ICON_INFORMATION,
+        )
+        test_dialog.SetYesNoLabels("Test key now", "Later")
+        result = test_dialog.ShowModal()
+        test_dialog.Destroy()
+
+        if result == wx.ID_YES:
+            self.main_window.open_settings(tab="AI")
+
+    def _has_saved_api_key(self, key_name: str) -> bool:
+        """Return True when a specific API key exists in secure storage."""
+        from .config.secure_storage import SecureStorage
+
+        return bool((SecureStorage.get_password(key_name) or "").strip())
+
+    @staticmethod
+    def _onboarding_status_text(enabled: bool) -> str:
+        return "Yes" if enabled else "No"
+
+    def _show_onboarding_readiness_summary(self) -> None:
+        """Show an end-of-onboarding summary of key setup readiness."""
         if not self.main_window or not self.config_manager:
             return
 
         config = self.config_manager.get_config()
-        settings = config.settings
-        if getattr(settings, "onboarding_wizard_shown", False):
-            return
-        if config.locations:
+        summary_lines = [
+            "Setup summary:",
+            f"- Location configured: {self._onboarding_status_text(bool(config.locations))}",
+            f"- OpenRouter key set: {self._onboarding_status_text(self._has_saved_api_key('openrouter_api_key'))}",
+            f"- Visual Crossing weather provider key set: {self._onboarding_status_text(self._has_saved_api_key('visual_crossing_api_key'))}",
+            (
+                "- Portable encrypted bundle enabled: "
+                f"{self._onboarding_status_text(getattr(config.settings, 'portable_auto_bundle_enabled', False))}"
+            ),
+        ]
+
+        summary_dialog = wx.MessageDialog(
+            self.main_window,
+            "\n".join(summary_lines),
+            "Onboarding readiness",
+            wx.OK | wx.ICON_INFORMATION,
+        )
+        summary_dialog.ShowModal()
+        summary_dialog.Destroy()
+
+    def _maybe_show_first_start_onboarding(self) -> None:
+        """Show a minimal onboarding wizard once on fresh setup."""
+        if not self._should_show_first_start_onboarding():
+            self._run_deferred_startup_update_check()
             return
 
         step1 = wx.MessageDialog(
@@ -752,50 +826,50 @@ class AccessiWeatherApp(wx.App):
         )
         if openrouter_key is not None and openrouter_key:
             self.config_manager.update_settings(openrouter_api_key=openrouter_key)
+            self._maybe_offer_test_key_now("OpenRouter API key")
 
         visual_crossing_key = self._prompt_optional_secret_with_link(
-            "Visual Crossing API key (optional)",
-            "Step 3 of 4: Enter your Visual Crossing API key now, or leave blank to skip.",
+            "Visual Crossing weather provider key (optional)",
+            "Step 3 of 4: Enter your Visual Crossing weather provider key now, or leave blank to skip.",
             "https://www.visualcrossing.com/sign-up",
-            "Get Visual Crossing API key",
+            "Get Visual Crossing weather provider key",
         )
         if visual_crossing_key is not None and visual_crossing_key:
             self.config_manager.update_settings(visual_crossing_api_key=visual_crossing_key)
+            self._maybe_offer_test_key_now("Visual Crossing weather provider key")
 
         if self._portable_mode:
             portable_bundle_prompt = wx.MessageDialog(
                 self.main_window,
-                "Step 4 of 4 (portable): Keep an encrypted API key bundle with this portable folder?\n\n"
-                "If enabled, AccessiWeather can auto-refresh api-keys.awkeys when keys change.\n"
-                "Passphrase is kept in memory for this app session only.",
-                "Portable encrypted API key bundle",
-                wx.YES_NO | wx.CANCEL | wx.ICON_INFORMATION,
+                "Step 4 of 4 (portable): Portable API key portability\n\n"
+                "Enable an encrypted key bundle for this portable folder?\n"
+                "If enabled, AccessiWeather can auto-refresh api-keys.awkeys when keys change.",
+                "Portable API key portability",
+                wx.YES_NO | wx.ICON_INFORMATION,
             )
-            portable_bundle_prompt.SetYesNoCancelLabels("Enable", "Skip", "Skip")
+            portable_bundle_prompt.SetYesNoLabels("Enable", "Skip")
             bundle_choice = portable_bundle_prompt.ShowModal()
             portable_bundle_prompt.Destroy()
 
             if bundle_choice == wx.ID_YES:
                 passphrase = self._prompt_optional_secret(
-                    "Set bundle passphrase",
+                    "Portable bundle passphrase",
                     "Enter passphrase for portable encrypted API key bundle.",
                 )
-                confirm = self._prompt_optional_secret(
-                    "Confirm bundle passphrase",
-                    "Re-enter passphrase to confirm.",
-                )
-                if passphrase and confirm and passphrase == confirm:
+                if passphrase:
                     self.config_manager.set_portable_bundle_passphrase(passphrase)
                     self.config_manager.update_settings(portable_auto_bundle_enabled=True)
                     self.config_manager.refresh_portable_api_key_bundle()
                 else:
                     wx.MessageBox(
-                        "Portable auto-bundle was not enabled because passphrases were empty or did not match.",
-                        "Portable auto-bundle skipped",
+                        "Portable encrypted bundle was not enabled because no passphrase was entered.",
+                        "Portable API key portability skipped",
                         wx.OK | wx.ICON_WARNING,
                     )
 
+        self._show_onboarding_readiness_summary()
         self.config_manager.update_settings(onboarding_wizard_shown=True)
+        self._run_deferred_startup_update_check()
 
     def _show_force_start_dialog(self) -> bool:
         """
