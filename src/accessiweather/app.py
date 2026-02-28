@@ -641,6 +641,16 @@ class AccessiWeatherApp(wx.App):
         if self._portable_keys_imported_this_session:
             return
 
+        # Skip if all keys are already present in keyring — nothing to import.
+        from .config.import_export import PORTABLE_API_SECRET_KEYS
+        from .config.secure_storage import SecureStorage
+
+        missing = [
+            k for k in PORTABLE_API_SECRET_KEYS if not (SecureStorage.get_password(k) or "").strip()
+        ]
+        if not missing:
+            return
+
         config_dir = self.config_manager.config_dir
         candidate_names = ["api-keys.keys", "api-keys.awkeys"]
         keys_path = None
