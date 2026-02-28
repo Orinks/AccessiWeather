@@ -175,6 +175,17 @@ class ImportExportOperations:
             # SECURITY: Only export non-sensitive settings (API keys stay in keyring)
             settings_data = {
                 "settings": config.settings.to_dict(),
+                "locations": [
+                    {
+                        "name": location.name,
+                        "latitude": location.latitude,
+                        "longitude": location.longitude,
+                        **(
+                            {"country_code": location.country_code} if location.country_code else {}
+                        ),
+                    }
+                    for location in config.locations
+                ],
                 "exported_at": str(datetime.now()),
             }
 
@@ -241,6 +252,10 @@ class ImportExportOperations:
                 return False
 
             self.logger.info("Imported %d API keys into secure storage", imported)
+
+            # Refresh in-memory config so keys are active without a restart
+            self._manager._load_secure_keys()
+
             return True
         except PortableSecretsError as exc:
             self.logger.error(f"Failed to import encrypted API keys: {exc}")
@@ -477,9 +492,41 @@ class ImportExportOperations:
                 self.logger.error(f"Failed to deserialize settings: {exc}")
                 return False
 
-            # SECURITY: Merge settings while preserving locations (settings-only import)
+            # SECURITY: Merge settings while preserving existing locations
             config = self._manager.get_config()
             config.settings = imported_settings
+
+            # Import locations if present in export file (skip duplicates by name)
+            locations_imported = 0
+            for entry in data.get("locations", []):
+                if not isinstance(entry, dict):
+                    continue
+                name = entry.get("name")
+                latitude = entry.get("latitude")
+                longitude = entry.get("longitude")
+                if not name or latitude is None or longitude is None:
+                    continue
+                try:
+                    latitude_value = float(latitude)
+                    longitude_value = float(longitude)
+                except (TypeError, ValueError):
+                    continue
+                if any(loc.name == name for loc in config.locations):
+                    self.logger.info(f"Skipped existing location: {name}")
+                    continue
+                config.locations.append(
+                    Location(
+                        name=name,
+                        latitude=latitude_value,
+                        longitude=longitude_value,
+                        country_code=entry.get("country_code"),
+                    )
+                )
+                locations_imported += 1
+                self.logger.info(f"Imported location: {name}")
+
+            if locations_imported:
+                self.logger.info("Imported %d locations from settings file", locations_imported)
 
             # Save the updated configuration
             if not self._manager.save_config():

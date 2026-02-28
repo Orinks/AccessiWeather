@@ -80,6 +80,8 @@ class TestPortableSecretsImportExportWiring:
 
         assert imported_store["openrouter_api_key"] == "sk-exported"
         assert imported_store["visual_crossing_api_key"] == "vc-exported"
+        # After import, in-memory config should be refreshed so keys are active immediately
+        manager._load_secure_keys.assert_called_once()
 
     def test_export_encrypted_api_keys_returns_false_when_no_keys(self, tmp_path):
         manager = MagicMock()
