@@ -37,6 +37,11 @@ def parse_args() -> argparse.Namespace:
         metavar="TAG",
         help="Override nightly build tag for update testing (e.g., 'nightly-20250101')",
     )
+    parser.add_argument(
+        "--wizard",
+        action="store_true",
+        help="Force the onboarding wizard to run even if it has already been shown",
+    )
     return parser.parse_args()
 
 
@@ -57,4 +62,5 @@ if __name__ == "__main__":
         portable_mode=args.portable,
         fake_version=fake_version,
         fake_nightly=fake_nightly,
+        force_wizard=args.wizard,
     )
