@@ -182,3 +182,36 @@ class LazySecureStorage:
         """Reset the lazy loader to fetch fresh value on next access."""
         self._value = None
         self._loaded = False
+
+
+# Cached result of keyring availability check
+_keyring_available: bool | None = None
+
+
+def is_keyring_available() -> bool:
+    """
+    Return True if the system keyring is functional.
+
+    Performs a test round-trip (set/get/delete) on first call and caches
+    the result.  Subsequent calls return the cached value immediately.
+    """
+    global _keyring_available
+    if _keyring_available is not None:
+        return _keyring_available
+
+    keyring = _get_keyring()
+    if keyring is None:
+        _keyring_available = False
+        return False
+
+    _TEST_KEY = "__accessiweather_keyring_probe__"
+    _TEST_VAL = "probe"
+    try:
+        keyring.set_password(SERVICE_NAME, _TEST_KEY, _TEST_VAL)
+        result = keyring.get_password(SERVICE_NAME, _TEST_KEY)
+        keyring.delete_password(SERVICE_NAME, _TEST_KEY)
+        _keyring_available = result == _TEST_VAL
+    except Exception:
+        _keyring_available = False
+
+    return _keyring_available

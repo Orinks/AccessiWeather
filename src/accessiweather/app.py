@@ -474,6 +474,7 @@ class AccessiWeatherApp(wx.App):
         self._portable_mode = portable_mode
         self.debug_mode = bool(debug)
         self._force_wizard = bool(force_wizard)
+        self._portable_keys_imported_this_session: bool = False
 
         # App version and build info (import locally to avoid circular import)
         from . import __version__
@@ -634,6 +635,10 @@ class AccessiWeatherApp(wx.App):
         if not self._portable_mode:
             return
 
+        # Skip if keys were already imported this session.
+        if self._portable_keys_imported_this_session:
+            return
+
         # Only run when at least one key is absent.
         if self._has_any_saved_api_keys():
             # Check whether *all* keys are present, not just any.
@@ -683,11 +688,23 @@ class AccessiWeatherApp(wx.App):
                 success = False
 
             if success:
-                wx.MessageBox(
-                    "API keys imported successfully. They are now active.",
-                    "Keys imported",
-                    wx.OK | wx.ICON_INFORMATION,
-                )
+                self._portable_keys_imported_this_session = True
+                from .config.secure_storage import is_keyring_available
+                if not is_keyring_available():
+                    wx.MessageBox(
+                        "API keys imported successfully and are active for this session.\n\n"
+                        "However, your system keyring is unavailable, so the keys could not be "
+                        "saved locally. You will be prompted for your passphrase again next launch.\n\n"
+                        "To avoid this, install a keyring backend (e.g. gnome-keyring or KWallet on Linux).",
+                        "Keys imported (keyring unavailable)",
+                        wx.OK | wx.ICON_WARNING,
+                    )
+                else:
+                    wx.MessageBox(
+                        "API keys imported successfully. They are now active.",
+                        "Keys imported",
+                        wx.OK | wx.ICON_INFORMATION,
+                    )
                 return
 
             # Wrong passphrase or other failure — offer retry or skip.
@@ -930,6 +947,22 @@ class AccessiWeatherApp(wx.App):
 
         if step1_result == wx.ID_YES and self.main_window:
             self.main_window.on_add_location()
+
+        from .config.secure_storage import is_keyring_available
+        if not is_keyring_available():
+            _warn_dlg = wx.MessageDialog(
+                self.main_window,
+                "Your system keyring is not available.\n\n"
+                "API keys you enter cannot be stored securely on this machine. "
+                "On Linux, installing a keyring backend (e.g. gnome-keyring or KWallet) "
+                "is recommended.\n\n"
+                "You can still enter keys now; if portable mode is enabled with an encrypted "
+                "bundle they will be saved there — otherwise they will be lost on exit.",
+                "Secure storage unavailable",
+                wx.OK | wx.ICON_WARNING,
+            )
+            _warn_dlg.ShowModal()
+            _warn_dlg.Destroy()
 
         openrouter_key = self._prompt_optional_secret_with_link(
             "OpenRouter API key (optional)",
