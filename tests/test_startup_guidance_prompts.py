@@ -191,50 +191,68 @@ def test_onboarding_wizard_shown_once_with_skip_path(monkeypatch):
     app.config_manager.update_settings.assert_not_called()
 
 
-def test_onboarding_wizard_portable_happy_path_sets_keys_and_bundle(monkeypatch):
+def test_onboarding_wizard_portable_happy_path_sets_keys_and_bundle(monkeypatch, tmp_path):
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._portable_mode = True
     app._force_wizard = False
+    app._portable_keys_imported_this_session = False
     app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
     settings = SimpleNamespace(onboarding_wizard_shown=False)
+    config = SimpleNamespace(locations=[], settings=settings)
+    bundle_path = tmp_path / "api-keys.keys"
     app.config_manager = SimpleNamespace(
-        get_config=lambda: SimpleNamespace(locations=[], settings=settings),
+        get_config=lambda: config,
         update_settings=MagicMock(),
-        set_portable_bundle_passphrase=MagicMock(),
-        refresh_portable_api_key_bundle=MagicMock(),
+        get_portable_api_key_bundle_path=lambda: bundle_path,
     )
 
     _ensure_wx_dialog_constants()
+    # Step 1: skip location; step 2: OR key prompt+link dialogs; step 3: VC key; summary OK
     responses = [
-        getattr(wx, "ID_NO", 0),
-        getattr(wx, "ID_YES", 1),
-        getattr(wx, "ID_NO", 0),
-        getattr(wx, "ID_YES", 1),
-        getattr(wx, "ID_NO", 0),
-        getattr(wx, "ID_YES", 1),
-        getattr(wx, "ID_OK", 1),
+        getattr(wx, "ID_NO", 0),  # step 1: skip location
+        getattr(wx, "ID_YES", 1),  # step 2: OR key — choose "Enter key"
+        getattr(wx, "ID_YES", 1),  # step 3: VC key — choose "Enter key"
+        getattr(wx, "ID_OK", 1),  # onboarding summary
     ]
     monkeypatch.setattr(
         "accessiweather.app.wx.MessageDialog",
         lambda *args, **kwargs: _FakeDialog(responses),
         raising=False,
     )
+    # TextEntryDialog: OR key, VC key, bundle passphrase
     text_responses = ["sk-or", "vc-key", "bundle-pass"]
     monkeypatch.setattr(
         "accessiweather.app.wx.TextEntryDialog",
         lambda *args, **kwargs: _FakeTextEntryDialog(text_responses),
         raising=False,
     )
+    monkeypatch.setattr(
+        "accessiweather.app.wx.MessageBox",
+        lambda *a, **kw: None,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "accessiweather.config.secure_storage.SecureStorage.set_password",
+        lambda *a: True,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "accessiweather.config.secure_storage.SecureStorage.get_password",
+        lambda *a: None,
+        raising=False,
+    )
 
     app._maybe_show_first_start_onboarding()
 
-    calls = app.config_manager.update_settings.call_args_list
-    assert calls[0].kwargs == {"openrouter_api_key": "sk-or"}
-    assert calls[1].kwargs == {"visual_crossing_api_key": "vc-key"}
-    assert calls[2].kwargs == {"portable_auto_bundle_enabled": True}
-    assert calls[3].kwargs == {"onboarding_wizard_shown": True}
-    app.config_manager.set_portable_bundle_passphrase.assert_called_once_with("bundle-pass")
-    app.config_manager.refresh_portable_api_key_bundle.assert_called_once()
+    # Bundle file should have been written with the entered keys
+    assert bundle_path.exists(), "Bundle file should have been created"
+    # Keys should be live in session memory
+    assert settings.openrouter_api_key == "sk-or"
+    assert settings.visual_crossing_api_key == "vc-key"
+    assert app._portable_keys_imported_this_session is True
+    # wizard_shown should be marked
+    last_call = app.config_manager.update_settings.call_args_list[-1]
+    assert last_call.kwargs == {"onboarding_wizard_shown": True}
 
 
 def test_onboarding_wizard_api_key_link_actions_open_browser(monkeypatch):
