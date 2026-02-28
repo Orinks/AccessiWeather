@@ -1387,7 +1387,7 @@ class SettingsDialogSimple(wx.Dialog):
             success = self.config_manager.update_settings(**settings_dict)
             if success:
                 logger.info("Settings saved successfully")
-                if self._is_runtime_portable_mode():
+                if hasattr(self, "app") and self._is_runtime_portable_mode():
                     self._maybe_update_portable_bundle_after_save(settings_dict)
             return success
 
