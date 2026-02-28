@@ -318,6 +318,7 @@ class TestUpdateSettings:
         """Create mock ConfigManager."""
         manager = MagicMock()
         manager.save_config.return_value = True
+        manager.app._portable_mode = False  # ensure keyring writes are not skipped
 
         config = AppConfig.default()
         manager.get_config.return_value = config
