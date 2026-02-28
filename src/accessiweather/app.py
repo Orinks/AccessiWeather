@@ -639,19 +639,15 @@ class AccessiWeatherApp(wx.App):
         if self._portable_keys_imported_this_session:
             return
 
-        # Only run when at least one key is absent.
-        if self._has_any_saved_api_keys():
-            # Check whether *all* keys are present, not just any.
-            from .config.import_export import PORTABLE_API_SECRET_KEYS
-            from .config.secure_storage import SecureStorage
+        # Only prompt if at least one key from the bundle is absent from keyring.
+        from .config.import_export import PORTABLE_API_SECRET_KEYS
+        from .config.secure_storage import SecureStorage
 
-            missing = [
-                k
-                for k in PORTABLE_API_SECRET_KEYS
-                if not (SecureStorage.get_password(k) or "").strip()
-            ]
-            if not missing:
-                return
+        missing = [
+            k for k in PORTABLE_API_SECRET_KEYS if not (SecureStorage.get_password(k) or "").strip()
+        ]
+        if not missing:
+            return
 
         config_dir = self.config_manager.config_dir
         candidate_names = ["api-keys.keys", "api-keys.awkeys"]

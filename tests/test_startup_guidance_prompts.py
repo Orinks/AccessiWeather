@@ -543,9 +543,9 @@ def _make_app_for_auto_import(tmp_path, all_keys_missing: bool = True):
         import_encrypted_api_keys=MagicMock(return_value=True),
     )
 
-    # Mimic _has_any_saved_api_keys — if all_keys_missing, return False
-    app._has_any_saved_api_keys = MagicMock(return_value=not all_keys_missing)
     app._force_wizard = False
+    # all_keys_missing controls whether SecureStorage returns keys or not;
+    # callers that need "all present" should patch SecureStorage.get_password.
 
     _ensure_wx_dialog_constants()
     return app
