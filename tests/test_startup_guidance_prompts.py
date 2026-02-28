@@ -67,9 +67,14 @@ def test_portable_missing_api_keys_hint_shown_once_and_persists(monkeypatch, tmp
     app._force_wizard = False
     app._portable_keys_imported_this_session = False
     app.main_window = SimpleNamespace(open_settings=MagicMock())
-    settings = SimpleNamespace(portable_missing_api_keys_hint_shown=False)
+    settings = SimpleNamespace(
+        portable_missing_api_keys_hint_shown=False,
+        onboarding_wizard_shown=True,  # wizard already done — hint should show
+    )
+    config = SimpleNamespace(settings=settings, locations={"Home": object()})
     app.config_manager = SimpleNamespace(
         get_settings=lambda: settings,
+        get_config=lambda: config,
         update_settings=MagicMock(),
         config_dir=tmp_path,  # no bundle files → hint should show
     )

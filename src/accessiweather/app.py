@@ -813,6 +813,10 @@ class AccessiWeatherApp(wx.App):
         if getattr(settings, "portable_missing_api_keys_hint_shown", False):
             return
 
+        # If the onboarding wizard is going to run (or did run), it covers key setup.
+        if self._should_show_first_start_onboarding():
+            return
+
         # If a bundle exists the import flow already handled it — no hint needed.
         config_dir = self.config_manager.config_dir
         bundle_exists = any(
