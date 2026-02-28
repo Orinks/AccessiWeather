@@ -612,8 +612,94 @@ class AccessiWeatherApp(wx.App):
 
     def _schedule_startup_guidance_prompts(self) -> None:
         """Schedule lightweight first-run and portable hints after startup."""
+        wx.CallLater(400, self._maybe_auto_import_keys_file)
         wx.CallLater(800, self._maybe_show_first_start_onboarding)
         wx.CallLater(1400, self._maybe_show_portable_missing_keys_hint)
+
+    def _maybe_auto_import_keys_file(self) -> None:
+        """
+        Auto-import an encrypted API key bundle on startup (portable mode only).
+
+        Looks for ``api-keys.keys`` (or legacy ``api-keys.awkeys``) in the
+        portable config directory.  When found and at least one API key is
+        missing from the local keyring, the user is prompted once for the
+        passphrase.  On success the keys are live immediately — no restart
+        needed.
+        """
+        if not self.main_window or not self.config_manager:
+            return
+        if not self._portable_mode:
+            return
+
+        # Only run when at least one key is absent.
+        if self._has_any_saved_api_keys():
+            # Check whether *all* keys are present, not just any.
+            from .config.import_export import PORTABLE_API_SECRET_KEYS
+            from .config.secure_storage import SecureStorage
+
+            missing = [
+                k
+                for k in PORTABLE_API_SECRET_KEYS
+                if not (SecureStorage.get_password(k) or "").strip()
+            ]
+            if not missing:
+                return
+
+        config_dir = self.config_manager.config_dir
+        candidate_names = ["api-keys.keys", "api-keys.awkeys"]
+        keys_path = None
+        for name in candidate_names:
+            p = config_dir / name
+            if p.exists():
+                keys_path = p
+                break
+
+        if keys_path is None:
+            return
+
+        # Prompt for passphrase with retry loop.
+        while True:
+            with wx.TextEntryDialog(
+                self.main_window,
+                "An encrypted API key bundle was found. Enter your passphrase to import your keys.",
+                "Import API keys",
+                style=wx.OK | wx.CANCEL | wx.TE_PASSWORD,
+            ) as dlg:
+                result = dlg.ShowModal()
+                if result != wx.ID_OK:
+                    return
+                passphrase = dlg.GetValue().strip()
+
+            if not passphrase:
+                return
+
+            try:
+                success = self.config_manager.import_encrypted_api_keys(keys_path, passphrase)
+            except Exception as exc:
+                logger.warning("Auto-import of API keys failed: %s", exc)
+                success = False
+
+            if success:
+                wx.MessageBox(
+                    "API keys imported successfully. They are now active.",
+                    "Keys imported",
+                    wx.OK | wx.ICON_INFORMATION,
+                )
+                return
+
+            # Wrong passphrase or other failure — offer retry or skip.
+            retry_dlg = wx.MessageDialog(
+                self.main_window,
+                "The passphrase was incorrect or the key bundle could not be read.\n\n"
+                "Would you like to try again?",
+                "Import failed",
+                wx.YES_NO | wx.ICON_WARNING,
+            )
+            retry_dlg.SetYesNoLabels("Try again", "Skip")
+            retry_result = retry_dlg.ShowModal()
+            retry_dlg.Destroy()
+            if retry_result != wx.ID_YES:
+                return
 
     def _should_show_first_start_onboarding(self) -> bool:
         """Return True when first-start onboarding should be shown."""
