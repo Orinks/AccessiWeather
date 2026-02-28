@@ -177,7 +177,11 @@ class SettingsOperations:
     def update_settings(self, **kwargs) -> bool:
         """Update settings values on the current configuration."""
         config = self._manager.get_config()
-        # These keys should be stored in SecureStorage
+        # In portable mode, API keys live in the bundle — skip keyring writes for them.
+        is_portable = getattr(self._manager.app, "_portable_mode", False)
+        portable_api_keys = {"visual_crossing_api_key", "openrouter_api_key"}
+
+        # These keys should be stored in SecureStorage (non-portable, or non-API-key secrets)
         secure_keys = {
             "visual_crossing_api_key",
             "openrouter_api_key",
@@ -185,6 +189,8 @@ class SettingsOperations:
             "github_app_private_key",
             "github_app_installation_id",
         }
+        if is_portable:
+            secure_keys -= portable_api_keys
         # These keys should be redacted in logs
         redacted_keys = {"github_app_private_key", "visual_crossing_api_key", "openrouter_api_key"}
 
