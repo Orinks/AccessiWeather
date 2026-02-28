@@ -241,12 +241,11 @@ class DebugAlertDialog(wx.Dialog):
         self._candidates_label.SetValue(" → ".join(candidates))
 
     def _get_notifier(self, settings):
-        from ...notifications.toast_notifier import SafeDesktopNotifier
+        from ...notifications.toast_notifier import SafeToastNotifier
 
         notifier = getattr(self._app, "notifier", None)
         if notifier is None:
-            notifier = SafeDesktopNotifier(
-                app_name="AccessiWeather",
+            notifier = SafeToastNotifier(
                 sound_enabled=bool(getattr(settings, "sound_enabled", True)),
                 soundpack=getattr(settings, "sound_pack", "default"),
             )
