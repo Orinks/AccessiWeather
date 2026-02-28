@@ -565,17 +565,22 @@ def test_auto_import_noops_in_non_portable_mode(tmp_path):
     app.config_manager.import_encrypted_api_keys.assert_not_called()
 
 
-def test_auto_import_silent_when_passphrase_stored(monkeypatch, tmp_path):
-    """If passphrase is stored in keyring, keys are imported silently."""
+def test_auto_import_prompts_when_bundle_found(monkeypatch, tmp_path):
+    """If bundle exists, user is prompted for passphrase."""
     app = _make_app_for_auto_import(tmp_path)
     (tmp_path / "api-keys.keys").write_bytes(b"dummy")
+    app.config_manager.import_encrypted_api_keys = MagicMock(return_value=True)
 
     monkeypatch.setattr(
-        "accessiweather.config.secure_storage.SecureStorage.get_password",
-        lambda name: "stored-pass" if name == app._PORTABLE_PASSPHRASE_KEYRING_KEY else None,
+        "accessiweather.app.wx.TextEntryDialog",
+        lambda *a, **kw: _FakeTextEntryDialog(["my-passphrase"]),
         raising=False,
     )
-    app.config_manager.import_encrypted_api_keys = MagicMock(return_value=True)
+    monkeypatch.setattr(
+        "accessiweather.app.wx.MessageBox",
+        lambda *a, **kw: None,
+        raising=False,
+    )
 
     app._maybe_auto_import_keys_file()
 

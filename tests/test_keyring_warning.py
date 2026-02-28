@@ -246,9 +246,5 @@ class TestPortableSessionFlag:
         mock_path.exists.return_value = False
         app.config_manager.config_dir.__truediv__ = MagicMock(return_value=mock_path)
 
-        with patch(
-            "accessiweather.config.secure_storage.SecureStorage.get_password",
-            return_value=None,
-        ):
-            app._maybe_auto_import_keys_file()
-            app.config_manager.import_encrypted_api_keys.assert_not_called()
+        app._maybe_auto_import_keys_file()
+        app.config_manager.import_encrypted_api_keys.assert_not_called()
