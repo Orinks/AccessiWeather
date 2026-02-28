@@ -647,6 +647,56 @@ class AccessiWeatherApp(wx.App):
         key_names = ("openrouter_api_key", "visual_crossing_api_key")
         return any(bool((SecureStorage.get_password(name) or "").strip()) for name in key_names)
 
+    def _maybe_offer_portable_key_export(self) -> None:
+        """During portable onboarding, offer to export keyring keys as an encrypted bundle."""
+        if not self.main_window or not self.config_manager:
+            return
+        if not self._has_any_saved_api_keys():
+            return
+
+        offer_dlg = wx.MessageDialog(
+            self.main_window,
+            "API keys were found in your system keyring.\n\n"
+            "Would you like to export them as an encrypted bundle into your portable folder now?\n"
+            "This lets you carry your keys with the portable install.",
+            "Export API keys to portable folder",
+            wx.YES_NO | wx.ICON_QUESTION,
+        )
+        offer_dlg.SetYesNoLabels("Export now", "Skip")
+        choice = offer_dlg.ShowModal()
+        offer_dlg.Destroy()
+
+        if choice != wx.ID_YES:
+            return
+
+        passphrase = self._prompt_optional_secret(
+            "Export passphrase",
+            "Enter a passphrase to encrypt the exported API key bundle.\n"
+            "You will need this passphrase to import the keys on another machine.",
+        )
+        if not passphrase:
+            wx.MessageBox(
+                "Key export cancelled — no passphrase was entered.",
+                "Export skipped",
+                wx.OK | wx.ICON_WARNING,
+            )
+            return
+
+        export_path = self.config_manager.config_dir / "api-keys.keys"
+        success = self.config_manager.export_encrypted_api_keys(export_path, passphrase)
+        if success:
+            wx.MessageBox(
+                f"API keys exported successfully to:\n{export_path}",
+                "Export successful",
+                wx.OK | wx.ICON_INFORMATION,
+            )
+        else:
+            wx.MessageBox(
+                "Failed to export API keys. Check the log for details.",
+                "Export failed",
+                wx.OK | wx.ICON_ERROR,
+            )
+
     def _maybe_show_portable_missing_keys_hint(self) -> None:
         """Show a one-time hint when portable mode starts with empty local keyring keys."""
         if not self.main_window or not self.config_manager or not self._portable_mode:
