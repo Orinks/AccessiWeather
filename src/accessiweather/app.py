@@ -1001,6 +1001,10 @@ class AccessiWeatherApp(wx.App):
                     self.config_manager.set_portable_bundle_passphrase(passphrase)
                     self.config_manager.update_settings(portable_auto_bundle_enabled=True)
                     self.config_manager.refresh_portable_api_key_bundle()
+                    # Persist passphrase so next launch auto-imports silently.
+                    from .config.secure_storage import SecureStorage
+
+                    SecureStorage.set_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY, passphrase)
                 else:
                     wx.MessageBox(
                         "Portable encrypted bundle was not enabled because no passphrase was entered.",
