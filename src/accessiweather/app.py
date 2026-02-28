@@ -620,14 +620,19 @@ class AccessiWeatherApp(wx.App):
         wx.CallLater(800, self._maybe_show_first_start_onboarding)
         wx.CallLater(1400, self._maybe_show_portable_missing_keys_hint)
 
+    # Keyring key used to cache the portable bundle passphrase for convenience.
+    # Only the passphrase is stored here — API keys always live in the bundle.
+    _PORTABLE_PASSPHRASE_KEYRING_KEY: str = "portable_bundle_passphrase"
+
     def _maybe_auto_import_keys_file(self) -> None:
         """
         Auto-import an encrypted API key bundle on startup (portable mode only).
 
-        In portable mode the bundle is the sole persistent key store — keyring
-        is not used.  If a bundle is found the user is prompted for the
-        passphrase once per session; on success the keys are live in memory
-        immediately.
+        API keys always live in the bundle — keyring is not used for key storage.
+        The bundle passphrase is cached in keyring purely for convenience so the
+        user is not prompted on every launch.  On first launch (or new machine)
+        the user is prompted once; on success the passphrase is stored in keyring
+        for silent auto-import on subsequent launches.
         """
         if not self.main_window or not self.config_manager:
             return
@@ -649,6 +654,21 @@ class AccessiWeatherApp(wx.App):
 
         if keys_path is None:
             return
+
+        from .config.secure_storage import SecureStorage
+
+        # Try cached passphrase for silent auto-import.
+        stored = (SecureStorage.get_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY) or "").strip()
+        if stored:
+            try:
+                if self.config_manager.import_encrypted_api_keys(keys_path, stored):
+                    self._portable_keys_imported_this_session = True
+                    logger.info("Portable API keys auto-imported silently.")
+                    return
+            except Exception as exc:
+                logger.warning("Silent auto-import failed: %s", exc)
+            # Cached passphrase is stale — clear and fall through to prompt.
+            SecureStorage.delete_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY)
 
         # Prompt for passphrase with retry loop.
         while True:
@@ -674,6 +694,8 @@ class AccessiWeatherApp(wx.App):
 
             if success:
                 self._portable_keys_imported_this_session = True
+                # Cache passphrase in keyring so next launch is silent.
+                SecureStorage.set_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY, passphrase)
                 wx.MessageBox(
                     "API keys imported successfully. They are now active.",
                     "Keys imported",
@@ -981,6 +1003,10 @@ class AccessiWeatherApp(wx.App):
                     self.config_manager.set_portable_bundle_passphrase(passphrase)
                     self.config_manager.update_settings(portable_auto_bundle_enabled=True)
                     self.config_manager.refresh_portable_api_key_bundle()
+                    # Cache passphrase so first post-wizard launch is silent.
+                    from .config.secure_storage import SecureStorage
+
+                    SecureStorage.set_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY, passphrase)
                 else:
                     wx.MessageBox(
                         "Portable encrypted bundle was not enabled because no passphrase was entered.",
