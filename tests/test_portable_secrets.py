@@ -133,3 +133,75 @@ class TestPortableSecretsImportExportWiring:
         with patch("accessiweather.config.import_export.SecureStorage.set_password") as mock_set:
             assert operations.import_encrypted_api_keys(export_file, "wrong-pass") is False
             mock_set.assert_not_called()
+
+
+class TestExportEncryptedApiKeysConfigFallback:
+    """export_encrypted_api_keys falls back to config.ini when keyring has nothing."""
+
+    def _make_manager(self, settings_dict: dict):
+        manager = MagicMock()
+        manager._get_logger.return_value = MagicMock()
+        settings = MagicMock()
+        for k, v in settings_dict.items():
+            setattr(settings, k, v)
+        config = MagicMock()
+        config.settings = settings
+        manager.get_config.return_value = config
+        return manager
+
+    def test_export_uses_config_ini_fallback_when_keyring_empty(self, tmp_path):
+        """Keys only in config.ini (not keyring) are still exported."""
+        manager = self._make_manager(
+            {
+                "openrouter_api_key": "sk-from-config",
+                "visual_crossing_api_key": "",
+            }
+        )
+        operations = ImportExportOperations(manager)
+        export_file = tmp_path / "keys.keys"
+
+        with patch(
+            "accessiweather.config.import_export.SecureStorage.get_password",
+            lambda _key_name: None,
+        ):
+            result = operations.export_encrypted_api_keys(export_file, "pass")
+
+        assert result is True
+        assert export_file.exists()
+        envelope = json.loads(export_file.read_text(encoding="utf-8"))
+        secrets = decrypt_secret_bundle(envelope, "pass")
+        assert secrets["openrouter_api_key"] == "sk-from-config"
+        assert "visual_crossing_api_key" not in secrets
+
+    def test_export_keyring_value_takes_priority_over_config_ini(self, tmp_path):
+        """Keyring value wins over config.ini value when both exist."""
+        manager = self._make_manager(
+            {"openrouter_api_key": "sk-from-config", "visual_crossing_api_key": ""}
+        )
+        operations = ImportExportOperations(manager)
+        export_file = tmp_path / "keys.keys"
+
+        with patch(
+            "accessiweather.config.import_export.SecureStorage.get_password",
+            lambda key_name: "sk-from-keyring" if key_name == "openrouter_api_key" else None,
+        ):
+            result = operations.export_encrypted_api_keys(export_file, "pass")
+
+        assert result is True
+        secrets = decrypt_secret_bundle(json.loads(export_file.read_text()), "pass")
+        assert secrets["openrouter_api_key"] == "sk-from-keyring"
+
+    def test_export_returns_false_when_keyring_and_config_both_empty(self, tmp_path):
+        """No keys anywhere → returns False."""
+        manager = self._make_manager({"openrouter_api_key": "", "visual_crossing_api_key": None})
+        operations = ImportExportOperations(manager)
+        export_file = tmp_path / "keys.keys"
+
+        with patch(
+            "accessiweather.config.import_export.SecureStorage.get_password",
+            lambda _key_name: None,
+        ):
+            result = operations.export_encrypted_api_keys(export_file, "pass")
+
+        assert result is False
+        assert not export_file.exists()

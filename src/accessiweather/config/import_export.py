@@ -203,8 +203,16 @@ class ImportExportOperations:
         """Export API keys from keyring to an encrypted portable bundle file."""
         try:
             secrets: dict[str, str] = {}
+            config = self._manager.get_config()
             for key_name in PORTABLE_API_SECRET_KEYS:
                 value = SecureStorage.get_password(key_name)
+                if not value:
+                    # Fall back to config.ini value if keyring had nothing
+                    value = getattr(config.settings, key_name, None) or ""
+                    if value:
+                        self.logger.debug(
+                            "Key '%s' not in keyring; using config.ini fallback", key_name
+                        )
                 if value:
                     secrets[key_name] = value
 

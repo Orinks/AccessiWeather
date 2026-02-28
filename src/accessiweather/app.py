@@ -735,11 +735,21 @@ class AccessiWeatherApp(wx.App):
         self._check_for_updates_on_startup()
 
     def _has_any_saved_api_keys(self) -> bool:
-        """Return True when at least one API key exists in secure storage."""
+        """Return True when at least one API key exists in secure storage or config.ini."""
         from .config.secure_storage import SecureStorage
 
         key_names = ("openrouter_api_key", "visual_crossing_api_key")
-        return any(bool((SecureStorage.get_password(name) or "").strip()) for name in key_names)
+        for name in key_names:
+            if (SecureStorage.get_password(name) or "").strip():
+                return True
+            # Fallback: check config.ini (keyring write may have failed silently)
+            try:
+                settings = self.config_manager.get_settings()
+                if (getattr(settings, name, None) or "").strip():
+                    return True
+            except Exception:
+                pass
+        return False
 
     def _maybe_offer_portable_key_export(self) -> None:
         """During portable onboarding, offer to export keyring keys as an encrypted bundle."""
