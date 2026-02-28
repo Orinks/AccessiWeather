@@ -565,26 +565,22 @@ def test_auto_import_noops_in_non_portable_mode(tmp_path):
     app.config_manager.import_encrypted_api_keys.assert_not_called()
 
 
-def test_auto_import_noops_when_all_keys_present(monkeypatch, tmp_path):
-    """If all API keys are present, auto-import is skipped."""
-    app = _make_app_for_auto_import(tmp_path, all_keys_missing=False)
+def test_auto_import_silent_when_passphrase_stored(monkeypatch, tmp_path):
+    """If passphrase is stored in keyring, keys are imported silently."""
+    app = _make_app_for_auto_import(tmp_path)
     (tmp_path / "api-keys.keys").write_bytes(b"dummy")
 
-    # Patch PORTABLE_API_SECRET_KEYS and SecureStorage so "all keys present"
-    monkeypatch.setattr(
-        "accessiweather.config.import_export.PORTABLE_API_SECRET_KEYS",
-        ("openrouter_api_key", "visual_crossing_api_key"),
-        raising=False,
-    )
     monkeypatch.setattr(
         "accessiweather.config.secure_storage.SecureStorage.get_password",
-        lambda name: "some-key",
+        lambda name: "stored-pass" if name == app._PORTABLE_PASSPHRASE_KEYRING_KEY else None,
         raising=False,
     )
+    app.config_manager.import_encrypted_api_keys = MagicMock(return_value=True)
 
     app._maybe_auto_import_keys_file()
 
-    app.config_manager.import_encrypted_api_keys.assert_not_called()
+    app.config_manager.import_encrypted_api_keys.assert_called_once()
+    assert app._portable_keys_imported_this_session is True
 
 
 def test_auto_import_noops_when_no_keys_file(tmp_path):

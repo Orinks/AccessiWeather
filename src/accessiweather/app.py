@@ -620,15 +620,17 @@ class AccessiWeatherApp(wx.App):
         wx.CallLater(800, self._maybe_show_first_start_onboarding)
         wx.CallLater(1400, self._maybe_show_portable_missing_keys_hint)
 
+    # Keyring key used to persist the portable bundle passphrase between launches.
+    _PORTABLE_PASSPHRASE_KEYRING_KEY: str = "portable_bundle_passphrase"
+
     def _maybe_auto_import_keys_file(self) -> None:
         """
         Auto-import an encrypted API key bundle on startup (portable mode only).
 
-        Looks for ``api-keys.keys`` (or legacy ``api-keys.awkeys``) in the
-        portable config directory.  When found and at least one API key is
-        missing from the local keyring, the user is prompted once for the
-        passphrase.  On success the keys are live immediately — no restart
-        needed.
+        On first launch the user is prompted for the passphrase; on success it
+        is stored in the system keyring so subsequent launches auto-decrypt
+        silently with no prompt.  Falls back to prompting if the stored
+        passphrase is stale or the keyring is unavailable.
         """
         if not self.main_window or not self.config_manager:
             return
@@ -637,16 +639,6 @@ class AccessiWeatherApp(wx.App):
 
         # Skip if keys were already imported this session.
         if self._portable_keys_imported_this_session:
-            return
-
-        # Only prompt if at least one key from the bundle is absent from keyring.
-        from .config.import_export import PORTABLE_API_SECRET_KEYS
-        from .config.secure_storage import SecureStorage
-
-        missing = [
-            k for k in PORTABLE_API_SECRET_KEYS if not (SecureStorage.get_password(k) or "").strip()
-        ]
-        if not missing:
             return
 
         config_dir = self.config_manager.config_dir
@@ -660,6 +652,22 @@ class AccessiWeatherApp(wx.App):
 
         if keys_path is None:
             return
+
+        from .config.secure_storage import SecureStorage
+
+        # Try stored passphrase first for silent auto-import.
+        stored = (SecureStorage.get_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY) or "").strip()
+        if stored:
+            try:
+                if self.config_manager.import_encrypted_api_keys(keys_path, stored):
+                    self._portable_keys_imported_this_session = True
+                    logger.info("Portable API keys auto-imported silently.")
+                    return
+            except Exception as exc:
+                logger.warning("Silent auto-import failed: %s", exc)
+            # Stored passphrase is stale — clear it and fall through to prompt.
+            SecureStorage.delete_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY)
+            logger.warning("Stored passphrase invalid; prompting user.")
 
         # Prompt for passphrase with retry loop.
         while True:
@@ -685,23 +693,12 @@ class AccessiWeatherApp(wx.App):
 
             if success:
                 self._portable_keys_imported_this_session = True
-                from .config.secure_storage import is_keyring_available
-
-                if not is_keyring_available():
-                    wx.MessageBox(
-                        "API keys imported successfully and are active for this session.\n\n"
-                        "However, your system keyring is unavailable, so the keys could not be "
-                        "saved locally. You will be prompted for your passphrase again next launch.\n\n"
-                        "To avoid this, install a keyring backend (e.g. gnome-keyring or KWallet on Linux).",
-                        "Keys imported (keyring unavailable)",
-                        wx.OK | wx.ICON_WARNING,
-                    )
-                else:
-                    wx.MessageBox(
-                        "API keys imported successfully. They are now active.",
-                        "Keys imported",
-                        wx.OK | wx.ICON_INFORMATION,
-                    )
+                SecureStorage.set_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY, passphrase)
+                wx.MessageBox(
+                    "API keys imported successfully. They are now active.",
+                    "Keys imported",
+                    wx.OK | wx.ICON_INFORMATION,
+                )
                 return
 
             # Wrong passphrase or other failure — offer retry or skip.
