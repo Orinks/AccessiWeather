@@ -536,6 +536,7 @@ def _make_app_for_auto_import(tmp_path, all_keys_missing: bool = True):
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._portable_mode = True
     app._force_wizard = False
+    app._portable_keys_imported_this_session = False
     app.main_window = SimpleNamespace()
     app.config_manager = SimpleNamespace(
         config_dir=tmp_path,
