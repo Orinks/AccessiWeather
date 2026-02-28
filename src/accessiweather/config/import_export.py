@@ -207,11 +207,11 @@ class ImportExportOperations:
             for key_name in PORTABLE_API_SECRET_KEYS:
                 value = SecureStorage.get_password(key_name)
                 if not value:
-                    # Fall back to config.ini value if keyring had nothing
+                    # Fall back to accessiweather.json value if keyring had nothing
                     value = getattr(config.settings, key_name, None) or ""
                     if value:
                         self.logger.debug(
-                            "Key '%s' not in keyring; using config.ini fallback", key_name
+                            "Key '%s' not in keyring; using accessiweather.json fallback", key_name
                         )
                 if value:
                     secrets[key_name] = value

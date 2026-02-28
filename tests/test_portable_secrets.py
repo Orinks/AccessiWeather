@@ -136,7 +136,7 @@ class TestPortableSecretsImportExportWiring:
 
 
 class TestExportEncryptedApiKeysConfigFallback:
-    """export_encrypted_api_keys falls back to config.ini when keyring has nothing."""
+    """export_encrypted_api_keys falls back to accessiweather.json when keyring has nothing."""
 
     def _make_manager(self, settings_dict: dict):
         manager = MagicMock()
@@ -150,7 +150,7 @@ class TestExportEncryptedApiKeysConfigFallback:
         return manager
 
     def test_export_uses_config_ini_fallback_when_keyring_empty(self, tmp_path):
-        """Keys only in config.ini (not keyring) are still exported."""
+        """Keys only in accessiweather.json (not keyring) are still exported."""
         manager = self._make_manager(
             {
                 "openrouter_api_key": "sk-from-config",
@@ -174,7 +174,7 @@ class TestExportEncryptedApiKeysConfigFallback:
         assert "visual_crossing_api_key" not in secrets
 
     def test_export_keyring_value_takes_priority_over_config_ini(self, tmp_path):
-        """Keyring value wins over config.ini value when both exist."""
+        """Keyring value wins over accessiweather.json value when both exist."""
         manager = self._make_manager(
             {"openrouter_api_key": "sk-from-config", "visual_crossing_api_key": ""}
         )
