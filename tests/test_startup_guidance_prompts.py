@@ -61,15 +61,22 @@ class _FakeTextEntryDialog:
         return self._responses.pop(0)
 
 
-def test_portable_missing_api_keys_hint_shown_once_and_persists(monkeypatch):
+def test_portable_missing_api_keys_hint_shown_once_and_persists(monkeypatch, tmp_path):
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._portable_mode = True
     app._force_wizard = False
+    app._portable_keys_imported_this_session = False
     app.main_window = SimpleNamespace(open_settings=MagicMock())
-    settings = SimpleNamespace(portable_missing_api_keys_hint_shown=False)
+    settings = SimpleNamespace(
+        portable_missing_api_keys_hint_shown=False,
+        onboarding_wizard_shown=True,  # wizard already done — hint should show
+    )
+    config = SimpleNamespace(settings=settings, locations={"Home": object()})
     app.config_manager = SimpleNamespace(
         get_settings=lambda: settings,
+        get_config=lambda: config,
         update_settings=MagicMock(),
+        config_dir=tmp_path,  # no bundle files → hint should show
     )
 
     _ensure_wx_dialog_constants()
@@ -79,14 +86,13 @@ def test_portable_missing_api_keys_hint_shown_once_and_persists(monkeypatch):
         lambda *args, **kwargs: _FakeDialog(responses),
         raising=False,
     )
-    monkeypatch.setattr(app, "_has_any_saved_api_keys", lambda: False)
 
     app._maybe_show_portable_missing_keys_hint()
 
     app.config_manager.update_settings.assert_called_once_with(
         portable_missing_api_keys_hint_shown=True
     )
-    app.main_window.open_settings.assert_called_once_with(tab="AI")
+    app.main_window.open_settings.assert_called_once_with()
 
     settings.portable_missing_api_keys_hint_shown = True
     app.config_manager.update_settings.reset_mock()
@@ -565,26 +571,60 @@ def test_auto_import_noops_in_non_portable_mode(tmp_path):
     app.config_manager.import_encrypted_api_keys.assert_not_called()
 
 
-def test_auto_import_noops_when_all_keys_present(monkeypatch, tmp_path):
-    """If all API keys are present, auto-import is skipped."""
-    app = _make_app_for_auto_import(tmp_path, all_keys_missing=False)
+def test_auto_import_silent_when_passphrase_cached(monkeypatch, tmp_path):
+    """If passphrase is cached in keyring, bundle is imported silently."""
+    app = _make_app_for_auto_import(tmp_path)
     (tmp_path / "api-keys.keys").write_bytes(b"dummy")
+    app.config_manager.import_encrypted_api_keys = MagicMock(return_value=True)
 
-    # Patch PORTABLE_API_SECRET_KEYS and SecureStorage so "all keys present"
     monkeypatch.setattr(
-        "accessiweather.config.import_export.PORTABLE_API_SECRET_KEYS",
-        ("openrouter_api_key", "visual_crossing_api_key"),
+        "accessiweather.config.secure_storage.SecureStorage.get_password",
+        lambda name: "cached-pass" if name == app._PORTABLE_PASSPHRASE_KEYRING_KEY else None,
         raising=False,
     )
     monkeypatch.setattr(
-        "accessiweather.config.secure_storage.SecureStorage.get_password",
-        lambda name: "some-key",
+        "accessiweather.config.secure_storage.SecureStorage.set_password",
+        lambda *a: True,
         raising=False,
     )
 
     app._maybe_auto_import_keys_file()
 
-    app.config_manager.import_encrypted_api_keys.assert_not_called()
+    app.config_manager.import_encrypted_api_keys.assert_called_once()
+    assert app._portable_keys_imported_this_session is True
+
+
+def test_auto_import_prompts_when_no_cached_passphrase(monkeypatch, tmp_path):
+    """Without cached passphrase, user is prompted."""
+    app = _make_app_for_auto_import(tmp_path)
+    (tmp_path / "api-keys.keys").write_bytes(b"dummy")
+    app.config_manager.import_encrypted_api_keys = MagicMock(return_value=True)
+
+    monkeypatch.setattr(
+        "accessiweather.config.secure_storage.SecureStorage.get_password",
+        lambda name: None,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "accessiweather.config.secure_storage.SecureStorage.set_password",
+        lambda *a: True,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "accessiweather.app.wx.TextEntryDialog",
+        lambda *a, **kw: _FakeTextEntryDialog(["my-passphrase"]),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "accessiweather.app.wx.MessageBox",
+        lambda *a, **kw: None,
+        raising=False,
+    )
+
+    app._maybe_auto_import_keys_file()
+
+    app.config_manager.import_encrypted_api_keys.assert_called_once()
+    assert app._portable_keys_imported_this_session is True
 
 
 def test_auto_import_noops_when_no_keys_file(tmp_path):

@@ -238,14 +238,13 @@ class TestPortableSessionFlag:
         assert app._portable_keys_imported_this_session is False
 
     def test_auto_import_runs_when_flag_not_set(self):
-        """Without session flag, missing-keys check runs; skips if all keys present."""
+        """Without session flag and no bundle, import is not attempted."""
         app = _make_app_stub(portable=True)
         app._portable_keys_imported_this_session = False
 
-        # All keys present in keyring → returns early without prompting
-        with patch(
-            "accessiweather.config.secure_storage.SecureStorage.get_password",
-            return_value="some-key",
-        ):
-            app._maybe_auto_import_keys_file()
-            app.config_manager.import_encrypted_api_keys.assert_not_called()
+        mock_path = MagicMock()
+        mock_path.exists.return_value = False
+        app.config_manager.config_dir.__truediv__ = MagicMock(return_value=mock_path)
+
+        app._maybe_auto_import_keys_file()
+        app.config_manager.import_encrypted_api_keys.assert_not_called()

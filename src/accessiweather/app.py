@@ -620,33 +620,27 @@ class AccessiWeatherApp(wx.App):
         wx.CallLater(800, self._maybe_show_first_start_onboarding)
         wx.CallLater(1400, self._maybe_show_portable_missing_keys_hint)
 
+    # Keyring key used to cache the portable bundle passphrase for convenience.
+    # Only the passphrase is stored here — API keys always live in the bundle.
+    _PORTABLE_PASSPHRASE_KEYRING_KEY: str = "portable_bundle_passphrase"
+
     def _maybe_auto_import_keys_file(self) -> None:
         """
         Auto-import an encrypted API key bundle on startup (portable mode only).
 
-        Looks for ``api-keys.keys`` (or legacy ``api-keys.awkeys``) in the
-        portable config directory.  When found and at least one API key is
-        missing from the local keyring, the user is prompted once for the
-        passphrase.  On success the keys are live immediately — no restart
-        needed.
+        API keys always live in the bundle — keyring is not used for key storage.
+        The bundle passphrase is cached in keyring purely for convenience so the
+        user is not prompted on every launch.  On first launch (or new machine)
+        the user is prompted once; on success the passphrase is stored in keyring
+        for silent auto-import on subsequent launches.
         """
         if not self.main_window or not self.config_manager:
             return
         if not self._portable_mode:
             return
 
-        # Skip if keys were already imported this session.
+        # Skip if already imported this session.
         if self._portable_keys_imported_this_session:
-            return
-
-        # Only prompt if at least one key from the bundle is absent from keyring.
-        from .config.import_export import PORTABLE_API_SECRET_KEYS
-        from .config.secure_storage import SecureStorage
-
-        missing = [
-            k for k in PORTABLE_API_SECRET_KEYS if not (SecureStorage.get_password(k) or "").strip()
-        ]
-        if not missing:
             return
 
         config_dir = self.config_manager.config_dir
@@ -660,6 +654,21 @@ class AccessiWeatherApp(wx.App):
 
         if keys_path is None:
             return
+
+        from .config.secure_storage import SecureStorage
+
+        # Try cached passphrase for silent auto-import.
+        stored = (SecureStorage.get_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY) or "").strip()
+        if stored:
+            try:
+                if self.config_manager.import_encrypted_api_keys(keys_path, stored):
+                    self._portable_keys_imported_this_session = True
+                    logger.info("Portable API keys auto-imported silently.")
+                    return
+            except Exception as exc:
+                logger.warning("Silent auto-import failed: %s", exc)
+            # Cached passphrase is stale — clear and fall through to prompt.
+            SecureStorage.delete_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY)
 
         # Prompt for passphrase with retry loop.
         while True:
@@ -685,23 +694,13 @@ class AccessiWeatherApp(wx.App):
 
             if success:
                 self._portable_keys_imported_this_session = True
-                from .config.secure_storage import is_keyring_available
-
-                if not is_keyring_available():
-                    wx.MessageBox(
-                        "API keys imported successfully and are active for this session.\n\n"
-                        "However, your system keyring is unavailable, so the keys could not be "
-                        "saved locally. You will be prompted for your passphrase again next launch.\n\n"
-                        "To avoid this, install a keyring backend (e.g. gnome-keyring or KWallet on Linux).",
-                        "Keys imported (keyring unavailable)",
-                        wx.OK | wx.ICON_WARNING,
-                    )
-                else:
-                    wx.MessageBox(
-                        "API keys imported successfully. They are now active.",
-                        "Keys imported",
-                        wx.OK | wx.ICON_INFORMATION,
-                    )
+                # Cache passphrase in keyring so next launch is silent.
+                SecureStorage.set_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY, passphrase)
+                wx.MessageBox(
+                    "API keys imported successfully. They are now active.",
+                    "Keys imported",
+                    wx.OK | wx.ICON_INFORMATION,
+                )
                 return
 
             # Wrong passphrase or other failure — offer retry or skip.
@@ -806,33 +805,47 @@ class AccessiWeatherApp(wx.App):
             )
 
     def _maybe_show_portable_missing_keys_hint(self) -> None:
-        """Show a one-time hint when portable mode starts with empty local keyring keys."""
+        """Show a one-time hint when portable mode has no bundle and no keys entered."""
         if not self.main_window or not self.config_manager or not self._portable_mode:
             return
 
         settings = self.config_manager.get_settings()
         if getattr(settings, "portable_missing_api_keys_hint_shown", False):
             return
-        if self._has_any_saved_api_keys():
+
+        # If the onboarding wizard is going to run (or did run), it covers key setup.
+        if self._should_show_first_start_onboarding():
+            return
+
+        # If a bundle exists the import flow already handled it — no hint needed.
+        config_dir = self.config_manager.config_dir
+        bundle_exists = any(
+            (config_dir / name).exists() for name in ("api-keys.keys", "api-keys.awkeys")
+        )
+        if bundle_exists:
+            return
+
+        # If keys were imported this session, no hint needed.
+        if self._portable_keys_imported_this_session:
             return
 
         dialog = wx.MessageDialog(
             self.main_window,
-            "It looks like this portable copy has no API keys on this machine yet.\n\n"
-            "If you moved or copied your AccessiWeather folder, settings transfer but API keys "
-            "stay machine-local by default.\n\n"
-            "You can re-enter keys in Settings > AI now, or import your encrypted API key bundle.",
+            "This portable copy has no API keys yet.\n\n"
+            "Visual Crossing weather provider keys can be entered in Settings > Data Sources. "
+            "OpenRouter AI keys can be entered in Settings > AI.\n\n"
+            "You can also create an encrypted key bundle to carry your keys with the portable install.",
             "Portable setup hint",
             wx.YES_NO | wx.CANCEL | wx.ICON_INFORMATION,
         )
-        dialog.SetYesNoCancelLabels("Open Settings > AI", "Later", "Cancel")
+        dialog.SetYesNoCancelLabels("Open Settings", "Later", "Cancel")
         result = dialog.ShowModal()
         dialog.Destroy()
 
         self.config_manager.update_settings(portable_missing_api_keys_hint_shown=True)
 
         if result == wx.ID_YES and self.main_window:
-            self.main_window.open_settings(tab="AI")
+            self.main_window.open_settings()
 
     def _prompt_optional_secret(self, title: str, message: str) -> str | None:
         """Prompt for optional secret text value. Empty input means skip."""
@@ -1004,6 +1017,10 @@ class AccessiWeatherApp(wx.App):
                     self.config_manager.set_portable_bundle_passphrase(passphrase)
                     self.config_manager.update_settings(portable_auto_bundle_enabled=True)
                     self.config_manager.refresh_portable_api_key_bundle()
+                    # Cache passphrase so first post-wizard launch is silent.
+                    from .config.secure_storage import SecureStorage
+
+                    SecureStorage.set_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY, passphrase)
                 else:
                     wx.MessageBox(
                         "Portable encrypted bundle was not enabled because no passphrase was entered.",
