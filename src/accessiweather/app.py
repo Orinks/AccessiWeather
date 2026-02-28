@@ -447,6 +447,7 @@ class AccessiWeatherApp(wx.App):
         config_dir: str | None = None,
         portable_mode: bool = False,
         debug: bool = False,
+        force_wizard: bool = False,
     ):
         """
         Initialize the AccessiWeather application.
@@ -455,6 +456,7 @@ class AccessiWeatherApp(wx.App):
             config_dir: Optional custom configuration directory path
             portable_mode: If True, use portable mode (config in app directory)
             debug: If True, enable debug mode (enables debug logging and extra UI tools)
+            force_wizard: If True, force the onboarding wizard even if already shown
 
         """
         self._config_dir = config_dir
@@ -471,6 +473,7 @@ class AccessiWeatherApp(wx.App):
 
         self._portable_mode = portable_mode
         self.debug_mode = bool(debug)
+        self._force_wizard = bool(force_wizard)
 
         # App version and build info (import locally to avoid circular import)
         from . import __version__
@@ -705,6 +708,11 @@ class AccessiWeatherApp(wx.App):
         """Return True when first-start onboarding should be shown."""
         if not self.main_window or not self.config_manager:
             return False
+
+        if self._force_wizard:
+            if self.debug_mode:
+                logger.debug("Wizard forced via --wizard flag")
+            return True
 
         config = self.config_manager.get_config()
         settings = config.settings
@@ -1535,6 +1543,7 @@ def main(
     debug: bool = False,
     fake_version: str | None = None,
     fake_nightly: str | None = None,
+    force_wizard: bool = False,
 ):
     """
     Run AccessiWeather application.
@@ -1545,6 +1554,7 @@ def main(
         debug: Enable debug mode.
         fake_version: Fake version for testing updates (e.g., '0.1.0').
         fake_nightly: Fake nightly tag for testing updates (e.g., 'nightly-20250101').
+        force_wizard: Force the onboarding wizard even if already shown.
 
     """
     if config_dir is None:
@@ -1558,7 +1568,12 @@ def main(
         except Exception:
             pass
 
-    app = AccessiWeatherApp(config_dir=config_dir, portable_mode=portable_mode, debug=debug)
+    app = AccessiWeatherApp(
+        config_dir=config_dir,
+        portable_mode=portable_mode,
+        debug=debug,
+        force_wizard=force_wizard,
+    )
 
     # Override version/build_tag for update testing
     if fake_version:
