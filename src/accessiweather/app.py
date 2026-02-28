@@ -904,7 +904,11 @@ class AccessiWeatherApp(wx.App):
             self.main_window.open_settings(tab="AI")
 
     def _has_saved_api_key(self, key_name: str) -> bool:
-        """Return True when a specific API key exists in secure storage."""
+        """Return True when a specific API key exists (in-memory config for portable, keyring for installed)."""
+        if self._portable_mode:
+            # In portable mode keys live in the bundle / in-memory config, not keyring.
+            val = getattr(self.config_manager.get_config().settings, key_name, None)
+            return bool((str(val).strip()) if val else "")
         from .config.secure_storage import SecureStorage
 
         return bool((SecureStorage.get_password(key_name) or "").strip())
@@ -924,9 +928,12 @@ class AccessiWeatherApp(wx.App):
             f"- Location configured: {self._onboarding_status_text(bool(config.locations))}",
             f"- OpenRouter key set: {self._onboarding_status_text(self._has_saved_api_key('openrouter_api_key'))}",
             f"- Visual Crossing weather provider key set: {self._onboarding_status_text(self._has_saved_api_key('visual_crossing_api_key'))}",
-            (
-                "- Portable encrypted bundle enabled: "
-                f"{self._onboarding_status_text(getattr(config.settings, 'portable_auto_bundle_enabled', False))}"
+            *(
+                [
+                    f"- Portable key bundle created: {self._onboarding_status_text(self._portable_keys_imported_this_session)}"
+                ]
+                if self._portable_mode
+                else []
             ),
         ]
 

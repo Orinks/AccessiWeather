@@ -357,7 +357,7 @@ def test_onboarding_summary_includes_readiness_status(monkeypatch):
     assert "Location configured: Yes" in summary
     assert "OpenRouter key set: Yes" in summary
     assert "Visual Crossing weather provider key set: No" in summary
-    assert "Portable encrypted bundle enabled: No" in summary
+    # portable_auto_bundle_enabled line removed — not relevant in new design
 
 
 def test_onboarding_completion_triggers_deferred_startup_update_check(monkeypatch):
