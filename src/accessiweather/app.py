@@ -812,7 +812,7 @@ class AccessiWeatherApp(wx.App):
                 self.main_window,
                 "Step 4 of 4 (portable): Portable API key portability\n\n"
                 "Enable an encrypted key bundle for this portable folder?\n"
-                "If enabled, AccessiWeather can auto-refresh api-keys.awkeys when keys change.",
+                "If enabled, AccessiWeather can auto-refresh api-keys.keys when keys change.",
                 "Portable API key portability",
                 wx.YES_NO | wx.ICON_INFORMATION,
             )
@@ -835,6 +835,9 @@ class AccessiWeatherApp(wx.App):
                         "Portable API key portability skipped",
                         wx.OK | wx.ICON_WARNING,
                     )
+
+            # Offer to export any keyring keys as an encrypted bundle into the portable folder
+            self._maybe_offer_portable_key_export()
 
         self._show_onboarding_readiness_summary()
         self.config_manager.update_settings(onboarding_wizard_shown=True)

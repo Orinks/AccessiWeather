@@ -215,7 +215,7 @@ class TestConfigManager:
         manager._import_export.export_encrypted_api_keys.return_value = True
         manager._import_export.import_encrypted_api_keys.return_value = True
 
-        export_path = manager.config_dir / "keys.awkeys"
+        export_path = manager.config_dir / "keys.keys"
 
         assert manager.export_encrypted_api_keys(export_path, "pass") is True
         manager._import_export.export_encrypted_api_keys.assert_called_once_with(
@@ -270,7 +270,7 @@ class TestPortableAutoBundleConfigManager:
             assert manager.refresh_portable_api_key_bundle() is False
             export_mock.assert_not_called()
 
-    def test_refresh_exports_to_default_awkeys_path_when_enabled(self, manager):
+    def test_refresh_exports_to_default_keys_path_when_enabled(self, manager):
         manager.load_config()
         manager._config.settings.portable_auto_bundle_enabled = True
         manager.app._portable_mode = True
@@ -279,7 +279,7 @@ class TestPortableAutoBundleConfigManager:
         with patch.object(manager, "export_encrypted_api_keys", return_value=True) as export_mock:
             assert manager.refresh_portable_api_key_bundle() is True
             export_mock.assert_called_once_with(
-                manager.config_dir / "api-keys.awkeys", "session-pass"
+                manager.config_dir / "api-keys.keys", "session-pass"
             )
 
     def test_disable_portable_auto_bundle_deletes_bundle_file(self, manager):

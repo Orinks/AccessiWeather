@@ -312,7 +312,7 @@ class ConfigManager:
 
     def get_portable_api_key_bundle_path(self) -> Path:
         """Return the default portable encrypted API key bundle path."""
-        return self.config_dir / "api-keys.awkeys"
+        return self.config_dir / "api-keys.keys"
 
     def set_portable_bundle_passphrase(self, passphrase: str | None) -> None:
         """Set in-memory passphrase for this app session (never persisted to disk)."""
