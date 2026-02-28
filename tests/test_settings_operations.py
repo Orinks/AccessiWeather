@@ -114,39 +114,6 @@ class TestValidateAndFixConfig:
         mock_manager.save_config.assert_not_called()
 
 
-class TestPortableAutoBundleSettings:
-    @pytest.fixture
-    def mock_manager(self):
-        manager = MagicMock()
-        manager._get_logger.return_value = MagicMock()
-        manager.save_config.return_value = True
-        manager._config = AppConfig.default()
-        manager.get_config.return_value = manager._config
-        manager.refresh_portable_api_key_bundle.return_value = True
-        manager.disable_portable_api_key_bundle.return_value = True
-        return manager
-
-    @pytest.fixture
-    def operations(self, mock_manager):
-        return SettingsOperations(mock_manager)
-
-    def test_api_key_update_refreshes_portable_bundle_when_enabled(self, operations):
-        operations._manager._config.settings.portable_auto_bundle_enabled = True
-
-        with patch("accessiweather.config.settings.SecureStorage.set_password", return_value=True):
-            ok = operations.update_settings(openrouter_api_key="sk-updated")
-
-        assert ok is True
-        operations._manager.refresh_portable_api_key_bundle.assert_called_once()
-
-    def test_disable_portable_auto_bundle_removes_bundle(self, operations):
-        with patch("accessiweather.config.settings.SecureStorage.set_password", return_value=True):
-            ok = operations.update_settings(portable_auto_bundle_enabled=False)
-
-        assert ok is True
-        operations._manager.disable_portable_api_key_bundle.assert_called_once()
-
-
 class TestValidateNonCritical:
     """Tests for validate_non_critical method."""
 
@@ -318,6 +285,7 @@ class TestUpdateSettings:
         """Create mock ConfigManager."""
         manager = MagicMock()
         manager.save_config.return_value = True
+        manager.app._portable_mode = False  # ensure keyring writes are not skipped
 
         config = AppConfig.default()
         manager.get_config.return_value = config

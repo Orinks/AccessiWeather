@@ -165,7 +165,11 @@ class ConfigManager:
 
         settings = self._config.settings
 
-        # List of secure keys to load lazily from SecureStorage
+        # In portable mode, API keys live in the bundle — not in keyring.
+        # Only load non-API-key secrets (e.g. GitHub app credentials) from keyring.
+        is_portable = getattr(self.app, "_portable_mode", False)
+        portable_api_keys = {"visual_crossing_api_key", "openrouter_api_key"}
+
         secure_keys = [
             "visual_crossing_api_key",
             "openrouter_api_key",
@@ -175,6 +179,11 @@ class ConfigManager:
         ]
 
         for key in secure_keys:
+            if is_portable and key in portable_api_keys:
+                # Leave as empty string; bundle import will populate in-memory.
+                setattr(settings, key, "")
+                logger.debug(f"Skipping keyring load for {key} (portable mode)")
+                continue
             # Create lazy accessor that will load from keyring on first access
             lazy_value = LazySecureStorage(key)
             setattr(settings, key, lazy_value)

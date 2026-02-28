@@ -238,19 +238,13 @@ class TestPortableSessionFlag:
         assert app._portable_keys_imported_this_session is False
 
     def test_auto_import_runs_when_flag_not_set(self):
-        """Without session flag, _has_any_saved_api_keys should be consulted."""
+        """Without session flag and no bundle, import is not attempted."""
         app = _make_app_stub(portable=True)
         app._portable_keys_imported_this_session = False
 
-        if not hasattr(wx, "TextEntryDialog"):
-            wx.TextEntryDialog = MagicMock
+        mock_path = MagicMock()
+        mock_path.exists.return_value = False
+        app.config_manager.config_dir.__truediv__ = MagicMock(return_value=mock_path)
 
-        with (
-            patch.object(app, "_has_any_saved_api_keys", return_value=True) as mock_check,
-            patch(
-                "accessiweather.app.wx.TextEntryDialog", return_value=_make_wx_dialog(), create=True
-            ),
-            patch("accessiweather.app.wx.MessageBox", create=True),
-        ):
-            app._maybe_auto_import_keys_file()
-            mock_check.assert_called_once()
+        app._maybe_auto_import_keys_file()
+        app.config_manager.import_encrypted_api_keys.assert_not_called()

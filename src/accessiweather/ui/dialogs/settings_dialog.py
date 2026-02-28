@@ -1385,10 +1385,10 @@ class SettingsDialogSimple(wx.Dialog):
                 return False
 
             success = self.config_manager.update_settings(**settings_dict)
-            if success and settings_dict.get("portable_auto_bundle_enabled"):
-                self.config_manager.refresh_portable_api_key_bundle()
             if success:
                 logger.info("Settings saved successfully")
+                if hasattr(self, "app") and self._is_runtime_portable_mode():
+                    self._maybe_update_portable_bundle_after_save(settings_dict)
             return success
 
         except Exception as e:
@@ -1843,6 +1843,98 @@ class SettingsDialogSimple(wx.Dialog):
                 f"Config directory not found: {config_dir}",
                 "Error",
                 wx.OK | wx.ICON_ERROR,
+            )
+
+    _PORTABLE_KEY_SETTINGS = ("visual_crossing_api_key", "openrouter_api_key")
+
+    def _maybe_update_portable_bundle_after_save(self, settings_dict: dict) -> None:
+        """
+        After saving settings in portable mode, keep the bundle in sync.
+
+        If any API key was changed:
+        - Bundle exists + passphrase cached → silently re-encrypt bundle
+        - Bundle exists + no cached passphrase → prompt for passphrase
+        - No bundle → offer to create one, or warn keys won't persist
+        """
+        changed_keys = {
+            k: v for k, v in settings_dict.items() if k in self._PORTABLE_KEY_SETTINGS and v
+        }
+        if not changed_keys:
+            return
+
+        from ...config.secure_storage import SecureStorage
+
+        app = self.app
+        _PASSPHRASE_KEY = getattr(
+            app, "_PORTABLE_PASSPHRASE_KEYRING_KEY", "portable_bundle_passphrase"
+        )
+        config_dir = self.config_manager.config_dir
+        bundle_names = ("api-keys.keys", "api-keys.awkeys")
+        bundle_path = next(
+            (config_dir / n for n in bundle_names if (config_dir / n).exists()), None
+        )
+
+        # Get or prompt for passphrase.
+        passphrase = (SecureStorage.get_password(_PASSPHRASE_KEY) or "").strip()
+
+        if not passphrase:
+            if bundle_path:
+                msg = (
+                    "Your API keys have been updated.\n\n"
+                    "Enter your bundle passphrase to re-encrypt the portable key bundle, "
+                    "or Cancel to leave the bundle unchanged (keys are active this session only)."
+                )
+            else:
+                msg = (
+                    "Your API keys have been updated.\n\n"
+                    "Enter a passphrase to create an encrypted key bundle so your keys "
+                    "persist across launches, or Cancel to skip (keys active this session only)."
+                )
+            with wx.TextEntryDialog(
+                self,
+                msg,
+                "Portable key bundle",
+                style=wx.OK | wx.CANCEL | wx.TE_PASSWORD,
+            ) as dlg:
+                if dlg.ShowModal() != wx.ID_OK:
+                    return
+                passphrase = dlg.GetValue().strip()
+            if not passphrase:
+                return
+            # Cache for future use.
+            SecureStorage.set_password(_PASSPHRASE_KEY, passphrase)
+
+        # Write/update the bundle.
+        if bundle_path is None:
+            bundle_path = config_dir / "api-keys.keys"
+
+        import json
+
+        from ...config.portable_secrets import encrypt_secret_bundle
+
+        # Merge existing bundle contents with updated keys so we don't drop other keys.
+        existing: dict[str, str] = {}
+        if bundle_path.exists():
+            try:
+                from ...config.portable_secrets import decrypt_secret_bundle
+
+                with open(bundle_path, encoding="utf-8") as fh:
+                    existing = decrypt_secret_bundle(json.load(fh), passphrase)
+            except Exception:
+                existing = {}
+
+        merged = {**existing, **changed_keys}
+        try:
+            envelope = encrypt_secret_bundle(merged, passphrase)
+            with open(bundle_path, "w", encoding="utf-8") as fh:
+                json.dump(envelope, fh, indent=2)
+            logger.info("Portable key bundle updated after settings save.")
+        except Exception as exc:
+            logger.error("Failed to update portable key bundle: %s", exc)
+            wx.MessageBox(
+                "Failed to update the key bundle. Keys are active this session but won't persist.",
+                "Bundle update failed",
+                wx.OK | wx.ICON_WARNING,
             )
 
     def _is_runtime_portable_mode(self) -> bool:
