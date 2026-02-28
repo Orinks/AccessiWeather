@@ -12,12 +12,21 @@ from accessiweather.app import AccessiWeatherApp
 
 def _ensure_wx_constants():
     for name, value in {
-        "OK": 0, "YES_NO": 0, "CANCEL": 0, "TE_PASSWORD": 0,
-        "ICON_INFORMATION": 0, "ICON_WARNING": 0, "ICON_ERROR": 0,
-        "ID_OK": 1, "ID_YES": 1, "ID_NO": 0, "ID_CANCEL": 2,
+        "OK": 0,
+        "YES_NO": 0,
+        "CANCEL": 0,
+        "TE_PASSWORD": 0,
+        "ICON_INFORMATION": 0,
+        "ICON_WARNING": 0,
+        "ICON_ERROR": 0,
+        "ID_OK": 1,
+        "ID_YES": 1,
+        "ID_NO": 0,
+        "ID_CANCEL": 2,
     }.items():
         if not hasattr(wx, name):
             setattr(wx, name, value)
+
 
 _ensure_wx_constants()
 
@@ -52,19 +61,23 @@ def _make_app_stub(*, portable=False):
 # is_keyring_available() unit tests
 # ---------------------------------------------------------------------------
 
+
 class TestIsKeyringAvailable:
     def setup_method(self):
         import accessiweather.config.secure_storage as ss
+
         ss._keyring_available = None
         ss._keyring_checked = False
         ss._keyring_module = None
 
     def teardown_method(self):
         import accessiweather.config.secure_storage as ss
+
         ss._keyring_available = None
 
     def test_returns_true_when_keyring_works(self):
         import accessiweather.config.secure_storage as ss
+
         mock_kr = MagicMock()
         mock_kr.get_password.return_value = "probe"
         with patch.object(ss, "_get_keyring", return_value=mock_kr):
@@ -73,12 +86,14 @@ class TestIsKeyringAvailable:
 
     def test_returns_false_when_keyring_import_fails(self):
         import accessiweather.config.secure_storage as ss
+
         with patch.object(ss, "_get_keyring", return_value=None):
             result = ss.is_keyring_available()
         assert result is False
 
     def test_returns_false_when_roundtrip_raises(self):
         import accessiweather.config.secure_storage as ss
+
         mock_kr = MagicMock()
         mock_kr.set_password.side_effect = Exception("no backend")
         with patch.object(ss, "_get_keyring", return_value=mock_kr):
@@ -87,6 +102,7 @@ class TestIsKeyringAvailable:
 
     def test_caches_result(self):
         import accessiweather.config.secure_storage as ss
+
         mock_kr = MagicMock()
         mock_kr.get_password.return_value = "probe"
         with patch.object(ss, "_get_keyring", return_value=mock_kr) as mock_get:
@@ -96,6 +112,7 @@ class TestIsKeyringAvailable:
 
     def test_returns_false_when_roundtrip_value_wrong(self):
         import accessiweather.config.secure_storage as ss
+
         mock_kr = MagicMock()
         mock_kr.get_password.return_value = "wrong"
         with patch.object(ss, "_get_keyring", return_value=mock_kr):
@@ -107,17 +124,21 @@ class TestIsKeyringAvailable:
 # Wizard warning tests
 # ---------------------------------------------------------------------------
 
+
 class TestWizardKeyringWarning:
     def setup_method(self):
         import accessiweather.config.secure_storage as ss
+
         ss._keyring_available = None
 
     def teardown_method(self):
         import accessiweather.config.secure_storage as ss
+
         ss._keyring_available = None
 
     def test_warning_shown_when_keyring_unavailable(self):
         import accessiweather.config.secure_storage as ss
+
         ss._keyring_available = False
 
         app = _make_app_stub()
@@ -141,11 +162,13 @@ class TestWizardKeyringWarning:
         ):
             app._maybe_show_first_start_onboarding()
 
-        assert any("Secure storage unavailable" in t for t in shown_titles), \
+        assert any("Secure storage unavailable" in t for t in shown_titles), (
             f"Expected warning dialog, got titles: {shown_titles}"
+        )
 
     def test_no_warning_when_keyring_available(self):
         import accessiweather.config.secure_storage as ss
+
         ss._keyring_available = True
 
         app = _make_app_stub()
@@ -170,6 +193,7 @@ class TestWizardKeyringWarning:
 
     def test_wizard_continues_after_warning(self):
         import accessiweather.config.secure_storage as ss
+
         ss._keyring_available = False
 
         app = _make_app_stub()
@@ -180,7 +204,9 @@ class TestWizardKeyringWarning:
             return ""
 
         with (
-            patch("accessiweather.app.wx.MessageDialog", side_effect=lambda *a, **k: _make_wx_dialog()),
+            patch(
+                "accessiweather.app.wx.MessageDialog", side_effect=lambda *a, **k: _make_wx_dialog()
+            ),
             patch.object(app, "_prompt_optional_secret_with_link", side_effect=fake_prompt),
             patch.object(app, "_should_show_first_start_onboarding", return_value=True),
             patch.object(app, "_run_deferred_startup_update_check"),
@@ -196,6 +222,7 @@ class TestWizardKeyringWarning:
 # ---------------------------------------------------------------------------
 # Portable session flag tests
 # ---------------------------------------------------------------------------
+
 
 class TestPortableSessionFlag:
     def test_session_flag_prevents_re_prompt(self):
@@ -220,7 +247,9 @@ class TestPortableSessionFlag:
 
         with (
             patch.object(app, "_has_any_saved_api_keys", return_value=True) as mock_check,
-            patch("accessiweather.app.wx.TextEntryDialog", return_value=_make_wx_dialog(), create=True),
+            patch(
+                "accessiweather.app.wx.TextEntryDialog", return_value=_make_wx_dialog(), create=True
+            ),
             patch("accessiweather.app.wx.MessageBox", create=True),
         ):
             app._maybe_auto_import_keys_file()

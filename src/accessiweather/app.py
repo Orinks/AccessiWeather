@@ -690,6 +690,7 @@ class AccessiWeatherApp(wx.App):
             if success:
                 self._portable_keys_imported_this_session = True
                 from .config.secure_storage import is_keyring_available
+
                 if not is_keyring_available():
                     wx.MessageBox(
                         "API keys imported successfully and are active for this session.\n\n"
@@ -949,6 +950,7 @@ class AccessiWeatherApp(wx.App):
             self.main_window.on_add_location()
 
         from .config.secure_storage import is_keyring_available
+
         if not is_keyring_available():
             _warn_dlg = wx.MessageDialog(
                 self.main_window,
