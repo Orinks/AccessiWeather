@@ -16,6 +16,7 @@ dependencies = [
     "gui_builder @ git+https://github.com/accessibleapps/gui_builder.git",
     "sound_lib @ git+https://github.com/accessibleapps/sound_lib.git",
     "desktop-notifier",
+    "toasted; sys_platform == 'win32'",
     "python-dateutil",
     "beautifulsoup4",
     "httpx>=0.20.0",

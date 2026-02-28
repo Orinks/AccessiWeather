@@ -66,36 +66,6 @@ def set_windows_app_user_model_id(app_id: str = WINDOWS_APP_USER_MODEL_ID) -> No
         logger.debug("Failed to set App User Model ID: %s", exc)
 
 
-def register_app_id_in_registry(
-    app_id: str = WINDOWS_APP_USER_MODEL_ID,
-    display_name: str = "AccessiWeather",
-    icon_path: str | None = None,
-) -> None:
-    r"""
-    Register the AppUserModelID in HKCU registry for portable/unpackaged builds.
-
-    Windows 10 v1903+ converts Shell_NotifyIcon balloon tips to WinRT toasts.
-    Without a registered AppID (via Start Menu shortcut OR registry), those toasts
-    are silently dropped. Writing to HKCU\\Software\\Classes\\AppUserModelId\\{app_id}
-    satisfies Windows without requiring a Start Menu shortcut — enabling toast
-    notifications in portable builds.
-    """
-    if sys.platform != "win32":
-        return
-
-    try:  # pragma: no cover
-        import winreg
-
-        key_path = rf"Software\Classes\AppUserModelId\{app_id}"
-        with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as key:
-            winreg.SetValueEx(key, "DisplayName", 0, winreg.REG_SZ, display_name)
-            if icon_path:
-                winreg.SetValueEx(key, "IconUri", 0, winreg.REG_SZ, icon_path)
-        logger.debug("Registered AppUserModelID in registry: %s", app_id)
-    except Exception as exc:  # pragma: no cover
-        logger.debug("Failed to register AppUserModelID in registry: %s", exc)
-
-
 def _is_unc_path(path: str) -> bool:
     """Return True when *path* points to a UNC/network location."""
     normalized = path.replace("/", "\\")
@@ -257,7 +227,6 @@ def ensure_windows_toast_identity(
         _is_unc_path(exe_path),
     )
 
-    register_app_id_in_registry(app_id=app_id, display_name=display_name, icon_path=exe_path)
     set_windows_app_user_model_id(app_id=app_id)
 
     stamp = _load_toast_identity_stamp(stamp_path)

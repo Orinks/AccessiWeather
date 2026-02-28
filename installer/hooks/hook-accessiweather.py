@@ -22,5 +22,13 @@ hiddenimports += [
     "accessiweather.utils",
 ]
 
+# Add toasted (Windows toast notifications) if available
+try:
+    import toasted  # noqa: F401
+
+    hiddenimports += collect_submodules("toasted")
+except ImportError:
+    pass
+
 # Collect data files (resources, soundpacks)
 datas = collect_data_files("accessiweather", include_py_files=False)

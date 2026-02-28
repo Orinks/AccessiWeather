@@ -3,7 +3,13 @@ Toast notification module for AccessiWeather.
 
 This module provides cross-platform toast notification functionality
 with safe error handling for test environments.
+
+On Windows, prefers the 'toasted' package (WinRT-based) for reliable
+AUMID handling. Falls back to desktop-notifier on Mac/Linux or when
+toasted is unavailable.
 """
+
+from __future__ import annotations
 
 import asyncio
 import logging
@@ -15,20 +21,46 @@ from .sound_player import play_notification_sound, play_notification_sound_candi
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Backend availability
+# ---------------------------------------------------------------------------
+
+# Try toasted first (Windows-only, WinRT-based)
+TOASTED_AVAILABLE = False
+_Toast = None
+_Text = None
+
+if sys.platform == "win32":
+    try:
+        from toasted import (  # type: ignore[assignment]
+            Text as _Text,
+            Toast as _Toast,
+        )
+
+        TOASTED_AVAILABLE = True
+    except ImportError:
+        logger.info("toasted not available on Windows, will try desktop-notifier")
+
+# Try desktop-notifier (cross-platform fallback)
 try:
     from desktop_notifier import DesktopNotifier
 
     DESKTOP_NOTIFIER_AVAILABLE = True
 except ImportError as e:
     logger.warning(f"Desktop notifier not available: {e}")
-    DesktopNotifier = None
+    DesktopNotifier = None  # type: ignore[assignment,misc]
     DESKTOP_NOTIFIER_AVAILABLE = False
+
+# At least one notification backend is usable
+NOTIFIER_AVAILABLE = TOASTED_AVAILABLE or DESKTOP_NOTIFIER_AVAILABLE
 
 
 def _log_packaging_notifier_diagnostics() -> None:
     """Emit debug-only notifier dependency diagnostics for packaged troubleshooting."""
     logger.debug(
-        "[packaging-diag] notifier deps: desktop_notifier_available=%s frozen=%s meipass=%s executable=%s",
+        "[packaging-diag] notifier deps: toasted_available=%s desktop_notifier_available=%s "
+        "frozen=%s meipass=%s executable=%s",
+        TOASTED_AVAILABLE,
         DESKTOP_NOTIFIER_AVAILABLE,
         getattr(sys, "frozen", False),
         getattr(sys, "_MEIPASS", None),
@@ -36,9 +68,253 @@ def _log_packaging_notifier_diagnostics() -> None:
     )
 
 
-class SafeDesktopNotifier:
+# ---------------------------------------------------------------------------
+# ToastedWindowsNotifier — Windows backend using the 'toasted' package
+# ---------------------------------------------------------------------------
+
+
+class ToastedWindowsNotifier:
     """
-    A wrapper around desktop-notifier that provides synchronous interface.
+    Windows notification backend using the 'toasted' package.
+
+    Uses WinRT toast notifications via the toasted library, which handles
+    AUMID/registry properly for non-UWP desktop apps.
+
+    Exposes the same public interface as SafeDesktopNotifier so callers
+    can use either interchangeably.
+    """
+
+    def __init__(
+        self,
+        app_name: str = "AccessiWeather",
+        sound_enabled: bool = True,
+        soundpack: str | None = None,
+    ):
+        """Initialize the Windows toasted notification backend."""
+        self.app_name = app_name
+        _log_packaging_notifier_diagnostics()
+
+        # Sound configuration
+        self.sound_enabled: bool = bool(sound_enabled)
+        self.soundpack: str = soundpack or "default"
+
+        # Optional fallback callable (same contract as SafeDesktopNotifier)
+        self.balloon_fn = None  # Optional[Callable[[str, str], None]]
+
+        # Persistent worker thread state
+        self._worker_loop: asyncio.AbstractEventLoop | None = None
+        self._worker_thread: threading.Thread | None = None
+        self._worker_ready = threading.Event()
+        self._lock = threading.Lock()
+        self._app_id_registered = False
+
+        if not TOASTED_AVAILABLE:
+            logger.warning("toasted not available, notifications will be logged only")
+            return
+
+        logger.info("ToastedWindowsNotifier initialized (app_id=%s)", WINDOWS_APP_USER_MODEL_ID)
+        # Eagerly start worker thread to avoid first-notification delay
+        self._ensure_worker()
+
+    # -- worker thread management ------------------------------------------
+
+    def _start_watchdog(self, interval: int = 30) -> None:
+        """Start a periodic watchdog timer that restarts the worker if it dies."""
+        if not TOASTED_AVAILABLE:
+            return
+        self._watchdog_timer: threading.Timer | None = None
+        self._watchdog_interval = interval
+        self._schedule_watchdog()
+
+    def _schedule_watchdog(self) -> None:
+        """Schedule the next watchdog check."""
+        t = threading.Timer(self._watchdog_interval, self._watchdog_check)
+        t.daemon = True
+        t.start()
+        self._watchdog_timer = t
+
+    def _watchdog_check(self) -> None:
+        """Check if the worker thread is alive; restart it if not."""
+        thread = self._worker_thread
+        if thread is not None and not thread.is_alive():
+            logger.warning("[toasted] Worker thread died — restarting")
+            with self._lock:
+                self._worker_thread = None
+                self._worker_loop = None
+            ok = self._ensure_worker()
+            if ok:
+                logger.info("[toasted] Worker thread restarted successfully")
+            else:
+                logger.error("[toasted] Worker thread restart failed")
+        else:
+            logger.debug("[toasted] Watchdog: worker thread alive")
+        self._schedule_watchdog()
+
+    def _ensure_worker(self) -> bool:
+        """Start the persistent worker thread if not already running."""
+        if not TOASTED_AVAILABLE:
+            return False
+
+        with self._lock:
+            if self._worker_thread is not None and self._worker_thread.is_alive():
+                return True
+
+            self._worker_ready.clear()
+            self._worker_thread = threading.Thread(
+                target=self._worker_run, name="ToastedNotifierWorker", daemon=True
+            )
+            self._worker_thread.start()
+
+        if not self._worker_ready.wait(timeout=5):
+            logger.error("Toasted worker thread failed to start within timeout")
+            return False
+
+        return self._worker_loop is not None
+
+    def _worker_run(self) -> None:
+        """Run the persistent worker thread with its own event loop."""
+        try:
+            self._worker_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self._worker_loop)
+
+            # Register the AUMID in the Windows registry (one-time, idempotent)
+            if not self._app_id_registered and _Toast is not None:
+                try:
+                    if not _Toast.is_registered_app_id(WINDOWS_APP_USER_MODEL_ID):
+                        _Toast.register_app_id(
+                            handle=WINDOWS_APP_USER_MODEL_ID,
+                            display_name=self.app_name,
+                            show_in_settings=True,
+                        )
+                    self._app_id_registered = True
+                    logger.debug("Registered toasted app ID: %s", WINDOWS_APP_USER_MODEL_ID)
+                except Exception as e:
+                    logger.warning("Failed to register toasted app ID: %s", e)
+
+            self._worker_ready.set()
+            self._worker_loop.run_forever()
+        except Exception as e:
+            logger.error("Toasted worker thread failed: %s", e)
+            self._worker_loop = None
+            self._worker_ready.set()  # unblock waiters
+
+    # -- sending ------------------------------------------------------------
+
+    def _send_in_worker(self, title: str, message: str, timeout: int = 10) -> bool:
+        """Send a notification via the persistent worker thread."""
+        worker_ok = self._ensure_worker()
+        logger.debug(
+            "[toasted] _send_in_worker: ensure_worker=%s, loop_alive=%s, thread_alive=%s",
+            worker_ok,
+            self._worker_loop is not None and self._worker_loop.is_running(),
+            self._worker_thread is not None and self._worker_thread.is_alive(),
+        )
+        if not worker_ok:
+            logger.warning("[toasted] _send_in_worker: worker thread not ready, toast skipped")
+            return False
+
+        loop = self._worker_loop
+        if loop is None:
+            logger.warning("[toasted] _send_in_worker: loop is None — aborting")
+            return False
+
+        async def _show_toast() -> bool:
+            toast = _Toast(  # type: ignore[misc]
+                app_id=WINDOWS_APP_USER_MODEL_ID,
+                sound=None,  # we handle sounds ourselves
+            )
+            toast.elements = [_Text(title), _Text(message)]  # type: ignore[misc]
+            # Fire-and-forget: schedule show and return immediately
+            asyncio.create_task(toast.show(mute_sound=True))
+            return True
+
+        # Fire and forget — don't block waiting for WinRT confirmation
+        logger.debug("[toasted] Submitting toast to worker loop (fire-and-forget): title=%r", title)
+        asyncio.run_coroutine_threadsafe(_show_toast(), loop)
+        return True
+
+    def send_notification(
+        self,
+        title: str,
+        message: str,
+        timeout: int = 10,
+        *,
+        sound_event: str | None = None,
+        sound_candidates: list[str] | None = None,
+        play_sound: bool = True,
+    ) -> bool:
+        """Send a notification synchronously (same interface as SafeDesktopNotifier)."""
+        logger.debug(
+            "[toasted] send_notification called: title=%r, "
+            "play_sound=%s, sound_enabled=%s, toasted_available=%s, "
+            "thread=%s",
+            title,
+            play_sound,
+            self.sound_enabled,
+            TOASTED_AVAILABLE,
+            threading.current_thread().name,
+        )
+
+        if not TOASTED_AVAILABLE:
+            logger.warning(
+                "[toasted] toasted NOT available — toast skipped, sound_only=%s: %r",
+                play_sound,
+                title,
+            )
+            if self.sound_enabled and play_sound:
+                self._play_sound(sound_event, sound_candidates)
+            return True
+
+        try:
+            # Fire sound immediately in a thread — don't block on toast future
+            if self.sound_enabled and play_sound:
+                threading.Thread(
+                    target=self._play_sound,
+                    args=(sound_event, sound_candidates),
+                    daemon=True,
+                ).start()
+                logger.debug("[toasted] Sound thread started")
+
+            success = self._send_in_worker(title, message, timeout)
+            if not success:
+                logger.warning(
+                    "[toasted] _send_in_worker returned False — toast NOT shown: %r", title
+                )
+                # Fallback to tray balloon when available
+                if self.balloon_fn is not None:
+                    try:
+                        self.balloon_fn(title, message)
+                        logger.debug("[toasted] Tray balloon fallback used for: %r", title)
+                    except Exception as bf_exc:
+                        logger.debug("[toasted] Tray balloon fallback failed: %s", bf_exc)
+            else:
+                logger.debug("[toasted] Toast dispatched successfully: %r", title)
+
+            return success
+        except Exception as e:
+            logger.warning("[toasted] send_notification raised %s: %s", type(e).__name__, e)
+            logger.info("[toasted] Notification (fallback): %s - %s", title, message)
+            return False
+
+    def _play_sound(self, sound_event: str | None, sound_candidates: list[str] | None) -> None:
+        """Play a notification sound."""
+        try:
+            if sound_candidates:
+                play_notification_sound_candidates(sound_candidates, self.soundpack)
+            else:
+                play_notification_sound(sound_event or "alert", self.soundpack)
+        except Exception as e:
+            logger.debug("Sound playback failed: %s", e)
+
+
+# ---------------------------------------------------------------------------
+# SafeDesktopNotifier — Mac/Linux backend using desktop-notifier
+# ---------------------------------------------------------------------------
+
+
+class _DesktopNotifierBackend:
+    """
+    Cross-platform notification backend using the desktop-notifier package.
 
     Uses a single persistent background thread with its own event loop and
     DesktopNotifier instance to avoid COM threading issues on Windows.
@@ -52,7 +328,6 @@ class SafeDesktopNotifier:
         sound_enabled: bool = True,
         soundpack: str | None = None,
     ):
-        """Initialize the desktop notifier wrapper."""
         self.app_name = app_name
         _log_packaging_notifier_diagnostics()
 
@@ -77,6 +352,42 @@ class SafeDesktopNotifier:
             return
 
         logger.info("SafeDesktopNotifier initialized")
+        # Eagerly start worker thread to avoid first-notification delay
+        self._ensure_worker()
+        # Start periodic health watchdog
+        self._start_watchdog()
+
+    def _start_watchdog(self, interval: int = 30) -> None:
+        """Start a periodic watchdog timer that restarts the worker if it dies."""
+        if not DESKTOP_NOTIFIER_AVAILABLE:
+            return
+        self._watchdog_timer: threading.Timer | None = None
+        self._watchdog_interval = interval
+        self._schedule_watchdog()
+
+    def _schedule_watchdog(self) -> None:
+        """Schedule the next watchdog check."""
+        t = threading.Timer(self._watchdog_interval, self._watchdog_check)
+        t.daemon = True
+        t.start()
+        self._watchdog_timer = t
+
+    def _watchdog_check(self) -> None:
+        """Check if the worker thread is alive; restart it if not."""
+        thread = self._worker_thread
+        if thread is not None and not thread.is_alive():
+            logger.warning("[toast] Worker thread died — restarting")
+            with self._lock:
+                self._worker_thread = None
+                self._worker_loop = None
+            ok = self._ensure_worker()
+            if ok:
+                logger.info("[toast] Worker thread restarted successfully")
+            else:
+                logger.error("[toast] Worker thread restart failed")
+        else:
+            logger.debug("[toast] Watchdog: worker thread alive")
+        self._schedule_watchdog()
 
     def _ensure_worker(self) -> bool:
         """Start the persistent worker thread if not already running."""
@@ -124,7 +435,7 @@ class SafeDesktopNotifier:
             # Keep the loop running so the notifier stays alive
             self._worker_loop.run_forever()
         except Exception as e:
-            logger.error(f"Worker thread failed: {e}")
+            logger.error("Worker thread failed: %s", e)
             self._worker_loop = None
             self._worker_notifier = None
             self._worker_ready.set()  # unblock waiters
@@ -133,10 +444,12 @@ class SafeDesktopNotifier:
         """Send a notification via the persistent worker thread."""
         worker_ok = self._ensure_worker()
         logger.debug(
-            f"[toast] _send_in_worker: ensure_worker={worker_ok}, "
-            f"loop_alive={self._worker_loop is not None and self._worker_loop.is_running()}, "
-            f"thread_alive={self._worker_thread is not None and self._worker_thread.is_alive()}, "
-            f"notifier_ready={self._worker_notifier is not None}"
+            "[toast] _send_in_worker: ensure_worker=%s, "
+            "loop_alive=%s, thread_alive=%s, notifier_ready=%s",
+            worker_ok,
+            self._worker_loop is not None and self._worker_loop.is_running(),
+            self._worker_thread is not None and self._worker_thread.is_alive(),
+            self._worker_notifier is not None,
         )
         if not worker_ok:
             logger.warning("[toast] _send_in_worker: worker thread not ready, toast skipped")
@@ -146,26 +459,19 @@ class SafeDesktopNotifier:
         notifier = self._worker_notifier
         if loop is None or notifier is None:
             logger.warning(
-                f"[toast] _send_in_worker: loop={loop is not None}, notifier={notifier is not None} — aborting"
+                "[toast] _send_in_worker: loop=%s, notifier=%s — aborting",
+                loop is not None,
+                notifier is not None,
             )
             return False
 
-        logger.debug(f"[toast] Submitting toast to worker loop: title={title!r}")
-        future = asyncio.run_coroutine_threadsafe(
+        # Fire and forget — don't block waiting for desktop-notifier to complete
+        logger.debug("[toast] Submitting toast to worker loop (fire-and-forget): title=%r", title)
+        asyncio.run_coroutine_threadsafe(
             notifier.send(title=title, message=message, timeout=timeout),
             loop,
         )
-
-        try:
-            result = future.result(timeout=10)
-            logger.debug(f"[toast] Worker returned: {result!r} — toast sent successfully")
-            return True
-        except TimeoutError:
-            logger.error("[toast] _send_in_worker: future timed out after 10s — toast NOT shown")
-            return False
-        except Exception as e:
-            logger.error(f"[toast] _send_in_worker: future raised {type(e).__name__}: {e}")
-            return False
+        return True
 
     def send_notification(
         self,
@@ -177,35 +483,24 @@ class SafeDesktopNotifier:
         sound_candidates: list[str] | None = None,
         play_sound: bool = True,
     ) -> bool:
-        """
-        Send a notification synchronously.
-
-        Optionally specify a specific sound_event or a list of sound_candidates
-        to determine which sound to play. candidates take precedence over event.
-
-        Args:
-            title: Notification title
-            message: Notification message body
-            timeout: Notification display timeout in seconds
-            sound_event: Specific sound event key to play
-            sound_candidates: List of sound event keys to try in order
-            play_sound: Whether to play a sound (default True). Set to False
-                       to send notification silently (useful when batching
-                       multiple alerts to avoid overlapping sounds).
-
-        """
-        import threading
-
+        """Send a notification synchronously."""
         logger.debug(
-            f"[toast] send_notification called: title={title!r}, "
-            f"play_sound={play_sound}, sound_enabled={self.sound_enabled}, "
-            f"desktop_notifier_available={DESKTOP_NOTIFIER_AVAILABLE}, "
-            f"thread={threading.current_thread().name}"
+            "[toast] send_notification called: title=%r, "
+            "play_sound=%s, sound_enabled=%s, "
+            "desktop_notifier_available=%s, "
+            "thread=%s",
+            title,
+            play_sound,
+            self.sound_enabled,
+            DESKTOP_NOTIFIER_AVAILABLE,
+            threading.current_thread().name,
         )
 
         if not DESKTOP_NOTIFIER_AVAILABLE:
             logger.warning(
-                f"[toast] desktop-notifier NOT available — toast skipped, sound_only={play_sound}: {title!r}"
+                "[toast] desktop-notifier NOT available — toast skipped, sound_only=%s: %r",
+                play_sound,
+                title,
             )
             # Still play sound if configured and requested, as a basic cue
             if self.sound_enabled and play_sound:
@@ -213,37 +508,35 @@ class SafeDesktopNotifier:
             return True
 
         try:
-            logger.debug(f"[toast] Calling _send_in_worker for: {title!r}")
+            # Fire sound immediately in a thread — don't block on toast future
+            if self.sound_enabled and play_sound:
+                threading.Thread(
+                    target=self._play_sound,
+                    args=(sound_event, sound_candidates),
+                    daemon=True,
+                ).start()
+                logger.debug("[toast] Sound thread started")
+
+            logger.debug("[toast] Calling _send_in_worker for: %r", title)
             success = self._send_in_worker(title, message, timeout)
             if not success:
                 logger.warning(
-                    f"[toast] _send_in_worker returned False — toast NOT shown: {title!r}"
+                    "[toast] _send_in_worker returned False — toast NOT shown: %r", title
                 )
                 # Fallback to tray balloon when available (e.g. window hidden in system tray)
                 if self.balloon_fn is not None:
                     try:
                         self.balloon_fn(title, message)
-                        logger.debug(f"[toast] Tray balloon fallback used for: {title!r}")
+                        logger.debug("[toast] Tray balloon fallback used for: %r", title)
                     except Exception as bf_exc:
-                        logger.debug(f"[toast] Tray balloon fallback failed: {bf_exc}")
+                        logger.debug("[toast] Tray balloon fallback failed: %s", bf_exc)
             else:
-                logger.debug(f"[toast] Toast dispatched successfully: {title!r}")
-
-            # Play alert sound when enabled and requested
-            if self.sound_enabled and play_sound:
-                logger.debug(
-                    f"[toast] Playing sound: event={sound_event!r}, candidates={sound_candidates!r}"
-                )
-                self._play_sound(sound_event, sound_candidates)
-            else:
-                logger.debug(
-                    f"[toast] Sound skipped: sound_enabled={self.sound_enabled}, play_sound={play_sound}"
-                )
+                logger.debug("[toast] Toast dispatched successfully: %r", title)
 
             return success
         except Exception as e:
-            logger.warning(f"[toast] send_notification raised {type(e).__name__}: {e}")
-            logger.info(f"[toast] Notification (fallback): {title} - {message}")
+            logger.warning("[toast] send_notification raised %s: %s", type(e).__name__, e)
+            logger.info("[toast] Notification (fallback): %s - %s", title, message)
             return False
 
     def _play_sound(self, sound_event: str | None, sound_candidates: list[str] | None) -> None:
@@ -254,22 +547,39 @@ class SafeDesktopNotifier:
             else:
                 play_notification_sound(sound_event or "alert", self.soundpack)
         except Exception as e:
-            logger.debug(f"Sound playback failed: {e}")
+            logger.debug("Sound playback failed: %s", e)
+
+
+# ---------------------------------------------------------------------------
+# Platform selection: export SafeDesktopNotifier as the right backend
+# ---------------------------------------------------------------------------
+
+if sys.platform == "win32" and TOASTED_AVAILABLE:
+    SafeDesktopNotifier = ToastedWindowsNotifier
+    logger.info("Using toasted backend for Windows notifications")
+else:
+    SafeDesktopNotifier = _DesktopNotifierBackend  # type: ignore[assignment,misc]
+
+
+# ---------------------------------------------------------------------------
+# SafeToastNotifier — higher-level wrapper (legacy interface)
+# ---------------------------------------------------------------------------
 
 
 class SafeToastNotifier:
     """
     A wrapper around the notification system that handles exceptions.
 
-    Provides cross-platform notification support using desktop-notifier.
+    Provides cross-platform notification support.  Automatically picks the
+    best available backend (toasted on Windows, desktop-notifier elsewhere).
     """
 
     def __init__(self, sound_enabled: bool = True, soundpack: str | None = None):
-        """Initialize the instance."""
+        """Initialize the notification wrapper."""
         self.sound_enabled: bool = bool(sound_enabled)
         self.soundpack: str = soundpack if soundpack is not None else "default"
-        # Initialize underlying desktop notifier with sound preferences as well
-        if DESKTOP_NOTIFIER_AVAILABLE:
+        # Initialize underlying notifier with sound preferences
+        if NOTIFIER_AVAILABLE:
             self._desktop_notifier = SafeDesktopNotifier(
                 app_name="AccessiWeather",
                 sound_enabled=self.sound_enabled,
@@ -286,7 +596,7 @@ class SafeToastNotifier:
         )
         if m is not None and callable(m):
             return bool(m(title, message, timeout))
-        logger.info(f"Notification (desktop notifier unavailable): {title} - {message}")
+        logger.info("Notification (desktop notifier unavailable): %s - %s", title, message)
         return True
 
     def show_toast(self, **kwargs) -> bool:
@@ -294,10 +604,9 @@ class SafeToastNotifier:
         try:
             # If we're running tests, just log the notification
             if "pytest" in sys.modules:
-                # For tests, just log the notification and return success
                 title = kwargs.get("title", "")
                 msg = kwargs.get("msg", "")
-                logger.info(f"Toast notification: {title} - {msg}")
+                logger.info("Toast notification: %s - %s", title, msg)
                 return True
 
             # Map parameters to desktop-notifier format
@@ -307,25 +616,22 @@ class SafeToastNotifier:
             alert_type = kwargs.get("alert_type", "notification")
             kwargs.get("severity")
 
-            # Use desktop-notifier if available and callable
             success = self._safe_send_notification(title, message, timeout)
 
             # Play sound if enabled
             if self.sound_enabled:
                 try:
-                    # Map alert_type to supported sound events
-                    # Use 'alert' for urgent/alert types, 'notify' for general notifications
                     sound_event = (
                         "alert" if str(alert_type).lower() in ("urgent", "alert") else "notify"
                     )
                     play_notification_sound(sound_event, self.soundpack)
                 except Exception as e:
-                    logger.error(f"Failed to play notification sound: {e}")
+                    logger.error("Failed to play notification sound: %s", e)
 
             return success
         except Exception as e:
-            logger.warning(f"Failed to show toast notification: {str(e)}")
+            logger.warning("Failed to show toast notification: %s", e)
             logger.info(
-                f"Toast notification would show: {kwargs.get('title')} - {kwargs.get('msg')}"
+                "Toast notification would show: %s - %s", kwargs.get("title"), kwargs.get("msg")
             )
             return False
