@@ -245,6 +245,15 @@ class ToastedWindowsNotifier:
             return True
 
         try:
+            # Fire sound immediately in a thread — don't block on toast future
+            if self.sound_enabled and play_sound:
+                threading.Thread(
+                    target=self._play_sound,
+                    args=(sound_event, sound_candidates),
+                    daemon=True,
+                ).start()
+                logger.debug("[toasted] Sound thread started")
+
             success = self._send_in_worker(title, message, timeout)
             if not success:
                 logger.warning(
@@ -259,20 +268,6 @@ class ToastedWindowsNotifier:
                         logger.debug("[toasted] Tray balloon fallback failed: %s", bf_exc)
             else:
                 logger.debug("[toasted] Toast dispatched successfully: %r", title)
-
-            if self.sound_enabled and play_sound:
-                logger.debug(
-                    "[toasted] Playing sound: event=%r, candidates=%r",
-                    sound_event,
-                    sound_candidates,
-                )
-                self._play_sound(sound_event, sound_candidates)
-            else:
-                logger.debug(
-                    "[toasted] Sound skipped: sound_enabled=%s, play_sound=%s",
-                    self.sound_enabled,
-                    play_sound,
-                )
 
             return success
         except Exception as e:
@@ -467,6 +462,15 @@ class _DesktopNotifierBackend:
             return True
 
         try:
+            # Fire sound immediately in a thread — don't block on toast future
+            if self.sound_enabled and play_sound:
+                threading.Thread(
+                    target=self._play_sound,
+                    args=(sound_event, sound_candidates),
+                    daemon=True,
+                ).start()
+                logger.debug("[toast] Sound thread started")
+
             logger.debug("[toast] Calling _send_in_worker for: %r", title)
             success = self._send_in_worker(title, message, timeout)
             if not success:
@@ -482,21 +486,6 @@ class _DesktopNotifierBackend:
                         logger.debug("[toast] Tray balloon fallback failed: %s", bf_exc)
             else:
                 logger.debug("[toast] Toast dispatched successfully: %r", title)
-
-            # Play alert sound when enabled and requested
-            if self.sound_enabled and play_sound:
-                logger.debug(
-                    "[toast] Playing sound: event=%r, candidates=%r",
-                    sound_event,
-                    sound_candidates,
-                )
-                self._play_sound(sound_event, sound_candidates)
-            else:
-                logger.debug(
-                    "[toast] Sound skipped: sound_enabled=%s, play_sound=%s",
-                    self.sound_enabled,
-                    play_sound,
-                )
 
             return success
         except Exception as e:
