@@ -64,6 +64,7 @@ class _FakeTextEntryDialog:
 def test_portable_missing_api_keys_hint_shown_once_and_persists(monkeypatch):
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._portable_mode = True
+    app._force_wizard = False
     app.main_window = SimpleNamespace(open_settings=MagicMock())
     settings = SimpleNamespace(portable_missing_api_keys_hint_shown=False)
     app.config_manager = SimpleNamespace(
@@ -131,6 +132,7 @@ def test_has_any_saved_api_keys_checks_both_keys(monkeypatch):
 def test_portable_missing_api_keys_hint_noops_when_not_portable():
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._portable_mode = False
+    app._force_wizard = False
     app.main_window = SimpleNamespace(open_settings=MagicMock())
     app.config_manager = SimpleNamespace(
         get_settings=lambda: SimpleNamespace(portable_missing_api_keys_hint_shown=False),
@@ -145,6 +147,7 @@ def test_portable_missing_api_keys_hint_noops_when_not_portable():
 def test_onboarding_wizard_shown_once_with_skip_path(monkeypatch):
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._portable_mode = False
+    app._force_wizard = False
     app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
     settings = SimpleNamespace(onboarding_wizard_shown=False)
     app.config_manager = SimpleNamespace(
@@ -185,6 +188,7 @@ def test_onboarding_wizard_shown_once_with_skip_path(monkeypatch):
 def test_onboarding_wizard_portable_happy_path_sets_keys_and_bundle(monkeypatch):
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._portable_mode = True
+    app._force_wizard = False
     app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
     settings = SimpleNamespace(onboarding_wizard_shown=False)
     app.config_manager = SimpleNamespace(
@@ -230,6 +234,7 @@ def test_onboarding_wizard_portable_happy_path_sets_keys_and_bundle(monkeypatch)
 def test_onboarding_wizard_api_key_link_actions_open_browser(monkeypatch):
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._portable_mode = False
+    app._force_wizard = False
     app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
     settings = SimpleNamespace(onboarding_wizard_shown=False)
     app.config_manager = SimpleNamespace(
@@ -280,6 +285,7 @@ def test_onboarding_wizard_api_key_link_actions_open_browser(monkeypatch):
 def test_onboarding_summary_includes_readiness_status(monkeypatch):
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._portable_mode = False
+    app._force_wizard = False
     app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
     settings = SimpleNamespace(onboarding_wizard_shown=False, portable_auto_bundle_enabled=False)
     configs = iter(
@@ -333,6 +339,7 @@ def test_onboarding_summary_includes_readiness_status(monkeypatch):
 def test_onboarding_completion_triggers_deferred_startup_update_check(monkeypatch):
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._portable_mode = False
+    app._force_wizard = False
     app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
     settings = SimpleNamespace(onboarding_wizard_shown=False)
     app.config_manager = SimpleNamespace(
@@ -340,6 +347,7 @@ def test_onboarding_completion_triggers_deferred_startup_update_check(monkeypatc
         update_settings=MagicMock(),
     )
     app._run_deferred_startup_update_check = MagicMock()
+    app._force_wizard = False
 
     _ensure_wx_dialog_constants()
     responses = [
@@ -375,6 +383,7 @@ def _make_app_for_key_export(monkeypatch, has_keys: bool, config_dir=None):
 
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._portable_mode = True
+    app._force_wizard = False
     app.main_window = SimpleNamespace()
 
     cfg_dir = Path(config_dir) if config_dir else Path("/tmp/portable-config")
@@ -385,6 +394,7 @@ def _make_app_for_key_export(monkeypatch, has_keys: bool, config_dir=None):
 
     # Patch _has_any_saved_api_keys directly on the instance
     app._has_any_saved_api_keys = MagicMock(return_value=has_keys)
+    app._force_wizard = False
 
     _ensure_wx_dialog_constants()
     return app
@@ -525,6 +535,7 @@ def _make_app_for_auto_import(tmp_path, all_keys_missing: bool = True):
     """Build a minimal AccessiWeatherApp stub for auto-import tests."""
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._portable_mode = True
+    app._force_wizard = False
     app.main_window = SimpleNamespace()
     app.config_manager = SimpleNamespace(
         config_dir=tmp_path,
@@ -533,6 +544,7 @@ def _make_app_for_auto_import(tmp_path, all_keys_missing: bool = True):
 
     # Mimic _has_any_saved_api_keys — if all_keys_missing, return False
     app._has_any_saved_api_keys = MagicMock(return_value=not all_keys_missing)
+    app._force_wizard = False
 
     _ensure_wx_dialog_constants()
     return app
@@ -542,6 +554,7 @@ def test_auto_import_noops_in_non_portable_mode(tmp_path):
     """_maybe_auto_import_keys_file is a no-op when not in portable mode."""
     app = _make_app_for_auto_import(tmp_path)
     app._portable_mode = False
+    app._force_wizard = False
 
     # Create a .keys file — should still be ignored.
     (tmp_path / "api-keys.keys").write_bytes(b"dummy")
