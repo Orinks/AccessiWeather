@@ -175,6 +175,9 @@ class TestExportSettings:
         assert "exported_at" in exported_data
         assert exported_data["settings"]["temperature_unit"] == "celsius"
         assert exported_data["settings"]["data_source"] == "openmeteo"
+        # Locations should be included in settings export
+        assert "locations" in exported_data
+        assert isinstance(exported_data["locations"], list)
 
     def test_export_settings_write_error(self, operations, tmp_path):
         """Test export settings with write error."""
@@ -581,6 +584,51 @@ class TestImportSettings:
 
         # Verify locations were preserved
         assert config.locations is original_locations
+
+    def test_import_settings_imports_locations(self, operations, mock_manager, tmp_path):
+        """Test that import_settings imports locations from export file."""
+        import_file = tmp_path / "import.json"
+        import_data = {
+            "settings": {
+                "temperature_unit": "fahrenheit",
+            },
+            "locations": [
+                {"name": "New City", "latitude": 51.5, "longitude": -0.1},
+                {"name": "Another City", "latitude": 48.8, "longitude": 2.3, "country_code": "FR"},
+            ],
+        }
+        import_file.write_text(json.dumps(import_data))
+
+        config = mock_manager.get_config.return_value
+        config.locations = []
+
+        operations.import_settings(import_file)
+
+        names = [loc.name for loc in config.locations]
+        assert "New City" in names
+        assert "Another City" in names
+        fr_loc = next(loc for loc in config.locations if loc.name == "Another City")
+        assert fr_loc.country_code == "FR"
+
+    def test_import_settings_skips_duplicate_locations(self, operations, mock_manager, tmp_path):
+        """Test that import_settings skips locations already present by name."""
+        import_file = tmp_path / "import.json"
+        import_data = {
+            "settings": {"temperature_unit": "celsius"},
+            "locations": [
+                {"name": "Existing", "latitude": 10.0, "longitude": 20.0},
+            ],
+        }
+        import_file.write_text(json.dumps(import_data))
+
+        existing = Location(name="Existing", latitude=10.0, longitude=20.0)
+        config = mock_manager.get_config.return_value
+        config.locations = [existing]
+
+        operations.import_settings(import_file)
+
+        # Should still be just one location (no duplicate)
+        assert len(config.locations) == 1
 
     def test_import_settings_logs_missing_fields(self, operations, tmp_path):
         """Test that missing fields are logged appropriately."""
