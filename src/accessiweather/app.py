@@ -641,13 +641,8 @@ class AccessiWeatherApp(wx.App):
         if self._portable_keys_imported_this_session:
             return
 
-        from .config.import_export import PORTABLE_API_SECRET_KEYS
-        from .config.secure_storage import SecureStorage
-
-        missing = [
-            k for k in PORTABLE_API_SECRET_KEYS if not (SecureStorage.get_password(k) or "").strip()
-        ]
-
+        # In portable mode the bundle is the source of truth.
+        # Find it, then auto-import (silently if passphrase is cached, else prompt).
         config_dir = self.config_manager.config_dir
         candidate_names = ["api-keys.keys", "api-keys.awkeys"]
         keys_path = None
@@ -657,18 +652,10 @@ class AccessiWeatherApp(wx.App):
                 keys_path = p
                 break
 
-        if not missing:
-            # Keys are in keyring — ensure bundle is up to date.
-            stored = (
-                SecureStorage.get_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY) or ""
-            ).strip()
-            if stored and keys_path is not None:
-                self.config_manager.set_portable_bundle_passphrase(stored)
-                self.config_manager.refresh_portable_api_key_bundle()
-            return
-
         if keys_path is None:
             return
+
+        from .config.secure_storage import SecureStorage
 
         # Try stored passphrase first for silent auto-import.
         stored = (SecureStorage.get_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY) or "").strip()
