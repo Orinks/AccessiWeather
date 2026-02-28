@@ -15,7 +15,6 @@ from accessiweather.app import (
     _run_powershell_json,
     _should_repair_shortcut,
     ensure_windows_toast_identity,
-    register_app_id_in_registry,
     set_windows_app_user_model_id,
 )
 from accessiweather.constants import WINDOWS_APP_USER_MODEL_ID
@@ -63,53 +62,6 @@ def test_skips_app_user_model_id_on_non_windows(monkeypatch):
     monkeypatch.delattr(sys, "frozen", raising=False)
 
     set_windows_app_user_model_id()
-
-
-def test_registers_app_id_in_registry_on_windows(monkeypatch):
-    create_key_context = MagicMock()
-    fake_key = MagicMock()
-    create_key_context.__enter__.return_value = fake_key
-
-    fake_winreg = SimpleNamespace(
-        HKEY_CURRENT_USER=object(),
-        KEY_SET_VALUE=0x0002,
-        REG_SZ=1,
-        CreateKeyEx=MagicMock(return_value=create_key_context),
-        SetValueEx=MagicMock(),
-    )
-
-    monkeypatch.setattr("accessiweather.app.sys.platform", "win32")
-    monkeypatch.setitem(sys.modules, "winreg", fake_winreg)
-
-    register_app_id_in_registry(icon_path=r"C:\apps\AccessiWeather.exe")
-
-    fake_winreg.CreateKeyEx.assert_called_once_with(
-        fake_winreg.HKEY_CURRENT_USER,
-        rf"Software\Classes\AppUserModelId\{WINDOWS_APP_USER_MODEL_ID}",
-        0,
-        fake_winreg.KEY_SET_VALUE,
-    )
-    fake_winreg.SetValueEx.assert_any_call(
-        fake_key, "DisplayName", 0, fake_winreg.REG_SZ, "AccessiWeather"
-    )
-    fake_winreg.SetValueEx.assert_any_call(
-        fake_key,
-        "IconUri",
-        0,
-        fake_winreg.REG_SZ,
-        r"C:\apps\AccessiWeather.exe",
-    )
-
-
-def test_register_app_id_skips_registry_on_non_windows(monkeypatch):
-    monkeypatch.setattr("accessiweather.app.sys.platform", "linux")
-    fake_winreg = SimpleNamespace(CreateKeyEx=MagicMock(), SetValueEx=MagicMock())
-    monkeypatch.setitem(sys.modules, "winreg", fake_winreg)
-
-    register_app_id_in_registry()
-
-    fake_winreg.CreateKeyEx.assert_not_called()
-    fake_winreg.SetValueEx.assert_not_called()
 
 
 def test_is_unc_path_detects_network_paths():
@@ -225,7 +177,6 @@ def test_ensure_windows_toast_identity_verification_success_writes_stamp(monkeyp
     monkeypatch.setattr("accessiweather.app.sys.platform", "win32")
     monkeypatch.setattr("accessiweather.app.sys.executable", str(tmp_path / "AccessiWeather.exe"))
     monkeypatch.setattr("accessiweather.app.Path.home", lambda: tmp_path)
-    monkeypatch.setattr("accessiweather.app.register_app_id_in_registry", MagicMock())
     monkeypatch.setattr("accessiweather.app.set_windows_app_user_model_id", MagicMock())
 
     written: list[dict] = []
@@ -267,7 +218,6 @@ def test_ensure_windows_toast_identity_verification_failure_writes_failed_stamp(
     monkeypatch.setattr("accessiweather.app.sys.platform", "win32")
     monkeypatch.setattr("accessiweather.app.sys.executable", str(tmp_path / "AccessiWeather.exe"))
     monkeypatch.setattr("accessiweather.app.Path.home", lambda: tmp_path)
-    monkeypatch.setattr("accessiweather.app.register_app_id_in_registry", MagicMock())
     monkeypatch.setattr("accessiweather.app.set_windows_app_user_model_id", MagicMock())
 
     written: list[dict] = []
@@ -294,16 +244,13 @@ def test_ensure_windows_toast_identity_verification_failure_writes_failed_stamp(
 
 def test_ensure_windows_toast_identity_skips_non_windows(monkeypatch):
     monkeypatch.setattr("accessiweather.app._TOAST_IDENTITY_ENSURED_THIS_STARTUP", False)
-    reg = MagicMock()
     set_id = MagicMock()
 
     monkeypatch.setattr("accessiweather.app.sys.platform", "linux")
-    monkeypatch.setattr("accessiweather.app.register_app_id_in_registry", reg)
     monkeypatch.setattr("accessiweather.app.set_windows_app_user_model_id", set_id)
 
     ensure_windows_toast_identity()
 
-    reg.assert_not_called()
     set_id.assert_not_called()
 
 
@@ -367,7 +314,6 @@ def test_ensure_windows_toast_identity_runs_repair_only_once_per_startup(monkeyp
     monkeypatch.setattr("accessiweather.app.sys.platform", "win32")
     monkeypatch.setattr("accessiweather.app.sys.executable", str(tmp_path / "AccessiWeather.exe"))
     monkeypatch.setattr("accessiweather.app.Path.home", lambda: tmp_path)
-    monkeypatch.setattr("accessiweather.app.register_app_id_in_registry", MagicMock())
     monkeypatch.setattr("accessiweather.app.set_windows_app_user_model_id", MagicMock())
     monkeypatch.setattr("accessiweather.app._TOAST_IDENTITY_ENSURED_THIS_STARTUP", False)
     monkeypatch.setattr("accessiweather.app._load_toast_identity_stamp", lambda _: None)
@@ -409,7 +355,6 @@ def test_ensure_windows_toast_identity_skips_repair_when_stamp_valid(monkeypatch
     monkeypatch.setattr("accessiweather.app.sys.platform", "win32")
     monkeypatch.setattr("accessiweather.app.sys.executable", str(tmp_path / "AccessiWeather.exe"))
     monkeypatch.setattr("accessiweather.app.Path.home", lambda: tmp_path)
-    monkeypatch.setattr("accessiweather.app.register_app_id_in_registry", MagicMock())
     monkeypatch.setattr("accessiweather.app.set_windows_app_user_model_id", MagicMock())
 
     shortcut = (
