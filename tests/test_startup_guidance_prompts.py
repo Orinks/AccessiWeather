@@ -92,7 +92,7 @@ def test_portable_missing_api_keys_hint_shown_once_and_persists(monkeypatch, tmp
     app.config_manager.update_settings.assert_called_once_with(
         portable_missing_api_keys_hint_shown=True
     )
-    app.main_window.open_settings.assert_called_once_with(tab="AI")
+    app.main_window.open_settings.assert_called_once_with()
 
     settings.portable_missing_api_keys_hint_shown = True
     app.config_manager.update_settings.reset_mock()

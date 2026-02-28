@@ -832,19 +832,20 @@ class AccessiWeatherApp(wx.App):
         dialog = wx.MessageDialog(
             self.main_window,
             "This portable copy has no API keys yet.\n\n"
-            "You can enter keys in Settings > AI, or create an encrypted key bundle "
-            "to carry your keys with the portable install.",
+            "Visual Crossing weather provider keys can be entered in Settings > Data Sources. "
+            "OpenRouter AI keys can be entered in Settings > AI.\n\n"
+            "You can also create an encrypted key bundle to carry your keys with the portable install.",
             "Portable setup hint",
             wx.YES_NO | wx.CANCEL | wx.ICON_INFORMATION,
         )
-        dialog.SetYesNoCancelLabels("Open Settings > AI", "Later", "Cancel")
+        dialog.SetYesNoCancelLabels("Open Settings", "Later", "Cancel")
         result = dialog.ShowModal()
         dialog.Destroy()
 
         self.config_manager.update_settings(portable_missing_api_keys_hint_shown=True)
 
         if result == wx.ID_YES and self.main_window:
-            self.main_window.open_settings(tab="AI")
+            self.main_window.open_settings()
 
     def _prompt_optional_secret(self, title: str, message: str) -> str | None:
         """Prompt for optional secret text value. Empty input means skip."""
