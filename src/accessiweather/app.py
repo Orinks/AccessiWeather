@@ -805,22 +805,31 @@ class AccessiWeatherApp(wx.App):
             )
 
     def _maybe_show_portable_missing_keys_hint(self) -> None:
-        """Show a one-time hint when portable mode starts with empty local keyring keys."""
+        """Show a one-time hint when portable mode has no bundle and no keys entered."""
         if not self.main_window or not self.config_manager or not self._portable_mode:
             return
 
         settings = self.config_manager.get_settings()
         if getattr(settings, "portable_missing_api_keys_hint_shown", False):
             return
-        if self._has_any_saved_api_keys():
+
+        # If a bundle exists the import flow already handled it — no hint needed.
+        config_dir = self.config_manager.config_dir
+        bundle_exists = any(
+            (config_dir / name).exists() for name in ("api-keys.keys", "api-keys.awkeys")
+        )
+        if bundle_exists:
+            return
+
+        # If keys were imported this session, no hint needed.
+        if self._portable_keys_imported_this_session:
             return
 
         dialog = wx.MessageDialog(
             self.main_window,
-            "It looks like this portable copy has no API keys on this machine yet.\n\n"
-            "If you moved or copied your AccessiWeather folder, settings transfer but API keys "
-            "stay machine-local by default.\n\n"
-            "You can re-enter keys in Settings > AI now, or import your encrypted API key bundle.",
+            "This portable copy has no API keys yet.\n\n"
+            "You can enter keys in Settings > AI, or create an encrypted key bundle "
+            "to carry your keys with the portable install.",
             "Portable setup hint",
             wx.YES_NO | wx.CANCEL | wx.ICON_INFORMATION,
         )

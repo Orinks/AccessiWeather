@@ -61,15 +61,17 @@ class _FakeTextEntryDialog:
         return self._responses.pop(0)
 
 
-def test_portable_missing_api_keys_hint_shown_once_and_persists(monkeypatch):
+def test_portable_missing_api_keys_hint_shown_once_and_persists(monkeypatch, tmp_path):
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._portable_mode = True
     app._force_wizard = False
+    app._portable_keys_imported_this_session = False
     app.main_window = SimpleNamespace(open_settings=MagicMock())
     settings = SimpleNamespace(portable_missing_api_keys_hint_shown=False)
     app.config_manager = SimpleNamespace(
         get_settings=lambda: settings,
         update_settings=MagicMock(),
+        config_dir=tmp_path,  # no bundle files → hint should show
     )
 
     _ensure_wx_dialog_constants()
@@ -79,7 +81,6 @@ def test_portable_missing_api_keys_hint_shown_once_and_persists(monkeypatch):
         lambda *args, **kwargs: _FakeDialog(responses),
         raising=False,
     )
-    monkeypatch.setattr(app, "_has_any_saved_api_keys", lambda: False)
 
     app._maybe_show_portable_missing_keys_hint()
 
