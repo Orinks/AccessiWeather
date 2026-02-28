@@ -113,6 +113,8 @@ class ToastedWindowsNotifier:
             return
 
         logger.info("ToastedWindowsNotifier initialized (app_id=%s)", WINDOWS_APP_USER_MODEL_ID)
+        # Eagerly start worker thread to avoid first-notification delay
+        self._ensure_worker()
 
     # -- worker thread management ------------------------------------------
 
@@ -334,6 +336,8 @@ class _DesktopNotifierBackend:
             return
 
         logger.info("SafeDesktopNotifier initialized")
+        # Eagerly start worker thread to avoid first-notification delay
+        self._ensure_worker()
 
     def _ensure_worker(self) -> bool:
         """Start the persistent worker thread if not already running."""
