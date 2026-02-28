@@ -369,3 +369,20 @@ def event_loop_policy():
     import asyncio
 
     return asyncio.DefaultEventLoopPolicy()
+
+
+# ---------------------------------------------------------------------------
+# Keyring availability: default to True in tests so wizard tests don't get
+# the "keyring unavailable" warning dialog unless they explicitly test for it.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def _mock_keyring_available():
+    """Pretend keyring is available in all tests unless overridden."""
+    import accessiweather.config.secure_storage as ss
+
+    original = ss._keyring_available
+    ss._keyring_available = True
+    yield
+    ss._keyring_available = original
