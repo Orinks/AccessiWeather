@@ -192,25 +192,14 @@ class ToastedWindowsNotifier:
                 sound=None,  # we handle sounds ourselves
             )
             toast.elements = [_Text(title), _Text(message)]  # type: ignore[misc]
-            # Fire-and-forget: don't block waiting for user dismiss/click
+            # Fire-and-forget: schedule show and return immediately
             asyncio.create_task(toast.show(mute_sound=True))
-            # Brief yield so the toast notification is dispatched
-            await asyncio.sleep(0.5)
             return True
 
-        logger.debug("[toasted] Submitting toast to worker loop: title=%r", title)
-        future = asyncio.run_coroutine_threadsafe(_show_toast(), loop)
-
-        try:
-            result = future.result(timeout=10)
-            logger.debug("[toasted] Worker returned: %r — toast sent successfully", result)
-            return True
-        except TimeoutError:
-            logger.error("[toasted] _send_in_worker: future timed out after 10s — toast NOT shown")
-            return False
-        except Exception as e:
-            logger.error("[toasted] _send_in_worker: future raised %s: %s", type(e).__name__, e)
-            return False
+        # Fire and forget — don't block waiting for WinRT confirmation
+        logger.debug("[toasted] Submitting toast to worker loop (fire-and-forget): title=%r", title)
+        asyncio.run_coroutine_threadsafe(_show_toast(), loop)
+        return True
 
     def send_notification(
         self,
@@ -410,22 +399,13 @@ class _DesktopNotifierBackend:
             )
             return False
 
-        logger.debug("[toast] Submitting toast to worker loop: title=%r", title)
-        future = asyncio.run_coroutine_threadsafe(
+        # Fire and forget — don't block waiting for desktop-notifier to complete
+        logger.debug("[toast] Submitting toast to worker loop (fire-and-forget): title=%r", title)
+        asyncio.run_coroutine_threadsafe(
             notifier.send(title=title, message=message, timeout=timeout),
             loop,
         )
-
-        try:
-            result = future.result(timeout=10)
-            logger.debug("[toast] Worker returned: %r — toast sent successfully", result)
-            return True
-        except TimeoutError:
-            logger.error("[toast] _send_in_worker: future timed out after 10s — toast NOT shown")
-            return False
-        except Exception as e:
-            logger.error("[toast] _send_in_worker: future raised %s: %s", type(e).__name__, e)
-            return False
+        return True
 
     def send_notification(
         self,
