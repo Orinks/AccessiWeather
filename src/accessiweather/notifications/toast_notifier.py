@@ -118,6 +118,38 @@ class ToastedWindowsNotifier:
 
     # -- worker thread management ------------------------------------------
 
+    def _start_watchdog(self, interval: int = 30) -> None:
+        """Start a periodic watchdog timer that restarts the worker if it dies."""
+        if not TOASTED_AVAILABLE:
+            return
+        self._watchdog_timer: threading.Timer | None = None
+        self._watchdog_interval = interval
+        self._schedule_watchdog()
+
+    def _schedule_watchdog(self) -> None:
+        """Schedule the next watchdog check."""
+        t = threading.Timer(self._watchdog_interval, self._watchdog_check)
+        t.daemon = True
+        t.start()
+        self._watchdog_timer = t
+
+    def _watchdog_check(self) -> None:
+        """Check if the worker thread is alive; restart it if not."""
+        thread = self._worker_thread
+        if thread is not None and not thread.is_alive():
+            logger.warning("[toasted] Worker thread died — restarting")
+            with self._lock:
+                self._worker_thread = None
+                self._worker_loop = None
+            ok = self._ensure_worker()
+            if ok:
+                logger.info("[toasted] Worker thread restarted successfully")
+            else:
+                logger.error("[toasted] Worker thread restart failed")
+        else:
+            logger.debug("[toasted] Watchdog: worker thread alive")
+        self._schedule_watchdog()
+
     def _ensure_worker(self) -> bool:
         """Start the persistent worker thread if not already running."""
         if not TOASTED_AVAILABLE:
@@ -322,6 +354,40 @@ class _DesktopNotifierBackend:
         logger.info("SafeDesktopNotifier initialized")
         # Eagerly start worker thread to avoid first-notification delay
         self._ensure_worker()
+        # Start periodic health watchdog
+        self._start_watchdog()
+
+    def _start_watchdog(self, interval: int = 30) -> None:
+        """Start a periodic watchdog timer that restarts the worker if it dies."""
+        if not DESKTOP_NOTIFIER_AVAILABLE:
+            return
+        self._watchdog_timer: threading.Timer | None = None
+        self._watchdog_interval = interval
+        self._schedule_watchdog()
+
+    def _schedule_watchdog(self) -> None:
+        """Schedule the next watchdog check."""
+        t = threading.Timer(self._watchdog_interval, self._watchdog_check)
+        t.daemon = True
+        t.start()
+        self._watchdog_timer = t
+
+    def _watchdog_check(self) -> None:
+        """Check if the worker thread is alive; restart it if not."""
+        thread = self._worker_thread
+        if thread is not None and not thread.is_alive():
+            logger.warning("[toast] Worker thread died — restarting")
+            with self._lock:
+                self._worker_thread = None
+                self._worker_loop = None
+            ok = self._ensure_worker()
+            if ok:
+                logger.info("[toast] Worker thread restarted successfully")
+            else:
+                logger.error("[toast] Worker thread restart failed")
+        else:
+            logger.debug("[toast] Watchdog: worker thread alive")
+        self._schedule_watchdog()
 
     def _ensure_worker(self) -> bool:
         """Start the persistent worker thread if not already running."""
