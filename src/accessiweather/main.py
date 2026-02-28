@@ -45,6 +45,11 @@ def main() -> None:
         help="Fake nightly tag for testing updates (e.g., 'nightly-20250101')",
         default=None,
     )
+    parser.add_argument(
+        "--wizard",
+        action="store_true",
+        help="Force the onboarding wizard to run even if it has already been shown",
+    )
     args = parser.parse_args()
 
     setup_logging(debug=args.debug)
@@ -57,6 +62,7 @@ def main() -> None:
         debug=args.debug,
         fake_version=args.fake_version,
         fake_nightly=args.fake_nightly,
+        force_wizard=args.wizard,
     )
 
 
