@@ -49,7 +49,7 @@ class TestPortableSecretsImportExportWiring:
         manager._get_logger.return_value = MagicMock()
         operations = ImportExportOperations(manager)
 
-        export_file = tmp_path / "keys.awkeys"
+        export_file = tmp_path / "keys.keys"
         imported_store: dict[str, str] = {}
 
         def _fake_get_password(key_name: str) -> str | None:
@@ -88,7 +88,7 @@ class TestPortableSecretsImportExportWiring:
         manager._get_logger.return_value = MagicMock()
         operations = ImportExportOperations(manager)
 
-        export_file = tmp_path / "keys.awkeys"
+        export_file = tmp_path / "keys.keys"
 
         with patch(
             "accessiweather.config.import_export.SecureStorage.get_password",
@@ -101,7 +101,7 @@ class TestPortableSecretsImportExportWiring:
         manager._get_logger.return_value = MagicMock()
         operations = ImportExportOperations(manager)
 
-        export_file = tmp_path / "keys.awkeys"
+        export_file = tmp_path / "keys.keys"
         export_file.write_text("[]", encoding="utf-8")
 
         with patch("accessiweather.config.import_export.SecureStorage.set_password") as mock_set:
@@ -113,7 +113,7 @@ class TestPortableSecretsImportExportWiring:
         manager._get_logger.return_value = MagicMock()
         operations = ImportExportOperations(manager)
 
-        export_file = tmp_path / "keys.awkeys"
+        export_file = tmp_path / "keys.keys"
         envelope = encrypt_secret_bundle({"other": "value"}, "right-pass")
         export_file.write_text(json.dumps(envelope), encoding="utf-8")
 
@@ -126,7 +126,7 @@ class TestPortableSecretsImportExportWiring:
         manager._get_logger.return_value = MagicMock()
         operations = ImportExportOperations(manager)
 
-        export_file = tmp_path / "keys.awkeys"
+        export_file = tmp_path / "keys.keys"
         envelope = encrypt_secret_bundle({"openrouter_api_key": "sk-exported"}, "right-pass")
         export_file.write_text(json.dumps(envelope), encoding="utf-8")
 
