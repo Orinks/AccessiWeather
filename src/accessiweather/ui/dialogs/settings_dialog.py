@@ -967,30 +967,6 @@ class SettingsDialogSimple(wx.Dialog):
         import_api_keys_btn.Bind(wx.EVT_BUTTON, self._on_import_encrypted_api_keys)
         sizer.Add(import_api_keys_btn, 0, wx.LEFT | wx.TOP, 10)
 
-        if self._is_runtime_portable_mode():
-            self._controls["portable_auto_bundle_enabled"] = wx.CheckBox(
-                panel,
-                label="Keep encrypted API key bundle with this portable folder",
-            )
-            sizer.Add(self._controls["portable_auto_bundle_enabled"], 0, wx.LEFT | wx.TOP, 10)
-
-            set_passphrase_btn = wx.Button(panel, label="Set bundle passphrase for this session")
-            set_passphrase_btn.Bind(wx.EVT_BUTTON, self._on_set_portable_bundle_passphrase)
-            sizer.Add(set_passphrase_btn, 0, wx.LEFT | wx.TOP, 10)
-
-            sizer.Add(
-                wx.StaticText(
-                    panel,
-                    label=(
-                        "Passphrase is kept in memory for this app session only and never written "
-                        "to disk. Auto-bundle refresh requires setting it each launch."
-                    ),
-                ),
-                0,
-                wx.LEFT | wx.TOP,
-                10,
-            )
-
         # Sound Pack Files
         sizer.Add(
             wx.StaticText(panel, label="Sound Pack Files"),
@@ -1225,10 +1201,6 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["weather_history"].SetValue(
                 getattr(settings, "weather_history_enabled", True)
             )
-            if "portable_auto_bundle_enabled" in self._controls:
-                self._controls["portable_auto_bundle_enabled"].SetValue(
-                    getattr(settings, "portable_auto_bundle_enabled", False)
-                )
         except Exception as e:
             logger.error(f"Failed to load settings: {e}")
 
@@ -1349,11 +1321,6 @@ class SettingsDialogSimple(wx.Dialog):
                 "startup_enabled": self._controls["startup"].GetValue(),
                 "weather_history_enabled": self._controls["weather_history"].GetValue(),
             }
-            if "portable_auto_bundle_enabled" in self._controls:
-                settings_dict["portable_auto_bundle_enabled"] = self._controls[
-                    "portable_auto_bundle_enabled"
-                ].GetValue()
-
             # Source priority
             us_idx = self._controls["us_priority"].GetSelection()
             us_priorities = [
@@ -1371,18 +1338,6 @@ class SettingsDialogSimple(wx.Dialog):
             settings_dict["source_priority_international"] = intl_priorities[
                 intl_idx if intl_idx >= 0 else 0
             ]
-
-            if (
-                settings_dict.get("portable_auto_bundle_enabled")
-                and not self.config_manager.has_portable_bundle_passphrase()
-            ):
-                wx.MessageBox(
-                    "Portable auto-bundle requires a session passphrase. "
-                    "Click 'Set bundle passphrase for this session' first.",
-                    "Passphrase required",
-                    wx.OK | wx.ICON_WARNING,
-                )
-                return False
 
             success = self.config_manager.update_settings(**settings_dict)
             if success:
@@ -1852,9 +1807,8 @@ class SettingsDialogSimple(wx.Dialog):
         After saving settings in portable mode, keep the bundle in sync.
 
         If any API key was changed:
-        - Bundle exists + passphrase cached → silently re-encrypt bundle
-        - Bundle exists + no cached passphrase → prompt for passphrase
-        - No bundle → offer to create one, or warn keys won't persist
+        - Passphrase cached → silently re-encrypt bundle via export_encrypted_api_keys
+        - No cached passphrase → prompt for passphrase, then export
         """
         changed_keys = {
             k: v for k, v in settings_dict.items() if k in self._PORTABLE_KEY_SETTINGS and v
@@ -1904,31 +1858,21 @@ class SettingsDialogSimple(wx.Dialog):
             # Cache for future use.
             SecureStorage.set_password(_PASSPHRASE_KEY, passphrase)
 
-        # Write/update the bundle.
+        # Write/update the bundle — export_encrypted_api_keys reads all keys
+        # from in-memory settings + keyring, so no manual merge needed.
         if bundle_path is None:
             bundle_path = config_dir / "api-keys.keys"
 
-        import json
-
-        from ...config.portable_secrets import encrypt_secret_bundle
-
-        # Merge existing bundle contents with updated keys so we don't drop other keys.
-        existing: dict[str, str] = {}
-        if bundle_path.exists():
-            try:
-                from ...config.portable_secrets import decrypt_secret_bundle
-
-                with open(bundle_path, encoding="utf-8") as fh:
-                    existing = decrypt_secret_bundle(json.load(fh), passphrase)
-            except Exception:
-                existing = {}
-
-        merged = {**existing, **changed_keys}
         try:
-            envelope = encrypt_secret_bundle(merged, passphrase)
-            with open(bundle_path, "w", encoding="utf-8") as fh:
-                json.dump(envelope, fh, indent=2)
-            logger.info("Portable key bundle updated after settings save.")
+            ok = self.config_manager.export_encrypted_api_keys(bundle_path, passphrase)
+            if ok:
+                logger.info("Portable key bundle updated after settings save.")
+            else:
+                wx.MessageBox(
+                    "No API keys found to export. Keys are active this session but won't persist.",
+                    "Bundle update skipped",
+                    wx.OK | wx.ICON_WARNING,
+                )
         except Exception as exc:
             logger.error("Failed to update portable key bundle: %s", exc)
             wx.MessageBox(
@@ -2187,16 +2131,82 @@ class SettingsDialogSimple(wx.Dialog):
                 "Copied settings summary:\n"
                 f"{summary_block}\n\n"
                 f"From:\n{installed_config_dir}\n\n"
-                f"To:\n{portable_config_dir}\n\n"
-                f"Important: {API_KEYS_TRANSFER_NOTE}",
+                f"To:\n{portable_config_dir}",
                 "Copy complete",
                 wx.OK | wx.ICON_INFORMATION,
             )
+
+            # Offer to export API keys from keyring to encrypted bundle.
+            self._offer_api_key_export_after_copy(portable_config_dir)
         except Exception as e:
             logger.error(f"Failed to copy installed config to portable: {e}")
             wx.MessageBox(
                 f"Failed to copy config: {e}",
                 "Copy failed",
+                wx.OK | wx.ICON_ERROR,
+            )
+
+    def _offer_api_key_export_after_copy(self, portable_config_dir: Path) -> None:
+        """After copying installed config to portable, offer to export API keys."""
+        result = wx.MessageBox(
+            "Config copied. Your API keys are stored in the system keyring and were not "
+            "copied.\n\n"
+            "Would you like to export them to an encrypted bundle now so they work in "
+            "portable mode?",
+            "Export API keys?",
+            wx.YES_NO | wx.ICON_QUESTION,
+        )
+        if result != wx.YES:
+            wx.MessageBox(
+                "You can export API keys later from Settings > Advanced > "
+                "Export API keys (encrypted).",
+                "API keys not exported",
+                wx.OK | wx.ICON_INFORMATION,
+            )
+            return
+
+        passphrase = self._prompt_passphrase(
+            "Export API keys (encrypted)",
+            "Enter a passphrase to encrypt your API keys.",
+        )
+        if passphrase is None:
+            return
+
+        confirm = self._prompt_passphrase(
+            "Confirm passphrase",
+            "Re-enter the passphrase to confirm.",
+        )
+        if confirm is None:
+            return
+        if passphrase != confirm:
+            wx.MessageBox(
+                "Passphrases do not match. API keys were not exported.",
+                "Export cancelled",
+                wx.OK | wx.ICON_WARNING,
+            )
+            return
+
+        bundle_path = portable_config_dir / "api-keys.keys"
+        try:
+            ok = self.config_manager.export_encrypted_api_keys(bundle_path, passphrase)
+            if ok:
+                wx.MessageBox(
+                    f"API keys exported to:\n{bundle_path}",
+                    "Export complete",
+                    wx.OK | wx.ICON_INFORMATION,
+                )
+            else:
+                wx.MessageBox(
+                    "No API keys found to export. You can add keys in Settings > Data Sources "
+                    "and export later.",
+                    "No keys to export",
+                    wx.OK | wx.ICON_WARNING,
+                )
+        except Exception as exc:
+            logger.error("Failed to export API keys after config copy: %s", exc)
+            wx.MessageBox(
+                f"Failed to export API keys: {exc}",
+                "Export failed",
                 wx.OK | wx.ICON_ERROR,
             )
 
@@ -2209,34 +2219,6 @@ class SettingsDialogSimple(wx.Dialog):
                 return None
             value = dlg.GetValue().strip()
             return value or None
-
-    def _on_set_portable_bundle_passphrase(self, event):
-        """Set in-memory passphrase used for portable auto-bundle refresh."""
-        passphrase = self._prompt_passphrase(
-            "Portable bundle passphrase",
-            "Enter passphrase for automatic portable API key bundle refresh.",
-        )
-        if passphrase is None:
-            return
-
-        confirm = self._prompt_passphrase(
-            "Confirm passphrase",
-            "Re-enter passphrase to confirm.",
-        )
-        if confirm is None:
-            return
-        if passphrase != confirm:
-            wx.MessageBox(
-                "Passphrases do not match.", "Passphrase not set", wx.OK | wx.ICON_WARNING
-            )
-            return
-
-        self.config_manager.set_portable_bundle_passphrase(passphrase)
-        wx.MessageBox(
-            "Passphrase saved for this session only.",
-            "Portable bundle passphrase",
-            wx.OK | wx.ICON_INFORMATION,
-        )
 
     def _on_export_encrypted_api_keys(self, event):
         """Export API keys from keyring to encrypted bundle file."""

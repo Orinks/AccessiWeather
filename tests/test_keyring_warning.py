@@ -49,7 +49,6 @@ def _make_app_stub(*, portable=False):
     app.config_manager = MagicMock()
     settings = SimpleNamespace(
         onboarding_wizard_shown=False,
-        portable_auto_bundle_enabled=False,
     )
     config = SimpleNamespace(settings=settings, locations={})
     app.config_manager.get_config.return_value = config
@@ -158,7 +157,6 @@ class TestWizardKeyringWarning:
             patch.object(app, "_run_deferred_startup_update_check"),
             patch.object(app, "_show_onboarding_readiness_summary"),
             patch.object(app, "_has_saved_api_key", return_value=False),
-            patch.object(app, "_maybe_offer_portable_key_export"),
         ):
             app._maybe_show_first_start_onboarding()
 
@@ -185,11 +183,37 @@ class TestWizardKeyringWarning:
             patch.object(app, "_run_deferred_startup_update_check"),
             patch.object(app, "_show_onboarding_readiness_summary"),
             patch.object(app, "_has_saved_api_key", return_value=False),
-            patch.object(app, "_maybe_offer_portable_key_export"),
         ):
             app._maybe_show_first_start_onboarding()
 
         assert not any("Secure storage unavailable" in t for t in shown_titles)
+
+    def test_no_warning_in_portable_mode(self):
+        """Keyring warning is suppressed in portable mode even when keyring unavailable."""
+        import accessiweather.config.secure_storage as ss
+
+        ss._keyring_available = False
+
+        app = _make_app_stub(portable=True)
+        shown_titles = []
+
+        def fake_msg_dialog(parent, msg, title, style=0):
+            shown_titles.append(title)
+            return _make_wx_dialog()
+
+        with (
+            patch("accessiweather.app.wx.MessageDialog", side_effect=fake_msg_dialog),
+            patch.object(app, "_prompt_optional_secret_with_link", return_value=""),
+            patch.object(app, "_should_show_first_start_onboarding", return_value=True),
+            patch.object(app, "_run_deferred_startup_update_check"),
+            patch.object(app, "_show_onboarding_readiness_summary"),
+            patch.object(app, "_has_saved_api_key", return_value=False),
+        ):
+            app._maybe_show_first_start_onboarding()
+
+        assert not any("Secure storage unavailable" in t for t in shown_titles), (
+            f"Keyring warning should not appear in portable mode, got titles: {shown_titles}"
+        )
 
     def test_wizard_continues_after_warning(self):
         import accessiweather.config.secure_storage as ss
@@ -212,7 +236,6 @@ class TestWizardKeyringWarning:
             patch.object(app, "_run_deferred_startup_update_check"),
             patch.object(app, "_show_onboarding_readiness_summary"),
             patch.object(app, "_has_saved_api_key", return_value=False),
-            patch.object(app, "_maybe_offer_portable_key_export"),
         ):
             app._maybe_show_first_start_onboarding()
 
@@ -229,9 +252,8 @@ class TestPortableSessionFlag:
         app = _make_app_stub(portable=True)
         app._portable_keys_imported_this_session = True
 
-        with patch.object(app, "_has_any_saved_api_keys") as mock_check:
-            app._maybe_auto_import_keys_file()
-            mock_check.assert_not_called()
+        app._maybe_auto_import_keys_file()
+        app.config_manager.import_encrypted_api_keys.assert_not_called()
 
     def test_session_flag_false_by_default(self):
         app = _make_app_stub(portable=True)
