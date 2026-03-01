@@ -373,16 +373,24 @@ class SoundPackWizardDialog(wx.Dialog):
         play_sound_file(Path(src))
 
     def _test_all_sounds(self, event) -> None:
-        """Test all assigned sounds."""
-        import time
-
+        """Test all assigned sounds without blocking the UI thread."""
         from ...notifications.sound_player import play_sound_file
 
-        for key in list(self.state.selected_alert_keys)[:5]:  # Limit to 5
-            src = self.state.sound_mappings.get(key)
-            if src:
-                play_sound_file(Path(src))
-                time.sleep(0.5)  # Brief delay
+        sounds = [
+            Path(self.state.sound_mappings[key])
+            for key in list(self.state.selected_alert_keys)[:5]
+            if key in self.state.sound_mappings
+        ]
+        if not sounds:
+            return
+
+        def play_next(index: int) -> None:
+            if index >= len(sounds):
+                return
+            play_sound_file(sounds[index])
+            wx.CallLater(500, play_next, index + 1)
+
+        play_next(0)
 
     def _validate_current_step(self) -> bool:
         """Validate the current step before proceeding."""
