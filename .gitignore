@@ -2,7 +2,7 @@ src/accessiweather/_build_meta.py
 progress.txt
 
 # Claude Code agent configs (local only — not for public repo)
-
+.claude/
 clawd/
 progress.txt
 
