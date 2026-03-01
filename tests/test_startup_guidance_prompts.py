@@ -123,18 +123,6 @@ def test_schedule_startup_guidance_prompts_uses_call_later(monkeypatch):
     assert calls[2][1] == app._maybe_show_portable_missing_keys_hint
 
 
-def test_has_any_saved_api_keys_checks_both_keys(monkeypatch):
-    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
-
-    monkeypatch.setattr(
-        "accessiweather.config.secure_storage.SecureStorage.get_password",
-        lambda name: "  " if name == "openrouter_api_key" else "vc-key",
-        raising=False,
-    )
-
-    assert app._has_any_saved_api_keys() is True
-
-
 def test_portable_missing_api_keys_hint_noops_when_not_portable():
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._portable_mode = False
@@ -200,10 +188,12 @@ def test_onboarding_wizard_portable_happy_path_sets_keys_and_bundle(monkeypatch,
     settings = SimpleNamespace(onboarding_wizard_shown=False)
     config = SimpleNamespace(locations=[], settings=settings)
     bundle_path = tmp_path / "api-keys.keys"
+    export_mock = MagicMock(return_value=True)
     app.config_manager = SimpleNamespace(
         get_config=lambda: config,
         update_settings=MagicMock(),
         get_portable_api_key_bundle_path=lambda: bundle_path,
+        export_encrypted_api_keys=export_mock,
     )
 
     _ensure_wx_dialog_constants()
@@ -220,7 +210,7 @@ def test_onboarding_wizard_portable_happy_path_sets_keys_and_bundle(monkeypatch,
         raising=False,
     )
     # TextEntryDialog: OR key, VC key, bundle passphrase
-    text_responses = ["sk-or", "vc-key", "bundle-pass"]
+    text_responses = ["FAKE_OR_KEY_TEST", "FAKE_VC_KEY_TEST", "FAKE_BUNDLE_PASSPHRASE"]
     monkeypatch.setattr(
         "accessiweather.app.wx.TextEntryDialog",
         lambda *args, **kwargs: _FakeTextEntryDialog(text_responses),
@@ -244,11 +234,11 @@ def test_onboarding_wizard_portable_happy_path_sets_keys_and_bundle(monkeypatch,
 
     app._maybe_show_first_start_onboarding()
 
-    # Bundle file should have been written with the entered keys
-    assert bundle_path.exists(), "Bundle file should have been created"
-    # Keys should be live in session memory
-    assert settings.openrouter_api_key == "sk-or"
-    assert settings.visual_crossing_api_key == "vc-key"
+    # Wizard should delegate to export_encrypted_api_keys (not raw encrypt_secret_bundle)
+    export_mock.assert_called_once_with(bundle_path, "FAKE_BUNDLE_PASSPHRASE")
+    # Keys should be live in session memory (set before export call)
+    assert settings.openrouter_api_key == "FAKE_OR_KEY_TEST"
+    assert settings.visual_crossing_api_key == "FAKE_VC_KEY_TEST"
     assert app._portable_keys_imported_this_session is True
     # wizard_shown should be marked
     last_call = app.config_manager.update_settings.call_args_list[-1]
@@ -281,7 +271,7 @@ def test_onboarding_wizard_api_key_link_actions_open_browser(monkeypatch):
         lambda *args, **kwargs: _FakeDialog(responses),
         raising=False,
     )
-    text_responses = ["sk-or"]
+    text_responses = ["FAKE_OR_KEY_TEST"]
     monkeypatch.setattr(
         "accessiweather.app.wx.TextEntryDialog",
         lambda *args, **kwargs: _FakeTextEntryDialog(text_responses),
@@ -302,7 +292,7 @@ def test_onboarding_wizard_api_key_link_actions_open_browser(monkeypatch):
         "https://www.visualcrossing.com/sign-up",
     ]
     calls = app.config_manager.update_settings.call_args_list
-    assert calls[0].kwargs == {"openrouter_api_key": "sk-or"}
+    assert calls[0].kwargs == {"openrouter_api_key": "FAKE_OR_KEY_TEST"}
     assert calls[1].kwargs == {"onboarding_wizard_shown": True}
 
 
@@ -311,7 +301,7 @@ def test_onboarding_summary_includes_readiness_status(monkeypatch):
     app._portable_mode = False
     app._force_wizard = False
     app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
-    settings = SimpleNamespace(onboarding_wizard_shown=False, portable_auto_bundle_enabled=False)
+    settings = SimpleNamespace(onboarding_wizard_shown=False)
     configs = iter(
         [
             SimpleNamespace(locations=[], settings=settings),
@@ -397,157 +387,144 @@ def test_onboarding_completion_triggers_deferred_startup_update_check(monkeypatc
 
 
 # ---------------------------------------------------------------------------
-# Tests for _maybe_offer_portable_key_export
+# Tests for wizard step numbering (non-portable = 3 steps, portable = 4)
 # ---------------------------------------------------------------------------
 
 
-def _make_app_for_key_export(monkeypatch, has_keys: bool, config_dir=None):
-    """Build a minimal AccessiWeatherApp stub for key-export tests."""
-    from pathlib import Path
+def _capture_wizard_step_messages(monkeypatch, *, portable: bool):
+    """Run the wizard and capture all dialog messages to verify step numbering."""
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._portable_mode = portable
+    app._force_wizard = False
+    app._portable_keys_imported_this_session = False
+    app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
+    settings = SimpleNamespace(onboarding_wizard_shown=False)
+    app.config_manager = SimpleNamespace(
+        get_config=lambda: SimpleNamespace(locations=[], settings=settings),
+        update_settings=MagicMock(),
+    )
 
+    _ensure_wx_dialog_constants()
+    captured_messages: list[str] = []
+
+    class _CapturingDialog(_FakeDialog):
+        def __init__(self, message: str, responses: list[int]):
+            super().__init__(responses)
+            captured_messages.append(message)
+
+    # Skip location, skip OR key, skip VC key, OK summary
+    responses = [
+        getattr(wx, "ID_NO", 0),
+        getattr(wx, "ID_CANCEL", 2),
+        getattr(wx, "ID_CANCEL", 2),
+        getattr(wx, "ID_OK", 1),
+    ]
+    monkeypatch.setattr(
+        "accessiweather.app.wx.MessageDialog",
+        lambda _parent, message, *_args, **_kwargs: _CapturingDialog(message, responses),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "accessiweather.app.wx.TextEntryDialog",
+        lambda *args, **kwargs: _FakeTextEntryDialog([]),
+        raising=False,
+    )
+    monkeypatch.setattr(app, "_has_saved_api_key", lambda key_name: False)
+
+    app._maybe_show_first_start_onboarding()
+    return captured_messages
+
+
+def test_wizard_step_numbering_non_portable(monkeypatch):
+    """Non-portable wizard uses 'of 3' in step labels."""
+    messages = _capture_wizard_step_messages(monkeypatch, portable=False)
+    step1 = messages[0]
+    assert "Step 1 of 3" in step1, f"Expected 'Step 1 of 3' in: {step1}"
+
+
+def test_wizard_step_numbering_portable(monkeypatch):
+    """Portable wizard uses 'of 4' in step labels."""
+    messages = _capture_wizard_step_messages(monkeypatch, portable=True)
+    step1 = messages[0]
+    assert "Step 1 of 4" in step1, f"Expected 'Step 1 of 4' in: {step1}"
+
+
+def test_wizard_step2_step3_numbering_non_portable(monkeypatch):
+    """Non-portable wizard passes 'of 3' to _prompt_optional_secret_with_link calls."""
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._portable_mode = False
+    app._force_wizard = False
+    app._portable_keys_imported_this_session = False
+    app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
+    settings = SimpleNamespace(onboarding_wizard_shown=False)
+    app.config_manager = SimpleNamespace(
+        get_config=lambda: SimpleNamespace(locations=[], settings=settings),
+        update_settings=MagicMock(),
+    )
+
+    _ensure_wx_dialog_constants()
+    prompt_messages: list[str] = []
+
+    def fake_prompt(title, message, url, label):
+        prompt_messages.append(message)
+        return ""
+
+    responses = [
+        getattr(wx, "ID_NO", 0),  # step 1 skip
+        getattr(wx, "ID_OK", 1),  # summary
+    ]
+    monkeypatch.setattr(
+        "accessiweather.app.wx.MessageDialog",
+        lambda *args, **kwargs: _FakeDialog(responses),
+        raising=False,
+    )
+    monkeypatch.setattr(app, "_prompt_optional_secret_with_link", fake_prompt)
+    monkeypatch.setattr(app, "_has_saved_api_key", lambda key_name: False)
+
+    app._maybe_show_first_start_onboarding()
+
+    assert len(prompt_messages) == 2
+    assert "Step 2 of 3" in prompt_messages[0], f"Expected 'Step 2 of 3' in: {prompt_messages[0]}"
+    assert "Step 3 of 3" in prompt_messages[1], f"Expected 'Step 3 of 3' in: {prompt_messages[1]}"
+
+
+def test_wizard_step2_step3_numbering_portable(monkeypatch):
+    """Portable wizard passes 'of 4' to _prompt_optional_secret_with_link calls."""
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._portable_mode = True
     app._force_wizard = False
-    app.main_window = SimpleNamespace()
-
-    cfg_dir = Path(config_dir) if config_dir else Path("/tmp/portable-config")
+    app._portable_keys_imported_this_session = False
+    app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
+    settings = SimpleNamespace(onboarding_wizard_shown=False)
     app.config_manager = SimpleNamespace(
-        config_dir=cfg_dir,
-        export_encrypted_api_keys=MagicMock(return_value=True),
+        get_config=lambda: SimpleNamespace(locations=[], settings=settings),
+        update_settings=MagicMock(),
     )
-
-    # Patch _has_any_saved_api_keys directly on the instance
-    app._has_any_saved_api_keys = MagicMock(return_value=has_keys)
-    app._force_wizard = False
 
     _ensure_wx_dialog_constants()
-    return app
+    prompt_messages: list[str] = []
 
+    def fake_prompt(title, message, url, label):
+        prompt_messages.append(message)
+        return ""
 
-def test_portable_key_export_skips_when_no_keyring_keys(monkeypatch):
-    """If no keyring keys exist, _maybe_offer_portable_key_export is a no-op."""
-    app = _make_app_for_key_export(monkeypatch, has_keys=False)
-
-    dialog_calls = []
+    responses = [
+        getattr(wx, "ID_NO", 0),  # step 1 skip
+        getattr(wx, "ID_OK", 1),  # summary
+    ]
     monkeypatch.setattr(
         "accessiweather.app.wx.MessageDialog",
-        lambda *a, **kw: dialog_calls.append(a) or _FakeDialog([]),
+        lambda *args, **kwargs: _FakeDialog(responses),
         raising=False,
     )
+    monkeypatch.setattr(app, "_prompt_optional_secret_with_link", fake_prompt)
+    monkeypatch.setattr(app, "_has_saved_api_key", lambda key_name: False)
 
-    app._maybe_offer_portable_key_export()
+    app._maybe_show_first_start_onboarding()
 
-    assert dialog_calls == [], "No dialog should appear when no keyring keys exist"
-    app.config_manager.export_encrypted_api_keys.assert_not_called()
-
-
-def test_portable_key_export_skips_when_user_declines(monkeypatch):
-    """User says 'Skip' → no export attempted."""
-    app = _make_app_for_key_export(monkeypatch, has_keys=True)
-
-    responses = [getattr(wx, "ID_NO", 0)]
-    monkeypatch.setattr(
-        "accessiweather.app.wx.MessageDialog",
-        lambda *a, **kw: _FakeDialog(responses),
-        raising=False,
-    )
-
-    app._maybe_offer_portable_key_export()
-
-    app.config_manager.export_encrypted_api_keys.assert_not_called()
-
-
-def test_portable_key_export_skips_when_no_passphrase(monkeypatch):
-    """User says yes but enters no passphrase → show warning, no export."""
-    app = _make_app_for_key_export(monkeypatch, has_keys=True)
-
-    dialog_responses = [getattr(wx, "ID_YES", 1)]
-    monkeypatch.setattr(
-        "accessiweather.app.wx.MessageDialog",
-        lambda *a, **kw: _FakeDialog(dialog_responses),
-        raising=False,
-    )
-    # Empty passphrase from TextEntryDialog
-    monkeypatch.setattr(
-        "accessiweather.app.wx.TextEntryDialog",
-        lambda *a, **kw: _FakeTextEntryDialog([""]),
-        raising=False,
-    )
-    messagebox_calls = []
-    monkeypatch.setattr(
-        "accessiweather.app.wx.MessageBox",
-        lambda *a, **kw: messagebox_calls.append(a),
-        raising=False,
-    )
-
-    app._maybe_offer_portable_key_export()
-
-    app.config_manager.export_encrypted_api_keys.assert_not_called()
-    assert messagebox_calls, "A warning MessageBox should have been shown"
-
-
-def test_portable_key_export_happy_path(monkeypatch, tmp_path):
-    """User accepts export, provides passphrase → export called, success dialog shown."""
-    app = _make_app_for_key_export(monkeypatch, has_keys=True, config_dir=str(tmp_path))
-
-    dialog_responses = [getattr(wx, "ID_YES", 1)]
-    monkeypatch.setattr(
-        "accessiweather.app.wx.MessageDialog",
-        lambda *a, **kw: _FakeDialog(dialog_responses),
-        raising=False,
-    )
-    monkeypatch.setattr(
-        "accessiweather.app.wx.TextEntryDialog",
-        lambda *a, **kw: _FakeTextEntryDialog(["my-secret-pass"]),
-        raising=False,
-    )
-    messagebox_calls = []
-    monkeypatch.setattr(
-        "accessiweather.app.wx.MessageBox",
-        lambda *a, **kw: messagebox_calls.append(a),
-        raising=False,
-    )
-
-    app._maybe_offer_portable_key_export()
-
-    expected_path = tmp_path / "api-keys.keys"
-    app.config_manager.export_encrypted_api_keys.assert_called_once_with(
-        expected_path, "my-secret-pass"
-    )
-    assert messagebox_calls, "A success MessageBox should have been shown"
-    assert (
-        "successful" in messagebox_calls[0][1].lower()
-        or "successful" in messagebox_calls[0][0].lower()
-    )
-
-
-def test_portable_key_export_shows_error_on_failure(monkeypatch, tmp_path):
-    """When export_encrypted_api_keys returns False, an error dialog is shown."""
-    app = _make_app_for_key_export(monkeypatch, has_keys=True, config_dir=str(tmp_path))
-    app.config_manager.export_encrypted_api_keys = MagicMock(return_value=False)
-
-    dialog_responses = [getattr(wx, "ID_YES", 1)]
-    monkeypatch.setattr(
-        "accessiweather.app.wx.MessageDialog",
-        lambda *a, **kw: _FakeDialog(dialog_responses),
-        raising=False,
-    )
-    monkeypatch.setattr(
-        "accessiweather.app.wx.TextEntryDialog",
-        lambda *a, **kw: _FakeTextEntryDialog(["pass"]),
-        raising=False,
-    )
-    messagebox_calls = []
-    monkeypatch.setattr(
-        "accessiweather.app.wx.MessageBox",
-        lambda *a, **kw: messagebox_calls.append(a),
-        raising=False,
-    )
-
-    app._maybe_offer_portable_key_export()
-
-    assert messagebox_calls, "An error MessageBox should have been shown"
-    assert "fail" in messagebox_calls[0][0].lower() or "fail" in messagebox_calls[0][1].lower()
+    assert len(prompt_messages) == 2
+    assert "Step 2 of 4" in prompt_messages[0], f"Expected 'Step 2 of 4' in: {prompt_messages[0]}"
+    assert "Step 3 of 4" in prompt_messages[1], f"Expected 'Step 3 of 4' in: {prompt_messages[1]}"
 
 
 # ---------------------------------------------------------------------------
@@ -597,7 +574,7 @@ def test_auto_import_silent_when_passphrase_cached(monkeypatch, tmp_path):
 
     monkeypatch.setattr(
         "accessiweather.config.secure_storage.SecureStorage.get_password",
-        lambda name: "cached-pass" if name == app._PORTABLE_PASSPHRASE_KEYRING_KEY else None,
+        lambda name: "FAKE_CACHED_PASS" if name == app._PORTABLE_PASSPHRASE_KEYRING_KEY else None,
         raising=False,
     )
     monkeypatch.setattr(
@@ -630,7 +607,7 @@ def test_auto_import_prompts_when_no_cached_passphrase(monkeypatch, tmp_path):
     )
     monkeypatch.setattr(
         "accessiweather.app.wx.TextEntryDialog",
-        lambda *a, **kw: _FakeTextEntryDialog(["my-passphrase"]),
+        lambda *a, **kw: _FakeTextEntryDialog(["FAKE_MY_PASSPHRASE"]),
         raising=False,
     )
     monkeypatch.setattr(
@@ -662,7 +639,7 @@ def test_auto_import_happy_path_keys_file(monkeypatch, tmp_path):
 
     monkeypatch.setattr(
         "accessiweather.app.wx.TextEntryDialog",
-        lambda *a, **kw: _FakeTextEntryDialog(["correct-pass"]),
+        lambda *a, **kw: _FakeTextEntryDialog(["FAKE_CORRECT_PASSPHRASE"]),
         raising=False,
     )
     messagebox_calls = []
@@ -674,7 +651,9 @@ def test_auto_import_happy_path_keys_file(monkeypatch, tmp_path):
 
     app._maybe_auto_import_keys_file()
 
-    app.config_manager.import_encrypted_api_keys.assert_called_once_with(keys_file, "correct-pass")
+    app.config_manager.import_encrypted_api_keys.assert_called_once_with(
+        keys_file, "FAKE_CORRECT_PASSPHRASE"
+    )
     assert messagebox_calls, "A success message should appear"
     assert "imported" in messagebox_calls[0][0].lower()
 
@@ -687,7 +666,7 @@ def test_auto_import_happy_path_legacy_awkeys(monkeypatch, tmp_path):
 
     monkeypatch.setattr(
         "accessiweather.app.wx.TextEntryDialog",
-        lambda *a, **kw: _FakeTextEntryDialog(["pass"]),
+        lambda *a, **kw: _FakeTextEntryDialog(["FAKE_TEST_PASSPHRASE"]),
         raising=False,
     )
     monkeypatch.setattr(
@@ -698,7 +677,9 @@ def test_auto_import_happy_path_legacy_awkeys(monkeypatch, tmp_path):
 
     app._maybe_auto_import_keys_file()
 
-    app.config_manager.import_encrypted_api_keys.assert_called_once_with(legacy_file, "pass")
+    app.config_manager.import_encrypted_api_keys.assert_called_once_with(
+        legacy_file, "FAKE_TEST_PASSPHRASE"
+    )
 
 
 def test_auto_import_prefers_keys_over_awkeys(monkeypatch, tmp_path):
@@ -709,7 +690,7 @@ def test_auto_import_prefers_keys_over_awkeys(monkeypatch, tmp_path):
 
     monkeypatch.setattr(
         "accessiweather.app.wx.TextEntryDialog",
-        lambda *a, **kw: _FakeTextEntryDialog(["pass"]),
+        lambda *a, **kw: _FakeTextEntryDialog(["FAKE_TEST_PASSPHRASE"]),
         raising=False,
     )
     monkeypatch.setattr(
@@ -732,7 +713,7 @@ def test_auto_import_wrong_passphrase_then_skip(monkeypatch, tmp_path):
 
     monkeypatch.setattr(
         "accessiweather.app.wx.TextEntryDialog",
-        lambda *a, **kw: _FakeTextEntryDialog(["bad-pass"]),
+        lambda *a, **kw: _FakeTextEntryDialog(["FAKE_BAD_PASSPHRASE"]),
         raising=False,
     )
     # Retry dialog → user picks "Skip" (ID_NO)
@@ -760,7 +741,7 @@ def test_auto_import_wrong_passphrase_then_retry_success(monkeypatch, tmp_path):
 
     app.config_manager.import_encrypted_api_keys = MagicMock(side_effect=_import_side_effect)
 
-    text_iter = iter(["bad-pass", "good-pass"])
+    text_iter = iter(["FAKE_BAD_PASSPHRASE", "FAKE_GOOD_PASSPHRASE"])
     monkeypatch.setattr(
         "accessiweather.app.wx.TextEntryDialog",
         lambda *a, **kw: _FakeTextEntryDialog([next(text_iter)]),
@@ -836,3 +817,73 @@ def test_schedule_startup_guidance_prompts_includes_auto_import(monkeypatch):
     auto_idx = fns.index(app._maybe_auto_import_keys_file)
     onboard_idx = fns.index(app._maybe_show_first_start_onboarding)
     assert auto_idx < onboard_idx
+
+
+# ---------------------------------------------------------------------------
+# Tests for wizard using export_encrypted_api_keys (not raw encrypt_secret_bundle)
+# ---------------------------------------------------------------------------
+
+
+def test_wizard_portable_export_failure_shows_warning(monkeypatch, tmp_path):
+    """When export_encrypted_api_keys returns False, wizard shows bundle write failure."""
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._portable_mode = True
+    app._force_wizard = False
+    app._portable_keys_imported_this_session = False
+    app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
+    settings = SimpleNamespace(onboarding_wizard_shown=False)
+    config = SimpleNamespace(locations=[], settings=settings)
+    bundle_path = tmp_path / "api-keys.keys"
+    export_mock = MagicMock(return_value=False)
+    app.config_manager = SimpleNamespace(
+        get_config=lambda: config,
+        update_settings=MagicMock(),
+        get_portable_api_key_bundle_path=lambda: bundle_path,
+        export_encrypted_api_keys=export_mock,
+    )
+
+    _ensure_wx_dialog_constants()
+    responses = [
+        getattr(wx, "ID_NO", 0),  # step 1: skip location
+        getattr(wx, "ID_YES", 1),  # step 2: OR key — choose "Enter key"
+        getattr(wx, "ID_CANCEL", 2),  # step 3: VC key — skip
+        getattr(wx, "ID_OK", 1),  # onboarding summary
+    ]
+    monkeypatch.setattr(
+        "accessiweather.app.wx.MessageDialog",
+        lambda *args, **kwargs: _FakeDialog(responses),
+        raising=False,
+    )
+    text_responses = ["FAKE_OR_KEY_TEST", "FAKE_BUNDLE_PASSPHRASE"]
+    monkeypatch.setattr(
+        "accessiweather.app.wx.TextEntryDialog",
+        lambda *args, **kwargs: _FakeTextEntryDialog(text_responses),
+        raising=False,
+    )
+    messagebox_calls = []
+    monkeypatch.setattr(
+        "accessiweather.app.wx.MessageBox",
+        lambda *a, **kw: messagebox_calls.append(a),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "accessiweather.config.secure_storage.SecureStorage.set_password",
+        lambda *a: True,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "accessiweather.config.secure_storage.SecureStorage.get_password",
+        lambda *a: None,
+        raising=False,
+    )
+
+    app._maybe_show_first_start_onboarding()
+
+    export_mock.assert_called_once()
+    # Should NOT mark as imported when export fails
+    assert app._portable_keys_imported_this_session is False
+    # A failure warning should have been shown
+    assert any(
+        "failed" in str(call).lower() or "not persist" in str(call).lower()
+        for call in messagebox_calls
+    )

@@ -200,11 +200,27 @@ class ImportExportOperations:
             return False
 
     def export_encrypted_api_keys(self, export_path: Path, passphrase: str) -> bool:
-        """Export API keys from keyring to an encrypted portable bundle file."""
+        """
+        Export API keys to an encrypted portable bundle file.
+
+        Checks in-memory settings first (covers portable mode where keys are
+        not in keyring), then falls back to keyring (covers installed mode).
+        LazySecureStorage values are resolved via ``str()``.
+        """
         try:
             secrets: dict[str, str] = {}
             for key_name in PORTABLE_API_SECRET_KEYS:
-                value = SecureStorage.get_password(key_name)
+                value: str | None = None
+                # 1. Try in-memory settings (covers portable mode)
+                if self._manager._config is not None:
+                    raw = getattr(self._manager._config.settings, key_name, None)
+                    if raw is not None:
+                        resolved = str(raw)  # resolves LazySecureStorage
+                        if resolved:
+                            value = resolved
+                # 2. Fall back to keyring (covers installed mode)
+                if not value:
+                    value = SecureStorage.get_password(key_name)
                 if value:
                     secrets[key_name] = value
 
@@ -238,25 +254,39 @@ class ImportExportOperations:
             secrets = decrypt_secret_bundle(envelope, passphrase)
 
             imported = 0
+            failed = []
             for key_name in PORTABLE_API_SECRET_KEYS:
                 value = secrets.get(key_name)
                 if not value:
                     continue
                 if not SecureStorage.set_password(key_name, value):
                     self.logger.error(f"Failed to import API key into secure storage: {key_name}")
-                    return False
-                imported += 1
+                    failed.append(key_name)
+                else:
+                    imported += 1
 
-            if imported == 0:
+            if imported == 0 and not failed:
                 self.logger.warning("Encrypted API key bundle did not contain supported keys")
                 return False
 
             self.logger.info("Imported %d API keys into secure storage", imported)
 
-            # Refresh in-memory config so keys are active without a restart
-            self._manager._load_secure_keys()
+            # In portable mode, set keys directly on in-memory settings so they
+            # are active immediately (keyring may not be available).
+            is_portable = getattr(self._manager, "app", None) and getattr(
+                self._manager.app, "_portable_mode", False
+            )
+            if is_portable and self._manager._config is not None:
+                for key_name in PORTABLE_API_SECRET_KEYS:
+                    value = secrets.get(key_name)
+                    if value:
+                        setattr(self._manager._config.settings, key_name, value)
+                        self.logger.debug(f"Set in-memory key for portable mode: {key_name}")
+            else:
+                # Refresh in-memory config so keys are active without a restart
+                self._manager._load_secure_keys()
 
-            return True
+            return not failed
         except PortableSecretsError as exc:
             self.logger.error(f"Failed to import encrypted API keys: {exc}")
             return False
