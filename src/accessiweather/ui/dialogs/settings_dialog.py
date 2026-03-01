@@ -974,16 +974,11 @@ class SettingsDialogSimple(wx.Dialog):
             )
             sizer.Add(self._controls["portable_auto_bundle_enabled"], 0, wx.LEFT | wx.TOP, 10)
 
-            set_passphrase_btn = wx.Button(panel, label="Set bundle passphrase for this session")
-            set_passphrase_btn.Bind(wx.EVT_BUTTON, self._on_set_portable_bundle_passphrase)
-            sizer.Add(set_passphrase_btn, 0, wx.LEFT | wx.TOP, 10)
-
             sizer.Add(
                 wx.StaticText(
                     panel,
                     label=(
-                        "Passphrase is kept in memory for this app session only and never written "
-                        "to disk. Auto-bundle refresh requires setting it each launch."
+                        "Passphrase is managed automatically via api-keys.pass in the config folder."
                     ),
                 ),
                 0,
@@ -1371,18 +1366,6 @@ class SettingsDialogSimple(wx.Dialog):
             settings_dict["source_priority_international"] = intl_priorities[
                 intl_idx if intl_idx >= 0 else 0
             ]
-
-            if (
-                settings_dict.get("portable_auto_bundle_enabled")
-                and not self.config_manager.has_portable_bundle_passphrase()
-            ):
-                wx.MessageBox(
-                    "Portable auto-bundle requires a session passphrase. "
-                    "Click 'Set bundle passphrase for this session' first.",
-                    "Passphrase required",
-                    wx.OK | wx.ICON_WARNING,
-                )
-                return False
 
             success = self.config_manager.update_settings(**settings_dict)
             if success:
@@ -1851,10 +1834,8 @@ class SettingsDialogSimple(wx.Dialog):
         """
         After saving settings in portable mode, keep the bundle in sync.
 
-        If any API key was changed:
-        - Bundle exists + passphrase cached → silently re-encrypt bundle
-        - Bundle exists + no cached passphrase → prompt for passphrase
-        - No bundle → offer to create one, or warn keys won't persist
+        Reads passphrase from api-keys.pass (generates + saves if missing).
+        Completely silent — no prompts.
         """
         changed_keys = {
             k: v for k, v in settings_dict.items() if k in self._PORTABLE_KEY_SETTINGS and v
@@ -1862,49 +1843,27 @@ class SettingsDialogSimple(wx.Dialog):
         if not changed_keys:
             return
 
-        from ...config.secure_storage import SecureStorage
-
-        app = self.app
-        _PASSPHRASE_KEY = getattr(
-            app, "_PORTABLE_PASSPHRASE_KEYRING_KEY", "portable_bundle_passphrase"
+        from ...config.import_export import (
+            generate_portable_passphrase,
+            load_portable_passphrase,
+            save_portable_passphrase,
         )
+
         config_dir = self.config_manager.config_dir
+        pass_path = self.config_manager.get_portable_passphrase_path()
+        passphrase = load_portable_passphrase(pass_path)
+
+        if not passphrase:
+            passphrase = generate_portable_passphrase()
+            save_portable_passphrase(pass_path, passphrase)
+
+        self.config_manager.set_portable_bundle_passphrase(passphrase)
+
+        # Write/update the bundle.
         bundle_names = ("api-keys.keys", "api-keys.awkeys")
         bundle_path = next(
             (config_dir / n for n in bundle_names if (config_dir / n).exists()), None
         )
-
-        # Get or prompt for passphrase.
-        passphrase = (SecureStorage.get_password(_PASSPHRASE_KEY) or "").strip()
-
-        if not passphrase:
-            if bundle_path:
-                msg = (
-                    "Your API keys have been updated.\n\n"
-                    "Enter your bundle passphrase to re-encrypt the portable key bundle, "
-                    "or Cancel to leave the bundle unchanged (keys are active this session only)."
-                )
-            else:
-                msg = (
-                    "Your API keys have been updated.\n\n"
-                    "Enter a passphrase to create an encrypted key bundle so your keys "
-                    "persist across launches, or Cancel to skip (keys active this session only)."
-                )
-            with wx.TextEntryDialog(
-                self,
-                msg,
-                "Portable key bundle",
-                style=wx.OK | wx.CANCEL | wx.TE_PASSWORD,
-            ) as dlg:
-                if dlg.ShowModal() != wx.ID_OK:
-                    return
-                passphrase = dlg.GetValue().strip()
-            if not passphrase:
-                return
-            # Cache for future use.
-            SecureStorage.set_password(_PASSPHRASE_KEY, passphrase)
-
-        # Write/update the bundle.
         if bundle_path is None:
             bundle_path = config_dir / "api-keys.keys"
 
@@ -2210,33 +2169,7 @@ class SettingsDialogSimple(wx.Dialog):
             value = dlg.GetValue().strip()
             return value or None
 
-    def _on_set_portable_bundle_passphrase(self, event):
-        """Set in-memory passphrase used for portable auto-bundle refresh."""
-        passphrase = self._prompt_passphrase(
-            "Portable bundle passphrase",
-            "Enter passphrase for automatic portable API key bundle refresh.",
-        )
-        if passphrase is None:
-            return
-
-        confirm = self._prompt_passphrase(
-            "Confirm passphrase",
-            "Re-enter passphrase to confirm.",
-        )
-        if confirm is None:
-            return
-        if passphrase != confirm:
-            wx.MessageBox(
-                "Passphrases do not match.", "Passphrase not set", wx.OK | wx.ICON_WARNING
-            )
-            return
-
-        self.config_manager.set_portable_bundle_passphrase(passphrase)
-        wx.MessageBox(
-            "Passphrase saved for this session only.",
-            "Portable bundle passphrase",
-            wx.OK | wx.ICON_INFORMATION,
-        )
+    # _on_set_portable_bundle_passphrase removed — passphrase is now file-managed.
 
     def _on_export_encrypted_api_keys(self, event):
         """Export API keys from keyring to encrypted bundle file."""

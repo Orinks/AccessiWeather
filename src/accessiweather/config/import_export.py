@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import secrets
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -26,6 +27,37 @@ PORTABLE_API_SECRET_KEYS: Final[tuple[str, ...]] = (
     "visual_crossing_api_key",
     "openrouter_api_key",
 )
+
+
+def load_portable_passphrase(path: Path) -> str | None:
+    """Read the passphrase from an api-keys.pass file. Returns None if missing."""
+    try:
+        if path.exists():
+            value = path.read_text(encoding="utf-8").strip()
+            return value or None
+    except Exception as exc:
+        logger.warning("Failed to read portable passphrase file %s: %s", path, exc)
+    return None
+
+
+def save_portable_passphrase(path: Path, passphrase: str) -> bool:
+    """Write a passphrase to the api-keys.pass file."""
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(passphrase, encoding="utf-8")
+        from .file_permissions import set_secure_file_permissions
+
+        set_secure_file_permissions(path)
+        logger.info("Portable passphrase saved to %s", path)
+        return True
+    except Exception as exc:
+        logger.error("Failed to save portable passphrase to %s: %s", path, exc)
+        return False
+
+
+def generate_portable_passphrase() -> str:
+    """Generate a cryptographically random passphrase for portable bundles."""
+    return secrets.token_urlsafe(32)
 
 
 class ImportExportOperations:

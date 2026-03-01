@@ -323,6 +323,10 @@ class ConfigManager:
         """Return the default portable encrypted API key bundle path."""
         return self.config_dir / "api-keys.keys"
 
+    def get_portable_passphrase_path(self) -> Path:
+        """Return the path to the portable passphrase file (api-keys.pass)."""
+        return self.config_dir / "api-keys.pass"
+
     def set_portable_bundle_passphrase(self, passphrase: str | None) -> None:
         """Set in-memory passphrase for this app session (never persisted to disk)."""
         self._portable_bundle_passphrase = (passphrase or "").strip() or None
@@ -338,8 +342,17 @@ class ConfigManager:
             return False
         if not getattr(config.settings, "portable_auto_bundle_enabled", False):
             return False
+
+        # Load passphrase from file if not already in memory.
         if not self._portable_bundle_passphrase:
-            logger.info("Portable auto-bundle skipped: no session passphrase available")
+            from .import_export import load_portable_passphrase
+
+            self._portable_bundle_passphrase = load_portable_passphrase(
+                self.get_portable_passphrase_path()
+            )
+
+        if not self._portable_bundle_passphrase:
+            logger.info("Portable auto-bundle skipped: no passphrase file found")
             return False
 
         return self.export_encrypted_api_keys(
@@ -347,15 +360,18 @@ class ConfigManager:
         )
 
     def disable_portable_api_key_bundle(self) -> bool:
-        """Disable portable auto-bundle and remove generated portable bundle file."""
+        """Disable portable auto-bundle and remove generated bundle + passphrase files."""
         self.set_portable_bundle_passphrase(None)
         bundle_path = self.get_portable_api_key_bundle_path()
+        pass_path = self.get_portable_passphrase_path()
         try:
             if bundle_path.exists():
                 bundle_path.unlink()
+            if pass_path.exists():
+                pass_path.unlink()
             return True
         except Exception as exc:
-            logger.error("Failed to remove portable bundle file %s: %s", bundle_path, exc)
+            logger.error("Failed to remove portable bundle/pass file: %s", exc)
             return False
 
     def _get_startup_manager(self):
