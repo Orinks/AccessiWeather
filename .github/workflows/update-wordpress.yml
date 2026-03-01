@@ -1,0 +1,12 @@
+name: Update WordPress on release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  push-to-wordpress:
+    uses: Orinks/orinks-github-releases/.github/workflows/push-releases.yml@master
+    secrets:
+      WP_PUSH_TOKEN: ${{ secrets.WP_PUSH_TOKEN }}
+      WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
