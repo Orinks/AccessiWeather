@@ -99,8 +99,13 @@ class TestIsPortableMode:
         ):
             assert is_portable_mode() is False
 
-    def test_frozen_writable_directory_is_portable(self, tmp_path):
-        """Frozen app in writable non-Program Files dir should be portable."""
+    def test_frozen_no_markers_not_portable(self, tmp_path):
+        """
+        Frozen app with no markers and not in Program Files should NOT be portable.
+
+        The old writable-directory heuristic incorrectly returned True here,
+        causing installed builds in custom directories to lose keyring API keys.
+        """
         exe_path = str(tmp_path / "app.exe")
 
         with (
@@ -112,7 +117,7 @@ class TestIsPortableMode:
             ),
             mock.patch("os.listdir", return_value=[]),
         ):
-            assert is_portable_mode() is True
+            assert is_portable_mode() is False
 
     def test_frozen_portable_marker_file_is_portable(self, tmp_path):
         """A .portable marker should force portable mode."""
@@ -144,9 +149,9 @@ class TestIsPortableMode:
         ):
             assert is_portable_mode() is True
 
-    def test_frozen_non_writable_directory_not_portable(self, tmp_path):
-        """Frozen app in non-writable dir should not be portable."""
-        exe_path = str(tmp_path / "app.exe")
+    def test_frozen_custom_install_path_not_portable(self, tmp_path):
+        """Frozen app installed to a custom path (not Program Files) should not be portable."""
+        exe_path = str(tmp_path / "MyApps" / "AccessiWeather" / "app.exe")
 
         with (
             mock.patch.object(sys, "frozen", True, create=True),
@@ -156,7 +161,6 @@ class TestIsPortableMode:
                 {"ACCESSIWEATHER_FORCE_PORTABLE": "", "PROGRAMFILES": "", "PROGRAMFILES(X86)": ""},
             ),
             mock.patch("os.listdir", return_value=[]),
-            mock.patch("builtins.open", side_effect=PermissionError("no write")),
         ):
             assert is_portable_mode() is False
 
