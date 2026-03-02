@@ -151,6 +151,17 @@ class MainWindow(SizedFrame):
         self.settings_button.Bind(wx.EVT_BUTTON, lambda e: self.on_settings())
         self.view_alert_button.Bind(wx.EVT_BUTTON, self._on_view_alert)
 
+        # Alerts list: open details on double-click or Enter key
+        self.alerts_list.Bind(wx.EVT_LISTBOX_DCLICK, self._on_view_alert)
+        self.alerts_list.Bind(wx.EVT_KEY_DOWN, self._on_alerts_list_key)
+
+    def _on_alerts_list_key(self, event) -> None:
+        """Handle key presses in alerts list — Enter opens details."""
+        if event.GetKeyCode() in (wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER):
+            self._on_view_alert(event)
+        else:
+            event.Skip()
+
     def _on_window_shown(self, event) -> None:
         """Handle window shown event to set initial focus."""
         event.Skip()  # Allow event to propagate
