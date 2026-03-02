@@ -145,6 +145,12 @@ class AirQualityDialog(wx.Dialog):
 
         panel.SetSizer(main_sizer)
 
+        # Set initial focus for screen readers
+        if has_data and getattr(self, "_hourly_display", None):
+            self._hourly_display.SetFocus()
+        else:
+            close_btn.SetFocus()
+
     def _build_summary_section(self, panel) -> wx.BoxSizer:
         """Build the current AQI summary section."""
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -225,14 +231,14 @@ class AirQualityDialog(wx.Dialog):
 
         forecast_text = "\n".join(forecast_lines) if forecast_lines else "No forecast data."
 
-        forecast_display = wx.TextCtrl(
+        self._hourly_display = wx.TextCtrl(
             panel,
             value=forecast_text,
             style=wx.TE_MULTILINE | wx.TE_READONLY,
             size=(-1, 100),
         )
-        self._accessibility_text_controls.append((forecast_display, "Hourly Forecast"))
-        sizer.Add(forecast_display, 1, wx.EXPAND)
+        self._accessibility_text_controls.append((self._hourly_display, "Hourly Forecast"))
+        sizer.Add(self._hourly_display, 1, wx.EXPAND)
 
         return sizer
 
