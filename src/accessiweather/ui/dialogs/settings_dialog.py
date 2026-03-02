@@ -1054,6 +1054,7 @@ class SettingsDialogSimple(wx.Dialog):
 
             vc_key = getattr(settings, "visual_crossing_api_key", "") or ""
             self._controls["vc_key"].SetValue(str(vc_key))
+            self._original_vc_key = str(vc_key)
 
             # Source priority
             us_priority = getattr(
@@ -1153,6 +1154,7 @@ class SettingsDialogSimple(wx.Dialog):
             # AI tab
             openrouter_key = getattr(settings, "openrouter_api_key", "") or ""
             self._controls["openrouter_key"].SetValue(str(openrouter_key))
+            self._original_openrouter_key = str(openrouter_key)
 
             ai_model = getattr(settings, "ai_model_preference", "openrouter/free")
             if ai_model == "openrouter/free":
@@ -1338,6 +1340,21 @@ class SettingsDialogSimple(wx.Dialog):
             settings_dict["source_priority_international"] = intl_priorities[
                 intl_idx if intl_idx >= 0 else 0
             ]
+
+            # Guard: never wipe a previously-set API key with an empty string.
+            # If the field is blank but the original value was non-empty, the
+            # keyring load failed transiently — keep the existing keyring value.
+            for key, orig_attr in (
+                ("visual_crossing_api_key", "_original_vc_key"),
+                ("openrouter_api_key", "_original_openrouter_key"),
+            ):
+                if not settings_dict.get(key) and getattr(self, orig_attr, ""):
+                    logger.warning(
+                        "Skipping empty %s save — original value was non-empty; "
+                        "keyring may have failed to load. Existing keyring value preserved.",
+                        key,
+                    )
+                    settings_dict.pop(key, None)
 
             success = self.config_manager.update_settings(**settings_dict)
             if success:
