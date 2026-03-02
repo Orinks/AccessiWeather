@@ -19,8 +19,9 @@ def is_portable_mode() -> bool:
     """
     Determine if the application is running in portable mode.
 
-    Portable mode is detected by checking if the executable is running from a
-    non-standard location (not Program Files) and if the directory is writable.
+    Portable mode is detected via explicit markers: a `.portable` file next to
+    the executable, a `config/` directory next to the executable (legacy), or
+    the presence of an Inno Setup uninstaller (which confirms installed mode).
 
     For testing purposes, portable mode can be forced by setting the
     ACCESSIWEATHER_FORCE_PORTABLE environment variable to "1" or "true".
@@ -101,18 +102,9 @@ def is_portable_mode() -> bool:
                 )
                 return False
 
-        # Check if the directory is writable (portable installations should be)
-        try:
-            test_file = os.path.join(app_dir, ".write_test")
-            with open(test_file, "w") as f:
-                f.write("test")
-            os.remove(test_file)
-            logger.debug(f"Portable mode detected: directory {app_dir} is writable")
-            return True
-        except (OSError, PermissionError) as e:
-            # If we can't write to the directory, assume it's not portable
-            logger.debug(f"Not in portable mode: directory {app_dir} is not writable ({e})")
-            return False
+        # No portable markers found and not in Program Files — assume installed.
+        logger.debug("Not in portable mode: no portable markers found, assuming installed build")
+        return False
 
     logger.debug("Not in portable mode: default fallback")
     return False
