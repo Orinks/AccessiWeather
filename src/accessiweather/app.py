@@ -663,6 +663,7 @@ class AccessiWeatherApp(wx.App):
             try:
                 if self.config_manager.import_encrypted_api_keys(keys_path, stored):
                     self._portable_keys_imported_this_session = True
+                    self._write_keys_file_after_import(config_dir, stored)
                     logger.info("Portable API keys auto-imported silently.")
                     return
             except Exception as exc:
@@ -696,6 +697,7 @@ class AccessiWeatherApp(wx.App):
                 self._portable_keys_imported_this_session = True
                 # Cache passphrase in keyring so next launch is silent.
                 SecureStorage.set_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY, passphrase)
+                self._write_keys_file_after_import(config_dir, passphrase)
                 wx.MessageBox(
                     "API keys imported successfully. They are now active.",
                     "Keys imported",
@@ -716,6 +718,19 @@ class AccessiWeatherApp(wx.App):
             retry_dlg.Destroy()
             if retry_result != wx.ID_YES:
                 return
+
+    def _write_keys_file_after_import(self, config_dir: Path, passphrase: str) -> None:
+        """
+        Write api-keys.keys to the portable config dir after a successful import.
+
+        This ensures the canonical bundle file is always present so that a new
+        machine or clean keyring can re-import from it.
+        """
+        keys_dest = config_dir / "api-keys.keys"
+        try:
+            self.config_manager.export_encrypted_api_keys(keys_dest, passphrase)
+        except Exception as exc:
+            logger.warning("Failed to write api-keys.keys after import: %s", exc)
 
     def _should_show_first_start_onboarding(self) -> bool:
         """Return True when first-start onboarding should be shown."""
