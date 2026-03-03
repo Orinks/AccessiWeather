@@ -44,23 +44,28 @@ if not hasattr(_wx, "SystemSettings"):
     _wx.SystemSettings = MagicMock(name="SystemSettings")
     _wx.SYS_COLOUR_GRAYTEXT = 0
 
-# Stub wx.lib and wx.lib.scrolledpanel (needed by soundpack_wizard_dialog)
-if "wx.lib" not in sys.modules:
-    import types
-
-    _wx_lib = types.ModuleType("wx.lib")
-    _wx_lib.__package__ = "wx.lib"
-    _wx_lib.__path__ = []
-    if not hasattr(_wx, "lib"):
-        _wx.lib = _wx_lib
-    sys.modules["wx.lib"] = _wx_lib
-
 if "wx.lib.scrolledpanel" not in sys.modules:
-    import types
+    try:
+        import wx.lib.scrolledpanel  # noqa: F401
+    except (ImportError, ModuleNotFoundError):
+        import types
 
-    _scrolled = types.ModuleType("wx.lib.scrolledpanel")
-    _scrolled.ScrolledPanel = _wx.Dialog
-    sys.modules["wx.lib.scrolledpanel"] = _scrolled
+        if "wx.lib" not in sys.modules:
+            _wx_lib = types.ModuleType("wx.lib")
+            _wx_lib.__package__ = "wx.lib"
+            _wx_lib.__path__ = []
+            if not hasattr(_wx, "lib"):
+                _wx.lib = _wx_lib
+            sys.modules["wx.lib"] = _wx_lib
+        _scrolled = types.ModuleType("wx.lib.scrolledpanel")
+        _scrolled.ScrolledPanel = _wx.Dialog
+        sys.modules["wx.lib.scrolledpanel"] = _scrolled
+
+_USING_STUB = not hasattr(sys.modules.get("wx", None), "App")
+_skip_when_real_wx = pytest.mark.skipif(
+    not _USING_STUB,
+    reason="Dialog instantiation tests require wx stub mode; real wx needs real parent window",
+)
 
 # Methods that dialogs invoke on *self* (inherits _WxStubBase via wx.Dialog).
 _StubBase = _wx.Dialog
@@ -169,6 +174,7 @@ def _make_environmental(*, has_data_val: bool = True, has_hourly: bool = True):
 class TestAirQualityDialogFocus:
     """Initial-focus tests for AirQualityDialog."""
 
+    @_skip_when_real_wx
     def test_focus_hourly_display_with_data(self, widget_tracker):
         """When data and hourly forecast exist, focus goes to _hourly_display."""
         env = _make_environmental(has_data_val=True, has_hourly=True)
@@ -180,6 +186,7 @@ class TestAirQualityDialogFocus:
         assert dlg._hourly_display is not None
         dlg._hourly_display.SetFocus.assert_called_once()
 
+    @_skip_when_real_wx
     def test_focus_close_button_without_data(self, widget_tracker):
         """When no data is available, focus goes to the close button."""
         AirQualityDialog(
@@ -197,6 +204,7 @@ class TestAirQualityDialogFocus:
 class TestUVIndexDialogFocus:
     """Initial-focus tests for UVIndexDialog."""
 
+    @_skip_when_real_wx
     def test_focus_hourly_display_with_data(self, widget_tracker):
         """When data and hourly forecast exist, focus goes to _hourly_display."""
         env = _make_environmental(has_data_val=True, has_hourly=True)
@@ -208,6 +216,7 @@ class TestUVIndexDialogFocus:
         assert dlg._hourly_display is not None
         dlg._hourly_display.SetFocus.assert_called_once()
 
+    @_skip_when_real_wx
     def test_focus_close_button_without_data(self, widget_tracker):
         """When no data is available, focus goes to the close button."""
         UVIndexDialog(parent=MagicMock(), location_name="Test", environmental=None, app=MagicMock())
@@ -223,6 +232,7 @@ class TestUVIndexDialogFocus:
 class TestDiscussionDialogFocus:
     """Initial-focus tests for DiscussionDialog."""
 
+    @_skip_when_real_wx
     def test_focus_discussion_display(self, widget_tracker):
         """Focus goes to discussion_display when the dialog opens."""
         app = MagicMock()
