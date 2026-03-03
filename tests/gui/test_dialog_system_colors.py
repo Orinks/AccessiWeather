@@ -12,7 +12,7 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -84,22 +84,22 @@ if not hasattr(_wx, "EVT_LIST_ITEM_ACTIVATED"):
 if not hasattr(_wx, "EVT_CHAR_HOOK"):
     _wx.EVT_CHAR_HOOK = MagicMock()
 
-if "wx.lib" not in sys.modules:
-    import types as _t
-
-    _wxlib = _t.ModuleType("wx.lib")
-    _wxlib.__package__ = "wx.lib"
-    _wxlib.__path__ = []
-    if not hasattr(_wx, "lib"):
-        _wx.lib = _wxlib
-    sys.modules["wx.lib"] = _wxlib
-
 if "wx.lib.scrolledpanel" not in sys.modules:
-    import types as _t2
+    try:
+        import wx.lib.scrolledpanel  # noqa: F401
+    except (ImportError, ModuleNotFoundError):
+        import types
 
-    _scrolled = _t2.ModuleType("wx.lib.scrolledpanel")
-    _scrolled.ScrolledPanel = _wx.Dialog
-    sys.modules["wx.lib.scrolledpanel"] = _scrolled
+        if "wx.lib" not in sys.modules:
+            _wx_lib = types.ModuleType("wx.lib")
+            _wx_lib.__package__ = "wx.lib"
+            _wx_lib.__path__ = []
+            if not hasattr(_wx, "lib"):
+                _wx.lib = _wx_lib
+            sys.modules["wx.lib"] = _wx_lib
+        _scrolled = types.ModuleType("wx.lib.scrolledpanel")
+        _scrolled.ScrolledPanel = _wx.Dialog
+        sys.modules["wx.lib.scrolledpanel"] = _scrolled
 
 # Methods on _WxStubBase
 _StubBase = _wx.Dialog
@@ -215,46 +215,56 @@ def _make_environmental(*, has_data_val=True, has_hourly=True):
 class TestSystemColorsUsedAtRuntime:
     """Verify wx.SystemSettings.GetColour is called during dialog init."""
 
+    _USING_STUB = not hasattr(sys.modules.get("wx", None), "App")
+    _skip_when_real_wx = pytest.mark.skipif(
+        not _USING_STUB,
+        reason="Dialog instantiation tests require wx stub mode; real wx needs real parent window",
+    )
+
+    @_skip_when_real_wx
     def test_air_quality_dialog_uses_system_colors(self):
         """AirQualityDialog calls SystemSettings.GetColour for hint text."""
         from accessiweather.ui.dialogs.air_quality_dialog import AirQualityDialog
 
         env = _make_environmental(has_data_val=True)
-        with patch.object(_wx.SystemSettings, "GetColour", return_value=MagicMock()) as mock_get:
-            AirQualityDialog(
-                parent=MagicMock(), location_name="Test", environmental=env, app=MagicMock()
-            )
-            assert mock_get.call_count > 0
+        mock_get = MagicMock(return_value=MagicMock())
+        _wx.SystemSettings.GetColour = mock_get
+        AirQualityDialog(parent=MagicMock(), location_name="Test", environmental=env, app=MagicMock())
+        assert mock_get.call_count > 0
 
+    @_skip_when_real_wx
     def test_uv_index_dialog_uses_system_colors(self):
         """UVIndexDialog calls SystemSettings.GetColour for hint text."""
         from accessiweather.ui.dialogs.uv_index_dialog import UVIndexDialog
 
         env = _make_environmental(has_data_val=True)
-        with patch.object(_wx.SystemSettings, "GetColour", return_value=MagicMock()) as mock_get:
-            UVIndexDialog(
-                parent=MagicMock(), location_name="Test", environmental=env, app=MagicMock()
-            )
-            assert mock_get.call_count > 0
+        mock_get = MagicMock(return_value=MagicMock())
+        _wx.SystemSettings.GetColour = mock_get
+        UVIndexDialog(parent=MagicMock(), location_name="Test", environmental=env, app=MagicMock())
+        assert mock_get.call_count > 0
 
+    @_skip_when_real_wx
     def test_weather_history_dialog_uses_system_colors(self):
         """WeatherHistoryDialog calls SystemSettings.GetColour."""
         from accessiweather.ui.dialogs.weather_history_dialog import WeatherHistoryDialog
 
-        with patch.object(_wx.SystemSettings, "GetColour", return_value=MagicMock()) as mock_get:
-            WeatherHistoryDialog(
-                parent=MagicMock(),
-                location_name="Test",
-                sections=[("Test", "Some content")],
-            )
-            assert mock_get.call_count > 0
+        mock_get = MagicMock(return_value=MagicMock())
+        _wx.SystemSettings.GetColour = mock_get
+        WeatherHistoryDialog(
+            parent=MagicMock(),
+            location_name="Test",
+            sections=[("Test", "Some content")],
+        )
+        assert mock_get.call_count > 0
 
+    @_skip_when_real_wx
     def test_aviation_dialog_uses_system_colors(self):
         """AviationDialog calls SystemSettings.GetColour for hint text."""
         from accessiweather.ui.dialogs.aviation_dialog import AviationDialog
 
         app = MagicMock()
         app.config_manager.get_current_location.return_value = MagicMock(name="TestCity")
-        with patch.object(_wx.SystemSettings, "GetColour", return_value=MagicMock()) as mock_get:
-            AviationDialog(parent=MagicMock(), app=app)
-            assert mock_get.call_count > 0
+        mock_get = MagicMock(return_value=MagicMock())
+        _wx.SystemSettings.GetColour = mock_get
+        AviationDialog(parent=MagicMock(), app=app)
+        assert mock_get.call_count > 0
