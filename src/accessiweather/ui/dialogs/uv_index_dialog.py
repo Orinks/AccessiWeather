@@ -112,12 +112,14 @@ class UVIndexDialog(wx.Dialog):
         self.location_name = location_name
         self.environmental = environmental
         self.app = app
+        self._accessibility_text_controls: list[tuple[wx.TextCtrl, str]] = []
 
         self._create_ui()
         self._setup_accessibility()
 
     def _create_ui(self):
         """Create the dialog UI."""
+        self._accessibility_text_controls = []
         panel = wx.Panel(self)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -239,6 +241,7 @@ class UVIndexDialog(wx.Dialog):
             style=wx.TE_MULTILINE | wx.TE_READONLY,
             size=(-1, 100),
         )
+        self._accessibility_text_controls.append((forecast_display, "Hourly Forecast"))
         sizer.Add(forecast_display, 1, wx.EXPAND)
 
         return sizer
@@ -267,6 +270,9 @@ class UVIndexDialog(wx.Dialog):
                 style=wx.TE_MULTILINE | wx.TE_READONLY,
                 size=(-1, 100),
             )
+            self._accessibility_text_controls.append(
+                (safety_display, "Sun Safety Recommendations")
+            )
             sizer.Add(safety_display, 1, wx.EXPAND)
         else:
             no_data = wx.StaticText(panel, label="Sun safety recommendations are not available.")
@@ -277,7 +283,8 @@ class UVIndexDialog(wx.Dialog):
 
     def _setup_accessibility(self):
         """Set up accessibility labels."""
-        # Controls are created with meaningful labels already
+        for control, label in self._accessibility_text_controls:
+            control.SetName(label)
 
     def _on_close(self, event):
         """Handle close button press."""
