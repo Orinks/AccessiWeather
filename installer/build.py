@@ -557,6 +557,7 @@ def main() -> int:
                 print(f"  {f.name} ({size_mb:.1f} MB)")
 
     print("\n✓ Build complete!")
+    print("\a", end="", flush=True)
     return 0
 
 
