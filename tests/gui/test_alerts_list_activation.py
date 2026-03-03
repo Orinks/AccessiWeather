@@ -1,4 +1,4 @@
-"""Tests for alerts list Enter key and double-click activation (issue #410)."""
+"""Tests for alerts list Enter/Space key and double-click activation (issue #410)."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import wx
 
 
 class TestAlertsListActivation:
-    """Enter key and double-click on the alerts list should open alert details."""
+    """Enter/Space key and double-click on the alerts list should open alert details."""
 
     def _make_main_window(self):
         """Create a MainWindow with enough mocking to test event bindings."""
@@ -24,8 +24,8 @@ class TestAlertsListActivation:
         win.app.current_weather_data = None
         return win
 
-    def test_bind_events_registers_dclick_and_key_down(self):
-        """_bind_events should bind EVT_LISTBOX_DCLICK and EVT_KEY_DOWN on alerts_list."""
+    def test_bind_events_registers_dclick_and_char(self):
+        """_bind_events should bind EVT_LISTBOX_DCLICK and EVT_CHAR on alerts_list."""
         win = self._make_main_window()
 
         # Provide remaining widgets that _bind_events touches
@@ -43,7 +43,7 @@ class TestAlertsListActivation:
         # Collect the event types bound on alerts_list
         bound_events = [call.args[0] for call in win.alerts_list.Bind.call_args_list]
         assert wx.EVT_LISTBOX_DCLICK in bound_events
-        assert wx.EVT_KEY_DOWN in bound_events
+        assert wx.EVT_CHAR in bound_events
 
     def test_enter_key_calls_on_view_alert(self):
         """Pressing Enter in alerts list should trigger _on_view_alert."""
@@ -71,8 +71,21 @@ class TestAlertsListActivation:
         win._on_view_alert.assert_called_once_with(event)
         event.Skip.assert_not_called()
 
+    def test_space_key_calls_on_view_alert(self):
+        """Pressing Space in alerts list should trigger _on_view_alert."""
+        win = self._make_main_window()
+        win._on_view_alert = MagicMock()
+
+        event = MagicMock()
+        event.GetKeyCode.return_value = wx.WXK_SPACE
+
+        win._on_alerts_list_key(event)
+
+        win._on_view_alert.assert_called_once_with(event)
+        event.Skip.assert_not_called()
+
     def test_other_key_is_skipped(self):
-        """Non-Enter keys should be passed through via event.Skip()."""
+        """Non-Enter/Space keys should be passed through via event.Skip()."""
         win = self._make_main_window()
         win._on_view_alert = MagicMock()
 

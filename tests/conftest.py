@@ -65,9 +65,11 @@ if "wx" not in sys.modules:
         _wx.EVT_CHOICE = MagicMock()
         _wx.EVT_TIMER = MagicMock()
         _wx.EVT_KEY_DOWN = MagicMock()
+        _wx.EVT_CHAR = MagicMock()
         _wx.EVT_LISTBOX_DCLICK = MagicMock()
         _wx.WXK_RETURN = 13
         _wx.WXK_NUMPAD_ENTER = 370
+        _wx.WXK_SPACE = 32
         _wx.ID_ANY = -1
         _wx.ID_OK = 5100
         _wx.ID_CANCEL = 5101
