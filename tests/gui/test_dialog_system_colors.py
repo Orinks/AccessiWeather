@@ -232,7 +232,9 @@ class TestSystemColorsUsedAtRuntime:
 
         env = _make_environmental(has_data_val=True)
         with patch.object(_wx.SystemSettings, "GetColour", return_value=MagicMock()) as mock_get:
-            UVIndexDialog(parent=MagicMock(), location_name="Test", environmental=env, app=MagicMock())
+            UVIndexDialog(
+                parent=MagicMock(), location_name="Test", environmental=env, app=MagicMock()
+            )
             assert mock_get.call_count > 0
 
     def test_weather_history_dialog_uses_system_colors(self):
