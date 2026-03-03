@@ -2,12 +2,13 @@
 Tests for initial focus in AirQuality, UVIndex, and Discussion dialogs.
 
 Covers the SetFocus calls added for screen reader accessibility (issue #409).
+Works in both wx-stub mode (headless without wxPython) and real-wx mode (CI/xvfb).
 """
 
 from __future__ import annotations
 
 import sys
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -62,10 +63,6 @@ if "wx.lib.scrolledpanel" not in sys.modules:
         sys.modules["wx.lib.scrolledpanel"] = _scrolled
 
 _USING_STUB = not hasattr(sys.modules.get("wx", None), "App")
-_skip_when_real_wx = pytest.mark.skipif(
-    not _USING_STUB,
-    reason="Dialog instantiation tests require wx stub mode; real wx needs real parent window",
-)
 
 # Methods that dialogs invoke on *self* (inherits _WxStubBase via wx.Dialog).
 _StubBase = _wx.Dialog
@@ -109,13 +106,37 @@ def widget_tracker():
     """
     Replace wx widget constructors with factories returning unique MagicMocks.
 
-    The conftest.py stub sets classes like ``_wx.BoxSizer = MagicMock`` (the
-    CLASS, not an instance).  Calling ``MagicMock(panel, label=...)`` would
-    pass the first arg as ``spec``, restricting attribute access.  Replacing
-    them with plain factory functions avoids this.
+    Works in both stub mode and real-wx mode (CI/xvfb).
+    When real wx is present, also patches wx.Dialog.__init__ and common
+    Dialog methods so dialog instantiation doesn't require a real parent window.
     """
     tracker = _WidgetTracker()
     saved = {}
+    active_patches = []
+
+    # When real wx is installed, patch Dialog.__init__ and instance methods
+    # so dialogs can be constructed with a MagicMock() parent.
+    if not _USING_STUB:
+        _dialog_methods = (
+            "__init__",
+            "CenterOnParent",
+            "SetSizer",
+            "Layout",
+            "EndModal",
+            "Hide",
+            "Show",
+            "SetSize",
+            "GetSizer",
+        )
+        for method in _dialog_methods:
+            if method == "__init__":
+                p = patch.object(_wx.Dialog, "__init__", lambda self, *a, **kw: None)
+            elif method == "GetSizer":
+                p = patch.object(_wx.Dialog, "GetSizer", lambda self: MagicMock())
+            else:
+                p = patch.object(_wx.Dialog, method, lambda self, *a, **kw: None)
+            active_patches.append(p)
+            p.start()
 
     # Save originals and replace with spec-free factories
     for name in ("StaticText", "BoxSizer", "Panel"):
@@ -133,6 +154,10 @@ def widget_tracker():
     # Restore originals
     for name, orig in saved.items():
         setattr(_wx, name, orig)
+
+    # Stop all active patches (real-wx mode)
+    for p in active_patches:
+        p.stop()
 
 
 def _make_environmental(*, has_data_val: bool = True, has_hourly: bool = True):
@@ -174,7 +199,6 @@ def _make_environmental(*, has_data_val: bool = True, has_hourly: bool = True):
 class TestAirQualityDialogFocus:
     """Initial-focus tests for AirQualityDialog."""
 
-    @_skip_when_real_wx
     def test_focus_hourly_display_with_data(self, widget_tracker):
         """When data and hourly forecast exist, focus goes to _hourly_display."""
         env = _make_environmental(has_data_val=True, has_hourly=True)
@@ -186,7 +210,6 @@ class TestAirQualityDialogFocus:
         assert dlg._hourly_display is not None
         dlg._hourly_display.SetFocus.assert_called_once()
 
-    @_skip_when_real_wx
     def test_focus_close_button_without_data(self, widget_tracker):
         """When no data is available, focus goes to the close button."""
         AirQualityDialog(
@@ -204,7 +227,6 @@ class TestAirQualityDialogFocus:
 class TestUVIndexDialogFocus:
     """Initial-focus tests for UVIndexDialog."""
 
-    @_skip_when_real_wx
     def test_focus_hourly_display_with_data(self, widget_tracker):
         """When data and hourly forecast exist, focus goes to _hourly_display."""
         env = _make_environmental(has_data_val=True, has_hourly=True)
@@ -216,7 +238,6 @@ class TestUVIndexDialogFocus:
         assert dlg._hourly_display is not None
         dlg._hourly_display.SetFocus.assert_called_once()
 
-    @_skip_when_real_wx
     def test_focus_close_button_without_data(self, widget_tracker):
         """When no data is available, focus goes to the close button."""
         UVIndexDialog(parent=MagicMock(), location_name="Test", environmental=None, app=MagicMock())
@@ -232,7 +253,6 @@ class TestUVIndexDialogFocus:
 class TestDiscussionDialogFocus:
     """Initial-focus tests for DiscussionDialog."""
 
-    @_skip_when_real_wx
     def test_focus_discussion_display(self, widget_tracker):
         """Focus goes to discussion_display when the dialog opens."""
         app = MagicMock()
