@@ -82,6 +82,7 @@ class AddLocationDialog(wx.Dialog):
 
         self._create_ui()
         self._setup_accessibility()
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_key)
 
     def _create_ui(self):
         """Create the dialog UI."""
@@ -173,6 +174,13 @@ class AddLocationDialog(wx.Dialog):
         self.name_input.SetName("Location name input")
         self.search_input.SetName("Search for location")
         self.results_list.SetName("Search results")
+
+    def _on_key(self, event: wx.KeyEvent) -> None:
+        """Handle key events."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.Close()
+        else:
+            event.Skip()
 
     def _update_status(self, message: str, is_error: bool = False):
         """Update the status label."""

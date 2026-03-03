@@ -115,6 +115,7 @@ class UVIndexDialog(wx.Dialog):
 
         self._create_ui()
         self._setup_accessibility()
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_key)
 
     def _create_ui(self):
         """Create the dialog UI."""
@@ -288,6 +289,13 @@ class UVIndexDialog(wx.Dialog):
     def _setup_accessibility(self):
         """Set up accessibility labels."""
         # Controls are created with meaningful labels already
+
+    def _on_key(self, event: wx.KeyEvent) -> None:
+        """Handle key events."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.Close()
+        else:
+            event.Skip()
 
     def _on_close(self, event):
         """Handle close button press."""

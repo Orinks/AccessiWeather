@@ -167,6 +167,7 @@ class SoundPackManagerDialog(wx.Dialog):
 
         # Bind close event to stop any playing preview
         self.Bind(wx.EVT_CLOSE, self._on_dialog_close)
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_key)
 
     def _create_community_service(self) -> CommunitySoundPackService | None:
         """Create the community soundpack service."""
@@ -1289,6 +1290,13 @@ class SoundPackManagerDialog(wx.Dialog):
         if self._preview_player:
             self._preview_player.stop()
         event.Skip()  # Allow normal close handling
+
+    def _on_key(self, event: wx.KeyEvent) -> None:
+        """Handle key events."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.Close()
+        else:
+            event.Skip()
 
     def _on_close(self, event) -> None:
         """Close the dialog."""

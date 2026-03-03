@@ -53,6 +53,7 @@ class SoundPackWizardDialog(wx.Dialog):
         self._create_ui()
         self._render_step()
         self.Centre()
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_key)
 
     def _create_ui(self) -> None:
         """Create the wizard UI."""
@@ -512,3 +513,10 @@ class SoundPackWizardDialog(wx.Dialog):
             shutil.rmtree(self.staging_dir)
 
         self.EndModal(wx.ID_CANCEL)
+
+    def _on_key(self, event: wx.KeyEvent) -> None:
+        """Handle key events."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.Close()
+        else:
+            event.Skip()
