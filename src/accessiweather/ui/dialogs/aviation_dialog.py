@@ -76,7 +76,7 @@ class AviationDialog(wx.Dialog):
             panel,
             label="Fetch decoded aviation weather by entering a four-letter ICAO airport code.",
         )
-        header.SetForegroundColour(wx.Colour(85, 85, 85))
+        header.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
         main_sizer.Add(header, 0, wx.ALL, 15)
 
         # Input row
@@ -101,7 +101,7 @@ class AviationDialog(wx.Dialog):
         self.status_label = wx.StaticText(
             panel, label="Enter a code and press Enter to fetch the latest TAF."
         )
-        self.status_label.SetForegroundColour(wx.Colour(85, 85, 85))
+        self.status_label.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
         main_sizer.Add(self.status_label, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
 
         # Content area with two columns
@@ -159,7 +159,9 @@ class AviationDialog(wx.Dialog):
         main_sizer.Add(self.advisories_list, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 15)
 
         self.advisories_info = wx.StaticText(panel, label="No advisories available.")
-        self.advisories_info.SetForegroundColour(wx.Colour(128, 128, 128))
+        self.advisories_info.SetForegroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+        )
         main_sizer.Add(self.advisories_info, 0, wx.LEFT | wx.RIGHT | wx.TOP, 15)
 
         # Close button
@@ -188,9 +190,13 @@ class AviationDialog(wx.Dialog):
         """Update the status label."""
         self.status_label.SetLabel(message)
         if is_error:
-            self.status_label.SetForegroundColour(wx.Colour(198, 40, 40))
+            self.status_label.SetForegroundColour(
+                wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+            )
         else:
-            self.status_label.SetForegroundColour(wx.Colour(46, 125, 50))
+            self.status_label.SetForegroundColour(
+                wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT)
+            )
 
     def _on_fetch(self, event):
         """Handle fetch button press."""

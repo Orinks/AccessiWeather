@@ -251,7 +251,7 @@ class SoundPackManagerDialog(wx.Dialog):
         sizer.Add(import_btn, 0, wx.EXPAND | wx.BOTTOM, 5)
 
         hint = wx.StaticText(parent, label="Hint: Select your active pack in Settings > Audio.")
-        hint.SetForegroundColour(wx.Colour(100, 100, 100))
+        hint.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
         sizer.Add(hint, 0)
 
         return sizer

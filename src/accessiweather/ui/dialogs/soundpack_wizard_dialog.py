@@ -167,7 +167,7 @@ class SoundPackWizardDialog(wx.Dialog):
             self.content_panel,
             label="A folder name will be generated from your pack name.",
         )
-        hint.SetForegroundColour(wx.Colour(100, 100, 100))
+        hint.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
         self.content_sizer.Add(hint, 0)
 
         # Set focus

@@ -182,7 +182,7 @@ class AirQualityDialog(wx.Dialog):
             category or "", "Monitor UV levels and use sun protection as needed."
         )
         guidance_label = wx.StaticText(panel, label=f"Health guidance: {guidance}")
-        guidance_label.SetForegroundColour(wx.Colour(128, 128, 128))
+        guidance_label.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
         guidance_label.Wrap(550)
         sizer.Add(guidance_label, 0, wx.BOTTOM, 4)
 
@@ -192,7 +192,7 @@ class AirQualityDialog(wx.Dialog):
             timestamp = updated_at.strftime("%I:%M %p").lstrip("0")
             date_str = updated_at.strftime("%B %d, %Y")
             updated_label = wx.StaticText(panel, label=f"Last updated: {timestamp} on {date_str}")
-            updated_label.SetForegroundColour(wx.Colour(128, 128, 128))
+            updated_label.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
             sizer.Add(updated_label, 0)
 
         return sizer
@@ -209,7 +209,7 @@ class AirQualityDialog(wx.Dialog):
         hourly_data = getattr(self.environmental, "hourly_air_quality", None)
         if not hourly_data:
             no_data = wx.StaticText(panel, label="Hourly forecast data is not available.")
-            no_data.SetForegroundColour(wx.Colour(128, 128, 128))
+            no_data.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
             sizer.Add(no_data, 0)
             return sizer
 
@@ -245,7 +245,7 @@ class AirQualityDialog(wx.Dialog):
         hourly_data = getattr(self.environmental, "hourly_air_quality", None)
         if not hourly_data:
             no_data = wx.StaticText(panel, label="Pollutant data is not available.")
-            no_data.SetForegroundColour(wx.Colour(128, 128, 128))
+            no_data.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
             sizer.Add(no_data, 0)
             return sizer
 

@@ -103,7 +103,7 @@ class AddLocationDialog(wx.Dialog):
         name_sizer.Add(self.name_input, 0, wx.EXPAND)
 
         help_text = wx.StaticText(panel, label="This name will appear in your location list")
-        help_text.SetForegroundColour(wx.Colour(128, 128, 128))
+        help_text.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
         name_sizer.Add(help_text, 0, wx.TOP, 5)
 
         main_sizer.Add(name_sizer, 0, wx.EXPAND | wx.ALL, 10)
@@ -126,7 +126,7 @@ class AddLocationDialog(wx.Dialog):
         search_sizer.Add(search_row, 0, wx.EXPAND)
 
         search_help = wx.StaticText(panel, label="Examples: 'New York', '10001', 'London'")
-        search_help.SetForegroundColour(wx.Colour(128, 128, 128))
+        search_help.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
         search_sizer.Add(search_help, 0, wx.TOP, 5)
 
         main_sizer.Add(search_sizer, 0, wx.EXPAND | wx.ALL, 10)
@@ -147,7 +147,7 @@ class AddLocationDialog(wx.Dialog):
 
         # Status section
         self.status_label = wx.StaticText(panel, label="Ready to add location")
-        self.status_label.SetForegroundColour(wx.Colour(128, 128, 128))
+        self.status_label.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
         main_sizer.Add(self.status_label, 0, wx.LEFT | wx.RIGHT, 10)
 
         # Buttons
@@ -178,9 +178,13 @@ class AddLocationDialog(wx.Dialog):
         """Update the status label."""
         self.status_label.SetLabel(message)
         if is_error:
-            self.status_label.SetForegroundColour(wx.Colour(192, 0, 0))
+            self.status_label.SetForegroundColour(
+                wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+            )
         else:
-            self.status_label.SetForegroundColour(wx.Colour(0, 128, 0))
+            self.status_label.SetForegroundColour(
+                wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT)
+            )
         logger.info(f"Location dialog status: {message}")
 
     def _on_search(self, event):

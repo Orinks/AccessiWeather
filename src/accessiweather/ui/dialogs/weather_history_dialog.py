@@ -175,7 +175,7 @@ class WeatherHistoryDialog(wx.Dialog):
             panel,
             label="Comparisons against previous days to provide context for current conditions.",
         )
-        description.SetForegroundColour(wx.Colour(128, 128, 128))
+        description.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
         main_sizer.Add(description, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
 
         # Build content text
