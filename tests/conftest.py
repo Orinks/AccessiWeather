@@ -66,6 +66,7 @@ if "wx" not in sys.modules:
         _wx.EVT_TIMER = MagicMock()
         _wx.EVT_KEY_DOWN = MagicMock()
         _wx.EVT_CHAR = MagicMock()
+        _wx.EVT_CHAR_HOOK = MagicMock()
         _wx.EVT_LISTBOX_DCLICK = MagicMock()
         _wx.WXK_RETURN = 13
         _wx.WXK_NUMPAD_ENTER = 370

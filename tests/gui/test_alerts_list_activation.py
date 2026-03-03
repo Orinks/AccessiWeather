@@ -24,8 +24,8 @@ class TestAlertsListActivation:
         win.app.current_weather_data = None
         return win
 
-    def test_bind_events_registers_dclick_and_char(self):
-        """_bind_events should bind EVT_LISTBOX_DCLICK and EVT_CHAR on alerts_list."""
+    def test_bind_events_registers_dclick_and_char_hook(self):
+        """_bind_events should bind EVT_LISTBOX_DCLICK and EVT_CHAR_HOOK on alerts_list."""
         win = self._make_main_window()
 
         # Provide remaining widgets that _bind_events touches
@@ -43,7 +43,7 @@ class TestAlertsListActivation:
         # Collect the event types bound on alerts_list
         bound_events = [call.args[0] for call in win.alerts_list.Bind.call_args_list]
         assert wx.EVT_LISTBOX_DCLICK in bound_events
-        assert wx.EVT_CHAR in bound_events
+        assert wx.EVT_CHAR_HOOK in bound_events
 
     def test_enter_key_calls_on_view_alert(self):
         """Pressing Enter in alerts list should trigger _on_view_alert."""

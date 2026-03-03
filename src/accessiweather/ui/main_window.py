@@ -152,10 +152,10 @@ class MainWindow(SizedFrame):
         self.view_alert_button.Bind(wx.EVT_BUTTON, self._on_view_alert)
 
         # Alerts list: open details on double-click or Enter/Space key.
-        # EVT_CHAR is used instead of EVT_KEY_DOWN because NVDA intercepts
-        # Enter at the key-down level in forms mode; char events pass through.
+        # EVT_CHAR_HOOK fires before the screen reader can consume the event,
+        # so Enter/Space reach the handler even when NVDA is in forms mode.
         self.alerts_list.Bind(wx.EVT_LISTBOX_DCLICK, self._on_view_alert)
-        self.alerts_list.Bind(wx.EVT_CHAR, self._on_alerts_list_key)
+        self.alerts_list.Bind(wx.EVT_CHAR_HOOK, self._on_alerts_list_key)
 
     def _on_alerts_list_key(self, event) -> None:
         """Handle key presses in alerts list — Enter/Space opens details."""
