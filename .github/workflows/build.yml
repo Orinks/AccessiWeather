@@ -186,7 +186,7 @@ jobs:
           ref: ${{ needs.prepare.outputs.is_nightly == 'true' && 'dev' || github.ref }}
           fetch-depth: 0
 
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
