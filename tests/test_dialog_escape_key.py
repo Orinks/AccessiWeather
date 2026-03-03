@@ -33,21 +33,21 @@ class TestAirQualityDialogEscape:
     def test_escape_calls_end_modal(self):
         from accessiweather.ui.dialogs.air_quality_dialog import AirQualityDialog
 
-        dlg = object.__new__(AirQualityDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
 
-        dlg._on_char_hook(_make_escape_event())
+        AirQualityDialog._on_char_hook(dlg, _make_escape_event())
 
         dlg.EndModal.assert_called_once_with(ID_CANCEL)
 
     def test_other_key_skips(self):
         from accessiweather.ui.dialogs.air_quality_dialog import AirQualityDialog
 
-        dlg = object.__new__(AirQualityDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
         event = _make_other_key_event()
 
-        dlg._on_char_hook(event)
+        AirQualityDialog._on_char_hook(dlg, event)
 
         dlg.EndModal.assert_not_called()
         event.Skip.assert_called_once()
@@ -59,21 +59,21 @@ class TestAlertDialogEscape:
     def test_escape_calls_end_modal(self):
         from accessiweather.ui.dialogs.alert_dialog import AlertDialog
 
-        dlg = object.__new__(AlertDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
 
-        dlg._on_char_hook(_make_escape_event())
+        AlertDialog._on_char_hook(dlg, _make_escape_event())
 
         dlg.EndModal.assert_called_once_with(ID_CANCEL)
 
     def test_other_key_skips(self):
         from accessiweather.ui.dialogs.alert_dialog import AlertDialog
 
-        dlg = object.__new__(AlertDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
         event = _make_other_key_event()
 
-        dlg._on_char_hook(event)
+        AlertDialog._on_char_hook(dlg, event)
 
         dlg.EndModal.assert_not_called()
         event.Skip.assert_called_once()
@@ -85,21 +85,21 @@ class TestAviationDialogEscape:
     def test_escape_calls_end_modal(self):
         from accessiweather.ui.dialogs.aviation_dialog import AviationDialog
 
-        dlg = object.__new__(AviationDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
 
-        dlg._on_char_hook(_make_escape_event())
+        AviationDialog._on_char_hook(dlg, _make_escape_event())
 
         dlg.EndModal.assert_called_once_with(ID_CANCEL)
 
     def test_other_key_skips(self):
         from accessiweather.ui.dialogs.aviation_dialog import AviationDialog
 
-        dlg = object.__new__(AviationDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
         event = _make_other_key_event()
 
-        dlg._on_char_hook(event)
+        AviationDialog._on_char_hook(dlg, event)
 
         dlg.EndModal.assert_not_called()
         event.Skip.assert_called_once()
@@ -111,21 +111,21 @@ class TestCommunityPacksBrowserDialogEscape:
     def test_escape_calls_end_modal(self):
         from accessiweather.ui.dialogs.community_packs_dialog import CommunityPacksBrowserDialog
 
-        dlg = object.__new__(CommunityPacksBrowserDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
 
-        dlg._on_char_hook(_make_escape_event())
+        CommunityPacksBrowserDialog._on_char_hook(dlg, _make_escape_event())
 
         dlg.EndModal.assert_called_once_with(ID_CANCEL)
 
     def test_other_key_skips(self):
         from accessiweather.ui.dialogs.community_packs_dialog import CommunityPacksBrowserDialog
 
-        dlg = object.__new__(CommunityPacksBrowserDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
         event = _make_other_key_event()
 
-        dlg._on_char_hook(event)
+        CommunityPacksBrowserDialog._on_char_hook(dlg, event)
 
         dlg.EndModal.assert_not_called()
         event.Skip.assert_called_once()
@@ -137,21 +137,21 @@ class TestDebugAlertDialogEscape:
     def test_escape_calls_end_modal(self):
         from accessiweather.ui.dialogs.debug_alert_dialog import DebugAlertDialog
 
-        dlg = object.__new__(DebugAlertDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
 
-        dlg._on_char_hook(_make_escape_event())
+        DebugAlertDialog._on_char_hook(dlg, _make_escape_event())
 
         dlg.EndModal.assert_called_once_with(ID_CANCEL)
 
     def test_other_key_skips(self):
         from accessiweather.ui.dialogs.debug_alert_dialog import DebugAlertDialog
 
-        dlg = object.__new__(DebugAlertDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
         event = _make_other_key_event()
 
-        dlg._on_char_hook(event)
+        DebugAlertDialog._on_char_hook(dlg, event)
 
         dlg.EndModal.assert_not_called()
         event.Skip.assert_called_once()
@@ -163,21 +163,21 @@ class TestDiscussionDialogEscape:
     def test_escape_calls_end_modal(self):
         from accessiweather.ui.dialogs.discussion_dialog import DiscussionDialog
 
-        dlg = object.__new__(DiscussionDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
 
-        dlg._on_char_hook(_make_escape_event())
+        DiscussionDialog._on_char_hook(dlg, _make_escape_event())
 
         dlg.EndModal.assert_called_once_with(ID_CANCEL)
 
     def test_other_key_skips(self):
         from accessiweather.ui.dialogs.discussion_dialog import DiscussionDialog
 
-        dlg = object.__new__(DiscussionDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
         event = _make_other_key_event()
 
-        dlg._on_char_hook(event)
+        DiscussionDialog._on_char_hook(dlg, event)
 
         dlg.EndModal.assert_not_called()
         event.Skip.assert_called_once()
@@ -189,21 +189,21 @@ class TestExplanationDialogEscape:
     def test_escape_calls_end_modal(self):
         from accessiweather.ui.dialogs.explanation_dialog import ExplanationDialog
 
-        dlg = object.__new__(ExplanationDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
 
-        dlg._on_char_hook(_make_escape_event())
+        ExplanationDialog._on_char_hook(dlg, _make_escape_event())
 
         dlg.EndModal.assert_called_once_with(ID_CANCEL)
 
     def test_other_key_skips(self):
         from accessiweather.ui.dialogs.explanation_dialog import ExplanationDialog
 
-        dlg = object.__new__(ExplanationDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
         event = _make_other_key_event()
 
-        dlg._on_char_hook(event)
+        ExplanationDialog._on_char_hook(dlg, event)
 
         dlg.EndModal.assert_not_called()
         event.Skip.assert_called_once()
@@ -217,10 +217,10 @@ class TestNationwideDiscussionDialogEscape:
             NationwideDiscussionDialog,
         )
 
-        dlg = object.__new__(NationwideDiscussionDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
 
-        dlg._on_char_hook(_make_escape_event())
+        NationwideDiscussionDialog._on_char_hook(dlg, _make_escape_event())
 
         dlg.EndModal.assert_called_once_with(ID_CANCEL)
 
@@ -229,11 +229,11 @@ class TestNationwideDiscussionDialogEscape:
             NationwideDiscussionDialog,
         )
 
-        dlg = object.__new__(NationwideDiscussionDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
         event = _make_other_key_event()
 
-        dlg._on_char_hook(event)
+        NationwideDiscussionDialog._on_char_hook(dlg, event)
 
         dlg.EndModal.assert_not_called()
         event.Skip.assert_called_once()
@@ -245,21 +245,21 @@ class TestNOAARadioDialogEscape:
     def test_escape_calls_close(self):
         from accessiweather.ui.dialogs.noaa_radio_dialog import NOAARadioDialog
 
-        dlg = object.__new__(NOAARadioDialog)
+        dlg = MagicMock()
         dlg.Close = MagicMock()
 
-        dlg._on_char_hook(_make_escape_event())
+        NOAARadioDialog._on_char_hook(dlg, _make_escape_event())
 
         dlg.Close.assert_called_once()
 
     def test_other_key_skips(self):
         from accessiweather.ui.dialogs.noaa_radio_dialog import NOAARadioDialog
 
-        dlg = object.__new__(NOAARadioDialog)
+        dlg = MagicMock()
         dlg.Close = MagicMock()
         event = _make_other_key_event()
 
-        dlg._on_char_hook(event)
+        NOAARadioDialog._on_char_hook(dlg, event)
 
         dlg.Close.assert_not_called()
         event.Skip.assert_called_once()
@@ -271,21 +271,21 @@ class TestSoundPackManagerDialogEscape:
     def test_escape_calls_end_modal(self):
         from accessiweather.ui.dialogs.soundpack_manager_dialog import SoundPackManagerDialog
 
-        dlg = object.__new__(SoundPackManagerDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
 
-        dlg._on_char_hook(_make_escape_event())
+        SoundPackManagerDialog._on_char_hook(dlg, _make_escape_event())
 
         dlg.EndModal.assert_called_once_with(ID_CANCEL)
 
     def test_other_key_skips(self):
         from accessiweather.ui.dialogs.soundpack_manager_dialog import SoundPackManagerDialog
 
-        dlg = object.__new__(SoundPackManagerDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
         event = _make_other_key_event()
 
-        dlg._on_char_hook(event)
+        SoundPackManagerDialog._on_char_hook(dlg, event)
 
         dlg.EndModal.assert_not_called()
         event.Skip.assert_called_once()
@@ -297,21 +297,21 @@ class TestUVIndexDialogEscape:
     def test_escape_calls_end_modal(self):
         from accessiweather.ui.dialogs.uv_index_dialog import UVIndexDialog
 
-        dlg = object.__new__(UVIndexDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
 
-        dlg._on_char_hook(_make_escape_event())
+        UVIndexDialog._on_char_hook(dlg, _make_escape_event())
 
         dlg.EndModal.assert_called_once_with(ID_CANCEL)
 
     def test_other_key_skips(self):
         from accessiweather.ui.dialogs.uv_index_dialog import UVIndexDialog
 
-        dlg = object.__new__(UVIndexDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
         event = _make_other_key_event()
 
-        dlg._on_char_hook(event)
+        UVIndexDialog._on_char_hook(dlg, event)
 
         dlg.EndModal.assert_not_called()
         event.Skip.assert_called_once()
@@ -323,21 +323,21 @@ class TestWeatherHistoryDialogEscape:
     def test_escape_calls_end_modal(self):
         from accessiweather.ui.dialogs.weather_history_dialog import WeatherHistoryDialog
 
-        dlg = object.__new__(WeatherHistoryDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
 
-        dlg._on_char_hook(_make_escape_event())
+        WeatherHistoryDialog._on_char_hook(dlg, _make_escape_event())
 
         dlg.EndModal.assert_called_once_with(ID_CANCEL)
 
     def test_other_key_skips(self):
         from accessiweather.ui.dialogs.weather_history_dialog import WeatherHistoryDialog
 
-        dlg = object.__new__(WeatherHistoryDialog)
+        dlg = MagicMock()
         dlg.EndModal = MagicMock()
         event = _make_other_key_event()
 
-        dlg._on_char_hook(event)
+        WeatherHistoryDialog._on_char_hook(dlg, event)
 
         dlg.EndModal.assert_not_called()
         event.Skip.assert_called_once()
@@ -349,21 +349,21 @@ class TestWeatherAssistantDialogEscape:
     def test_escape_calls_close(self):
         from accessiweather.ui.dialogs.weather_assistant_dialog import WeatherAssistantDialog
 
-        dlg = object.__new__(WeatherAssistantDialog)
+        dlg = MagicMock()
         dlg.Close = MagicMock()
 
-        dlg._on_key(_make_escape_event())
+        WeatherAssistantDialog._on_key(dlg, _make_escape_event())
 
         dlg.Close.assert_called_once()
 
     def test_other_key_skips(self):
         from accessiweather.ui.dialogs.weather_assistant_dialog import WeatherAssistantDialog
 
-        dlg = object.__new__(WeatherAssistantDialog)
+        dlg = MagicMock()
         dlg.Close = MagicMock()
         event = _make_other_key_event()
 
-        dlg._on_key(event)
+        WeatherAssistantDialog._on_key(dlg, event)
 
         dlg.Close.assert_not_called()
         event.Skip.assert_called_once()
