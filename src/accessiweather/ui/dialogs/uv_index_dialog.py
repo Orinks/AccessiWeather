@@ -270,9 +270,7 @@ class UVIndexDialog(wx.Dialog):
                 style=wx.TE_MULTILINE | wx.TE_READONLY,
                 size=(-1, 100),
             )
-            self._accessibility_text_controls.append(
-                (safety_display, "Sun Safety Recommendations")
-            )
+            self._accessibility_text_controls.append((safety_display, "Sun Safety Recommendations"))
             sizer.Add(safety_display, 1, wx.EXPAND)
         else:
             no_data = wx.StaticText(panel, label="Sun safety recommendations are not available.")

@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import wx
+
 try:
     import wx.lib.scrolledpanel as scrolled
 except ModuleNotFoundError:
