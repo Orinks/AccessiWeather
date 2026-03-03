@@ -44,12 +44,22 @@ if not hasattr(_wx, "SystemSettings"):
     _wx.SystemSettings = MagicMock(name="SystemSettings")
     _wx.SYS_COLOUR_GRAYTEXT = 0
 
-# Stub wx.lib.scrolledpanel (needed by soundpack_wizard_dialog via __init__.py)
+# Stub wx.lib and wx.lib.scrolledpanel (needed by soundpack_wizard_dialog)
+if "wx.lib" not in sys.modules:
+    import types
+
+    _wx_lib = types.ModuleType("wx.lib")
+    _wx_lib.__package__ = "wx.lib"
+    _wx_lib.__path__ = []
+    if not hasattr(_wx, "lib"):
+        _wx.lib = _wx_lib
+    sys.modules["wx.lib"] = _wx_lib
+
 if "wx.lib.scrolledpanel" not in sys.modules:
     import types
 
     _scrolled = types.ModuleType("wx.lib.scrolledpanel")
-    _scrolled.ScrolledPanel = _wx.Dialog  # reuse _WxStubBase
+    _scrolled.ScrolledPanel = _wx.Dialog
     sys.modules["wx.lib.scrolledpanel"] = _scrolled
 
 # Methods that dialogs invoke on *self* (inherits _WxStubBase via wx.Dialog).
