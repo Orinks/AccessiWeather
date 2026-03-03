@@ -12,7 +12,7 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -84,12 +84,21 @@ if not hasattr(_wx, "EVT_LIST_ITEM_ACTIVATED"):
 if not hasattr(_wx, "EVT_CHAR_HOOK"):
     _wx.EVT_CHAR_HOOK = MagicMock()
 
-# Stub wx.lib.scrolledpanel
-if "wx.lib.scrolledpanel" not in sys.modules:
-    import types
+if "wx.lib" not in sys.modules:
+    import types as _t
 
-    _scrolled = types.ModuleType("wx.lib.scrolledpanel")
-    _scrolled.ScrolledPanel = _wx.Dialog  # reuse _WxStubBase
+    _wxlib = _t.ModuleType("wx.lib")
+    _wxlib.__package__ = "wx.lib"
+    _wxlib.__path__ = []
+    if not hasattr(_wx, "lib"):
+        _wx.lib = _wxlib
+    sys.modules["wx.lib"] = _wxlib
+
+if "wx.lib.scrolledpanel" not in sys.modules:
+    import types as _t2
+
+    _scrolled = _t2.ModuleType("wx.lib.scrolledpanel")
+    _scrolled.ScrolledPanel = _wx.Dialog
     sys.modules["wx.lib.scrolledpanel"] = _scrolled
 
 # Methods on _WxStubBase
@@ -210,49 +219,40 @@ class TestSystemColorsUsedAtRuntime:
         """AirQualityDialog calls SystemSettings.GetColour for hint text."""
         from accessiweather.ui.dialogs.air_quality_dialog import AirQualityDialog
 
-        _wx.SystemSettings.GetColour.reset_mock()
         env = _make_environmental(has_data_val=True)
-
-        AirQualityDialog(
-            parent=MagicMock(), location_name="Test", environmental=env, app=MagicMock()
-        )
-
-        assert _wx.SystemSettings.GetColour.call_count > 0
+        with patch.object(_wx.SystemSettings, "GetColour", return_value=MagicMock()) as mock_get:
+            AirQualityDialog(
+                parent=MagicMock(), location_name="Test", environmental=env, app=MagicMock()
+            )
+            assert mock_get.call_count > 0
 
     def test_uv_index_dialog_uses_system_colors(self):
         """UVIndexDialog calls SystemSettings.GetColour for hint text."""
         from accessiweather.ui.dialogs.uv_index_dialog import UVIndexDialog
 
-        _wx.SystemSettings.GetColour.reset_mock()
         env = _make_environmental(has_data_val=True)
-
-        UVIndexDialog(parent=MagicMock(), location_name="Test", environmental=env, app=MagicMock())
-
-        assert _wx.SystemSettings.GetColour.call_count > 0
+        with patch.object(_wx.SystemSettings, "GetColour", return_value=MagicMock()) as mock_get:
+            UVIndexDialog(parent=MagicMock(), location_name="Test", environmental=env, app=MagicMock())
+            assert mock_get.call_count > 0
 
     def test_weather_history_dialog_uses_system_colors(self):
         """WeatherHistoryDialog calls SystemSettings.GetColour."""
         from accessiweather.ui.dialogs.weather_history_dialog import WeatherHistoryDialog
 
-        _wx.SystemSettings.GetColour.reset_mock()
-
-        WeatherHistoryDialog(
-            parent=MagicMock(),
-            location_name="Test",
-            sections=[("Test", "Some content")],
-        )
-
-        assert _wx.SystemSettings.GetColour.call_count > 0
+        with patch.object(_wx.SystemSettings, "GetColour", return_value=MagicMock()) as mock_get:
+            WeatherHistoryDialog(
+                parent=MagicMock(),
+                location_name="Test",
+                sections=[("Test", "Some content")],
+            )
+            assert mock_get.call_count > 0
 
     def test_aviation_dialog_uses_system_colors(self):
         """AviationDialog calls SystemSettings.GetColour for hint text."""
         from accessiweather.ui.dialogs.aviation_dialog import AviationDialog
 
-        _wx.SystemSettings.GetColour.reset_mock()
-
         app = MagicMock()
         app.config_manager.get_current_location.return_value = MagicMock(name="TestCity")
-
-        AviationDialog(parent=MagicMock(), app=app)
-
-        assert _wx.SystemSettings.GetColour.call_count > 0
+        with patch.object(_wx.SystemSettings, "GetColour", return_value=MagicMock()) as mock_get:
+            AviationDialog(parent=MagicMock(), app=app)
+            assert mock_get.call_count > 0
