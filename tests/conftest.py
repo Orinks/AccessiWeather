@@ -73,7 +73,24 @@ if "wx" not in sys.modules:
         _wx.ICON_INFORMATION = 0
         _wx.ICON_WARNING = 0
         _wx.ICON_ERROR = 0
+        _wx.WXK_ESCAPE = 27
+        _wx.ID_CLOSE = 5103
+        _wx.NOT_FOUND = -1
         _wx.CallAfter = MagicMock()
+
+        # Fallback for any unlisted wx attribute (constants, event types, etc.)
+        _wx_original_getattr = _wx.__class__.__getattribute__
+
+        def _wx_getattr(self, name):
+            try:
+                return _wx_original_getattr(self, name)
+            except AttributeError:
+                mock = MagicMock()
+                setattr(self, name, mock)
+                return mock
+
+        # Install on the module type for this instance only
+        _wx.__class__ = type("_WxStubModule", (types.ModuleType,), {"__getattr__": _wx_getattr})
 
         # wx sub-modules
         _wx_lib = types.ModuleType("wx.lib")
@@ -95,6 +112,9 @@ if "wx" not in sys.modules:
         _wx_html2 = types.ModuleType("wx.html2")
         _wx_html2.WebView = MagicMock
 
+        _wx_lib_scrolled = types.ModuleType("wx.lib.scrolledpanel")
+        _wx_lib_scrolled.ScrolledPanel = _WxStubBase
+
         # Wire sub-modules as attributes so `wx.adv`, `wx.lib` etc. resolve
         _wx.lib = _wx_lib
         _wx.adv = _wx_adv
@@ -104,6 +124,7 @@ if "wx" not in sys.modules:
         sys.modules["wx.lib"] = _wx_lib
         sys.modules["wx.lib.sized_controls"] = _wx_lib_sized
         sys.modules["wx.lib.newevent"] = _wx_lib_newevent
+        sys.modules["wx.lib.scrolledpanel"] = _wx_lib_scrolled
         sys.modules["wx.adv"] = _wx_adv
         sys.modules["wx.html2"] = _wx_html2
 

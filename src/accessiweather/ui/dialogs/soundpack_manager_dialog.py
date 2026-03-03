@@ -168,6 +168,9 @@ class SoundPackManagerDialog(wx.Dialog):
         # Bind close event to stop any playing preview
         self.Bind(wx.EVT_CLOSE, self._on_dialog_close)
 
+        # Escape to close
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
+
     def _create_community_service(self) -> CommunitySoundPackService | None:
         """Create the community soundpack service."""
         try:
@@ -1309,6 +1312,13 @@ class SoundPackManagerDialog(wx.Dialog):
             except Exception:
                 pass
         self.EndModal(wx.ID_CLOSE)
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle key events - Escape closes dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.EndModal(wx.ID_CANCEL)
+        else:
+            event.Skip()
 
 
 def show_soundpack_manager_dialog(parent: wx.Window, app: AccessiWeatherApp) -> None:

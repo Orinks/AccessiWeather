@@ -128,6 +128,9 @@ class DiscussionDialog(wx.Dialog):
         self.regenerate_button.Bind(wx.EVT_BUTTON, self._on_regenerate)
         self.close_button.Bind(wx.EVT_BUTTON, self._on_close)
 
+        # Escape to close
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
+
     def _setup_initial_state(self) -> None:
         """Set up initial state."""
         self.discussion_display.SetValue("Loading...")
@@ -355,6 +358,13 @@ class DiscussionDialog(wx.Dialog):
             "Please check your OpenRouter API key in Settings."
         )
         self._set_status("Explanation failed.")
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle key events - Escape closes dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.EndModal(wx.ID_CANCEL)
+        else:
+            event.Skip()
 
     def _on_close(self, event) -> None:
         """Handle close button press."""

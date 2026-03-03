@@ -53,6 +53,16 @@ class ExplanationDialog(wx.Dialog):
         self._create_ui()
         self._setup_accessibility()
 
+        # Escape to close
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle key events - Escape closes dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.EndModal(wx.ID_CANCEL)
+        else:
+            event.Skip()
+
     def _create_ui(self):
         """Create the dialog UI."""
         main_sizer = wx.BoxSizer(wx.VERTICAL)

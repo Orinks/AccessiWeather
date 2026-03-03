@@ -79,6 +79,9 @@ class NOAARadioDialog(wx.Dialog):
         self._init_ui()
         self._load_stations()
 
+        # Escape to close
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
+
     def _init_ui(self) -> None:
         """Create and layout all UI controls."""
         panel = wx.Panel(self)
@@ -326,6 +329,13 @@ class NOAARadioDialog(wx.Dialog):
     def _set_status(self, text: str) -> None:
         """Update the status text."""
         self._status_text.SetLabel(text)
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle key events - Escape closes dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.Close()
+        else:
+            event.Skip()
 
     def _on_close(self, _event: wx.Event) -> None:
         """Handle dialog close."""

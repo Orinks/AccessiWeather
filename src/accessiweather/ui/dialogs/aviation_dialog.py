@@ -66,6 +66,9 @@ class AviationDialog(wx.Dialog):
         self._create_ui()
         self._setup_accessibility()
 
+        # Escape to close
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
+
     def _create_ui(self):
         """Create the dialog UI."""
         panel = wx.Panel(self)
@@ -321,6 +324,13 @@ class AviationDialog(wx.Dialog):
         if start:
             return str(start)
         return "--"
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle key events - Escape closes dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.EndModal(wx.ID_CANCEL)
+        else:
+            event.Skip()
 
     def _on_close(self, event):
         """Handle close button press."""

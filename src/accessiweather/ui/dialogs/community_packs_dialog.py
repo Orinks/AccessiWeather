@@ -59,6 +59,9 @@ class CommunityPacksBrowserDialog(wx.Dialog):
         self._create_ui()
         self.Centre()
 
+        # Escape to close
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
+
         # Load packs after dialog is shown
         wx.CallAfter(self._start_loading)
 
@@ -371,6 +374,13 @@ class CommunityPacksBrowserDialog(wx.Dialog):
         """Handle install error."""
         progress.complete_error(error)
         wx.CallLater(3000, progress.Destroy)
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle key events - Escape closes dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.EndModal(wx.ID_CANCEL)
+        else:
+            event.Skip()
 
     def Destroy(self) -> bool:
         """Clean up resources before destroying."""

@@ -146,6 +146,10 @@ class DebugAlertDialog(wx.Dialog):
         self._app = app
         self._build_ui()
         self._update_candidates()
+
+        # Escape to close
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
+
         self.SetSize((520, 440))
         if self.GetParent() is not None:
             self.CentreOnParent()
@@ -254,6 +258,13 @@ class DebugAlertDialog(wx.Dialog):
     # ------------------------------------------------------------------
     # Event handlers
     # ------------------------------------------------------------------
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle key events - Escape closes dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.EndModal(wx.ID_CANCEL)
+        else:
+            event.Skip()
 
     def _on_selection_changed(self, event) -> None:
         self._update_candidates()
