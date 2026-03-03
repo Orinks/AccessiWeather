@@ -229,7 +229,9 @@ class TestSystemColorsUsedAtRuntime:
         env = _make_environmental(has_data_val=True)
         mock_get = MagicMock(return_value=MagicMock())
         _wx.SystemSettings.GetColour = mock_get
-        AirQualityDialog(parent=MagicMock(), location_name="Test", environmental=env, app=MagicMock())
+        AirQualityDialog(
+            parent=MagicMock(), location_name="Test", environmental=env, app=MagicMock()
+        )
         assert mock_get.call_count > 0
 
     @_skip_when_real_wx
