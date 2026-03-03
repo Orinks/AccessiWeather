@@ -57,6 +57,7 @@ class CommunityPacksBrowserDialog(wx.Dialog):
         self._selected_key: str | None = None
 
         self._create_ui()
+        self._setup_accessibility()
         self.Centre()
 
         # Load packs after dialog is shown
@@ -112,13 +113,22 @@ class CommunityPacksBrowserDialog(wx.Dialog):
         self.install_btn.Enable(False)
         button_sizer.Add(self.install_btn, 0, wx.RIGHT, 5)
 
-        close_btn = wx.Button(panel, wx.ID_CLOSE, label="Close")
-        close_btn.Bind(wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_CLOSE))
-        button_sizer.Add(close_btn, 0)
+        self.close_btn = wx.Button(panel, wx.ID_CLOSE, label="Close")
+        self.close_btn.Bind(wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_CLOSE))
+        button_sizer.Add(self.close_btn, 0)
 
         main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 10)
 
         panel.SetSizer(main_sizer)
+
+    def _setup_accessibility(self) -> None:
+        """Set up accessibility labels for interactive controls."""
+        self.search_input.SetName("Filter packs input")
+        self.refresh_btn.SetName("Refresh community packs")
+        self.pack_listbox.SetName("Available community sound packs list")
+        self.description_text.SetName("Community pack description")
+        self.install_btn.SetName("Download and install selected community pack")
+        self.close_btn.SetName("Close community sound packs dialog")
 
     def _create_pack_list_panel(self, parent: wx.Window) -> wx.BoxSizer:
         """Create the pack list panel."""
