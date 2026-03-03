@@ -54,12 +54,23 @@ if "wx" not in sys.modules:
         _wx.Icon = MagicMock
         _wx.Bitmap = MagicMock
         _wx.Image = MagicMock
+        _wx.ListBox = MagicMock
 
         # Common constants
         _wx.EVT_CLOSE = MagicMock()
+        _wx.EVT_ICONIZE = MagicMock()
+        _wx.EVT_SHOW = MagicMock()
         _wx.EVT_MENU = MagicMock()
         _wx.EVT_BUTTON = MagicMock()
+        _wx.EVT_CHOICE = MagicMock()
         _wx.EVT_TIMER = MagicMock()
+        _wx.EVT_KEY_DOWN = MagicMock()
+        _wx.EVT_CHAR = MagicMock()
+        _wx.EVT_CHAR_HOOK = MagicMock()
+        _wx.EVT_LISTBOX_DCLICK = MagicMock()
+        _wx.WXK_RETURN = 13
+        _wx.WXK_NUMPAD_ENTER = 370
+        _wx.WXK_SPACE = 32
         _wx.ID_ANY = -1
         _wx.ID_OK = 5100
         _wx.ID_CANCEL = 5101
