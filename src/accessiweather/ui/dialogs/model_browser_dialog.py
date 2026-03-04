@@ -91,6 +91,7 @@ class ModelBrowserDialog(wx.Dialog):
 
         self._create_ui()
         self._setup_accessibility()
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
         self._load_models()
 
     def _create_ui(self):
@@ -164,8 +165,9 @@ class ModelBrowserDialog(wx.Dialog):
         self.select_btn.Enable(False)
         btn_sizer.Add(self.select_btn, 0, wx.RIGHT, 10)
 
-        cancel_btn = wx.Button(self, wx.ID_CANCEL, "&Cancel")
-        btn_sizer.Add(cancel_btn, 0)
+        self.cancel_btn = wx.Button(self, wx.ID_CANCEL, "&Cancel")
+        self.cancel_btn.Bind(wx.EVT_BUTTON, self._on_close)
+        btn_sizer.Add(self.cancel_btn, 0)
 
         main_sizer.Add(btn_sizer, 0, wx.EXPAND | wx.ALL, 10)
 
@@ -222,6 +224,17 @@ class ModelBrowserDialog(wx.Dialog):
         """Handle select button - close with OK."""
         if self._selected_model_id:
             self.EndModal(wx.ID_OK)
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle keyboard shortcuts for the dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self._on_close(event)
+            return
+        event.Skip()
+
+    def _on_close(self, event) -> None:
+        """Close the dialog as cancelled."""
+        self.EndModal(wx.ID_CANCEL)
 
     def _load_models(self):
         """Load models from OpenRouter in a background thread."""

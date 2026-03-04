@@ -58,6 +58,7 @@ class CommunityPacksBrowserDialog(wx.Dialog):
 
         self._create_ui()
         self._setup_accessibility()
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
         self.Centre()
 
         # Load packs after dialog is shown
@@ -114,7 +115,7 @@ class CommunityPacksBrowserDialog(wx.Dialog):
         button_sizer.Add(self.install_btn, 0, wx.RIGHT, 5)
 
         self.close_btn = wx.Button(panel, wx.ID_CLOSE, label="Close")
-        self.close_btn.Bind(wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_CLOSE))
+        self.close_btn.Bind(wx.EVT_BUTTON, self._on_close)
         button_sizer.Add(self.close_btn, 0)
 
         main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 10)
@@ -381,6 +382,17 @@ class CommunityPacksBrowserDialog(wx.Dialog):
         """Handle install error."""
         progress.complete_error(error)
         wx.CallLater(3000, progress.Destroy)
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle keyboard shortcuts for the dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self._on_close(event)
+            return
+        event.Skip()
+
+    def _on_close(self, event: wx.Event) -> None:
+        """Handle close button press."""
+        self.EndModal(wx.ID_CLOSE)
 
     def Destroy(self) -> bool:
         """Clean up resources before destroying."""
