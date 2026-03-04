@@ -51,7 +51,9 @@ class WeatherEventStore:
                 return event
         return None
 
-    def get_after(self, cursor: str | None = None, channel: WeatherEventChannel | None = None) -> list[WeatherEvent]:
+    def get_after(
+        self, cursor: str | None = None, channel: WeatherEventChannel | None = None
+    ) -> list[WeatherEvent]:
         seen_cursor = cursor is None
         out: list[WeatherEvent] = []
         for event in self._events:
@@ -109,7 +111,9 @@ class WeatherEventDispatcher:
             self.announcer.announce(event.speech_text)
 
         if mirror_toast and self.notifier is not None:
-            message = event.change_text or event.speech_text or self._serialize_payload(event.payload)
+            message = (
+                event.change_text or event.speech_text or self._serialize_payload(event.payload)
+            )
             self.notifier.send_notification(
                 title=event.headline or "Weather Update",
                 message=message,
