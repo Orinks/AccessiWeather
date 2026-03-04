@@ -93,3 +93,63 @@ def test_should_emit_current_conditions_event_threshold_gating():
     emit_cond, reason_cond = should_emit_current_conditions_event(prev, curr_condition_change)
     assert emit_cond is True
     assert "Conditions changed" in reason_cond
+
+
+def test_store_get_after_mark_read_and_latest_none():
+    store = WeatherEventStore()
+    e1 = WeatherEvent(id="e1", channel="now", headline="One")
+    e2 = WeatherEvent(id="e2", channel="hourly", headline="Two")
+    store.append(e1)
+    store.append(e2)
+
+    assert store.latest(channel="urgent") is None
+    assert [event.id for event in store.get_after()] == ["e1", "e2"]
+    assert [event.id for event in store.get_after(cursor="e1")] == ["e2"]
+    assert [event.id for event in store.get_after(cursor="missing")] == []
+    assert [event.id for event in store.get_after(channel="hourly")] == ["e2"]
+
+    assert store.mark_read("e1") is True
+    assert e1.read is True
+    assert store.mark_read("missing") is False
+
+
+def test_dispatcher_toast_message_falls_back_to_serialized_payload():
+    notifier = DummyNotifier()
+    store = WeatherEventStore()
+    dispatcher = WeatherEventDispatcher(store, notifier=notifier)
+    dispatcher.announcer = DummyAnnouncer()
+
+    event = WeatherEvent(channel="system", payload={"source": "nws", "ok": True})
+    dispatcher.dispatch_event(event, announce=False, mirror_toast=True)
+
+    assert len(notifier.calls) == 1
+    assert notifier.calls[0]["title"] == "Weather Update"
+    assert '"source": "nws"' in notifier.calls[0]["message"]
+
+
+def test_serialize_payload_handles_empty_and_unserializable_payload():
+    class BadPayload:
+        def __repr__(self) -> str:
+            return "BAD_PAYLOAD"
+
+    assert WeatherEventDispatcher._serialize_payload({}) == ""
+    assert (
+        WeatherEventDispatcher._serialize_payload({"bad": BadPayload()}) == "{'bad': BAD_PAYLOAD}"
+    )
+
+
+def test_should_emit_current_conditions_event_none_and_initial_and_wind():
+    emit_none, reason_none = should_emit_current_conditions_event(None, None)
+    assert emit_none is False
+    assert reason_none == ""
+
+    current = CurrentConditions(temperature=70.0, wind_speed=3.0, condition="Clear")
+    emit_initial, reason_initial = should_emit_current_conditions_event(None, current)
+    assert emit_initial is True
+    assert reason_initial == "Initial current conditions"
+
+    previous = CurrentConditions(temperature=70.0, wind_speed=2.0, condition="Clear")
+    windy = CurrentConditions(temperature=70.1, wind_speed=9.0, condition="Clear")
+    emit_wind, reason_wind = should_emit_current_conditions_event(previous, windy)
+    assert emit_wind is True
+    assert "Wind changed by 7" in reason_wind
