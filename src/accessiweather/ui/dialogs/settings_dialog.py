@@ -1128,7 +1128,7 @@ class SettingsDialogSimple(wx.Dialog):
 
             # Event-based notifications
             self._controls["notify_discussion_update"].SetValue(
-                getattr(settings, "notify_discussion_update", False)
+                getattr(settings, "notify_discussion_update", True)
             )
             self._controls["notify_severe_risk_change"].SetValue(
                 getattr(settings, "notify_severe_risk_change", False)

@@ -108,7 +108,7 @@ class AppSettings:
     # Nationwide location visibility
     show_nationwide_location: bool = True
     # Event-based notifications (opt-in, disabled by default)
-    notify_discussion_update: bool = False
+    notify_discussion_update: bool = True
     notify_severe_risk_change: bool = False
     github_backend_url: str = ""
     github_app_id: str = ""
@@ -444,7 +444,7 @@ class AppSettings:
             sound_enabled=cls._as_bool(data.get("sound_enabled"), True),
             sound_pack=data.get("sound_pack", "default"),
             show_nationwide_location=cls._as_bool(data.get("show_nationwide_location"), True),
-            notify_discussion_update=cls._as_bool(data.get("notify_discussion_update"), False),
+            notify_discussion_update=cls._as_bool(data.get("notify_discussion_update"), True),
             notify_severe_risk_change=cls._as_bool(data.get("notify_severe_risk_change"), False),
             github_backend_url=data.get("github_backend_url", ""),
             alert_radius_type=data.get("alert_radius_type", "point"),
