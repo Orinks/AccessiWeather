@@ -3,6 +3,7 @@ name: Update WordPress on release
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 jobs:
   push-to-wordpress:
