@@ -424,7 +424,7 @@ class MainWindow(SizedFrame):
 
     def on_refresh(self) -> None:
         """Handle refresh button click."""
-        self.refresh_weather_async()
+        self.refresh_weather_async(force_refresh=True)
 
     def on_settings(self) -> None:
         """Handle settings button click."""
