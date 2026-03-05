@@ -351,7 +351,7 @@ class SettingsDialogSimple(wx.Dialog):
         sizer.Add(
             wx.StaticText(
                 panel,
-                label="When using Auto mode, data is merged from multiple sources in priority order.",
+                label="Station selection strategy applies to NWS current conditions. In Auto mode, it applies when NWS is selected or used as fallback.",
             ),
             0,
             wx.LEFT | wx.BOTTOM,
@@ -418,6 +418,26 @@ class SettingsDialogSimple(wx.Dialog):
             ],
         )
         sizer.Add(self._controls["openmeteo_model"], 0, wx.LEFT, 10)
+
+        sizer.Add(
+            wx.StaticText(panel, label="NWS Station Selection (Current Conditions):"),
+            0,
+            wx.ALL,
+            5,
+        )
+        self._controls["station_selection_strategy"] = wx.Choice(
+            panel,
+            choices=[
+                "Hybrid default (recommended: fresh + major station with distance guardrail)",
+                "Nearest station (pure distance)",
+                "Major airport preferred (within radius, else nearest)",
+                "Freshest observation (among nearest stations)",
+            ],
+        )
+        self._controls["station_selection_strategy"].SetToolTip(
+            "Applies to NWS current conditions. In Auto mode, applies when NWS is selected or used as fallback."
+        )
+        sizer.Add(self._controls["station_selection_strategy"], 0, wx.LEFT, 10)
 
         panel.SetSizer(sizer)
         self.notebook.AddPage(panel, "Data Sources")
@@ -1093,6 +1113,15 @@ class SettingsDialogSimple(wx.Dialog):
             }
             self._controls["openmeteo_model"].SetSelection(model_map.get(model, 0))
 
+            strategy = getattr(settings, "station_selection_strategy", "hybrid_default")
+            strategy_map = {
+                "hybrid_default": 0,
+                "nearest": 1,
+                "major_airport_preferred": 2,
+                "freshest_observation": 3,
+            }
+            self._controls["station_selection_strategy"].SetSelection(strategy_map.get(strategy, 0))
+
             # Notifications tab
             self._controls["enable_alerts"].SetValue(getattr(settings, "enable_alerts", True))
             self._controls["alert_notif"].SetValue(
@@ -1230,6 +1259,12 @@ class SettingsDialogSimple(wx.Dialog):
                 "jma_seamless",
             ]
             style_values = ["brief", "standard", "detailed"]
+            station_strategy_values = [
+                "hybrid_default",
+                "nearest",
+                "major_airport_preferred",
+                "freshest_observation",
+            ]
 
             # Update nationwide visibility
             show_nationwide = self._controls["show_nationwide"].GetValue()
@@ -1280,6 +1315,9 @@ class SettingsDialogSimple(wx.Dialog):
                 ][max(0, self._controls["intl_priority"].GetSelection())],
                 "openmeteo_weather_model": model_values[
                     self._controls["openmeteo_model"].GetSelection()
+                ],
+                "station_selection_strategy": station_strategy_values[
+                    max(0, self._controls["station_selection_strategy"].GetSelection())
                 ],
                 # Notifications
                 "enable_alerts": self._controls["enable_alerts"].GetValue(),
@@ -1393,6 +1431,7 @@ class SettingsDialogSimple(wx.Dialog):
             "us_priority": "US Locations Priority",
             "intl_priority": "International Locations Priority",
             "openmeteo_model": "Open-Meteo Weather Model",
+            "station_selection_strategy": "Station selection strategy",
             "enable_alerts": "Enable weather alerts",
             "alert_notif": "Enable alert notifications",
             "alert_radius_type": "Alert Area",

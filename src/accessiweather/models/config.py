@@ -84,6 +84,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "source_priority_us",
     "source_priority_international",
     "openmeteo_weather_model",
+    "station_selection_strategy",
 }
 
 
@@ -157,6 +158,8 @@ class AppSettings:
     )
     # Open-Meteo weather model selection
     openmeteo_weather_model: str = "best_match"
+    # NWS station selection behavior for current conditions
+    station_selection_strategy: str = "hybrid_default"
     # AI Explanation Settings
     openrouter_api_key: str = ""
     ai_model_preference: str = "openrouter/free"  # free auto-router (default)
@@ -318,6 +321,16 @@ class AppSettings:
             if value not in valid_models:
                 setattr(self, setting_name, "best_match")
 
+        elif setting_name == "station_selection_strategy":
+            valid_strategies = {
+                "nearest",
+                "major_airport_preferred",
+                "freshest_observation",
+                "hybrid_default",
+            }
+            if value not in valid_strategies:
+                setattr(self, setting_name, "hybrid_default")
+
         elif setting_name in {"source_priority_us", "source_priority_international"}:
             # Ensure valid list of source names
             valid_sources = {"nws", "openmeteo", "visualcrossing"}
@@ -410,6 +423,7 @@ class AppSettings:
             "source_priority_us": self.source_priority_us,
             "source_priority_international": self.source_priority_international,
             "openmeteo_weather_model": self.openmeteo_weather_model,
+            "station_selection_strategy": self.station_selection_strategy,
             # AI settings (API key stored in secure storage, not here)
             "ai_model_preference": self.ai_model_preference,
             "ai_explanation_style": self.ai_explanation_style,
@@ -489,6 +503,7 @@ class AppSettings:
                 "source_priority_international", ["openmeteo", "visualcrossing"]
             ),
             openmeteo_weather_model=data.get("openmeteo_weather_model", "best_match"),
+            station_selection_strategy=data.get("station_selection_strategy", "hybrid_default"),
             # AI settings
             openrouter_api_key=data.get("openrouter_api_key", ""),
             ai_model_preference=data.get("ai_model_preference", "openrouter/free"),

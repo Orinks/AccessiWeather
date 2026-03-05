@@ -228,6 +228,10 @@ def ensure_config_defaults(config: dict[str, Any]) -> dict[str, Any]:
         UPDATE_CHECK_INTERVAL_KEY,
     )
 
+    if "station_selection_strategy" not in settings:
+        logger.info("Adding default station_selection_strategy setting: hybrid_default")
+        settings["station_selection_strategy"] = "hybrid_default"
+
     if AUTO_UPDATE_CHECK_KEY not in settings:
         logger.info(f"Adding default {AUTO_UPDATE_CHECK_KEY} setting: {DEFAULT_AUTO_UPDATE_CHECK}")
         settings[AUTO_UPDATE_CHECK_KEY] = DEFAULT_AUTO_UPDATE_CHECK
