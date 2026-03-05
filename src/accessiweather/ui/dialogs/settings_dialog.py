@@ -2311,7 +2311,7 @@ class SettingsDialogSimple(wx.Dialog):
         with wx.FileDialog(
             self,
             "Export API keys (encrypted)",
-            wildcard="Encrypted bundle (*.keys)|*.keys|Legacy bundle (*.awkeys)|*.awkeys|JSON files (*.json)|*.json",
+            wildcard="Encrypted bundle (*.keys)|*.keys|Legacy bundle (*.awkeys)|*.awkeys",
             defaultFile="accessiweather_api_keys.keys",
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
         ) as dlg:
@@ -2338,7 +2338,7 @@ class SettingsDialogSimple(wx.Dialog):
         with wx.FileDialog(
             self,
             "Import API keys (encrypted)",
-            wildcard="Encrypted bundle (*.keys)|*.keys|Legacy bundle (*.awkeys)|*.awkeys|JSON files (*.json)|*.json",
+            wildcard="Encrypted bundle (*.keys)|*.keys|Legacy bundle (*.awkeys)|*.awkeys",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
         ) as dlg:
             if dlg.ShowModal() != wx.ID_OK:
