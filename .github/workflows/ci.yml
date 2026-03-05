@@ -220,8 +220,7 @@ jobs:
           --compare-branch=origin/${{ github.base_ref }} \
           --fail-under=80 \
           --diff-range-notation='..' \
-          --exclude 'src/accessiweather/ui/*' \
-          --exclude 'src/accessiweather/ui/dialogs/*' \
-          --exclude '*/accessiweather/notifications/toast_notifier.py' \
-          --exclude '*/weather_gov_api_client/*'
+          --exclude '.*src/accessiweather/ui/.*' \
+          --exclude '.*src/accessiweather/notifications/toast_notifier.py' \
+          --exclude '.*weather_gov_api_client/.*'
         echo "✅ New code meets coverage threshold!"
