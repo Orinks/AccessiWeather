@@ -110,6 +110,9 @@ if "wx" not in sys.modules:
         _wx_lib_newevent.NewEvent = lambda: (MagicMock, MagicMock())
         _wx_lib_newevent.NewCommandEvent = lambda: (MagicMock, MagicMock())
 
+        _wx_lib_scrolledpanel = types.ModuleType("wx.lib.scrolledpanel")
+        _wx_lib_scrolledpanel.ScrolledPanel = _WxStubBase
+
         _wx_adv = types.ModuleType("wx.adv")
         _wx_adv.TaskBarIcon = _WxStubBase
 
@@ -125,6 +128,7 @@ if "wx" not in sys.modules:
         sys.modules["wx.lib"] = _wx_lib
         sys.modules["wx.lib.sized_controls"] = _wx_lib_sized
         sys.modules["wx.lib.newevent"] = _wx_lib_newevent
+        sys.modules["wx.lib.scrolledpanel"] = _wx_lib_scrolledpanel
         sys.modules["wx.adv"] = _wx_adv
         sys.modules["wx.html2"] = _wx_html2
 
