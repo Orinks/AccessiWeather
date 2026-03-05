@@ -36,6 +36,60 @@ from .weather_client_parsers import (
 
 logger = logging.getLogger(__name__)
 
+_SNOW_WEATHER_CODES = {71, 73, 75, 77, 85, 86}
+_RAIN_WEATHER_CODES = {51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82}
+_ACTIVE_PRECIP_EPSILON_IN = 0.001
+_NEAR_ZERO_SNOW_EPSILON_IN = 0.0005
+
+
+def _pick_precipitation_type(rain_in: float, snow_in: float) -> list[str] | None:
+    """Infer precipitation type from rain/snow rates with conservative thresholds."""
+    has_rain = rain_in > _ACTIVE_PRECIP_EPSILON_IN
+    has_snow = snow_in > _ACTIVE_PRECIP_EPSILON_IN
+    if has_rain and has_snow:
+        return ["rain", "snow"]
+    if has_rain:
+        return ["rain"]
+    if has_snow:
+        return ["snow"]
+    return None
+
+
+def _resolve_current_condition_description(current: dict[str, Any]) -> str | None:
+    """Resolve current condition text using weather_code plus rain/snow rates."""
+    weather_code = current.get("weather_code")
+    base = weather_code_to_description(weather_code)
+
+    try:
+        code = int(weather_code) if weather_code is not None else None
+    except (TypeError, ValueError):
+        code = None
+
+    rain = float(current.get("rain") or 0.0) + float(current.get("showers") or 0.0)
+    snow = float(current.get("snowfall") or 0.0)
+
+    # If no active precip, trust weather code mapping directly.
+    if rain <= _ACTIVE_PRECIP_EPSILON_IN and snow <= _ACTIVE_PRECIP_EPSILON_IN:
+        return base
+
+    # Rain observed with near-zero snow should never present as snow.
+    if rain > _ACTIVE_PRECIP_EPSILON_IN and snow <= _NEAR_ZERO_SNOW_EPSILON_IN:
+        if code in _SNOW_WEATHER_CODES:
+            return "Light drizzle" if rain < 0.02 else "Slight rain"
+        return base
+
+    # Snow clearly dominates: keep mapped text (or normalize from rain code to mixed).
+    if snow > (rain * 1.5):
+        if code in _RAIN_WEATHER_CODES:
+            return "Mixed rain and snow"
+        return base
+
+    # Mixed or ambiguous precip should not collapse to pure snow/rain.
+    if rain > _ACTIVE_PRECIP_EPSILON_IN and snow > _ACTIVE_PRECIP_EPSILON_IN:
+        return "Mixed rain and snow"
+
+    return base
+
 
 def _parse_iso_datetime(
     value: str | None, utc_offset_seconds: int | None = None
@@ -168,7 +222,7 @@ async def get_openmeteo_current_conditions(
             "current": (
                 "temperature_2m,relative_humidity_2m,apparent_temperature,"
                 "weather_code,wind_speed_10m,wind_direction_10m,pressure_msl,"
-                "snowfall,snow_depth,visibility"
+                "precipitation,rain,showers,snowfall,snow_depth,visibility"
             ),
             "daily": "sunrise,sunset,uv_index_max",
             "temperature_unit": "fahrenheit",
@@ -365,6 +419,10 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
     snowfall_rate = current.get("snowfall")  # inches (due to precipitation_unit=inch)
     snowfall_rate_in = snowfall_rate  # Already in inches
 
+    rain_rate_in = float(current.get("rain") or 0.0) + float(current.get("showers") or 0.0)
+    snow_rate_in = float(snowfall_rate or 0.0)
+    precipitation_type = _pick_precipitation_type(rain_rate_in, snow_rate_in)
+
     # Snow depth unit depends on the API request units
     # When using temperature_unit=fahrenheit, snow_depth is returned in feet
     snow_depth_unit = units.get("snow_depth", "").lower()
@@ -407,7 +465,7 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
     return CurrentConditions(
         temperature_f=temp_f,
         temperature_c=temp_c,
-        condition=weather_code_to_description(current.get("weather_code")),
+        condition=_resolve_current_condition_description(current),
         humidity=humidity,
         dewpoint_f=dewpoint_f,
         dewpoint_c=dewpoint_c,
@@ -431,6 +489,7 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         wind_chill_c=wind_chill_c,
         heat_index_f=heat_index_f,
         heat_index_c=heat_index_c,
+        precipitation_type=precipitation_type,
     )
 
 
