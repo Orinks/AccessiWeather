@@ -86,6 +86,16 @@ if "wx" not in sys.modules:
         _wx.ICON_ERROR = 0
         _wx.CallAfter = MagicMock()
 
+        # System colour constants
+        _wx.SYS_COLOUR_GRAYTEXT = 17
+        _wx.SYS_COLOUR_WINDOWTEXT = 8
+        _wx.SYS_COLOUR_BTNTEXT = 18
+
+        # SystemSettings stub
+        _sys_settings = MagicMock()
+        _sys_settings.GetColour = MagicMock(return_value=MagicMock(name="SystemColour"))
+        _wx.SystemSettings = _sys_settings
+
         # wx sub-modules
         _wx_lib = types.ModuleType("wx.lib")
         _wx_lib.__package__ = "wx.lib"

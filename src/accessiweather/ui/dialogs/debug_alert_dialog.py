@@ -146,6 +146,7 @@ class DebugAlertDialog(wx.Dialog):
         self._app = app
         self._build_ui()
         self._setup_accessibility()
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
         self._update_candidates()
         self.SetSize((520, 440))
         if self.GetParent() is not None:
@@ -200,7 +201,7 @@ class DebugAlertDialog(wx.Dialog):
         self._send_btn = wx.Button(panel, label="&Send Test Notification")
         self._send_btn.Bind(wx.EVT_BUTTON, self._on_send)
         self._close_btn = wx.Button(panel, wx.ID_CLOSE, label="&Close")
-        self._close_btn.Bind(wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_CLOSE))
+        self._close_btn.Bind(wx.EVT_BUTTON, self._on_close)
         btn_sizer.Add(self._send_btn, 0, wx.RIGHT, 8)
         btn_sizer.Add(self._close_btn, 0)
         sizer.Add(btn_sizer, 0, wx.ALIGN_RIGHT | wx.ALL, 8)
@@ -262,6 +263,17 @@ class DebugAlertDialog(wx.Dialog):
     # ------------------------------------------------------------------
     # Event handlers
     # ------------------------------------------------------------------
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle keyboard shortcuts for the dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self._on_close(event)
+            return
+        event.Skip()
+
+    def _on_close(self, event) -> None:
+        """Handle close button press."""
+        self.EndModal(wx.ID_CLOSE)
 
     def _on_selection_changed(self, event) -> None:
         self._update_candidates()

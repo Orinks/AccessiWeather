@@ -274,10 +274,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh workflow run update-pages.yml || true
 
-      - name: Update WordPress
-        if: ${{ inputs.dry_run != true }}
-        uses: Orinks/orinks-github-releases/.github/workflows/push-releases.yml@master
-        secrets:
-          WP_PUSH_TOKEN: ${{ secrets.WP_PUSH_TOKEN }}
-          WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
-
+  push-to-wordpress:
+    needs: release
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
+    uses: Orinks/orinks-github-releases/.github/workflows/push-releases.yml@master
+    secrets:
+      WP_PUSH_TOKEN: ${{ secrets.WP_PUSH_TOKEN }}
+      WP_SITE_URL: ${{ secrets.WP_SITE_URL }}

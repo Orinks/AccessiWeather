@@ -70,8 +70,10 @@ class SoundPackWizardDialog(wx.Dialog):
         self.staging_dir = Path(tempfile.mkdtemp(prefix="aw_soundpack_wizard_"))
 
         self._create_ui()
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
         self._render_step()
         self.Centre()
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_key)
 
     def _create_ui(self) -> None:
         """Create the wizard UI."""
@@ -105,7 +107,7 @@ class SoundPackWizardDialog(wx.Dialog):
         nav_sizer.Add(self.next_btn, 0, wx.RIGHT, 5)
 
         self.cancel_btn = wx.Button(self.panel, wx.ID_CANCEL, label="Cancel")
-        self.cancel_btn.Bind(wx.EVT_BUTTON, self._on_cancel)
+        self.cancel_btn.Bind(wx.EVT_BUTTON, self._on_close)
         nav_sizer.Add(self.cancel_btn, 0)
 
         main_sizer.Add(nav_sizer, 0, wx.EXPAND | wx.ALL, 10)
@@ -215,7 +217,7 @@ class SoundPackWizardDialog(wx.Dialog):
             self.content_panel,
             label="A folder name will be generated from your pack name.",
         )
-        hint.SetForegroundColour(wx.Colour(100, 100, 100))
+        hint.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
         self.content_sizer.Add(hint, 0)
 
         # Set focus
@@ -541,6 +543,17 @@ class SoundPackWizardDialog(wx.Dialog):
 
         self.EndModal(wx.ID_OK)
 
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle keyboard shortcuts for the dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self._on_close(event)
+            return
+        event.Skip()
+
+    def _on_close(self, event: wx.Event) -> None:
+        """Handle close action from cancel button or Escape."""
+        self._on_cancel(event)
+
     def _on_cancel(self, event) -> None:
         """Cancel the wizard."""
         # Check if there are any changes
@@ -566,3 +579,10 @@ class SoundPackWizardDialog(wx.Dialog):
             shutil.rmtree(self.staging_dir)
 
         self.EndModal(wx.ID_CANCEL)
+
+    def _on_key(self, event: wx.KeyEvent) -> None:
+        """Handle key events."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.Close()
+        else:
+            event.Skip()

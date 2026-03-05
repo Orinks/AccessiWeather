@@ -160,6 +160,7 @@ class WeatherHistoryDialog(wx.Dialog):
 
         self._create_ui()
         self._setup_accessibility()
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
 
     def _create_ui(self):
         """Create the dialog UI."""
@@ -175,7 +176,7 @@ class WeatherHistoryDialog(wx.Dialog):
             panel,
             label="Comparisons against previous days to provide context for current conditions.",
         )
-        description.SetForegroundColour(wx.Colour(128, 128, 128))
+        description.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
         main_sizer.Add(description, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
 
         # Build content text
@@ -216,6 +217,13 @@ class WeatherHistoryDialog(wx.Dialog):
     def _setup_accessibility(self):
         """Set up accessibility labels."""
         self.text_display.SetName("Weather history text")
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle keyboard shortcuts for the dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self._on_close(event)
+            return
+        event.Skip()
 
     def _on_close(self, event):
         """Handle close button press."""
