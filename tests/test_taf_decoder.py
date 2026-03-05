@@ -280,6 +280,30 @@ class TestDecodeWeather:
         assert "mixed precipitation" in result
         assert "unknown precipitation" not in result
 
+    def test_unknown_precipitation_with_freezing_hint(self):
+        result = _decode_weather("FZUP")
+        assert "freezing precipitation" in result
+
+    def test_unknown_precipitation_with_thunderstorm_hint(self):
+        result = _decode_weather("TSUP")
+        assert "thunderstorm precipitation" in result
+
+    def test_unknown_precipitation_with_showery_hint(self):
+        result = _decode_weather("SHUP")
+        assert "showery precipitation" in result
+
+    def test_unknown_precipitation_with_freezing_descriptor(self):
+        result = _decode_weather("FZUP")
+        assert "freezing precipitation" in result
+
+    def test_unknown_precipitation_with_thunderstorm_descriptor(self):
+        result = _decode_weather("TSUP")
+        assert "thunderstorm precipitation" in result
+
+    def test_unknown_precipitation_with_showers_descriptor(self):
+        result = _decode_weather("SHUP")
+        assert "showery precipitation" in result
+
 
 # --- _decode_cloud ---
 

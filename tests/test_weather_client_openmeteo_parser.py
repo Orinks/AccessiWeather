@@ -1,6 +1,8 @@
 """Tests for Open-Meteo parser behavior."""
 
 from accessiweather.weather_client_openmeteo import (
+    _pick_precipitation_type,
+    _resolve_current_condition_description,
     parse_openmeteo_current_conditions,
     parse_openmeteo_forecast,
 )
@@ -84,3 +86,93 @@ def test_current_mixed_precip_fields_return_mixed_condition():
 
     assert current.condition == "Mixed rain and snow"
     assert current.precipitation_type == ["rain", "snow"]
+
+
+def test_pick_precipitation_type_handles_snow_only_and_none():
+    assert _pick_precipitation_type(0.0, 0.01) == ["snow"]
+    assert _pick_precipitation_type(0.0, 0.0) is None
+
+
+def test_resolve_condition_handles_invalid_code_and_precip_branches():
+    # Invalid weather_code should safely fall back (covers ValueError path)
+    assert (
+        _resolve_current_condition_description(
+            {"weather_code": "not-a-number", "rain": 0.0, "showers": 0.0, "snowfall": 0.0}
+        )
+        is not None
+    )
+
+    # Active rain with non-snow weather code should return base text
+    rain_base = _resolve_current_condition_description(
+        {"weather_code": 3, "rain": 0.01, "showers": 0.0, "snowfall": 0.0}
+    )
+    assert rain_base is not None
+    assert "rain" not in rain_base.lower()
+
+    # Snow dominates with rain-coded weather code should normalize to mixed
+    assert (
+        _resolve_current_condition_description(
+            {"weather_code": 61, "rain": 0.01, "showers": 0.0, "snowfall": 0.02}
+        )
+        == "Mixed rain and snow"
+    )
+
+    # Snow dominates with non-rain code should keep base mapping
+    mostly_snow = _resolve_current_condition_description(
+        {"weather_code": 71, "rain": 0.005, "showers": 0.0, "snowfall": 0.02}
+    )
+    assert mostly_snow is not None
+    assert "mixed" not in mostly_snow.lower()
+
+
+def test_pick_precipitation_type_snow_only_returns_snow():
+    assert _pick_precipitation_type(rain_in=0.0, snow_in=0.01) == ["snow"]
+
+
+def test_resolve_condition_handles_invalid_weather_code_and_mixed_precip():
+    condition = _resolve_current_condition_description(
+        {
+            "weather_code": "bad-code",
+            "rain": 0.01,
+            "showers": 0.0,
+            "snowfall": 0.01,
+        }
+    )
+    assert condition == "Mixed rain and snow"
+
+
+def test_resolve_condition_returns_base_when_no_active_precipitation():
+    condition = _resolve_current_condition_description(
+        {
+            "weather_code": 3,
+            "rain": 0.0,
+            "showers": 0.0,
+            "snowfall": 0.0,
+        }
+    )
+    assert condition == "Overcast"
+
+
+def test_resolve_condition_snow_dominant_with_rain_code_returns_mixed_label():
+    condition = _resolve_current_condition_description(
+        {
+            "weather_code": 61,
+            "rain": 0.01,
+            "showers": 0.0,
+            "snowfall": 0.02,
+        }
+    )
+    assert condition == "Mixed rain and snow"
+
+
+def test_resolve_condition_snow_dominant_with_snow_code_keeps_base_label():
+    condition = _resolve_current_condition_description(
+        {
+            "weather_code": 71,
+            "rain": 0.01,
+            "showers": 0.0,
+            "snowfall": 0.02,
+        }
+    )
+    assert condition is not None
+    assert "snow" in condition.lower()
