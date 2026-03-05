@@ -6,7 +6,7 @@ on:
 
 jobs:
   push-to-wordpress:
-    uses: Orinks/orinks-github-releases/.github/workflows/push-releases.yml@master
+    uses: ./.github/workflows/push-releases.yml
     secrets:
       WP_PUSH_TOKEN: ${{ secrets.WP_PUSH_TOKEN }}
       WP_SITE_URL: ${{ secrets.WP_SITE_URL }}

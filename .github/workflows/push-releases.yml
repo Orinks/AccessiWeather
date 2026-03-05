@@ -1,0 +1,55 @@
+name: Push releases to WordPress
+
+on:
+  workflow_call:
+    secrets:
+      WP_PUSH_TOKEN:
+        required: true
+      WP_SITE_URL:
+        required: true
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch releases and push to WordPress
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WP_TOKEN: ${{ secrets.WP_PUSH_TOKEN }}
+          WP_URL: ${{ secrets.WP_SITE_URL }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh api "repos/$REPO/releases/latest" \
+            -H "Accept: application/vnd.github+json" > /tmp/latest.json 2>/dev/null || echo "null" > /tmp/latest.json
+
+          gh api "repos/$REPO/releases?per_page=20" \
+            -H "Accept: application/vnd.github+json" > /tmp/all.json
+
+          python3 - <<'PYEOF'
+          import json, os, urllib.request
+
+          with open('/tmp/latest.json') as f:
+              latest = json.load(f)
+
+          with open('/tmp/all.json') as f:
+              all_releases = json.load(f)
+
+          payload = json.dumps({
+              'repo': os.environ['REPO'],
+              'releases': all_releases[:20],
+              'latest': latest if isinstance(latest, dict) and latest.get('tag_name') else None,
+          }).encode()
+
+          req = urllib.request.Request(
+              os.environ['WP_URL'].rstrip('/') + '/wp-json/ogr/v1/push-releases',
+              data=payload,
+              headers={
+                  'Content-Type': 'application/json',
+                  'X-OGR-Token': os.environ['WP_TOKEN'],
+              },
+              method='POST',
+          )
+          with urllib.request.urlopen(req) as r:
+              body = json.load(r)
+          print(f"Pushed {body['count']} releases for {body['repo']}")
+          PYEOF
