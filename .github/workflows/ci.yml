@@ -218,10 +218,11 @@ jobs:
         echo "Checking that new/changed code has test coverage..."
 
         BASE="origin/${{ github.base_ref }}"
-        NON_EXCLUDED_CHANGED=$(git diff --name-only "$BASE"..HEAD | grep -Ev '^src/accessiweather/ui/|^src/accessiweather/notifications/toast_notifier.py$|^src/weather_gov_api_client/' || true)
+        CHANGED_SRC=$(git diff --name-only "$BASE"..HEAD | grep '^src/' || true)
+        NON_EXCLUDED_CHANGED=$(echo "$CHANGED_SRC" | grep -Ev '^src/accessiweather/ui/|^src/accessiweather/notifications/toast_notifier.py$|^src/weather_gov_api_client/' || true)
 
         if [ -z "$NON_EXCLUDED_CHANGED" ]; then
-          echo "ℹ️ Only excluded paths changed (UI/toast_notifier/weather_gov_api_client). Skipping diff coverage gate."
+          echo "ℹ️ No non-excluded src/ changes to gate. Skipping diff coverage gate."
           exit 0
         fi
 
