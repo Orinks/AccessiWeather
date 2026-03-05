@@ -11,45 +11,64 @@ on:
 jobs:
   push:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - name: Fetch releases and push to WordPress
+      - name: Validate required secrets
+        env:
+          WP_TOKEN: ${{ secrets.WP_PUSH_TOKEN }}
+          WP_URL: ${{ secrets.WP_SITE_URL }}
+        run: |
+          test -n "$WP_TOKEN" || { echo "Missing WP_PUSH_TOKEN"; exit 1; }
+          test -n "$WP_URL" || { echo "Missing WP_SITE_URL"; exit 1; }
+
+      - name: Push releases to WordPress (with retry + cache nudge)
         env:
           GH_TOKEN: ${{ github.token }}
           WP_TOKEN: ${{ secrets.WP_PUSH_TOKEN }}
           WP_URL: ${{ secrets.WP_SITE_URL }}
           REPO: ${{ github.repository }}
         run: |
-          gh api "repos/$REPO/releases/latest" \
-            -H "Accept: application/vnd.github+json" > /tmp/latest.json 2>/dev/null || echo "null" > /tmp/latest.json
+          set -euo pipefail
 
-          gh api "repos/$REPO/releases?per_page=20" \
-            -H "Accept: application/vnd.github+json" > /tmp/all.json
+          attempt() {
+            gh api "repos/$REPO/releases/latest" -H "Accept: application/vnd.github+json" > /tmp/latest.json 2>/dev/null || echo "null" > /tmp/latest.json
+            gh api "repos/$REPO/releases?per_page=20" -H "Accept: application/vnd.github+json" > /tmp/all.json
 
-          python3 - <<'PYEOF'
-          import json, os, urllib.request
+            PAYLOAD=$(jq -c -n \
+              --arg repo "$REPO" \
+              --slurpfile all /tmp/all.json \
+              --slurpfile latest /tmp/latest.json \
+              '{repo:$repo, releases:($all[0][0:20]), latest:(if ($latest[0] | type)=="object" and ($latest[0].tag_name != null) then $latest[0] else null end)}')
 
-          with open('/tmp/latest.json') as f:
-              latest = json.load(f)
+            # Primary push
+            curl -sS -f \
+              -H "Content-Type: application/json" \
+              -H "X-OGR-Token: $WP_TOKEN" \
+              -X POST \
+              -d "$PAYLOAD" \
+              "${WP_URL%/}/wp-json/ogr/v1/push-releases" >/dev/null
 
-          with open('/tmp/all.json') as f:
-              all_releases = json.load(f)
+            # Cache nudge for plugin-level cache only (host cache may still need purge)
+            curl -sS -f \
+              -H "Content-Type: application/json" \
+              -H "X-OGR-Token: $WP_TOKEN" \
+              -X POST \
+              -d "{\"repository\":{\"full_name\":\"$REPO\"}}" \
+              "${WP_URL%/}/wp-json/ogr/v1/bust-cache" >/dev/null || true
 
-          payload = json.dumps({
-              'repo': os.environ['REPO'],
-              'releases': all_releases[:20],
-              'latest': latest if isinstance(latest, dict) and latest.get('tag_name') else None,
-          }).encode()
+            # Re-push so data exists after bust
+            RESPONSE=$(curl -sS -f \
+              -H "Content-Type: application/json" \
+              -H "X-OGR-Token: $WP_TOKEN" \
+              -X POST \
+              -d "$PAYLOAD" \
+              "${WP_URL%/}/wp-json/ogr/v1/push-releases")
 
-          req = urllib.request.Request(
-              os.environ['WP_URL'].rstrip('/') + '/wp-json/ogr/v1/push-releases',
-              data=payload,
-              headers={
-                  'Content-Type': 'application/json',
-                  'X-OGR-Token': os.environ['WP_TOKEN'],
-              },
-              method='POST',
-          )
-          with urllib.request.urlopen(req) as r:
-              body = json.load(r)
-          print(f"Pushed {body['count']} releases for {body['repo']}")
-          PYEOF
+            echo "$RESPONSE" | jq -r '"Pushed \(.count) releases for \(.repo) (post-bust)"'
+          }
+
+          attempt || {
+            echo "First push attempt failed, retrying in 10s..."
+            sleep 10
+            attempt
+          }
