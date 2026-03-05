@@ -1230,7 +1230,7 @@ class AccessiWeatherApp(wx.App):
 
     def _stop_auto_update_checks(self) -> None:
         """Stop and detach the automatic update-check timer, if present."""
-        timer = self._auto_update_check_timer
+        timer = getattr(self, "_auto_update_check_timer", None)
         if not timer:
             return
 
