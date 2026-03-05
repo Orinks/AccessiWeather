@@ -176,3 +176,15 @@ def test_resolve_condition_snow_dominant_with_snow_code_keeps_base_label():
     )
     assert condition is not None
     assert "snow" in condition.lower()
+
+
+def test_resolve_condition_returns_base_when_snow_is_small_but_rain_above_epsilon():
+    condition = _resolve_current_condition_description(
+        {
+            "weather_code": 3,
+            "rain": 0.01,
+            "showers": 0.0,
+            "snowfall": 0.0008,
+        }
+    )
+    assert condition == "Overcast"
