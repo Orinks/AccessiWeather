@@ -351,7 +351,7 @@ class SettingsDialogSimple(wx.Dialog):
         sizer.Add(
             wx.StaticText(
                 panel,
-                label="When using Auto mode, data is merged from multiple sources in priority order.",
+                label="Station selection strategy applies to NWS current conditions. In Auto mode, it applies when NWS is selected or used as fallback.",
             ),
             0,
             wx.LEFT | wx.BOTTOM,
