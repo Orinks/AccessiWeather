@@ -61,6 +61,8 @@ _PHENOMENA = {
 
 _INTENSITY = {"+": "heavy", "-": "light"}
 
+_KNOWN_PRECIP_CODES = {"DZ", "RA", "SN", "SG", "IC", "PL", "GR", "GS"}
+
 
 def decode_taf_text(raw_taf: str) -> str:
     """Decode a raw TAF string into an accessible textual summary."""
@@ -452,20 +454,36 @@ def _decode_weather(token: str) -> str | None:
         intensity = _INTENSITY[working[0]]
         working = working[1:]
 
+    descriptor_codes: list[str] = []
     descriptors: list[str] = []
+    phenomenon_codes: list[str] = []
     phenomena: list[str] = []
 
     while working:
         code = working[:2]
         if code in _DESCRIPTORS:
+            descriptor_codes.append(code)
             descriptors.append(_DESCRIPTORS[code])
             working = working[2:]
             continue
         if code in _PHENOMENA:
+            phenomenon_codes.append(code)
             phenomena.append(_PHENOMENA[code])
             working = working[2:]
             continue
         break
+
+    if "UP" in phenomenon_codes:
+        inferred = _infer_unknown_precipitation_label(descriptor_codes, phenomenon_codes)
+        if inferred == "mixed precipitation":
+            phenomena = [inferred]
+        else:
+            non_unknown = [
+                value
+                for code, value in zip(phenomenon_codes, phenomena, strict=False)
+                if code != "UP"
+            ]
+            phenomena = non_unknown or [inferred]
 
     if not descriptors and not phenomena and not intensity:
         return None
@@ -481,6 +499,22 @@ def _decode_weather(token: str) -> str | None:
     description = description.replace("  ", " ").strip()
 
     return f"{qualifier}{description} ({original})"
+
+
+def _infer_unknown_precipitation_label(
+    descriptor_codes: list[str], phenomenon_codes: list[str]
+) -> str:
+    """Infer a friendlier precipitation label when TAF uses UP (unknown precipitation)."""
+    has_known_precip = any(code in _KNOWN_PRECIP_CODES for code in phenomenon_codes if code != "UP")
+    if has_known_precip:
+        return "mixed precipitation"
+    if "FZ" in descriptor_codes:
+        return "freezing precipitation"
+    if "TS" in descriptor_codes:
+        return "thunderstorm precipitation"
+    if "SH" in descriptor_codes:
+        return "showery precipitation"
+    return "unidentified precipitation"
 
 
 def _decode_cloud(token: str) -> str | None:

@@ -270,6 +270,16 @@ class TestDecodeWeather:
         assert "shallow" in result
         assert "fog" in result
 
+    def test_unknown_precipitation_fallback_is_friendlier(self):
+        result = _decode_weather("UP")
+        assert "unidentified precipitation" in result
+        assert "unknown precipitation" not in result
+
+    def test_unknown_precipitation_with_type_hints_prefers_inference(self):
+        result = _decode_weather("RAUP")
+        assert "mixed precipitation" in result
+        assert "unknown precipitation" not in result
+
 
 # --- _decode_cloud ---
 
