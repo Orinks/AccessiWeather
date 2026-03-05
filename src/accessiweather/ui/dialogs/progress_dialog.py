@@ -35,6 +35,7 @@ class ProgressDialog(wx.Dialog):
         self._lock = threading.Lock()
 
         self._create_ui(message, can_cancel)
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
         self.Centre()
 
     def _create_ui(self, message: str, can_cancel: bool) -> None:
@@ -70,6 +71,17 @@ class ProgressDialog(wx.Dialog):
             self.cancel_btn = None
 
         panel.SetSizer(sizer)
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle keyboard shortcuts for the dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self._on_close(event)
+            return
+        event.Skip()
+
+    def _on_close(self, event: wx.Event) -> None:
+        """Handle close action from Escape."""
+        self._on_cancel(event)
 
     def _on_cancel(self, event) -> None:
         """Handle cancel button click."""
