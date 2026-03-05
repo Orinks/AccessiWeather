@@ -29,6 +29,8 @@ class ReportIssueDialog(wx.Dialog):
         self._create_controls()
         self._do_layout()
         self._bind_events()
+        self._setup_accessibility()
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
 
         self.SetSize((500, 400))
         self.CenterOnParent()
@@ -105,6 +107,16 @@ class ReportIssueDialog(wx.Dialog):
     def _bind_events(self) -> None:
         """Bind event handlers."""
         self.submit_btn.Bind(wx.EVT_BUTTON, self._on_submit)
+        self.cancel_btn.Bind(wx.EVT_BUTTON, self._on_close)
+
+    def _setup_accessibility(self) -> None:
+        """Set up accessibility labels for interactive controls."""
+        self.type_choice.SetName("Issue Type")
+        self.title_input.SetName("Title")
+        self.desc_input.SetName("Description")
+        self.info_text.SetName("System info (auto-collected)")
+        self.submit_btn.SetName("Open in Browser")
+        self.cancel_btn.SetName("Cancel")
 
     def _get_system_info(self) -> str:
         """Collect system information."""
@@ -113,6 +125,17 @@ class ReportIssueDialog(wx.Dialog):
             f"- OS: {platform.system()} {platform.release()}\n"
             f"- Python: {sys.version.split()[0]}"
         )
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle keyboard shortcuts for the dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self._on_close(event)
+            return
+        event.Skip()
+
+    def _on_close(self, event: wx.Event) -> None:
+        """Close the dialog as cancelled."""
+        self.EndModal(wx.ID_CANCEL)
 
     def _on_submit(self, event: wx.CommandEvent) -> None:
         """Handle submit button click."""

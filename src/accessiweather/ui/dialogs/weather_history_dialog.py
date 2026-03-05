@@ -160,7 +160,7 @@ class WeatherHistoryDialog(wx.Dialog):
 
         self._create_ui()
         self._setup_accessibility()
-        self.Bind(wx.EVT_CHAR_HOOK, self._on_key)
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
 
     def _create_ui(self):
         """Create the dialog UI."""
@@ -218,12 +218,12 @@ class WeatherHistoryDialog(wx.Dialog):
         """Set up accessibility labels."""
         self.text_display.SetName("Weather history text")
 
-    def _on_key(self, event: wx.KeyEvent) -> None:
-        """Handle key events."""
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle keyboard shortcuts for the dialog."""
         if event.GetKeyCode() == wx.WXK_ESCAPE:
-            self.Close()
-        else:
-            event.Skip()
+            self._on_close(event)
+            return
+        event.Skip()
 
     def _on_close(self, event):
         """Handle close button press."""

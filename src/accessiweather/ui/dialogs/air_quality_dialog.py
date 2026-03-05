@@ -95,13 +95,15 @@ class AirQualityDialog(wx.Dialog):
         self.location_name = location_name
         self.environmental = environmental
         self.app = app
+        self._accessibility_text_controls: list[tuple[wx.TextCtrl, str]] = []
 
         self._create_ui()
         self._setup_accessibility()
-        self.Bind(wx.EVT_CHAR_HOOK, self._on_key)
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
 
     def _create_ui(self):
         """Create the dialog UI."""
+        self._accessibility_text_controls = []
         panel = wx.Panel(self)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -236,6 +238,7 @@ class AirQualityDialog(wx.Dialog):
             style=wx.TE_MULTILINE | wx.TE_READONLY,
             size=(-1, 100),
         )
+        self._accessibility_text_controls.append((forecast_display, "Hourly Forecast"))
         sizer.Add(forecast_display, 1, wx.EXPAND)
 
         return sizer
@@ -293,13 +296,22 @@ class AirQualityDialog(wx.Dialog):
             style=wx.TE_MULTILINE | wx.TE_READONLY,
             size=(-1, 100),
         )
+        self._accessibility_text_controls.append((pollutant_display, "Current Pollutant Levels"))
         sizer.Add(pollutant_display, 1, wx.EXPAND)
 
         return sizer
 
     def _setup_accessibility(self):
         """Set up accessibility labels."""
-        # Controls are created with meaningful labels already
+        for control, label in self._accessibility_text_controls:
+            control.SetName(label)
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle keyboard shortcuts for the dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self._on_close(event)
+            return
+        event.Skip()
 
     def _on_key(self, event: wx.KeyEvent) -> None:
         """Handle key events."""

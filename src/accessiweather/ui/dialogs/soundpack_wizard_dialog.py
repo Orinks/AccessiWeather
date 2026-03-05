@@ -11,7 +11,26 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import wx
-import wx.lib.scrolledpanel as scrolled
+
+try:
+    import wx.lib.scrolledpanel as scrolled
+except ModuleNotFoundError:
+    _SCROLLED_BASE = wx.Panel if hasattr(wx, "Panel") else object
+
+    class _FallbackScrolledPanel(_SCROLLED_BASE):
+        """Fallback when wx.lib.scrolledpanel is unavailable."""
+
+        def __init__(self, *args, **kwargs) -> None:
+            super().__init__(*args, **kwargs)
+
+        def SetupScrolling(self) -> None:  # noqa: N802
+            if hasattr(self, "SetScrollRate"):
+                self.SetScrollRate(10, 10)
+
+    class _FallbackScrolledModule:
+        ScrolledPanel = _FallbackScrolledPanel
+
+    scrolled = _FallbackScrolledModule()
 
 from .soundpack_manager_dialog import FRIENDLY_ALERT_CATEGORIES
 
@@ -51,6 +70,7 @@ class SoundPackWizardDialog(wx.Dialog):
         self.staging_dir = Path(tempfile.mkdtemp(prefix="aw_soundpack_wizard_"))
 
         self._create_ui()
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
         self._render_step()
         self.Centre()
         self.Bind(wx.EVT_CHAR_HOOK, self._on_key)
@@ -87,12 +107,19 @@ class SoundPackWizardDialog(wx.Dialog):
         nav_sizer.Add(self.next_btn, 0, wx.RIGHT, 5)
 
         self.cancel_btn = wx.Button(self.panel, wx.ID_CANCEL, label="Cancel")
-        self.cancel_btn.Bind(wx.EVT_BUTTON, self._on_cancel)
+        self.cancel_btn.Bind(wx.EVT_BUTTON, self._on_close)
         nav_sizer.Add(self.cancel_btn, 0)
 
         main_sizer.Add(nav_sizer, 0, wx.EXPAND | wx.ALL, 10)
 
         self.panel.SetSizer(main_sizer)
+        self._setup_accessibility()
+
+    def _setup_accessibility(self) -> None:
+        """Set up accessibility labels for always-visible controls."""
+        self.prev_btn.SetName("Go to previous wizard step")
+        self.next_btn.SetName("Go to next wizard step")
+        self.cancel_btn.SetName("Cancel sound pack creation")
 
     def _render_step(self) -> None:
         """Render the current step."""
@@ -124,6 +151,28 @@ class SoundPackWizardDialog(wx.Dialog):
 
         self.content_panel.Layout()
         self.panel.Layout()
+        self._setup_step_accessibility()
+
+    def _setup_step_accessibility(self) -> None:
+        """Set accessibility labels for step-specific controls."""
+        if self.current_step == 1:
+            self.name_input.SetName("Pack name (required)")
+            self.author_input.SetName("Author (optional)")
+            self.desc_input.SetName("Description (optional)")
+        elif self.current_step == 2:
+            for _, checkbox in self.category_checks:
+                checkbox.SetName(checkbox.GetLabel())
+            if hasattr(self, "select_common_btn"):
+                self.select_common_btn.SetName("Select common alert types")
+            if hasattr(self, "clear_all_btn"):
+                self.clear_all_btn.SetName("Clear all alert type selections")
+        elif self.current_step == 3:
+            for key, file_ctrl in self.mapping_controls:
+                friendly = key.replace("_", " ")
+                file_ctrl.SetName(f"{friendly} selected sound file")
+        else:
+            if hasattr(self, "test_all_btn"):
+                self.test_all_btn.SetName("Test all assigned sounds")
 
     def _build_step1(self) -> None:
         """Step 1: Pack details."""
@@ -200,13 +249,13 @@ class SoundPackWizardDialog(wx.Dialog):
         # Action buttons
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        select_common_btn = wx.Button(self.content_panel, label="Select Common")
-        select_common_btn.Bind(wx.EVT_BUTTON, self._select_common_alerts)
-        btn_sizer.Add(select_common_btn, 0, wx.RIGHT, 5)
+        self.select_common_btn = wx.Button(self.content_panel, label="Select Common")
+        self.select_common_btn.Bind(wx.EVT_BUTTON, self._select_common_alerts)
+        btn_sizer.Add(self.select_common_btn, 0, wx.RIGHT, 5)
 
-        clear_btn = wx.Button(self.content_panel, label="Clear All")
-        clear_btn.Bind(wx.EVT_BUTTON, self._clear_all_alerts)
-        btn_sizer.Add(clear_btn, 0)
+        self.clear_all_btn = wx.Button(self.content_panel, label="Clear All")
+        self.clear_all_btn.Bind(wx.EVT_BUTTON, self._clear_all_alerts)
+        btn_sizer.Add(self.clear_all_btn, 0)
 
         self.content_sizer.Add(btn_sizer, 0)
 
@@ -245,6 +294,7 @@ class SoundPackWizardDialog(wx.Dialog):
         scroll_sizer.AddGrowableCol(1, 1)
 
         self.mapping_controls: list[tuple[str, wx.TextCtrl]] = []
+        self.choose_buttons: list[wx.Button] = []
 
         for key in self.state.selected_alert_keys:
             # Get friendly name
@@ -272,6 +322,8 @@ class SoundPackWizardDialog(wx.Dialog):
                 lambda evt, k=key, fc=file_ctrl: self._choose_sound_file(k, fc),
             )
             scroll_sizer.Add(choose_btn, 0)
+            choose_btn.SetName(f"Choose sound file for {friendly}")
+            self.choose_buttons.append(choose_btn)
 
             self.mapping_controls.append((key, file_ctrl))
 
@@ -329,6 +381,7 @@ class SoundPackWizardDialog(wx.Dialog):
         scroll_sizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
         scroll_sizer.AddGrowableCol(1, 1)
 
+        self.preview_buttons: list[wx.Button] = []
         for key in self.state.selected_alert_keys:
             friendly = key.replace("_", " ").title()
             for display_name, tech_key in FRIENDLY_ALERT_CATEGORIES:
@@ -352,16 +405,18 @@ class SoundPackWizardDialog(wx.Dialog):
                 lambda evt, k=key: self._preview_sound(k),
             )
             preview_btn.Enable(key in self.state.sound_mappings)
+            preview_btn.SetName(f"Preview sound for {friendly}")
             scroll_sizer.Add(preview_btn, 0)
+            self.preview_buttons.append(preview_btn)
 
         scroll.SetSizer(scroll_sizer)
         scroll.SetupScrolling()
         self.content_sizer.Add(scroll, 1, wx.EXPAND | wx.BOTTOM, 10)
 
         # Test button
-        test_btn = wx.Button(self.content_panel, label="Test All Sounds")
-        test_btn.Bind(wx.EVT_BUTTON, self._test_all_sounds)
-        self.content_sizer.Add(test_btn, 0)
+        self.test_all_btn = wx.Button(self.content_panel, label="Test All Sounds")
+        self.test_all_btn.Bind(wx.EVT_BUTTON, self._test_all_sounds)
+        self.content_sizer.Add(self.test_all_btn, 0)
 
     def _preview_sound(self, key: str) -> None:
         """Preview a sound for the given key."""
@@ -487,6 +542,17 @@ class SoundPackWizardDialog(wx.Dialog):
         )
 
         self.EndModal(wx.ID_OK)
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle keyboard shortcuts for the dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self._on_close(event)
+            return
+        event.Skip()
+
+    def _on_close(self, event: wx.Event) -> None:
+        """Handle close action from cancel button or Escape."""
+        self._on_cancel(event)
 
     def _on_cancel(self, event) -> None:
         """Cancel the wizard."""
