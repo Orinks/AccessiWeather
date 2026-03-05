@@ -148,6 +148,12 @@ def widget_tracker():
             active_patches.append(p)
             p.start()
 
+        # Avoid PyNoAppError when dialog code calls SystemSettings colours while
+        # wx.Dialog.__init__ is mocked in these focused unit tests.
+        p = patch.object(_wx.SystemSettings, "GetColour", lambda *a, **kw: MagicMock())
+        active_patches.append(p)
+        p.start()
+
     # Save originals and replace with spec-free factories
     for name in ("StaticText", "BoxSizer", "Panel"):
         saved[name] = getattr(_wx, name)
