@@ -1440,7 +1440,7 @@ class SettingsDialogSimple(wx.Dialog):
             "us_priority": "US Locations Priority",
             "intl_priority": "International Locations Priority",
             "openmeteo_model": "Open-Meteo Weather Model",
-            "station_selection_strategy": "NWS station selection strategy",
+            "station_selection_strategy": "Station selection strategy",
             "enable_alerts": "Enable weather alerts",
             "alert_notif": "Enable alert notifications",
             "alert_radius_type": "Alert Area",
