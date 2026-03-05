@@ -77,6 +77,7 @@ class NOAARadioDialog(wx.Dialog):
         self.Bind(wx.EVT_TIMER, self._on_health_check, self._health_timer)
 
         self._init_ui()
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
         self._load_stations()
 
     def _init_ui(self) -> None:
@@ -326,6 +327,13 @@ class NOAARadioDialog(wx.Dialog):
     def _set_status(self, text: str) -> None:
         """Update the status text."""
         self._status_text.SetLabel(text)
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle keyboard shortcuts for the dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self._on_close(event)
+            return
+        event.Skip()
 
     def _on_close(self, _event: wx.Event) -> None:
         """Handle dialog close."""
