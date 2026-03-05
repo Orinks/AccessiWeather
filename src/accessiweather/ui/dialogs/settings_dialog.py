@@ -425,18 +425,6 @@ class SettingsDialogSimple(wx.Dialog):
             wx.ALL,
             5,
         )
-        sizer.Add(
-            wx.StaticText(
-                panel,
-                label=(
-                    "Controls how AccessiWeather chooses an observation station. "
-                    "Hybrid default balances freshness, reliability, and distance."
-                ),
-            ),
-            0,
-            wx.LEFT | wx.BOTTOM,
-            5,
-        )
         self._controls["station_selection_strategy"] = wx.Choice(
             panel,
             choices=[
@@ -445,6 +433,9 @@ class SettingsDialogSimple(wx.Dialog):
                 "Major airport preferred (within radius, else nearest)",
                 "Freshest observation (among nearest stations)",
             ],
+        )
+        self._controls["station_selection_strategy"].SetToolTip(
+            "Applies to NWS current conditions. In Auto mode, applies when NWS is selected or used as fallback."
         )
         sizer.Add(self._controls["station_selection_strategy"], 0, wx.LEFT, 10)
 
