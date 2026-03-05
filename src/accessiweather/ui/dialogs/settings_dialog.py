@@ -1054,6 +1054,7 @@ class SettingsDialogSimple(wx.Dialog):
 
             vc_key = getattr(settings, "visual_crossing_api_key", "") or ""
             self._controls["vc_key"].SetValue(str(vc_key))
+            self._original_vc_key = str(vc_key)
 
             # Source priority
             us_priority = getattr(
@@ -1153,6 +1154,7 @@ class SettingsDialogSimple(wx.Dialog):
             # AI tab
             openrouter_key = getattr(settings, "openrouter_api_key", "") or ""
             self._controls["openrouter_key"].SetValue(str(openrouter_key))
+            self._original_openrouter_key = str(openrouter_key)
 
             ai_model = getattr(settings, "ai_model_preference", "openrouter/free")
             if ai_model == "openrouter/free":
@@ -1339,6 +1341,21 @@ class SettingsDialogSimple(wx.Dialog):
                 intl_idx if intl_idx >= 0 else 0
             ]
 
+            # Guard: never wipe a previously-set API key with an empty string.
+            # If the field is blank but the original value was non-empty, the
+            # keyring load failed transiently — keep the existing keyring value.
+            for key, orig_attr in (
+                ("visual_crossing_api_key", "_original_vc_key"),
+                ("openrouter_api_key", "_original_openrouter_key"),
+            ):
+                if not settings_dict.get(key) and getattr(self, orig_attr, ""):
+                    logger.warning(
+                        "Skipping empty %s save — original value was non-empty; "
+                        "keyring may have failed to load. Existing keyring value preserved.",
+                        key,
+                    )
+                    settings_dict.pop(key, None)
+
             success = self.config_manager.update_settings(**settings_dict)
             if success:
                 logger.info("Settings saved successfully")
@@ -1352,12 +1369,62 @@ class SettingsDialogSimple(wx.Dialog):
 
     def _setup_accessibility(self):
         """Set up accessibility labels for controls."""
-        # Set accessible names for key controls
-        self._controls["update_interval"].SetName("Update interval in minutes")
-        self._controls["temp_unit"].SetName("Temperature unit selection")
-        self._controls["data_source"].SetName("Weather data source selection")
-        self._controls["vc_key"].SetName("Visual Crossing API key")
-        self._controls["openrouter_key"].SetName("OpenRouter API key")
+        control_names = {
+            "update_interval": "Update Interval (minutes)",
+            "show_nationwide": "Show Nationwide location (requires Auto or NWS data source)",
+            "taskbar_icon_text_enabled": "Show weather text on tray icon",
+            "taskbar_icon_dynamic_enabled": "Update tray text dynamically",
+            "taskbar_icon_text_format": "Tray text format",
+            "temp_unit": "Temperature Display",
+            "show_dewpoint": "Show dewpoint",
+            "show_visibility": "Show visibility",
+            "show_uv_index": "Show UV index",
+            "show_pressure_trend": "Show pressure trend",
+            "detailed_forecast": "Show detailed forecast information",
+            "forecast_duration_days": "Forecast duration",
+            "forecast_time_reference": "Forecast time display",
+            "time_display_mode": "Time zone display",
+            "time_format_12hour": "Use 12-hour time format (e.g., 3:00 PM)",
+            "show_timezone_suffix": "Show timezone abbreviations (e.g., EST, UTC)",
+            "verbosity_level": "Verbosity level",
+            "severe_weather_override": "Automatically prioritize severe weather info",
+            "data_source": "Weather Data Source",
+            "vc_key": "API Key",
+            "us_priority": "US Locations Priority",
+            "intl_priority": "International Locations Priority",
+            "openmeteo_model": "Open-Meteo Weather Model",
+            "enable_alerts": "Enable weather alerts",
+            "alert_notif": "Enable alert notifications",
+            "alert_radius_type": "Alert Area",
+            "notify_extreme": "Extreme - Life-threatening events (e.g., Tornado Warning)",
+            "notify_severe": "Severe - Significant hazards (e.g., Severe Thunderstorm Warning)",
+            "notify_moderate": "Moderate - Potentially hazardous (e.g., Winter Weather Advisory)",
+            "notify_minor": "Minor - Low impact events (e.g., Frost Advisory, Fog Advisory)",
+            "notify_unknown": "Unknown - Uncategorized alerts",
+            "notify_discussion_update": "Notify when Area Forecast Discussion is updated (NWS US only)",
+            "notify_severe_risk_change": "Notify when severe weather risk level changes (Visual Crossing only)",
+            "global_cooldown": "Global cooldown (minutes)",
+            "per_alert_cooldown": "Per-alert cooldown (minutes)",
+            "freshness_window": "Alert freshness window (minutes)",
+            "max_notifications": "Maximum notifications per hour",
+            "sound_enabled": "Enable Sounds",
+            "sound_pack": "Active sound pack",
+            "auto_update": "Check for updates automatically",
+            "update_channel": "Update Channel",
+            "update_check_interval": "Check Interval (hours)",
+            "openrouter_key": "OpenRouter API Key",
+            "ai_model": "Model Preference",
+            "ai_style": "Explanation Style",
+            "custom_prompt": "Custom System Prompt (optional)",
+            "custom_instructions": "Custom Instructions (optional)",
+            "minimize_tray": "Minimize to notification area when closing",
+            "minimize_on_startup": "Start minimized to notification area",
+            "startup": "Launch automatically at startup",
+            "weather_history": "Enable weather history comparisons",
+        }
+
+        for key, name in control_names.items():
+            self._controls[key].SetName(name)
 
     def _get_ai_model_preference(self) -> str:
         """Get the AI model preference based on UI selection."""
@@ -2244,7 +2311,7 @@ class SettingsDialogSimple(wx.Dialog):
         with wx.FileDialog(
             self,
             "Export API keys (encrypted)",
-            wildcard="Encrypted bundle (*.keys)|*.keys|Legacy bundle (*.awkeys)|*.awkeys|JSON files (*.json)|*.json",
+            wildcard="Encrypted bundle (*.keys)|*.keys|Legacy bundle (*.awkeys)|*.awkeys",
             defaultFile="accessiweather_api_keys.keys",
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
         ) as dlg:
@@ -2271,7 +2338,7 @@ class SettingsDialogSimple(wx.Dialog):
         with wx.FileDialog(
             self,
             "Import API keys (encrypted)",
-            wildcard="Encrypted bundle (*.keys)|*.keys|Legacy bundle (*.awkeys)|*.awkeys|JSON files (*.json)|*.json",
+            wildcard="Encrypted bundle (*.keys)|*.keys|Legacy bundle (*.awkeys)|*.awkeys",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
         ) as dlg:
             if dlg.ShowModal() != wx.ID_OK:

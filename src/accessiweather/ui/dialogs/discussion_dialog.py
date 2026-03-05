@@ -42,6 +42,9 @@ class DiscussionDialog(wx.Dialog):
         self.SetSize((700, 600))
         self.CenterOnParent()
 
+        # Set initial focus for screen readers
+        self.discussion_display.SetFocus()
+
         # Load the discussion
         self._load_discussion()
 

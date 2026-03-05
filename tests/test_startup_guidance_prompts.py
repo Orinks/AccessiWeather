@@ -542,6 +542,7 @@ def _make_app_for_auto_import(tmp_path, all_keys_missing: bool = True):
     app.config_manager = SimpleNamespace(
         config_dir=tmp_path,
         import_encrypted_api_keys=MagicMock(return_value=True),
+        export_encrypted_api_keys=MagicMock(return_value=True),
     )
 
     app._force_wizard = False
@@ -796,6 +797,85 @@ def test_auto_import_cancel_passphrase_dialog_exits_silently(monkeypatch, tmp_pa
     app._maybe_auto_import_keys_file()
 
     app.config_manager.import_encrypted_api_keys.assert_not_called()
+
+
+def test_auto_import_writes_keys_file_after_silent_import(monkeypatch, tmp_path):
+    """After silent auto-import, api-keys.keys is written via export_encrypted_api_keys."""
+    app = _make_app_for_auto_import(tmp_path)
+    (tmp_path / "api-keys.keys").write_bytes(b"dummy")
+
+    monkeypatch.setattr(
+        "accessiweather.config.secure_storage.SecureStorage.get_password",
+        lambda name: "CACHED_PASS" if name == app._PORTABLE_PASSPHRASE_KEYRING_KEY else None,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "accessiweather.config.secure_storage.SecureStorage.set_password",
+        lambda *a: True,
+        raising=False,
+    )
+
+    app._maybe_auto_import_keys_file()
+
+    app.config_manager.export_encrypted_api_keys.assert_called_once_with(
+        tmp_path / "api-keys.keys", "CACHED_PASS"
+    )
+
+
+def test_auto_import_writes_keys_file_after_prompted_import(monkeypatch, tmp_path):
+    """After user-prompted import, api-keys.keys is written via export_encrypted_api_keys."""
+    app = _make_app_for_auto_import(tmp_path)
+    (tmp_path / "api-keys.awkeys").write_bytes(b"legacy-blob")
+
+    monkeypatch.setattr(
+        "accessiweather.config.secure_storage.SecureStorage.get_password",
+        lambda name: None,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "accessiweather.config.secure_storage.SecureStorage.set_password",
+        lambda *a: True,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "accessiweather.app.wx.TextEntryDialog",
+        lambda *a, **kw: _FakeTextEntryDialog(["USER_PASSPHRASE"]),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "accessiweather.app.wx.MessageBox",
+        lambda *a, **kw: None,
+        raising=False,
+    )
+
+    app._maybe_auto_import_keys_file()
+
+    app.config_manager.export_encrypted_api_keys.assert_called_once_with(
+        tmp_path / "api-keys.keys", "USER_PASSPHRASE"
+    )
+
+
+def test_auto_import_export_failure_does_not_block_import(monkeypatch, tmp_path):
+    """If export_encrypted_api_keys raises, import still succeeds."""
+    app = _make_app_for_auto_import(tmp_path)
+    (tmp_path / "api-keys.keys").write_bytes(b"dummy")
+    app.config_manager.export_encrypted_api_keys = MagicMock(side_effect=OSError("disk full"))
+
+    monkeypatch.setattr(
+        "accessiweather.config.secure_storage.SecureStorage.get_password",
+        lambda name: "CACHED_PASS" if name == app._PORTABLE_PASSPHRASE_KEYRING_KEY else None,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "accessiweather.config.secure_storage.SecureStorage.set_password",
+        lambda *a: True,
+        raising=False,
+    )
+
+    app._maybe_auto_import_keys_file()
+
+    # Import still marked as successful despite export failure
+    assert app._portable_keys_imported_this_session is True
 
 
 def test_schedule_startup_guidance_prompts_includes_auto_import(monkeypatch):

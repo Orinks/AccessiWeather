@@ -54,12 +54,23 @@ if "wx" not in sys.modules:
         _wx.Icon = MagicMock
         _wx.Bitmap = MagicMock
         _wx.Image = MagicMock
+        _wx.ListBox = MagicMock
 
         # Common constants
         _wx.EVT_CLOSE = MagicMock()
+        _wx.EVT_ICONIZE = MagicMock()
+        _wx.EVT_SHOW = MagicMock()
         _wx.EVT_MENU = MagicMock()
         _wx.EVT_BUTTON = MagicMock()
+        _wx.EVT_CHOICE = MagicMock()
         _wx.EVT_TIMER = MagicMock()
+        _wx.EVT_KEY_DOWN = MagicMock()
+        _wx.EVT_CHAR = MagicMock()
+        _wx.EVT_CHAR_HOOK = MagicMock()
+        _wx.EVT_LISTBOX_DCLICK = MagicMock()
+        _wx.WXK_RETURN = 13
+        _wx.WXK_NUMPAD_ENTER = 370
+        _wx.WXK_SPACE = 32
         _wx.ID_ANY = -1
         _wx.ID_OK = 5100
         _wx.ID_CANCEL = 5101
@@ -75,6 +86,16 @@ if "wx" not in sys.modules:
         _wx.ICON_ERROR = 0
         _wx.CallAfter = MagicMock()
 
+        # System colour constants
+        _wx.SYS_COLOUR_GRAYTEXT = 17
+        _wx.SYS_COLOUR_WINDOWTEXT = 8
+        _wx.SYS_COLOUR_BTNTEXT = 18
+
+        # SystemSettings stub
+        _sys_settings = MagicMock()
+        _sys_settings.GetColour = MagicMock(return_value=MagicMock(name="SystemColour"))
+        _wx.SystemSettings = _sys_settings
+
         # wx sub-modules
         _wx_lib = types.ModuleType("wx.lib")
         _wx_lib.__package__ = "wx.lib"
@@ -88,6 +109,9 @@ if "wx" not in sys.modules:
         _wx_lib_newevent = types.ModuleType("wx.lib.newevent")
         _wx_lib_newevent.NewEvent = lambda: (MagicMock, MagicMock())
         _wx_lib_newevent.NewCommandEvent = lambda: (MagicMock, MagicMock())
+
+        _wx_lib_scrolledpanel = types.ModuleType("wx.lib.scrolledpanel")
+        _wx_lib_scrolledpanel.ScrolledPanel = _WxStubBase
 
         _wx_adv = types.ModuleType("wx.adv")
         _wx_adv.TaskBarIcon = _WxStubBase
@@ -104,6 +128,7 @@ if "wx" not in sys.modules:
         sys.modules["wx.lib"] = _wx_lib
         sys.modules["wx.lib.sized_controls"] = _wx_lib_sized
         sys.modules["wx.lib.newevent"] = _wx_lib_newevent
+        sys.modules["wx.lib.scrolledpanel"] = _wx_lib_scrolledpanel
         sys.modules["wx.adv"] = _wx_adv
         sys.modules["wx.html2"] = _wx_html2
 

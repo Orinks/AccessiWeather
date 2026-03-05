@@ -48,6 +48,7 @@ class NationwideDiscussionDialog(wx.Dialog):
 
         self._create_widgets()
         self._bind_events()
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
 
         self.SetSize((800, 600))
         self.CenterOnParent()
@@ -246,6 +247,13 @@ class NationwideDiscussionDialog(wx.Dialog):
         self.explain_button.Bind(wx.EVT_BUTTON, self._on_explain)
         self._is_explaining = False
         self._update_explain_button_state()
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle keyboard shortcuts for the dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self._on_close(event)
+            return
+        event.Skip()
 
     def _on_close(self, event) -> None:
         """Handle close button press."""

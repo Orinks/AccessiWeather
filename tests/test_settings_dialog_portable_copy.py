@@ -348,6 +348,95 @@ def test_import_settings_confirm_and_success_messages_mention_encrypted_key_tran
     assert "Import API keys (encrypted)" in complete_message
 
 
+def test_export_encrypted_api_keys_dialog_uses_keys_primary_and_awkeys_legacy(
+    monkeypatch, tmp_path
+):
+    dialog = _make_dialog(tmp_path / "portable")
+    dialog.config_manager.export_encrypted_api_keys = MagicMock(return_value=True)
+    dialog._prompt_passphrase = MagicMock(side_effect=["FAKE_PASS", "FAKE_PASS"])
+
+    _ensure_wx_constants()
+    if not hasattr(module.wx, "ID_OK"):
+        module.wx.ID_OK = 1
+    if not hasattr(module.wx, "FD_SAVE"):
+        module.wx.FD_SAVE = 0
+    if not hasattr(module.wx, "FD_OVERWRITE_PROMPT"):
+        module.wx.FD_OVERWRITE_PROMPT = 0
+
+    file_dialog_kwargs: dict = {}
+
+    class _FakeFileDialog:
+        def __init__(self, *args, **kwargs):
+            file_dialog_kwargs.update(kwargs)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def ShowModal(self):
+            return module.wx.ID_OK
+
+        def GetPath(self):
+            return str(tmp_path / "exported.keys")
+
+    monkeypatch.setattr(module.wx, "FileDialog", _FakeFileDialog, raising=False)
+    monkeypatch.setattr(module.wx, "MessageBox", lambda *a, **k: module.wx.OK, raising=False)
+
+    dialog._on_export_encrypted_api_keys(None)
+
+    assert file_dialog_kwargs["wildcard"].startswith("Encrypted bundle (*.keys)|*.keys|")
+    assert "Legacy bundle (*.awkeys)|*.awkeys" in file_dialog_kwargs["wildcard"]
+    assert "JSON files (*.json)|*.json" not in file_dialog_kwargs["wildcard"]
+    assert file_dialog_kwargs["defaultFile"] == "accessiweather_api_keys.keys"
+
+
+def test_import_encrypted_api_keys_dialog_accepts_keys_and_awkeys(monkeypatch, tmp_path):
+    dialog = _make_dialog(tmp_path / "portable")
+    dialog.config_manager.import_encrypted_api_keys = MagicMock(return_value=True)
+    dialog._prompt_passphrase = MagicMock(return_value="FAKE_PASS")
+    dialog._load_settings = MagicMock()
+
+    _ensure_wx_constants()
+    if not hasattr(module.wx, "ID_OK"):
+        module.wx.ID_OK = 1
+    if not hasattr(module.wx, "FD_OPEN"):
+        module.wx.FD_OPEN = 0
+    if not hasattr(module.wx, "FD_FILE_MUST_EXIST"):
+        module.wx.FD_FILE_MUST_EXIST = 0
+
+    file_dialog_kwargs: dict = {}
+
+    class _FakeFileDialog:
+        def __init__(self, *args, **kwargs):
+            file_dialog_kwargs.update(kwargs)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def ShowModal(self):
+            return module.wx.ID_OK
+
+        def GetPath(self):
+            return str(tmp_path / "legacy.awkeys")
+
+    monkeypatch.setattr(module.wx, "FileDialog", _FakeFileDialog, raising=False)
+    monkeypatch.setattr(module.wx, "MessageBox", lambda *a, **k: module.wx.OK, raising=False)
+
+    dialog._on_import_encrypted_api_keys(None)
+
+    assert file_dialog_kwargs["wildcard"].startswith("Encrypted bundle (*.keys)|*.keys|")
+    assert "Legacy bundle (*.awkeys)|*.awkeys" in file_dialog_kwargs["wildcard"]
+    assert "JSON files (*.json)|*.json" not in file_dialog_kwargs["wildcard"]
+    dialog.config_manager.import_encrypted_api_keys.assert_called_once()
+    called_path = dialog.config_manager.import_encrypted_api_keys.call_args[0][0]
+    assert called_path.name == "legacy.awkeys"
+
+
 def test_copy_installed_config_to_portable_no_locations_warns_and_stops(tmp_path, monkeypatch):
     installed = tmp_path / "installed"
     portable = tmp_path / "portable"
