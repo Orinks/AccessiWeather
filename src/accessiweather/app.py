@@ -8,6 +8,7 @@ screen reader accessibility.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 import os
@@ -1227,6 +1228,23 @@ class AccessiWeatherApp(wx.App):
             logger.warning(f"Failed to check minimize setting, showing window: {e}")
             self.main_window.Show()
 
+    def _stop_auto_update_checks(self) -> None:
+        """Stop and detach the automatic update-check timer, if present."""
+        timer = self._auto_update_check_timer
+        if not timer:
+            return
+
+        try:
+            timer.Stop()
+        except Exception as e:
+            logger.debug(f"Failed to stop auto-update timer cleanly: {e}")
+
+        # Unbind the old timer source so reconfiguration cannot stack handlers.
+        with contextlib.suppress(Exception):
+            self.Unbind(wx.EVT_TIMER, source=timer)
+
+        self._auto_update_check_timer = None
+
     def _start_auto_update_checks(self) -> None:
         """Start periodic automatic update checks based on user settings."""
         try:
@@ -1234,9 +1252,7 @@ class AccessiWeatherApp(wx.App):
             auto_enabled = bool(getattr(settings, "auto_update_enabled", True))
 
             # Stop existing timer before reconfiguring
-            if self._auto_update_check_timer:
-                self._auto_update_check_timer.Stop()
-                self._auto_update_check_timer = None
+            self._stop_auto_update_checks()
 
             if not auto_enabled:
                 logger.debug("Automatic update checks disabled")
@@ -1245,9 +1261,10 @@ class AccessiWeatherApp(wx.App):
             interval_hours = max(1, int(getattr(settings, "update_check_interval_hours", 24)))
             interval_ms = interval_hours * 60 * 60 * 1000
 
-            self._auto_update_check_timer = wx.Timer()
-            self._auto_update_check_timer.Bind(wx.EVT_TIMER, self._on_auto_update_check_timer)
-            self._auto_update_check_timer.Start(interval_ms)
+            timer = wx.Timer(self)
+            self.Bind(wx.EVT_TIMER, self._on_auto_update_check_timer, timer)
+            timer.Start(interval_ms)
+            self._auto_update_check_timer = timer
 
             logger.info(
                 "Automatic update checks scheduled every %s hour(s)",
@@ -1487,9 +1504,7 @@ class AccessiWeatherApp(wx.App):
         if update_timer:
             update_timer.Stop()
 
-        auto_update_timer = getattr(self, "_auto_update_check_timer", None)
-        if auto_update_timer:
-            auto_update_timer.Stop()
+        self._stop_auto_update_checks()
 
         # Play exit sound without blocking shutdown.
         try:
