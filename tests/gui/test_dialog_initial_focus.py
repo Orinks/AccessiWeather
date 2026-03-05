@@ -66,7 +66,16 @@ _USING_STUB = not hasattr(sys.modules.get("wx", None), "App")
 
 # Methods that dialogs invoke on *self* (inherits _WxStubBase via wx.Dialog).
 _StubBase = _wx.Dialog
-for _meth in ("SetSize", "CenterOnParent", "SetSizer", "EndModal", "Layout", "Hide", "Show"):
+for _meth in (
+    "SetSize",
+    "CenterOnParent",
+    "SetSizer",
+    "EndModal",
+    "Layout",
+    "Hide",
+    "Show",
+    "Bind",
+):
     if not hasattr(_StubBase, _meth):
         setattr(_StubBase, _meth, lambda self, *a, **kw: None)
 if not hasattr(_StubBase, "GetSizer"):
@@ -127,6 +136,7 @@ def widget_tracker():
             "Show",
             "SetSize",
             "GetSizer",
+            "Bind",
         )
         for method in _dialog_methods:
             if method == "__init__":
