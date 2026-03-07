@@ -119,12 +119,20 @@ jobs:
           if exist "AccessiWeather_dir" (
             cd AccessiWeather_dir
             if not exist "config" mkdir config
+            if not exist "data" mkdir data
+            if not exist "data\soundpacks" mkdir data\soundpacks
+            if exist "..\..\soundpacks\default" xcopy /E /I /Y "..\..\soundpacks\default" "data\soundpacks\default"
+            if exist "..\..\soundpacks\nature" xcopy /E /I /Y "..\..\soundpacks\nature" "data\soundpacks\nature"
             7z a -tzip "..\AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip" *
             cd ..
           ) else (
             mkdir AccessiWeather_portable
             copy "AccessiWeather.exe" "AccessiWeather_portable\AccessiWeather.exe"
             mkdir "AccessiWeather_portable\config"
+            mkdir "AccessiWeather_portable\data"
+            mkdir "AccessiWeather_portable\data\soundpacks"
+            if exist "..\soundpacks\default" xcopy /E /I /Y "..\soundpacks\default" "AccessiWeather_portable\data\soundpacks\default"
+            if exist "..\soundpacks\nature" xcopy /E /I /Y "..\soundpacks\nature" "AccessiWeather_portable\data\soundpacks\nature"
             7z a -tzip "AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip" "AccessiWeather_portable\*"
           )
 
