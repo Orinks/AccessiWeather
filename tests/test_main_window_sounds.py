@@ -149,3 +149,53 @@ class TestMainWindowFetchErrorSound:
             win._on_weather_error("Connection timed out")
 
         mock_play.assert_not_called()
+
+    def test_data_updated_sound_exception_is_swallowed(self, mock_app):
+        """Exceptions from play_data_updated_sound must not propagate."""
+        from accessiweather.ui.main_window import MainWindow
+
+        with patch.object(MainWindow, "__init__", lambda self, *a, **kw: None):
+            win = MainWindow.__new__(MainWindow)
+        win.app = mock_app
+        win.set_status = MagicMock()
+        win.refresh_button = MagicMock()
+        win.current_conditions = MagicMock()
+        win.stale_warning_label = MagicMock()
+        win.forecast_display = MagicMock()
+        win._update_alerts = MagicMock()
+        win._process_notification_events = MagicMock()
+        win._alert_lifecycle_labels = {}
+        presentation = MagicMock()
+        presentation.current_conditions = MagicMock()
+        presentation.current_conditions.fallback_text = "70°F"
+        presentation.source_attribution = None
+        presentation.forecast = None
+        presentation.status_messages = []
+        mock_app.presenter.present.return_value = presentation
+
+        with patch(
+            "accessiweather.notifications.sound_player.play_data_updated_sound",
+            side_effect=Exception("sound failure"),
+        ):
+            win._on_weather_data_received(MagicMock())  # must not raise
+
+
+class TestMainWindowFetchErrorSoundExceptions(TestMainWindowFetchErrorSound):
+    """Exception-swallowing tests for fetch_error sound."""
+
+    def test_fetch_error_sound_exception_is_swallowed(self, mock_app):
+        """Exceptions from play_fetch_error_sound must not propagate."""
+        from accessiweather.ui.main_window import MainWindow
+
+        with patch.object(MainWindow, "__init__", lambda self, *a, **kw: None):
+            win = MainWindow.__new__(MainWindow)
+        win.app = mock_app
+        win.set_status = MagicMock()
+        win.refresh_button = MagicMock()
+        win.app.is_updating = True
+
+        with patch(
+            "accessiweather.notifications.sound_player.play_fetch_error_sound",
+            side_effect=Exception("sound failure"),
+        ):
+            win._on_weather_error("network error")  # must not raise
