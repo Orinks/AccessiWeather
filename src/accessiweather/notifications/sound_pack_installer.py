@@ -19,10 +19,12 @@ def safe_extractall(zip_file: zipfile.ZipFile, target_dir: Path) -> None:
     target_dir = target_dir.resolve()
     for member in zip_file.namelist():
         member_path = (target_dir / member).resolve()
-        if not str(member_path).startswith(str(target_dir) + "/") and member_path != target_dir:
+        try:
+            member_path.relative_to(target_dir)
+        except ValueError as e:
             raise ValueError(
                 f"Zip Slip detected: member '{member}' would extract outside target directory"
-            )
+            ) from e
     zip_file.extractall(target_dir)
 
 
