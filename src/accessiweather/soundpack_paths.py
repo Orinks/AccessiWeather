@@ -34,7 +34,10 @@ def get_soundpacks_dir() -> Path:
         legacy_config_marker = exe_dir / "config"
         is_portable = portable_marker.exists() or legacy_config_marker.is_dir()
 
-        base_path = exe_dir if is_portable else meipass_dir
+        # Portable: soundpacks live in config/soundpacks/ alongside other
+        # user data so everything portable-managed is in one place.
+        # Installed/onefile: use _MEIPASS where packs are extracted by PyInstaller.
+        base_path = exe_dir / "config" if is_portable else meipass_dir
         result = base_path / "soundpacks"
         logger.debug(
             "[packaging-diag] soundpacks_dir resolved (frozen=%s, portable=%s, meipass=%s, executable=%s): %s exists=%s",
