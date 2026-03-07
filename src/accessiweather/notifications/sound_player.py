@@ -487,6 +487,24 @@ def play_success_sound(pack_dir: str = DEFAULT_PACK) -> None:
         logger.debug(f"Failed to play success sound: {e}")
 
 
+def play_data_updated_sound(pack_dir: str = DEFAULT_PACK) -> None:
+    """Play a sound when weather data is successfully refreshed."""
+    try:
+        play_notification_sound("data_updated", pack_dir)
+        logger.debug(f"Played data_updated sound from pack: {pack_dir}")
+    except Exception as e:
+        logger.debug(f"Failed to play data_updated sound: {e}")
+
+
+def play_fetch_error_sound(pack_dir: str = DEFAULT_PACK) -> None:
+    """Play a sound when a weather data fetch fails."""
+    try:
+        play_notification_sound("fetch_error", pack_dir)
+        logger.debug(f"Played fetch_error sound from pack: {pack_dir}")
+    except Exception as e:
+        logger.debug(f"Failed to play fetch_error sound: {e}")
+
+
 def get_available_sound_packs() -> dict[str, dict]:
     """Get all available sound packs with their metadata."""
     sound_packs: dict[str, dict] = {}

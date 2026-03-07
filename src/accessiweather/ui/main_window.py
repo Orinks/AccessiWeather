@@ -1066,6 +1066,17 @@ class MainWindow(SizedFrame):
             # Process notification events (AFD updates, severe risk changes)
             self._process_notification_events(weather_data)
 
+            # Play data_updated sound on successful weather data refresh
+            try:
+                settings = self.app.config_manager.get_settings()
+                if getattr(settings, "sound_enabled", True):
+                    from accessiweather.notifications.sound_player import play_data_updated_sound
+
+                    sound_pack = getattr(settings, "sound_pack", "default")
+                    play_data_updated_sound(sound_pack)
+            except Exception as sound_exc:
+                logger.debug(f"Failed to play data_updated sound: {sound_exc}")
+
         except Exception as e:
             logger.error(f"Failed to update weather display: {e}")
             self.set_status(f"Error updating display: {e}")
@@ -1079,6 +1090,17 @@ class MainWindow(SizedFrame):
         self.set_status(f"Error: {error_message}")
         self.app.is_updating = False
         self.refresh_button.Enable()
+
+        # Play fetch_error sound on weather data fetch failure
+        try:
+            settings = self.app.config_manager.get_settings()
+            if getattr(settings, "sound_enabled", True):
+                from accessiweather.notifications.sound_player import play_fetch_error_sound
+
+                sound_pack = getattr(settings, "sound_pack", "default")
+                play_fetch_error_sound(sound_pack)
+        except Exception as sound_exc:
+            logger.debug(f"Failed to play fetch_error sound: {sound_exc}")
 
     def _update_alerts(self, alerts, lifecycle_labels: dict[str, str] | None = None) -> None:
         """

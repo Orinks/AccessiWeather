@@ -38,6 +38,8 @@ FRIENDLY_ALERT_CATEGORIES: list[tuple[str, str]] = [
     # Notification events
     ("Forecast Discussion Update", "discussion_update"),
     ("Severe Weather Risk Change", "severe_risk"),
+    ("Weather Data Successfully Refreshed", "data_updated"),
+    ("Weather Data Fetch Failed", "fetch_error"),
     # ----- Severity-based fallbacks (used when specific event sound not found) -----
     ("Extreme Severity (fallback)", "extreme"),
     ("Severe Severity (fallback)", "severe"),

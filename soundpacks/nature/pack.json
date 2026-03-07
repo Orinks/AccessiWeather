@@ -9,6 +9,8 @@
         "error": "thunder_distant.wav",
         "success": "gentle_rain.wav",
         "startup": "bird_chirp.wav",
-        "exit": "gentle_rain.wav"
+        "exit": "gentle_rain.wav",
+        "data_updated": "gentle_rain.wav",
+        "fetch_error": "thunder_distant.wav"
     }
 }
