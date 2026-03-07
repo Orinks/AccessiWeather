@@ -15,6 +15,8 @@
     "warning": "critical_alert.wav",
     "watch": "watch.wav",
     "discussion_update": "notify.wav",
-    "severe_risk": "critical_alert.wav"
+    "severe_risk": "critical_alert.wav",
+    "data_updated": "success.wav",
+    "fetch_error": "error.wav"
   }
 }
