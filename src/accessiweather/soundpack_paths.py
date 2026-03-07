@@ -17,13 +17,29 @@ def _find_project_root(start: Path) -> Path | None:
 
 
 def get_soundpacks_dir() -> Path:
-    """Return the base soundpacks directory for dev or packaged builds."""
+    """
+    Return the base soundpacks directory for dev or packaged builds.
+
+    In frozen builds, portable mode uses the exe directory so users can add
+    their own packs alongside the executable. Installed/onefile builds fall
+    back to the PyInstaller extraction dir (sys._MEIPASS).
+    """
     if getattr(sys, "frozen", False):
-        base_path = Path(sys._MEIPASS) if hasattr(sys, "_MEIPASS") else Path(sys.executable).parent
+        exe_dir = Path(sys.executable).parent
+        meipass_dir = Path(sys._MEIPASS) if hasattr(sys, "_MEIPASS") else exe_dir
+
+        # Portable: soundpacks live next to the exe so users can manage them.
+        # Detect via .portable marker (same logic as config_utils.is_portable_mode).
+        portable_marker = exe_dir / ".portable"
+        legacy_config_marker = exe_dir / "config"
+        is_portable = portable_marker.exists() or legacy_config_marker.is_dir()
+
+        base_path = exe_dir if is_portable else meipass_dir
         result = base_path / "soundpacks"
         logger.debug(
-            "[packaging-diag] soundpacks_dir resolved (frozen=%s, meipass=%s, executable=%s): %s exists=%s",
+            "[packaging-diag] soundpacks_dir resolved (frozen=%s, portable=%s, meipass=%s, executable=%s): %s exists=%s",
             getattr(sys, "frozen", False),
+            is_portable,
             getattr(sys, "_MEIPASS", None),
             getattr(sys, "executable", None),
             result,
