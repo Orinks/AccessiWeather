@@ -122,7 +122,6 @@ jobs:
             if not exist "data" mkdir data
             if not exist "data\soundpacks" mkdir data\soundpacks
             if exist "..\..\soundpacks\default" xcopy /E /I /Y "..\..\soundpacks\default" "data\soundpacks\default"
-            if exist "..\..\soundpacks\nature" xcopy /E /I /Y "..\..\soundpacks\nature" "data\soundpacks\nature"
             7z a -tzip "..\AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip" *
             cd ..
           ) else (
@@ -132,7 +131,6 @@ jobs:
             mkdir "AccessiWeather_portable\data"
             mkdir "AccessiWeather_portable\data\soundpacks"
             if exist "..\soundpacks\default" xcopy /E /I /Y "..\soundpacks\default" "AccessiWeather_portable\data\soundpacks\default"
-            if exist "..\soundpacks\nature" xcopy /E /I /Y "..\soundpacks\nature" "AccessiWeather_portable\data\soundpacks\nature"
             7z a -tzip "AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip" "AccessiWeather_portable\*"
           )
 
