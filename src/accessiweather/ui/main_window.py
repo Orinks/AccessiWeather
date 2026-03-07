@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING
 import wx
 from wx.lib.sized_controls import SizedFrame, SizedPanel
 
+from ..weather_event_pipeline import WeatherEvent, should_emit_current_conditions_event
+
 if TYPE_CHECKING:
     from ..app import AccessiWeatherApp
     from ..models.location import Location
@@ -993,6 +995,7 @@ class MainWindow(SizedFrame):
     def _on_weather_data_received(self, weather_data) -> None:
         """Handle received weather data (called on main thread)."""
         try:
+            previous_weather_data = self.app.current_weather_data
             self.app.current_weather_data = weather_data
 
             # Use presenter to create formatted presentation
@@ -1010,6 +1013,42 @@ class MainWindow(SizedFrame):
                 current_text += f"\n\n{presentation.source_attribution.summary_text}"
 
             self.current_conditions.SetValue(current_text)
+
+            # Emit channelized current-conditions event only on meaningful change.
+            if self.app.event_dispatcher:
+                previous_current = (
+                    previous_weather_data.current_conditions if previous_weather_data else None
+                )
+                should_emit, change_text = should_emit_current_conditions_event(
+                    previous_current,
+                    weather_data.current_conditions,
+                )
+                if should_emit and weather_data.current_conditions is not None:
+                    location = self.app.config_manager.get_current_location()
+                    location_name = location.name if location else "Unknown"
+                    condition = weather_data.current_conditions.condition or "Unknown conditions"
+                    temperature = weather_data.current_conditions.temperature
+                    temp_text = (
+                        f", {temperature:.0f} degrees"
+                        if isinstance(temperature, (int, float))
+                        else ""
+                    )
+                    speech_text = f"{location_name}: {condition}{temp_text}. {change_text}".strip()
+                    self.app.event_dispatcher.dispatch_event(
+                        WeatherEvent(
+                            channel="now",
+                            location=location_name,
+                            headline=f"Current conditions: {condition}",
+                            speech_text=speech_text,
+                            change_text=change_text,
+                            payload={
+                                "condition": condition,
+                                "temperature": temperature,
+                            },
+                        ),
+                        announce=True,
+                        mirror_toast=False,
+                    )
 
             # Update stale/cached data warning
             if presentation.status_messages:

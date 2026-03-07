@@ -24,6 +24,7 @@ from .constants import (
 from .display.presentation.formatters import format_display_datetime
 from .models import AppSettings, WeatherAlert, WeatherAlerts
 from .notifications.toast_notifier import SafeDesktopNotifier
+from .weather_event_pipeline import WeatherEvent, WeatherEventDispatcher
 
 logger = logging.getLogger(__name__)
 
@@ -133,11 +134,13 @@ class AlertNotificationSystem:
         alert_manager: AlertManager,
         notifier: SafeDesktopNotifier | None = None,
         settings: AppSettings | None = None,
+        event_dispatcher: WeatherEventDispatcher | None = None,
     ):
         """Initialize the instance."""
         self.alert_manager = alert_manager
         self.notifier = notifier or SafeDesktopNotifier()
         self.settings = settings
+        self.event_dispatcher = event_dispatcher
 
         logger.info("AlertNotificationSystem initialized")
 
@@ -259,6 +262,25 @@ class AlertNotificationSystem:
                 sound_candidates=sound_candidates,
                 play_sound=play_sound,
             )
+
+            if self.event_dispatcher is not None:
+                self.event_dispatcher.dispatch_event(
+                    WeatherEvent(
+                        channel="urgent",
+                        location=", ".join(alert.areas[:1]) if alert.areas else "Unknown",
+                        headline=title,
+                        speech_text=message,
+                        change_text=message,
+                        payload={
+                            "reason": reason,
+                            "severity": alert.severity,
+                            "event": alert.event,
+                            "alert_id": alert.get_unique_id(),
+                        },
+                    ),
+                    announce=True,
+                    mirror_toast=False,
+                )
 
             if success:
                 logger.info(f"[notify] Alert notification sent: {title[:60]!r}")
