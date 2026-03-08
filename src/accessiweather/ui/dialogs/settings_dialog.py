@@ -25,24 +25,6 @@ API_KEYS_TRANSFER_NOTE = (
 class SettingsDialogSimple(wx.Dialog):
     """Comprehensive settings dialog matching Toga version functionality."""
 
-    _EVENT_SOUND_SECTION_ORDER: tuple[tuple[str, str, tuple[str, ...]], ...] = (
-        (
-            "Weather updates",
-            "Control sounds tied to refresh results. Weather refresh is off by default.",
-            ("data_updated", "fetch_error"),
-        ),
-        (
-            "Weather events",
-            "These sounds follow the matching notification settings when those events are enabled.",
-            ("discussion_update", "severe_risk"),
-        ),
-        (
-            "App lifecycle",
-            "Optional sounds for startup and exit.",
-            ("startup", "exit"),
-        ),
-    )
-
     def __init__(self, parent, app: AccessiWeatherApp):
         """Initialize the settings dialog."""
         super().__init__(
@@ -743,10 +725,18 @@ class SettingsDialogSimple(wx.Dialog):
         panel.SetSizer(sizer)
         self.notebook.AddPage(panel, "Audio")
 
-    @classmethod
-    def _get_event_sound_sections(cls) -> tuple[tuple[str, str, tuple[str, ...]], ...]:
+    @staticmethod
+    def _get_event_sound_sections() -> tuple[tuple[str, str, tuple[str, ...]], ...]:
         """Return grouped event-sound sections used by the settings UI."""
-        return cls._EVENT_SOUND_SECTION_ORDER
+        try:
+            from ...sound_events import SOUND_EVENT_SECTIONS
+        except ImportError:
+            from accessiweather.sound_events import SOUND_EVENT_SECTIONS
+
+        return tuple(
+            (title, description, tuple(event_key for event_key, _label in section_events))
+            for title, description, section_events in SOUND_EVENT_SECTIONS
+        )
 
     @staticmethod
     def _get_mutable_sound_events() -> tuple[tuple[str, str], ...]:
