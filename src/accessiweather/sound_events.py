@@ -18,6 +18,8 @@ SOUND_EVENT_SECTIONS: tuple[tuple[str, str, tuple[tuple[str, str], ...]], ...] =
             ("success", "General success"),
             ("data_updated", "Weather refresh completed"),
             ("fetch_error", "Weather refresh failed"),
+            ("discussion_update", "Forecast discussion updated"),
+            ("severe_risk", "Severe weather risk changed"),
         ),
     ),
     (
@@ -26,14 +28,6 @@ SOUND_EVENT_SECTIONS: tuple[tuple[str, str, tuple[tuple[str, str], ...]], ...] =
         (
             ("startup", "App startup"),
             ("exit", "App exit"),
-        ),
-    ),
-    (
-        "Weather events",
-        "Discussion and severe-risk sounds.",
-        (
-            ("discussion_update", "Forecast discussion updated"),
-            ("severe_risk", "Severe weather risk changed"),
         ),
     ),
     (
