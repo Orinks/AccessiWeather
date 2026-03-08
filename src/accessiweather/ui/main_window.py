@@ -636,6 +636,7 @@ class MainWindow(SizedFrame):
             app_name="AccessiWeather",
             sound_enabled=bool(getattr(settings, "sound_enabled", True)),
             soundpack=getattr(settings, "sound_pack", "default"),
+            muted_sound_events=getattr(settings, "muted_sound_events", ["data_updated"]),
         )
         sent = notifier.send_notification(
             title="NWS Discussion Updated",
@@ -1073,7 +1074,8 @@ class MainWindow(SizedFrame):
                     from accessiweather.notifications.sound_player import play_data_updated_sound
 
                     sound_pack = getattr(settings, "sound_pack", "default")
-                    play_data_updated_sound(sound_pack)
+                    muted_events = getattr(settings, "muted_sound_events", ["data_updated"])
+                    play_data_updated_sound(sound_pack, muted_events=muted_events)
             except Exception as sound_exc:
                 logger.debug(f"Failed to play data_updated sound: {sound_exc}")
 
@@ -1098,7 +1100,8 @@ class MainWindow(SizedFrame):
                 from accessiweather.notifications.sound_player import play_fetch_error_sound
 
                 sound_pack = getattr(settings, "sound_pack", "default")
-                play_fetch_error_sound(sound_pack)
+                muted_events = getattr(settings, "muted_sound_events", ["data_updated"])
+                play_fetch_error_sound(sound_pack, muted_events=muted_events)
         except Exception as sound_exc:
             logger.debug(f"Failed to play fetch_error sound: {sound_exc}")
 

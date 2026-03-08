@@ -22,7 +22,7 @@ class TestMainWindowDataUpdatedSound:
         from accessiweather.models.config import AppSettings
 
         app = MagicMock()
-        settings = AppSettings(sound_enabled=True, sound_pack="default")
+        settings = AppSettings(sound_enabled=True, sound_pack="default", muted_sound_events=[])
         app.config_manager.get_settings.return_value = settings
         app.config_manager.get_current_location.return_value = MagicMock(name="Test Location")
         app.is_updating = True
@@ -35,7 +35,7 @@ class TestMainWindowDataUpdatedSound:
         from accessiweather.models.config import AppSettings
 
         app = MagicMock()
-        settings = AppSettings(sound_enabled=False, sound_pack="default")
+        settings = AppSettings(sound_enabled=False, sound_pack="default", muted_sound_events=[])
         app.config_manager.get_settings.return_value = settings
         app.config_manager.get_current_location.return_value = MagicMock(name="Test Location")
         app.is_updating = True
@@ -79,7 +79,7 @@ class TestMainWindowDataUpdatedSound:
         ) as mock_play:
             win._on_weather_data_received(weather_data)
 
-        mock_play.assert_called_once_with("default")
+        mock_play.assert_called_once_with("default", muted_events=[])
 
     def test_data_updated_sound_not_called_when_sound_disabled(self, mock_app_sound_disabled):
         """play_data_updated_sound is NOT called when sound_enabled=False."""
@@ -94,6 +94,20 @@ class TestMainWindowDataUpdatedSound:
 
         mock_play.assert_not_called()
 
+    def test_data_updated_sound_not_called_when_event_muted(self, mock_app):
+        """play_data_updated_sound is skipped when the event is muted."""
+        mock_app.config_manager.get_settings.return_value.muted_sound_events = ["data_updated"]
+        win = self._make_window(mock_app)
+        weather_data = MagicMock()
+        weather_data.alert_lifecycle_diff = None
+
+        with patch(
+            "accessiweather.notifications.sound_player.play_data_updated_sound"
+        ) as mock_play:
+            win._on_weather_data_received(weather_data)
+
+        mock_play.assert_called_once_with("default", muted_events=["data_updated"])
+
 
 class TestMainWindowFetchErrorSound:
     """Tests for fetch_error sound playback in _on_weather_error."""
@@ -104,7 +118,7 @@ class TestMainWindowFetchErrorSound:
         from accessiweather.models.config import AppSettings
 
         app = MagicMock()
-        settings = AppSettings(sound_enabled=True, sound_pack="default")
+        settings = AppSettings(sound_enabled=True, sound_pack="default", muted_sound_events=[])
         app.config_manager.get_settings.return_value = settings
         app.is_updating = True
         return app
@@ -115,7 +129,7 @@ class TestMainWindowFetchErrorSound:
         from accessiweather.models.config import AppSettings
 
         app = MagicMock()
-        settings = AppSettings(sound_enabled=False, sound_pack="default")
+        settings = AppSettings(sound_enabled=False, sound_pack="default", muted_sound_events=[])
         app.config_manager.get_settings.return_value = settings
         app.is_updating = True
         return app
@@ -139,7 +153,7 @@ class TestMainWindowFetchErrorSound:
         with patch("accessiweather.notifications.sound_player.play_fetch_error_sound") as mock_play:
             win._on_weather_error("Connection timed out")
 
-        mock_play.assert_called_once_with("default")
+        mock_play.assert_called_once_with("default", muted_events=[])
 
     def test_fetch_error_sound_not_called_when_sound_disabled(self, mock_app_sound_disabled):
         """play_fetch_error_sound is NOT called when sound_enabled=False."""
@@ -149,6 +163,16 @@ class TestMainWindowFetchErrorSound:
             win._on_weather_error("Connection timed out")
 
         mock_play.assert_not_called()
+
+    def test_fetch_error_sound_called_with_muted_events(self, mock_app):
+        """play_fetch_error_sound receives muted event overrides."""
+        mock_app.config_manager.get_settings.return_value.muted_sound_events = ["data_updated"]
+        win = self._make_window(mock_app)
+
+        with patch("accessiweather.notifications.sound_player.play_fetch_error_sound") as mock_play:
+            win._on_weather_error("Connection timed out")
+
+        mock_play.assert_called_once_with("default", muted_events=["data_updated"])
 
     def test_data_updated_sound_exception_is_swallowed(self, mock_app):
         """Exceptions from play_data_updated_sound must not propagate."""

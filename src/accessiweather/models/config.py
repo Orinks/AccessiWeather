@@ -34,6 +34,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     # Sound settings
     "sound_enabled",
     "sound_pack",
+    "muted_sound_events",
     "show_nationwide_location",
     # Event notifications
     "notify_discussion_update",
@@ -106,6 +107,7 @@ class AppSettings:
     update_check_interval_hours: int = 24
     sound_enabled: bool = True
     sound_pack: str = "default"
+    muted_sound_events: list[str] = field(default_factory=lambda: ["data_updated"])
     # Nationwide location visibility
     show_nationwide_location: bool = True
     # Event-based notifications (opt-in, disabled by default)
@@ -253,6 +255,22 @@ class AppSettings:
             if not isinstance(value, str) or not value.strip():
                 setattr(self, setting_name, "default")
 
+        elif setting_name == "muted_sound_events":
+            if not isinstance(value, list):
+                setattr(self, setting_name, ["data_updated"])
+            else:
+                normalized: list[str] = []
+                seen: set[str] = set()
+                for item in value:
+                    if not isinstance(item, str):
+                        continue
+                    event = item.strip()
+                    if not event or event in seen:
+                        continue
+                    seen.add(event)
+                    normalized.append(event)
+                setattr(self, setting_name, normalized)
+
         elif setting_name == "taskbar_icon_text_format":
             # Ensure format string is valid
             if not isinstance(value, str) or not value.strip():
@@ -383,6 +401,7 @@ class AppSettings:
             "update_check_interval_hours": self.update_check_interval_hours,
             "sound_enabled": self.sound_enabled,
             "sound_pack": self.sound_pack,
+            "muted_sound_events": self.muted_sound_events,
             "show_nationwide_location": self.show_nationwide_location,
             "notify_discussion_update": self.notify_discussion_update,
             "notify_severe_risk_change": self.notify_severe_risk_change,
@@ -457,6 +476,7 @@ class AppSettings:
             update_check_interval_hours=data.get("update_check_interval_hours", 24),
             sound_enabled=cls._as_bool(data.get("sound_enabled"), True),
             sound_pack=data.get("sound_pack", "default"),
+            muted_sound_events=data.get("muted_sound_events", ["data_updated"]),
             show_nationwide_location=cls._as_bool(data.get("show_nationwide_location"), True),
             notify_discussion_update=cls._as_bool(data.get("notify_discussion_update"), True),
             notify_severe_risk_change=cls._as_bool(data.get("notify_severe_risk_change"), False),
