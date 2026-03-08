@@ -32,6 +32,7 @@ SRC_DIR = ROOT / "src"
 DIST_DIR = ROOT / "dist"
 BUILD_DIR = ROOT / "build"
 RESOURCES_DIR = SRC_DIR / "accessiweather" / "resources"
+SOUNDPACKS_DIR = ROOT / "soundpacks"
 
 # Platform detection
 IS_WINDOWS = platform.system() == "Windows"
@@ -338,8 +339,22 @@ def create_portable_zip() -> bool:
             exe_path = DIST_DIR / "AccessiWeather.exe"
             if exe_path.exists():
                 source_dir = DIST_DIR / "AccessiWeather_portable"
+                if source_dir.exists():
+                    shutil.rmtree(source_dir)
                 source_dir.mkdir(exist_ok=True)
                 shutil.copy2(exe_path, source_dir / "AccessiWeather.exe")
+
+                # Portable frozen builds resolve bundled soundpacks from data/soundpacks
+                # next to the executable, not from PyInstaller's temp extraction dir.
+                default_soundpack_dir = SOUNDPACKS_DIR / "default"
+                if default_soundpack_dir.exists():
+                    portable_soundpacks_dir = source_dir / "data" / "soundpacks"
+                    portable_soundpacks_dir.mkdir(parents=True, exist_ok=True)
+                    shutil.copytree(
+                        default_soundpack_dir,
+                        portable_soundpacks_dir / "default",
+                        dirs_exist_ok=True,
+                    )
             else:
                 print("Error: No build output found")
                 return False
