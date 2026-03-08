@@ -6,6 +6,7 @@ from collections.abc import Collection
 from pathlib import Path
 from typing import Any
 
+from ..sound_events import normalize_muted_sound_events
 from ..soundpack_paths import get_soundpacks_dir
 
 # Try sound_lib first (supports stopping playback, cross-platform)
@@ -37,31 +38,6 @@ logger = logging.getLogger(__name__)
 SOUNDPACKS_DIR = get_soundpacks_dir()
 DEFAULT_PACK = "default"
 DEFAULT_EVENT = "alert"
-DEFAULT_MUTED_SOUND_EVENTS: tuple[str, ...] = ("data_updated",)
-USER_MUTABLE_SOUND_EVENTS: tuple[tuple[str, str], ...] = (
-    ("data_updated", "Play a sound after weather refresh"),
-    ("fetch_error", "Play a sound when weather refresh fails"),
-    ("discussion_update", "Play a sound for forecast discussion updates"),
-    ("severe_risk", "Play a sound for severe risk changes"),
-    ("startup", "Play a startup sound when the app opens"),
-    ("exit", "Play an exit sound when the app closes"),
-)
-
-
-def normalize_muted_sound_events(events: Collection[str] | None) -> list[str]:
-    """Normalize muted event names while preserving order."""
-    if not events:
-        return []
-
-    normalized: list[str] = []
-    seen: set[str] = set()
-    for item in events:
-        event = str(item).strip()
-        if not event or event in seen:
-            continue
-        seen.add(event)
-        normalized.append(event)
-    return normalized
 
 
 def is_sound_event_muted(event: str, muted_events: Collection[str] | None = None) -> bool:

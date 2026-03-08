@@ -92,7 +92,11 @@ def test_load_settings_updates_event_sound_state_and_summary():
 
     assert dialog._event_sound_states["data_updated"] is False
     assert dialog._event_sound_states["fetch_error"] is True
-    assert dialog._controls["event_sounds_summary"].GetLabel() == "5 of 6 sound events are enabled."
+    total_events = len(dialog._build_default_event_sound_states())
+    assert (
+        dialog._controls["event_sounds_summary"].GetLabel()
+        == f"{total_events - 1} of {total_events} sound events are enabled."
+    )
 
 
 def test_save_settings_collects_unchecked_audio_events():
@@ -126,7 +130,11 @@ def test_configure_event_sounds_applies_modal_result_and_refreshes_summary():
 
     assert dialog._event_sound_states["data_updated"] is False
     assert dialog._event_sound_states["severe_risk"] is False
-    assert dialog._controls["event_sounds_summary"].GetLabel() == "4 of 6 sound events are enabled."
+    total_events = len(dialog._build_default_event_sound_states())
+    assert (
+        dialog._controls["event_sounds_summary"].GetLabel()
+        == f"{total_events - 2} of {total_events} sound events are enabled."
+    )
 
 
 def test_configure_event_sounds_cancel_keeps_existing_state():

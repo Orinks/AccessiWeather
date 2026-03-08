@@ -17,8 +17,8 @@ import sys
 import threading
 
 from ..constants import WINDOWS_APP_USER_MODEL_ID
+from ..sound_events import DEFAULT_MUTED_SOUND_EVENTS
 from .sound_player import (
-    DEFAULT_MUTED_SOUND_EVENTS,
     normalize_muted_sound_events,
     play_notification_sound,
     play_notification_sound_candidates,

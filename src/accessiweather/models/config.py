@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from ..sound_events import DEFAULT_MUTED_SOUND_EVENTS, normalize_known_muted_sound_events
 from .weather import Location
 
 # Critical settings needed for app initialization (load synchronously)
@@ -107,7 +108,7 @@ class AppSettings:
     update_check_interval_hours: int = 24
     sound_enabled: bool = True
     sound_pack: str = "default"
-    muted_sound_events: list[str] = field(default_factory=lambda: ["data_updated"])
+    muted_sound_events: list[str] = field(default_factory=lambda: list(DEFAULT_MUTED_SOUND_EVENTS))
     # Nationwide location visibility
     show_nationwide_location: bool = True
     # Event-based notifications (opt-in, disabled by default)
@@ -257,18 +258,9 @@ class AppSettings:
 
         elif setting_name == "muted_sound_events":
             if not isinstance(value, list):
-                setattr(self, setting_name, ["data_updated"])
+                setattr(self, setting_name, list(DEFAULT_MUTED_SOUND_EVENTS))
             else:
-                normalized: list[str] = []
-                seen: set[str] = set()
-                for item in value:
-                    if not isinstance(item, str):
-                        continue
-                    event = item.strip()
-                    if not event or event in seen:
-                        continue
-                    seen.add(event)
-                    normalized.append(event)
+                normalized = normalize_known_muted_sound_events(value)
                 setattr(self, setting_name, normalized)
 
         elif setting_name == "taskbar_icon_text_format":
@@ -476,7 +468,7 @@ class AppSettings:
             update_check_interval_hours=data.get("update_check_interval_hours", 24),
             sound_enabled=cls._as_bool(data.get("sound_enabled"), True),
             sound_pack=data.get("sound_pack", "default"),
-            muted_sound_events=data.get("muted_sound_events", ["data_updated"]),
+            muted_sound_events=data.get("muted_sound_events", list(DEFAULT_MUTED_SOUND_EVENTS)),
             show_nationwide_location=cls._as_bool(data.get("show_nationwide_location"), True),
             notify_discussion_update=cls._as_bool(data.get("notify_discussion_update"), True),
             notify_severe_risk_change=cls._as_bool(data.get("notify_severe_risk_change"), False),
