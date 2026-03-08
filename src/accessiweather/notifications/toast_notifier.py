@@ -17,7 +17,12 @@ import sys
 import threading
 
 from ..constants import WINDOWS_APP_USER_MODEL_ID
-from .sound_player import play_notification_sound, play_notification_sound_candidates
+from .sound_player import (
+    DEFAULT_MUTED_SOUND_EVENTS,
+    normalize_muted_sound_events,
+    play_notification_sound,
+    play_notification_sound_candidates,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +94,7 @@ class ToastedWindowsNotifier:
         app_name: str = "AccessiWeather",
         sound_enabled: bool = True,
         soundpack: str | None = None,
+        muted_sound_events: list[str] | None = None,
     ):
         """Initialize the Windows toasted notification backend."""
         self.app_name = app_name
@@ -97,6 +103,10 @@ class ToastedWindowsNotifier:
         # Sound configuration
         self.sound_enabled: bool = bool(sound_enabled)
         self.soundpack: str = soundpack or "default"
+        initial_muted_events = (
+            DEFAULT_MUTED_SOUND_EVENTS if muted_sound_events is None else muted_sound_events
+        )
+        self.muted_sound_events: list[str] = normalize_muted_sound_events(initial_muted_events)
 
         # Optional fallback callable (same contract as SafeDesktopNotifier)
         self.balloon_fn = None  # Optional[Callable[[str, str], None]]
@@ -299,10 +309,20 @@ class ToastedWindowsNotifier:
     def _play_sound(self, sound_event: str | None, sound_candidates: list[str] | None) -> None:
         """Play a notification sound."""
         try:
+            effective_event = sound_event or (sound_candidates[0] if sound_candidates else None)
             if sound_candidates:
-                play_notification_sound_candidates(sound_candidates, self.soundpack)
+                play_notification_sound_candidates(
+                    sound_candidates,
+                    self.soundpack,
+                    logical_event=effective_event,
+                    muted_events=self.muted_sound_events,
+                )
             else:
-                play_notification_sound(sound_event or "alert", self.soundpack)
+                play_notification_sound(
+                    sound_event or "alert",
+                    self.soundpack,
+                    muted_events=self.muted_sound_events,
+                )
         except Exception as e:
             logger.debug("Sound playback failed: %s", e)
 
@@ -327,6 +347,7 @@ class _DesktopNotifierBackend:
         app_name: str = "AccessiWeather",
         sound_enabled: bool = True,
         soundpack: str | None = None,
+        muted_sound_events: list[str] | None = None,
     ):
         self.app_name = app_name
         _log_packaging_notifier_diagnostics()
@@ -334,6 +355,10 @@ class _DesktopNotifierBackend:
         # Sound configuration
         self.sound_enabled: bool = bool(sound_enabled)
         self.soundpack: str = soundpack or "default"
+        initial_muted_events = (
+            DEFAULT_MUTED_SOUND_EVENTS if muted_sound_events is None else muted_sound_events
+        )
+        self.muted_sound_events: list[str] = normalize_muted_sound_events(initial_muted_events)
 
         # Optional fallback callable: balloon_fn(title, message) is called when the
         # WinRT/desktop-notifier toast fails (e.g. window hidden in system tray).
@@ -542,10 +567,20 @@ class _DesktopNotifierBackend:
     def _play_sound(self, sound_event: str | None, sound_candidates: list[str] | None) -> None:
         """Play a notification sound."""
         try:
+            effective_event = sound_event or (sound_candidates[0] if sound_candidates else None)
             if sound_candidates:
-                play_notification_sound_candidates(sound_candidates, self.soundpack)
+                play_notification_sound_candidates(
+                    sound_candidates,
+                    self.soundpack,
+                    logical_event=effective_event,
+                    muted_events=self.muted_sound_events,
+                )
             else:
-                play_notification_sound(sound_event or "alert", self.soundpack)
+                play_notification_sound(
+                    sound_event or "alert",
+                    self.soundpack,
+                    muted_events=self.muted_sound_events,
+                )
         except Exception as e:
             logger.debug("Sound playback failed: %s", e)
 
@@ -574,16 +609,26 @@ class SafeToastNotifier:
     best available backend (toasted on Windows, desktop-notifier elsewhere).
     """
 
-    def __init__(self, sound_enabled: bool = True, soundpack: str | None = None):
+    def __init__(
+        self,
+        sound_enabled: bool = True,
+        soundpack: str | None = None,
+        muted_sound_events: list[str] | None = None,
+    ):
         """Initialize the notification wrapper."""
         self.sound_enabled: bool = bool(sound_enabled)
         self.soundpack: str = soundpack if soundpack is not None else "default"
+        initial_muted_events = (
+            DEFAULT_MUTED_SOUND_EVENTS if muted_sound_events is None else muted_sound_events
+        )
+        self.muted_sound_events: list[str] = normalize_muted_sound_events(initial_muted_events)
         # Initialize underlying notifier with sound preferences
         if NOTIFIER_AVAILABLE:
             self._desktop_notifier = SafeDesktopNotifier(
                 app_name="AccessiWeather",
                 sound_enabled=self.sound_enabled,
                 soundpack=self.soundpack,
+                muted_sound_events=self.muted_sound_events,
             )
         else:
             self._desktop_notifier = None
@@ -624,7 +669,11 @@ class SafeToastNotifier:
                     sound_event = (
                         "alert" if str(alert_type).lower() in ("urgent", "alert") else "notify"
                     )
-                    play_notification_sound(sound_event, self.soundpack)
+                    play_notification_sound(
+                        sound_event,
+                        self.soundpack,
+                        muted_events=self.muted_sound_events,
+                    )
                 except Exception as e:
                     logger.error("Failed to play notification sound: %s", e)
 

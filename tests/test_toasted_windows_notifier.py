@@ -94,7 +94,7 @@ class TestToastedWindowsNotifierSend:
         ):
             notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=True)
             notifier.send_notification("Title", "Body", play_sound=True)
-            mock_sound.assert_called_once_with("alert", "default")
+            mock_sound.assert_called_once_with("alert", "default", muted_events=["data_updated"])
 
     def test_send_skips_sound_when_play_sound_false(self):
         """When play_sound=False, no sound is played."""
@@ -114,7 +114,12 @@ class TestToastedWindowsNotifierSend:
         ):
             notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=True)
             notifier.send_notification("Title", "Body", sound_candidates=["alert", "notify"])
-            mock_candidates.assert_called_once_with(["alert", "notify"], "default")
+            mock_candidates.assert_called_once_with(
+                ["alert", "notify"],
+                "default",
+                logical_event="alert",
+                muted_events=["data_updated"],
+            )
 
     def test_balloon_fallback_called_on_failure(self):
         """When _send_in_worker fails, balloon_fn fallback is tried."""

@@ -664,6 +664,28 @@ class SettingsDialogSimple(wx.Dialog):
         manage_btn.Bind(wx.EVT_BUTTON, self._on_manage_soundpacks)
         sizer.Add(manage_btn, 0, wx.LEFT | wx.TOP, 10)
 
+        sizer.Add(wx.StaticLine(panel), 0, wx.EXPAND | wx.ALL, 10)
+        sizer.Add(wx.StaticText(panel, label="Per-event sounds:"), 0, wx.LEFT | wx.BOTTOM, 5)
+        sizer.Add(
+            wx.StaticText(
+                panel,
+                label="These toggles override the selected sound pack. Weather refresh is off by default, and you can re-enable it here at any time.",
+            ),
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            10,
+        )
+
+        from ...notifications.sound_player import USER_MUTABLE_SOUND_EVENTS
+
+        self._event_sound_controls = {}
+        for event_key, label in USER_MUTABLE_SOUND_EVENTS:
+            control_key = f"sound_event_{event_key}"
+            checkbox = wx.CheckBox(panel, label=label)
+            self._controls[control_key] = checkbox
+            self._event_sound_controls[event_key] = checkbox
+            sizer.Add(checkbox, 0, wx.LEFT | wx.BOTTOM, 10)
+
         panel.SetSizer(sizer)
         self.notebook.AddPage(panel, "Audio")
 
@@ -1172,6 +1194,10 @@ class SettingsDialogSimple(wx.Dialog):
             except (ValueError, AttributeError):
                 self._controls["sound_pack"].SetSelection(0)
 
+            muted_sound_events = set(getattr(settings, "muted_sound_events", ["data_updated"]))
+            for event_key, control in getattr(self, "_event_sound_controls", {}).items():
+                control.SetValue(event_key not in muted_sound_events)
+
             # Updates tab
             self._controls["auto_update"].SetValue(getattr(settings, "auto_update_enabled", True))
             channel = getattr(settings, "update_channel", "stable")
@@ -1343,6 +1369,11 @@ class SettingsDialogSimple(wx.Dialog):
                 if hasattr(self, "_sound_pack_ids")
                 and self._controls["sound_pack"].GetSelection() < len(self._sound_pack_ids)
                 else "default",
+                "muted_sound_events": [
+                    event_key
+                    for event_key, control in getattr(self, "_event_sound_controls", {}).items()
+                    if not control.GetValue()
+                ],
                 # Updates
                 "auto_update_enabled": self._controls["auto_update"].GetValue(),
                 "update_channel": "stable"
@@ -1461,6 +1492,11 @@ class SettingsDialogSimple(wx.Dialog):
             "startup": "Launch automatically at startup",
             "weather_history": "Enable weather history comparisons",
         }
+
+        from ...notifications.sound_player import USER_MUTABLE_SOUND_EVENTS
+
+        for event_key, label in USER_MUTABLE_SOUND_EVENTS:
+            control_names[f"sound_event_{event_key}"] = label
 
         for key, name in control_names.items():
             self._controls[key].SetName(name)

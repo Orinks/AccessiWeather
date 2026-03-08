@@ -343,6 +343,12 @@ class TestAppSettings:
         assert settings.forecast_duration_days == 7
         assert settings.forecast_time_reference == "location"
 
+    def test_default_muted_sound_events(self):
+        """Weather refresh sound is muted by default."""
+        settings = AppSettings()
+
+        assert settings.muted_sound_events == ["data_updated"]
+
     def test_custom_settings(self):
         """Test custom settings."""
         settings = AppSettings(
@@ -369,6 +375,23 @@ class TestAppSettings:
 
         assert settings.validate_on_access("forecast_duration_days") is True
         assert settings.forecast_duration_days == 7
+
+    def test_muted_sound_events_round_trip(self):
+        """Muted sound events should serialize and load cleanly."""
+        settings = AppSettings(muted_sound_events=["data_updated", "startup"])
+
+        restored = AppSettings.from_dict(settings.to_dict())
+        restored.validate_on_access("muted_sound_events")
+
+        assert restored.muted_sound_events == ["data_updated", "startup"]
+
+    def test_muted_sound_events_validation_filters_invalid_values(self):
+        """Muted sound events validation should normalize the stored list."""
+        settings = AppSettings(muted_sound_events=["data_updated"])
+        settings.muted_sound_events = ["data_updated", "", "data_updated", 123]  # type: ignore[list-item]
+
+        assert settings.validate_on_access("muted_sound_events") is True
+        assert settings.muted_sound_events == ["data_updated"]
 
 
 class TestAppConfig:
