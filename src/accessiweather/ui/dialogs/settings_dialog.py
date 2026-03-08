@@ -25,12 +25,30 @@ API_KEYS_TRANSFER_NOTE = (
 class SettingsDialogSimple(wx.Dialog):
     """Comprehensive settings dialog matching Toga version functionality."""
 
+    _EVENT_SOUND_SECTION_ORDER: tuple[tuple[str, str, tuple[str, ...]], ...] = (
+        (
+            "Weather updates",
+            "Control sounds tied to refresh results. Weather refresh is off by default.",
+            ("data_updated", "fetch_error"),
+        ),
+        (
+            "Weather events",
+            "These sounds follow the matching notification settings when those events are enabled.",
+            ("discussion_update", "severe_risk"),
+        ),
+        (
+            "App lifecycle",
+            "Optional sounds for startup and exit.",
+            ("startup", "exit"),
+        ),
+    )
+
     def __init__(self, parent, app: AccessiWeatherApp):
         """Initialize the settings dialog."""
         super().__init__(
             parent,
             title="Settings",
-            size=(600, 550),
+            size=(680, 620),
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self.app = app
@@ -55,6 +73,7 @@ class SettingsDialogSimple(wx.Dialog):
         self._create_data_sources_tab()
         self._create_notifications_tab()
         self._create_audio_tab()
+        self._create_event_sounds_tab()
         self._create_updates_tab()
         self._create_ai_tab()
         self._create_advanced_tab()
@@ -534,7 +553,10 @@ class SettingsDialogSimple(wx.Dialog):
         sizer.Add(
             wx.StaticText(
                 panel,
-                label="Get notified when specific weather events occur (disabled by default).",
+                label=(
+                    "Get notified when specific weather events occur (disabled by default). "
+                    "Use Event Sounds to decide whether these events also play audio."
+                ),
             ),
             0,
             wx.LEFT | wx.BOTTOM,
@@ -618,22 +640,35 @@ class SettingsDialogSimple(wx.Dialog):
 
     def _create_audio_tab(self):
         """Create the audio tab."""
-        panel = wx.Panel(self.notebook)
+        panel = wx.ScrolledWindow(self.notebook)
+        panel.SetScrollRate(0, 20)
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         sizer.Add(
-            wx.StaticText(panel, label="Sound Notifications:"),
+            wx.StaticText(panel, label="Audio"),
             0,
             wx.ALL,
             5,
         )
+        sizer.Add(
+            wx.StaticText(
+                panel,
+                label=(
+                    "Choose whether sounds are enabled and which sound pack is active. "
+                    "Individual event toggles are on the Event Sounds tab."
+                ),
+            ),
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            5,
+        )
 
-        self._controls["sound_enabled"] = wx.CheckBox(panel, label="Enable Sounds")
+        self._controls["sound_enabled"] = wx.CheckBox(panel, label="Play notification sounds")
         sizer.Add(self._controls["sound_enabled"], 0, wx.LEFT | wx.BOTTOM, 10)
 
         row1 = wx.BoxSizer(wx.HORIZONTAL)
         row1.Add(
-            wx.StaticText(panel, label="Active sound pack:"),
+            wx.StaticText(panel, label="Sound pack:"),
             0,
             wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
             10,
@@ -653,41 +688,76 @@ class SettingsDialogSimple(wx.Dialog):
 
         self._controls["sound_pack"] = wx.Choice(panel, choices=pack_names)
         row1.Add(self._controls["sound_pack"], 0)
-        sizer.Add(row1, 0, wx.LEFT, 10)
+        sizer.Add(row1, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
-        # Test sound button
-        test_btn = wx.Button(panel, label="Test Sound")
+        action_row = wx.BoxSizer(wx.HORIZONTAL)
+        test_btn = wx.Button(panel, label="Test selected sound")
         test_btn.Bind(wx.EVT_BUTTON, self._on_test_sound)
-        sizer.Add(test_btn, 0, wx.LEFT | wx.TOP, 10)
+        action_row.Add(test_btn, 0, wx.RIGHT, 10)
 
-        manage_btn = wx.Button(panel, label="Manage Sound Packs...")
+        manage_btn = wx.Button(panel, label="Manage sound packs...")
         manage_btn.Bind(wx.EVT_BUTTON, self._on_manage_soundpacks)
-        sizer.Add(manage_btn, 0, wx.LEFT | wx.TOP, 10)
+        action_row.Add(manage_btn, 0)
+        sizer.Add(action_row, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
-        sizer.Add(wx.StaticLine(panel), 0, wx.EXPAND | wx.ALL, 10)
-        sizer.Add(wx.StaticText(panel, label="Per-event sounds:"), 0, wx.LEFT | wx.BOTTOM, 5)
+        panel.SetSizer(sizer)
+        self.notebook.AddPage(panel, "Audio")
+
+    @classmethod
+    def _get_event_sound_sections(cls) -> tuple[tuple[str, str, tuple[str, ...]], ...]:
+        """Return grouped event-sound sections used by the settings UI."""
+        return cls._EVENT_SOUND_SECTION_ORDER
+
+    def _create_event_sounds_tab(self):
+        """Create the event sounds tab."""
+        panel = wx.ScrolledWindow(self.notebook)
+        panel.SetScrollRate(0, 20)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer.Add(
+            wx.StaticText(panel, label="Event Sounds"),
+            0,
+            wx.ALL,
+            5,
+        )
         sizer.Add(
             wx.StaticText(
                 panel,
-                label="These toggles override the selected sound pack. Weather refresh is off by default, and you can re-enable it here at any time.",
+                label=(
+                    "Fine-tune which events play sounds without changing your selected sound pack."
+                ),
             ),
             0,
             wx.LEFT | wx.RIGHT | wx.BOTTOM,
-            10,
+            5,
         )
 
         from ...notifications.sound_player import USER_MUTABLE_SOUND_EVENTS
 
+        sound_event_labels = dict(USER_MUTABLE_SOUND_EVENTS)
         self._event_sound_controls = {}
-        for event_key, label in USER_MUTABLE_SOUND_EVENTS:
-            control_key = f"sound_event_{event_key}"
-            checkbox = wx.CheckBox(panel, label=label)
-            self._controls[control_key] = checkbox
-            self._event_sound_controls[event_key] = checkbox
-            sizer.Add(checkbox, 0, wx.LEFT | wx.BOTTOM, 10)
+
+        for title, description, event_keys in self._get_event_sound_sections():
+            section = wx.StaticBoxSizer(wx.VERTICAL, panel, title)
+            section.Add(
+                wx.StaticText(panel, label=description),
+                0,
+                wx.LEFT | wx.RIGHT | wx.BOTTOM,
+                5,
+            )
+            for event_key in event_keys:
+                label = sound_event_labels.get(event_key)
+                if label is None:
+                    continue
+                control_key = f"sound_event_{event_key}"
+                checkbox = wx.CheckBox(panel, label=label)
+                self._controls[control_key] = checkbox
+                self._event_sound_controls[event_key] = checkbox
+                section.Add(checkbox, 0, wx.LEFT | wx.BOTTOM, 5)
+            sizer.Add(section, 0, wx.EXPAND | wx.ALL, 5)
 
         panel.SetSizer(sizer)
-        self.notebook.AddPage(panel, "Audio")
+        self.notebook.AddPage(panel, "Event Sounds")
 
     def _create_updates_tab(self):
         """Create the updates tab."""
@@ -1477,8 +1547,8 @@ class SettingsDialogSimple(wx.Dialog):
             "per_alert_cooldown": "Per-alert cooldown (minutes)",
             "freshness_window": "Alert freshness window (minutes)",
             "max_notifications": "Maximum notifications per hour",
-            "sound_enabled": "Enable Sounds",
-            "sound_pack": "Active sound pack",
+            "sound_enabled": "Play notification sounds",
+            "sound_pack": "Sound pack",
             "auto_update": "Check for updates automatically",
             "update_channel": "Update Channel",
             "update_check_interval": "Check Interval (hours)",
