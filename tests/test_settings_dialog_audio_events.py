@@ -29,6 +29,8 @@ class _DummyControl:
     def __init__(self) -> None:
         self._selection = 0
         self._value = False
+        self._label = ""
+        self._name = ""
 
     def SetSelection(self, value: int) -> None:
         self._selection = value
@@ -42,8 +44,14 @@ class _DummyControl:
     def GetValue(self):
         return self._value
 
+    def SetLabel(self, value: str) -> None:
+        self._label = value
+
+    def GetLabel(self) -> str:
+        return self._label
+
     def SetName(self, _value: str) -> None:
-        return None
+        self._name = _value
 
     def __getattr__(self, _name: str):
         return lambda *args, **kwargs: None
@@ -59,20 +67,19 @@ class _Controls(dict):
 def _make_dialog(settings: SimpleNamespace) -> SettingsDialogSimple:
     dialog = SettingsDialogSimple.__new__(SettingsDialogSimple)
     dialog._controls = _Controls()
+    dialog._controls["event_sounds_summary"] = _DummyControl()
+    dialog._controls["configure_event_sounds"] = _DummyControl()
     dialog._sound_pack_ids = ["default"]
     dialog._selected_specific_model = None
+    dialog._event_sound_states = dialog._build_default_event_sound_states()
     dialog.config_manager = MagicMock()
     dialog.config_manager.get_settings.return_value = settings
     dialog.config_manager.update_settings.return_value = True
     dialog._get_ai_model_preference = lambda: "openrouter/free"
-    dialog._event_sound_controls = {
-        "data_updated": dialog._controls["sound_event_data_updated"],
-        "fetch_error": dialog._controls["sound_event_fetch_error"],
-    }
     return dialog
 
 
-def test_load_settings_marks_muted_events_as_unchecked():
+def test_load_settings_updates_event_sound_state_and_summary():
     dialog = _make_dialog(
         SimpleNamespace(
             sound_enabled=True,
@@ -83,19 +90,50 @@ def test_load_settings_marks_muted_events_as_unchecked():
 
     dialog._load_settings()
 
-    assert dialog._controls["sound_event_data_updated"].GetValue() is False
-    assert dialog._controls["sound_event_fetch_error"].GetValue() is True
+    assert dialog._event_sound_states["data_updated"] is False
+    assert dialog._event_sound_states["fetch_error"] is True
+    assert dialog._controls["event_sounds_summary"].GetLabel() == "5 of 6 sound events are enabled."
 
 
 def test_save_settings_collects_unchecked_audio_events():
     dialog = _make_dialog(SimpleNamespace())
     dialog._controls["sound_enabled"].SetValue(True)
     dialog._controls["sound_pack"].SetSelection(0)
-    dialog._controls["sound_event_data_updated"].SetValue(False)
-    dialog._controls["sound_event_fetch_error"].SetValue(True)
+    dialog._event_sound_states["data_updated"] = False
+    dialog._event_sound_states["fetch_error"] = True
 
     success = dialog._save_settings()
 
     assert success is True
     kwargs = dialog.config_manager.update_settings.call_args.kwargs
     assert kwargs["muted_sound_events"] == ["data_updated"]
+
+
+def test_configure_event_sounds_applies_modal_result_and_refreshes_summary():
+    dialog = _make_dialog(SimpleNamespace())
+    dialog._run_event_sounds_dialog = MagicMock(
+        return_value={
+            "data_updated": False,
+            "fetch_error": True,
+            "discussion_update": True,
+            "severe_risk": False,
+            "startup": True,
+            "exit": True,
+        }
+    )
+
+    dialog._on_configure_event_sounds(event=None)
+
+    assert dialog._event_sound_states["data_updated"] is False
+    assert dialog._event_sound_states["severe_risk"] is False
+    assert dialog._controls["event_sounds_summary"].GetLabel() == "4 of 6 sound events are enabled."
+
+
+def test_configure_event_sounds_cancel_keeps_existing_state():
+    dialog = _make_dialog(SimpleNamespace())
+    dialog._event_sound_states["startup"] = False
+    dialog._run_event_sounds_dialog = MagicMock(return_value=None)
+
+    dialog._on_configure_event_sounds(event=None)
+
+    assert dialog._event_sound_states["startup"] is False
