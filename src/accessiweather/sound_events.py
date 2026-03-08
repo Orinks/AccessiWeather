@@ -10,7 +10,7 @@ DEFAULT_MUTED_SOUND_EVENTS: tuple[str, ...] = ("data_updated",)
 SOUND_EVENT_SECTIONS: tuple[tuple[str, str, tuple[tuple[str, str], ...]], ...] = (
     (
         "Core notifications",
-        "General sounds used for alerts, notifications, and common success or error feedback.",
+        "General app sounds.",
         (
             ("alert", "General alert"),
             ("notify", "General notification"),
@@ -20,7 +20,7 @@ SOUND_EVENT_SECTIONS: tuple[tuple[str, str, tuple[tuple[str, str], ...]], ...] =
     ),
     (
         "App lifecycle",
-        "Optional sounds for startup and shutdown.",
+        "Startup and exit sounds.",
         (
             ("startup", "App startup"),
             ("exit", "App exit"),
@@ -28,7 +28,7 @@ SOUND_EVENT_SECTIONS: tuple[tuple[str, str, tuple[tuple[str, str], ...]], ...] =
     ),
     (
         "Weather updates",
-        "Control sounds tied to refresh results.",
+        "Weather refresh sounds.",
         (
             ("data_updated", "Weather refresh completed"),
             ("fetch_error", "Weather refresh failed"),
@@ -36,7 +36,7 @@ SOUND_EVENT_SECTIONS: tuple[tuple[str, str, tuple[tuple[str, str], ...]], ...] =
     ),
     (
         "Weather events",
-        "These sounds follow the matching notification settings when those events are enabled.",
+        "Discussion and severe-risk sounds.",
         (
             ("discussion_update", "Forecast discussion updated"),
             ("severe_risk", "Severe weather risk changed"),
@@ -44,7 +44,7 @@ SOUND_EVENT_SECTIONS: tuple[tuple[str, str, tuple[tuple[str, str], ...]], ...] =
     ),
     (
         "Alert severity fallbacks",
-        "Used when a pack maps alerts by severity instead of by a more specific alert event.",
+        "Fallbacks by alert severity.",
         (
             ("extreme", "Extreme severity"),
             ("severe", "Severe severity"),
@@ -54,7 +54,7 @@ SOUND_EVENT_SECTIONS: tuple[tuple[str, str, tuple[tuple[str, str], ...]], ...] =
     ),
     (
         "Alert type fallbacks",
-        "Used when a pack maps alerts by generic alert type.",
+        "Fallbacks by alert type.",
         (
             ("warning", "Generic warning"),
             ("watch", "Generic watch"),
@@ -64,7 +64,7 @@ SOUND_EVENT_SECTIONS: tuple[tuple[str, str, tuple[tuple[str, str], ...]], ...] =
     ),
     (
         "Alert events",
-        "Specific alert events you may hear when packs provide dedicated sounds.",
+        "Specific alert sounds.",
         (
             ("tornado_warning", "Tornado Warning"),
             ("tornado_watch", "Tornado Watch"),

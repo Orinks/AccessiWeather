@@ -690,10 +690,7 @@ class SettingsDialogSimple(wx.Dialog):
         event_sounds_section.Add(
             wx.StaticText(
                 panel,
-                label=(
-                    "Review event-specific sound choices in one place without crowding "
-                    "the main Audio tab."
-                ),
+                label="Choose which events can play sounds.",
             ),
             0,
             wx.LEFT | wx.RIGHT | wx.BOTTOM,
@@ -809,10 +806,7 @@ class SettingsDialogSimple(wx.Dialog):
         main_sizer.Add(
             wx.StaticText(
                 dialog,
-                label=(
-                    "Choose which events may play audio. Notification settings still "
-                    "control whether discussion and severe-risk events can occur."
-                ),
+                label="Choose which events can play sounds.",
             ),
             0,
             wx.ALL | wx.EXPAND,
