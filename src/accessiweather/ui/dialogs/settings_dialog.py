@@ -25,6 +25,24 @@ API_KEYS_TRANSFER_NOTE = (
 class SettingsDialogSimple(wx.Dialog):
     """Comprehensive settings dialog matching Toga version functionality."""
 
+    _EVENT_SOUND_SECTION_ORDER: tuple[tuple[str, str, tuple[str, ...]], ...] = (
+        (
+            "Weather updates",
+            "Control sounds tied to refresh results. Weather refresh is off by default.",
+            ("data_updated", "fetch_error"),
+        ),
+        (
+            "Weather events",
+            "These sounds follow the matching notification settings when those events are enabled.",
+            ("discussion_update", "severe_risk"),
+        ),
+        (
+            "App lifecycle",
+            "Optional sounds for startup and exit.",
+            ("startup", "exit"),
+        ),
+    )
+
     def __init__(self, parent, app: AccessiWeatherApp):
         """Initialize the settings dialog."""
         super().__init__(
@@ -37,6 +55,7 @@ class SettingsDialogSimple(wx.Dialog):
         self.config_manager = app.config_manager
         self._controls = {}
         self._selected_specific_model: str | None = None
+        self._event_sound_states = self._build_default_event_sound_states()
 
         self._create_ui()
         self._load_settings()
@@ -622,18 +641,37 @@ class SettingsDialogSimple(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         sizer.Add(
-            wx.StaticText(panel, label="Sound Notifications:"),
+            wx.StaticText(panel, label="Audio"),
             0,
             wx.ALL,
             5,
         )
+        sizer.Add(
+            wx.StaticText(
+                panel,
+                label=(
+                    "Choose whether sounds are enabled, which sound pack is active, "
+                    "and which events should play audio."
+                ),
+            ),
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            5,
+        )
 
-        self._controls["sound_enabled"] = wx.CheckBox(panel, label="Enable Sounds")
-        sizer.Add(self._controls["sound_enabled"], 0, wx.LEFT | wx.BOTTOM, 10)
+        playback_section = wx.StaticBoxSizer(wx.VERTICAL, panel, "Playback")
+
+        self._controls["sound_enabled"] = wx.CheckBox(panel, label="Play notification sounds")
+        playback_section.Add(
+            self._controls["sound_enabled"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            5,
+        )
 
         row1 = wx.BoxSizer(wx.HORIZONTAL)
         row1.Add(
-            wx.StaticText(panel, label="Active sound pack:"),
+            wx.StaticText(panel, label="Sound pack:"),
             0,
             wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
             10,
@@ -653,41 +691,196 @@ class SettingsDialogSimple(wx.Dialog):
 
         self._controls["sound_pack"] = wx.Choice(panel, choices=pack_names)
         row1.Add(self._controls["sound_pack"], 0)
-        sizer.Add(row1, 0, wx.LEFT, 10)
+        playback_section.Add(row1, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
 
-        # Test sound button
         test_btn = wx.Button(panel, label="Test Sound")
         test_btn.Bind(wx.EVT_BUTTON, self._on_test_sound)
-        sizer.Add(test_btn, 0, wx.LEFT | wx.TOP, 10)
+        action_row = wx.BoxSizer(wx.HORIZONTAL)
+        action_row.Add(test_btn, 0, wx.RIGHT, 10)
 
         manage_btn = wx.Button(panel, label="Manage Sound Packs...")
         manage_btn.Bind(wx.EVT_BUTTON, self._on_manage_soundpacks)
-        sizer.Add(manage_btn, 0, wx.LEFT | wx.TOP, 10)
+        action_row.Add(manage_btn, 0)
+        playback_section.Add(action_row, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+        sizer.Add(playback_section, 0, wx.EXPAND | wx.ALL, 5)
 
-        sizer.Add(wx.StaticLine(panel), 0, wx.EXPAND | wx.ALL, 10)
-        sizer.Add(wx.StaticText(panel, label="Per-event sounds:"), 0, wx.LEFT | wx.BOTTOM, 5)
-        sizer.Add(
+        event_sounds_section = wx.StaticBoxSizer(wx.VERTICAL, panel, "Event sounds")
+        event_sounds_section.Add(
             wx.StaticText(
                 panel,
-                label="These toggles override the selected sound pack. Weather refresh is off by default, and you can re-enable it here at any time.",
+                label=(
+                    "Review event-specific sound choices in one place without crowding "
+                    "the main Audio tab."
+                ),
             ),
             0,
             wx.LEFT | wx.RIGHT | wx.BOTTOM,
-            10,
+            5,
         )
-
-        from ...notifications.sound_player import USER_MUTABLE_SOUND_EVENTS
-
-        self._event_sound_controls = {}
-        for event_key, label in USER_MUTABLE_SOUND_EVENTS:
-            control_key = f"sound_event_{event_key}"
-            checkbox = wx.CheckBox(panel, label=label)
-            self._controls[control_key] = checkbox
-            self._event_sound_controls[event_key] = checkbox
-            sizer.Add(checkbox, 0, wx.LEFT | wx.BOTTOM, 10)
+        self._controls["event_sounds_summary"] = wx.StaticText(panel, label="")
+        event_sounds_section.Add(
+            self._controls["event_sounds_summary"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            5,
+        )
+        self._controls["configure_event_sounds"] = wx.Button(
+            panel,
+            label="Configure Event Sounds...",
+        )
+        self._controls["configure_event_sounds"].Bind(
+            wx.EVT_BUTTON,
+            self._on_configure_event_sounds,
+        )
+        event_sounds_section.Add(
+            self._controls["configure_event_sounds"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            5,
+        )
+        sizer.Add(event_sounds_section, 0, wx.EXPAND | wx.ALL, 5)
 
         panel.SetSizer(sizer)
         self.notebook.AddPage(panel, "Audio")
+
+    @classmethod
+    def _get_event_sound_sections(cls) -> tuple[tuple[str, str, tuple[str, ...]], ...]:
+        """Return grouped event-sound sections used by the settings UI."""
+        return cls._EVENT_SOUND_SECTION_ORDER
+
+    @staticmethod
+    def _get_mutable_sound_events() -> tuple[tuple[str, str], ...]:
+        """Return user-configurable event sound labels."""
+        try:
+            from ...notifications.sound_player import USER_MUTABLE_SOUND_EVENTS
+        except ImportError:
+            from accessiweather.notifications.sound_player import USER_MUTABLE_SOUND_EVENTS
+
+        return tuple(USER_MUTABLE_SOUND_EVENTS)
+
+    @classmethod
+    def _build_default_event_sound_states(cls) -> dict[str, bool]:
+        """Return the default enabled state for each mutable sound event."""
+        return {event_key: True for event_key, _label in cls._get_mutable_sound_events()}
+
+    def _set_event_sound_states(self, muted_sound_events: list[str] | tuple[str, ...]) -> None:
+        """Apply muted event settings to the in-memory audio state."""
+        muted_event_set = set(muted_sound_events)
+        self._event_sound_states = {
+            event_key: event_key not in muted_event_set
+            for event_key, _label in self._get_mutable_sound_events()
+        }
+        self._refresh_event_sound_summary()
+
+    def _get_muted_sound_events(self) -> list[str]:
+        """Return muted event keys in the configured display order."""
+        state_map = (
+            getattr(self, "_event_sound_states", {}) or self._build_default_event_sound_states()
+        )
+        return [
+            event_key
+            for event_key, _label in self._get_mutable_sound_events()
+            if not state_map.get(event_key, True)
+        ]
+
+    def _get_event_sound_summary_text(self) -> str:
+        """Build summary text shown on the audio tab."""
+        total_events = len(self._get_mutable_sound_events())
+        muted_events = self._get_muted_sound_events()
+        enabled_count = total_events - len(muted_events)
+
+        if not muted_events:
+            return f"All {total_events} sound events are enabled."
+        if enabled_count == 0:
+            return "All event sounds are turned off."
+        return f"{enabled_count} of {total_events} sound events are enabled."
+
+    def _refresh_event_sound_summary(self) -> None:
+        """Refresh the event sound summary shown on the audio tab."""
+        summary_control = self._controls.get("event_sounds_summary")
+        if summary_control is not None:
+            summary_control.SetLabel(self._get_event_sound_summary_text())
+
+    def _run_event_sounds_dialog(self) -> dict[str, bool] | None:
+        """Show the event-sounds modal and return updated state when accepted."""
+        dialog = wx.Dialog(
+            self,
+            title="Configure Event Sounds",
+            size=(460, 420),
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+        )
+        dialog_controls: dict[str, wx.CheckBox] = {}
+        state_map = dict(
+            getattr(self, "_event_sound_states", {}) or self._build_default_event_sound_states()
+        )
+        label_map = dict(self._get_mutable_sound_events())
+
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+        main_sizer.Add(
+            wx.StaticText(
+                dialog,
+                label=(
+                    "Choose which events may play audio. Notification settings still "
+                    "control whether discussion and severe-risk events can occur."
+                ),
+            ),
+            0,
+            wx.ALL | wx.EXPAND,
+            10,
+        )
+
+        scroll = wx.ScrolledWindow(dialog)
+        scroll.SetScrollRate(0, 20)
+        scroll_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        for section_title, description, event_keys in self._get_event_sound_sections():
+            section = wx.StaticBoxSizer(wx.VERTICAL, scroll, section_title)
+            section.Add(
+                wx.StaticText(scroll, label=description),
+                0,
+                wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+                5,
+            )
+            for event_key in event_keys:
+                checkbox = wx.CheckBox(scroll, label=label_map.get(event_key, event_key))
+                checkbox.SetValue(state_map.get(event_key, True))
+                dialog_controls[event_key] = checkbox
+                section.Add(checkbox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+            scroll_sizer.Add(section, 0, wx.ALL | wx.EXPAND, 5)
+
+        scroll.SetSizer(scroll_sizer)
+        main_sizer.Add(scroll, 1, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 10)
+
+        button_row = wx.BoxSizer(wx.HORIZONTAL)
+        button_row.AddStretchSpacer()
+        cancel_btn = wx.Button(dialog, wx.ID_CANCEL, "Cancel")
+        ok_btn = wx.Button(dialog, wx.ID_OK, "OK")
+        button_row.Add(cancel_btn, 0, wx.RIGHT, 10)
+        button_row.Add(ok_btn, 0)
+        main_sizer.Add(button_row, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        dialog.SetSizer(main_sizer)
+
+        try:
+            if dialog.ShowModal() != wx.ID_OK:
+                return None
+            return {
+                event_key: checkbox.GetValue() for event_key, checkbox in dialog_controls.items()
+            }
+        finally:
+            if hasattr(dialog, "Destroy"):
+                dialog.Destroy()
+
+    def _on_configure_event_sounds(self, event):
+        """Open the event-sounds modal and persist accepted in-memory state."""
+        updated_states = self._run_event_sounds_dialog()
+        if updated_states is None:
+            return
+        self._event_sound_states = {
+            event_key: updated_states.get(event_key, True)
+            for event_key, _label in self._get_mutable_sound_events()
+        }
+        self._refresh_event_sound_summary()
 
     def _create_updates_tab(self):
         """Create the updates tab."""
@@ -1194,9 +1387,7 @@ class SettingsDialogSimple(wx.Dialog):
             except (ValueError, AttributeError):
                 self._controls["sound_pack"].SetSelection(0)
 
-            muted_sound_events = set(getattr(settings, "muted_sound_events", ["data_updated"]))
-            for event_key, control in getattr(self, "_event_sound_controls", {}).items():
-                control.SetValue(event_key not in muted_sound_events)
+            self._set_event_sound_states(getattr(settings, "muted_sound_events", ["data_updated"]))
 
             # Updates tab
             self._controls["auto_update"].SetValue(getattr(settings, "auto_update_enabled", True))
@@ -1369,11 +1560,7 @@ class SettingsDialogSimple(wx.Dialog):
                 if hasattr(self, "_sound_pack_ids")
                 and self._controls["sound_pack"].GetSelection() < len(self._sound_pack_ids)
                 else "default",
-                "muted_sound_events": [
-                    event_key
-                    for event_key, control in getattr(self, "_event_sound_controls", {}).items()
-                    if not control.GetValue()
-                ],
+                "muted_sound_events": self._get_muted_sound_events(),
                 # Updates
                 "auto_update_enabled": self._controls["auto_update"].GetValue(),
                 "update_channel": "stable"
@@ -1493,10 +1680,8 @@ class SettingsDialogSimple(wx.Dialog):
             "weather_history": "Enable weather history comparisons",
         }
 
-        from ...notifications.sound_player import USER_MUTABLE_SOUND_EVENTS
-
-        for event_key, label in USER_MUTABLE_SOUND_EVENTS:
-            control_names[f"sound_event_{event_key}"] = label
+        control_names["event_sounds_summary"] = "Event sound summary"
+        control_names["configure_event_sounds"] = "Configure event sounds"
 
         for key, name in control_names.items():
             self._controls[key].SetName(name)
