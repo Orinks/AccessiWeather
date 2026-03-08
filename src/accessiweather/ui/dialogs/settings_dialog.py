@@ -752,9 +752,9 @@ class SettingsDialogSimple(wx.Dialog):
     def _get_mutable_sound_events() -> tuple[tuple[str, str], ...]:
         """Return user-configurable event sound labels."""
         try:
-            from ...notifications.sound_player import USER_MUTABLE_SOUND_EVENTS
+            from ...sound_events import USER_MUTABLE_SOUND_EVENTS
         except ImportError:
-            from accessiweather.notifications.sound_player import USER_MUTABLE_SOUND_EVENTS
+            from accessiweather.sound_events import USER_MUTABLE_SOUND_EVENTS
 
         return tuple(USER_MUTABLE_SOUND_EVENTS)
 
