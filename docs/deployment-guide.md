@@ -366,11 +366,11 @@ git push origin v0.4.3
 - Download and test installers
 - Verify release notes
 
-#### 7. Update Website (Optional)
+#### 7. Update Website
 
 ```bash
-# Trigger update-pages.yml (automatic on push to main)
-# Or manually update accessiweather.orinks.net
+# update-wordpress.yml updates the existing WordPress page on release publish
+# update-pages.yml still refreshes the GitHub Pages mirror
 ```
 
 ---

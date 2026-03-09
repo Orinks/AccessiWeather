@@ -1,42 +1,41 @@
-# Inline replacement for Orinks/orinks-github-releases reusable workflow.
-# That repo is private and cannot be referenced from other private repos
-# without making it public. This local workflow does the same thing.
-name: Push releases to WordPress
+name: Update WordPress release page
 
 on:
   workflow_call:
     inputs:
-      bust_cache_first:
-        description: "Bust WordPress cache before retrying push"
-        required: false
-        default: false
-        type: boolean
+      wp_page_id:
+        description: "WordPress page ID for the existing AccessiWeather release page"
+        required: true
+        type: string
     secrets:
-      WP_PUSH_TOKEN:
+      WP_APPLICATION_PASSWORD:
         required: true
       WP_SITE_URL:
         required: true
+      WP_USERNAME:
+        required: true
   workflow_dispatch:
     inputs:
-      bust_cache_first:
-        description: "Bust WordPress cache before retrying push"
-        required: false
-        default: false
-        type: boolean
+      wp_page_id:
+        description: "WordPress page ID for the existing AccessiWeather release page"
+        required: true
+        type: string
 
 jobs:
-  push:
+  update-page:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
-      - name: Push release data to WordPress
+        uses: actions/checkout@v6
+      - name: Update WordPress page from latest release
         env:
-          WP_TOKEN: ${{ secrets.WP_PUSH_TOKEN }}
           WP_URL: ${{ secrets.WP_SITE_URL }}
+          WP_PAGE_ID: ${{ inputs.wp_page_id }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APPLICATION_PASSWORD: ${{ secrets.WP_APPLICATION_PASSWORD }}
           REPO: ${{ github.repository }}
-          BUST_CACHE_FIRST: ${{ inputs.bust_cache_first || false }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           python3 .github/scripts/push_releases.py
