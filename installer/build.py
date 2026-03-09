@@ -429,7 +429,9 @@ def _stage_default_soundpack_for_portable(portable_root: Path) -> Path:
         shutil.copytree(candidate, target_dir, dirs_exist_ok=True)
         return target_dir
 
-    candidate_list = ", ".join(str(path) for path in _candidate_default_soundpack_dirs(portable_root))
+    candidate_list = ", ".join(
+        str(path) for path in _candidate_default_soundpack_dirs(portable_root)
+    )
     raise RuntimeError(
         "Default sound pack was not found in the staged build output or repo checkout. "
         f"Checked: {candidate_list}"
@@ -441,8 +443,7 @@ def _assert_portable_soundpack_staged(portable_root: Path) -> Path:
     manifest_path = portable_root / PORTABLE_DEFAULT_SOUNDPACK_MANIFEST
     if not manifest_path.exists():
         raise RuntimeError(
-            "Portable staging is missing the default sound pack manifest at "
-            f"{manifest_path}"
+            f"Portable staging is missing the default sound pack manifest at {manifest_path}"
         )
     return manifest_path
 
