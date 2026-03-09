@@ -23,6 +23,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 # Paths
@@ -33,6 +34,9 @@ DIST_DIR = ROOT / "dist"
 BUILD_DIR = ROOT / "build"
 RESOURCES_DIR = SRC_DIR / "accessiweather" / "resources"
 SOUNDPACKS_DIR = ROOT / "soundpacks"
+PORTABLE_DEFAULT_SOUNDPACK_DIR = Path("data") / "soundpacks" / "default"
+PORTABLE_DEFAULT_SOUNDPACK_MANIFEST = PORTABLE_DEFAULT_SOUNDPACK_DIR / "pack.json"
+BUNDLED_DEFAULT_SOUNDPACK_DIR = Path("soundpacks") / "default"
 
 # Platform detection
 IS_WINDOWS = platform.system() == "Windows"
@@ -343,18 +347,6 @@ def create_portable_zip() -> bool:
                     shutil.rmtree(source_dir)
                 source_dir.mkdir(exist_ok=True)
                 shutil.copy2(exe_path, source_dir / "AccessiWeather.exe")
-
-                # Portable frozen builds resolve bundled soundpacks from data/soundpacks
-                # next to the executable, not from PyInstaller's temp extraction dir.
-                default_soundpack_dir = SOUNDPACKS_DIR / "default"
-                if default_soundpack_dir.exists():
-                    portable_soundpacks_dir = source_dir / "data" / "soundpacks"
-                    portable_soundpacks_dir.mkdir(parents=True, exist_ok=True)
-                    shutil.copytree(
-                        default_soundpack_dir,
-                        portable_soundpacks_dir / "default",
-                        dirs_exist_ok=True,
-                    )
             else:
                 print("Error: No build output found")
                 return False
@@ -378,16 +370,106 @@ def create_portable_zip() -> bool:
     # Ensure portable marker directory for Windows portable artifacts.
     if IS_WINDOWS:
         (source_dir / "config").mkdir(exist_ok=True)
+        try:
+            _stage_default_soundpack_for_portable(source_dir)
+            _assert_portable_soundpack_staged(source_dir)
+        except RuntimeError as exc:
+            print(f"Error: {exc}")
+            return False
 
     # Remove existing zip
-    if Path(f"{zip_path}.zip").exists():
-        Path(f"{zip_path}.zip").unlink()
+    zip_file = Path(f"{zip_path}.zip")
+    if zip_file.exists():
+        zip_file.unlink()
 
     # Create zip
     shutil.make_archive(str(zip_path), "zip", source_dir.parent, source_dir.name)
 
-    print(f"\n✓ Portable ZIP created: {zip_path}.zip")
+    if IS_WINDOWS:
+        try:
+            _assert_portable_zip_has_soundpack(zip_file)
+        except RuntimeError as exc:
+            print(f"Error: {exc}")
+            return False
+
+    print(f"\n✓ Portable ZIP created: {zip_file}")
     return True
+
+
+def _candidate_default_soundpack_dirs(portable_root: Path) -> list[Path]:
+    """Return preferred source locations for the default sound pack."""
+    return [
+        portable_root / PORTABLE_DEFAULT_SOUNDPACK_DIR,
+        portable_root / BUNDLED_DEFAULT_SOUNDPACK_DIR,
+        SOUNDPACKS_DIR / "default",
+    ]
+
+
+def _stage_default_soundpack_for_portable(portable_root: Path) -> Path:
+    """
+    Ensure the portable layout contains data/soundpacks/default/pack.json.
+
+    Prefer the sound pack already staged by PyInstaller in soundpacks/default.
+    Fall back to the repo copy only when the staged build output does not
+    already contain the bundled payload.
+    """
+    target_dir = portable_root / PORTABLE_DEFAULT_SOUNDPACK_DIR
+    target_manifest = target_dir / "pack.json"
+    if target_manifest.exists():
+        return target_dir
+
+    for candidate in _candidate_default_soundpack_dirs(portable_root):
+        candidate_manifest = candidate / "pack.json"
+        if not candidate_manifest.exists():
+            continue
+        if candidate.resolve() == target_dir.resolve():
+            return target_dir
+
+        target_dir.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(candidate, target_dir, dirs_exist_ok=True)
+        return target_dir
+
+    candidate_list = ", ".join(
+        str(path) for path in _candidate_default_soundpack_dirs(portable_root)
+    )
+    raise RuntimeError(
+        "Default sound pack was not found in the staged build output or repo checkout. "
+        f"Checked: {candidate_list}"
+    )
+
+
+def _assert_portable_soundpack_staged(portable_root: Path) -> Path:
+    """Fail loudly when the staged portable tree lacks the default sound pack manifest."""
+    manifest_path = portable_root / PORTABLE_DEFAULT_SOUNDPACK_MANIFEST
+    if not manifest_path.exists():
+        raise RuntimeError(
+            f"Portable staging is missing the default sound pack manifest at {manifest_path}"
+        )
+    return manifest_path
+
+
+def _archive_has_expected_soundpack_path(names: set[str]) -> bool:
+    """Allow either a flat archive or one wrapped in a single top-level folder."""
+    expected_suffix = PORTABLE_DEFAULT_SOUNDPACK_MANIFEST.as_posix()
+    for name in names:
+        normalized = name.rstrip("/")
+        if normalized == expected_suffix:
+            return True
+        if "/" in normalized and normalized.split("/", 1)[1] == expected_suffix:
+            return True
+    return False
+
+
+def _assert_portable_zip_has_soundpack(zip_path: Path) -> None:
+    """Fail loudly when the portable ZIP does not contain the default manifest."""
+    with zipfile.ZipFile(zip_path) as archive:
+        names = set(archive.namelist())
+
+    if not _archive_has_expected_soundpack_path(names):
+        raise RuntimeError(
+            "Portable ZIP is missing default/pack.json at the expected portable path "
+            f"({PORTABLE_DEFAULT_SOUNDPACK_MANIFEST.as_posix()}) in {zip_path}"
+        )
 
 
 def clean_build() -> None:
@@ -501,6 +583,11 @@ def main() -> int:
         help="Skip portable ZIP creation",
     )
     parser.add_argument(
+        "--portable-zip-only",
+        action="store_true",
+        help="Create and validate the portable ZIP from an existing dist/ build",
+    )
+    parser.add_argument(
         "--nightly",
         action="store_true",
         help="Build as nightly (generates nightly-YYYYMMDD build tag)",
@@ -530,6 +617,9 @@ def main() -> int:
     if args.dev:
         return run_dev()
 
+    if args.portable_zip_only:
+        return 0 if create_portable_zip() else 1
+
     # Install dependencies
     install_dependencies()
 
@@ -556,8 +646,8 @@ def main() -> int:
             create_macos_dmg()
 
     # Create portable ZIP
-    if not args.no_zip:
-        create_portable_zip()
+    if not args.no_zip and not create_portable_zip():
+        return 1
 
     # Print summary
     print("\n" + "=" * 60)
