@@ -98,28 +98,28 @@ def check_icons() -> bool:
 
     if IS_WINDOWS:
         if ico_path.exists():
-            print("✓ Windows icon found")
+            print("OK: Windows icon found")
             return True
-        print("✗ Windows icon not found at:", ico_path)
+        print("ERROR: Windows icon not found at:", ico_path)
         print("  Run 'python installer/create_icons.py' to generate icons")
         return False
 
     if IS_MACOS:
         if icns_path.exists():
-            print("✓ macOS icon found")
+            print("OK: macOS icon found")
             return True
         if png_path.exists():
-            print("✓ macOS icon (PNG fallback) found")
+            print("OK: macOS icon (PNG fallback) found")
             return True
-        print("✗ macOS icon not found at:", icns_path)
+        print("ERROR: macOS icon not found at:", icns_path)
         print("  Run 'python installer/create_icons.py' on macOS to generate icons")
         return False
 
     # Linux or other
     if png_path.exists() or ico_path.exists():
-        print("✓ Icon found")
+        print("OK: Icon found")
         return True
-    print("✗ No icon found")
+    print("ERROR: No icon found")
     return False
 
 
@@ -131,7 +131,7 @@ def install_dependencies() -> None:
     try:
         import PyInstaller
 
-        print(f"✓ PyInstaller {PyInstaller.__version__} found")
+        print(f"OK: PyInstaller {PyInstaller.__version__} found")
     except ImportError:
         print("Installing PyInstaller...")
         run_command([sys.executable, "-m", "pip", "install", "pyinstaller"])
@@ -141,7 +141,7 @@ def install_dependencies() -> None:
         import importlib.util
 
         if importlib.util.find_spec("PIL"):
-            print("✓ Pillow found")
+            print("OK: Pillow found")
         else:
             raise ImportError
     except ImportError:
@@ -179,10 +179,10 @@ def build_pyinstaller() -> bool:
 
     try:
         run_command(cmd, cwd=ROOT)
-        print("\n✓ PyInstaller build completed")
+        print("\nOK: PyInstaller build completed")
         return True
     except Exception as e:
-        print(f"\n✗ PyInstaller build failed: {e}")
+        print(f"\nERROR: PyInstaller build failed: {e}")
         return False
 
 
@@ -225,10 +225,10 @@ def create_windows_installer() -> bool:
     # Run Inno Setup compiler
     try:
         run_command([iscc_exe, str(iss_file)], cwd=INSTALLER_DIR)
-        print(f"\n✓ Windows installer created: dist/AccessiWeather_Setup_v{version}.exe")
+        print(f"\nOK: Windows installer created: dist/AccessiWeather_Setup_v{version}.exe")
         return True
     except Exception as e:
-        print(f"\n✗ Inno Setup failed: {e}")
+        print(f"\nERROR: Inno Setup failed: {e}")
         return False
 
 
@@ -282,7 +282,7 @@ def create_macos_dmg() -> bool:
             cmd.extend([str(dmg_path), str(DIST_DIR)])
 
             run_command(cmd, cwd=ROOT)
-            print(f"\n✓ DMG created: {dmg_path}")
+            print(f"\nOK: DMG created: {dmg_path}")
             return True
         except Exception as e:
             print(f"create-dmg failed: {e}, falling back to hdiutil")
@@ -320,10 +320,10 @@ def create_macos_dmg() -> bool:
         # Cleanup
         shutil.rmtree(dmg_temp)
 
-        print(f"\n✓ DMG created: {dmg_path}")
+        print(f"\nOK: DMG created: {dmg_path}")
         return True
     except Exception as e:
-        print(f"\n✗ DMG creation failed: {e}")
+        print(f"\nERROR: DMG creation failed: {e}")
         return False
 
 
@@ -392,7 +392,7 @@ def create_portable_zip() -> bool:
             print(f"Error: {exc}")
             return False
 
-    print(f"\n✓ Portable ZIP created: {zip_file}")
+    print(f"\nOK: Portable ZIP created: {zip_file}")
     return True
 
 
@@ -493,7 +493,7 @@ def clean_build() -> None:
         if "site-packages" not in str(pyc):
             pyc.unlink(missing_ok=True)
 
-    print("✓ Clean complete")
+    print("OK: Clean complete")
 
 
 def run_dev() -> int:
@@ -661,7 +661,7 @@ def main() -> int:
                 size_mb = f.stat().st_size / (1024 * 1024)
                 print(f"  {f.name} ({size_mb:.1f} MB)")
 
-    print("\n✓ Build complete!")
+    print("\nOK: Build complete!")
     print("\a", end="", flush=True)
     return 0
 
