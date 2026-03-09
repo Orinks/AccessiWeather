@@ -1,0 +1,42 @@
+# Inline replacement for Orinks/orinks-github-releases reusable workflow.
+# That repo is private and cannot be referenced from other private repos
+# without making it public. This local workflow does the same thing.
+name: Push releases to WordPress
+
+on:
+  workflow_call:
+    inputs:
+      bust_cache_first:
+        description: "Bust WordPress cache before retrying push"
+        required: false
+        default: false
+        type: boolean
+    secrets:
+      WP_PUSH_TOKEN:
+        required: true
+      WP_SITE_URL:
+        required: true
+  workflow_dispatch:
+    inputs:
+      bust_cache_first:
+        description: "Bust WordPress cache before retrying push"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Push release data to WordPress
+        env:
+          WP_TOKEN: ${{ secrets.WP_PUSH_TOKEN }}
+          WP_URL: ${{ secrets.WP_SITE_URL }}
+          REPO: ${{ github.repository }}
+          BUST_CACHE_FIRST: ${{ inputs.bust_cache_first || false }}
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/push_releases.py

@@ -1,12 +1,24 @@
+# Triggers the local push-releases workflow instead of the private
+# Orinks/orinks-github-releases reusable workflow (which requires the
+# caller repo to be public or in the same org with visibility).
 name: Update WordPress on release
 
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      bust_cache_first:
+        description: "Bust WordPress cache before retrying push"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   push-to-wordpress:
-    uses: Orinks/orinks-github-releases/.github/workflows/push-releases.yml@master
+    uses: ./.github/workflows/push-releases.yml
+    with:
+      bust_cache_first: ${{ inputs.bust_cache_first || false }}
     secrets:
       WP_PUSH_TOKEN: ${{ secrets.WP_PUSH_TOKEN }}
       WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
