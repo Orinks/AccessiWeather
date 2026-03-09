@@ -113,26 +113,8 @@ jobs:
           "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe" installer\accessiweather.iss
 
       - name: Create portable ZIP
-        shell: cmd
         run: |
-          cd dist
-          if exist "AccessiWeather_dir" (
-            cd AccessiWeather_dir
-            if not exist "config" mkdir config
-            if not exist "data" mkdir data
-            if not exist "data\soundpacks" mkdir data\soundpacks
-            if exist "..\..\soundpacks\default" xcopy /E /I /Y "..\..\soundpacks\default" "data\soundpacks\default"
-            7z a -tzip "..\AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip" *
-            cd ..
-          ) else (
-            mkdir AccessiWeather_portable
-            copy "AccessiWeather.exe" "AccessiWeather_portable\AccessiWeather.exe"
-            mkdir "AccessiWeather_portable\config"
-            mkdir "AccessiWeather_portable\data"
-            mkdir "AccessiWeather_portable\data\soundpacks"
-            if exist "..\soundpacks\default" xcopy /E /I /Y "..\soundpacks\default" "AccessiWeather_portable\data\soundpacks\default"
-            7z a -tzip "AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip" "AccessiWeather_portable\*"
-          )
+          python installer/build.py --portable-zip-only
 
       - uses: actions/upload-artifact@v6
         with:
