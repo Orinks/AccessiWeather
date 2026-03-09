@@ -172,6 +172,13 @@ def build_release_context(
     }
 
 
+def find_asset(assets: list[ReleaseAsset], kind: str) -> ReleaseAsset | None:
+    for asset in assets:
+        if asset.kind == kind:
+            return asset
+    return None
+
+
 def render_asset_links(assets: list[ReleaseAsset]) -> str:
     if not assets:
         return ""
@@ -266,11 +273,19 @@ def render_nightly_notes_summary(release: ReleaseInfo) -> str:
 
 def render_nightly_card(release: ReleaseInfo) -> str:
     primary = release.primary_asset
+    portable = find_asset(release.assets, "windows-portable")
+    actions = [
+        f'<a href="{html.escape(primary.url, quote=True)}">Download {html.escape(primary.label)}</a>'
+    ]
+    if portable and portable.url != primary.url:
+        actions.append(
+            f'<a href="{html.escape(portable.url, quote=True)}">Download Windows portable</a>'
+        )
+    actions.append(f'<a href="{html.escape(release.html_url, quote=True)}">Full release</a>')
     return (
         '<li class="accessiweather-nightly-card">'
         f"<div><strong>{html.escape(release.tag_name)}</strong> ({html.escape(release.published_at)})</div>"
-        f'<div><a href="{html.escape(primary.url, quote=True)}">Download {html.escape(primary.label)}</a>'
-        f' · <a href="{html.escape(release.html_url, quote=True)}">Full release</a>'
+        f"<div>{' · '.join(actions)}"
         f" · {format_count(release.total_downloads)} downloads</div>"
         f'<div class="accessiweather-nightly-notes">{render_nightly_notes_summary(release)}</div>'
         "</li>"
@@ -294,6 +309,23 @@ def render_release_section(context: dict[str, Any]) -> str:
     )
 
     primary = stable.primary_asset
+    portable = find_asset(stable.assets, "windows-portable")
+    stable_buttons = [
+        '<div class="wp-block-button">'
+        f'<a class="wp-block-button__link wp-element-button" href="{html.escape(primary.url, quote=True)}">Download {html.escape(primary.label)}</a>'
+        '</div>'
+    ]
+    if portable and portable.url != primary.url:
+        stable_buttons.append(
+            '<div class="wp-block-button is-style-outline">'
+            f'<a class="wp-block-button__link wp-element-button" href="{html.escape(portable.url, quote=True)}">Download Windows portable</a>'
+            '</div>'
+        )
+    stable_buttons.append(
+        '<div class="wp-block-button is-style-outline">'
+        f'<a class="wp-block-button__link wp-element-button" href="{html.escape(stable.html_url, quote=True)}">View release notes</a>'
+        '</div>'
+    )
     return f"""
 {START_MARKER}
 <!-- wp:group {{"layout":{{"type":"constrained"}}}} -->
@@ -308,12 +340,7 @@ def render_release_section(context: dict[str, Any]) -> str:
   <div class="wp-block-group accessiweather-release-stable">
     <h3>Stable ({html.escape(stable.tag_name.lstrip("v"))})</h3>
     <div class="wp-block-buttons">
-      <div class="wp-block-button">
-        <a class="wp-block-button__link wp-element-button" href="{html.escape(primary.url, quote=True)}">Download {html.escape(primary.label)}</a>
-      </div>
-      <div class="wp-block-button is-style-outline">
-        <a class="wp-block-button__link wp-element-button" href="{html.escape(stable.html_url, quote=True)}">View release notes</a>
-      </div>
+      {''.join(stable_buttons)}
     </div>
     <ul>
       <li><strong>Version:</strong> {html.escape(stable.tag_name.lstrip("v"))}</li>

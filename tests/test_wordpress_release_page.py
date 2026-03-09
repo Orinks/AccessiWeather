@@ -202,7 +202,12 @@ def test_render_release_section_contains_stable_and_nightlies():
                 "name": "AccessiWeather-0.4.3-windows-setup.exe",
                 "browser_download_url": "https://example.com/stable.exe",
                 "download_count": 12,
-            }
+            },
+            {
+                "name": "AccessiWeather-0.4.3-windows-portable.zip",
+                "browser_download_url": "https://example.com/stable-portable.zip",
+                "download_count": 7,
+            },
         ],
     }
     nightlies = [
@@ -218,7 +223,12 @@ def test_render_release_section_contains_stable_and_nightlies():
                     "name": "AccessiWeather-nightly-20260309-windows-setup.exe",
                     "browser_download_url": "https://example.com/nightly.exe",
                     "download_count": 3,
-                }
+                },
+                {
+                    "name": "AccessiWeather-nightly-20260309-windows-portable.zip",
+                    "browser_download_url": "https://example.com/nightly-portable.zip",
+                    "download_count": 2,
+                },
             ],
         }
     ]
@@ -234,3 +244,4 @@ def test_render_release_section_contains_stable_and_nightlies():
     assert "Stable change one" in html_block
     assert "Fixed updater" in html_block
     assert "Extra detail" not in html_block
+    assert "Download Windows portable" in html_block
