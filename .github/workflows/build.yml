@@ -55,25 +55,29 @@ jobs:
             echo "tag=nightly-$(date -u +%Y%m%d)" >> $GITHUB_OUTPUT
             echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-            LAST_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -1)
-
-            if [ -z "$LAST_TAG" ]; then
-              # No prior nightly: build once
+            if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
               echo "should_build=true" >> $GITHUB_OUTPUT
             else
-              RANGE="$LAST_TAG"..HEAD
+              LAST_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -1)
 
-              # Build only when there is at least one user-facing commit.
-              # This avoids shipping nightlies for test/chore/ci-only changes.
-              USER_FACING_COUNT=$(git log "$RANGE" --pretty='%s' --no-merges --first-parent | \
-                grep -Ei '^(feat|fix|perf|security)(\([^)]+\))?:' | \
-                grep -Eiv '^fix\((test|ci|build|chore|docs|style|refactor)\):' | \
-                wc -l | tr -d ' ')
-
-              if [ "${USER_FACING_COUNT:-0}" -gt 0 ]; then
+              if [ -z "$LAST_TAG" ]; then
+                # No prior nightly: build once
                 echo "should_build=true" >> $GITHUB_OUTPUT
               else
-                echo "should_build=false" >> $GITHUB_OUTPUT
+                RANGE="$LAST_TAG"..HEAD
+
+                # Build only when there is at least one user-facing commit.
+                # This avoids shipping nightlies for test/chore/ci-only changes.
+                USER_FACING_COUNT=$(git log "$RANGE" --pretty='%s' --no-merges --first-parent | \
+                  grep -Ei '^(feat|fix|perf|security)(\([^)]+\))?:' | \
+                  grep -Eiv '^fix\((test|ci|build|chore|docs|style|refactor)\):' | \
+                  wc -l | tr -d ' ')
+
+                if [ "${USER_FACING_COUNT:-0}" -gt 0 ]; then
+                  echo "should_build=true" >> $GITHUB_OUTPUT
+                else
+                  echo "should_build=false" >> $GITHUB_OUTPUT
+                fi
               fi
             fi
           fi
