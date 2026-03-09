@@ -1,4 +1,4 @@
-"""Update the existing WordPress release page from the latest public GitHub release."""
+"""Update the existing WordPress release page from GitHub stable + nightly releases."""
 
 from __future__ import annotations
 
@@ -20,12 +20,13 @@ WP_PAGE_ID = os.environ["WP_PAGE_ID"]
 WP_USERNAME = os.environ["WP_USERNAME"]
 WP_APPLICATION_PASSWORD = os.environ["WP_APPLICATION_PASSWORD"]
 GH_TOKEN = os.environ.get("GITHUB_TOKEN")
+NIGHTLY_COUNT = 5
 
 START_MARKER = "<!-- accessiweather-release:start -->"
 END_MARKER = "<!-- accessiweather-release:end -->"
 DEFAULT_SECTION_HEADING = "Download AccessiWeather"
 DEFAULT_SECTION_DESCRIPTION = (
-    "Get the latest stable AccessiWeather release directly from GitHub Releases."
+    "Download the latest stable release directly, or grab one of the newest nightly builds if you want the freshest fixes and features."
 )
 
 GH_API_HEADERS: dict[str, str] = {
@@ -37,8 +38,6 @@ if GH_TOKEN:
 
 @dataclass(frozen=True)
 class ReleaseAsset:
-    """Normalized release asset information used for page rendering."""
-
     name: str
     url: str
     download_count: int
@@ -46,8 +45,19 @@ class ReleaseAsset:
     label: str
 
 
+@dataclass(frozen=True)
+class ReleaseInfo:
+    tag_name: str
+    name: str
+    published_at: str
+    html_url: str
+    assets: list[ReleaseAsset]
+    total_downloads: int
+    primary_asset: ReleaseAsset
+    prerelease: bool
+
+
 def gh_json(endpoint: str, allow_missing: bool = False) -> Any:
-    """Fetch JSON from the GitHub API."""
     request = urllib.request.Request(f"https://api.github.com/{endpoint}", headers=GH_API_HEADERS)
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
@@ -65,7 +75,6 @@ def wp_request(
     payload: dict[str, Any] | None = None,
     query: dict[str, str] | None = None,
 ) -> dict[str, Any]:
-    """Call the WordPress REST API using Application Password auth."""
     auth = base64.b64encode(f"{WP_USERNAME}:{WP_APPLICATION_PASSWORD}".encode()).decode("ascii")
     url = f"{WP_URL}{path}"
     if query:
@@ -86,7 +95,6 @@ def wp_request(
 
 
 def classify_asset(asset: dict[str, Any]) -> ReleaseAsset | None:
-    """Return a display asset for page links, or None for sidecar files."""
     name = str(asset.get("name", ""))
     lower_name = name.lower()
     url = str(asset.get("browser_download_url", ""))
@@ -108,7 +116,6 @@ def classify_asset(asset: dict[str, Any]) -> ReleaseAsset | None:
 
 
 def select_primary_asset(assets: list[ReleaseAsset], release_url: str) -> ReleaseAsset:
-    """Choose the main download target shown in the page button."""
     priority = {
         "windows-installer": 0,
         "windows-portable": 1,
@@ -127,7 +134,6 @@ def select_primary_asset(assets: list[ReleaseAsset], release_url: str) -> Releas
 
 
 def format_date(date_str: str | None) -> str:
-    """Format GitHub timestamps for the page."""
     if not date_str:
         return "Unknown"
     parsed = dt.datetime.fromisoformat(date_str.replace("Z", "+00:00"))
@@ -135,64 +141,84 @@ def format_date(date_str: str | None) -> str:
 
 
 def format_count(value: int) -> str:
-    """Add separators for download counts."""
     return f"{value:,}"
 
 
-def build_release_context(release: dict[str, Any]) -> dict[str, Any]:
-    """Build the page rendering context from the latest GitHub release."""
+def normalize_release(release: dict[str, Any]) -> ReleaseInfo:
     assets = [
         classified for asset in release.get("assets", []) if (classified := classify_asset(asset))
     ]
-    primary_asset = select_primary_asset(
-        assets,
-        release.get("html_url", f"https://github.com/{REPO}/releases"),
+    html_url = release.get("html_url", f"https://github.com/{REPO}/releases")
+    return ReleaseInfo(
+        tag_name=str(release.get("tag_name", "")),
+        name=str(release.get("name") or release.get("tag_name") or "Release"),
+        published_at=format_date(release.get("published_at")),
+        html_url=html_url,
+        assets=assets,
+        total_downloads=sum(asset.download_count for asset in assets),
+        primary_asset=select_primary_asset(assets, html_url),
+        prerelease=bool(release.get("prerelease", False)),
     )
-    total_downloads = sum(asset.download_count for asset in assets)
 
+
+def build_release_context(stable_release: dict[str, Any], nightly_releases: list[dict[str, Any]]) -> dict[str, Any]:
+    stable = normalize_release(stable_release)
+    nightlies = [normalize_release(release) for release in nightly_releases[:NIGHTLY_COUNT]]
     return {
-        "version": str(release.get("tag_name", "Latest release")).lstrip("v"),
-        "published_at": format_date(release.get("published_at")),
-        "release_url": release.get("html_url", f"https://github.com/{REPO}/releases"),
-        "primary_asset": primary_asset,
-        "assets": assets,
-        "total_downloads": total_downloads,
+        "stable": stable,
+        "nightlies": nightlies,
     }
 
 
-def render_release_section(context: dict[str, Any]) -> str:
-    """Render the generated HTML block that lives inside the existing WP page."""
-    primary_asset: ReleaseAsset = context["primary_asset"]
-    assets: list[ReleaseAsset] = context["assets"]
-    version = html.escape(context["version"])
-    published_at = html.escape(context["published_at"])
-    primary_label = html.escape(primary_asset.label)
-    primary_url = html.escape(primary_asset.url, quote=True)
-    release_url = html.escape(context["release_url"], quote=True)
-    total_downloads = format_count(context["total_downloads"])
+def render_asset_links(assets: list[ReleaseAsset]) -> str:
+    if not assets:
+        return ""
 
-    platform_links: list[str] = []
+    links: list[str] = []
     seen_kinds: set[str] = set()
     for asset in assets:
         if asset.kind in seen_kinds:
             continue
         seen_kinds.add(asset.kind)
-        platform_links.append(
+        links.append(
             "<li>"
             f'<a href="{html.escape(asset.url, quote=True)}">{html.escape(asset.label)}</a>'
             f" ({format_count(asset.download_count)} downloads)"
             "</li>"
         )
+    return "<ul>" + "".join(links) + "</ul>"
 
-    platform_links_html = "\n".join(platform_links)
-    if platform_links_html:
-        platform_links_html = (
-            '<div class="accessiweather-release-links">'
-            "<p><strong>Available downloads</strong></p>"
-            f"<ul>{platform_links_html}</ul>"
-            "</div>"
-        )
 
+def render_nightly_card(release: ReleaseInfo) -> str:
+    primary = release.primary_asset
+    return (
+        '<li>'
+        f"<strong>{html.escape(release.tag_name)}</strong>"
+        f" — {html.escape(release.published_at)}"
+        f" — <a href=\"{html.escape(primary.url, quote=True)}\">Download {html.escape(primary.label)}</a>"
+        f" — <a href=\"{html.escape(release.html_url, quote=True)}\">Release notes</a>"
+        f" — {format_count(release.total_downloads)} downloads"
+        "</li>"
+    )
+
+
+def render_release_section(context: dict[str, Any]) -> str:
+    stable: ReleaseInfo = context["stable"]
+    nightlies: list[ReleaseInfo] = context["nightlies"]
+
+    stable_links = render_asset_links(stable.assets)
+    nightly_items = "".join(render_nightly_card(release) for release in nightlies)
+    nightly_html = (
+        "<div class=\"accessiweather-nightlies\">"
+        "<h3>Latest Nightly Builds</h3>"
+        "<p>The newest pre-release builds from the dev branch.</p>"
+        f"<ul>{nightly_items}</ul>"
+        "</div>"
+        if nightly_items
+        else ""
+    )
+
+    primary = stable.primary_asset
     return f"""
 {START_MARKER}
 <!-- wp:group {{"layout":{{"type":"constrained"}}}} -->
@@ -203,28 +229,26 @@ def render_release_section(context: dict[str, Any]) -> str:
   <!-- wp:paragraph -->
   <p>{html.escape(DEFAULT_SECTION_DESCRIPTION)}</p>
   <!-- /wp:paragraph -->
-  <!-- wp:buttons -->
-  <div class="wp-block-buttons">
-    <!-- wp:button -->
-    <div class="wp-block-button">
-      <a class="wp-block-button__link wp-element-button" href="{primary_url}">Download {primary_label}</a>
+  <!-- wp:group -->
+  <div class="wp-block-group accessiweather-release-stable">
+    <h3>Stable ({html.escape(stable.tag_name.lstrip('v'))})</h3>
+    <div class="wp-block-buttons">
+      <div class="wp-block-button">
+        <a class="wp-block-button__link wp-element-button" href="{html.escape(primary.url, quote=True)}">Download {html.escape(primary.label)}</a>
+      </div>
+      <div class="wp-block-button is-style-outline">
+        <a class="wp-block-button__link wp-element-button" href="{html.escape(stable.html_url, quote=True)}">View release notes</a>
+      </div>
     </div>
-    <!-- /wp:button -->
-    <!-- wp:button {{"className":"is-style-outline"}} -->
-    <div class="wp-block-button is-style-outline">
-      <a class="wp-block-button__link wp-element-button" href="{release_url}">View release notes</a>
-    </div>
-    <!-- /wp:button -->
+    <ul>
+      <li><strong>Version:</strong> {html.escape(stable.tag_name.lstrip('v'))}</li>
+      <li><strong>Release date:</strong> {html.escape(stable.published_at)}</li>
+      <li><strong>Total downloads:</strong> {format_count(stable.total_downloads)}</li>
+    </ul>
+    {stable_links}
   </div>
-  <!-- /wp:buttons -->
-  <!-- wp:list -->
-  <ul>
-    <li><strong>Version:</strong> {version}</li>
-    <li><strong>Release date:</strong> {published_at}</li>
-    <li><strong>Total downloads:</strong> {total_downloads}</li>
-  </ul>
-  <!-- /wp:list -->
-  {platform_links_html}
+  <!-- /wp:group -->
+  {nightly_html}
 </div>
 <!-- /wp:group -->
 {END_MARKER}
@@ -232,13 +256,20 @@ def render_release_section(context: dict[str, Any]) -> str:
 
 
 def replace_managed_section(existing_content: str, generated_section: str) -> str:
-    """Replace the managed page fragment or append it if no markers exist yet."""
     pattern = re.compile(
         rf"{re.escape(START_MARKER)}.*?{re.escape(END_MARKER)}",
         flags=re.DOTALL,
     )
     if pattern.search(existing_content):
         return pattern.sub(generated_section, existing_content, count=1)
+
+    legacy_pattern = re.compile(
+        r"<!-- download-links:accessiweather-stable -->.*?<!-- /download-links:accessiweather-nightly -->",
+        flags=re.DOTALL,
+    )
+    if legacy_pattern.search(existing_content):
+        return legacy_pattern.sub(generated_section, existing_content, count=1)
+
     stripped_content = existing_content.rstrip()
     if not stripped_content:
         return generated_section
@@ -246,12 +277,10 @@ def replace_managed_section(existing_content: str, generated_section: str) -> st
 
 
 def fetch_page() -> dict[str, Any]:
-    """Load the target page with raw editable content."""
     return wp_request(f"/wp-json/wp/v2/pages/{WP_PAGE_ID}", query={"context": "edit"})
 
 
 def update_page_content(content: str) -> dict[str, Any]:
-    """Persist new page content to WordPress."""
     return wp_request(
         f"/wp-json/wp/v2/pages/{WP_PAGE_ID}",
         method="POST",
@@ -259,17 +288,32 @@ def update_page_content(content: str) -> dict[str, Any]:
     )
 
 
-def fetch_latest_release() -> dict[str, Any]:
-    """Get the latest public stable release for the repository."""
+def fetch_latest_stable_release() -> dict[str, Any]:
     latest = gh_json(f"repos/{REPO}/releases/latest", allow_missing=True)
     if not isinstance(latest, dict) or not latest.get("tag_name"):
         raise RuntimeError(f"No public stable GitHub release found for {REPO}")
     return latest
 
 
+def fetch_recent_nightlies() -> list[dict[str, Any]]:
+    releases = gh_json(f"repos/{REPO}/releases?per_page=20")
+    if not isinstance(releases, list):
+        return []
+    nightlies = [
+        release
+        for release in releases
+        if isinstance(release, dict)
+        and release.get("prerelease")
+        and str(release.get("tag_name", "")).startswith("nightly-")
+        and not release.get("draft")
+    ]
+    return nightlies[:NIGHTLY_COUNT]
+
+
 def main() -> None:
-    release = fetch_latest_release()
-    context = build_release_context(release)
+    stable_release = fetch_latest_stable_release()
+    nightly_releases = fetch_recent_nightlies()
+    context = build_release_context(stable_release, nightly_releases)
     generated_section = render_release_section(context)
 
     page = fetch_page()
@@ -285,11 +329,10 @@ def main() -> None:
     print(
         "Updated page",
         result.get("id", WP_PAGE_ID),
-        "to",
-        context["version"],
-        "with primary asset",
-        context["primary_asset"].name,
-        f"and {context['total_downloads']} total downloads",
+        "stable",
+        context["stable"].tag_name,
+        "nightlies",
+        len(context["nightlies"]),
     )
 
 
