@@ -271,16 +271,33 @@ def render_nightly_notes_summary(release: ReleaseInfo) -> str:
     return render_release_notes(release.body, max_items=3)
 
 
+def ordered_unique_assets(
+    assets: list[ReleaseAsset], *, primary: ReleaseAsset | None = None
+) -> list[ReleaseAsset]:
+    seen_urls: set[str] = set()
+    ordered_assets = list(assets)
+    if primary is not None:
+        ordered_assets.sort(key=lambda asset: 0 if asset.url == primary.url else 1)
+
+    unique_assets: list[ReleaseAsset] = []
+    for asset in ordered_assets:
+        if asset.url in seen_urls:
+            continue
+        seen_urls.add(asset.url)
+        unique_assets.append(asset)
+    return unique_assets
+
+
+def render_download_actions(assets: list[ReleaseAsset], *, primary: ReleaseAsset | None = None) -> list[str]:
+    return [
+        f'<a href="{html.escape(asset.url, quote=True)}">Download {html.escape(asset.label)}</a>'
+        for asset in ordered_unique_assets(assets, primary=primary)
+    ]
+
+
 def render_nightly_card(release: ReleaseInfo) -> str:
     primary = release.primary_asset
-    portable = find_asset(release.assets, "windows-portable")
-    actions = [
-        f'<a href="{html.escape(primary.url, quote=True)}">Download {html.escape(primary.label)}</a>'
-    ]
-    if portable and portable.url != primary.url:
-        actions.append(
-            f'<a href="{html.escape(portable.url, quote=True)}">Download Windows portable</a>'
-        )
+    actions = render_download_actions(release.assets, primary=primary)
     actions.append(f'<a href="{html.escape(release.html_url, quote=True)}">Full release</a>')
     return (
         '<li class="accessiweather-nightly-card">'
@@ -309,16 +326,12 @@ def render_release_section(context: dict[str, Any]) -> str:
     )
 
     primary = stable.primary_asset
-    portable = find_asset(stable.assets, "windows-portable")
-    stable_buttons = [
-        '<div class="wp-block-button">'
-        f'<a class="wp-block-button__link wp-element-button" href="{html.escape(primary.url, quote=True)}">Download {html.escape(primary.label)}</a>'
-        '</div>'
-    ]
-    if portable and portable.url != primary.url:
+    stable_buttons = []
+    for i, asset in enumerate(ordered_unique_assets(stable.assets, primary=primary)):
+        button_class = '' if i == 0 else ' is-style-outline'
         stable_buttons.append(
-            '<div class="wp-block-button is-style-outline">'
-            f'<a class="wp-block-button__link wp-element-button" href="{html.escape(portable.url, quote=True)}">Download Windows portable</a>'
+            f'<div class="wp-block-button{button_class}">'
+            f'<a class="wp-block-button__link wp-element-button" href="{html.escape(asset.url, quote=True)}">Download {html.escape(asset.label)}</a>'
             '</div>'
         )
     stable_buttons.append(
