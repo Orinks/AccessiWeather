@@ -869,6 +869,25 @@ class MainWindow(SizedFrame):
             self._fetch_weather_data(force_refresh=force_refresh, generation=generation)
         )
 
+    def refresh_notification_events_async(self) -> None:
+        """Run a lightweight event check without refreshing the full weather UI."""
+        if self.app.is_updating:
+            logger.debug("Skipping event check while full weather refresh is in progress")
+            return
+        self.app.run_async(self._fetch_notification_event_data())
+
+    async def _fetch_notification_event_data(self) -> None:
+        """Fetch only the lightweight data needed for notifications."""
+        try:
+            location = self.app.config_manager.get_current_location()
+            if not location or location.name == "Nationwide":
+                return
+
+            weather_data = await self.app.weather_client.get_notification_event_data(location)
+            wx.CallAfter(self._on_notification_event_data_received, weather_data)
+        except Exception as e:
+            logger.debug(f"Failed to fetch lightweight notification data: {e}")
+
     async def _fetch_weather_data(self, force_refresh: bool = False, generation: int = 0) -> None:
         """Fetch weather data in background."""
         try:
@@ -1187,6 +1206,33 @@ class MainWindow(SizedFrame):
 
             self._fallback_notifier = SafeDesktopNotifier()
         return self._fallback_notifier
+
+    def _on_notification_event_data_received(self, weather_data) -> None:
+        """Handle lightweight event data without refreshing the visible weather UI."""
+        try:
+            if (
+                weather_data.alerts
+                and weather_data.alerts.has_alerts()
+                and self.app.alert_notification_system
+            ):
+                self.app.run_async(
+                    self.app.alert_notification_system.process_and_notify(weather_data.alerts)
+                )
+
+            if (
+                self.app.alert_notification_system
+                and weather_data.alert_lifecycle_diff is not None
+                and weather_data.alert_lifecycle_diff.has_changes
+            ):
+                self.app.run_async(
+                    self.app.alert_notification_system.notify_lifecycle_changes(
+                        weather_data.alert_lifecycle_diff
+                    )
+                )
+
+            self._process_notification_events(weather_data)
+        except Exception as e:
+            logger.debug(f"Failed to process lightweight notification event data: {e}")
 
     def _process_notification_events(self, weather_data) -> None:
         """
