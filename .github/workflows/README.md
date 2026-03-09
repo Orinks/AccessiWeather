@@ -39,7 +39,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 ---
 
 ### 3. Update GitHub Pages (`update-pages.yml`)
-**Purpose**: Update the download page with latest build info
+**Purpose**: Update the GitHub Pages mirror with latest build info
 **Triggers**:
 - After successful Build workflow (on `main` or `dev`)
 - After releases are published/edited
@@ -47,15 +47,29 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 
 **What it does**:
 - Fetches latest build information
-- Updates download page with version info
+- Updates the GitHub Pages mirror with version info
 - Generates nightly.link URLs
 - Deploys to GitHub Pages
 
 ---
 
+### 4. Update WordPress release page (`update-wordpress.yml`)
+**Purpose**: Update the existing WordPress release page to link directly to the latest public GitHub release assets
+**Triggers**:
+- When a GitHub release is published
+- Manual dispatch
+
+**What it does**:
+- Fetches the latest public stable GitHub release
+- Picks the primary release asset for the main download button
+- Computes GitHub asset download counts
+- Updates only the managed section of the existing WordPress page via the standard REST API
+
+---
+
 ## Release Workflows
 
-### 4. Official Release (`briefcase-release.yml`)
+### 5. Official Release (`briefcase-release.yml`)
 **Purpose**: Create official releases from main branch
 **Triggers**:
 - Push to `main` or `feature/toga-migration` (excluding docs)
@@ -71,7 +85,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 
 ---
 
-### 5. Beta Release (`beta-release.yml`)
+### 6. Beta Release (`beta-release.yml`)
 **Purpose**: Create pre-release builds for testing
 **Triggers**:
 - Push tags matching: `v*-beta.*`, `v*-alpha.*`, `v*-rc.*`, `v*-dev.*`
@@ -87,7 +101,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 
 ## Testing Workflows
 
-### 6. Test nightly.link (`test-nightly-link.yml`)
+### 7. Test nightly.link (`test-nightly-link.yml`)
 **Purpose**: Test nightly.link integration
 **Triggers**: Manual dispatch only
 
@@ -124,7 +138,8 @@ Push tag     → beta-release.yml
 |------------|--------------|-----|
 | Test code changes | `windows-ci.yml` | Automatic on PR/push |
 | Build installers | `briefcase-build.yml` | Automatic after CI or manual |
-| Update downloads page | `update-pages.yml` | Automatic after build or manual |
+| Update GitHub Pages mirror | `update-pages.yml` | Automatic after build or manual |
+| Update WordPress release page | `update-wordpress.yml` | Automatic on release publish or manual |
 | Create official release | `briefcase-release.yml` | Push to main or manual |
 | Create beta release | `beta-release.yml` | Tag with beta/alpha/rc/dev or manual |
 | Test nightly.link | `test-nightly-link.yml` | Manual only |
