@@ -25,9 +25,7 @@ NIGHTLY_COUNT = 5
 START_MARKER = "<!-- accessiweather-release:start -->"
 END_MARKER = "<!-- accessiweather-release:end -->"
 DEFAULT_SECTION_HEADING = "Download AccessiWeather"
-DEFAULT_SECTION_DESCRIPTION = (
-    "Download the latest stable release directly, or grab one of the newest nightly builds if you want the freshest fixes and features."
-)
+DEFAULT_SECTION_DESCRIPTION = "Download the latest stable release directly, or grab one of the newest nightly builds if you want the freshest fixes and features."
 
 GH_API_HEADERS: dict[str, str] = {
     "Accept": "application/vnd.github+json",
@@ -51,6 +49,7 @@ class ReleaseInfo:
     name: str
     published_at: str
     html_url: str
+    body: str
     assets: list[ReleaseAsset]
     total_downloads: int
     primary_asset: ReleaseAsset
@@ -154,6 +153,7 @@ def normalize_release(release: dict[str, Any]) -> ReleaseInfo:
         name=str(release.get("name") or release.get("tag_name") or "Release"),
         published_at=format_date(release.get("published_at")),
         html_url=html_url,
+        body=str(release.get("body") or "").strip(),
         assets=assets,
         total_downloads=sum(asset.download_count for asset in assets),
         primary_asset=select_primary_asset(assets, html_url),
@@ -161,7 +161,9 @@ def normalize_release(release: dict[str, Any]) -> ReleaseInfo:
     )
 
 
-def build_release_context(stable_release: dict[str, Any], nightly_releases: list[dict[str, Any]]) -> dict[str, Any]:
+def build_release_context(
+    stable_release: dict[str, Any], nightly_releases: list[dict[str, Any]]
+) -> dict[str, Any]:
     stable = normalize_release(stable_release)
     nightlies = [normalize_release(release) for release in nightly_releases[:NIGHTLY_COUNT]]
     return {
@@ -189,15 +191,88 @@ def render_asset_links(assets: list[ReleaseAsset]) -> str:
     return "<ul>" + "".join(links) + "</ul>"
 
 
+def _inline_markdown_to_html(text: str) -> str:
+    rendered = html.escape(text)
+    rendered = re.sub(r"`([^`]+)`", r"<code>\1</code>", rendered)
+    rendered = re.sub(r"\[([^\]]+)\]\((https?://[^)\s]+)\)", r'<a href="\2">\1</a>', rendered)
+    rendered = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", rendered)
+    rendered = re.sub(r"__([^_]+)__", r"<strong>\1</strong>", rendered)
+    rendered = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"<em>\1</em>", rendered)
+    return re.sub(r"(?<!_)_([^_]+)_(?!_)", r"<em>\1</em>", rendered)
+
+
+def render_release_notes(body: str, *, max_items: int | None = None) -> str:
+    if not body.strip():
+        return "<p>No release notes published for this release yet.</p>"
+
+    blocks: list[str] = []
+    in_list = False
+    list_items = 0
+    paragraph_lines: list[str] = []
+
+    def flush_paragraph() -> None:
+        nonlocal paragraph_lines
+        if paragraph_lines:
+            text = " ".join(line.strip() for line in paragraph_lines if line.strip())
+            if text:
+                blocks.append(f"<p>{_inline_markdown_to_html(text)}</p>")
+            paragraph_lines = []
+
+    def close_list() -> None:
+        nonlocal in_list
+        if in_list:
+            blocks.append("</ul>")
+            in_list = False
+
+    for raw_line in body.splitlines():
+        line = raw_line.strip()
+        if not line:
+            flush_paragraph()
+            close_list()
+            continue
+
+        heading_match = re.match(r"^(#{1,3})\s+(.+)$", line)
+        if heading_match:
+            flush_paragraph()
+            close_list()
+            level = min(len(heading_match.group(1)) + 2, 6)
+            heading_text = _inline_markdown_to_html(heading_match.group(2).strip())
+            blocks.append(f"<h{level}>{heading_text}</h{level}>")
+            continue
+
+        list_match = re.match(r"^[-*]\s+(.+)$", line)
+        if list_match:
+            flush_paragraph()
+            if max_items is not None and list_items >= max_items:
+                continue
+            if not in_list:
+                blocks.append("<ul>")
+                in_list = True
+            blocks.append(f"<li>{_inline_markdown_to_html(list_match.group(1).strip())}</li>")
+            list_items += 1
+            continue
+
+        close_list()
+        paragraph_lines.append(line)
+
+    flush_paragraph()
+    close_list()
+    return "".join(blocks) or "<p>No release notes published for this release yet.</p>"
+
+
+def render_nightly_notes_summary(release: ReleaseInfo) -> str:
+    return render_release_notes(release.body, max_items=3)
+
+
 def render_nightly_card(release: ReleaseInfo) -> str:
     primary = release.primary_asset
     return (
-        '<li>'
-        f"<strong>{html.escape(release.tag_name)}</strong>"
-        f" — {html.escape(release.published_at)}"
-        f" — <a href=\"{html.escape(primary.url, quote=True)}\">Download {html.escape(primary.label)}</a>"
-        f" — <a href=\"{html.escape(release.html_url, quote=True)}\">Release notes</a>"
-        f" — {format_count(release.total_downloads)} downloads"
+        '<li class="accessiweather-nightly-card">'
+        f"<div><strong>{html.escape(release.tag_name)}</strong> ({html.escape(release.published_at)})</div>"
+        f'<div><a href="{html.escape(primary.url, quote=True)}">Download {html.escape(primary.label)}</a>'
+        f' · <a href="{html.escape(release.html_url, quote=True)}">Full release</a>'
+        f" · {format_count(release.total_downloads)} downloads</div>"
+        f'<div class="accessiweather-nightly-notes">{render_nightly_notes_summary(release)}</div>'
         "</li>"
     )
 
@@ -209,7 +284,7 @@ def render_release_section(context: dict[str, Any]) -> str:
     stable_links = render_asset_links(stable.assets)
     nightly_items = "".join(render_nightly_card(release) for release in nightlies)
     nightly_html = (
-        "<div class=\"accessiweather-nightlies\">"
+        '<div class="accessiweather-nightlies">'
         "<h3>Latest Nightly Builds</h3>"
         "<p>The newest pre-release builds from the dev branch.</p>"
         f"<ul>{nightly_items}</ul>"
@@ -231,7 +306,7 @@ def render_release_section(context: dict[str, Any]) -> str:
   <!-- /wp:paragraph -->
   <!-- wp:group -->
   <div class="wp-block-group accessiweather-release-stable">
-    <h3>Stable ({html.escape(stable.tag_name.lstrip('v'))})</h3>
+    <h3>Stable ({html.escape(stable.tag_name.lstrip("v"))})</h3>
     <div class="wp-block-buttons">
       <div class="wp-block-button">
         <a class="wp-block-button__link wp-element-button" href="{html.escape(primary.url, quote=True)}">Download {html.escape(primary.label)}</a>
@@ -241,11 +316,15 @@ def render_release_section(context: dict[str, Any]) -> str:
       </div>
     </div>
     <ul>
-      <li><strong>Version:</strong> {html.escape(stable.tag_name.lstrip('v'))}</li>
+      <li><strong>Version:</strong> {html.escape(stable.tag_name.lstrip("v"))}</li>
       <li><strong>Release date:</strong> {html.escape(stable.published_at)}</li>
       <li><strong>Total downloads:</strong> {format_count(stable.total_downloads)}</li>
     </ul>
     {stable_links}
+    <div class="accessiweather-release-notes">
+      <h4>What&apos;s new</h4>
+      {render_release_notes(stable.body)}
+    </div>
   </div>
   <!-- /wp:group -->
   {nightly_html}

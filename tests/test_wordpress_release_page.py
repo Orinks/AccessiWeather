@@ -112,6 +112,7 @@ def test_build_release_context_includes_five_nightlies():
         "tag_name": "v0.4.3",
         "published_at": "2026-02-11T00:00:00Z",
         "html_url": "https://example.com/stable",
+        "body": "## Stable changes\n\n- Added a thing",
         "assets": [
             {
                 "name": "AccessiWeather-0.4.3-windows-setup.exe",
@@ -128,6 +129,7 @@ def test_build_release_context_includes_five_nightlies():
                 "name": f"Nightly 2026-03-0{i}",
                 "published_at": f"2026-03-0{i}T04:00:00Z",
                 "html_url": f"https://example.com/nightly-{i}",
+                "body": f"## Nightly {i}\n\n- Change {i}\n- Fix {i}",
                 "prerelease": True,
                 "assets": [
                     {
@@ -142,8 +144,50 @@ def test_build_release_context_includes_five_nightlies():
     context = module.build_release_context(stable_release, nightlies)
 
     assert context["stable"].tag_name == "v0.4.3"
+    assert context["stable"].body == "## Stable changes\n\n- Added a thing"
     assert len(context["nightlies"]) == 5
     assert context["nightlies"][0].tag_name == "nightly-20260301"
+
+
+def test_render_release_notes_handles_headings_lists_and_links():
+    module = load_module()
+
+    html_block = module.render_release_notes(
+        "## Highlights\n\n- Added **bold** support\n- Visit [Docs](https://example.com/docs)\n\nA short `code` note."
+    )
+
+    assert "<h4>Highlights</h4>" in html_block
+    assert "<ul>" in html_block
+    assert "<strong>bold</strong>" in html_block
+    assert '<a href="https://example.com/docs">Docs</a>' in html_block
+    assert "<code>code</code>" in html_block
+
+
+def test_render_nightly_notes_summary_limits_list_items():
+    module = load_module()
+    release = module.ReleaseInfo(
+        tag_name="nightly-20260309",
+        name="Nightly 2026-03-09",
+        published_at="March 09, 2026",
+        html_url="https://example.com/nightly",
+        body="## Changes\n\n- One\n- Two\n- Three\n- Four",
+        assets=[],
+        total_downloads=0,
+        primary_asset=module.ReleaseAsset(
+            "setup.exe",
+            "https://example.com/nightly.exe",
+            0,
+            "windows-installer",
+            "Windows installer",
+        ),
+        prerelease=True,
+    )
+
+    html_block = module.render_nightly_notes_summary(release)
+
+    assert "<li>One</li>" in html_block
+    assert "<li>Three</li>" in html_block
+    assert "<li>Four</li>" not in html_block
 
 
 def test_render_release_section_contains_stable_and_nightlies():
@@ -152,6 +196,7 @@ def test_render_release_section_contains_stable_and_nightlies():
         "tag_name": "v0.4.3",
         "published_at": "2026-02-11T00:00:00Z",
         "html_url": "https://example.com/stable",
+        "body": "## Highlights\n\n- Stable change one\n- Stable change two",
         "assets": [
             {
                 "name": "AccessiWeather-0.4.3-windows-setup.exe",
@@ -166,6 +211,7 @@ def test_render_release_section_contains_stable_and_nightlies():
             "name": "Nightly 2026-03-09",
             "published_at": "2026-03-09T04:00:00Z",
             "html_url": "https://example.com/nightly",
+            "body": "## Nightly notes\n\n- Fixed updater\n- Polished layout\n- Improved tests\n- Extra detail",
             "prerelease": True,
             "assets": [
                 {
@@ -184,3 +230,7 @@ def test_render_release_section_contains_stable_and_nightlies():
     assert "Stable (0.4.3)" in html_block
     assert "Latest Nightly Builds" in html_block
     assert "nightly-20260309" in html_block
+    assert "What&apos;s new" in html_block
+    assert "Stable change one" in html_block
+    assert "Fixed updater" in html_block
+    assert "Extra detail" not in html_block
