@@ -245,3 +245,6 @@ def test_render_release_section_contains_stable_and_nightlies():
     assert "Fixed updater" in html_block
     assert "Extra detail" not in html_block
     assert "Download Windows portable" in html_block
+    assert "macOS (" not in html_block
+    assert "Windows installer (" not in html_block
+    assert "Windows portable (" not in html_block

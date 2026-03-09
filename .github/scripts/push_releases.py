@@ -179,13 +179,18 @@ def find_asset(assets: list[ReleaseAsset], kind: str) -> ReleaseAsset | None:
     return None
 
 
-def render_asset_links(assets: list[ReleaseAsset]) -> str:
+def render_asset_links(
+    assets: list[ReleaseAsset], *, exclude_urls: set[str] | None = None
+) -> str:
     if not assets:
         return ""
 
+    exclude_urls = exclude_urls or set()
     links: list[str] = []
     seen_kinds: set[str] = set()
     for asset in assets:
+        if asset.url in exclude_urls:
+            continue
         if asset.kind in seen_kinds:
             continue
         seen_kinds.add(asset.kind)
@@ -195,7 +200,7 @@ def render_asset_links(assets: list[ReleaseAsset]) -> str:
             f" ({format_count(asset.download_count)} downloads)"
             "</li>"
         )
-    return "<ul>" + "".join(links) + "</ul>"
+    return ("<ul>" + "".join(links) + "</ul>") if links else ""
 
 
 def _inline_markdown_to_html(text: str) -> str:
@@ -313,7 +318,9 @@ def render_release_section(context: dict[str, Any]) -> str:
     stable: ReleaseInfo = context["stable"]
     nightlies: list[ReleaseInfo] = context["nightlies"]
 
-    stable_links = render_asset_links(stable.assets)
+    promoted_assets = ordered_unique_assets(stable.assets, primary=stable.primary_asset)
+    promoted_urls = {asset.url for asset in promoted_assets}
+    stable_links = render_asset_links(stable.assets, exclude_urls=promoted_urls)
     nightly_items = "".join(render_nightly_card(release) for release in nightlies)
     nightly_html = (
         '<div class="accessiweather-nightlies">'
