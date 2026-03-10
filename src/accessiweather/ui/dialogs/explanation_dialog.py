@@ -52,6 +52,7 @@ class ExplanationDialog(wx.Dialog):
         self.app = app
         self._create_ui()
         self._setup_accessibility()
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_key)
 
     def _create_ui(self):
         """Create the dialog UI."""
@@ -233,6 +234,13 @@ class ExplanationDialog(wx.Dialog):
         """Handle regeneration error."""
         self.text_ctrl.SetValue(f"Failed to regenerate: {error_msg}")
         self.regenerate_btn.Enable()
+
+    def _on_key(self, event):
+        """Handle key press - close dialog on Escape."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.Close()
+        else:
+            event.Skip()
 
     def _setup_accessibility(self):
         """Set up accessibility labels."""
