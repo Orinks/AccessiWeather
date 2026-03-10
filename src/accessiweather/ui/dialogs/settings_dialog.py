@@ -788,6 +788,23 @@ class SettingsDialogSimple(wx.Dialog):
         if summary_control is not None:
             summary_control.SetLabel(self._get_event_sound_summary_text())
 
+    def _configure_modal_dialog_buttons(
+        self,
+        dialog: wx.Dialog,
+        ok_btn: wx.Button,
+        cancel_btn: wx.Button,
+        *,
+        focus_target: wx.Window | None = None,
+    ) -> None:
+        """Apply standard wx dialog button semantics and predictable focus."""
+        dialog.SetAffirmativeId(wx.ID_OK)
+        dialog.SetEscapeId(wx.ID_CANCEL)
+        ok_btn.SetDefault()
+        if focus_target is not None:
+            focus_target.SetFocus()
+        else:
+            ok_btn.SetFocus()
+
     def _run_event_sounds_dialog(self) -> dict[str, bool] | None:
         """Show the event-sounds modal and return updated state when accepted."""
         dialog = wx.Dialog(
@@ -844,6 +861,12 @@ class SettingsDialogSimple(wx.Dialog):
         main_sizer.Add(button_row, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         dialog.SetSizer(main_sizer)
+        self._configure_modal_dialog_buttons(
+            dialog,
+            ok_btn,
+            cancel_btn,
+            focus_target=next(iter(dialog_controls.values()), None),
+        )
 
         try:
             if dialog.ShowModal() != wx.ID_OK:
