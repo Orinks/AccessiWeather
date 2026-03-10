@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 
 from accessiweather.constants import SEVERITY_PRIORITY_MAP
@@ -148,6 +148,22 @@ def _build_summary(
     return ", ".join(parts) if parts else "No changes"
 
 
+def _alert_is_recently_issued(alert: WeatherAlert | None, max_age_minutes: int = 10) -> bool:
+    """Return True only if the alert was issued within *max_age_minutes*."""
+    if alert is None:
+        return True  # no alert object → assume new to be safe
+    effective_dt = alert.effective or alert.onset
+    if effective_dt is None:
+        return True  # no timestamp → assume new
+    try:
+        now = datetime.now(UTC)
+        if effective_dt.tzinfo is None:
+            effective_dt = effective_dt.replace(tzinfo=UTC)
+        return (now - effective_dt) <= timedelta(minutes=max_age_minutes)
+    except Exception:
+        return True  # parse error → assume new to be safe
+
+
 def diff_alerts(
     previous: WeatherAlerts | None,
     current: WeatherAlerts | None,
@@ -249,6 +265,34 @@ def diff_alerts(
                     title=alert.title or "",
                 )
             )
+
+    # Bug fix 1: On first load (previous is None), suppress "New" notifications
+    # for alerts that have been active for more than 10 minutes. They silently
+    # enter the known-set without firing notifications.
+    if previous is None:
+        new_changes = [c for c in new_changes if _alert_is_recently_issued(c.alert)]
+
+    # Bug fix 2: Suppress false "cancelled" notifications when NWS cancels and
+    # reissues an alert with a new ID. If a cancelled alert and a new alert share
+    # the same event type AND have overlapping areas, treat it as an in-place
+    # reissue — suppress the cancel notification, keep the new alert.
+    suppressed_cancel_ids: set[str] = set()
+    for cancelled in cancelled_changes:
+        cancelled_alert = prev_map.get(cancelled.alert_id)
+        if not cancelled_alert:
+            continue
+        for new_change in new_changes:
+            new_alert = new_change.alert
+            if new_alert is None:
+                continue
+            if (
+                (cancelled_alert.event or "").lower() == (new_alert.event or "").lower()
+                and cancelled_alert.event is not None
+                and set(cancelled_alert.areas or []) & set(new_alert.areas or [])
+            ):
+                suppressed_cancel_ids.add(cancelled.alert_id)
+                break
+    cancelled_changes = [c for c in cancelled_changes if c.alert_id not in suppressed_cancel_ids]
 
     summary = _build_summary(
         new_changes, updated_changes, escalated_changes, extended_changes, cancelled_changes
