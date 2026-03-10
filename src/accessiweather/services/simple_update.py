@@ -378,7 +378,7 @@ def build_macos_update_script(
             cp -R /Volumes/*/*.app "{app_dir}/"
             hdiutil detach /Volumes/* -quiet
         fi
-        open "{app_path}"
+        open "{app_path}" --args --updated
         rm -f "$0" "{update_path}"
         """
     ).strip()
@@ -420,7 +420,7 @@ def build_portable_update_script(
         rd /s /q "%EXTRACT_DIR%"
         del "%ZIP_PATH%"
         timeout /t 2 /nobreak >NUL
-        start "" "%EXE_PATH%"
+        start "" "%EXE_PATH%" --updated
         (goto) 2>nul & del "%~f0"
         """
     ).strip()
