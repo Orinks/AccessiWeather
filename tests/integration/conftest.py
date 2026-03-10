@@ -64,6 +64,7 @@ integration_vcr = vcr.VCR(
     filter_headers=["authorization", "x-api-key", "api-key", "user-agent"],
     # Decode compressed responses for readable cassettes
     decode_compressed_response=True,
+    allow_playback_repeats=True,
 )
 
 
