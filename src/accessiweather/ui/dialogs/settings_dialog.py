@@ -37,6 +37,7 @@ class SettingsDialogSimple(wx.Dialog):
         self.config_manager = app.config_manager
         self._controls = {}
         self._selected_specific_model: str | None = None
+        self._event_sound_states = self._build_default_event_sound_states()
 
         self._create_ui()
         self._load_settings()
@@ -351,7 +352,7 @@ class SettingsDialogSimple(wx.Dialog):
         sizer.Add(
             wx.StaticText(
                 panel,
-                label="When using Auto mode, data is merged from multiple sources in priority order.",
+                label="Station selection strategy applies to NWS current conditions. In Auto mode, it applies when NWS is selected or used as fallback.",
             ),
             0,
             wx.LEFT | wx.BOTTOM,
@@ -419,6 +420,26 @@ class SettingsDialogSimple(wx.Dialog):
         )
         sizer.Add(self._controls["openmeteo_model"], 0, wx.LEFT, 10)
 
+        sizer.Add(
+            wx.StaticText(panel, label="NWS Station Selection (Current Conditions):"),
+            0,
+            wx.ALL,
+            5,
+        )
+        self._controls["station_selection_strategy"] = wx.Choice(
+            panel,
+            choices=[
+                "Hybrid default (recommended: fresh + major station with distance guardrail)",
+                "Nearest station (pure distance)",
+                "Major airport preferred (within radius, else nearest)",
+                "Freshest observation (among nearest stations)",
+            ],
+        )
+        self._controls["station_selection_strategy"].SetToolTip(
+            "Applies to NWS current conditions. In Auto mode, applies when NWS is selected or used as fallback."
+        )
+        sizer.Add(self._controls["station_selection_strategy"], 0, wx.LEFT, 10)
+
         panel.SetSizer(sizer)
         self.notebook.AddPage(panel, "Data Sources")
 
@@ -452,6 +473,18 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["alert_notif"] = wx.CheckBox(panel, label="Enable alert notifications")
         sizer.Add(self._controls["alert_notif"], 0, wx.LEFT | wx.BOTTOM, 5)
 
+        # Alert check interval
+        row_check_interval = wx.BoxSizer(wx.HORIZONTAL)
+        row_check_interval.Add(
+            wx.StaticText(panel, label="Alert Check Interval (minutes):"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["event_check_interval"] = wx.SpinCtrl(panel, min=1, max=60, initial=2)
+        row_check_interval.Add(self._controls["event_check_interval"], 0)
+        sizer.Add(row_check_interval, 0, wx.ALL, 5)
+
         # Alert area setting
         row_area = wx.BoxSizer(wx.HORIZONTAL)
         row_area.Add(
@@ -463,9 +496,10 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["alert_radius_type"] = wx.Choice(
             panel,
             choices=[
-                "Point (recommended)",
-                "Zone",
-                "State",
+                "County (recommended — alerts for your county only)",
+                "Point (exact coordinate — may miss alerts)",
+                "Zone (NWS forecast zone — slightly broader than county)",
+                "State (entire state — noisy)",
             ],
         )
         row_area.Add(self._controls["alert_radius_type"], 0)
@@ -602,18 +636,37 @@ class SettingsDialogSimple(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         sizer.Add(
-            wx.StaticText(panel, label="Sound Notifications:"),
+            wx.StaticText(panel, label="Audio"),
             0,
             wx.ALL,
             5,
         )
+        sizer.Add(
+            wx.StaticText(
+                panel,
+                label=(
+                    "Choose whether sounds are enabled, which sound pack is active, "
+                    "and which events should play audio."
+                ),
+            ),
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            5,
+        )
 
-        self._controls["sound_enabled"] = wx.CheckBox(panel, label="Enable Sounds")
-        sizer.Add(self._controls["sound_enabled"], 0, wx.LEFT | wx.BOTTOM, 10)
+        playback_section = wx.StaticBoxSizer(wx.VERTICAL, panel, "Playback")
+
+        self._controls["sound_enabled"] = wx.CheckBox(panel, label="Play notification sounds")
+        playback_section.Add(
+            self._controls["sound_enabled"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            5,
+        )
 
         row1 = wx.BoxSizer(wx.HORIZONTAL)
         row1.Add(
-            wx.StaticText(panel, label="Active sound pack:"),
+            wx.StaticText(panel, label="Sound pack:"),
             0,
             wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
             10,
@@ -633,19 +686,221 @@ class SettingsDialogSimple(wx.Dialog):
 
         self._controls["sound_pack"] = wx.Choice(panel, choices=pack_names)
         row1.Add(self._controls["sound_pack"], 0)
-        sizer.Add(row1, 0, wx.LEFT, 10)
+        playback_section.Add(row1, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
 
-        # Test sound button
         test_btn = wx.Button(panel, label="Test Sound")
         test_btn.Bind(wx.EVT_BUTTON, self._on_test_sound)
-        sizer.Add(test_btn, 0, wx.LEFT | wx.TOP, 10)
+        action_row = wx.BoxSizer(wx.HORIZONTAL)
+        action_row.Add(test_btn, 0, wx.RIGHT, 10)
 
         manage_btn = wx.Button(panel, label="Manage Sound Packs...")
         manage_btn.Bind(wx.EVT_BUTTON, self._on_manage_soundpacks)
-        sizer.Add(manage_btn, 0, wx.LEFT | wx.TOP, 10)
+        action_row.Add(manage_btn, 0)
+        playback_section.Add(action_row, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+        sizer.Add(playback_section, 0, wx.EXPAND | wx.ALL, 5)
+
+        event_sounds_section = wx.StaticBoxSizer(wx.VERTICAL, panel, "Event sounds")
+        event_sounds_section.Add(
+            wx.StaticText(
+                panel,
+                label="Choose which events can play sounds.",
+            ),
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            5,
+        )
+        self._controls["event_sounds_summary"] = wx.StaticText(panel, label="")
+        event_sounds_section.Add(
+            self._controls["event_sounds_summary"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            5,
+        )
+        self._controls["configure_event_sounds"] = wx.Button(
+            panel,
+            label="Configure Event Sounds...",
+        )
+        self._controls["configure_event_sounds"].Bind(
+            wx.EVT_BUTTON,
+            self._on_configure_event_sounds,
+        )
+        event_sounds_section.Add(
+            self._controls["configure_event_sounds"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            5,
+        )
+        sizer.Add(event_sounds_section, 0, wx.EXPAND | wx.ALL, 5)
 
         panel.SetSizer(sizer)
         self.notebook.AddPage(panel, "Audio")
+
+    @staticmethod
+    def _get_event_sound_sections() -> tuple[tuple[str, str, tuple[str, ...]], ...]:
+        """Return grouped event-sound sections used by the settings UI."""
+        try:
+            from ...sound_events import SOUND_EVENT_SECTIONS
+        except ImportError:
+            from accessiweather.sound_events import SOUND_EVENT_SECTIONS
+
+        return tuple(
+            (title, description, tuple(event_key for event_key, _label in section_events))
+            for title, description, section_events in SOUND_EVENT_SECTIONS
+        )
+
+    @staticmethod
+    def _get_mutable_sound_events() -> tuple[tuple[str, str], ...]:
+        """Return user-configurable event sound labels."""
+        try:
+            from ...sound_events import USER_MUTABLE_SOUND_EVENTS
+        except ImportError:
+            from accessiweather.sound_events import USER_MUTABLE_SOUND_EVENTS
+
+        return tuple(USER_MUTABLE_SOUND_EVENTS)
+
+    @classmethod
+    def _build_default_event_sound_states(cls) -> dict[str, bool]:
+        """Return the default enabled state for each mutable sound event."""
+        return {event_key: True for event_key, _label in cls._get_mutable_sound_events()}
+
+    def _set_event_sound_states(self, muted_sound_events: list[str] | tuple[str, ...]) -> None:
+        """Apply muted event settings to the in-memory audio state."""
+        muted_event_set = set(muted_sound_events)
+        self._event_sound_states = {
+            event_key: event_key not in muted_event_set
+            for event_key, _label in self._get_mutable_sound_events()
+        }
+        self._refresh_event_sound_summary()
+
+    def _get_muted_sound_events(self) -> list[str]:
+        """Return muted event keys in the configured display order."""
+        state_map = (
+            getattr(self, "_event_sound_states", {}) or self._build_default_event_sound_states()
+        )
+        return [
+            event_key
+            for event_key, _label in self._get_mutable_sound_events()
+            if not state_map.get(event_key, True)
+        ]
+
+    def _get_event_sound_summary_text(self) -> str:
+        """Build summary text shown on the audio tab."""
+        total_events = len(self._get_mutable_sound_events())
+        muted_events = self._get_muted_sound_events()
+        enabled_count = total_events - len(muted_events)
+
+        if not muted_events:
+            return f"All {total_events} sound events are enabled."
+        if enabled_count == 0:
+            return "All event sounds are turned off."
+        return f"{enabled_count} of {total_events} sound events are enabled."
+
+    def _refresh_event_sound_summary(self) -> None:
+        """Refresh the event sound summary shown on the audio tab."""
+        summary_control = self._controls.get("event_sounds_summary")
+        if summary_control is not None:
+            summary_control.SetLabel(self._get_event_sound_summary_text())
+
+    def _configure_modal_dialog_buttons(
+        self,
+        dialog: wx.Dialog,
+        ok_btn: wx.Button,
+        cancel_btn: wx.Button,
+        *,
+        focus_target: wx.Window | None = None,
+    ) -> None:
+        """Apply standard wx dialog button semantics and predictable focus."""
+        dialog.SetAffirmativeId(wx.ID_OK)
+        dialog.SetEscapeId(wx.ID_CANCEL)
+        ok_btn.SetDefault()
+        if focus_target is not None:
+            focus_target.SetFocus()
+        else:
+            ok_btn.SetFocus()
+
+    def _run_event_sounds_dialog(self) -> dict[str, bool] | None:
+        """Show the event-sounds modal and return updated state when accepted."""
+        dialog = wx.Dialog(
+            self,
+            title="Configure Event Sounds",
+            size=(460, 420),
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+        )
+        dialog_controls: dict[str, wx.CheckBox] = {}
+        state_map = dict(
+            getattr(self, "_event_sound_states", {}) or self._build_default_event_sound_states()
+        )
+        label_map = dict(self._get_mutable_sound_events())
+
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+        main_sizer.Add(
+            wx.StaticText(
+                dialog,
+                label="Choose which events can play sounds.",
+            ),
+            0,
+            wx.ALL | wx.EXPAND,
+            10,
+        )
+
+        scroll = wx.ScrolledWindow(dialog)
+        scroll.SetScrollRate(0, 20)
+        scroll_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        for section_title, description, event_keys in self._get_event_sound_sections():
+            section = wx.StaticBoxSizer(wx.VERTICAL, scroll, section_title)
+            section.Add(
+                wx.StaticText(scroll, label=description),
+                0,
+                wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+                5,
+            )
+            for event_key in event_keys:
+                checkbox = wx.CheckBox(scroll, label=label_map.get(event_key, event_key))
+                checkbox.SetValue(state_map.get(event_key, True))
+                dialog_controls[event_key] = checkbox
+                section.Add(checkbox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+            scroll_sizer.Add(section, 0, wx.ALL | wx.EXPAND, 5)
+
+        scroll.SetSizer(scroll_sizer)
+        main_sizer.Add(scroll, 1, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 10)
+
+        button_row = wx.BoxSizer(wx.HORIZONTAL)
+        button_row.AddStretchSpacer()
+        cancel_btn = wx.Button(dialog, wx.ID_CANCEL, "Cancel")
+        ok_btn = wx.Button(dialog, wx.ID_OK, "OK")
+        button_row.Add(cancel_btn, 0, wx.RIGHT, 10)
+        button_row.Add(ok_btn, 0)
+        main_sizer.Add(button_row, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        dialog.SetSizer(main_sizer)
+        self._configure_modal_dialog_buttons(
+            dialog,
+            ok_btn,
+            cancel_btn,
+            focus_target=next(iter(dialog_controls.values()), None),
+        )
+
+        try:
+            if dialog.ShowModal() != wx.ID_OK:
+                return None
+            return {
+                event_key: checkbox.GetValue() for event_key, checkbox in dialog_controls.items()
+            }
+        finally:
+            if hasattr(dialog, "Destroy"):
+                dialog.Destroy()
+
+    def _on_configure_event_sounds(self, event):
+        """Open the event-sounds modal and persist accepted in-memory state."""
+        updated_states = self._run_event_sounds_dialog()
+        if updated_states is None:
+            return
+        self._event_sound_states = {
+            event_key: updated_states.get(event_key, True)
+            for event_key, _label in self._get_mutable_sound_events()
+        }
+        self._refresh_event_sound_summary()
 
     def _create_updates_tab(self):
         """Create the updates tab."""
@@ -967,30 +1222,6 @@ class SettingsDialogSimple(wx.Dialog):
         import_api_keys_btn.Bind(wx.EVT_BUTTON, self._on_import_encrypted_api_keys)
         sizer.Add(import_api_keys_btn, 0, wx.LEFT | wx.TOP, 10)
 
-        if self._is_runtime_portable_mode():
-            self._controls["portable_auto_bundle_enabled"] = wx.CheckBox(
-                panel,
-                label="Keep encrypted API key bundle with this portable folder",
-            )
-            sizer.Add(self._controls["portable_auto_bundle_enabled"], 0, wx.LEFT | wx.TOP, 10)
-
-            set_passphrase_btn = wx.Button(panel, label="Set bundle passphrase for this session")
-            set_passphrase_btn.Bind(wx.EVT_BUTTON, self._on_set_portable_bundle_passphrase)
-            sizer.Add(set_passphrase_btn, 0, wx.LEFT | wx.TOP, 10)
-
-            sizer.Add(
-                wx.StaticText(
-                    panel,
-                    label=(
-                        "Passphrase is kept in memory for this app session only and never written "
-                        "to disk. Auto-bundle refresh requires setting it each launch."
-                    ),
-                ),
-                0,
-                wx.LEFT | wx.TOP,
-                10,
-            )
-
         # Sound Pack Files
         sizer.Add(
             wx.StaticText(panel, label="Sound Pack Files"),
@@ -1014,6 +1245,9 @@ class SettingsDialogSimple(wx.Dialog):
             # General tab
             self._controls["update_interval"].SetValue(
                 getattr(settings, "update_interval_minutes", 10)
+            )
+            self._controls["event_check_interval"].SetValue(
+                getattr(settings, "event_check_interval_minutes", 2)
             )
             self._controls["show_nationwide"].SetValue(
                 getattr(self.config_manager.get_settings(), "show_nationwide_location", True)
@@ -1078,6 +1312,7 @@ class SettingsDialogSimple(wx.Dialog):
 
             vc_key = getattr(settings, "visual_crossing_api_key", "") or ""
             self._controls["vc_key"].SetValue(str(vc_key))
+            self._original_vc_key = str(vc_key)
 
             # Source priority
             us_priority = getattr(
@@ -1116,14 +1351,23 @@ class SettingsDialogSimple(wx.Dialog):
             }
             self._controls["openmeteo_model"].SetSelection(model_map.get(model, 0))
 
+            strategy = getattr(settings, "station_selection_strategy", "hybrid_default")
+            strategy_map = {
+                "hybrid_default": 0,
+                "nearest": 1,
+                "major_airport_preferred": 2,
+                "freshest_observation": 3,
+            }
+            self._controls["station_selection_strategy"].SetSelection(strategy_map.get(strategy, 0))
+
             # Notifications tab
             self._controls["enable_alerts"].SetValue(getattr(settings, "enable_alerts", True))
             self._controls["alert_notif"].SetValue(
                 getattr(settings, "alert_notifications_enabled", True)
             )
             # Alert radius type: map value to choice index
-            radius_type = getattr(settings, "alert_radius_type", "point")
-            radius_type_map = {"point": 0, "zone": 1, "state": 2}
+            radius_type = getattr(settings, "alert_radius_type", "county")
+            radius_type_map = {"county": 0, "point": 1, "zone": 2, "state": 3}
             self._controls["alert_radius_type"].SetSelection(radius_type_map.get(radius_type, 0))
             self._controls["notify_extreme"].SetValue(
                 getattr(settings, "alert_notify_extreme", True)
@@ -1151,7 +1395,7 @@ class SettingsDialogSimple(wx.Dialog):
 
             # Event-based notifications
             self._controls["notify_discussion_update"].SetValue(
-                getattr(settings, "notify_discussion_update", False)
+                getattr(settings, "notify_discussion_update", True)
             )
             self._controls["notify_severe_risk_change"].SetValue(
                 getattr(settings, "notify_severe_risk_change", False)
@@ -1166,6 +1410,8 @@ class SettingsDialogSimple(wx.Dialog):
             except (ValueError, AttributeError):
                 self._controls["sound_pack"].SetSelection(0)
 
+            self._set_event_sound_states(getattr(settings, "muted_sound_events", ["data_updated"]))
+
             # Updates tab
             self._controls["auto_update"].SetValue(getattr(settings, "auto_update_enabled", True))
             channel = getattr(settings, "update_channel", "stable")
@@ -1177,6 +1423,7 @@ class SettingsDialogSimple(wx.Dialog):
             # AI tab
             openrouter_key = getattr(settings, "openrouter_api_key", "") or ""
             self._controls["openrouter_key"].SetValue(str(openrouter_key))
+            self._original_openrouter_key = str(openrouter_key)
 
             ai_model = getattr(settings, "ai_model_preference", "openrouter/free")
             if ai_model == "openrouter/free":
@@ -1225,10 +1472,6 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["weather_history"].SetValue(
                 getattr(settings, "weather_history_enabled", True)
             )
-            if "portable_auto_bundle_enabled" in self._controls:
-                self._controls["portable_auto_bundle_enabled"].SetValue(
-                    getattr(settings, "portable_auto_bundle_enabled", False)
-                )
         except Exception as e:
             logger.error(f"Failed to load settings: {e}")
 
@@ -1256,6 +1499,12 @@ class SettingsDialogSimple(wx.Dialog):
                 "jma_seamless",
             ]
             style_values = ["brief", "standard", "detailed"]
+            station_strategy_values = [
+                "hybrid_default",
+                "nearest",
+                "major_airport_preferred",
+                "freshest_observation",
+            ]
 
             # Update nationwide visibility
             show_nationwide = self._controls["show_nationwide"].GetValue()
@@ -1264,6 +1513,7 @@ class SettingsDialogSimple(wx.Dialog):
             settings_dict = {
                 # General
                 "update_interval_minutes": self._controls["update_interval"].GetValue(),
+                "event_check_interval_minutes": self._controls["event_check_interval"].GetValue(),
                 "show_nationwide_location": show_nationwide,
                 "taskbar_icon_text_enabled": self._controls["taskbar_icon_text_enabled"].GetValue(),
                 "taskbar_icon_dynamic_enabled": self._controls[
@@ -1307,10 +1557,13 @@ class SettingsDialogSimple(wx.Dialog):
                 "openmeteo_weather_model": model_values[
                     self._controls["openmeteo_model"].GetSelection()
                 ],
+                "station_selection_strategy": station_strategy_values[
+                    max(0, self._controls["station_selection_strategy"].GetSelection())
+                ],
                 # Notifications
                 "enable_alerts": self._controls["enable_alerts"].GetValue(),
                 "alert_notifications_enabled": self._controls["alert_notif"].GetValue(),
-                "alert_radius_type": ["point", "zone", "state"][
+                "alert_radius_type": ["county", "point", "zone", "state"][
                     self._controls["alert_radius_type"].GetSelection()
                 ],
                 "alert_notify_extreme": self._controls["notify_extreme"].GetValue(),
@@ -1331,6 +1584,7 @@ class SettingsDialogSimple(wx.Dialog):
                 if hasattr(self, "_sound_pack_ids")
                 and self._controls["sound_pack"].GetSelection() < len(self._sound_pack_ids)
                 else "default",
+                "muted_sound_events": self._get_muted_sound_events(),
                 # Updates
                 "auto_update_enabled": self._controls["auto_update"].GetValue(),
                 "update_channel": "stable"
@@ -1349,11 +1603,6 @@ class SettingsDialogSimple(wx.Dialog):
                 "startup_enabled": self._controls["startup"].GetValue(),
                 "weather_history_enabled": self._controls["weather_history"].GetValue(),
             }
-            if "portable_auto_bundle_enabled" in self._controls:
-                settings_dict["portable_auto_bundle_enabled"] = self._controls[
-                    "portable_auto_bundle_enabled"
-                ].GetValue()
-
             # Source priority
             us_idx = self._controls["us_priority"].GetSelection()
             us_priorities = [
@@ -1372,23 +1621,26 @@ class SettingsDialogSimple(wx.Dialog):
                 intl_idx if intl_idx >= 0 else 0
             ]
 
-            if (
-                settings_dict.get("portable_auto_bundle_enabled")
-                and not self.config_manager.has_portable_bundle_passphrase()
+            # Guard: never wipe a previously-set API key with an empty string.
+            # If the field is blank but the original value was non-empty, the
+            # keyring load failed transiently — keep the existing keyring value.
+            for key, orig_attr in (
+                ("visual_crossing_api_key", "_original_vc_key"),
+                ("openrouter_api_key", "_original_openrouter_key"),
             ):
-                wx.MessageBox(
-                    "Portable auto-bundle requires a session passphrase. "
-                    "Click 'Set bundle passphrase for this session' first.",
-                    "Passphrase required",
-                    wx.OK | wx.ICON_WARNING,
-                )
-                return False
+                if not settings_dict.get(key) and getattr(self, orig_attr, ""):
+                    logger.warning(
+                        "Skipping empty %s save — original value was non-empty; "
+                        "keyring may have failed to load. Existing keyring value preserved.",
+                        key,
+                    )
+                    settings_dict.pop(key, None)
 
             success = self.config_manager.update_settings(**settings_dict)
-            if success and settings_dict.get("portable_auto_bundle_enabled"):
-                self.config_manager.refresh_portable_api_key_bundle()
             if success:
                 logger.info("Settings saved successfully")
+                if hasattr(self, "app") and self._is_runtime_portable_mode():
+                    self._maybe_update_portable_bundle_after_save(settings_dict)
             return success
 
         except Exception as e:
@@ -1397,12 +1649,67 @@ class SettingsDialogSimple(wx.Dialog):
 
     def _setup_accessibility(self):
         """Set up accessibility labels for controls."""
-        # Set accessible names for key controls
-        self._controls["update_interval"].SetName("Update interval in minutes")
-        self._controls["temp_unit"].SetName("Temperature unit selection")
-        self._controls["data_source"].SetName("Weather data source selection")
-        self._controls["vc_key"].SetName("Visual Crossing API key")
-        self._controls["openrouter_key"].SetName("OpenRouter API key")
+        control_names = {
+            "update_interval": "Update Interval (minutes)",
+            "event_check_interval": "Alert Check Interval (minutes)",
+            "show_nationwide": "Show Nationwide location (requires Auto or NWS data source)",
+            "taskbar_icon_text_enabled": "Show weather text on tray icon",
+            "taskbar_icon_dynamic_enabled": "Update tray text dynamically",
+            "taskbar_icon_text_format": "Tray text format",
+            "temp_unit": "Temperature Display",
+            "show_dewpoint": "Show dewpoint",
+            "show_visibility": "Show visibility",
+            "show_uv_index": "Show UV index",
+            "show_pressure_trend": "Show pressure trend",
+            "detailed_forecast": "Show detailed forecast information",
+            "forecast_duration_days": "Forecast duration",
+            "forecast_time_reference": "Forecast time display",
+            "time_display_mode": "Time zone display",
+            "time_format_12hour": "Use 12-hour time format (e.g., 3:00 PM)",
+            "show_timezone_suffix": "Show timezone abbreviations (e.g., EST, UTC)",
+            "verbosity_level": "Verbosity level",
+            "severe_weather_override": "Automatically prioritize severe weather info",
+            "data_source": "Weather Data Source",
+            "vc_key": "API Key",
+            "us_priority": "US Locations Priority",
+            "intl_priority": "International Locations Priority",
+            "openmeteo_model": "Open-Meteo Weather Model",
+            "station_selection_strategy": "Station selection strategy",
+            "enable_alerts": "Enable weather alerts",
+            "alert_notif": "Enable alert notifications",
+            "alert_radius_type": "Alert Area",
+            "notify_extreme": "Extreme - Life-threatening events (e.g., Tornado Warning)",
+            "notify_severe": "Severe - Significant hazards (e.g., Severe Thunderstorm Warning)",
+            "notify_moderate": "Moderate - Potentially hazardous (e.g., Winter Weather Advisory)",
+            "notify_minor": "Minor - Low impact events (e.g., Frost Advisory, Fog Advisory)",
+            "notify_unknown": "Unknown - Uncategorized alerts",
+            "notify_discussion_update": "Notify when Area Forecast Discussion is updated (NWS US only)",
+            "notify_severe_risk_change": "Notify when severe weather risk level changes (Visual Crossing only)",
+            "global_cooldown": "Global cooldown (minutes)",
+            "per_alert_cooldown": "Per-alert cooldown (minutes)",
+            "freshness_window": "Alert freshness window (minutes)",
+            "max_notifications": "Maximum notifications per hour",
+            "sound_enabled": "Enable Sounds",
+            "sound_pack": "Active sound pack",
+            "auto_update": "Check for updates automatically",
+            "update_channel": "Update Channel",
+            "update_check_interval": "Check Interval (hours)",
+            "openrouter_key": "OpenRouter API Key",
+            "ai_model": "Model Preference",
+            "ai_style": "Explanation Style",
+            "custom_prompt": "Custom System Prompt (optional)",
+            "custom_instructions": "Custom Instructions (optional)",
+            "minimize_tray": "Minimize to notification area when closing",
+            "minimize_on_startup": "Start minimized to notification area",
+            "startup": "Launch automatically at startup",
+            "weather_history": "Enable weather history comparisons",
+        }
+
+        control_names["event_sounds_summary"] = "Event sound summary"
+        control_names["configure_event_sounds"] = "Configure event sounds"
+
+        for key, name in control_names.items():
+            self._controls[key].SetName(name)
 
     def _get_ai_model_preference(self) -> str:
         """Get the AI model preference based on UI selection."""
@@ -1845,6 +2152,87 @@ class SettingsDialogSimple(wx.Dialog):
                 wx.OK | wx.ICON_ERROR,
             )
 
+    _PORTABLE_KEY_SETTINGS = ("visual_crossing_api_key", "openrouter_api_key")
+
+    def _maybe_update_portable_bundle_after_save(self, settings_dict: dict) -> None:
+        """
+        After saving settings in portable mode, keep the bundle in sync.
+
+        If any API key was changed:
+        - Passphrase cached → silently re-encrypt bundle via export_encrypted_api_keys
+        - No cached passphrase → prompt for passphrase, then export
+        """
+        changed_keys = {
+            k: v for k, v in settings_dict.items() if k in self._PORTABLE_KEY_SETTINGS and v
+        }
+        if not changed_keys:
+            return
+
+        from ...config.secure_storage import SecureStorage
+
+        app = self.app
+        _PASSPHRASE_KEY = getattr(
+            app, "_PORTABLE_PASSPHRASE_KEYRING_KEY", "portable_bundle_passphrase"
+        )
+        config_dir = self.config_manager.config_dir
+        bundle_names = ("api-keys.keys", "api-keys.awkeys")
+        bundle_path = next(
+            (config_dir / n for n in bundle_names if (config_dir / n).exists()), None
+        )
+
+        # Get or prompt for passphrase.
+        passphrase = (SecureStorage.get_password(_PASSPHRASE_KEY) or "").strip()
+
+        if not passphrase:
+            if bundle_path:
+                msg = (
+                    "Your API keys have been updated.\n\n"
+                    "Enter your bundle passphrase to re-encrypt the portable key bundle, "
+                    "or Cancel to leave the bundle unchanged (keys are active this session only)."
+                )
+            else:
+                msg = (
+                    "Your API keys have been updated.\n\n"
+                    "Enter a passphrase to create an encrypted key bundle so your keys "
+                    "persist across launches, or Cancel to skip (keys active this session only)."
+                )
+            with wx.TextEntryDialog(
+                self,
+                msg,
+                "Portable key bundle",
+                style=wx.OK | wx.CANCEL | wx.TE_PASSWORD,
+            ) as dlg:
+                if dlg.ShowModal() != wx.ID_OK:
+                    return
+                passphrase = dlg.GetValue().strip()
+            if not passphrase:
+                return
+            # Cache for future use.
+            SecureStorage.set_password(_PASSPHRASE_KEY, passphrase)
+
+        # Write/update the bundle — export_encrypted_api_keys reads all keys
+        # from in-memory settings + keyring, so no manual merge needed.
+        if bundle_path is None:
+            bundle_path = config_dir / "api-keys.keys"
+
+        try:
+            ok = self.config_manager.export_encrypted_api_keys(bundle_path, passphrase)
+            if ok:
+                logger.info("Portable key bundle updated after settings save.")
+            else:
+                wx.MessageBox(
+                    "No API keys found to export. Keys are active this session but won't persist.",
+                    "Bundle update skipped",
+                    wx.OK | wx.ICON_WARNING,
+                )
+        except Exception as exc:
+            logger.error("Failed to update portable key bundle: %s", exc)
+            wx.MessageBox(
+                "Failed to update the key bundle. Keys are active this session but won't persist.",
+                "Bundle update failed",
+                wx.OK | wx.ICON_WARNING,
+            )
+
     def _is_runtime_portable_mode(self) -> bool:
         """Return portable mode using runtime app/config state (single source of truth)."""
         app_portable = getattr(self.app, "_portable_mode", None)
@@ -2095,16 +2483,82 @@ class SettingsDialogSimple(wx.Dialog):
                 "Copied settings summary:\n"
                 f"{summary_block}\n\n"
                 f"From:\n{installed_config_dir}\n\n"
-                f"To:\n{portable_config_dir}\n\n"
-                f"Important: {API_KEYS_TRANSFER_NOTE}",
+                f"To:\n{portable_config_dir}",
                 "Copy complete",
                 wx.OK | wx.ICON_INFORMATION,
             )
+
+            # Offer to export API keys from keyring to encrypted bundle.
+            self._offer_api_key_export_after_copy(portable_config_dir)
         except Exception as e:
             logger.error(f"Failed to copy installed config to portable: {e}")
             wx.MessageBox(
                 f"Failed to copy config: {e}",
                 "Copy failed",
+                wx.OK | wx.ICON_ERROR,
+            )
+
+    def _offer_api_key_export_after_copy(self, portable_config_dir: Path) -> None:
+        """After copying installed config to portable, offer to export API keys."""
+        result = wx.MessageBox(
+            "Config copied. Your API keys are stored in the system keyring and were not "
+            "copied.\n\n"
+            "Would you like to export them to an encrypted bundle now so they work in "
+            "portable mode?",
+            "Export API keys?",
+            wx.YES_NO | wx.ICON_QUESTION,
+        )
+        if result != wx.YES:
+            wx.MessageBox(
+                "You can export API keys later from Settings > Advanced > "
+                "Export API keys (encrypted).",
+                "API keys not exported",
+                wx.OK | wx.ICON_INFORMATION,
+            )
+            return
+
+        passphrase = self._prompt_passphrase(
+            "Export API keys (encrypted)",
+            "Enter a passphrase to encrypt your API keys.",
+        )
+        if passphrase is None:
+            return
+
+        confirm = self._prompt_passphrase(
+            "Confirm passphrase",
+            "Re-enter the passphrase to confirm.",
+        )
+        if confirm is None:
+            return
+        if passphrase != confirm:
+            wx.MessageBox(
+                "Passphrases do not match. API keys were not exported.",
+                "Export cancelled",
+                wx.OK | wx.ICON_WARNING,
+            )
+            return
+
+        bundle_path = portable_config_dir / "api-keys.keys"
+        try:
+            ok = self.config_manager.export_encrypted_api_keys(bundle_path, passphrase)
+            if ok:
+                wx.MessageBox(
+                    f"API keys exported to:\n{bundle_path}",
+                    "Export complete",
+                    wx.OK | wx.ICON_INFORMATION,
+                )
+            else:
+                wx.MessageBox(
+                    "No API keys found to export. You can add keys in Settings > Data Sources "
+                    "and export later.",
+                    "No keys to export",
+                    wx.OK | wx.ICON_WARNING,
+                )
+        except Exception as exc:
+            logger.error("Failed to export API keys after config copy: %s", exc)
+            wx.MessageBox(
+                f"Failed to export API keys: {exc}",
+                "Export failed",
                 wx.OK | wx.ICON_ERROR,
             )
 
@@ -2117,34 +2571,6 @@ class SettingsDialogSimple(wx.Dialog):
                 return None
             value = dlg.GetValue().strip()
             return value or None
-
-    def _on_set_portable_bundle_passphrase(self, event):
-        """Set in-memory passphrase used for portable auto-bundle refresh."""
-        passphrase = self._prompt_passphrase(
-            "Portable bundle passphrase",
-            "Enter passphrase for automatic portable API key bundle refresh.",
-        )
-        if passphrase is None:
-            return
-
-        confirm = self._prompt_passphrase(
-            "Confirm passphrase",
-            "Re-enter passphrase to confirm.",
-        )
-        if confirm is None:
-            return
-        if passphrase != confirm:
-            wx.MessageBox(
-                "Passphrases do not match.", "Passphrase not set", wx.OK | wx.ICON_WARNING
-            )
-            return
-
-        self.config_manager.set_portable_bundle_passphrase(passphrase)
-        wx.MessageBox(
-            "Passphrase saved for this session only.",
-            "Portable bundle passphrase",
-            wx.OK | wx.ICON_INFORMATION,
-        )
 
     def _on_export_encrypted_api_keys(self, event):
         """Export API keys from keyring to encrypted bundle file."""
@@ -2170,8 +2596,8 @@ class SettingsDialogSimple(wx.Dialog):
         with wx.FileDialog(
             self,
             "Export API keys (encrypted)",
-            wildcard="Encrypted bundle (*.awkeys)|*.awkeys|JSON files (*.json)|*.json",
-            defaultFile="accessiweather_api_keys.awkeys",
+            wildcard="Encrypted bundle (*.keys)|*.keys|Legacy bundle (*.awkeys)|*.awkeys",
+            defaultFile="accessiweather_api_keys.keys",
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
         ) as dlg:
             if dlg.ShowModal() != wx.ID_OK:
@@ -2197,7 +2623,7 @@ class SettingsDialogSimple(wx.Dialog):
         with wx.FileDialog(
             self,
             "Import API keys (encrypted)",
-            wildcard="Encrypted bundle (*.awkeys)|*.awkeys|JSON files (*.json)|*.json",
+            wildcard="Encrypted bundle (*.keys)|*.keys|Legacy bundle (*.awkeys)|*.awkeys",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
         ) as dlg:
             if dlg.ShowModal() != wx.ID_OK:

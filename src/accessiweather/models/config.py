@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from ..sound_events import DEFAULT_MUTED_SOUND_EVENTS, normalize_known_muted_sound_events
 from .weather import Location
 
 # Critical settings needed for app initialization (load synchronously)
@@ -34,10 +35,12 @@ NON_CRITICAL_SETTINGS: set[str] = {
     # Sound settings
     "sound_enabled",
     "sound_pack",
+    "muted_sound_events",
     "show_nationwide_location",
     # Event notifications
     "notify_discussion_update",
     "notify_severe_risk_change",
+    "event_check_interval_minutes",
     # GitHub settings
     "github_backend_url",
     "github_app_id",
@@ -84,7 +87,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "source_priority_us",
     "source_priority_international",
     "openmeteo_weather_model",
-    "portable_auto_bundle_enabled",
+    "station_selection_strategy",
 }
 
 
@@ -106,16 +109,18 @@ class AppSettings:
     update_check_interval_hours: int = 24
     sound_enabled: bool = True
     sound_pack: str = "default"
+    muted_sound_events: list[str] = field(default_factory=lambda: list(DEFAULT_MUTED_SOUND_EVENTS))
     # Nationwide location visibility
     show_nationwide_location: bool = True
-    # Event-based notifications (opt-in, disabled by default)
-    notify_discussion_update: bool = False
+    # Event-based notifications
+    notify_discussion_update: bool = True
     notify_severe_risk_change: bool = False
+    event_check_interval_minutes: int = 2
     github_backend_url: str = ""
     github_app_id: str = ""
     github_app_private_key: str = ""
     github_app_installation_id: str = ""
-    alert_radius_type: str = "point"  # "point", "zone", or "state"
+    alert_radius_type: str = "county"  # "county", "point", "zone", or "state"
     alert_notifications_enabled: bool = True
     alert_notify_extreme: bool = True
     alert_notify_severe: bool = True
@@ -158,6 +163,8 @@ class AppSettings:
     )
     # Open-Meteo weather model selection
     openmeteo_weather_model: str = "best_match"
+    # NWS station selection behavior for current conditions
+    station_selection_strategy: str = "hybrid_default"
     # AI Explanation Settings
     openrouter_api_key: str = ""
     ai_model_preference: str = "openrouter/free"  # free auto-router (default)
@@ -182,7 +189,6 @@ class AppSettings:
     # Startup UX guidance flags
     onboarding_wizard_shown: bool = False
     portable_missing_api_keys_hint_shown: bool = False
-    portable_auto_bundle_enabled: bool = False
 
     @staticmethod
     def _as_bool(value, default: bool) -> bool:
@@ -252,6 +258,13 @@ class AppSettings:
             if not isinstance(value, str) or not value.strip():
                 setattr(self, setting_name, "default")
 
+        elif setting_name == "muted_sound_events":
+            if not isinstance(value, list):
+                setattr(self, setting_name, list(DEFAULT_MUTED_SOUND_EVENTS))
+            else:
+                normalized = normalize_known_muted_sound_events(value)
+                setattr(self, setting_name, normalized)
+
         elif setting_name == "taskbar_icon_text_format":
             # Ensure format string is valid
             if not isinstance(value, str) or not value.strip():
@@ -299,9 +312,9 @@ class AppSettings:
                 setattr(self, setting_name, 180)
 
         elif setting_name == "alert_radius_type":
-            valid_types = {"point", "zone", "state"}
+            valid_types = {"county", "point", "zone", "state"}
             if value not in valid_types:
-                setattr(self, setting_name, "point")
+                setattr(self, setting_name, "county")
 
         elif setting_name == "openmeteo_weather_model":
             valid_models = {
@@ -319,6 +332,16 @@ class AppSettings:
             }
             if value not in valid_models:
                 setattr(self, setting_name, "best_match")
+
+        elif setting_name == "station_selection_strategy":
+            valid_strategies = {
+                "nearest",
+                "major_airport_preferred",
+                "freshest_observation",
+                "hybrid_default",
+            }
+            if value not in valid_strategies:
+                setattr(self, setting_name, "hybrid_default")
 
         elif setting_name in {"source_priority_us", "source_priority_international"}:
             # Ensure valid list of source names
@@ -372,9 +395,11 @@ class AppSettings:
             "update_check_interval_hours": self.update_check_interval_hours,
             "sound_enabled": self.sound_enabled,
             "sound_pack": self.sound_pack,
+            "muted_sound_events": self.muted_sound_events,
             "show_nationwide_location": self.show_nationwide_location,
             "notify_discussion_update": self.notify_discussion_update,
             "notify_severe_risk_change": self.notify_severe_risk_change,
+            "event_check_interval_minutes": self.event_check_interval_minutes,
             "github_backend_url": self.github_backend_url,
             "alert_radius_type": self.alert_radius_type,
             "alert_notifications_enabled": self.alert_notifications_enabled,
@@ -412,6 +437,7 @@ class AppSettings:
             "source_priority_us": self.source_priority_us,
             "source_priority_international": self.source_priority_international,
             "openmeteo_weather_model": self.openmeteo_weather_model,
+            "station_selection_strategy": self.station_selection_strategy,
             # AI settings (API key stored in secure storage, not here)
             "ai_model_preference": self.ai_model_preference,
             "ai_explanation_style": self.ai_explanation_style,
@@ -425,7 +451,6 @@ class AppSettings:
             "severe_weather_override": self.severe_weather_override,
             "onboarding_wizard_shown": self.onboarding_wizard_shown,
             "portable_missing_api_keys_hint_shown": self.portable_missing_api_keys_hint_shown,
-            "portable_auto_bundle_enabled": self.portable_auto_bundle_enabled,
         }
 
     @classmethod
@@ -446,11 +471,13 @@ class AppSettings:
             update_check_interval_hours=data.get("update_check_interval_hours", 24),
             sound_enabled=cls._as_bool(data.get("sound_enabled"), True),
             sound_pack=data.get("sound_pack", "default"),
+            muted_sound_events=data.get("muted_sound_events", list(DEFAULT_MUTED_SOUND_EVENTS)),
             show_nationwide_location=cls._as_bool(data.get("show_nationwide_location"), True),
-            notify_discussion_update=cls._as_bool(data.get("notify_discussion_update"), False),
+            notify_discussion_update=cls._as_bool(data.get("notify_discussion_update"), True),
             notify_severe_risk_change=cls._as_bool(data.get("notify_severe_risk_change"), False),
+            event_check_interval_minutes=data.get("event_check_interval_minutes", 2),
             github_backend_url=data.get("github_backend_url", ""),
-            alert_radius_type=data.get("alert_radius_type", "point"),
+            alert_radius_type=data.get("alert_radius_type", "county"),
             alert_notifications_enabled=cls._as_bool(data.get("alert_notifications_enabled"), True),
             alert_notify_extreme=cls._as_bool(data.get("alert_notify_extreme"), True),
             alert_notify_severe=cls._as_bool(data.get("alert_notify_severe"), True),
@@ -492,6 +519,7 @@ class AppSettings:
                 "source_priority_international", ["openmeteo", "visualcrossing"]
             ),
             openmeteo_weather_model=data.get("openmeteo_weather_model", "best_match"),
+            station_selection_strategy=data.get("station_selection_strategy", "hybrid_default"),
             # AI settings
             openrouter_api_key=data.get("openrouter_api_key", ""),
             ai_model_preference=data.get("ai_model_preference", "openrouter/free"),
@@ -517,9 +545,6 @@ class AppSettings:
             onboarding_wizard_shown=cls._as_bool(data.get("onboarding_wizard_shown"), False),
             portable_missing_api_keys_hint_shown=cls._as_bool(
                 data.get("portable_missing_api_keys_hint_shown"), False
-            ),
-            portable_auto_bundle_enabled=cls._as_bool(
-                data.get("portable_auto_bundle_enabled"), False
             ),
         )
 

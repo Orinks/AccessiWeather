@@ -151,6 +151,19 @@ class MainWindow(SizedFrame):
         self.settings_button.Bind(wx.EVT_BUTTON, lambda e: self.on_settings())
         self.view_alert_button.Bind(wx.EVT_BUTTON, self._on_view_alert)
 
+        # Alerts list: open details on double-click or Enter/Space key.
+        # EVT_CHAR_HOOK fires before the screen reader can consume the event,
+        # so Enter/Space reach the handler even when NVDA is in forms mode.
+        self.alerts_list.Bind(wx.EVT_LISTBOX_DCLICK, self._on_view_alert)
+        self.alerts_list.Bind(wx.EVT_CHAR_HOOK, self._on_alerts_list_key)
+
+    def _on_alerts_list_key(self, event) -> None:
+        """Handle key presses in alerts list — Enter/Space opens details."""
+        if event.GetKeyCode() in (wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER, wx.WXK_SPACE):
+            self._on_view_alert(event)
+        else:
+            event.Skip()
+
     def _on_window_shown(self, event) -> None:
         """Handle window shown event to set initial focus."""
         event.Skip()  # Allow event to propagate
@@ -275,6 +288,11 @@ class MainWindow(SizedFrame):
                 "Test: Tray &Balloon (direct)",
                 "Directly invoke the tray balloon fallback to verify it is wired up",
             )
+            self._debug_menu_items["simulate_alert"] = debug_menu.Append(
+                wx.ID_ANY,
+                "Test: &Simulate Alert Change (poll cycle)",
+                "Inject a mock alert into the next event check cycle to test the full polling path",
+            )
             debug_menu.AppendSeparator()
             self._debug_menu_items["diagnostics"] = debug_menu.Append(
                 wx.ID_ANY,
@@ -330,6 +348,11 @@ class MainWindow(SizedFrame):
                 lambda e: self._on_test_notifications(),
                 self._debug_menu_items["diagnostics"],
             )
+            self.Bind(
+                wx.EVT_MENU,
+                lambda e: self._on_debug_simulate_alert(),
+                self._debug_menu_items["simulate_alert"],
+            )
         self.Bind(wx.EVT_MENU, lambda e: self._on_report_issue(), report_issue_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_about(), about_item)
 
@@ -351,6 +374,10 @@ class MainWindow(SizedFrame):
             if cached and cached.has_any_data():
                 logger.info(f"Showing cached data for {selected} while refreshing")
                 self._on_weather_data_received(cached)
+
+        # Fire an immediate alert/event check for the new location (lightweight)
+        if location and hasattr(self.app, "weather_client") and self.app.weather_client:
+            self.refresh_notification_events_async()
 
         # Debounce: cancel pending fetch, wait 500ms before fetching
         if hasattr(self, "_location_debounce_timer") and self._location_debounce_timer.IsRunning():
@@ -411,7 +438,7 @@ class MainWindow(SizedFrame):
 
     def on_refresh(self) -> None:
         """Handle refresh button click."""
-        self.refresh_weather_async()
+        self.refresh_weather_async(force_refresh=True)
 
     def on_settings(self) -> None:
         """Handle settings button click."""
@@ -623,6 +650,7 @@ class MainWindow(SizedFrame):
             app_name="AccessiWeather",
             sound_enabled=bool(getattr(settings, "sound_enabled", True)),
             soundpack=getattr(settings, "sound_pack", "default"),
+            muted_sound_events=getattr(settings, "muted_sound_events", ["data_updated"]),
         )
         sent = notifier.send_notification(
             title="NWS Discussion Updated",
@@ -672,6 +700,52 @@ class MainWindow(SizedFrame):
         dlg = DebugAlertDialog(self, self.app)
         dlg.ShowModal()
         dlg.Destroy()
+
+    def _on_debug_simulate_alert(self) -> None:
+        """Inject a mock alert into the event check cycle to test the full polling path."""
+        from ..alert_lifecycle import AlertChange, AlertChangeKind, AlertLifecycleDiff
+        from ..models.alerts import WeatherAlert
+        from ..models.weather import WeatherAlerts, WeatherData
+
+        app = self.app
+        if not hasattr(app, "weather_client") or not app.weather_client:
+            wx.MessageBox("Weather client not ready.", "Debug", wx.OK | wx.ICON_WARNING)
+            return
+
+        location = app.config_manager.get_current_location()
+        if not location:
+            wx.MessageBox("No current location.", "Debug", wx.OK | wx.ICON_WARNING)
+            return
+
+        fake_alert = WeatherAlert(
+            title="Tornado Warning",
+            description=(
+                "This is a simulated alert injected via the debug menu "
+                "to test the event polling notification path."
+            ),
+            severity="Extreme",
+            urgency="Immediate",
+            certainty="Observed",
+            event="Tornado Warning",
+            headline="DEBUG: Simulated Tornado Warning for testing",
+            areas=["Test County"],
+            id="debug-simulate-001",
+            message_type="Alert",
+        )
+        fake_alerts = WeatherAlerts(alerts=[fake_alert])
+        fake_change = AlertChange(
+            kind=AlertChangeKind.NEW,
+            alert=fake_alert,
+            alert_id=fake_alert.get_unique_id(),
+            title=fake_alert.title,
+        )
+        fake_diff = AlertLifecycleDiff(new_alerts=[fake_change])
+
+        mock_data = WeatherData(location=location)
+        mock_data.alerts = fake_alerts
+        mock_data.alert_lifecycle_diff = fake_diff
+
+        self._on_notification_event_data_received(mock_data)
 
     def _on_test_notifications(self) -> None:
         """Run notification tests and show pass/fail results."""
@@ -854,6 +928,25 @@ class MainWindow(SizedFrame):
         self.app.run_async(
             self._fetch_weather_data(force_refresh=force_refresh, generation=generation)
         )
+
+    def refresh_notification_events_async(self) -> None:
+        """Run a lightweight event check without refreshing the full weather UI."""
+        if self.app.is_updating:
+            logger.debug("Skipping event check while full weather refresh is in progress")
+            return
+        self.app.run_async(self._fetch_notification_event_data())
+
+    async def _fetch_notification_event_data(self) -> None:
+        """Fetch only the lightweight data needed for notifications."""
+        try:
+            location = self.app.config_manager.get_current_location()
+            if not location or location.name == "Nationwide":
+                return
+
+            weather_data = await self.app.weather_client.get_notification_event_data(location)
+            wx.CallAfter(self._on_notification_event_data_received, weather_data)
+        except Exception as e:
+            logger.debug(f"Failed to fetch lightweight notification data: {e}")
 
     async def _fetch_weather_data(self, force_refresh: bool = False, generation: int = 0) -> None:
         """Fetch weather data in background."""
@@ -1053,6 +1146,18 @@ class MainWindow(SizedFrame):
             # Process notification events (AFD updates, severe risk changes)
             self._process_notification_events(weather_data)
 
+            # Play data_updated sound on successful weather data refresh
+            try:
+                settings = self.app.config_manager.get_settings()
+                if getattr(settings, "sound_enabled", True):
+                    from accessiweather.notifications.sound_player import play_data_updated_sound
+
+                    sound_pack = getattr(settings, "sound_pack", "default")
+                    muted_events = getattr(settings, "muted_sound_events", ["data_updated"])
+                    play_data_updated_sound(sound_pack, muted_events=muted_events)
+            except Exception as sound_exc:
+                logger.debug(f"Failed to play data_updated sound: {sound_exc}")
+
         except Exception as e:
             logger.error(f"Failed to update weather display: {e}")
             self.set_status(f"Error updating display: {e}")
@@ -1066,6 +1171,18 @@ class MainWindow(SizedFrame):
         self.set_status(f"Error: {error_message}")
         self.app.is_updating = False
         self.refresh_button.Enable()
+
+        # Play fetch_error sound on weather data fetch failure
+        try:
+            settings = self.app.config_manager.get_settings()
+            if getattr(settings, "sound_enabled", True):
+                from accessiweather.notifications.sound_player import play_fetch_error_sound
+
+                sound_pack = getattr(settings, "sound_pack", "default")
+                muted_events = getattr(settings, "muted_sound_events", ["data_updated"])
+                play_fetch_error_sound(sound_pack, muted_events=muted_events)
+        except Exception as sound_exc:
+            logger.debug(f"Failed to play fetch_error sound: {sound_exc}")
 
     def _update_alerts(self, alerts, lifecycle_labels: dict[str, str] | None = None) -> None:
         """
@@ -1149,6 +1266,33 @@ class MainWindow(SizedFrame):
 
             self._fallback_notifier = SafeDesktopNotifier()
         return self._fallback_notifier
+
+    def _on_notification_event_data_received(self, weather_data) -> None:
+        """Handle lightweight event data without refreshing the visible weather UI."""
+        try:
+            if (
+                weather_data.alerts
+                and weather_data.alerts.has_alerts()
+                and self.app.alert_notification_system
+            ):
+                self.app.run_async(
+                    self.app.alert_notification_system.process_and_notify(weather_data.alerts)
+                )
+
+            if (
+                self.app.alert_notification_system
+                and weather_data.alert_lifecycle_diff is not None
+                and weather_data.alert_lifecycle_diff.has_changes
+            ):
+                self.app.run_async(
+                    self.app.alert_notification_system.notify_lifecycle_changes(
+                        weather_data.alert_lifecycle_diff
+                    )
+                )
+
+            self._process_notification_events(weather_data)
+        except Exception as e:
+            logger.debug(f"Failed to process lightweight notification event data: {e}")
 
     def _process_notification_events(self, weather_data) -> None:
         """

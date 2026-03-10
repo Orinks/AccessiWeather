@@ -113,22 +113,10 @@ jobs:
           "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe" installer\accessiweather.iss
 
       - name: Create portable ZIP
-        shell: cmd
         run: |
-          cd dist
-          if exist "AccessiWeather_dir" (
-            cd AccessiWeather_dir
-            if not exist "config" mkdir config
-            7z a -tzip "..\AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip" *
-            cd ..
-          ) else (
-            mkdir AccessiWeather_portable
-            copy "AccessiWeather.exe" "AccessiWeather_portable\AccessiWeather.exe"
-            mkdir "AccessiWeather_portable\config"
-            7z a -tzip "AccessiWeather_Portable_v${{ needs.prepare.outputs.version }}.zip" "AccessiWeather_portable\*"
-          )
+          python installer/build.py --portable-zip-only
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v6
         with:
           name: windows
           path: |
@@ -170,7 +158,7 @@ jobs:
             "dist/AccessiWeather_v${VERSION}.dmg" "dist/AccessiWeather.app" || \
           hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${VERSION}.dmg"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v6
         with:
           name: macos
           path: dist/AccessiWeather_*.dmg
@@ -186,7 +174,7 @@ jobs:
           ref: ${{ needs.prepare.outputs.is_nightly == 'true' && 'dev' || github.ref }}
           fetch-depth: 0
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@v7
         with:
           path: dist
           merge-multiple: true
@@ -278,6 +266,9 @@ jobs:
     needs: release
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
     uses: ./.github/workflows/push-releases.yml
+    with:
+      wp_page_id: ${{ vars.WP_PAGE_ID }}
     secrets:
-      WP_PUSH_TOKEN: ${{ secrets.WP_PUSH_TOKEN }}
+      WP_APPLICATION_PASSWORD: ${{ secrets.WP_APPLICATION_PASSWORD }}
       WP_SITE_URL: ${{ secrets.WP_SITE_URL }}
+      WP_USERNAME: ${{ secrets.WP_USERNAME }}

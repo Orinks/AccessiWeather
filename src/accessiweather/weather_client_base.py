@@ -378,6 +378,43 @@ class WeatherClient:
             location, force_refresh, skip_notifications
         )
 
+    async def get_notification_event_data(self, location: Location) -> WeatherData:
+        """Fetch only lightweight data needed for alert/discussion/risk notifications."""
+        logger.info("Fetching notification event data for %s", location.name)
+        weather_data = WeatherData(location=location)
+
+        try:
+            if self._is_us_location(location):
+                discussion_task = asyncio.create_task(
+                    self._get_nws_forecast_and_discussion(location)
+                )
+                alerts_task = asyncio.create_task(self._get_nws_alerts(location))
+                forecast, discussion, discussion_issuance_time = await discussion_task
+                alerts = await alerts_task
+                weather_data.discussion = discussion
+                weather_data.discussion_issuance_time = discussion_issuance_time
+                weather_data.alerts = alerts or WeatherAlerts(alerts=[])
+            elif self.visual_crossing_client:
+                current_task = asyncio.create_task(
+                    self.visual_crossing_client.get_current_conditions(location)
+                )
+                alerts_task = asyncio.create_task(self.visual_crossing_client.get_alerts(location))
+                weather_data.current = await current_task
+                weather_data.alerts = await alerts_task or WeatherAlerts(alerts=[])
+            else:
+                weather_data.alerts = WeatherAlerts(alerts=[])
+
+            loc_key = self._location_key(location)
+            previous_alerts = self._previous_alerts.get(loc_key)
+            weather_data.alert_lifecycle_diff = diff_alerts(previous_alerts, weather_data.alerts)
+            if weather_data.alerts is not None:
+                self._previous_alerts[loc_key] = weather_data.alerts
+        except Exception as exc:
+            logger.error("Failed to fetch notification event data for %s: %s", location.name, exc)
+            weather_data.alerts = weather_data.alerts or WeatherAlerts(alerts=[])
+
+        return weather_data
+
     async def _fetch_weather_data_with_dedup(
         self, location: Location, force_refresh: bool, skip_notifications: bool = False
     ) -> WeatherData:
@@ -972,7 +1009,7 @@ class WeatherClient:
 
     async def _get_nws_alerts(self, location: Location) -> WeatherAlerts | None:
         """Delegate to the NWS client module."""
-        alert_radius_type = getattr(self.settings, "alert_radius_type", "point")
+        alert_radius_type = getattr(self.settings, "alert_radius_type", "county")
         return await nws_client.get_nws_alerts(
             location,
             self.nws_base_url,

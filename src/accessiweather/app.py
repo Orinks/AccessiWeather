@@ -8,6 +8,7 @@ screen reader accessibility.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 import os
@@ -447,6 +448,7 @@ class AccessiWeatherApp(wx.App):
         config_dir: str | None = None,
         portable_mode: bool = False,
         debug: bool = False,
+        force_wizard: bool = False,
     ):
         """
         Initialize the AccessiWeather application.
@@ -455,6 +457,7 @@ class AccessiWeatherApp(wx.App):
             config_dir: Optional custom configuration directory path
             portable_mode: If True, use portable mode (config in app directory)
             debug: If True, enable debug mode (enables debug logging and extra UI tools)
+            force_wizard: If True, force the onboarding wizard even if already shown
 
         """
         self._config_dir = config_dir
@@ -471,6 +474,8 @@ class AccessiWeatherApp(wx.App):
 
         self._portable_mode = portable_mode
         self.debug_mode = bool(debug)
+        self._force_wizard = bool(force_wizard)
+        self._portable_keys_imported_this_session: bool = False
 
         # App version and build info (import locally to avoid circular import)
         from . import __version__
@@ -612,13 +617,131 @@ class AccessiWeatherApp(wx.App):
 
     def _schedule_startup_guidance_prompts(self) -> None:
         """Schedule lightweight first-run and portable hints after startup."""
+        wx.CallLater(400, self._maybe_auto_import_keys_file)
         wx.CallLater(800, self._maybe_show_first_start_onboarding)
         wx.CallLater(1400, self._maybe_show_portable_missing_keys_hint)
+
+    # Keyring key used to cache the portable bundle passphrase for convenience.
+    # Only the passphrase is stored here — API keys always live in the bundle.
+    _PORTABLE_PASSPHRASE_KEYRING_KEY: str = "portable_bundle_passphrase"
+
+    def _maybe_auto_import_keys_file(self) -> None:
+        """
+        Auto-import an encrypted API key bundle on startup (portable mode only).
+
+        API keys always live in the bundle — keyring is not used for key storage.
+        The bundle passphrase is cached in keyring purely for convenience so the
+        user is not prompted on every launch.  On first launch (or new machine)
+        the user is prompted once; on success the passphrase is stored in keyring
+        for silent auto-import on subsequent launches.
+        """
+        if not self.main_window or not self.config_manager:
+            return
+        if not self._portable_mode:
+            return
+
+        # Skip if already imported this session.
+        if self._portable_keys_imported_this_session:
+            return
+
+        config_dir = self.config_manager.config_dir
+        candidate_names = ["api-keys.keys", "api-keys.awkeys"]
+        keys_path = None
+        for name in candidate_names:
+            p = config_dir / name
+            if p.exists():
+                keys_path = p
+                break
+
+        if keys_path is None:
+            return
+
+        from .config.secure_storage import SecureStorage
+
+        # Try cached passphrase for silent auto-import.
+        stored = (SecureStorage.get_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY) or "").strip()
+        if stored:
+            try:
+                if self.config_manager.import_encrypted_api_keys(keys_path, stored):
+                    self._portable_keys_imported_this_session = True
+                    self._write_keys_file_after_import(config_dir, stored)
+                    logger.info("Portable API keys auto-imported silently.")
+                    return
+            except Exception as exc:
+                logger.warning("Silent auto-import failed: %s", exc)
+            # Cached passphrase is stale — clear and fall through to prompt.
+            SecureStorage.delete_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY)
+
+        # Prompt for passphrase with retry loop.
+        while True:
+            with wx.TextEntryDialog(
+                self.main_window,
+                "An encrypted API key bundle was found. Enter your passphrase to import your keys.",
+                "Import API keys",
+                style=wx.OK | wx.CANCEL | wx.TE_PASSWORD,
+            ) as dlg:
+                result = dlg.ShowModal()
+                if result != wx.ID_OK:
+                    return
+                passphrase = dlg.GetValue().strip()
+
+            if not passphrase:
+                return
+
+            try:
+                success = self.config_manager.import_encrypted_api_keys(keys_path, passphrase)
+            except Exception as exc:
+                logger.warning("Auto-import of API keys failed: %s", exc)
+                success = False
+
+            if success:
+                self._portable_keys_imported_this_session = True
+                # Cache passphrase in keyring so next launch is silent.
+                SecureStorage.set_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY, passphrase)
+                self._write_keys_file_after_import(config_dir, passphrase)
+                wx.MessageBox(
+                    "API keys imported successfully. They are now active.",
+                    "Keys imported",
+                    wx.OK | wx.ICON_INFORMATION,
+                )
+                return
+
+            # Wrong passphrase or other failure — offer retry or skip.
+            retry_dlg = wx.MessageDialog(
+                self.main_window,
+                "The passphrase was incorrect or the key bundle could not be read.\n\n"
+                "Would you like to try again?",
+                "Import failed",
+                wx.YES_NO | wx.ICON_WARNING,
+            )
+            retry_dlg.SetYesNoLabels("Try again", "Skip")
+            retry_result = retry_dlg.ShowModal()
+            retry_dlg.Destroy()
+            if retry_result != wx.ID_YES:
+                return
+
+    def _write_keys_file_after_import(self, config_dir: Path, passphrase: str) -> None:
+        """
+        Write api-keys.keys to the portable config dir after a successful import.
+
+        This ensures the canonical bundle file is always present so that a new
+        machine or clean keyring can re-import from it.
+        """
+        keys_dest = config_dir / "api-keys.keys"
+        try:
+            self.config_manager.export_encrypted_api_keys(keys_dest, passphrase)
+        except Exception as exc:
+            logger.warning("Failed to write api-keys.keys after import: %s", exc)
 
     def _should_show_first_start_onboarding(self) -> bool:
         """Return True when first-start onboarding should be shown."""
         if not self.main_window or not self.config_manager:
             return False
+
+        if self._force_wizard:
+            if self.debug_mode:
+                logger.debug("Wizard forced via --wizard flag")
+            return True
 
         config = self.config_manager.get_config()
         settings = config.settings
@@ -640,41 +763,48 @@ class AccessiWeatherApp(wx.App):
         self._startup_update_check_deferred = False
         self._check_for_updates_on_startup()
 
-    def _has_any_saved_api_keys(self) -> bool:
-        """Return True when at least one API key exists in secure storage."""
-        from .config.secure_storage import SecureStorage
-
-        key_names = ("openrouter_api_key", "visual_crossing_api_key")
-        return any(bool((SecureStorage.get_password(name) or "").strip()) for name in key_names)
-
     def _maybe_show_portable_missing_keys_hint(self) -> None:
-        """Show a one-time hint when portable mode starts with empty local keyring keys."""
+        """Show a one-time hint when portable mode has no bundle and no keys entered."""
         if not self.main_window or not self.config_manager or not self._portable_mode:
             return
 
         settings = self.config_manager.get_settings()
         if getattr(settings, "portable_missing_api_keys_hint_shown", False):
             return
-        if self._has_any_saved_api_keys():
+
+        # If the onboarding wizard is going to run (or did run), it covers key setup.
+        if self._should_show_first_start_onboarding():
+            return
+
+        # If a bundle exists the import flow already handled it — no hint needed.
+        config_dir = self.config_manager.config_dir
+        bundle_exists = any(
+            (config_dir / name).exists() for name in ("api-keys.keys", "api-keys.awkeys")
+        )
+        if bundle_exists:
+            return
+
+        # If keys were imported this session, no hint needed.
+        if self._portable_keys_imported_this_session:
             return
 
         dialog = wx.MessageDialog(
             self.main_window,
-            "It looks like this portable copy has no API keys on this machine yet.\n\n"
-            "If you moved or copied your AccessiWeather folder, settings transfer but API keys "
-            "stay machine-local by default.\n\n"
-            "You can re-enter keys in Settings > AI now, or import your encrypted API key bundle.",
+            "This portable copy has no API keys yet.\n\n"
+            "Visual Crossing weather provider keys can be entered in Settings > Data Sources. "
+            "OpenRouter AI keys can be entered in Settings > AI.\n\n"
+            "You can also create an encrypted key bundle to carry your keys with the portable install.",
             "Portable setup hint",
             wx.YES_NO | wx.CANCEL | wx.ICON_INFORMATION,
         )
-        dialog.SetYesNoCancelLabels("Open Settings > AI", "Later", "Cancel")
+        dialog.SetYesNoCancelLabels("Open Settings", "Later", "Cancel")
         result = dialog.ShowModal()
         dialog.Destroy()
 
         self.config_manager.update_settings(portable_missing_api_keys_hint_shown=True)
 
         if result == wx.ID_YES and self.main_window:
-            self.main_window.open_settings(tab="AI")
+            self.main_window.open_settings()
 
     def _prompt_optional_secret(self, title: str, message: str) -> str | None:
         """Prompt for optional secret text value. Empty input means skip."""
@@ -733,7 +863,11 @@ class AccessiWeatherApp(wx.App):
             self.main_window.open_settings(tab="AI")
 
     def _has_saved_api_key(self, key_name: str) -> bool:
-        """Return True when a specific API key exists in secure storage."""
+        """Return True when a specific API key exists (in-memory config for portable, keyring for installed)."""
+        if self._portable_mode:
+            # In portable mode keys live in the bundle / in-memory config, not keyring.
+            val = getattr(self.config_manager.get_config().settings, key_name, None)
+            return bool((str(val).strip()) if val else "")
         from .config.secure_storage import SecureStorage
 
         return bool((SecureStorage.get_password(key_name) or "").strip())
@@ -753,9 +887,12 @@ class AccessiWeatherApp(wx.App):
             f"- Location configured: {self._onboarding_status_text(bool(config.locations))}",
             f"- OpenRouter key set: {self._onboarding_status_text(self._has_saved_api_key('openrouter_api_key'))}",
             f"- Visual Crossing weather provider key set: {self._onboarding_status_text(self._has_saved_api_key('visual_crossing_api_key'))}",
-            (
-                "- Portable encrypted bundle enabled: "
-                f"{self._onboarding_status_text(getattr(config.settings, 'portable_auto_bundle_enabled', False))}"
+            *(
+                [
+                    f"- Portable key bundle created: {self._onboarding_status_text(self._portable_keys_imported_this_session)}"
+                ]
+                if self._portable_mode
+                else []
             ),
         ]
 
@@ -774,9 +911,11 @@ class AccessiWeatherApp(wx.App):
             self._run_deferred_startup_update_check()
             return
 
+        total_steps = 4 if self._portable_mode else 3
+
         step1 = wx.MessageDialog(
             self.main_window,
-            "Welcome to AccessiWeather.\n\nStep 1 of 4: Add your first location now?",
+            f"Welcome to AccessiWeather.\n\nStep 1 of {total_steps}: Add your first location now?",
             "Getting started",
             wx.YES_NO | wx.ICON_INFORMATION,
         )
@@ -787,54 +926,101 @@ class AccessiWeatherApp(wx.App):
         if step1_result == wx.ID_YES and self.main_window:
             self.main_window.on_add_location()
 
+        from .config.secure_storage import is_keyring_available
+
+        if not self._portable_mode and not is_keyring_available():
+            _warn_dlg = wx.MessageDialog(
+                self.main_window,
+                "Your system keyring is not available.\n\n"
+                "API keys you enter cannot be stored securely on this machine. "
+                "On Linux, installing a keyring backend (e.g. gnome-keyring or KWallet) "
+                "is recommended.\n\n"
+                "You can still enter keys now; if portable mode is enabled with an encrypted "
+                "bundle they will be saved there — otherwise they will be lost on exit.",
+                "Secure storage unavailable",
+                wx.OK | wx.ICON_WARNING,
+            )
+            _warn_dlg.ShowModal()
+            _warn_dlg.Destroy()
+
+        # Collect keys entered in steps 2/3 — in portable mode we write directly to
+        # the bundle rather than going through keyring (which isn't used in portable).
+        _wizard_keys: dict[str, str] = {}
+
         openrouter_key = self._prompt_optional_secret_with_link(
             "OpenRouter API key (optional)",
-            "Step 2 of 4: Enter your OpenRouter API key now, or leave blank to skip.",
+            f"Step 2 of {total_steps}: Enter your OpenRouter API key now, or leave blank to skip.",
             "https://openrouter.ai/keys",
             "Get OpenRouter API key",
         )
         if openrouter_key is not None and openrouter_key:
-            self.config_manager.update_settings(openrouter_api_key=openrouter_key)
-            self._maybe_offer_test_key_now("OpenRouter API key")
+            if not self._portable_mode:
+                self.config_manager.update_settings(openrouter_api_key=openrouter_key)
+                self._maybe_offer_test_key_now("OpenRouter API key")
+            else:
+                _wizard_keys["openrouter_api_key"] = openrouter_key
 
         visual_crossing_key = self._prompt_optional_secret_with_link(
             "Visual Crossing weather provider key (optional)",
-            "Step 3 of 4: Enter your Visual Crossing weather provider key now, or leave blank to skip.",
+            f"Step 3 of {total_steps}: Enter your Visual Crossing weather provider key now, or leave blank to skip.",
             "https://www.visualcrossing.com/sign-up",
             "Get Visual Crossing weather provider key",
         )
         if visual_crossing_key is not None and visual_crossing_key:
-            self.config_manager.update_settings(visual_crossing_api_key=visual_crossing_key)
-            self._maybe_offer_test_key_now("Visual Crossing weather provider key")
+            if not self._portable_mode:
+                self.config_manager.update_settings(visual_crossing_api_key=visual_crossing_key)
+                self._maybe_offer_test_key_now("Visual Crossing weather provider key")
+            else:
+                _wizard_keys["visual_crossing_api_key"] = visual_crossing_key
 
-        if self._portable_mode:
-            portable_bundle_prompt = wx.MessageDialog(
-                self.main_window,
-                "Step 4 of 4 (portable): Portable API key portability\n\n"
-                "Enable an encrypted key bundle for this portable folder?\n"
-                "If enabled, AccessiWeather can auto-refresh api-keys.awkeys when keys change.",
-                "Portable API key portability",
-                wx.YES_NO | wx.ICON_INFORMATION,
+        if self._portable_mode and _wizard_keys:
+            # Keys were entered — prompt for passphrase and write bundle directly.
+            passphrase = self._prompt_optional_secret(
+                "Step 4 of 4: Secure your API keys",
+                "Enter a passphrase to encrypt your API keys into a portable bundle.\n"
+                "This bundle travels with the app so your keys work on any machine.\n\n"
+                "Leave blank to skip (keys will not be saved).",
             )
-            portable_bundle_prompt.SetYesNoLabels("Enable", "Skip")
-            bundle_choice = portable_bundle_prompt.ShowModal()
-            portable_bundle_prompt.Destroy()
+            if passphrase:
+                try:
+                    # Set keys in-memory first so export_encrypted_api_keys can read them.
+                    for k, v in _wizard_keys.items():
+                        setattr(self.config_manager.get_config().settings, k, v)
+                    bundle_path = self.config_manager.get_portable_api_key_bundle_path()
+                    success = self.config_manager.export_encrypted_api_keys(bundle_path, passphrase)
+                    if success:
+                        self._portable_keys_imported_this_session = True
+                        # Cache passphrase so next launch is silent.
+                        from .config.secure_storage import SecureStorage
 
-            if bundle_choice == wx.ID_YES:
-                passphrase = self._prompt_optional_secret(
-                    "Portable bundle passphrase",
-                    "Enter passphrase for portable encrypted API key bundle.",
-                )
-                if passphrase:
-                    self.config_manager.set_portable_bundle_passphrase(passphrase)
-                    self.config_manager.update_settings(portable_auto_bundle_enabled=True)
-                    self.config_manager.refresh_portable_api_key_bundle()
-                else:
+                        SecureStorage.set_password(
+                            self._PORTABLE_PASSPHRASE_KEYRING_KEY, passphrase
+                        )
+                        wx.MessageBox(
+                            "API keys saved to encrypted bundle. They are now active.",
+                            "Keys saved",
+                            wx.OK | wx.ICON_INFORMATION,
+                        )
+                    else:
+                        wx.MessageBox(
+                            "Failed to save the key bundle. Keys will not persist after this session.",
+                            "Bundle write failed",
+                            wx.OK | wx.ICON_WARNING,
+                        )
+                except Exception as exc:
+                    logger.error("Failed to write portable bundle: %s", exc)
                     wx.MessageBox(
-                        "Portable encrypted bundle was not enabled because no passphrase was entered.",
-                        "Portable API key portability skipped",
+                        "Failed to save the key bundle. Keys will not persist after this session.",
+                        "Bundle write failed",
                         wx.OK | wx.ICON_WARNING,
                     )
+            else:
+                wx.MessageBox(
+                    "No passphrase entered — API keys will not be saved.",
+                    "Keys not saved",
+                    wx.OK | wx.ICON_WARNING,
+                )
+        # No keys entered — skip step 4 entirely, nothing to bundle.
 
         self._show_onboarding_readiness_summary()
         self.config_manager.update_settings(onboarding_wizard_shown=True)
@@ -1042,6 +1228,23 @@ class AccessiWeatherApp(wx.App):
             logger.warning(f"Failed to check minimize setting, showing window: {e}")
             self.main_window.Show()
 
+    def _stop_auto_update_checks(self) -> None:
+        """Stop and detach the automatic update-check timer, if present."""
+        timer = getattr(self, "_auto_update_check_timer", None)
+        if not timer:
+            return
+
+        try:
+            timer.Stop()
+        except Exception as e:
+            logger.debug(f"Failed to stop auto-update timer cleanly: {e}")
+
+        # Unbind the old timer source so reconfiguration cannot stack handlers.
+        with contextlib.suppress(Exception):
+            self.Unbind(wx.EVT_TIMER, source=timer)
+
+        self._auto_update_check_timer = None
+
     def _start_auto_update_checks(self) -> None:
         """Start periodic automatic update checks based on user settings."""
         try:
@@ -1049,9 +1252,7 @@ class AccessiWeatherApp(wx.App):
             auto_enabled = bool(getattr(settings, "auto_update_enabled", True))
 
             # Stop existing timer before reconfiguring
-            if self._auto_update_check_timer:
-                self._auto_update_check_timer.Stop()
-                self._auto_update_check_timer = None
+            self._stop_auto_update_checks()
 
             if not auto_enabled:
                 logger.debug("Automatic update checks disabled")
@@ -1060,9 +1261,10 @@ class AccessiWeatherApp(wx.App):
             interval_hours = max(1, int(getattr(settings, "update_check_interval_hours", 24)))
             interval_ms = interval_hours * 60 * 60 * 1000
 
-            self._auto_update_check_timer = wx.Timer()
-            self._auto_update_check_timer.Bind(wx.EVT_TIMER, self._on_auto_update_check_timer)
-            self._auto_update_check_timer.Start(interval_ms)
+            timer = wx.Timer(self)
+            self.Bind(wx.EVT_TIMER, self._on_auto_update_check_timer, timer)
+            timer.Start(interval_ms)
+            self._auto_update_check_timer = timer
 
             logger.info(
                 "Automatic update checks scheduled every %s hour(s)",
@@ -1262,24 +1464,51 @@ class AccessiWeatherApp(wx.App):
         except Exception as e:
             logger.debug(f"Failed to update tray tooltip: {e}")
 
+    def _stop_background_updates(self) -> None:
+        """Stop any running background timers."""
+        weather_timer = getattr(self, "_update_timer", None)
+        if weather_timer:
+            weather_timer.Stop()
+
+        event_timer = getattr(self, "_event_check_timer", None)
+        if event_timer:
+            event_timer.Stop()
+
     def _start_background_updates(self) -> None:
-        """Start periodic background weather updates."""
+        """Start split background timers for full refreshes and lightweight event checks."""
         try:
+            self._stop_background_updates()
             settings = self.config_manager.get_settings()
             interval_minutes = getattr(settings, "update_interval_minutes", 10)
+            event_interval_minutes = getattr(settings, "event_check_interval_minutes", 2)
             interval_ms = interval_minutes * 60 * 1000
+            event_interval_ms = event_interval_minutes * 60 * 1000
 
             self._update_timer = wx.Timer()
             self._update_timer.Bind(wx.EVT_TIMER, self._on_background_update)
             self._update_timer.Start(interval_ms)
-            logger.info(f"Background updates started (every {interval_minutes} minutes)")
+
+            self._event_check_timer = wx.Timer()
+            self._event_check_timer.Bind(wx.EVT_TIMER, self._on_event_check_update)
+            self._event_check_timer.Start(event_interval_ms)
+
+            logger.info(
+                "Background updates started (weather every %s minutes, events every %s minutes)",
+                interval_minutes,
+                event_interval_minutes,
+            )
         except Exception as e:
             logger.error(f"Failed to start background updates: {e}")
 
     def _on_background_update(self, event) -> None:
-        """Handle background update timer event."""
+        """Handle slower full weather refresh timer event."""
         if self.main_window and not self.is_updating:
             self.main_window.refresh_weather_async()
+
+    def _on_event_check_update(self, event) -> None:
+        """Handle fast lightweight event-check timer event."""
+        if self.main_window:
+            self.main_window.refresh_notification_events_async()
 
     def _play_startup_sound(self) -> None:
         """Play startup sound if enabled."""
@@ -1289,7 +1518,8 @@ class AccessiWeatherApp(wx.App):
                 from .notifications.sound_player import play_startup_sound
 
                 sound_pack = getattr(settings, "sound_pack", "default")
-                play_startup_sound(sound_pack)
+                muted_events = getattr(settings, "muted_sound_events", ["data_updated"])
+                play_startup_sound(sound_pack, muted_events=muted_events)
         except Exception as e:
             logger.debug(f"Could not play startup sound: {e}")
 
@@ -1298,13 +1528,9 @@ class AccessiWeatherApp(wx.App):
         logger.info("Application exit requested")
 
         # Stop background updates
-        update_timer = getattr(self, "_update_timer", None)
-        if update_timer:
-            update_timer.Stop()
+        self._stop_background_updates()
 
-        auto_update_timer = getattr(self, "_auto_update_check_timer", None)
-        if auto_update_timer:
-            auto_update_timer.Stop()
+        self._stop_auto_update_checks()
 
         # Play exit sound without blocking shutdown.
         try:
@@ -1317,6 +1543,7 @@ class AccessiWeatherApp(wx.App):
                 )
 
                 sound_pack = getattr(settings, "sound_pack", "default")
+                muted_events = getattr(settings, "muted_sound_events", ["data_updated"])
                 frozen = bool(getattr(sys, "frozen", False))
                 logger.debug(
                     "[packaging-diag] exit sound: frozen=%s sound_pack=%s sound_lib=%s playsound3=%s",
@@ -1326,7 +1553,7 @@ class AccessiWeatherApp(wx.App):
                     PLAYSOUND_AVAILABLE,
                 )
 
-                play_exit_sound(sound_pack)
+                play_exit_sound(sound_pack, muted_events=muted_events)
         except Exception:
             pass
 
@@ -1367,6 +1594,9 @@ class AccessiWeatherApp(wx.App):
             if self._notifier:
                 self._notifier.sound_enabled = bool(getattr(settings, "sound_enabled", True))
                 self._notifier.soundpack = getattr(settings, "sound_pack", "default")
+                self._notifier.muted_sound_events = list(
+                    getattr(settings, "muted_sound_events", ["data_updated"])
+                )
 
             if self.alert_notification_system:
                 self.alert_notification_system.settings = settings
@@ -1384,6 +1614,7 @@ class AccessiWeatherApp(wx.App):
                 )
 
             self._start_auto_update_checks()
+            self._start_background_updates()
 
             logger.info("Runtime settings refreshed successfully")
         except Exception as e:
@@ -1396,6 +1627,7 @@ def main(
     debug: bool = False,
     fake_version: str | None = None,
     fake_nightly: str | None = None,
+    force_wizard: bool = False,
 ):
     """
     Run AccessiWeather application.
@@ -1406,6 +1638,7 @@ def main(
         debug: Enable debug mode.
         fake_version: Fake version for testing updates (e.g., '0.1.0').
         fake_nightly: Fake nightly tag for testing updates (e.g., 'nightly-20250101').
+        force_wizard: Force the onboarding wizard even if already shown.
 
     """
     if config_dir is None:
@@ -1419,7 +1652,12 @@ def main(
         except Exception:
             pass
 
-    app = AccessiWeatherApp(config_dir=config_dir, portable_mode=portable_mode, debug=debug)
+    app = AccessiWeatherApp(
+        config_dir=config_dir,
+        portable_mode=portable_mode,
+        debug=debug,
+        force_wizard=force_wizard,
+    )
 
     # Override version/build_tag for update testing
     if fake_version:

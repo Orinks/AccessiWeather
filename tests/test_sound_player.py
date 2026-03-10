@@ -794,3 +794,54 @@ class TestPlaySoundFileWithVolume:
             assert isinstance(result, bool)
         finally:
             temp_path.unlink(missing_ok=True)
+
+
+class TestUserLevelMute:
+    """Test user-level event muting in the sound player."""
+
+    def test_play_notification_sound_skips_muted_event(self):
+        """Muted events should never reach the playback backend."""
+        from accessiweather.notifications.sound_player import play_notification_sound
+
+        with patch("accessiweather.notifications.sound_player._play_sound_file") as mock_play:
+            play_notification_sound("data_updated", "default", muted_events=["data_updated"])
+
+        mock_play.assert_not_called()
+
+    def test_play_notification_sound_candidates_skips_muted_logical_event(self):
+        """Candidate playback should skip entirely when the logical event is muted."""
+        from accessiweather.notifications.sound_player import play_notification_sound_candidates
+
+        with patch("accessiweather.notifications.sound_player._play_sound_file") as mock_play:
+            play_notification_sound_candidates(
+                ["discussion_update", "notify"],
+                "default",
+                logical_event="discussion_update",
+                muted_events=["discussion_update"],
+            )
+
+        mock_play.assert_not_called()
+
+
+class TestSilentPlaybackBypassesFallback:
+    """Test that silent events do not leak through fallback backends."""
+
+    def test_volume_zero_returns_without_playsound(self):
+        """Volume zero should be treated as a silent no-op."""
+        from accessiweather.notifications.sound_player import _play_sound_file
+
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+            temp_path = Path(f.name)
+
+        try:
+            with (
+                patch("accessiweather.notifications.sound_player.SOUND_LIB_AVAILABLE", False),
+                patch("accessiweather.notifications.sound_player.PLAYSOUND_AVAILABLE", True),
+                patch("accessiweather.notifications.sound_player.playsound") as mock_playsound,
+            ):
+                result = _play_sound_file(temp_path, volume=0.0)
+
+            assert result is True
+            mock_playsound.assert_not_called()
+        finally:
+            temp_path.unlink(missing_ok=True)

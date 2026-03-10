@@ -175,6 +175,17 @@ class ImportExportOperations:
             # SECURITY: Only export non-sensitive settings (API keys stay in keyring)
             settings_data = {
                 "settings": config.settings.to_dict(),
+                "locations": [
+                    {
+                        "name": location.name,
+                        "latitude": location.latitude,
+                        "longitude": location.longitude,
+                        **(
+                            {"country_code": location.country_code} if location.country_code else {}
+                        ),
+                    }
+                    for location in config.locations
+                ],
                 "exported_at": str(datetime.now()),
             }
 
@@ -189,11 +200,27 @@ class ImportExportOperations:
             return False
 
     def export_encrypted_api_keys(self, export_path: Path, passphrase: str) -> bool:
-        """Export API keys from keyring to an encrypted portable bundle file."""
+        """
+        Export API keys to an encrypted portable bundle file.
+
+        Checks in-memory settings first (covers portable mode where keys are
+        not in keyring), then falls back to keyring (covers installed mode).
+        LazySecureStorage values are resolved via ``str()``.
+        """
         try:
             secrets: dict[str, str] = {}
             for key_name in PORTABLE_API_SECRET_KEYS:
-                value = SecureStorage.get_password(key_name)
+                value: str | None = None
+                # 1. Try in-memory settings (covers portable mode)
+                if self._manager._config is not None:
+                    raw = getattr(self._manager._config.settings, key_name, None)
+                    if raw is not None:
+                        resolved = str(raw)  # resolves LazySecureStorage
+                        if resolved:
+                            value = resolved
+                # 2. Fall back to keyring (covers installed mode)
+                if not value:
+                    value = SecureStorage.get_password(key_name)
                 if value:
                     secrets[key_name] = value
 
@@ -227,21 +254,39 @@ class ImportExportOperations:
             secrets = decrypt_secret_bundle(envelope, passphrase)
 
             imported = 0
+            failed = []
             for key_name in PORTABLE_API_SECRET_KEYS:
                 value = secrets.get(key_name)
                 if not value:
                     continue
                 if not SecureStorage.set_password(key_name, value):
                     self.logger.error(f"Failed to import API key into secure storage: {key_name}")
-                    return False
-                imported += 1
+                    failed.append(key_name)
+                else:
+                    imported += 1
 
-            if imported == 0:
+            if imported == 0 and not failed:
                 self.logger.warning("Encrypted API key bundle did not contain supported keys")
                 return False
 
             self.logger.info("Imported %d API keys into secure storage", imported)
-            return True
+
+            # In portable mode, set keys directly on in-memory settings so they
+            # are active immediately (keyring may not be available).
+            is_portable = getattr(self._manager, "app", None) and getattr(
+                self._manager.app, "_portable_mode", False
+            )
+            if is_portable and self._manager._config is not None:
+                for key_name in PORTABLE_API_SECRET_KEYS:
+                    value = secrets.get(key_name)
+                    if value:
+                        setattr(self._manager._config.settings, key_name, value)
+                        self.logger.debug(f"Set in-memory key for portable mode: {key_name}")
+            else:
+                # Refresh in-memory config so keys are active without a restart
+                self._manager._load_secure_keys()
+
+            return not failed
         except PortableSecretsError as exc:
             self.logger.error(f"Failed to import encrypted API keys: {exc}")
             return False
@@ -477,9 +522,41 @@ class ImportExportOperations:
                 self.logger.error(f"Failed to deserialize settings: {exc}")
                 return False
 
-            # SECURITY: Merge settings while preserving locations (settings-only import)
+            # SECURITY: Merge settings while preserving existing locations
             config = self._manager.get_config()
             config.settings = imported_settings
+
+            # Import locations if present in export file (skip duplicates by name)
+            locations_imported = 0
+            for entry in data.get("locations", []):
+                if not isinstance(entry, dict):
+                    continue
+                name = entry.get("name")
+                latitude = entry.get("latitude")
+                longitude = entry.get("longitude")
+                if not name or latitude is None or longitude is None:
+                    continue
+                try:
+                    latitude_value = float(latitude)
+                    longitude_value = float(longitude)
+                except (TypeError, ValueError):
+                    continue
+                if any(loc.name == name for loc in config.locations):
+                    self.logger.info(f"Skipped existing location: {name}")
+                    continue
+                config.locations.append(
+                    Location(
+                        name=name,
+                        latitude=latitude_value,
+                        longitude=longitude_value,
+                        country_code=entry.get("country_code"),
+                    )
+                )
+                locations_imported += 1
+                self.logger.info(f"Imported location: {name}")
+
+            if locations_imported:
+                self.logger.info("Imported %d locations from settings file", locations_imported)
 
             # Save the updated configuration
             if not self._manager.save_config():

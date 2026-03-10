@@ -405,7 +405,9 @@ def test_request_exit_does_not_use_blocking_sound_in_frozen_build(monkeypatch):
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._update_timer = None
     app.config_manager = SimpleNamespace(
-        get_settings=lambda: SimpleNamespace(sound_enabled=True, sound_pack="default")
+        get_settings=lambda: SimpleNamespace(
+            sound_enabled=True, sound_pack="default", muted_sound_events=[]
+        )
     )
     app.tray_icon = None
     app.single_instance_manager = None
@@ -428,6 +430,6 @@ def test_request_exit_does_not_use_blocking_sound_in_frozen_build(monkeypatch):
 
     app.request_exit()
 
-    mock_play_exit_sound.assert_called_once_with("default")
+    mock_play_exit_sound.assert_called_once_with("default", muted_events=[])
     mock_play_exit_sound_blocking.assert_not_called()
     app.ExitMainLoop.assert_called_once()

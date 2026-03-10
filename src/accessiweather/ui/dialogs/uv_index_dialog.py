@@ -112,12 +112,15 @@ class UVIndexDialog(wx.Dialog):
         self.location_name = location_name
         self.environmental = environmental
         self.app = app
+        self._accessibility_text_controls: list[tuple[wx.TextCtrl, str]] = []
 
         self._create_ui()
         self._setup_accessibility()
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
 
     def _create_ui(self):
         """Create the dialog UI."""
+        self._accessibility_text_controls = []
         panel = wx.Panel(self)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -160,6 +163,12 @@ class UVIndexDialog(wx.Dialog):
 
         panel.SetSizer(main_sizer)
 
+        # Set initial focus for screen readers
+        if has_data and getattr(self, "_hourly_display", None):
+            self._hourly_display.SetFocus()
+        else:
+            close_btn.SetFocus()
+
     def _build_summary_section(self, panel) -> wx.BoxSizer:
         """Build the current UV index summary section."""
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -192,7 +201,9 @@ class UVIndexDialog(wx.Dialog):
             category or "", "Monitor UV levels and use sun protection as needed."
         )
         guidance_label = wx.StaticText(panel, label=f"Health guidance: {guidance}")
-        guidance_label.SetForegroundColour(wx.Colour(128, 128, 128))
+        guidance_label.SetForegroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+        )  # pragma: no cover
         guidance_label.Wrap(550)
         sizer.Add(guidance_label, 0, wx.BOTTOM, 4)
 
@@ -202,7 +213,9 @@ class UVIndexDialog(wx.Dialog):
             timestamp = updated_at.strftime("%I:%M %p").lstrip("0")
             date_str = updated_at.strftime("%B %d, %Y")
             updated_label = wx.StaticText(panel, label=f"Last updated: {timestamp} on {date_str}")
-            updated_label.SetForegroundColour(wx.Colour(128, 128, 128))
+            updated_label.SetForegroundColour(
+                wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+            )  # pragma: no cover
             sizer.Add(updated_label, 0)
 
         return sizer
@@ -219,7 +232,9 @@ class UVIndexDialog(wx.Dialog):
         hourly_data = getattr(self.environmental, "hourly_uv_index", None)
         if not hourly_data:
             no_data = wx.StaticText(panel, label="Hourly forecast data is not available.")
-            no_data.SetForegroundColour(wx.Colour(128, 128, 128))
+            no_data.SetForegroundColour(
+                wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+            )  # pragma: no cover
             sizer.Add(no_data, 0)
             return sizer
 
@@ -233,13 +248,14 @@ class UVIndexDialog(wx.Dialog):
 
         forecast_text = "\n".join(forecast_lines) if forecast_lines else "No forecast data."
 
-        forecast_display = wx.TextCtrl(
+        self._hourly_display = wx.TextCtrl(
             panel,
             value=forecast_text,
             style=wx.TE_MULTILINE | wx.TE_READONLY,
             size=(-1, 100),
         )
-        sizer.Add(forecast_display, 1, wx.EXPAND)
+        self._accessibility_text_controls.append((self._hourly_display, "Hourly Forecast"))
+        sizer.Add(self._hourly_display, 1, wx.EXPAND)
 
         return sizer
 
@@ -255,7 +271,9 @@ class UVIndexDialog(wx.Dialog):
         category = getattr(self.environmental, "uv_category", None)
         if not category:
             no_data = wx.StaticText(panel, label="Sun safety recommendations are not available.")
-            no_data.SetForegroundColour(wx.Colour(128, 128, 128))
+            no_data.SetForegroundColour(
+                wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+            )  # pragma: no cover
             sizer.Add(no_data, 0)
             return sizer
 
@@ -267,17 +285,35 @@ class UVIndexDialog(wx.Dialog):
                 style=wx.TE_MULTILINE | wx.TE_READONLY,
                 size=(-1, 100),
             )
+            self._accessibility_text_controls.append((safety_display, "Sun Safety Recommendations"))
             sizer.Add(safety_display, 1, wx.EXPAND)
         else:
             no_data = wx.StaticText(panel, label="Sun safety recommendations are not available.")
-            no_data.SetForegroundColour(wx.Colour(128, 128, 128))
+            no_data.SetForegroundColour(
+                wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
+            )  # pragma: no cover
             sizer.Add(no_data, 0)
 
         return sizer
 
     def _setup_accessibility(self):
         """Set up accessibility labels."""
-        # Controls are created with meaningful labels already
+        for control, label in self._accessibility_text_controls:
+            control.SetName(label)
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle keyboard shortcuts for the dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self._on_close(event)
+            return
+        event.Skip()
+
+    def _on_key(self, event: wx.KeyEvent) -> None:
+        """Handle key events."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.Close()
+        else:
+            event.Skip()
 
     def _on_close(self, event):
         """Handle close button press."""

@@ -269,8 +269,14 @@ class WeatherDataRetrieval:
             else:
                 logger.info("Using NWS API for current conditions")
                 try:
+                    station_strategy = self.api_client_manager.config.get("settings", {}).get(
+                        "station_selection_strategy", "hybrid_default"
+                    )
                     return self.nws_client.get_current_conditions(
-                        lat, lon, force_refresh=force_refresh
+                        lat,
+                        lon,
+                        force_refresh=force_refresh,
+                        station_selection_strategy=station_strategy,
                     )
                 except (NoaaApiError, Exception) as e:
                     logger.warning(f"NWS API failed for current conditions: {str(e)}")

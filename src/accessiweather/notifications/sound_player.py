@@ -2,9 +2,11 @@ import json
 import logging
 import platform
 import sys
+from collections.abc import Collection
 from pathlib import Path
 from typing import Any
 
+from ..sound_events import normalize_muted_sound_events
 from ..soundpack_paths import get_soundpacks_dir
 
 # Try sound_lib first (supports stopping playback, cross-platform)
@@ -36,6 +38,13 @@ logger = logging.getLogger(__name__)
 SOUNDPACKS_DIR = get_soundpacks_dir()
 DEFAULT_PACK = "default"
 DEFAULT_EVENT = "alert"
+
+
+def is_sound_event_muted(event: str, muted_events: Collection[str] | None = None) -> bool:
+    """Return True when a user-level mute disables the event."""
+    if not event:
+        return False
+    return event in set(normalize_muted_sound_events(muted_events))
 
 
 def _log_packaging_sound_diagnostics() -> None:
@@ -188,6 +197,9 @@ def _play_sound_file(sound_file: Path, block: bool = False, volume: float = 1.0)
     """
     # Clamp volume to valid range
     volume = max(0.0, min(1.0, volume))
+    if volume <= 0.0:
+        logger.debug(f"Skipping silent sound playback: {sound_file}")
+        return True
 
     # Always prefer sound_lib when available (supports volume, stop, better reliability)
     if SOUND_LIB_AVAILABLE:
@@ -390,7 +402,12 @@ def is_playsound_available() -> bool:
 is_sound_lib_available = is_playsound_available
 
 
-def play_notification_sound(event: str, pack_dir: str) -> None:
+def play_notification_sound(
+    event: str,
+    pack_dir: str,
+    *,
+    muted_events: Collection[str] | None = None,
+) -> None:
     """
     Play a notification sound for the given event and pack.
 
@@ -399,8 +416,13 @@ def play_notification_sound(event: str, pack_dir: str) -> None:
     Args:
         event: The sound event name (e.g., "alert", "critical_alert")
         pack_dir: The sound pack directory name
+        muted_events: Optional user-level muted events that override the sound pack
 
     """
+    if is_sound_event_muted(event, muted_events):
+        logger.debug(f"Skipping muted sound event: {event}")
+        return
+
     sound_file, volume = get_sound_entry(event, pack_dir)
     if not sound_file:
         logger.warning("Sound file not found.")
@@ -415,18 +437,26 @@ def play_sample_sound(pack_dir: str) -> None:
     play_notification_sound(DEFAULT_EVENT, pack_dir)
 
 
-def play_startup_sound(pack_dir: str = DEFAULT_PACK) -> None:
+def play_startup_sound(
+    pack_dir: str = DEFAULT_PACK, *, muted_events: Collection[str] | None = None
+) -> None:
     """Play the application startup sound."""
     try:
-        play_notification_sound("startup", pack_dir)
+        play_notification_sound("startup", pack_dir, muted_events=muted_events)
         logger.debug(f"Played startup sound from pack: {pack_dir}")
     except Exception as e:
         logger.debug(f"Failed to play startup sound: {e}")
 
 
-def play_exit_sound(pack_dir: str = DEFAULT_PACK) -> None:
+def play_exit_sound(
+    pack_dir: str = DEFAULT_PACK, *, muted_events: Collection[str] | None = None
+) -> None:
     """Play the application exit sound."""
     try:
+        if is_sound_event_muted("exit", muted_events):
+            logger.debug("Skipping muted sound event: exit")
+            return
+
         sound_file, volume = get_sound_entry("exit", pack_dir)
         logger.debug(
             "[packaging-diag] exit sound async: pack=%s file=%s exists=%s volume=%s sound_lib=%s playsound3=%s",
@@ -446,9 +476,15 @@ def play_exit_sound(pack_dir: str = DEFAULT_PACK) -> None:
         logger.debug(f"Failed to play exit sound: {e}")
 
 
-def play_exit_sound_blocking(pack_dir: str = DEFAULT_PACK) -> None:
+def play_exit_sound_blocking(
+    pack_dir: str = DEFAULT_PACK, *, muted_events: Collection[str] | None = None
+) -> None:
     """Play the application exit sound and wait for it to finish."""
     try:
+        if is_sound_event_muted("exit", muted_events):
+            logger.debug("Skipping muted sound event: exit")
+            return
+
         sound_file, volume = get_sound_entry("exit", pack_dir)
         logger.debug(
             "[packaging-diag] exit sound blocking: pack=%s file=%s exists=%s volume=%s sound_lib=%s playsound3=%s",
@@ -469,22 +505,48 @@ def play_exit_sound_blocking(pack_dir: str = DEFAULT_PACK) -> None:
         logger.debug(f"Failed to play exit sound: {e}")
 
 
-def play_error_sound(pack_dir: str = DEFAULT_PACK) -> None:
+def play_error_sound(
+    pack_dir: str = DEFAULT_PACK, *, muted_events: Collection[str] | None = None
+) -> None:
     """Play an error sound."""
     try:
-        play_notification_sound("error", pack_dir)
+        play_notification_sound("error", pack_dir, muted_events=muted_events)
         logger.debug(f"Played error sound from pack: {pack_dir}")
     except Exception as e:
         logger.debug(f"Failed to play error sound: {e}")
 
 
-def play_success_sound(pack_dir: str = DEFAULT_PACK) -> None:
+def play_success_sound(
+    pack_dir: str = DEFAULT_PACK, *, muted_events: Collection[str] | None = None
+) -> None:
     """Play a success sound."""
     try:
-        play_notification_sound("success", pack_dir)
+        play_notification_sound("success", pack_dir, muted_events=muted_events)
         logger.debug(f"Played success sound from pack: {pack_dir}")
     except Exception as e:
         logger.debug(f"Failed to play success sound: {e}")
+
+
+def play_data_updated_sound(
+    pack_dir: str = DEFAULT_PACK, *, muted_events: Collection[str] | None = None
+) -> None:
+    """Play a sound when weather data is successfully refreshed."""
+    try:
+        play_notification_sound("data_updated", pack_dir, muted_events=muted_events)
+        logger.debug(f"Played data_updated sound from pack: {pack_dir}")
+    except Exception as e:
+        logger.debug(f"Failed to play data_updated sound: {e}")
+
+
+def play_fetch_error_sound(
+    pack_dir: str = DEFAULT_PACK, *, muted_events: Collection[str] | None = None
+) -> None:
+    """Play a sound when a weather data fetch fails."""
+    try:
+        play_notification_sound("fetch_error", pack_dir, muted_events=muted_events)
+        logger.debug(f"Played fetch_error sound from pack: {pack_dir}")
+    except Exception as e:
+        logger.debug(f"Failed to play fetch_error sound: {e}")
 
 
 def get_available_sound_packs() -> dict[str, dict]:
@@ -645,7 +707,13 @@ def get_sound_file_for_candidates(candidates: list[str], pack_dir: str) -> Path 
     return sound_file
 
 
-def play_notification_sound_candidates(candidates: list[str], pack_dir: str) -> None:
+def play_notification_sound_candidates(
+    candidates: list[str],
+    pack_dir: str,
+    *,
+    logical_event: str | None = None,
+    muted_events: Collection[str] | None = None,
+) -> None:
     """
     Play the first available sound from a list of candidate event keys.
 
@@ -654,9 +722,23 @@ def play_notification_sound_candidates(candidates: list[str], pack_dir: str) -> 
     Args:
         candidates: List of event names to try in order
         pack_dir: The sound pack directory name
+        logical_event: Optional high-level event key used for mute checks before fallback
+        muted_events: Optional user-level muted events that override the sound pack
 
     """
-    sound_file, volume = get_sound_entry_for_candidates(candidates, pack_dir)
+    effective_event = logical_event or (candidates[0] if candidates else None)
+    if effective_event and is_sound_event_muted(effective_event, muted_events):
+        logger.debug(f"Skipping muted sound event: {effective_event}")
+        return
+
+    filtered_candidates = [
+        candidate for candidate in candidates if not is_sound_event_muted(candidate, muted_events)
+    ]
+    if not filtered_candidates:
+        logger.debug("All candidate sound events are muted; skipping playback")
+        return
+
+    sound_file, volume = get_sound_entry_for_candidates(filtered_candidates, pack_dir)
     if not sound_file:
         logger.warning("No candidate sound file found.")
         return

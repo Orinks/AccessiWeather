@@ -1,4 +1,7 @@
-# nightly.link Integration Setup Complete
+# GitHub Pages Mirror Setup
+
+> WordPress is now the primary public release page. This document only covers
+> the GitHub Pages mirror and nightly.link support.
 
 ## ✅ What's Been Implemented
 

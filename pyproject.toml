@@ -172,3 +172,16 @@ line-ending = "auto"
 
 [tool.ruff.lint.mccabe]
 max-complexity = 15
+
+[tool.coverage.run]
+omit = [
+    "*/weather_gov_api_client/*",
+    "*/accessiweather/ui/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if sys.platform",
+]

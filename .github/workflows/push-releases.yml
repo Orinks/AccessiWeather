@@ -1,74 +1,41 @@
-name: Push releases to WordPress
+name: Update WordPress release page
 
 on:
   workflow_call:
+    inputs:
+      wp_page_id:
+        description: "WordPress page ID for the existing AccessiWeather release page"
+        required: true
+        type: string
     secrets:
-      WP_PUSH_TOKEN:
+      WP_APPLICATION_PASSWORD:
         required: true
       WP_SITE_URL:
         required: true
+      WP_USERNAME:
+        required: true
+  workflow_dispatch:
+    inputs:
+      wp_page_id:
+        description: "WordPress page ID for the existing AccessiWeather release page"
+        required: true
+        type: string
 
 jobs:
-  push:
+  update-page:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Validate required secrets
+      - name: Checkout repo
+        uses: actions/checkout@v6
+      - name: Update WordPress page from latest release
         env:
-          WP_TOKEN: ${{ secrets.WP_PUSH_TOKEN }}
           WP_URL: ${{ secrets.WP_SITE_URL }}
-        run: |
-          test -n "$WP_TOKEN" || { echo "Missing WP_PUSH_TOKEN"; exit 1; }
-          test -n "$WP_URL" || { echo "Missing WP_SITE_URL"; exit 1; }
-
-      - name: Push releases to WordPress (with retry + cache nudge)
-        env:
-          GH_TOKEN: ${{ github.token }}
-          WP_TOKEN: ${{ secrets.WP_PUSH_TOKEN }}
-          WP_URL: ${{ secrets.WP_SITE_URL }}
+          WP_PAGE_ID: ${{ inputs.wp_page_id }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APPLICATION_PASSWORD: ${{ secrets.WP_APPLICATION_PASSWORD }}
           REPO: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-
-          attempt() {
-            gh api "repos/$REPO/releases/latest" -H "Accept: application/vnd.github+json" > /tmp/latest.json 2>/dev/null || echo "null" > /tmp/latest.json
-            gh api "repos/$REPO/releases?per_page=20" -H "Accept: application/vnd.github+json" > /tmp/all.json
-
-            PAYLOAD=$(jq -c -n \
-              --arg repo "$REPO" \
-              --slurpfile all /tmp/all.json \
-              --slurpfile latest /tmp/latest.json \
-              '{repo:$repo, releases:($all[0][0:20]), latest:(if ($latest[0] | type)=="object" and ($latest[0].tag_name != null) then $latest[0] else null end)}')
-
-            # Primary push
-            curl -sS -f \
-              -H "Content-Type: application/json" \
-              -H "X-OGR-Token: $WP_TOKEN" \
-              -X POST \
-              -d "$PAYLOAD" \
-              "${WP_URL%/}/wp-json/ogr/v1/push-releases" >/dev/null
-
-            # Cache nudge for plugin-level cache only (host cache may still need purge)
-            curl -sS -f \
-              -H "Content-Type: application/json" \
-              -H "X-OGR-Token: $WP_TOKEN" \
-              -X POST \
-              -d "{\"repository\":{\"full_name\":\"$REPO\"}}" \
-              "${WP_URL%/}/wp-json/ogr/v1/bust-cache" >/dev/null || true
-
-            # Re-push so data exists after bust
-            RESPONSE=$(curl -sS -f \
-              -H "Content-Type: application/json" \
-              -H "X-OGR-Token: $WP_TOKEN" \
-              -X POST \
-              -d "$PAYLOAD" \
-              "${WP_URL%/}/wp-json/ogr/v1/push-releases")
-
-            echo "$RESPONSE" | jq -r '"Pushed \(.count) releases for \(.repo) (post-bust)"'
-          }
-
-          attempt || {
-            echo "First push attempt failed, retrying in 10s..."
-            sleep 10
-            attempt
-          }
+          python3 .github/scripts/push_releases.py

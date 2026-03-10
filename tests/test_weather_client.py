@@ -223,6 +223,27 @@ class TestWeatherClientFetching:
         assert data.current.temperature_f == 72.0
 
     @pytest.mark.asyncio
+    async def test_force_refresh_invalidates_existing_cache_entry(
+        self, client, location, mock_current
+    ):
+        """force_refresh should invalidate stale cache before fetching."""
+        from unittest.mock import MagicMock
+
+        cache = MagicMock()
+        cache.load.return_value = None
+        client.offline_cache = cache
+
+        client._fetch_nws_data = AsyncMock(
+            return_value=(mock_current, None, None, None, WeatherAlerts(alerts=[]), None)
+        )
+        client._launch_enrichment_tasks = MagicMock(return_value={})
+        client._await_enrichments = AsyncMock()
+
+        await client.get_weather_data(location, force_refresh=True)
+
+        cache.invalidate.assert_called_once_with(location)
+
+    @pytest.mark.asyncio
     async def test_get_cached_weather(self, client, location, mock_current):
         """Test getting cached weather synchronously."""
         import tempfile

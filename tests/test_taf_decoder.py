@@ -270,6 +270,40 @@ class TestDecodeWeather:
         assert "shallow" in result
         assert "fog" in result
 
+    def test_unknown_precipitation_fallback_is_friendlier(self):
+        result = _decode_weather("UP")
+        assert "unidentified precipitation" in result
+        assert "unknown precipitation" not in result
+
+    def test_unknown_precipitation_with_type_hints_prefers_inference(self):
+        result = _decode_weather("RAUP")
+        assert "mixed precipitation" in result
+        assert "unknown precipitation" not in result
+
+    def test_unknown_precipitation_with_freezing_hint(self):
+        result = _decode_weather("FZUP")
+        assert "freezing precipitation" in result
+
+    def test_unknown_precipitation_with_thunderstorm_hint(self):
+        result = _decode_weather("TSUP")
+        assert "thunderstorm precipitation" in result
+
+    def test_unknown_precipitation_with_showery_hint(self):
+        result = _decode_weather("SHUP")
+        assert "showery precipitation" in result
+
+    def test_unknown_precipitation_with_freezing_descriptor(self):
+        result = _decode_weather("FZUP")
+        assert "freezing precipitation" in result
+
+    def test_unknown_precipitation_with_thunderstorm_descriptor(self):
+        result = _decode_weather("TSUP")
+        assert "thunderstorm precipitation" in result
+
+    def test_unknown_precipitation_with_showers_descriptor(self):
+        result = _decode_weather("SHUP")
+        assert "showery precipitation" in result
+
 
 # --- _decode_cloud ---
 

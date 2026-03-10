@@ -91,7 +91,10 @@ class TestNotificationEventManager:
     @pytest.fixture
     def settings_none_enabled(self):
         """Create settings with no event notifications enabled."""
-        return AppSettings()  # Both are False by default
+        settings = AppSettings()
+        settings.notify_discussion_update = False
+        settings.notify_severe_risk_change = False
+        return settings
 
     def test_initialization(self, manager):
         """Test manager initialization."""

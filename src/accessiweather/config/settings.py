@@ -177,7 +177,11 @@ class SettingsOperations:
     def update_settings(self, **kwargs) -> bool:
         """Update settings values on the current configuration."""
         config = self._manager.get_config()
-        # These keys should be stored in SecureStorage
+        # In portable mode, API keys live in the bundle — skip keyring writes for them.
+        is_portable = getattr(self._manager.app, "_portable_mode", False)
+        portable_api_keys = {"visual_crossing_api_key", "openrouter_api_key"}
+
+        # These keys should be stored in SecureStorage (non-portable, or non-API-key secrets)
         secure_keys = {
             "visual_crossing_api_key",
             "openrouter_api_key",
@@ -185,14 +189,10 @@ class SettingsOperations:
             "github_app_private_key",
             "github_app_installation_id",
         }
+        if is_portable:
+            secure_keys -= portable_api_keys
         # These keys should be redacted in logs
         redacted_keys = {"github_app_private_key", "visual_crossing_api_key", "openrouter_api_key"}
-
-        api_key_changed = False
-        portable_auto_bundle_updated = False
-        portable_auto_bundle_enabled = getattr(
-            config.settings, "portable_auto_bundle_enabled", False
-        )
 
         for key, value in kwargs.items():
             if hasattr(config.settings, key):
@@ -200,28 +200,13 @@ class SettingsOperations:
 
                 if key in secure_keys and not SecureStorage.set_password(key, value):
                     self.logger.error(f"Failed to save {key} to secure storage")
-                if key in {"visual_crossing_api_key", "openrouter_api_key"}:
-                    api_key_changed = True
-                if key == "portable_auto_bundle_enabled":
-                    portable_auto_bundle_updated = True
-                    portable_auto_bundle_enabled = bool(value)
 
                 log_value = "***redacted***" if key in redacted_keys else value
                 self.logger.info(f"Updated setting {key} = {log_value}")
             else:
                 self.logger.warning(f"Unknown setting: {key}")
 
-        save_ok = self._manager.save_config()
-        if not save_ok:
-            return False
-
-        if portable_auto_bundle_updated and not portable_auto_bundle_enabled:
-            self._manager.disable_portable_api_key_bundle()
-
-        if api_key_changed and portable_auto_bundle_enabled:
-            self._manager.refresh_portable_api_key_bundle()
-
-        return True
+        return self._manager.save_config()
 
     def get_settings(self) -> AppSettings:
         """Return the current AppSettings instance."""

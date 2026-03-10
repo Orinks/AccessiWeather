@@ -718,7 +718,7 @@ async def get_nws_alerts(
     user_agent: str,
     timeout: float,
     client: httpx.AsyncClient | None = None,
-    alert_radius_type: str = "point",
+    alert_radius_type: str = "county",
 ) -> WeatherAlerts | None:
     """
     Fetch weather alerts from the NWS API.
@@ -729,7 +729,7 @@ async def get_nws_alerts(
         user_agent: User agent string
         timeout: Request timeout
         client: Optional HTTP client to reuse
-        alert_radius_type: "point" (exact location), "zone" (forecast zone), or "state"
+        alert_radius_type: "county", "point" (exact location), "zone" (forecast zone), or "state"
 
     """
     try:
@@ -737,7 +737,26 @@ async def get_nws_alerts(
         headers = {"User-Agent": user_agent}
 
         # Build params based on alert_radius_type
-        if alert_radius_type == "state":
+        if alert_radius_type == "county":
+            # Get county zone from point data
+            point_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+            if client is not None:
+                point_response = await _client_get(client, point_url, headers=headers)
+            else:
+                async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+                    point_response = await new_client.get(point_url, headers=headers)
+            point_response.raise_for_status()
+            point_data = point_response.json()
+
+            county_url = point_data.get("properties", {}).get("county")
+            if county_url and "/county/" in county_url:
+                zone_id = county_url.split("/county/")[1]
+                params = {"zone": zone_id, "status": "actual"}
+            else:
+                logger.warning("Could not determine county zone, falling back to point query")
+                params = {"point": f"{location.latitude},{location.longitude}", "status": "actual"}
+
+        elif alert_radius_type == "state":
             # Get state from location - need to fetch point data first
             point_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
             if client is not None:
@@ -1291,6 +1310,18 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
             logger.debug(f"Parsed alert with ID: {alert_id}")
         else:
             logger.debug("Parsed alert without ID, will generate unique ID")
+
+    # Deduplicate by alert ID, keeping first occurrence
+    seen_ids: set[str] = set()
+    deduped: list[WeatherAlert] = []
+    for alert in alerts:
+        if alert.id and alert.id in seen_ids:
+            logger.debug(f"Skipping duplicate alert ID: {alert.id}")
+            continue
+        if alert.id:
+            seen_ids.add(alert.id)
+        deduped.append(alert)
+    alerts = deduped
 
     logger.info(f"Parsed {len(alerts)} alerts from NWS API")
     return WeatherAlerts(alerts=alerts)
