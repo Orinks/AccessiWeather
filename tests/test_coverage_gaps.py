@@ -79,8 +79,7 @@ if not hasattr(_wx, "Colour"):
     _wx.Colour = lambda *a, **kw: MagicMock(name="Colour")
 if not hasattr(_wx, "Font"):
     _wx.Font = lambda *a, **kw: MagicMock(name="Font")
-if not hasattr(_wx, "MessageBox"):
-    _wx.MessageBox = MagicMock(name="MessageBox")
+_wx.MessageBox = MagicMock(name="MessageBox")
 
 
 class TestAlertDialogEscapeKey:
