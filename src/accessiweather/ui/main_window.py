@@ -365,6 +365,10 @@ class MainWindow(SizedFrame):
                 logger.info(f"Showing cached data for {selected} while refreshing")
                 self._on_weather_data_received(cached)
 
+        # Fire an immediate alert/event check for the new location (lightweight)
+        if location and hasattr(self.app, "weather_client") and self.app.weather_client:
+            self.refresh_notification_events_async()
+
         # Debounce: cancel pending fetch, wait 500ms before fetching
         if hasattr(self, "_location_debounce_timer") and self._location_debounce_timer.IsRunning():
             self._location_debounce_timer.Stop()
