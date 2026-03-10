@@ -94,6 +94,18 @@ class SettingsDialogSimple(wx.Dialog):
         row1.Add(self._controls["update_interval"], 0)
         sizer.Add(row1, 0, wx.ALL, 5)
 
+        # Alert check interval
+        row1b = wx.BoxSizer(wx.HORIZONTAL)
+        row1b.Add(
+            wx.StaticText(panel, label="Alert Check Interval (minutes):"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["event_check_interval"] = wx.SpinCtrl(panel, min=1, max=60, initial=2)
+        row1b.Add(self._controls["event_check_interval"], 0)
+        sizer.Add(row1b, 0, wx.ALL, 5)
+
         # Show Nationwide location (only available with Auto or NWS data source)
         self._controls["show_nationwide"] = wx.CheckBox(
             panel, label="Show Nationwide location (requires Auto or NWS data source)"
@@ -1233,6 +1245,9 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["update_interval"].SetValue(
                 getattr(settings, "update_interval_minutes", 10)
             )
+            self._controls["event_check_interval"].SetValue(
+                getattr(settings, "event_check_interval_minutes", 2)
+            )
             self._controls["show_nationwide"].SetValue(
                 getattr(self.config_manager.get_settings(), "show_nationwide_location", True)
             )
@@ -1497,6 +1512,7 @@ class SettingsDialogSimple(wx.Dialog):
             settings_dict = {
                 # General
                 "update_interval_minutes": self._controls["update_interval"].GetValue(),
+                "event_check_interval_minutes": self._controls["event_check_interval"].GetValue(),
                 "show_nationwide_location": show_nationwide,
                 "taskbar_icon_text_enabled": self._controls["taskbar_icon_text_enabled"].GetValue(),
                 "taskbar_icon_dynamic_enabled": self._controls[
@@ -1634,6 +1650,7 @@ class SettingsDialogSimple(wx.Dialog):
         """Set up accessibility labels for controls."""
         control_names = {
             "update_interval": "Update Interval (minutes)",
+            "event_check_interval": "Alert Check Interval (minutes)",
             "show_nationwide": "Show Nationwide location (requires Auto or NWS data source)",
             "taskbar_icon_text_enabled": "Show weather text on tray icon",
             "taskbar_icon_dynamic_enabled": "Update tray text dynamically",
