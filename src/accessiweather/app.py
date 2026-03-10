@@ -449,7 +449,6 @@ class AccessiWeatherApp(wx.App):
         portable_mode: bool = False,
         debug: bool = False,
         force_wizard: bool = False,
-        updated: bool = False,
     ):
         """
         Initialize the AccessiWeather application.
@@ -459,10 +458,8 @@ class AccessiWeatherApp(wx.App):
             portable_mode: If True, use portable mode (config in app directory)
             debug: If True, enable debug mode (enables debug logging and extra UI tools)
             force_wizard: If True, force the onboarding wizard even if already shown
-            updated: If True, skip lock-file prompt (app was restarted after an update)
 
         """
-        self._updated = updated
         self._config_dir = config_dir
 
         # Auto-detect portable mode for frozen builds unless explicitly overridden
@@ -561,15 +558,9 @@ class AccessiWeatherApp(wx.App):
             # Check for single instance
             self.single_instance_manager = SingleInstanceManager(self)
             if not self.single_instance_manager.try_acquire_lock():
-                if self._updated:
-                    # After an update restart the old lock file is stale; force-acquire it
-                    logger.info("Post-update restart: forcing lock acquisition")
-                    self.single_instance_manager.force_remove_lock()
-                    self.single_instance_manager.try_acquire_lock()
-                else:
-                    logger.info("Another instance is already running, showing force start dialog")
-                    if not self._show_force_start_dialog():
-                        return False
+                logger.info("Another instance is already running, showing force start dialog")
+                if not self._show_force_start_dialog():
+                    return False
 
             # Start async event loop in background thread
             self._start_async_loop()
@@ -1435,11 +1426,6 @@ class AccessiWeatherApp(wx.App):
                     )
                     if result == wx.YES:
                         portable = is_portable_mode()
-                        # Destroy all wx windows so file handles are released before exit
-                        for win in wx.GetTopLevelWindows():
-                            with contextlib.suppress(Exception):
-                                win.Destroy()
-                        wx.SafeYield()
                         apply_update(update_path, portable=portable)
 
                 wx.CallAfter(confirm_apply)
@@ -1642,7 +1628,6 @@ def main(
     fake_version: str | None = None,
     fake_nightly: str | None = None,
     force_wizard: bool = False,
-    updated: bool = False,
 ):
     """
     Run AccessiWeather application.
@@ -1654,7 +1639,6 @@ def main(
         fake_version: Fake version for testing updates (e.g., '0.1.0').
         fake_nightly: Fake nightly tag for testing updates (e.g., 'nightly-20250101').
         force_wizard: Force the onboarding wizard even if already shown.
-        updated: Skip lock-file prompt (app was restarted after an update).
 
     """
     if config_dir is None:
@@ -1673,7 +1657,6 @@ def main(
         portable_mode=portable_mode,
         debug=debug,
         force_wizard=force_wizard,
-        updated=updated,
     )
 
     # Override version/build_tag for update testing

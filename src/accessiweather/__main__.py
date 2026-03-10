@@ -43,11 +43,6 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Force the onboarding wizard to run even if it has already been shown",
     )
-    parser.add_argument(
-        "--updated",
-        action="store_true",
-        help="Skip lock-file prompt (set automatically after an update restart)",
-    )
     return parser.parse_args()
 
 
@@ -67,7 +62,6 @@ def main() -> None:
         fake_version=args.fake_version,
         fake_nightly=args.fake_nightly,
         force_wizard=args.wizard,
-        updated=args.updated,
     )
 
 
