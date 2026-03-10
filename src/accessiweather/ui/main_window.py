@@ -288,6 +288,11 @@ class MainWindow(SizedFrame):
                 "Test: Tray &Balloon (direct)",
                 "Directly invoke the tray balloon fallback to verify it is wired up",
             )
+            self._debug_menu_items["simulate_alert"] = debug_menu.Append(
+                wx.ID_ANY,
+                "Test: &Simulate Alert Change (poll cycle)",
+                "Inject a mock alert into the next event check cycle to test the full polling path",
+            )
             debug_menu.AppendSeparator()
             self._debug_menu_items["diagnostics"] = debug_menu.Append(
                 wx.ID_ANY,
@@ -342,6 +347,11 @@ class MainWindow(SizedFrame):
                 wx.EVT_MENU,
                 lambda e: self._on_test_notifications(),
                 self._debug_menu_items["diagnostics"],
+            )
+            self.Bind(
+                wx.EVT_MENU,
+                lambda e: self._on_debug_simulate_alert(),
+                self._debug_menu_items["simulate_alert"],
             )
         self.Bind(wx.EVT_MENU, lambda e: self._on_report_issue(), report_issue_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_about(), about_item)
@@ -690,6 +700,52 @@ class MainWindow(SizedFrame):
         dlg = DebugAlertDialog(self, self.app)
         dlg.ShowModal()
         dlg.Destroy()
+
+    def _on_debug_simulate_alert(self) -> None:
+        """Inject a mock alert into the event check cycle to test the full polling path."""
+        from ..alert_lifecycle import AlertChange, AlertChangeKind, AlertLifecycleDiff
+        from ..models.alerts import WeatherAlert
+        from ..models.weather import WeatherAlerts, WeatherData
+
+        app = self.app
+        if not hasattr(app, "weather_client") or not app.weather_client:
+            wx.MessageBox("Weather client not ready.", "Debug", wx.OK | wx.ICON_WARNING)
+            return
+
+        location = app.config_manager.get_current_location()
+        if not location:
+            wx.MessageBox("No current location.", "Debug", wx.OK | wx.ICON_WARNING)
+            return
+
+        fake_alert = WeatherAlert(
+            title="Tornado Warning",
+            description=(
+                "This is a simulated alert injected via the debug menu "
+                "to test the event polling notification path."
+            ),
+            severity="Extreme",
+            urgency="Immediate",
+            certainty="Observed",
+            event="Tornado Warning",
+            headline="DEBUG: Simulated Tornado Warning for testing",
+            areas=["Test County"],
+            id="debug-simulate-001",
+            message_type="Alert",
+        )
+        fake_alerts = WeatherAlerts(alerts=[fake_alert])
+        fake_change = AlertChange(
+            kind=AlertChangeKind.NEW,
+            alert=fake_alert,
+            alert_id=fake_alert.get_unique_id(),
+            title=fake_alert.title,
+        )
+        fake_diff = AlertLifecycleDiff(new_alerts=[fake_change])
+
+        mock_data = WeatherData(location=location)
+        mock_data.alerts = fake_alerts
+        mock_data.alert_lifecycle_diff = fake_diff
+
+        self._on_notification_event_data_received(mock_data)
 
     def _on_test_notifications(self) -> None:
         """Run notification tests and show pass/fail results."""
