@@ -94,18 +94,6 @@ class SettingsDialogSimple(wx.Dialog):
         row1.Add(self._controls["update_interval"], 0)
         sizer.Add(row1, 0, wx.ALL, 5)
 
-        # Alert check interval
-        row1b = wx.BoxSizer(wx.HORIZONTAL)
-        row1b.Add(
-            wx.StaticText(panel, label="Alert Check Interval (minutes):"),
-            0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
-            10,
-        )
-        self._controls["event_check_interval"] = wx.SpinCtrl(panel, min=1, max=60, initial=2)
-        row1b.Add(self._controls["event_check_interval"], 0)
-        sizer.Add(row1b, 0, wx.ALL, 5)
-
         # Show Nationwide location (only available with Auto or NWS data source)
         self._controls["show_nationwide"] = wx.CheckBox(
             panel, label="Show Nationwide location (requires Auto or NWS data source)"
@@ -484,6 +472,18 @@ class SettingsDialogSimple(wx.Dialog):
 
         self._controls["alert_notif"] = wx.CheckBox(panel, label="Enable alert notifications")
         sizer.Add(self._controls["alert_notif"], 0, wx.LEFT | wx.BOTTOM, 5)
+
+        # Alert check interval
+        row_check_interval = wx.BoxSizer(wx.HORIZONTAL)
+        row_check_interval.Add(
+            wx.StaticText(panel, label="Alert Check Interval (minutes):"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["event_check_interval"] = wx.SpinCtrl(panel, min=1, max=60, initial=2)
+        row_check_interval.Add(self._controls["event_check_interval"], 0)
+        sizer.Add(row_check_interval, 0, wx.ALL, 5)
 
         # Alert area setting
         row_area = wx.BoxSizer(wx.HORIZONTAL)
