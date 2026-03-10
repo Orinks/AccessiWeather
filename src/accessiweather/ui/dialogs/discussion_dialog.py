@@ -37,6 +37,7 @@ class DiscussionDialog(wx.Dialog):
         self._create_widgets()
         self._bind_events()
         self._setup_initial_state()
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_key)
 
         # Set a reasonable size
         self.SetSize((700, 600))
@@ -358,6 +359,13 @@ class DiscussionDialog(wx.Dialog):
             "Please check your OpenRouter API key in Settings."
         )
         self._set_status("Explanation failed.")
+
+    def _on_key(self, event):
+        """Handle key press - close dialog on Escape."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self.Close()
+        else:
+            event.Skip()
 
     def _on_close(self, event) -> None:
         """Handle close button press."""

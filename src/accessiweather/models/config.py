@@ -40,6 +40,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     # Event notifications
     "notify_discussion_update",
     "notify_severe_risk_change",
+    "event_check_interval_minutes",
     # GitHub settings
     "github_backend_url",
     "github_app_id",
@@ -111,14 +112,15 @@ class AppSettings:
     muted_sound_events: list[str] = field(default_factory=lambda: list(DEFAULT_MUTED_SOUND_EVENTS))
     # Nationwide location visibility
     show_nationwide_location: bool = True
-    # Event-based notifications (opt-in, disabled by default)
+    # Event-based notifications
     notify_discussion_update: bool = True
     notify_severe_risk_change: bool = False
+    event_check_interval_minutes: int = 2
     github_backend_url: str = ""
     github_app_id: str = ""
     github_app_private_key: str = ""
     github_app_installation_id: str = ""
-    alert_radius_type: str = "point"  # "point", "zone", or "state"
+    alert_radius_type: str = "county"  # "county", "point", "zone", or "state"
     alert_notifications_enabled: bool = True
     alert_notify_extreme: bool = True
     alert_notify_severe: bool = True
@@ -310,9 +312,9 @@ class AppSettings:
                 setattr(self, setting_name, 180)
 
         elif setting_name == "alert_radius_type":
-            valid_types = {"point", "zone", "state"}
+            valid_types = {"county", "point", "zone", "state"}
             if value not in valid_types:
-                setattr(self, setting_name, "point")
+                setattr(self, setting_name, "county")
 
         elif setting_name == "openmeteo_weather_model":
             valid_models = {
@@ -397,6 +399,7 @@ class AppSettings:
             "show_nationwide_location": self.show_nationwide_location,
             "notify_discussion_update": self.notify_discussion_update,
             "notify_severe_risk_change": self.notify_severe_risk_change,
+            "event_check_interval_minutes": self.event_check_interval_minutes,
             "github_backend_url": self.github_backend_url,
             "alert_radius_type": self.alert_radius_type,
             "alert_notifications_enabled": self.alert_notifications_enabled,
@@ -472,8 +475,9 @@ class AppSettings:
             show_nationwide_location=cls._as_bool(data.get("show_nationwide_location"), True),
             notify_discussion_update=cls._as_bool(data.get("notify_discussion_update"), True),
             notify_severe_risk_change=cls._as_bool(data.get("notify_severe_risk_change"), False),
+            event_check_interval_minutes=data.get("event_check_interval_minutes", 2),
             github_backend_url=data.get("github_backend_url", ""),
-            alert_radius_type=data.get("alert_radius_type", "point"),
+            alert_radius_type=data.get("alert_radius_type", "county"),
             alert_notifications_enabled=cls._as_bool(data.get("alert_notifications_enabled"), True),
             alert_notify_extreme=cls._as_bool(data.get("alert_notify_extreme"), True),
             alert_notify_severe=cls._as_bool(data.get("alert_notify_severe"), True),

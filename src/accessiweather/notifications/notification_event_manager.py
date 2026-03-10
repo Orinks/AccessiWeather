@@ -48,6 +48,25 @@ def get_risk_category(risk: int) -> str:
     return "minimal"
 
 
+def summarize_discussion_change(previous_text: str | None, current_text: str | None) -> str | None:
+    """Return a short human-friendly summary of what changed in the discussion text."""
+    if not current_text:
+        return None
+
+    previous_lines = {
+        line.strip()
+        for line in (previous_text or "").splitlines()
+        if line.strip() and not line.strip().startswith("$")
+    }
+    for raw_line in current_text.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("$"):
+            continue
+        if line not in previous_lines:
+            return line[:160]
+    return None
+
+
 @dataclass
 class NotificationEvent:
     """Represents a notification event to be sent."""
@@ -63,6 +82,7 @@ class NotificationState:
     """Tracks state for notification change detection."""
 
     last_discussion_issuance_time: datetime | None = None  # NWS API issuanceTime
+    last_discussion_text: str | None = None
     last_severe_risk: int | None = None
     last_check_time: datetime | None = None
 
@@ -74,6 +94,7 @@ class NotificationState:
                 if self.last_discussion_issuance_time
                 else None
             ),
+            "last_discussion_text": self.last_discussion_text,
             "last_severe_risk": self.last_severe_risk,
             "last_check_time": self.last_check_time.isoformat() if self.last_check_time else None,
         }
@@ -87,6 +108,7 @@ class NotificationState:
             last_discussion_issuance_time=(
                 datetime.fromisoformat(last_issuance) if last_issuance else None
             ),
+            last_discussion_text=data.get("last_discussion_text"),
             last_severe_risk=data.get("last_severe_risk"),
             last_check_time=datetime.fromisoformat(last_check) if last_check else None,
         )
@@ -165,7 +187,9 @@ class NotificationEventManager:
         # Check for AFD/discussion update using NWS API issuanceTime
         if settings.notify_discussion_update:
             discussion_event = self._check_discussion_update(
-                weather_data.discussion_issuance_time, location_name
+                weather_data.discussion_issuance_time,
+                weather_data.discussion,
+                location_name,
             )
             if discussion_event:
                 events.append(discussion_event)
@@ -185,13 +209,14 @@ class NotificationEventManager:
         return events
 
     def _check_discussion_update(
-        self, issuance_time: datetime | None, location_name: str
+        self, issuance_time: datetime | None, discussion_text: str | None, location_name: str
     ) -> NotificationEvent | None:
         """
         Check if the forecast discussion has been updated using NWS API issuanceTime.
 
         Args:
             issuance_time: The issuanceTime from the NWS API for the current AFD
+            discussion_text: The latest discussion text used to summarize what changed
             location_name: Name of the location
 
         Returns:
@@ -205,6 +230,7 @@ class NotificationEventManager:
         # First time seeing discussion - store but don't notify
         if self.state.last_discussion_issuance_time is None:
             self.state.last_discussion_issuance_time = issuance_time
+            self.state.last_discussion_text = discussion_text
             logger.debug("First discussion issuance time stored: %s", issuance_time)
             return None
 
@@ -215,15 +241,30 @@ class NotificationEventManager:
                 self.state.last_discussion_issuance_time,
                 issuance_time,
             )
+            change_summary = summarize_discussion_change(
+                self.state.last_discussion_text,
+                discussion_text,
+            )
             self.state.last_discussion_issuance_time = issuance_time
+            self.state.last_discussion_text = discussion_text
+
+            issued_label = (
+                issuance_time.strftime("%-I:%M %p")
+                if hasattr(issuance_time, "strftime")
+                else str(issuance_time)
+            )
+            message = f"The Area Forecast Discussion for {location_name} was updated by the National Weather Service at {issued_label}."
+            if change_summary:
+                message += f" Change summary: {change_summary}"
 
             return NotificationEvent(
                 event_type="discussion_update",
                 title="Forecast Discussion Updated",
-                message=f"The Area Forecast Discussion for {location_name} has been updated by the National Weather Service.",
+                message=message,
                 sound_event="discussion_update",
             )
 
+        self.state.last_discussion_text = discussion_text
         return None
 
     def _check_severe_risk_change(

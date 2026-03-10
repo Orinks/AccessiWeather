@@ -473,6 +473,18 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["alert_notif"] = wx.CheckBox(panel, label="Enable alert notifications")
         sizer.Add(self._controls["alert_notif"], 0, wx.LEFT | wx.BOTTOM, 5)
 
+        # Alert check interval
+        row_check_interval = wx.BoxSizer(wx.HORIZONTAL)
+        row_check_interval.Add(
+            wx.StaticText(panel, label="Alert Check Interval (minutes):"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["event_check_interval"] = wx.SpinCtrl(panel, min=1, max=60, initial=2)
+        row_check_interval.Add(self._controls["event_check_interval"], 0)
+        sizer.Add(row_check_interval, 0, wx.ALL, 5)
+
         # Alert area setting
         row_area = wx.BoxSizer(wx.HORIZONTAL)
         row_area.Add(
@@ -484,9 +496,10 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["alert_radius_type"] = wx.Choice(
             panel,
             choices=[
-                "Point (recommended)",
-                "Zone",
-                "State",
+                "County (recommended — alerts for your county only)",
+                "Point (exact coordinate — may miss alerts)",
+                "Zone (NWS forecast zone — slightly broader than county)",
+                "State (entire state — noisy)",
             ],
         )
         row_area.Add(self._controls["alert_radius_type"], 0)
@@ -1233,6 +1246,9 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["update_interval"].SetValue(
                 getattr(settings, "update_interval_minutes", 10)
             )
+            self._controls["event_check_interval"].SetValue(
+                getattr(settings, "event_check_interval_minutes", 2)
+            )
             self._controls["show_nationwide"].SetValue(
                 getattr(self.config_manager.get_settings(), "show_nationwide_location", True)
             )
@@ -1350,8 +1366,8 @@ class SettingsDialogSimple(wx.Dialog):
                 getattr(settings, "alert_notifications_enabled", True)
             )
             # Alert radius type: map value to choice index
-            radius_type = getattr(settings, "alert_radius_type", "point")
-            radius_type_map = {"point": 0, "zone": 1, "state": 2}
+            radius_type = getattr(settings, "alert_radius_type", "county")
+            radius_type_map = {"county": 0, "point": 1, "zone": 2, "state": 3}
             self._controls["alert_radius_type"].SetSelection(radius_type_map.get(radius_type, 0))
             self._controls["notify_extreme"].SetValue(
                 getattr(settings, "alert_notify_extreme", True)
@@ -1497,6 +1513,7 @@ class SettingsDialogSimple(wx.Dialog):
             settings_dict = {
                 # General
                 "update_interval_minutes": self._controls["update_interval"].GetValue(),
+                "event_check_interval_minutes": self._controls["event_check_interval"].GetValue(),
                 "show_nationwide_location": show_nationwide,
                 "taskbar_icon_text_enabled": self._controls["taskbar_icon_text_enabled"].GetValue(),
                 "taskbar_icon_dynamic_enabled": self._controls[
@@ -1546,7 +1563,7 @@ class SettingsDialogSimple(wx.Dialog):
                 # Notifications
                 "enable_alerts": self._controls["enable_alerts"].GetValue(),
                 "alert_notifications_enabled": self._controls["alert_notif"].GetValue(),
-                "alert_radius_type": ["point", "zone", "state"][
+                "alert_radius_type": ["county", "point", "zone", "state"][
                     self._controls["alert_radius_type"].GetSelection()
                 ],
                 "alert_notify_extreme": self._controls["notify_extreme"].GetValue(),
@@ -1634,6 +1651,7 @@ class SettingsDialogSimple(wx.Dialog):
         """Set up accessibility labels for controls."""
         control_names = {
             "update_interval": "Update Interval (minutes)",
+            "event_check_interval": "Alert Check Interval (minutes)",
             "show_nationwide": "Show Nationwide location (requires Auto or NWS data source)",
             "taskbar_icon_text_enabled": "Show weather text on tray icon",
             "taskbar_icon_dynamic_enabled": "Update tray text dynamically",

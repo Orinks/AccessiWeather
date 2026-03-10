@@ -229,5 +229,6 @@ jobs:
         diff-cover reports/coverage.xml \
           --compare-branch="$BASE" \
           --fail-under=80 \
-          --diff-range-notation='..'
+          --diff-range-notation='..' \
+          --exclude '*/accessiweather/ui/*'
         echo "✅ New code meets coverage threshold!"

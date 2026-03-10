@@ -1464,24 +1464,51 @@ class AccessiWeatherApp(wx.App):
         except Exception as e:
             logger.debug(f"Failed to update tray tooltip: {e}")
 
+    def _stop_background_updates(self) -> None:
+        """Stop any running background timers."""
+        weather_timer = getattr(self, "_update_timer", None)
+        if weather_timer:
+            weather_timer.Stop()
+
+        event_timer = getattr(self, "_event_check_timer", None)
+        if event_timer:
+            event_timer.Stop()
+
     def _start_background_updates(self) -> None:
-        """Start periodic background weather updates."""
+        """Start split background timers for full refreshes and lightweight event checks."""
         try:
+            self._stop_background_updates()
             settings = self.config_manager.get_settings()
             interval_minutes = getattr(settings, "update_interval_minutes", 10)
+            event_interval_minutes = getattr(settings, "event_check_interval_minutes", 2)
             interval_ms = interval_minutes * 60 * 1000
+            event_interval_ms = event_interval_minutes * 60 * 1000
 
             self._update_timer = wx.Timer()
             self._update_timer.Bind(wx.EVT_TIMER, self._on_background_update)
             self._update_timer.Start(interval_ms)
-            logger.info(f"Background updates started (every {interval_minutes} minutes)")
+
+            self._event_check_timer = wx.Timer()
+            self._event_check_timer.Bind(wx.EVT_TIMER, self._on_event_check_update)
+            self._event_check_timer.Start(event_interval_ms)
+
+            logger.info(
+                "Background updates started (weather every %s minutes, events every %s minutes)",
+                interval_minutes,
+                event_interval_minutes,
+            )
         except Exception as e:
             logger.error(f"Failed to start background updates: {e}")
 
     def _on_background_update(self, event) -> None:
-        """Handle background update timer event."""
+        """Handle slower full weather refresh timer event."""
         if self.main_window and not self.is_updating:
             self.main_window.refresh_weather_async()
+
+    def _on_event_check_update(self, event) -> None:
+        """Handle fast lightweight event-check timer event."""
+        if self.main_window:
+            self.main_window.refresh_notification_events_async()
 
     def _play_startup_sound(self) -> None:
         """Play startup sound if enabled."""
@@ -1501,9 +1528,7 @@ class AccessiWeatherApp(wx.App):
         logger.info("Application exit requested")
 
         # Stop background updates
-        update_timer = getattr(self, "_update_timer", None)
-        if update_timer:
-            update_timer.Stop()
+        self._stop_background_updates()
 
         self._stop_auto_update_checks()
 
@@ -1589,6 +1614,7 @@ class AccessiWeatherApp(wx.App):
                 )
 
             self._start_auto_update_checks()
+            self._start_background_updates()
 
             logger.info("Runtime settings refreshed successfully")
         except Exception as e:
