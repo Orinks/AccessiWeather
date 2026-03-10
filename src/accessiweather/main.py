@@ -50,6 +50,11 @@ def main() -> None:
         action="store_true",
         help="Force the onboarding wizard to run even if it has already been shown",
     )
+    parser.add_argument(
+        "--updated",
+        action="store_true",
+        help="Skip lock-file prompt (set automatically after an update restart)",
+    )
     args = parser.parse_args()
 
     setup_logging(debug=args.debug)
@@ -63,6 +68,7 @@ def main() -> None:
         fake_version=args.fake_version,
         fake_nightly=args.fake_nightly,
         force_wizard=args.wizard,
+        updated=args.updated,
     )
 
 
