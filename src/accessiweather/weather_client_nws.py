@@ -1311,6 +1311,18 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
         else:
             logger.debug("Parsed alert without ID, will generate unique ID")
 
+    # Deduplicate by alert ID, keeping first occurrence
+    seen_ids: set[str] = set()
+    deduped: list[WeatherAlert] = []
+    for alert in alerts:
+        if alert.id and alert.id in seen_ids:
+            logger.debug(f"Skipping duplicate alert ID: {alert.id}")
+            continue
+        if alert.id:
+            seen_ids.add(alert.id)
+        deduped.append(alert)
+    alerts = deduped
+
     logger.info(f"Parsed {len(alerts)} alerts from NWS API")
     return WeatherAlerts(alerts=alerts)
 
