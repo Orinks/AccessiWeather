@@ -496,9 +496,10 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["alert_radius_type"] = wx.Choice(
             panel,
             choices=[
-                "Point (recommended)",
-                "Zone",
-                "State",
+                "County (recommended — alerts for your county only)",
+                "Point (exact coordinate — may miss alerts)",
+                "Zone (NWS forecast zone — slightly broader than county)",
+                "State (entire state — noisy)",
             ],
         )
         row_area.Add(self._controls["alert_radius_type"], 0)
@@ -1365,8 +1366,8 @@ class SettingsDialogSimple(wx.Dialog):
                 getattr(settings, "alert_notifications_enabled", True)
             )
             # Alert radius type: map value to choice index
-            radius_type = getattr(settings, "alert_radius_type", "point")
-            radius_type_map = {"point": 0, "zone": 1, "state": 2}
+            radius_type = getattr(settings, "alert_radius_type", "county")
+            radius_type_map = {"county": 0, "point": 1, "zone": 2, "state": 3}
             self._controls["alert_radius_type"].SetSelection(radius_type_map.get(radius_type, 0))
             self._controls["notify_extreme"].SetValue(
                 getattr(settings, "alert_notify_extreme", True)
@@ -1562,7 +1563,7 @@ class SettingsDialogSimple(wx.Dialog):
                 # Notifications
                 "enable_alerts": self._controls["enable_alerts"].GetValue(),
                 "alert_notifications_enabled": self._controls["alert_notif"].GetValue(),
-                "alert_radius_type": ["point", "zone", "state"][
+                "alert_radius_type": ["county", "point", "zone", "state"][
                     self._controls["alert_radius_type"].GetSelection()
                 ],
                 "alert_notify_extreme": self._controls["notify_extreme"].GetValue(),

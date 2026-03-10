@@ -120,7 +120,7 @@ class AppSettings:
     github_app_id: str = ""
     github_app_private_key: str = ""
     github_app_installation_id: str = ""
-    alert_radius_type: str = "point"  # "point", "zone", or "state"
+    alert_radius_type: str = "county"  # "county", "point", "zone", or "state"
     alert_notifications_enabled: bool = True
     alert_notify_extreme: bool = True
     alert_notify_severe: bool = True
@@ -312,9 +312,9 @@ class AppSettings:
                 setattr(self, setting_name, 180)
 
         elif setting_name == "alert_radius_type":
-            valid_types = {"point", "zone", "state"}
+            valid_types = {"county", "point", "zone", "state"}
             if value not in valid_types:
-                setattr(self, setting_name, "point")
+                setattr(self, setting_name, "county")
 
         elif setting_name == "openmeteo_weather_model":
             valid_models = {
@@ -477,7 +477,7 @@ class AppSettings:
             notify_severe_risk_change=cls._as_bool(data.get("notify_severe_risk_change"), False),
             event_check_interval_minutes=data.get("event_check_interval_minutes", 2),
             github_backend_url=data.get("github_backend_url", ""),
-            alert_radius_type=data.get("alert_radius_type", "point"),
+            alert_radius_type=data.get("alert_radius_type", "county"),
             alert_notifications_enabled=cls._as_bool(data.get("alert_notifications_enabled"), True),
             alert_notify_extreme=cls._as_bool(data.get("alert_notify_extreme"), True),
             alert_notify_severe=cls._as_bool(data.get("alert_notify_severe"), True),

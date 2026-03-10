@@ -1009,7 +1009,7 @@ class WeatherClient:
 
     async def _get_nws_alerts(self, location: Location) -> WeatherAlerts | None:
         """Delegate to the NWS client module."""
-        alert_radius_type = getattr(self.settings, "alert_radius_type", "point")
+        alert_radius_type = getattr(self.settings, "alert_radius_type", "county")
         return await nws_client.get_nws_alerts(
             location,
             self.nws_base_url,

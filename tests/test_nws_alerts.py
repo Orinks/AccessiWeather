@@ -250,6 +250,7 @@ class TestGetNwsAlertsParameters:
                 nws_base_url="https://api.weather.gov",
                 user_agent="Test/1.0",
                 timeout=10.0,
+                alert_radius_type="point",
             )
 
             # Verify the request was made
@@ -311,6 +312,7 @@ class TestGetNwsAlertsParameters:
                 nws_base_url="https://api.weather.gov",
                 user_agent="Test/1.0",
                 timeout=10.0,
+                alert_radius_type="point",
             )
 
             # Verify the request was made
