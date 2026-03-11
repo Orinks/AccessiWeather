@@ -1491,12 +1491,13 @@ class AccessiWeatherApp(wx.App):
     def _start_background_updates(self) -> None:
         """Start split background timers for full refreshes and lightweight event checks."""
         try:
+            from .constants import ALERT_POLL_INTERVAL_SECONDS
+
             self._stop_background_updates()
             settings = self.config_manager.get_settings()
             interval_minutes = getattr(settings, "update_interval_minutes", 10)
-            event_interval_minutes = getattr(settings, "event_check_interval_minutes", 2)
             interval_ms = interval_minutes * 60 * 1000
-            event_interval_ms = event_interval_minutes * 60 * 1000
+            event_interval_ms = ALERT_POLL_INTERVAL_SECONDS * 1000
 
             self._update_timer = wx.Timer()
             self._update_timer.Bind(wx.EVT_TIMER, self._on_background_update)
@@ -1507,9 +1508,9 @@ class AccessiWeatherApp(wx.App):
             self._event_check_timer.Start(event_interval_ms)
 
             logger.info(
-                "Background updates started (weather every %s minutes, events every %s minutes)",
+                "Background updates started (weather every %s minutes, events every %ss)",
                 interval_minutes,
-                event_interval_minutes,
+                ALERT_POLL_INTERVAL_SECONDS,
             )
         except Exception as e:
             logger.error(f"Failed to start background updates: {e}")
