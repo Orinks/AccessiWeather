@@ -1,4 +1,5 @@
-"""Surgical coverage tests for PR #449 changed lines.
+"""
+Surgical coverage tests for PR #449 changed lines.
 
 Targets uncovered lines identified by diff-cover:
 - src/accessiweather/models/alerts.py line 37 (references=None branch)
@@ -11,7 +12,6 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import httpx
 import pytest
 
 from accessiweather.models.alerts import WeatherAlert
