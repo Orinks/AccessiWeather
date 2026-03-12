@@ -167,6 +167,7 @@ def _alert_is_recently_issued(alert: WeatherAlert | None, max_age_minutes: int =
 def diff_alerts(
     previous: WeatherAlerts | None,
     current: WeatherAlerts | None,
+    confirmed_cancel_ids: set[str] | None = None,
 ) -> AlertLifecycleDiff:
     """
     Compare two alert snapshots and return a structured diff.
@@ -174,6 +175,11 @@ def diff_alerts(
     Args:
         previous: The earlier snapshot (or None if no history).
         current:  The latest snapshot (or None if alerts are unavailable).
+        confirmed_cancel_ids: Set of alert IDs confirmed cancelled via the NWS
+            cancel endpoint. NWS alerts that disappear but are not in this set
+            are silently suppressed (transient disappearance / Update supersession).
+            If None, all NWS cancels are suppressed (safe default when the cancel
+            endpoint could not be reached). Non-NWS alerts ignore this parameter.
 
     Returns:
         An AlertLifecycleDiff describing what changed.
@@ -212,13 +218,28 @@ def diff_alerts(
     # Cancelled: in previous but not current
     for alert_id, prev_alert in prev_map.items():
         if alert_id not in curr_map:
-            cancelled_changes.append(
-                AlertChange(
-                    kind=AlertChangeKind.CANCELLED,
-                    alert_id=alert_id,
-                    title=prev_alert.title or "",
+            if prev_alert.source == "NWS":
+                # NWS alerts: require explicit cancel confirmation via the NWS cancel endpoint.
+                # If confirmed_cancel_ids is None (not fetched): suppress all NWS cancels.
+                # If provided: only notify if this alert ID is confirmed cancelled.
+                if confirmed_cancel_ids is not None and alert_id in confirmed_cancel_ids:
+                    cancelled_changes.append(
+                        AlertChange(
+                            kind=AlertChangeKind.CANCELLED,
+                            alert_id=alert_id,
+                            title=prev_alert.title or "",
+                        )
+                    )
+                # else: silently suppress (transient / Update supersession / stale cache)
+            else:
+                # Non-NWS sources (VisualCrossing, etc.): disappear = cancelled
+                cancelled_changes.append(
+                    AlertChange(
+                        kind=AlertChangeKind.CANCELLED,
+                        alert_id=alert_id,
+                        title=prev_alert.title or "",
+                    )
                 )
-            )
 
     # Changed: in both maps -- classify into escalated / updated / extended
     for alert_id, alert in curr_map.items():
@@ -271,28 +292,6 @@ def diff_alerts(
     # enter the known-set without firing notifications.
     if previous is None:
         new_changes = [c for c in new_changes if _alert_is_recently_issued(c.alert)]
-
-    # Bug fix 2: Suppress false "cancelled" notifications when NWS cancels and
-    # reissues an alert with a new ID. If a cancelled alert and a new alert share
-    # the same event type AND have overlapping areas, treat it as an in-place
-    # reissue — suppress the cancel notification, keep the new alert.
-    suppressed_cancel_ids: set[str] = set()
-    for cancelled in cancelled_changes:
-        cancelled_alert = prev_map.get(cancelled.alert_id)
-        if not cancelled_alert:
-            continue
-        for new_change in new_changes:
-            new_alert = new_change.alert
-            if new_alert is None:
-                continue
-            if (
-                (cancelled_alert.event or "").lower() == (new_alert.event or "").lower()
-                and cancelled_alert.event is not None
-                and set(cancelled_alert.areas or []) & set(new_alert.areas or [])
-            ):
-                suppressed_cancel_ids.add(cancelled.alert_id)
-                break
-    cancelled_changes = [c for c in cancelled_changes if c.alert_id not in suppressed_cancel_ids]
 
     summary = _build_summary(
         new_changes, updated_changes, escalated_changes, extended_changes, cancelled_changes

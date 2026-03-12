@@ -835,6 +835,51 @@ async def get_nws_alerts(
         return WeatherAlerts(alerts=[])
 
 
+async def fetch_nws_cancel_references(
+    nws_base_url: str,
+    user_agent: str,
+    timeout: float,
+    lookback_minutes: int = 15,
+    client: httpx.AsyncClient | None = None,
+) -> set[str]:
+    """
+    Fetch recent NWS Cancel messages and return the set of alert IDs they reference.
+
+    Queries GET /alerts?message_type=cancel&start=<lookback ago>&end=<now>.
+    Returns set of all referenced alert IDs (from properties.references[].identifier or @id).
+    On any failure, returns empty set (safe default: caller suppresses ambiguous cancels).
+    """
+    try:
+        now = datetime.now(UTC)
+        start = now - timedelta(minutes=lookback_minutes)
+        start_str = start.strftime("%Y-%m-%dT%H:%M:%SZ")
+        end_str = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+        url = f"{nws_base_url}/alerts"
+        params = {"message_type": "cancel", "start": start_str, "end": end_str}
+        headers = {"User-Agent": user_agent}
+        if client is not None:
+            response = await _client_get(client, url, headers=headers, params=params)
+            response.raise_for_status()
+            data = response.json()
+        else:
+            async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+                response = await new_client.get(url, params=params, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+        referenced_ids: set[str] = set()
+        for feature in data.get("features", []):
+            props = feature.get("properties", {})
+            for ref in props.get("references", []):
+                ref_id = ref.get("identifier") or ref.get("@id") or ref.get("id")
+                if ref_id:
+                    referenced_ids.add(ref_id)
+        logger.debug(f"Fetched {len(referenced_ids)} NWS cancel references")
+        return referenced_ids
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"Failed to fetch NWS cancel references: {exc}")
+        return set()
+
+
 @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
 async def get_nws_hourly_forecast(
     location: Location,
@@ -1286,6 +1331,12 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
             except ValueError:
                 logger.warning(f"Failed to parse effective time: {props['effective']}")
 
+        references = []
+        for ref in props.get("references", []):
+            ref_id = ref.get("identifier") or ref.get("@id") or ref.get("id")
+            if ref_id:
+                references.append(ref_id)
+
         alert = WeatherAlert(
             title=props.get("headline", "Weather Alert"),
             description=props.get("description", ""),
@@ -1300,6 +1351,7 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
             sent=sent,
             effective=effective,
             areas=props.get("areaDesc", "").split("; ") if props.get("areaDesc") else [],
+            references=references,
             id=alert_id,
             source="NWS",
             message_type=props.get("messageType"),

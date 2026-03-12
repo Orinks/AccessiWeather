@@ -25,6 +25,7 @@ class WeatherAlert:
     sent: datetime | None = None
     effective: datetime | None = None
     areas: list[str] = field(default_factory=list)
+    references: list[str] = field(default_factory=list)
     id: str | None = None
     source: str | None = None
     message_type: str | None = None  # e.g. "Alert", "Update", "Cancel"
@@ -32,6 +33,8 @@ class WeatherAlert:
     def __post_init__(self):
         if self.areas is None:
             self.areas = []
+        if self.references is None:
+            self.references = []
 
     def get_unique_id(self) -> str:
         """

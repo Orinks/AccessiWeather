@@ -529,108 +529,75 @@ class TestDiffAlertsFirstLoadStaleFilter:
 
 
 # ---------------------------------------------------------------------------
-# Bug fix: cancel+reissue suppression
+# Cancellation verification via NWS cancel endpoint
 # ---------------------------------------------------------------------------
 
 
-class TestDiffAlertsCancelReissueSuppression:
-    def test_cancel_reissue_same_event_overlapping_areas_suppresses_cancel(self):
-        """Cancel+reissue with same event and overlapping areas suppresses cancel."""
-        old_alert = WeatherAlert(
-            title="Flood Warning",
-            description="Flooding expected.",
-            severity="Severe",
-            urgency="Immediate",
-            id="old-flood-1",
-            event="Flood Warning",
-            areas=["County A", "County B"],
-        )
-        new_alert = WeatherAlert(
-            title="Flood Warning",
-            description="Updated flooding info.",
-            severity="Severe",
-            urgency="Immediate",
-            id="new-flood-2",
-            event="Flood Warning",
-            areas=["County B", "County C"],
-        )
-        diff = diff_alerts(alerts(old_alert), alerts(new_alert))
-        # Cancel should be suppressed, new alert should remain
+def make_nws_alert(
+    alert_id: str,
+    title: str = "Test NWS Alert",
+    event: str = "Tornado Warning",
+) -> WeatherAlert:
+    return WeatherAlert(
+        title=title,
+        description="desc",
+        event=event,
+        areas=["County A"],
+        id=alert_id,
+        source="NWS",
+        expires=datetime.now(UTC) + timedelta(hours=1),
+    )
+
+
+class TestCancellationVerification:
+    def test_genuine_cancel_fires_notification(self):
+        """NWS alert in confirmed_cancel_ids → cancel notification fires."""
+        prev_snap = alerts(make_nws_alert("NWS-1"))
+        curr_snap = alerts()
+        diff = diff_alerts(prev_snap, curr_snap, confirmed_cancel_ids={"NWS-1"})
+        assert len(diff.cancelled_alerts) == 1
+        assert diff.cancelled_alerts[0].alert_id == "NWS-1"
+
+    def test_alert_disappears_not_in_cancel_list_suppressed(self):
+        """NWS alert disappears but not in confirmed_cancel_ids → suppressed."""
+        prev_snap = alerts(make_nws_alert("NWS-1"))
+        curr_snap = alerts()
+        diff = diff_alerts(prev_snap, curr_snap, confirmed_cancel_ids=set())
+        assert len(diff.cancelled_alerts) == 0
+
+    def test_confirmed_cancel_ids_none_suppresses_nws(self):
+        """confirmed_cancel_ids=None → NWS cancels suppressed (safe default)."""
+        prev_snap = alerts(make_nws_alert("NWS-1"))
+        curr_snap = alerts()
+        diff = diff_alerts(prev_snap, curr_snap, confirmed_cancel_ids=None)
+        assert len(diff.cancelled_alerts) == 0
+
+    def test_vc_alert_cancel_fires_without_confirmation(self):
+        """VisualCrossing alerts: disappear = cancelled regardless of confirmed_cancel_ids."""
+        vc = WeatherAlert(title="VC", description="d", id="VC-1", source="VisualCrossing")
+        prev_snap = alerts(vc)
+        curr_snap = alerts()
+        diff = diff_alerts(prev_snap, curr_snap, confirmed_cancel_ids=None)
+        assert len(diff.cancelled_alerts) == 1
+        assert diff.cancelled_alerts[0].alert_id == "VC-1"
+
+    def test_stale_cache_flicker_no_notification(self):
+        """Alert disappears then reappears → no cancel notification."""
+        a = make_nws_alert("NWS-1")
+        prev_snap = alerts(a)
+        curr_snap = alerts(a)
+        diff = diff_alerts(prev_snap, curr_snap, confirmed_cancel_ids=set())
+        assert len(diff.cancelled_alerts) == 0
+
+    def test_update_supersession_no_cancel(self):
+        """Alert replaced by new ID (NWS Update pattern) → old ID suppressed."""
+        old = make_nws_alert("NWS-OLD")
+        new = make_nws_alert("NWS-NEW")
+        prev_snap = alerts(old)
+        curr_snap = alerts(new)
+        diff = diff_alerts(prev_snap, curr_snap, confirmed_cancel_ids={"NWS-UNRELATED"})
         assert len(diff.cancelled_alerts) == 0
         assert len(diff.new_alerts) == 1
-        assert diff.new_alerts[0].alert_id == "new-flood-2"
-
-    def test_cancel_different_event_not_suppressed(self):
-        """Cancel for a different event type should NOT be suppressed."""
-        old_alert = WeatherAlert(
-            title="Flood Warning",
-            description="Flooding expected.",
-            severity="Severe",
-            urgency="Immediate",
-            id="old-flood-1",
-            event="Flood Warning",
-            areas=["County A"],
-        )
-        new_alert = WeatherAlert(
-            title="Tornado Warning",
-            description="Tornado spotted.",
-            severity="Extreme",
-            urgency="Immediate",
-            id="new-tornado-1",
-            event="Tornado Warning",
-            areas=["County A"],
-        )
-        diff = diff_alerts(alerts(old_alert), alerts(new_alert))
-        assert len(diff.cancelled_alerts) == 1
-        assert len(diff.new_alerts) == 1
-
-    def test_cancel_no_overlapping_areas_not_suppressed(self):
-        """Cancel with same event but no overlapping areas should NOT be suppressed."""
-        old_alert = WeatherAlert(
-            title="Flood Warning",
-            description="Flooding expected.",
-            severity="Severe",
-            urgency="Immediate",
-            id="old-flood-1",
-            event="Flood Warning",
-            areas=["County A"],
-        )
-        new_alert = WeatherAlert(
-            title="Flood Warning",
-            description="Different area flooding.",
-            severity="Severe",
-            urgency="Immediate",
-            id="new-flood-2",
-            event="Flood Warning",
-            areas=["County X"],
-        )
-        diff = diff_alerts(alerts(old_alert), alerts(new_alert))
-        assert len(diff.cancelled_alerts) == 1
-        assert len(diff.new_alerts) == 1
-
-    def test_cancel_reissue_with_none_event_not_suppressed(self):
-        """Alerts with None event should not match for suppression."""
-        old_alert = WeatherAlert(
-            title="Some Alert",
-            description="Something.",
-            severity="Moderate",
-            urgency="Expected",
-            id="old-1",
-            event=None,
-            areas=["County A"],
-        )
-        new_alert = WeatherAlert(
-            title="Some Alert",
-            description="Something new.",
-            severity="Moderate",
-            urgency="Expected",
-            id="new-1",
-            event=None,
-            areas=["County A"],
-        )
-        diff = diff_alerts(alerts(old_alert), alerts(new_alert))
-        # Both have event=None → should NOT be suppressed (guard clause)
-        assert len(diff.cancelled_alerts) == 1
 
 
 # ---------------------------------------------------------------------------
