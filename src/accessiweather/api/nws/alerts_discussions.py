@@ -5,8 +5,12 @@ This module handles weather alerts, forecast discussions, and national
 weather products from various centers.
 """
 
+from __future__ import annotations
+
 import logging
 from typing import Any, cast
+
+import httpx
 
 from accessiweather.api_client import ApiClientError, NoaaApiError
 from accessiweather.weather_gov_api_client.api.default import alerts_active, alerts_active_zone
@@ -27,6 +31,53 @@ class NwsAlertsDiscussions:
 
         """
         self.wrapper = wrapper_instance
+        # Conditional GET state for alert polling
+        self._alert_etag: str | None = None
+        self._alert_last_modified: str | None = None
+        self._cached_alert_response: dict[str, Any] | None = None
+
+    def reset_conditional_cache(self) -> None:
+        """Reset conditional GET cache state (e.g. when location changes)."""
+        self._alert_etag = None
+        self._alert_last_modified = None
+        self._cached_alert_response = None
+
+    def _fetch_alerts_conditional(self, url: str) -> dict[str, Any]:
+        """
+        Fetch alerts using HTTP conditional GET (ETag / Last-Modified).
+
+        On 304 Not Modified, returns the previously cached response.
+        On 200, stores new ETag/Last-Modified headers and caches the response.
+        Gracefully degrades when the server omits caching headers.
+        """
+        self.wrapper._rate_limit()
+
+        headers = {"User-Agent": f"{self.wrapper.user_agent} ({self.wrapper.contact_info})"}
+        if self._alert_etag:
+            headers["If-None-Match"] = self._alert_etag
+        if self._alert_last_modified:
+            headers["If-Modified-Since"] = self._alert_last_modified
+
+        with httpx.Client(timeout=httpx.Timeout(10.0), follow_redirects=True) as client:
+            response = client.get(url, headers=headers)
+
+            if response.status_code == 304 and self._cached_alert_response is not None:
+                logger.debug("Alerts not modified (304), returning cached data")
+                return self._cached_alert_response
+
+            response.raise_for_status()
+
+            # Store conditional GET headers for next request
+            etag = response.headers.get("ETag")
+            last_modified = response.headers.get("Last-Modified")
+            if etag:
+                self._alert_etag = etag
+            if last_modified:
+                self._alert_last_modified = last_modified
+
+            data = response.json()
+            self._cached_alert_response = data
+            return data
 
     def get_alerts(
         self,
@@ -69,10 +120,9 @@ class NwsAlertsDiscussions:
                 )
 
                 def fetch_data() -> dict[str, Any]:
-                    self.wrapper._rate_limit()
                     try:
                         url = f"{self.wrapper.core_client.BASE_URL}/alerts/active?point={lat},{lon}"
-                        response = self.wrapper._fetch_url(url)
+                        response = self._fetch_alerts_conditional(url)
                         return self._transform_alerts_data(response)
                     except Exception as e:
                         logger.error(f"Error getting alerts for point ({lat}, {lon}): {str(e)}")
@@ -129,12 +179,11 @@ class NwsAlertsDiscussions:
                 cache_key = self.wrapper._generate_cache_key("alerts_state", {"state": location_id})
 
                 def fetch_data() -> dict[str, Any]:
-                    self.wrapper._rate_limit()
                     try:
                         url = (
                             f"{self.wrapper.core_client.BASE_URL}/alerts/active?area={location_id}"
                         )
-                        response = self.wrapper._fetch_url(url)
+                        response = self._fetch_alerts_conditional(url)
                         return self._transform_alerts_data(response)
                     except Exception as e:
                         logger.error(f"Error getting alerts for state {location_id}: {str(e)}")
@@ -158,10 +207,9 @@ class NwsAlertsDiscussions:
                 )
 
                 def fetch_data() -> dict[str, Any]:
-                    self.wrapper._rate_limit()
                     try:
                         url = f"{self.wrapper.core_client.BASE_URL}/alerts/active?point={lat},{lon}&radius={radius}"
-                        response = self.wrapper._fetch_url(url)
+                        response = self._fetch_alerts_conditional(url)
                         return self._transform_alerts_data(response)
                     except Exception as e:
                         logger.error(f"Error getting alerts for point ({lat}, {lon}): {str(e)}")
