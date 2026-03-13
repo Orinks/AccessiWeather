@@ -105,12 +105,21 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     # Lazy import alert components
     from .alert_manager import AlertManager
     from .alert_notification_system import AlertNotificationSystem
+    from .weather_event_pipeline import WeatherEventDispatcher, WeatherEventStore
+
+    app.event_dispatcher = WeatherEventDispatcher(
+        WeatherEventStore(max_size=300),
+        notifier=app._notifier,
+    )
 
     config_dir_str = str(app.paths.config)
     alert_settings = config.settings.to_alert_settings()
     app.alert_manager = AlertManager(config_dir_str, alert_settings)
     app.alert_notification_system = AlertNotificationSystem(
-        app.alert_manager, app._notifier, config.settings
+        app.alert_manager,
+        app._notifier,
+        config.settings,
+        event_dispatcher=app.event_dispatcher,
     )
 
     # Defer weather history service initialization
