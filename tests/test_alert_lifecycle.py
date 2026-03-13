@@ -8,6 +8,7 @@ from accessiweather.alert_lifecycle import (
     AlertChange,
     AlertChangeKind,
     AlertLifecycleDiff,
+    _alert_is_recently_issued,
     compute_lifecycle_labels,
     diff_alerts,
 )
@@ -449,3 +450,197 @@ class TestComputeLifecycleLabels:
         }
         assert "nws-c" not in labels
         assert "vc-1" not in labels
+
+
+# ---------------------------------------------------------------------------
+# Bug fix: first-load stale alerts should not fire "New" notifications
+# ---------------------------------------------------------------------------
+
+
+class TestDiffAlertsFirstLoadStaleFilter:
+    def test_first_load_old_alerts_not_new(self):
+        """Alerts active for hours should not appear as NEW on first load."""
+        old_alert = WeatherAlert(
+            title="Heat Advisory",
+            description="Excessive heat.",
+            severity="Moderate",
+            urgency="Expected",
+            id="ha1",
+            effective=datetime.now(UTC) - timedelta(hours=2),
+        )
+        diff = diff_alerts(None, alerts(old_alert))
+        assert len(diff.new_alerts) == 0
+
+    def test_first_load_recent_alerts_are_new(self):
+        """Alerts issued within 10 minutes should appear as NEW on first load."""
+        recent_alert = WeatherAlert(
+            title="Tornado Warning",
+            description="Take shelter.",
+            severity="Extreme",
+            urgency="Immediate",
+            id="tw1",
+            effective=datetime.now(UTC) - timedelta(minutes=3),
+        )
+        diff = diff_alerts(None, alerts(recent_alert))
+        assert len(diff.new_alerts) == 1
+        assert diff.new_alerts[0].alert_id == "tw1"
+
+    def test_first_load_no_effective_assumes_new(self):
+        """Alert without effective/onset timestamps should be treated as new."""
+        alert = make_alert("Unknown Alert", alert_id="ua1")
+        diff = diff_alerts(None, alerts(alert))
+        assert len(diff.new_alerts) == 1
+
+    def test_second_load_old_alert_still_detected(self):
+        """With a real previous snapshot (empty), old alerts should be detected as NEW."""
+        old_alert = WeatherAlert(
+            title="Heat Advisory",
+            description="Excessive heat.",
+            severity="Moderate",
+            urgency="Expected",
+            id="ha1",
+            effective=datetime.now(UTC) - timedelta(hours=2),
+        )
+        # previous is an empty WeatherAlerts, NOT None — the filter doesn't apply
+        diff = diff_alerts(alerts(), alerts(old_alert))
+        assert len(diff.new_alerts) == 1
+
+    def test_first_load_mixed_old_and_new(self):
+        """Only recent alerts fire notifications; old ones silently enter known-set."""
+        old_alert = WeatherAlert(
+            title="Heat Advisory",
+            description="Excessive heat.",
+            severity="Moderate",
+            urgency="Expected",
+            id="ha1",
+            effective=datetime.now(UTC) - timedelta(hours=5),
+        )
+        recent_alert = WeatherAlert(
+            title="Tornado Warning",
+            description="Take shelter.",
+            severity="Extreme",
+            urgency="Immediate",
+            id="tw1",
+            effective=datetime.now(UTC) - timedelta(minutes=2),
+        )
+        diff = diff_alerts(None, alerts(old_alert, recent_alert))
+        assert len(diff.new_alerts) == 1
+        assert diff.new_alerts[0].alert_id == "tw1"
+
+
+# ---------------------------------------------------------------------------
+# Cancellation verification via NWS cancel endpoint
+# ---------------------------------------------------------------------------
+
+
+def make_nws_alert(
+    alert_id: str,
+    title: str = "Test NWS Alert",
+    event: str = "Tornado Warning",
+) -> WeatherAlert:
+    return WeatherAlert(
+        title=title,
+        description="desc",
+        event=event,
+        areas=["County A"],
+        id=alert_id,
+        source="NWS",
+        expires=datetime.now(UTC) + timedelta(hours=1),
+    )
+
+
+class TestCancellationVerification:
+    def test_genuine_cancel_fires_notification(self):
+        """NWS alert in confirmed_cancel_ids → cancel notification fires."""
+        prev_snap = alerts(make_nws_alert("NWS-1"))
+        curr_snap = alerts()
+        diff = diff_alerts(prev_snap, curr_snap, confirmed_cancel_ids={"NWS-1"})
+        assert len(diff.cancelled_alerts) == 1
+        assert diff.cancelled_alerts[0].alert_id == "NWS-1"
+
+    def test_alert_disappears_not_in_cancel_list_suppressed(self):
+        """NWS alert disappears but not in confirmed_cancel_ids → suppressed."""
+        prev_snap = alerts(make_nws_alert("NWS-1"))
+        curr_snap = alerts()
+        diff = diff_alerts(prev_snap, curr_snap, confirmed_cancel_ids=set())
+        assert len(diff.cancelled_alerts) == 0
+
+    def test_confirmed_cancel_ids_none_suppresses_nws(self):
+        """confirmed_cancel_ids=None → NWS cancels suppressed (safe default)."""
+        prev_snap = alerts(make_nws_alert("NWS-1"))
+        curr_snap = alerts()
+        diff = diff_alerts(prev_snap, curr_snap, confirmed_cancel_ids=None)
+        assert len(diff.cancelled_alerts) == 0
+
+    def test_vc_alert_cancel_fires_without_confirmation(self):
+        """VisualCrossing alerts: disappear = cancelled regardless of confirmed_cancel_ids."""
+        vc = WeatherAlert(title="VC", description="d", id="VC-1", source="VisualCrossing")
+        prev_snap = alerts(vc)
+        curr_snap = alerts()
+        diff = diff_alerts(prev_snap, curr_snap, confirmed_cancel_ids=None)
+        assert len(diff.cancelled_alerts) == 1
+        assert diff.cancelled_alerts[0].alert_id == "VC-1"
+
+    def test_stale_cache_flicker_no_notification(self):
+        """Alert disappears then reappears → no cancel notification."""
+        a = make_nws_alert("NWS-1")
+        prev_snap = alerts(a)
+        curr_snap = alerts(a)
+        diff = diff_alerts(prev_snap, curr_snap, confirmed_cancel_ids=set())
+        assert len(diff.cancelled_alerts) == 0
+
+    def test_update_supersession_no_cancel(self):
+        """Alert replaced by new ID (NWS Update pattern) → old ID suppressed."""
+        old = make_nws_alert("NWS-OLD")
+        new = make_nws_alert("NWS-NEW")
+        prev_snap = alerts(old)
+        curr_snap = alerts(new)
+        diff = diff_alerts(prev_snap, curr_snap, confirmed_cancel_ids={"NWS-UNRELATED"})
+        assert len(diff.cancelled_alerts) == 0
+        assert len(diff.new_alerts) == 1
+
+
+# ---------------------------------------------------------------------------
+# _alert_is_recently_issued helper
+# ---------------------------------------------------------------------------
+
+
+class TestAlertIsRecentlyIssued:
+    def test_recent_alert_returns_true(self):
+        alert = WeatherAlert(
+            title="Test",
+            description="Test",
+            effective=datetime.now(UTC) - timedelta(minutes=5),
+        )
+        assert _alert_is_recently_issued(alert) is True
+
+    def test_old_alert_returns_false(self):
+        alert = WeatherAlert(
+            title="Test",
+            description="Test",
+            effective=datetime.now(UTC) - timedelta(hours=1),
+        )
+        assert _alert_is_recently_issued(alert) is False
+
+    def test_no_timestamps_returns_true(self):
+        alert = WeatherAlert(title="Test", description="Test")
+        assert _alert_is_recently_issued(alert) is True
+
+    def test_none_alert_returns_true(self):
+        assert _alert_is_recently_issued(None) is True
+
+    def test_onset_used_when_no_effective(self):
+        alert = WeatherAlert(
+            title="Test",
+            description="Test",
+            onset=datetime.now(UTC) - timedelta(hours=2),
+        )
+        assert _alert_is_recently_issued(alert) is False
+
+    def test_naive_datetime_treated_as_utc(self):
+        alert = WeatherAlert(
+            title="Test",
+            description="Test",
+            effective=datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=2),
+        )
+        assert _alert_is_recently_issued(alert) is False

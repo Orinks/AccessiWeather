@@ -146,6 +146,16 @@ class WeatherClient:
         """Generate a unique key for a location to track in-flight requests."""
         return f"{location.name}:{location.latitude:.4f},{location.longitude:.4f}"
 
+    async def _fetch_nws_cancel_references(self) -> set[str]:
+        """Fetch recent NWS cancel references for verifying genuine cancellations."""
+        return await nws_client.fetch_nws_cancel_references(
+            self.nws_base_url,
+            self.user_agent,
+            self.timeout,
+            lookback_minutes=15,
+            client=self._get_http_client(),
+        )
+
     def _get_http_client(self) -> httpx.AsyncClient:
         """Get or create the reusable HTTP client with optimized connection pooling."""
         if self._http_client is None or getattr(self._http_client, "is_closed", False):
@@ -406,7 +416,10 @@ class WeatherClient:
 
             loc_key = self._location_key(location)
             previous_alerts = self._previous_alerts.get(loc_key)
-            weather_data.alert_lifecycle_diff = diff_alerts(previous_alerts, weather_data.alerts)
+            _cancel_refs = await self._fetch_nws_cancel_references()
+            weather_data.alert_lifecycle_diff = diff_alerts(
+                previous_alerts, weather_data.alerts, confirmed_cancel_ids=_cancel_refs
+            )
             if weather_data.alerts is not None:
                 self._previous_alerts[loc_key] = weather_data.alerts
         except Exception as exc:
@@ -563,7 +576,10 @@ class WeatherClient:
                 # Compute alert lifecycle diff for NWS single-source path
                 _nws_loc_key = self._location_key(location)
                 _nws_prev = self._previous_alerts.get(_nws_loc_key)
-                weather_data.alert_lifecycle_diff = diff_alerts(_nws_prev, alerts)
+                _cancel_refs = await self._fetch_nws_cancel_references()
+                weather_data.alert_lifecycle_diff = diff_alerts(
+                    _nws_prev, alerts, confirmed_cancel_ids=_cancel_refs
+                )
                 if alerts is not None:
                     self._previous_alerts[_nws_loc_key] = alerts
 
@@ -723,7 +739,8 @@ class WeatherClient:
         # Compute alert lifecycle diff (compare against previous fetch for this location)
         _loc_key = self._location_key(location)
         _prev_alerts = self._previous_alerts.get(_loc_key)
-        _alert_diff = diff_alerts(_prev_alerts, merged_alerts)
+        _cancel_refs = await self._fetch_nws_cancel_references()
+        _alert_diff = diff_alerts(_prev_alerts, merged_alerts, confirmed_cancel_ids=_cancel_refs)
         self._previous_alerts[_loc_key] = merged_alerts
 
         # Build source attribution

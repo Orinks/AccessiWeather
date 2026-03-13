@@ -16,7 +16,6 @@ def test_start_background_updates_uses_split_intervals(monkeypatch):
     app.config_manager = MagicMock()
     app.config_manager.get_settings.return_value = SimpleNamespace(
         update_interval_minutes=60,
-        event_check_interval_minutes=2,
     )
 
     weather_timer = MagicMock()
@@ -30,7 +29,10 @@ def test_start_background_updates_uses_split_intervals(monkeypatch):
     weather_timer.Bind.assert_called_once_with(wx.EVT_TIMER, app._on_background_update)
     weather_timer.Start.assert_called_once_with(60 * 60 * 1000)
     event_timer.Bind.assert_called_once_with(wx.EVT_TIMER, app._on_event_check_update)
-    event_timer.Start.assert_called_once_with(2 * 60 * 1000)
+    # Alert poll interval is hardcoded to 60 seconds
+    from accessiweather.constants import ALERT_POLL_INTERVAL_SECONDS
+
+    event_timer.Start.assert_called_once_with(ALERT_POLL_INTERVAL_SECONDS * 1000)
 
 
 def test_request_exit_stops_weather_and_event_timers():

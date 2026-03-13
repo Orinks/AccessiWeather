@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 
 from accessiweather.constants import SEVERITY_PRIORITY_MAP
@@ -148,9 +148,26 @@ def _build_summary(
     return ", ".join(parts) if parts else "No changes"
 
 
+def _alert_is_recently_issued(alert: WeatherAlert | None, max_age_minutes: int = 10) -> bool:
+    """Return True only if the alert was issued within *max_age_minutes*."""
+    if alert is None:
+        return True  # no alert object → assume new to be safe
+    effective_dt = alert.effective or alert.onset
+    if effective_dt is None:
+        return True  # no timestamp → assume new
+    try:
+        now = datetime.now(UTC)
+        if effective_dt.tzinfo is None:
+            effective_dt = effective_dt.replace(tzinfo=UTC)
+        return (now - effective_dt) <= timedelta(minutes=max_age_minutes)
+    except Exception:
+        return True  # parse error → assume new to be safe
+
+
 def diff_alerts(
     previous: WeatherAlerts | None,
     current: WeatherAlerts | None,
+    confirmed_cancel_ids: set[str] | None = None,
 ) -> AlertLifecycleDiff:
     """
     Compare two alert snapshots and return a structured diff.
@@ -158,6 +175,11 @@ def diff_alerts(
     Args:
         previous: The earlier snapshot (or None if no history).
         current:  The latest snapshot (or None if alerts are unavailable).
+        confirmed_cancel_ids: Set of alert IDs confirmed cancelled via the NWS
+            cancel endpoint. NWS alerts that disappear but are not in this set
+            are silently suppressed (transient disappearance / Update supersession).
+            If None, all NWS cancels are suppressed (safe default when the cancel
+            endpoint could not be reached). Non-NWS alerts ignore this parameter.
 
     Returns:
         An AlertLifecycleDiff describing what changed.
@@ -196,13 +218,28 @@ def diff_alerts(
     # Cancelled: in previous but not current
     for alert_id, prev_alert in prev_map.items():
         if alert_id not in curr_map:
-            cancelled_changes.append(
-                AlertChange(
-                    kind=AlertChangeKind.CANCELLED,
-                    alert_id=alert_id,
-                    title=prev_alert.title or "",
+            if prev_alert.source == "NWS":
+                # NWS alerts: require explicit cancel confirmation via the NWS cancel endpoint.
+                # If confirmed_cancel_ids is None (not fetched): suppress all NWS cancels.
+                # If provided: only notify if this alert ID is confirmed cancelled.
+                if confirmed_cancel_ids is not None and alert_id in confirmed_cancel_ids:
+                    cancelled_changes.append(
+                        AlertChange(
+                            kind=AlertChangeKind.CANCELLED,
+                            alert_id=alert_id,
+                            title=prev_alert.title or "",
+                        )
+                    )
+                # else: silently suppress (transient / Update supersession / stale cache)
+            else:
+                # Non-NWS sources (VisualCrossing, etc.): disappear = cancelled
+                cancelled_changes.append(
+                    AlertChange(
+                        kind=AlertChangeKind.CANCELLED,
+                        alert_id=alert_id,
+                        title=prev_alert.title or "",
+                    )
                 )
-            )
 
     # Changed: in both maps -- classify into escalated / updated / extended
     for alert_id, alert in curr_map.items():
@@ -249,6 +286,12 @@ def diff_alerts(
                     title=alert.title or "",
                 )
             )
+
+    # Bug fix 1: On first load (previous is None), suppress "New" notifications
+    # for alerts that have been active for more than 10 minutes. They silently
+    # enter the known-set without firing notifications.
+    if previous is None:
+        new_changes = [c for c in new_changes if _alert_is_recently_issued(c.alert)]
 
     summary = _build_summary(
         new_changes, updated_changes, escalated_changes, extended_changes, cancelled_changes

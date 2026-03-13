@@ -64,6 +64,7 @@ WINDOWS_APP_USER_MODEL_ID = "Orinks.AccessiWeather"
 
 # Default values for intervals
 UPDATE_INTERVAL = 15  # Default update interval in minutes
+ALERT_POLL_INTERVAL_SECONDS = 60  # Fixed alert polling interval (not user-configurable)
 
 # Validation limits
 MIN_UPDATE_INTERVAL = 1
