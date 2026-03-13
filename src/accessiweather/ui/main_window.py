@@ -790,6 +790,7 @@ class MainWindow(SizedFrame):
 
     def _on_about(self) -> None:
         """Show about dialog."""
+        from accessiweather import __version__
         from accessiweather.config_utils import is_portable_mode
 
         portable = is_portable_mode()
@@ -799,7 +800,7 @@ class MainWindow(SizedFrame):
         )
 
         wx.MessageBox(
-            "AccessiWeather\n\n"
+            f"AccessiWeather v{__version__}\n\n"
             "An accessible weather application with NOAA and Open-Meteo support.\n\n"
             "Built with wxPython for screen reader compatibility.\n\n"
             f"Mode: {mode_label}\n"
