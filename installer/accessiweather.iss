@@ -13,7 +13,7 @@
 ; Falls back to hardcoded default for local builds
 #define MyAppVersion "0.9.4"
 #ifexist "..\dist\version.txt"
-  #define MyAppVersion ReadIni("..\dist\version.txt", "version", "value", "0.4.3")
+  #define MyAppVersion ReadIni("..\dist\version.txt", "version", "value", "0.9.4")
 #endif
 #define MyAppPublisher "Orinks"
 #define MyAppURL "https://github.com/Orinks/AccessiWeather"
