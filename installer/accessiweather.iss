@@ -11,7 +11,7 @@
 #define MyAppName "AccessiWeather"
 ; Version is read from dist/version.txt (written by CI from pyproject.toml)
 ; Falls back to hardcoded default for local builds
-#define MyAppVersion "0.4.3"
+#define MyAppVersion "0.9.4"
 #ifexist "..\dist\version.txt"
   #define MyAppVersion ReadIni("..\dist\version.txt", "version", "value", "0.4.3")
 #endif
