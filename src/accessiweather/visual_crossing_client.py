@@ -22,7 +22,7 @@ from .models import (
 )
 from .utils.retry_utils import async_retry_with_backoff
 from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
-from .weather_client_parsers import describe_moon_phase
+from .weather_client_parsers import convert_f_to_c, degrees_to_cardinal, describe_moon_phase
 
 logger = logging.getLogger(__name__)
 
@@ -414,17 +414,17 @@ class VisualCrossingClient:
         location_tz = timezone(timedelta(hours=tz_offset_hours))
 
         temp_f = current.get("temp")
-        temp_c = self._convert_f_to_c(temp_f)
+        temp_c = convert_f_to_c(temp_f)
 
         humidity = current.get("humidity")
         humidity = round(humidity) if humidity is not None else None
 
         dewpoint_f = current.get("dew")
-        dewpoint_c = self._convert_f_to_c(dewpoint_f) if dewpoint_f is not None else None
+        dewpoint_c = convert_f_to_c(dewpoint_f) if dewpoint_f is not None else None
         if dewpoint_f is None and temp_f is not None and humidity is not None:
             dewpoint_f = calculate_dewpoint(temp_f, humidity, unit=TemperatureUnit.FAHRENHEIT)
             if dewpoint_f is not None:
-                dewpoint_c = self._convert_f_to_c(dewpoint_f)
+                dewpoint_c = convert_f_to_c(dewpoint_f)
 
         wind_speed_mph = current.get("windspeed")
         wind_speed_kph = wind_speed_mph * 1.60934 if wind_speed_mph is not None else None
@@ -439,7 +439,7 @@ class VisualCrossingClient:
         visibility_km = visibility_miles * 1.60934 if visibility_miles is not None else None
 
         feels_like_f = current.get("feelslike")
-        feels_like_c = self._convert_f_to_c(feels_like_f)
+        feels_like_c = convert_f_to_c(feels_like_f)
 
         sunrise_time = None
         sunset_time = None
@@ -472,10 +472,10 @@ class VisualCrossingClient:
         snow_depth_cm = snow_depth_in * 2.54 if snow_depth_in is not None else None
 
         wind_chill_f = current.get("windchill")
-        wind_chill_c = self._convert_f_to_c(wind_chill_f)
+        wind_chill_c = convert_f_to_c(wind_chill_f)
 
         heat_index_f = current.get("heatindex")
-        heat_index_c = self._convert_f_to_c(heat_index_f)
+        heat_index_c = convert_f_to_c(heat_index_f)
 
         precip_type = current.get("preciptype")
         precipitation_type = precip_type if isinstance(precip_type, list) else None
@@ -560,7 +560,7 @@ class VisualCrossingClient:
                 wind_speed=f"{day_data.get('windspeed', 0)} mph"
                 if day_data.get("windspeed")
                 else None,
-                wind_direction=self._degrees_to_cardinal(day_data.get("winddir")),
+                wind_direction=degrees_to_cardinal(day_data.get("winddir")),
                 icon=day_data.get("icon"),
                 precipitation_probability=day_data.get("precipprob"),
                 snowfall=day_data.get("snow"),
@@ -655,7 +655,7 @@ class VisualCrossingClient:
                     wind_speed=f"{hour_data.get('windspeed', 0)} mph"
                     if hour_data.get("windspeed")
                     else None,
-                    wind_direction=self._degrees_to_cardinal(hour_data.get("winddir")),
+                    wind_direction=degrees_to_cardinal(hour_data.get("winddir")),
                     icon=hour_data.get("icon"),
                     pressure_mb=hourly_pressure_mb,
                     pressure_in=hourly_pressure_in,
@@ -665,9 +665,9 @@ class VisualCrossingClient:
                     # Seasonal fields
                     snow_depth=hour_data.get("snowdepth"),
                     wind_chill_f=hourly_wind_chill_f,
-                    wind_chill_c=self._convert_f_to_c(hourly_wind_chill_f),
+                    wind_chill_c=convert_f_to_c(hourly_wind_chill_f),
                     heat_index_f=hourly_heat_index_f,
-                    heat_index_c=self._convert_f_to_c(hourly_heat_index_f),
+                    heat_index_c=convert_f_to_c(hourly_heat_index_f),
                     feels_like=hour_data.get("feelslike"),
                     visibility_miles=hourly_vis_miles,
                     visibility_km=hourly_vis_miles * 1.60934
@@ -844,33 +844,3 @@ class VisualCrossingClient:
         except (ValueError, TypeError) as e:
             logger.debug(f"Failed to parse VC time '{date_str}T{time_str}': {e}")
             return None
-
-    def _convert_f_to_c(self, fahrenheit: float | None) -> float | None:
-        """Convert Fahrenheit to Celsius."""
-        return (fahrenheit - 32) * 5 / 9 if fahrenheit is not None else None
-
-    def _degrees_to_cardinal(self, degrees: float | None) -> str | None:
-        """Convert wind direction degrees to cardinal direction."""
-        if degrees is None:
-            return None
-
-        directions = [
-            "N",
-            "NNE",
-            "NE",
-            "ENE",
-            "E",
-            "ESE",
-            "SE",
-            "SSE",
-            "S",
-            "SSW",
-            "SW",
-            "WSW",
-            "W",
-            "WNW",
-            "NW",
-            "NNW",
-        ]
-        index = round(degrees / 22.5) % 16
-        return directions[index]
