@@ -32,16 +32,41 @@ class TestVisualCrossingClientInit:
         client = VisualCrossingClient(api_key="key", user_agent="CustomApp/2.0")
         assert client.user_agent == "CustomApp/2.0"
 
-    def test_low_latency_endpoint(self):
-        """Test that low-latency mode uses timelinellx endpoint."""
-        client = VisualCrossingClient(api_key="key", use_low_latency=True)
-        assert "timelinellx" in client.base_url
-        assert "timeline/" not in client.base_url
-
-    def test_default_endpoint_not_low_latency(self):
-        """Test that default mode uses standard timeline endpoint."""
+    def test_starts_with_low_latency_endpoint(self):
+        """Test that client starts with low-latency timelinellx endpoint."""
         client = VisualCrossingClient(api_key="key")
-        assert "/timeline" in client.base_url
+        assert "timelinellx" in client.base_url
+
+    @pytest.mark.asyncio
+    async def test_falls_back_to_standard_on_failure(self):
+        """Test that client falls back to standard timeline on 404."""
+        mock_llx_response = MagicMock()
+        mock_llx_response.status_code = 404
+
+        mock_std_response = MagicMock()
+        mock_std_response.status_code = 200
+        mock_std_response.json.return_value = {
+            "currentConditions": {"temp": 72.0, "conditions": "Clear"},
+            "days": [{"datetime": "2024-01-01"}],
+        }
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+            mock_client.get.side_effect = [mock_llx_response, mock_std_response]
+
+            client = VisualCrossingClient(api_key="test-key")
+            result = await client.get_current_conditions(Location("NYC", 40.7, -74.0))
+
+        assert result is not None
+        assert client.base_url == client._STANDARD_URL
+        assert client._fell_back_to_standard is True
+
+    def test_fallback_is_sticky(self):
+        """Test that once fallen back, client stays on standard endpoint."""
+        client = VisualCrossingClient(api_key="key")
+        client._fell_back_to_standard = True
+        client.base_url = client._STANDARD_URL
         assert "timelinellx" not in client.base_url
 
 

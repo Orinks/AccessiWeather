@@ -40,21 +40,45 @@ class VisualCrossingApiError(Exception):
 class VisualCrossingClient:
     """Client for Visual Crossing Weather API."""
 
+    _BASE = "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services"
+    _LOW_LATENCY_URL = f"{_BASE}/timelinellx"
+    _STANDARD_URL = f"{_BASE}/timeline"
+
     def __init__(
         self,
         api_key: str,
         user_agent: str = "AccessiWeather/1.0",
-        use_low_latency: bool = False,
     ):
         """Initialize the instance."""
         self.api_key = api_key
         self.user_agent = user_agent
-        base_path = "timelinellx" if use_low_latency else "timeline"
-        self.base_url = (
-            "https://weather.visualcrossing.com/VisualCrossingWebServices"
-            f"/rest/services/{base_path}"
-        )
+        self.base_url = self._LOW_LATENCY_URL
+        self._fell_back_to_standard = False
         self.timeout = 15.0
+
+    async def _get(
+        self,
+        client: httpx.AsyncClient,
+        url: str,
+        params: dict,
+        headers: dict,
+    ) -> httpx.Response:
+        """Make a GET request, falling back from low-latency to standard endpoint."""
+        response = await client.get(url, params=params, headers=headers)
+
+        # If low-latency endpoint fails (404/5xx) and we haven't fallen back yet, retry
+        if (
+            not self._fell_back_to_standard
+            and self.base_url == self._LOW_LATENCY_URL
+            and response.status_code in {404, 500, 502, 503}
+        ):
+            logger.info("Low-latency endpoint unavailable, falling back to standard")
+            self.base_url = self._STANDARD_URL
+            self._fell_back_to_standard = True
+            fallback_url = url.replace("/timelinellx/", "/timeline/")
+            response = await client.get(fallback_url, params=params, headers=headers)
+
+        return response
 
     @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
     async def get_current_conditions(self, location: Location) -> CurrentConditions | None:
@@ -72,7 +96,7 @@ class VisualCrossingClient:
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 headers = {"User-Agent": self.user_agent}
-                response = await client.get(url, params=params, headers=headers)
+                response = await self._get(client, url, params, headers)
 
                 if response.status_code == 401:
                     raise VisualCrossingApiError("Invalid API key", response.status_code)
@@ -118,7 +142,7 @@ class VisualCrossingClient:
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 headers = {"User-Agent": self.user_agent}
-                response = await client.get(url, params=params, headers=headers)
+                response = await self._get(client, url, params, headers)
 
                 if response.status_code == 401:
                     raise VisualCrossingApiError("Invalid API key", response.status_code)
@@ -156,7 +180,7 @@ class VisualCrossingClient:
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 headers = {"User-Agent": self.user_agent}
-                response = await client.get(url, params=params, headers=headers)
+                response = await self._get(client, url, params, headers)
 
                 if response.status_code == 401:
                     raise VisualCrossingApiError("Invalid API key", response.status_code)
@@ -193,7 +217,7 @@ class VisualCrossingClient:
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 headers = {"User-Agent": self.user_agent}
-                response = await client.get(url, params=params, headers=headers)
+                response = await self._get(client, url, params, headers)
 
                 if response.status_code == 401:
                     raise VisualCrossingApiError("Invalid API key", response.status_code)
@@ -237,7 +261,7 @@ class VisualCrossingClient:
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 headers = {"User-Agent": self.user_agent}
-                response = await client.get(url, params=params, headers=headers)
+                response = await self._get(client, url, params, headers)
 
                 if response.status_code != 200:
                     return None
@@ -289,7 +313,7 @@ class VisualCrossingClient:
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 headers = {"User-Agent": self.user_agent}
-                response = await client.get(url, params=params, headers=headers)
+                response = await self._get(client, url, params, headers)
 
                 if response.status_code == 401:
                     raise VisualCrossingApiError("Invalid API key", response.status_code)
@@ -353,7 +377,7 @@ class VisualCrossingClient:
 
             async with httpx.AsyncClient(timeout=self.timeout * 2, follow_redirects=True) as client:
                 headers = {"User-Agent": self.user_agent}
-                response = await client.get(url, params=params, headers=headers)
+                response = await self._get(client, url, params, headers)
 
                 if response.status_code != 200:
                     logger.warning(f"Batch forecast failed: HTTP {response.status_code}")

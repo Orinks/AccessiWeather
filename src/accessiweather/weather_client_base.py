@@ -133,11 +133,7 @@ class WeatherClient:
             # Now we check the API key truthiness, which may trigger lazy keyring load
             api_key = self.visual_crossing_api_key
             if api_key:
-                self._visual_crossing_client = VisualCrossingClient(
-                    api_key,
-                    self.user_agent,
-                    use_low_latency=getattr(self.settings, "vc_use_low_latency", False),
-                )
+                self._visual_crossing_client = VisualCrossingClient(api_key, self.user_agent)
                 logger.debug("Visual Crossing client created lazily")
         return self._visual_crossing_client
 
