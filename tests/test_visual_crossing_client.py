@@ -32,6 +32,18 @@ class TestVisualCrossingClientInit:
         client = VisualCrossingClient(api_key="key", user_agent="CustomApp/2.0")
         assert client.user_agent == "CustomApp/2.0"
 
+    def test_low_latency_endpoint(self):
+        """Test that low-latency mode uses timelinellx endpoint."""
+        client = VisualCrossingClient(api_key="key", use_low_latency=True)
+        assert "timelinellx" in client.base_url
+        assert "timeline/" not in client.base_url
+
+    def test_default_endpoint_not_low_latency(self):
+        """Test that default mode uses standard timeline endpoint."""
+        client = VisualCrossingClient(api_key="key")
+        assert "/timeline" in client.base_url
+        assert "timelinellx" not in client.base_url
+
 
 class TestVisualCrossingParsers:
     """Tests for response parsing methods."""
@@ -53,6 +65,9 @@ class TestVisualCrossingParsers:
                 "pressure": 30.05,
                 "conditions": "Partly Cloudy",
                 "visibility": 10.0,
+                "cloudcover": 45.0,
+                "windgust": 22.0,
+                "precip": 0.1,
             },
             "days": [
                 {
@@ -71,6 +86,9 @@ class TestVisualCrossingParsers:
         assert current.humidity == 65
         assert current.wind_speed_mph == 10.0
         assert current.condition == "Partly Cloudy"
+        assert current.cloud_cover == 45.0
+        assert current.wind_gust_mph == 22.0
+        assert current.precipitation_in == 0.1
 
     def test_parse_forecast(self, client):
         """Test parsing forecast."""
@@ -85,6 +103,9 @@ class TestVisualCrossingParsers:
                     "windspeed": 10.0,
                     "winddir": 180,
                     "icon": "clear-day",
+                    "cloudcover": 30.0,
+                    "windgust": 18.0,
+                    "precip": 0.05,
                 },
                 {
                     "datetime": "2024-01-02",
@@ -95,6 +116,9 @@ class TestVisualCrossingParsers:
                     "windspeed": 8.0,
                     "winddir": 200,
                     "icon": "partly-cloudy-day",
+                    "cloudcover": 50.0,
+                    "windgust": 20.0,
+                    "precip": 0.1,
                 },
             ]
         }
@@ -105,6 +129,9 @@ class TestVisualCrossingParsers:
         assert forecast.periods[0].name == "Today"
         assert forecast.periods[0].temperature == 75.0
         assert forecast.periods[1].name == "Tomorrow"
+        assert forecast.periods[0].cloud_cover == 30.0
+        assert forecast.periods[0].wind_gust == "18.0 mph"
+        assert forecast.periods[0].precipitation_amount == 0.05
 
     def test_parse_hourly_forecast(self, client):
         """Test parsing hourly forecast."""
@@ -120,6 +147,9 @@ class TestVisualCrossingParsers:
                             "conditions": "Sunny",
                             "windspeed": 10.0,
                             "winddir": 180,
+                            "cloudcover": 10.0,
+                            "windgust": 15.0,
+                            "precip": 0.0,
                         },
                         {
                             "datetime": "13:00:00",
@@ -127,6 +157,9 @@ class TestVisualCrossingParsers:
                             "conditions": "Partly Cloudy",
                             "windspeed": 12.0,
                             "winddir": 190,
+                            "cloudcover": 40.0,
+                            "windgust": 20.0,
+                            "precip": 0.02,
                         },
                     ],
                 }
@@ -138,6 +171,12 @@ class TestVisualCrossingParsers:
         assert len(hourly.periods) == 2
         assert hourly.periods[0].temperature == 72.0
         assert hourly.periods[1].temperature == 74.0
+        assert hourly.periods[0].cloud_cover == 10.0
+        assert hourly.periods[0].wind_gust_mph == 15.0
+        assert hourly.periods[0].precipitation_amount == 0.0
+        assert hourly.periods[1].cloud_cover == 40.0
+        assert hourly.periods[1].wind_gust_mph == 20.0
+        assert hourly.periods[1].precipitation_amount == 0.02
 
     def test_parse_hourly_forecast_falls_back_to_tzoffset_when_zoneinfo_fails(self, client):
         """ZoneInfo failures should still produce timezone-aware hourly timestamps."""
@@ -458,3 +497,127 @@ class TestVisualCrossingApiCalls:
             # Should return empty alerts, not raise
             assert alerts is not None
             assert len(alerts.alerts) == 0
+
+    @pytest.mark.asyncio
+    async def test_get_air_quality(self):
+        """Test fetching air quality data from Visual Crossing."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "currentConditions": {
+                "datetime": "12:00:00",
+                "aqius": 42,
+                "pm2p5": 10.5,
+                "pm10": 22.0,
+                "o3": 35.0,
+            }
+        }
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+            mock_client.get.return_value = mock_response
+
+            client = VisualCrossingClient(api_key="test-key")
+            result = await client.get_air_quality(Location("NYC", 40.7, -74.0))
+
+        assert result is not None
+        assert result["aqius"] == 42
+        assert result["pm2p5"] == 10.5
+        assert result["o3"] == 35.0
+
+    @pytest.mark.asyncio
+    async def test_get_air_quality_failure(self):
+        """Test air quality returns None on API failure."""
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+            mock_client.get.return_value = mock_response
+
+            client = VisualCrossingClient(api_key="test-key")
+            result = await client.get_air_quality(Location("NYC", 40.7, -74.0))
+
+        assert result is None
+
+
+class TestVisualCrossingBatchQueries:
+    """Tests for batch location queries."""
+
+    @pytest.mark.asyncio
+    async def test_get_forecast_batch(self):
+        """Test batch forecast for multiple locations."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "locations": {
+                "40.7,-74.0": {
+                    "days": [
+                        {
+                            "datetime": "2024-01-01",
+                            "tempmax": 75,
+                            "tempmin": 55,
+                            "conditions": "Sunny",
+                        }
+                    ]
+                },
+                "34.0,-118.2": {
+                    "days": [
+                        {
+                            "datetime": "2024-01-01",
+                            "tempmax": 80,
+                            "tempmin": 60,
+                            "conditions": "Clear",
+                        }
+                    ]
+                },
+            }
+        }
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+            mock_client.get.return_value = mock_response
+
+            client = VisualCrossingClient(api_key="test-key")
+            locations = [
+                Location("NYC", 40.7, -74.0),
+                Location("LA", 34.0, -118.2),
+            ]
+            results = await client.get_forecast_batch(locations)
+
+        assert len(results) == 2
+        assert "40.7,-74.0" in results
+        assert "34.0,-118.2" in results
+
+    @pytest.mark.asyncio
+    async def test_get_forecast_batch_empty(self):
+        """Test batch forecast with empty list."""
+        client = VisualCrossingClient(api_key="test-key")
+        results = await client.get_forecast_batch([])
+        assert results == {}
+
+    @pytest.mark.asyncio
+    async def test_batch_url_format(self):
+        """Test that batch query uses pipe-separated coordinates."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"locations": {}}
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+            mock_client.get.return_value = mock_response
+
+            client = VisualCrossingClient(api_key="test-key")
+            await client.get_forecast_batch(
+                [
+                    Location("A", 40.7, -74.0),
+                    Location("B", 34.0, -118.2),
+                ]
+            )
+
+        call_url = mock_client.get.call_args[0][0]
+        assert "40.7,-74.0|34.0,-118.2" in call_url

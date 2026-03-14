@@ -40,12 +40,19 @@ class VisualCrossingApiError(Exception):
 class VisualCrossingClient:
     """Client for Visual Crossing Weather API."""
 
-    def __init__(self, api_key: str, user_agent: str = "AccessiWeather/1.0"):
+    def __init__(
+        self,
+        api_key: str,
+        user_agent: str = "AccessiWeather/1.0",
+        use_low_latency: bool = False,
+    ):
         """Initialize the instance."""
         self.api_key = api_key
         self.user_agent = user_agent
+        base_path = "timelinellx" if use_low_latency else "timeline"
         self.base_url = (
-            "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline"
+            "https://weather.visualcrossing.com/VisualCrossingWebServices"
+            f"/rest/services/{base_path}"
         )
         self.timeout = 15.0
 
@@ -60,7 +67,7 @@ class VisualCrossingClient:
                 "include": "current,days",
                 "numDays": 1,
                 "unitGroup": "us",  # Use US units (Fahrenheit, mph, inches)
-                "elements": "temp,feelslike,humidity,windspeed,winddir,pressure,conditions,datetime,sunrise,sunset,moonrise,moonset,moonphase,sunriseEpoch,sunsetEpoch,moonriseEpoch,moonsetEpoch,snowdepth,preciptype,windchill,heatindex,severerisk,visibility,uvindex,dew",
+                "elements": "temp,feelslike,humidity,windspeed,winddir,pressure,conditions,datetime,sunrise,sunset,moonrise,moonset,moonphase,sunriseEpoch,sunsetEpoch,moonriseEpoch,moonsetEpoch,snowdepth,preciptype,windchill,heatindex,severerisk,visibility,uvindex,dew,cloudcover,windgust,precip",
             }
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
@@ -106,7 +113,7 @@ class VisualCrossingClient:
                 "key": self.api_key,
                 "include": "days",
                 "unitGroup": "us",
-                "elements": "datetime,tempmax,tempmin,temp,conditions,description,windspeed,winddir,icon,precipprob,snow,uvindex,snowdepth,preciptype,windchill,heatindex,severerisk,visibility,feelslikemax,feelslikemin",
+                "elements": "datetime,tempmax,tempmin,temp,conditions,description,windspeed,winddir,icon,precipprob,snow,uvindex,snowdepth,preciptype,windchill,heatindex,severerisk,visibility,feelslikemax,feelslikemin,cloudcover,windgust,precip",
             }
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
@@ -144,7 +151,7 @@ class VisualCrossingClient:
                 "key": self.api_key,
                 "include": "hours",
                 "unitGroup": "us",
-                "elements": "datetime,temp,conditions,windspeed,winddir,icon,precipprob,snow,uvindex,snowdepth,preciptype,windchill,heatindex,visibility,feelslike,pressure",
+                "elements": "datetime,temp,conditions,windspeed,winddir,icon,precipprob,snow,uvindex,snowdepth,preciptype,windchill,heatindex,visibility,feelslike,pressure,cloudcover,windgust,precip",
             }
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
@@ -212,6 +219,59 @@ class VisualCrossingClient:
             return WeatherAlerts(alerts=[])
 
     @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
+    async def get_air_quality(self, location: Location) -> dict | None:
+        """
+        Get air quality data from Visual Crossing API.
+
+        Returns dict with available AQ keys (aqius, pm1, pm2p5, pm10,
+        o3, no2, so2, co) or None on failure.
+        """
+        try:
+            url = f"{self.base_url}/{location.latitude},{location.longitude}"
+            params = {
+                "key": self.api_key,
+                "include": "current",
+                "unitGroup": "us",
+                "elements": ("datetime,aqius,pm1,pm2p5,pm10,o3,no2,so2,co"),
+            }
+
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
+                headers = {"User-Agent": self.user_agent}
+                response = await client.get(url, params=params, headers=headers)
+
+                if response.status_code != 200:
+                    return None
+
+                data = response.json()
+                current = data.get("currentConditions", {})
+                if not current:
+                    return None
+
+                result = {}
+                for key in (
+                    "aqius",
+                    "pm1",
+                    "pm2p5",
+                    "pm10",
+                    "o3",
+                    "no2",
+                    "so2",
+                    "co",
+                ):
+                    val = current.get(key)
+                    if val is not None:
+                        result[key] = val
+
+                return result if result else None
+
+        except Exception:
+            logger.debug(
+                "Visual Crossing air quality request failed",
+                exc_info=True,
+            )
+            return None
+
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
     async def get_history(
         self, location: Location, start_date: datetime, end_date: datetime
     ) -> Forecast | None:
@@ -252,6 +312,73 @@ class VisualCrossingClient:
         except Exception as e:
             logger.error(f"Failed to get Visual Crossing history: {e}")
             raise VisualCrossingApiError(f"Unexpected error: {e}") from e
+
+    async def get_forecast_batch(
+        self, locations: list[Location], days: int = 7
+    ) -> dict[str, Forecast | None]:
+        """
+        Get forecasts for multiple locations in a single API call.
+
+        Visual Crossing supports pipe-separated locations.
+
+        Args:
+            locations: List of locations to fetch forecasts for.
+            days: Number of forecast days (1-15).
+
+        Returns:
+            Dict mapping location coordinate key to Forecast (or None on error).
+
+        """
+        if not locations:
+            return {}
+
+        loc_str = "|".join(f"{loc.latitude},{loc.longitude}" for loc in locations)
+
+        try:
+            forecast_days = min(max(days, 1), 15)
+            url = f"{self.base_url}/{loc_str}"
+            params = {
+                "key": self.api_key,
+                "include": "days",
+                "unitGroup": "us",
+                "forecastDays": forecast_days,
+                "elements": (
+                    "datetime,tempmax,tempmin,temp,conditions,description,"
+                    "windspeed,winddir,icon,precipprob,snow,uvindex,"
+                    "snowdepth,preciptype,windchill,heatindex,severerisk,"
+                    "visibility,feelslikemax,feelslikemin,cloudcover,"
+                    "windgust,precip"
+                ),
+            }
+
+            async with httpx.AsyncClient(timeout=self.timeout * 2, follow_redirects=True) as client:
+                headers = {"User-Agent": self.user_agent}
+                response = await client.get(url, params=params, headers=headers)
+
+                if response.status_code != 200:
+                    logger.warning(f"Batch forecast failed: HTTP {response.status_code}")
+                    return {}
+
+                data = response.json()
+
+                results: dict[str, Forecast | None] = {}
+                if "locations" in data:
+                    for loc_key, loc_data in data["locations"].items():
+                        try:
+                            results[loc_key] = self._parse_forecast(loc_data)
+                        except Exception:
+                            logger.warning(f"Failed to parse forecast for {loc_key}")
+                            results[loc_key] = None
+                else:
+                    # Single location fallback
+                    if locations:
+                        results[locations[0].name] = self._parse_forecast(data)
+
+                return results
+
+        except Exception:
+            logger.error("Batch forecast request failed", exc_info=True)
+            return {}
 
     def _parse_current_conditions(self, data: dict) -> CurrentConditions:
         """Parse Visual Crossing current conditions data."""
@@ -332,6 +459,12 @@ class VisualCrossingClient:
         severe_weather_risk = current.get("severerisk")
         uv_index = current.get("uvindex")
 
+        cloud_cover = current.get("cloudcover")
+        wind_gust_mph = current.get("windgust")
+        wind_gust_kph = wind_gust_mph * 1.60934 if wind_gust_mph is not None else None
+        precipitation_in = current.get("precip")
+        precipitation_mm = precipitation_in * 25.4 if precipitation_in is not None else None
+
         return CurrentConditions(
             temperature_f=temp_f,
             temperature_c=temp_c,
@@ -363,6 +496,11 @@ class VisualCrossingClient:
             precipitation_type=precipitation_type,
             severe_weather_risk=severe_weather_risk,
             uv_index=uv_index,
+            cloud_cover=cloud_cover,
+            wind_gust_mph=wind_gust_mph,
+            wind_gust_kph=wind_gust_kph,
+            precipitation_in=precipitation_in,
+            precipitation_mm=precipitation_mm,
         )
 
     def _parse_forecast(self, data: dict) -> Forecast:
@@ -409,6 +547,11 @@ class VisualCrossingClient:
                 precipitation_type=precipitation_type,
                 feels_like_high=day_data.get("feelslikemax"),
                 feels_like_low=day_data.get("feelslikemin"),
+                cloud_cover=day_data.get("cloudcover"),
+                wind_gust=f"{day_data.get('windgust', 0)} mph"
+                if day_data.get("windgust")
+                else None,
+                precipitation_amount=day_data.get("precip"),
             )
             periods.append(period)
 
@@ -507,6 +650,9 @@ class VisualCrossingClient:
                     if hourly_vis_miles is not None
                     else None,
                     precipitation_type=precipitation_type,
+                    cloud_cover=hour_data.get("cloudcover"),
+                    wind_gust_mph=hour_data.get("windgust"),
+                    precipitation_amount=hour_data.get("precip"),
                 )
                 periods.append(period)
 
