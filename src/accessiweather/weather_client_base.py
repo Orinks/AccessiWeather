@@ -424,12 +424,18 @@ class WeatherClient:
 
         try:
             if self._is_us_location(location):
-                discussion_task = asyncio.create_task(
-                    self._get_nws_forecast_and_discussion(location)
-                )
+                # Use discussion-only fetch so a forecast API failure can never
+                # silently suppress AFD update notifications.
+                discussion_task = asyncio.create_task(self._get_nws_discussion_only(location))
                 alerts_task = asyncio.create_task(self._get_nws_alerts(location))
-                forecast, discussion, discussion_issuance_time = await discussion_task
+                discussion, discussion_issuance_time = await discussion_task
                 alerts = await alerts_task
+                logger.debug(
+                    "get_notification_event_data: discussion=%s issuance=%s alerts=%s",
+                    "ok" if discussion else "None",
+                    discussion_issuance_time,
+                    len(alerts.alerts) if alerts and alerts.alerts else 0,
+                )
                 weather_data.discussion = discussion
                 weather_data.discussion_issuance_time = discussion_issuance_time
                 weather_data.alerts = alerts or WeatherAlerts(alerts=[])
@@ -1050,6 +1056,14 @@ class WeatherClient:
     ) -> tuple[Forecast | None, str | None, datetime | None]:
         """Delegate to the NWS client module."""
         return await nws_client.get_nws_forecast_and_discussion(
+            location, self.nws_base_url, self.user_agent, self.timeout, self._get_http_client()
+        )
+
+    async def _get_nws_discussion_only(
+        self, location: Location
+    ) -> tuple[str | None, datetime | None]:
+        """Fetch only the NWS AFD discussion (no forecast). Used by the notification path."""
+        return await nws_client.get_nws_discussion_only(
             location, self.nws_base_url, self.user_agent, self.timeout, self._get_http_client()
         )
 
