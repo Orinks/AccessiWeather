@@ -75,6 +75,33 @@ def _build_basic_metrics(
         uv_desc = get_uv_description(current.uv_index)
         metrics.append(Metric("UV Index", f"{current.uv_index} ({uv_desc})"))
 
+    if current.cloud_cover is not None:
+        metrics.append(Metric("Cloud cover", f"{current.cloud_cover:.0f}%"))
+
+    if current.wind_gust_mph is not None:
+        if unit_pref == TemperatureUnit.CELSIUS:
+            gust_kph = current.wind_gust_kph or current.wind_gust_mph * 1.60934
+            metrics.append(Metric("Wind gusts", f"{gust_kph:.0f} kph"))
+        elif unit_pref == TemperatureUnit.FAHRENHEIT:
+            metrics.append(Metric("Wind gusts", f"{current.wind_gust_mph:.0f} mph"))
+        else:
+            gust_kph = current.wind_gust_kph or current.wind_gust_mph * 1.60934
+            metrics.append(
+                Metric("Wind gusts", f"{current.wind_gust_mph:.0f} mph ({gust_kph:.0f} kph)")
+            )
+
+    if current.precipitation_in is not None and current.precipitation_in > 0:
+        if unit_pref == TemperatureUnit.CELSIUS:
+            precip_mm = current.precipitation_mm or current.precipitation_in * 25.4
+            metrics.append(Metric("Precipitation", f"{precip_mm:.1f} mm"))
+        elif unit_pref == TemperatureUnit.FAHRENHEIT:
+            metrics.append(Metric("Precipitation", f"{current.precipitation_in:.2f} in"))
+        else:
+            precip_mm = current.precipitation_mm or current.precipitation_in * 25.4
+            metrics.append(
+                Metric("Precipitation", f"{current.precipitation_in:.2f} in ({precip_mm:.1f} mm)")
+            )
+
     return metrics
 
 
