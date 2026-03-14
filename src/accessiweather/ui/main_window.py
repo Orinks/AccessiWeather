@@ -1061,13 +1061,18 @@ class MainWindow(SizedFrame):
         """Pre-warm cache for non-current locations so switching is instant."""
         try:
             all_locations = self.app.config_manager.get_all_locations()
-            for loc in all_locations:
-                if loc.name != current_location.name:
-                    # Check if already cached
-                    cached = self.app.weather_client.get_cached_weather(loc)
-                    if not cached or not cached.has_any_data():
-                        logger.debug(f"Pre-warming cache for {loc.name}")
-                        await self.app.weather_client.pre_warm_cache(loc)
+            uncached = [
+                loc
+                for loc in all_locations
+                if loc.name != current_location.name
+                and not (
+                    self.app.weather_client.get_cached_weather(loc)
+                    and self.app.weather_client.get_cached_weather(loc).has_any_data()
+                )
+            ]
+            if uncached:
+                logger.debug(f"Pre-warming cache for {len(uncached)} locations")
+                await self.app.weather_client.pre_warm_batch(uncached)
         except Exception as e:
             logger.debug(f"Cache pre-warm failed (non-critical): {e}")
 

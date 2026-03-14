@@ -161,6 +161,11 @@ class CurrentConditions:
     visibility_miles: float | None = None
     visibility_km: float | None = None
     uv_index: float | None = None
+    cloud_cover: float | None = None  # Cloud cover percentage (0-100)
+    wind_gust_mph: float | None = None  # Wind gust speed (mph)
+    wind_gust_kph: float | None = None  # Wind gust speed (kph)
+    precipitation_in: float | None = None  # Precipitation amount (inches)
+    precipitation_mm: float | None = None  # Precipitation amount (mm)
     sunrise_time: datetime | None = None
     sunset_time: datetime | None = None
     moon_phase: str | None = None
@@ -237,6 +242,9 @@ class ForecastPeriod:
     precipitation_probability: float | None = None
     snowfall: float | None = None
     uv_index: float | None = None
+    cloud_cover: float | None = None  # Cloud cover percentage (0-100)
+    wind_gust: str | None = None  # Wind gust speed as string (e.g. "25 mph")
+    precipitation_amount: float | None = None  # Precipitation amount (inches)
 
     # Seasonal fields - Winter
     snow_depth: float | None = None  # Expected snow accumulation (inches)
@@ -291,6 +299,9 @@ class HourlyForecastPeriod:
     precipitation_probability: float | None = None
     snowfall: float | None = None
     uv_index: float | None = None
+    cloud_cover: float | None = None  # Cloud cover percentage (0-100)
+    wind_gust_mph: float | None = None  # Wind gust speed (mph)
+    precipitation_amount: float | None = None  # Precipitation amount (inches)
 
     # Seasonal fields - Winter
     snow_depth: float | None = None  # Snow depth at this hour (inches)

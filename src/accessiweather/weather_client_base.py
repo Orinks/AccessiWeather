@@ -337,6 +337,35 @@ class WeatherClient:
             logger.error(f"Cache pre-warm failed for {location.name}: {exc}")
             return False
 
+    async def pre_warm_batch(self, locations: list[Location]) -> int:
+        """
+        Pre-warm forecast cache for multiple locations using a single batch API call.
+
+        Uses Visual Crossing batch endpoint when available, falls back to
+        individual pre_warm_cache calls otherwise.
+
+        Returns the number of locations successfully warmed.
+        """
+        if not locations:
+            return 0
+
+        # Try batch via VC if client is configured
+        vc = self.visual_crossing_client
+        if vc and len(locations) > 1:
+            try:
+                batch_results = await vc.get_forecast_batch(locations)
+                if batch_results:
+                    logger.info("Batch pre-warm: got %d forecasts from VC", len(batch_results))
+            except Exception as exc:  # noqa: BLE001
+                logger.debug("Batch forecast failed, falling back to individual: %s", exc)
+
+        # Still do full individual pre-warm for each location (current, alerts, etc.)
+        warmed = 0
+        for loc in locations:
+            if await self.pre_warm_cache(loc):
+                warmed += 1
+        return warmed
+
     def get_cached_weather(self, location: Location) -> WeatherData | None:
         """
         Retrieve cached weather data for a location without triggering a network fetch.

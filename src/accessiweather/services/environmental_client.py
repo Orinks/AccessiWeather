@@ -423,3 +423,29 @@ class EnvironmentalDataClient:
             return float(value)
         except (TypeError, ValueError):
             return None
+
+    def populate_from_visual_crossing(
+        self,
+        vc_aq_data: dict | None,
+        environmental: EnvironmentalConditions,
+    ) -> None:
+        """
+        Populate air quality from Visual Crossing data as fallback.
+
+        Only populates if Open-Meteo didn't already provide AQ data.
+        """
+        if not vc_aq_data:
+            return
+
+        if environmental.air_quality_index is not None:
+            return
+
+        aqius = vc_aq_data.get("aqius")
+        if aqius is not None:
+            environmental.air_quality_index = float(aqius)
+            environmental.air_quality_category = (
+                self._air_quality_category(float(aqius))
+            )
+            environmental.sources.append(
+                "Visual Crossing Air Quality"
+            )
