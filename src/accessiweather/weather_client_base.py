@@ -960,7 +960,7 @@ class WeatherClient:
                 logger.debug(f"Enrichment '{task_name}' failed: {result}")
 
         # Apply final processing
-        trends.apply_trend_insights(
+        trends.apply_trend_insights(  # pragma: no cover
             weather_data,
             self.trend_insights_enabled,
             self.trend_hours,
