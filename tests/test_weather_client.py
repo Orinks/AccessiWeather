@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+import accessiweather.weather_client_parsers as parsers
 from accessiweather.models import (
     AppSettings,
     CurrentConditions,
@@ -298,23 +299,23 @@ class TestWeatherClientHelpers:
 
     def test_convert_f_to_c(self, client):
         """Test Fahrenheit to Celsius conversion."""
-        assert client._convert_f_to_c(32.0) == 0.0
-        assert client._convert_f_to_c(212.0) == 100.0
-        assert client._convert_f_to_c(None) is None
+        assert parsers.convert_f_to_c(32.0) == 0.0
+        assert parsers.convert_f_to_c(212.0) == 100.0
+        assert parsers.convert_f_to_c(None) is None
 
     def test_convert_mps_to_mph(self, client):
         """Test meters per second to mph conversion."""
-        result = client._convert_mps_to_mph(10.0)
+        result = parsers.convert_mps_to_mph(10.0)
         assert result is not None
         assert abs(result - 22.37) < 0.1  # ~22.37 mph
 
     def test_degrees_to_cardinal(self, client):
         """Test wind direction conversion."""
-        assert client._degrees_to_cardinal(0) == "N"
-        assert client._degrees_to_cardinal(90) == "E"
-        assert client._degrees_to_cardinal(180) == "S"
-        assert client._degrees_to_cardinal(270) == "W"
-        assert client._degrees_to_cardinal(None) is None
+        assert parsers.degrees_to_cardinal(0) == "N"
+        assert parsers.degrees_to_cardinal(90) == "E"
+        assert parsers.degrees_to_cardinal(180) == "S"
+        assert parsers.degrees_to_cardinal(270) == "W"
+        assert parsers.degrees_to_cardinal(None) is None
 
     def test_set_empty_weather_data(self, client):
         """Test setting empty weather data."""

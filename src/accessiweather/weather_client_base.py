@@ -17,7 +17,6 @@ from . import (
     weather_client_enrichment as enrichment,
     weather_client_nws as nws_client,
     weather_client_openmeteo as openmeteo_client,
-    weather_client_parsers as parsers,
     weather_client_trends as trends,
     weather_client_visualcrossing as vc_alerts,
 )
@@ -1347,53 +1346,3 @@ class WeatherClient:
         self, periods: list[HourlyForecastPeriod] | Sequence[HourlyForecastPeriod], hours_ahead: int
     ) -> HourlyForecastPeriod | None:
         return trends.period_for_hours_ahead(periods, hours_ahead)
-
-    def _normalize_datetime(self, value: datetime | None) -> datetime | None:
-        return trends.normalize_datetime(value)
-
-    # Utility methods
-    def _convert_mps_to_mph(self, mps: float | None) -> float | None:
-        return parsers.convert_mps_to_mph(mps)
-
-    def _convert_wind_speed_to_mph(
-        self, value: float | None, unit_code: str | None
-    ) -> float | None:
-        return parsers.convert_wind_speed_to_mph(value, unit_code)
-
-    def _convert_wind_speed_to_kph(
-        self, value: float | None, unit_code: str | None
-    ) -> float | None:
-        return parsers.convert_wind_speed_to_kph(value, unit_code)
-
-    def _convert_wind_speed_to_mph_and_kph(
-        self, value: float | None, unit_code: str | None
-    ) -> tuple[float | None, float | None]:
-        return parsers.convert_wind_speed_to_mph_and_kph(value, unit_code)
-
-    def _convert_pa_to_inches(self, pa: float | None) -> float | None:
-        return parsers.convert_pa_to_inches(pa)
-
-    def _convert_pa_to_mb(self, pa: float | None) -> float | None:
-        return parsers.convert_pa_to_mb(pa)
-
-    def _normalize_temperature(
-        self, value: float | None, unit: str | None
-    ) -> tuple[float | None, float | None]:
-        return parsers.normalize_temperature(value, unit)
-
-    def _normalize_pressure(
-        self, value: float | None, unit: str | None
-    ) -> tuple[float | None, float | None]:
-        return parsers.normalize_pressure(value, unit)
-
-    def _convert_f_to_c(self, fahrenheit: float | None) -> float | None:
-        return parsers.convert_f_to_c(fahrenheit)
-
-    def _degrees_to_cardinal(self, degrees: float | None) -> str | None:
-        return parsers.degrees_to_cardinal(degrees)
-
-    def _weather_code_to_description(self, code: int | str | None) -> str | None:
-        return parsers.weather_code_to_description(code)
-
-    def _format_date_name(self, date_str: str, index: int) -> str:
-        return parsers.format_date_name(date_str, index)
