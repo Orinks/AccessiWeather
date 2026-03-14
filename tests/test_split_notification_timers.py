@@ -49,9 +49,73 @@ class TestSummarizeDiscussionChange:
         assert result == "brand new content"
 
     def test_truncates_long_lines(self):
-        long_line = "x" * 200
+        long_line = "x" * 400
         result = summarize_discussion_change(None, long_line)
-        assert len(result) == 160
+        assert len(result) == 300
+
+    # ------------------------------------------------------------------
+    # New section-extraction paths
+    # ------------------------------------------------------------------
+
+    def test_what_has_changed_section_used_when_present(self):
+        """Path 1: .WHAT HAS CHANGED... section is found and returned."""
+        afd = (
+            ".SYNOPSIS...\n"
+            "Some synopsis text\n"
+            ".WHAT HAS CHANGED...\n"
+            "Temperatures have risen significantly across the region.\n"
+            "Winds will increase overnight.\n"
+            ".SHORT TERM...\n"
+            "Short term forecast content.\n"
+            "&&\n"
+        )
+        result = summarize_discussion_change(None, afd)
+        assert result is not None
+        assert "Temperatures have risen" in result
+        assert "Winds will increase overnight" in result
+        # The short-term section body should NOT appear in the summary
+        assert "Short term forecast content" not in result
+
+    def test_key_messages_fallback_when_no_what_has_changed(self):
+        """Path 2: .KEY MESSAGES... section used when no WHAT HAS CHANGED."""
+        afd = (
+            ".SYNOPSIS...\n"
+            "Synopsis text here.\n"
+            ".KEY MESSAGES...\n"
+            "* Heavy rain expected Tuesday.\n"
+            "* Flash flood watch in effect.\n"
+            "&&\n"
+            ".SHORT TERM...\n"
+            "Short term text.\n"
+        )
+        result = summarize_discussion_change(None, afd)
+        assert result is not None
+        assert "Heavy rain expected Tuesday" in result
+        assert "Flash flood watch in effect" in result
+        assert "Short term text" not in result
+
+    def test_first_new_line_fallback_when_no_special_sections(self):
+        """Path 3: falls back to first new line when no special sections exist."""
+        previous = "line one\nline two\n"
+        current = "line one\nline two\nThis is brand new forecast text.\n"
+        result = summarize_discussion_change(previous, current)
+        assert result == "This is brand new forecast text."
+
+    def test_what_has_changed_takes_priority_over_key_messages(self):
+        """WHAT HAS CHANGED is preferred over KEY MESSAGES."""
+        afd = ".WHAT HAS CHANGED...\nChange detail here.\n.KEY MESSAGES...\nKey message here.\n&&\n"
+        result = summarize_discussion_change(None, afd)
+        assert result is not None
+        assert "Change detail here" in result
+        assert "Key message here" not in result
+
+    def test_truncates_section_to_300_chars(self):
+        """Section content is truncated to 300 characters."""
+        body = "word " * 100  # well over 300 chars
+        afd = f".WHAT HAS CHANGED...\n{body}\n.SHORT TERM...\nother stuff\n"
+        result = summarize_discussion_change(None, afd)
+        assert result is not None
+        assert len(result) <= 300
 
 
 # ---------------------------------------------------------------------------
