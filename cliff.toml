@@ -103,6 +103,7 @@ commit_parsers = [
 
     # Changed - only conventional commits that aren't caught above
     { message = "(?i)refactor.*build", skip = true },
+    { message = "(?i)refactor.*[Pp]hase", skip = true },
     { message = "^refactor", group = "Changed" },
     { message = "^perf", group = "Changed" },
 
