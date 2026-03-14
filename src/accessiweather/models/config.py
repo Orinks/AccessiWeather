@@ -87,6 +87,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "source_priority_international",
     "openmeteo_weather_model",
     "station_selection_strategy",
+    "vc_use_low_latency",
 }
 
 
@@ -163,6 +164,8 @@ class AppSettings:
     openmeteo_weather_model: str = "best_match"
     # NWS station selection behavior for current conditions
     station_selection_strategy: str = "hybrid_default"
+    # Visual Crossing low-latency endpoint (timelinellx)
+    vc_use_low_latency: bool = False
     # AI Explanation Settings
     openrouter_api_key: str = ""
     ai_model_preference: str = "openrouter/free"  # free auto-router (default)
