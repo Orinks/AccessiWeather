@@ -262,7 +262,7 @@ class NotificationEventManager:
             self.state.last_discussion_text = discussion_text
 
             issued_label = (
-                issuance_time.strftime("%-I:%M %p")
+                issuance_time.strftime("%I:%M %p").lstrip("0")
                 if hasattr(issuance_time, "strftime")
                 else str(issuance_time)
             )
