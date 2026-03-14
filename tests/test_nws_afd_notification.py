@@ -10,7 +10,7 @@ Covers:
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
@@ -335,3 +335,140 @@ class TestGetNotificationEventDataDiscussionPath:
 
         assert weather_data is not None
         assert weather_data.discussion_issuance_time is None
+
+
+def _make_async_client_mock(responses):
+    """Build a mock AsyncClient usable as an async context manager."""
+
+    def side_effect(url, **kwargs):
+        return responses.get(url, _make_mock_response({}, status_code=404))
+
+    mock_client = MagicMock(spec=httpx.AsyncClient)
+    mock_client.get.side_effect = side_effect
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+    return mock_client
+
+
+class TestGetNwsForecastAndDiscussionNoClientBranch:
+    """Covers the no-client (new AsyncClient) branch of get_nws_forecast_and_discussion."""
+
+    @pytest.mark.asyncio
+    async def test_happy_path_no_client(self):
+        """client=None creates its own AsyncClient and returns forecast+discussion."""
+        responses = {
+            f"{NWS_BASE}/points/{US_LOCATION.latitude},{US_LOCATION.longitude}": (
+                _make_mock_response(GRID_DATA)
+            ),
+            f"{NWS_BASE}/gridpoints/OKX/36,38/forecast": _make_mock_response(FORECAST_DATA),
+            f"{NWS_BASE}/products/types/AFD/locations/OKX": _make_mock_response(PRODUCTS_LIST),
+            f"{NWS_BASE}/products/test-afd-product-001": _make_mock_response(PRODUCT_TEXT),
+        }
+        mock_client = _make_async_client_mock(responses)
+
+        with patch("accessiweather.weather_client_nws.httpx.AsyncClient", return_value=mock_client):
+            forecast, discussion, issuance_time = await get_nws_forecast_and_discussion(
+                location=US_LOCATION,
+                nws_base_url=NWS_BASE,
+                user_agent="Test/1.0",
+                timeout=10.0,
+                client=None,
+            )
+
+        assert forecast is not None
+        assert discussion is not None
+        assert issuance_time == datetime(2026, 1, 20, 19, 1, 0, tzinfo=timezone.utc)
+
+    @pytest.mark.asyncio
+    async def test_forecast_failure_no_client(self):
+        """client=None: forecast 503 does not suppress discussion."""
+        responses = {
+            f"{NWS_BASE}/points/{US_LOCATION.latitude},{US_LOCATION.longitude}": (
+                _make_mock_response(GRID_DATA)
+            ),
+            f"{NWS_BASE}/gridpoints/OKX/36,38/forecast": _make_mock_response_error(503),
+            f"{NWS_BASE}/products/types/AFD/locations/OKX": _make_mock_response(PRODUCTS_LIST),
+            f"{NWS_BASE}/products/test-afd-product-001": _make_mock_response(PRODUCT_TEXT),
+        }
+        mock_client = _make_async_client_mock(responses)
+
+        with patch("accessiweather.weather_client_nws.httpx.AsyncClient", return_value=mock_client):
+            forecast, discussion, issuance_time = await get_nws_forecast_and_discussion(
+                location=US_LOCATION,
+                nws_base_url=NWS_BASE,
+                user_agent="Test/1.0",
+                timeout=10.0,
+                client=None,
+            )
+
+        assert forecast is None
+        assert discussion is not None
+        assert issuance_time is not None
+
+
+class TestGetNwsDiscussionOnlyNoClientBranch:
+    """Covers the no-client branch of get_nws_discussion_only."""
+
+    @pytest.mark.asyncio
+    async def test_happy_path_no_client(self):
+        """client=None creates its own AsyncClient and returns discussion+issuance_time."""
+        responses = {
+            f"{NWS_BASE}/points/{US_LOCATION.latitude},{US_LOCATION.longitude}": (
+                _make_mock_response(GRID_DATA)
+            ),
+            f"{NWS_BASE}/products/types/AFD/locations/OKX": _make_mock_response(PRODUCTS_LIST),
+            f"{NWS_BASE}/products/test-afd-product-001": _make_mock_response(PRODUCT_TEXT),
+        }
+        mock_client = _make_async_client_mock(responses)
+
+        with patch("accessiweather.weather_client_nws.httpx.AsyncClient", return_value=mock_client):
+            discussion, issuance_time = await get_nws_discussion_only(
+                location=US_LOCATION,
+                nws_base_url=NWS_BASE,
+                user_agent="Test/1.0",
+                timeout=10.0,
+                client=None,
+            )
+
+        assert discussion is not None
+        assert issuance_time == datetime(2026, 1, 20, 19, 1, 0, tzinfo=timezone.utc)
+
+    @pytest.mark.asyncio
+    async def test_retryable_error_raises_no_client(self):
+        """client=None: 503 on grid fetch raises after retry exhaustion (covers line 727)."""
+        error_response = _make_mock_response_error(503)
+        mock_client = MagicMock(spec=httpx.AsyncClient)
+        mock_client.get.return_value = error_response
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        with (
+            patch("accessiweather.weather_client_nws.httpx.AsyncClient", return_value=mock_client),
+            pytest.raises(httpx.HTTPStatusError),
+        ):
+            await get_nws_discussion_only(
+                location=US_LOCATION,
+                nws_base_url=NWS_BASE,
+                user_agent="Test/1.0",
+                timeout=10.0,
+                client=None,
+            )
+
+
+class TestWeatherClientGetNwsDiscussionOnlyDelegation:
+    """Covers WeatherClient._get_nws_discussion_only (base line 1066)."""
+
+    @pytest.mark.asyncio
+    async def test_delegates_to_nws_client_module(self):
+        """_get_nws_discussion_only calls nws_client.get_nws_discussion_only."""
+        issuance = datetime(2026, 1, 20, 19, 1, 0, tzinfo=timezone.utc)
+
+        weather_client = WeatherClient()
+        with patch(
+            "accessiweather.weather_client_nws.get_nws_discussion_only",
+            new=AsyncMock(return_value=("AFD text", issuance)),
+        ) as mock_fn:
+            result = await weather_client._get_nws_discussion_only(US_LOCATION)
+
+        assert result == ("AFD text", issuance)
+        mock_fn.assert_called_once()
