@@ -31,11 +31,9 @@ from .models import (
     CurrentConditions,
     Forecast,
     HourlyForecast,
-    HourlyForecastPeriod,
     Location,
     SourceAttribution,
     SourceData,
-    TrendInsight,
     WeatherAlerts,
     WeatherData,
 )
@@ -1128,36 +1126,6 @@ class WeatherClient:
             location, self.openmeteo_base_url, self.timeout, self._get_http_client()
         )
 
-    def _parse_nws_current_conditions(self, data: dict) -> CurrentConditions:
-        """Delegate to the NWS client module."""
-        return nws_client.parse_nws_current_conditions(data)
-
-    def _parse_nws_forecast(self, data: dict) -> Forecast:
-        """Delegate to the NWS client module."""
-        return nws_client.parse_nws_forecast(data)
-
-    def _parse_nws_alerts(self, data: dict) -> WeatherAlerts:
-        """Delegate to the NWS client module."""
-        return nws_client.parse_nws_alerts(data)
-
-    def _parse_nws_hourly_forecast(
-        self, data: dict, location: Location | None = None
-    ) -> HourlyForecast:
-        """Delegate to the NWS client module."""
-        return nws_client.parse_nws_hourly_forecast(data, location)
-
-    def _parse_openmeteo_current_conditions(self, data: dict) -> CurrentConditions:
-        """Delegate to the Open-Meteo client module."""
-        return openmeteo_client.parse_openmeteo_current_conditions(data)
-
-    def _parse_openmeteo_forecast(self, data: dict) -> Forecast:
-        """Delegate to the Open-Meteo client module."""
-        return openmeteo_client.parse_openmeteo_forecast(data)
-
-    def _parse_openmeteo_hourly_forecast(self, data: dict) -> HourlyForecast:
-        """Delegate to the Open-Meteo client module."""
-        return openmeteo_client.parse_openmeteo_hourly_forecast(data)
-
     async def _augment_current_with_openmeteo(
         self,
         current: CurrentConditions | None,
@@ -1287,17 +1255,3 @@ class WeatherClient:
             self.offline_cache.store(location, weather_data)
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"Failed to persist weather data cache: {exc}")
-
-    def _compute_temperature_trend(self, weather_data: WeatherData) -> TrendInsight | None:
-        return trends.compute_temperature_trend(weather_data, self.trend_hours)
-
-    def _compute_pressure_trend(self, weather_data: WeatherData) -> TrendInsight | None:
-        return trends.compute_pressure_trend(weather_data, self.trend_hours)
-
-    def _trend_descriptor(self, change: float, *, minor: float, strong: float) -> tuple[str, str]:
-        return trends.trend_descriptor(change, minor=minor, strong=strong)
-
-    def _period_for_hours_ahead(
-        self, periods: list[HourlyForecastPeriod] | Sequence[HourlyForecastPeriod], hours_ahead: int
-    ) -> HourlyForecastPeriod | None:
-        return trends.period_for_hours_ahead(periods, hours_ahead)
