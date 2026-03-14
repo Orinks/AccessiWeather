@@ -646,3 +646,92 @@ class TestVisualCrossingBatchQueries:
 
         call_url = mock_client.get.call_args[0][0]
         assert "40.7,-74.0|34.0,-118.2" in call_url
+
+    @pytest.mark.asyncio
+    async def test_get_forecast_batch_non_200_returns_empty(self):
+        """Batch forecast with non-200 response returns empty dict."""
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+            mock_client.get.return_value = mock_response
+
+            client = VisualCrossingClient(api_key="test-key")
+            locations = [Location("NYC", 40.7, -74.0)]
+            results = await client.get_forecast_batch(locations)
+
+        assert results == {}
+
+    @pytest.mark.asyncio
+    async def test_get_forecast_batch_single_location_fallback(self):
+        """When response has no 'locations' key, fall back to single parse."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "days": [
+                {
+                    "datetime": "2024-01-01",
+                    "tempmax": 75,
+                    "tempmin": 55,
+                    "conditions": "Sunny",
+                }
+            ]
+        }
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+            mock_client.get.return_value = mock_response
+
+            client = VisualCrossingClient(api_key="test-key")
+            locations = [Location("NYC", 40.7, -74.0)]
+            results = await client.get_forecast_batch(locations)
+
+        assert "NYC" in results
+        assert results["NYC"] is not None
+        assert len(results["NYC"].periods) == 1
+
+    @pytest.mark.asyncio
+    async def test_get_forecast_batch_exception_returns_empty(self):
+        """Batch forecast returns empty dict on unexpected exception."""
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+            mock_client.get.side_effect = Exception("network error")
+
+            client = VisualCrossingClient(api_key="test-key")
+            locations = [Location("NYC", 40.7, -74.0)]
+            results = await client.get_forecast_batch(locations)
+
+        assert results == {}
+
+    @pytest.mark.asyncio
+    async def test_get_air_quality_non_200_returns_none(self):
+        """Air quality returns None on non-200 status code."""
+        mock_response = MagicMock()
+        mock_response.status_code = 403
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+            mock_client.get.return_value = mock_response
+
+            client = VisualCrossingClient(api_key="test-key")
+            result = await client.get_air_quality(Location("NYC", 40.7, -74.0))
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_get_air_quality_exception_returns_none(self):
+        """Air quality returns None on exception."""
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+            mock_client.get.side_effect = Exception("timeout")
+
+            client = VisualCrossingClient(api_key="test-key")
+            result = await client.get_air_quality(Location("NYC", 40.7, -74.0))
+
+        assert result is None
