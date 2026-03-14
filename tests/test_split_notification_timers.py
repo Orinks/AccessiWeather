@@ -296,14 +296,11 @@ class TestGetNotificationEventData:
 
     @pytest.mark.asyncio
     async def test_us_location_fetches_nws_data(self, client, us_location):
-        forecast = MagicMock()
         discussion = "Discussion text"
         issuance_time = MagicMock()
         alerts = WeatherAlerts(alerts=[])
 
-        client._get_nws_forecast_and_discussion = AsyncMock(
-            return_value=(forecast, discussion, issuance_time)
-        )
+        client._get_nws_discussion_only = AsyncMock(return_value=(discussion, issuance_time))
         client._get_nws_alerts = AsyncMock(return_value=alerts)
 
         result = await client.get_notification_event_data(us_location)
@@ -311,12 +308,12 @@ class TestGetNotificationEventData:
         assert result.discussion == discussion
         assert result.discussion_issuance_time == issuance_time
         assert result.alerts == alerts
-        client._get_nws_forecast_and_discussion.assert_awaited_once_with(us_location)
+        client._get_nws_discussion_only.assert_awaited_once_with(us_location)
         client._get_nws_alerts.assert_awaited_once_with(us_location)
 
     @pytest.mark.asyncio
     async def test_us_location_none_alerts_becomes_empty(self, client, us_location):
-        client._get_nws_forecast_and_discussion = AsyncMock(return_value=(None, None, None))
+        client._get_nws_discussion_only = AsyncMock(return_value=(None, None))
         client._get_nws_alerts = AsyncMock(return_value=None)
 
         result = await client.get_notification_event_data(us_location)
@@ -352,7 +349,7 @@ class TestGetNotificationEventData:
     @pytest.mark.asyncio
     async def test_tracks_alert_lifecycle_diff(self, client, us_location):
         alerts = WeatherAlerts(alerts=[])
-        client._get_nws_forecast_and_discussion = AsyncMock(return_value=(None, None, None))
+        client._get_nws_discussion_only = AsyncMock(return_value=(None, None))
         client._get_nws_alerts = AsyncMock(return_value=alerts)
 
         result = await client.get_notification_event_data(us_location)
@@ -361,7 +358,7 @@ class TestGetNotificationEventData:
 
     @pytest.mark.asyncio
     async def test_exception_returns_empty_alerts(self, client, us_location):
-        client._get_nws_forecast_and_discussion = AsyncMock(side_effect=RuntimeError("API down"))
+        client._get_nws_discussion_only = AsyncMock(side_effect=RuntimeError("API down"))
         client._get_nws_alerts = AsyncMock(side_effect=RuntimeError("API down"))
 
         result = await client.get_notification_event_data(us_location)

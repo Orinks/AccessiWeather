@@ -225,14 +225,27 @@ class NotificationEventManager:
         """
         if not issuance_time:
             # No issuance time available (non-US location or API issue)
+            logger.debug(
+                "_check_discussion_update: no issuance_time (non-US location or fetch failed) "
+                "— skipping"
+            )
             return None
 
         # First time seeing discussion - store but don't notify
         if self.state.last_discussion_issuance_time is None:
             self.state.last_discussion_issuance_time = issuance_time
             self.state.last_discussion_text = discussion_text
-            logger.debug("First discussion issuance time stored: %s", issuance_time)
+            logger.debug(
+                "_check_discussion_update: first-run — stored issuance_time=%s, no notification",
+                issuance_time,
+            )
             return None
+
+        logger.debug(
+            "_check_discussion_update: last=%s current=%s",
+            self.state.last_discussion_issuance_time,
+            issuance_time,
+        )
 
         # Check if issuance time is newer (discussion was updated)
         if issuance_time > self.state.last_discussion_issuance_time:
@@ -265,6 +278,10 @@ class NotificationEventManager:
             )
 
         self.state.last_discussion_text = discussion_text
+        logger.debug(
+            "_check_discussion_update: issuance_time unchanged (%s) — no notification",
+            issuance_time,
+        )
         return None
 
     def _check_severe_risk_change(
