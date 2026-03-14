@@ -16,6 +16,7 @@ from accessiweather.visual_crossing_client import (
     VisualCrossingApiError,
     VisualCrossingClient,
 )
+from accessiweather.weather_client_parsers import convert_f_to_c, degrees_to_cardinal
 
 
 class TestVisualCrossingClientInit:
@@ -383,20 +384,20 @@ class TestVisualCrossingHelpers:
     def client(self):
         return VisualCrossingClient(api_key="test-key")
 
-    def test_convert_f_to_c(self, client):
+    def test_convert_f_to_c(self, client):  # noqa: ARG002
         """Test Fahrenheit to Celsius conversion."""
-        assert client._convert_f_to_c(32.0) == 0.0
-        assert client._convert_f_to_c(212.0) == 100.0
-        assert client._convert_f_to_c(None) is None
+        assert convert_f_to_c(32.0) == 0.0
+        assert convert_f_to_c(212.0) == 100.0
+        assert convert_f_to_c(None) is None
 
-    def test_degrees_to_cardinal(self, client):
+    def test_degrees_to_cardinal(self, client):  # noqa: ARG002
         """Test wind direction conversion."""
-        assert client._degrees_to_cardinal(0) == "N"
-        assert client._degrees_to_cardinal(45) == "NE"
-        assert client._degrees_to_cardinal(90) == "E"
-        assert client._degrees_to_cardinal(180) == "S"
-        assert client._degrees_to_cardinal(270) == "W"
-        assert client._degrees_to_cardinal(None) is None
+        assert degrees_to_cardinal(0) == "N"
+        assert degrees_to_cardinal(45) == "NE"
+        assert degrees_to_cardinal(90) == "E"
+        assert degrees_to_cardinal(180) == "S"
+        assert degrees_to_cardinal(270) == "W"
+        assert degrees_to_cardinal(None) is None
 
 
 class TestVisualCrossingApiCalls:

@@ -144,23 +144,19 @@ class TestWeatherClientHelpers:
 
     def test_temperature_conversion(self):
         """Test temperature conversion helper."""
-        from accessiweather.weather_client import WeatherClient
-
-        client = WeatherClient()
+        from accessiweather.weather_client_parsers import convert_f_to_c
 
         # F to C
-        assert client._convert_f_to_c(32.0) == 0.0
-        assert client._convert_f_to_c(212.0) == 100.0
-        assert client._convert_f_to_c(None) is None
+        assert convert_f_to_c(32.0) == 0.0
+        assert convert_f_to_c(212.0) == 100.0
+        assert convert_f_to_c(None) is None
 
     def test_wind_direction_conversion(self):
         """Test wind direction conversion."""
-        from accessiweather.weather_client import WeatherClient
+        from accessiweather.weather_client_parsers import degrees_to_cardinal
 
-        client = WeatherClient()
-
-        assert client._degrees_to_cardinal(0) == "N"
-        assert client._degrees_to_cardinal(90) == "E"
-        assert client._degrees_to_cardinal(180) == "S"
-        assert client._degrees_to_cardinal(270) == "W"
-        assert client._degrees_to_cardinal(None) is None
+        assert degrees_to_cardinal(0) == "N"
+        assert degrees_to_cardinal(90) == "E"
+        assert degrees_to_cardinal(180) == "S"
+        assert degrees_to_cardinal(270) == "W"
+        assert degrees_to_cardinal(None) is None
