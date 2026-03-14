@@ -17,6 +17,7 @@ from . import (
     weather_client_enrichment as enrichment,
     weather_client_nws as nws_client,
     weather_client_openmeteo as openmeteo_client,
+    weather_client_parsers as parsers,
     weather_client_trends as trends,
     weather_client_visualcrossing as vc_alerts,
 )
@@ -1188,53 +1189,7 @@ class WeatherClient:
         logger.info(
             "Supplementing NWS current conditions with Open-Meteo data for %s", location.name
         )
-        return self._merge_current_conditions(current, fallback)
-
-    def _merge_current_conditions(
-        self,
-        primary: CurrentConditions | None,
-        fallback: CurrentConditions,
-    ) -> CurrentConditions:
-        """Merge missing fields from fallback conditions into the primary instance."""
-        if primary is None:
-            return fallback
-
-        for field in [
-            "temperature",
-            "temperature_f",
-            "temperature_c",
-            "condition",
-            "humidity",
-            "dewpoint_f",
-            "dewpoint_c",
-            "wind_speed",
-            "wind_speed_mph",
-            "wind_speed_kph",
-            "wind_direction",
-            "pressure",
-            "pressure_in",
-            "pressure_mb",
-            "feels_like_f",
-            "feels_like_c",
-            "visibility_miles",
-            "visibility_km",
-            "uv_index",
-            "sunrise_time",
-            "sunset_time",
-            "moon_phase",
-            "moonrise_time",
-            "moonset_time",
-        ]:
-            value = getattr(primary, field, None)
-            if value not in (None, ""):
-                continue
-            fallback_value = getattr(fallback, field, None)
-            if fallback_value in (None, ""):
-                continue
-            setattr(primary, field, fallback_value)
-
-        primary.__post_init__()
-        return primary
+        return parsers.merge_current_conditions(current, fallback)
 
     async def _enrich_with_nws_discussion(
         self, weather_data: WeatherData, location: Location
