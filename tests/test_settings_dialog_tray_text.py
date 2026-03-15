@@ -85,6 +85,7 @@ def test_load_settings_populates_tray_text_controls_and_disables_dependents_when
     assert dialog._controls["taskbar_icon_text_format"].GetValue() == "{temp}"
     assert dialog._controls["taskbar_icon_dynamic_enabled"].enabled is False
     assert dialog._controls["taskbar_icon_text_format"].enabled is False
+    assert dialog._controls["taskbar_icon_text_format_dialog"].enabled is False
 
 
 def test_load_settings_enables_dependents_when_tray_text_on():
@@ -99,6 +100,7 @@ def test_load_settings_enables_dependents_when_tray_text_on():
 
     assert dialog._controls["taskbar_icon_dynamic_enabled"].enabled is True
     assert dialog._controls["taskbar_icon_text_format"].enabled is True
+    assert dialog._controls["taskbar_icon_text_format_dialog"].enabled is True
 
 
 def test_save_settings_persists_tray_text_fields():
@@ -117,3 +119,10 @@ def test_save_settings_persists_tray_text_fields():
     assert kwargs["taskbar_icon_text_enabled"] is True
     assert kwargs["taskbar_icon_dynamic_enabled"] is False
     assert kwargs["taskbar_icon_text_format"] == "{temp}"
+
+
+def test_get_selected_temperature_unit_uses_current_choice():
+    dialog = _make_dialog_for_settings(SimpleNamespace())
+    dialog._controls["temp_unit"].SetSelection(1)
+
+    assert dialog._get_selected_temperature_unit() == "c"

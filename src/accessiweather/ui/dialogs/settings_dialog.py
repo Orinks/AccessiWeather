@@ -126,6 +126,14 @@ class SettingsDialogSimple(wx.Dialog):
         )
         self._controls["taskbar_icon_text_format"] = wx.TextCtrl(panel, size=(280, -1))
         row_taskbar_format.Add(self._controls["taskbar_icon_text_format"], 1)
+        self._controls["taskbar_icon_text_format_dialog"] = wx.Button(
+            panel, label="Edit Format..."
+        )
+        self._controls["taskbar_icon_text_format_dialog"].Bind(
+            wx.EVT_BUTTON,
+            self._on_edit_taskbar_text_format,
+        )
+        row_taskbar_format.Add(self._controls["taskbar_icon_text_format_dialog"], 0, wx.LEFT, 8)
         sizer.Add(row_taskbar_format, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 15)
 
         panel.SetSizer(sizer)
@@ -2761,6 +2769,44 @@ class SettingsDialogSimple(wx.Dialog):
         """Enable/disable dependent taskbar text controls."""
         self._controls["taskbar_icon_dynamic_enabled"].Enable(taskbar_text_enabled)
         self._controls["taskbar_icon_text_format"].Enable(taskbar_text_enabled)
+        self._controls["taskbar_icon_text_format_dialog"].Enable(taskbar_text_enabled)
+
+    def _on_edit_taskbar_text_format(self, event):
+        """Open the focused tray text format dialog."""
+        from .tray_text_format_dialog import TrayTextFormatDialog
+        from ...taskbar_icon_updater import TaskbarIconUpdater
+
+        current_weather = getattr(self.app, "current_weather_data", None)
+        current_location = None
+        if current_weather and getattr(current_weather, "location", None):
+            current_location = getattr(current_weather.location, "name", None)
+
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            dynamic_enabled=self._controls["taskbar_icon_dynamic_enabled"].GetValue(),
+            format_string=self._controls["taskbar_icon_text_format"].GetValue(),
+            temperature_unit=self._get_selected_temperature_unit(),
+        )
+
+        dialog = TrayTextFormatDialog(
+            self,
+            updater=updater,
+            weather_data=current_weather,
+            location_name=current_location,
+            initial_format=self._controls["taskbar_icon_text_format"].GetValue(),
+        )
+        if dialog.ShowModal() == wx.ID_OK:
+            self._controls["taskbar_icon_text_format"].SetValue(dialog.get_format_string())
+        dialog.Destroy()
+        event.Skip()
+
+    def _get_selected_temperature_unit(self) -> str:
+        """Return the temperature unit selection currently shown in the dialog."""
+        temp_values = ["f", "c", "both"]
+        selection = self._controls["temp_unit"].GetSelection()
+        if selection < 0 or selection >= len(temp_values):
+            return "both"
+        return temp_values[selection]
 
     def _on_open_soundpacks_dir(self, event):
         """Open sound packs directory."""

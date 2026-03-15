@@ -18,8 +18,28 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 DEFAULT_TOOLTIP_TEXT = "AccessiWeather"
+DEFAULT_TOOLTIP_FORMAT = "{temp} {condition}"
 TOOLTIP_MAX_LENGTH = 127
 PLACEHOLDER_NA = "N/A"
+DEFAULT_PREVIEW_DATA = {
+    "location": "Sample Location",
+    "temp": "72F/22C",
+    "temp_f": "72F",
+    "temp_c": "22C",
+    "condition": "Partly Cloudy",
+    "humidity": "55%",
+    "wind": "NW at 8 mph",
+    "wind_speed": "8 mph",
+    "wind_dir": "NW",
+    "pressure": "30.1 inHg",
+    "feels_like": "74F/23C",
+    "uv": "5",
+    "visibility": "10 mi",
+    "high": "78F/26C",
+    "low": "61F/16C",
+    "precip": "0 in",
+    "precip_chance": "20",
+}
 
 
 class TaskbarIconUpdater:
@@ -37,7 +57,7 @@ class TaskbarIconUpdater:
         self,
         text_enabled: bool = False,
         dynamic_enabled: bool = True,
-        format_string: str = "{temp} {condition}",
+        format_string: str = DEFAULT_TOOLTIP_FORMAT,
         temperature_unit: str = "both",
         verbosity_level: str = "standard",
     ):
@@ -117,65 +137,42 @@ class TaskbarIconUpdater:
         if weather_data is None:
             return DEFAULT_TOOLTIP_TEXT
 
-        if not self.dynamic_enabled:
-            return DEFAULT_TOOLTIP_TEXT
-
         current = getattr(weather_data, "current_conditions", None)
         if current is None or not current.has_data():
             return DEFAULT_TOOLTIP_TEXT
 
         try:
             data = self._extract_weather_variables(current, location_name)
-            tooltip = self._format_by_verbosity(data)
-
-            if location_name and tooltip and not tooltip.startswith(location_name):
-                tooltip = f"{location_name}: {tooltip}"
-
-            return self._truncate_tooltip(tooltip)
+            return self.format_text(data)
         except Exception as exc:
             logger.debug("Failed to format tooltip: %s", exc)
             return DEFAULT_TOOLTIP_TEXT
 
-    def _format_by_verbosity(self, data: dict[str, str]) -> str:
-        """
-        Format tooltip content based on verbosity level.
+    def format_text(
+        self,
+        data: dict[str, str],
+        format_string: str | None = None,
+    ) -> str:
+        """Format tray text from already-extracted placeholder data."""
+        result = self._format_with_fallback(format_string or self.format_string, data)
+        return self._truncate_tooltip(result)
 
-        Args:
-            data: Dictionary of weather variable values
+    def build_preview(
+        self,
+        format_string: str,
+        weather_data: WeatherData | None = None,
+        location_name: str | None = None,
+    ) -> str:
+        """Build preview text using live weather data when available, else safe sample values."""
+        current = getattr(weather_data, "current_conditions", None) if weather_data else None
+        if current is not None and current.has_data():
+            data = self._extract_weather_variables(current, location_name)
+        else:
+            data = dict(DEFAULT_PREVIEW_DATA)
+            if location_name:
+                data["location"] = location_name
 
-        Returns:
-            Formatted tooltip string appropriate to verbosity level
-
-        """
-        if self.verbosity_level == "minimal":
-            # Minimal: just temperature
-            return data.get("temp", PLACEHOLDER_NA)
-
-        if self.verbosity_level == "detailed":
-            # Detailed: temp + condition + feels_like + humidity + wind
-            parts = [data.get("temp", PLACEHOLDER_NA)]
-
-            condition = data.get("condition")
-            if condition and condition != PLACEHOLDER_NA:
-                parts.append(condition)
-
-            feels_like = data.get("feels_like")
-            if feels_like and feels_like != PLACEHOLDER_NA:
-                parts.append(f"Feels {feels_like}")
-
-            humidity = data.get("humidity")
-            if humidity and humidity != PLACEHOLDER_NA:
-                parts.append(f"Humidity {humidity}")
-
-            wind = data.get("wind")
-            if wind and wind != PLACEHOLDER_NA:
-                parts.append(f"Wind {wind}")
-
-            return " | ".join(parts)
-
-        # Standard (default): temp + condition
-        format_string = self.format_string
-        return self._format_with_fallback(format_string, data)
+        return self.format_text(data, format_string=format_string)
 
     def _extract_weather_variables(
         self,
@@ -302,20 +299,28 @@ class TaskbarIconUpdater:
         """
         Format the string with fallback for invalid format strings.
 
+        Unknown placeholders (e.g. ``{foo}``) are left as literal text in the
+        output — they do NOT trigger a full format-string fallback.  Only
+        genuinely malformed input (unbalanced braces) causes a fallback to
+        ``DEFAULT_TOOLTIP_TEXT``.
+
         Args:
             format_string: The format string to use
             data: Dictionary of variable values
 
         Returns:
-            Formatted string, or default if format is invalid
+            Formatted string, or default if format is genuinely invalid
 
         """
-        is_valid, error = self.parser.validate_format_string(format_string)
-        if not is_valid:
+        # Detect unbalanced braces before handing off to the parser.
+        # Unknown placeholder names are handled safely by FormatStringParser.format_string
+        # which leaves them as literal "{key}" text, so we no longer reject them here.
+        if format_string.count("{") != format_string.count("}"):
+            error = "Unbalanced braces in format string"
             if error != self._last_format_error:
                 logger.warning("Invalid format string: %s", error)
                 self._last_format_error = error
-            format_string = "{temp} {condition}"
+            return DEFAULT_TOOLTIP_TEXT
 
         result = self.parser.format_string(format_string, data)
 
@@ -323,7 +328,8 @@ class TaskbarIconUpdater:
             logger.warning("Format error: %s", result)
             return DEFAULT_TOOLTIP_TEXT
 
-        return result.strip()
+        result = result.strip()
+        return result or DEFAULT_TOOLTIP_TEXT
 
     def _truncate_tooltip(self, text: str) -> str:
         """
