@@ -22,22 +22,22 @@ class FormatStringParser:
 
     # Define the supported placeholders and their descriptions
     SUPPORTED_PLACEHOLDERS = {
-        "temp": "Current temperature (respects temperature unit preference)",
+        "temp": "Current temperature (follows your temperature unit setting)",
         "temp_f": "Current temperature in Fahrenheit",
         "temp_c": "Current temperature in Celsius",
         "condition": "Current weather condition (e.g., 'Partly Cloudy')",
         "humidity": "Current humidity percentage",
         "wind": "Wind direction with speed text (e.g., 'NW at 5 mph')",
-        "wind_speed": "Wind speed (respects unit preference)",
+        "wind_speed": "Wind speed (follows your temperature unit setting)",
         "wind_dir": "Wind direction (e.g., 'NW')",
-        "pressure": "Barometric pressure (respects unit preference)",
+        "pressure": "Barometric pressure (follows your temperature unit setting)",
         "location": "Current location name",
-        "feels_like": "Feels-like temperature (respects temperature unit preference)",
+        "feels_like": "Feels-like temperature (follows your temperature unit setting)",
         "uv": "UV index",
-        "visibility": "Visibility (respects unit preference)",
-        "high": "Forecast high temperature when available (respects temperature unit preference)",
-        "low": "Forecast low temperature when available (respects temperature unit preference)",
-        "precip": "Precipitation amount (respects unit preference)",
+        "visibility": "Visibility (follows your temperature unit setting)",
+        "high": "Forecast high temperature when available (follows your temperature unit setting)",
+        "low": "Forecast low temperature when available (follows your temperature unit setting)",
+        "precip": "Precipitation amount (follows your temperature unit setting)",
         "precip_chance": "Chance of precipitation percentage",
     }
 
