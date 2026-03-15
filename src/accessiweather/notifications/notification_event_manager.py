@@ -30,23 +30,18 @@ def _extract_discussion_issued_time_label(discussion_text: str | None) -> str | 
     if not discussion_text:
         return None
 
-    compact_match = re.search(
+    patterns = (
         r"\bISSUED\s+(\d{1,2})(\d{2})\s+([AP]M)\s+([A-Z]{2,4})\b",
-        discussion_text,
-        re.IGNORECASE,
-    )
-    if compact_match:
-        hour, minute, meridiem, tz_name = compact_match.groups()
-        return f"{int(hour)}:{minute} {meridiem.upper()} {tz_name.upper()}"
-
-    colon_match = re.search(
         r"\bISSUED\s+(\d{1,2}):(\d{2})\s+([AP]M)\s+([A-Z]{2,4})\b",
-        discussion_text,
-        re.IGNORECASE,
+        r"(?:^|\n)\s*(\d{1,2})(\d{2})\s+([AP]M)\s+([A-Z]{2,4})\s+(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b",
+        r"(?:^|\n)\s*(\d{1,2}):(\d{2})\s+([AP]M)\s+([A-Z]{2,4})\s+(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b",
     )
-    if colon_match:
-        hour, minute, meridiem, tz_name = colon_match.groups()
-        return f"{int(hour)}:{minute} {meridiem.upper()} {tz_name.upper()}"
+
+    for pattern in patterns:
+        match = re.search(pattern, discussion_text, re.IGNORECASE)
+        if match:
+            hour, minute, meridiem, tz_name = match.groups()
+            return f"{int(hour)}:{minute} {meridiem.upper()} {tz_name.upper()}"
 
     return None
 

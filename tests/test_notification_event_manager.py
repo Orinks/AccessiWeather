@@ -135,7 +135,7 @@ class TestNotificationEventManager:
         weather_data.discussion = (
             "Area Forecast Discussion\n"
             "National Weather Service Test Office\n"
-            "ISSUED 1235 PM EST MON JAN 20 2026\n\n"
+            "1235 PM EST MON JAN 20 2026\n\n"
             ".WHAT HAS CHANGED...\n"
             "Rain arrives earlier."
         )
@@ -147,6 +147,31 @@ class TestNotificationEventManager:
         assert "12:35 PM EST" in events3[0].message
         assert "Change summary:" not in events3[0].message
         assert "Rain arrives earlier." in events3[0].message
+
+    def test_discussion_update_uses_standard_afd_header_time(self, manager, settings_with_discussion):
+        """Use the standard AFD local header time when present in the discussion text."""
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.current = None
+        weather_data.discussion = "Old discussion"
+
+        first_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
+        weather_data.discussion_issuance_time = first_time
+        manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
+
+        weather_data.discussion = (
+            "\n000\nFXUS61 KOKX 201435\nAFDOKX\n\n"
+            "Area Forecast Discussion\n"
+            "National Weather Service New York NY\n"
+            "935 AM EST Tue Jan 20 2026\n\n"
+            ".WHAT HAS CHANGED...\n"
+            "No significant changes made to forecast."
+        )
+        weather_data.discussion_issuance_time = first_time + timedelta(hours=1)
+        events = manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
+
+        assert len(events) == 1
+        assert "9:35 AM EST" in events[0].message
+        assert "No significant changes made to forecast." in events[0].message
 
     def test_discussion_update_falls_back_to_metadata_time(self, manager, settings_with_discussion):
         """Use the metadata timestamp when the AFD text has no parseable issued line."""
