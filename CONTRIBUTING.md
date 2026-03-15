@@ -33,16 +33,18 @@ This project follows test-driven development (TDD) principles:
 
 ### Running Tests
 
-Use the provided script to run tests:
+For a quick unit-only pass, use the helper script:
 
-```
-python run_tests.py
+```bash
+scripts/run-unit-tests.sh
 ```
 
-Or run pytest directly:
+For the same validation CI enforces on pull requests, run:
 
-```
-python -m pytest tests/
+```bash
+ruff format --check .
+ruff check .
+ACCESSIWEATHER_TEST_MODE=1 HYPOTHESIS_PROFILE=ci pytest tests/ -n auto -v --tb=short -m "not integration"
 ```
 
 ## Accessibility Requirements
@@ -72,8 +74,8 @@ All UI components must be accessible to screen readers. Before submitting a pull
 
 You can check your code with:
 ```bash
-ruff check src/accessiweather tests
-ruff format src/accessiweather tests
+ruff format --check .
+ruff check .
 python -m mypy src/accessiweather
 ```
 

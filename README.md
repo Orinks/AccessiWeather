@@ -117,8 +117,8 @@ We welcome contributions! Whether you're fixing bugs, adding features, or improv
 
 1. Fork the repo and create a feature branch from `dev`
 2. Make your changes with tests
-3. Run linting: `ruff check --fix . && ruff format .`
-4. Run tests: `pytest -n auto`
+3. Run CI-equivalent lint checks: `ruff format --check . && ruff check .`
+4. Run CI-equivalent tests: `ACCESSIWEATHER_TEST_MODE=1 HYPOTHESIS_PROFILE=ci pytest tests/ -n auto -v --tb=short -m "not integration"`
 5. Submit a PR to `dev`
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
@@ -157,7 +157,7 @@ pip install -e ".[dev]"
 python -m accessiweather
 
 # Run tests
-pytest -n auto
+ACCESSIWEATHER_TEST_MODE=1 HYPOTHESIS_PROFILE=ci pytest tests/ -n auto -v --tb=short -m "not integration"
 ```
 
 ### Key Commands
@@ -165,9 +165,9 @@ pytest -n auto
 ```bash
 # Development
 uv run python -m accessiweather  # Run the app
-uv run pytest -n auto            # Run tests (parallel)
-uv run ruff check --fix .        # Lint and fix
-uv run ruff format .             # Format code
+uv run pytest tests/ -n auto -v --tb=short -m "not integration"  # CI test selection
+uv run ruff format --check .     # CI format check
+uv run ruff check .              # CI lint check
 uv run pyright                   # Type checking
 ```
 
