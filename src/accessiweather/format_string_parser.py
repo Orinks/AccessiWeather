@@ -41,10 +41,23 @@ class FormatStringParser:
         "precip_chance": "Chance of precipitation percentage",
     }
 
+    # Pattern to detect square-bracket placeholders like [temp]
+    _BRACKET_PATTERN = re.compile(r"\[([a-zA-Z_]+)\]")
+
     def __init__(self):
         """Initialize the FormatStringParser."""
         # Compile a regex pattern to find placeholders in format strings
         self.placeholder_pattern = re.compile(r"\{([a-zA-Z_]+)\}")
+
+    @classmethod
+    def normalize_format_string(cls, format_string: str) -> str:
+        """
+        Convert square-bracket placeholders [x] to curly-brace {x} notation.
+
+        Users may enter placeholders as [temp] or {temp}. Both are accepted;
+        this method normalizes to the internal {temp} form before processing.
+        """
+        return cls._BRACKET_PATTERN.sub(r"{\1}", format_string)
 
     def get_placeholders(self, format_string: str) -> list[str]:
         """
@@ -69,6 +82,8 @@ class FormatStringParser:
         """
         Validate a format string.
 
+        Accepts both {placeholder} and [placeholder] notation.
+
         Args:
         ----
             format_string: The format string to validate.
@@ -84,12 +99,15 @@ class FormatStringParser:
         if not format_string:
             return True, None  # Empty string is valid (will use default)
 
+        # Normalize [placeholder] → {placeholder} before validation
+        normalized = self.normalize_format_string(format_string)
+
         # Check for unbalanced braces
-        if format_string.count("{") != format_string.count("}"):
+        if normalized.count("{") != normalized.count("}"):
             return False, "Unbalanced braces in format string"
 
         # Check for unsupported placeholders
-        placeholders = self.get_placeholders(format_string)
+        placeholders = self.get_placeholders(normalized)
         unsupported = [p for p in placeholders if p not in self.SUPPORTED_PLACEHOLDERS]
 
         if unsupported:
@@ -105,6 +123,8 @@ class FormatStringParser:
         """
         Format a string by substituting placeholders with values from data.
 
+        Accepts both {placeholder} and [placeholder] notation.
+
         Args:
         ----
             format_string: The format string with placeholders.
@@ -117,6 +137,9 @@ class FormatStringParser:
         """
         if not format_string:
             return ""
+
+        # Normalize [placeholder] → {placeholder} before substitution
+        format_string = self.normalize_format_string(format_string)
 
         # Check for unbalanced braces
         if format_string.count("{") != format_string.count("}"):

@@ -124,8 +124,13 @@ class SettingsDialogSimple(wx.Dialog):
             wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
             10,
         )
-        self._controls["taskbar_icon_text_format"] = wx.TextCtrl(panel, size=(280, -1))
+        self._controls["taskbar_icon_text_format"] = wx.TextCtrl(panel, size=(200, -1))
         row_taskbar_format.Add(self._controls["taskbar_icon_text_format"], 1)
+        self._controls["tray_text_customize_btn"] = wx.Button(panel, label="Customize\u2026")
+        self._controls["tray_text_customize_btn"].Bind(wx.EVT_BUTTON, self._on_tray_text_customize)
+        row_taskbar_format.Add(
+            self._controls["tray_text_customize_btn"], 0, wx.LEFT | wx.ALIGN_CENTER_VERTICAL, 8
+        )
         sizer.Add(row_taskbar_format, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 15)
 
         panel.SetSizer(sizer)
@@ -2740,10 +2745,21 @@ class SettingsDialogSimple(wx.Dialog):
             # If minimize to tray is disabled, also uncheck minimize on startup
             self._controls["minimize_on_startup"].SetValue(False)
 
+    def _on_tray_text_customize(self, event) -> None:
+        """Open the tray text customization dialog."""
+        from .tray_text_dialog import TrayTextCustomizationDialog
+
+        current_fmt = self._controls["taskbar_icon_text_format"].GetValue()
+        dlg = TrayTextCustomizationDialog(self, current_format=current_fmt)
+        if dlg.ShowModal() == wx.ID_OK:
+            self._controls["taskbar_icon_text_format"].SetValue(dlg.get_format_string())
+        dlg.Destroy()
+
     def _update_taskbar_text_controls_state(self, taskbar_text_enabled: bool):
         """Enable/disable dependent taskbar text controls."""
         self._controls["taskbar_icon_dynamic_enabled"].Enable(taskbar_text_enabled)
         self._controls["taskbar_icon_text_format"].Enable(taskbar_text_enabled)
+        self._controls["tray_text_customize_btn"].Enable(taskbar_text_enabled)
 
     def _on_open_soundpacks_dir(self, event):
         """Open sound packs directory."""

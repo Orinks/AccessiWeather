@@ -310,6 +310,9 @@ class TaskbarIconUpdater:
             Formatted string, or default if format is invalid
 
         """
+        if not format_string:
+            format_string = "{temp} {condition}"
+
         is_valid, error = self.parser.validate_format_string(format_string)
         if not is_valid:
             if error != self._last_format_error:
