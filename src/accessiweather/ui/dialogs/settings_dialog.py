@@ -130,9 +130,7 @@ class SettingsDialogSimple(wx.Dialog):
             style=wx.TE_READONLY,
         )
         row_taskbar_format.Add(self._controls["taskbar_icon_text_format"], 1)
-        self._controls["taskbar_icon_text_format_dialog"] = wx.Button(
-            panel, label="Edit Format..."
-        )
+        self._controls["taskbar_icon_text_format_dialog"] = wx.Button(panel, label="Edit Format...")
         self._controls["taskbar_icon_text_format_dialog"].Bind(
             wx.EVT_BUTTON,
             self._on_edit_taskbar_text_format,
