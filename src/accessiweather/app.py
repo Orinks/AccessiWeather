@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 
 import wx
 
+from . import app_timer_manager
 from .models import WeatherData
 from .paths import Paths
 from .single_instance import SingleInstanceManager
@@ -841,52 +842,15 @@ class AccessiWeatherApp(wx.App):
 
     def _stop_auto_update_checks(self) -> None:
         """Stop and detach the automatic update-check timer, if present."""
-        timer = getattr(self, "_auto_update_check_timer", None)
-        if not timer:
-            return
-
-        try:
-            timer.Stop()
-        except Exception as e:
-            logger.debug(f"Failed to stop auto-update timer cleanly: {e}")
-
-        # Unbind the old timer source so reconfiguration cannot stack handlers.
-        with contextlib.suppress(Exception):
-            self.Unbind(wx.EVT_TIMER, source=timer)
-
-        self._auto_update_check_timer = None
+        app_timer_manager.stop_auto_update_checks(self)
 
     def _start_auto_update_checks(self) -> None:
         """Start periodic automatic update checks based on user settings."""
-        try:
-            settings = self.config_manager.get_settings()
-            auto_enabled = bool(getattr(settings, "auto_update_enabled", True))
-
-            # Stop existing timer before reconfiguring
-            self._stop_auto_update_checks()
-
-            if not auto_enabled:
-                logger.debug("Automatic update checks disabled")
-                return
-
-            interval_hours = max(1, int(getattr(settings, "update_check_interval_hours", 24)))
-            interval_ms = interval_hours * 60 * 60 * 1000
-
-            timer = wx.Timer(self)
-            self.Bind(wx.EVT_TIMER, self._on_auto_update_check_timer, timer)
-            timer.Start(interval_ms)
-            self._auto_update_check_timer = timer
-
-            logger.info(
-                "Automatic update checks scheduled every %s hour(s)",
-                interval_hours,
-            )
-        except Exception as e:
-            logger.warning(f"Failed to start automatic update checks: {e}")
+        app_timer_manager.start_auto_update_checks(self)
 
     def _on_auto_update_check_timer(self, event) -> None:
         """Run an automatic update check on timer ticks."""
-        self._check_for_updates_on_startup()
+        app_timer_manager.on_auto_update_check_timer(self, event)
 
     def _check_for_updates_on_startup(self) -> None:
         """Check for updates on startup if enabled in settings."""
@@ -1082,50 +1046,19 @@ class AccessiWeatherApp(wx.App):
 
     def _stop_background_updates(self) -> None:
         """Stop any running background timers."""
-        weather_timer = getattr(self, "_update_timer", None)
-        if weather_timer:
-            weather_timer.Stop()
-
-        event_timer = getattr(self, "_event_check_timer", None)
-        if event_timer:
-            event_timer.Stop()
+        app_timer_manager.stop_background_updates(self)
 
     def _start_background_updates(self) -> None:
         """Start split background timers for full refreshes and lightweight event checks."""
-        try:
-            from .constants import ALERT_POLL_INTERVAL_SECONDS
-
-            self._stop_background_updates()
-            settings = self.config_manager.get_settings()
-            interval_minutes = getattr(settings, "update_interval_minutes", 10)
-            interval_ms = interval_minutes * 60 * 1000
-            event_interval_ms = ALERT_POLL_INTERVAL_SECONDS * 1000
-
-            self._update_timer = wx.Timer()
-            self._update_timer.Bind(wx.EVT_TIMER, self._on_background_update)
-            self._update_timer.Start(interval_ms)
-
-            self._event_check_timer = wx.Timer()
-            self._event_check_timer.Bind(wx.EVT_TIMER, self._on_event_check_update)
-            self._event_check_timer.Start(event_interval_ms)
-
-            logger.info(
-                "Background updates started (weather every %s minutes, events every %ss)",
-                interval_minutes,
-                ALERT_POLL_INTERVAL_SECONDS,
-            )
-        except Exception as e:
-            logger.error(f"Failed to start background updates: {e}")
+        app_timer_manager.start_background_updates(self)
 
     def _on_background_update(self, event) -> None:
         """Handle slower full weather refresh timer event."""
-        if self.main_window and not self.is_updating:
-            self.main_window.refresh_weather_async()
+        app_timer_manager.on_background_update(self, event)
 
     def _on_event_check_update(self, event) -> None:
         """Handle fast lightweight event-check timer event."""
-        if self.main_window:
-            self.main_window.refresh_notification_events_async()
+        app_timer_manager.on_event_check_update(self, event)
 
     def _play_startup_sound(self) -> None:
         """Play startup sound if enabled."""
