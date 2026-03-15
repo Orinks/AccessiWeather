@@ -148,7 +148,9 @@ class TestNotificationEventManager:
         assert "Change summary:" not in events3[0].message
         assert "Rain arrives earlier." in events3[0].message
 
-    def test_discussion_update_uses_standard_afd_header_time(self, manager, settings_with_discussion):
+    def test_discussion_update_uses_standard_afd_header_time(
+        self, manager, settings_with_discussion
+    ):
         """Use the standard AFD local header time when present in the discussion text."""
         weather_data = MagicMock(spec=WeatherData)
         weather_data.current = None
