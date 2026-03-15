@@ -19,6 +19,7 @@ class TrayTextFormatDialog(wx.Dialog):
         location_name: str | None = None,
         initial_format: str = DEFAULT_TOOLTIP_FORMAT,
     ):
+        """Initialize the tray text format dialog with preview context."""
         super().__init__(
             parent,
             title="Tray Text Format",

@@ -191,6 +191,8 @@ class TaskbarIconUpdater:
         Args:
             current: Current conditions object
             location_name: Name of the current location
+            weather_data: Optional weather payload used for forecast-derived placeholders
+                like high and low.
 
         Returns:
             Dictionary of variable names to string values

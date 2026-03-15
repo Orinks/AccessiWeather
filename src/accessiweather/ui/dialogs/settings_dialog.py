@@ -2757,8 +2757,8 @@ class SettingsDialogSimple(wx.Dialog):
 
     def _on_edit_taskbar_text_format(self, event):
         """Open the focused tray text format dialog."""
-        from .tray_text_format_dialog import TrayTextFormatDialog
         from ...taskbar_icon_updater import TaskbarIconUpdater
+        from .tray_text_format_dialog import TrayTextFormatDialog
 
         current_weather = getattr(self.app, "current_weather_data", None)
         current_location = None

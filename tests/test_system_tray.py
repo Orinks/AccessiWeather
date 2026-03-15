@@ -459,8 +459,8 @@ class TestFormatterUnitPreferencePlaceholders:
             visibility_miles=10.0,
             visibility_km=16.1,
         )
-        setattr(current, "precipitation", 1.0)
-        setattr(current, "precipitation_mm", 25.4)
+        current.precipitation = 1.0
+        current.precipitation_mm = 25.4
 
         forecast = Forecast(
             periods=[
@@ -489,7 +489,7 @@ class TestFormatterUnitPreferencePlaceholders:
     def test_unit_aware_placeholders_follow_unit_preference(
         self, unit_sensitive_weather_data, temperature_unit, expected
     ):
-        """wind_speed, pressure, visibility, precip, high, and low honor unit preference."""
+        """Wind_speed, pressure, visibility, precip, high, and low honor unit preference."""
         from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
 
         updater = TaskbarIconUpdater(
@@ -519,7 +519,7 @@ class TestFormatterUnitPreferencePlaceholders:
         assert result == "72F / 22C"
 
     def test_high_low_stay_na_without_forecast_data(self):
-        """high and low should not invent values when forecast data is unavailable."""
+        """High and low should not invent values when forecast data is unavailable."""
         from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
 
         weather_data = WeatherData(
