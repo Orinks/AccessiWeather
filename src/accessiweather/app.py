@@ -9,10 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import json
 import logging
-import os
-import subprocess
 import sys
 import threading
 import webbrowser
@@ -21,7 +18,7 @@ from typing import TYPE_CHECKING
 
 import wx
 
-from .constants import WINDOWS_APP_USER_MODEL_ID
+from . import app_timer_manager
 from .models import WeatherData
 from .paths import Paths
 from .single_instance import SingleInstanceManager
@@ -44,400 +41,6 @@ if not logging.getLogger().handlers:
     )
 
 logger = logging.getLogger(__name__)
-
-
-def set_windows_app_user_model_id(app_id: str = WINDOWS_APP_USER_MODEL_ID) -> None:
-    """
-    Register a Windows AppUserModelID for every Windows run.
-
-    Setting the AppUserModelID explicitly ensures source, portable, and
-    installer builds share the same identity (the shortcut uses this value),
-    so toast notifications work consistently without conflicting with the
-    registered shortcut AppID.
-    """
-    if sys.platform != "win32":
-        return
-
-    try:  # pragma: no cover
-        import ctypes
-
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
-        logger.debug("App User Model ID set: %s", app_id)
-    except Exception as exc:  # pragma: no cover
-        logger.debug("Failed to set App User Model ID: %s", exc)
-
-
-def _is_unc_path(path: str) -> bool:
-    """Return True when *path* points to a UNC/network location."""
-    normalized = path.replace("/", "\\")
-    return normalized.startswith("\\\\")
-
-
-def _needs_shortcut_repair(
-    *, expected_target: str, current_target: str | None, current_app_id: str | None, app_id: str
-) -> bool:
-    """Determine whether Start Menu shortcut should be recreated/repaired."""
-    if not current_target:
-        return True
-    if Path(current_target).resolve() != Path(expected_target).resolve():
-        return True
-    return (current_app_id or "") != app_id
-
-
-def _run_powershell_json(script: str, **args: str) -> dict[str, str | bool | None]:
-    """Run a small PowerShell script and parse JSON output."""
-    if sys.platform != "win32":
-        return {}
-
-    cmd = ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script]
-    for key, value in args.items():
-        cmd.extend([f"-{key}", value])
-
-    startupinfo = None
-    creationflags = 0
-    if os.name == "nt":
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        startupinfo.wShowWindow = getattr(subprocess, "SW_HIDE", 0)
-        creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
-
-    result = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True,
-        check=False,
-        startupinfo=startupinfo,
-        creationflags=creationflags,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(result.stderr.strip() or f"powershell exit {result.returncode}")
-
-    payload = (result.stdout or "").strip()
-    if not payload:
-        return {}
-    return json.loads(payload)
-
-
-def _resolve_start_menu_shortcut_path(display_name: str) -> Path:
-    """Find the real Start Menu shortcut path, including nested subfolders."""
-    appdata = Path.home() / "AppData" / "Roaming"
-    programs_dir = appdata / "Microsoft" / "Windows" / "Start Menu" / "Programs"
-
-    nested_default = programs_dir / display_name / f"{display_name}.lnk"
-    top_level_default = programs_dir / f"{display_name}.lnk"
-
-    if nested_default.exists():
-        return nested_default
-    if top_level_default.exists():
-        return top_level_default
-
-    for candidate in sorted(programs_dir.rglob(f"{display_name}.lnk")):
-        if candidate.is_file():
-            return candidate
-
-    return nested_default
-
-
-def _toast_identity_stamp_path(appdata: Path, display_name: str) -> Path:
-    return appdata / display_name / "toast_identity_stamp.json"
-
-
-def _load_toast_identity_stamp(stamp_path: Path) -> dict[str, str | bool] | None:
-    try:
-        payload = json.loads(stamp_path.read_text(encoding="utf-8"))
-    except Exception:
-        return None
-    if not isinstance(payload, dict):
-        return None
-    return payload
-
-
-def _should_repair_shortcut(
-    *,
-    stamp: dict[str, str | bool] | None,
-    shortcut_path: Path,
-    exe_path: str,
-    app_version: str,
-) -> bool:
-    if not shortcut_path.exists():
-        return True
-    if not stamp:
-        return True
-
-    return not (
-        bool(stamp.get("verified"))
-        and stamp.get("exe_path") == exe_path
-        and stamp.get("app_version") == app_version
-        and stamp.get("shortcut_path") == str(shortcut_path)
-    )
-
-
-def _write_toast_identity_stamp(
-    *,
-    stamp_path: Path,
-    shortcut_path: Path,
-    exe_path: str,
-    app_version: str,
-    verified: bool,
-    readback_app_id: str | None,
-) -> None:
-    stamp_path.parent.mkdir(parents=True, exist_ok=True)
-    stamp_path.write_text(
-        json.dumps(
-            {
-                "verified": bool(verified),
-                "exe_path": exe_path,
-                "app_version": app_version,
-                "shortcut_path": str(shortcut_path),
-                "readback_app_id": readback_app_id,
-            }
-        ),
-        encoding="utf-8",
-    )
-
-
-_TOAST_IDENTITY_ENSURED_THIS_STARTUP = False
-
-
-def ensure_windows_toast_identity(
-    app_id: str = WINDOWS_APP_USER_MODEL_ID,
-    display_name: str = "AccessiWeather",
-) -> None:
-    """Ensure registry + Start Menu shortcut identity for reliable Windows toasts."""
-    global _TOAST_IDENTITY_ENSURED_THIS_STARTUP
-
-    if sys.platform != "win32":
-        return
-
-    if _TOAST_IDENTITY_ENSURED_THIS_STARTUP:
-        logger.debug("[notify-init] Windows toast identity already ensured this startup; skipping")
-        return
-
-    from . import __version__
-
-    exe_path = str(Path(sys.executable).resolve())
-    appdata = Path.home() / "AppData" / "Roaming"
-    shortcut_path = _resolve_start_menu_shortcut_path(display_name)
-    stamp_path = _toast_identity_stamp_path(appdata, display_name)
-    app_version = __version__
-
-    logger.info(
-        "[notify-init] Windows toast identity: exe_path=%s shortcut_path=%s exe_is_unc=%s",
-        exe_path,
-        shortcut_path,
-        _is_unc_path(exe_path),
-    )
-
-    set_windows_app_user_model_id(app_id=app_id)
-
-    stamp = _load_toast_identity_stamp(stamp_path)
-    if not _should_repair_shortcut(
-        stamp=stamp,
-        shortcut_path=shortcut_path,
-        exe_path=exe_path,
-        app_version=app_version,
-    ):
-        _TOAST_IDENTITY_ENSURED_THIS_STARTUP = True
-        logger.info(
-            "[notify-init] Windows toast identity: verified stamp valid, skipping shortcut repair"
-        )
-        return
-
-    # Do not run repair more than once in the same process startup.
-    _TOAST_IDENTITY_ENSURED_THIS_STARTUP = True
-
-    script = r"""
-param([string]$ShortcutPath,[string]$TargetPath,[string]$AppId,[string]$DisplayName)
-$state = [ordered]@{ shortcut_path = $ShortcutPath; shortcut_exists = $false; current_target = $null; readback_app_id = $null; repaired = $false; verified = $false; set_error = $null }
-$dir = Split-Path -Parent $ShortcutPath
-if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
-if (Test-Path $ShortcutPath) {
-  $state.shortcut_exists = $true
-  try {
-    $w = New-Object -ComObject WScript.Shell
-    $s = $w.CreateShortcut($ShortcutPath)
-    $state.current_target = $s.TargetPath
-  } catch {}
-  try {
-    $shell = New-Object -ComObject Shell.Application
-    $folder = $shell.Namespace((Split-Path -Parent $ShortcutPath))
-    if ($folder) {
-      $item = $folder.ParseName((Split-Path -Leaf $ShortcutPath))
-      if ($item) { $state.readback_app_id = $item.ExtendedProperty('System.AppUserModel.ID') }
-    }
-  } catch {}
-}
-$needsRepair = (-not $state.current_target) -or (([IO.Path]::GetFullPath($state.current_target)) -ne ([IO.Path]::GetFullPath($TargetPath))) -or (($state.readback_app_id ?? '') -ne $AppId)
-if ($needsRepair) {
-  try {
-    $w = New-Object -ComObject WScript.Shell
-    $s = $w.CreateShortcut($ShortcutPath)
-    $s.TargetPath = $TargetPath
-    $s.WorkingDirectory = [IO.Path]::GetDirectoryName($TargetPath)
-    $s.IconLocation = "$TargetPath,0"
-    $s.Description = $DisplayName
-    $s.Save()
-
-    Add-Type -TypeDefinition @"
-using System;
-using System.Runtime.InteropServices;
-[Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99")]
-[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-public interface IPropertyStore { void GetCount(out uint c); void GetAt(uint i, out PropKey k); void GetValue(ref PropKey k, out object v); void SetValue(ref PropKey k, ref PropVariantW v); void Commit(); }
-[StructLayout(LayoutKind.Sequential, Pack=4)]
-public struct PropKey { public Guid fmt; public uint pid; }
-[StructLayout(LayoutKind.Explicit)]
-public struct PropVariantW { [FieldOffset(0)] public ushort vt; [FieldOffset(8)] public IntPtr pwszVal; }
-public class PropStoreHelper {
-  [DllImport("shell32.dll", CharSet=CharSet.Unicode)]
-  public static extern int SHGetPropertyStoreFromParsingName(string path, IntPtr pbc, int flags, [MarshalAs(UnmanagedType.LPStruct)] Guid riid, [MarshalAs(UnmanagedType.Interface)] out IPropertyStore ppv);
-}
-"@ -Language CSharp
-    $iid = [Guid]"886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99"
-    $store = $null
-    $hr = [PropStoreHelper]::SHGetPropertyStoreFromParsingName($ShortcutPath, [IntPtr]::Zero, 2, $iid, [ref]$store)
-    if ($hr -ne 0) {
-      $state.set_error = "SHGetPropertyStoreFromParsingName failed: HR=0x{0:X8}" -f ($hr -band 0xffffffff)
-    } else {
-      $key = [PropKey]@{ fmt = [Guid]"9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"; pid = 5 }
-      $ptr = [Runtime.InteropServices.Marshal]::StringToCoTaskMemUni($AppId)
-      try {
-        $pv = [PropVariantW]@{ vt = 0x1F; pwszVal = $ptr }
-        $store.SetValue([ref]$key, [ref]$pv)
-        $store.Commit()
-      } finally {
-        [Runtime.InteropServices.Marshal]::FreeCoTaskMem($ptr)
-      }
-    }
-
-    $shell = New-Object -ComObject Shell.Application
-    $folder = $shell.Namespace((Split-Path -Parent $ShortcutPath))
-    if ($folder) {
-      $item = $folder.ParseName((Split-Path -Leaf $ShortcutPath))
-      if ($item) { $state.readback_app_id = $item.ExtendedProperty('System.AppUserModel.ID') }
-    }
-
-    $state.verified = (($state.readback_app_id ?? '') -eq $AppId)
-    $state.repaired = $state.verified
-    if (-not $state.verified -and -not $state.set_error) {
-      $state.set_error = "AppUserModelID verification failed after property-store commit"
-    }
-  } catch {
-    $state.set_error = $_.Exception.Message
-  }
-}
-$state | ConvertTo-Json -Compress
-"""
-
-    fallback_script = r"""
-param([string]$ShortcutPath,[string]$AppId)
-$state = [ordered]@{ readback_app_id = $null; verified = $false; set_error = $null }
-try {
-  Add-Type -TypeDefinition @"
-using System;
-using System.Runtime.InteropServices;
-[Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99")]
-[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-public interface IPropertyStore { void GetCount(out uint c); void GetAt(uint i, out PropKey k); void GetValue(ref PropKey k, out object v); void SetValue(ref PropKey k, ref PropVariantW v); void Commit(); }
-[StructLayout(LayoutKind.Sequential, Pack=4)]
-public struct PropKey { public Guid fmt; public uint pid; }
-[StructLayout(LayoutKind.Explicit)]
-public struct PropVariantW { [FieldOffset(0)] public ushort vt; [FieldOffset(8)] public IntPtr pwszVal; }
-public class PropStoreHelper {
-  [DllImport("shell32.dll", CharSet=CharSet.Unicode)]
-  public static extern int SHGetPropertyStoreFromParsingName(string path, IntPtr pbc, int flags, [MarshalAs(UnmanagedType.LPStruct)] Guid riid, [MarshalAs(UnmanagedType.Interface)] out IPropertyStore ppv);
-}
-"@ -Language CSharp
-  $iid = [Guid]"886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99"
-  $store = $null
-  $hr = [PropStoreHelper]::SHGetPropertyStoreFromParsingName($ShortcutPath, [IntPtr]::Zero, 2, $iid, [ref]$store)
-  if ($hr -ne 0) {
-    $state.set_error = "fallback SHGetPropertyStoreFromParsingName failed: HR=0x{0:X8}" -f ($hr -band 0xffffffff)
-  } else {
-    $key = [PropKey]@{ fmt = [Guid]"9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"; pid = 5 }
-    $ptr = [Runtime.InteropServices.Marshal]::StringToCoTaskMemUni($AppId)
-    try {
-      $pv = [PropVariantW]@{ vt = 0x1F; pwszVal = $ptr }
-      $store.SetValue([ref]$key, [ref]$pv)
-      $store.Commit()
-    } finally {
-      [Runtime.InteropServices.Marshal]::FreeCoTaskMem($ptr)
-    }
-
-    $shell = New-Object -ComObject Shell.Application
-    $folder = $shell.Namespace((Split-Path -Parent $ShortcutPath))
-    if ($folder) {
-      $item = $folder.ParseName((Split-Path -Leaf $ShortcutPath))
-      if ($item) { $state.readback_app_id = $item.ExtendedProperty('System.AppUserModel.ID') }
-    }
-    $state.verified = (($state.readback_app_id ?? '') -eq $AppId)
-    if (-not $state.verified) {
-      $state.set_error = "fallback verification failed after property-store commit"
-    }
-  }
-} catch {
-  $state.set_error = $_.Exception.Message
-}
-$state | ConvertTo-Json -Compress
-"""
-
-    try:  # pragma: no cover - windows only integration path
-        state = _run_powershell_json(
-            script,
-            ShortcutPath=str(shortcut_path),
-            TargetPath=exe_path,
-            AppId=app_id,
-            DisplayName=display_name,
-        )
-
-        if state.get("verified") is not True:
-            logger.warning(
-                "[notify-init] Primary shortcut AppID set failed: %s",
-                state.get("set_error") or "unknown error",
-            )
-            fallback_state = _run_powershell_json(
-                fallback_script,
-                ShortcutPath=str(shortcut_path),
-                AppId=app_id,
-            )
-            state["fallback_verified"] = fallback_state.get("verified")
-            state["fallback_error"] = fallback_state.get("set_error")
-            state["readback_app_id"] = fallback_state.get("readback_app_id") or state.get(
-                "readback_app_id"
-            )
-
-        logger.info(
-            "[notify-init] Windows toast identity result: shortcut=%s exists=%s repaired=%s verified=%s fallback_verified=%s readback_app_id=%s notifier_app_id=%s",
-            state.get("shortcut_path"),
-            state.get("shortcut_exists"),
-            state.get("repaired"),
-            state.get("verified"),
-            state.get("fallback_verified"),
-            state.get("readback_app_id"),
-            app_id,
-        )
-
-        if state.get("fallback_verified") is not True and state.get("verified") is not True:
-            logger.warning(
-                "[notify-init] Fallback shortcut AppID set failed: %s",
-                state.get("fallback_error") or state.get("set_error") or "unknown error",
-            )
-
-        verified = (state.get("verified") is True and state.get("readback_app_id") == app_id) or (
-            state.get("fallback_verified") is True and state.get("readback_app_id") == app_id
-        )
-        _write_toast_identity_stamp(
-            stamp_path=stamp_path,
-            shortcut_path=Path(str(state.get("shortcut_path") or shortcut_path)),
-            exe_path=exe_path,
-            app_version=app_version,
-            verified=verified,
-            readback_app_id=(
-                None if state.get("readback_app_id") is None else str(state.get("readback_app_id"))
-            ),
-        )
-    except Exception as exc:  # pragma: no cover
-        logger.warning("[notify-init] Failed to validate/repair Start menu shortcut: %s", exc)
 
 
 class AccessiWeatherApp(wx.App):
@@ -1239,52 +842,15 @@ class AccessiWeatherApp(wx.App):
 
     def _stop_auto_update_checks(self) -> None:
         """Stop and detach the automatic update-check timer, if present."""
-        timer = getattr(self, "_auto_update_check_timer", None)
-        if not timer:
-            return
-
-        try:
-            timer.Stop()
-        except Exception as e:
-            logger.debug(f"Failed to stop auto-update timer cleanly: {e}")
-
-        # Unbind the old timer source so reconfiguration cannot stack handlers.
-        with contextlib.suppress(Exception):
-            self.Unbind(wx.EVT_TIMER, source=timer)
-
-        self._auto_update_check_timer = None
+        app_timer_manager.stop_auto_update_checks(self)
 
     def _start_auto_update_checks(self) -> None:
         """Start periodic automatic update checks based on user settings."""
-        try:
-            settings = self.config_manager.get_settings()
-            auto_enabled = bool(getattr(settings, "auto_update_enabled", True))
-
-            # Stop existing timer before reconfiguring
-            self._stop_auto_update_checks()
-
-            if not auto_enabled:
-                logger.debug("Automatic update checks disabled")
-                return
-
-            interval_hours = max(1, int(getattr(settings, "update_check_interval_hours", 24)))
-            interval_ms = interval_hours * 60 * 60 * 1000
-
-            timer = wx.Timer(self)
-            self.Bind(wx.EVT_TIMER, self._on_auto_update_check_timer, timer)
-            timer.Start(interval_ms)
-            self._auto_update_check_timer = timer
-
-            logger.info(
-                "Automatic update checks scheduled every %s hour(s)",
-                interval_hours,
-            )
-        except Exception as e:
-            logger.warning(f"Failed to start automatic update checks: {e}")
+        app_timer_manager.start_auto_update_checks(self)
 
     def _on_auto_update_check_timer(self, event) -> None:
         """Run an automatic update check on timer ticks."""
-        self._check_for_updates_on_startup()
+        app_timer_manager.on_auto_update_check_timer(self, event)
 
     def _check_for_updates_on_startup(self) -> None:
         """Check for updates on startup if enabled in settings."""
@@ -1480,50 +1046,19 @@ class AccessiWeatherApp(wx.App):
 
     def _stop_background_updates(self) -> None:
         """Stop any running background timers."""
-        weather_timer = getattr(self, "_update_timer", None)
-        if weather_timer:
-            weather_timer.Stop()
-
-        event_timer = getattr(self, "_event_check_timer", None)
-        if event_timer:
-            event_timer.Stop()
+        app_timer_manager.stop_background_updates(self)
 
     def _start_background_updates(self) -> None:
         """Start split background timers for full refreshes and lightweight event checks."""
-        try:
-            from .constants import ALERT_POLL_INTERVAL_SECONDS
-
-            self._stop_background_updates()
-            settings = self.config_manager.get_settings()
-            interval_minutes = getattr(settings, "update_interval_minutes", 10)
-            interval_ms = interval_minutes * 60 * 1000
-            event_interval_ms = ALERT_POLL_INTERVAL_SECONDS * 1000
-
-            self._update_timer = wx.Timer()
-            self._update_timer.Bind(wx.EVT_TIMER, self._on_background_update)
-            self._update_timer.Start(interval_ms)
-
-            self._event_check_timer = wx.Timer()
-            self._event_check_timer.Bind(wx.EVT_TIMER, self._on_event_check_update)
-            self._event_check_timer.Start(event_interval_ms)
-
-            logger.info(
-                "Background updates started (weather every %s minutes, events every %ss)",
-                interval_minutes,
-                ALERT_POLL_INTERVAL_SECONDS,
-            )
-        except Exception as e:
-            logger.error(f"Failed to start background updates: {e}")
+        app_timer_manager.start_background_updates(self)
 
     def _on_background_update(self, event) -> None:
         """Handle slower full weather refresh timer event."""
-        if self.main_window and not self.is_updating:
-            self.main_window.refresh_weather_async()
+        app_timer_manager.on_background_update(self, event)
 
     def _on_event_check_update(self, event) -> None:
         """Handle fast lightweight event-check timer event."""
-        if self.main_window:
-            self.main_window.refresh_notification_events_async()
+        app_timer_manager.on_event_check_update(self, event)
 
     def _play_startup_sound(self) -> None:
         """Play startup sound if enabled."""

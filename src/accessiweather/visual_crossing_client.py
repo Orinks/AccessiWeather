@@ -22,7 +22,7 @@ from .models import (
 )
 from .utils.retry_utils import async_retry_with_backoff
 from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
-from .weather_client_parsers import describe_moon_phase
+from .weather_client_parsers import convert_f_to_c, degrees_to_cardinal, describe_moon_phase
 
 logger = logging.getLogger(__name__)
 
@@ -40,14 +40,45 @@ class VisualCrossingApiError(Exception):
 class VisualCrossingClient:
     """Client for Visual Crossing Weather API."""
 
-    def __init__(self, api_key: str, user_agent: str = "AccessiWeather/1.0"):
+    _BASE = "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services"
+    _LOW_LATENCY_URL = f"{_BASE}/timelinellx"
+    _STANDARD_URL = f"{_BASE}/timeline"
+
+    def __init__(
+        self,
+        api_key: str,
+        user_agent: str = "AccessiWeather/1.0",
+    ):
         """Initialize the instance."""
         self.api_key = api_key
         self.user_agent = user_agent
-        self.base_url = (
-            "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline"
-        )
+        self.base_url = self._LOW_LATENCY_URL
+        self._fell_back_to_standard = False
         self.timeout = 15.0
+
+    async def _get(
+        self,
+        client: httpx.AsyncClient,
+        url: str,
+        params: dict,
+        headers: dict,
+    ) -> httpx.Response:
+        """Make a GET request, falling back from low-latency to standard endpoint."""
+        response = await client.get(url, params=params, headers=headers)
+
+        # If low-latency endpoint fails (404/5xx) and we haven't fallen back yet, retry
+        if (
+            not self._fell_back_to_standard
+            and self.base_url == self._LOW_LATENCY_URL
+            and response.status_code in {404, 500, 502, 503}
+        ):
+            logger.info("Low-latency endpoint unavailable, falling back to standard")
+            self.base_url = self._STANDARD_URL
+            self._fell_back_to_standard = True
+            fallback_url = url.replace("/timelinellx/", "/timeline/")
+            response = await client.get(fallback_url, params=params, headers=headers)
+
+        return response
 
     @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
     async def get_current_conditions(self, location: Location) -> CurrentConditions | None:
@@ -60,12 +91,12 @@ class VisualCrossingClient:
                 "include": "current,days",
                 "numDays": 1,
                 "unitGroup": "us",  # Use US units (Fahrenheit, mph, inches)
-                "elements": "temp,feelslike,humidity,windspeed,winddir,pressure,conditions,datetime,sunrise,sunset,moonrise,moonset,moonphase,sunriseEpoch,sunsetEpoch,moonriseEpoch,moonsetEpoch,snowdepth,preciptype,windchill,heatindex,severerisk,visibility,uvindex,dew",
+                "elements": "temp,feelslike,humidity,windspeed,winddir,pressure,conditions,datetime,sunrise,sunset,moonrise,moonset,moonphase,sunriseEpoch,sunsetEpoch,moonriseEpoch,moonsetEpoch,snowdepth,preciptype,windchill,heatindex,severerisk,visibility,uvindex,dew,cloudcover,windgust,precip",
             }
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 headers = {"User-Agent": self.user_agent}
-                response = await client.get(url, params=params, headers=headers)
+                response = await self._get(client, url, params, headers)
 
                 if response.status_code == 401:
                     raise VisualCrossingApiError("Invalid API key", response.status_code)
@@ -106,12 +137,12 @@ class VisualCrossingClient:
                 "key": self.api_key,
                 "include": "days",
                 "unitGroup": "us",
-                "elements": "datetime,tempmax,tempmin,temp,conditions,description,windspeed,winddir,icon,precipprob,snow,uvindex,snowdepth,preciptype,windchill,heatindex,severerisk,visibility,feelslikemax,feelslikemin",
+                "elements": "datetime,tempmax,tempmin,temp,conditions,description,windspeed,winddir,icon,precipprob,snow,uvindex,snowdepth,preciptype,windchill,heatindex,severerisk,visibility,feelslikemax,feelslikemin,cloudcover,windgust,precip",
             }
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 headers = {"User-Agent": self.user_agent}
-                response = await client.get(url, params=params, headers=headers)
+                response = await self._get(client, url, params, headers)
 
                 if response.status_code == 401:
                     raise VisualCrossingApiError("Invalid API key", response.status_code)
@@ -144,12 +175,12 @@ class VisualCrossingClient:
                 "key": self.api_key,
                 "include": "hours",
                 "unitGroup": "us",
-                "elements": "datetime,temp,conditions,windspeed,winddir,icon,precipprob,snow,uvindex,snowdepth,preciptype,windchill,heatindex,visibility,feelslike,pressure",
+                "elements": "datetime,temp,conditions,windspeed,winddir,icon,precipprob,snow,uvindex,snowdepth,preciptype,windchill,heatindex,visibility,feelslike,pressure,cloudcover,windgust,precip",
             }
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 headers = {"User-Agent": self.user_agent}
-                response = await client.get(url, params=params, headers=headers)
+                response = await self._get(client, url, params, headers)
 
                 if response.status_code == 401:
                     raise VisualCrossingApiError("Invalid API key", response.status_code)
@@ -186,7 +217,7 @@ class VisualCrossingClient:
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 headers = {"User-Agent": self.user_agent}
-                response = await client.get(url, params=params, headers=headers)
+                response = await self._get(client, url, params, headers)
 
                 if response.status_code == 401:
                     raise VisualCrossingApiError("Invalid API key", response.status_code)
@@ -212,6 +243,59 @@ class VisualCrossingClient:
             return WeatherAlerts(alerts=[])
 
     @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
+    async def get_air_quality(self, location: Location) -> dict | None:
+        """
+        Get air quality data from Visual Crossing API.
+
+        Returns dict with available AQ keys (aqius, pm1, pm2p5, pm10,
+        o3, no2, so2, co) or None on failure.
+        """
+        try:
+            url = f"{self.base_url}/{location.latitude},{location.longitude}"
+            params = {
+                "key": self.api_key,
+                "include": "current",
+                "unitGroup": "us",
+                "elements": ("datetime,aqius,pm1,pm2p5,pm10,o3,no2,so2,co"),
+            }
+
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
+                headers = {"User-Agent": self.user_agent}
+                response = await self._get(client, url, params, headers)
+
+                if response.status_code != 200:
+                    return None
+
+                data = response.json()
+                current = data.get("currentConditions", {})
+                if not current:
+                    return None
+
+                result = {}
+                for key in (
+                    "aqius",
+                    "pm1",
+                    "pm2p5",
+                    "pm10",
+                    "o3",
+                    "no2",
+                    "so2",
+                    "co",
+                ):
+                    val = current.get(key)
+                    if val is not None:
+                        result[key] = val
+
+                return result if result else None
+
+        except Exception:
+            logger.debug(
+                "Visual Crossing air quality request failed",
+                exc_info=True,
+            )
+            return None
+
+    @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
     async def get_history(
         self, location: Location, start_date: datetime, end_date: datetime
     ) -> Forecast | None:
@@ -229,7 +313,7 @@ class VisualCrossingClient:
 
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
                 headers = {"User-Agent": self.user_agent}
-                response = await client.get(url, params=params, headers=headers)
+                response = await self._get(client, url, params, headers)
 
                 if response.status_code == 401:
                     raise VisualCrossingApiError("Invalid API key", response.status_code)
@@ -253,6 +337,73 @@ class VisualCrossingClient:
             logger.error(f"Failed to get Visual Crossing history: {e}")
             raise VisualCrossingApiError(f"Unexpected error: {e}") from e
 
+    async def get_forecast_batch(
+        self, locations: list[Location], days: int = 7
+    ) -> dict[str, Forecast | None]:
+        """
+        Get forecasts for multiple locations in a single API call.
+
+        Visual Crossing supports pipe-separated locations.
+
+        Args:
+            locations: List of locations to fetch forecasts for.
+            days: Number of forecast days (1-15).
+
+        Returns:
+            Dict mapping location coordinate key to Forecast (or None on error).
+
+        """
+        if not locations:
+            return {}
+
+        loc_str = "|".join(f"{loc.latitude},{loc.longitude}" for loc in locations)
+
+        try:
+            forecast_days = min(max(days, 1), 15)
+            url = f"{self.base_url}/{loc_str}"
+            params = {
+                "key": self.api_key,
+                "include": "days",
+                "unitGroup": "us",
+                "forecastDays": forecast_days,
+                "elements": (
+                    "datetime,tempmax,tempmin,temp,conditions,description,"
+                    "windspeed,winddir,icon,precipprob,snow,uvindex,"
+                    "snowdepth,preciptype,windchill,heatindex,severerisk,"
+                    "visibility,feelslikemax,feelslikemin,cloudcover,"
+                    "windgust,precip"
+                ),
+            }
+
+            async with httpx.AsyncClient(timeout=self.timeout * 2, follow_redirects=True) as client:
+                headers = {"User-Agent": self.user_agent}
+                response = await self._get(client, url, params, headers)
+
+                if response.status_code != 200:
+                    logger.warning(f"Batch forecast failed: HTTP {response.status_code}")
+                    return {}
+
+                data = response.json()
+
+                results: dict[str, Forecast | None] = {}
+                if "locations" in data:
+                    for loc_key, loc_data in data["locations"].items():
+                        try:
+                            results[loc_key] = self._parse_forecast(loc_data)
+                        except Exception:
+                            logger.warning(f"Failed to parse forecast for {loc_key}")
+                            results[loc_key] = None
+                else:
+                    # Single location fallback
+                    if locations:
+                        results[locations[0].name] = self._parse_forecast(data)
+
+                return results
+
+        except Exception:
+            logger.error("Batch forecast request failed", exc_info=True)
+            return {}
+
     def _parse_current_conditions(self, data: dict) -> CurrentConditions:
         """Parse Visual Crossing current conditions data."""
         current = data.get("currentConditions", {})
@@ -263,17 +414,17 @@ class VisualCrossingClient:
         location_tz = timezone(timedelta(hours=tz_offset_hours))
 
         temp_f = current.get("temp")
-        temp_c = self._convert_f_to_c(temp_f)
+        temp_c = convert_f_to_c(temp_f)
 
         humidity = current.get("humidity")
         humidity = round(humidity) if humidity is not None else None
 
         dewpoint_f = current.get("dew")
-        dewpoint_c = self._convert_f_to_c(dewpoint_f) if dewpoint_f is not None else None
+        dewpoint_c = convert_f_to_c(dewpoint_f) if dewpoint_f is not None else None
         if dewpoint_f is None and temp_f is not None and humidity is not None:
             dewpoint_f = calculate_dewpoint(temp_f, humidity, unit=TemperatureUnit.FAHRENHEIT)
             if dewpoint_f is not None:
-                dewpoint_c = self._convert_f_to_c(dewpoint_f)
+                dewpoint_c = convert_f_to_c(dewpoint_f)
 
         wind_speed_mph = current.get("windspeed")
         wind_speed_kph = wind_speed_mph * 1.60934 if wind_speed_mph is not None else None
@@ -288,7 +439,7 @@ class VisualCrossingClient:
         visibility_km = visibility_miles * 1.60934 if visibility_miles is not None else None
 
         feels_like_f = current.get("feelslike")
-        feels_like_c = self._convert_f_to_c(feels_like_f)
+        feels_like_c = convert_f_to_c(feels_like_f)
 
         sunrise_time = None
         sunset_time = None
@@ -321,16 +472,22 @@ class VisualCrossingClient:
         snow_depth_cm = snow_depth_in * 2.54 if snow_depth_in is not None else None
 
         wind_chill_f = current.get("windchill")
-        wind_chill_c = self._convert_f_to_c(wind_chill_f)
+        wind_chill_c = convert_f_to_c(wind_chill_f)
 
         heat_index_f = current.get("heatindex")
-        heat_index_c = self._convert_f_to_c(heat_index_f)
+        heat_index_c = convert_f_to_c(heat_index_f)
 
         precip_type = current.get("preciptype")
         precipitation_type = precip_type if isinstance(precip_type, list) else None
 
         severe_weather_risk = current.get("severerisk")
         uv_index = current.get("uvindex")
+
+        cloud_cover = current.get("cloudcover")
+        wind_gust_mph = current.get("windgust")
+        wind_gust_kph = wind_gust_mph * 1.60934 if wind_gust_mph is not None else None
+        precipitation_in = current.get("precip")
+        precipitation_mm = precipitation_in * 25.4 if precipitation_in is not None else None
 
         return CurrentConditions(
             temperature_f=temp_f,
@@ -363,6 +520,11 @@ class VisualCrossingClient:
             precipitation_type=precipitation_type,
             severe_weather_risk=severe_weather_risk,
             uv_index=uv_index,
+            cloud_cover=cloud_cover,
+            wind_gust_mph=wind_gust_mph,
+            wind_gust_kph=wind_gust_kph,
+            precipitation_in=precipitation_in,
+            precipitation_mm=precipitation_mm,
         )
 
     def _parse_forecast(self, data: dict) -> Forecast:
@@ -398,7 +560,7 @@ class VisualCrossingClient:
                 wind_speed=f"{day_data.get('windspeed', 0)} mph"
                 if day_data.get("windspeed")
                 else None,
-                wind_direction=self._degrees_to_cardinal(day_data.get("winddir")),
+                wind_direction=degrees_to_cardinal(day_data.get("winddir")),
                 icon=day_data.get("icon"),
                 precipitation_probability=day_data.get("precipprob"),
                 snowfall=day_data.get("snow"),
@@ -409,6 +571,11 @@ class VisualCrossingClient:
                 precipitation_type=precipitation_type,
                 feels_like_high=day_data.get("feelslikemax"),
                 feels_like_low=day_data.get("feelslikemin"),
+                cloud_cover=day_data.get("cloudcover"),
+                wind_gust=f"{day_data.get('windgust', 0)} mph"
+                if day_data.get("windgust")
+                else None,
+                precipitation_amount=day_data.get("precip"),
             )
             periods.append(period)
 
@@ -488,7 +655,7 @@ class VisualCrossingClient:
                     wind_speed=f"{hour_data.get('windspeed', 0)} mph"
                     if hour_data.get("windspeed")
                     else None,
-                    wind_direction=self._degrees_to_cardinal(hour_data.get("winddir")),
+                    wind_direction=degrees_to_cardinal(hour_data.get("winddir")),
                     icon=hour_data.get("icon"),
                     pressure_mb=hourly_pressure_mb,
                     pressure_in=hourly_pressure_in,
@@ -498,15 +665,18 @@ class VisualCrossingClient:
                     # Seasonal fields
                     snow_depth=hour_data.get("snowdepth"),
                     wind_chill_f=hourly_wind_chill_f,
-                    wind_chill_c=self._convert_f_to_c(hourly_wind_chill_f),
+                    wind_chill_c=convert_f_to_c(hourly_wind_chill_f),
                     heat_index_f=hourly_heat_index_f,
-                    heat_index_c=self._convert_f_to_c(hourly_heat_index_f),
+                    heat_index_c=convert_f_to_c(hourly_heat_index_f),
                     feels_like=hour_data.get("feelslike"),
                     visibility_miles=hourly_vis_miles,
                     visibility_km=hourly_vis_miles * 1.60934
                     if hourly_vis_miles is not None
                     else None,
                     precipitation_type=precipitation_type,
+                    cloud_cover=hour_data.get("cloudcover"),
+                    wind_gust_mph=hour_data.get("windgust"),
+                    precipitation_amount=hour_data.get("precip"),
                 )
                 periods.append(period)
 
@@ -674,33 +844,3 @@ class VisualCrossingClient:
         except (ValueError, TypeError) as e:
             logger.debug(f"Failed to parse VC time '{date_str}T{time_str}': {e}")
             return None
-
-    def _convert_f_to_c(self, fahrenheit: float | None) -> float | None:
-        """Convert Fahrenheit to Celsius."""
-        return (fahrenheit - 32) * 5 / 9 if fahrenheit is not None else None
-
-    def _degrees_to_cardinal(self, degrees: float | None) -> str | None:
-        """Convert wind direction degrees to cardinal direction."""
-        if degrees is None:
-            return None
-
-        directions = [
-            "N",
-            "NNE",
-            "NE",
-            "ENE",
-            "E",
-            "ESE",
-            "SE",
-            "SSE",
-            "S",
-            "SSW",
-            "SW",
-            "WSW",
-            "W",
-            "WNW",
-            "NW",
-            "NNW",
-        ]
-        index = round(degrees / 22.5) % 16
-        return directions[index]

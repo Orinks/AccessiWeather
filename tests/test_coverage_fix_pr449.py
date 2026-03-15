@@ -1,11 +1,12 @@
 """
-Surgical coverage tests for PR #449 changed lines.
+Surgical coverage tests for PR #449 and PR #456 changed lines.
 
 Targets uncovered lines identified by diff-cover:
 - src/accessiweather/models/alerts.py line 37 (references=None branch)
 - src/accessiweather/weather_client_nws.py lines 865-868 (client=None branch)
 - src/accessiweather/weather_client_nws.py lines 1336-1338 (parse_nws_alerts references)
 - src/accessiweather/weather_client_base.py lines 742-743 (_fetch_nws_cancel_references in auto path)
+- src/accessiweather/weather_client_base.py lines 912-924 (_launch_enrichment_tasks auto-mode tasks)
 """
 
 from __future__ import annotations
@@ -104,3 +105,79 @@ def test_parse_nws_alerts_extracts_references():
     assert "ref-A" in alerts_obj.alerts[0].references
     assert "ref-B" in alerts_obj.alerts[0].references
     assert "ref-C" in alerts_obj.alerts[0].references
+
+
+# ---------------------------------------------------------------------------
+# 4. weather_client_base.py lines 912-924: _launch_enrichment_tasks auto-mode
+#    These lines are inside `if self.data_source == "auto":` and create tasks
+#    for sunrise_sunset, nws_discussion, vc_alerts, and vc_moon_data.
+# ---------------------------------------------------------------------------
+@pytest.mark.asyncio
+async def test_launch_enrichment_tasks_auto_mode_creates_smart_tasks():
+    """_launch_enrichment_tasks with data_source='auto' creates all four smart enrichment tasks."""
+    import asyncio
+
+    import accessiweather.weather_client_enrichment as enrichment
+    from accessiweather.models import Location, WeatherData
+    from accessiweather.weather_client import WeatherClient
+
+    client = WeatherClient(data_source="auto")
+    location = Location(name="NYC", latitude=40.7128, longitude=-74.0060)
+    weather_data = WeatherData(location=location)
+
+    async def _noop(*args, **kwargs):
+        pass
+
+    with (
+        patch.object(enrichment, "enrich_with_sunrise_sunset", side_effect=_noop),
+        patch.object(enrichment, "enrich_with_nws_discussion", side_effect=_noop),
+        patch.object(enrichment, "enrich_with_visual_crossing_alerts", side_effect=_noop),
+        patch.object(enrichment, "enrich_with_visual_crossing_moon_data", side_effect=_noop),
+        patch.object(enrichment, "populate_environmental_metrics", side_effect=_noop),
+        patch.object(enrichment, "enrich_with_aviation_data", side_effect=_noop),
+    ):
+        tasks = client._launch_enrichment_tasks(weather_data, location)
+        # Cancel tasks to prevent ResourceWarning about pending coroutines
+        for t in tasks.values():
+            t.cancel()
+        await asyncio.gather(*tasks.values(), return_exceptions=True)
+
+    assert "sunrise_sunset" in tasks
+    assert "nws_discussion" in tasks
+    assert "vc_alerts" in tasks
+    assert "vc_moon_data" in tasks
+    assert "environmental" in tasks
+    assert "aviation" in tasks
+
+
+@pytest.mark.asyncio
+async def test_launch_enrichment_tasks_non_auto_skips_smart_tasks():
+    """_launch_enrichment_tasks with data_source != 'auto' does not create smart enrichment tasks."""
+    import asyncio
+
+    import accessiweather.weather_client_enrichment as enrichment
+    from accessiweather.models import Location, WeatherData
+    from accessiweather.weather_client import WeatherClient
+
+    client = WeatherClient(data_source="nws")
+    location = Location(name="NYC", latitude=40.7128, longitude=-74.0060)
+    weather_data = WeatherData(location=location)
+
+    async def _noop(*args, **kwargs):
+        pass
+
+    with (
+        patch.object(enrichment, "populate_environmental_metrics", side_effect=_noop),
+        patch.object(enrichment, "enrich_with_aviation_data", side_effect=_noop),
+    ):
+        tasks = client._launch_enrichment_tasks(weather_data, location)
+        for t in tasks.values():
+            t.cancel()
+        await asyncio.gather(*tasks.values(), return_exceptions=True)
+
+    assert "sunrise_sunset" not in tasks
+    assert "nws_discussion" not in tasks
+    assert "vc_alerts" not in tasks
+    assert "vc_moon_data" not in tasks
+    assert "environmental" in tasks
+    assert "aviation" in tasks

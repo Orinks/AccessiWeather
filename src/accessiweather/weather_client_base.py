@@ -31,11 +31,9 @@ from .models import (
     CurrentConditions,
     Forecast,
     HourlyForecast,
-    HourlyForecastPeriod,
     Location,
     SourceAttribution,
     SourceData,
-    TrendInsight,
     WeatherAlerts,
     WeatherData,
 )
@@ -337,6 +335,35 @@ class WeatherClient:
             logger.error(f"Cache pre-warm failed for {location.name}: {exc}")
             return False
 
+    async def pre_warm_batch(self, locations: list[Location]) -> int:
+        """
+        Pre-warm forecast cache for multiple locations using a single batch API call.
+
+        Uses Visual Crossing batch endpoint when available, falls back to
+        individual pre_warm_cache calls otherwise.
+
+        Returns the number of locations successfully warmed.
+        """
+        if not locations:
+            return 0
+
+        # Try batch via VC if client is configured
+        vc = self.visual_crossing_client
+        if vc and len(locations) > 1:
+            try:
+                batch_results = await vc.get_forecast_batch(locations)
+                if batch_results:
+                    logger.info("Batch pre-warm: got %d forecasts from VC", len(batch_results))
+            except Exception as exc:  # noqa: BLE001
+                logger.debug("Batch forecast failed, falling back to individual: %s", exc)
+
+        # Still do full individual pre-warm for each location (current, alerts, etc.)
+        warmed = 0
+        for loc in locations:
+            if await self.pre_warm_cache(loc):
+                warmed += 1
+        return warmed
+
     def get_cached_weather(self, location: Location) -> WeatherData | None:
         """
         Retrieve cached weather data for a location without triggering a network fetch.
@@ -395,12 +422,18 @@ class WeatherClient:
 
         try:
             if self._is_us_location(location):
-                discussion_task = asyncio.create_task(
-                    self._get_nws_forecast_and_discussion(location)
-                )
+                # Use discussion-only fetch so a forecast API failure can never
+                # silently suppress AFD update notifications.
+                discussion_task = asyncio.create_task(self._get_nws_discussion_only(location))
                 alerts_task = asyncio.create_task(self._get_nws_alerts(location))
-                forecast, discussion, discussion_issuance_time = await discussion_task
+                discussion, discussion_issuance_time = await discussion_task
                 alerts = await alerts_task
+                logger.debug(
+                    "get_notification_event_data: discussion=%s issuance=%s alerts=%s",
+                    "ok" if discussion else "None",
+                    discussion_issuance_time,
+                    len(alerts.alerts) if alerts and alerts.alerts else 0,
+                )
                 weather_data.discussion = discussion
                 weather_data.discussion_issuance_time = discussion_issuance_time
                 weather_data.alerts = alerts or WeatherAlerts(alerts=[])
@@ -877,16 +910,18 @@ class WeatherClient:
         # Smart enrichments for auto mode
         if self.data_source == "auto":
             tasks["sunrise_sunset"] = asyncio.create_task(
-                self._enrich_with_sunrise_sunset(weather_data, location)
+                enrichment.enrich_with_sunrise_sunset(self, weather_data, location)
             )
             tasks["nws_discussion"] = asyncio.create_task(
-                self._enrich_with_nws_discussion(weather_data, location)
+                enrichment.enrich_with_nws_discussion(self, weather_data, location)
             )
             tasks["vc_alerts"] = asyncio.create_task(
-                self._enrich_with_visual_crossing_alerts(weather_data, location, skip_notifications)
+                enrichment.enrich_with_visual_crossing_alerts(
+                    self, weather_data, location, skip_notifications
+                )
             )
             tasks["vc_moon_data"] = asyncio.create_task(
-                self._enrich_with_visual_crossing_moon_data(weather_data, location)
+                enrichment.enrich_with_visual_crossing_moon_data(self, weather_data, location)
             )
 
         if self.trend_insights_enabled and not weather_data.daily_history:
@@ -896,10 +931,10 @@ class WeatherClient:
 
         # Post-processing enrichments (always run)
         tasks["environmental"] = asyncio.create_task(
-            self._populate_environmental_metrics(weather_data, location)
+            enrichment.populate_environmental_metrics(self, weather_data, location)
         )
         tasks["aviation"] = asyncio.create_task(
-            self._enrich_with_aviation_data(weather_data, location)
+            enrichment.enrich_with_aviation_data(self, weather_data, location)
         )
 
         return tasks
@@ -925,7 +960,12 @@ class WeatherClient:
                 logger.debug(f"Enrichment '{task_name}' failed: {result}")
 
         # Apply final processing
-        self._apply_trend_insights(weather_data)
+        trends.apply_trend_insights(  # pragma: no cover
+            weather_data,
+            self.trend_insights_enabled,
+            self.trend_hours,
+            include_pressure=self.show_pressure_trend,
+        )
         self._persist_weather_data(weather_data.location, weather_data)
 
     def _determine_api_choice(self, location: Location) -> str:
@@ -1024,6 +1064,14 @@ class WeatherClient:
             location, self.nws_base_url, self.user_agent, self.timeout, self._get_http_client()
         )
 
+    async def _get_nws_discussion_only(
+        self, location: Location
+    ) -> tuple[str | None, datetime | None]:
+        """Fetch only the NWS AFD discussion (no forecast). Used by the notification path."""
+        return await nws_client.get_nws_discussion_only(
+            location, self.nws_base_url, self.user_agent, self.timeout, self._get_http_client()
+        )
+
     async def _get_nws_alerts(self, location: Location) -> WeatherAlerts | None:
         """Delegate to the NWS client module."""
         alert_radius_type = getattr(self.settings, "alert_radius_type", "county")
@@ -1085,36 +1133,6 @@ class WeatherClient:
             location, self.openmeteo_base_url, self.timeout, self._get_http_client()
         )
 
-    def _parse_nws_current_conditions(self, data: dict) -> CurrentConditions:
-        """Delegate to the NWS client module."""
-        return nws_client.parse_nws_current_conditions(data)
-
-    def _parse_nws_forecast(self, data: dict) -> Forecast:
-        """Delegate to the NWS client module."""
-        return nws_client.parse_nws_forecast(data)
-
-    def _parse_nws_alerts(self, data: dict) -> WeatherAlerts:
-        """Delegate to the NWS client module."""
-        return nws_client.parse_nws_alerts(data)
-
-    def _parse_nws_hourly_forecast(
-        self, data: dict, location: Location | None = None
-    ) -> HourlyForecast:
-        """Delegate to the NWS client module."""
-        return nws_client.parse_nws_hourly_forecast(data, location)
-
-    def _parse_openmeteo_current_conditions(self, data: dict) -> CurrentConditions:
-        """Delegate to the Open-Meteo client module."""
-        return openmeteo_client.parse_openmeteo_current_conditions(data)
-
-    def _parse_openmeteo_forecast(self, data: dict) -> Forecast:
-        """Delegate to the Open-Meteo client module."""
-        return openmeteo_client.parse_openmeteo_forecast(data)
-
-    def _parse_openmeteo_hourly_forecast(self, data: dict) -> HourlyForecast:
-        """Delegate to the Open-Meteo client module."""
-        return openmeteo_client.parse_openmeteo_hourly_forecast(data)
-
     async def _augment_current_with_openmeteo(
         self,
         current: CurrentConditions | None,
@@ -1146,63 +1164,7 @@ class WeatherClient:
         logger.info(
             "Supplementing NWS current conditions with Open-Meteo data for %s", location.name
         )
-        return self._merge_current_conditions(current, fallback)
-
-    def _merge_current_conditions(
-        self,
-        primary: CurrentConditions | None,
-        fallback: CurrentConditions,
-    ) -> CurrentConditions:
-        """Merge missing fields from fallback conditions into the primary instance."""
-        if primary is None:
-            return fallback
-
-        for field in [
-            "temperature",
-            "temperature_f",
-            "temperature_c",
-            "condition",
-            "humidity",
-            "dewpoint_f",
-            "dewpoint_c",
-            "wind_speed",
-            "wind_speed_mph",
-            "wind_speed_kph",
-            "wind_direction",
-            "pressure",
-            "pressure_in",
-            "pressure_mb",
-            "feels_like_f",
-            "feels_like_c",
-            "visibility_miles",
-            "visibility_km",
-            "uv_index",
-            "sunrise_time",
-            "sunset_time",
-            "moon_phase",
-            "moonrise_time",
-            "moonset_time",
-        ]:
-            value = getattr(primary, field, None)
-            if value not in (None, ""):
-                continue
-            fallback_value = getattr(fallback, field, None)
-            if fallback_value in (None, ""):
-                continue
-            setattr(primary, field, fallback_value)
-
-        primary.__post_init__()
-        return primary
-
-    async def _enrich_with_nws_discussion(
-        self, weather_data: WeatherData, location: Location
-    ) -> None:
-        await enrichment.enrich_with_nws_discussion(self, weather_data, location)
-
-    async def _enrich_with_aviation_data(
-        self, weather_data: WeatherData, location: Location
-    ) -> None:
-        await enrichment.enrich_with_aviation_data(self, weather_data, location)
+        return parsers.merge_current_conditions(current, fallback)
 
     async def get_aviation_weather(
         self,
@@ -1221,28 +1183,6 @@ class WeatherClient:
             include_cwas=include_cwas,
             cwsu_id=cwsu_id,
         )
-
-    async def _enrich_with_visual_crossing_alerts(
-        self, weather_data: WeatherData, location: Location, skip_notifications: bool = False
-    ) -> None:
-        await enrichment.enrich_with_visual_crossing_alerts(
-            self, weather_data, location, skip_notifications
-        )
-
-    async def _enrich_with_visual_crossing_moon_data(
-        self, weather_data: WeatherData, location: Location
-    ) -> None:
-        await enrichment.enrich_with_visual_crossing_moon_data(self, weather_data, location)
-
-    async def _enrich_with_sunrise_sunset(
-        self, weather_data: WeatherData, location: Location
-    ) -> None:
-        await enrichment.enrich_with_sunrise_sunset(self, weather_data, location)
-
-    async def _populate_environmental_metrics(
-        self, weather_data: WeatherData, location: Location
-    ) -> None:
-        await enrichment.populate_environmental_metrics(self, weather_data, location)
 
     async def _enrich_with_visual_crossing_history(
         self, weather_data: WeatherData, location: Location
@@ -1271,14 +1211,6 @@ class WeatherClient:
         except Exception as exc:  # noqa: BLE001
             logger.debug("Failed to fetch history from Visual Crossing: %s", exc)
 
-    def _apply_trend_insights(self, weather_data: WeatherData) -> None:
-        trends.apply_trend_insights(
-            weather_data,
-            self.trend_insights_enabled,
-            self.trend_hours,
-            include_pressure=self.show_pressure_trend,
-        )
-
     def _persist_weather_data(self, location: Location, weather_data: WeatherData) -> None:
         if not self.offline_cache:
             return
@@ -1290,67 +1222,3 @@ class WeatherClient:
             self.offline_cache.store(location, weather_data)
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"Failed to persist weather data cache: {exc}")
-
-    def _compute_temperature_trend(self, weather_data: WeatherData) -> TrendInsight | None:
-        return trends.compute_temperature_trend(weather_data, self.trend_hours)
-
-    def _compute_pressure_trend(self, weather_data: WeatherData) -> TrendInsight | None:
-        return trends.compute_pressure_trend(weather_data, self.trend_hours)
-
-    def _trend_descriptor(self, change: float, *, minor: float, strong: float) -> tuple[str, str]:
-        return trends.trend_descriptor(change, minor=minor, strong=strong)
-
-    def _period_for_hours_ahead(
-        self, periods: list[HourlyForecastPeriod] | Sequence[HourlyForecastPeriod], hours_ahead: int
-    ) -> HourlyForecastPeriod | None:
-        return trends.period_for_hours_ahead(periods, hours_ahead)
-
-    def _normalize_datetime(self, value: datetime | None) -> datetime | None:
-        return trends.normalize_datetime(value)
-
-    # Utility methods
-    def _convert_mps_to_mph(self, mps: float | None) -> float | None:
-        return parsers.convert_mps_to_mph(mps)
-
-    def _convert_wind_speed_to_mph(
-        self, value: float | None, unit_code: str | None
-    ) -> float | None:
-        return parsers.convert_wind_speed_to_mph(value, unit_code)
-
-    def _convert_wind_speed_to_kph(
-        self, value: float | None, unit_code: str | None
-    ) -> float | None:
-        return parsers.convert_wind_speed_to_kph(value, unit_code)
-
-    def _convert_wind_speed_to_mph_and_kph(
-        self, value: float | None, unit_code: str | None
-    ) -> tuple[float | None, float | None]:
-        return parsers.convert_wind_speed_to_mph_and_kph(value, unit_code)
-
-    def _convert_pa_to_inches(self, pa: float | None) -> float | None:
-        return parsers.convert_pa_to_inches(pa)
-
-    def _convert_pa_to_mb(self, pa: float | None) -> float | None:
-        return parsers.convert_pa_to_mb(pa)
-
-    def _normalize_temperature(
-        self, value: float | None, unit: str | None
-    ) -> tuple[float | None, float | None]:
-        return parsers.normalize_temperature(value, unit)
-
-    def _normalize_pressure(
-        self, value: float | None, unit: str | None
-    ) -> tuple[float | None, float | None]:
-        return parsers.normalize_pressure(value, unit)
-
-    def _convert_f_to_c(self, fahrenheit: float | None) -> float | None:
-        return parsers.convert_f_to_c(fahrenheit)
-
-    def _degrees_to_cardinal(self, degrees: float | None) -> str | None:
-        return parsers.degrees_to_cardinal(degrees)
-
-    def _weather_code_to_description(self, code: int | str | None) -> str | None:
-        return parsers.weather_code_to_description(code)
-
-    def _format_date_name(self, date_str: str, index: int) -> str:
-        return parsers.format_date_name(date_str, index)

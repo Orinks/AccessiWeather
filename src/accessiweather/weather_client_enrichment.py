@@ -385,6 +385,14 @@ async def populate_environmental_metrics(
 
     weather_data.environmental = environmental
 
+    # Fallback: populate AQ from Visual Crossing if Open-Meteo didn't provide it
+    if environmental.air_quality_index is None and client.visual_crossing_client:
+        try:
+            vc_aq = await client.visual_crossing_client.get_air_quality(location)
+            client.environmental_client.populate_from_visual_crossing(vc_aq, environmental)
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("VC air quality fallback failed: %s", exc)
+
     # Copy UV index from current conditions to environmental conditions
     if weather_data.current and weather_data.current.uv_index is not None:
         weather_data.environmental.uv_index = weather_data.current.uv_index

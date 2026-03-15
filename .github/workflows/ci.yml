@@ -19,103 +19,23 @@ env:
   FORCE_COLOR: "1"
 
 jobs:
-  changelog-check:
-    name: CHANGELOG Check
+  validate:
+    name: Validate (Ubuntu, Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
-    # Only run on dev branch (where nightlies come from)
-    if: github.ref == 'refs/heads/dev' || github.base_ref == 'dev'
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v6
-      with:
-        fetch-depth: 0
-
-    - name: Check for CHANGELOG updates
-      run: |
-        echo "Checking if src/ changes include CHANGELOG.md updates..."
-
-        # Determine the comparison base
-        if [ "${{ github.event_name }}" = "pull_request" ]; then
-          BASE="origin/${{ github.base_ref }}"
-          echo "PR detected - comparing against $BASE"
-        else
-          # For pushes, compare against the previous commit or last nightly tag
-          LAST_NIGHTLY=$(git tag --list "nightly-*" --sort=-version:refname | head -n 1)
-          if [ -n "$LAST_NIGHTLY" ]; then
-            BASE="$LAST_NIGHTLY"
-            echo "Push detected - comparing against last nightly tag: $BASE"
-          else
-            BASE="HEAD~1"
-            echo "Push detected - no nightly tag found, comparing against previous commit"
-          fi
-        fi
-
-        # Get changed files (two-dot syntax: changes in HEAD not in BASE)
-        CHANGED_FILES=$(git diff --name-only "$BASE"..HEAD)
-
-        # Check if src/ was modified
-        SRC_CHANGED=$(echo "$CHANGED_FILES" | grep -E "^src/" || true)
-        CHANGELOG_CHANGED=$(echo "$CHANGED_FILES" | grep -E "^CHANGELOG\.md$" || true)
-
-        echo ""
-        echo "Changed files in src/:"
-        echo "$SRC_CHANGED" | head -20
-        echo ""
-
-        if [ -n "$SRC_CHANGED" ] && [ -z "$CHANGELOG_CHANGED" ]; then
-          echo "::warning::⚠️ Source files were changed but CHANGELOG.md was not updated!"
-          echo ""
-          echo "┌─────────────────────────────────────────────────────────────┐"
-          echo "│  📝 CHANGELOG REMINDER                                      │"
-          echo "├─────────────────────────────────────────────────────────────┤"
-          echo "│  You modified files in src/ but didn't update CHANGELOG.md │"
-          echo "│                                                             │"
-          echo "│  Please add your changes to the '## Unreleased' section:    │"
-          echo "│  - New features go under '### Added'                        │"
-          echo "│  - Bug fixes go under '### Fixed'                           │"
-          echo "│  - Changes go under '### Changed'                           │"
-          echo "│                                                             │"
-          echo "│  This helps generate accurate nightly release notes!        │"
-          echo "└─────────────────────────────────────────────────────────────┘"
-          echo ""
-          # Don't fail the build, just warn
-          exit 0
-        elif [ -n "$SRC_CHANGED" ] && [ -n "$CHANGELOG_CHANGED" ]; then
-          echo "✅ CHANGELOG.md was updated along with source changes. Great job!"
-        else
-          echo "ℹ️ No source file changes detected (or only non-src files changed)."
-        fi
-
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v6
-
-    - name: Ruff format check
-      uses: astral-sh/ruff-action@v3
-      with:
-        args: format --check
-
-    - name: Ruff lint
-      uses: astral-sh/ruff-action@v3
-      with:
-        args: check
-
-  tests:
-    name: Tests (Ubuntu, Python ${{ matrix.python-version }})
-    runs-on: ubuntu-latest
-    needs: lint
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.12", "3.13"]
+        include:
+          - python-version: "3.12"
+            primary: true
+          - python-version: "3.13"
+            primary: false
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
+      with:
+        fetch-depth: ${{ matrix.primary && 0 || 1 }}
 
     - name: Set up Python
       uses: actions/setup-python@v6
@@ -131,6 +51,18 @@ jobs:
           freeglut3-dev xvfb
         version: 1.0
 
+    - name: Ruff format check
+      if: matrix.primary
+      uses: astral-sh/ruff-action@v3
+      with:
+        args: format --check
+
+    - name: Ruff lint
+      if: matrix.primary
+      uses: astral-sh/ruff-action@v3
+      with:
+        args: check
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -143,86 +75,70 @@ jobs:
         pip install -r requirements-dev.txt
         pip install -e .
 
-    - name: Run tests with coverage (headless via xvfb)
+    - name: Check CHANGELOG reminder
+      if: matrix.primary && (github.ref == 'refs/heads/dev' || github.base_ref == 'dev')
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          BASE="origin/${{ github.base_ref }}"
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}:${BASE}" || true
+          echo "PR detected - comparing against $BASE"
+        else
+          LAST_NIGHTLY=$(git tag --list "nightly-*" --sort=-version:refname | head -n 1)
+          BASE="${LAST_NIGHTLY:-HEAD~1}"
+          echo "Push detected - comparing against $BASE"
+        fi
+
+        if ! CHANGED_FILES=$(git diff --name-only "$BASE"..HEAD 2>/dev/null); then
+          echo "Could not determine changed files for CHANGELOG reminder. Skipping."
+          exit 0
+        fi
+
+        SRC_CHANGED=$(echo "$CHANGED_FILES" | grep -E "^src/" || true)
+        CHANGELOG_CHANGED=$(echo "$CHANGED_FILES" | grep -E "^CHANGELOG\.md$" || true)
+
+        if [ -n "$SRC_CHANGED" ] && [ -z "$CHANGELOG_CHANGED" ]; then
+          {
+            echo "### CHANGELOG reminder"
+            echo
+            echo "Source files changed without a matching \`CHANGELOG.md\` update."
+            echo "Add the user-facing note under \`## Unreleased\` when the change should appear in nightly release notes."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::warning::Source files changed but CHANGELOG.md was not updated."
+        elif [ -n "$SRC_CHANGED" ]; then
+          echo "CHANGELOG.md updated alongside src/ changes."
+        else
+          echo "No src/ changes detected."
+        fi
+
+    - name: Run tests (headless via xvfb)
       env:
         PYTHONPATH: src
         ACCESSIWEATHER_TEST_MODE: "1"
-        HYPOTHESIS_PROFILE: ci  # Use fast CI profile (fewer examples, no deadline)
+        HYPOTHESIS_PROFILE: ci
       run: |
-        mkdir -p reports
-        xvfb-run -a pytest tests/ -n auto -v --tb=short -m "not integration" \
-          --junitxml=reports/junit.xml \
-          --cov=src/accessiweather \
-          --cov-report=xml:reports/coverage.xml \
-          --cov-report=term-missing
-
-    - name: Upload test report
-      if: always()
-      uses: actions/upload-artifact@v7
-      with:
-        name: junit-${{ matrix.python-version }}
-        path: reports/junit.xml
-        retention-days: 7
-
-    - name: Upload coverage report
-      if: always()
-      uses: actions/upload-artifact@v7
-      with:
-        name: coverage-${{ matrix.python-version }}
-        path: reports/coverage.xml
-        retention-days: 7
-
-    - name: CI Summary
-      if: always()
-      run: |
-        echo "=== CI Workflow Summary ==="
-        echo "Branch: ${{ github.ref_name }}"
-        echo "Commit: ${{ github.sha }}"
-        echo "Event: ${{ github.event_name }}"
-        echo "Python: ${{ matrix.python-version }}"
-        if [ "${{ job.status }}" = "success" ]; then
-          echo "✅ All checks passed!"
+        if [ "${{ matrix.primary }}" = "true" ]; then
+          mkdir -p reports
+          xvfb-run -a pytest tests/ -n auto -v --tb=short -m "not integration" \
+            --cov=src/accessiweather \
+            --cov-report=xml:reports/coverage.xml \
+            --cov-report=term-missing
         else
-          echo "❌ Some checks failed"
+          xvfb-run -a pytest tests/ -n auto -v --tb=short -m "not integration"
         fi
 
-  coverage-gate:
-    name: Coverage Gate
-    runs-on: ubuntu-latest
-    needs: tests
-    if: github.event_name == 'pull_request'
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v6
-      with:
-        fetch-depth: 0
-
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: "3.12"
-        cache: pip
-
     - name: Install diff-cover
+      if: matrix.primary && github.event_name == 'pull_request'
       run: pip install diff-cover>=9.0.0
 
-    - name: Download coverage report
-      uses: actions/download-artifact@v8
-      with:
-        name: coverage-3.12
-        path: reports
-
-    - name: Check coverage on changed lines
+    - name: Coverage gate
+      if: matrix.primary && github.event_name == 'pull_request'
       run: |
-        echo "Checking that new/changed code has test coverage..."
-
         BASE="origin/${{ github.base_ref }}"
         CHANGED_SRC=$(git diff --name-only "$BASE"..HEAD | grep '^src/' || true)
         NON_EXCLUDED_CHANGED=$(echo "$CHANGED_SRC" | grep -Ev '^src/accessiweather/ui/|^src/accessiweather/notifications/toast_notifier.py$|^src/weather_gov_api_client/' || true)
 
         if [ -z "$NON_EXCLUDED_CHANGED" ]; then
-          echo "ℹ️ No non-excluded src/ changes to gate. Skipping diff coverage gate."
+          echo "No non-excluded src/ changes to gate. Skipping diff coverage gate."
           exit 0
         fi
 
@@ -231,4 +147,4 @@ jobs:
           --fail-under=80 \
           --diff-range-notation='..' \
           --exclude '*/accessiweather/ui/*'
-        echo "✅ New code meets coverage threshold!"
+        echo "New code meets coverage threshold."
