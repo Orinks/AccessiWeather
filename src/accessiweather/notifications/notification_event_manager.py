@@ -24,6 +24,13 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _format_issuance_time_label(issuance_time: datetime) -> str:
+    """Format issuance time using the datetime's own timezone context."""
+    time_str = issuance_time.strftime("%I:%M %p").lstrip("0")
+    tz_name = issuance_time.tzname() or ""
+    return f"{time_str} {tz_name}".strip()
+
+
 def get_risk_category(risk: int) -> str:
     """
     Categorize severe weather risk level.
@@ -325,13 +332,13 @@ class NotificationEventManager:
             self.state.last_discussion_text = discussion_text
 
             issued_label = (
-                issuance_time.strftime("%I:%M %p").lstrip("0")
+                _format_issuance_time_label(issuance_time)
                 if hasattr(issuance_time, "strftime")
                 else str(issuance_time)
             )
             message = f"The Area Forecast Discussion for {location_name} was updated by the National Weather Service at {issued_label}."
             if change_summary:
-                message += f" Change summary: {change_summary}"
+                message += f" {change_summary}"
 
             return NotificationEvent(
                 event_type="discussion_update",

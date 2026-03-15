@@ -131,12 +131,16 @@ class TestNotificationEventManager:
         assert len(events2) == 0
 
         # Newer issuance time - should notify
-        newer_time = first_time + timedelta(hours=3)
+        newer_time = datetime(2026, 1, 20, 12, 35, 0, tzinfo=timezone(timedelta(hours=-5), "EST"))
+        weather_data.discussion = "Discussion text\n\n.WHAT HAS CHANGED...\nRain arrives earlier."
         weather_data.discussion_issuance_time = newer_time
         events3 = manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
         assert len(events3) == 1
         assert events3[0].event_type == "discussion_update"
         assert "Updated" in events3[0].title
+        assert "12:35 PM EST" in events3[0].message
+        assert "Change summary:" not in events3[0].message
+        assert "Rain arrives earlier." in events3[0].message
 
     def test_discussion_notification_disabled(self, manager, settings_none_enabled):
         """Test that notifications are not sent when disabled."""
