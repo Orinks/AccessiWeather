@@ -31,11 +31,9 @@ from .models import (
     CurrentConditions,
     Forecast,
     HourlyForecast,
-    HourlyForecastPeriod,
     Location,
     SourceAttribution,
     SourceData,
-    TrendInsight,
     WeatherAlerts,
     WeatherData,
 )
@@ -912,16 +910,18 @@ class WeatherClient:
         # Smart enrichments for auto mode
         if self.data_source == "auto":
             tasks["sunrise_sunset"] = asyncio.create_task(
-                self._enrich_with_sunrise_sunset(weather_data, location)
+                enrichment.enrich_with_sunrise_sunset(self, weather_data, location)
             )
             tasks["nws_discussion"] = asyncio.create_task(
-                self._enrich_with_nws_discussion(weather_data, location)
+                enrichment.enrich_with_nws_discussion(self, weather_data, location)
             )
             tasks["vc_alerts"] = asyncio.create_task(
-                self._enrich_with_visual_crossing_alerts(weather_data, location, skip_notifications)
+                enrichment.enrich_with_visual_crossing_alerts(
+                    self, weather_data, location, skip_notifications
+                )
             )
             tasks["vc_moon_data"] = asyncio.create_task(
-                self._enrich_with_visual_crossing_moon_data(weather_data, location)
+                enrichment.enrich_with_visual_crossing_moon_data(self, weather_data, location)
             )
 
         if self.trend_insights_enabled and not weather_data.daily_history:
@@ -931,10 +931,10 @@ class WeatherClient:
 
         # Post-processing enrichments (always run)
         tasks["environmental"] = asyncio.create_task(
-            self._populate_environmental_metrics(weather_data, location)
+            enrichment.populate_environmental_metrics(self, weather_data, location)
         )
         tasks["aviation"] = asyncio.create_task(
-            self._enrich_with_aviation_data(weather_data, location)
+            enrichment.enrich_with_aviation_data(self, weather_data, location)
         )
 
         return tasks
@@ -960,7 +960,12 @@ class WeatherClient:
                 logger.debug(f"Enrichment '{task_name}' failed: {result}")
 
         # Apply final processing
-        self._apply_trend_insights(weather_data)
+        trends.apply_trend_insights(  # pragma: no cover
+            weather_data,
+            self.trend_insights_enabled,
+            self.trend_hours,
+            include_pressure=self.show_pressure_trend,
+        )
         self._persist_weather_data(weather_data.location, weather_data)
 
     def _determine_api_choice(self, location: Location) -> str:
@@ -1128,36 +1133,6 @@ class WeatherClient:
             location, self.openmeteo_base_url, self.timeout, self._get_http_client()
         )
 
-    def _parse_nws_current_conditions(self, data: dict) -> CurrentConditions:
-        """Delegate to the NWS client module."""
-        return nws_client.parse_nws_current_conditions(data)
-
-    def _parse_nws_forecast(self, data: dict) -> Forecast:
-        """Delegate to the NWS client module."""
-        return nws_client.parse_nws_forecast(data)
-
-    def _parse_nws_alerts(self, data: dict) -> WeatherAlerts:
-        """Delegate to the NWS client module."""
-        return nws_client.parse_nws_alerts(data)
-
-    def _parse_nws_hourly_forecast(
-        self, data: dict, location: Location | None = None
-    ) -> HourlyForecast:
-        """Delegate to the NWS client module."""
-        return nws_client.parse_nws_hourly_forecast(data, location)
-
-    def _parse_openmeteo_current_conditions(self, data: dict) -> CurrentConditions:
-        """Delegate to the Open-Meteo client module."""
-        return openmeteo_client.parse_openmeteo_current_conditions(data)
-
-    def _parse_openmeteo_forecast(self, data: dict) -> Forecast:
-        """Delegate to the Open-Meteo client module."""
-        return openmeteo_client.parse_openmeteo_forecast(data)
-
-    def _parse_openmeteo_hourly_forecast(self, data: dict) -> HourlyForecast:
-        """Delegate to the Open-Meteo client module."""
-        return openmeteo_client.parse_openmeteo_hourly_forecast(data)
-
     async def _augment_current_with_openmeteo(
         self,
         current: CurrentConditions | None,
@@ -1191,16 +1166,6 @@ class WeatherClient:
         )
         return parsers.merge_current_conditions(current, fallback)
 
-    async def _enrich_with_nws_discussion(
-        self, weather_data: WeatherData, location: Location
-    ) -> None:
-        await enrichment.enrich_with_nws_discussion(self, weather_data, location)
-
-    async def _enrich_with_aviation_data(
-        self, weather_data: WeatherData, location: Location
-    ) -> None:
-        await enrichment.enrich_with_aviation_data(self, weather_data, location)
-
     async def get_aviation_weather(
         self,
         station_id: str,
@@ -1218,28 +1183,6 @@ class WeatherClient:
             include_cwas=include_cwas,
             cwsu_id=cwsu_id,
         )
-
-    async def _enrich_with_visual_crossing_alerts(
-        self, weather_data: WeatherData, location: Location, skip_notifications: bool = False
-    ) -> None:
-        await enrichment.enrich_with_visual_crossing_alerts(
-            self, weather_data, location, skip_notifications
-        )
-
-    async def _enrich_with_visual_crossing_moon_data(
-        self, weather_data: WeatherData, location: Location
-    ) -> None:
-        await enrichment.enrich_with_visual_crossing_moon_data(self, weather_data, location)
-
-    async def _enrich_with_sunrise_sunset(
-        self, weather_data: WeatherData, location: Location
-    ) -> None:
-        await enrichment.enrich_with_sunrise_sunset(self, weather_data, location)
-
-    async def _populate_environmental_metrics(
-        self, weather_data: WeatherData, location: Location
-    ) -> None:
-        await enrichment.populate_environmental_metrics(self, weather_data, location)
 
     async def _enrich_with_visual_crossing_history(
         self, weather_data: WeatherData, location: Location
@@ -1268,14 +1211,6 @@ class WeatherClient:
         except Exception as exc:  # noqa: BLE001
             logger.debug("Failed to fetch history from Visual Crossing: %s", exc)
 
-    def _apply_trend_insights(self, weather_data: WeatherData) -> None:
-        trends.apply_trend_insights(
-            weather_data,
-            self.trend_insights_enabled,
-            self.trend_hours,
-            include_pressure=self.show_pressure_trend,
-        )
-
     def _persist_weather_data(self, location: Location, weather_data: WeatherData) -> None:
         if not self.offline_cache:
             return
@@ -1287,17 +1222,3 @@ class WeatherClient:
             self.offline_cache.store(location, weather_data)
         except Exception as exc:  # noqa: BLE001
             logger.debug(f"Failed to persist weather data cache: {exc}")
-
-    def _compute_temperature_trend(self, weather_data: WeatherData) -> TrendInsight | None:
-        return trends.compute_temperature_trend(weather_data, self.trend_hours)
-
-    def _compute_pressure_trend(self, weather_data: WeatherData) -> TrendInsight | None:
-        return trends.compute_pressure_trend(weather_data, self.trend_hours)
-
-    def _trend_descriptor(self, change: float, *, minor: float, strong: float) -> tuple[str, str]:
-        return trends.trend_descriptor(change, minor=minor, strong=strong)
-
-    def _period_for_hours_ahead(
-        self, periods: list[HourlyForecastPeriod] | Sequence[HourlyForecastPeriod], hours_ahead: int
-    ) -> HourlyForecastPeriod | None:
-        return trends.period_for_hours_ahead(periods, hours_ahead)
