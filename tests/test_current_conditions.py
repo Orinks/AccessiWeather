@@ -706,3 +706,230 @@ class TestBuildCurrentConditions:
         assert not any(line.startswith("Temperature:") and "mi" in line for line in lines), (
             "Visibility value incorrectly labelled as Temperature in fallback_text"
         )
+
+
+# ── Cloud cover, wind gusts, precipitation in _build_basic_metrics ──
+
+
+class TestBuildBasicMetricsNewFields:
+    """Cover cloud_cover, wind_gust, and precipitation lines in _build_basic_metrics."""
+
+    def _make_current(self, **kwargs):
+        return CurrentConditions(temperature_f=72.0, **kwargs)
+
+    # -- Cloud cover --
+
+    def test_cloud_cover_present(self):
+        current = self._make_current(cloud_cover=45.0)
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.FAHRENHEIT,
+            0,
+            show_dewpoint=False,
+            show_visibility=False,
+            show_uv_index=False,
+        )
+        cc = [m for m in metrics if m.label == "Cloud cover"]
+        assert len(cc) == 1
+        assert "45%" in cc[0].value
+
+    def test_cloud_cover_none_omitted(self):
+        current = self._make_current(cloud_cover=None)
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.FAHRENHEIT,
+            0,
+            show_dewpoint=False,
+            show_visibility=False,
+            show_uv_index=False,
+        )
+        assert not any(m.label == "Cloud cover" for m in metrics)
+
+    # -- Wind gusts (FAHRENHEIT) --
+
+    def test_wind_gusts_fahrenheit(self):
+        current = self._make_current(wind_gust_mph=25.0)
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.FAHRENHEIT,
+            0,
+            show_dewpoint=False,
+            show_visibility=False,
+            show_uv_index=False,
+        )
+        gusts = [m for m in metrics if m.label == "Wind gusts"]
+        assert len(gusts) == 1
+        assert "25 mph" in gusts[0].value
+
+    # -- Wind gusts (CELSIUS) --
+
+    def test_wind_gusts_celsius(self):
+        current = self._make_current(wind_gust_mph=25.0, wind_gust_kph=40.2)
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.CELSIUS,
+            0,
+            show_dewpoint=False,
+            show_visibility=False,
+            show_uv_index=False,
+        )
+        gusts = [m for m in metrics if m.label == "Wind gusts"]
+        assert len(gusts) == 1
+        assert "40 kph" in gusts[0].value
+
+    def test_wind_gusts_celsius_converts_from_mph(self):
+        current = self._make_current(wind_gust_mph=10.0, wind_gust_kph=None)
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.CELSIUS,
+            0,
+            show_dewpoint=False,
+            show_visibility=False,
+            show_uv_index=False,
+        )
+        gusts = [m for m in metrics if m.label == "Wind gusts"]
+        assert len(gusts) == 1
+        assert "kph" in gusts[0].value
+
+    # -- Wind gusts (BOTH) --
+
+    def test_wind_gusts_both(self):
+        current = self._make_current(wind_gust_mph=25.0, wind_gust_kph=40.2)
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.BOTH,
+            0,
+            show_dewpoint=False,
+            show_visibility=False,
+            show_uv_index=False,
+        )
+        gusts = [m for m in metrics if m.label == "Wind gusts"]
+        assert len(gusts) == 1
+        assert "mph" in gusts[0].value
+        assert "kph" in gusts[0].value
+
+    def test_wind_gusts_both_converts_kph(self):
+        current = self._make_current(wind_gust_mph=25.0, wind_gust_kph=None)
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.BOTH,
+            0,
+            show_dewpoint=False,
+            show_visibility=False,
+            show_uv_index=False,
+        )
+        gusts = [m for m in metrics if m.label == "Wind gusts"]
+        assert len(gusts) == 1
+        assert "mph" in gusts[0].value and "kph" in gusts[0].value
+
+    def test_wind_gusts_none_omitted(self):
+        current = self._make_current(wind_gust_mph=None)
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.FAHRENHEIT,
+            0,
+            show_dewpoint=False,
+            show_visibility=False,
+            show_uv_index=False,
+        )
+        assert not any(m.label == "Wind gusts" for m in metrics)
+
+    # -- Precipitation (FAHRENHEIT) --
+
+    def test_precipitation_fahrenheit(self):
+        current = self._make_current(precipitation_in=0.5)
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.FAHRENHEIT,
+            0,
+            show_dewpoint=False,
+            show_visibility=False,
+            show_uv_index=False,
+        )
+        precip = [m for m in metrics if m.label == "Precipitation"]
+        assert len(precip) == 1
+        assert "0.50 in" in precip[0].value
+
+    # -- Precipitation (CELSIUS) --
+
+    def test_precipitation_celsius(self):
+        current = self._make_current(precipitation_in=0.5, precipitation_mm=12.7)
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.CELSIUS,
+            0,
+            show_dewpoint=False,
+            show_visibility=False,
+            show_uv_index=False,
+        )
+        precip = [m for m in metrics if m.label == "Precipitation"]
+        assert len(precip) == 1
+        assert "12.7 mm" in precip[0].value
+
+    def test_precipitation_celsius_converts_from_in(self):
+        current = self._make_current(precipitation_in=1.0, precipitation_mm=None)
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.CELSIUS,
+            0,
+            show_dewpoint=False,
+            show_visibility=False,
+            show_uv_index=False,
+        )
+        precip = [m for m in metrics if m.label == "Precipitation"]
+        assert len(precip) == 1
+        assert "25.4 mm" in precip[0].value
+
+    # -- Precipitation (BOTH) --
+
+    def test_precipitation_both(self):
+        current = self._make_current(precipitation_in=0.5, precipitation_mm=12.7)
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.BOTH,
+            0,
+            show_dewpoint=False,
+            show_visibility=False,
+            show_uv_index=False,
+        )
+        precip = [m for m in metrics if m.label == "Precipitation"]
+        assert len(precip) == 1
+        assert "in" in precip[0].value and "mm" in precip[0].value
+
+    def test_precipitation_both_converts_mm(self):
+        current = self._make_current(precipitation_in=1.0, precipitation_mm=None)
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.BOTH,
+            0,
+            show_dewpoint=False,
+            show_visibility=False,
+            show_uv_index=False,
+        )
+        precip = [m for m in metrics if m.label == "Precipitation"]
+        assert len(precip) == 1
+        assert "in" in precip[0].value and "mm" in precip[0].value
+
+    def test_precipitation_zero_omitted(self):
+        current = self._make_current(precipitation_in=0.0)
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.FAHRENHEIT,
+            0,
+            show_dewpoint=False,
+            show_visibility=False,
+            show_uv_index=False,
+        )
+        assert not any(m.label == "Precipitation" for m in metrics)
+
+    def test_precipitation_none_omitted(self):
+        current = self._make_current(precipitation_in=None)
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.FAHRENHEIT,
+            0,
+            show_dewpoint=False,
+            show_visibility=False,
+            show_uv_index=False,
+        )
+        assert not any(m.label == "Precipitation" for m in metrics)

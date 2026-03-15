@@ -48,11 +48,74 @@ def get_risk_category(risk: int) -> str:
     return "minimal"
 
 
+def _extract_section(text: str, start_marker: str, end_markers: tuple[str, ...]) -> str | None:
+    """
+    Extract the content of a named section from AFD text.
+
+    Args:
+        text: The full AFD text to search.
+        start_marker: The section header to look for (e.g. '.WHAT HAS CHANGED...').
+        end_markers: Tuple of prefixes that indicate the end of the section
+                     (e.g. lines starting with '.' or '&&').
+
+    Returns:
+        The extracted section body (stripped), or None if the section is not found.
+
+    """
+    lines = text.splitlines()
+    in_section = False
+    body_lines: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if not in_section:
+            if stripped.upper().startswith(start_marker.upper()):
+                in_section = True
+            continue
+        # We are inside the section — check for terminator
+        if any(stripped.startswith(m) for m in end_markers) or any(
+            stripped.upper().startswith(m.upper()) for m in end_markers
+        ):
+            break
+        body_lines.append(stripped)
+    if not in_section:
+        return None
+    content = " ".join(part for part in body_lines if part)
+    return content if content else None
+
+
 def summarize_discussion_change(previous_text: str | None, current_text: str | None) -> str | None:
-    """Return a short human-friendly summary of what changed in the discussion text."""
+    """
+    Return a short human-friendly summary of what changed in the discussion text.
+
+    Priority order:
+    1. `.WHAT HAS CHANGED...` section — extract body up to the next section marker.
+    2. `.KEY MESSAGES...` section — extract body up to ``&&``.
+    3. First new line not present in the previous discussion text.
+
+    The result is truncated to ~300 characters.
+    """
     if not current_text:
         return None
 
+    # 1. Try .WHAT HAS CHANGED... section
+    section = _extract_section(
+        current_text,
+        start_marker=".WHAT HAS CHANGED",
+        end_markers=(".", "&&"),
+    )
+    if section:
+        return section[:300]
+
+    # 2. Try .KEY MESSAGES... section
+    section = _extract_section(
+        current_text,
+        start_marker=".KEY MESSAGES",
+        end_markers=("&&",),
+    )
+    if section:
+        return section[:300]
+
+    # 3. Fall back to first new line not present in previous text
     previous_lines = {
         line.strip()
         for line in (previous_text or "").splitlines()
@@ -63,7 +126,7 @@ def summarize_discussion_change(previous_text: str | None, current_text: str | N
         if not line or line.startswith("$"):
             continue
         if line not in previous_lines:
-            return line[:160]
+            return line[:300]
     return None
 
 
@@ -225,14 +288,27 @@ class NotificationEventManager:
         """
         if not issuance_time:
             # No issuance time available (non-US location or API issue)
+            logger.debug(
+                "_check_discussion_update: no issuance_time (non-US location or fetch failed) "
+                "— skipping"
+            )
             return None
 
         # First time seeing discussion - store but don't notify
         if self.state.last_discussion_issuance_time is None:
             self.state.last_discussion_issuance_time = issuance_time
             self.state.last_discussion_text = discussion_text
-            logger.debug("First discussion issuance time stored: %s", issuance_time)
+            logger.debug(
+                "_check_discussion_update: first-run — stored issuance_time=%s, no notification",
+                issuance_time,
+            )
             return None
+
+        logger.debug(
+            "_check_discussion_update: last=%s current=%s",
+            self.state.last_discussion_issuance_time,
+            issuance_time,
+        )
 
         # Check if issuance time is newer (discussion was updated)
         if issuance_time > self.state.last_discussion_issuance_time:
@@ -249,7 +325,7 @@ class NotificationEventManager:
             self.state.last_discussion_text = discussion_text
 
             issued_label = (
-                issuance_time.strftime("%-I:%M %p")
+                issuance_time.strftime("%I:%M %p").lstrip("0")
                 if hasattr(issuance_time, "strftime")
                 else str(issuance_time)
             )
@@ -265,6 +341,10 @@ class NotificationEventManager:
             )
 
         self.state.last_discussion_text = discussion_text
+        logger.debug(
+            "_check_discussion_update: issuance_time unchanged (%s) — no notification",
+            issuance_time,
+        )
         return None
 
     def _check_severe_risk_change(

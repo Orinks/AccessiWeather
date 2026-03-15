@@ -158,7 +158,7 @@ jobs:
 
     - name: Upload test report
       if: always()
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: junit-${{ matrix.python-version }}
         path: reports/junit.xml
@@ -166,7 +166,7 @@ jobs:
 
     - name: Upload coverage report
       if: always()
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: coverage-${{ matrix.python-version }}
         path: reports/coverage.xml
@@ -208,7 +208,7 @@ jobs:
       run: pip install diff-cover>=9.0.0
 
     - name: Download coverage report
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v8
       with:
         name: coverage-3.12
         path: reports

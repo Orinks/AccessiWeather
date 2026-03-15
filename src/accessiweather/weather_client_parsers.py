@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .models import CurrentConditions
 
 __all__ = [
     "convert_mps_to_mph",
@@ -19,6 +23,7 @@ __all__ = [
     "weather_code_to_description",
     "format_date_name",
     "describe_moon_phase",
+    "merge_current_conditions",
 ]
 
 logger = logging.getLogger(__name__)
@@ -243,3 +248,56 @@ def describe_moon_phase(value: float | int | str | None) -> str | None:
         if fraction < threshold:
             return name
     return "New Moon"
+
+
+def merge_current_conditions(
+    primary: CurrentConditions | None,
+    fallback: CurrentConditions,
+) -> CurrentConditions:
+    """
+    Merge missing fields from fallback into primary; return merged result.
+
+    If primary is None, returns fallback unchanged. Otherwise, iterates over
+    the known supplemental fields and copies non-None, non-empty values from
+    fallback to primary wherever primary has no data. Calls __post_init__ on
+    the result to recompute any derived fields.
+    """
+    if primary is None:
+        return fallback
+
+    for field in [
+        "temperature",
+        "temperature_f",
+        "temperature_c",
+        "condition",
+        "humidity",
+        "dewpoint_f",
+        "dewpoint_c",
+        "wind_speed",
+        "wind_speed_mph",
+        "wind_speed_kph",
+        "wind_direction",
+        "pressure",
+        "pressure_in",
+        "pressure_mb",
+        "feels_like_f",
+        "feels_like_c",
+        "visibility_miles",
+        "visibility_km",
+        "uv_index",
+        "sunrise_time",
+        "sunset_time",
+        "moon_phase",
+        "moonrise_time",
+        "moonset_time",
+    ]:
+        value = getattr(primary, field, None)
+        if value not in (None, ""):
+            continue
+        fallback_value = getattr(fallback, field, None)
+        if fallback_value in (None, ""):
+            continue
+        setattr(primary, field, fallback_value)
+
+    primary.__post_init__()
+    return primary

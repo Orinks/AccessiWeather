@@ -138,6 +138,8 @@ def build_forecast(
     include_uv = verbosity_level == "detailed"
     include_snowfall = verbosity_level == "detailed"
     include_details = verbosity_level == "detailed"
+    include_cloud_cover = verbosity_level == "detailed"
+    include_wind_gust = verbosity_level == "detailed"
     configured_days = _configured_forecast_days(settings)
     selected_periods = _select_periods_by_day_window(forecast, configured_days)
 
@@ -168,6 +170,19 @@ def build_forecast(
             if include_uv and period.uv_index is not None
             else None
         )
+        cloud_val = (
+            f"{period.cloud_cover:.0f}%"
+            if include_cloud_cover and period.cloud_cover is not None
+            else None
+        )
+        gust_val = period.wind_gust if include_wind_gust and period.wind_gust else None
+        precip_amt = (
+            f"{period.precipitation_amount:.2f} in"
+            if include_precipitation
+            and period.precipitation_amount is not None
+            and period.precipitation_amount > 0
+            else None
+        )
 
         periods.append(
             ForecastPeriodPresentation(
@@ -179,6 +194,9 @@ def build_forecast(
                 precipitation_probability=precip_prob,
                 snowfall=snowfall_val,
                 uv_index=uv_val,
+                cloud_cover=cloud_val,
+                wind_gust=gust_val,
+                precipitation_amount=precip_amt,
             )
         )
 
@@ -187,10 +205,16 @@ def build_forecast(
             fallback_lines.append(f"  Conditions: {period.short_forecast}")
         if wind_value:
             fallback_lines.append(f"  Wind: {wind_value}")
+        if gust_val:
+            fallback_lines.append(f"  Wind gusts: {gust_val}")
         if precip_prob:
             fallback_lines.append(f"  Precipitation: {precip_prob}")
+        if precip_amt:
+            fallback_lines.append(f"  Precipitation amount: {precip_amt}")
         if snowfall_val:
             fallback_lines.append(f"  Snowfall: {snowfall_val}")
+        if cloud_val:
+            fallback_lines.append(f"  Cloud cover: {cloud_val}")
         if uv_val:
             fallback_lines.append(f"  UV Index: {uv_val}")
         if details:
@@ -262,6 +286,8 @@ def build_hourly_summary(
     include_precipitation = verbosity_level in ("standard", "detailed")
     include_uv = verbosity_level == "detailed"
     include_snowfall = verbosity_level == "detailed"
+    include_cloud_cover = verbosity_level == "detailed"
+    include_wind_gust = verbosity_level == "detailed"
 
     for period in hourly_forecast.get_next_hours(6):
         if not period.has_data():
@@ -297,6 +323,23 @@ def build_hourly_summary(
             if include_uv and period.uv_index is not None
             else None
         )
+        cloud_val = (
+            f"{period.cloud_cover:.0f}%"
+            if include_cloud_cover and period.cloud_cover is not None
+            else None
+        )
+        gust_val = (
+            f"{period.wind_gust_mph:.0f} mph"
+            if include_wind_gust and period.wind_gust_mph is not None
+            else None
+        )
+        precip_amt = (
+            f"{period.precipitation_amount:.2f} in"
+            if include_precipitation
+            and period.precipitation_amount is not None
+            and period.precipitation_amount > 0
+            else None
+        )
 
         summary.append(
             HourlyPeriodPresentation(
@@ -307,6 +350,9 @@ def build_hourly_summary(
                 precipitation_probability=precip_prob,
                 snowfall=snowfall_val,
                 uv_index=uv_val,
+                cloud_cover=cloud_val,
+                wind_gust=gust_val,
+                precipitation_amount=precip_amt,
             )
         )
     return summary
@@ -350,6 +396,12 @@ def render_hourly_fallback(hourly: Iterable[HourlyPeriodPresentation]) -> str:
             parts.append(f"Precip {period.precipitation_probability}")
         if period.snowfall:
             parts.append(f"Snow {period.snowfall}")
+        if period.cloud_cover:
+            parts.append(f"Clouds {period.cloud_cover}")
+        if period.wind_gust:
+            parts.append(f"Gusts {period.wind_gust}")
+        if period.precipitation_amount:
+            parts.append(f"Precip amt {period.precipitation_amount}")
         if period.uv_index:
             parts.append(f"UV {period.uv_index}")
         lines.append("  " + " - ".join(parts))

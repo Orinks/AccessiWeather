@@ -580,6 +580,9 @@ async def get_nws_forecast_and_discussion(
     """
     Fetch forecast and discussion from the NWS API for the given location.
 
+    Forecast and discussion fetches are independent: if the forecast fetch fails,
+    the discussion is still returned (and vice versa).
+
     Returns:
         Tuple of (forecast, discussion_text, discussion_issuance_time)
 
@@ -591,23 +594,37 @@ async def get_nws_forecast_and_discussion(
 
         # Use provided client or create a new one
         if client is not None:
-            # Fetch grid data if not provided
+            # Fetch grid data if not provided (needed by both forecast and discussion)
             if grid_data is None:
                 grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
                 response = await _client_get(client, grid_url, headers=headers)
                 response.raise_for_status()
                 grid_data = response.json()
 
-            forecast_url = grid_data["properties"]["forecast"]
-            response = await _client_get(client, forecast_url, headers=feature_headers)
-            response.raise_for_status()
-            forecast_data = response.json()
+            # Fetch forecast independently so a failure doesn't kill the discussion
+            parsed_forecast: Forecast | None = None
+            try:
+                forecast_url = grid_data["properties"]["forecast"]
+                response = await _client_get(client, forecast_url, headers=feature_headers)
+                response.raise_for_status()
+                parsed_forecast = parse_nws_forecast(response.json())
+            except Exception as forecast_exc:  # noqa: BLE001
+                logger.warning(
+                    "Forecast fetch failed (discussion will still be returned): %s", forecast_exc
+                )
 
             discussion, discussion_issuance_time = await get_nws_discussion(
                 client, headers, grid_data, nws_base_url
             )
+            logger.debug(
+                "get_nws_forecast_and_discussion: forecast=%s discussion_len=%s issuance=%s",
+                "ok" if parsed_forecast else "None",
+                len(discussion) if discussion else 0,
+                discussion_issuance_time,
+            )
 
-            return parse_nws_forecast(forecast_data), discussion, discussion_issuance_time
+            return parsed_forecast, discussion, discussion_issuance_time
+
         grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
 
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
@@ -615,22 +632,100 @@ async def get_nws_forecast_and_discussion(
             response.raise_for_status()
             grid_data = response.json()
 
-            forecast_url = grid_data["properties"]["forecast"]
-            response = await new_client.get(forecast_url, headers=feature_headers)
-            response.raise_for_status()
-            forecast_data = response.json()
+            # Fetch forecast independently so a failure doesn't kill the discussion
+            parsed_forecast = None
+            try:
+                forecast_url = grid_data["properties"]["forecast"]
+                response = await new_client.get(forecast_url, headers=feature_headers)
+                response.raise_for_status()
+                parsed_forecast = parse_nws_forecast(response.json())
+            except Exception as forecast_exc:  # noqa: BLE001
+                logger.warning(
+                    "Forecast fetch failed (discussion will still be returned): %s", forecast_exc
+                )
 
             discussion, discussion_issuance_time = await get_nws_discussion(
                 new_client, headers, grid_data, nws_base_url
             )
+            logger.debug(
+                "get_nws_forecast_and_discussion: forecast=%s discussion_len=%s issuance=%s",
+                "ok" if parsed_forecast else "None",
+                len(discussion) if discussion else 0,
+                discussion_issuance_time,
+            )
 
-            return parse_nws_forecast(forecast_data), discussion, discussion_issuance_time
+            return parsed_forecast, discussion, discussion_issuance_time
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS forecast and discussion: {exc}")
         if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
             raise
         return None, None, None
+
+
+@async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
+async def get_nws_discussion_only(
+    location: Location,
+    nws_base_url: str,
+    user_agent: str,
+    timeout: float,
+    client: httpx.AsyncClient | None = None,
+) -> tuple[str | None, datetime | None]:
+    """
+    Fetch only the NWS Area Forecast Discussion for a location.
+
+    Lighter-weight than get_nws_forecast_and_discussion — skips the forecast
+    fetch entirely.  Used by the notification event path so that a transient
+    forecast API error never silently suppresses AFD update notifications.
+
+    Returns:
+        Tuple of (discussion_text, discussion_issuance_time).
+        Returns (None, None) on unrecoverable error.
+
+    """
+    try:
+        headers = {"User-Agent": user_agent}
+        logger.debug(
+            "get_nws_discussion_only: fetching grid data for %s,%s",
+            location.latitude,
+            location.longitude,
+        )
+
+        if client is not None:
+            grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+            response = await _client_get(client, grid_url, headers=headers)
+            response.raise_for_status()
+            grid_data = response.json()
+            discussion, issuance_time = await get_nws_discussion(
+                client, headers, grid_data, nws_base_url
+            )
+            logger.debug(
+                "get_nws_discussion_only: discussion_len=%s issuance=%s",
+                len(discussion) if discussion else 0,
+                issuance_time,
+            )
+            return discussion, issuance_time
+
+        grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+            response = await new_client.get(grid_url, headers=headers)
+            response.raise_for_status()
+            grid_data = response.json()
+            discussion, issuance_time = await get_nws_discussion(
+                new_client, headers, grid_data, nws_base_url
+            )
+            logger.debug(
+                "get_nws_discussion_only: discussion_len=%s issuance=%s",
+                len(discussion) if discussion else 0,
+                issuance_time,
+            )
+            return discussion, issuance_time
+
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Failed to fetch NWS discussion only: %s", exc)
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
+        return None, None
 
 
 async def get_nws_discussion(

@@ -49,9 +49,73 @@ class TestSummarizeDiscussionChange:
         assert result == "brand new content"
 
     def test_truncates_long_lines(self):
-        long_line = "x" * 200
+        long_line = "x" * 400
         result = summarize_discussion_change(None, long_line)
-        assert len(result) == 160
+        assert len(result) == 300
+
+    # ------------------------------------------------------------------
+    # New section-extraction paths
+    # ------------------------------------------------------------------
+
+    def test_what_has_changed_section_used_when_present(self):
+        """Path 1: .WHAT HAS CHANGED... section is found and returned."""
+        afd = (
+            ".SYNOPSIS...\n"
+            "Some synopsis text\n"
+            ".WHAT HAS CHANGED...\n"
+            "Temperatures have risen significantly across the region.\n"
+            "Winds will increase overnight.\n"
+            ".SHORT TERM...\n"
+            "Short term forecast content.\n"
+            "&&\n"
+        )
+        result = summarize_discussion_change(None, afd)
+        assert result is not None
+        assert "Temperatures have risen" in result
+        assert "Winds will increase overnight" in result
+        # The short-term section body should NOT appear in the summary
+        assert "Short term forecast content" not in result
+
+    def test_key_messages_fallback_when_no_what_has_changed(self):
+        """Path 2: .KEY MESSAGES... section used when no WHAT HAS CHANGED."""
+        afd = (
+            ".SYNOPSIS...\n"
+            "Synopsis text here.\n"
+            ".KEY MESSAGES...\n"
+            "* Heavy rain expected Tuesday.\n"
+            "* Flash flood watch in effect.\n"
+            "&&\n"
+            ".SHORT TERM...\n"
+            "Short term text.\n"
+        )
+        result = summarize_discussion_change(None, afd)
+        assert result is not None
+        assert "Heavy rain expected Tuesday" in result
+        assert "Flash flood watch in effect" in result
+        assert "Short term text" not in result
+
+    def test_first_new_line_fallback_when_no_special_sections(self):
+        """Path 3: falls back to first new line when no special sections exist."""
+        previous = "line one\nline two\n"
+        current = "line one\nline two\nThis is brand new forecast text.\n"
+        result = summarize_discussion_change(previous, current)
+        assert result == "This is brand new forecast text."
+
+    def test_what_has_changed_takes_priority_over_key_messages(self):
+        """WHAT HAS CHANGED is preferred over KEY MESSAGES."""
+        afd = ".WHAT HAS CHANGED...\nChange detail here.\n.KEY MESSAGES...\nKey message here.\n&&\n"
+        result = summarize_discussion_change(None, afd)
+        assert result is not None
+        assert "Change detail here" in result
+        assert "Key message here" not in result
+
+    def test_truncates_section_to_300_chars(self):
+        """Section content is truncated to 300 characters."""
+        body = "word " * 100  # well over 300 chars
+        afd = f".WHAT HAS CHANGED...\n{body}\n.SHORT TERM...\nother stuff\n"
+        result = summarize_discussion_change(None, afd)
+        assert result is not None
+        assert len(result) <= 300
 
 
 # ---------------------------------------------------------------------------
@@ -160,7 +224,7 @@ class TestFetchNotificationEventData:
         weather_data = WeatherData(location=loc)
         win.app.weather_client.get_notification_event_data = AsyncMock(return_value=weather_data)
 
-        with patch("accessiweather.ui.main_window.wx") as mock_wx:
+        with patch("accessiweather.ui.main_window_notification_events.wx") as mock_wx:
             await win._fetch_notification_event_data()
 
             mock_wx.CallAfter.assert_called_once_with(
@@ -177,7 +241,7 @@ class TestFetchNotificationEventData:
         )
 
         # Should not raise
-        with patch("accessiweather.ui.main_window.wx"):
+        with patch("accessiweather.ui.main_window_notification_events.wx"):
             await win._fetch_notification_event_data()
 
 
@@ -272,6 +336,90 @@ class TestOnNotificationEventDataReceived:
         win._on_notification_event_data_received(weather_data)
 
 
+class TestNotificationEventHelpers:
+    """Focused tests for extracted main window notification event helpers."""
+
+    def _make_window(self):
+        from pathlib import Path
+
+        from accessiweather.ui.main_window import MainWindow
+
+        with patch.object(MainWindow, "__init__", lambda self, *a, **kw: None):
+            win = MainWindow.__new__(MainWindow)
+
+        win.app = MagicMock()
+        win.app.paths.config = Path("/tmp/config")
+        win._notification_event_manager = None
+        win._fallback_notifier = None
+        return win
+
+    def test_get_notification_event_manager_caches_instance(self):
+        win = self._make_window()
+
+        with patch(
+            "accessiweather.ui.main_window_notification_events.NotificationEventManager"
+        ) as manager_cls:
+            first = win._get_notification_event_manager()
+            second = win._get_notification_event_manager()
+
+        assert first is second
+        manager_cls.assert_called_once_with(
+            state_file=win.app.paths.config / "notification_event_state.json"
+        )
+
+    def test_process_notification_events_skips_when_both_disabled(self):
+        win = self._make_window()
+        settings = MagicMock()
+        settings.notify_discussion_update = False
+        settings.notify_severe_risk_change = False
+        win.app.config_manager.get_settings.return_value = settings
+
+        win._process_notification_events(MagicMock())
+
+        win.app.config_manager.get_current_location.assert_not_called()
+
+    def test_process_notification_events_uses_fallback_notifier(self):
+        win = self._make_window()
+        settings = MagicMock()
+        settings.notify_discussion_update = True
+        settings.notify_severe_risk_change = False
+        settings.sound_enabled = True
+        win.app.config_manager.get_settings.return_value = settings
+        location = MagicMock()
+        location.name = "PHI"
+        win.app.config_manager.get_current_location.return_value = location
+        win.app.notifier = None
+
+        event = MagicMock()
+        event.event_type = "discussion_update"
+        event.title = "Updated discussion"
+        event.message = "Summary"
+        event.sound_event = "discussion_update"
+        weather_data = MagicMock()
+
+        with (
+            patch(
+                "accessiweather.ui.main_window_notification_events.NotificationEventManager"
+            ) as manager_cls,
+            patch(
+                "accessiweather.ui.main_window_notification_events.SafeDesktopNotifier"
+            ) as notifier_cls,
+        ):
+            manager_cls.return_value.check_for_events.return_value = [event]
+            notifier = notifier_cls.return_value
+            notifier.send_notification.return_value = True
+
+            win._process_notification_events(weather_data)
+
+        notifier.send_notification.assert_called_once_with(
+            title="Updated discussion",
+            message="Summary",
+            timeout=10,
+            sound_event="discussion_update",
+            play_sound=True,
+        )
+
+
 # ---------------------------------------------------------------------------
 # weather_client_base.py: get_notification_event_data (lines 383-416)
 # ---------------------------------------------------------------------------
@@ -296,14 +444,11 @@ class TestGetNotificationEventData:
 
     @pytest.mark.asyncio
     async def test_us_location_fetches_nws_data(self, client, us_location):
-        forecast = MagicMock()
         discussion = "Discussion text"
         issuance_time = MagicMock()
         alerts = WeatherAlerts(alerts=[])
 
-        client._get_nws_forecast_and_discussion = AsyncMock(
-            return_value=(forecast, discussion, issuance_time)
-        )
+        client._get_nws_discussion_only = AsyncMock(return_value=(discussion, issuance_time))
         client._get_nws_alerts = AsyncMock(return_value=alerts)
 
         result = await client.get_notification_event_data(us_location)
@@ -311,12 +456,12 @@ class TestGetNotificationEventData:
         assert result.discussion == discussion
         assert result.discussion_issuance_time == issuance_time
         assert result.alerts == alerts
-        client._get_nws_forecast_and_discussion.assert_awaited_once_with(us_location)
+        client._get_nws_discussion_only.assert_awaited_once_with(us_location)
         client._get_nws_alerts.assert_awaited_once_with(us_location)
 
     @pytest.mark.asyncio
     async def test_us_location_none_alerts_becomes_empty(self, client, us_location):
-        client._get_nws_forecast_and_discussion = AsyncMock(return_value=(None, None, None))
+        client._get_nws_discussion_only = AsyncMock(return_value=(None, None))
         client._get_nws_alerts = AsyncMock(return_value=None)
 
         result = await client.get_notification_event_data(us_location)
@@ -352,7 +497,7 @@ class TestGetNotificationEventData:
     @pytest.mark.asyncio
     async def test_tracks_alert_lifecycle_diff(self, client, us_location):
         alerts = WeatherAlerts(alerts=[])
-        client._get_nws_forecast_and_discussion = AsyncMock(return_value=(None, None, None))
+        client._get_nws_discussion_only = AsyncMock(return_value=(None, None))
         client._get_nws_alerts = AsyncMock(return_value=alerts)
 
         result = await client.get_notification_event_data(us_location)
@@ -361,7 +506,7 @@ class TestGetNotificationEventData:
 
     @pytest.mark.asyncio
     async def test_exception_returns_empty_alerts(self, client, us_location):
-        client._get_nws_forecast_and_discussion = AsyncMock(side_effect=RuntimeError("API down"))
+        client._get_nws_discussion_only = AsyncMock(side_effect=RuntimeError("API down"))
         client._get_nws_alerts = AsyncMock(side_effect=RuntimeError("API down"))
 
         result = await client.get_notification_event_data(us_location)
