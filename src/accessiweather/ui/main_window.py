@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING
 import wx
 from wx.lib.sized_controls import SizedFrame, SizedPanel
 
+from . import main_window_notification_events
+
 if TYPE_CHECKING:
     from ..app import AccessiWeatherApp
     from ..models.location import Location
@@ -932,22 +934,11 @@ class MainWindow(SizedFrame):
 
     def refresh_notification_events_async(self) -> None:
         """Run a lightweight event check without refreshing the full weather UI."""
-        if self.app.is_updating:
-            logger.debug("Skipping event check while full weather refresh is in progress")
-            return
-        self.app.run_async(self._fetch_notification_event_data())
+        main_window_notification_events.refresh_notification_events_async(self)
 
     async def _fetch_notification_event_data(self) -> None:
         """Fetch only the lightweight data needed for notifications."""
-        try:
-            location = self.app.config_manager.get_current_location()
-            if not location or location.name == "Nationwide":
-                return
-
-            weather_data = await self.app.weather_client.get_notification_event_data(location)
-            wx.CallAfter(self._on_notification_event_data_received, weather_data)
-        except Exception as e:
-            logger.debug(f"Failed to fetch lightweight notification data: {e}")
+        await main_window_notification_events.fetch_notification_event_data(self)
 
     async def _fetch_weather_data(self, force_refresh: bool = False, generation: int = 0) -> None:
         """Fetch weather data in background."""
