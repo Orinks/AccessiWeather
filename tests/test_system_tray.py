@@ -439,6 +439,104 @@ class TestFormatterSafety:
         assert "sys.platform" not in combined
 
 
+class TestFormatterUnitPreferencePlaceholders:
+    """Targeted tests for placeholders that promise unit-aware output."""
+
+    @pytest.fixture
+    def unit_sensitive_weather_data(self):
+        """Create weather data with both unit families plus forecast high/low."""
+        from accessiweather.models import Forecast, ForecastPeriod
+
+        current = CurrentConditions(
+            temperature_f=72.0,
+            temperature_c=22.2,
+            condition="Partly Cloudy",
+            wind_speed_mph=10.0,
+            wind_speed_kph=16.1,
+            wind_direction="NW",
+            pressure_in=30.05,
+            pressure_mb=1017.0,
+            visibility_miles=10.0,
+            visibility_km=16.1,
+        )
+        setattr(current, "precipitation", 1.0)
+        setattr(current, "precipitation_mm", 25.4)
+
+        forecast = Forecast(
+            periods=[
+                ForecastPeriod(name="Today", temperature=75, temperature_unit="F"),
+                ForecastPeriod(name="Tonight", temperature=55, temperature_unit="F"),
+            ]
+        )
+        return WeatherData(
+            location=Location(name="Test City", latitude=40.0, longitude=-74.0),
+            current=current,
+            forecast=forecast,
+        )
+
+    @pytest.mark.parametrize(
+        ("temperature_unit", "expected"),
+        [
+            ("f", "10.0 mph | 30.05 inHg | 10.0 mi | 1.00 in | 75F | 55F"),
+            ("c", "16.1 km/h | 1017.00 hPa | 16.1 km | 25.40 mm | 24C | 13C"),
+            (
+                "both",
+                "10.0 mph (16.1 km/h) | 30.05 inHg (1017.00 hPa) | 10.0 mi (16.1 km) | "
+                "1.00 in (25.40 mm) | 75F/24C | 55F/13C",
+            ),
+        ],
+    )
+    def test_unit_aware_placeholders_follow_unit_preference(
+        self, unit_sensitive_weather_data, temperature_unit, expected
+    ):
+        """wind_speed, pressure, visibility, precip, high, and low honor unit preference."""
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            format_string="{wind_speed} | {pressure} | {visibility} | {precip} | {high} | {low}",
+            temperature_unit=temperature_unit,
+        )
+
+        result = updater.format_tooltip(unit_sensitive_weather_data, "Test City")
+
+        assert result == expected
+
+    def test_explicit_temperature_placeholders_do_not_follow_unit_preference(
+        self, unit_sensitive_weather_data
+    ):
+        """temp_f and temp_c remain explicit even when the main preference is Celsius."""
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            format_string="{temp_f} / {temp_c}",
+            temperature_unit="c",
+        )
+
+        result = updater.format_tooltip(unit_sensitive_weather_data, "Test City")
+
+        assert result == "72F / 22C"
+
+    def test_high_low_stay_na_without_forecast_data(self):
+        """high and low should not invent values when forecast data is unavailable."""
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        weather_data = WeatherData(
+            location=Location(name="Test City", latitude=40.0, longitude=-74.0),
+            current=CurrentConditions(temperature_f=72.0, temperature_c=22.2, condition="Sunny"),
+        )
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            format_string="{high} / {low}",
+            temperature_unit="f",
+        )
+
+        result = updater.format_tooltip(weather_data, "Test City")
+
+        assert result == "N/A / N/A"
+
+
 class TestPopupMenu:
     """Tests for system tray popup menu."""
 

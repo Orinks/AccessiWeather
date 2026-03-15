@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from accessiweather.taskbar_icon_updater import (
     DEFAULT_TOOLTIP_FORMAT,
     TaskbarIconUpdater,
@@ -117,5 +119,31 @@ class TestTrayTextFormatDialogPreview:
         """build_preview correctly substitutes the temp placeholder."""
         updater = TaskbarIconUpdater(text_enabled=True)
         result = updater.build_preview("{temp}", weather_data=None)
-        # DEFAULT_PREVIEW_DATA has temp "72F/22C"
         assert "72F" in result or "22C" in result
+
+    @pytest.mark.parametrize(
+        ("temperature_unit", "expected"),
+        [
+            ("f", "8.0 mph | 30.10 inHg | 10.0 mi | 0.00 in | 78F | 61F"),
+            ("c", "12.9 km/h | 1019.30 hPa | 16.1 km | 0.00 mm | 26C | 16C"),
+            (
+                "both",
+                "8.0 mph (12.9 km/h) | 30.10 inHg (1019.30 hPa) | 10.0 mi (16.1 km) | "
+                "0.00 in (0.00 mm) | 78F/26C | 61F/16C",
+            ),
+        ],
+    )
+    def test_build_preview_respects_selected_unit_preference(self, temperature_unit, expected):
+        """Sample preview values follow the selected unit preference."""
+        updater = TaskbarIconUpdater(text_enabled=True, temperature_unit=temperature_unit)
+        result = updater.build_preview(
+            "{wind_speed} | {pressure} | {visibility} | {precip} | {high} | {low}",
+            weather_data=None,
+        )
+        assert result == expected
+
+    def test_build_preview_explicit_temperature_placeholders_remain_explicit(self):
+        """Explicit temp placeholders stay explicit regardless of unit preference."""
+        updater = TaskbarIconUpdater(text_enabled=True, temperature_unit="c")
+        result = updater.build_preview("{temp_f} / {temp_c}", weather_data=None)
+        assert result == "72F / 22C"

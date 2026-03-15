@@ -8,9 +8,21 @@ updating the system tray icon tooltip text based on current weather conditions.
 from __future__ import annotations
 
 import logging
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 
 from .format_string_parser import FormatStringParser
+from .utils.temperature_utils import (
+    TemperatureUnit,
+    celsius_to_fahrenheit,
+    fahrenheit_to_celsius,
+)
+from .utils.unit_utils import (
+    format_precipitation,
+    format_pressure,
+    format_visibility,
+    format_wind_speed,
+)
 
 if TYPE_CHECKING:
     from .models import WeatherData
@@ -21,25 +33,6 @@ DEFAULT_TOOLTIP_TEXT = "AccessiWeather"
 DEFAULT_TOOLTIP_FORMAT = "{temp} {condition}"
 TOOLTIP_MAX_LENGTH = 127
 PLACEHOLDER_NA = "N/A"
-DEFAULT_PREVIEW_DATA = {
-    "location": "Sample Location",
-    "temp": "72F/22C",
-    "temp_f": "72F",
-    "temp_c": "22C",
-    "condition": "Partly Cloudy",
-    "humidity": "55%",
-    "wind": "NW at 8 mph",
-    "wind_speed": "8 mph",
-    "wind_dir": "NW",
-    "pressure": "30.1 inHg",
-    "feels_like": "74F/23C",
-    "uv": "5",
-    "visibility": "10 mi",
-    "high": "78F/26C",
-    "low": "61F/16C",
-    "precip": "0 in",
-    "precip_chance": "20",
-}
 
 
 class TaskbarIconUpdater:
@@ -142,7 +135,11 @@ class TaskbarIconUpdater:
             return DEFAULT_TOOLTIP_TEXT
 
         try:
-            data = self._extract_weather_variables(current, location_name)
+            data = self._extract_weather_variables(
+                current,
+                location_name,
+                weather_data=weather_data,
+            )
             return self.format_text(data)
         except Exception as exc:
             logger.debug("Failed to format tooltip: %s", exc)
@@ -166,11 +163,18 @@ class TaskbarIconUpdater:
         """Build preview text using live weather data when available, else safe sample values."""
         current = getattr(weather_data, "current_conditions", None) if weather_data else None
         if current is not None and current.has_data():
-            data = self._extract_weather_variables(current, location_name)
+            data = self._extract_weather_variables(
+                current,
+                location_name,
+                weather_data=weather_data,
+            )
         else:
-            data = dict(DEFAULT_PREVIEW_DATA)
-            if location_name:
-                data["location"] = location_name
+            preview_weather = self._build_preview_weather_data()
+            data = self._extract_weather_variables(
+                preview_weather.current_conditions,
+                location_name or "Sample Location",
+                weather_data=preview_weather,
+            )
 
         return self.format_text(data, format_string=format_string)
 
@@ -178,6 +182,8 @@ class TaskbarIconUpdater:
         self,
         current: Any,
         location_name: str | None = None,
+        *,
+        weather_data: WeatherData | Any | None = None,
     ) -> dict[str, str]:
         """
         Extract weather variables from current conditions for substitution.
@@ -201,17 +207,16 @@ class TaskbarIconUpdater:
         humidity = getattr(current, "humidity", None) or getattr(current, "relative_humidity", None)
         data["humidity"] = self._format_numeric(humidity, "%")
         data["wind"] = self._format_wind(current)
-        data["wind_speed"] = self._format_numeric(getattr(current, "wind_speed", None), " mph")
+        data["wind_speed"] = self._format_wind_speed(current)
         # wind_direction can be str ("NW") or int (270 degrees) - ensure it's a string
         wind_dir = getattr(current, "wind_direction", None)
         data["wind_dir"] = str(wind_dir) if wind_dir is not None else PLACEHOLDER_NA
-        data["pressure"] = self._format_numeric(getattr(current, "pressure", None), " inHg")
+        data["pressure"] = self._format_pressure(current)
         data["feels_like"] = self._format_feels_like(current)
         data["uv"] = self._format_numeric(getattr(current, "uv_index", None), "")
-        data["visibility"] = self._format_numeric(getattr(current, "visibility", None), " mi")
-        data["high"] = PLACEHOLDER_NA
-        data["low"] = PLACEHOLDER_NA
-        data["precip"] = self._format_numeric(getattr(current, "precipitation", None), " in")
+        data["visibility"] = self._format_visibility(current)
+        data["high"], data["low"] = self._format_forecast_temperatures(weather_data)
+        data["precip"] = self._format_precipitation(current)
         data["precip_chance"] = self._format_numeric(
             getattr(current, "precipitation_probability", None), ""
         )
@@ -268,6 +273,15 @@ class TaskbarIconUpdater:
             return PLACEHOLDER_NA
         return f"{value:.0f}{suffix}"
 
+    def _normalize_temperature_unit(self) -> TemperatureUnit:
+        """Normalize legacy short forms to the shared temperature unit enum."""
+        normalized = (self.temperature_unit or "both").strip().lower()
+        if normalized in {"fahrenheit", "f"}:
+            return TemperatureUnit.FAHRENHEIT
+        if normalized in {"celsius", "c"}:
+            return TemperatureUnit.CELSIUS
+        return TemperatureUnit.BOTH
+
     def _format_numeric(self, value: float | int | None, suffix: str) -> str:
         """Format a numeric value with optional suffix."""
         if value is None:
@@ -294,6 +308,144 @@ class TaskbarIconUpdater:
             parts.append(f"at {speed:.0f} mph")
 
         return " ".join(parts) if parts else PLACEHOLDER_NA
+
+    def _format_wind_speed(self, current: Any) -> str:
+        """Format wind speed using the selected unit preference."""
+        return format_wind_speed(
+            getattr(current, "wind_speed_mph", None),
+            unit=self._normalize_temperature_unit(),
+            wind_speed_kph=getattr(current, "wind_speed_kph", None),
+            precision=1,
+        )
+
+    def _format_pressure(self, current: Any) -> str:
+        """Format pressure using the selected unit preference."""
+        return format_pressure(
+            getattr(current, "pressure_in", None),
+            unit=self._normalize_temperature_unit(),
+            pressure_mb=getattr(current, "pressure_mb", None),
+            precision=2,
+        )
+
+    def _format_visibility(self, current: Any) -> str:
+        """Format visibility using the selected unit preference."""
+        return format_visibility(
+            getattr(current, "visibility_miles", None),
+            unit=self._normalize_temperature_unit(),
+            visibility_km=getattr(current, "visibility_km", None),
+            precision=1,
+        )
+
+    def _format_precipitation(self, current: Any) -> str:
+        """Format precipitation using the selected unit preference when source data exists."""
+        precip_in = getattr(current, "precipitation_in", None)
+        if precip_in is None:
+            precip_in = getattr(current, "precipitation_inches", None)
+        if precip_in is None:
+            precip_in = getattr(current, "precipitation", None)
+
+        return format_precipitation(
+            precip_in,
+            unit=self._normalize_temperature_unit(),
+            precipitation_mm=getattr(current, "precipitation_mm", None),
+            precision=2,
+        )
+
+    def _format_forecast_temperatures(
+        self, weather_data: WeatherData | Any | None
+    ) -> tuple[str, str]:
+        """Return high/low placeholders from forecast data when it exists."""
+        forecast = getattr(weather_data, "forecast", None) if weather_data is not None else None
+        periods = getattr(forecast, "periods", None) or []
+        if not periods:
+            return PLACEHOLDER_NA, PLACEHOLDER_NA
+
+        high_period = next((period for period in periods if self._is_day_period(period)), None)
+        low_period = next((period for period in periods if self._is_night_period(period)), None)
+
+        if high_period is None:
+            high_period = next(
+                (period for period in periods if getattr(period, "temperature", None) is not None),
+                None,
+            )
+
+        high = self._format_forecast_temperature(
+            getattr(high_period, "temperature", None) if high_period is not None else None,
+            getattr(high_period, "temperature_unit", "F") if high_period is not None else "F",
+        )
+
+        low_value = None
+        low_unit = "F"
+        if low_period is not None:
+            low_value = getattr(low_period, "temperature_low", None)
+            if low_value is None:
+                low_value = getattr(low_period, "temperature", None)
+            low_unit = getattr(low_period, "temperature_unit", "F")
+        else:
+            for period in periods:
+                low_value = getattr(period, "temperature_low", None)
+                if low_value is not None:
+                    low_unit = getattr(period, "temperature_unit", "F")
+                    break
+
+        return high, self._format_forecast_temperature(low_value, low_unit)
+
+    def _format_forecast_temperature(self, value: float | None, unit_code: str | None) -> str:
+        """Format a forecast temperature according to the selected unit preference."""
+        if value is None:
+            return PLACEHOLDER_NA
+
+        normalized_unit = (unit_code or "F").strip().upper()
+        temp_f = value if normalized_unit == "F" else celsius_to_fahrenheit(value)
+        temp_c = value if normalized_unit == "C" else fahrenheit_to_celsius(value)
+
+        if self.temperature_unit in ("fahrenheit", "f"):
+            return self._format_temp_value(temp_f, "F")
+        if self.temperature_unit in ("celsius", "c"):
+            return self._format_temp_value(temp_c, "C")
+        return f"{temp_f:.0f}F/{temp_c:.0f}C"
+
+    def _is_day_period(self, period: Any) -> bool:
+        """Best-effort detection for daytime forecast periods."""
+        name = str(getattr(period, "name", "") or "").lower()
+        return "night" not in name and "tonight" not in name and "overnight" not in name
+
+    def _is_night_period(self, period: Any) -> bool:
+        """Best-effort detection for nighttime forecast periods."""
+        name = str(getattr(period, "name", "") or "").lower()
+        return any(token in name for token in ("night", "tonight", "overnight"))
+
+    def _build_preview_weather_data(self) -> Any:
+        """Create sample weather data so preview formatting matches live formatting rules."""
+        current = SimpleNamespace(
+            temperature_f=72.0,
+            temperature_c=22.0,
+            condition="Partly Cloudy",
+            humidity=55,
+            wind_speed=8.0,
+            wind_speed_mph=8.0,
+            wind_speed_kph=12.9,
+            wind_direction="NW",
+            pressure=30.1,
+            pressure_in=30.1,
+            pressure_mb=1019.3,
+            feels_like_f=74.0,
+            feels_like_c=23.0,
+            uv_index=5,
+            visibility_miles=10.0,
+            visibility_km=16.1,
+            precipitation=0.0,
+            precipitation_mm=0.0,
+            precipitation_probability=20,
+            has_data=lambda: True,
+        )
+        forecast = SimpleNamespace(
+            periods=[
+                SimpleNamespace(name="Today", temperature=78.0, temperature_unit="F"),
+                SimpleNamespace(name="Tonight", temperature=61.0, temperature_unit="F"),
+            ]
+        )
+        return SimpleNamespace(current_conditions=current, forecast=forecast)
 
     def _format_with_fallback(self, format_string: str, data: dict[str, str]) -> str:
         """
