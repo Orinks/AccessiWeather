@@ -4,45 +4,39 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 
 ## Core Workflows
 
-### 1. CI (`windows-ci.yml`)
-**Purpose**: Lint, format check, and test the code
+### 1. CI (`ci.yml`)
+**Purpose**: Validate pull requests and branch pushes with the same core checks, using the fewest visible jobs possible
 **Triggers**:
 - Push to `main` or `dev` branches
 - Pull requests to `main` or `dev`
 - Manual dispatch
 
 **What it does**:
-- Runs Ruff format checks
-- Runs Ruff linting
-- Executes pytest test suite
-- Validates installer/build.py smoke test
-
-**Next step**: Triggers `briefcase-build.yml` on success
+- Runs Ruff format and lint checks on the primary Python lane
+- Executes the non-integration pytest suite on Python 3.12 and 3.13
+- Runs changed-line coverage gating for pull requests in the primary lane
+- Posts a non-blocking CHANGELOG reminder in the job summary when `src/` changes target `dev`
 
 ---
 
-### 2. Build and Package (`briefcase-build.yml`)
-**Purpose**: Build Windows installers and portable versions
+### 2. Build and Package (`build.yml`)
+**Purpose**: Build nightly or tagged release artifacts separately from pull request validation
 **Triggers**:
-- After successful CI workflow (on `main`, `dev`, or `feature/toga-migration`)
+- Nightly schedule
+- Version tags
 - Manual dispatch (with optional version override)
 
 **What it does**:
-- Creates Windows MSI installer
-- Creates portable ZIP version
-- Generates checksums
-- Uploads build artifacts
-- Validates all artifacts
-
-**Next step**: Triggers `update-pages.yml` on success
+- Builds Windows installer + portable ZIP and macOS DMG
+- Creates nightly or stable GitHub releases
+- Triggers GitHub Pages refresh after a successful release
 
 ---
 
 ### 3. Update GitHub Pages (`update-pages.yml`)
 **Purpose**: Update the GitHub Pages mirror with latest build info
 **Triggers**:
-- After successful Build workflow (on `main` or `dev`)
-- After releases are published/edited
+- Push to `main`
 - Manual dispatch
 
 **What it does**:
@@ -69,66 +63,15 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 
 ## Release Workflows
 
-### 5. Official Release (`briefcase-release.yml`)
-**Purpose**: Create official releases from main branch
-**Triggers**:
-- Push to `main` or `feature/toga-migration` (excluding docs)
-- Manual dispatch with version input
-
-**What it does**:
-- Checks if release already exists
-- Builds MSI installer and portable ZIP
-- Creates GitHub release (draft)
-- Uploads release assets with checksums
-
-**Note**: Creates as **draft** release - you must manually publish it
-
----
-
-### 6. Beta Release (`beta-release.yml`)
-**Purpose**: Create pre-release builds for testing
-**Triggers**:
-- Push tags matching: `v*-beta.*`, `v*-alpha.*`, `v*-rc.*`, `v*-dev.*`
-- Manual dispatch with beta version input
-
-**What it does**:
-- Validates beta version format
-- Builds MSI installer and portable ZIP
-- Creates pre-release with beta-specific notes
-- Uploads beta assets with checksums
-
----
-
-## Testing Workflows
-
-### 7. Test nightly.link (`test-nightly-link.yml`)
-**Purpose**: Test nightly.link integration
-**Triggers**: Manual dispatch only
-
-**What it does**:
-- Tests nightly.link URLs for specified branch
-- Generates documentation of available URLs
-- Validates artifact accessibility
-
----
-
 ## Workflow Dependencies
 
-```
-Push to dev/main
-    ↓
-windows-ci.yml (CI)
-    ↓ (on success)
-briefcase-build.yml (Build)
-    ↓ (on success)
-update-pages.yml (Update Pages)
-```
+`ci.yml` handles validation only.
 
-Release workflow runs independently when triggered:
-```
-Push to main → briefcase-release.yml
-Push tag     → beta-release.yml
-```
+`build.yml` handles nightly/tagged packaging and release publication.
+
+`update-pages.yml` handles GitHub Pages publication.
+
+`update-wordpress.yml` handles the external WordPress sync after a published release.
 
 ---
 
@@ -136,13 +79,10 @@ Push tag     → beta-release.yml
 
 | Need to... | Use workflow | How |
 |------------|--------------|-----|
-| Test code changes | `windows-ci.yml` | Automatic on PR/push |
-| Build installers | `briefcase-build.yml` | Automatic after CI or manual |
+| Test code changes | `ci.yml` | Automatic on PR/push |
+| Build installers / nightlies | `build.yml` | Nightly, tags, or manual |
 | Update GitHub Pages mirror | `update-pages.yml` | Automatic after build or manual |
 | Update WordPress release page | `update-wordpress.yml` | Automatic on release publish or manual |
-| Create official release | `briefcase-release.yml` | Push to main or manual |
-| Create beta release | `beta-release.yml` | Tag with beta/alpha/rc/dev or manual |
-| Test nightly.link | `test-nightly-link.yml` | Manual only |
 
 ---
 
@@ -150,11 +90,11 @@ Push tag     → beta-release.yml
 
 As a solo maintainer, you typically only need to:
 
-1. **Push to `dev` branch**: Triggers CI → Build → Pages update automatically
-2. **Merge `dev` to `main`**: Triggers release workflow (creates draft)
-3. **Review and publish draft release**: Manual step in GitHub UI
+1. **Open a PR to `dev`**: `ci.yml` validates formatting, lint, tests, and diff coverage
+2. **Merge changes to `dev`**: Nightly `build.yml` creates user-facing artifacts when there were user-facing commits
+3. **Publish a stable release tag**: `build.yml` creates the release assets, then Pages/WordPress update flows can run
 
-Everything else happens automatically! 🎉
+Everything else stays out of the PR path.
 
 ---
 
@@ -181,7 +121,7 @@ If a workflow fails:
 
 Common issues:
 - **CI fails**: Usually linting or test failures - run locally first
-- **Build fails**: Check Python version, dependencies, or Briefcase setup
+- **Build fails**: Check Python version, dependencies, or packaging setup
 - **Release fails**: Check if release already exists or version conflicts
 
 ---
