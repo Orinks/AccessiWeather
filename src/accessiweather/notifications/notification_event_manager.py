@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -22,6 +23,34 @@ if TYPE_CHECKING:
     from ..models import AppSettings, CurrentConditions, WeatherData
 
 logger = logging.getLogger(__name__)
+
+
+def _extract_discussion_issued_time_label(discussion_text: str | None) -> str | None:
+    """Extract the station-local issued time label from AFD text when present."""
+    if not discussion_text:
+        return None
+
+    patterns = (
+        r"\bISSUED\s+(\d{1,2})(\d{2})\s+([AP]M)\s+([A-Z]{2,4})\b",
+        r"\bISSUED\s+(\d{1,2}):(\d{2})\s+([AP]M)\s+([A-Z]{2,4})\b",
+        r"(?:^|\n)\s*(\d{1,2})(\d{2})\s+([AP]M)\s+([A-Z]{2,4})\s+(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b",
+        r"(?:^|\n)\s*(\d{1,2}):(\d{2})\s+([AP]M)\s+([A-Z]{2,4})\s+(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b",
+    )
+
+    for pattern in patterns:
+        match = re.search(pattern, discussion_text, re.IGNORECASE)
+        if match:
+            hour, minute, meridiem, tz_name = match.groups()
+            return f"{int(hour)}:{minute} {meridiem.upper()} {tz_name.upper()}"
+
+    return None
+
+
+def _format_issuance_time_label(issuance_time: datetime) -> str:
+    """Format issuance time using the datetime's own timezone context."""
+    time_str = issuance_time.strftime("%I:%M %p").lstrip("0")
+    tz_name = issuance_time.tzname() or ""
+    return f"{time_str} {tz_name}".strip()
 
 
 def get_risk_category(risk: int) -> str:
@@ -324,14 +353,16 @@ class NotificationEventManager:
             self.state.last_discussion_issuance_time = issuance_time
             self.state.last_discussion_text = discussion_text
 
-            issued_label = (
-                issuance_time.strftime("%I:%M %p").lstrip("0")
-                if hasattr(issuance_time, "strftime")
-                else str(issuance_time)
-            )
+            issued_label = _extract_discussion_issued_time_label(discussion_text)
+            if not issued_label:
+                issued_label = (
+                    _format_issuance_time_label(issuance_time)
+                    if hasattr(issuance_time, "strftime")
+                    else str(issuance_time)
+                )
             message = f"The Area Forecast Discussion for {location_name} was updated by the National Weather Service at {issued_label}."
             if change_summary:
-                message += f" Change summary: {change_summary}"
+                message += f" {change_summary}"
 
             return NotificationEvent(
                 event_type="discussion_update",

@@ -104,4 +104,5 @@ def test_discussion_update_message_includes_change_summary():
 
     assert len(events) == 1
     assert "updated by the National Weather Service" in events[0].message
-    assert "Change summary: New headline" in events[0].message
+    assert "Change summary:" not in events[0].message
+    assert events[0].message.endswith("New headline")
