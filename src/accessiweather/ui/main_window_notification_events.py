@@ -26,7 +26,11 @@ def refresh_notification_events_async(window: MainWindow) -> None:
     if window.app.is_updating:
         logger.debug("Skipping event check while full weather refresh is in progress")
         return
-    window.app.run_async(fetch_notification_event_data(window))
+
+    coro = fetch_notification_event_data(window)
+    window.app.run_async(coro)
+    if window.app.__dict__.get("_async_loop") is None:
+        coro.close()
 
 
 async def fetch_notification_event_data(window: MainWindow) -> None:
