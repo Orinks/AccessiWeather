@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING
 import wx
 from wx.lib.sized_controls import SizedFrame, SizedPanel
 
+from . import main_window_notification_events
+
 if TYPE_CHECKING:
     from ..app import AccessiWeatherApp
     from ..models.location import Location
@@ -932,22 +934,11 @@ class MainWindow(SizedFrame):
 
     def refresh_notification_events_async(self) -> None:
         """Run a lightweight event check without refreshing the full weather UI."""
-        if self.app.is_updating:
-            logger.debug("Skipping event check while full weather refresh is in progress")
-            return
-        self.app.run_async(self._fetch_notification_event_data())
+        main_window_notification_events.refresh_notification_events_async(self)
 
     async def _fetch_notification_event_data(self) -> None:
         """Fetch only the lightweight data needed for notifications."""
-        try:
-            location = self.app.config_manager.get_current_location()
-            if not location or location.name == "Nationwide":
-                return
-
-            weather_data = await self.app.weather_client.get_notification_event_data(location)
-            wx.CallAfter(self._on_notification_event_data_received, weather_data)
-        except Exception as e:
-            logger.debug(f"Failed to fetch lightweight notification data: {e}")
+        await main_window_notification_events.fetch_notification_event_data(self)
 
     async def _fetch_weather_data(self, force_refresh: bool = False, generation: int = 0) -> None:
         """Fetch weather data in background."""
@@ -1255,136 +1246,18 @@ class MainWindow(SizedFrame):
 
     def _get_notification_event_manager(self):
         """Get or create the notification event manager for AFD/severe risk notifications."""
-        if (
-            not hasattr(self, "_notification_event_manager")
-            or self._notification_event_manager is None
-        ):
-            from ..notifications.notification_event_manager import NotificationEventManager
-
-            state_file = self.app.paths.config / "notification_event_state.json"
-            self._notification_event_manager = NotificationEventManager(state_file=state_file)
-        return self._notification_event_manager
+        return main_window_notification_events.get_notification_event_manager(
+            self
+        )  # pragma: no cover
 
     def _get_fallback_notifier(self):
         """Get or create a cached fallback notifier for event notifications."""
-        if not hasattr(self, "_fallback_notifier") or self._fallback_notifier is None:
-            from ..notifications.toast_notifier import SafeDesktopNotifier
-
-            self._fallback_notifier = SafeDesktopNotifier()
-        return self._fallback_notifier
+        return main_window_notification_events.get_fallback_notifier(self)  # pragma: no cover
 
     def _on_notification_event_data_received(self, weather_data) -> None:
         """Handle lightweight event data without refreshing the visible weather UI."""
-        try:
-            if (
-                weather_data.alerts
-                and weather_data.alerts.has_alerts()
-                and self.app.alert_notification_system
-            ):
-                self.app.run_async(
-                    self.app.alert_notification_system.process_and_notify(weather_data.alerts)
-                )
-
-            if (
-                self.app.alert_notification_system
-                and weather_data.alert_lifecycle_diff is not None
-                and weather_data.alert_lifecycle_diff.has_changes
-            ):
-                self.app.run_async(
-                    self.app.alert_notification_system.notify_lifecycle_changes(
-                        weather_data.alert_lifecycle_diff
-                    )
-                )
-
-            self._process_notification_events(weather_data)
-        except Exception as e:
-            logger.debug(f"Failed to process lightweight notification event data: {e}")
+        main_window_notification_events.on_notification_event_data_received(self, weather_data)
 
     def _process_notification_events(self, weather_data) -> None:
-        """
-        Process weather data for notification events.
-
-        Checks for:
-        - Area Forecast Discussion (AFD) updates (NWS US only)
-        - Severe weather risk level changes (Visual Crossing only)
-
-        Both are opt-in notifications (disabled by default).
-        """
-        try:
-            settings = self.app.config_manager.get_settings()
-
-            # Skip if neither notification type is enabled
-            if not settings.notify_discussion_update and not settings.notify_severe_risk_change:
-                logger.debug(
-                    "[events] _process_notification_events: both discuss_update=%s and "
-                    "severe_risk=%s disabled — skipping",
-                    settings.notify_discussion_update,
-                    settings.notify_severe_risk_change,
-                )
-                return
-
-            location = self.app.config_manager.get_current_location()
-            if not location:
-                logger.warning("[events] _process_notification_events: no current location")
-                return
-
-            # Get notifier from app or use cached fallback
-            notifier = getattr(self.app, "notifier", None)
-            notifier_source = "app.notifier"
-            if not notifier:
-                notifier = self._get_fallback_notifier()
-                notifier_source = "fallback_notifier"
-            logger.debug(
-                "[events] _process_notification_events: notifier=%s (%s), sound_enabled=%s",
-                type(notifier).__name__,
-                notifier_source,
-                settings.sound_enabled,
-            )
-
-            # Get event manager and check for events
-            event_manager = self._get_notification_event_manager()
-            events = event_manager.check_for_events(weather_data, settings, location.name)
-
-            logger.debug(
-                "[events] check_for_events returned %d event(s) for location %r",
-                len(events),
-                location.name,
-            )
-
-            # Send notifications for each event
-            for event in events:
-                try:
-                    logger.debug(
-                        "[events] Sending %s notification: title=%r, sound_event=%r, play_sound=%s",
-                        event.event_type,
-                        event.title,
-                        event.sound_event,
-                        settings.sound_enabled,
-                    )
-                    # Pass sound_event and let send_notification handle sound
-                    # to avoid double-playing (send_notification plays sound
-                    # internally when play_sound=True)
-                    success = notifier.send_notification(
-                        title=event.title,
-                        message=event.message,
-                        timeout=10,
-                        sound_event=event.sound_event,
-                        play_sound=settings.sound_enabled,
-                    )
-
-                    if success:
-                        logger.info(
-                            "[events] Sent %s notification: %s", event.event_type, event.title
-                        )
-                    else:
-                        logger.warning(
-                            "[events] send_notification returned False for %s: %r",
-                            event.event_type,
-                            event.title,
-                        )
-
-                except Exception as e:
-                    logger.warning("[events] Failed to send event notification: %s", e)
-
-        except Exception as e:
-            logger.warning("[events] Error processing notification events: %s", e)
+        """Process weather data for discussion and severe-risk notification events."""
+        main_window_notification_events.process_notification_events(self, weather_data)
