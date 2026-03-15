@@ -80,6 +80,7 @@ jobs:
       run: |
         if [ "${{ github.event_name }}" = "pull_request" ]; then
           BASE="origin/${{ github.base_ref }}"
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}:${BASE}" || true
           echo "PR detected - comparing against $BASE"
         else
           LAST_NIGHTLY=$(git tag --list "nightly-*" --sort=-version:refname | head -n 1)
@@ -87,7 +88,11 @@ jobs:
           echo "Push detected - comparing against $BASE"
         fi
 
-        CHANGED_FILES=$(git diff --name-only "$BASE"..HEAD)
+        if ! CHANGED_FILES=$(git diff --name-only "$BASE"..HEAD 2>/dev/null); then
+          echo "Could not determine changed files for CHANGELOG reminder. Skipping."
+          exit 0
+        fi
+
         SRC_CHANGED=$(echo "$CHANGED_FILES" | grep -E "^src/" || true)
         CHANGELOG_CHANGED=$(echo "$CHANGED_FILES" | grep -E "^CHANGELOG\.md$" || true)
 
