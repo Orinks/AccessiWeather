@@ -260,6 +260,33 @@ class TestDynamicTrayTooltip:
         assert tooltip is not None
         assert len(tooltip) > 0
 
+    def test_update_tray_tooltip_uses_saved_format_when_dynamic_toggle_off(
+        self, sample_weather_data
+    ):
+        """Saved tray format should still drive tooltip text."""
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            dynamic_enabled=False,
+            format_string="{location}: {temp}",
+            temperature_unit="f",
+        )
+
+        tooltip = updater.format_tooltip(sample_weather_data, "Test City")
+
+        assert tooltip == "Test City: 72F"
+
+    def test_build_preview_uses_safe_sample_values_without_weather(self):
+        """Preview should still render when no live weather data is available."""
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        updater = TaskbarIconUpdater(text_enabled=True, format_string="{location}: {temp}")
+
+        preview = updater.build_preview("{location}: {temp} | {condition}", weather_data=None)
+
+        assert preview == "Sample Location: 72F/22C | Partly Cloudy"
+
     def test_update_tray_tooltip_without_weather_data(self):
         """Test tray tooltip returns default when no weather data."""
         from accessiweather.taskbar_icon_updater import DEFAULT_TOOLTIP_TEXT, TaskbarIconUpdater
@@ -330,6 +357,184 @@ class TestDynamicTrayTooltip:
 
         assert result is False
         mock_taskbar_updater.format_tooltip.assert_not_called()
+
+
+class TestFormatterSafety:
+    """
+    Regression tests for TRAY-01, TRAY-04, and TRAY-05 formatter safety.
+
+    TRAY-01: Saved tray text format drives tray tooltip text.
+    TRAY-04: Formatter code path has no platform-specific imports.
+    TRAY-05: Unknown placeholders produce predictable literal output, not a crash or full fallback.
+    """
+
+    @pytest.fixture
+    def sample_weather_data(self):
+        """Create sample weather data for formatter safety testing."""
+        location = Location(name="Test City", latitude=40.0, longitude=-74.0)
+        current = CurrentConditions(
+            temperature_f=72.0,
+            temperature_c=22.2,
+            condition="Partly Cloudy",
+        )
+        return WeatherData(location=location, current=current)
+
+    def test_format_tooltip_uses_saved_format_string_when_dynamic_enabled(
+        self, sample_weather_data
+    ):
+        """TRAY-01: format_tooltip uses format_string with text_enabled=True and returns exact text."""
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            dynamic_enabled=True,
+            format_string="{location}: {temp}",
+            temperature_unit="f",
+        )
+
+        result = updater.format_tooltip(sample_weather_data, "Test City")
+
+        assert result == "Test City: 72F"
+
+    def test_format_tooltip_with_unknown_placeholder_does_not_crash(self, sample_weather_data):
+        """TRAY-05a: format_tooltip with an unknown placeholder does not raise and returns non-empty string."""
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            format_string="{location}: {unknown_key}",
+            temperature_unit="f",
+        )
+
+        result = updater.format_tooltip(sample_weather_data, "Test City")
+
+        assert isinstance(result, str)
+        assert len(result) > 0
+
+    def test_format_text_leaves_unknown_placeholder_as_literal(self):
+        """TRAY-05b: format_text with an unknown placeholder leaves it as literal {key} text."""
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        updater = TaskbarIconUpdater(text_enabled=True, format_string="{temp} {condition}")
+
+        result = updater.format_text(
+            {"temp": "72F", "condition": "Sunny"}, "{temp}: {totally_unknown}"
+        )
+
+        assert result == "72F: {totally_unknown}"
+
+    def test_formatter_has_no_platform_specific_imports(self):
+        """TRAY-04: taskbar_icon_updater and format_string_parser have no platform-specific imports."""
+        import inspect
+
+        import accessiweather.format_string_parser as fsp_module
+        import accessiweather.taskbar_icon_updater as tiu_module
+
+        tiu_source = inspect.getsource(tiu_module)
+        fsp_source = inspect.getsource(fsp_module)
+        combined = tiu_source + fsp_source
+
+        assert "import winreg" not in combined
+        assert "import ctypes" not in combined
+        assert "sys.platform" not in combined
+
+
+class TestFormatterUnitPreferencePlaceholders:
+    """Targeted tests for placeholders that promise unit-aware output."""
+
+    @pytest.fixture
+    def unit_sensitive_weather_data(self):
+        """Create weather data with both unit families plus forecast high/low."""
+        from accessiweather.models import Forecast, ForecastPeriod
+
+        current = CurrentConditions(
+            temperature_f=72.0,
+            temperature_c=22.2,
+            condition="Partly Cloudy",
+            wind_speed_mph=10.0,
+            wind_speed_kph=16.1,
+            wind_direction="NW",
+            pressure_in=30.05,
+            pressure_mb=1017.0,
+            visibility_miles=10.0,
+            visibility_km=16.1,
+        )
+        current.precipitation = 1.0
+        current.precipitation_mm = 25.4
+
+        forecast = Forecast(
+            periods=[
+                ForecastPeriod(name="Today", temperature=75, temperature_unit="F"),
+                ForecastPeriod(name="Tonight", temperature=55, temperature_unit="F"),
+            ]
+        )
+        return WeatherData(
+            location=Location(name="Test City", latitude=40.0, longitude=-74.0),
+            current=current,
+            forecast=forecast,
+        )
+
+    @pytest.mark.parametrize(
+        ("temperature_unit", "expected"),
+        [
+            ("f", "10.0 mph | 30.05 inHg | 10.0 mi | 1.00 in | 75F | 55F"),
+            ("c", "16.1 km/h | 1017.00 hPa | 16.1 km | 25.40 mm | 24C | 13C"),
+            (
+                "both",
+                "10.0 mph (16.1 km/h) | 30.05 inHg (1017.00 hPa) | 10.0 mi (16.1 km) | "
+                "1.00 in (25.40 mm) | 75F/24C | 55F/13C",
+            ),
+        ],
+    )
+    def test_unit_aware_placeholders_follow_unit_preference(
+        self, unit_sensitive_weather_data, temperature_unit, expected
+    ):
+        """Wind_speed, pressure, visibility, precip, high, and low honor unit preference."""
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            format_string="{wind_speed} | {pressure} | {visibility} | {precip} | {high} | {low}",
+            temperature_unit=temperature_unit,
+        )
+
+        result = updater.format_tooltip(unit_sensitive_weather_data, "Test City")
+
+        assert result == expected
+
+    def test_explicit_temperature_placeholders_do_not_follow_unit_preference(
+        self, unit_sensitive_weather_data
+    ):
+        """temp_f and temp_c remain explicit even when the main preference is Celsius."""
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            format_string="{temp_f} / {temp_c}",
+            temperature_unit="c",
+        )
+
+        result = updater.format_tooltip(unit_sensitive_weather_data, "Test City")
+
+        assert result == "72F / 22C"
+
+    def test_high_low_stay_na_without_forecast_data(self):
+        """High and low should not invent values when forecast data is unavailable."""
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        weather_data = WeatherData(
+            location=Location(name="Test City", latitude=40.0, longitude=-74.0),
+            current=CurrentConditions(temperature_f=72.0, temperature_c=22.2, condition="Sunny"),
+        )
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            format_string="{high} / {low}",
+            temperature_unit="f",
+        )
+
+        result = updater.format_tooltip(weather_data, "Test City")
+
+        assert result == "N/A / N/A"
 
 
 class TestPopupMenu:
