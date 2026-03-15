@@ -224,7 +224,7 @@ class TestFetchNotificationEventData:
         weather_data = WeatherData(location=loc)
         win.app.weather_client.get_notification_event_data = AsyncMock(return_value=weather_data)
 
-        with patch("accessiweather.ui.main_window.wx") as mock_wx:
+        with patch("accessiweather.ui.main_window_notification_events.wx") as mock_wx:
             await win._fetch_notification_event_data()
 
             mock_wx.CallAfter.assert_called_once_with(
@@ -241,7 +241,7 @@ class TestFetchNotificationEventData:
         )
 
         # Should not raise
-        with patch("accessiweather.ui.main_window.wx"):
+        with patch("accessiweather.ui.main_window_notification_events.wx"):
             await win._fetch_notification_event_data()
 
 
@@ -334,6 +334,90 @@ class TestOnNotificationEventDataReceived:
 
         # Should not raise
         win._on_notification_event_data_received(weather_data)
+
+
+class TestNotificationEventHelpers:
+    """Focused tests for extracted main window notification event helpers."""
+
+    def _make_window(self):
+        from pathlib import Path
+
+        from accessiweather.ui.main_window import MainWindow
+
+        with patch.object(MainWindow, "__init__", lambda self, *a, **kw: None):
+            win = MainWindow.__new__(MainWindow)
+
+        win.app = MagicMock()
+        win.app.paths.config = Path("/tmp/config")
+        win._notification_event_manager = None
+        win._fallback_notifier = None
+        return win
+
+    def test_get_notification_event_manager_caches_instance(self):
+        win = self._make_window()
+
+        with patch(
+            "accessiweather.ui.main_window_notification_events.NotificationEventManager"
+        ) as manager_cls:
+            first = win._get_notification_event_manager()
+            second = win._get_notification_event_manager()
+
+        assert first is second
+        manager_cls.assert_called_once_with(
+            state_file=win.app.paths.config / "notification_event_state.json"
+        )
+
+    def test_process_notification_events_skips_when_both_disabled(self):
+        win = self._make_window()
+        settings = MagicMock()
+        settings.notify_discussion_update = False
+        settings.notify_severe_risk_change = False
+        win.app.config_manager.get_settings.return_value = settings
+
+        win._process_notification_events(MagicMock())
+
+        win.app.config_manager.get_current_location.assert_not_called()
+
+    def test_process_notification_events_uses_fallback_notifier(self):
+        win = self._make_window()
+        settings = MagicMock()
+        settings.notify_discussion_update = True
+        settings.notify_severe_risk_change = False
+        settings.sound_enabled = True
+        win.app.config_manager.get_settings.return_value = settings
+        location = MagicMock()
+        location.name = "PHI"
+        win.app.config_manager.get_current_location.return_value = location
+        win.app.notifier = None
+
+        event = MagicMock()
+        event.event_type = "discussion_update"
+        event.title = "Updated discussion"
+        event.message = "Summary"
+        event.sound_event = "discussion_update"
+        weather_data = MagicMock()
+
+        with (
+            patch(
+                "accessiweather.ui.main_window_notification_events.NotificationEventManager"
+            ) as manager_cls,
+            patch(
+                "accessiweather.ui.main_window_notification_events.SafeDesktopNotifier"
+            ) as notifier_cls,
+        ):
+            manager_cls.return_value.check_for_events.return_value = [event]
+            notifier = notifier_cls.return_value
+            notifier.send_notification.return_value = True
+
+            win._process_notification_events(weather_data)
+
+        notifier.send_notification.assert_called_once_with(
+            title="Updated discussion",
+            message="Summary",
+            timeout=10,
+            sound_event="discussion_update",
+            play_sound=True,
+        )
 
 
 # ---------------------------------------------------------------------------
