@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -22,6 +23,32 @@ if TYPE_CHECKING:
     from ..models import AppSettings, CurrentConditions, WeatherData
 
 logger = logging.getLogger(__name__)
+
+
+def _extract_discussion_issued_time_label(discussion_text: str | None) -> str | None:
+    """Extract the station-local issued time label from AFD text when present."""
+    if not discussion_text:
+        return None
+
+    compact_match = re.search(
+        r"\bISSUED\s+(\d{1,2})(\d{2})\s+([AP]M)\s+([A-Z]{2,4})\b",
+        discussion_text,
+        re.IGNORECASE,
+    )
+    if compact_match:
+        hour, minute, meridiem, tz_name = compact_match.groups()
+        return f"{int(hour)}:{minute} {meridiem.upper()} {tz_name.upper()}"
+
+    colon_match = re.search(
+        r"\bISSUED\s+(\d{1,2}):(\d{2})\s+([AP]M)\s+([A-Z]{2,4})\b",
+        discussion_text,
+        re.IGNORECASE,
+    )
+    if colon_match:
+        hour, minute, meridiem, tz_name = colon_match.groups()
+        return f"{int(hour)}:{minute} {meridiem.upper()} {tz_name.upper()}"
+
+    return None
 
 
 def _format_issuance_time_label(issuance_time: datetime) -> str:
@@ -331,11 +358,13 @@ class NotificationEventManager:
             self.state.last_discussion_issuance_time = issuance_time
             self.state.last_discussion_text = discussion_text
 
-            issued_label = (
-                _format_issuance_time_label(issuance_time)
-                if hasattr(issuance_time, "strftime")
-                else str(issuance_time)
-            )
+            issued_label = _extract_discussion_issued_time_label(discussion_text)
+            if not issued_label:
+                issued_label = (
+                    _format_issuance_time_label(issuance_time)
+                    if hasattr(issuance_time, "strftime")
+                    else str(issuance_time)
+                )
             message = f"The Area Forecast Discussion for {location_name} was updated by the National Weather Service at {issued_label}."
             if change_summary:
                 message += f" {change_summary}"

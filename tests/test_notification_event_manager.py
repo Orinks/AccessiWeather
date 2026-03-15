@@ -131,8 +131,14 @@ class TestNotificationEventManager:
         assert len(events2) == 0
 
         # Newer issuance time - should notify
-        newer_time = datetime(2026, 1, 20, 12, 35, 0, tzinfo=timezone(timedelta(hours=-5), "EST"))
-        weather_data.discussion = "Discussion text\n\n.WHAT HAS CHANGED...\nRain arrives earlier."
+        newer_time = first_time + timedelta(hours=3)
+        weather_data.discussion = (
+            "Area Forecast Discussion\n"
+            "National Weather Service Test Office\n"
+            "ISSUED 1235 PM EST MON JAN 20 2026\n\n"
+            ".WHAT HAS CHANGED...\n"
+            "Rain arrives earlier."
+        )
         weather_data.discussion_issuance_time = newer_time
         events3 = manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
         assert len(events3) == 1
@@ -141,6 +147,22 @@ class TestNotificationEventManager:
         assert "12:35 PM EST" in events3[0].message
         assert "Change summary:" not in events3[0].message
         assert "Rain arrives earlier." in events3[0].message
+
+    def test_discussion_update_falls_back_to_metadata_time(self, manager, settings_with_discussion):
+        """Use the metadata timestamp when the AFD text has no parseable issued line."""
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.current = None
+        weather_data.discussion = "Discussion text without an issued header"
+
+        first_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
+        weather_data.discussion_issuance_time = first_time
+        manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
+
+        weather_data.discussion_issuance_time = first_time + timedelta(hours=3)
+        events = manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
+
+        assert len(events) == 1
+        assert "5:35 PM UTC" in events[0].message
 
     def test_discussion_notification_disabled(self, manager, settings_none_enabled):
         """Test that notifications are not sent when disabled."""
