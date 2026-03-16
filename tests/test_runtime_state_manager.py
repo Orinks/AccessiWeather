@@ -31,9 +31,7 @@ def test_round_trip_preserves_phase1_runtime_sections(tmp_path):
     state = manager.load_state()
     state["alerts"]["last_global_notification"] = "2026-03-16T15:00:00+00:00"
     state["alerts"]["alert_states"] = [{"alert_id": "abc"}]
-    state["notification_events"]["discussion"]["last_issuance_time"] = (
-        "2026-03-16T14:30:00+00:00"
-    )
+    state["notification_events"]["discussion"]["last_issuance_time"] = "2026-03-16T14:30:00+00:00"
     state["notification_events"]["discussion"]["last_text"] = "Discussion text"
     state["notification_events"]["severe_risk"]["last_value"] = 35
     state["meta"]["migrated_from"] = ["alert_state.json"]
