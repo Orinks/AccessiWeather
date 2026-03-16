@@ -14,6 +14,7 @@ import wx
 
 from ..notifications.notification_event_manager import NotificationEventManager
 from ..notifications.toast_notifier import SafeDesktopNotifier
+from ..runtime_state import RuntimeStateManager
 
 if TYPE_CHECKING:
     from .main_window import MainWindow
@@ -52,8 +53,10 @@ def get_notification_event_manager(window: MainWindow):
         not hasattr(window, "_notification_event_manager")
         or window._notification_event_manager is None
     ):
-        state_file = window.app.paths.config / "notification_event_state.json"
-        window._notification_event_manager = NotificationEventManager(state_file=state_file)
+        config_root = window.app.config_manager.config_dir
+        window._notification_event_manager = NotificationEventManager(
+            runtime_state_manager=RuntimeStateManager(config_root)
+        )
     return window._notification_event_manager
 
 

@@ -13,6 +13,7 @@ import pytest
 
 from accessiweather.alert_manager import AlertManager, AlertSettings, AlertState
 from accessiweather.models import WeatherAlert, WeatherAlerts
+from accessiweather.runtime_state import RuntimeStateManager
 
 
 class TestAlertState:
@@ -242,6 +243,42 @@ class TestAlertManager:
         (config_dir / "alert_state.json").write_text(
             json.dumps(state_payload),
             encoding="utf-8",
+        )
+
+        manager = AlertManager(str(config_dir))
+        notifications = manager.process_alerts(WeatherAlerts(alerts=[sample_alert]))
+
+        assert notifications == []
+        assert manager.alert_states[sample_alert.get_unique_id()].notification_count == 1
+
+    def test_runtime_state_path_is_canonical_under_config_root(self, config_dir):
+        """Alert state should now write through the unified runtime store."""
+        manager = AlertManager(str(config_dir))
+
+        assert (
+            manager.runtime_state_manager.state_file == config_dir / "state" / "runtime_state.json"
+        )
+
+    def test_unified_runtime_state_prevents_duplicate_notifications_on_restart(
+        self, config_dir, sample_alert
+    ):
+        """Existing unified alert state should suppress duplicate notifications."""
+        runtime_state = RuntimeStateManager(config_dir)
+        runtime_state.save_section(
+            "alerts",
+            {
+                "alert_states": [
+                    AlertState(
+                        alert_id=sample_alert.get_unique_id(),
+                        content_hash=sample_alert.get_content_hash(),
+                        first_seen=datetime.now(UTC) - timedelta(hours=2),
+                        last_notified=datetime.now(UTC) - timedelta(minutes=30),
+                        notification_count=1,
+                        severity_priority=sample_alert.get_severity_priority(),
+                    ).to_dict()
+                ],
+                "last_global_notification": None,
+            },
         )
 
         manager = AlertManager(str(config_dir))
