@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 
-from accessiweather.paths import Paths
+from accessiweather.paths import Paths, RuntimeStoragePaths, resolve_runtime_storage
 
 
 class TestPathsInit:
@@ -147,6 +147,42 @@ class TestPortableFrozenBasePath:
         ):
             result = p._get_base_path()
         assert result == tmp_path
+
+
+class TestRuntimeStorageResolution:
+    """Test canonical runtime storage resolution."""
+
+    def test_default_layout_uses_app_config_root(self, tmp_path):
+        paths = Paths()
+        paths._base_path = tmp_path
+
+        runtime = resolve_runtime_storage(paths)
+
+        assert runtime == RuntimeStoragePaths(config_root=tmp_path / "Config")
+        assert runtime.config_file == tmp_path / "Config" / "accessiweather.json"
+        assert runtime.runtime_state_file == tmp_path / "Config" / "state" / "runtime_state.json"
+        assert runtime.cache_dir == tmp_path / "Config" / "weather_cache"
+        assert runtime.noaa_radio_preferences_file == tmp_path / "Config" / "noaa_radio_prefs.json"
+        assert runtime.lock_file == tmp_path / "Config" / "state" / "accessiweather.lock"
+
+    def test_custom_config_dir_wins(self, tmp_path):
+        paths = Paths()
+        custom = tmp_path / "custom-root"
+
+        runtime = resolve_runtime_storage(paths, config_dir=custom)
+
+        assert runtime.config_root == custom
+        assert runtime.custom_config_dir is True
+        assert runtime.portable_mode is False
+
+    def test_portable_layout_uses_cwd_config_when_not_frozen(self, tmp_path):
+        paths = Paths()
+
+        with patch("accessiweather.paths.Path.cwd", return_value=tmp_path):
+            runtime = resolve_runtime_storage(paths, portable_mode=True)
+
+        assert runtime.config_root == tmp_path / "config"
+        assert runtime.portable_mode is True
 
     def test_frozen_with_portable_marker_uses_exe_dir(self, tmp_path):
         exe = tmp_path / "AccessiWeather.exe"

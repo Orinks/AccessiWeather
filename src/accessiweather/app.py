@@ -20,7 +20,7 @@ import wx
 
 from . import app_timer_manager
 from .models import WeatherData
-from .paths import Paths
+from .paths import Paths, RuntimeStoragePaths, resolve_runtime_storage
 from .single_instance import SingleInstanceManager
 
 if TYPE_CHECKING:
@@ -103,6 +103,11 @@ class AccessiWeatherApp(wx.App):
 
         # Set up paths (similar to Toga's paths API)
         self.paths = Paths()
+        self.runtime_paths: RuntimeStoragePaths = resolve_runtime_storage(
+            self.paths,
+            config_dir=self._config_dir,
+            portable_mode=self._portable_mode,
+        )
 
         # Core components (initialized in OnInit)
         self.config_manager: ConfigManager | None = None
@@ -162,7 +167,9 @@ class AccessiWeatherApp(wx.App):
 
         try:
             # Check for single instance
-            self.single_instance_manager = SingleInstanceManager(self)
+            self.single_instance_manager = SingleInstanceManager(
+                self, runtime_paths=self.runtime_paths
+            )
             if not self.single_instance_manager.try_acquire_lock():
                 if self._updated:
                     # After an update restart the old lock file is stale; force-acquire it
