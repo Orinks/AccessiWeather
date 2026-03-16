@@ -56,9 +56,9 @@ class ConfigManager:
         self.runtime_paths = runtime_paths
 
         # Determine config directory based on parameters
-        if runtime_paths is not None:
-            self.config_dir = runtime_paths.config_root
-        elif config_dir:
+        # Explicit config_dir and portable_mode take precedence; runtime_paths.config_root
+        # is the resolved canonical root and acts as the default when neither is given.
+        if config_dir:
             self.config_dir = Path(config_dir)
         elif portable_mode:
             # Portable mode: use directory alongside the executable/app
