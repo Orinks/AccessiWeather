@@ -33,10 +33,11 @@ class TestVisualCrossingClientInit:
         client = VisualCrossingClient(api_key="key", user_agent="CustomApp/2.0")
         assert client.user_agent == "CustomApp/2.0"
 
-    def test_starts_with_low_latency_endpoint(self):
-        """Test that client starts with low-latency timelinellx endpoint."""
+    def test_starts_with_standard_timeline_endpoint(self):
+        """Test that client starts with the standard timeline endpoint."""
         client = VisualCrossingClient(api_key="key")
-        assert "timelinellx" in client.base_url
+        assert "timeline" in client.base_url
+        assert "timelinellx" not in client.base_url
 
     @pytest.mark.asyncio
     async def test_falls_back_to_standard_on_failure(self):
@@ -63,11 +64,12 @@ class TestVisualCrossingClientInit:
         assert client.base_url == client._STANDARD_URL
         assert client._fell_back_to_standard is True
 
-    def test_fallback_is_sticky(self):
-        """Test that once fallen back, client stays on standard endpoint."""
+    def test_standard_timeline_endpoint_stays_in_use(self):
+        """Test that the client continues using the standard timeline endpoint."""
         client = VisualCrossingClient(api_key="key")
         client._fell_back_to_standard = True
         client.base_url = client._STANDARD_URL
+        assert "timeline" in client.base_url
         assert "timelinellx" not in client.base_url
 
 
