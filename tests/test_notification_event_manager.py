@@ -299,6 +299,63 @@ class TestNotificationEventManager:
         assert manager2.state.last_discussion_issuance_time == issuance_time
         assert manager2.state.last_severe_risk == 42
 
+    def test_loaded_discussion_state_preserves_first_run_no_spam(self, tmp_path):
+        """Persisted discussion state should suppress same-issuance notifications after restart."""
+        state_file = tmp_path / "notification_event_state.json"
+        issuance_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
+        manager1 = NotificationEventManager(state_file=state_file)
+        manager1.state.last_discussion_issuance_time = issuance_time
+        manager1.state.last_discussion_text = "Old discussion text"
+        manager1._save_state()
+
+        manager2 = NotificationEventManager(state_file=state_file)
+        settings = AppSettings(notify_discussion_update=True, notify_severe_risk_change=False)
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.current = None
+        weather_data.discussion = "Same issuance discussion text"
+        weather_data.discussion_issuance_time = issuance_time
+
+        same_events = manager2.check_for_events(weather_data, settings, "Test Location")
+
+        assert same_events == []
+        assert manager2.state.last_discussion_text == "Same issuance discussion text"
+
+        weather_data.discussion = "Updated discussion text"
+        weather_data.discussion_issuance_time = issuance_time + timedelta(hours=1)
+
+        updated_events = manager2.check_for_events(weather_data, settings, "Test Location")
+
+        assert len(updated_events) == 1
+        assert updated_events[0].event_type == "discussion_update"
+
+    def test_loaded_severe_risk_state_tracks_numeric_value_within_category(self, tmp_path):
+        """Persisted severe-risk state should keep the latest value before a threshold crossing."""
+        state_file = tmp_path / "notification_event_state.json"
+        manager1 = NotificationEventManager(state_file=state_file)
+        manager1.state.last_severe_risk = 25
+        manager1._save_state()
+
+        manager2 = NotificationEventManager(state_file=state_file)
+        settings = AppSettings(notify_discussion_update=False, notify_severe_risk_change=True)
+        current = MagicMock(spec=CurrentConditions)
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.discussion = None
+        weather_data.discussion_issuance_time = None
+        weather_data.current = current
+
+        current.severe_weather_risk = 35
+        same_category_events = manager2.check_for_events(weather_data, settings, "Test Location")
+
+        assert same_category_events == []
+        assert manager2.state.last_severe_risk == 35
+
+        current.severe_weather_risk = 45
+        threshold_events = manager2.check_for_events(weather_data, settings, "Test Location")
+
+        assert len(threshold_events) == 1
+        assert threshold_events[0].event_type == "severe_risk"
+        assert "low to moderate" in threshold_events[0].message.lower()
+
     def test_reset_state(self, manager):
         """Test state reset."""
         manager.state.last_discussion_issuance_time = datetime(

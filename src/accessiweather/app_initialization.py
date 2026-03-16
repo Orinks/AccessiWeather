@@ -26,6 +26,9 @@ def initialize_components(app: AccessiWeatherApp) -> None:
         config_dir=getattr(app, "_config_dir", None),
         portable_mode=getattr(app, "_portable_mode", False),
     )
+    from .runtime_state import RuntimeStateManager
+
+    app.runtime_state_manager = RuntimeStateManager(app.config_manager.config_dir)
     config = app.config_manager.load_config()
 
     # Defer update service initialization to background (using wx.CallLater)

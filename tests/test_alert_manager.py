@@ -6,6 +6,7 @@ Tests alert state tracking, change detection, and notification logic.
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -220,6 +221,34 @@ class TestAlertManager:
         manager2._ensure_state_loaded()
 
         assert sample_alert.get_unique_id() in manager2.alert_states
+
+    def test_existing_alert_state_suppresses_duplicate_first_run_notification(
+        self, config_dir, sample_alert
+    ):
+        """Legacy alert_state.json should prevent duplicate notifications on restart."""
+        existing_state = AlertState(
+            alert_id=sample_alert.get_unique_id(),
+            content_hash=sample_alert.get_content_hash(),
+            first_seen=datetime.now(UTC) - timedelta(hours=2),
+            last_notified=datetime.now(UTC) - timedelta(minutes=30),
+            notification_count=1,
+            severity_priority=sample_alert.get_severity_priority(),
+        )
+        state_payload = {
+            "alert_states": [existing_state.to_dict()],
+            "last_global_notification": None,
+        }
+        config_dir.mkdir(parents=True, exist_ok=True)
+        (config_dir / "alert_state.json").write_text(
+            json.dumps(state_payload),
+            encoding="utf-8",
+        )
+
+        manager = AlertManager(str(config_dir))
+        notifications = manager.process_alerts(WeatherAlerts(alerts=[sample_alert]))
+
+        assert notifications == []
+        assert manager.alert_states[sample_alert.get_unique_id()].notification_count == 1
 
     def test_get_statistics(self, manager, sample_alert):
         """Test getting alert statistics."""
