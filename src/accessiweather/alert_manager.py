@@ -6,9 +6,7 @@ and notification management following the design principles for unique
 alert identification and user controls.
 """
 
-import json
 import logging
-import os
 import time
 from collections import deque
 from datetime import UTC, datetime, timedelta
@@ -28,6 +26,7 @@ from .constants import (
     SEVERITY_PRIORITY_MAP,
 )
 from .models import WeatherAlert, WeatherAlerts
+from .runtime_state import RuntimeStateManager
 
 logger = logging.getLogger(__name__)
 
@@ -251,12 +250,19 @@ class AlertSettings:
 class AlertManager:
     """Manages alert state tracking, change detection, and notifications."""
 
-    def __init__(self, config_dir: str, settings: AlertSettings | None = None):
+    def __init__(
+        self,
+        config_dir: str,
+        settings: AlertSettings | None = None,
+        runtime_state_manager: RuntimeStateManager | None = None,
+    ):
         """Initialize the instance."""
         self.config_dir = Path(config_dir)
         self.config_dir.mkdir(parents=True, exist_ok=True)
 
-        self.state_file = self.config_dir / "alert_state.json"
+        self.runtime_state_manager = runtime_state_manager or RuntimeStateManager(self.config_dir)
+        self.state_file = self.runtime_state_manager.state_file
+        self.legacy_state_file = self.runtime_state_manager.legacy_alert_state_file
         self.settings = settings or AlertSettings()
 
         # In-memory state tracking
@@ -276,7 +282,7 @@ class AlertManager:
         # Defer state loading until first use for faster startup
         self._state_loaded = False
 
-        logger.info(f"AlertManager initialized with state file: {self.state_file}")
+        logger.info("AlertManager initialized with runtime state file: %s", self.state_file)
 
     def _ensure_state_loaded(self):
         """Ensure state is loaded before first use (lazy loading)."""
@@ -288,24 +294,18 @@ class AlertManager:
     def _load_state(self):
         """Load alert state from persistent storage."""
         try:
-            if self.state_file.exists():
-                with open(self.state_file) as f:
-                    data = json.load(f)
+            data = self.runtime_state_manager.load_section("alerts")
 
-                # Load alert states
-                for state_data in data.get("alert_states", []):
-                    state = AlertState.from_dict(state_data)
-                    self.alert_states[state.alert_id] = state
+            for state_data in data.get("alert_states", []):
+                state = AlertState.from_dict(state_data)
+                self.alert_states[state.alert_id] = state
 
-                # Load global state
-                if data.get("last_global_notification"):
-                    self.last_global_notification = datetime.fromisoformat(
-                        data["last_global_notification"]
-                    )
+            if data.get("last_global_notification"):
+                self.last_global_notification = datetime.fromisoformat(
+                    data["last_global_notification"]
+                )
 
-                logger.info(f"Loaded {len(self.alert_states)} alert states from storage")
-            else:
-                logger.info("No existing alert state file found, starting fresh")
+            logger.info("Loaded %d alert states from runtime storage", len(self.alert_states))
 
         except Exception as e:
             logger.error(f"Failed to load alert state: {e}")
@@ -324,24 +324,11 @@ class AlertManager:
                     if self.last_global_notification
                     else None
                 ),
-                "saved_at": datetime.now(UTC).isoformat(),
             }
-
-            # Write atomically
-            temp_file = self.state_file.with_suffix(".tmp")
-            with open(temp_file, "w") as f:
-                json.dump(data, f, indent=2)
-
-            temp_file.replace(self.state_file)
-
-            # Set secure permissions on POSIX systems
-            try:
-                if os.name != "nt":
-                    os.chmod(self.state_file, 0o600)
-            except Exception:
-                logger.debug("Could not set strict permissions on alert state file", exc_info=True)
-
-            logger.debug(f"Saved {len(self.alert_states)} alert states to storage")
+            if self.runtime_state_manager.save_section("alerts", data):
+                logger.debug("Saved %d alert states to runtime storage", len(self.alert_states))
+            else:
+                logger.error("Failed to save alert runtime state")
 
         except Exception as e:
             logger.error(f"Failed to save alert state: {e}")

@@ -349,6 +349,7 @@ class TestNotificationEventHelpers:
 
         win.app = MagicMock()
         win.app.paths.config = Path("/tmp/config")
+        win.app.config_manager.config_dir = Path("/tmp/runtime-config")
         win._notification_event_manager = None
         win._fallback_notifier = None
         return win
@@ -363,8 +364,9 @@ class TestNotificationEventHelpers:
             second = win._get_notification_event_manager()
 
         assert first is second
-        manager_cls.assert_called_once_with(
-            state_file=win.app.paths.config / "notification_event_state.json"
+        _, kwargs = manager_cls.call_args
+        assert kwargs["runtime_state_manager"].state_file == (
+            win.app.config_manager.config_dir / "state" / "runtime_state.json"
         )
 
     def test_process_notification_events_skips_when_both_disabled(self):

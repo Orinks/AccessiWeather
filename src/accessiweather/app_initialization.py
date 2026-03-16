@@ -109,9 +109,13 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     from .alert_manager import AlertManager
     from .alert_notification_system import AlertNotificationSystem
 
-    config_dir_str = str(app.paths.config)
+    config_dir_str = str(app.config_manager.config_dir)
     alert_settings = config.settings.to_alert_settings()
-    app.alert_manager = AlertManager(config_dir_str, alert_settings)
+    app.alert_manager = AlertManager(
+        config_dir_str,
+        alert_settings,
+        runtime_state_manager=app.runtime_state_manager,
+    )
     app.alert_notification_system = AlertNotificationSystem(
         app.alert_manager, app._notifier, config.settings
     )
