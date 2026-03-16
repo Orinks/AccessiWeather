@@ -116,7 +116,7 @@ jobs:
         run: |
           python installer/build.py --portable-zip-only
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: windows
           path: |
@@ -158,7 +158,7 @@ jobs:
             "dist/AccessiWeather_v${VERSION}.dmg" "dist/AccessiWeather.app" || \
           hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${VERSION}.dmg"
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: macos
           path: dist/AccessiWeather_*.dmg
