@@ -28,7 +28,8 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 
 **What it does**:
 - Builds Windows installer + portable ZIP and macOS DMG
-- Creates nightly or stable GitHub releases
+- Creates nightly or stable GitHub releases using curated `CHANGELOG.md`
+  sections for the public release notes
 - Triggers GitHub Pages refresh after a successful release
 
 ---

@@ -1,4 +1,6 @@
 # git-cliff configuration for AccessiWeather
+# Internal note: public nightly/stable GitHub release notes come from curated
+# CHANGELOG.md sections. This config is only for changelog maintenance workflows.
 # https://git-cliff.org/docs/configuration
 # Format: Keep a Changelog (https://keepachangelog.com/en/1.0.0/)
 

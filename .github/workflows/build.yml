@@ -213,23 +213,19 @@ jobs:
           # Generate checksums
           cd assets && sha256sum * > checksums.txt 2>/dev/null || true
 
-          # Generate release notes via git-cliff (nightly and stable)
+          # Public release notes come from curated CHANGELOG.md sections.
           cd ..
           if [ "$IS_NIGHTLY" = "true" ]; then
-            LAST_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -1)
-            if [ -n "$LAST_TAG" ]; then
-              npx git-cliff@latest "$LAST_TAG"..HEAD --strip all > notes.md.tmp || true
-              awk '!seen[$0]++' notes.md.tmp > notes.md && rm -f notes.md.tmp
-              [ -s notes.md ] || echo "- No user-facing changes" > notes.md
-            else
-              echo "Initial nightly build" > notes.md
-            fi
+            python3 .github/scripts/extract_release_notes.py \
+              --mode nightly \
+              --changelog CHANGELOG.md \
+              --default-message "- No user-facing changes." > notes.md
           else
-            npx git-cliff@latest --latest --ignore-tags "nightly-.*" --strip all > notes.md.tmp || true
-            awk '!seen[$0]++' notes.md.tmp > notes.md && rm -f notes.md.tmp
-            if [ ! -s notes.md ]; then
-              echo "See [CHANGELOG.md](https://github.com/Orinks/AccessiWeather/blob/main/CHANGELOG.md) for full release notes." > notes.md
-            fi
+            python3 .github/scripts/extract_release_notes.py \
+              --mode stable \
+              --version "$VERSION" \
+              --changelog CHANGELOG.md \
+              --default-message "See [CHANGELOG.md](https://github.com/Orinks/AccessiWeather/blob/main/CHANGELOG.md) for full release notes." > notes.md
           fi
 
       - name: Create release
