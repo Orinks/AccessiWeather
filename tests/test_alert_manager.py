@@ -255,7 +255,9 @@ class TestAlertManager:
         """Alert state should now write through the unified runtime store."""
         manager = AlertManager(str(config_dir))
 
-        assert manager.runtime_state_manager.state_file == config_dir / "state" / "runtime_state.json"
+        assert (
+            manager.runtime_state_manager.state_file == config_dir / "state" / "runtime_state.json"
+        )
 
     def test_unified_runtime_state_prevents_duplicate_notifications_on_restart(
         self, config_dir, sample_alert

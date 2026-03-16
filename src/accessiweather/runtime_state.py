@@ -80,14 +80,20 @@ class RuntimeStateManager:
             raise KeyError(f"Unknown runtime-state section: {section}")
 
         raw_state = self._load_raw_state()
-        if isinstance(raw_state, dict) and section in raw_state and isinstance(raw_state[section], dict):
+        if (
+            isinstance(raw_state, dict)
+            and section in raw_state
+            and isinstance(raw_state[section], dict)
+        ):
             return deepcopy(self.load_state()[section])
 
         legacy_section = self._load_legacy_section(section)
         if legacy_section is None:
             return deepcopy(_SECTION_DEFAULTS[section])
 
-        self.save_section(section, legacy_section, migrated_from=self._legacy_name_for_section(section))
+        self.save_section(
+            section, legacy_section, migrated_from=self._legacy_name_for_section(section)
+        )
         return legacy_section
 
     def save_section(

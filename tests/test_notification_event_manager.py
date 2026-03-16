@@ -68,7 +68,9 @@ class TestNotificationEventManager:
     @pytest.fixture
     def runtime_manager(self, tmp_path):
         """Create a manager backed by the unified runtime state store."""
-        return NotificationEventManager(runtime_state_manager=RuntimeStateManager(tmp_path / "config"))
+        return NotificationEventManager(
+            runtime_state_manager=RuntimeStateManager(tmp_path / "config")
+        )
 
     @pytest.fixture
     def settings_with_discussion(self):

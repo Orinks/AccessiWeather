@@ -253,7 +253,9 @@ class NotificationEventManager:
             self.state = NotificationState.from_dict(data)
             logger.debug(
                 "Loaded notification state from %s",
-                self.runtime_state_manager.state_file if self.runtime_state_manager else self.state_file,
+                self.runtime_state_manager.state_file
+                if self.runtime_state_manager
+                else self.state_file,
             )
         except Exception as e:
             logger.warning("Failed to load notification state: %s", e)
