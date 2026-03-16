@@ -41,7 +41,7 @@ class VisualCrossingClient:
     """Client for Visual Crossing Weather API."""
 
     _BASE = "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services"
-    _LOW_LATENCY_URL = f"{_BASE}/timelinellx"
+    _LOW_LATENCY_URL = f"{_BASE}/timeline"
     _STANDARD_URL = f"{_BASE}/timeline"
 
     def __init__(
