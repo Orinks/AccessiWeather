@@ -9,7 +9,6 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
-
 logger = logging.getLogger(__name__)
 
 _DEFAULT_RUNTIME_STATE: dict[str, Any] = {
@@ -53,6 +52,7 @@ class RuntimeStateManager:
     """Manage the future unified runtime-state file under a canonical state root."""
 
     def __init__(self, config_root: Path | str):
+        """Initialize the manager for a given config-root directory."""
         self.config_root = Path(config_root)
         self.state_dir = self.config_root / "state"
         self.state_file = self.state_dir / "runtime_state.json"
