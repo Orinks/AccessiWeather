@@ -173,7 +173,9 @@ class TestNOAARadioDialogModule:
 
     def test_dialog_uses_app_runtime_prefs_path(self, noaa_dialog_module):
         fake_app = MagicMock()
-        fake_app.runtime_paths.noaa_radio_preferences_file = Path("/tmp/config/noaa_radio_prefs.json")
+        fake_app.runtime_paths.noaa_radio_preferences_file = Path(
+            "/tmp/config/noaa_radio_prefs.json"
+        )
 
         with (
             patch.object(noaa_dialog_module.wx, "GetApp", return_value=fake_app),
