@@ -20,6 +20,7 @@ from accessiweather.models import AppConfig, AppSettings, Location
 if TYPE_CHECKING:
     from accessiweather.app import AccessiWeatherApp
 
+from ..paths import RuntimeStoragePaths
 from .file_permissions import set_secure_file_permissions
 from .github_config import GitHubConfigOperations
 from .import_export import ImportExportOperations
@@ -36,6 +37,7 @@ class ConfigManager:
     def __init__(
         self,
         app: AccessiWeatherApp,
+        runtime_paths: RuntimeStoragePaths | None = None,
         config_dir: str | Path | None = None,
         portable_mode: bool = False,
     ):
@@ -44,14 +46,19 @@ class ConfigManager:
 
         Args:
             app: Toga application instance
+            runtime_paths: Resolved canonical runtime storage layout
             config_dir: Custom configuration directory (overrides default)
             portable_mode: If True, use app directory for config instead of user directory
 
         """
         self.app = app
 
+        self.runtime_paths = runtime_paths
+
         # Determine config directory based on parameters
-        if config_dir:
+        if runtime_paths is not None:
+            self.config_dir = runtime_paths.config_root
+        elif config_dir:
             self.config_dir = Path(config_dir)
         elif portable_mode:
             # Portable mode: use directory alongside the executable/app
