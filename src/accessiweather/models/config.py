@@ -55,6 +55,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     # API key settings (loaded lazily via keyring)
     "visual_crossing_api_key",
     # Display preferences
+    "round_values",
     "show_detailed_forecast",
     "enable_alerts",
     "minimize_to_tray",
@@ -187,6 +188,8 @@ class AppSettings:
     # Startup UX guidance flags
     onboarding_wizard_shown: bool = False
     portable_missing_api_keys_hint_shown: bool = False
+    # Display precision
+    round_values: bool = False
 
     @staticmethod
     def _as_bool(value, default: bool) -> bool:
@@ -448,6 +451,7 @@ class AppSettings:
             "severe_weather_override": self.severe_weather_override,
             "onboarding_wizard_shown": self.onboarding_wizard_shown,
             "portable_missing_api_keys_hint_shown": self.portable_missing_api_keys_hint_shown,
+            "round_values": self.round_values,
         }
 
     @classmethod
@@ -542,6 +546,7 @@ class AppSettings:
             portable_missing_api_keys_hint_shown=cls._as_bool(
                 data.get("portable_missing_api_keys_hint_shown"), False
             ),
+            round_values=cls._as_bool(data.get("round_values"), False),
         )
 
     def to_alert_settings(self):

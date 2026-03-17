@@ -820,6 +820,7 @@ class AccessiWeatherApp(wx.App):
                 format_string=getattr(settings, "taskbar_icon_text_format", "{temp} {condition}"),
                 temperature_unit=getattr(settings, "temperature_unit", "both"),
                 verbosity_level=getattr(settings, "verbosity_level", "standard"),
+                round_values=getattr(settings, "round_values", False),
             )
             logger.debug("Taskbar icon updater initialized")
         except Exception as e:
