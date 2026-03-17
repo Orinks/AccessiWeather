@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-import pytest
-
 from accessiweather.display.presentation.current_conditions import (
     _build_basic_metrics,
     _build_seasonal_metrics,
     build_current_conditions,
 )
-from accessiweather.display.presentation.forecast import build_forecast, build_hourly_summary
 from accessiweather.display.presentation.formatters import (
     format_pressure_value,
     format_visibility_value,
@@ -18,15 +15,10 @@ from accessiweather.display.presentation.formatters import (
 from accessiweather.models import (
     AppSettings,
     CurrentConditions,
-    Forecast,
-    ForecastPeriod,
-    HourlyForecast,
-    HourlyForecastPeriod,
     Location,
 )
 from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
 from accessiweather.utils import TemperatureUnit
-
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
