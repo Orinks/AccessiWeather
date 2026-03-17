@@ -1271,9 +1271,7 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["show_pressure_trend"].SetValue(
                 getattr(settings, "show_pressure_trend", True)
             )
-            self._controls["round_values"].SetValue(
-                getattr(settings, "round_values", False)
-            )
+            self._controls["round_values"].SetValue(getattr(settings, "round_values", False))
             self._controls["detailed_forecast"].SetValue(
                 getattr(settings, "show_detailed_forecast", True)
             )

@@ -404,7 +404,7 @@ class TestBuildEnvironmentalMetrics:
 class TestBuildSeasonalMetrics:
     def test_snow_depth_fahrenheit(self):
         current = CurrentConditions(snow_depth_in=6.0)
-        metrics = _build_seasonal_metrics(current, TemperatureUnit.FAHRENHEIT, 0)
+        metrics = _build_seasonal_metrics(current, TemperatureUnit.FAHRENHEIT, 1)
         assert any("6.0 in" in m.value for m in metrics)
 
     def test_snow_depth_celsius(self):
@@ -841,7 +841,7 @@ class TestBuildBasicMetricsNewFields:
         metrics = _build_basic_metrics(
             current,
             TemperatureUnit.FAHRENHEIT,
-            0,
+            2,
             show_dewpoint=False,
             show_visibility=False,
             show_uv_index=False,
@@ -857,7 +857,7 @@ class TestBuildBasicMetricsNewFields:
         metrics = _build_basic_metrics(
             current,
             TemperatureUnit.CELSIUS,
-            0,
+            1,
             show_dewpoint=False,
             show_visibility=False,
             show_uv_index=False,
@@ -871,7 +871,7 @@ class TestBuildBasicMetricsNewFields:
         metrics = _build_basic_metrics(
             current,
             TemperatureUnit.CELSIUS,
-            0,
+            1,
             show_dewpoint=False,
             show_visibility=False,
             show_uv_index=False,

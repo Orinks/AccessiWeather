@@ -99,7 +99,10 @@ def _build_basic_metrics(
         else:
             precip_mm = current.precipitation_mm or current.precipitation_in * 25.4
             metrics.append(
-                Metric("Precipitation", f"{current.precipitation_in:.{precision}f} in ({precip_mm:.{precision}f} mm)")
+                Metric(
+                    "Precipitation",
+                    f"{current.precipitation_in:.{precision}f} in ({precip_mm:.{precision}f} mm)",
+                )
             )
 
     return metrics
@@ -249,7 +252,10 @@ def _build_seasonal_metrics(
         else:
             snow_depth_cm = current.snow_depth_cm or current.snow_depth_in * 2.54
             metrics.append(
-                Metric("Snow on ground", f"{current.snow_depth_in:.{precision}f} in ({snow_depth_cm:.{precision}f} cm)")
+                Metric(
+                    "Snow on ground",
+                    f"{current.snow_depth_in:.{precision}f} in ({snow_depth_cm:.{precision}f} cm)",
+                )
             )
 
     if current.wind_chill_f is not None:
