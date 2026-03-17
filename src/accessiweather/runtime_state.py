@@ -65,27 +65,41 @@ class RuntimeStateManager:
         self.legacy_notification_event_state_file = (
             self.config_root / "notification_event_state.json"
         )
+        # In-memory cache to avoid redundant disk reads on the notification hot path.
+        self._cache: dict[str, Any] | None = None
+
+    def _get_cached_state(self) -> dict[str, Any]:
+        """Return the in-memory state, loading from disk once if needed."""
+        if self._cache is None:
+            loaded = self._load_raw_state()
+            if loaded is None:
+                self._cache = deepcopy(_DEFAULT_RUNTIME_STATE)
+            else:
+                self._cache = _merge_nested(_DEFAULT_RUNTIME_STATE, loaded)
+        return self._cache
+
+    def _invalidate_cache(self) -> None:
+        """Discard the in-memory cache so the next read re-loads from disk."""
+        self._cache = None
 
     def load_state(self) -> dict[str, Any]:
-        """Load runtime state, falling back to the default schema on error."""
-        loaded = self._load_raw_state()
-        if loaded is None:
-            return deepcopy(_DEFAULT_RUNTIME_STATE)
+        """Load runtime state from cache (or disk on first call), returning a copy."""
+        return deepcopy(self._get_cached_state())
 
-        return _merge_nested(_DEFAULT_RUNTIME_STATE, loaded)
+    def _section_is_populated(self, section: str, state: dict[str, Any]) -> bool:
+        """Return True when the runtime-state file had real data for this section."""
+        # The unified file exists and has this section only if it was previously written.
+        # A freshly-loaded default does NOT count as populated.
+        return self.state_file.exists() and isinstance(state.get(section), dict)
 
     def load_section(self, section: str) -> dict[str, Any]:
         """Load a runtime-state section, hydrating from legacy state if needed."""
         if section not in _SECTION_DEFAULTS:
             raise KeyError(f"Unknown runtime-state section: {section}")
 
-        raw_state = self._load_raw_state()
-        if (
-            isinstance(raw_state, dict)
-            and section in raw_state
-            and isinstance(raw_state[section], dict)
-        ):
-            return deepcopy(self.load_state()[section])
+        cached = self._get_cached_state()
+        if self._section_is_populated(section, cached):
+            return deepcopy(cached[section])
 
         legacy_section = self._load_legacy_section(section)
         if legacy_section is None:
@@ -107,23 +121,24 @@ class RuntimeStateManager:
         if section not in _SECTION_DEFAULTS:
             raise KeyError(f"Unknown runtime-state section: {section}")
 
-        state = self.load_state()
-        state[section] = _merge_nested(_SECTION_DEFAULTS[section], section_state)
+        # Update in-memory cache directly — avoids a disk read for each save.
+        cached = self._get_cached_state()
+        cached[section] = _merge_nested(_SECTION_DEFAULTS[section], section_state)
 
         if migrated_from:
-            migrated = list(state["meta"].get("migrated_from", []))
+            migrated = list(cached["meta"].get("migrated_from", []))
             if migrated_from not in migrated:
                 migrated.append(migrated_from)
-            state["meta"]["migrated_from"] = migrated
-            if state["meta"].get("migrated_at") is None:
+            cached["meta"]["migrated_from"] = migrated
+            if cached["meta"].get("migrated_at") is None:
                 from datetime import UTC, datetime
 
-                state["meta"]["migrated_at"] = datetime.now(UTC).isoformat()
+                cached["meta"]["migrated_at"] = datetime.now(UTC).isoformat()
 
-        return self.save_state(state)
+        return self.save_state(cached)
 
     def save_state(self, state: dict[str, Any]) -> bool:
-        """Save runtime state atomically."""
+        """Save runtime state atomically and update the in-memory cache."""
         try:
             self.state_dir.mkdir(parents=True, exist_ok=True)
             tmp_file = self.state_file.with_suffix(".json.tmp")
@@ -132,9 +147,14 @@ class RuntimeStateManager:
             with open(tmp_file, "w", encoding="utf-8", newline="\n") as handle:
                 handle.write(payload)
                 handle.flush()
-                os.fsync(handle.fileno())
+                # fsync only on platforms where it is meaningful; skip on Windows
+                # (os.replace is atomic enough for state files there).
+                if os.name != "nt":
+                    os.fsync(handle.fileno())
 
             os.replace(tmp_file, self.state_file)
+            # Keep the cache warm so the next read avoids a disk round-trip.
+            self._cache = state
             return True
         except Exception as exc:
             logger.warning("Failed to save runtime state to %s: %s", self.state_file, exc)
