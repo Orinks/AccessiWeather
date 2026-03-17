@@ -241,18 +241,14 @@ class TestBuildCurrentConditionsRoundValues:
 class TestBuildBasicMetricsPrecipitation:
     def test_precision_1_formats_correctly(self):
         current = _make_current(precip_in=0.17)
-        metrics = _build_basic_metrics(
-            current, TemperatureUnit.FAHRENHEIT, 1, True, True, True
-        )
+        metrics = _build_basic_metrics(current, TemperatureUnit.FAHRENHEIT, 1, True, True, True)
         precip = next((m for m in metrics if m.label == "Precipitation"), None)
         assert precip is not None
         assert "0.2" in precip.value  # rounds 0.17 to 0.2 at precision=1
 
     def test_precision_0_rounds_to_whole(self):
         current = _make_current(precip_in=0.15)
-        metrics = _build_basic_metrics(
-            current, TemperatureUnit.FAHRENHEIT, 0, True, True, True
-        )
+        metrics = _build_basic_metrics(current, TemperatureUnit.FAHRENHEIT, 0, True, True, True)
         precip = next((m for m in metrics if m.label == "Precipitation"), None)
         assert precip is not None
         assert "0.15" not in precip.value
