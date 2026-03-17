@@ -29,7 +29,9 @@ def format_temperature_pair(
     return format_temperature(temp_f, unit_pref, temperature_c=temp_c, precision=precision)
 
 
-def format_wind(current: CurrentConditions, unit_pref: TemperatureUnit) -> str | None:
+def format_wind(
+    current: CurrentConditions, unit_pref: TemperatureUnit, precision: int = 1
+) -> str | None:
     """Describe wind direction and speed or return calm when wind is negligible."""
     if (
         current.wind_speed_mph is None
@@ -56,7 +58,7 @@ def format_wind(current: CurrentConditions, unit_pref: TemperatureUnit) -> str |
         current.wind_speed_mph,
         unit_pref,
         wind_speed_kph=current.wind_speed_kph,
-        precision=1,
+        precision=precision,
     )
     if direction and speed:
         return f"{direction} at {speed}"
@@ -97,6 +99,7 @@ def format_dewpoint(
 def format_pressure_value(
     current: CurrentConditions,
     unit_pref: TemperatureUnit,
+    precision: int = 1,
 ) -> str | None:
     """Format station pressure in the preferred unit, if available."""
     if current.pressure_in is None and current.pressure_mb is None:
@@ -105,12 +108,13 @@ def format_pressure_value(
     pressure_mb = current.pressure_mb
     if pressure_in is None and pressure_mb is not None:
         pressure_in = pressure_mb / 33.8639
-    return format_pressure(pressure_in, unit_pref, pressure_mb=pressure_mb, precision=1)
+    return format_pressure(pressure_in, unit_pref, pressure_mb=pressure_mb, precision=precision)
 
 
 def format_visibility_value(
     current: CurrentConditions,
     unit_pref: TemperatureUnit,
+    precision: int = 1,
 ) -> str | None:
     """Format horizontal visibility taking unit preference into account."""
     if current.visibility_miles is None and current.visibility_km is None:
@@ -119,7 +123,7 @@ def format_visibility_value(
         current.visibility_miles,
         unit_pref,
         visibility_km=current.visibility_km,
-        precision=1,
+        precision=precision,
     )
 
 

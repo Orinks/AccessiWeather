@@ -55,7 +55,7 @@ def _build_basic_metrics(
     if current.humidity is not None:
         metrics.append(Metric("Humidity", f"{current.humidity:.0f}%"))
 
-    wind_value = format_wind(current, unit_pref)
+    wind_value = format_wind(current, unit_pref, precision=precision)
     if wind_value:
         metrics.append(Metric("Wind", wind_value))
 
@@ -63,11 +63,11 @@ def _build_basic_metrics(
     if show_dewpoint and dewpoint_value:
         metrics.append(Metric("Dewpoint", dewpoint_value))
 
-    pressure_value = format_pressure_value(current, unit_pref)
+    pressure_value = format_pressure_value(current, unit_pref, precision=precision)
     if pressure_value:
         metrics.append(Metric("Pressure", pressure_value))
 
-    visibility_value = format_visibility_value(current, unit_pref)
+    visibility_value = format_visibility_value(current, unit_pref, precision=precision)
     if show_visibility and visibility_value:
         metrics.append(Metric("Visibility", visibility_value))
 
@@ -93,13 +93,13 @@ def _build_basic_metrics(
     if current.precipitation_in is not None and current.precipitation_in > 0:
         if unit_pref == TemperatureUnit.CELSIUS:
             precip_mm = current.precipitation_mm or current.precipitation_in * 25.4
-            metrics.append(Metric("Precipitation", f"{precip_mm:.1f} mm"))
+            metrics.append(Metric("Precipitation", f"{precip_mm:.{precision}f} mm"))
         elif unit_pref == TemperatureUnit.FAHRENHEIT:
-            metrics.append(Metric("Precipitation", f"{current.precipitation_in:.2f} in"))
+            metrics.append(Metric("Precipitation", f"{current.precipitation_in:.{precision}f} in"))
         else:
             precip_mm = current.precipitation_mm or current.precipitation_in * 25.4
             metrics.append(
-                Metric("Precipitation", f"{current.precipitation_in:.2f} in ({precip_mm:.1f} mm)")
+                Metric("Precipitation", f"{current.precipitation_in:.{precision}f} in ({precip_mm:.{precision}f} mm)")
             )
 
     return metrics
@@ -243,13 +243,13 @@ def _build_seasonal_metrics(
     if current.snow_depth_in is not None and current.snow_depth_in > 0:
         if unit_pref == TemperatureUnit.CELSIUS:
             snow_depth_cm = current.snow_depth_cm or current.snow_depth_in * 2.54
-            metrics.append(Metric("Snow on ground", f"{snow_depth_cm:.1f} cm"))
+            metrics.append(Metric("Snow on ground", f"{snow_depth_cm:.{precision}f} cm"))
         elif unit_pref == TemperatureUnit.FAHRENHEIT:
-            metrics.append(Metric("Snow on ground", f"{current.snow_depth_in:.1f} in"))
+            metrics.append(Metric("Snow on ground", f"{current.snow_depth_in:.{precision}f} in"))
         else:
             snow_depth_cm = current.snow_depth_cm or current.snow_depth_in * 2.54
             metrics.append(
-                Metric("Snow on ground", f"{current.snow_depth_in:.1f} in ({snow_depth_cm:.1f} cm)")
+                Metric("Snow on ground", f"{current.snow_depth_in:.{precision}f} in ({snow_depth_cm:.{precision}f} cm)")
             )
 
     if current.wind_chill_f is not None:
@@ -428,7 +428,8 @@ def build_current_conditions(
     """Create a structured presentation for the current weather using helper functions."""
     title = f"Current conditions for {location.name}"
     description = current.condition or "Unknown"
-    precision = get_temperature_precision(unit_pref)
+    round_values = getattr(settings, "round_values", False) if settings else False
+    precision = 0 if round_values else get_temperature_precision(unit_pref)
 
     # Extract settings preferences
     show_dewpoint = getattr(settings, "show_dewpoint", True) if settings else True

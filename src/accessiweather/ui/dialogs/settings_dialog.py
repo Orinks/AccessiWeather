@@ -190,6 +190,11 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["show_pressure_trend"] = wx.CheckBox(panel, label="Show pressure trend")
         sizer.Add(self._controls["show_pressure_trend"], 0, wx.LEFT, 10)
 
+        self._controls["round_values"] = wx.CheckBox(
+            panel, label="Show values as whole numbers (no decimals)"
+        )
+        sizer.Add(self._controls["round_values"], 0, wx.LEFT | wx.TOP, 10)
+
         self._controls["detailed_forecast"] = wx.CheckBox(
             panel, label="Show detailed forecast information"
         )
@@ -1266,6 +1271,9 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["show_pressure_trend"].SetValue(
                 getattr(settings, "show_pressure_trend", True)
             )
+            self._controls["round_values"].SetValue(
+                getattr(settings, "round_values", False)
+            )
             self._controls["detailed_forecast"].SetValue(
                 getattr(settings, "show_detailed_forecast", True)
             )
@@ -1520,6 +1528,7 @@ class SettingsDialogSimple(wx.Dialog):
                 "show_visibility": self._controls["show_visibility"].GetValue(),
                 "show_uv_index": self._controls["show_uv_index"].GetValue(),
                 "show_pressure_trend": self._controls["show_pressure_trend"].GetValue(),
+                "round_values": self._controls["round_values"].GetValue(),
                 "show_detailed_forecast": self._controls["detailed_forecast"].GetValue(),
                 "forecast_duration_days": forecast_duration_values[
                     self._controls["forecast_duration_days"].GetSelection()
