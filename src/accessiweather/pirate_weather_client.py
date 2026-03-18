@@ -401,7 +401,8 @@ class PirateWeatherClient:
             )
             periods.append(period)
 
-        return Forecast(periods=periods, generated_at=datetime.now(UTC))
+        daily_summary = data.get("daily", {}).get("summary")
+        return Forecast(periods=periods, generated_at=datetime.now(UTC), summary=daily_summary)
 
     def _parse_hourly_forecast(self, data: dict) -> HourlyForecast:
         """Parse Pirate Weather ``hourly`` block into an HourlyForecast."""

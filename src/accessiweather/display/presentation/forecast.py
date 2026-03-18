@@ -111,7 +111,10 @@ def build_forecast(
     precision = 0 if round_values else get_temperature_precision(unit_pref)
 
     periods: list[ForecastPeriodPresentation] = []
+    summary_line = f"Overall: {forecast.summary}" if forecast.summary else None
     fallback_lines = [f"Forecast for {location.name}:\n"]
+    if summary_line:
+        fallback_lines.append(summary_line)
 
     if hourly_forecast and hourly_forecast.has_data():
         hourly = build_hourly_summary(hourly_forecast, unit_pref, settings=settings)
@@ -253,6 +256,7 @@ def build_forecast(
         generated_at=generated_at,
         fallback_text=fallback_text,
         confidence_label=confidence_label,
+        summary=summary_line,
     )
 
 

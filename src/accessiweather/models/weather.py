@@ -276,6 +276,7 @@ class Forecast:
 
     periods: list[ForecastPeriod]
     generated_at: datetime | None = None
+    summary: str | None = None
 
     def has_data(self) -> bool:
         """Check if we have any forecast data."""

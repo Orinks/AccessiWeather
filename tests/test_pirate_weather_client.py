@@ -276,6 +276,52 @@ class TestParseForecast:
         assert result.periods[0].wind_speed is not None
         assert "m/s" in result.periods[0].wind_speed
 
+    def test_daily_summary_parsed(self, client):
+        """Summary field is populated from data['daily']['summary']."""
+        payload = {
+            "offset": 0,
+            "daily": {
+                "summary": "Light rain throughout the week.",
+                "data": [
+                    {
+                        "time": 1700000000,
+                        "temperatureHigh": 70.0,
+                        "temperatureLow": 50.0,
+                        "summary": "Rain",
+                        "icon": "rain",
+                        "windSpeed": 5.0,
+                        "windBearing": 90,
+                        "precipProbability": 0.8,
+                        "precipIntensity": 0.05,
+                        "cloudCover": 0.9,
+                        "uvIndex": 1,
+                    }
+                ],
+            },
+        }
+        result = client._parse_forecast(payload)
+        assert result.summary == "Light rain throughout the week."
+
+    def test_daily_summary_none_when_missing(self, client, sample_forecast_payload):
+        """Summary is None when the daily block has no 'summary' key."""
+        payload = dict(sample_forecast_payload)
+        payload["daily"] = {"data": sample_forecast_payload["daily"]["data"]}
+        result = client._parse_forecast(payload)
+        assert result.summary is None
+
+    def test_daily_summary_preserved_in_forecast_model(self, client):
+        """Forecast dataclass stores summary independently of period summaries."""
+        payload = {
+            "offset": 0,
+            "daily": {
+                "summary": "Possible drizzle on Thursday.",
+                "data": [],
+            },
+        }
+        result = client._parse_forecast(payload)
+        assert result.summary == "Possible drizzle on Thursday."
+        assert result.periods == []
+
 
 # ---------------------------------------------------------------------------
 # Unit tests – _parse_hourly_forecast

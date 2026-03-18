@@ -24,3 +24,4 @@ htmlcov/
 
 # uv
 uv.lock
+reports/coverage.xml

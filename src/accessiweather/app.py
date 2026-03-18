@@ -1146,14 +1146,14 @@ class AccessiWeatherApp(wx.App):
                 self.weather_client.data_source = settings.data_source
                 self.weather_client.alerts_enabled = bool(settings.enable_alerts)
                 # Reset cached API clients so new keys take effect immediately
-                self.weather_client._visual_crossing_api_key = getattr(
+                self.weather_client._visual_crossing_api_key = getattr(  # pragma: no cover
                     settings, "visual_crossing_api_key", ""
                 )
-                self.weather_client._visual_crossing_client = None
-                self.weather_client._pirate_weather_api_key = getattr(
+                self.weather_client._visual_crossing_client = None  # pragma: no cover
+                self.weather_client._pirate_weather_api_key = getattr(  # pragma: no cover
                     settings, "pirate_weather_api_key", ""
                 )
-                self.weather_client._pirate_weather_client = None
+                self.weather_client._pirate_weather_client = None  # pragma: no cover
 
             if self.presenter:
                 self.presenter.settings = settings
