@@ -357,6 +357,46 @@ class SettingsDialogSimple(wx.Dialog):
         btn_row.Add(validate_btn, 0)
         sizer.Add(btn_row, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
 
+        # AVWX Configuration (international aviation weather)
+        sizer.Add(
+            wx.StaticText(panel, label="AVWX API Configuration (International Aviation Weather):"),
+            0,
+            wx.ALL,
+            5,
+        )
+        sizer.Add(
+            wx.StaticText(
+                panel,
+                label=(
+                    "AVWX provides TAF/METAR with translations and screen-reader speech strings "
+                    "for non-US airports. Free registration at avwx.rest."
+                ),
+            ),
+            0,
+            wx.LEFT | wx.BOTTOM,
+            10,
+        )
+
+        row_avwx_key = wx.BoxSizer(wx.HORIZONTAL)
+        row_avwx_key.Add(
+            wx.StaticText(panel, label="AVWX API Key:"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["avwx_key"] = wx.TextCtrl(panel, style=wx.TE_PASSWORD, size=(250, -1))
+        row_avwx_key.Add(self._controls["avwx_key"], 1)
+        sizer.Add(row_avwx_key, 0, wx.LEFT | wx.EXPAND, 10)
+        sizer.Add(
+            wx.StaticText(
+                panel,
+                label="Used automatically for international ICAO stations (non-K prefix).",
+            ),
+            0,
+            wx.LEFT | wx.TOP | wx.BOTTOM,
+            10,
+        )
+
         # Source Priority (Auto Mode)
         sizer.Add(
             wx.StaticText(panel, label="Source Priority (Auto Mode):"),
@@ -1315,6 +1355,10 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["vc_key"].SetValue(str(vc_key))
             self._original_vc_key = str(vc_key)
 
+            avwx_key = getattr(settings, "avwx_api_key", "") or ""
+            self._controls["avwx_key"].SetValue(str(avwx_key))
+            self._original_avwx_key = str(avwx_key)
+
             # Source priority
             us_priority = getattr(
                 settings, "source_priority_us", ["nws", "openmeteo", "visualcrossing"]
@@ -1546,6 +1590,7 @@ class SettingsDialogSimple(wx.Dialog):
                 # Data sources
                 "data_source": source_values[self._controls["data_source"].GetSelection()],
                 "visual_crossing_api_key": self._controls["vc_key"].GetValue(),
+                "avwx_api_key": self._controls["avwx_key"].GetValue(),
                 "source_priority_us": [
                     ["nws", "openmeteo", "visualcrossing"],
                     ["nws", "visualcrossing", "openmeteo"],
@@ -1628,6 +1673,7 @@ class SettingsDialogSimple(wx.Dialog):
             for key, orig_attr in (
                 ("visual_crossing_api_key", "_original_vc_key"),
                 ("openrouter_api_key", "_original_openrouter_key"),
+                ("avwx_api_key", "_original_avwx_key"),
             ):
                 if not settings_dict.get(key) and getattr(self, orig_attr, ""):
                     logger.warning(
@@ -2152,7 +2198,7 @@ class SettingsDialogSimple(wx.Dialog):
                 wx.OK | wx.ICON_ERROR,
             )
 
-    _PORTABLE_KEY_SETTINGS = ("visual_crossing_api_key", "openrouter_api_key")
+    _PORTABLE_KEY_SETTINGS = ("visual_crossing_api_key", "openrouter_api_key", "avwx_api_key")
 
     def _maybe_update_portable_bundle_after_save(self, settings_dict: dict) -> None:
         """

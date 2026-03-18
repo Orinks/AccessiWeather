@@ -25,6 +25,7 @@ logger = logging.getLogger("accessiweather.config")
 PORTABLE_API_SECRET_KEYS: Final[tuple[str, ...]] = (
     "visual_crossing_api_key",
     "openrouter_api_key",
+    "avwx_api_key",
 )
 
 
