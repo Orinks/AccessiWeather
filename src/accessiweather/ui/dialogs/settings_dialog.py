@@ -397,6 +397,10 @@ class SettingsDialogSimple(wx.Dialog):
         get_pw_key_btn = wx.Button(panel, label="Get Free API Key")
         get_pw_key_btn.Bind(wx.EVT_BUTTON, self._on_get_pw_api_key)
         btn_row_pw.Add(get_pw_key_btn, 0, wx.RIGHT, 10)
+
+        validate_pw_btn = wx.Button(panel, label="Validate API Key")
+        validate_pw_btn.Bind(wx.EVT_BUTTON, self._on_validate_pw_api_key)
+        btn_row_pw.Add(validate_pw_btn, 0)
         self._pw_config_sizer.Add(btn_row_pw, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
         sizer.Add(self._pw_config_sizer, 0, wx.EXPAND)
 
@@ -1859,6 +1863,57 @@ class SettingsDialogSimple(wx.Dialog):
     def _on_get_vc_api_key(self, event):
         """Open Visual Crossing signup page."""
         webbrowser.open("https://www.visualcrossing.com/sign-up")
+
+    def _on_validate_pw_api_key(self, event):
+        """Validate Pirate Weather API key."""
+        key = self._controls["pw_key"].GetValue()
+        if not key:
+            wx.MessageBox("Please enter an API key first.", "Validation", wx.OK | wx.ICON_WARNING)
+            return
+
+        wx.BeginBusyCursor()
+        try:
+            import asyncio
+
+            from ...models import Location
+            from ...pirate_weather_client import PirateWeatherApiError, PirateWeatherClient
+
+            test_location = Location(name="Test", latitude=40.7128, longitude=-74.0060)
+            client = PirateWeatherClient(api_key=key)
+
+            async def test_key():
+                try:
+                    await client.get_current_conditions(test_location)
+                    return True, None
+                except PirateWeatherApiError as e:
+                    if e.status_code == 401:
+                        return False, "Invalid API key"
+                    if e.status_code == 429:
+                        return False, "Rate limit exceeded — but key appears valid"
+                    return False, str(e)
+                except Exception as e:
+                    return False, str(e)
+
+            loop = asyncio.new_event_loop()
+            try:
+                valid, error = loop.run_until_complete(test_key())
+            finally:
+                loop.close()
+
+            if valid:
+                wx.MessageBox(
+                    "Pirate Weather API key is valid!",
+                    "Validation Successful",
+                    wx.OK | wx.ICON_INFORMATION,
+                )
+            else:
+                wx.MessageBox(
+                    f"Pirate Weather API key validation failed: {error}",
+                    "Validation Failed",
+                    wx.OK | wx.ICON_ERROR,
+                )
+        finally:
+            wx.EndBusyCursor()
 
     def _on_validate_vc_api_key(self, event):
         """Validate Visual Crossing API key."""
