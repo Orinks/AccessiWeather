@@ -339,7 +339,7 @@ class SettingsDialogSimple(wx.Dialog):
 
         row_key = wx.BoxSizer(wx.HORIZONTAL)
         row_key.Add(
-            wx.StaticText(panel, label="API Key:"),
+            wx.StaticText(panel, label="Visual Crossing API Key:"),
             0,
             wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
             10,
@@ -368,7 +368,7 @@ class SettingsDialogSimple(wx.Dialog):
 
         row_pw_key = wx.BoxSizer(wx.HORIZONTAL)
         row_pw_key.Add(
-            wx.StaticText(panel, label="API Key:"),
+            wx.StaticText(panel, label="Pirate Weather API Key:"),
             0,
             wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
             10,
@@ -1790,7 +1790,7 @@ class SettingsDialogSimple(wx.Dialog):
     # Event handlers for buttons
     def _on_get_pw_api_key(self, event):
         """Open Pirate Weather signup page."""
-        webbrowser.open("https://pirateweather.net/en/latest/")
+        webbrowser.open("https://pirate-weather.apiable.io/signup")
 
     def _on_get_vc_api_key(self, event):
         """Open Visual Crossing signup page."""
