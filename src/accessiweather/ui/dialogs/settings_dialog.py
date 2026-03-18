@@ -221,6 +221,18 @@ class SettingsDialogSimple(wx.Dialog):
         row_forecast_duration.Add(self._controls["forecast_duration_days"], 0)
         sizer.Add(row_forecast_duration, 0, wx.LEFT | wx.TOP, 10)
 
+        # Hourly forecast hours
+        row_hourly_hours = wx.BoxSizer(wx.HORIZONTAL)
+        row_hourly_hours.Add(
+            wx.StaticText(panel, label="Hourly forecast hours:"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["hourly_forecast_hours"] = wx.SpinCtrl(panel, min=1, max=68, initial=6)
+        row_hourly_hours.Add(self._controls["hourly_forecast_hours"], 0)
+        sizer.Add(row_hourly_hours, 0, wx.LEFT | wx.TOP, 10)
+
         # Time & Date Display Section
         sizer.Add(
             wx.StaticText(panel, label="Time & Date Display:"),
@@ -1312,6 +1324,10 @@ class SettingsDialogSimple(wx.Dialog):
                 forecast_duration_map.get(forecast_duration_days, 2)
             )
 
+            self._controls["hourly_forecast_hours"].SetValue(
+                getattr(settings, "hourly_forecast_hours", 6)
+            )
+
             forecast_time_reference = getattr(settings, "forecast_time_reference", "location")
             forecast_time_reference_map = {"location": 0, "user_local": 1}
             self._controls["forecast_time_reference"].SetSelection(
@@ -1590,6 +1606,7 @@ class SettingsDialogSimple(wx.Dialog):
                 "forecast_duration_days": forecast_duration_values[
                     self._controls["forecast_duration_days"].GetSelection()
                 ],
+                "hourly_forecast_hours": self._controls["hourly_forecast_hours"].GetValue(),
                 "forecast_time_reference": forecast_time_reference_values[
                     self._controls["forecast_time_reference"].GetSelection()
                 ],
@@ -1724,6 +1741,7 @@ class SettingsDialogSimple(wx.Dialog):
             "show_pressure_trend": "Show pressure trend",
             "detailed_forecast": "Show detailed forecast information",
             "forecast_duration_days": "Forecast duration",
+            "hourly_forecast_hours": "Hourly forecast hours",
             "forecast_time_reference": "Forecast time display",
             "time_display_mode": "Time zone display",
             "time_format_12hour": "Use 12-hour time format (e.g., 3:00 PM)",

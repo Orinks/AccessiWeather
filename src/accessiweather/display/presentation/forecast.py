@@ -238,7 +238,7 @@ def build_forecast(
         fallback_lines.append(f"\nForecast generated: {generated_at}")
 
     if hourly:
-        fallback_lines.insert(1, render_hourly_fallback(hourly))
+        fallback_lines.append(render_hourly_fallback(hourly))
 
     # Append cross-source confidence summary when available
     confidence_label: str | None = None
@@ -295,7 +295,9 @@ def build_hourly_summary(
     include_cloud_cover = verbosity_level == "detailed"
     include_wind_gust = verbosity_level == "detailed"
 
-    for period in hourly_forecast.get_next_hours(6):
+    hourly_hours = getattr(settings, "hourly_forecast_hours", 6) if settings else 6
+    hourly_hours = max(1, min(hourly_hours, 68))
+    for period in hourly_forecast.get_next_hours(hourly_hours):
         if not period.has_data():
             continue
         temperature = format_period_temperature(period, unit_pref, precision)

@@ -147,6 +147,7 @@ class AppSettings:
     offline_cache_max_age_minutes: int = 180
     weather_history_enabled: bool = True
     forecast_duration_days: int = 7
+    hourly_forecast_hours: int = 6
     forecast_time_reference: str = "location"
     time_display_mode: str = "local"
     time_format_12hour: bool = True
