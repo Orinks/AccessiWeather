@@ -300,6 +300,17 @@ class WeatherClient:
             self._get_openmeteo_hourly_forecast(location),
         )
 
+    def _should_use_openmeteo_for_extended_forecast(
+        self, location: Location, source: str | None = None
+    ) -> bool:
+        """Use Open-Meteo for full-range forecasts when NWS-style sources exceed 7 days."""
+        normalized_source = (source or self.data_source).strip().lower()
+        if normalized_source not in {"nws", "pw", "auto"}:
+            return False
+        if not self._is_us_location(location):
+            return False
+        return self._get_forecast_days_for_source(location, "openmeteo") > 7
+
     async def close(self) -> None:
         """Close the HTTP client and release resources."""
         if self._http_client is not None and not self._http_client.is_closed:
@@ -603,14 +614,31 @@ class WeatherClient:
         else:
             # Use NWS API only (user explicitly selected this source)
             try:
-                (
-                    current,
-                    forecast,
-                    discussion,
-                    discussion_issuance_time,
-                    alerts,
-                    hourly_forecast,
-                ) = await self._fetch_nws_data(location)
+                use_openmeteo_forecast = self._should_use_openmeteo_for_extended_forecast(
+                    location, source="nws"
+                )
+
+                if use_openmeteo_forecast:
+                    current_task = asyncio.create_task(self._get_nws_current_conditions(location))
+                    forecast_task = asyncio.create_task(self._get_openmeteo_forecast(location))
+                    discussion_task = asyncio.create_task(self._get_nws_discussion_only(location))
+                    alerts_task = asyncio.create_task(self._get_nws_alerts(location))
+                    hourly_task = asyncio.create_task(self._get_nws_hourly_forecast(location))
+
+                    current = await current_task
+                    forecast = await forecast_task
+                    discussion, discussion_issuance_time = await discussion_task
+                    alerts = await alerts_task
+                    hourly_forecast = await hourly_task
+                else:
+                    (
+                        current,
+                        forecast,
+                        discussion,
+                        discussion_issuance_time,
+                        alerts,
+                        hourly_forecast,
+                    ) = await self._fetch_nws_data(location)
 
                 weather_data.current = current
                 weather_data.forecast = forecast
@@ -631,7 +659,13 @@ class WeatherClient:
 
                 # Set source attribution for single-source mode
                 weather_data.source_attribution = SourceAttribution(
-                    contributing_sources={"nws"},
+                    field_sources={
+                        "forecast_source": "openmeteo" if use_openmeteo_forecast else "nws",
+                        "hourly_source": "nws",
+                    },
+                    contributing_sources={"nws", "openmeteo"}
+                    if use_openmeteo_forecast
+                    else {"nws"},
                 )
 
                 if (current is None or not current.has_data()) and forecast is None:
@@ -791,9 +825,17 @@ class WeatherClient:
 
         # Build source attribution
         attribution = SourceAttribution(
-            field_sources=current_attribution.field_sources,
+            field_sources={
+                **current_attribution.field_sources,
+                **forecast_attribution,
+                **hourly_attribution,
+            },
             conflicts=current_attribution.conflicts,
-            contributing_sources=current_attribution.contributing_sources,
+            contributing_sources=(
+                current_attribution.contributing_sources
+                | set(forecast_attribution.values())
+                | set(hourly_attribution.values())
+            ),
             failed_sources=current_attribution.failed_sources,
         )
 
