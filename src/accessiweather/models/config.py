@@ -499,10 +499,10 @@ class AppSettings:
             notify_discussion_update=cls._as_bool(data.get("notify_discussion_update"), True),
             notify_severe_risk_change=cls._as_bool(data.get("notify_severe_risk_change"), False),
             notify_minutely_precipitation_start=cls._as_bool(
-                data.get("notify_minutely_precipitation_start"), False
+                data.get("notify_minutely_precipitation_start"), True
             ),
             notify_minutely_precipitation_stop=cls._as_bool(
-                data.get("notify_minutely_precipitation_stop"), False
+                data.get("notify_minutely_precipitation_stop"), True
             ),
             github_backend_url=data.get("github_backend_url", ""),
             alert_radius_type=data.get("alert_radius_type", "county"),
