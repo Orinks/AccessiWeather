@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-import pytest
-
 from accessiweather.display.presentation.current_conditions import (
     _build_basic_metrics,
     _build_seasonal_metrics,
     build_current_conditions,
 )
-from accessiweather.display.presentation.forecast import build_forecast, build_hourly_summary
 from accessiweather.display.presentation.formatters import (
     format_pressure_value,
     format_visibility_value,
@@ -18,15 +15,10 @@ from accessiweather.display.presentation.formatters import (
 from accessiweather.models import (
     AppSettings,
     CurrentConditions,
-    Forecast,
-    ForecastPeriod,
-    HourlyForecast,
-    HourlyForecastPeriod,
     Location,
 )
 from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
 from accessiweather.utils import TemperatureUnit
-
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -241,18 +233,14 @@ class TestBuildCurrentConditionsRoundValues:
 class TestBuildBasicMetricsPrecipitation:
     def test_precision_1_formats_correctly(self):
         current = _make_current(precip_in=0.17)
-        metrics = _build_basic_metrics(
-            current, TemperatureUnit.FAHRENHEIT, 1, True, True, True
-        )
+        metrics = _build_basic_metrics(current, TemperatureUnit.FAHRENHEIT, 1, True, True, True)
         precip = next((m for m in metrics if m.label == "Precipitation"), None)
         assert precip is not None
         assert "0.2" in precip.value  # rounds 0.17 to 0.2 at precision=1
 
     def test_precision_0_rounds_to_whole(self):
         current = _make_current(precip_in=0.15)
-        metrics = _build_basic_metrics(
-            current, TemperatureUnit.FAHRENHEIT, 0, True, True, True
-        )
+        metrics = _build_basic_metrics(current, TemperatureUnit.FAHRENHEIT, 0, True, True, True)
         precip = next((m for m in metrics if m.label == "Precipitation"), None)
         assert precip is not None
         assert "0.15" not in precip.value
