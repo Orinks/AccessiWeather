@@ -47,6 +47,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "github_app_installation_id",
     # AI explanation settings
     "openrouter_api_key",
+    "avwx_api_key",
     "ai_model_preference",
     "ai_explanation_style",
     "ai_cache_ttl",
@@ -164,6 +165,8 @@ class AppSettings:
     openmeteo_weather_model: str = "best_match"
     # NWS station selection behavior for current conditions
     station_selection_strategy: str = "hybrid_default"
+    # AVWX API key for international aviation weather
+    avwx_api_key: str = ""
     # AI Explanation Settings
     openrouter_api_key: str = ""
     ai_model_preference: str = "openrouter/free"  # free auto-router (default)
@@ -438,7 +441,7 @@ class AppSettings:
             "source_priority_international": self.source_priority_international,
             "openmeteo_weather_model": self.openmeteo_weather_model,
             "station_selection_strategy": self.station_selection_strategy,
-            # AI settings (API key stored in secure storage, not here)
+            # AI settings and AVWX key stored in secure storage, not here
             "ai_model_preference": self.ai_model_preference,
             "ai_explanation_style": self.ai_explanation_style,
             "ai_cache_ttl": self.ai_cache_ttl,
@@ -520,7 +523,8 @@ class AppSettings:
             ),
             openmeteo_weather_model=data.get("openmeteo_weather_model", "best_match"),
             station_selection_strategy=data.get("station_selection_strategy", "hybrid_default"),
-            # AI settings
+            # AVWX and AI settings (stored in secure storage)
+            avwx_api_key=data.get("avwx_api_key", ""),
             openrouter_api_key=data.get("openrouter_api_key", ""),
             ai_model_preference=data.get("ai_model_preference", "openrouter/free"),
             ai_explanation_style=data.get("ai_explanation_style", "standard"),
