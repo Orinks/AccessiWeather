@@ -14,7 +14,14 @@ but the original was non-empty, skip the key in settings_dict entirely.
 from __future__ import annotations
 
 
-def _make_dialog(vc_key="", openrouter_key="", original_vc="", original_or=""):
+def _make_dialog(
+    vc_key="",
+    pirate_key="",
+    openrouter_key="",
+    original_vc="",
+    original_pirate="",
+    original_or="",
+):
     """Create a minimal SettingsDialogSimple stand-in with the guard logic."""
     import importlib.util
     from pathlib import Path
@@ -33,10 +40,12 @@ def _make_dialog(vc_key="", openrouter_key="", original_vc="", original_or=""):
 
     dlg = mod.SettingsDialogSimple.__new__(mod.SettingsDialogSimple)
     dlg._original_vc_key = original_vc
+    dlg._original_pirate_weather_key = original_pirate
     dlg._original_openrouter_key = original_or
 
     settings_dict = {
         "visual_crossing_api_key": vc_key,
+        "pirate_weather_api_key": pirate_key,
         "openrouter_api_key": openrouter_key,
         "update_interval_minutes": 30,
     }
@@ -45,6 +54,7 @@ def _make_dialog(vc_key="", openrouter_key="", original_vc="", original_or=""):
 
     for key, orig_attr in (
         ("visual_crossing_api_key", "_original_vc_key"),
+        ("pirate_weather_api_key", "_original_pirate_weather_key"),
         ("openrouter_api_key", "_original_openrouter_key"),
     ):
         if not settings_dict.get(key) and getattr(dlg, orig_attr, ""):
@@ -75,13 +85,21 @@ class TestApiKeyGuard:
         result = _make_dialog(openrouter_key="", original_or="sk-abc123")
         assert "openrouter_api_key" not in result
 
+    def test_pirate_weather_key_guard(self):
+        """Same guard applies to Pirate Weather key."""
+        result = _make_dialog(pirate_key="", original_pirate="pw-abc123")
+        assert "pirate_weather_api_key" not in result
+
     def test_both_keys_guarded_independently(self):
         """Each key is guarded independently."""
         result = _make_dialog(
             vc_key="",
+            pirate_key="still-set-pw",
             openrouter_key="still-set",
             original_vc="was-set",
+            original_pirate="still-set-pw",
             original_or="still-set",
         )
         assert "visual_crossing_api_key" not in result
+        assert result["pirate_weather_api_key"] == "still-set-pw"
         assert result["openrouter_api_key"] == "still-set"

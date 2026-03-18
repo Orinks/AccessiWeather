@@ -400,6 +400,32 @@ class SettingsDialogSimple(wx.Dialog):
         self._pw_config_sizer.Add(btn_row_pw, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
         sizer.Add(self._pw_config_sizer, 0, wx.EXPAND)
 
+        sizer.Add(
+            wx.StaticText(panel, label="Pirate Weather API Configuration:"),
+            0,
+            wx.ALL,
+            5,
+        )
+
+        row_pw_key = wx.BoxSizer(wx.HORIZONTAL)
+        row_pw_key.Add(
+            wx.StaticText(panel, label="API Key:"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["pirate_weather_key"] = wx.TextCtrl(
+            panel, style=wx.TE_PASSWORD, size=(250, -1)
+        )
+        row_pw_key.Add(self._controls["pirate_weather_key"], 1)
+        sizer.Add(row_pw_key, 0, wx.LEFT | wx.EXPAND, 10)
+
+        pirate_btn_row = wx.BoxSizer(wx.HORIZONTAL)
+        get_pirate_key_btn = wx.Button(panel, label="Get Free API Key")
+        get_pirate_key_btn.Bind(wx.EVT_BUTTON, self._on_get_pirate_weather_api_key)
+        pirate_btn_row.Add(get_pirate_key_btn, 0)
+        sizer.Add(pirate_btn_row, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
+
         # Source Priority (Auto Mode)
         sizer.Add(
             wx.StaticText(panel, label="Source Priority (Auto Mode):"),
@@ -1368,6 +1394,9 @@ class SettingsDialogSimple(wx.Dialog):
             vc_key = getattr(settings, "visual_crossing_api_key", "") or ""
             self._controls["vc_key"].SetValue(str(vc_key))
             self._original_vc_key = str(vc_key)
+            pirate_weather_key = getattr(settings, "pirate_weather_api_key", "") or ""
+            self._controls["pirate_weather_key"].SetValue(str(pirate_weather_key))
+            self._original_pirate_weather_key = str(pirate_weather_key)
 
             pw_key = getattr(settings, "pirate_weather_api_key", "") or ""
             self._controls["pw_key"].SetValue(str(pw_key))
@@ -1622,7 +1651,7 @@ class SettingsDialogSimple(wx.Dialog):
                 # Data sources
                 "data_source": source_values[self._controls["data_source"].GetSelection()],
                 "visual_crossing_api_key": self._controls["vc_key"].GetValue(),
-                "pirate_weather_api_key": self._controls["pw_key"].GetValue(),
+                "pirate_weather_api_key": self._controls["pirate_weather_key"].GetValue(),
                 "source_priority_us": [
                     ["nws", "openmeteo", "visualcrossing", "pirateweather"],
                     ["nws", "visualcrossing", "openmeteo", "pirateweather"],
@@ -1704,7 +1733,7 @@ class SettingsDialogSimple(wx.Dialog):
             # keyring load failed transiently — keep the existing keyring value.
             for key, orig_attr in (
                 ("visual_crossing_api_key", "_original_vc_key"),
-                ("pirate_weather_api_key", "_original_pw_key"),
+                ("pirate_weather_api_key", "_original_pirate_weather_key"),
                 ("openrouter_api_key", "_original_openrouter_key"),
             ):
                 if not settings_dict.get(key) and getattr(self, orig_attr, ""):
@@ -1749,8 +1778,8 @@ class SettingsDialogSimple(wx.Dialog):
             "verbosity_level": "Verbosity level",
             "severe_weather_override": "Automatically prioritize severe weather info",
             "data_source": "Weather Data Source",
-            "vc_key": "Visual Crossing API Key",
-            "pw_key": "Pirate Weather API Key",
+            "vc_key": "API Key",
+            "pirate_weather_key": "Pirate Weather API Key",
             "us_priority": "US Locations Priority",
             "intl_priority": "International Locations Priority",
             "openmeteo_model": "Open-Meteo Weather Model",
@@ -1836,6 +1865,10 @@ class SettingsDialogSimple(wx.Dialog):
     def _on_get_vc_api_key(self, event):
         """Open Visual Crossing signup page."""
         webbrowser.open("https://www.visualcrossing.com/sign-up")
+
+    def _on_get_pirate_weather_api_key(self, event):
+        """Open Pirate Weather API key page."""
+        webbrowser.open("https://pirateweather.net/")
 
     def _on_validate_vc_api_key(self, event):
         """Validate Visual Crossing API key."""
@@ -2655,7 +2688,7 @@ class SettingsDialogSimple(wx.Dialog):
             else:
                 wx.MessageBox(
                     "No API keys found to export. You can add keys in Settings > Data Sources "
-                    "and export later.",
+                    "or Settings > AI and export later.",
                     "No keys to export",
                     wx.OK | wx.ICON_WARNING,
                 )

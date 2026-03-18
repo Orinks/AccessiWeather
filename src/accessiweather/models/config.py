@@ -53,8 +53,8 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "custom_system_prompt",
     "custom_instructions",
     # API key settings (loaded lazily via keyring)
-    "visual_crossing_api_key",
     "pirate_weather_api_key",
+    "visual_crossing_api_key",
     # Display preferences
     "round_values",
     "show_detailed_forecast",
@@ -401,7 +401,7 @@ class AppSettings:
             "minimize_on_startup": self.minimize_on_startup,
             "startup_enabled": self.startup_enabled,
             "data_source": self.data_source,
-            # visual_crossing_api_key, pirate_weather_api_key and github_app_* are stored in secure keyring, not JSON
+            # weather provider API keys and github_app_* are stored in secure keyring, not JSON
             "auto_update_enabled": self.auto_update_enabled,
             "update_channel": self.update_channel,
             "update_check_interval_hours": self.update_check_interval_hours,

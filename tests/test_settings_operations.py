@@ -314,11 +314,11 @@ class TestUpdateSettings:
         """Test updating a secure setting."""
         mock_set_password.return_value = True
 
-        result = operations.update_settings(visual_crossing_api_key="test_key")
+        result = operations.update_settings(pirate_weather_api_key="test_key")
 
         config = mock_manager.get_config.return_value
-        assert config.settings.visual_crossing_api_key == "test_key"
-        mock_set_password.assert_called_once_with("visual_crossing_api_key", "test_key")
+        assert config.settings.pirate_weather_api_key == "test_key"
+        mock_set_password.assert_called_once_with("pirate_weather_api_key", "test_key")
         assert result is True
 
     @patch("accessiweather.config.settings.SecureStorage.set_password")
@@ -326,11 +326,11 @@ class TestUpdateSettings:
         """Test updating a secure setting when secure storage fails."""
         mock_set_password.return_value = False
 
-        result = operations.update_settings(visual_crossing_api_key="test_key")
+        result = operations.update_settings(pirate_weather_api_key="test_key")
 
         # Should still update the setting and save config
         config = mock_manager.get_config.return_value
-        assert config.settings.visual_crossing_api_key == "test_key"
+        assert config.settings.pirate_weather_api_key == "test_key"
         assert result is True
 
     def test_update_multiple_settings(self, operations, mock_manager):
@@ -363,11 +363,11 @@ class TestUpdateSettings:
 
     def test_redacted_logging(self, operations, mock_manager):
         """Test that sensitive values are redacted in logs."""
-        operations.update_settings(github_app_private_key="secret_key")
+        operations.update_settings(pirate_weather_api_key="secret_key")
 
         logger = mock_manager._get_logger.return_value
         # Check that logger.info was called with redacted value
-        logger.info.assert_called_with("Updated setting github_app_private_key = ***redacted***")
+        logger.info.assert_called_with("Updated setting pirate_weather_api_key = ***redacted***")
 
 
 class TestGetSettings:
