@@ -40,6 +40,8 @@ NON_CRITICAL_SETTINGS: set[str] = {
     # Event notifications
     "notify_discussion_update",
     "notify_severe_risk_change",
+    "notify_minutely_precipitation_start",
+    "notify_minutely_precipitation_stop",
     # GitHub settings
     "github_backend_url",
     "github_app_id",
@@ -117,6 +119,8 @@ class AppSettings:
     # Event-based notifications
     notify_discussion_update: bool = True
     notify_severe_risk_change: bool = False
+    notify_minutely_precipitation_start: bool = False
+    notify_minutely_precipitation_stop: bool = False
     github_backend_url: str = ""
     github_app_id: str = ""
     github_app_private_key: str = ""
@@ -411,6 +415,8 @@ class AppSettings:
             "show_nationwide_location": self.show_nationwide_location,
             "notify_discussion_update": self.notify_discussion_update,
             "notify_severe_risk_change": self.notify_severe_risk_change,
+            "notify_minutely_precipitation_start": self.notify_minutely_precipitation_start,
+            "notify_minutely_precipitation_stop": self.notify_minutely_precipitation_stop,
             "github_backend_url": self.github_backend_url,
             "alert_radius_type": self.alert_radius_type,
             "alert_notifications_enabled": self.alert_notifications_enabled,
@@ -489,6 +495,12 @@ class AppSettings:
             show_nationwide_location=cls._as_bool(data.get("show_nationwide_location"), True),
             notify_discussion_update=cls._as_bool(data.get("notify_discussion_update"), True),
             notify_severe_risk_change=cls._as_bool(data.get("notify_severe_risk_change"), False),
+            notify_minutely_precipitation_start=cls._as_bool(
+                data.get("notify_minutely_precipitation_start"), False
+            ),
+            notify_minutely_precipitation_stop=cls._as_bool(
+                data.get("notify_minutely_precipitation_stop"), False
+            ),
             github_backend_url=data.get("github_backend_url", ""),
             alert_radius_type=data.get("alert_radius_type", "county"),
             alert_notifications_enabled=cls._as_bool(data.get("alert_notifications_enabled"), True),

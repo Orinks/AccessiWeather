@@ -637,6 +637,16 @@ class SettingsDialogSimple(wx.Dialog):
         )
         sizer.Add(self._controls["notify_severe_risk_change"], 0, wx.LEFT | wx.BOTTOM, 10)
 
+        self._controls["notify_minutely_precipitation_start"] = wx.CheckBox(
+            panel, label="Notify when precipitation is expected to start soon (Pirate Weather)"
+        )
+        sizer.Add(self._controls["notify_minutely_precipitation_start"], 0, wx.LEFT, 10)
+
+        self._controls["notify_minutely_precipitation_stop"] = wx.CheckBox(
+            panel, label="Notify when precipitation is expected to stop soon (Pirate Weather)"
+        )
+        sizer.Add(self._controls["notify_minutely_precipitation_stop"], 0, wx.LEFT | wx.BOTTOM, 10)
+
         # Rate Limiting Section
         sizer.Add(
             wx.StaticText(panel, label="Rate Limiting:"),
@@ -1505,6 +1515,12 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["notify_severe_risk_change"].SetValue(
                 getattr(settings, "notify_severe_risk_change", False)
             )
+            self._controls["notify_minutely_precipitation_start"].SetValue(
+                getattr(settings, "notify_minutely_precipitation_start", False)
+            )
+            self._controls["notify_minutely_precipitation_stop"].SetValue(
+                getattr(settings, "notify_minutely_precipitation_stop", False)
+            )
 
             # Audio tab
             self._controls["sound_enabled"].SetValue(getattr(settings, "sound_enabled", True))
@@ -1685,6 +1701,12 @@ class SettingsDialogSimple(wx.Dialog):
                 # Event-based notifications
                 "notify_discussion_update": self._controls["notify_discussion_update"].GetValue(),
                 "notify_severe_risk_change": self._controls["notify_severe_risk_change"].GetValue(),
+                "notify_minutely_precipitation_start": self._controls[
+                    "notify_minutely_precipitation_start"
+                ].GetValue(),
+                "notify_minutely_precipitation_stop": self._controls[
+                    "notify_minutely_precipitation_stop"
+                ].GetValue(),
                 # Audio
                 "sound_enabled": self._controls["sound_enabled"].GetValue(),
                 "sound_pack": self._sound_pack_ids[self._controls["sound_pack"].GetSelection()]
@@ -1794,6 +1816,8 @@ class SettingsDialogSimple(wx.Dialog):
             "notify_unknown": "Unknown - Uncategorized alerts",
             "notify_discussion_update": "Notify when Area Forecast Discussion is updated (NWS US only)",
             "notify_severe_risk_change": "Notify when severe weather risk level changes (Visual Crossing only)",
+            "notify_minutely_precipitation_start": "Notify when precipitation is expected to start soon (Pirate Weather)",
+            "notify_minutely_precipitation_stop": "Notify when precipitation is expected to stop soon (Pirate Weather)",
             "global_cooldown": "Global cooldown (minutes)",
             "per_alert_cooldown": "Per-alert cooldown (minutes)",
             "freshness_window": "Alert freshness window (minutes)",
