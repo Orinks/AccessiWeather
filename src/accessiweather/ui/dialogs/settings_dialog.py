@@ -1353,23 +1353,40 @@ class SettingsDialogSimple(wx.Dialog):
 
             # Source priority
             us_priority = getattr(
-                settings, "source_priority_us", ["nws", "openmeteo", "visualcrossing"]
+                settings,
+                "source_priority_us",
+                ["nws", "openmeteo", "visualcrossing", "pirateweather"],
             )
             us_map = {
+                # 4-element lists (current format includes pirateweather)
+                ("nws", "openmeteo", "visualcrossing", "pirateweather"): 0,
+                ("nws", "visualcrossing", "openmeteo", "pirateweather"): 1,
+                ("openmeteo", "nws", "visualcrossing", "pirateweather"): 2,
+                # 3-element lists (legacy configs without pirateweather)
                 ("nws", "openmeteo", "visualcrossing"): 0,
                 ("nws", "visualcrossing", "openmeteo"): 1,
                 ("openmeteo", "nws", "visualcrossing"): 2,
             }
-            self._controls["us_priority"].SetSelection(us_map.get(tuple(us_priority[:3]), 0))
+            self._controls["us_priority"].SetSelection(
+                us_map.get(tuple(us_priority), us_map.get(tuple(us_priority[:3]), 0))
+            )
 
             intl_priority = getattr(
-                settings, "source_priority_international", ["openmeteo", "visualcrossing"]
+                settings,
+                "source_priority_international",
+                ["openmeteo", "pirateweather", "visualcrossing"],
             )
             intl_map = {
+                # 3-element lists (current format includes pirateweather)
+                ("openmeteo", "pirateweather", "visualcrossing"): 0,
+                ("visualcrossing", "openmeteo", "pirateweather"): 1,
+                # 2-element lists (legacy configs without pirateweather)
                 ("openmeteo", "visualcrossing"): 0,
                 ("visualcrossing", "openmeteo"): 1,
             }
-            self._controls["intl_priority"].SetSelection(intl_map.get(tuple(intl_priority[:2]), 0))
+            self._controls["intl_priority"].SetSelection(
+                intl_map.get(tuple(intl_priority), intl_map.get(tuple(intl_priority[:2]), 0))
+            )
 
             # Open-Meteo model
             model = getattr(settings, "openmeteo_weather_model", "best_match")
@@ -1584,13 +1601,13 @@ class SettingsDialogSimple(wx.Dialog):
                 "visual_crossing_api_key": self._controls["vc_key"].GetValue(),
                 "pirate_weather_api_key": self._controls["pw_key"].GetValue(),
                 "source_priority_us": [
-                    ["nws", "openmeteo", "visualcrossing"],
-                    ["nws", "visualcrossing", "openmeteo"],
-                    ["openmeteo", "nws", "visualcrossing"],
+                    ["nws", "openmeteo", "visualcrossing", "pirateweather"],
+                    ["nws", "visualcrossing", "openmeteo", "pirateweather"],
+                    ["openmeteo", "nws", "visualcrossing", "pirateweather"],
                 ][max(0, self._controls["us_priority"].GetSelection())],
                 "source_priority_international": [
-                    ["openmeteo", "visualcrossing"],
-                    ["visualcrossing", "openmeteo"],
+                    ["openmeteo", "pirateweather", "visualcrossing"],
+                    ["visualcrossing", "openmeteo", "pirateweather"],
                 ][max(0, self._controls["intl_priority"].GetSelection())],
                 "openmeteo_weather_model": model_values[
                     self._controls["openmeteo_model"].GetSelection()
@@ -1644,16 +1661,16 @@ class SettingsDialogSimple(wx.Dialog):
             # Source priority
             us_idx = self._controls["us_priority"].GetSelection()
             us_priorities = [
-                ["nws", "openmeteo", "visualcrossing"],
-                ["nws", "visualcrossing", "openmeteo"],
-                ["openmeteo", "nws", "visualcrossing"],
+                ["nws", "openmeteo", "visualcrossing", "pirateweather"],
+                ["nws", "visualcrossing", "openmeteo", "pirateweather"],
+                ["openmeteo", "nws", "visualcrossing", "pirateweather"],
             ]
             settings_dict["source_priority_us"] = us_priorities[us_idx if us_idx >= 0 else 0]
 
             intl_idx = self._controls["intl_priority"].GetSelection()
             intl_priorities = [
-                ["openmeteo", "visualcrossing"],
-                ["visualcrossing", "openmeteo"],
+                ["openmeteo", "pirateweather", "visualcrossing"],
+                ["visualcrossing", "openmeteo", "pirateweather"],
             ]
             settings_dict["source_priority_international"] = intl_priorities[
                 intl_idx if intl_idx >= 0 else 0

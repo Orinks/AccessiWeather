@@ -68,6 +68,20 @@ def _make_dialog_for_settings(settings: SimpleNamespace) -> SettingsDialogSimple
 
 
 def test_load_settings_maps_us_source_priority_to_index_1():
+    # 4-element list (current format)
+    settings = SimpleNamespace(
+        source_priority_us=["nws", "visualcrossing", "openmeteo", "pirateweather"],
+        source_priority_international=["openmeteo", "pirateweather", "visualcrossing"],
+    )
+    dialog = _make_dialog_for_settings(settings)
+
+    dialog._load_settings()
+
+    assert dialog._controls["us_priority"].GetSelection() == 1
+
+
+def test_load_settings_maps_us_source_priority_legacy_3_element_to_index_1():
+    # 3-element list (legacy config without pirateweather) - should still map correctly
     settings = SimpleNamespace(
         source_priority_us=["nws", "visualcrossing", "openmeteo"],
         source_priority_international=["openmeteo", "visualcrossing"],
@@ -80,6 +94,20 @@ def test_load_settings_maps_us_source_priority_to_index_1():
 
 
 def test_load_settings_maps_international_source_priority_to_index_1():
+    # 3-element list (current format)
+    settings = SimpleNamespace(
+        source_priority_us=["nws", "openmeteo", "visualcrossing", "pirateweather"],
+        source_priority_international=["visualcrossing", "openmeteo", "pirateweather"],
+    )
+    dialog = _make_dialog_for_settings(settings)
+
+    dialog._load_settings()
+
+    assert dialog._controls["intl_priority"].GetSelection() == 1
+
+
+def test_load_settings_maps_international_source_priority_legacy_2_element_to_index_1():
+    # 2-element list (legacy config without pirateweather) - should still map correctly
     settings = SimpleNamespace(
         source_priority_us=["nws", "openmeteo", "visualcrossing"],
         source_priority_international=["visualcrossing", "openmeteo"],
@@ -103,4 +131,4 @@ def test_save_settings_persists_selected_us_source_priority_index_2():
 
     assert success is True
     kwargs = dialog.config_manager.update_settings.call_args.kwargs
-    assert kwargs["source_priority_us"] == ["openmeteo", "nws", "visualcrossing"]
+    assert kwargs["source_priority_us"] == ["openmeteo", "nws", "visualcrossing", "pirateweather"]

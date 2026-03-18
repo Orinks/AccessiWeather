@@ -157,10 +157,10 @@ class AppSettings:
     taskbar_icon_text_format: str = "{temp} {condition}"
     # Source priority settings for smart auto mode
     source_priority_us: list[str] = field(
-        default_factory=lambda: ["nws", "openmeteo", "visualcrossing"]
+        default_factory=lambda: ["nws", "openmeteo", "visualcrossing", "pirateweather"]
     )
     source_priority_international: list[str] = field(
-        default_factory=lambda: ["openmeteo", "visualcrossing"]
+        default_factory=lambda: ["openmeteo", "pirateweather", "visualcrossing"]
     )
     # Open-Meteo weather model selection
     openmeteo_weather_model: str = "best_match"
@@ -351,17 +351,25 @@ class AppSettings:
             valid_sources = {"nws", "openmeteo", "visualcrossing", "pirateweather"}
             if not isinstance(value, list):
                 if setting_name == "source_priority_us":
-                    setattr(self, setting_name, ["nws", "openmeteo", "visualcrossing"])
+                    setattr(
+                        self, setting_name, ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+                    )
                 else:
-                    setattr(self, setting_name, ["openmeteo", "visualcrossing"])
+                    setattr(self, setting_name, ["openmeteo", "pirateweather", "visualcrossing"])
             else:
                 # Filter to only valid sources
                 filtered = [s for s in value if s in valid_sources]
                 if not filtered:
                     if setting_name == "source_priority_us":
-                        setattr(self, setting_name, ["nws", "openmeteo", "visualcrossing"])
+                        setattr(
+                            self,
+                            setting_name,
+                            ["nws", "openmeteo", "visualcrossing", "pirateweather"],
+                        )
                     else:
-                        setattr(self, setting_name, ["openmeteo", "visualcrossing"])
+                        setattr(
+                            self, setting_name, ["openmeteo", "pirateweather", "visualcrossing"]
+                        )
                 elif filtered != value:
                     setattr(self, setting_name, filtered)
 
@@ -516,10 +524,10 @@ class AppSettings:
             ),
             taskbar_icon_text_format=data.get("taskbar_icon_text_format", "{temp} {condition}"),
             source_priority_us=data.get(
-                "source_priority_us", ["nws", "openmeteo", "visualcrossing"]
+                "source_priority_us", ["nws", "openmeteo", "visualcrossing", "pirateweather"]
             ),
             source_priority_international=data.get(
-                "source_priority_international", ["openmeteo", "visualcrossing"]
+                "source_priority_international", ["openmeteo", "pirateweather", "visualcrossing"]
             ),
             openmeteo_weather_model=data.get("openmeteo_weather_model", "best_match"),
             station_selection_strategy=data.get("station_selection_strategy", "hybrid_default"),

@@ -745,10 +745,14 @@ class WeatherClient:
 
         # Initialize components with user's source priority settings
         us_priority = getattr(
-            self.settings, "source_priority_us", ["nws", "openmeteo", "visualcrossing"]
+            self.settings,
+            "source_priority_us",
+            ["nws", "openmeteo", "visualcrossing", "pirateweather"],
         )
         intl_priority = getattr(
-            self.settings, "source_priority_international", ["openmeteo", "visualcrossing"]
+            self.settings,
+            "source_priority_international",
+            ["openmeteo", "pirateweather", "visualcrossing"],
         )
         config = SourcePriorityConfig(us_default=us_priority, international_default=intl_priority)
         coordinator = ParallelFetchCoordinator(timeout=5.0)
