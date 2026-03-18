@@ -37,11 +37,11 @@ def initialize_components(app: AccessiWeatherApp) -> None:
 
     # Initialize weather client with lazy imports
     data_source = config.settings.data_source if config.settings else "auto"
-    # Note: visual_crossing_api_key and pirate_weather_api_key are LazySecureStorage
-    # objects that defer keyring access until first use. We pass them directly to
-    # WeatherClient which will access the values lazily when the clients are needed.
+    # Note: visual_crossing_api_key, pirate_weather_api_key and avwx_api_key are
+    # LazySecureStorage objects that defer keyring access until first use.
     lazy_api_key = config.settings.visual_crossing_api_key if config.settings else ""
     lazy_pw_api_key = config.settings.pirate_weather_api_key if config.settings else ""
+    lazy_avwx_key = config.settings.avwx_api_key if config.settings else ""
     # Lazy import WeatherDataCache
     from .cache import WeatherDataCache
 
@@ -61,6 +61,7 @@ def initialize_components(app: AccessiWeatherApp) -> None:
         data_source=data_source,
         visual_crossing_api_key=lazy_api_key,
         pirate_weather_api_key=lazy_pw_api_key,
+        avwx_api_key=lazy_avwx_key,
         settings=config.settings,
         offline_cache=offline_cache,
     )

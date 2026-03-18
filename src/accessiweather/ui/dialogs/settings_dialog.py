@@ -426,6 +426,46 @@ class SettingsDialogSimple(wx.Dialog):
         pirate_btn_row.Add(get_pirate_key_btn, 0)
         sizer.Add(pirate_btn_row, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
 
+        # AVWX Configuration (international aviation weather)
+        sizer.Add(
+            wx.StaticText(panel, label="AVWX API Configuration (International Aviation Weather):"),
+            0,
+            wx.ALL,
+            5,
+        )
+        sizer.Add(
+            wx.StaticText(
+                panel,
+                label=(
+                    "AVWX provides TAF/METAR with translations and screen-reader speech strings "
+                    "for non-US airports. Free registration at avwx.rest."
+                ),
+            ),
+            0,
+            wx.LEFT | wx.BOTTOM,
+            10,
+        )
+
+        row_avwx_key = wx.BoxSizer(wx.HORIZONTAL)
+        row_avwx_key.Add(
+            wx.StaticText(panel, label="AVWX API Key:"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["avwx_key"] = wx.TextCtrl(panel, style=wx.TE_PASSWORD, size=(250, -1))
+        row_avwx_key.Add(self._controls["avwx_key"], 1)
+        sizer.Add(row_avwx_key, 0, wx.LEFT | wx.EXPAND, 10)
+        sizer.Add(
+            wx.StaticText(
+                panel,
+                label="Used automatically for international ICAO stations (non-K prefix).",
+            ),
+            0,
+            wx.LEFT | wx.TOP | wx.BOTTOM,
+            10,
+        )
+
         # Source Priority (Auto Mode)
         sizer.Add(
             wx.StaticText(panel, label="Source Priority (Auto Mode):"),
@@ -1412,6 +1452,10 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["pw_key"].SetValue(str(pw_key))
             self._original_pw_key = str(pw_key)
 
+            avwx_key = getattr(settings, "avwx_api_key", "") or ""
+            self._controls["avwx_key"].SetValue(str(avwx_key))
+            self._original_avwx_key = str(avwx_key)
+
             # Source priority
             us_priority = getattr(
                 settings,
@@ -1668,6 +1712,7 @@ class SettingsDialogSimple(wx.Dialog):
                 "data_source": source_values[self._controls["data_source"].GetSelection()],
                 "visual_crossing_api_key": self._controls["vc_key"].GetValue(),
                 "pirate_weather_api_key": self._controls["pirate_weather_key"].GetValue(),
+                "avwx_api_key": self._controls["avwx_key"].GetValue(),
                 "source_priority_us": [
                     ["nws", "openmeteo", "visualcrossing", "pirateweather"],
                     ["nws", "visualcrossing", "openmeteo", "pirateweather"],
@@ -1757,6 +1802,7 @@ class SettingsDialogSimple(wx.Dialog):
                 ("visual_crossing_api_key", "_original_vc_key"),
                 ("pirate_weather_api_key", "_original_pirate_weather_key"),
                 ("openrouter_api_key", "_original_openrouter_key"),
+                ("avwx_api_key", "_original_avwx_key"),
             ):
                 if not settings_dict.get(key) and getattr(self, orig_attr, ""):
                     logger.warning(
@@ -2314,6 +2360,7 @@ class SettingsDialogSimple(wx.Dialog):
         "visual_crossing_api_key",
         "pirate_weather_api_key",
         "openrouter_api_key",
+        "avwx_api_key",
     )
 
     def _maybe_update_portable_bundle_after_save(self, settings_dict: dict) -> None:

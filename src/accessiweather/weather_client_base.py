@@ -62,6 +62,7 @@ class WeatherClient:
         data_source: str = "auto",
         visual_crossing_api_key: str = "",
         pirate_weather_api_key: str = "",
+        avwx_api_key: str = "",
         settings: AppSettings | None = None,
         *,
         environmental_client: EnvironmentalDataClient | None = None,
@@ -96,6 +97,10 @@ class WeatherClient:
         self._visual_crossing_client: VisualCrossingClient | None = None
         self._pirate_weather_api_key = pirate_weather_api_key
         self._pirate_weather_client: PirateWeatherClient | None = None
+
+        # AVWX API key for international aviation weather (stored as a plain string or
+        # LazySecureStorage; resolved to str on first access via avwx_api_key property).
+        self._avwx_api_key = avwx_api_key
 
         # Secondary data providers
         self.environmental_client = environmental_client
@@ -171,6 +176,14 @@ class WeatherClient:
     def pirate_weather_client(self, value: PirateWeatherClient | None) -> None:
         """Allow direct assignment for backward compatibility and testing."""
         self._pirate_weather_client = value
+
+    @property
+    def avwx_api_key(self) -> str:
+        """Get the AVWX API key, resolving lazy accessor if needed."""
+        key = self._avwx_api_key
+        if key is None or key == "":
+            return ""
+        return str(key)
 
     def _location_key(self, location: Location) -> str:
         """Generate a unique key for a location to track in-flight requests."""

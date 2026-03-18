@@ -190,6 +190,7 @@ class SettingsOperations:
             "visual_crossing_api_key",
             "pirate_weather_api_key",
             "openrouter_api_key",
+            "avwx_api_key",
         }
 
         # These keys should be stored in SecureStorage (non-portable, or non-API-key secrets)
@@ -197,6 +198,7 @@ class SettingsOperations:
             "visual_crossing_api_key",
             "pirate_weather_api_key",
             "openrouter_api_key",
+            "avwx_api_key",
             "github_app_id",
             "github_app_private_key",
             "github_app_installation_id",
@@ -209,6 +211,7 @@ class SettingsOperations:
             "visual_crossing_api_key",
             "pirate_weather_api_key",
             "openrouter_api_key",
+            "avwx_api_key",
         }
 
         for key, value in kwargs.items():
