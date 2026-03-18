@@ -327,10 +327,12 @@ class SettingsDialogSimple(wx.Dialog):
             ],
         )
         row1.Add(self._controls["data_source"], 0)
+        self._controls["data_source"].Bind(wx.EVT_CHOICE, self._on_data_source_changed)
         sizer.Add(row1, 0, wx.ALL, 5)
 
         # Visual Crossing Configuration
-        sizer.Add(
+        self._vc_config_sizer = wx.BoxSizer(wx.VERTICAL)
+        self._vc_config_sizer.Add(
             wx.StaticText(panel, label="Visual Crossing API Configuration:"),
             0,
             wx.ALL,
@@ -346,7 +348,7 @@ class SettingsDialogSimple(wx.Dialog):
         )
         self._controls["vc_key"] = wx.TextCtrl(panel, style=wx.TE_PASSWORD, size=(250, -1))
         row_key.Add(self._controls["vc_key"], 1)
-        sizer.Add(row_key, 0, wx.LEFT | wx.EXPAND, 10)
+        self._vc_config_sizer.Add(row_key, 0, wx.LEFT | wx.EXPAND, 10)
 
         btn_row = wx.BoxSizer(wx.HORIZONTAL)
         get_key_btn = wx.Button(panel, label="Get Free API Key")
@@ -356,10 +358,12 @@ class SettingsDialogSimple(wx.Dialog):
         validate_btn = wx.Button(panel, label="Validate API Key")
         validate_btn.Bind(wx.EVT_BUTTON, self._on_validate_vc_api_key)
         btn_row.Add(validate_btn, 0)
-        sizer.Add(btn_row, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
+        self._vc_config_sizer.Add(btn_row, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
+        sizer.Add(self._vc_config_sizer, 0, wx.EXPAND)
 
         # Pirate Weather Configuration
-        sizer.Add(
+        self._pw_config_sizer = wx.BoxSizer(wx.VERTICAL)
+        self._pw_config_sizer.Add(
             wx.StaticText(panel, label="Pirate Weather API Configuration:"),
             0,
             wx.ALL,
@@ -375,13 +379,14 @@ class SettingsDialogSimple(wx.Dialog):
         )
         self._controls["pw_key"] = wx.TextCtrl(panel, style=wx.TE_PASSWORD, size=(250, -1))
         row_pw_key.Add(self._controls["pw_key"], 1)
-        sizer.Add(row_pw_key, 0, wx.LEFT | wx.EXPAND, 10)
+        self._pw_config_sizer.Add(row_pw_key, 0, wx.LEFT | wx.EXPAND, 10)
 
         btn_row_pw = wx.BoxSizer(wx.HORIZONTAL)
         get_pw_key_btn = wx.Button(panel, label="Get Free API Key")
         get_pw_key_btn.Bind(wx.EVT_BUTTON, self._on_get_pw_api_key)
         btn_row_pw.Add(get_pw_key_btn, 0, wx.RIGHT, 10)
-        sizer.Add(btn_row_pw, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
+        self._pw_config_sizer.Add(btn_row_pw, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
+        sizer.Add(self._pw_config_sizer, 0, wx.EXPAND)
 
         # Source Priority (Auto Mode)
         sizer.Add(
@@ -1342,6 +1347,7 @@ class SettingsDialogSimple(wx.Dialog):
                 "pirateweather": 4,
             }
             self._controls["data_source"].SetSelection(source_map.get(data_source, 0))
+            self._update_api_key_visibility()
 
             vc_key = getattr(settings, "visual_crossing_api_key", "") or ""
             self._controls["vc_key"].SetValue(str(vc_key))
@@ -1788,6 +1794,23 @@ class SettingsDialogSimple(wx.Dialog):
             wx.MessageBox("Failed to save settings.", "Error", wx.OK | wx.ICON_ERROR)
 
     # Event handlers for buttons
+    def _on_data_source_changed(self, event):
+        """Update API key section visibility when data source changes."""
+        self._update_api_key_visibility()
+
+    def _update_api_key_visibility(self):
+        """Show/hide API key sections based on selected data source."""
+        selection = self._controls["data_source"].GetSelection()
+        # 0=auto, 1=nws, 2=openmeteo, 3=visualcrossing, 4=pirateweather
+        show_vc = selection in (0, 3)  # auto or VC
+        show_pw = selection in (0, 4)  # auto or PW
+        self._vc_config_sizer.ShowItems(show_vc)
+        self._pw_config_sizer.ShowItems(show_pw)
+        # Re-layout the panel
+        parent = self._controls["data_source"].GetParent()
+        parent.Layout()
+        parent.FitInside()
+
     def _on_get_pw_api_key(self, event):
         """Open Pirate Weather signup page."""
         webbrowser.open("https://pirate-weather.apiable.io/signup")
