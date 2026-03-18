@@ -682,7 +682,11 @@ def test_maybe_update_portable_bundle_uses_export_encrypted_api_keys(tmp_path, m
     )
 
     dialog._maybe_update_portable_bundle_after_save(
-        {"visual_crossing_api_key": "FAKE_VC_KEY_123", "other_setting": "ignored"}
+        {
+            "visual_crossing_api_key": "FAKE_VC_KEY_123",
+            "pirate_weather_api_key": "FAKE_PW_KEY_123",
+            "other_setting": "ignored",
+        }
     )
 
     dialog.config_manager.export_encrypted_api_keys.assert_called_once_with(
@@ -735,7 +739,7 @@ def test_maybe_update_portable_bundle_prompts_when_no_cached_passphrase(tmp_path
 
     monkeypatch.setattr(wx, "TextEntryDialog", _FakeTextEntryDialog, raising=False)
 
-    dialog._maybe_update_portable_bundle_after_save({"openrouter_api_key": "FAKE_OR_KEY_456"})
+    dialog._maybe_update_portable_bundle_after_save({"pirate_weather_api_key": "FAKE_PW_KEY_456"})
 
     dialog.config_manager.export_encrypted_api_keys.assert_called_once_with(
         portable / "api-keys.keys", "FAKE_NEW_PASSPHRASE"

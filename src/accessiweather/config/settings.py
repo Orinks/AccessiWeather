@@ -179,11 +179,16 @@ class SettingsOperations:
         config = self._manager.get_config()
         # In portable mode, API keys live in the bundle — skip keyring writes for them.
         is_portable = getattr(self._manager.app, "_portable_mode", False)
-        portable_api_keys = {"visual_crossing_api_key", "openrouter_api_key"}
+        portable_api_keys = {
+            "visual_crossing_api_key",
+            "pirate_weather_api_key",
+            "openrouter_api_key",
+        }
 
         # These keys should be stored in SecureStorage (non-portable, or non-API-key secrets)
         secure_keys = {
             "visual_crossing_api_key",
+            "pirate_weather_api_key",
             "openrouter_api_key",
             "github_app_id",
             "github_app_private_key",
@@ -192,7 +197,12 @@ class SettingsOperations:
         if is_portable:
             secure_keys -= portable_api_keys
         # These keys should be redacted in logs
-        redacted_keys = {"github_app_private_key", "visual_crossing_api_key", "openrouter_api_key"}
+        redacted_keys = {
+            "github_app_private_key",
+            "visual_crossing_api_key",
+            "pirate_weather_api_key",
+            "openrouter_api_key",
+        }
 
         for key, value in kwargs.items():
             if hasattr(config.settings, key):
