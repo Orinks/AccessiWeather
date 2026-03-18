@@ -148,6 +148,7 @@ class TestNotificationEventManager:
             2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc
         )
         weather_data.current = None
+        weather_data.minutely_precipitation = None
 
         events = manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
         assert len(events) == 0
@@ -158,6 +159,7 @@ class TestNotificationEventManager:
         weather_data = MagicMock(spec=WeatherData)
         weather_data.current = None
         weather_data.discussion = "Discussion text"
+        weather_data.minutely_precipitation = None
 
         # First discussion with issuance time
         first_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
@@ -194,6 +196,7 @@ class TestNotificationEventManager:
         weather_data = MagicMock(spec=WeatherData)
         weather_data.current = None
         weather_data.discussion = "Old discussion"
+        weather_data.minutely_precipitation = None
 
         first_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
         weather_data.discussion_issuance_time = first_time
@@ -219,6 +222,7 @@ class TestNotificationEventManager:
         weather_data = MagicMock(spec=WeatherData)
         weather_data.current = None
         weather_data.discussion = "Discussion text without an issued header"
+        weather_data.minutely_precipitation = None
 
         first_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
         weather_data.discussion_issuance_time = first_time
@@ -238,6 +242,7 @@ class TestNotificationEventManager:
             2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc
         )
         weather_data.current = None
+        weather_data.minutely_precipitation = None
 
         # First check
         manager.check_for_events(weather_data, settings_none_enabled, "Test Location")
@@ -257,6 +262,7 @@ class TestNotificationEventManager:
         weather_data.discussion = "Some discussion text"
         weather_data.discussion_issuance_time = None  # Non-US location or API issue
         weather_data.current = None
+        weather_data.minutely_precipitation = None
 
         events = manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
         assert len(events) == 0
@@ -271,6 +277,7 @@ class TestNotificationEventManager:
         weather_data.discussion = None
         weather_data.discussion_issuance_time = None
         weather_data.current = current
+        weather_data.minutely_precipitation = None
 
         events = manager.check_for_events(weather_data, settings_with_severe_risk, "Test Location")
         assert len(events) == 0
@@ -285,6 +292,7 @@ class TestNotificationEventManager:
         weather_data.discussion = None
         weather_data.discussion_issuance_time = None
         weather_data.current = current
+        weather_data.minutely_precipitation = None
 
         # First risk (low: 20-39)
         current.severe_weather_risk = 25
@@ -311,6 +319,7 @@ class TestNotificationEventManager:
         weather_data.discussion = None
         weather_data.discussion_issuance_time = None
         weather_data.current = current
+        weather_data.minutely_precipitation = None
 
         # Start at extreme (80+)
         current.severe_weather_risk = 85
@@ -353,6 +362,7 @@ class TestNotificationEventManager:
         weather_data.current = None
         weather_data.discussion = "Same issuance discussion text"
         weather_data.discussion_issuance_time = issuance_time
+        weather_data.minutely_precipitation = None
 
         same_events = manager2.check_for_events(weather_data, settings, "Test Location")
 
@@ -383,6 +393,7 @@ class TestNotificationEventManager:
         weather_data.current = None
         weather_data.discussion = "Same issuance discussion text"
         weather_data.discussion_issuance_time = issuance_time
+        weather_data.minutely_precipitation = None
 
         same_events = manager.check_for_events(weather_data, settings, "Test Location")
 
@@ -409,6 +420,7 @@ class TestNotificationEventManager:
         weather_data.discussion = None
         weather_data.discussion_issuance_time = None
         weather_data.current = current
+        weather_data.minutely_precipitation = None
 
         events = manager.check_for_events(weather_data, settings, "Test Location")
         reloaded = NotificationEventManager(runtime_state_manager=runtime_state)
@@ -430,6 +442,7 @@ class TestNotificationEventManager:
         weather_data.discussion = None
         weather_data.discussion_issuance_time = None
         weather_data.current = current
+        weather_data.minutely_precipitation = None
 
         current.severe_weather_risk = 35
         same_category_events = manager2.check_for_events(weather_data, settings, "Test Location")

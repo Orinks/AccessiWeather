@@ -627,9 +627,7 @@ class TestFetchPirateWeatherInAutoMode:
         """Lines 796-806, 855, 861-862, 869-870: PW fetched in auto mode for intl locations."""
         from datetime import UTC, datetime
 
-        from accessiweather.models.weather import (
-            SourceAttribution,
-        )
+        from accessiweather.models.weather import SourceAttribution
         from accessiweather.weather_client_fusion import DataFusionEngine
         from accessiweather.weather_client_parallel import ParallelFetchCoordinator, SourceData
 
@@ -661,11 +659,14 @@ class TestFetchPirateWeatherInAutoMode:
             success=True,
         )
 
-        mock_attribution = MagicMock(spec=SourceAttribution)
-        mock_attribution.field_sources = {}
-        mock_attribution.conflicts = []
-        mock_attribution.contributing_sources = {"pirateweather"}
-        mock_attribution.failed_sources = set()
+        mock_current_attribution = SourceAttribution(
+            field_sources={},
+            conflicts=[],
+            contributing_sources={"pirateweather"},
+            failed_sources=set(),
+        )
+        mock_forecast_attribution = {"summary": "pirateweather"}
+        mock_hourly_attribution = {"temperature": "pirateweather"}
 
         with (
             patch.object(
@@ -677,17 +678,17 @@ class TestFetchPirateWeatherInAutoMode:
             patch.object(
                 DataFusionEngine,
                 "merge_current_conditions",
-                return_value=(mock_current, mock_attribution),
+                return_value=(mock_current, mock_current_attribution),
             ),
             patch.object(
                 DataFusionEngine,
                 "merge_forecasts",
-                return_value=(mock_forecast, mock_attribution),
+                return_value=(mock_forecast, mock_forecast_attribution),
             ),
             patch.object(
                 DataFusionEngine,
                 "merge_hourly_forecasts",
-                return_value=(mock_hourly, mock_attribution),
+                return_value=(mock_hourly, mock_hourly_attribution),
             ),
         ):
             result = await wc._fetch_smart_auto_source(intl_location)

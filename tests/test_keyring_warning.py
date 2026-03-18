@@ -219,6 +219,8 @@ class TestWizardKeyringWarning:
         import accessiweather.config.secure_storage as ss
 
         ss._keyring_available = False
+        if not hasattr(wx, "MessageDialog"):
+            wx.MessageDialog = MagicMock()
 
         app = _make_app_stub()
         prompt_calls = []
@@ -239,7 +241,7 @@ class TestWizardKeyringWarning:
         ):
             app._maybe_show_first_start_onboarding()
 
-        assert len(prompt_calls) == 2
+        assert len(prompt_calls) == 3
 
 
 # ---------------------------------------------------------------------------

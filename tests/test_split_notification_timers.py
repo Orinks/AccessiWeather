@@ -374,6 +374,8 @@ class TestNotificationEventHelpers:
         settings = MagicMock()
         settings.notify_discussion_update = False
         settings.notify_severe_risk_change = False
+        settings.notify_minutely_precipitation_start = False
+        settings.notify_minutely_precipitation_stop = False
         win.app.config_manager.get_settings.return_value = settings
 
         win._process_notification_events(MagicMock())
