@@ -229,7 +229,7 @@ class SettingsDialogSimple(wx.Dialog):
             wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
             10,
         )
-        self._controls["hourly_forecast_hours"] = wx.SpinCtrl(panel, min=1, max=68, initial=6)
+        self._controls["hourly_forecast_hours"] = wx.SpinCtrl(panel, min=1, max=168, initial=6)
         row_hourly_hours.Add(self._controls["hourly_forecast_hours"], 0)
         sizer.Add(row_hourly_hours, 0, wx.LEFT | wx.TOP, 10)
 

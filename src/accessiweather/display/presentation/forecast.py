@@ -296,7 +296,7 @@ def build_hourly_summary(
     include_wind_gust = verbosity_level == "detailed"
 
     hourly_hours = getattr(settings, "hourly_forecast_hours", 6) if settings else 6
-    hourly_hours = max(1, min(hourly_hours, 68))
+    hourly_hours = max(1, min(hourly_hours, 168))
     for period in hourly_forecast.get_next_hours(hourly_hours):
         if not period.has_data():
             continue
