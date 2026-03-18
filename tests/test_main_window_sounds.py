@@ -58,6 +58,10 @@ class TestMainWindowDataUpdatedSound:
         win._update_alerts = MagicMock()
         win._process_notification_events = MagicMock()
         win._alert_lifecycle_labels = {}
+        # Disable event dispatcher so should_emit_current_conditions_event is not
+        # called with MagicMock temperature values (causes TypeError on Python 3.13
+        # due to stricter __format__ return-type enforcement on f"{mock:.0f}").
+        app.event_dispatcher = None
         # Stub presenter so the method doesn't blow up on presentation logic
         presentation = MagicMock()
         presentation.current_conditions = MagicMock()
