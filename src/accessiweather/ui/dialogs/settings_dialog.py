@@ -323,6 +323,7 @@ class SettingsDialogSimple(wx.Dialog):
                 "National Weather Service (US only, with alerts)",
                 "Open-Meteo (International, no alerts)",
                 "Visual Crossing (International with alerts, requires API key)",
+                "Pirate Weather (Global with alerts, requires API key)",
             ],
         )
         row1.Add(self._controls["data_source"], 0)
@@ -356,6 +357,31 @@ class SettingsDialogSimple(wx.Dialog):
         validate_btn.Bind(wx.EVT_BUTTON, self._on_validate_vc_api_key)
         btn_row.Add(validate_btn, 0)
         sizer.Add(btn_row, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
+
+        # Pirate Weather Configuration
+        sizer.Add(
+            wx.StaticText(panel, label="Pirate Weather API Configuration:"),
+            0,
+            wx.ALL,
+            5,
+        )
+
+        row_pw_key = wx.BoxSizer(wx.HORIZONTAL)
+        row_pw_key.Add(
+            wx.StaticText(panel, label="API Key:"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["pw_key"] = wx.TextCtrl(panel, style=wx.TE_PASSWORD, size=(250, -1))
+        row_pw_key.Add(self._controls["pw_key"], 1)
+        sizer.Add(row_pw_key, 0, wx.LEFT | wx.EXPAND, 10)
+
+        btn_row_pw = wx.BoxSizer(wx.HORIZONTAL)
+        get_pw_key_btn = wx.Button(panel, label="Get Free API Key")
+        get_pw_key_btn.Bind(wx.EVT_BUTTON, self._on_get_pw_api_key)
+        btn_row_pw.Add(get_pw_key_btn, 0, wx.RIGHT, 10)
+        sizer.Add(btn_row_pw, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
 
         # Source Priority (Auto Mode)
         sizer.Add(
@@ -1308,12 +1334,22 @@ class SettingsDialogSimple(wx.Dialog):
 
             # Data sources tab
             data_source = getattr(settings, "data_source", "auto")
-            source_map = {"auto": 0, "nws": 1, "openmeteo": 2, "visualcrossing": 3}
+            source_map = {
+                "auto": 0,
+                "nws": 1,
+                "openmeteo": 2,
+                "visualcrossing": 3,
+                "pirateweather": 4,
+            }
             self._controls["data_source"].SetSelection(source_map.get(data_source, 0))
 
             vc_key = getattr(settings, "visual_crossing_api_key", "") or ""
             self._controls["vc_key"].SetValue(str(vc_key))
             self._original_vc_key = str(vc_key)
+
+            pw_key = getattr(settings, "pirate_weather_api_key", "") or ""
+            self._controls["pw_key"].SetValue(str(pw_key))
+            self._original_pw_key = str(pw_key)
 
             # Source priority
             us_priority = getattr(
@@ -1480,7 +1516,7 @@ class SettingsDialogSimple(wx.Dialog):
         """Save settings from UI controls."""
         try:
             # Map selections back to values
-            source_values = ["auto", "nws", "openmeteo", "visualcrossing"]
+            source_values = ["auto", "nws", "openmeteo", "visualcrossing", "pirateweather"]
             temp_values = ["f", "c", "both"]
             forecast_duration_values = [3, 5, 7, 10, 14, 15]
             forecast_time_reference_values = ["location", "user_local"]
@@ -1546,6 +1582,7 @@ class SettingsDialogSimple(wx.Dialog):
                 # Data sources
                 "data_source": source_values[self._controls["data_source"].GetSelection()],
                 "visual_crossing_api_key": self._controls["vc_key"].GetValue(),
+                "pirate_weather_api_key": self._controls["pw_key"].GetValue(),
                 "source_priority_us": [
                     ["nws", "openmeteo", "visualcrossing"],
                     ["nws", "visualcrossing", "openmeteo"],
@@ -1627,6 +1664,7 @@ class SettingsDialogSimple(wx.Dialog):
             # keyring load failed transiently — keep the existing keyring value.
             for key, orig_attr in (
                 ("visual_crossing_api_key", "_original_vc_key"),
+                ("pirate_weather_api_key", "_original_pw_key"),
                 ("openrouter_api_key", "_original_openrouter_key"),
             ):
                 if not settings_dict.get(key) and getattr(self, orig_attr, ""):
@@ -1670,7 +1708,8 @@ class SettingsDialogSimple(wx.Dialog):
             "verbosity_level": "Verbosity level",
             "severe_weather_override": "Automatically prioritize severe weather info",
             "data_source": "Weather Data Source",
-            "vc_key": "API Key",
+            "vc_key": "Visual Crossing API Key",
+            "pw_key": "Pirate Weather API Key",
             "us_priority": "US Locations Priority",
             "intl_priority": "International Locations Priority",
             "openmeteo_model": "Open-Meteo Weather Model",
@@ -1732,6 +1771,10 @@ class SettingsDialogSimple(wx.Dialog):
             wx.MessageBox("Failed to save settings.", "Error", wx.OK | wx.ICON_ERROR)
 
     # Event handlers for buttons
+    def _on_get_pw_api_key(self, event):
+        """Open Pirate Weather signup page."""
+        webbrowser.open("https://pirateweather.net/en/latest/")
+
     def _on_get_vc_api_key(self, event):
         """Open Visual Crossing signup page."""
         webbrowser.open("https://www.visualcrossing.com/sign-up")
@@ -2152,7 +2195,11 @@ class SettingsDialogSimple(wx.Dialog):
                 wx.OK | wx.ICON_ERROR,
             )
 
-    _PORTABLE_KEY_SETTINGS = ("visual_crossing_api_key", "openrouter_api_key")
+    _PORTABLE_KEY_SETTINGS = (
+        "visual_crossing_api_key",
+        "pirate_weather_api_key",
+        "openrouter_api_key",
+    )
 
     def _maybe_update_portable_bundle_after_save(self, settings_dict: dict) -> None:
         """

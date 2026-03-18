@@ -48,10 +48,17 @@ class SettingsOperations:
         config_changed = False
 
         # Critical validation: data_source affects weather client selection at startup
-        valid_sources = ["auto", "nws", "openmeteo", "visualcrossing"]
+        valid_sources = ["auto", "nws", "openmeteo", "visualcrossing", "pirateweather"]
         if settings.data_source not in valid_sources:
             self.logger.warning(
                 f"Invalid data_source '{settings.data_source}', resetting to 'auto'"
+            )
+            settings.data_source = "auto"
+            config_changed = True
+
+        if settings.data_source == "pirateweather" and not settings.pirate_weather_api_key:
+            self.logger.warning(
+                "Pirate Weather selected but no API key provided, switching to 'auto'"
             )
             settings.data_source = "auto"
             config_changed = True
@@ -179,11 +186,16 @@ class SettingsOperations:
         config = self._manager.get_config()
         # In portable mode, API keys live in the bundle — skip keyring writes for them.
         is_portable = getattr(self._manager.app, "_portable_mode", False)
-        portable_api_keys = {"visual_crossing_api_key", "openrouter_api_key"}
+        portable_api_keys = {
+            "visual_crossing_api_key",
+            "pirate_weather_api_key",
+            "openrouter_api_key",
+        }
 
         # These keys should be stored in SecureStorage (non-portable, or non-API-key secrets)
         secure_keys = {
             "visual_crossing_api_key",
+            "pirate_weather_api_key",
             "openrouter_api_key",
             "github_app_id",
             "github_app_private_key",
@@ -192,7 +204,12 @@ class SettingsOperations:
         if is_portable:
             secure_keys -= portable_api_keys
         # These keys should be redacted in logs
-        redacted_keys = {"github_app_private_key", "visual_crossing_api_key", "openrouter_api_key"}
+        redacted_keys = {
+            "github_app_private_key",
+            "visual_crossing_api_key",
+            "pirate_weather_api_key",
+            "openrouter_api_key",
+        }
 
         for key, value in kwargs.items():
             if hasattr(config.settings, key):

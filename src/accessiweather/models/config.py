@@ -54,6 +54,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "custom_instructions",
     # API key settings (loaded lazily via keyring)
     "visual_crossing_api_key",
+    "pirate_weather_api_key",
     # Display preferences
     "round_values",
     "show_detailed_forecast",
@@ -104,6 +105,7 @@ class AppSettings:
     startup_enabled: bool = False
     data_source: str = "auto"
     visual_crossing_api_key: str = ""
+    pirate_weather_api_key: str = ""
     auto_update_enabled: bool = True
     update_channel: str = "stable"
     update_check_interval_hours: int = 24
@@ -346,7 +348,7 @@ class AppSettings:
 
         elif setting_name in {"source_priority_us", "source_priority_international"}:
             # Ensure valid list of source names
-            valid_sources = {"nws", "openmeteo", "visualcrossing"}
+            valid_sources = {"nws", "openmeteo", "visualcrossing", "pirateweather"}
             if not isinstance(value, list):
                 if setting_name == "source_priority_us":
                     setattr(self, setting_name, ["nws", "openmeteo", "visualcrossing"])
@@ -390,7 +392,7 @@ class AppSettings:
             "minimize_on_startup": self.minimize_on_startup,
             "startup_enabled": self.startup_enabled,
             "data_source": self.data_source,
-            # visual_crossing_api_key and github_app_* are stored in secure keyring, not JSON
+            # visual_crossing_api_key, pirate_weather_api_key and github_app_* are stored in secure keyring, not JSON
             "auto_update_enabled": self.auto_update_enabled,
             "update_channel": self.update_channel,
             "update_check_interval_hours": self.update_check_interval_hours,
@@ -467,6 +469,7 @@ class AppSettings:
             startup_enabled=cls._as_bool(data.get("startup_enabled"), False),
             data_source=data.get("data_source", "auto"),
             visual_crossing_api_key=data.get("visual_crossing_api_key", ""),
+            pirate_weather_api_key=data.get("pirate_weather_api_key", ""),
             auto_update_enabled=cls._as_bool(data.get("auto_update_enabled"), True),
             update_channel=data.get("update_channel", "stable"),
             update_check_interval_hours=data.get("update_check_interval_hours", 24),
