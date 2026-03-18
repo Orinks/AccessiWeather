@@ -30,6 +30,8 @@ def test_download_and_apply_update_success_path(monkeypatch, tmp_path):
         ProgressDialog=MagicMock(return_value=progress_dialog),
         MessageBox=MagicMock(return_value=1),
         CallAfter=lambda func, *args, **kwargs: func(*args, **kwargs),
+        GetTopLevelWindows=MagicMock(return_value=[]),
+        SafeYield=MagicMock(),
     )
     monkeypatch.setattr(app_module, "wx", fake_wx)
 

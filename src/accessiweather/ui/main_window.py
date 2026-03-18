@@ -13,8 +13,8 @@ from typing import TYPE_CHECKING
 import wx
 from wx.lib.sized_controls import SizedFrame, SizedPanel
 
-from . import main_window_notification_events
 from ..weather_event_pipeline import WeatherEvent, should_emit_current_conditions_event
+from . import main_window_notification_events
 
 if TYPE_CHECKING:
     from ..app import AccessiWeatherApp
