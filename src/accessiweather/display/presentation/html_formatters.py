@@ -235,9 +235,10 @@ def generate_forecast_html(presentation: ForecastPresentation | None) -> str:
 <div class="hourly-temp">{temp}</div>
 <div class="hourly-conditions">{conditions}</div>
 </div>""")
+        num_hourly = len(presentation.hourly_periods)
         hourly_html = f"""
-<section class="hourly-section" aria-label="Next 6 hours forecast">
-<h3>Next 6 Hours</h3>
+<section class="hourly-section" aria-label="Next {num_hourly} hours forecast">
+<h3>Next {num_hourly} Hours</h3>
 <div class="hourly-grid" role="list">
 {"".join(hourly_items)}
 </div>

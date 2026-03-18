@@ -116,6 +116,9 @@ def build_forecast(
     if summary_line:
         fallback_lines.append(summary_line)
 
+    hourly_hours = getattr(settings, "hourly_forecast_hours", 6) if settings else 6
+    hourly_hours = max(1, min(hourly_hours, 168))
+
     if hourly_forecast and hourly_forecast.has_data():
         hourly = build_hourly_summary(hourly_forecast, unit_pref, settings=settings)
     else:
@@ -238,7 +241,7 @@ def build_forecast(
         fallback_lines.append(f"\nForecast generated: {generated_at}")
 
     if hourly:
-        fallback_lines.append(render_hourly_fallback(hourly))
+        fallback_lines.append(render_hourly_fallback(hourly, hours=hourly_hours))
 
     # Append cross-source confidence summary when available
     confidence_label: str | None = None
@@ -389,9 +392,9 @@ def _resolve_forecast_display_time(
     return start_time.astimezone(target_tz)
 
 
-def render_hourly_fallback(hourly: Iterable[HourlyPeriodPresentation]) -> str:
+def render_hourly_fallback(hourly: Iterable[HourlyPeriodPresentation], hours: int = 6) -> str:
     """Render hourly periods into fallback text."""
-    lines = ["Next 6 Hours:"]
+    lines = [f"Next {hours} Hours:"]
     for period in hourly:
         parts = [period.time]
         if period.temperature:
