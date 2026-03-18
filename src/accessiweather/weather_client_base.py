@@ -1,6 +1,9 @@
 """Core WeatherClient implementation with enrichment delegation."""
 
+from __future__ import annotations
+
 import asyncio
+import inspect
 import logging
 import os
 from collections.abc import Sequence
@@ -32,11 +35,13 @@ from .models import (
     Forecast,
     HourlyForecast,
     Location,
+    MinutelyPrecipitationForecast,
     SourceAttribution,
     SourceData,
     WeatherAlerts,
     WeatherData,
 )
+from .notifications.minutely_precipitation import parse_pirate_weather_minutely_block
 from .services import EnvironmentalDataClient
 from .utils.retry import APITimeoutError, retry_with_backoff
 from .visual_crossing_client import VisualCrossingApiError, VisualCrossingClient
@@ -447,6 +452,8 @@ class WeatherClient:
             else:
                 weather_data.alerts = WeatherAlerts(alerts=[])
 
+            weather_data.minutely_precipitation = await self._get_pirate_weather_minutely(location)
+
             loc_key = self._location_key(location)
             previous_alerts = self._previous_alerts.get(loc_key)
             _cancel_refs = await self._fetch_nws_cancel_references()
@@ -460,6 +467,34 @@ class WeatherClient:
             weather_data.alerts = weather_data.alerts or WeatherAlerts(alerts=[])
 
         return weather_data
+
+    async def _get_pirate_weather_minutely(
+        self, location: Location
+    ) -> MinutelyPrecipitationForecast | None:
+        """Fetch Pirate Weather minutely precipitation when a client is configured."""
+        client = getattr(self, "pirate_weather_client", None)
+        if client is None:
+            return None
+
+        for method_name in ("get_minutely_forecast", "get_forecast"):
+            method = getattr(client, method_name, None)
+            if not callable(method):
+                continue
+            try:
+                result = method(location)
+                if inspect.isawaitable(result):
+                    result = await result
+                if isinstance(result, dict):
+                    return parse_pirate_weather_minutely_block(result)
+            except TypeError:
+                logger.debug(
+                    "Pirate Weather client method %s has an unsupported signature", method_name
+                )
+            except Exception as exc:
+                logger.debug("Pirate Weather minutely fetch via %s failed: %s", method_name, exc)
+                return None
+
+        return None
 
     async def _fetch_weather_data_with_dedup(
         self, location: Location, force_refresh: bool, skip_notifications: bool = False

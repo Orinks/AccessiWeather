@@ -12,6 +12,12 @@ This package provides notification functionality including:
 from .alert_sound_mapper import choose_sound_event, get_candidate_sound_events
 
 # Event-based notifications
+from .minutely_precipitation import (
+    MinutelyPrecipitationTransition,
+    build_minutely_transition_signature,
+    detect_minutely_precipitation_transition,
+    parse_pirate_weather_minutely_block,
+)
 from .notification_event_manager import (
     NotificationEvent,
     NotificationEventManager,
@@ -37,6 +43,10 @@ __all__ = [
     # Alert sound mapping
     "choose_sound_event",
     "get_candidate_sound_events",
+    "MinutelyPrecipitationTransition",
+    "parse_pirate_weather_minutely_block",
+    "detect_minutely_precipitation_transition",
+    "build_minutely_transition_signature",
     # Sound player
     "get_available_sound_packs",
     "get_sound_file",
