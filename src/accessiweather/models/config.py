@@ -120,8 +120,8 @@ class AppSettings:
     # Event-based notifications
     notify_discussion_update: bool = True
     notify_severe_risk_change: bool = False
-    notify_minutely_precipitation_start: bool = False
-    notify_minutely_precipitation_stop: bool = False
+    notify_minutely_precipitation_start: bool = True
+    notify_minutely_precipitation_stop: bool = True
     github_backend_url: str = ""
     github_app_id: str = ""
     github_app_private_key: str = ""
