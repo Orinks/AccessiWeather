@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import fields, replace
-from datetime import date
+from dataclasses import fields
 from typing import Any
 
 from accessiweather.config.source_priority import SourcePriorityConfig
@@ -200,37 +199,6 @@ class DataFusionEngine:
                         f"selected {selected_source}={selected_value}"
                     )
 
-    def _max_forecast_date(self, forecast: Forecast) -> date | None:
-        dated = [p.start_time.date() for p in forecast.periods if p.start_time is not None]
-        return max(dated) if dated else None
-
-    def _append_openmeteo_tail_for_us(
-        self, nws_forecast: Forecast, openmeteo_forecast: Forecast
-    ) -> Forecast:
-        """Append Open-Meteo daily periods strictly after NWS horizon for US auto mode."""
-        nws_max_date = self._max_forecast_date(nws_forecast)
-        if nws_max_date is None:
-            return nws_forecast
-
-        tail_periods = [
-            p
-            for p in openmeteo_forecast.periods
-            if p.start_time is not None and p.start_time.date() > nws_max_date
-        ]
-        if not tail_periods:
-            return nws_forecast
-
-        # Label the first appended period so users can hear where extended data starts.
-        first_tail = tail_periods[0]
-        marker = "Extended outlook (Open-Meteo): "
-        if not (first_tail.name or "").startswith(marker):
-            tail_periods[0] = replace(first_tail, name=f"{marker}{first_tail.name or 'Day 8+'}")
-
-        return Forecast(
-            periods=[*nws_forecast.periods, *tail_periods],
-            generated_at=nws_forecast.generated_at or openmeteo_forecast.generated_at,
-        )
-
     def merge_forecasts(
         self,
         sources: list[SourceData],
@@ -265,10 +233,14 @@ class DataFusionEngine:
             return None, field_sources
 
         # Select single source based on location (no merging to avoid duplicates)
-        # US: prefer NWS > Open-Meteo > Visual Crossing
+        # US: prefer NWS for 7-day forecasts, Open-Meteo for extended ranges
         # International: prefer Open-Meteo > Visual Crossing
         if is_us:
-            preferred_order = ["nws", "openmeteo", "visualcrossing"]
+            preferred_order = (
+                ["openmeteo", "nws", "visualcrossing"]
+                if requested_days > 7
+                else ["nws", "openmeteo", "visualcrossing"]
+            )
         else:
             preferred_order = ["openmeteo", "visualcrossing"]
 
@@ -286,19 +258,9 @@ class DataFusionEngine:
         if not selected_source:
             selected_source = valid_sources[0]
 
-        # Use the selected source's forecast directly (no merging)
+        # Use the selected source's forecast directly (no merging / stitching).
         forecast = selected_source.forecast
         source_name = selected_source.source
-
-        # In US auto mode, allow Open-Meteo to fill forecast tail beyond NWS horizon.
-        # This enables >7 day outlooks while preserving NWS for near-term periods.
-        if is_us and source_name == "nws" and requested_days > 7 and forecast is not None:
-            openmeteo_source = next((s for s in valid_sources if s.source == "openmeteo"), None)
-            if openmeteo_source and openmeteo_source.forecast is not None:
-                extended = self._append_openmeteo_tail_for_us(forecast, openmeteo_source.forecast)
-                if len(extended.periods) > len(forecast.periods):
-                    forecast = extended
-                    source_name = "nws+openmeteo-tail"
 
         # Track attribution
         field_sources["forecast_source"] = source_name

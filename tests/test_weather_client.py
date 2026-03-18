@@ -347,6 +347,55 @@ class TestWeatherClientHelpers:
         assert client._get_forecast_days_for_source(us_location, "openmeteo") == 15
         assert client._get_forecast_days_for_source(us_location, "visualcrossing") == 15
 
+    def test_extended_nws_forecasts_switch_to_openmeteo_for_us(self):
+        """US NWS-style requests over 7 days should use Open-Meteo forecasts."""
+        client = WeatherClient(settings=AppSettings(forecast_duration_days=15))
+        us_location = Location(name="NYC", latitude=40.7128, longitude=-74.0060, country_code="US")
+        intl_location = Location(
+            name="London", latitude=51.5074, longitude=-0.1278, country_code="GB"
+        )
+
+        assert client._should_use_openmeteo_for_extended_forecast(us_location, "nws") is True
+        assert client._should_use_openmeteo_for_extended_forecast(us_location, "pw") is True
+        assert client._should_use_openmeteo_for_extended_forecast(us_location, "auto") is True
+        assert client._should_use_openmeteo_for_extended_forecast(intl_location, "nws") is False
+        assert client._should_use_openmeteo_for_extended_forecast(us_location, "openmeteo") is False
+
+
+class TestWeatherClientExtendedForecastRouting:
+    """Tests for extended forecast provider routing."""
+
+    @pytest.mark.asyncio
+    async def test_explicit_nws_uses_openmeteo_for_extended_forecast(self):
+        settings = AppSettings(forecast_duration_days=15)
+        client = WeatherClient(data_source="nws", settings=settings)
+        location = Location(name="NYC", latitude=40.7128, longitude=-74.0060, country_code="US")
+        current = CurrentConditions(temperature_f=72.0, condition="Sunny")
+        forecast = Forecast(
+            periods=[ForecastPeriod(name=f"Day {i}", temperature=70 + i) for i in range(1, 16)]
+        )
+        hourly_forecast = MagicMock()
+        alerts = WeatherAlerts(alerts=[])
+        client._get_nws_current_conditions = AsyncMock(return_value=current)
+        client._get_openmeteo_forecast = AsyncMock(return_value=forecast)
+        client._get_nws_discussion_only = AsyncMock(return_value=("NWS discussion", None))
+        client._get_nws_alerts = AsyncMock(return_value=alerts)
+        client._get_nws_hourly_forecast = AsyncMock(return_value=hourly_forecast)
+        client._fetch_nws_data = AsyncMock()
+        client._fetch_nws_cancel_references = AsyncMock(return_value=set())
+        client._launch_enrichment_tasks = MagicMock(return_value={})
+        client._await_enrichments = AsyncMock()
+
+        data = await client.get_weather_data(location)
+
+        assert data.forecast is forecast
+        assert data.current is current
+        assert data.source_attribution is not None
+        assert data.source_attribution.field_sources["forecast_source"] == "openmeteo"
+        assert data.source_attribution.contributing_sources == {"nws", "openmeteo"}
+        client._get_openmeteo_forecast.assert_awaited_once_with(location)
+        client._fetch_nws_data.assert_not_called()
+
 
 class TestWeatherClientContextManager:
     """Tests for async context manager."""
