@@ -346,22 +346,22 @@ class PirateWeatherClient:
             wind_raw = day.get("windSpeed")
             if wind_raw is not None:
                 if using_us or self.units == "uk2":
-                    wind_str = f"{wind_raw} mph"
+                    wind_str = f"{round(wind_raw)} mph"
                 elif self.units == "ca":
-                    wind_str = f"{wind_raw} km/h"
+                    wind_str = f"{round(wind_raw)} km/h"
                 else:
-                    wind_str = f"{wind_raw} m/s"
+                    wind_str = f"{round(wind_raw)} m/s"
             else:
                 wind_str = None
 
             wind_gust_raw = day.get("windGust")
             if wind_gust_raw is not None:
                 if using_us or self.units == "uk2":
-                    wind_gust_str = f"{wind_gust_raw} mph"
+                    wind_gust_str = f"{round(wind_gust_raw)} mph"
                 elif self.units == "ca":
-                    wind_gust_str = f"{wind_gust_raw} km/h"
+                    wind_gust_str = f"{round(wind_gust_raw)} km/h"
                 else:
-                    wind_gust_str = f"{wind_gust_raw} m/s"
+                    wind_gust_str = f"{round(wind_gust_raw)} m/s"
             else:
                 wind_gust_str = None
 
@@ -433,11 +433,11 @@ class PirateWeatherClient:
             wind_raw = hour.get("windSpeed")
             if wind_raw is not None:
                 if using_us or self.units == "uk2":
-                    wind_str = f"{wind_raw} mph"
+                    wind_str = f"{round(wind_raw)} mph"
                 elif self.units == "ca":
-                    wind_str = f"{wind_raw} km/h"
+                    wind_str = f"{round(wind_raw)} km/h"
                 else:
-                    wind_str = f"{wind_raw} m/s"
+                    wind_str = f"{round(wind_raw)} m/s"
             else:
                 wind_str = None
 
