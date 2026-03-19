@@ -152,7 +152,7 @@ def test_onboarding_wizard_shown_once_with_skip_path(monkeypatch):
     _ensure_wx_dialog_constants()
     skip_id = getattr(wx, "ID_NO", 0)
     cancel_id = getattr(wx, "ID_CANCEL", 2)
-    responses = [skip_id, cancel_id, cancel_id, getattr(wx, "ID_OK", 1)]
+    responses = [skip_id, cancel_id, cancel_id, cancel_id, getattr(wx, "ID_OK", 1)]
     monkeypatch.setattr(
         "accessiweather.app.wx.MessageDialog",
         lambda *args, **kwargs: _FakeDialog(responses),
@@ -197,11 +197,12 @@ def test_onboarding_wizard_portable_happy_path_sets_keys_and_bundle(monkeypatch,
     )
 
     _ensure_wx_dialog_constants()
-    # Step 1: skip location; step 2: OR key prompt+link dialogs; step 3: VC key; summary OK
+    # Step 1: skip location; step 2: OR key; step 3: VC key; step 4: Pirate key; summary OK
     responses = [
         getattr(wx, "ID_NO", 0),  # step 1: skip location
         getattr(wx, "ID_YES", 1),  # step 2: OR key — choose "Enter key"
         getattr(wx, "ID_YES", 1),  # step 3: VC key — choose "Enter key"
+        getattr(wx, "ID_YES", 1),  # step 4: Pirate key — choose "Enter key"
         getattr(wx, "ID_OK", 1),  # onboarding summary
     ]
     monkeypatch.setattr(
@@ -209,8 +210,13 @@ def test_onboarding_wizard_portable_happy_path_sets_keys_and_bundle(monkeypatch,
         lambda *args, **kwargs: _FakeDialog(responses),
         raising=False,
     )
-    # TextEntryDialog: OR key, VC key, bundle passphrase
-    text_responses = ["FAKE_OR_KEY_TEST", "FAKE_VC_KEY_TEST", "FAKE_BUNDLE_PASSPHRASE"]
+    # TextEntryDialog: OR key, VC key, Pirate key, bundle passphrase
+    text_responses = [
+        "FAKE_OR_KEY_TEST",
+        "FAKE_VC_KEY_TEST",
+        "FAKE_PW_KEY_TEST",
+        "FAKE_BUNDLE_PASSPHRASE",
+    ]
     monkeypatch.setattr(
         "accessiweather.app.wx.TextEntryDialog",
         lambda *args, **kwargs: _FakeTextEntryDialog(text_responses),
@@ -239,6 +245,7 @@ def test_onboarding_wizard_portable_happy_path_sets_keys_and_bundle(monkeypatch,
     # Keys should be live in session memory (set before export call)
     assert settings.openrouter_api_key == "FAKE_OR_KEY_TEST"
     assert settings.visual_crossing_api_key == "FAKE_VC_KEY_TEST"
+    assert settings.pirate_weather_api_key == "FAKE_PW_KEY_TEST"
     assert app._portable_keys_imported_this_session is True
     # wizard_shown should be marked
     last_call = app.config_manager.update_settings.call_args_list[-1]
@@ -262,6 +269,8 @@ def test_onboarding_wizard_api_key_link_actions_open_browser(monkeypatch):
         getattr(wx, "ID_NO", 0),
         getattr(wx, "ID_YES", 1),
         getattr(wx, "ID_NO", 0),
+        getattr(wx, "ID_NO", 0),
+        getattr(wx, "ID_CANCEL", 2),
         getattr(wx, "ID_NO", 0),
         getattr(wx, "ID_CANCEL", 2),
         getattr(wx, "ID_OK", 1),
@@ -290,6 +299,7 @@ def test_onboarding_wizard_api_key_link_actions_open_browser(monkeypatch):
     assert opened_urls == [
         "https://openrouter.ai/keys",
         "https://www.visualcrossing.com/sign-up",
+        "https://pirateweather.net/",
     ]
     calls = app.config_manager.update_settings.call_args_list
     assert calls[0].kwargs == {"openrouter_api_key": "FAKE_OR_KEY_TEST"}
@@ -316,6 +326,7 @@ def test_onboarding_summary_includes_readiness_status(monkeypatch):
     _ensure_wx_dialog_constants()
     responses = [
         getattr(wx, "ID_NO", 0),
+        getattr(wx, "ID_CANCEL", 2),
         getattr(wx, "ID_CANCEL", 2),
         getattr(wx, "ID_CANCEL", 2),
         getattr(wx, "ID_OK", 1),
@@ -347,6 +358,7 @@ def test_onboarding_summary_includes_readiness_status(monkeypatch):
     assert "Location configured: Yes" in summary
     assert "OpenRouter key set: Yes" in summary
     assert "Visual Crossing weather provider key set: No" in summary
+    assert "Pirate Weather provider key set: No" in summary
     # portable_auto_bundle_enabled line removed — not relevant in new design
 
 
@@ -368,6 +380,7 @@ def test_onboarding_completion_triggers_deferred_startup_update_check(monkeypatc
         getattr(wx, "ID_NO", 0),
         getattr(wx, "ID_CANCEL", 2),
         getattr(wx, "ID_CANCEL", 2),
+        getattr(wx, "ID_CANCEL", 2),
         getattr(wx, "ID_OK", 1),
     ]
     monkeypatch.setattr(
@@ -387,7 +400,7 @@ def test_onboarding_completion_triggers_deferred_startup_update_check(monkeypatc
 
 
 # ---------------------------------------------------------------------------
-# Tests for wizard step numbering (non-portable = 3 steps, portable = 4)
+# Tests for wizard step numbering (non-portable = 4 steps, portable = 5)
 # ---------------------------------------------------------------------------
 
 
@@ -412,9 +425,10 @@ def _capture_wizard_step_messages(monkeypatch, *, portable: bool):
             super().__init__(responses)
             captured_messages.append(message)
 
-    # Skip location, skip OR key, skip VC key, OK summary
+    # Skip location, skip OR key, skip VC key, skip Pirate key, OK summary
     responses = [
         getattr(wx, "ID_NO", 0),
+        getattr(wx, "ID_CANCEL", 2),
         getattr(wx, "ID_CANCEL", 2),
         getattr(wx, "ID_CANCEL", 2),
         getattr(wx, "ID_OK", 1),
@@ -436,21 +450,21 @@ def _capture_wizard_step_messages(monkeypatch, *, portable: bool):
 
 
 def test_wizard_step_numbering_non_portable(monkeypatch):
-    """Non-portable wizard uses 'of 3' in step labels."""
+    """Non-portable wizard uses 'of 4' in step labels."""
     messages = _capture_wizard_step_messages(monkeypatch, portable=False)
-    step1 = messages[0]
-    assert "Step 1 of 3" in step1, f"Expected 'Step 1 of 3' in: {step1}"
-
-
-def test_wizard_step_numbering_portable(monkeypatch):
-    """Portable wizard uses 'of 4' in step labels."""
-    messages = _capture_wizard_step_messages(monkeypatch, portable=True)
     step1 = messages[0]
     assert "Step 1 of 4" in step1, f"Expected 'Step 1 of 4' in: {step1}"
 
 
-def test_wizard_step2_step3_numbering_non_portable(monkeypatch):
-    """Non-portable wizard passes 'of 3' to _prompt_optional_secret_with_link calls."""
+def test_wizard_step_numbering_portable(monkeypatch):
+    """Portable wizard uses 'of 5' in step labels."""
+    messages = _capture_wizard_step_messages(monkeypatch, portable=True)
+    step1 = messages[0]
+    assert "Step 1 of 5" in step1, f"Expected 'Step 1 of 5' in: {step1}"
+
+
+def test_wizard_step2_step3_step4_numbering_non_portable(monkeypatch):
+    """Non-portable wizard passes 'of 4' to provider key prompts."""
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._portable_mode = False
     app._force_wizard = False
@@ -483,13 +497,14 @@ def test_wizard_step2_step3_numbering_non_portable(monkeypatch):
 
     app._maybe_show_first_start_onboarding()
 
-    assert len(prompt_messages) == 2
-    assert "Step 2 of 3" in prompt_messages[0], f"Expected 'Step 2 of 3' in: {prompt_messages[0]}"
-    assert "Step 3 of 3" in prompt_messages[1], f"Expected 'Step 3 of 3' in: {prompt_messages[1]}"
+    assert len(prompt_messages) == 3
+    assert "Step 2 of 4" in prompt_messages[0], f"Expected 'Step 2 of 4' in: {prompt_messages[0]}"
+    assert "Step 3 of 4" in prompt_messages[1], f"Expected 'Step 3 of 4' in: {prompt_messages[1]}"
+    assert "Step 4 of 4" in prompt_messages[2], f"Expected 'Step 4 of 4' in: {prompt_messages[2]}"
 
 
-def test_wizard_step2_step3_numbering_portable(monkeypatch):
-    """Portable wizard passes 'of 4' to _prompt_optional_secret_with_link calls."""
+def test_wizard_step2_step3_step4_numbering_portable(monkeypatch):
+    """Portable wizard passes 'of 5' to provider key prompts."""
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._portable_mode = True
     app._force_wizard = False
@@ -522,9 +537,10 @@ def test_wizard_step2_step3_numbering_portable(monkeypatch):
 
     app._maybe_show_first_start_onboarding()
 
-    assert len(prompt_messages) == 2
-    assert "Step 2 of 4" in prompt_messages[0], f"Expected 'Step 2 of 4' in: {prompt_messages[0]}"
-    assert "Step 3 of 4" in prompt_messages[1], f"Expected 'Step 3 of 4' in: {prompt_messages[1]}"
+    assert len(prompt_messages) == 3
+    assert "Step 2 of 5" in prompt_messages[0], f"Expected 'Step 2 of 5' in: {prompt_messages[0]}"
+    assert "Step 3 of 5" in prompt_messages[1], f"Expected 'Step 3 of 5' in: {prompt_messages[1]}"
+    assert "Step 4 of 5" in prompt_messages[2], f"Expected 'Step 4 of 5' in: {prompt_messages[2]}"
 
 
 # ---------------------------------------------------------------------------
@@ -927,6 +943,7 @@ def test_wizard_portable_export_failure_shows_warning(monkeypatch, tmp_path):
         getattr(wx, "ID_NO", 0),  # step 1: skip location
         getattr(wx, "ID_YES", 1),  # step 2: OR key — choose "Enter key"
         getattr(wx, "ID_CANCEL", 2),  # step 3: VC key — skip
+        getattr(wx, "ID_CANCEL", 2),  # step 4: Pirate key — skip
         getattr(wx, "ID_OK", 1),  # onboarding summary
     ]
     monkeypatch.setattr(

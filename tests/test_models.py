@@ -17,6 +17,8 @@ from accessiweather.models import (
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    MinutelyPrecipitationForecast,
+    MinutelyPrecipitationPoint,
     WeatherAlert,
     WeatherAlerts,
     WeatherData,
@@ -331,6 +333,20 @@ class TestWeatherData:
         )
         assert with_forecast.has_any_data() is True
 
+        with_minutely = WeatherData(
+            location=loc,
+            minutely_precipitation=MinutelyPrecipitationForecast(
+                points=[
+                    MinutelyPrecipitationPoint(
+                        time=datetime.now(UTC),
+                        precipitation_intensity=0.1,
+                        precipitation_type="rain",
+                    )
+                ]
+            ),
+        )
+        assert with_minutely.has_any_data() is True
+
 
 class TestAppSettings:
     """Tests for AppSettings model."""
@@ -359,6 +375,18 @@ class TestAppSettings:
         assert settings.update_interval_minutes == 30
         assert settings.enable_alerts is False
         assert settings.data_source == "openmeteo"
+
+    def test_minutely_notification_settings_round_trip(self):
+        """Minutely precipitation notification settings should round-trip cleanly."""
+        settings = AppSettings(
+            notify_minutely_precipitation_start=True,
+            notify_minutely_precipitation_stop=False,
+        )
+
+        restored = AppSettings.from_dict(settings.to_dict())
+
+        assert restored.notify_minutely_precipitation_start is True
+        assert restored.notify_minutely_precipitation_stop is False
 
     def test_forecast_time_reference_validation(self):
         """Ensure invalid forecast_time_reference values fall back to location."""

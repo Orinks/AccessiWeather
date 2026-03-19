@@ -196,8 +196,9 @@ class TestGenerateForecastHtml:
             ],
         )
         html = generate_forecast_html(pres)
-        assert "Next 6 Hours" in html
-        assert 'aria-label="Next 6 hours forecast"' in html
+        expected_hours = len(pres.hourly_periods)
+        assert f"Next {expected_hours} Hours" in html
+        assert f'aria-label="Next {expected_hours} hours forecast"' in html
         assert "3 PM" in html
         assert "75°F" in html
         assert "Sunny" in html

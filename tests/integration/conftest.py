@@ -45,15 +45,29 @@ LIVE_TESTS = os.environ.get("LIVE_TESTS", "false").lower() == "true"
 
 # API keys from environment (for live tests or recording new cassettes)
 VISUAL_CROSSING_API_KEY = os.environ.get("VISUAL_CROSSING_API_KEY", "test-api-key")
+PIRATE_WEATHER_API_KEY = os.environ.get("PIRATE_WEATHER_API_KEY", "test-api-key")
 
 
 # =============================================================================
 # VCR Configuration
 # =============================================================================
 
+
 # Create custom VCR instance with our configuration
 # Note: We use filter_query_parameters and filter_headers instead of
 # before_record_request to avoid compatibility issues with different VCR versions
+def _scrub_pw_key_from_uri(request):
+    """Replace Pirate Weather API key in URL path with a placeholder."""
+    import re
+
+    request.uri = re.sub(
+        r"(api\.pirateweather\.net/forecast/)[^/]+(/)",
+        r"\1FILTERED_API_KEY\2",
+        request.uri,
+    )
+    return request
+
+
 integration_vcr = vcr.VCR(
     cassette_library_dir=str(CASSETTE_DIR),
     record_mode=RECORD_MODE,
@@ -62,6 +76,8 @@ integration_vcr = vcr.VCR(
     # Filter sensitive data from recorded cassettes
     filter_query_parameters=["key", "api_key", "apikey", "token"],
     filter_headers=["authorization", "x-api-key", "api-key", "user-agent"],
+    # Scrub PW API keys from URL paths before recording
+    before_record_request=_scrub_pw_key_from_uri,
     # Decode compressed responses for readable cassettes
     decode_compressed_response=True,
 )
@@ -118,9 +134,28 @@ def alaska_location() -> Location:
 
 
 @pytest.fixture
+def norway_location() -> Location:
+    """Return a Norwegian location for testing (Tromsø)."""
+    from accessiweather.models import Location
+
+    return Location(
+        name="Tromsø, Norway",
+        latitude=69.6489,
+        longitude=18.9551,
+        country_code="NO",
+    )
+
+
+@pytest.fixture
 def visual_crossing_api_key() -> str:
     """Return the Visual Crossing API key."""
     return VISUAL_CROSSING_API_KEY
+
+
+@pytest.fixture
+def pirate_weather_api_key() -> str:
+    """Return the Pirate Weather API key."""
+    return PIRATE_WEATHER_API_KEY
 
 
 @pytest.fixture
@@ -128,6 +163,13 @@ def skip_if_no_api_key():
     """Skip test if no Visual Crossing API key is configured."""
     if VISUAL_CROSSING_API_KEY == "test-api-key" and RECORD_MODE == "all":
         pytest.skip("Visual Crossing API key required for recording")
+
+
+@pytest.fixture
+def skip_if_no_pw_api_key():
+    """Skip test if no Pirate Weather API key is configured."""
+    if PIRATE_WEATHER_API_KEY == "test-api-key" and RECORD_MODE == "all":
+        pytest.skip("Pirate Weather API key required for recording")
 
 
 @pytest.fixture

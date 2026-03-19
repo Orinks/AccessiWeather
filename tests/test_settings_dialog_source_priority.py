@@ -29,6 +29,7 @@ class _DummyControl:
     def __init__(self) -> None:
         self._selection = 0
         self._value = False
+        self._parent = _DummyParent()
 
     def SetSelection(self, value: int) -> None:
         self._selection = value
@@ -45,6 +46,9 @@ class _DummyControl:
     def Append(self, _value: str) -> None:
         return None
 
+    def GetParent(self):
+        return self._parent
+
     def __getattr__(self, _name: str):
         return lambda *args, **kwargs: None
 
@@ -56,18 +60,47 @@ class _Controls(dict):
         return value
 
 
+class _DummySizer:
+    def ShowItems(self, _value: bool) -> None:
+        return None
+
+
+class _DummyParent:
+    def Layout(self) -> None:
+        return None
+
+    def FitInside(self) -> None:
+        return None
+
+
 def _make_dialog_for_settings(settings: SimpleNamespace) -> SettingsDialogSimple:
     dialog = SettingsDialogSimple.__new__(SettingsDialogSimple)
     dialog._controls = _Controls()
     dialog._sound_pack_ids = ["default"]
     dialog._selected_specific_model = None
     dialog._update_minimize_on_startup_state = lambda _enabled: None
+    dialog._vc_config_sizer = _DummySizer()
+    dialog._pw_config_sizer = _DummySizer()
     dialog.config_manager = MagicMock()
     dialog.config_manager.get_settings.return_value = settings
     return dialog
 
 
 def test_load_settings_maps_us_source_priority_to_index_1():
+    # 4-element list (current format)
+    settings = SimpleNamespace(
+        source_priority_us=["nws", "visualcrossing", "openmeteo", "pirateweather"],
+        source_priority_international=["openmeteo", "pirateweather", "visualcrossing"],
+    )
+    dialog = _make_dialog_for_settings(settings)
+
+    dialog._load_settings()
+
+    assert dialog._controls["us_priority"].GetSelection() == 1
+
+
+def test_load_settings_maps_us_source_priority_legacy_3_element_to_index_1():
+    # 3-element list (legacy config without pirateweather) - should still map correctly
     settings = SimpleNamespace(
         source_priority_us=["nws", "visualcrossing", "openmeteo"],
         source_priority_international=["openmeteo", "visualcrossing"],
@@ -80,6 +113,20 @@ def test_load_settings_maps_us_source_priority_to_index_1():
 
 
 def test_load_settings_maps_international_source_priority_to_index_1():
+    # 3-element list (current format)
+    settings = SimpleNamespace(
+        source_priority_us=["nws", "openmeteo", "visualcrossing", "pirateweather"],
+        source_priority_international=["visualcrossing", "openmeteo", "pirateweather"],
+    )
+    dialog = _make_dialog_for_settings(settings)
+
+    dialog._load_settings()
+
+    assert dialog._controls["intl_priority"].GetSelection() == 1
+
+
+def test_load_settings_maps_international_source_priority_legacy_2_element_to_index_1():
+    # 2-element list (legacy config without pirateweather) - should still map correctly
     settings = SimpleNamespace(
         source_priority_us=["nws", "openmeteo", "visualcrossing"],
         source_priority_international=["visualcrossing", "openmeteo"],
@@ -103,4 +150,4 @@ def test_save_settings_persists_selected_us_source_priority_index_2():
 
     assert success is True
     kwargs = dialog.config_manager.update_settings.call_args.kwargs
-    assert kwargs["source_priority_us"] == ["openmeteo", "nws", "visualcrossing"]
+    assert kwargs["source_priority_us"] == ["openmeteo", "nws", "visualcrossing", "pirateweather"]

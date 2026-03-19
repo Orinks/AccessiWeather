@@ -40,6 +40,8 @@ NON_CRITICAL_SETTINGS: set[str] = {
     # Event notifications
     "notify_discussion_update",
     "notify_severe_risk_change",
+    "notify_minutely_precipitation_start",
+    "notify_minutely_precipitation_stop",
     # GitHub settings
     "github_backend_url",
     "github_app_id",
@@ -54,6 +56,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "custom_system_prompt",
     "custom_instructions",
     # API key settings (loaded lazily via keyring)
+    "pirate_weather_api_key",
     "visual_crossing_api_key",
     # Display preferences
     "round_values",
@@ -105,6 +108,7 @@ class AppSettings:
     startup_enabled: bool = False
     data_source: str = "auto"
     visual_crossing_api_key: str = ""
+    pirate_weather_api_key: str = ""
     auto_update_enabled: bool = True
     update_channel: str = "stable"
     update_check_interval_hours: int = 24
@@ -116,6 +120,8 @@ class AppSettings:
     # Event-based notifications
     notify_discussion_update: bool = True
     notify_severe_risk_change: bool = False
+    notify_minutely_precipitation_start: bool = True
+    notify_minutely_precipitation_stop: bool = True
     github_backend_url: str = ""
     github_app_id: str = ""
     github_app_private_key: str = ""
@@ -146,6 +152,7 @@ class AppSettings:
     offline_cache_max_age_minutes: int = 180
     weather_history_enabled: bool = True
     forecast_duration_days: int = 7
+    hourly_forecast_hours: int = 6
     forecast_time_reference: str = "location"
     time_display_mode: str = "local"
     time_format_12hour: bool = True
@@ -156,10 +163,10 @@ class AppSettings:
     taskbar_icon_text_format: str = "{temp} {condition}"
     # Source priority settings for smart auto mode
     source_priority_us: list[str] = field(
-        default_factory=lambda: ["nws", "openmeteo", "visualcrossing"]
+        default_factory=lambda: ["nws", "openmeteo", "visualcrossing", "pirateweather"]
     )
     source_priority_international: list[str] = field(
-        default_factory=lambda: ["openmeteo", "visualcrossing"]
+        default_factory=lambda: ["openmeteo", "pirateweather", "visualcrossing"]
     )
     # Open-Meteo weather model selection
     openmeteo_weather_model: str = "best_match"
@@ -349,20 +356,28 @@ class AppSettings:
 
         elif setting_name in {"source_priority_us", "source_priority_international"}:
             # Ensure valid list of source names
-            valid_sources = {"nws", "openmeteo", "visualcrossing"}
+            valid_sources = {"nws", "openmeteo", "visualcrossing", "pirateweather"}
             if not isinstance(value, list):
                 if setting_name == "source_priority_us":
-                    setattr(self, setting_name, ["nws", "openmeteo", "visualcrossing"])
+                    setattr(
+                        self, setting_name, ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+                    )
                 else:
-                    setattr(self, setting_name, ["openmeteo", "visualcrossing"])
+                    setattr(self, setting_name, ["openmeteo", "pirateweather", "visualcrossing"])
             else:
                 # Filter to only valid sources
                 filtered = [s for s in value if s in valid_sources]
                 if not filtered:
                     if setting_name == "source_priority_us":
-                        setattr(self, setting_name, ["nws", "openmeteo", "visualcrossing"])
+                        setattr(
+                            self,
+                            setting_name,
+                            ["nws", "openmeteo", "visualcrossing", "pirateweather"],
+                        )
                     else:
-                        setattr(self, setting_name, ["openmeteo", "visualcrossing"])
+                        setattr(
+                            self, setting_name, ["openmeteo", "pirateweather", "visualcrossing"]
+                        )
                 elif filtered != value:
                     setattr(self, setting_name, filtered)
 
@@ -393,7 +408,7 @@ class AppSettings:
             "minimize_on_startup": self.minimize_on_startup,
             "startup_enabled": self.startup_enabled,
             "data_source": self.data_source,
-            # visual_crossing_api_key and github_app_* are stored in secure keyring, not JSON
+            # weather provider API keys and github_app_* are stored in secure keyring, not JSON
             "auto_update_enabled": self.auto_update_enabled,
             "update_channel": self.update_channel,
             "update_check_interval_hours": self.update_check_interval_hours,
@@ -403,6 +418,8 @@ class AppSettings:
             "show_nationwide_location": self.show_nationwide_location,
             "notify_discussion_update": self.notify_discussion_update,
             "notify_severe_risk_change": self.notify_severe_risk_change,
+            "notify_minutely_precipitation_start": self.notify_minutely_precipitation_start,
+            "notify_minutely_precipitation_stop": self.notify_minutely_precipitation_stop,
             "github_backend_url": self.github_backend_url,
             "alert_radius_type": self.alert_radius_type,
             "alert_notifications_enabled": self.alert_notifications_enabled,
@@ -430,6 +447,7 @@ class AppSettings:
             "offline_cache_max_age_minutes": self.offline_cache_max_age_minutes,
             "weather_history_enabled": self.weather_history_enabled,
             "forecast_duration_days": self.forecast_duration_days,
+            "hourly_forecast_hours": self.hourly_forecast_hours,
             "forecast_time_reference": self.forecast_time_reference,
             "time_display_mode": self.time_display_mode,
             "time_format_12hour": self.time_format_12hour,
@@ -470,6 +488,7 @@ class AppSettings:
             startup_enabled=cls._as_bool(data.get("startup_enabled"), False),
             data_source=data.get("data_source", "auto"),
             visual_crossing_api_key=data.get("visual_crossing_api_key", ""),
+            pirate_weather_api_key=data.get("pirate_weather_api_key", ""),
             auto_update_enabled=cls._as_bool(data.get("auto_update_enabled"), True),
             update_channel=data.get("update_channel", "stable"),
             update_check_interval_hours=data.get("update_check_interval_hours", 24),
@@ -479,6 +498,12 @@ class AppSettings:
             show_nationwide_location=cls._as_bool(data.get("show_nationwide_location"), True),
             notify_discussion_update=cls._as_bool(data.get("notify_discussion_update"), True),
             notify_severe_risk_change=cls._as_bool(data.get("notify_severe_risk_change"), False),
+            notify_minutely_precipitation_start=cls._as_bool(
+                data.get("notify_minutely_precipitation_start"), True
+            ),
+            notify_minutely_precipitation_stop=cls._as_bool(
+                data.get("notify_minutely_precipitation_stop"), True
+            ),
             github_backend_url=data.get("github_backend_url", ""),
             alert_radius_type=data.get("alert_radius_type", "county"),
             alert_notifications_enabled=cls._as_bool(data.get("alert_notifications_enabled"), True),
@@ -506,6 +531,7 @@ class AppSettings:
             offline_cache_max_age_minutes=data.get("offline_cache_max_age_minutes", 180),
             weather_history_enabled=cls._as_bool(data.get("weather_history_enabled"), True),
             forecast_duration_days=data.get("forecast_duration_days", 7),
+            hourly_forecast_hours=data.get("hourly_forecast_hours", 6),
             forecast_time_reference=data.get("forecast_time_reference", "location"),
             time_display_mode=data.get("time_display_mode", "local"),
             time_format_12hour=cls._as_bool(data.get("time_format_12hour"), True),
@@ -516,10 +542,10 @@ class AppSettings:
             ),
             taskbar_icon_text_format=data.get("taskbar_icon_text_format", "{temp} {condition}"),
             source_priority_us=data.get(
-                "source_priority_us", ["nws", "openmeteo", "visualcrossing"]
+                "source_priority_us", ["nws", "openmeteo", "visualcrossing", "pirateweather"]
             ),
             source_priority_international=data.get(
-                "source_priority_international", ["openmeteo", "visualcrossing"]
+                "source_priority_international", ["openmeteo", "pirateweather", "visualcrossing"]
             ),
             openmeteo_weather_model=data.get("openmeteo_weather_model", "best_match"),
             station_selection_strategy=data.get("station_selection_strategy", "hybrid_default"),

@@ -410,7 +410,7 @@ class AccessiWeatherApp(wx.App):
         dialog = wx.MessageDialog(
             self.main_window,
             "This portable copy has no API keys yet.\n\n"
-            "Visual Crossing weather provider keys can be entered in Settings > Data Sources. "
+            "Visual Crossing and Pirate Weather provider keys can be entered in Settings > Data Sources. "
             "OpenRouter AI keys can be entered in Settings > AI.\n\n"
             "You can also create an encrypted key bundle to carry your keys with the portable install.",
             "Portable setup hint",
@@ -506,6 +506,7 @@ class AccessiWeatherApp(wx.App):
             f"- Location configured: {self._onboarding_status_text(bool(config.locations))}",
             f"- OpenRouter key set: {self._onboarding_status_text(self._has_saved_api_key('openrouter_api_key'))}",
             f"- Visual Crossing weather provider key set: {self._onboarding_status_text(self._has_saved_api_key('visual_crossing_api_key'))}",
+            f"- Pirate Weather provider key set: {self._onboarding_status_text(self._has_saved_api_key('pirate_weather_api_key'))}",
             *(
                 [
                     f"- Portable key bundle created: {self._onboarding_status_text(self._portable_keys_imported_this_session)}"
@@ -530,7 +531,7 @@ class AccessiWeatherApp(wx.App):
             self._run_deferred_startup_update_check()
             return
 
-        total_steps = 4 if self._portable_mode else 3
+        total_steps = 5 if self._portable_mode else 4
 
         step1 = wx.MessageDialog(
             self.main_window,
@@ -592,10 +593,23 @@ class AccessiWeatherApp(wx.App):
             else:
                 _wizard_keys["visual_crossing_api_key"] = visual_crossing_key
 
+        pirate_weather_key = self._prompt_optional_secret_with_link(
+            "Pirate Weather provider key (optional)",
+            f"Step 4 of {total_steps}: Enter your Pirate Weather provider key now, or leave blank to skip.",
+            "https://pirateweather.net/",
+            "Get Pirate Weather provider key",
+        )
+        if pirate_weather_key is not None and pirate_weather_key:
+            if not self._portable_mode:
+                self.config_manager.update_settings(pirate_weather_api_key=pirate_weather_key)
+                self._maybe_offer_test_key_now("Pirate Weather provider key")
+            else:
+                _wizard_keys["pirate_weather_api_key"] = pirate_weather_key
+
         if self._portable_mode and _wizard_keys:
             # Keys were entered — prompt for passphrase and write bundle directly.
             passphrase = self._prompt_optional_secret(
-                "Step 4 of 4: Secure your API keys",
+                "Step 5 of 5: Secure your API keys",
                 "Enter a passphrase to encrypt your API keys into a portable bundle.\n"
                 "This bundle travels with the app so your keys work on any machine.\n\n"
                 "Leave blank to skip (keys will not be saved).",
@@ -1145,6 +1159,15 @@ class AccessiWeatherApp(wx.App):
                 self.weather_client.settings = settings
                 self.weather_client.data_source = settings.data_source
                 self.weather_client.alerts_enabled = bool(settings.enable_alerts)
+                # Reset cached API clients so new keys take effect immediately
+                self.weather_client._visual_crossing_api_key = getattr(  # pragma: no cover
+                    settings, "visual_crossing_api_key", ""
+                )
+                self.weather_client._visual_crossing_client = None  # pragma: no cover
+                self.weather_client._pirate_weather_api_key = getattr(  # pragma: no cover
+                    settings, "pirate_weather_api_key", ""
+                )
+                self.weather_client._pirate_weather_client = None  # pragma: no cover
 
             if self.presenter:
                 self.presenter.settings = settings

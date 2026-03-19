@@ -233,16 +233,16 @@ class DataFusionEngine:
             return None, field_sources
 
         # Select single source based on location (no merging to avoid duplicates)
-        # US: prefer NWS for 7-day forecasts, Open-Meteo for extended ranges
-        # International: prefer Open-Meteo > Visual Crossing
+        # US: prefer NWS for 7-day, Open-Meteo for extended ranges; PW as fallback
+        # International: prefer Open-Meteo > Pirate Weather > Visual Crossing
         if is_us:
             preferred_order = (
-                ["openmeteo", "nws", "visualcrossing"]
+                ["openmeteo", "nws", "visualcrossing", "pirateweather"]
                 if requested_days > 7
-                else ["nws", "openmeteo", "visualcrossing"]
+                else ["nws", "openmeteo", "visualcrossing", "pirateweather"]
             )
         else:
-            preferred_order = ["openmeteo", "visualcrossing"]
+            preferred_order = ["openmeteo", "pirateweather", "visualcrossing"]
 
         # Find the first available source in preferred order
         selected_source = None
@@ -300,12 +300,12 @@ class DataFusionEngine:
             return None, field_sources
 
         # Select single source based on location (no merging for hourly data)
-        # US: prefer NWS > Open-Meteo > Visual Crossing
-        # International: prefer Open-Meteo > Visual Crossing
+        # US: prefer NWS > Open-Meteo > Visual Crossing > Pirate Weather
+        # International: prefer Open-Meteo > Pirate Weather > Visual Crossing
         if is_us:
-            preferred_order = ["nws", "openmeteo", "visualcrossing"]
+            preferred_order = ["nws", "openmeteo", "visualcrossing", "pirateweather"]
         else:
-            preferred_order = ["openmeteo", "visualcrossing"]
+            preferred_order = ["openmeteo", "pirateweather", "visualcrossing"]
 
         # Find the first available source in preferred order
         selected_source = None

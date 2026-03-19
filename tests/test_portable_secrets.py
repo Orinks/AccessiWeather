@@ -15,6 +15,7 @@ def test_encrypt_decrypt_secret_bundle_round_trip():
     secrets = {
         "openrouter_api_key": "FAKE_SK_TEST_ONLY",
         "visual_crossing_api_key": "FAKE_VC_TEST_ONLY",
+        "pirate_weather_api_key": "FAKE_PW_TEST_ONLY",
     }
 
     envelope = encrypt_secret_bundle(secrets, "correct horse battery staple")
@@ -66,6 +67,7 @@ class TestPortableSecretsImportExportWiring:
             return {
                 "openrouter_api_key": "FAKE_OR_EXPORTED_TEST",
                 "visual_crossing_api_key": "FAKE_VC_EXPORTED_TEST",
+                "pirate_weather_api_key": "FAKE_PW_EXPORTED_TEST",
             }.get(key_name)
 
         def _fake_set_password(key_name: str, value: str) -> bool:
@@ -94,6 +96,7 @@ class TestPortableSecretsImportExportWiring:
 
         assert imported_store["openrouter_api_key"] == "FAKE_OR_EXPORTED_TEST"
         assert imported_store["visual_crossing_api_key"] == "FAKE_VC_EXPORTED_TEST"
+        assert imported_store["pirate_weather_api_key"] == "FAKE_PW_EXPORTED_TEST"
         # After import, in-memory config should be refreshed so keys are active immediately
         manager._load_secure_keys.assert_called_once()
 
@@ -120,6 +123,7 @@ class TestPortableSecretsImportExportWiring:
         # Simulate in-memory settings with API keys (portable mode)
         config = MagicMock()
         config.settings.visual_crossing_api_key = "FAKE_VC_KEY_TEST"
+        config.settings.pirate_weather_api_key = "FAKE_PW_KEY_TEST"
         config.settings.openrouter_api_key = "FAKE_OR_KEY_TEST"
         manager._config = config
         operations = ImportExportOperations(manager)
@@ -137,6 +141,7 @@ class TestPortableSecretsImportExportWiring:
         saved = json.loads(export_file.read_text(encoding="utf-8"))
         restored = decrypt_secret_bundle(saved, "FAKE_PASSPHRASE_123")
         assert restored["visual_crossing_api_key"] == "FAKE_VC_KEY_TEST"
+        assert restored["pirate_weather_api_key"] == "FAKE_PW_KEY_TEST"
         assert restored["openrouter_api_key"] == "FAKE_OR_KEY_TEST"
 
     def test_export_resolves_lazy_secure_storage_values(self, tmp_path):
@@ -151,6 +156,7 @@ class TestPortableSecretsImportExportWiring:
         lazy._value = "FAKE_VC_LAZY_TEST"
         lazy._loaded = True
         config.settings.visual_crossing_api_key = lazy
+        config.settings.pirate_weather_api_key = "FAKE_PW_PLAIN_TEST"
         config.settings.openrouter_api_key = "FAKE_OR_PLAIN_TEST"
         manager._config = config
         operations = ImportExportOperations(manager)
@@ -166,6 +172,7 @@ class TestPortableSecretsImportExportWiring:
         saved = json.loads(export_file.read_text(encoding="utf-8"))
         restored = decrypt_secret_bundle(saved, "FAKE_PASSPHRASE_123")
         assert restored["visual_crossing_api_key"] == "FAKE_VC_LAZY_TEST"
+        assert restored["pirate_weather_api_key"] == "FAKE_PW_PLAIN_TEST"
         assert restored["openrouter_api_key"] == "FAKE_OR_PLAIN_TEST"
 
     def test_import_writes_all_keys_even_if_first_fails(self, tmp_path):
@@ -177,6 +184,7 @@ class TestPortableSecretsImportExportWiring:
 
         secrets = {
             "visual_crossing_api_key": "FAKE_VC_VAL_TEST",
+            "pirate_weather_api_key": "FAKE_PW_VAL_TEST",
             "openrouter_api_key": "FAKE_OR_VAL_TEST",
         }
         envelope = encrypt_secret_bundle(secrets, "FAKE_TEST_PASSPHRASE")
@@ -197,6 +205,7 @@ class TestPortableSecretsImportExportWiring:
         # Returns False because one key failed
         assert result is False
         # But the second key was still written
+        assert written["pirate_weather_api_key"] == "FAKE_PW_VAL_TEST"
         assert written["openrouter_api_key"] == "FAKE_OR_VAL_TEST"
 
     def test_import_sets_in_memory_keys_in_portable_mode(self, tmp_path):
@@ -214,6 +223,7 @@ class TestPortableSecretsImportExportWiring:
 
         secrets = {
             "visual_crossing_api_key": "FAKE_VC_PORTABLE_TEST",
+            "pirate_weather_api_key": "FAKE_PW_PORTABLE_TEST",
             "openrouter_api_key": "FAKE_OR_PORTABLE_TEST",
         }
         envelope = encrypt_secret_bundle(secrets, "FAKE_TEST_PASSPHRASE")
@@ -228,6 +238,7 @@ class TestPortableSecretsImportExportWiring:
 
         assert result is True
         assert config.settings.visual_crossing_api_key == "FAKE_VC_PORTABLE_TEST"
+        assert config.settings.pirate_weather_api_key == "FAKE_PW_PORTABLE_TEST"
         assert config.settings.openrouter_api_key == "FAKE_OR_PORTABLE_TEST"
         # Should NOT call _load_secure_keys in portable mode
         manager._load_secure_keys.assert_not_called()
