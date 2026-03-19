@@ -394,12 +394,17 @@ class TestOpenMeteoGeocoding:
     @integration_vcr.use_cassette("openmeteo/geocoding_no_results.yaml")
     def test_search_no_results(self):
         """Test searching for a non-existent location."""
+        from unittest.mock import patch
+
         from accessiweather.openmeteo_geocoding_client import OpenMeteoGeocodingClient
 
         client = OpenMeteoGeocodingClient(timeout=30.0)
         try:
-            # Search for something that shouldn't exist
-            results = client.search("xyznonexistentlocation12345", count=5)
+            # Search for something that shouldn't exist.
+            # Patch out the Unicode fallback to avoid extra HTTP requests
+            # that would need cassettes.
+            with patch.object(client, "_build_fallback_queries", return_value=[]):
+                results = client.search("xyznonexistentlocation12345", count=5)
 
             # Should return empty list, not error
             assert results is not None
