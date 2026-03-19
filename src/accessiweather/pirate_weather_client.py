@@ -506,7 +506,12 @@ class PirateWeatherClient:
             )
             periods.append(period)
 
-        return HourlyForecast(periods=periods, generated_at=datetime.now(UTC))
+        hourly_summary = data.get("hourly", {}).get("summary")
+        return HourlyForecast(
+            periods=periods,
+            generated_at=datetime.now(UTC),
+            summary=hourly_summary if isinstance(hourly_summary, str) else None,
+        )
 
     def _parse_alerts(self, data: dict) -> WeatherAlerts:
         """Parse Pirate Weather ``alerts`` list into WeatherAlerts."""

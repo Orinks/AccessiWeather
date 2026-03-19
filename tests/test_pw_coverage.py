@@ -12,6 +12,7 @@ Covers lines missed in:
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -626,9 +627,11 @@ class TestFetchPirateWeatherInAutoMode:
     @pytest.mark.asyncio
     async def test_auto_mode_includes_pw_alerts_for_intl(self, intl_location):
         """Lines 796-806, 855, 861-862, 869-870: PW fetched in auto mode for intl locations."""
-        from datetime import UTC, datetime
-
-        from accessiweather.models.weather import SourceAttribution
+        from accessiweather.models.weather import (
+            MinutelyPrecipitationForecast,
+            MinutelyPrecipitationPoint,
+            SourceAttribution,
+        )
         from accessiweather.weather_client_fusion import DataFusionEngine
         from accessiweather.weather_client_parallel import ParallelFetchCoordinator, SourceData
 
@@ -649,6 +652,11 @@ class TestFetchPirateWeatherInAutoMode:
         mock_pw.get_hourly_forecast = AsyncMock(return_value=mock_hourly)
         mock_pw.get_alerts = AsyncMock(return_value=mock_alerts)
         wc._pirate_weather_client = mock_pw
+        mock_minutely = MinutelyPrecipitationForecast(
+            summary="Rain starting in 12 minutes.",
+            points=[MinutelyPrecipitationPoint(time=datetime.now(UTC))],
+        )
+        wc._get_pirate_weather_minutely = AsyncMock(return_value=mock_minutely)
 
         pw_source = SourceData(
             source="pirateweather",
@@ -695,6 +703,7 @@ class TestFetchPirateWeatherInAutoMode:
             result = await wc._fetch_smart_auto_source(intl_location)
 
         assert result is not None
+        assert result.minutely_precipitation is mock_minutely
 
 
 # ---------------------------------------------------------------------------
@@ -751,3 +760,26 @@ class TestForecastSummaryPresentation:
         forecast = self._make_forecast(summary=None)
         result = build_forecast(forecast, None, self._make_location(), TemperatureUnit.FAHRENHEIT)
         assert "Overall:" not in result.fallback_text
+
+    def test_hourly_summary_appears_in_presentation_and_fallback_text(self):
+        """Pirate Weather hourly block summaries surface above the hourly section."""
+        from accessiweather.display.presentation.forecast import build_forecast
+        from accessiweather.models.weather import HourlyForecast, HourlyForecastPeriod
+        from accessiweather.utils import TemperatureUnit
+
+        forecast = self._make_forecast()
+        hourly = HourlyForecast(
+            periods=[
+                HourlyForecastPeriod(
+                    start_time=datetime(2026, 2, 1, 12, tzinfo=UTC),
+                    temperature=70.0,
+                    short_forecast="Partly Cloudy",
+                )
+            ],
+            summary="Partly cloudy until this afternoon.",
+        )
+
+        result = build_forecast(forecast, hourly, self._make_location(), TemperatureUnit.FAHRENHEIT)
+
+        assert result.hourly_summary == "Hourly outlook: Partly cloudy until this afternoon."
+        assert "Hourly outlook: Partly cloudy until this afternoon." in result.fallback_text

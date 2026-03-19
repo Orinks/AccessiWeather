@@ -921,6 +921,10 @@ class WeatherClient:
             source_results, location
         )
 
+        merged_minutely = None
+        if self.pirate_weather_api_key:
+            merged_minutely = await self._get_pirate_weather_minutely(location)
+
         # Check if we got any actual data
         has_any_data = (
             (merged_current is not None and merged_current.has_data())
@@ -1005,6 +1009,7 @@ class WeatherClient:
             hourly_forecast=merged_hourly,
             discussion=discussion,
             discussion_issuance_time=discussion_issuance_time,
+            minutely_precipitation=merged_minutely,
             alerts=merged_alerts,
             source_attribution=attribution,
             incomplete_sections=incomplete_sections,
