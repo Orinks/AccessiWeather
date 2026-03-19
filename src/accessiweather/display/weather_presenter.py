@@ -98,6 +98,7 @@ class ForecastPresentation:
     title: str
     periods: list[ForecastPeriodPresentation] = field(default_factory=list)
     hourly_periods: list[HourlyPeriodPresentation] = field(default_factory=list)
+    hourly_summary: str | None = None
     generated_at: str | None = None
     fallback_text: str = ""
     confidence_label: str | None = None
@@ -213,6 +214,7 @@ class WeatherPresenter:
                 environmental=weather_data.environmental,
                 trends=weather_data.trend_insights,
                 hourly_forecast=weather_data.hourly_forecast,
+                minutely_precipitation=weather_data.minutely_precipitation,
                 air_quality=air_quality_panel,
                 alerts=weather_data.alerts,
                 unit_system=unit_system,
@@ -290,6 +292,7 @@ class WeatherPresenter:
             environmental=environmental,
             trends=trends,
             hourly_forecast=hourly_forecast,
+            minutely_precipitation=None,
             air_quality=air_quality_panel,
             alerts=alerts,
             unit_system=unit_system,
@@ -330,6 +333,7 @@ class WeatherPresenter:
         environmental: EnvironmentalConditions | None = None,
         trends: Iterable[TrendInsight] | None = None,
         hourly_forecast: HourlyForecast | None = None,
+        minutely_precipitation=None,
         air_quality: AirQualityPresentation | None = None,
         alerts: WeatherAlerts | None = None,
         unit_system=None,
@@ -342,6 +346,7 @@ class WeatherPresenter:
             environmental=environmental,
             trends=trends,
             hourly_forecast=hourly_forecast,
+            minutely_precipitation=minutely_precipitation,
             air_quality=air_quality,
             alerts=alerts,
             unit_system=unit_system,

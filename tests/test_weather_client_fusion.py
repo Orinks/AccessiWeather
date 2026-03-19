@@ -387,6 +387,27 @@ class TestMergeForecasts:
         assert result.periods == om_periods
         assert field_sources["forecast_source"] == "openmeteo"
 
+    def test_preserves_pirateweather_daily_summary_when_other_source_selected(
+        self, engine, intl_location
+    ):
+        om_forecast = self._make_forecast()
+        pw_forecast = Forecast(
+            periods=[ForecastPeriod(name="Tonight", temperature=54.0)],
+            summary="Rain later this evening.",
+        )
+        sources = [
+            _make_source("openmeteo", forecast=om_forecast),
+            _make_source("pirateweather", forecast=pw_forecast),
+        ]
+
+        result, field_sources = engine.merge_forecasts(sources, intl_location)
+
+        assert result is not None
+        assert result is not om_forecast
+        assert result.summary == "Rain later this evening."
+        assert field_sources["forecast_source"] == "openmeteo"
+        assert field_sources["forecast_summary"] == "pirateweather"
+
 
 # --- merge_hourly_forecasts ---
 
@@ -443,6 +464,27 @@ class TestMergeHourlyForecasts:
         result, field_sources = engine.merge_hourly_forecasts(sources, us_location)
         assert result is not None
         assert field_sources["hourly_source"] == "mystery_api"
+
+    def test_preserves_pirateweather_hourly_summary_when_other_source_selected(
+        self, engine, intl_location
+    ):
+        om_hourly = self._make_hourly()
+        pw_hourly = HourlyForecast(
+            periods=[HourlyForecastPeriod(start_time=datetime.now(UTC), temperature=64.0)],
+            summary="Light rain developing overnight.",
+        )
+        sources = [
+            _make_source("openmeteo", hourly=om_hourly),
+            _make_source("pirateweather", hourly=pw_hourly),
+        ]
+
+        result, field_sources = engine.merge_hourly_forecasts(sources, intl_location)
+
+        assert result is not None
+        assert result is not om_hourly
+        assert result.summary == "Light rain developing overnight."
+        assert field_sources["hourly_source"] == "openmeteo"
+        assert field_sources["hourly_summary"] == "pirateweather"
 
 
 # --- DataFusionEngine init ---

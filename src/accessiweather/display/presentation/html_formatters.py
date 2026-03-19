@@ -224,6 +224,11 @@ def generate_forecast_html(presentation: ForecastPresentation | None) -> str:
     # Build hourly section if available
     hourly_html = ""
     if presentation.hourly_periods:
+        hourly_summary_html = ""
+        if presentation.hourly_summary:
+            hourly_summary_html = (
+                f'<p class="description">{_escape_html(presentation.hourly_summary)}</p>'
+            )
         hourly_items = []
         for period in presentation.hourly_periods:
             time_str = _escape_html(period.time)
@@ -239,6 +244,7 @@ def generate_forecast_html(presentation: ForecastPresentation | None) -> str:
         hourly_html = f"""
 <section class="hourly-section" aria-label="Next {num_hourly} hours forecast">
 <h3>Next {num_hourly} Hours</h3>
+{hourly_summary_html}
 <div class="hourly-grid" role="list">
 {"".join(hourly_items)}
 </div>

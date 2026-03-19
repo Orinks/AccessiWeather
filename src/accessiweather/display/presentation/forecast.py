@@ -112,6 +112,11 @@ def build_forecast(
 
     periods: list[ForecastPeriodPresentation] = []
     summary_line = f"Overall: {forecast.summary}" if forecast.summary else None
+    hourly_summary_line = (
+        f"Hourly outlook: {hourly_forecast.summary}"
+        if hourly_forecast and hourly_forecast.summary
+        else None
+    )
     fallback_lines = [f"Forecast for {location.name}:\n"]
     if summary_line:
         fallback_lines.append(summary_line)
@@ -240,6 +245,9 @@ def build_forecast(
     if generated_at:
         fallback_lines.append(f"\nForecast generated: {generated_at}")
 
+    if hourly_summary_line:
+        fallback_lines.append(hourly_summary_line)
+
     if hourly:
         fallback_lines.append(render_hourly_fallback(hourly, hours=hourly_hours))
 
@@ -256,6 +264,7 @@ def build_forecast(
         title=title,
         periods=periods,
         hourly_periods=hourly,
+        hourly_summary=hourly_summary_line,
         generated_at=generated_at,
         fallback_text=fallback_text,
         confidence_label=confidence_label,

@@ -204,6 +204,19 @@ class TestGenerateForecastHtml:
         assert "Sunny" in html
         assert "4 PM" in html
 
+    def test_with_hourly_summary(self):
+        pres = ForecastPresentation(
+            title="Forecast",
+            hourly_summary="Hourly outlook: Partly cloudy until this afternoon.",
+            hourly_periods=[
+                HourlyPeriodPresentation(
+                    time="3 PM", temperature="75°F", conditions="Sunny", wind=None
+                )
+            ],
+        )
+        html = generate_forecast_html(pres)
+        assert "Hourly outlook: Partly cloudy until this afternoon." in html
+
     def test_with_generated_at(self):
         pres = ForecastPresentation(title="F", generated_at="2026-02-14 02:00 UTC")
         html = generate_forecast_html(pres)

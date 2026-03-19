@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 
 from accessiweather.display.presentation.current_conditions import (
     _build_astronomical_metrics,
@@ -29,6 +29,8 @@ from accessiweather.models import (
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    MinutelyPrecipitationForecast,
+    MinutelyPrecipitationPoint,
     TrendInsight,
     WeatherAlert,
     WeatherAlerts,
@@ -649,6 +651,25 @@ class TestBuildCurrentConditions:
             current, location, TemperatureUnit.FAHRENHEIT, trends=trends
         )
         assert len(result.trends) > 0
+
+    def test_with_minutely_summary_adds_quick_glance_line(self):
+        current = CurrentConditions(temperature_f=72.0, condition="Cloudy")
+        location = Location(name="City", latitude=0, longitude=0)
+        minutely = MinutelyPrecipitationForecast(
+            summary="Rain starting in 12 minutes.",
+            points=[MinutelyPrecipitationPoint(time=datetime.now(UTC))],
+        )
+
+        result = build_current_conditions(
+            current,
+            location,
+            TemperatureUnit.FAHRENHEIT,
+            minutely_precipitation=minutely,
+        )
+
+        assert result.metrics[0].label == "Precipitation outlook"
+        assert result.metrics[0].value == "Rain starting in 12 minutes."
+        assert "Precipitation outlook: Rain starting in 12 minutes." in result.fallback_text
 
     def test_priority_reorder_preserves_labels_in_fallback_text(self):
         """
