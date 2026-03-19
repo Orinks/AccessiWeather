@@ -98,6 +98,41 @@ class AviationDialog(wx.Dialog):
 
         main_sizer.Add(input_row, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
 
+        # AVWX API key row (for enhanced international TAF data)
+        avwx_row = wx.BoxSizer(wx.HORIZONTAL)
+        avwx_label = wx.StaticText(panel, label="AVWX API Key (optional):")
+        avwx_row.Add(avwx_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10)
+
+        # Pre-fill from settings
+        current_key = (
+            getattr(self.app.config_manager.get_settings(), "avwx_api_key", "")
+            if self.app and self.app.config_manager
+            else ""
+        )
+        self.avwx_key_input = wx.TextCtrl(
+            panel, value=current_key or "", size=(250, -1), style=wx.TE_PASSWORD
+        )
+        avwx_row.Add(self.avwx_key_input, 0, wx.RIGHT, 10)
+
+        avwx_signup_btn = wx.Button(panel, label="Get Free Key")
+        avwx_signup_btn.Bind(
+            wx.EVT_BUTTON,
+            lambda _evt: __import__("webbrowser").open("https://account.avwx.rest"),
+        )
+        avwx_row.Add(avwx_signup_btn, 0)
+
+        main_sizer.Add(avwx_row, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
+
+        avwx_hint = wx.StaticText(
+            panel,
+            label=(
+                "Enables enhanced translations, flight rules, and screen-reader speech "
+                "for international airports. US airports use NWS by default."
+            ),
+        )
+        avwx_hint.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
+        main_sizer.Add(avwx_hint, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
+
         # Status
         self.status_label = wx.StaticText(
             panel, label="Enter a code and press Enter to fetch the latest TAF."
@@ -225,6 +260,17 @@ class AviationDialog(wx.Dialog):
         self._is_fetching = True
         self.fetch_button.Disable()
         self._set_status(f"Fetching aviation weather for {code}...")
+
+        # Update AVWX key from dialog input and persist to settings
+        avwx_key = self.avwx_key_input.GetValue().strip()
+        if hasattr(self.app, "weather_client") and self.app.weather_client:
+            self.app.weather_client._avwx_api_key = avwx_key
+        if self.app.config_manager:
+            current_saved = (
+                getattr(self.app.config_manager.get_settings(), "avwx_api_key", "") or ""
+            )
+            if avwx_key != current_saved:
+                self.app.config_manager.update_settings(avwx_api_key=avwx_key)
 
         # Run async fetch
         self.app.run_async(self._do_fetch(code))

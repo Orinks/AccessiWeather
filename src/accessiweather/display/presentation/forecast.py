@@ -107,10 +107,17 @@ def build_forecast(
 ) -> ForecastPresentation:
     """Create a structured forecast including optional hourly highlights."""
     title = f"Forecast for {location.name}"
-    precision = get_temperature_precision(unit_pref)
+    round_values = getattr(settings, "round_values", False) if settings else False
+    precision = 0 if round_values else get_temperature_precision(unit_pref)
 
     periods: list[ForecastPeriodPresentation] = []
+    summary_line = f"Overall: {forecast.summary}" if forecast.summary else None
     fallback_lines = [f"Forecast for {location.name}:\n"]
+    if summary_line:
+        fallback_lines.append(summary_line)
+
+    hourly_hours = getattr(settings, "hourly_forecast_hours", 6) if settings else 6
+    hourly_hours = max(1, min(hourly_hours, 168))
 
     if hourly_forecast and hourly_forecast.has_data():
         hourly = build_hourly_summary(hourly_forecast, unit_pref, settings=settings)
@@ -161,7 +168,7 @@ def build_forecast(
             else None
         )
         snowfall_val = (
-            f"{period.snowfall:.1f} in"
+            f"{period.snowfall:.{precision}f} in"
             if include_snowfall and period.snowfall is not None and period.snowfall > 0
             else None
         )
@@ -177,7 +184,7 @@ def build_forecast(
         )
         gust_val = period.wind_gust if include_wind_gust and period.wind_gust else None
         precip_amt = (
-            f"{period.precipitation_amount:.2f} in"
+            f"{period.precipitation_amount:.{precision}f} in"
             if include_precipitation
             and period.precipitation_amount is not None
             and period.precipitation_amount > 0
@@ -234,7 +241,7 @@ def build_forecast(
         fallback_lines.append(f"\nForecast generated: {generated_at}")
 
     if hourly:
-        fallback_lines.insert(1, render_hourly_fallback(hourly))
+        fallback_lines.append(render_hourly_fallback(hourly, hours=hourly_hours))
 
     # Append cross-source confidence summary when available
     confidence_label: str | None = None
@@ -252,6 +259,7 @@ def build_forecast(
         generated_at=generated_at,
         fallback_text=fallback_text,
         confidence_label=confidence_label,
+        summary=summary_line,
     )
 
 
@@ -261,7 +269,8 @@ def build_hourly_summary(
     settings: AppSettings | None = None,
 ) -> list[HourlyPeriodPresentation]:
     """Generate the next six hours of simplified forecast data."""
-    precision = get_temperature_precision(unit_pref)
+    round_values = getattr(settings, "round_values", False) if settings else False
+    precision = 0 if round_values else get_temperature_precision(unit_pref)
     summary: list[HourlyPeriodPresentation] = []
 
     # Extract time display preferences and verbosity from settings
@@ -289,7 +298,9 @@ def build_hourly_summary(
     include_cloud_cover = verbosity_level == "detailed"
     include_wind_gust = verbosity_level == "detailed"
 
-    for period in hourly_forecast.get_next_hours(6):
+    hourly_hours = getattr(settings, "hourly_forecast_hours", 6) if settings else 6
+    hourly_hours = max(1, min(hourly_hours, 168))
+    for period in hourly_forecast.get_next_hours(hourly_hours):
         if not period.has_data():
             continue
         temperature = format_period_temperature(period, unit_pref, precision)
@@ -314,7 +325,7 @@ def build_hourly_summary(
             else None
         )
         snowfall_val = (
-            f"{period.snowfall:.1f} in"
+            f"{period.snowfall:.{precision}f} in"
             if include_snowfall and period.snowfall is not None and period.snowfall > 0
             else None
         )
@@ -334,7 +345,7 @@ def build_hourly_summary(
             else None
         )
         precip_amt = (
-            f"{period.precipitation_amount:.2f} in"
+            f"{period.precipitation_amount:.{precision}f} in"
             if include_precipitation
             and period.precipitation_amount is not None
             and period.precipitation_amount > 0
@@ -381,9 +392,9 @@ def _resolve_forecast_display_time(
     return start_time.astimezone(target_tz)
 
 
-def render_hourly_fallback(hourly: Iterable[HourlyPeriodPresentation]) -> str:
+def render_hourly_fallback(hourly: Iterable[HourlyPeriodPresentation], hours: int = 6) -> str:
     """Render hourly periods into fallback text."""
-    lines = ["Next 6 Hours:"]
+    lines = [f"Next {hours} Hours:"]
     for period in hourly:
         parts = [period.time]
         if period.temperature:

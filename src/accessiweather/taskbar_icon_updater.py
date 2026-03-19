@@ -53,6 +53,7 @@ class TaskbarIconUpdater:
         format_string: str = DEFAULT_TOOLTIP_FORMAT,
         temperature_unit: str = "both",
         verbosity_level: str = "standard",
+        round_values: bool = False,
     ):
         """
         Initialize the TaskbarIconUpdater.
@@ -63,6 +64,7 @@ class TaskbarIconUpdater:
             format_string: The format string to use for the tooltip
             temperature_unit: Temperature unit preference (fahrenheit, celsius, both)
             verbosity_level: Information verbosity level (minimal, standard, detailed)
+            round_values: Whether to round numeric values to whole numbers
 
         """
         self.text_enabled = text_enabled
@@ -70,6 +72,7 @@ class TaskbarIconUpdater:
         self.format_string = format_string
         self.temperature_unit = temperature_unit
         self.verbosity_level = verbosity_level
+        self.round_values = round_values
         self.parser = FormatStringParser()
         self._last_format_error: str | None = None
 
@@ -80,6 +83,7 @@ class TaskbarIconUpdater:
         format_string: str | None = None,
         temperature_unit: str | None = None,
         verbosity_level: str | None = None,
+        round_values: bool | None = None,
     ) -> None:
         """
         Update taskbar icon settings.
@@ -90,6 +94,7 @@ class TaskbarIconUpdater:
             format_string: The format string to use for the tooltip
             temperature_unit: Temperature unit preference
             verbosity_level: Information verbosity level (minimal, standard, detailed)
+            round_values: Whether to round numeric values to whole numbers
 
         """
         if text_enabled is not None:
@@ -102,6 +107,8 @@ class TaskbarIconUpdater:
             self.temperature_unit = temperature_unit
         if verbosity_level is not None:
             self.verbosity_level = verbosity_level
+        if round_values is not None:
+            self.round_values = round_values
 
     def format_tooltip(
         self,
@@ -313,29 +320,32 @@ class TaskbarIconUpdater:
 
     def _format_wind_speed(self, current: Any) -> str:
         """Format wind speed using the selected unit preference."""
+        precision = 0 if self.round_values else 1
         return format_wind_speed(
             getattr(current, "wind_speed_mph", None),
             unit=self._normalize_temperature_unit(),
             wind_speed_kph=getattr(current, "wind_speed_kph", None),
-            precision=1,
+            precision=precision,
         )
 
     def _format_pressure(self, current: Any) -> str:
         """Format pressure using the selected unit preference."""
+        precision = 0 if self.round_values else 2
         return format_pressure(
             getattr(current, "pressure_in", None),
             unit=self._normalize_temperature_unit(),
             pressure_mb=getattr(current, "pressure_mb", None),
-            precision=2,
+            precision=precision,
         )
 
     def _format_visibility(self, current: Any) -> str:
         """Format visibility using the selected unit preference."""
+        precision = 0 if self.round_values else 1
         return format_visibility(
             getattr(current, "visibility_miles", None),
             unit=self._normalize_temperature_unit(),
             visibility_km=getattr(current, "visibility_km", None),
-            precision=1,
+            precision=precision,
         )
 
     def _format_precipitation(self, current: Any) -> str:
@@ -346,11 +356,12 @@ class TaskbarIconUpdater:
         if precip_in is None:
             precip_in = getattr(current, "precipitation", None)
 
+        precision = 0 if self.round_values else 2
         return format_precipitation(
             precip_in,
             unit=self._normalize_temperature_unit(),
             precipitation_mm=getattr(current, "precipitation_mm", None),
-            precision=2,
+            precision=precision,
         )
 
     def _format_forecast_temperatures(

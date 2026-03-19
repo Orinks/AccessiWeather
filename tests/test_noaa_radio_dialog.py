@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import sys
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -169,6 +170,25 @@ class TestNOAARadioDialogModule:
         import wx
 
         assert issubclass(noaa_dialog_module.NOAARadioDialog, wx.Dialog)
+
+    def test_dialog_uses_app_runtime_prefs_path(self, noaa_dialog_module):
+        fake_app = MagicMock()
+        fake_app.runtime_paths.noaa_radio_preferences_file = Path(
+            "/tmp/config/noaa_radio_prefs.json"
+        )
+
+        with (
+            patch.object(noaa_dialog_module.wx, "GetApp", return_value=fake_app),
+            patch.object(noaa_dialog_module, "RadioPlayer"),
+            patch.object(noaa_dialog_module, "StreamURLProvider"),
+            patch.object(noaa_dialog_module, "WxRadioClient"),
+            patch.object(noaa_dialog_module, "RadioPreferences") as mock_prefs,
+            patch.object(noaa_dialog_module.NOAARadioDialog, "_init_ui"),
+            patch.object(noaa_dialog_module.NOAARadioDialog, "_load_stations"),
+        ):
+            noaa_dialog_module.NOAARadioDialog(MagicMock(), 40.7, -74.0)
+
+        mock_prefs.assert_called_once_with(path=fake_app.runtime_paths.noaa_radio_preferences_file)
 
 
 class TestGetSelectedStation:

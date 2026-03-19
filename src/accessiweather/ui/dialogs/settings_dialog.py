@@ -190,6 +190,11 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["show_pressure_trend"] = wx.CheckBox(panel, label="Show pressure trend")
         sizer.Add(self._controls["show_pressure_trend"], 0, wx.LEFT, 10)
 
+        self._controls["round_values"] = wx.CheckBox(
+            panel, label="Show values as whole numbers (no decimals)"
+        )
+        sizer.Add(self._controls["round_values"], 0, wx.LEFT | wx.TOP, 10)
+
         self._controls["detailed_forecast"] = wx.CheckBox(
             panel, label="Show detailed forecast information"
         )
@@ -215,6 +220,18 @@ class SettingsDialogSimple(wx.Dialog):
         )
         row_forecast_duration.Add(self._controls["forecast_duration_days"], 0)
         sizer.Add(row_forecast_duration, 0, wx.LEFT | wx.TOP, 10)
+
+        # Hourly forecast hours
+        row_hourly_hours = wx.BoxSizer(wx.HORIZONTAL)
+        row_hourly_hours.Add(
+            wx.StaticText(panel, label="Hourly forecast hours:"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["hourly_forecast_hours"] = wx.SpinCtrl(panel, min=1, max=168, initial=6)
+        row_hourly_hours.Add(self._controls["hourly_forecast_hours"], 0)
+        sizer.Add(row_hourly_hours, 0, wx.LEFT | wx.TOP, 10)
 
         # Time & Date Display Section
         sizer.Add(
@@ -315,16 +332,19 @@ class SettingsDialogSimple(wx.Dialog):
             panel,
             choices=[
                 "Automatic (merges all available sources)",
-                "National Weather Service (US only, with alerts)",
-                "Open-Meteo (International, no alerts)",
-                "Visual Crossing (International with alerts, requires API key)",
+                "National Weather Service (US only, forecast + alerts)",
+                "Open-Meteo (Global forecast, no alerts, no API key)",
+                "Visual Crossing (Global forecast, US/Canada/Europe alerts, API key)",
+                "Pirate Weather (Global forecast + worldwide alerts, API key)",
             ],
         )
         row1.Add(self._controls["data_source"], 0)
+        self._controls["data_source"].Bind(wx.EVT_CHOICE, self._on_data_source_changed)
         sizer.Add(row1, 0, wx.ALL, 5)
 
         # Visual Crossing Configuration
-        sizer.Add(
+        self._vc_config_sizer = wx.BoxSizer(wx.VERTICAL)
+        self._vc_config_sizer.Add(
             wx.StaticText(panel, label="Visual Crossing API Configuration:"),
             0,
             wx.ALL,
@@ -333,14 +353,14 @@ class SettingsDialogSimple(wx.Dialog):
 
         row_key = wx.BoxSizer(wx.HORIZONTAL)
         row_key.Add(
-            wx.StaticText(panel, label="API Key:"),
+            wx.StaticText(panel, label="Visual Crossing API Key:"),
             0,
             wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
             10,
         )
         self._controls["vc_key"] = wx.TextCtrl(panel, style=wx.TE_PASSWORD, size=(250, -1))
         row_key.Add(self._controls["vc_key"], 1)
-        sizer.Add(row_key, 0, wx.LEFT | wx.EXPAND, 10)
+        self._vc_config_sizer.Add(row_key, 0, wx.LEFT | wx.EXPAND, 10)
 
         btn_row = wx.BoxSizer(wx.HORIZONTAL)
         get_key_btn = wx.Button(panel, label="Get Free API Key")
@@ -350,7 +370,39 @@ class SettingsDialogSimple(wx.Dialog):
         validate_btn = wx.Button(panel, label="Validate API Key")
         validate_btn.Bind(wx.EVT_BUTTON, self._on_validate_vc_api_key)
         btn_row.Add(validate_btn, 0)
-        sizer.Add(btn_row, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
+        self._vc_config_sizer.Add(btn_row, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
+        sizer.Add(self._vc_config_sizer, 0, wx.EXPAND)
+
+        # Pirate Weather Configuration
+        self._pw_config_sizer = wx.BoxSizer(wx.VERTICAL)
+        self._pw_config_sizer.Add(
+            wx.StaticText(panel, label="Pirate Weather API Configuration:"),
+            0,
+            wx.ALL,
+            5,
+        )
+
+        row_pw_key = wx.BoxSizer(wx.HORIZONTAL)
+        row_pw_key.Add(
+            wx.StaticText(panel, label="Pirate Weather API Key:"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._controls["pw_key"] = wx.TextCtrl(panel, style=wx.TE_PASSWORD, size=(250, -1))
+        row_pw_key.Add(self._controls["pw_key"], 1)
+        self._pw_config_sizer.Add(row_pw_key, 0, wx.LEFT | wx.EXPAND, 10)
+
+        btn_row_pw = wx.BoxSizer(wx.HORIZONTAL)
+        get_pw_key_btn = wx.Button(panel, label="Get Free API Key")
+        get_pw_key_btn.Bind(wx.EVT_BUTTON, self._on_get_pw_api_key)
+        btn_row_pw.Add(get_pw_key_btn, 0, wx.RIGHT, 10)
+
+        validate_pw_btn = wx.Button(panel, label="Validate API Key")
+        validate_pw_btn.Bind(wx.EVT_BUTTON, self._on_validate_pw_api_key)
+        btn_row_pw.Add(validate_pw_btn, 0)
+        self._pw_config_sizer.Add(btn_row_pw, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
+        sizer.Add(self._pw_config_sizer, 0, wx.EXPAND)
 
         # Source Priority (Auto Mode)
         sizer.Add(
@@ -562,6 +614,16 @@ class SettingsDialogSimple(wx.Dialog):
             panel, label="Notify when severe weather risk level changes (Visual Crossing only)"
         )
         sizer.Add(self._controls["notify_severe_risk_change"], 0, wx.LEFT | wx.BOTTOM, 10)
+
+        self._controls["notify_minutely_precipitation_start"] = wx.CheckBox(
+            panel, label="Notify when precipitation is expected to start soon (Pirate Weather)"
+        )
+        sizer.Add(self._controls["notify_minutely_precipitation_start"], 0, wx.LEFT, 10)
+
+        self._controls["notify_minutely_precipitation_stop"] = wx.CheckBox(
+            panel, label="Notify when precipitation is expected to stop soon (Pirate Weather)"
+        )
+        sizer.Add(self._controls["notify_minutely_precipitation_stop"], 0, wx.LEFT | wx.BOTTOM, 10)
 
         # Rate Limiting Section
         sizer.Add(
@@ -1266,6 +1328,7 @@ class SettingsDialogSimple(wx.Dialog):
             self._controls["show_pressure_trend"].SetValue(
                 getattr(settings, "show_pressure_trend", True)
             )
+            self._controls["round_values"].SetValue(getattr(settings, "round_values", False))
             self._controls["detailed_forecast"].SetValue(
                 getattr(settings, "show_detailed_forecast", True)
             )
@@ -1273,6 +1336,10 @@ class SettingsDialogSimple(wx.Dialog):
             forecast_duration_map = {3: 0, 5: 1, 7: 2, 10: 3, 14: 4, 15: 5}
             self._controls["forecast_duration_days"].SetSelection(
                 forecast_duration_map.get(forecast_duration_days, 2)
+            )
+
+            self._controls["hourly_forecast_hours"].SetValue(
+                getattr(settings, "hourly_forecast_hours", 6)
             )
 
             forecast_time_reference = getattr(settings, "forecast_time_reference", "location")
@@ -1302,32 +1369,59 @@ class SettingsDialogSimple(wx.Dialog):
 
             # Data sources tab
             data_source = getattr(settings, "data_source", "auto")
-            source_map = {"auto": 0, "nws": 1, "openmeteo": 2, "visualcrossing": 3}
+            source_map = {
+                "auto": 0,
+                "nws": 1,
+                "openmeteo": 2,
+                "visualcrossing": 3,
+                "pirateweather": 4,
+            }
             self._controls["data_source"].SetSelection(source_map.get(data_source, 0))
+            self._update_api_key_visibility()
 
             vc_key = getattr(settings, "visual_crossing_api_key", "") or ""
             self._controls["vc_key"].SetValue(str(vc_key))
             self._original_vc_key = str(vc_key)
+            pw_key = getattr(settings, "pirate_weather_api_key", "") or ""
+            self._controls["pw_key"].SetValue(str(pw_key))
+            self._original_pw_key = str(pw_key)
 
             # Source priority
             us_priority = getattr(
-                settings, "source_priority_us", ["nws", "openmeteo", "visualcrossing"]
+                settings,
+                "source_priority_us",
+                ["nws", "openmeteo", "visualcrossing", "pirateweather"],
             )
             us_map = {
+                # 4-element lists (current format includes pirateweather)
+                ("nws", "openmeteo", "visualcrossing", "pirateweather"): 0,
+                ("nws", "visualcrossing", "openmeteo", "pirateweather"): 1,
+                ("openmeteo", "nws", "visualcrossing", "pirateweather"): 2,
+                # 3-element lists (legacy configs without pirateweather)
                 ("nws", "openmeteo", "visualcrossing"): 0,
                 ("nws", "visualcrossing", "openmeteo"): 1,
                 ("openmeteo", "nws", "visualcrossing"): 2,
             }
-            self._controls["us_priority"].SetSelection(us_map.get(tuple(us_priority[:3]), 0))
+            self._controls["us_priority"].SetSelection(
+                us_map.get(tuple(us_priority), us_map.get(tuple(us_priority[:3]), 0))
+            )
 
             intl_priority = getattr(
-                settings, "source_priority_international", ["openmeteo", "visualcrossing"]
+                settings,
+                "source_priority_international",
+                ["openmeteo", "pirateweather", "visualcrossing"],
             )
             intl_map = {
+                # 3-element lists (current format includes pirateweather)
+                ("openmeteo", "pirateweather", "visualcrossing"): 0,
+                ("visualcrossing", "openmeteo", "pirateweather"): 1,
+                # 2-element lists (legacy configs without pirateweather)
                 ("openmeteo", "visualcrossing"): 0,
                 ("visualcrossing", "openmeteo"): 1,
             }
-            self._controls["intl_priority"].SetSelection(intl_map.get(tuple(intl_priority[:2]), 0))
+            self._controls["intl_priority"].SetSelection(
+                intl_map.get(tuple(intl_priority), intl_map.get(tuple(intl_priority[:2]), 0))
+            )
 
             # Open-Meteo model
             model = getattr(settings, "openmeteo_weather_model", "best_match")
@@ -1394,6 +1488,12 @@ class SettingsDialogSimple(wx.Dialog):
             )
             self._controls["notify_severe_risk_change"].SetValue(
                 getattr(settings, "notify_severe_risk_change", False)
+            )
+            self._controls["notify_minutely_precipitation_start"].SetValue(
+                getattr(settings, "notify_minutely_precipitation_start", False)
+            )
+            self._controls["notify_minutely_precipitation_stop"].SetValue(
+                getattr(settings, "notify_minutely_precipitation_stop", False)
             )
 
             # Audio tab
@@ -1474,7 +1574,7 @@ class SettingsDialogSimple(wx.Dialog):
         """Save settings from UI controls."""
         try:
             # Map selections back to values
-            source_values = ["auto", "nws", "openmeteo", "visualcrossing"]
+            source_values = ["auto", "nws", "openmeteo", "visualcrossing", "pirateweather"]
             temp_values = ["f", "c", "both"]
             forecast_duration_values = [3, 5, 7, 10, 14, 15]
             forecast_time_reference_values = ["location", "user_local"]
@@ -1520,10 +1620,12 @@ class SettingsDialogSimple(wx.Dialog):
                 "show_visibility": self._controls["show_visibility"].GetValue(),
                 "show_uv_index": self._controls["show_uv_index"].GetValue(),
                 "show_pressure_trend": self._controls["show_pressure_trend"].GetValue(),
+                "round_values": self._controls["round_values"].GetValue(),
                 "show_detailed_forecast": self._controls["detailed_forecast"].GetValue(),
                 "forecast_duration_days": forecast_duration_values[
                     self._controls["forecast_duration_days"].GetSelection()
                 ],
+                "hourly_forecast_hours": self._controls["hourly_forecast_hours"].GetValue(),
                 "forecast_time_reference": forecast_time_reference_values[
                     self._controls["forecast_time_reference"].GetSelection()
                 ],
@@ -1539,14 +1641,15 @@ class SettingsDialogSimple(wx.Dialog):
                 # Data sources
                 "data_source": source_values[self._controls["data_source"].GetSelection()],
                 "visual_crossing_api_key": self._controls["vc_key"].GetValue(),
+                "pirate_weather_api_key": self._controls["pw_key"].GetValue(),
                 "source_priority_us": [
-                    ["nws", "openmeteo", "visualcrossing"],
-                    ["nws", "visualcrossing", "openmeteo"],
-                    ["openmeteo", "nws", "visualcrossing"],
+                    ["nws", "openmeteo", "visualcrossing", "pirateweather"],
+                    ["nws", "visualcrossing", "openmeteo", "pirateweather"],
+                    ["openmeteo", "nws", "visualcrossing", "pirateweather"],
                 ][max(0, self._controls["us_priority"].GetSelection())],
                 "source_priority_international": [
-                    ["openmeteo", "visualcrossing"],
-                    ["visualcrossing", "openmeteo"],
+                    ["openmeteo", "pirateweather", "visualcrossing"],
+                    ["visualcrossing", "openmeteo", "pirateweather"],
                 ][max(0, self._controls["intl_priority"].GetSelection())],
                 "openmeteo_weather_model": model_values[
                     self._controls["openmeteo_model"].GetSelection()
@@ -1572,6 +1675,12 @@ class SettingsDialogSimple(wx.Dialog):
                 # Event-based notifications
                 "notify_discussion_update": self._controls["notify_discussion_update"].GetValue(),
                 "notify_severe_risk_change": self._controls["notify_severe_risk_change"].GetValue(),
+                "notify_minutely_precipitation_start": self._controls[
+                    "notify_minutely_precipitation_start"
+                ].GetValue(),
+                "notify_minutely_precipitation_stop": self._controls[
+                    "notify_minutely_precipitation_stop"
+                ].GetValue(),
                 # Audio
                 "sound_enabled": self._controls["sound_enabled"].GetValue(),
                 "sound_pack": self._sound_pack_ids[self._controls["sound_pack"].GetSelection()]
@@ -1600,16 +1709,16 @@ class SettingsDialogSimple(wx.Dialog):
             # Source priority
             us_idx = self._controls["us_priority"].GetSelection()
             us_priorities = [
-                ["nws", "openmeteo", "visualcrossing"],
-                ["nws", "visualcrossing", "openmeteo"],
-                ["openmeteo", "nws", "visualcrossing"],
+                ["nws", "openmeteo", "visualcrossing", "pirateweather"],
+                ["nws", "visualcrossing", "openmeteo", "pirateweather"],
+                ["openmeteo", "nws", "visualcrossing", "pirateweather"],
             ]
             settings_dict["source_priority_us"] = us_priorities[us_idx if us_idx >= 0 else 0]
 
             intl_idx = self._controls["intl_priority"].GetSelection()
             intl_priorities = [
-                ["openmeteo", "visualcrossing"],
-                ["visualcrossing", "openmeteo"],
+                ["openmeteo", "pirateweather", "visualcrossing"],
+                ["visualcrossing", "openmeteo", "pirateweather"],
             ]
             settings_dict["source_priority_international"] = intl_priorities[
                 intl_idx if intl_idx >= 0 else 0
@@ -1620,6 +1729,7 @@ class SettingsDialogSimple(wx.Dialog):
             # keyring load failed transiently — keep the existing keyring value.
             for key, orig_attr in (
                 ("visual_crossing_api_key", "_original_vc_key"),
+                ("pirate_weather_api_key", "_original_pw_key"),
                 ("openrouter_api_key", "_original_openrouter_key"),
             ):
                 if not settings_dict.get(key) and getattr(self, orig_attr, ""):
@@ -1656,6 +1766,7 @@ class SettingsDialogSimple(wx.Dialog):
             "show_pressure_trend": "Show pressure trend",
             "detailed_forecast": "Show detailed forecast information",
             "forecast_duration_days": "Forecast duration",
+            "hourly_forecast_hours": "Hourly forecast hours",
             "forecast_time_reference": "Forecast time display",
             "time_display_mode": "Time zone display",
             "time_format_12hour": "Use 12-hour time format (e.g., 3:00 PM)",
@@ -1664,6 +1775,7 @@ class SettingsDialogSimple(wx.Dialog):
             "severe_weather_override": "Automatically prioritize severe weather info",
             "data_source": "Weather Data Source",
             "vc_key": "API Key",
+            "pw_key": "Pirate Weather API Key",
             "us_priority": "US Locations Priority",
             "intl_priority": "International Locations Priority",
             "openmeteo_model": "Open-Meteo Weather Model",
@@ -1678,6 +1790,8 @@ class SettingsDialogSimple(wx.Dialog):
             "notify_unknown": "Unknown - Uncategorized alerts",
             "notify_discussion_update": "Notify when Area Forecast Discussion is updated (NWS US only)",
             "notify_severe_risk_change": "Notify when severe weather risk level changes (Visual Crossing only)",
+            "notify_minutely_precipitation_start": "Notify when precipitation is expected to start soon (Pirate Weather)",
+            "notify_minutely_precipitation_stop": "Notify when precipitation is expected to stop soon (Pirate Weather)",
             "global_cooldown": "Global cooldown (minutes)",
             "per_alert_cooldown": "Per-alert cooldown (minutes)",
             "freshness_window": "Alert freshness window (minutes)",
@@ -1725,9 +1839,81 @@ class SettingsDialogSimple(wx.Dialog):
             wx.MessageBox("Failed to save settings.", "Error", wx.OK | wx.ICON_ERROR)
 
     # Event handlers for buttons
+    def _on_data_source_changed(self, event):
+        """Update API key section visibility when data source changes."""
+        self._update_api_key_visibility()
+
+    def _update_api_key_visibility(self):
+        """Show/hide API key sections based on selected data source."""
+        selection = self._controls["data_source"].GetSelection()
+        # 0=auto, 1=nws, 2=openmeteo, 3=visualcrossing, 4=pirateweather
+        show_vc = selection in (0, 3)  # auto or VC
+        show_pw = selection in (0, 4)  # auto or PW
+        self._vc_config_sizer.ShowItems(show_vc)
+        self._pw_config_sizer.ShowItems(show_pw)
+        # Re-layout the panel
+        parent = self._controls["data_source"].GetParent()
+        parent.Layout()
+        parent.FitInside()
+
+    def _on_get_pw_api_key(self, event):
+        """Open Pirate Weather signup page."""
+        webbrowser.open("https://pirate-weather.apiable.io/signup")
+
     def _on_get_vc_api_key(self, event):
         """Open Visual Crossing signup page."""
         webbrowser.open("https://www.visualcrossing.com/sign-up")
+
+    def _on_validate_pw_api_key(self, event):
+        """Validate Pirate Weather API key."""
+        key = self._controls["pw_key"].GetValue()
+        if not key:
+            wx.MessageBox("Please enter an API key first.", "Validation", wx.OK | wx.ICON_WARNING)
+            return
+
+        wx.BeginBusyCursor()
+        try:
+            import asyncio
+
+            from ...models import Location
+            from ...pirate_weather_client import PirateWeatherApiError, PirateWeatherClient
+
+            test_location = Location(name="Test", latitude=40.7128, longitude=-74.0060)
+            client = PirateWeatherClient(api_key=key)
+
+            async def test_key():
+                try:
+                    await client.get_current_conditions(test_location)
+                    return True, None
+                except PirateWeatherApiError as e:
+                    if e.status_code == 401:
+                        return False, "Invalid API key"
+                    if e.status_code == 429:
+                        return False, "Rate limit exceeded — but key appears valid"
+                    return False, str(e)
+                except Exception as e:
+                    return False, str(e)
+
+            loop = asyncio.new_event_loop()
+            try:
+                valid, error = loop.run_until_complete(test_key())
+            finally:
+                loop.close()
+
+            if valid:
+                wx.MessageBox(
+                    "Pirate Weather API key is valid!",
+                    "Validation Successful",
+                    wx.OK | wx.ICON_INFORMATION,
+                )
+            else:
+                wx.MessageBox(
+                    f"Pirate Weather API key validation failed: {error}",
+                    "Validation Failed",
+                    wx.OK | wx.ICON_ERROR,
+                )
+        finally:
+            wx.EndBusyCursor()
 
     def _on_validate_vc_api_key(self, event):
         """Validate Visual Crossing API key."""
@@ -2145,7 +2331,12 @@ class SettingsDialogSimple(wx.Dialog):
                 wx.OK | wx.ICON_ERROR,
             )
 
-    _PORTABLE_KEY_SETTINGS = ("visual_crossing_api_key", "openrouter_api_key")
+    _PORTABLE_KEY_SETTINGS = (
+        "visual_crossing_api_key",
+        "pirate_weather_api_key",
+        "openrouter_api_key",
+        "avwx_api_key",
+    )
 
     def _maybe_update_portable_bundle_after_save(self, settings_dict: dict) -> None:
         """
@@ -2543,7 +2734,7 @@ class SettingsDialogSimple(wx.Dialog):
             else:
                 wx.MessageBox(
                     "No API keys found to export. You can add keys in Settings > Data Sources "
-                    "and export later.",
+                    "or Settings > AI and export later.",
                     "No keys to export",
                     wx.OK | wx.ICON_WARNING,
                 )

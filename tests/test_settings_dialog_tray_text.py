@@ -30,6 +30,7 @@ class _DummyControl:
         self._selection = 0
         self._value = False
         self.enabled = True
+        self._parent = _DummyParent()
 
     def SetSelection(self, value: int) -> None:
         self._selection = value
@@ -49,6 +50,9 @@ class _DummyControl:
     def Append(self, _value: str) -> None:
         return None
 
+    def GetParent(self):
+        return self._parent
+
     def __getattr__(self, _name: str):
         return lambda *args, **kwargs: None
 
@@ -60,11 +64,26 @@ class _Controls(dict):
         return value
 
 
+class _DummySizer:
+    def ShowItems(self, _value: bool) -> None:
+        return None
+
+
+class _DummyParent:
+    def Layout(self) -> None:
+        return None
+
+    def FitInside(self) -> None:
+        return None
+
+
 def _make_dialog_for_settings(settings: SimpleNamespace) -> SettingsDialogSimple:
     dialog = SettingsDialogSimple.__new__(SettingsDialogSimple)
     dialog._controls = _Controls()
     dialog._sound_pack_ids = ["default"]
     dialog._selected_specific_model = None
+    dialog._vc_config_sizer = _DummySizer()
+    dialog._pw_config_sizer = _DummySizer()
     dialog.config_manager = MagicMock()
     dialog.config_manager.get_settings.return_value = settings
     return dialog

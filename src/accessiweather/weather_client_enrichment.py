@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from . import weather_client_nws as nws_client
+from .api.avwx_client import AvwxApiError, fetch_avwx_taf, is_us_station
 from .display.presentation.environmental import _get_uv_category
 from .models import AviationData, Location, WeatherAlert, WeatherAlerts, WeatherData
 from .utils import decode_taf_text
@@ -161,12 +162,45 @@ async def get_aviation_weather(
     include_cwas: bool = False,
     cwsu_id: str | None = None,
 ) -> AviationData:
-    """Fetch aviation weather products for a specific ICAO station identifier."""
+    """
+    Fetch aviation weather products for a specific ICAO station identifier.
+
+    Routing logic
+    -------------
+    * **US stations** (ICAO prefix ``K``, ``PA``, ``PH``, ``PG``, …) are
+      handled by the existing NWS / AviationWeather.gov path which provides
+      native US SIGMET and CWA data.
+    * **International stations** are routed through the AVWX REST API when an
+      API key is configured on the client.  AVWX returns TTS-ready speech
+      strings, plain-English translations, and per-period flight rules — all
+      significantly improving accessibility for non-US users.  If no AVWX key
+      is configured (or the request fails) the function falls back to the
+      AviationWeather.gov global TAF feed so that a raw TAF is still returned.
+    """
     station = (station_id or "").strip().upper()
     if not station:
         raise ValueError("station_id must be a non-empty ICAO identifier.")
 
     http_client = client._get_http_client()
+
+    # ------------------------------------------------------------------
+    # Route international stations through AVWX when an API key is set
+    # ------------------------------------------------------------------
+    avwx_key: str = getattr(client, "avwx_api_key", "") or ""
+    if not is_us_station(station) and avwx_key:
+        logger.debug("Routing international station %s through AVWX", station)
+        try:
+            return await fetch_avwx_taf(station, avwx_key, http_client=http_client)
+        except AvwxApiError as exc:
+            logger.warning("AVWX fetch failed for %s (%s); falling back to AWC path", station, exc)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "Unexpected error fetching from AVWX for %s (%s); falling back", station, exc
+            )
+
+    # ------------------------------------------------------------------
+    # NWS / AviationWeather.gov path (US stations and AVWX fallback)
+    # ------------------------------------------------------------------
     aviation = AviationData(station_id=station, airport_name=station)
 
     station_metadata: dict[str, Any] | None = None

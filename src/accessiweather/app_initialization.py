@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import wx
@@ -23,9 +22,13 @@ def initialize_components(app: AccessiWeatherApp) -> None:
 
     app.config_manager = ConfigManager(
         app,
+        runtime_paths=app.runtime_paths,
         config_dir=getattr(app, "_config_dir", None),
         portable_mode=getattr(app, "_portable_mode", False),
     )
+    from .runtime_state import RuntimeStateManager
+
+    app.runtime_state_manager = RuntimeStateManager(app.runtime_paths.config_root)
     config = app.config_manager.load_config()
 
     # Defer update service initialization to background (using wx.CallLater)
@@ -34,29 +37,15 @@ def initialize_components(app: AccessiWeatherApp) -> None:
 
     # Initialize weather client with lazy imports
     data_source = config.settings.data_source if config.settings else "auto"
-    # Note: visual_crossing_api_key is now a LazySecureStorage object that defers
-    # keyring access until first use. We pass it directly to WeatherClient which
-    # will access the value lazily when the VisualCrossing client is needed.
+    # Note: visual_crossing_api_key, pirate_weather_api_key and avwx_api_key are
+    # LazySecureStorage objects that defer keyring access until first use.
     lazy_api_key = config.settings.visual_crossing_api_key if config.settings else ""
-    config_dir_value = getattr(app.config_manager, "config_dir", None)
-    cache_root: Path | None = None
-    if config_dir_value is not None:
-        try:
-            cache_root = Path(config_dir_value)
-        except (TypeError, ValueError):  # pragma: no cover - defensive logging
-            cache_root = None
-    if cache_root is None:
-        fallback_dir = getattr(app.paths, "config", None)
-        try:
-            cache_root = Path(fallback_dir) if fallback_dir is not None else Path.cwd()
-        except (TypeError, ValueError):  # pragma: no cover - defensive logging
-            cache_root = Path.cwd()
-    cache_dir = cache_root / "weather_cache"
-
+    lazy_pw_api_key = config.settings.pirate_weather_api_key if config.settings else ""
+    lazy_avwx_key = config.settings.avwx_api_key if config.settings else ""
     # Lazy import WeatherDataCache
     from .cache import WeatherDataCache
 
-    offline_cache = WeatherDataCache(cache_dir)
+    offline_cache = WeatherDataCache(app.runtime_paths.cache_dir)
     debug_enabled = bool(getattr(app, "debug_mode", False))
     log_level = logging.DEBUG if debug_enabled else logging.INFO
     root_logger = logging.getLogger()
@@ -71,6 +60,8 @@ def initialize_components(app: AccessiWeatherApp) -> None:
         user_agent="AccessiWeather/2.0",
         data_source=data_source,
         visual_crossing_api_key=lazy_api_key,
+        pirate_weather_api_key=lazy_pw_api_key,
+        avwx_api_key=lazy_avwx_key,
         settings=config.settings,
         offline_cache=offline_cache,
     )
@@ -106,9 +97,13 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     from .alert_manager import AlertManager
     from .alert_notification_system import AlertNotificationSystem
 
-    config_dir_str = str(app.paths.config)
+    config_dir_str = str(app.config_manager.config_dir)
     alert_settings = config.settings.to_alert_settings()
-    app.alert_manager = AlertManager(config_dir_str, alert_settings)
+    app.alert_manager = AlertManager(
+        config_dir_str,
+        alert_settings,
+        runtime_state_manager=app.runtime_state_manager,
+    )
     app.alert_notification_system = AlertNotificationSystem(
         app.alert_manager, app._notifier, config.settings
     )

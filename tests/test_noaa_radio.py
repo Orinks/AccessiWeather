@@ -241,3 +241,11 @@ class TestRadioPreferencesEdgeCases:
         prefs = RadioPreferences(config_dir=nested)
         prefs.set_preferred_url("TEST", "http://x.com")
         assert (nested / "noaa_radio_prefs.json").exists()
+
+    def test_path_argument_wins_over_config_dir(self, tmp_path):
+        prefs_file = tmp_path / "prefs" / "custom.json"
+        prefs = RadioPreferences(config_dir=tmp_path / "ignored", path=prefs_file)
+
+        prefs.set_preferred_url("TEST", "http://x.com")
+
+        assert prefs_file.exists()

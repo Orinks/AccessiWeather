@@ -14,6 +14,8 @@ import subprocess
 import time
 from pathlib import Path
 
+from .paths import RuntimeStoragePaths
+
 logger = logging.getLogger(__name__)
 
 # Global reference for cleanup handlers (needed for atexit and signal handlers)
@@ -23,21 +25,36 @@ _active_manager: "SingleInstanceManager | None" = None
 class SingleInstanceManager:
     """Manages single instance functionality using a lock file approach."""
 
-    def __init__(self, app, lock_filename: str = "accessiweather.lock"):
+    def __init__(
+        self,
+        app,
+        lock_filename: str = "accessiweather.lock",
+        runtime_paths: RuntimeStoragePaths | None = None,
+    ):
         """
         Initialize the single instance manager.
 
         Args:
         ----
-            app: The application instance (must have a paths.data attribute)
+            app: The application instance
             lock_filename: Name of the lock file to create
+            runtime_paths: Resolved canonical runtime storage layout
 
         """
         self.app = app
         self.lock_filename = lock_filename
+        self.runtime_paths = runtime_paths or getattr(app, "runtime_paths", None)
         self.lock_file_path: Path | None = None
         self._lock_acquired = False
         self._cleanup_registered = False
+
+    def _get_lock_file_path(self) -> Path:
+        """Return the canonical lock file path for the current runtime layout."""
+        if self.runtime_paths is not None:
+            return self.runtime_paths.lock_file
+
+        lock_dir = self.app.paths.data
+        return lock_dir / self.lock_filename
 
     def try_acquire_lock(self) -> bool:
         """
@@ -49,10 +66,8 @@ class SingleInstanceManager:
 
         """
         try:
-            # Use app.paths.data for the lock file location (cross-platform data directory)
-            lock_dir = self.app.paths.data
-            lock_dir.mkdir(parents=True, exist_ok=True)
-            self.lock_file_path = lock_dir / self.lock_filename
+            self.lock_file_path = self._get_lock_file_path()
+            self.lock_file_path.parent.mkdir(parents=True, exist_ok=True)
 
             logger.info(f"Checking for existing instance using lock file: {self.lock_file_path}")
 
@@ -299,10 +314,8 @@ class SingleInstanceManager:
         """
         try:
             if self.lock_file_path is None:
-                # Initialize lock file path if not already done
-                lock_dir = self.app.paths.data
-                lock_dir.mkdir(parents=True, exist_ok=True)
-                self.lock_file_path = lock_dir / self.lock_filename
+                self.lock_file_path = self._get_lock_file_path()
+                self.lock_file_path.parent.mkdir(parents=True, exist_ok=True)
 
             if self.lock_file_path.exists():
                 self.lock_file_path.unlink()

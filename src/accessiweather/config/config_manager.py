@@ -20,6 +20,7 @@ from accessiweather.models import AppConfig, AppSettings, Location
 if TYPE_CHECKING:
     from accessiweather.app import AccessiWeatherApp
 
+from ..paths import RuntimeStoragePaths
 from .file_permissions import set_secure_file_permissions
 from .github_config import GitHubConfigOperations
 from .import_export import ImportExportOperations
@@ -36,6 +37,7 @@ class ConfigManager:
     def __init__(
         self,
         app: AccessiWeatherApp,
+        runtime_paths: RuntimeStoragePaths | None = None,
         config_dir: str | Path | None = None,
         portable_mode: bool = False,
     ):
@@ -44,13 +46,18 @@ class ConfigManager:
 
         Args:
             app: Toga application instance
+            runtime_paths: Resolved canonical runtime storage layout
             config_dir: Custom configuration directory (overrides default)
             portable_mode: If True, use app directory for config instead of user directory
 
         """
         self.app = app
 
+        self.runtime_paths = runtime_paths
+
         # Determine config directory based on parameters
+        # Explicit config_dir and portable_mode take precedence; runtime_paths.config_root
+        # is the resolved canonical root and acts as the default when neither is given.
         if config_dir:
             self.config_dir = Path(config_dir)
         elif portable_mode:
@@ -166,10 +173,15 @@ class ConfigManager:
         # In portable mode, API keys live in the bundle — not in keyring.
         # Only load non-API-key secrets (e.g. GitHub app credentials) from keyring.
         is_portable = getattr(self.app, "_portable_mode", False)
-        portable_api_keys = {"visual_crossing_api_key", "openrouter_api_key"}
+        portable_api_keys = {
+            "visual_crossing_api_key",
+            "pirate_weather_api_key",
+            "openrouter_api_key",
+        }
 
         secure_keys = [
             "visual_crossing_api_key",
+            "pirate_weather_api_key",
             "openrouter_api_key",
             "github_app_id",
             "github_app_private_key",

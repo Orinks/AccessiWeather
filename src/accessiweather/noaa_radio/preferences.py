@@ -12,10 +12,16 @@ logger = logging.getLogger(__name__)
 class RadioPreferences:
     """Stores per-station preferred stream URLs in a JSON file."""
 
-    def __init__(self, config_dir: Path | str | None = None) -> None:
-        """Initialize with optional config directory for persistence."""
+    def __init__(
+        self,
+        config_dir: Path | str | None = None,
+        path: Path | str | None = None,
+    ) -> None:
+        """Initialize with an optional canonical preferences file path."""
         self._prefs: dict[str, str] = {}
-        if config_dir is not None:
+        if path is not None:
+            self._path = Path(path)
+        elif config_dir is not None:
             self._path = Path(config_dir) / "noaa_radio_prefs.json"
         else:
             self._path: Path | None = None

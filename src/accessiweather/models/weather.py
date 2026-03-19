@@ -276,6 +276,7 @@ class Forecast:
 
     periods: list[ForecastPeriod]
     generated_at: datetime | None = None
+    summary: str | None = None
 
     def has_data(self) -> bool:
         """Check if we have any forecast data."""
@@ -407,6 +408,29 @@ class HourlyForecast:
 
 
 @dataclass
+class MinutelyPrecipitationPoint:
+    """A single minute of precipitation guidance."""
+
+    time: datetime
+    precipitation_intensity: float | None = None
+    precipitation_probability: float | None = None
+    precipitation_type: str | None = None
+
+
+@dataclass
+class MinutelyPrecipitationForecast:
+    """Short-range precipitation guidance from a minutely provider."""
+
+    summary: str | None = None
+    icon: str | None = None
+    points: list[MinutelyPrecipitationPoint] = field(default_factory=list)
+
+    def has_data(self) -> bool:
+        """Return True when at least one minutely point is available."""
+        return len(self.points) > 0
+
+
+@dataclass
 class TrendInsight:
     """Summary of a metric trend over a timeframe."""
 
@@ -510,6 +534,7 @@ class WeatherData:
     daily_history: list[ForecastPeriod] = field(default_factory=list)
     discussion: str | None = None
     discussion_issuance_time: datetime | None = None  # NWS AFD issuance time for update detection
+    minutely_precipitation: MinutelyPrecipitationForecast | None = None
     alerts: WeatherAlerts | None = None
     environmental: EnvironmentalConditions | None = None
     aviation: AviationData | None = None
@@ -544,6 +569,7 @@ class WeatherData:
                 self.current and self.current.has_data(),
                 self.forecast and self.forecast.has_data(),
                 self.hourly_forecast and self.hourly_forecast.has_data(),
+                self.minutely_precipitation and self.minutely_precipitation.has_data(),
                 self.alerts and self.alerts.has_alerts(),
                 self.environmental and self.environmental.has_data(),
                 self.aviation and self.aviation.has_taf(),

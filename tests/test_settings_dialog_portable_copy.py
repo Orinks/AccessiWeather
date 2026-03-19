@@ -135,6 +135,43 @@ def test_copy_installed_config_to_portable_success_reloads_and_offers_key_export
     assert any(t == "API keys not exported" for _, t, _ in calls)
 
 
+def test_copy_installed_config_to_portable_excludes_runtime_state_files(tmp_path, monkeypatch):
+    installed = tmp_path / "installed"
+    portable = tmp_path / "portable"
+    _write_config(installed, ai_model="openrouter/auto", locations=[{"name": "Seattle"}])
+    (installed / "alert_state.json").write_text("{}", encoding="utf-8")
+    (installed / "notification_event_state.json").write_text("{}", encoding="utf-8")
+    (installed / "state").mkdir(parents=True, exist_ok=True)
+    (installed / "state" / "runtime_state.json").write_text("{}", encoding="utf-8")
+
+    dialog = _make_dialog(portable)
+    dialog._get_installed_config_dir = lambda: installed
+
+    _ensure_wx_constants()
+    calls: list[tuple] = []
+
+    def _fake_message_box(message, title, style):
+        calls.append((message, title, style))
+        if title == "Copy installed config to portable":
+            return module.wx.YES
+        if title == "Export API keys?":
+            return getattr(module.wx, "NO", 0)
+        return module.wx.OK
+
+    monkeypatch.setattr(module.wx, "MessageBox", _fake_message_box, raising=False)
+
+    dialog._on_copy_installed_config_to_portable(None)
+
+    assert (portable / "accessiweather.json").exists()
+    assert not (portable / "alert_state.json").exists()
+    assert not (portable / "notification_event_state.json").exists()
+    assert not (portable / "state" / "runtime_state.json").exists()
+    copy_complete = next((msg, t, s) for msg, t, s in calls if t == "Copy complete")
+    assert "runtime_state.json" not in copy_complete[0]
+    assert "alert_state.json" not in copy_complete[0]
+    assert "notification_event_state.json" not in copy_complete[0]
+
+
 def test_copy_installed_config_to_portable_validation_failure_reports_incomplete(
     tmp_path, monkeypatch
 ):
@@ -645,7 +682,11 @@ def test_maybe_update_portable_bundle_uses_export_encrypted_api_keys(tmp_path, m
     )
 
     dialog._maybe_update_portable_bundle_after_save(
-        {"visual_crossing_api_key": "FAKE_VC_KEY_123", "other_setting": "ignored"}
+        {
+            "visual_crossing_api_key": "FAKE_VC_KEY_123",
+            "pirate_weather_api_key": "FAKE_PW_KEY_123",
+            "other_setting": "ignored",
+        }
     )
 
     dialog.config_manager.export_encrypted_api_keys.assert_called_once_with(
@@ -698,7 +739,7 @@ def test_maybe_update_portable_bundle_prompts_when_no_cached_passphrase(tmp_path
 
     monkeypatch.setattr(wx, "TextEntryDialog", _FakeTextEntryDialog, raising=False)
 
-    dialog._maybe_update_portable_bundle_after_save({"openrouter_api_key": "FAKE_OR_KEY_456"})
+    dialog._maybe_update_portable_bundle_after_save({"pirate_weather_api_key": "FAKE_PW_KEY_456"})
 
     dialog.config_manager.export_encrypted_api_keys.assert_called_once_with(
         portable / "api-keys.keys", "FAKE_NEW_PASSPHRASE"

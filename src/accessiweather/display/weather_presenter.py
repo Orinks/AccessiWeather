@@ -100,6 +100,7 @@ class ForecastPresentation:
     generated_at: str | None = None
     fallback_text: str = ""
     confidence_label: str | None = None
+    summary: str | None = None
 
 
 @dataclass(slots=True)

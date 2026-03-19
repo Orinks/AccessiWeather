@@ -14,6 +14,7 @@ import wx
 
 from ..notifications.notification_event_manager import NotificationEventManager
 from ..notifications.toast_notifier import SafeDesktopNotifier
+from ..runtime_state import RuntimeStateManager
 
 if TYPE_CHECKING:
     from .main_window import MainWindow
@@ -52,8 +53,10 @@ def get_notification_event_manager(window: MainWindow):
         not hasattr(window, "_notification_event_manager")
         or window._notification_event_manager is None
     ):
-        state_file = window.app.paths.config / "notification_event_state.json"
-        window._notification_event_manager = NotificationEventManager(state_file=state_file)
+        config_root = window.app.config_manager.config_dir
+        window._notification_event_manager = NotificationEventManager(
+            runtime_state_manager=RuntimeStateManager(config_root)
+        )
     return window._notification_event_manager
 
 
@@ -99,18 +102,26 @@ def process_notification_events(window: MainWindow, weather_data) -> None:
     Checks for:
     - Area Forecast Discussion (AFD) updates (NWS US only)
     - Severe weather risk level changes (Visual Crossing only)
+    - Minutely precipitation start/stop transitions (Pirate Weather)
 
     Both are opt-in notifications (disabled by default).
     """
     try:
         settings = window.app.config_manager.get_settings()
 
-        if not settings.notify_discussion_update and not settings.notify_severe_risk_change:
+        if (
+            not settings.notify_discussion_update
+            and not settings.notify_severe_risk_change
+            and not settings.notify_minutely_precipitation_start
+            and not settings.notify_minutely_precipitation_stop
+        ):
             logger.debug(
-                "[events] _process_notification_events: both discuss_update=%s and "
-                "severe_risk=%s disabled -- skipping",
+                "[events] _process_notification_events: discussion=%s severe_risk=%s "
+                "minutely_start=%s minutely_stop=%s disabled -- skipping",
                 settings.notify_discussion_update,
                 settings.notify_severe_risk_change,
+                settings.notify_minutely_precipitation_start,
+                settings.notify_minutely_precipitation_stop,
             )
             return
 

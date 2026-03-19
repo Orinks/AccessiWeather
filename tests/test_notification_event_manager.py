@@ -8,12 +8,18 @@ from unittest.mock import MagicMock
 import pytest
 
 from accessiweather.models import AppSettings, CurrentConditions, WeatherData
+from accessiweather.notifications.minutely_precipitation import (
+    build_minutely_transition_signature,
+    detect_minutely_precipitation_transition,
+    parse_pirate_weather_minutely_block,
+)
 from accessiweather.notifications.notification_event_manager import (
     NotificationEvent,
     NotificationEventManager,
     NotificationState,
     get_risk_category,
 )
+from accessiweather.runtime_state import RuntimeStateManager
 
 
 class TestNotificationState:
@@ -49,6 +55,15 @@ class TestNotificationState:
         assert state.last_discussion_issuance_time == datetime.fromisoformat(issuance_time_str)
         assert state.last_severe_risk == 75
 
+    def test_minutely_signature_round_trip(self):
+        """Test minutely state serialization."""
+        state = NotificationState(last_minutely_transition_signature="starting:12:rain")
+
+        data = state.to_dict()
+        restored = NotificationState.from_dict(data)
+
+        assert restored.last_minutely_transition_signature == "starting:12:rain"
+
 
 class TestNotificationEventManager:
     """Tests for NotificationEventManager."""
@@ -63,6 +78,13 @@ class TestNotificationEventManager:
         """Create a notification event manager with persistence."""
         state_file = tmp_path / "notification_state.json"
         return NotificationEventManager(state_file=state_file)
+
+    @pytest.fixture
+    def runtime_manager(self, tmp_path):
+        """Create a manager backed by the unified runtime state store."""
+        return NotificationEventManager(
+            runtime_state_manager=RuntimeStateManager(tmp_path / "config")
+        )
 
     @pytest.fixture
     def settings_with_discussion(self):
@@ -89,6 +111,16 @@ class TestNotificationEventManager:
         return settings
 
     @pytest.fixture
+    def settings_with_minutely(self):
+        """Create settings with minutely precipitation notifications enabled."""
+        settings = AppSettings()
+        settings.notify_discussion_update = False
+        settings.notify_severe_risk_change = False
+        settings.notify_minutely_precipitation_start = True
+        settings.notify_minutely_precipitation_stop = True
+        return settings
+
+    @pytest.fixture
     def settings_none_enabled(self):
         """Create settings with no event notifications enabled."""
         settings = AppSettings()
@@ -101,6 +133,13 @@ class TestNotificationEventManager:
         assert manager.state.last_discussion_issuance_time is None
         assert manager.state.last_severe_risk is None
 
+    def test_runtime_state_path_is_canonical_under_config_root(self, runtime_manager, tmp_path):
+        assert runtime_manager.runtime_state_manager is not None
+        assert (
+            runtime_manager.runtime_state_manager.state_file
+            == tmp_path / "config" / "state" / "runtime_state.json"
+        )
+
     def test_first_discussion_no_notification(self, manager, settings_with_discussion):
         """Test that first discussion doesn't trigger notification."""
         weather_data = MagicMock(spec=WeatherData)
@@ -109,6 +148,7 @@ class TestNotificationEventManager:
             2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc
         )
         weather_data.current = None
+        weather_data.minutely_precipitation = None
 
         events = manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
         assert len(events) == 0
@@ -119,6 +159,7 @@ class TestNotificationEventManager:
         weather_data = MagicMock(spec=WeatherData)
         weather_data.current = None
         weather_data.discussion = "Discussion text"
+        weather_data.minutely_precipitation = None
 
         # First discussion with issuance time
         first_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
@@ -155,6 +196,7 @@ class TestNotificationEventManager:
         weather_data = MagicMock(spec=WeatherData)
         weather_data.current = None
         weather_data.discussion = "Old discussion"
+        weather_data.minutely_precipitation = None
 
         first_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
         weather_data.discussion_issuance_time = first_time
@@ -180,6 +222,7 @@ class TestNotificationEventManager:
         weather_data = MagicMock(spec=WeatherData)
         weather_data.current = None
         weather_data.discussion = "Discussion text without an issued header"
+        weather_data.minutely_precipitation = None
 
         first_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
         weather_data.discussion_issuance_time = first_time
@@ -199,6 +242,7 @@ class TestNotificationEventManager:
             2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc
         )
         weather_data.current = None
+        weather_data.minutely_precipitation = None
 
         # First check
         manager.check_for_events(weather_data, settings_none_enabled, "Test Location")
@@ -218,6 +262,7 @@ class TestNotificationEventManager:
         weather_data.discussion = "Some discussion text"
         weather_data.discussion_issuance_time = None  # Non-US location or API issue
         weather_data.current = None
+        weather_data.minutely_precipitation = None
 
         events = manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
         assert len(events) == 0
@@ -232,6 +277,7 @@ class TestNotificationEventManager:
         weather_data.discussion = None
         weather_data.discussion_issuance_time = None
         weather_data.current = current
+        weather_data.minutely_precipitation = None
 
         events = manager.check_for_events(weather_data, settings_with_severe_risk, "Test Location")
         assert len(events) == 0
@@ -246,6 +292,7 @@ class TestNotificationEventManager:
         weather_data.discussion = None
         weather_data.discussion_issuance_time = None
         weather_data.current = current
+        weather_data.minutely_precipitation = None
 
         # First risk (low: 20-39)
         current.severe_weather_risk = 25
@@ -272,6 +319,7 @@ class TestNotificationEventManager:
         weather_data.discussion = None
         weather_data.discussion_issuance_time = None
         weather_data.current = current
+        weather_data.minutely_precipitation = None
 
         # Start at extreme (80+)
         current.severe_weather_risk = 85
@@ -299,6 +347,258 @@ class TestNotificationEventManager:
         assert manager2.state.last_discussion_issuance_time == issuance_time
         assert manager2.state.last_severe_risk == 42
 
+    def test_loaded_discussion_state_preserves_first_run_no_spam(self, tmp_path):
+        """Persisted discussion state should suppress same-issuance notifications after restart."""
+        state_file = tmp_path / "notification_event_state.json"
+        issuance_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
+        manager1 = NotificationEventManager(state_file=state_file)
+        manager1.state.last_discussion_issuance_time = issuance_time
+        manager1.state.last_discussion_text = "Old discussion text"
+        manager1._save_state()
+
+        manager2 = NotificationEventManager(state_file=state_file)
+        settings = AppSettings(notify_discussion_update=True, notify_severe_risk_change=False)
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.current = None
+        weather_data.discussion = "Same issuance discussion text"
+        weather_data.discussion_issuance_time = issuance_time
+        weather_data.minutely_precipitation = None
+
+        same_events = manager2.check_for_events(weather_data, settings, "Test Location")
+
+        assert same_events == []
+
+    def test_unified_runtime_state_preserves_first_run_no_spam(self, tmp_path):
+        """Persisted unified discussion state should suppress same-issuance notifications."""
+        runtime_state = RuntimeStateManager(tmp_path / "config")
+        issuance_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
+        runtime_state.save_section(
+            "notification_events",
+            {
+                "discussion": {
+                    "last_issuance_time": issuance_time.isoformat(),
+                    "last_text": "Old discussion text",
+                    "last_check_time": None,
+                },
+                "severe_risk": {
+                    "last_value": None,
+                    "last_check_time": None,
+                },
+            },
+        )
+
+        manager = NotificationEventManager(runtime_state_manager=runtime_state)
+        settings = AppSettings(notify_discussion_update=True, notify_severe_risk_change=False)
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.current = None
+        weather_data.discussion = "Same issuance discussion text"
+        weather_data.discussion_issuance_time = issuance_time
+        weather_data.minutely_precipitation = None
+
+        same_events = manager.check_for_events(weather_data, settings, "Test Location")
+
+        assert same_events == []
+
+    def test_legacy_severe_risk_numeric_value_migrates_without_category_change_notification(
+        self, tmp_path
+    ):
+        state_file = tmp_path / "notification_event_state.json"
+        state_file.write_text(
+            '{"last_discussion_issuance_time": null, "last_discussion_text": null, '
+            '"last_severe_risk": 25, "last_check_time": null}',
+            encoding="utf-8",
+        )
+        runtime_state = RuntimeStateManager(tmp_path / "config")
+        manager = NotificationEventManager(
+            state_file=state_file,
+            runtime_state_manager=runtime_state,
+        )
+        settings = AppSettings(notify_discussion_update=False, notify_severe_risk_change=True)
+        current = MagicMock(spec=CurrentConditions)
+        current.severe_weather_risk = 35
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.discussion = None
+        weather_data.discussion_issuance_time = None
+        weather_data.current = current
+        weather_data.minutely_precipitation = None
+
+        events = manager.check_for_events(weather_data, settings, "Test Location")
+        reloaded = NotificationEventManager(runtime_state_manager=runtime_state)
+
+        assert events == []
+        assert reloaded.state.last_severe_risk == 35
+
+    def test_loaded_severe_risk_state_tracks_numeric_value_within_category(self, tmp_path):
+        """Persisted severe-risk state should keep the latest value before a threshold crossing."""
+        state_file = tmp_path / "notification_event_state.json"
+        manager1 = NotificationEventManager(state_file=state_file)
+        manager1.state.last_severe_risk = 25
+        manager1._save_state()
+
+        manager2 = NotificationEventManager(state_file=state_file)
+        settings = AppSettings(notify_discussion_update=False, notify_severe_risk_change=True)
+        current = MagicMock(spec=CurrentConditions)
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.discussion = None
+        weather_data.discussion_issuance_time = None
+        weather_data.current = current
+        weather_data.minutely_precipitation = None
+
+        current.severe_weather_risk = 35
+        same_category_events = manager2.check_for_events(weather_data, settings, "Test Location")
+
+        assert same_category_events == []
+        assert manager2.state.last_severe_risk == 35
+
+        current.severe_weather_risk = 45
+        threshold_events = manager2.check_for_events(weather_data, settings, "Test Location")
+
+        assert len(threshold_events) == 1
+        assert threshold_events[0].event_type == "severe_risk"
+
+    def test_parse_pirate_weather_minutely_block(self):
+        """Pirate Weather minutely payloads should parse into the shared forecast model."""
+        forecast = parse_pirate_weather_minutely_block(
+            {
+                "minutely": {
+                    "summary": "Rain starting in 12 minutes.",
+                    "icon": "rain",
+                    "data": [
+                        {"time": 1768917600, "precipIntensity": 0, "precipProbability": 0},
+                        {
+                            "time": 1768917660,
+                            "precipIntensity": 0.02,
+                            "precipProbability": 0.8,
+                            "precipType": "rain",
+                        },
+                    ],
+                }
+            }
+        )
+
+        assert forecast is not None
+        assert forecast.summary == "Rain starting in 12 minutes."
+        assert len(forecast.points) == 2
+        assert forecast.points[1].precipitation_type == "rain"
+
+    def test_detect_minutely_precipitation_start_transition(self):
+        """Dry-to-wet transitions should use the first wet minute and precip type."""
+        forecast = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0},
+                    {"time": 1768917660, "precipIntensity": 0},
+                    {"time": 1768917720, "precipIntensity": 0.02, "precipType": "rain"},
+                ]
+            }
+        )
+
+        transition = detect_minutely_precipitation_transition(forecast)
+
+        assert transition is not None
+        assert transition.transition_type == "starting"
+        assert transition.minutes_until == 2
+        assert transition.precipitation_type == "rain"
+        assert build_minutely_transition_signature(forecast) == "starting:2:rain"
+
+    def test_detect_minutely_precipitation_stop_transition(self):
+        """Wet-to-dry transitions should announce when precipitation stops."""
+        forecast = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0.03, "precipType": "snow"},
+                    {"time": 1768917660, "precipIntensity": 0.01, "precipType": "snow"},
+                    {"time": 1768917720, "precipIntensity": 0},
+                ]
+            }
+        )
+
+        transition = detect_minutely_precipitation_transition(forecast)
+
+        assert transition is not None
+        assert transition.transition_type == "stopping"
+        assert transition.minutes_until == 2
+        assert transition.precipitation_type == "snow"
+
+    def test_minutely_precipitation_transition_triggers_notification(
+        self, manager, settings_with_minutely
+    ):
+        """A changed minutely transition should generate a user-facing notification."""
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.discussion = None
+        weather_data.discussion_issuance_time = None
+        weather_data.current = None
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0},
+                    {"time": 1768917660, "precipIntensity": 0.02, "precipType": "rain"},
+                ]
+            }
+        )
+
+        first_events = manager.check_for_events(weather_data, settings_with_minutely, "Test City")
+        second_events = manager.check_for_events(weather_data, settings_with_minutely, "Test City")
+        assert first_events == []
+        assert second_events == []
+
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0},
+                    {"time": 1768917660, "precipIntensity": 0},
+                    {"time": 1768917720, "precipIntensity": 0.02, "precipType": "rain"},
+                ]
+            }
+        )
+
+        events = manager.check_for_events(weather_data, settings_with_minutely, "Test City")
+
+        assert len(events) == 1
+        assert events[0].event_type == "minutely_precipitation_start"
+        assert events[0].title == "Rain starting in 2 minutes"
+        assert events[0].message == "Rain starting in 2 minutes for Test City."
+        assert manager.state.last_minutely_transition_signature == "starting:2:rain"
+
+    def test_minutely_precipitation_stop_can_be_disabled(self, manager):
+        """Disabled stop notifications should still update state without notifying."""
+        settings = AppSettings(
+            notify_discussion_update=False,
+            notify_severe_risk_change=False,
+            notify_minutely_precipitation_start=True,
+            notify_minutely_precipitation_stop=False,
+        )
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.discussion = None
+        weather_data.discussion_issuance_time = None
+        weather_data.current = None
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0.04, "precipType": "rain"},
+                    {"time": 1768917660, "precipIntensity": 0},
+                ]
+            }
+        )
+
+        first_events = manager.check_for_events(weather_data, settings, "Test City")
+        assert first_events == []
+
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0.04, "precipType": "rain"},
+                    {"time": 1768917660, "precipIntensity": 0.03, "precipType": "rain"},
+                    {"time": 1768917720, "precipIntensity": 0},
+                ]
+            }
+        )
+
+        events = manager.check_for_events(weather_data, settings, "Test City")
+
+        assert events == []
+        assert manager.state.last_minutely_transition_signature == "stopping:2:rain"
+
     def test_reset_state(self, manager):
         """Test state reset."""
         manager.state.last_discussion_issuance_time = datetime(
@@ -310,6 +610,7 @@ class TestNotificationEventManager:
 
         assert manager.state.last_discussion_issuance_time is None
         assert manager.state.last_severe_risk is None
+        assert manager.state.last_minutely_transition_signature is None
 
 
 class TestNotificationEvent:

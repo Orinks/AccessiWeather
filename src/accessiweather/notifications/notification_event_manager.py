@@ -4,8 +4,9 @@ Notification event manager for tracking weather data changes.
 This module provides state tracking and change detection for:
 - Area Forecast Discussion (AFD) updates (using NWS API issuanceTime)
 - Severe weather risk level changes
+- Pirate Weather minutely precipitation start/stop transitions
 
-Both notification types are opt-in (disabled by default) and can be
+All notification types are opt-in (disabled by default) and can be
 enabled in Settings > Notifications.
 """
 
@@ -18,6 +19,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
+
+from ..runtime_state import RuntimeStateManager
+from .minutely_precipitation import (
+    build_minutely_transition_signature,
+    detect_minutely_precipitation_transition,
+)
 
 if TYPE_CHECKING:
     from ..models import AppSettings, CurrentConditions, WeatherData
@@ -163,7 +170,7 @@ def summarize_discussion_change(previous_text: str | None, current_text: str | N
 class NotificationEvent:
     """Represents a notification event to be sent."""
 
-    event_type: str  # 'discussion_update' or 'severe_risk'
+    event_type: str
     title: str
     message: str
     sound_event: str  # Sound event key for the soundpack
@@ -176,6 +183,7 @@ class NotificationState:
     last_discussion_issuance_time: datetime | None = None  # NWS API issuanceTime
     last_discussion_text: str | None = None
     last_severe_risk: int | None = None
+    last_minutely_transition_signature: str | None = None
     last_check_time: datetime | None = None
 
     def to_dict(self) -> dict:
@@ -188,6 +196,7 @@ class NotificationState:
             ),
             "last_discussion_text": self.last_discussion_text,
             "last_severe_risk": self.last_severe_risk,
+            "last_minutely_transition_signature": self.last_minutely_transition_signature,
             "last_check_time": self.last_check_time.isoformat() if self.last_check_time else None,
         }
 
@@ -202,6 +211,7 @@ class NotificationState:
             ),
             last_discussion_text=data.get("last_discussion_text"),
             last_severe_risk=data.get("last_severe_risk"),
+            last_minutely_transition_signature=data.get("last_minutely_transition_signature"),
             last_check_time=datetime.fromisoformat(last_check) if last_check else None,
         )
 
@@ -213,48 +223,108 @@ class NotificationEventManager:
     Tracks changes in:
     - Area Forecast Discussion (AFD) updates using NWS API issuanceTime
     - Severe weather risk levels (from Visual Crossing)
+    - Minutely precipitation start/stop transitions (from Pirate Weather)
 
-    Both notifications are opt-in (disabled by default).
+    All notifications are opt-in (disabled by default).
     """
 
-    def __init__(self, state_file: Path | None = None):
+    def __init__(
+        self,
+        state_file: Path | None = None,
+        runtime_state_manager: RuntimeStateManager | None = None,
+    ):
         """
         Initialize the notification event manager.
 
         Args:
             state_file: Optional path to persist notification state
+            runtime_state_manager: Optional unified runtime-state manager
 
         """
         self.state_file = state_file
+        self.runtime_state_manager = runtime_state_manager
         self.state = NotificationState()
         self._load_state()
         logger.info("NotificationEventManager initialized")
 
     def _load_state(self) -> None:
         """Load state from file if available."""
-        if not self.state_file or not self.state_file.exists():
-            return
-
         try:
-            with open(self.state_file, encoding="utf-8") as f:
-                data = json.load(f)
+            if self.runtime_state_manager is not None:
+                data = self._runtime_section_to_legacy_shape(
+                    self.runtime_state_manager.load_section("notification_events")
+                )
+            elif self.state_file and self.state_file.exists():
+                with open(self.state_file, encoding="utf-8") as f:
+                    data = json.load(f)
+            else:
+                return
             self.state = NotificationState.from_dict(data)
-            logger.debug("Loaded notification state from %s", self.state_file)
+            logger.debug(
+                "Loaded notification state from %s",
+                self.runtime_state_manager.state_file
+                if self.runtime_state_manager
+                else self.state_file,
+            )
         except Exception as e:
             logger.warning("Failed to load notification state: %s", e)
 
     def _save_state(self) -> None:
         """Save state to file if configured."""
-        if not self.state_file:
-            return
-
         try:
-            self.state_file.parent.mkdir(parents=True, exist_ok=True)
-            with open(self.state_file, "w", encoding="utf-8") as f:
-                json.dump(self.state.to_dict(), f, indent=2)
-            logger.debug("Saved notification state to %s", self.state_file)
+            if self.runtime_state_manager is not None:
+                self.runtime_state_manager.save_section(
+                    "notification_events",
+                    self._legacy_shape_to_runtime_section(self.state.to_dict()),
+                )
+                logger.debug(
+                    "Saved notification state to %s", self.runtime_state_manager.state_file
+                )
+            elif self.state_file:
+                self.state_file.parent.mkdir(parents=True, exist_ok=True)
+                with open(self.state_file, "w", encoding="utf-8") as f:
+                    json.dump(self.state.to_dict(), f, indent=2)
+                logger.debug("Saved notification state to %s", self.state_file)
         except Exception as e:
             logger.warning("Failed to save notification state: %s", e)
+
+    @staticmethod
+    def _runtime_section_to_legacy_shape(section: dict) -> dict:
+        """Convert unified runtime state to the legacy notification-state shape."""
+        discussion = section.get("discussion", {})
+        severe_risk = section.get("severe_risk", {})
+        minutely_precipitation = section.get("minutely_precipitation", {})
+        return {
+            "last_discussion_issuance_time": discussion.get("last_issuance_time"),
+            "last_discussion_text": discussion.get("last_text"),
+            "last_severe_risk": severe_risk.get("last_value"),
+            "last_minutely_transition_signature": minutely_precipitation.get(
+                "last_transition_signature"
+            ),
+            "last_check_time": discussion.get("last_check_time")
+            or severe_risk.get("last_check_time")
+            or minutely_precipitation.get("last_check_time"),
+        }
+
+    @staticmethod
+    def _legacy_shape_to_runtime_section(data: dict) -> dict:
+        """Convert legacy notification-state payloads to the unified section shape."""
+        last_check_time = data.get("last_check_time")
+        return {
+            "discussion": {
+                "last_issuance_time": data.get("last_discussion_issuance_time"),
+                "last_text": data.get("last_discussion_text"),
+                "last_check_time": last_check_time,
+            },
+            "severe_risk": {
+                "last_value": data.get("last_severe_risk"),
+                "last_check_time": last_check_time,
+            },
+            "minutely_precipitation": {
+                "last_transition_signature": data.get("last_minutely_transition_signature"),
+                "last_check_time": last_check_time,
+            },
+        }
 
     def check_for_events(
         self,
@@ -293,6 +363,18 @@ class NotificationEventManager:
                 risk_event = self._check_severe_risk_change(current_conditions, location_name)
                 if risk_event:
                     events.append(risk_event)
+
+        if (
+            settings.notify_minutely_precipitation_start
+            or settings.notify_minutely_precipitation_stop
+        ):
+            minutely_event = self._check_minutely_precipitation_transition(
+                weather_data.minutely_precipitation,
+                settings,
+                location_name,
+            )
+            if minutely_event:
+                events.append(minutely_event)
 
         # Update check time and save state
         self.state.last_check_time = datetime.now()
@@ -453,6 +535,48 @@ class NotificationEventManager:
         # Update stored value even if category didn't change
         self.state.last_severe_risk = severe_risk
         return None
+
+    def _check_minutely_precipitation_transition(
+        self,
+        minutely_precipitation,
+        settings: AppSettings,
+        location_name: str,
+    ) -> NotificationEvent | None:
+        """Check for a new dry/wet transition in Pirate Weather minutely guidance."""
+        signature = build_minutely_transition_signature(minutely_precipitation)
+        if signature is None:
+            return None
+
+        if self.state.last_minutely_transition_signature is None:
+            self.state.last_minutely_transition_signature = signature
+            logger.debug("First minutely precipitation state stored: %s", signature)
+            return None
+
+        if signature == self.state.last_minutely_transition_signature:
+            return None
+
+        self.state.last_minutely_transition_signature = signature
+        transition = detect_minutely_precipitation_transition(minutely_precipitation)
+        if transition is None:
+            return None
+
+        if (
+            transition.transition_type == "starting"
+            and not settings.notify_minutely_precipitation_start
+        ):
+            return None
+        if (
+            transition.transition_type == "stopping"
+            and not settings.notify_minutely_precipitation_stop
+        ):
+            return None
+
+        return NotificationEvent(
+            event_type=transition.event_type,
+            title=transition.title,
+            message=f"{transition.title} for {location_name}.",
+            sound_event="notify",
+        )
 
     def reset_state(self) -> None:
         """Reset all tracked state."""
