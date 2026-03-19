@@ -6,6 +6,8 @@ import logging
 import sys
 from pathlib import Path
 
+from .paths import detect_portable_mode
+
 logger = logging.getLogger(__name__)
 
 
@@ -29,10 +31,7 @@ def get_soundpacks_dir() -> Path:
         meipass_dir = Path(sys._MEIPASS) if hasattr(sys, "_MEIPASS") else exe_dir
 
         # Portable: soundpacks live next to the exe so users can manage them.
-        # Detect via .portable marker (same logic as config_utils.is_portable_mode).
-        portable_marker = exe_dir / ".portable"
-        legacy_config_marker = exe_dir / "config"
-        is_portable = portable_marker.exists() or legacy_config_marker.is_dir()
+        is_portable = detect_portable_mode()
 
         # Portable: soundpacks live in data/soundpacks/ (app data, not user config).
         # Installed/onefile: use _MEIPASS where packs are extracted by PyInstaller.

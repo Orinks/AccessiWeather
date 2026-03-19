@@ -295,6 +295,9 @@ class HourlyForecastPeriod:
     wind_direction: str | None = None
     icon: str | None = None
     end_time: datetime | None = None
+    humidity: int | None = None
+    dewpoint_f: float | None = None
+    dewpoint_c: float | None = None
     pressure_mb: float | None = None
     pressure_in: float | None = None
     precipitation_probability: float | None = None
@@ -332,6 +335,9 @@ class HourlyForecastPeriod:
                 self.temperature is not None,
                 self.short_forecast is not None,
                 self.wind_speed is not None,
+                self.humidity is not None,
+                self.dewpoint_f is not None,
+                self.dewpoint_c is not None,
                 self.pressure_mb is not None,
             ]
         )
@@ -343,6 +349,7 @@ class HourlyForecast:
 
     periods: list[HourlyForecastPeriod]
     generated_at: datetime | None = None
+    summary: str | None = None
 
     def has_data(self) -> bool:
         """Check if we have any hourly forecast data."""

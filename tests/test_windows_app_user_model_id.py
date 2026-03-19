@@ -437,7 +437,7 @@ def test_ensure_windows_toast_identity_skips_repair_when_stamp_valid(monkeypatch
 
 def test_accessiweather_app_init_falls_back_when_portable_detection_errors(monkeypatch):
     monkeypatch.setattr(
-        "accessiweather.config_utils.is_portable_mode", MagicMock(side_effect=RuntimeError("oops"))
+        "accessiweather.app.detect_portable_mode", MagicMock(side_effect=RuntimeError("oops"))
     )
     init_mock = MagicMock(return_value=None)
     monkeypatch.setattr("wx.App.__init__", init_mock)

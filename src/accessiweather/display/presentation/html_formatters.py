@@ -224,21 +224,38 @@ def generate_forecast_html(presentation: ForecastPresentation | None) -> str:
     # Build hourly section if available
     hourly_html = ""
     if presentation.hourly_periods:
+        hourly_summary_html = ""
+        if presentation.hourly_summary:
+            hourly_summary_html = (
+                f'<p class="description">{_escape_html(presentation.hourly_summary)}</p>'
+            )
         hourly_items = []
         for period in presentation.hourly_periods:
             time_str = _escape_html(period.time)
             temp = _escape_html(period.temperature) if period.temperature else ""
             conditions = _escape_html(period.conditions) if period.conditions else ""
+            details: list[str] = []
+            if period.wind:
+                details.append(f"Wind: {_escape_html(period.wind)}")
+            if period.humidity:
+                details.append(f"Humidity: {_escape_html(period.humidity)}")
+            if period.dewpoint:
+                details.append(f"Dewpoint: {_escape_html(period.dewpoint)}")
+            details_html = (
+                f'<div class="hourly-details">{" | ".join(details)}</div>' if details else ""
+            )
             hourly_items.append(f"""
 <div class="hourly-item" role="listitem">
 <div class="hourly-time">{time_str}</div>
 <div class="hourly-temp">{temp}</div>
 <div class="hourly-conditions">{conditions}</div>
+{details_html}
 </div>""")
         num_hourly = len(presentation.hourly_periods)
         hourly_html = f"""
 <section class="hourly-section" aria-label="Next {num_hourly} hours forecast">
 <h3>Next {num_hourly} Hours</h3>
+{hourly_summary_html}
 <div class="hourly-grid" role="list">
 {"".join(hourly_items)}
 </div>

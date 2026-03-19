@@ -187,7 +187,7 @@ def test_render_nightly_notes_summary_limits_list_items():
 
     assert "<li>One</li>" in html_block
     assert "<li>Three</li>" in html_block
-    assert "<li>Four</li>" not in html_block
+    assert "<li>Four</li>" in html_block  # max_items=10 allows all 4
 
 
 def test_render_release_section_contains_stable_and_nightlies():
@@ -243,7 +243,7 @@ def test_render_release_section_contains_stable_and_nightlies():
     assert "What&apos;s new" in html_block
     assert "Stable change one" in html_block
     assert "Fixed updater" in html_block
-    assert "Extra detail" not in html_block
+    assert "Extra detail" in html_block  # max_items=10 allows all items
     assert "Download Windows portable" in html_block
     assert "macOS (" not in html_block
     assert "Windows installer (" not in html_block

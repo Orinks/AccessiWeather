@@ -12,6 +12,7 @@ from ...models import (
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    MinutelyPrecipitationForecast,
     TrendInsight,
     WeatherAlerts,
 )
@@ -437,6 +438,7 @@ def build_current_conditions(
     environmental: EnvironmentalConditions | None = None,
     trends: Iterable[TrendInsight] | None = None,
     hourly_forecast: HourlyForecast | None = None,
+    minutely_precipitation: MinutelyPrecipitationForecast | None = None,
     air_quality: AirQualityPresentation | None = None,
     alerts: WeatherAlerts | None = None,
     unit_system: DisplayUnitSystem | str | None = None,
@@ -493,6 +495,9 @@ def build_current_conditions(
 
     # Reorder metrics by priority before adding non-reorderable metrics
     metrics = _order_metrics_by_priority(metrics, ordered_categories)
+
+    if minutely_precipitation and minutely_precipitation.summary:
+        metrics.insert(0, Metric("Precipitation outlook", minutely_precipitation.summary))
 
     # Add astronomical metrics (these don't need reordering - always at end)
     metrics.extend(

@@ -2,11 +2,19 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
-from accessiweather.paths import Paths, RuntimeStoragePaths, resolve_runtime_storage
+from accessiweather.paths import (
+    Paths,
+    RuntimeStoragePaths,
+    detect_portable_mode,
+    resolve_default_config_root,
+    resolve_default_runtime_storage,
+    resolve_runtime_storage,
+)
 
 
 class TestPathsInit:
@@ -149,6 +157,44 @@ class TestPortableFrozenBasePath:
         assert result == tmp_path
 
 
+class TestPortableDetection:
+    """Test the canonical portable-mode detection helper."""
+
+    def test_not_frozen_returns_false(self):
+        with (
+            patch.object(sys, "frozen", False, create=True),
+            patch.dict(os.environ, {}, clear=False),
+        ):
+            os.environ.pop("ACCESSIWEATHER_FORCE_PORTABLE", None)
+            assert detect_portable_mode() is False
+
+    def test_force_portable_env_var(self):
+        with patch.dict(os.environ, {"ACCESSIWEATHER_FORCE_PORTABLE": "1"}):
+            assert detect_portable_mode() is True
+
+    def test_frozen_portable_marker_file_is_portable(self, tmp_path):
+        exe_path = str(tmp_path / "app.exe")
+        (tmp_path / ".portable").write_text("1")
+
+        with (
+            patch.object(sys, "frozen", True, create=True),
+            patch.object(sys, "executable", exe_path),
+            patch.dict(os.environ, {"ACCESSIWEATHER_FORCE_PORTABLE": ""}, clear=False),
+        ):
+            assert detect_portable_mode() is True
+
+    def test_frozen_config_dir_marker_is_portable(self, tmp_path):
+        exe_path = str(tmp_path / "app.exe")
+        (tmp_path / "config").mkdir()
+
+        with (
+            patch.object(sys, "frozen", True, create=True),
+            patch.object(sys, "executable", exe_path),
+            patch.dict(os.environ, {"ACCESSIWEATHER_FORCE_PORTABLE": ""}, clear=False),
+        ):
+            assert detect_portable_mode() is True
+
+
 class TestRuntimeStorageResolution:
     """Test canonical runtime storage resolution."""
 
@@ -198,6 +244,24 @@ class TestRuntimeStorageResolution:
         ):
             result = p._get_base_path()
         assert result == tmp_path
+
+    def test_resolve_default_runtime_storage_uses_normalized_linux_config_root(self, tmp_path):
+        with (
+            patch.object(sys, "platform", "linux"),
+            patch.dict("os.environ", {"XDG_DATA_HOME": str(tmp_path)}),
+        ):
+            runtime = resolve_default_runtime_storage()
+
+        assert runtime.config_root == tmp_path / "accessiweather" / "Config"
+
+    def test_resolve_default_config_root_uses_normalized_windows_config_root(self, tmp_path):
+        with (
+            patch.object(sys, "platform", "win32"),
+            patch.dict("os.environ", {"LOCALAPPDATA": str(tmp_path)}),
+        ):
+            config_root = resolve_default_config_root()
+
+        assert config_root == tmp_path / "Orinks" / "AccessiWeather" / "Config"
 
     def test_frozen_with_config_dir_marker_uses_exe_dir(self, tmp_path):
         exe = tmp_path / "AccessiWeather.exe"

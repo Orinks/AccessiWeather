@@ -426,6 +426,24 @@ class PirateWeatherClient:
                 temp_c = float(temp) if temp is not None else None
                 temp_f = (temp_c * 9 / 5 + 32) if temp_c is not None else temp_c
 
+            humidity_raw = hour.get("humidity")
+            humidity = round(humidity_raw * 100) if humidity_raw is not None else None
+
+            dewpoint = hour.get("dewPoint")
+            if using_us:
+                dewpoint_f = float(dewpoint) if dewpoint is not None else None
+                dewpoint_c = convert_f_to_c(dewpoint_f)
+                if dewpoint_f is None and temp_f is not None and humidity is not None:
+                    dewpoint_f = calculate_dewpoint(
+                        temp_f,
+                        humidity,
+                        unit=TemperatureUnit.FAHRENHEIT,
+                    )
+                    dewpoint_c = convert_f_to_c(dewpoint_f)
+            else:
+                dewpoint_c = float(dewpoint) if dewpoint is not None else None
+                dewpoint_f = (dewpoint_c * 9 / 5 + 32) if dewpoint_c is not None else None
+
             # Pressure in mb (all unit groups)
             pressure_mb = hour.get("pressure")
             pressure_in = pressure_mb / 33.8639 if pressure_mb is not None else None
@@ -493,6 +511,9 @@ class PirateWeatherClient:
                 short_forecast=condition,
                 wind_speed=wind_str,
                 wind_direction=degrees_to_cardinal(hour.get("windBearing")),
+                humidity=humidity,
+                dewpoint_f=dewpoint_f,
+                dewpoint_c=dewpoint_c,
                 pressure_mb=pressure_mb,
                 pressure_in=pressure_in,
                 precipitation_probability=precip_prob,
@@ -506,7 +527,12 @@ class PirateWeatherClient:
             )
             periods.append(period)
 
-        return HourlyForecast(periods=periods, generated_at=datetime.now(UTC))
+        hourly_summary = data.get("hourly", {}).get("summary")
+        return HourlyForecast(
+            periods=periods,
+            generated_at=datetime.now(UTC),
+            summary=hourly_summary if isinstance(hourly_summary, str) else None,
+        )
 
     def _parse_alerts(self, data: dict) -> WeatherAlerts:
         """Parse Pirate Weather ``alerts`` list into WeatherAlerts."""

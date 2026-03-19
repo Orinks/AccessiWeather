@@ -63,6 +63,8 @@ def sample_forecast_payload():
                     "icon": "partly-cloudy-day",
                     "temperature": 68.0,
                     "apparentTemperature": 66.5,
+                    "humidity": 0.65,
+                    "dewPoint": 55.0,
                     "windSpeed": 10.0,
                     "windGust": 18.0,
                     "windBearing": 180,
@@ -335,10 +337,29 @@ class TestParseHourlyForecast:
         period = result.periods[0]
         assert period.temperature == 68.0
         assert period.temperature_unit == "F"
+        assert period.humidity == 65
+        assert period.dewpoint_f == 55.0
         assert period.pressure_mb == 1013.0
         assert period.cloud_cover == 45
         assert period.uv_index == 3
         assert period.precipitation_probability == 10
+
+    def test_hourly_dewpoint_calculated_when_missing(self, client, sample_forecast_payload):
+        payload = dict(sample_forecast_payload)
+        payload["hourly"] = {
+            "data": [dict(sample_forecast_payload["hourly"]["data"][0], dewPoint=None)]
+        }
+
+        result = client._parse_hourly_forecast(payload)
+
+        assert result.periods[0].humidity == 65
+        assert result.periods[0].dewpoint_f is not None
+        assert result.periods[0].dewpoint_c is not None
+
+    def test_hourly_block_summary_parsed(self, client, sample_forecast_payload):
+        sample_forecast_payload["hourly"]["summary"] = "Partly cloudy until late afternoon."
+        result = client._parse_hourly_forecast(sample_forecast_payload)
+        assert result.summary == "Partly cloudy until late afternoon."
 
     def test_timezone_aware_start_time(self, client, sample_forecast_payload):
         result = client._parse_hourly_forecast(sample_forecast_payload)

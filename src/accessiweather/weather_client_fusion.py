@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import fields
+from dataclasses import fields, replace
 from typing import Any
 
 from accessiweather.config.source_priority import SourcePriorityConfig
@@ -258,12 +258,25 @@ class DataFusionEngine:
         if not selected_source:
             selected_source = valid_sources[0]
 
-        # Use the selected source's forecast directly (no merging / stitching).
+        # Use the selected source's forecast directly, while preserving Pirate Weather's
+        # block summary when another source wins the main forecast selection.
         forecast = selected_source.forecast
         source_name = selected_source.source
+        pirate_weather_source = next(
+            (s for s in valid_sources if s.source == "pirateweather"), None
+        )
+        pirate_summary = (
+            pirate_weather_source.forecast.summary
+            if pirate_weather_source and pirate_weather_source.forecast
+            else None
+        )
+        if forecast and forecast.summary is None and pirate_summary:
+            forecast = replace(forecast, summary=pirate_summary)
 
         # Track attribution
         field_sources["forecast_source"] = source_name
+        if pirate_summary and forecast and forecast.summary == pirate_summary:
+            field_sources["forecast_summary"] = "pirateweather"
         logger.debug(f"Using {source_name} for forecast (location: {location.name})")
 
         return forecast, field_sources
@@ -321,12 +334,25 @@ class DataFusionEngine:
         if not selected_source:
             selected_source = valid_sources[0]
 
-        # Use the selected source's hourly forecast directly (no merging)
+        # Use the selected source's hourly forecast directly, while preserving Pirate Weather's
+        # block summary when another source wins the hourly selection.
         hourly_forecast = selected_source.hourly_forecast
         source_name = selected_source.source
+        pirate_weather_source = next(
+            (s for s in valid_sources if s.source == "pirateweather"), None
+        )
+        pirate_summary = (
+            pirate_weather_source.hourly_forecast.summary
+            if pirate_weather_source and pirate_weather_source.hourly_forecast
+            else None
+        )
+        if hourly_forecast and hourly_forecast.summary is None and pirate_summary:
+            hourly_forecast = replace(hourly_forecast, summary=pirate_summary)
 
         # Track attribution
         field_sources["hourly_source"] = source_name
+        if pirate_summary and hourly_forecast and hourly_forecast.summary == pirate_summary:
+            field_sources["hourly_summary"] = "pirateweather"
         logger.debug(f"Using {source_name} for hourly forecast (location: {location.name})")
 
         return hourly_forecast, field_sources
