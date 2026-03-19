@@ -174,6 +174,18 @@ class TestHourlyForecast:
         )
         assert with_periods.has_data() is True
 
+    def test_hourly_period_accepts_humidity_and_dewpoint(self):
+        period = HourlyForecastPeriod(
+            start_time=datetime.now(UTC),
+            humidity=65,
+            dewpoint_f=55.0,
+            dewpoint_c=12.8,
+        )
+
+        assert period.has_data() is True
+        assert period.humidity == 65
+        assert period.dewpoint_f == 55.0
+
 
 class TestWeatherAlert:
     """Tests for WeatherAlert model."""

@@ -373,6 +373,9 @@ def _serialize_hourly_period(period: HourlyForecastPeriod) -> dict:
         "wind_speed": period.wind_speed,
         "wind_direction": period.wind_direction,
         "icon": period.icon,
+        "humidity": period.humidity,
+        "dewpoint_f": period.dewpoint_f,
+        "dewpoint_c": period.dewpoint_c,
         "pressure_mb": period.pressure_mb,
         "pressure_in": period.pressure_in,
     }
@@ -389,6 +392,9 @@ def _deserialize_hourly_period(data: dict) -> HourlyForecastPeriod:
         wind_speed=data.get("wind_speed"),
         wind_direction=data.get("wind_direction"),
         icon=data.get("icon"),
+        humidity=data.get("humidity"),
+        dewpoint_f=data.get("dewpoint_f"),
+        dewpoint_c=data.get("dewpoint_c"),
         pressure_mb=data.get("pressure_mb"),
         pressure_in=data.get("pressure_in"),
     )

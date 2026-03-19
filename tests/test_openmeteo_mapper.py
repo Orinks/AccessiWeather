@@ -59,3 +59,56 @@ class TestOpenMeteoMapperForecastPairing:
         periods = mapped["properties"]["periods"]
 
         assert "temperature_low" not in periods[0]
+
+
+class TestOpenMeteoMapperHourlyFields:
+    def test_hourly_mapping_includes_humidity_and_dewpoint(self):
+        mapped = OpenMeteoMapper().map_hourly_forecast(
+            {
+                "utc_offset_seconds": 0,
+                "hourly": {
+                    "time": ["2026-03-19T12:00"],
+                    "temperature_2m": [72.0],
+                    "relative_humidity_2m": [55],
+                    "dew_point_2m": [54.0],
+                    "weather_code": [1],
+                    "wind_speed_10m": [8.0],
+                    "wind_direction_10m": [180],
+                    "is_day": [1],
+                },
+                "hourly_units": {
+                    "temperature_2m": "°F",
+                    "wind_speed_10m": "mph",
+                },
+            }
+        )
+
+        period = mapped["properties"]["periods"][0]
+
+        assert period["relativeHumidity"]["value"] == 55
+        assert period["dewpoint"]["value"] == 54.0
+
+    def test_hourly_mapping_calculates_dewpoint_when_missing(self):
+        mapped = OpenMeteoMapper().map_hourly_forecast(
+            {
+                "utc_offset_seconds": 0,
+                "hourly": {
+                    "time": ["2026-03-19T12:00"],
+                    "temperature_2m": [72.0],
+                    "relative_humidity_2m": [55],
+                    "weather_code": [1],
+                    "wind_speed_10m": [8.0],
+                    "wind_direction_10m": [180],
+                    "is_day": [1],
+                },
+                "hourly_units": {
+                    "temperature_2m": "°F",
+                    "wind_speed_10m": "mph",
+                },
+            }
+        )
+
+        period = mapped["properties"]["periods"][0]
+
+        assert period["relativeHumidity"]["value"] == 55
+        assert period["dewpoint"]["value"] is not None

@@ -50,6 +50,8 @@ class HourlyPeriodPresentation:
     temperature: str | None
     conditions: str | None
     wind: str | None
+    humidity: str | None = None
+    dewpoint: str | None = None
     precipitation_probability: str | None = None
     snowfall: str | None = None
     uv_index: str | None = None

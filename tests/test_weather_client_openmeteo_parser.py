@@ -5,6 +5,7 @@ from accessiweather.weather_client_openmeteo import (
     _resolve_current_condition_description,
     parse_openmeteo_current_conditions,
     parse_openmeteo_forecast,
+    parse_openmeteo_hourly_forecast,
 )
 
 
@@ -176,3 +177,62 @@ def test_resolve_condition_snow_dominant_with_snow_code_keeps_base_label():
     )
     assert condition is not None
     assert "snow" in condition.lower()
+
+
+def test_parse_openmeteo_hourly_forecast_surfaces_humidity_and_dewpoint():
+    data = {
+        "utc_offset_seconds": 0,
+        "hourly": {
+            "time": ["2026-03-19T12:00"],
+            "temperature_2m": [72.0],
+            "relative_humidity_2m": [55],
+            "dew_point_2m": [54.0],
+            "weather_code": [1],
+            "wind_speed_10m": [8.0],
+            "wind_direction_10m": [180],
+            "pressure_msl": [1015.0],
+            "precipitation_probability": [20],
+            "snowfall": [0.0],
+            "uv_index": [4.0],
+            "snow_depth": [0.0],
+            "freezing_level_height": [2000.0],
+            "visibility": [16093.44],
+            "apparent_temperature": [72.0],
+        },
+    }
+
+    hourly = parse_openmeteo_hourly_forecast(data)
+    period = hourly.periods[0]
+
+    assert period.humidity == 55
+    assert period.dewpoint_f == 54.0
+    assert period.dewpoint_c is not None
+
+
+def test_parse_openmeteo_hourly_forecast_calculates_dewpoint_when_missing():
+    data = {
+        "utc_offset_seconds": 0,
+        "hourly": {
+            "time": ["2026-03-19T12:00"],
+            "temperature_2m": [72.0],
+            "relative_humidity_2m": [55],
+            "weather_code": [1],
+            "wind_speed_10m": [8.0],
+            "wind_direction_10m": [180],
+            "pressure_msl": [1015.0],
+            "precipitation_probability": [20],
+            "snowfall": [0.0],
+            "uv_index": [4.0],
+            "snow_depth": [0.0],
+            "freezing_level_height": [2000.0],
+            "visibility": [16093.44],
+            "apparent_temperature": [72.0],
+        },
+    }
+
+    hourly = parse_openmeteo_hourly_forecast(data)
+    period = hourly.periods[0]
+
+    assert period.humidity == 55
+    assert period.dewpoint_f is not None
+    assert period.dewpoint_c is not None

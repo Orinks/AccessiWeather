@@ -188,6 +188,7 @@ class OpenMeteoApiClient:
             "current": [
                 "temperature_2m",
                 "relative_humidity_2m",
+                "dew_point_2m",
                 "apparent_temperature",
                 "is_day",
                 "precipitation",
