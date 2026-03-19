@@ -103,6 +103,8 @@ class ForecastPresentation:
     hourly_summary: str | None = None
     generated_at: str | None = None
     fallback_text: str = ""
+    daily_section_text: str = ""
+    hourly_section_text: str = ""
     confidence_label: str | None = None
     summary: str | None = None
 

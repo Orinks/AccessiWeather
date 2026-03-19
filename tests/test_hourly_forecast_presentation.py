@@ -3,10 +3,19 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from accessiweather.display.presentation.forecast import (
+    build_forecast,
+    build_hourly_section_text,
     build_hourly_summary,
     render_hourly_fallback,
 )
-from accessiweather.models import AppSettings, HourlyForecast, HourlyForecastPeriod
+from accessiweather.models import (
+    AppSettings,
+    Forecast,
+    ForecastPeriod,
+    HourlyForecast,
+    HourlyForecastPeriod,
+    Location,
+)
 from accessiweather.utils import TemperatureUnit
 
 
@@ -60,3 +69,49 @@ def test_hourly_fallback_includes_humidity_and_dewpoint():
 
     assert "Humidity 55%" in lines
     assert "Dewpoint 54°F" in lines
+
+
+def test_hourly_section_text_omits_empty_section_without_summary():
+    section_text = build_hourly_section_text([], hours=6)
+
+    assert section_text == ""
+
+
+def test_build_forecast_exposes_daily_and_hourly_sections():
+    forecast = Forecast(
+        periods=[
+            ForecastPeriod(
+                name="Today",
+                temperature=70.0,
+                temperature_low=54.0,
+                temperature_unit="F",
+                short_forecast="Sunny",
+            )
+        ],
+        summary="Dry and pleasant through tomorrow.",
+    )
+    hourly = HourlyForecast(
+        periods=[
+            HourlyForecastPeriod(
+                start_time=datetime(2026, 3, 19, 12, tzinfo=UTC),
+                temperature=72.0,
+                temperature_unit="F",
+                short_forecast="Sunny",
+            )
+        ],
+        summary="Clear through mid afternoon.",
+    )
+    result = build_forecast(
+        forecast,
+        hourly,
+        Location(name="Testville", latitude=40.0, longitude=-75.0),
+        TemperatureUnit.FAHRENHEIT,
+        settings=AppSettings(hourly_forecast_hours=1),
+    )
+
+    assert result.daily_section_text.startswith("Daily forecast for Testville:")
+    assert "Overall: Dry and pleasant through tomorrow." in result.daily_section_text
+    assert result.hourly_section_text.startswith("Hourly forecast:")
+    assert "Hourly outlook: Clear through mid afternoon." in result.hourly_section_text
+    assert "Next 1 Hours:" in result.hourly_section_text
+    assert result.fallback_text == (f"{result.daily_section_text}\n\n{result.hourly_section_text}")
