@@ -332,10 +332,10 @@ class SettingsDialogSimple(wx.Dialog):
             panel,
             choices=[
                 "Automatic (merges all available sources)",
-                "National Weather Service (US only, with alerts)",
-                "Open-Meteo (International, no alerts)",
-                "Visual Crossing (International with alerts, requires API key)",
-                "Pirate Weather (Global with alerts, requires API key)",
+                "National Weather Service (US only, forecast + alerts)",
+                "Open-Meteo (Global forecast, no alerts, no API key)",
+                "Visual Crossing (Global forecast, US/Canada/Europe alerts, API key)",
+                "Pirate Weather (Global forecast + worldwide alerts, API key)",
             ],
         )
         row1.Add(self._controls["data_source"], 0)
