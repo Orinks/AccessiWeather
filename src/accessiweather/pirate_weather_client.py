@@ -11,6 +11,7 @@ API endpoint: https://api.pirateweather.net/forecast/{apikey}/{lat},{lon}
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from datetime import UTC, datetime, timedelta, timezone
 
@@ -68,6 +69,21 @@ def _icon_to_condition(icon: str | None) -> str | None:
     if not icon:
         return None
     return _ICON_TO_CONDITION.get(icon, icon.replace("-", " ").title())
+
+
+def _build_alert_id(alert_data: dict[str, object]) -> str:
+    """Build a deterministic lifecycle ID for Pirate Weather / WMO alerts."""
+    title = str(alert_data.get("title") or "Weather Alert").strip().lower()
+    severity = str(alert_data.get("severity") or "").strip().lower()
+    onset = str(alert_data.get("time") or "")
+    regions = alert_data.get("regions")
+    normalized_regions: list[str] = []
+    if isinstance(regions, list):
+        normalized_regions = sorted(str(region).strip().lower() for region in regions if region)
+
+    fingerprint = "|".join([title, severity, onset, ",".join(normalized_regions)])
+    digest = hashlib.sha1(fingerprint.encode("utf-8")).hexdigest()[:16]
+    return f"pw-wmo-{digest}"
 
 
 class PirateWeatherClient:
@@ -546,13 +562,7 @@ class PirateWeatherClient:
             title = alert_data.get("title") or "Weather Alert"
             description = alert_data.get("description") or title
             severity = self._map_severity(alert_data.get("severity"))
-            uri = alert_data.get("uri") or ""
-
-            # Use stable ID based on title + expires so it doesn't change on minor
-            # text updates to the description
-            expires_raw = alert_data.get("expires")
-            _id_str = f"pw-{hash(f'{title}-{expires_raw}')}"
-            alert_id = uri or _id_str
+            alert_id = _build_alert_id(alert_data)
 
             onset_raw = alert_data.get("time")
             expires_raw_val = alert_data.get("expires")

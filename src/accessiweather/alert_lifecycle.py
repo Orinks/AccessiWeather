@@ -95,6 +95,12 @@ def _alert_label(count: int, singular: str, plural: str | None = None) -> str:
     return f"{count} {singular if count == 1 else plural}"
 
 
+def _source_requires_cancel_confirmation(source: str | None) -> bool:
+    """Return True for sources where disappearance alone is not trustworthy."""
+    normalized_source = (source or "").strip().lower()
+    return normalized_source in {"nws", "pirateweather"}
+
+
 def _expires_extended(prev: WeatherAlert, curr: WeatherAlert) -> bool:
     """Return True when the expiry timestamp was pushed to a later time."""
     if prev.expires is None or curr.expires is None:
@@ -218,10 +224,12 @@ def diff_alerts(
     # Cancelled: in previous but not current
     for alert_id, prev_alert in prev_map.items():
         if alert_id not in curr_map:
-            if prev_alert.source == "NWS":
+            if _source_requires_cancel_confirmation(prev_alert.source):
                 # NWS alerts: require explicit cancel confirmation via the NWS cancel endpoint.
-                # If confirmed_cancel_ids is None (not fetched): suppress all NWS cancels.
-                # If provided: only notify if this alert ID is confirmed cancelled.
+                # Pirate Weather / WMO alerts: disappearance alone is not reliable enough to
+                # announce a cancellation, and there is no authoritative cancel verification path.
+                # If confirmed_cancel_ids is None (not fetched): suppress all such cancels.
+                # If provided: only notify if this alert ID is explicitly confirmed cancelled.
                 if confirmed_cancel_ids is not None and alert_id in confirmed_cancel_ids:
                     cancelled_changes.append(
                         AlertChange(
