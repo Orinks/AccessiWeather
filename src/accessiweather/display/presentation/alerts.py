@@ -12,6 +12,11 @@ if TYPE_CHECKING:
     from accessiweather.alert_lifecycle import AlertLifecycleDiff
 
 
+def _is_pirate_weather_alert(alert: WeatherAlert) -> bool:
+    """Return True when the alert originated from Pirate Weather / WMO."""
+    return "pirateweather" in (alert.source or "").strip().lower()
+
+
 def build_alerts(
     alerts: WeatherAlerts,
     location: Location,
@@ -93,6 +98,7 @@ def build_single_alert(
     severity = alert.severity if alert.severity != "Unknown" else None
     urgency = alert.urgency if alert.urgency != "Unknown" else None
     areas = alert.areas[:3] if alert.areas else []
+    is_regional_pw_alert = _is_pirate_weather_alert(alert)
 
     # Extract time preferences
     if settings:
@@ -135,7 +141,12 @@ def build_single_alert(
         area_text = ", ".join(areas)
         if remaining > 0:
             area_text += f" and {remaining} more"
-        parts.append(f"  Areas: {area_text}")
+        area_label = "Regions" if is_regional_pw_alert else "Areas"
+        parts.append(f"  {area_label}: {area_text}")
+    if is_regional_pw_alert:
+        parts.append(
+            "  Coverage: Regional alert from Pirate Weather/WMO; may not match your exact county or zone."
+        )
     if expires:
         parts.append(f"  Expires: {expires}")
     if description:
