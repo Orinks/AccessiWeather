@@ -34,6 +34,7 @@ from .weather_client_parsers import convert_f_to_c, degrees_to_cardinal
 logger = logging.getLogger(__name__)
 
 _BASE_URL = "https://api.pirateweather.net/forecast"
+_PW_MIN_INCLUDED_SEVERITIES = frozenset({"Severe", "Extreme"})
 
 
 class PirateWeatherApiError(Exception):
@@ -84,6 +85,18 @@ def _build_alert_id(alert_data: dict[str, object]) -> str:
     fingerprint = "|".join([title, severity, onset, ",".join(normalized_regions)])
     digest = hashlib.sha1(fingerprint.encode("utf-8")).hexdigest()[:16]
     return f"pw-wmo-{digest}"
+
+
+def _normalize_regions(regions: object) -> list[str]:
+    """Return a cleaned list of regional area names from the PW payload."""
+    if not isinstance(regions, list):
+        return []
+    normalized: list[str] = []
+    for region in regions:
+        region_name = str(region).strip()
+        if region_name:
+            normalized.append(region_name)
+    return normalized
 
 
 class PirateWeatherClient:
@@ -562,6 +575,13 @@ class PirateWeatherClient:
             title = alert_data.get("title") or "Weather Alert"
             description = alert_data.get("description") or title
             severity = self._map_severity(alert_data.get("severity"))
+            if severity not in _PW_MIN_INCLUDED_SEVERITIES:
+                logger.info(
+                    "Skipping lower-severity Pirate Weather regional alert '%s' (severity=%s)",
+                    title,
+                    severity,
+                )
+                continue
             alert_id = _build_alert_id(alert_data)
 
             onset_raw = alert_data.get("time")
@@ -572,8 +592,7 @@ class PirateWeatherClient:
                 datetime.fromtimestamp(expires_raw_val, tz=location_tz) if expires_raw_val else None
             )
 
-            regions = alert_data.get("regions", [])
-            areas: list[str] = regions if isinstance(regions, list) else []
+            areas = _normalize_regions(alert_data.get("regions"))
 
             alert = WeatherAlert(
                 id=alert_id,

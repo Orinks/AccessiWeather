@@ -27,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - Added per-event sound toggles in Settings > Audio, so you can mute sounds like weather refreshes without editing the active sound pack. Weather refresh sounds now stay off by default until you turn them back on.
 - Muted and zero-volume sounds now stop before fallback playback, so backends like `playsound3` no longer leak audio when an event should be silent.
 - Pirate Weather alert tracking now keeps a stable ID across provider revisions and no longer announces false cancellations when an alert briefly disappears upstream.
+- Pirate Weather / WMO alerts now stay conservative: lower-severity regional alerts are filtered out, and the remaining alerts are labeled as regional coverage instead of pretending to match your exact county or zone.
 - Fixed PyInstaller bundling for `prismatoid`/`prism` in nightly builds.
 - Enabled "Show Nationwide location" checkbox and correctly handled Nationwide location in `set_current_location()`.
 - Corrected CPC URLs to point to the actual discussion page (`fxus06.html`).

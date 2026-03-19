@@ -420,6 +420,38 @@ class TestParseAlerts:
         assert alert.expires is not None
         assert alert.expires > alert.onset
 
+    def test_lower_severity_regional_alerts_are_suppressed(
+        self, client, sample_payload_with_alerts
+    ):
+        payload = dict(sample_payload_with_alerts)
+        payload["alerts"] = [
+            {
+                "title": "Wind Advisory",
+                "severity": "moderate",
+                "time": 1700000000,
+                "description": "Breezy conditions expected.",
+                "regions": ["New York"],
+            }
+        ]
+        result = client._parse_alerts(payload)
+        assert result.alerts == []
+
+    def test_regions_are_normalized_without_fake_precision(
+        self, client, sample_payload_with_alerts
+    ):
+        payload = dict(sample_payload_with_alerts)
+        payload["alerts"] = [
+            {
+                "title": "Winter Storm Warning",
+                "severity": "severe",
+                "time": 1700000000,
+                "description": "Heavy snow expected.",
+                "regions": [" New York ", "", "Hudson Valley"],
+            }
+        ]
+        result = client._parse_alerts(payload)
+        assert result.alerts[0].areas == ["New York", "Hudson Valley"]
+
     def test_severity_mapping(self, client):
         for raw, expected in [
             ("extreme", "Extreme"),

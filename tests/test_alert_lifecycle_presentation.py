@@ -203,6 +203,21 @@ class TestBuildAlertsEdgeCases:
         result = build_alerts(empty, _loc())
         assert result.change_summary is None
 
+    def test_pirate_weather_alerts_are_presented_as_regional(self):
+        """Pirate Weather alerts use regional wording instead of precise area wording."""
+        alert = WeatherAlert(
+            title="Winter Storm Warning",
+            description="Heavy snow expected.",
+            severity="Severe",
+            urgency="Expected",
+            areas=["New York", "Hudson Valley"],
+            source="PirateWeather",
+        )
+        result = build_alerts(WeatherAlerts(alerts=[alert]), _loc())
+        assert "Regions: New York, Hudson Valley" in result.fallback_text
+        assert "Areas:" not in result.fallback_text
+        assert "may not match your exact county or zone" in result.fallback_text
+
 
 # ---------------------------------------------------------------------------
 # build_alerts: lifecycle_states labels appended to alert header lines
