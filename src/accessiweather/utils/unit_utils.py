@@ -7,9 +7,24 @@ copied from the wx version for consistency.
 
 import logging
 
+from ..units import DisplayUnitSystem
 from .temperature_utils import TemperatureUnit
 
 logger = logging.getLogger(__name__)
+
+
+def _normalize_unit_system(unit_system: DisplayUnitSystem | str | None) -> DisplayUnitSystem | None:
+    """Normalize optional unit-system hints."""
+    if isinstance(unit_system, DisplayUnitSystem):
+        return unit_system
+    if isinstance(unit_system, str):
+        normalized = unit_system.strip().lower()
+        if normalized == "uk2":
+            normalized = "uk"
+        for candidate in DisplayUnitSystem:
+            if candidate.value == normalized:
+                return candidate
+    return None
 
 
 def format_wind_speed(
@@ -17,6 +32,7 @@ def format_wind_speed(
     unit: TemperatureUnit = TemperatureUnit.FAHRENHEIT,
     wind_speed_kph: int | float | None = None,
     precision: int = 1,
+    unit_system: DisplayUnitSystem | str | None = None,
 ) -> str:
     """
     Format wind speed for display based on user preference.
@@ -27,6 +43,7 @@ def format_wind_speed(
         unit: Temperature unit preference (used to determine display format)
         wind_speed_kph: Wind speed in kilometers per hour (if available)
         precision: Number of decimal places to display
+        unit_system: Optional explicit unit-system override for auto-per-location display
 
     Returns:
     -------
@@ -42,6 +59,17 @@ def format_wind_speed(
     elif wind_speed_mph is not None and wind_speed_kph is None:
         wind_speed_kph = wind_speed_mph * 1.60934
 
+    normalized_system = _normalize_unit_system(unit_system)
+    if normalized_system == DisplayUnitSystem.US:
+        return f"{wind_speed_mph:.{precision}f} mph"
+    if normalized_system == DisplayUnitSystem.UK:
+        return f"{wind_speed_mph:.{precision}f} mph"
+    if normalized_system == DisplayUnitSystem.CA:
+        return f"{wind_speed_kph:.{precision}f} km/h"
+    if normalized_system == DisplayUnitSystem.SI:
+        wind_speed_mps = wind_speed_kph / 3.6
+        return f"{wind_speed_mps:.{precision}f} m/s"
+
     # Format based on user preference
     if unit == TemperatureUnit.FAHRENHEIT:
         return f"{wind_speed_mph:.{precision}f} mph"
@@ -56,6 +84,7 @@ def format_pressure(
     unit: TemperatureUnit = TemperatureUnit.FAHRENHEIT,
     pressure_mb: int | float | None = None,
     precision: int = 2,
+    unit_system: DisplayUnitSystem | str | None = None,
 ) -> str:
     """
     Format pressure for display based on user preference.
@@ -66,6 +95,7 @@ def format_pressure(
         unit: Temperature unit preference (used to determine display format)
         pressure_mb: Pressure in millibars/hPa (if available)
         precision: Number of decimal places to display
+        unit_system: Optional explicit unit-system override for auto-per-location display
 
     Returns:
     -------
@@ -81,6 +111,12 @@ def format_pressure(
     elif pressure_inhg is not None and pressure_mb is None:
         pressure_mb = pressure_inhg * 33.8639
 
+    normalized_system = _normalize_unit_system(unit_system)
+    if normalized_system == DisplayUnitSystem.US:
+        return f"{pressure_inhg:.{precision}f} inHg"
+    if normalized_system in {DisplayUnitSystem.UK, DisplayUnitSystem.CA, DisplayUnitSystem.SI}:
+        return f"{pressure_mb:.{precision}f} hPa"
+
     # Format based on user preference
     if unit == TemperatureUnit.FAHRENHEIT:
         return f"{pressure_inhg:.{precision}f} inHg"
@@ -95,6 +131,7 @@ def format_visibility(
     unit: TemperatureUnit = TemperatureUnit.FAHRENHEIT,
     visibility_km: int | float | None = None,
     precision: int = 1,
+    unit_system: DisplayUnitSystem | str | None = None,
 ) -> str:
     """
     Format visibility for display based on user preference.
@@ -105,6 +142,7 @@ def format_visibility(
         unit: Temperature unit preference (used to determine display format)
         visibility_km: Visibility in kilometers (if available)
         precision: Number of decimal places to display
+        unit_system: Optional explicit unit-system override for auto-per-location display
 
     Returns:
     -------
@@ -120,6 +158,12 @@ def format_visibility(
     elif visibility_miles is not None and visibility_km is None:
         visibility_km = visibility_miles * 1.60934
 
+    normalized_system = _normalize_unit_system(unit_system)
+    if normalized_system in {DisplayUnitSystem.US, DisplayUnitSystem.UK}:
+        return f"{visibility_miles:.{precision}f} mi"
+    if normalized_system in {DisplayUnitSystem.CA, DisplayUnitSystem.SI}:
+        return f"{visibility_km:.{precision}f} km"
+
     # Format based on user preference
     if unit == TemperatureUnit.FAHRENHEIT:
         return f"{visibility_miles:.{precision}f} mi"
@@ -134,6 +178,7 @@ def format_precipitation(
     unit: TemperatureUnit = TemperatureUnit.FAHRENHEIT,
     precipitation_mm: int | float | None = None,
     precision: int = 2,
+    unit_system: DisplayUnitSystem | str | None = None,
 ) -> str:
     """
     Format precipitation for display based on user preference.
@@ -144,6 +189,7 @@ def format_precipitation(
         unit: Temperature unit preference (used to determine display format)
         precipitation_mm: Precipitation in millimeters (if available)
         precision: Number of decimal places to display
+        unit_system: Optional explicit unit-system override for auto-per-location display
 
     Returns:
     -------
@@ -158,6 +204,12 @@ def format_precipitation(
         precipitation_inches = precipitation_mm / 25.4
     elif precipitation_inches is not None and precipitation_mm is None:
         precipitation_mm = precipitation_inches * 25.4
+
+    normalized_system = _normalize_unit_system(unit_system)
+    if normalized_system == DisplayUnitSystem.US:
+        return f"{precipitation_inches:.{precision}f} in"
+    if normalized_system in {DisplayUnitSystem.UK, DisplayUnitSystem.CA, DisplayUnitSystem.SI}:
+        return f"{precipitation_mm:.{precision}f} mm"
 
     # Format based on user preference
     if unit == TemperatureUnit.FAHRENHEIT:

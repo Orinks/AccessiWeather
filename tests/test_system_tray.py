@@ -475,23 +475,48 @@ class TestFormatterUnitPreferencePlaceholders:
         )
 
     @pytest.mark.parametrize(
-        ("temperature_unit", "expected"),
+        ("temperature_unit", "location", "expected"),
         [
-            ("f", "10.0 mph | 30.05 inHg | 10.0 mi | 1.00 in | 75F | 55F"),
-            ("c", "16.1 km/h | 1017.00 hPa | 16.1 km | 25.40 mm | 24C | 13C"),
+            (
+                "f",
+                Location(name="Test City", latitude=40.0, longitude=-74.0, country_code="US"),
+                "10.0 mph | 30.05 inHg | 10.0 mi | 1.00 in | 75F | 55F",
+            ),
+            (
+                "c",
+                Location(name="Test City", latitude=40.0, longitude=-74.0, country_code="US"),
+                "16.1 km/h | 1017.00 hPa | 16.1 km | 25.40 mm | 24C | 13C",
+            ),
             (
                 "both",
+                Location(name="Test City", latitude=40.0, longitude=-74.0, country_code="US"),
                 "10.0 mph (16.1 km/h) | 30.05 inHg (1017.00 hPa) | 10.0 mi (16.1 km) | "
                 "1.00 in (25.40 mm) | 75F/24C | 55F/13C",
+            ),
+            (
+                "auto",
+                Location(name="London", latitude=51.5, longitude=-0.12, country_code="GB"),
+                "10.0 mph | 1017.00 hPa | 10.0 mi | 25.40 mm | 24C | 13C",
+            ),
+            (
+                "auto",
+                Location(name="Toronto", latitude=43.65, longitude=-79.38, country_code="CA"),
+                "16.1 km/h | 1017.00 hPa | 16.1 km | 25.40 mm | 24C | 13C",
+            ),
+            (
+                "auto",
+                Location(name="Paris", latitude=48.86, longitude=2.35, country_code="FR"),
+                "4.5 m/s | 1017.00 hPa | 16.1 km | 25.40 mm | 24C | 13C",
             ),
         ],
     )
     def test_unit_aware_placeholders_follow_unit_preference(
-        self, unit_sensitive_weather_data, temperature_unit, expected
+        self, unit_sensitive_weather_data, temperature_unit, location, expected
     ):
         """Wind_speed, pressure, visibility, precip, high, and low honor unit preference."""
         from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
 
+        unit_sensitive_weather_data.location = location
         updater = TaskbarIconUpdater(
             text_enabled=True,
             format_string="{wind_speed} | {pressure} | {visibility} | {precip} | {high} | {low}",

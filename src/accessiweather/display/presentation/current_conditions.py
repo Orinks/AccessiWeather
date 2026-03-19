@@ -15,7 +15,9 @@ from ...models import (
     TrendInsight,
     WeatherAlerts,
 )
+from ...units import DisplayUnitSystem
 from ...utils import TemperatureUnit
+from ...utils.unit_utils import format_precipitation, format_wind_speed
 from ..priority_engine import PriorityEngine, WeatherCategory
 from ..weather_presenter import CurrentConditionsPresentation, Metric
 from .environmental import AirQualityPresentation
@@ -40,6 +42,8 @@ def _build_basic_metrics(
     show_dewpoint: bool,
     show_visibility: bool,
     show_uv_index: bool,
+    *,
+    unit_system: DisplayUnitSystem | str | None = None,
 ) -> list[Metric]:
     """Build basic weather metrics (temperature, feels like, humidity, wind, dewpoint, etc.)."""
     # Format temperature with inline feels-like when there's a significant difference
@@ -55,7 +59,7 @@ def _build_basic_metrics(
     if current.humidity is not None:
         metrics.append(Metric("Humidity", f"{current.humidity:.0f}%"))
 
-    wind_value = format_wind(current, unit_pref, precision=precision)
+    wind_value = format_wind(current, unit_pref, precision=precision, unit_system=unit_system)
     if wind_value:
         metrics.append(Metric("Wind", wind_value))
 
@@ -63,11 +67,21 @@ def _build_basic_metrics(
     if show_dewpoint and dewpoint_value:
         metrics.append(Metric("Dewpoint", dewpoint_value))
 
-    pressure_value = format_pressure_value(current, unit_pref, precision=precision)
+    pressure_value = format_pressure_value(
+        current,
+        unit_pref,
+        precision=precision,
+        unit_system=unit_system,
+    )
     if pressure_value:
         metrics.append(Metric("Pressure", pressure_value))
 
-    visibility_value = format_visibility_value(current, unit_pref, precision=precision)
+    visibility_value = format_visibility_value(
+        current,
+        unit_pref,
+        precision=precision,
+        unit_system=unit_system,
+    )
     if show_visibility and visibility_value:
         metrics.append(Metric("Visibility", visibility_value))
 
@@ -79,31 +93,26 @@ def _build_basic_metrics(
         metrics.append(Metric("Cloud cover", f"{current.cloud_cover:.0f}%"))
 
     if current.wind_gust_mph is not None:
-        if unit_pref == TemperatureUnit.CELSIUS:
-            gust_kph = current.wind_gust_kph or current.wind_gust_mph * 1.60934
-            metrics.append(Metric("Wind gusts", f"{gust_kph:.0f} kph"))
-        elif unit_pref == TemperatureUnit.FAHRENHEIT:
-            metrics.append(Metric("Wind gusts", f"{current.wind_gust_mph:.0f} mph"))
-        else:
-            gust_kph = current.wind_gust_kph or current.wind_gust_mph * 1.60934
-            metrics.append(
-                Metric("Wind gusts", f"{current.wind_gust_mph:.0f} mph ({gust_kph:.0f} kph)")
-            )
+        gust_value = format_wind_speed(
+            current.wind_gust_mph,
+            unit=unit_pref,
+            wind_speed_kph=current.wind_gust_kph,
+            precision=0,
+            unit_system=unit_system,
+        )
+        if unit_system is None:
+            gust_value = gust_value.replace("km/h", "kph")
+        metrics.append(Metric("Wind gusts", gust_value))
 
     if current.precipitation_in is not None and current.precipitation_in > 0:
-        if unit_pref == TemperatureUnit.CELSIUS:
-            precip_mm = current.precipitation_mm or current.precipitation_in * 25.4
-            metrics.append(Metric("Precipitation", f"{precip_mm:.{precision}f} mm"))
-        elif unit_pref == TemperatureUnit.FAHRENHEIT:
-            metrics.append(Metric("Precipitation", f"{current.precipitation_in:.{precision}f} in"))
-        else:
-            precip_mm = current.precipitation_mm or current.precipitation_in * 25.4
-            metrics.append(
-                Metric(
-                    "Precipitation",
-                    f"{current.precipitation_in:.{precision}f} in ({precip_mm:.{precision}f} mm)",
-                )
-            )
+        precip_value = format_precipitation(
+            current.precipitation_in,
+            unit=unit_pref,
+            precipitation_mm=current.precipitation_mm,
+            precision=precision,
+            unit_system=unit_system,
+        )
+        metrics.append(Metric("Precipitation", precip_value))
 
     return metrics
 
@@ -430,6 +439,7 @@ def build_current_conditions(
     hourly_forecast: HourlyForecast | None = None,
     air_quality: AirQualityPresentation | None = None,
     alerts: WeatherAlerts | None = None,
+    unit_system: DisplayUnitSystem | str | None = None,
 ) -> CurrentConditionsPresentation:
     """Create a structured presentation for the current weather using helper functions."""
     title = f"Current conditions for {location.name}"
@@ -467,7 +477,13 @@ def build_current_conditions(
     metrics: list[Metric] = []
     metrics.extend(
         _build_basic_metrics(
-            current, unit_pref, precision, show_dewpoint, show_visibility, show_uv_index
+            current,
+            unit_pref,
+            precision,
+            show_dewpoint,
+            show_visibility,
+            show_uv_index,
+            unit_system=unit_system,
         )
     )
 
