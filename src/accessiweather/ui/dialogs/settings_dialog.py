@@ -2430,14 +2430,10 @@ class SettingsDialogSimple(wx.Dialog):
         app_portable = getattr(self.app, "_portable_mode", None)
         if app_portable is not None:
             return bool(app_portable)
-
-        # Fallback for tests/edge cases where app flag is unavailable.
-        try:
-            from ...config_utils import is_portable_mode
-
-            return bool(is_portable_mode())
-        except Exception:
-            return False
+        runtime_paths = getattr(self.app, "runtime_paths", None)
+        if runtime_paths is not None:
+            return bool(getattr(runtime_paths, "portable_mode", False))
+        return False
 
     def _has_meaningful_installed_config_data(
         self, installed_config_dir: Path

@@ -25,10 +25,10 @@ from .update_service.settings import DEFAULT_OWNER, DEFAULT_REPO
 ProgressCallback = Callable[[int, int], None]
 
 try:
-    from ..config_utils import is_portable_mode
+    from ..paths import detect_portable_mode
 except ImportError:
 
-    def is_portable_mode() -> bool:
+    def detect_portable_mode() -> bool:
         return False
 
 
@@ -575,7 +575,7 @@ class UpdateService:
         if not is_update_available(latest, current_version, current_nightly_date):
             return None
 
-        portable_flag = portable if portable is not None else is_portable_mode()
+        portable_flag = portable if portable is not None else detect_portable_mode()
         asset = select_asset(latest, portable=portable_flag, platform_system=platform_system)
         if not asset:
             return None

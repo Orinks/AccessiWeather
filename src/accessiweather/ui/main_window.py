@@ -793,9 +793,8 @@ class MainWindow(SizedFrame):
     def _on_about(self) -> None:
         """Show about dialog."""
         from accessiweather import __version__
-        from accessiweather.config_utils import is_portable_mode
 
-        portable = is_portable_mode()
+        portable = bool(getattr(self.app, "_portable_mode", False))
         mode_label = "Portable" if portable else "Installed"
         config_path = (
             str(self.app.config_manager.config_dir) if self.app.config_manager else "unknown"

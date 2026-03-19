@@ -7,9 +7,10 @@ This module handles location storage and retrieval.
 import json
 import logging
 import os
+from pathlib import Path
 
-from accessiweather.config_utils import get_config_dir
 from accessiweather.geocoding import GeocodingService
+from accessiweather.paths import resolve_default_config_root
 
 logger = logging.getLogger(__name__)
 
@@ -39,11 +40,11 @@ class LocationManager:
             data_source: The data source to use ('nws' or 'auto')
 
         """
-        self.config_dir = get_config_dir(config_dir)
+        self.config_dir = str(resolve_default_config_root(config_dir=config_dir))
         self.show_nationwide = show_nationwide
         self.data_source = data_source
 
-        self.locations_file = os.path.join(self.config_dir, "locations.json")
+        self.locations_file = str(Path(self.config_dir) / "locations.json")
         self.current_location: str | None = None
         self.saved_locations: dict[str, dict[str, float]] = {}
 

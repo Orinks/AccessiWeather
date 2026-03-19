@@ -20,7 +20,7 @@ import wx
 
 from . import app_timer_manager
 from .models import WeatherData
-from .paths import Paths, RuntimeStoragePaths, resolve_runtime_storage
+from .paths import Paths, RuntimeStoragePaths, detect_portable_mode, resolve_runtime_storage
 from .single_instance import SingleInstanceManager
 
 if TYPE_CHECKING:
@@ -72,9 +72,7 @@ class AccessiWeatherApp(wx.App):
         # via --portable or --config-dir.
         if not portable_mode and config_dir is None:
             try:
-                from .config_utils import is_portable_mode
-
-                portable_mode = is_portable_mode()
+                portable_mode = detect_portable_mode()
             except Exception:
                 portable_mode = False
 
@@ -973,7 +971,6 @@ class AccessiWeatherApp(wx.App):
         import tempfile
         from pathlib import Path
 
-        from .config_utils import is_portable_mode
         from .services.simple_update import UpdateService, apply_update
 
         # Create progress dialog
@@ -1022,7 +1019,7 @@ class AccessiWeatherApp(wx.App):
                         wx.YES_NO | wx.ICON_QUESTION,
                     )
                     if result == wx.YES:
-                        portable = is_portable_mode()
+                        portable = self._portable_mode
                         # Destroy all wx windows so file handles are released before exit
                         for win in wx.GetTopLevelWindows():
                             with contextlib.suppress(Exception):
@@ -1224,17 +1221,6 @@ def main(
         updated: Skip lock-file prompt (app was restarted after an update).
 
     """
-    if config_dir is None:
-        try:
-            from .config_utils import _explicit_portable_config_dir
-
-            explicit_portable_dir = _explicit_portable_config_dir()
-            if explicit_portable_dir:
-                config_dir = explicit_portable_dir
-                portable_mode = True
-        except Exception:
-            pass
-
     app = AccessiWeatherApp(
         config_dir=config_dir,
         portable_mode=portable_mode,

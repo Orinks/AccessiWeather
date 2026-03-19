@@ -114,7 +114,10 @@ class TestLoggingConfigCoverage:
     def test_log_dir_chmod_called(self, tmp_path: Path) -> None:
         """Verify log directory permissions are set."""
         with (
-            patch("accessiweather.logging_config.get_config_dir", return_value=str(tmp_path)),
+            patch(
+                "accessiweather.logging_config.resolve_default_config_root",
+                return_value=tmp_path,
+            ),
             patch("accessiweather.logging_config.Path.chmod") as mock_chmod,
         ):
             from accessiweather.logging_config import setup_logging
@@ -125,7 +128,10 @@ class TestLoggingConfigCoverage:
     def test_log_dir_chmod_oserror_suppressed(self, tmp_path: Path) -> None:
         """OSError on chmod is suppressed gracefully."""
         with (
-            patch("accessiweather.logging_config.get_config_dir", return_value=str(tmp_path)),
+            patch(
+                "accessiweather.logging_config.resolve_default_config_root",
+                return_value=tmp_path,
+            ),
             patch("accessiweather.logging_config.Path.chmod", side_effect=OSError("no perms")),
         ):
             from accessiweather.logging_config import setup_logging
