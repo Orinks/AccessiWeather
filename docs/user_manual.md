@@ -1,684 +1,484 @@
-# AccessiWeather - User Manual
+# AccessiWeather User Manual
 
 ## Overview
 
-AccessiWeather is a cross-platform desktop weather application that provides comprehensive weather information with robust accessibility features and international weather support. Built using the BeeWare/Toga framework with a focus on screen reader compatibility and keyboard navigation, AccessiWeather offers weather data from multiple sources including the National Weather Service (NWS) and Open-Meteo.
+AccessiWeather is an accessible desktop weather app built with wxPython. It is designed for screen reader users first, but it is equally usable with keyboard or mouse. The main window separates weather into four core sections:
 
-## Installation
+- `Current Conditions`
+- `Daily Forecast`
+- `Hourly Forecast`
+- `Weather Alerts`
 
-AccessiWeather offers multiple installation options to suit different user needs:
+You can also open forecast discussions, weather history, air quality, UV index, aviation weather, NOAA Weather Radio, AI explanations, and the Weather Assistant from the menu.
 
-### Option 1: Download Pre-built Installer (Recommended)
+## Install and Launch
 
-Visit [accessiweather.orinks.net](https://accessiweather.orinks.net) or the [GitHub releases page](https://github.com/Orinks/AccessiWeather/releases) to download:
+### Prebuilt Downloads
 
-**Windows:**
-1. Download the MSI installer or portable ZIP
-2. Run the installer and follow the setup wizard
-3. Launch AccessiWeather from the Start Menu or desktop shortcut
+Download the latest build from [accessiweather.orinks.net](https://accessiweather.orinks.net) or the [GitHub releases page](https://github.com/Orinks/AccessiWeather/releases).
 
-**macOS:**
-1. Download the DMG installer
-2. Open the DMG and drag AccessiWeather to Applications
-3. Launch from Applications folder
+- **Windows**: MSI installer or portable ZIP
+- **macOS**: DMG
+- **Linux**: Build from source for now
 
-**Linux:**
-- AppImage distribution is planned for a future release
-- For now, install from source (see Option 3 below)
+### Portable Mode
 
-### Option 2: Portable Version (Windows)
-1. Download the portable ZIP from the releases page
-2. Extract the ZIP file to your desired location
-3. Run `AccessiWeather.exe` directly from the extracted folder
-4. Configuration files will be saved in the same folder as the application
+The Windows portable ZIP stores app data next to the app. If you install from source or want to force portable mode manually, run:
 
-### Option 3: Install from Source
-1. Ensure you have Python 3.10 or higher installed
-2. Clone the repository or download the source code:
-   ```bash
-   git clone https://github.com/Orinks/AccessiWeather.git
-   cd AccessiWeather
-   ```
-3. Create and activate a virtual environment:
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
-4. Install the application:
-   ```bash
-   pip install -e ".[dev]"
-   ```
-5. Run the application:
-   ```bash
-   briefcase dev
-   ```
-
-### Option 4: Force Portable Mode
-If you want to run AccessiWeather in portable mode (saving configuration to the application directory), use:
 ```bash
 accessiweather --portable
 ```
 
-### Nightly Builds
-Want to test the latest features? Nightly builds are available from the [dev branch](https://github.com/Orinks/AccessiWeather/tree/dev).
+### Run From Source
 
-⚠️ Nightly builds may contain bugs or incomplete features.
+Using `uv`:
+
+```bash
+git clone https://github.com/Orinks/AccessiWeather.git
+cd AccessiWeather
+uv sync
+uv run accessiweather
+```
+
+Using a virtual environment:
+
+```bash
+git clone https://github.com/Orinks/AccessiWeather.git
+cd AccessiWeather
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+accessiweather
+```
 
 ## First-Time Setup
 
-When you first run AccessiWeather:
+When you start AccessiWeather for the first time:
 
-1. **Initial Configuration**: The application will create a configuration directory and start with the Nationwide location pre-loaded
-2. **Add Your Location**: Click "Add Location" to add your local weather location
-3. **Configure Settings**: Access Settings to customize weather data sources, update intervals, and display preferences
-4. **System Tray Setup**: If desired, enable "Minimize to Tray" in Advanced settings for background operation
+1. The app creates its config folder.
+2. The `Nationwide` location is available by default.
+3. Add your own location with `Location > Add Location` or `Ctrl+L`.
+4. Leave `Settings > Data Sources > Weather Data Source` on `Automatic` unless you want to force a provider.
+5. Add optional API keys only for the features you want.
 
-## Core Features
+## Main Window
 
-### Weather Data Sources
+### Current Conditions
 
-AccessiWeather supports multiple weather data providers:
+This section shows the latest observed or merged current weather. Depending on your settings and source, it can include:
 
-- **National Weather Service (NWS)**: Provides weather data for US locations with full alert support
-- **Open-Meteo**: Free international weather service covering worldwide locations (no alerts)
-- **Automatic Selection**: Intelligently uses NWS for US locations and Open-Meteo for international locations (recommended)
+- Temperature
+- Feels like temperature
+- Wind
+- Humidity
+- Dewpoint
+- Visibility
+- UV index
+- Pressure trend
+- Environmental data such as air quality or pollen when available
 
-You can change your preferred data source in Settings → Data Sources → Weather Data Source.
+If Pirate Weather minutely data is available, you will also see a short `Precipitation outlook` line in current conditions.
 
-### Weather Models
+### Daily Forecast
 
-When using Open-Meteo or Automatic mode, you can choose which weather forecast model to use. Weather models are sophisticated computer simulations that meteorological agencies run to predict future weather conditions. Different models have different strengths depending on your location and what you need.
+The daily forecast is shown in its own section. It is separate from the hourly forecast and uses your configured forecast duration. Current options are 3, 5, 7, 10, 14, or 15 days depending on the source data available.
 
-#### What is a Weather Model?
+### Hourly Forecast
 
-A weather model (also called a numerical weather prediction model) is a computer program that uses mathematical equations to simulate the atmosphere. These models take current observations from weather stations, satellites, and weather balloons, then calculate how the atmosphere will evolve over time.
+The hourly forecast has its own section and is no longer mixed into the daily forecast text. You can choose how many hours to show in `Settings > Display > Hourly forecast hours`.
 
-Different meteorological agencies around the world run their own models, each with unique characteristics:
-- **Resolution**: How detailed the predictions are (smaller grid = more local detail)
-- **Coverage**: Geographic area the model covers well
-- **Update Frequency**: How often the model runs with fresh data
-- **Forecast Length**: How far into the future predictions extend
+### Weather Alerts
 
-#### Available Models
+The alerts list shows active alerts for the selected location. When AccessiWeather detects changes between refreshes, alerts can be labeled with lifecycle states such as:
 
-| Model | Provider | Best For | Resolution |
-|-------|----------|----------|------------|
-| **Best Match (Automatic)** | Open-Meteo | General use - automatically picks the best model for your location | Varies |
-| **ICON Seamless** | DWD (Germany) | Europe and global forecasts with smooth blending between resolutions | 2-13 km |
-| **ICON Global** | DWD (Germany) | Worldwide coverage, good baseline accuracy | 13 km |
-| **ICON EU** | DWD (Germany) | European locations - higher detail for Europe | 6.5 km |
-| **ICON D2** | DWD (Germany) | Germany and nearby regions - very high detail | 2 km |
-| **GFS Seamless** | NOAA (USA) | Americas and global, good for North America | 3-28 km |
-| **GFS Global** | NOAA (USA) | Worldwide coverage, reliable US government model | 28 km |
-| **ECMWF IFS** | ECMWF (Europe) | Highest accuracy worldwide, considered the gold standard | 9 km |
-| **Météo-France** | Météo-France | France and Europe - excellent for Western Europe | Varies |
-| **GEM** | Canada | North America, especially Canada | Varies |
-| **JMA** | Japan | Japan and East Asia | Varies |
+- `New`
+- `Updated`
+- `Escalated`
+- `Extended`
 
-#### Choosing the Right Model
+Cancelled alerts can also trigger notifications even after they disappear from the active list.
 
-**For most users**: Start with "Best Match (Automatic)" - Open-Meteo will intelligently select the best model for your location.
+Use `View Alert Details` or press Enter/Space on a selected alert to open the full alert text.
 
-**For specific needs**:
-- **US locations**: GFS Seamless or Best Match work well
-- **European locations**: ICON Seamless, ICON EU, or ECMWF IFS
-- **Germany**: ICON D2 for maximum local detail
-- **Canada**: GEM for optimized Canadian forecasts
-- **Japan/East Asia**: JMA for regional expertise
-- **Maximum accuracy**: ECMWF IFS is widely considered the most accurate global model
+## Weather Sources
 
-#### Tips for Model Selection
+AccessiWeather supports four weather providers. They do not all behave the same, so it helps to know what each one is best at.
 
-1. **Try different models**: Weather models can have different biases for your specific location. If one model consistently over- or under-predicts, try another.
+### National Weather Service (NWS)
 
-2. **Consider your use case**:
-   - For general daily planning, Best Match is usually sufficient
-   - For outdoor activities or events, try a higher-resolution regional model
-   - For travel planning, stick with global models like GFS or ECMWF
+Best for:
 
-3. **Regional models are limited**: High-resolution regional models (like ICON D2) only cover specific areas. If you select one for a location outside its coverage, forecasts may be less accurate.
+- US forecasts
+- US alerts
+- Area Forecast Discussions
+- NOAA Weather Radio integration
 
-4. **Model updates vary**: Some models update every hour, others every 6 hours. More frequent updates mean fresher predictions but don't necessarily mean better accuracy.
+User-facing behavior:
 
-To change your weather model: Settings → Data Sources → Open-Meteo Weather Model
+- NWS is the authoritative alert source for US locations.
+- It supports county, point, zone, and state alert targeting.
+- It provides the forecast discussion used by `View > Forecast Discussion...`.
 
-### Location Management
+### Open-Meteo
 
-AccessiWeather allows you to manage multiple weather locations:
+Best for:
 
-#### Adding Locations
-1. **Simple Search**: Click "Add Location" and search by city name or ZIP code
-2. **Advanced Entry**: Use "Advanced (Lat/Lon)" for precise coordinates
-3. **International Locations**: Supported through Open-Meteo integration
+- No-key global forecasts
+- International coverage
+- Open-Meteo model selection
+- UV and environmental support
 
-#### Managing Locations
-- **Switch Locations**: Use the dropdown menu to select different saved locations
-- **Remove Locations**: Select a location and click "Remove Location"
-- **Nationwide View**: Special location providing national weather overview (US only)
+User-facing behavior:
 
-#### Nationwide Location
-The Nationwide location provides:
-- National weather discussions from Weather Prediction Center (WPC)
-- Storm Prediction Center (SPC) discussions
-- Comprehensive overview of US weather patterns
-- Cannot be removed but can be hidden in settings
+- No API key is required.
+- It does not provide weather alerts in AccessiWeather.
+- You can choose the Open-Meteo model in `Settings > Data Sources`.
 
-### Weather Information Display
+### Pirate Weather
 
-AccessiWeather presents comprehensive weather data:
+Best for:
 
-#### Current Conditions
-- Real-time temperature and weather conditions
-- Humidity, wind speed, and atmospheric pressure
-- "Feels like" temperature and visibility
-
-#### Forecasts
-- **Detailed Forecasts**: Multi-day weather predictions with descriptions
-- **Hourly Forecasts**: Hour-by-hour weather data for precise planning
-- **Extended Outlook**: Long-range weather trends
-
-#### Weather Alerts
-- **Real-time Alerts**: Watches, warnings, and advisories
-- **Severity Levels**: Extreme, Severe, Moderate, and Minor classifications
-- **Geographic Targeting**: Precise location or state-wide alert options
-- **Alert Details**: Click any alert for comprehensive information
-
-#### Weather Discussions
-- **Local Discussions**: Detailed meteorological analysis for your area
-- **National Discussions**: WPC and SPC professional weather analysis
-- **Technical Insights**: In-depth weather pattern explanations
-
-### Environmental Information Dialogs
-
-AccessiWeather provides specialized dialogs for detailed environmental data:
-
-#### UV Index Dialog
-
-Access comprehensive UV index information through View → UV Index in the menu bar.
-
-**What You'll See:**
-- **Current UV Index**: Real-time UV index value with EPA/WHO category rating
-- **Health Guidance**: Context-specific health recommendations based on current UV level
-- **Hourly Forecast**: 24-hour UV index forecast with trend analysis
-- **Peak Times**: Identifies when UV levels are highest for activity planning
-- **Sun Safety Recommendations**: Detailed protection guidance including:
-  - Sunscreen SPF recommendations and reapplication schedule
-  - Protective clothing suggestions (hats, sunglasses, long sleeves)
-  - Shade-seeking guidance and timing recommendations
-  - Safe outdoor activity windows
-
-**UV Index Categories:**
-- **Low (0-2)**: No protection needed for most people
-- **Moderate (3-5)**: Take precautions - wear sunscreen and hat
-- **High (6-7)**: Protection essential - use SPF 30+, protective clothing
-- **Very High (8-10)**: Extra protection required - SPF 50+, minimize midday exposure
-- **Extreme (11+)**: Take all precautions - avoid sun exposure 10 AM to 4 PM
-
-**When to Check UV Index:**
-- Planning outdoor activities or sports
-- Before spending extended time outside
-- When traveling to locations with different sun exposure
-- For managing sun-sensitive health conditions
-- During summer months or at high elevations
-
-**Accessibility Features:**
-- Full screen reader compatibility with descriptive labels
-- Keyboard navigation support
-- Clear section headers for easy scanning
-- Detailed ARIA descriptions for all information panels
-
-**Note:** UV index data availability depends on your weather data source. Open-Meteo provides comprehensive UV index data for both US and international locations, including hourly forecasts.
-
-### Notifications and Alerts
-
-AccessiWeather provides intelligent alert management:
-
-#### Desktop Notifications
-- Automatic notifications for new weather alerts
-- Severity-based prioritization
-- Non-intrusive notification system
-- Customizable alert radius (5-100 miles)
-
-#### Alert Configuration
-- **Precise Location Alerts**: County/township-level targeting
-- **State-wide Alerts**: Broader geographic coverage
-- **Alert Radius**: Customizable distance for alert monitoring
-- **Alert Types**: Watches, warnings, advisories, and statements
-
-### System Tray and Taskbar Customization
-
-AccessiWeather offers advanced system tray integration:
-
-#### System Tray Features
-- **Minimize to Tray**: Hide the application to the system tray instead of closing
-- **Taskbar Icon**: Persistent system tray icon for quick access
-- **Context Menu**: Right-click the tray icon for quick actions
-- **Keyboard Accessibility**: Full keyboard support for tray icon interaction
-
-#### Taskbar Icon Customization
-AccessiWeather's standout feature is intelligent taskbar icon text customization with dynamic format switching:
-
-- **Dynamic Format Switching**: Automatically changes display format based on weather conditions
-- **Custom Text Display**: Show weather information directly in the taskbar
-- **Format Strings**: Use variables like `{temp}`, `{condition}`, `{location}`, `{humidity}`
-- **Real-time Updates**: Taskbar text updates automatically with weather data
-- **Weather-Aware Display**: Different formats for normal, severe, and extreme conditions
-
-#### Dynamic Format Examples
-When dynamic switching is enabled, the taskbar automatically shows contextually relevant information:
-
-- **Normal conditions**: `"San Francisco, CA 72°F Clear • 55%"`
-- **Severe weather**: `"🌩️ New York, NY Thunderstorms 68°F • NW 25.0 mph"`
-- **Temperature extremes**: `"🌡️ Phoenix, AZ 105°F (feels 115°F) • Sunny"`
-- **High winds**: `"💨 Chicago, IL NW 35.0 mph • Partly Cloudy 45°F"`
-- **Precipitation expected**: `"🌧️ Seattle, WA Cloudy 58°F • 80% chance"`
-- **Low visibility**: `"🌫️ San Francisco, CA Fog 55°F • Visibility 0.5 mi"`
-
-#### System Tray Keyboard Shortcuts
-- **Enter**: Focus application or show context menu
-- **Applications Key**: Show context menu (screen reader compatible)
-- **Shift+F10**: Alternative context menu access
-- **Escape**: Hide application to tray (when minimize to tray is enabled)
-
-## Settings Configuration
-
-AccessiWeather provides extensive customization through a five-tab settings dialog:
-
-### General Tab
-Core application settings:
-- **Temperature Units**: Imperial, Metric, or Both
-- **Update Interval**: How often to refresh weather data (1-1440 minutes)
-- **Detailed Forecast**: Enable/disable detailed forecast information
-- **Alert Settings**: Configure weather alert preferences
-
-### Data Sources Tab
-Weather API configuration:
-- **Weather Data Source**:
-  - **National Weather Service**: US locations only, includes weather alerts
-  - **Open-Meteo**: International locations, free service, no alerts
-  - **Automatic**: Best of both - NWS for US, Open-Meteo for international (recommended)
-- **Open-Meteo Weather Model**: Choose which forecast model to use (see [Weather Models](#weather-models) below)
-- **Visual Crossing API**: Setup and configuration for Visual Crossing weather service
-
-### Audio Tab
-Sound notification settings:
-- **Sound Enabled**: Enable/disable sound notifications
-- **Sound Pack Selection**: Choose from available sound packs
-- **Manage Sound Packs**: Add, remove, or configure sound packs
-
-### Updates Tab
-Update configuration:
-- **Auto-update**: Enable automatic update checking
-- **Channel Selection**: Choose Stable, Beta, or Development releases
-- **Check Interval**: How often to check for updates
-- **Manual Check**: Check for updates immediately
-
-### Advanced Tab
-Power user settings:
-- **Minimize to Tray**: Hide to system tray instead of closing
-- **Debug Mode**: Enable detailed logging for troubleshooting
-
-#### Taskbar Icon Customization
-- **Enable Taskbar Text**: Show weather information in the taskbar icon
-- **Dynamic Format Switching**: Automatically adapt display format based on weather conditions
-- **Custom Format String**: Define what information to display (used as default/fallback when dynamic switching is enabled)
-
-#### Dynamic Format Switching
-When enabled, AccessiWeather intelligently selects the most appropriate format based on current conditions:
-
-- **Automatic Context Switching**: Changes format based on weather severity and type
-- **Visual Weather Indicators**: Uses emojis (🌩️, 🌡️, 💨, 🌧️, 🌫️) to quickly identify conditions
-- **Relevant Information Priority**: Shows the most important data for each weather scenario
-- **Fallback Protection**: Uses your custom format if dynamic switching encounters issues
-
-#### Available Format Variables
-All variables respect your temperature unit preference (Imperial/Metric/Both):
-
-- `{temp}` - Current temperature (formatted with units)
-- `{temp_f}` - Temperature in Fahrenheit only
-- `{temp_c}` - Temperature in Celsius only
-- `{condition}` - Weather condition (e.g., "Sunny", "Partly Cloudy")
-- `{location}` - Location name
-- `{humidity}` - Humidity percentage (number only, % symbol added by template)
-- `{wind_speed}` - Wind speed (formatted with units)
-- `{wind_dir}` - Wind direction (e.g., "NW", "SE")
-- `{feels_like}` - Feels-like temperature (formatted with units)
-- `{pressure}` - Atmospheric pressure (formatted with units)
-- `{visibility}` - Visibility distance (formatted with units)
-- `{precip}` - Precipitation amount (formatted with units)
-- `{precip_chance}` - Chance of precipitation (number only, % symbol added by template)
-- `{uv}` - UV index
-- `{high}` - Today's high temperature (formatted with units)
-- `{low}` - Today's low temperature (formatted with units)
-
-#### Custom Format Examples
-- `{location} {temp} {condition}` → "New York, NY 72°F Sunny"
-- `{temp} • {humidity}% humidity` → "72°F • 45% humidity"
-- `{location}: {temp} (feels {feels_like})` → "Phoenix: 95°F (feels 105°F)"
-- `{condition} {temp} • {wind_dir} {wind_speed}` → "Partly Cloudy 68°F • NW 12.0 mph"
-
-### Advanced Tab
-
-#### System Behavior
-- **Minimize to Tray**: Hide to system tray instead of closing when X is clicked
-- **Cache Settings**: Enable/disable API response caching
-- **Cache TTL**: How long to cache weather data (60-3600 seconds)
-
-## Understanding Dynamic Format Switching
-
-Dynamic format switching is AccessiWeather's intelligent feature that automatically adapts the taskbar display based on current weather conditions. This ensures you always see the most relevant information at a glance.
-
-### How Dynamic Switching Works
-
-The system analyzes current weather data and selects the most appropriate format template:
-
-1. **Weather Condition Analysis**: Evaluates temperature, wind speed, precipitation, visibility, and alerts
-2. **Priority Assessment**: Determines which weather factors are most important to display
-3. **Format Selection**: Chooses the best template for the current conditions
-4. **Automatic Updates**: Switches formats as weather conditions change throughout the day
-
-### Dynamic Format Types
-
-#### Default Format
-**Used for**: Normal, pleasant weather conditions
-**Shows**: Location, temperature, condition, and humidity
-**Example**: `"San Francisco, CA 75°F Partly Cloudy • 68%"`
-
-#### Severe Weather Format
-**Used for**: Thunderstorms, severe weather warnings
-**Shows**: Storm emoji, location, condition, temperature, and wind information
-**Example**: `"🌩️ Miami, FL Thunderstorms 82°F • SW 28.0 mph"`
-
-#### Temperature Extreme Format
-**Used for**: Very hot or very cold conditions (based on feels-like temperature)
-**Shows**: Temperature emoji, location, actual and feels-like temperatures
-**Example**: `"🌡️ Phoenix, AZ 108°F (feels 118°F) • Sunny"`
-
-#### Wind Warning Format
-**Used for**: High wind conditions
-**Shows**: Wind emoji, location, wind details, condition, and temperature
-**Example**: `"💨 Chicago, IL NW 42.0 mph • Clear 38°F"`
-
-#### Precipitation Format
-**Used for**: When rain, snow, or other precipitation is likely
-**Shows**: Rain emoji, location, condition, temperature, and precipitation chance
-**Example**: `"🌧️ Seattle, WA Overcast 52°F • 85% chance"`
-
-#### Fog/Low Visibility Format
-**Used for**: Foggy conditions or low visibility
-**Shows**: Fog emoji, location, condition, temperature, and visibility distance
-**Example**: `"🌫️ San Francisco, CA Fog 58°F • Visibility 0.3 mi"`
-
-#### Alert Format
-**Used for**: Active weather alerts and warnings
-**Shows**: Warning emoji, location, alert type, and severity
-**Example**: `"⚠️ Dallas, TX: Tornado Warning (Extreme)"`
-
-### Benefits of Dynamic Switching
-
-- **Contextual Relevance**: Always shows the most important information for current conditions
-- **Quick Recognition**: Visual emojis help identify weather situations at a glance
-- **Automatic Adaptation**: No manual configuration needed as weather changes
-- **Comprehensive Coverage**: Handles all types of weather scenarios intelligently
-- **Accessibility**: Maintains screen reader compatibility while providing rich visual information
-
-## Accessibility Features
-
-AccessiWeather is designed with comprehensive accessibility support:
-
-### Screen Reader Compatibility
-- **Windows**: Full support for NVDA and JAWS screen readers
-- **macOS**: VoiceOver compatibility
-- **Linux**: Orca screen reader support
-- **Accessible Labels**: All UI elements have proper ARIA labels and descriptions
-- **Role Definitions**: Proper ARIA roles for complex interface elements
-
-### Keyboard Navigation
-- **Complete Keyboard Access**: Every feature accessible via keyboard
-- **Logical Tab Order**: Intuitive navigation flow through interface
-- **Focus Indicators**: Clear visual focus indicators for sighted users
-- **Keyboard Shortcuts**: Comprehensive cross-platform shortcut system
-
-### Accessible UI Components
-- **Native Controls**: Toga framework provides native platform controls with built-in accessibility
-- **Proper Event Handling**: Keyboard events properly handled for accessibility
-- **Character Navigation**: Support for character-by-character text navigation
-- **Context Menus**: Accessible via keyboard shortcuts
+- Worldwide WMO alerts
+- Minutely precipitation guidance
+- Dark Sky-style summaries
+- International use when you want alert coverage outside the US
+
+User-facing behavior:
+
+- Requires an API key.
+- Adds minutely precipitation guidance when available.
+- Can trigger start/stop precipitation notifications.
+- Pirate Weather alerts are often regional WMO alerts, so the listed areas may be broader than an exact county or zone.
+
+### Visual Crossing
+
+Best for:
+
+- Weather history
+- Global forecast enrichment
+- Some alert coverage where available
+
+User-facing behavior:
+
+- Requires an API key.
+- It is useful when you want weather history and broader source coverage.
+- For US alerts, AccessiWeather still prefers NWS because NWS metadata is stronger.
+
+### Automatic Mode
+
+`Automatic` is the default and usually the best choice.
+
+What it does:
+
+- Merges available sources instead of blindly picking only one
+- Uses NWS, Open-Meteo, and any configured optional sources to fill gaps
+- Keeps US alerts on NWS only
+- Uses Pirate Weather alerts outside the US when available
+- Falls back to Visual Crossing alerts outside the US if Pirate Weather is not configured
+
+## Alerts and Notifications
+
+### Alert Sources
+
+Alerts are source-dependent:
+
+- **US locations**: NWS alerts are used as the active alert source in Automatic mode
+- **International locations**: Pirate Weather alerts are preferred when configured; otherwise Visual Crossing may provide alert coverage
+- **Open-Meteo**: No alerts
+
+### Why NWS and Pirate Weather Alerts Feel Different
+
+Users should expect real differences:
+
+- **NWS alerts** are usually more precise for US users and include stronger metadata such as severity, urgency, and certainty.
+- **Pirate Weather/WMO alerts** are better for worldwide coverage, but they may be broader regional alerts and may not align with county-based US alert targeting.
+- **Visual Crossing alerts** can be useful, but for US locations they are not treated as the authoritative alert source.
+
+### Notification Settings
+
+Open `Settings > Notifications` to control:
+
+- Whether weather alerts are enabled at all
+- Whether desktop alert notifications are enabled
+- Which severities can notify you
+- Alert area behavior for NWS alerts
+- Cooldowns and rate limits
+- Event-based notifications
+
+Current event-based notification options include:
+
+- `Notify when Area Forecast Discussion is updated (NWS US only)`
+- `Notify when severe weather risk level changes (Visual Crossing only)`
+- `Notify when precipitation is expected to start soon (Pirate Weather)`
+- `Notify when precipitation is expected to stop soon (Pirate Weather)`
+
+## Settings Guide
+
+The Settings dialog currently has these tabs.
+
+### General
+
+Use this tab for:
+
+- Update interval
+- Showing or hiding the `Nationwide` location
+- Tray icon weather text
+
+### Display
+
+Use this tab for:
+
+- Temperature display
+- Turning metrics on or off
+- Rounding values
+- Forecast duration
+- Hourly forecast hours
+- Time display and timezone display
+- Verbosity level
+- Severe weather prioritization
+
+### Data Sources
+
+Use this tab for:
+
+- Choosing `Automatic`, `NWS`, `Open-Meteo`, `Visual Crossing`, or `Pirate Weather`
+- Entering `Visual Crossing` and `Pirate Weather` API keys
+- Choosing Open-Meteo weather models
+- Choosing the NWS station selection strategy for current conditions
+
+Available Open-Meteo model choices currently include:
+
+- Best Match
+- ICON Seamless
+- ICON Global
+- ICON EU
+- ICON D2
+- GFS Seamless
+- GFS Global
+- ECMWF IFS
+- Météo-France
+- GEM
+- JMA
+
+### Notifications
+
+Use this tab for:
+
+- Alert on/off controls
+- Severity filters
+- NWS alert area behavior
+- Event notifications
+- Notification cooldowns and hourly caps
+
+### Audio
+
+Use this tab for:
+
+- Enabling or disabling notification sounds
+- Choosing the active sound pack
+- Enabling or disabling sounds for individual event types
+
+### Updates
+
+Use this tab for:
+
+- Automatic update checks
+- Update channel
+- Update check interval
+- Manual update checks
+
+### AI
+
+Use this tab for:
+
+- Entering your OpenRouter API key
+- Choosing the AI model
+- Picking brief, standard, or detailed explanations
+- Adding optional custom system prompts or custom instructions
+
+AccessiWeather currently requires an OpenRouter API key for AI features, including free models.
+
+### Advanced
+
+Use this tab for:
+
+- Minimize to tray behavior
+- Start minimized
+- Launch at startup
+- Weather history toggle
+- Resetting settings
+- Resetting all app data
+- Opening config folders
+- Exporting or importing settings
+- Exporting or importing API keys with encryption
+- Opening the sound packs folder
+
+## Optional API Keys
+
+### Pirate Weather
+
+Needed for:
+
+- Worldwide WMO alerts
+- Minutely precipitation guidance
+- Dark Sky-style daily summaries
+
+Where to add it:
+
+- `Settings > Data Sources`
+
+### Visual Crossing
+
+Needed for:
+
+- Weather history
+- Extra global forecast coverage
+- Some regional alert coverage
+
+Where to add it:
+
+- `Settings > Data Sources`
+
+### OpenRouter
+
+Needed for:
+
+- `View > Explain Weather`
+- `View > Weather Assistant`
+
+Where to add it:
+
+- `Settings > AI`
+
+### AVWX
+
+Needed for:
+
+- Better international aviation weather translations and speech output
+
+Where to add it:
+
+- `View > Aviation Weather...`
+
+US airport aviation weather uses the NWS/AWC path by default. AVWX is mainly for international airport coverage.
+
+## AI Features
+
+AccessiWeather has two separate AI features.
+
+### Explain Weather
+
+`View > Explain Weather` gives you a one-shot natural-language summary of the current weather. It is best when you want a quick explanation instead of a conversation.
+
+You can control:
+
+- Model preference
+- Explanation style
+- Optional custom prompt behavior
+
+### Weather Assistant
+
+`View > Weather Assistant...` opens a chat-style assistant that can help you understand weather conditions and forecasts in more detail.
+
+Both AI features require an OpenRouter API key.
+
+## Weather Discussions
+
+`View > Forecast Discussion...` opens the NWS Area Forecast Discussion when it is available for the selected US location. This is a technical forecast product written by forecasters, and it is useful when you want reasoning behind the forecast.
+
+`Nationwide` also gives access to national discussion products.
+
+## Additional Tools
+
+### Weather History
+
+`View > Weather History` shows past weather comparisons. This feature depends on the app's weather history support and may rely on optional source data.
+
+### Air Quality and UV Index
+
+Use the `View` menu to open dedicated dialogs for air quality and UV index details, including hourly outlooks when available.
+
+### Aviation Weather
+
+Use `View > Aviation Weather...` to fetch TAF data by ICAO airport code. For international airports, adding an AVWX key improves translated and speech-friendly output.
+
+### NOAA Weather Radio
+
+Use `View > NOAA Weather Radio...` for NOAA Weather Radio access.
 
 ## Keyboard Shortcuts
 
-### Global Shortcuts
-- **Ctrl+R** (Windows/Linux) / **Cmd+R** (macOS): Refresh weather data
-- **Ctrl+,** (Windows/Linux) / **Cmd+,** (macOS): Open settings dialog
-- **Ctrl+L** (Windows/Linux) / **Cmd+L** (macOS): Add/manage locations
-- **Ctrl+Q** (Windows/Linux) / **Cmd+Q** (macOS): Quit application
-- **F1**: Open help/documentation
-- **Escape**: Minimize to system tray (when enabled)
+Current shortcuts exposed by the app include:
 
-### Navigation Shortcuts
-- **Tab / Shift+Tab**: Navigate between UI elements
-- **Arrow Keys**: Navigate lists, dropdowns, and text
-- **Enter / Space**: Activate buttons and controls
-- **Alt+Down** (Windows) / **Option+Down** (macOS): Open dropdown menus
-- **Delete** (Windows/Linux) / **Backspace** (macOS): Remove selected item (locations, sound packs)
+- `Ctrl+L`: Add location
+- `Ctrl+D`: Remove location
+- `Ctrl+R` or `F5`: Refresh
+- `Ctrl+S`: Settings
+- `Ctrl+E`: Explain Weather
+- `Ctrl+H`: Weather History
+- `Ctrl+T`: Weather Assistant
+- `Ctrl+Q`: Quit
+- `Ctrl+Shift+R`: NOAA Weather Radio
 
-### System Tray Shortcuts
-- **Enter**: Focus application or show context menu
-- **Applications Key**: Show context menu
-- **Shift+F10**: Alternative context menu access
+## Configuration and Portability
 
-### List and Text Navigation
-- **Home / End**: Move to beginning/end of lists or text
-- **Page Up / Page Down**: Scroll through long content
-- **Ctrl+A**: Select all text in text controls
+AccessiWeather stores settings in the standard per-user config location unless you run in portable mode.
 
-### Context-Specific Shortcuts
-- **Delete on Location Selection**: Remove the currently selected location (requires at least one location to remain)
-- **Delete on Sound Pack List**: Remove the selected sound pack (cannot delete the default pack)
+Settings export/import:
 
-## Usage Tips and Best Practices
+- Includes app settings and locations
+- Does not include API keys
 
-### Getting Started
-1. **Start with Automatic Data Source**: The automatic weather source selection provides the best experience
-2. **Add Local Location First**: Add your primary location before exploring other features
-3. **Enable Dynamic Format Switching**: Turn on dynamic format switching for the best taskbar experience
-4. **Configure Alerts**: Set appropriate alert radius and precision for your needs
-5. **Enable System Tray**: Use minimize to tray for convenient background operation
+API key portability:
 
-### Taskbar Customization Tips
-- **Try Dynamic Switching First**: Enable dynamic format switching to see intelligent format changes
-- **Create Custom Fallback**: Design a custom format string as backup when dynamic switching is enabled
-- **Test Different Conditions**: Observe how the format changes during different weather conditions
-- **Consider Screen Space**: Longer formats may be truncated on smaller screens
-- **Use Relevant Variables**: Include variables that matter most for your location and preferences
+1. Open `Settings > Advanced`.
+2. Choose `Export API keys (encrypted)`.
+3. Save the encrypted bundle and keep the passphrase.
+4. On the destination machine, use `Import API keys (encrypted)`.
 
-### Optimizing Performance
-- **Reasonable Update Intervals**: Use 10-15 minute intervals for active monitoring, longer for background use
-- **Enable Caching**: Keep API caching enabled to reduce network requests
-- **Manage Locations**: Remove unused locations to improve performance
-
-### Accessibility Best Practices
-- **Use Keyboard Navigation**: Take advantage of comprehensive cross-platform keyboard shortcuts
-- **Configure Screen Reader**: Ensure your screen reader is properly configured (NVDA/JAWS on Windows, VoiceOver on macOS, Orca on Linux)
-- **Adjust Update Intervals**: Longer intervals reduce interruptions from automatic updates
-
-## Portable Mode
-
-AccessiWeather supports portable operation for users who need to run the application from removable media or without installation:
-
-### Automatic Portable Detection
-AccessiWeather automatically detects portable mode when:
-- Running from a location outside Program Files
-- The application directory is writable
-- No standard installation is detected
-
-### Manual Portable Mode
-Force portable mode using the command line:
-```bash
-accessiweather --portable
-```
-
-### Portable Mode Features
-- **Self-contained config**: Settings and locations are stored in the application directory
-- **Secure secrets by default**: API keys stay in the local machine keyring unless you export them explicitly
-- **No Registry Changes**: No system modifications required
-- **Removable Media**: Run from USB drives or network locations
-- **Multiple Instances**: Different portable installations can have separate configurations
-
-### Portable API Key Transfer (Optional)
-To make API keys portable between machines while keeping them encrypted:
-1. Open **Settings → Advanced**.
-2. Select **Export API keys (encrypted)** and set a passphrase.
-3. Keep the encrypted bundle file with your portable folder.
-4. On the destination machine, use **Import API keys (encrypted)** and enter the same passphrase.
-
-Notes:
-- Regular config export/import and installed→portable config copy do **not** include API keys.
-- If you move a portable folder without importing keys, AccessiWeather will prompt you to reconfigure/import keys on first run.
+This keeps plaintext keys out of regular config exports.
 
 ## Troubleshooting
 
-### Installation Issues
+### I am not seeing alerts
 
-#### Windows Installation Problems
-- **MSI Installer Won't Run**: Right-click installer and select "Run as Administrator"
-- **Antivirus Blocking**: Temporarily disable antivirus or add exception for AccessiWeather
-- **Missing Dependencies**: Ensure Windows is up to date with latest Visual C++ redistributables
+Check these points:
 
-#### macOS Installation Problems
-- **"App is damaged" Warning**: Go to System Settings → Privacy & Security and click "Open Anyway"
-- **Gatekeeper Block**: Download from official sources (GitHub Releases or accessiweather.orinks.net)
+- Open-Meteo does not provide alerts.
+- For US locations, use `Automatic` or `NWS`.
+- For international locations, add a Pirate Weather key if you want better global alert coverage.
+- In `Settings > Notifications`, make sure alerts and alert notifications are enabled.
 
-#### Portable Version Issues
-- **Won't Start**: Ensure the folder has write permissions
-- **Configuration Lost**: Check that the application directory is writable
-- **Multiple Instances**: Each portable installation maintains separate settings
+### Alerts look too broad outside the US
 
-### Weather Data Issues
+That can be normal with Pirate Weather or other non-NWS alert feeds. Those alerts may be regional WMO alerts instead of exact county or zone alerts.
 
-#### No Weather Data Displayed
-1. **Check Internet Connection**: Ensure stable internet connectivity
-2. **Verify Location**: Confirm location coordinates are correct
-3. **Try Different Data Source**: Switch between NWS, Open-Meteo, or Automatic
-4. **Check API Status**: Weather services may experience temporary outages
+### I want rain start/stop notifications
 
-#### Inaccurate Weather Information
-- **Location Precision**: Use more precise coordinates for better accuracy
-- **Data Source Selection**: NWS provides more accurate data for US locations
-- **Update Frequency**: Increase update frequency for more current data
+You need:
 
-#### Missing Weather Alerts
-- **US Locations Only**: Weather alerts are only available for US locations via NWS
-- **Alert Radius**: Increase alert radius to capture more distant alerts
-- **Precise vs. State-wide**: Try switching between precise and state-wide alert modes
+- A Pirate Weather API key
+- `Settings > Notifications > Notify when precipitation is expected to start soon`
+  or
+- `Settings > Notifications > Notify when precipitation is expected to stop soon`
 
-### System Tray Issues
+### Forecast times look wrong
 
-#### Tray Icon Not Appearing
-- **Windows Settings**: Check Windows notification area settings
-- **Restart Application**: Close and restart AccessiWeather
-- **System Tray Overflow**: Check the hidden icons area in the system tray
+Check `Settings > Display`:
 
-#### Taskbar Text Not Updating
-- **Enable Feature**: Ensure taskbar text is enabled in Display settings
-- **Format String**: Verify the format string syntax is correct
-- **Data Availability**: Some variables may not be available for all locations
-- **Dynamic Switching**: If enabled, format changes automatically based on weather conditions
+- `Forecast time display`
+- `Time zone display`
+- `Use 12-hour time format`
+- `Show timezone abbreviations`
 
-#### Dynamic Format Issues
-- **Format Not Changing**: Dynamic switching requires varying weather conditions to demonstrate different formats
-- **Missing Emojis**: Ensure your system supports Unicode emoji display
-- **Unexpected Format**: Dynamic switching overrides custom format; disable it to use only your custom format
-- **Fallback Behavior**: If dynamic switching fails, it automatically uses your custom format string
+### AI features do not work
 
-### Performance Issues
+Check these points:
 
-#### Slow Application Response
-- **Reduce Update Frequency**: Increase update interval to reduce API calls
-- **Disable Caching**: Try disabling cache if experiencing issues
-- **Close Other Applications**: Free up system resources
+- Add a valid OpenRouter API key in `Settings > AI`
+- Make sure the selected model is still available
+- Try the free router first if a paid model fails
 
-#### High Memory Usage
-- **Restart Application**: Restart AccessiWeather periodically
-- **Reduce Locations**: Remove unused weather locations
-- **Update Application**: Ensure you're running the latest version
+### Aviation weather is limited for non-US airports
 
-### Accessibility Issues
-
-#### Screen Reader Problems
-- **Update Screen Reader**: Ensure your screen reader software is current
-- **Platform-Specific**: On Windows use NVDA or JAWS, on macOS use VoiceOver, on Linux use Orca
-- **Alternative Navigation**: Use keyboard shortcuts if mouse navigation isn't working
-
-#### Keyboard Navigation Issues
-- **Focus Problems**: Use Tab key to restore proper focus
-- **Stuck Focus**: Press Escape to reset focus to main window
-- **Menu Access**: Use Alt key to access menu bar
-
-### Configuration Issues
-
-#### Settings Not Saving
-- **File Permissions**: Ensure configuration directory is writable
-- **Portable Mode**: Check if running in portable mode affects save location
-- **Disk Space**: Verify sufficient disk space for configuration files
-
-#### Configuration File Locations
-AccessiWeather stores configuration in:
-- **Windows**: `%APPDATA%\accessiweather\accessiweather.json`
-- **macOS**: `~/Library/Application Support/accessiweather/accessiweather.json`
-- **Linux**: `~/.config/accessiweather/accessiweather.json`
-
-#### Lost Configuration
-- **Backup Settings**: Regularly backup your configuration directory
-- **Default Settings**: Reset to defaults if configuration becomes corrupted
-- **Multiple Installations**: Ensure you're running the correct installation
-
-### Getting Help
-
-#### Log Files
-Log files are stored in:
-- **Windows**: `%APPDATA%\accessiweather\logs\`
-- **macOS**: `~/Library/Application Support/accessiweather/logs/`
-- **Linux**: `~/.config/accessiweather/logs/`
-- **Portable Mode**: `[Application Directory]/.accessiweather/logs/`
-
-#### Debug Mode
-Run AccessiWeather with debug mode for detailed logging:
-```bash
-accessiweather --debug
-```
-
-Or when running from source:
-```bash
-briefcase dev
-```
-
-#### Reporting Issues
-When reporting issues, please include:
-- AccessiWeather version number
-- Operating system version
-- Steps to reproduce the problem
-- Relevant log file entries
-- Screenshots (if applicable)
-
-## Support and Community
-
-### Getting Support
-- **GitHub Issues**: Report bugs and request features at [GitHub Issues](https://github.com/Orinks/AccessiWeather/issues)
-- **Documentation**: Check this manual and other documentation in the `docs/` folder
-- **Community**: Engage with other users through GitHub discussions
-
-### Contributing
-AccessiWeather is open source and welcomes contributions:
-- **Bug Reports**: Help improve the application by reporting issues
-- **Feature Requests**: Suggest new features and improvements
-- **Code Contributions**: Submit pull requests for bug fixes and enhancements
-- **Documentation**: Help improve documentation and user guides
-
-### Version Information
-To check your AccessiWeather version:
-1. Open AccessiWeather
-2. Go to Help → About
-3. Version information is displayed in the About dialog
-
-For the latest version and release notes, visit the [GitHub releases page](https://github.com/Orinks/AccessiWeather/releases).
+Add an AVWX key in the `Aviation Weather` dialog for better international decoding and speech output.

@@ -1,195 +1,180 @@
 # AccessiWeather
 
-**Weather that speaks to you.**
+Accessible desktop weather for Windows, macOS, and Linux.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 [![Built with wxPython](https://img.shields.io/badge/Built%20with-wxPython-blue)](https://wxpython.org/)
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20macOS%20%7C%20Linux-informational)
 
-AccessiWeather is a cross-platform, accessible weather application built with Python and wxPython. Get detailed weather forecasts, alerts, and conditions with full screen reader support, customizable audio alerts, and keyboard navigation.
+AccessiWeather is a screen-reader-friendly weather app with keyboard navigation, desktop notifications, optional alert sounds, and multiple weather sources. It separates current conditions, daily forecast, hourly forecast, and alerts so the information is easier to scan with speech or braille.
 
-## Features
+## What It Does
 
-- **Multi-Source Weather Data**: Combines National Weather Service (NWS), Open-Meteo, Pirate Weather, and Visual Crossing for comprehensive coverage
-- **Weather Alerts**: Real-time notifications for severe weather with customizable alert sounds
-- **Accessibility First**: Full screen reader support, keyboard shortcuts, and ARIA labels throughout
-- **Air Quality & Environmental Data**: Track AQI, pollen, UV index, and more
-- **Weather History**: View historical weather trends and patterns
-- **Aviation Weather**: TAF/METAR decoding for pilots
-- **Sound Packs**: Customize alert sounds with community-created packs
-- **Offline Support**: Smart caching keeps data available when you're offline
-- **Multiple Locations**: Save and switch between your favorite locations
+- Combines multiple weather sources instead of locking you to one provider
+- Shows separate `Current Conditions`, `Daily Forecast`, `Hourly Forecast`, and `Weather Alerts` sections
+- Supports US and international locations
+- Tracks alert lifecycle changes such as new, updated, escalated, extended, and cancelled alerts
+- Offers optional AI weather explanations and a conversational Weather Assistant
+- Includes weather history, air quality, UV index, aviation weather, NOAA Weather Radio, and sound pack support
 
-## Installation
+## Weather Sources
 
-### Download Installers
+AccessiWeather supports four weather providers:
 
-Visit [accessiweather.orinks.net](https://accessiweather.orinks.net) to download:
+- **National Weather Service (NWS)**: Best for US forecasts, US alerts, and forecast discussions. This is the authoritative alert source for US locations.
+- **Open-Meteo**: No API key required. Good global baseline forecasts, Open-Meteo model selection, and broad international coverage. It does not provide weather alerts in AccessiWeather.
+- **Pirate Weather**: Optional API key. Best when you want worldwide WMO alerts, minutely precipitation guidance, and Dark Sky-style daily summaries. It is especially useful outside the US.
+- **Visual Crossing**: Optional API key. Useful for weather history, global forecasts, and some alert coverage where available.
+
+### Automatic Mode
+
+`Automatic` is the default. It merges available sources and uses source priority rules to fill gaps.
+
+- For **US locations**, AccessiWeather uses **NWS alerts only**. Pirate Weather and Visual Crossing alerts are intentionally ignored there to avoid duplicate alerts with weaker metadata.
+- For **international locations**, AccessiWeather uses **Pirate Weather alerts when available**, otherwise **Visual Crossing** if configured.
+- If you add a Pirate Weather key, Automatic mode can also pull **minutely precipitation** guidance.
+
+## Alerts
+
+Alert behavior depends on the source and location:
+
+- **NWS alerts**: Best for US users. They include stronger metadata such as severity, urgency, certainty, and NWS-specific targeting options.
+- **Pirate Weather alerts**: Based on worldwide WMO alert feeds. These are useful outside the US, but they may be broader regional alerts and may not match your exact county or zone.
+- **Visual Crossing alerts**: Available in some regions, but they are generally less detailed than NWS for US use.
+
+In the app you can:
+
+- Enable or disable alerts entirely
+- Enable desktop alert notifications separately
+- Choose alert area behavior for NWS alerts: county, point, zone, or state
+- Filter notifications by severity
+- Turn on event notifications for forecast discussion updates, severe risk changes, and minutely precipitation start/stop
+
+## Optional API Keys
+
+AccessiWeather works without paid services, but some features need optional keys:
+
+- **Pirate Weather**: Global alerts, minutely precipitation, Dark Sky-style summaries
+  - Get a key at [pirate-weather.apiable.io](https://pirate-weather.apiable.io/)
+- **Visual Crossing**: Weather history, global forecast enrichment, some regional alerts
+  - Get a key at [visualcrossing.com/weather-api](https://www.visualcrossing.com/weather-api)
+- **OpenRouter**: Required for `Explain Weather` and `Weather Assistant`
+  - Get a key at [openrouter.ai/keys](https://openrouter.ai/keys)
+- **AVWX**: Optional for better international aviation weather translations and speech output
+  - Entered from the `Aviation Weather` dialog, not the main Settings dialog
+  - Get a key at [account.avwx.rest](https://account.avwx.rest)
+
+API keys are stored in your system keyring by default.
+
+### Portable API Key Transfer
+
+Settings export/import does not include API keys. If you want to move keys between machines:
+
+1. Open `Settings > Advanced`.
+2. Choose `Export API keys (encrypted)`.
+3. Save the encrypted bundle and remember the passphrase.
+4. On the other machine, use `Import API keys (encrypted)` and enter the same passphrase.
+
+## Install
+
+### Prebuilt Downloads
+
+Download builds from [accessiweather.orinks.net](https://accessiweather.orinks.net) or the [GitHub releases page](https://github.com/Orinks/AccessiWeather/releases).
 
 - **Windows**: MSI installer or portable ZIP
-- **macOS**: DMG installer
-- **Linux**: AppImage (coming soon)
+- **macOS**: DMG
+- **Linux**: Build from source for now
 
-## Getting Started
+### Run From Source
 
-1. **Launch AccessiWeather** after installation
-2. **Add a location**: Click "Add Location" or press `Ctrl+L` (Windows/Linux) / `Cmd+L` (macOS)
-3. **View weather**: Select your location and choose from Current Conditions, Forecast, Alerts, and more
-4. **Customize settings**: Access Settings via the menu or `Ctrl+,` / `Cmd+,`
-
-### Keyboard Shortcuts
-
-- `Ctrl/Cmd + L` - Add/manage locations
-- `Ctrl/Cmd + R` - Refresh weather data
-- `Ctrl/Cmd + ,` - Open settings
-- `Ctrl/Cmd + Q` - Quit application
-- `F1` - Help/documentation
-
-See the [User Manual](docs/user_manual.md) for complete documentation.
-
-## Configuration
-
-AccessiWeather stores your settings and locations in:
-
-- **Windows**: `%APPDATA%\accessiweather\accessiweather.json`
-- **macOS**: `~/Library/Application Support/accessiweather/accessiweather.json`
-- **Linux**: `~/.config/accessiweather/accessiweather.json`
-
-You can export and import your configuration from the Settings dialog.
-
-> Note: Config export/import does **not** include API keys. API keys stay in your machine's secure keyring by default.
-
-## API Keys (Optional)
-
-AccessiWeather works out of the box with free data sources (NWS and Open-Meteo). For enhanced features, you can add:
-
-- **Pirate Weather API**: Best for global WMO alerts, minutely precipitation forecasts, and Dark Sky-style daily summaries
-  - Especially useful outside the US, where NWS coverage does not apply
-  - Get a free key at [pirateweather.apiable.io](https://pirate-weather.apiable.io/)
-  - Add in Settings → Weather Sources
-- **Visual Crossing API**: Historical weather data and extended forecasts
-  - Get a free key at [visualcrossing.com](https://www.visualcrossing.com/weather-api)
-  - Add in Settings → Weather Sources
-- **OpenRouter API**: Optional AI weather explanations
-  - Add in Settings → AI
-
-### Portable API Key Transfer (Optional)
-
-If you want API keys to travel with a portable folder between machines:
-1. In Settings → Advanced, choose **Export API keys (encrypted)**.
-2. Save the encrypted bundle file and remember the passphrase.
-3. Move/copy that encrypted bundle with your portable folder.
-4. On the destination machine, use **Import API keys (encrypted)** and enter the passphrase.
-
-This keeps plaintext keys out of config files while still allowing portable transfer when you opt in.
-
-## Documentation
-
-- [User Manual](docs/user_manual.md) - Complete guide to using AccessiWeather
-- [Accessibility Guide](docs/ACCESSIBILITY.md) - Screen reader tips and keyboard navigation
-- [Sound Pack System](docs/SOUND_PACK_SYSTEM.md) - Create and install custom alert sounds
-- [Update System](docs/UPDATE_SYSTEM.md) - How automatic updates work
-
-## Troubleshooting
-
-### Antivirus False Positives
-
-Some antivirus software (e.g., Avast, AVG) may flag AccessiWeather's auto-update service as malicious during builds or first run. This is a **false positive** caused by the update mechanism using standard Windows patterns (batch scripts, PowerShell for ZIP extraction) that superficially resemble malware techniques.
-
-**The code is safe** - our update service:
-- Only downloads from official GitHub releases
-- Verifies all downloads with SHA256 checksums
-- Uses no obfuscation or suspicious network calls
-
-**If flagged:**
-1. Report as false positive to your antivirus vendor
-2. Add an exception for AccessiWeather in your antivirus settings
-3. The flagged file is typically `github_update_service.cpython-*.pyc` in `__pycache__`
-
-See [docs/UPDATE_SYSTEM.md](docs/UPDATE_SYSTEM.md) for technical details about the update system's security measures.
-
-## Support & Community
-
-- **Issues**: Report bugs or request features on [GitHub Issues](https://github.com/Orinks/AccessiWeather/issues)
-- **Discussions**: Join the conversation on [GitHub Discussions](https://github.com/Orinks/AccessiWeather/discussions)
-- **Website**: [accessiweather.orinks.net](https://accessiweather.orinks.net)
-
-## Contributing
-
-We welcome contributions! Whether you're fixing bugs, adding features, or improving documentation:
-
-1. Fork the repo and create a feature branch from `dev`
-2. Make your changes with tests
-3. Run CI-equivalent lint checks: `ruff format --check . && ruff check .`
-4. Run CI-equivalent tests: `ACCESSIWEATHER_TEST_MODE=1 HYPOTHESIS_PROFILE=ci pytest tests/ -n auto -v --tb=short -m "not integration"`
-5. Submit a PR to `dev`
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
-
-## Development
-
-### Quick Start with uv (Recommended)
-
-[uv](https://docs.astral.sh/uv/) handles everything automatically — no manual environment activation needed.
+Using `uv`:
 
 ```bash
-# Install uv first (if you don't have it)
-# Windows (PowerShell):
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-# macOS/Linux:
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Clone and run
 git clone https://github.com/Orinks/AccessiWeather.git
 cd AccessiWeather
 uv sync
-uv run python -m accessiweather
+uv run accessiweather
 ```
 
-### Traditional Method
+Using a virtual environment:
 
 ```bash
-# Clone and setup
 git clone https://github.com/Orinks/AccessiWeather.git
 cd AccessiWeather
 python -m venv .venv
-source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+source .venv/bin/activate
 pip install -e ".[dev]"
-
-# Run the app
-python -m accessiweather
-
-# Run tests
-ACCESSIWEATHER_TEST_MODE=1 HYPOTHESIS_PROFILE=ci pytest tests/ -n auto -v --tb=short -m "not integration"
+accessiweather
 ```
 
-### Key Commands
+Portable mode is also available:
 
 ```bash
-# Development
-uv run python -m accessiweather  # Run the app
-uv run pytest tests/ -n auto -v --tb=short -m "not integration"  # CI test selection
-uv run ruff format --check .     # CI format check
-uv run ruff check .              # CI lint check
-uv run pyright                   # Type checking
+accessiweather --portable
 ```
 
-See [AGENTS.md](AGENTS.md) for detailed development conventions, architecture overview, and CI/CD information.
+## First Run
+
+1. Launch AccessiWeather.
+2. Add a location.
+3. Leave `Weather Data Source` on `Automatic` unless you have a reason to force one provider.
+4. Open `Settings` and add optional API keys only if you need those extra features.
+5. Refresh to load current conditions, daily forecast, hourly forecast, and alerts.
+
+## Main Views
+
+- **Current Conditions**: Temperature, condition, wind, humidity, and other enabled metrics
+- **Daily Forecast**: Multi-day forecast in its own section
+- **Hourly Forecast**: Separate short-range outlook with configurable hour count
+- **Weather Alerts**: Active alerts with lifecycle labels when alerts change
+- **Forecast Discussion**: NWS Area Forecast Discussion for US locations
+- **Explain Weather**: One-shot AI summary of the current weather
+- **Weather Assistant**: Chat-style AI weather help
+
+If Pirate Weather minutely data is available, AccessiWeather adds a short precipitation outlook to current conditions and can notify you when precipitation is about to start or stop.
+
+## Settings Overview
+
+The Settings dialog currently includes these tabs:
+
+- **General**: Update interval, Nationwide location, tray text
+- **Display**: Units, visible metrics, forecast length, hourly hours, time display, verbosity
+- **Data Sources**: Source selection, Pirate Weather key, Visual Crossing key, Open-Meteo model, NWS station selection
+- **Notifications**: Alert behavior, severities, event notifications, cooldowns
+- **Audio**: Sound packs and per-event sound controls
+- **Updates**: Update channel and check interval
+- **AI**: OpenRouter key, model, explanation style, custom prompts
+- **Advanced**: Portable/config tools, settings backup, encrypted API key transfer, resets
+
+## Keyboard Shortcuts
+
+- `Ctrl+L`: Add location
+- `Ctrl+D`: Remove location
+- `Ctrl+R` or `F5`: Refresh weather
+- `Ctrl+S`: Open settings
+- `Ctrl+E`: Explain weather
+- `Ctrl+H`: Weather history
+- `Ctrl+T`: Weather Assistant
+- `Ctrl+Q`: Quit
+
+## Documentation
+
+- [User Manual](docs/user_manual.md)
+- [Accessibility Guide](docs/ACCESSIBILITY.md)
+- [Sound Pack System](docs/SOUND_PACK_SYSTEM.md)
+- [Update System](docs/UPDATE_SYSTEM.md)
+
+## Support
+
+- [GitHub Issues](https://github.com/Orinks/AccessiWeather/issues)
+- [GitHub Discussions](https://github.com/Orinks/AccessiWeather/discussions)
+- [Project website](https://accessiweather.orinks.net)
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md).
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
-
-## Acknowledgments
-
-Built with [wxPython](https://wxpython.org/) for accessible cross-platform GUI development. Weather data provided by:
-
-- [National Weather Service](https://www.weather.gov/) (US)
-- [Open-Meteo](https://open-meteo.com/) (Global)
-- [Pirate Weather](https://pirateweather.net/) (Optional, best for global WMO alerts, minutely precipitation, and Dark Sky-style summaries)
-- [Visual Crossing](https://www.visualcrossing.com/) (Optional, for historical data)
-
-## Related Projects
-
-- [AccessiSky](https://github.com/Orinks/AccessiSky) - Accessible sky tracking app (ISS passes, moon phases, aurora forecasts)
+MIT. See [LICENSE](LICENSE).
