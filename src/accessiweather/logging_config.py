@@ -10,6 +10,7 @@ import logging
 import logging.handlers
 import os
 import sys
+from pathlib import Path  # noqa: F401  # exposed for test patching (logging_config.Path.chmod)
 
 from accessiweather.paths import resolve_default_config_root
 
