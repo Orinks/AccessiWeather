@@ -6,6 +6,7 @@ import textwrap
 from datetime import UTC, datetime, timedelta
 
 from ...models import CurrentConditions, ForecastPeriod, HourlyForecastPeriod
+from ...units import DisplayUnitSystem
 from ...utils import (
     TemperatureUnit,
     calculate_dewpoint,
@@ -30,7 +31,11 @@ def format_temperature_pair(
 
 
 def format_wind(
-    current: CurrentConditions, unit_pref: TemperatureUnit, precision: int = 1
+    current: CurrentConditions,
+    unit_pref: TemperatureUnit,
+    precision: int = 1,
+    *,
+    unit_system: DisplayUnitSystem | str | None = None,
 ) -> str | None:
     """Describe wind direction and speed or return calm when wind is negligible."""
     if (
@@ -59,6 +64,7 @@ def format_wind(
         unit_pref,
         wind_speed_kph=current.wind_speed_kph,
         precision=precision,
+        unit_system=unit_system,
     )
     if direction and speed:
         return f"{direction} at {speed}"
@@ -100,6 +106,8 @@ def format_pressure_value(
     current: CurrentConditions,
     unit_pref: TemperatureUnit,
     precision: int = 1,
+    *,
+    unit_system: DisplayUnitSystem | str | None = None,
 ) -> str | None:
     """Format station pressure in the preferred unit, if available."""
     if current.pressure_in is None and current.pressure_mb is None:
@@ -108,13 +116,21 @@ def format_pressure_value(
     pressure_mb = current.pressure_mb
     if pressure_in is None and pressure_mb is not None:
         pressure_in = pressure_mb / 33.8639
-    return format_pressure(pressure_in, unit_pref, pressure_mb=pressure_mb, precision=precision)
+    return format_pressure(
+        pressure_in,
+        unit_pref,
+        pressure_mb=pressure_mb,
+        precision=precision,
+        unit_system=unit_system,
+    )
 
 
 def format_visibility_value(
     current: CurrentConditions,
     unit_pref: TemperatureUnit,
     precision: int = 1,
+    *,
+    unit_system: DisplayUnitSystem | str | None = None,
 ) -> str | None:
     """Format horizontal visibility taking unit preference into account."""
     if current.visibility_miles is None and current.visibility_km is None:
@@ -124,6 +140,7 @@ def format_visibility_value(
         unit_pref,
         visibility_km=current.visibility_km,
         precision=precision,
+        unit_system=unit_system,
     )
 
 

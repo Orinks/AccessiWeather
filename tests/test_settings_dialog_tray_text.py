@@ -142,6 +142,13 @@ def test_save_settings_persists_tray_text_fields():
 
 def test_get_selected_temperature_unit_uses_current_choice():
     dialog = _make_dialog_for_settings(SimpleNamespace())
-    dialog._controls["temp_unit"].SetSelection(1)
+    dialog._controls["temp_unit"].SetSelection(2)
 
     assert dialog._get_selected_temperature_unit() == "c"
+
+
+def test_get_selected_temperature_unit_returns_auto_for_first_choice():
+    dialog = _make_dialog_for_settings(SimpleNamespace())
+    dialog._controls["temp_unit"].SetSelection(0)
+
+    assert dialog._get_selected_temperature_unit() == "auto"

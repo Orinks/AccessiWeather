@@ -44,6 +44,7 @@ from .models import (
 from .notifications.minutely_precipitation import parse_pirate_weather_minutely_block
 from .pirate_weather_client import PirateWeatherApiError, PirateWeatherClient
 from .services import EnvironmentalDataClient
+from .units import resolve_auto_unit_system
 from .utils.retry import APITimeoutError, retry_with_backoff
 from .visual_crossing_client import VisualCrossingApiError, VisualCrossingClient
 from .weather_client_alerts import AlertAggregator
@@ -613,18 +614,19 @@ class WeatherClient:
         if api_choice == "pirateweather":
             # Use Pirate Weather API
             try:
-                if not self.pirate_weather_client:
+                pirate_weather_client = self._pirate_weather_client_for_location(location)
+                if not pirate_weather_client:
                     raise PirateWeatherApiError("Pirate Weather API key not configured")
 
                 # Parallelize API calls for better performance
                 current, forecast, hourly_forecast, alerts = await asyncio.gather(
-                    self.pirate_weather_client.get_current_conditions(location),
-                    self.pirate_weather_client.get_forecast(
+                    pirate_weather_client.get_current_conditions(location),
+                    pirate_weather_client.get_forecast(
                         location,
                         days=self._get_forecast_days_for_source(location, source="pirateweather"),
                     ),
-                    self.pirate_weather_client.get_hourly_forecast(location),
-                    self.pirate_weather_client.get_alerts(location),
+                    pirate_weather_client.get_hourly_forecast(location),
+                    pirate_weather_client.get_alerts(location),
                 )
 
                 weather_data.current = current
@@ -876,15 +878,16 @@ class WeatherClient:
 
         # Fetch from Pirate Weather if configured
         async def fetch_pw():
-            if not self.pirate_weather_client:
+            pirate_weather_client = self._pirate_weather_client_for_location(location)
+            if not pirate_weather_client:
                 return (None, None, None, None)
-            current = await self.pirate_weather_client.get_current_conditions(location)
-            forecast = await self.pirate_weather_client.get_forecast(
+            current = await pirate_weather_client.get_current_conditions(location)
+            forecast = await pirate_weather_client.get_forecast(
                 location,
                 days=self._get_forecast_days_for_source(location, source="pirateweather"),
             )
-            hourly = await self.pirate_weather_client.get_hourly_forecast(location)
-            alerts = await self.pirate_weather_client.get_alerts(location)
+            hourly = await pirate_weather_client.get_hourly_forecast(location)
+            alerts = await pirate_weather_client.get_alerts(location)
             return (current, forecast, hourly, alerts)
 
         # Fetch from all sources in parallel
@@ -893,7 +896,7 @@ class WeatherClient:
             fetch_nws=fetch_nws() if is_us else None,
             fetch_openmeteo=fetch_openmeteo(),
             fetch_visualcrossing=fetch_vc() if self.visual_crossing_client else None,
-            fetch_pirateweather=fetch_pw() if self.pirate_weather_client else None,
+            fetch_pirateweather=fetch_pw() if self.pirate_weather_api_key else None,
         )
 
         # Check if all sources failed
@@ -1196,6 +1199,29 @@ class WeatherClient:
     def _location_key(location: Location) -> str:
         """Return a stable string key for a location (used for alert caching)."""
         return f"{location.latitude:.4f},{location.longitude:.4f}"
+
+    def _resolve_pirate_weather_units(self, location: Location) -> str:
+        """Resolve the Pirate Weather unit bundle for the given location."""
+        preference = (getattr(self.settings, "temperature_unit", "both") or "both").strip().lower()
+        if preference == "auto":
+            unit_system = resolve_auto_unit_system(location)
+            return "uk" if unit_system.value == "uk" else unit_system.value
+        if preference in {"c", "celsius"}:
+            return "ca"
+        return "us"
+
+    def _pirate_weather_client_for_location(self, location: Location) -> PirateWeatherClient | None:
+        """Return a Pirate Weather client configured for the location's effective unit system."""
+        api_key = self.pirate_weather_api_key
+        if not api_key:
+            return None
+
+        units = self._resolve_pirate_weather_units(location)
+        client = self._pirate_weather_client
+        if client is None or client.units != units:
+            client = PirateWeatherClient(api_key, self.user_agent, units=units)
+            self._pirate_weather_client = client
+        return client
 
     def _is_us_location(self, location: Location) -> bool:
         """

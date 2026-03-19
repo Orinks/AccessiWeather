@@ -29,6 +29,7 @@ from ..models import (
     WeatherAlerts,
     WeatherData,
 )
+from ..units import resolve_display_unit_system, resolve_temperature_unit_preference
 from ..utils import TemperatureUnit, decode_taf_text
 from .presentation.environmental import AirQualityPresentation, build_air_quality_panel
 
@@ -193,7 +194,7 @@ class WeatherPresenter:
 
     def present(self, weather_data: WeatherData) -> WeatherPresentation:
         """Build a structured presentation for the given weather data."""
-        unit_pref = self._get_temperature_unit_preference()
+        unit_pref, unit_system = self._resolve_unit_preferences(weather_data.location)
 
         air_quality_panel = (
             build_air_quality_panel(
@@ -214,6 +215,7 @@ class WeatherPresenter:
                 hourly_forecast=weather_data.hourly_forecast,
                 air_quality=air_quality_panel,
                 alerts=weather_data.alerts,
+                unit_system=unit_system,
             )
             if weather_data.current
             else None
@@ -274,7 +276,7 @@ class WeatherPresenter:
     ) -> CurrentConditionsPresentation | None:
         if not current or not current.has_data():
             return None
-        unit_pref = self._get_temperature_unit_preference()
+        unit_pref, unit_system = self._resolve_unit_preferences(location)
         air_quality_panel = (
             build_air_quality_panel(location, environmental, settings=self.settings)
             if environmental
@@ -290,6 +292,7 @@ class WeatherPresenter:
             hourly_forecast=hourly_forecast,
             air_quality=air_quality_panel,
             alerts=alerts,
+            unit_system=unit_system,
         )
 
     def present_forecast(
@@ -301,7 +304,7 @@ class WeatherPresenter:
     ) -> ForecastPresentation | None:
         if not forecast or not forecast.has_data():
             return None
-        unit_pref = self._get_temperature_unit_preference()
+        unit_pref, _unit_system = self._resolve_unit_preferences(location)
         return self._build_forecast(
             forecast, hourly_forecast, location, unit_pref, confidence=confidence
         )
@@ -329,6 +332,7 @@ class WeatherPresenter:
         hourly_forecast: HourlyForecast | None = None,
         air_quality: AirQualityPresentation | None = None,
         alerts: WeatherAlerts | None = None,
+        unit_system=None,
     ) -> CurrentConditionsPresentation:
         return build_current_conditions(
             current,
@@ -340,6 +344,7 @@ class WeatherPresenter:
             hourly_forecast=hourly_forecast,
             air_quality=air_quality,
             alerts=alerts,
+            unit_system=unit_system,
         )
 
     def _build_forecast(
@@ -644,13 +649,14 @@ class WeatherPresenter:
             aria_label=aria_label,
         )
 
-    def _get_temperature_unit_preference(self) -> TemperatureUnit:
-        unit_pref = (self.settings.temperature_unit or "both").lower()
-        if unit_pref in {"fahrenheit", "f"}:
-            return TemperatureUnit.FAHRENHEIT
-        if unit_pref in {"celsius", "c"}:
-            return TemperatureUnit.CELSIUS
-        return TemperatureUnit.BOTH
+    def _resolve_unit_preferences(
+        self, location: Location
+    ) -> tuple[TemperatureUnit, object | None]:
+        preference = getattr(self.settings, "temperature_unit", "both")
+        return (
+            resolve_temperature_unit_preference(preference, location),
+            resolve_display_unit_system(preference, location),
+        )
 
     def _format_timestamp(self, value: datetime) -> str:
         mode = getattr(self.settings, "time_display_mode", "local")
