@@ -340,6 +340,11 @@ class TestParseHourlyForecast:
         assert period.uv_index == 3
         assert period.precipitation_probability == 10
 
+    def test_hourly_block_summary_parsed(self, client, sample_forecast_payload):
+        sample_forecast_payload["hourly"]["summary"] = "Partly cloudy until late afternoon."
+        result = client._parse_hourly_forecast(sample_forecast_payload)
+        assert result.summary == "Partly cloudy until late afternoon."
+
     def test_timezone_aware_start_time(self, client, sample_forecast_payload):
         result = client._parse_hourly_forecast(sample_forecast_payload)
         assert result.periods[0].start_time.tzinfo is not None
