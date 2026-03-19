@@ -416,6 +416,125 @@ class TestTemperatureConflicts:
         assert len(attr.conflicts) == 0
 
 
+# --- helper coverage for semantic groups ---
+
+
+class TestFusionHelpers:
+    def test_source_group_helpers_handle_missing_current_and_clear_stale_fields(self, engine):
+        source = _make_source("nws", current=None)
+        assert engine._source_has_any_field(source, ("temperature_f", "temperature_c")) is False
+
+        merged_values = {"temperature_f": 70.0, "temperature_c": 21.1}
+        attr = engine.merge_current_conditions([], Location(name="X", latitude=0, longitude=0))[1]
+
+        engine._set_group_values(
+            {"temperature_f": None, "temperature_c": 20.0},
+            merged_values,
+            attr,
+            "openmeteo",
+        )
+
+        assert "temperature_f" not in merged_values
+        assert "temperature_f" not in attr.field_sources
+        assert merged_values["temperature_c"] == 20.0
+        assert attr.field_sources["temperature_c"] == "openmeteo"
+
+    def test_visibility_helpers_skip_missing_current_and_clear_missing_units(
+        self, engine, monkeypatch
+    ):
+        result = engine._select_visibility(
+            [
+                _make_source("missing", current=None),
+                _make_source("nws", current=CurrentConditions(visibility_miles=0.5)),
+            ]
+        )
+
+        assert result == pytest.approx((0.5, 0.804672, "nws"))
+
+        merged_values = {"visibility_miles": 1.0, "visibility_km": 1.6}
+        attr = engine.merge_current_conditions([], Location(name="X", latitude=0, longitude=0))[1]
+        attr.field_sources["visibility_miles"] = "nws"
+        attr.field_sources["visibility_km"] = "nws"
+
+        monkeypatch.setattr(engine, "_select_visibility", lambda _: (None, 2.0, "openmeteo"))
+        engine._apply_visibility_selection([], merged_values, attr)
+        assert "visibility_miles" not in merged_values
+        assert "visibility_miles" not in attr.field_sources
+        assert merged_values["visibility_km"] == 2.0
+        assert attr.field_sources["visibility_km"] == "openmeteo"
+
+        monkeypatch.setattr(engine, "_select_visibility", lambda _: (1.0, None, "pirateweather"))
+        engine._apply_visibility_selection([], merged_values, attr)
+        assert merged_values["visibility_miles"] == 1.0
+        assert attr.field_sources["visibility_miles"] == "pirateweather"
+        assert "visibility_km" not in merged_values
+        assert "visibility_km" not in attr.field_sources
+
+    def test_semantic_group_builders_fill_missing_units_and_base_values(self, engine):
+        temperature_current = CurrentConditions(temperature_c=10.0)
+        temperature_current.temperature = None
+        temperature_values = engine._build_temperature_values(temperature_current)
+        dewpoint_values = engine._build_dewpoint_values(CurrentConditions(dewpoint_c=5.0))
+        feels_like_values = engine._build_feels_like_values(CurrentConditions(feels_like_c=9.0))
+        wind_chill_values = engine._build_wind_chill_values(CurrentConditions(wind_chill_c=-4.0))
+        heat_index_values = engine._build_heat_index_values(CurrentConditions(heat_index_c=31.0))
+        wind_speed_current = CurrentConditions(wind_speed_mph=12.0)
+        wind_speed_current.wind_speed = None
+        wind_speed_values = engine._build_speed_values(wind_speed_current)
+        wind_gust_values = engine._build_wind_gust_values(CurrentConditions(wind_gust_kph=40.0))
+        pressure_current = CurrentConditions(pressure_mb=1013.25)
+        pressure_current.pressure = None
+        pressure_values = engine._build_pressure_values(pressure_current)
+
+        assert temperature_values["temperature"] == pytest.approx(50.0)
+        assert temperature_values["temperature_f"] == pytest.approx(50.0)
+        assert temperature_values["temperature_c"] == pytest.approx(10.0)
+        assert dewpoint_values == pytest.approx({"dewpoint_f": 41.0, "dewpoint_c": 5.0})
+        assert feels_like_values == pytest.approx({"feels_like_f": 48.2, "feels_like_c": 9.0})
+        assert wind_chill_values == pytest.approx({"wind_chill_f": 24.8, "wind_chill_c": -4.0})
+        assert heat_index_values == pytest.approx({"heat_index_f": 87.8, "heat_index_c": 31.0})
+        assert wind_speed_values["wind_speed"] == pytest.approx(12.0)
+        assert wind_speed_values["wind_speed_mph"] == pytest.approx(12.0)
+        assert wind_speed_values["wind_speed_kph"] == pytest.approx(19.312128)
+        assert wind_gust_values == pytest.approx(
+            {"wind_gust_mph": 24.8548476895, "wind_gust_kph": 40.0}
+        )
+        assert pressure_values["pressure"] == pytest.approx(29.9212524019)
+        assert pressure_values["pressure_in"] == pytest.approx(29.9212524019)
+        assert pressure_values["pressure_mb"] == pytest.approx(1013.25)
+
+    def test_depth_precipitation_and_freezing_helpers_fill_both_conversion_directions(self, engine):
+        precipitation_from_mm = engine._build_precipitation_values(
+            CurrentConditions(precipitation_mm=12.7)
+        )
+        precipitation_from_in = engine._build_precipitation_values(
+            CurrentConditions(precipitation_in=0.5)
+        )
+        snow_from_cm = engine._build_snow_depth_values(CurrentConditions(snow_depth_cm=10.16))
+        snow_from_in = engine._build_snow_depth_values(CurrentConditions(snow_depth_in=4.0))
+        freezing_from_m = engine._build_freezing_level_values(
+            CurrentConditions(freezing_level_m=304.8)
+        )
+        freezing_from_ft = engine._build_freezing_level_values(
+            CurrentConditions(freezing_level_ft=1000.0)
+        )
+
+        assert precipitation_from_mm == pytest.approx(
+            {"precipitation_in": 0.5, "precipitation_mm": 12.7}
+        )
+        assert precipitation_from_in == pytest.approx(
+            {"precipitation_in": 0.5, "precipitation_mm": 12.7}
+        )
+        assert snow_from_cm == pytest.approx({"snow_depth_in": 4.0, "snow_depth_cm": 10.16})
+        assert snow_from_in == pytest.approx({"snow_depth_in": 4.0, "snow_depth_cm": 10.16})
+        assert freezing_from_m == pytest.approx(
+            {"freezing_level_ft": 1000.0, "freezing_level_m": 304.8}
+        )
+        assert freezing_from_ft == pytest.approx(
+            {"freezing_level_ft": 1000.0, "freezing_level_m": 304.8}
+        )
+
+
 # --- merge_forecasts ---
 
 
