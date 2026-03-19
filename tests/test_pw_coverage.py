@@ -782,4 +782,5 @@ class TestForecastSummaryPresentation:
         result = build_forecast(forecast, hourly, self._make_location(), TemperatureUnit.FAHRENHEIT)
 
         assert result.hourly_summary == "Hourly outlook: Partly cloudy until this afternoon."
+        assert result.hourly_section_text.startswith("Hourly forecast:")
         assert "Hourly outlook: Partly cloudy until this afternoon." in result.fallback_text
