@@ -116,6 +116,37 @@ class TestWeatherClientDataSource:
         # Should fall back to NWS for US location
         assert choice == "nws"
 
+    @pytest.mark.parametrize(
+        ("country_code", "expected_units"),
+        [
+            ("US", "us"),
+            ("GB", "uk"),
+            ("CA", "ca"),
+            ("FR", "si"),
+        ],
+    )
+    def test_resolve_pirate_weather_units_for_auto(self, client, country_code, expected_units):
+        client.settings.temperature_unit = "auto"
+
+        location = Location(name="Test", latitude=0.0, longitude=0.0, country_code=country_code)
+
+        assert client._resolve_pirate_weather_units(location) == expected_units
+
+    def test_pirate_weather_client_for_location_rebuilds_with_auto_units(self, client):
+        client.settings.temperature_unit = "auto"
+        client._pirate_weather_api_key = "test-key"
+
+        london = Location(name="London", latitude=51.5, longitude=-0.12, country_code="GB")
+        paris = Location(name="Paris", latitude=48.86, longitude=2.35, country_code="FR")
+
+        london_client = client._pirate_weather_client_for_location(london)
+        paris_client = client._pirate_weather_client_for_location(paris)
+
+        assert london_client is not None
+        assert paris_client is not None
+        assert london_client.units == "uk2"
+        assert paris_client.units == "si"
+
 
 class TestWeatherClientFetching:
     """Tests for weather data fetching."""

@@ -86,12 +86,12 @@ class PirateWeatherClient:
             api_key: Pirate Weather API key.
             user_agent: HTTP User-Agent header value.
             units: Unit system – "us" (°F, mph, in), "si" (°C, m/s, mm),
-                   "ca" (°C, km/h, mm), or "uk2" (°C, mph, mm).
+                   "ca" (°C, km/h, mm), or "uk"/"uk2" (°C, mph, mm).
 
         """
         self.api_key = api_key
         self.user_agent = user_agent
-        self.units = units
+        self.units = "uk2" if units == "uk" else units
         self.timeout = 15.0
 
     def _build_url(self, lat: float, lon: float) -> str:

@@ -157,6 +157,7 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["temp_unit"] = wx.Choice(
             panel,
             choices=[
+                "Auto (based on location)",
                 "Fahrenheit only",
                 "Celsius only",
                 "Both (Fahrenheit and Celsius)",
@@ -1319,8 +1320,15 @@ class SettingsDialogSimple(wx.Dialog):
 
             # Display tab
             temp_unit = getattr(settings, "temperature_unit", "both")
-            temp_map = {"f": 0, "fahrenheit": 0, "c": 1, "celsius": 1, "both": 2}
-            self._controls["temp_unit"].SetSelection(temp_map.get(temp_unit, 2))
+            temp_map = {
+                "auto": 0,
+                "f": 1,
+                "fahrenheit": 1,
+                "c": 2,
+                "celsius": 2,
+                "both": 3,
+            }
+            self._controls["temp_unit"].SetSelection(temp_map.get(temp_unit, 3))
 
             self._controls["show_dewpoint"].SetValue(getattr(settings, "show_dewpoint", True))
             self._controls["show_visibility"].SetValue(getattr(settings, "show_visibility", True))
@@ -1575,7 +1583,7 @@ class SettingsDialogSimple(wx.Dialog):
         try:
             # Map selections back to values
             source_values = ["auto", "nws", "openmeteo", "visualcrossing", "pirateweather"]
-            temp_values = ["f", "c", "both"]
+            temp_values = ["auto", "f", "c", "both"]
             forecast_duration_values = [3, 5, 7, 10, 14, 15]
             forecast_time_reference_values = ["location", "user_local"]
             time_mode_values = ["local", "utc", "both"]
@@ -2977,7 +2985,7 @@ class SettingsDialogSimple(wx.Dialog):
 
     def _get_selected_temperature_unit(self) -> str:
         """Return the temperature unit selection currently shown in the dialog."""
-        temp_values = ["f", "c", "both"]
+        temp_values = ["auto", "f", "c", "both"]
         selection = self._controls["temp_unit"].GetSelection()
         if selection < 0 or selection >= len(temp_values):
             return "both"

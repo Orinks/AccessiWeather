@@ -572,6 +572,7 @@ class TestPirateWeatherDataSourcePath:
         mock_pw.get_hourly_forecast = AsyncMock(return_value=MagicMock())
         mock_pw.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
         wc._pirate_weather_client = mock_pw
+        wc._pirate_weather_client_for_location = lambda loc: mock_pw
 
         result = await wc._do_fetch_weather_data(intl_location)
 

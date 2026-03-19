@@ -12,6 +12,7 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 
 from .format_string_parser import FormatStringParser
+from .units import resolve_display_unit_system, resolve_temperature_unit_preference
 from .utils.temperature_utils import (
     TemperatureUnit,
     celsius_to_fahrenheit,
@@ -142,6 +143,7 @@ class TaskbarIconUpdater:
             return DEFAULT_TOOLTIP_TEXT
 
         try:
+            self._active_weather_data = weather_data
             data = self._extract_weather_variables(
                 current,
                 location_name,
@@ -151,6 +153,8 @@ class TaskbarIconUpdater:
         except Exception as exc:
             logger.debug("Failed to format tooltip: %s", exc)
             return DEFAULT_TOOLTIP_TEXT
+        finally:
+            self._active_weather_data = None
 
     def format_text(
         self,
@@ -240,9 +244,11 @@ class TaskbarIconUpdater:
         if temp_f is None and temp_c is None:
             return PLACEHOLDER_NA
 
-        if self.temperature_unit in ("fahrenheit", "f"):
+        effective_unit = self._resolve_temperature_unit()
+
+        if effective_unit == TemperatureUnit.FAHRENHEIT:
             return self._format_temp_value(temp_f, "F")
-        if self.temperature_unit in ("celsius", "c"):
+        if effective_unit == TemperatureUnit.CELSIUS:
             if temp_c is not None:
                 return self._format_temp_value(temp_c, "C")
             return PLACEHOLDER_NA
@@ -262,9 +268,11 @@ class TaskbarIconUpdater:
         if feels_f is None and feels_c is None:
             return PLACEHOLDER_NA
 
-        if self.temperature_unit in ("fahrenheit", "f"):
+        effective_unit = self._resolve_temperature_unit()
+
+        if effective_unit == TemperatureUnit.FAHRENHEIT:
             return self._format_temp_value(feels_f, "F")
-        if self.temperature_unit in ("celsius", "c"):
+        if effective_unit == TemperatureUnit.CELSIUS:
             if feels_c is not None:
                 return self._format_temp_value(feels_c, "C")
             return PLACEHOLDER_NA
@@ -282,14 +290,20 @@ class TaskbarIconUpdater:
             return PLACEHOLDER_NA
         return f"{value:.0f}{suffix}"
 
-    def _normalize_temperature_unit(self) -> TemperatureUnit:
-        """Normalize legacy short forms to the shared temperature unit enum."""
-        normalized = (self.temperature_unit or "both").strip().lower()
-        if normalized in {"fahrenheit", "f"}:
-            return TemperatureUnit.FAHRENHEIT
-        if normalized in {"celsius", "c"}:
-            return TemperatureUnit.CELSIUS
-        return TemperatureUnit.BOTH
+    def _resolve_temperature_unit(self, location: Any | None = None) -> TemperatureUnit:
+        """Resolve the effective temperature unit for the active location."""
+        resolved_location = location
+        if resolved_location is None and getattr(self, "_active_weather_data", None) is not None:
+            resolved_location = getattr(self._active_weather_data, "location", None)
+        return resolve_temperature_unit_preference(self.temperature_unit, resolved_location)
+
+    def _resolve_display_unit_system(self, location: Any | None = None) -> str | None:
+        """Resolve the effective single-unit display system for the active location."""
+        resolved_location = location
+        if resolved_location is None and getattr(self, "_active_weather_data", None) is not None:
+            resolved_location = getattr(self._active_weather_data, "location", None)
+        unit_system = resolve_display_unit_system(self.temperature_unit, resolved_location)
+        return unit_system.value if unit_system is not None else None
 
     def _format_numeric(self, value: float | int | None, suffix: str) -> str:
         """Format a numeric value with optional suffix."""
@@ -323,9 +337,10 @@ class TaskbarIconUpdater:
         precision = 0 if self.round_values else 1
         return format_wind_speed(
             getattr(current, "wind_speed_mph", None),
-            unit=self._normalize_temperature_unit(),
+            unit=self._resolve_temperature_unit(),
             wind_speed_kph=getattr(current, "wind_speed_kph", None),
             precision=precision,
+            unit_system=self._resolve_display_unit_system(),
         )
 
     def _format_pressure(self, current: Any) -> str:
@@ -333,9 +348,10 @@ class TaskbarIconUpdater:
         precision = 0 if self.round_values else 2
         return format_pressure(
             getattr(current, "pressure_in", None),
-            unit=self._normalize_temperature_unit(),
+            unit=self._resolve_temperature_unit(),
             pressure_mb=getattr(current, "pressure_mb", None),
             precision=precision,
+            unit_system=self._resolve_display_unit_system(),
         )
 
     def _format_visibility(self, current: Any) -> str:
@@ -343,9 +359,10 @@ class TaskbarIconUpdater:
         precision = 0 if self.round_values else 1
         return format_visibility(
             getattr(current, "visibility_miles", None),
-            unit=self._normalize_temperature_unit(),
+            unit=self._resolve_temperature_unit(),
             visibility_km=getattr(current, "visibility_km", None),
             precision=precision,
+            unit_system=self._resolve_display_unit_system(),
         )
 
     def _format_precipitation(self, current: Any) -> str:
@@ -359,9 +376,10 @@ class TaskbarIconUpdater:
         precision = 0 if self.round_values else 2
         return format_precipitation(
             precip_in,
-            unit=self._normalize_temperature_unit(),
+            unit=self._resolve_temperature_unit(),
             precipitation_mm=getattr(current, "precipitation_mm", None),
             precision=precision,
+            unit_system=self._resolve_display_unit_system(),
         )
 
     def _format_forecast_temperatures(
@@ -412,9 +430,11 @@ class TaskbarIconUpdater:
         temp_f = value if normalized_unit == "F" else celsius_to_fahrenheit(value)
         temp_c = value if normalized_unit == "C" else fahrenheit_to_celsius(value)
 
-        if self.temperature_unit in ("fahrenheit", "f"):
+        effective_unit = self._resolve_temperature_unit()
+
+        if effective_unit == TemperatureUnit.FAHRENHEIT:
             return self._format_temp_value(temp_f, "F")
-        if self.temperature_unit in ("celsius", "c"):
+        if effective_unit == TemperatureUnit.CELSIUS:
             return self._format_temp_value(temp_c, "C")
         return f"{temp_f:.0f}F/{temp_c:.0f}C"
 
