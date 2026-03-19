@@ -581,6 +581,14 @@ class TestCancellationVerification:
         assert len(diff.cancelled_alerts) == 1
         assert diff.cancelled_alerts[0].alert_id == "VC-1"
 
+    def test_pirate_weather_alert_cancel_is_suppressed_without_confirmation(self):
+        """Pirate Weather / WMO disappearance should not emit a cancellation by default."""
+        pw = WeatherAlert(title="PW", description="d", id="PW-1", source="PirateWeather")
+        prev_snap = alerts(pw)
+        curr_snap = alerts()
+        diff = diff_alerts(prev_snap, curr_snap, confirmed_cancel_ids=None)
+        assert len(diff.cancelled_alerts) == 0
+
     def test_stale_cache_flicker_no_notification(self):
         """Alert disappears then reappears → no cancel notification."""
         a = make_nws_alert("NWS-1")
