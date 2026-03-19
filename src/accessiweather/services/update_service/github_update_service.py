@@ -30,10 +30,10 @@ from .settings import (
 )
 
 try:
-    from ...config_utils import is_portable_mode
+    from ...paths import detect_portable_mode
 except ImportError:
 
-    def is_portable_mode() -> bool:
+    def detect_portable_mode() -> bool:
         return False
 
 
@@ -231,7 +231,7 @@ class GitHubUpdateService:
     def _is_portable_environment(self) -> bool:
         """Check if running in a portable environment."""
         try:
-            return is_portable_mode()
+            return detect_portable_mode()
         except Exception as e:
             logger.debug(f"Error checking portable mode: {e}")
             return False

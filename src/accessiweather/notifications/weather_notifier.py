@@ -9,6 +9,7 @@ import json
 import logging
 import os
 from datetime import datetime
+from pathlib import Path
 
 # For Python 3.10 compatibility
 try:
@@ -19,7 +20,7 @@ from typing import Any
 
 from dateutil.parser import isoparse  # type: ignore # requires python-dateutil
 
-from accessiweather.config_utils import get_config_dir
+from accessiweather.paths import resolve_default_config_root
 
 from .toast_notifier import SafeToastNotifier
 
@@ -48,8 +49,9 @@ class WeatherNotifier:
 
         # Set up persistent storage path
         if self.enable_persistence:
-            self.config_dir: str | None = config_dir or get_config_dir()
-            self.alerts_state_file: str | None = os.path.join(self.config_dir, "alert_state.json")
+            config_root = resolve_default_config_root(config_dir=config_dir)
+            self.config_dir = str(config_root)
+            self.alerts_state_file = str(Path(config_root) / "alert_state.json")
             # Load existing alert state
             self._load_alert_state()
         else:

@@ -13,6 +13,27 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
+def is_forced_portable_mode() -> bool:
+    """Return True when portable mode is forced via environment override."""
+    return os.environ.get("ACCESSIWEATHER_FORCE_PORTABLE", "").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+
+
+def detect_portable_mode() -> bool:
+    """Detect portable mode using the canonical runtime marker rules."""
+    if is_forced_portable_mode():
+        return True
+
+    if not getattr(sys, "frozen", False):
+        return False
+
+    exe_dir = Path(sys.executable).parent
+    return (exe_dir / ".portable").exists() or (exe_dir / "config").is_dir()
+
+
 class Paths:
     """
     Cross-platform application paths.
@@ -44,17 +65,9 @@ class Paths:
 
         # Portable mode override for frozen builds:
         # if explicit marker exists (or forced), keep all app data beside the exe.
-        if getattr(sys, "frozen", False):
-            exe_dir = Path(sys.executable).parent
-            forced_portable = os.environ.get("ACCESSIWEATHER_FORCE_PORTABLE", "").lower() in {
-                "1",
-                "true",
-                "yes",
-            }
-            marker_portable = (exe_dir / ".portable").exists() or (exe_dir / "config").is_dir()
-            if forced_portable or marker_portable:
-                self._base_path = exe_dir
-                return self._base_path
+        if getattr(sys, "frozen", False) and detect_portable_mode():
+            self._base_path = Path(sys.executable).parent
+            return self._base_path
 
         if sys.platform == "win32":
             # Windows: %LOCALAPPDATA%/Author/AppName/
@@ -166,3 +179,24 @@ def resolve_runtime_storage(
         return RuntimeStoragePaths(config_root=app_dir / "config", portable_mode=True)
 
     return RuntimeStoragePaths(config_root=Path(app_paths.config))
+
+
+def resolve_default_runtime_storage(
+    *, config_dir: str | Path | None = None, portable_mode: bool = False
+) -> RuntimeStoragePaths:
+    """Resolve runtime storage without needing an app instance."""
+    return resolve_runtime_storage(
+        Paths(),
+        config_dir=config_dir,
+        portable_mode=portable_mode,
+    )
+
+
+def resolve_default_config_root(
+    *, config_dir: str | Path | None = None, portable_mode: bool = False
+) -> Path:
+    """Return the canonical default config root for the current runtime."""
+    return resolve_default_runtime_storage(
+        config_dir=config_dir,
+        portable_mode=portable_mode,
+    ).config_root
