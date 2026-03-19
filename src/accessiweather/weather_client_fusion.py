@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from dataclasses import fields, replace
 from typing import Any
 
@@ -18,6 +19,12 @@ from accessiweather.models.weather import (
 )
 
 logger = logging.getLogger(__name__)
+
+KM_PER_MILE = 1.609344
+MB_PER_INHG = 33.8639
+MM_PER_INCH = 25.4
+CM_PER_INCH = 2.54
+METERS_PER_FOOT = 0.3048
 
 
 class DataFusionEngine:
@@ -44,6 +51,65 @@ class DataFusionEngine:
     def _get_field_value(self, obj: Any, field_name: str) -> Any:
         """Get a field value from an object, returning None if not present."""
         return getattr(obj, field_name, None)
+
+    def _source_priority_index(
+        self,
+        source_name: str,
+        priority: list[str],
+    ) -> int:
+        """Return a stable priority index for sorting sources."""
+        try:
+            return priority.index(source_name)
+        except ValueError:
+            return len(priority)
+
+    def _source_has_any_field(
+        self,
+        source: SourceData,
+        field_names: tuple[str, ...],
+    ) -> bool:
+        """Check whether a source reports any field in a semantic group."""
+        if source.current is None:
+            return False
+        return any(
+            self._get_field_value(source.current, field_name) is not None
+            for field_name in field_names
+        )
+
+    def _select_semantic_group_source(
+        self,
+        valid_sources: list[SourceData],
+        *,
+        field_names: tuple[str, ...],
+        priority_field: str,
+        is_us: bool,
+    ) -> SourceData | None:
+        """Pick the highest-priority source that has any value in the semantic group."""
+        field_priority = self.config.get_priority(priority_field, is_us)
+        field_sources = sorted(
+            valid_sources,
+            key=lambda source: self._source_priority_index(source.source, field_priority),
+        )
+        for source in field_sources:
+            if self._source_has_any_field(source, field_names):
+                return source
+        return None
+
+    def _set_group_values(
+        self,
+        values: dict[str, Any],
+        merged_values: dict[str, Any],
+        attribution: SourceAttribution,
+        source_name: str,
+    ) -> None:
+        """Apply a semantic group selection and keep attribution aligned."""
+        for field_name, value in values.items():
+            if value is not None:
+                merged_values[field_name] = value
+                attribution.field_sources[field_name] = source_name
+            else:
+                merged_values.pop(field_name, None)
+                attribution.field_sources.pop(field_name, None)
 
     def merge_current_conditions(
         self,
@@ -74,13 +140,7 @@ class DataFusionEngine:
         priority = self.config.get_priority("current_conditions", is_us)
 
         # Sort sources by priority
-        def source_priority(s: SourceData) -> int:
-            try:
-                return priority.index(s.source)
-            except ValueError:
-                return len(priority)  # Unknown sources go last
-
-        valid_sources.sort(key=source_priority)
+        valid_sources.sort(key=lambda source: self._source_priority_index(source.source, priority))
 
         # Track contributing sources
         for s in valid_sources:
@@ -117,7 +177,7 @@ class DataFusionEngine:
                     attribution.field_sources[field_name] = source.source
                     break
 
-        self._apply_visibility_selection(valid_sources, merged_values, attribution)
+        self._apply_semantic_group_selections(valid_sources, merged_values, attribution, is_us)
 
         # Check for temperature conflicts
         self._check_temperature_conflicts(valid_sources, merged_values, attribution, is_us)
@@ -136,6 +196,139 @@ class DataFusionEngine:
         # Create merged CurrentConditions
         merged = CurrentConditions(**merged_values)
         return merged, attribution
+
+    def _apply_semantic_group_selections(
+        self,
+        valid_sources: list[SourceData],
+        merged_values: dict[str, Any],
+        attribution: SourceAttribution,
+        is_us: bool,
+    ) -> None:
+        """Align related measurements so one semantic reading comes from one source."""
+        self._apply_priority_group_selection(
+            valid_sources,
+            merged_values,
+            attribution,
+            is_us=is_us,
+            priority_field="temperature",
+            field_names=("temperature", "temperature_f", "temperature_c"),
+            value_builder=self._build_temperature_values,
+        )
+        self._apply_priority_group_selection(
+            valid_sources,
+            merged_values,
+            attribution,
+            is_us=is_us,
+            priority_field="dewpoint_f",
+            field_names=("dewpoint_f", "dewpoint_c"),
+            value_builder=self._build_dewpoint_values,
+        )
+        self._apply_priority_group_selection(
+            valid_sources,
+            merged_values,
+            attribution,
+            is_us=is_us,
+            priority_field="wind_speed",
+            field_names=("wind_speed", "wind_speed_mph", "wind_speed_kph"),
+            value_builder=self._build_speed_values,
+        )
+        self._apply_priority_group_selection(
+            valid_sources,
+            merged_values,
+            attribution,
+            is_us=is_us,
+            priority_field="pressure",
+            field_names=("pressure", "pressure_in", "pressure_mb"),
+            value_builder=self._build_pressure_values,
+        )
+        self._apply_priority_group_selection(
+            valid_sources,
+            merged_values,
+            attribution,
+            is_us=is_us,
+            priority_field="feels_like_f",
+            field_names=("feels_like_f", "feels_like_c"),
+            value_builder=self._build_feels_like_values,
+        )
+        self._apply_visibility_selection(valid_sources, merged_values, attribution)
+        self._apply_priority_group_selection(
+            valid_sources,
+            merged_values,
+            attribution,
+            is_us=is_us,
+            priority_field="wind_gust_mph",
+            field_names=("wind_gust_mph", "wind_gust_kph"),
+            value_builder=self._build_wind_gust_values,
+        )
+        self._apply_priority_group_selection(
+            valid_sources,
+            merged_values,
+            attribution,
+            is_us=is_us,
+            priority_field="precipitation_in",
+            field_names=("precipitation_in", "precipitation_mm"),
+            value_builder=self._build_precipitation_values,
+        )
+        self._apply_priority_group_selection(
+            valid_sources,
+            merged_values,
+            attribution,
+            is_us=is_us,
+            priority_field="snow_depth_in",
+            field_names=("snow_depth_in", "snow_depth_cm"),
+            value_builder=self._build_snow_depth_values,
+        )
+        self._apply_priority_group_selection(
+            valid_sources,
+            merged_values,
+            attribution,
+            is_us=is_us,
+            priority_field="wind_chill_f",
+            field_names=("wind_chill_f", "wind_chill_c"),
+            value_builder=self._build_wind_chill_values,
+        )
+        self._apply_priority_group_selection(
+            valid_sources,
+            merged_values,
+            attribution,
+            is_us=is_us,
+            priority_field="freezing_level_ft",
+            field_names=("freezing_level_ft", "freezing_level_m"),
+            value_builder=self._build_freezing_level_values,
+        )
+        self._apply_priority_group_selection(
+            valid_sources,
+            merged_values,
+            attribution,
+            is_us=is_us,
+            priority_field="heat_index_f",
+            field_names=("heat_index_f", "heat_index_c"),
+            value_builder=self._build_heat_index_values,
+        )
+
+    def _apply_priority_group_selection(
+        self,
+        valid_sources: list[SourceData],
+        merged_values: dict[str, Any],
+        attribution: SourceAttribution,
+        *,
+        is_us: bool,
+        priority_field: str,
+        field_names: tuple[str, ...],
+        value_builder: Callable[[CurrentConditions], dict[str, float | None]],
+    ) -> None:
+        """Select one source for a semantic field group and normalize missing units."""
+        source = self._select_semantic_group_source(
+            valid_sources,
+            field_names=field_names,
+            priority_field=priority_field,
+            is_us=is_us,
+        )
+        if source is None or source.current is None:
+            return
+
+        values = value_builder(source.current)
+        self._set_group_values(values, merged_values, attribution, source.source)
 
     def _apply_visibility_selection(
         self,
@@ -196,9 +389,9 @@ class DataFusionEngine:
         visibility_km = best_source.current.visibility_km
 
         if visibility_miles is None and visibility_km is not None:
-            visibility_miles = visibility_km / 1.609344
+            visibility_miles = visibility_km / KM_PER_MILE
         if visibility_km is None and visibility_miles is not None:
-            visibility_km = visibility_miles * 1.609344
+            visibility_km = visibility_miles * KM_PER_MILE
 
         return visibility_miles, visibility_km, best_source.source
 
@@ -207,8 +400,147 @@ class DataFusionEngine:
         if current.visibility_miles is not None:
             return current.visibility_miles
         if current.visibility_km is not None:
-            return current.visibility_km / 1.609344
+            return current.visibility_km / KM_PER_MILE
         return None
+
+    def _build_temperature_values(self, current: CurrentConditions) -> dict[str, float | None]:
+        """Build aligned temperature values from a single source."""
+        pair = self._build_value_pair(current.temperature_f, current.temperature_c, "temperature")
+        temperature_f = pair["temperature_f"]
+        temperature_c = pair["temperature_c"]
+        temperature = current.temperature
+        if temperature is None:
+            temperature = temperature_f if temperature_f is not None else temperature_c
+        return {
+            "temperature": temperature,
+            "temperature_f": temperature_f,
+            "temperature_c": temperature_c,
+        }
+
+    def _build_dewpoint_values(self, current: CurrentConditions) -> dict[str, float | None]:
+        """Build aligned dewpoint values from a single source."""
+        return self._build_value_pair(current.dewpoint_f, current.dewpoint_c, "dewpoint")
+
+    def _build_feels_like_values(self, current: CurrentConditions) -> dict[str, float | None]:
+        """Build aligned feels-like values from a single source."""
+        return self._build_value_pair(current.feels_like_f, current.feels_like_c, "feels_like")
+
+    def _build_wind_chill_values(self, current: CurrentConditions) -> dict[str, float | None]:
+        """Build aligned wind chill values from a single source."""
+        return self._build_value_pair(current.wind_chill_f, current.wind_chill_c, "wind_chill")
+
+    def _build_heat_index_values(self, current: CurrentConditions) -> dict[str, float | None]:
+        """Build aligned heat index values from a single source."""
+        return self._build_value_pair(current.heat_index_f, current.heat_index_c, "heat_index")
+
+    def _build_speed_values(self, current: CurrentConditions) -> dict[str, float | None]:
+        """Build aligned wind speed values from a single source."""
+        pair = self._build_speed_pair(current.wind_speed_mph, current.wind_speed_kph, "wind_speed")
+        speed_mph = pair["wind_speed_mph"]
+        speed_kph = pair["wind_speed_kph"]
+        speed = current.wind_speed
+        if speed is None:
+            speed = speed_mph if speed_mph is not None else speed_kph
+        return {
+            "wind_speed": speed,
+            "wind_speed_mph": speed_mph,
+            "wind_speed_kph": speed_kph,
+        }
+
+    def _build_wind_gust_values(self, current: CurrentConditions) -> dict[str, float | None]:
+        """Build aligned wind gust values from a single source."""
+        return self._build_speed_pair(current.wind_gust_mph, current.wind_gust_kph, "wind_gust")
+
+    def _build_value_pair(
+        self,
+        value_a: float | None,
+        value_b: float | None,
+        base_name: str,
+    ) -> dict[str, float | None]:
+        """Build aligned Fahrenheit/Celsius-style value pairs from a single source."""
+        if value_a is None and value_b is not None:
+            value_a = (value_b * 9 / 5) + 32
+        if value_b is None and value_a is not None:
+            value_b = (value_a - 32) * 5 / 9
+        return {
+            f"{base_name}_f": value_a,
+            f"{base_name}_c": value_b,
+        }
+
+    def _build_speed_pair(
+        self,
+        value_mph: float | None,
+        value_kph: float | None,
+        base_name: str,
+    ) -> dict[str, float | None]:
+        """Build aligned mph/kph value pairs from a single source."""
+        if value_mph is None and value_kph is not None:
+            value_mph = value_kph / KM_PER_MILE
+        if value_kph is None and value_mph is not None:
+            value_kph = value_mph * KM_PER_MILE
+
+        return {
+            f"{base_name}_mph": value_mph,
+            f"{base_name}_kph": value_kph,
+        }
+
+    def _build_pressure_values(self, current: CurrentConditions) -> dict[str, float | None]:
+        """Build aligned pressure values from a single source."""
+        pressure_in = current.pressure_in
+        pressure_mb = current.pressure_mb
+        if pressure_in is None and pressure_mb is not None:
+            pressure_in = pressure_mb / MB_PER_INHG
+        if pressure_mb is None and pressure_in is not None:
+            pressure_mb = pressure_in * MB_PER_INHG
+
+        pressure = current.pressure
+        if pressure is None:
+            pressure = pressure_in if pressure_in is not None else pressure_mb
+
+        return {
+            "pressure": pressure,
+            "pressure_in": pressure_in,
+            "pressure_mb": pressure_mb,
+        }
+
+    def _build_precipitation_values(self, current: CurrentConditions) -> dict[str, float | None]:
+        """Build aligned precipitation totals from a single source."""
+        precipitation_in = current.precipitation_in
+        precipitation_mm = current.precipitation_mm
+        if precipitation_in is None and precipitation_mm is not None:
+            precipitation_in = precipitation_mm / MM_PER_INCH
+        if precipitation_mm is None and precipitation_in is not None:
+            precipitation_mm = precipitation_in * MM_PER_INCH
+        return {
+            "precipitation_in": precipitation_in,
+            "precipitation_mm": precipitation_mm,
+        }
+
+    def _build_snow_depth_values(self, current: CurrentConditions) -> dict[str, float | None]:
+        """Build aligned snow depth values from a single source."""
+        snow_depth_in = current.snow_depth_in
+        snow_depth_cm = current.snow_depth_cm
+        if snow_depth_in is None and snow_depth_cm is not None:
+            snow_depth_in = snow_depth_cm / CM_PER_INCH
+        if snow_depth_cm is None and snow_depth_in is not None:
+            snow_depth_cm = snow_depth_in * CM_PER_INCH
+        return {
+            "snow_depth_in": snow_depth_in,
+            "snow_depth_cm": snow_depth_cm,
+        }
+
+    def _build_freezing_level_values(self, current: CurrentConditions) -> dict[str, float | None]:
+        """Build aligned freezing level values from a single source."""
+        freezing_level_ft = current.freezing_level_ft
+        freezing_level_m = current.freezing_level_m
+        if freezing_level_ft is None and freezing_level_m is not None:
+            freezing_level_ft = freezing_level_m / METERS_PER_FOOT
+        if freezing_level_m is None and freezing_level_ft is not None:
+            freezing_level_m = freezing_level_ft * METERS_PER_FOOT
+        return {
+            "freezing_level_ft": freezing_level_ft,
+            "freezing_level_m": freezing_level_m,
+        }
 
     def _check_temperature_conflicts(
         self,

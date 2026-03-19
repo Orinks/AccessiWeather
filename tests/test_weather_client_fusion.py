@@ -246,6 +246,65 @@ class TestMergeCurrentConditions:
         assert attr.field_sources["visibility_miles"] == "pirateweather"
         assert attr.field_sources["visibility_km"] == "pirateweather"
 
+    def test_temperature_group_stays_aligned_to_one_source(self, engine, us_location):
+        """Temperature variants should come from one provider once auto selects a reading."""
+        nws_cc = CurrentConditions(temperature_f=72.0)
+        om_cc = CurrentConditions(temperature_c=10.0)
+        sources = [
+            _make_source("openmeteo", current=om_cc),
+            _make_source("nws", current=nws_cc),
+        ]
+
+        result, attr = engine.merge_current_conditions(sources, us_location)
+
+        assert result is not None
+        assert result.temperature == pytest.approx(72.0)
+        assert result.temperature_f == pytest.approx(72.0)
+        assert result.temperature_c == pytest.approx(22.2222222222)
+        assert attr.field_sources["temperature"] == "nws"
+        assert attr.field_sources["temperature_f"] == "nws"
+        assert attr.field_sources["temperature_c"] == "nws"
+
+    def test_pressure_group_stays_aligned_to_one_source(self, engine, us_location):
+        """Pressure aliases and unit variants should not mix providers."""
+        nws_cc = CurrentConditions(pressure_in=30.0)
+        om_cc = CurrentConditions(pressure_mb=990.0)
+        sources = [
+            _make_source("openmeteo", current=om_cc),
+            _make_source("nws", current=nws_cc),
+        ]
+
+        result, attr = engine.merge_current_conditions(sources, us_location)
+
+        assert result is not None
+        assert result.pressure == pytest.approx(30.0)
+        assert result.pressure_in == pytest.approx(30.0)
+        assert result.pressure_mb == pytest.approx(1015.917)
+        assert attr.field_sources["pressure"] == "nws"
+        assert attr.field_sources["pressure_in"] == "nws"
+        assert attr.field_sources["pressure_mb"] == "nws"
+
+    def test_wind_speed_group_respects_per_field_priority_override(self, us_location):
+        """Semantic group selection should still honor custom field priority overrides."""
+        config = SourcePriorityConfig(field_priorities={"wind_speed": ["openmeteo", "nws"]})
+        engine = DataFusionEngine(config=config)
+        nws_cc = CurrentConditions(wind_speed_mph=12.0)
+        om_cc = CurrentConditions(wind_speed_kph=20.0)
+        sources = [
+            _make_source("nws", current=nws_cc),
+            _make_source("openmeteo", current=om_cc),
+        ]
+
+        result, attr = engine.merge_current_conditions(sources, us_location)
+
+        assert result is not None
+        assert result.wind_speed == pytest.approx(20.0)
+        assert result.wind_speed_mph == pytest.approx(12.4274238447)
+        assert result.wind_speed_kph == pytest.approx(20.0)
+        assert attr.field_sources["wind_speed"] == "openmeteo"
+        assert attr.field_sources["wind_speed_mph"] == "openmeteo"
+        assert attr.field_sources["wind_speed_kph"] == "openmeteo"
+
     def test_us_strips_openmeteo_snow_depth(self, engine, us_location):
         """Open-Meteo snow depth (ERA5/GFS model) is stripped for US locations."""
         nws_cc = CurrentConditions(temperature_f=32.0, snow_depth_in=None, snow_depth_cm=None)
