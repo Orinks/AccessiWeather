@@ -617,6 +617,41 @@ class TestPirateWeatherDataSourcePath:
         assert result is not None
         assert result.discussion == "Weather data not available."
 
+    @pytest.mark.asyncio
+    async def test_pirateweather_alert_disappearance_does_not_emit_cancel(self, intl_location):
+        """Pirate Weather lifecycle stays conservative when an alert disappears."""
+        from accessiweather.models.alerts import WeatherAlert
+
+        wc = WeatherClient(data_source="pirateweather", pirate_weather_api_key="test-key")
+
+        first_alerts = WeatherAlerts(
+            alerts=[
+                WeatherAlert(
+                    title="Avalanche Warning",
+                    description="Heavy avalanche risk.",
+                    id="pw-wmo-1",
+                    source="PirateWeather",
+                )
+            ]
+        )
+        second_alerts = WeatherAlerts(alerts=[])
+
+        mock_pw = MagicMock()
+        mock_pw.get_current_conditions = AsyncMock(return_value=MagicMock())
+        mock_pw.get_forecast = AsyncMock(return_value=MagicMock())
+        mock_pw.get_hourly_forecast = AsyncMock(return_value=MagicMock())
+        mock_pw.get_alerts = AsyncMock(side_effect=[first_alerts, second_alerts])
+        wc._pirate_weather_client = mock_pw
+        wc._pirate_weather_client_for_location = lambda loc: mock_pw
+
+        first = await wc._do_fetch_weather_data(intl_location)
+        second = await wc._do_fetch_weather_data(intl_location)
+
+        assert first.alert_lifecycle_diff is not None
+        assert len(first.alert_lifecycle_diff.new_alerts) == 1
+        assert second.alert_lifecycle_diff is not None
+        assert len(second.alert_lifecycle_diff.cancelled_alerts) == 0
+
 
 # ---------------------------------------------------------------------------
 # weather_client_base.py – fetch_pw in _fetch_smart_auto_source
@@ -782,4 +817,5 @@ class TestForecastSummaryPresentation:
         result = build_forecast(forecast, hourly, self._make_location(), TemperatureUnit.FAHRENHEIT)
 
         assert result.hourly_summary == "Hourly outlook: Partly cloudy until this afternoon."
+        assert result.hourly_section_text.startswith("Hourly forecast:")
         assert "Hourly outlook: Partly cloudy until this afternoon." in result.fallback_text

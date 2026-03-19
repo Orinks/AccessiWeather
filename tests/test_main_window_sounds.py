@@ -54,7 +54,10 @@ class TestMainWindowDataUpdatedSound:
         win.refresh_button = MagicMock()
         win.current_conditions = MagicMock()
         win.stale_warning_label = MagicMock()
-        win.forecast_display = MagicMock()
+        win.daily_forecast_display = MagicMock()
+        win.hourly_forecast_display = MagicMock()
+        win.forecast_display = win.daily_forecast_display
+        win._set_forecast_sections = MagicMock()
         win._update_alerts = MagicMock()
         win._process_notification_events = MagicMock()
         win._alert_lifecycle_labels = {}
@@ -185,7 +188,10 @@ class TestMainWindowFetchErrorSound:
         win.refresh_button = MagicMock()
         win.current_conditions = MagicMock()
         win.stale_warning_label = MagicMock()
-        win.forecast_display = MagicMock()
+        win.daily_forecast_display = MagicMock()
+        win.hourly_forecast_display = MagicMock()
+        win.forecast_display = win.daily_forecast_display
+        win._set_forecast_sections = MagicMock()
         win._update_alerts = MagicMock()
         win._process_notification_events = MagicMock()
         win._alert_lifecycle_labels = {}

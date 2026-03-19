@@ -118,9 +118,9 @@ def build_forecast(
         if hourly_forecast and hourly_forecast.summary
         else None
     )
-    fallback_lines = [f"Forecast for {location.name}:\n"]
+    daily_lines = [f"Daily forecast for {location.name}:"]
     if summary_line:
-        fallback_lines.append(summary_line)
+        daily_lines.append(summary_line)
 
     hourly_hours = getattr(settings, "hourly_forecast_hours", 6) if settings else 6
     hourly_hours = max(1, min(hourly_hours, 168))
@@ -213,25 +213,25 @@ def build_forecast(
             )
         )
 
-        fallback_lines.append(f"{period.name or 'Unknown'}: {temp_pair or 'N/A'}")
+        daily_lines.append(f"{period.name or 'Unknown'}: {temp_pair or 'N/A'}")
         if period.short_forecast:
-            fallback_lines.append(f"  Conditions: {period.short_forecast}")
+            daily_lines.append(f"  Conditions: {period.short_forecast}")
         if wind_value:
-            fallback_lines.append(f"  Wind: {wind_value}")
+            daily_lines.append(f"  Wind: {wind_value}")
         if gust_val:
-            fallback_lines.append(f"  Wind gusts: {gust_val}")
+            daily_lines.append(f"  Wind gusts: {gust_val}")
         if precip_prob:
-            fallback_lines.append(f"  Precipitation: {precip_prob}")
+            daily_lines.append(f"  Precipitation: {precip_prob}")
         if precip_amt:
-            fallback_lines.append(f"  Precipitation amount: {precip_amt}")
+            daily_lines.append(f"  Precipitation amount: {precip_amt}")
         if snowfall_val:
-            fallback_lines.append(f"  Snowfall: {snowfall_val}")
+            daily_lines.append(f"  Snowfall: {snowfall_val}")
         if cloud_val:
-            fallback_lines.append(f"  Cloud cover: {cloud_val}")
+            daily_lines.append(f"  Cloud cover: {cloud_val}")
         if uv_val:
-            fallback_lines.append(f"  UV Index: {uv_val}")
+            daily_lines.append(f"  UV Index: {uv_val}")
         if details:
-            fallback_lines.append(f"  Details: {wrap_text(details, 80)}")
+            daily_lines.append(f"  Details: {wrap_text(details, 80)}")
 
     generated_at = (
         format_timestamp(
@@ -244,22 +244,25 @@ def build_forecast(
         else None
     )
     if generated_at:
-        fallback_lines.append(f"\nForecast generated: {generated_at}")
-
-    if hourly_summary_line:
-        fallback_lines.append(hourly_summary_line)
-
-    if hourly:
-        fallback_lines.append(render_hourly_fallback(hourly, hours=hourly_hours))
+        daily_lines.append(f"Forecast generated: {generated_at}")
 
     # Append cross-source confidence summary when available
     confidence_label: str | None = None
     if confidence is not None:
         level_str = confidence.level.value  # 'High', 'Medium', 'Low'
-        fallback_lines.append(f"\nForecast confidence: {level_str}. {confidence.rationale}.")
+        daily_lines.append(f"Forecast confidence: {level_str}. {confidence.rationale}.")
         confidence_label = f"Confidence: {level_str}"
 
-    fallback_text = "\n".join(fallback_lines).rstrip()
+    daily_section_text = "\n".join(daily_lines).rstrip()
+    hourly_section_text = build_hourly_section_text(
+        hourly,
+        hours=hourly_hours,
+        summary_line=hourly_summary_line,
+    )
+    fallback_sections = [daily_section_text]
+    if hourly_section_text:
+        fallback_sections.append(hourly_section_text)
+    fallback_text = "\n\n".join(section for section in fallback_sections if section).rstrip()
 
     return ForecastPresentation(
         title=title,
@@ -268,6 +271,8 @@ def build_forecast(
         hourly_summary=hourly_summary_line,
         generated_at=generated_at,
         fallback_text=fallback_text,
+        daily_section_text=daily_section_text,
+        hourly_section_text=hourly_section_text,
         confidence_label=confidence_label,
         summary=summary_line,
     )
@@ -441,6 +446,28 @@ def render_hourly_fallback(hourly: Iterable[HourlyPeriodPresentation], hours: in
             parts.append(f"UV {period.uv_index}")
         lines.append("  " + " - ".join(parts))
     return "\n".join(lines)
+
+
+def build_hourly_section_text(
+    hourly: Iterable[HourlyPeriodPresentation],
+    *,
+    hours: int,
+    summary_line: str | None = None,
+) -> str:
+    """Render hourly forecast as a separate accessibility section."""
+    hourly_periods = list(hourly)
+    if not hourly_periods and not summary_line:
+        return ""
+
+    lines = ["Hourly forecast:"]
+    if summary_line:
+        lines.append(summary_line)
+
+    rendered = render_hourly_fallback(hourly_periods, hours=hours)
+    if rendered:
+        lines.append(rendered)
+
+    return "\n".join(lines).rstrip()
 
 
 def _format_hourly_dewpoint(

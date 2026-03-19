@@ -14,6 +14,7 @@ from accessiweather.models import Location
 from accessiweather.pirate_weather_client import (
     PirateWeatherApiError,
     PirateWeatherClient,
+    _build_alert_id,
     _icon_to_condition,
 )
 
@@ -397,9 +398,20 @@ class TestParseAlerts:
         assert alert.source == "PirateWeather"
         assert "New York" in alert.areas
 
-    def test_alert_id_from_uri(self, client, sample_payload_with_alerts):
+    def test_alert_id_is_deterministic_wmo_fingerprint(self, client, sample_payload_with_alerts):
         result = client._parse_alerts(sample_payload_with_alerts)
-        assert result.alerts[0].id == "https://alerts.weather.gov/cap/123"
+        alert_data = sample_payload_with_alerts["alerts"][0]
+        assert result.alerts[0].id == _build_alert_id(alert_data)
+
+    def test_alert_id_ignores_uri_revision_changes(self, client, sample_payload_with_alerts):
+        first = dict(sample_payload_with_alerts["alerts"][0], uri="https://example.com/v1.xml")
+        second = dict(sample_payload_with_alerts["alerts"][0], uri="https://example.com/v2.xml")
+        assert _build_alert_id(first) == _build_alert_id(second)
+
+    def test_alert_id_ignores_expiry_extension(self, client, sample_payload_with_alerts):
+        first = dict(sample_payload_with_alerts["alerts"][0], expires=1700050000)
+        second = dict(sample_payload_with_alerts["alerts"][0], expires=1700060000)
+        assert _build_alert_id(first) == _build_alert_id(second)
 
     def test_alert_times_parsed(self, client, sample_payload_with_alerts):
         result = client._parse_alerts(sample_payload_with_alerts)
@@ -407,6 +419,38 @@ class TestParseAlerts:
         assert alert.onset is not None
         assert alert.expires is not None
         assert alert.expires > alert.onset
+
+    def test_lower_severity_regional_alerts_are_suppressed(
+        self, client, sample_payload_with_alerts
+    ):
+        payload = dict(sample_payload_with_alerts)
+        payload["alerts"] = [
+            {
+                "title": "Wind Advisory",
+                "severity": "moderate",
+                "time": 1700000000,
+                "description": "Breezy conditions expected.",
+                "regions": ["New York"],
+            }
+        ]
+        result = client._parse_alerts(payload)
+        assert result.alerts == []
+
+    def test_regions_are_normalized_without_fake_precision(
+        self, client, sample_payload_with_alerts
+    ):
+        payload = dict(sample_payload_with_alerts)
+        payload["alerts"] = [
+            {
+                "title": "Winter Storm Warning",
+                "severity": "severe",
+                "time": 1700000000,
+                "description": "Heavy snow expected.",
+                "regions": [" New York ", "", "Hudson Valley"],
+            }
+        ]
+        result = client._parse_alerts(payload)
+        assert result.alerts[0].areas == ["New York", "Hudson Valley"]
 
     def test_severity_mapping(self, client):
         for raw, expected in [

@@ -99,13 +99,22 @@ class MainWindow(SizedFrame):
         self.current_conditions.SetSizerProps(expand=True, proportion=1)
 
         # Forecast section
-        wx.StaticText(panel, label="Forecast:")
-        self.forecast_display = wx.TextCtrl(
+        wx.StaticText(panel, label="Daily Forecast:")
+        self.daily_forecast_display = wx.TextCtrl(
             panel,
             style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
-            name="Weather forecast",
+            name="Daily weather forecast",
         )
-        self.forecast_display.SetSizerProps(expand=True, proportion=1)
+        self.daily_forecast_display.SetSizerProps(expand=True, proportion=1)
+        self.forecast_display = self.daily_forecast_display
+
+        wx.StaticText(panel, label="Hourly Forecast:")
+        self.hourly_forecast_display = wx.TextCtrl(
+            panel,
+            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
+            name="Hourly weather forecast",
+        )
+        self.hourly_forecast_display.SetSizerProps(expand=True, proportion=1)
 
         # Weather alerts section
         alerts_panel = SizedPanel(panel)
@@ -954,7 +963,7 @@ class MainWindow(SizedFrame):
                     "Fetching nationwide weather discussions from NWS, SPC, NHC, and CPC...\n"
                     "This may take a moment.",
                 )
-                wx.CallAfter(self.forecast_display.SetValue, "")
+                wx.CallAfter(self._set_forecast_sections, "", "")
                 await self._fetch_nationwide_discussions(generation)
                 return
 
@@ -1038,7 +1047,7 @@ class MainWindow(SizedFrame):
         """Handle received nationwide discussion data (called on main thread)."""
         try:
             self.current_conditions.SetValue(current_text)
-            self.forecast_display.SetValue(forecast_text)
+            self._set_forecast_sections(forecast_text, "")
             self.stale_warning_label.SetLabel("")
             self.set_status("Nationwide discussions updated")
         except Exception as e:
@@ -1096,9 +1105,17 @@ class MainWindow(SizedFrame):
 
             # Update forecast
             if presentation.forecast:
-                self.forecast_display.SetValue(presentation.forecast.fallback_text)
+                daily_text = (
+                    presentation.forecast.daily_section_text or "No daily forecast available."
+                )
+                hourly_text = (
+                    presentation.forecast.hourly_section_text or "No hourly forecast available."
+                )
+                self._set_forecast_sections(daily_text, hourly_text)
             else:
-                self.forecast_display.SetValue("No forecast available.")
+                self._set_forecast_sections(
+                    "No daily forecast available.", "No hourly forecast available."
+                )
 
             # Update lifecycle label map from the current active alerts, then refresh the alerts list.
             if weather_data.alerts is not None:
@@ -1161,6 +1178,11 @@ class MainWindow(SizedFrame):
         finally:
             self.app.is_updating = False
             self.refresh_button.Enable()
+
+    def _set_forecast_sections(self, daily_text: str, hourly_text: str) -> None:
+        """Update the daily and hourly forecast controls together."""
+        self.daily_forecast_display.SetValue(daily_text)
+        self.hourly_forecast_display.SetValue(hourly_text)
 
     def _on_weather_error(self, error_message: str) -> None:
         """Handle weather fetch error (called on main thread)."""
