@@ -273,7 +273,7 @@ def render_release_notes(body: str, *, max_items: int | None = None) -> str:
 
 
 def render_nightly_notes_summary(release: ReleaseInfo) -> str:
-    return render_release_notes(release.body, max_items=3)
+    return render_release_notes(release.body, max_items=10)
 
 
 def ordered_unique_assets(
