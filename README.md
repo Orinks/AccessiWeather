@@ -11,7 +11,7 @@ AccessiWeather is a cross-platform, accessible weather application built with Py
 
 ## Features
 
-- **Multi-Source Weather Data**: Combines National Weather Service (NWS), Open-Meteo, and Visual Crossing for comprehensive coverage
+- **Multi-Source Weather Data**: Combines National Weather Service (NWS), Open-Meteo, Pirate Weather, and Visual Crossing for comprehensive coverage
 - **Weather Alerts**: Real-time notifications for severe weather with customizable alert sounds
 - **Accessibility First**: Full screen reader support, keyboard shortcuts, and ARIA labels throughout
 - **Air Quality & Environmental Data**: Track AQI, pollen, UV index, and more
@@ -64,6 +64,10 @@ You can export and import your configuration from the Settings dialog.
 
 AccessiWeather works out of the box with free data sources (NWS and Open-Meteo). For enhanced features, you can add:
 
+- **Pirate Weather API**: Best for global WMO alerts, minutely precipitation forecasts, and Dark Sky-style daily summaries
+  - Especially useful outside the US, where NWS coverage does not apply
+  - Get a free key at [pirateweather.apiable.io](https://pirate-weather.apiable.io/)
+  - Add in Settings → Weather Sources
 - **Visual Crossing API**: Historical weather data and extended forecasts
   - Get a free key at [visualcrossing.com](https://www.visualcrossing.com/weather-api)
   - Add in Settings → Weather Sources
@@ -183,6 +187,7 @@ Built with [wxPython](https://wxpython.org/) for accessible cross-platform GUI d
 
 - [National Weather Service](https://www.weather.gov/) (US)
 - [Open-Meteo](https://open-meteo.com/) (Global)
+- [Pirate Weather](https://pirateweather.net/) (Optional, best for global WMO alerts, minutely precipitation, and Dark Sky-style summaries)
 - [Visual Crossing](https://www.visualcrossing.com/) (Optional, for historical data)
 
 ## Related Projects
