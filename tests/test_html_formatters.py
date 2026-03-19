@@ -188,7 +188,12 @@ class TestGenerateForecastHtml:
             title="Forecast",
             hourly_periods=[
                 HourlyPeriodPresentation(
-                    time="3 PM", temperature="75°F", conditions="Sunny", wind=None
+                    time="3 PM",
+                    temperature="75°F",
+                    conditions="Sunny",
+                    wind="S at 8 mph",
+                    humidity="55%",
+                    dewpoint="57°F",
                 ),
                 HourlyPeriodPresentation(
                     time="4 PM", temperature="74°F", conditions=None, wind=None
@@ -202,6 +207,9 @@ class TestGenerateForecastHtml:
         assert "3 PM" in html
         assert "75°F" in html
         assert "Sunny" in html
+        assert "Wind: S at 8 mph" in html
+        assert "Humidity: 55%" in html
+        assert "Dewpoint: 57°F" in html
         assert "4 PM" in html
 
     def test_with_hourly_summary(self):

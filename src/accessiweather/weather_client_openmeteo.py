@@ -328,7 +328,8 @@ async def get_openmeteo_hourly_forecast(
             "latitude": location.latitude,
             "longitude": location.longitude,
             "hourly": (
-                "temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,pressure_msl,"
+                "temperature_2m,relative_humidity_2m,dew_point_2m,weather_code,"
+                "wind_speed_10m,wind_direction_10m,pressure_msl,"
                 "precipitation_probability,snowfall,uv_index,snow_depth,freezing_level_height,"
                 "visibility,apparent_temperature"
             ),
@@ -534,6 +535,8 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
 
     times = hourly.get("time", [])
     temperatures = hourly.get("temperature_2m", [])
+    humidities = hourly.get("relative_humidity_2m", [])
+    dew_points = hourly.get("dew_point_2m", [])
     weather_codes = hourly.get("weather_code", [])
     wind_speeds = hourly.get("wind_speed_10m", [])
     wind_directions = hourly.get("wind_direction_10m", [])
@@ -551,6 +554,8 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
         start_time = _parse_iso_datetime(time_str, utc_offset_seconds) or datetime.now()
 
         temperature = temperatures[i] if i < len(temperatures) else None
+        humidity = humidities[i] if i < len(humidities) else None
+        dewpoint = dew_points[i] if i < len(dew_points) else None
         weather_code = weather_codes[i] if i < len(weather_codes) else None
         wind_speed = wind_speeds[i] if i < len(wind_speeds) else None
         wind_direction = wind_directions[i] if i < len(wind_directions) else None
@@ -572,6 +577,15 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
         visibility_miles = visibility_m / 1609.344 if visibility_m is not None else None
 
         apparent_temp = apparent_temps[i] if i < len(apparent_temps) else None
+        dewpoint_f = dewpoint
+        dewpoint_c = (dewpoint_f - 32) * 5 / 9 if dewpoint_f is not None else None
+        if dewpoint_f is None and temperature is not None and humidity is not None:
+            dewpoint_f = calculate_dewpoint(
+                temperature,
+                humidity,
+                unit=TemperatureUnit.FAHRENHEIT,
+            )
+            dewpoint_c = (dewpoint_f - 32) * 5 / 9 if dewpoint_f is not None else None
 
         # Determine wind chill vs heat index from apparent temperature
         wind_chill_f = None
@@ -589,6 +603,9 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
             short_forecast=weather_code_to_description(weather_code),
             wind_speed=f"{wind_speed} mph" if wind_speed is not None else None,
             wind_direction=degrees_to_cardinal(wind_direction),
+            humidity=humidity,
+            dewpoint_f=dewpoint_f,
+            dewpoint_c=dewpoint_c,
             pressure_mb=pressure_mb,
             pressure_in=pressure_in,
             precipitation_probability=precip_prob,

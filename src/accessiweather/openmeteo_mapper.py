@@ -391,6 +391,8 @@ class OpenMeteoMapper:
             periods = []
             times = hourly.get("time", [])
             temperatures = hourly.get("temperature_2m", [])
+            humidities = hourly.get("relative_humidity_2m", [])
+            dew_points = hourly.get("dew_point_2m", [])
             weather_codes = hourly.get("weather_code", [])
             wind_speeds = hourly.get("wind_speed_10m", [])
             wind_directions = hourly.get("wind_direction_10m", [])
@@ -424,6 +426,30 @@ class OpenMeteoMapper:
                             "F" if "°f" in hourly_units.get("temperature_2m", "°F").lower() else "C"
                         ),
                         "temperatureTrend": None,
+                        "relativeHumidity": {
+                            "value": (
+                                humidities[i]
+                                if i < len(humidities) and humidities[i] is not None
+                                else None
+                            ),
+                            "unitCode": "wmoUnit:percent",
+                            "qualityControl": "qc:V",
+                        },
+                        "dewpoint": {
+                            "value": (
+                                dew_points[i]
+                                if i < len(dew_points) and dew_points[i] is not None
+                                else self._calculate_dewpoint(
+                                    temperatures[i] if i < len(temperatures) else None,
+                                    humidities[i] if i < len(humidities) else None,
+                                    hourly_units.get("temperature_2m", "°F"),
+                                )
+                            ),
+                            "unitCode": self._get_temperature_unit_code(
+                                hourly_units.get("temperature_2m", "°F")
+                            ),
+                            "qualityControl": "qc:V",
+                        },
                         "windSpeed": f"{wind_speeds[i] if i < len(wind_speeds) and wind_speeds[i] is not None else 0} {hourly_units.get('wind_speed_10m', 'mph')}",
                         "windDirection": self._degrees_to_direction(
                             wind_directions[i] if i < len(wind_directions) else None

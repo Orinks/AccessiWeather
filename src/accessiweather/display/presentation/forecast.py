@@ -7,7 +7,7 @@ from datetime import datetime, tzinfo
 
 from ...forecast_confidence import ForecastConfidence
 from ...models import AppSettings, Forecast, ForecastPeriod, HourlyForecast, Location
-from ...utils import TemperatureUnit
+from ...utils import TemperatureUnit, calculate_dewpoint
 from ..weather_presenter import (
     ForecastPeriodPresentation,
     ForecastPresentation,
@@ -19,6 +19,7 @@ from .formatters import (
     format_hourly_wind,
     format_period_temperature,
     format_period_wind,
+    format_temperature,
     format_timestamp,
     get_temperature_precision,
     get_uv_description,
@@ -302,6 +303,8 @@ def build_hourly_summary(
     # detailed: all available fields
     include_wind = verbosity_level in ("standard", "detailed")
     include_precipitation = verbosity_level in ("standard", "detailed")
+    include_humidity = verbosity_level in ("standard", "detailed")
+    include_dewpoint = verbosity_level in ("standard", "detailed")
     include_uv = verbosity_level == "detailed"
     include_snowfall = verbosity_level == "detailed"
     include_cloud_cover = verbosity_level == "detailed"
@@ -332,6 +335,12 @@ def build_hourly_summary(
             f"{int(period.precipitation_probability)}%"
             if include_precipitation and period.precipitation_probability is not None
             else None
+        )
+        humidity_val = (
+            f"{period.humidity:.0f}%" if include_humidity and period.humidity is not None else None
+        )
+        dewpoint_val = (
+            _format_hourly_dewpoint(period, unit_pref, precision) if include_dewpoint else None
         )
         snowfall_val = (
             f"{period.snowfall:.{precision}f} in"
@@ -367,6 +376,8 @@ def build_hourly_summary(
                 temperature=temperature,
                 conditions=period.short_forecast,
                 wind=wind,
+                humidity=humidity_val,
+                dewpoint=dewpoint_val,
                 precipitation_probability=precip_prob,
                 snowfall=snowfall_val,
                 uv_index=uv_val,
@@ -412,6 +423,10 @@ def render_hourly_fallback(hourly: Iterable[HourlyPeriodPresentation], hours: in
             parts.append(period.conditions)
         if period.wind:
             parts.append(f"Wind {period.wind}")
+        if period.humidity:
+            parts.append(f"Humidity {period.humidity}")
+        if period.dewpoint:
+            parts.append(f"Dewpoint {period.dewpoint}")
         if period.precipitation_probability:
             parts.append(f"Precip {period.precipitation_probability}")
         if period.snowfall:
@@ -426,3 +441,31 @@ def render_hourly_fallback(hourly: Iterable[HourlyPeriodPresentation], hours: in
             parts.append(f"UV {period.uv_index}")
         lines.append("  " + " - ".join(parts))
     return "\n".join(lines)
+
+
+def _format_hourly_dewpoint(
+    period,
+    unit_pref: TemperatureUnit,
+    precision: int,
+) -> str | None:
+    dewpoint_f = period.dewpoint_f
+    dewpoint_c = period.dewpoint_c
+
+    if dewpoint_f is None and dewpoint_c is None:
+        if period.temperature is None or period.humidity is None:
+            return None
+        unit = (period.temperature_unit or "F").upper()
+        temp_f = period.temperature if unit == "F" else (period.temperature * 9 / 5) + 32
+        dewpoint_f = calculate_dewpoint(
+            temp_f,
+            period.humidity,
+            unit=TemperatureUnit.FAHRENHEIT,
+        )
+        dewpoint_c = (dewpoint_f - 32) * 5 / 9 if dewpoint_f is not None else None
+
+    return format_temperature(
+        dewpoint_f,
+        unit_pref,
+        temperature_c=dewpoint_c,
+        precision=precision,
+    )
