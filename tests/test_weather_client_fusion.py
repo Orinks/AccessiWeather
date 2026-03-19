@@ -195,6 +195,57 @@ class TestMergeCurrentConditions:
         assert result is not None
         assert result.temperature_f == 65.0
 
+    def test_visibility_prefers_most_conservative_value(self, engine, us_location):
+        """Visibility should favor the lowest reported value, not source priority."""
+        nws_cc = CurrentConditions(visibility_miles=0.25, visibility_km=0.4)
+        om_cc = CurrentConditions(visibility_miles=10.0, visibility_km=16.1)
+        sources = [
+            _make_source("openmeteo", current=om_cc),
+            _make_source("nws", current=nws_cc),
+        ]
+
+        result, attr = engine.merge_current_conditions(sources, us_location)
+
+        assert result is not None
+        assert result.visibility_miles == pytest.approx(0.25)
+        assert result.visibility_km == pytest.approx(0.4)
+        assert attr.field_sources["visibility_miles"] == "nws"
+        assert attr.field_sources["visibility_km"] == "nws"
+
+    def test_visibility_keeps_units_from_same_winning_source(self, engine, us_location):
+        """Do not mix unit variants from different sources for one visibility reading."""
+        nws_cc = CurrentConditions(visibility_miles=0.5)
+        om_cc = CurrentConditions(visibility_km=5.0)
+        sources = [
+            _make_source("openmeteo", current=om_cc),
+            _make_source("nws", current=nws_cc),
+        ]
+
+        result, attr = engine.merge_current_conditions(sources, us_location)
+
+        assert result is not None
+        assert result.visibility_miles == pytest.approx(0.5)
+        assert result.visibility_km == pytest.approx(0.804672)
+        assert attr.field_sources["visibility_miles"] == "nws"
+        assert attr.field_sources["visibility_km"] == "nws"
+
+    def test_visibility_can_select_source_with_only_km(self, engine, intl_location):
+        """Comparison should still work when the best source only reports kilometers."""
+        pw_cc = CurrentConditions(visibility_km=0.8)
+        om_cc = CurrentConditions(visibility_miles=2.0, visibility_km=3.2)
+        sources = [
+            _make_source("openmeteo", current=om_cc),
+            _make_source("pirateweather", current=pw_cc),
+        ]
+
+        result, attr = engine.merge_current_conditions(sources, intl_location)
+
+        assert result is not None
+        assert result.visibility_km == pytest.approx(0.8)
+        assert result.visibility_miles == pytest.approx(0.4970969538)
+        assert attr.field_sources["visibility_miles"] == "pirateweather"
+        assert attr.field_sources["visibility_km"] == "pirateweather"
+
     def test_us_strips_openmeteo_snow_depth(self, engine, us_location):
         """Open-Meteo snow depth (ERA5/GFS model) is stripped for US locations."""
         nws_cc = CurrentConditions(temperature_f=32.0, snow_depth_in=None, snow_depth_cm=None)

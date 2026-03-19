@@ -117,6 +117,8 @@ class DataFusionEngine:
                     attribution.field_sources[field_name] = source.source
                     break
 
+        self._apply_visibility_selection(valid_sources, merged_values, attribution)
+
         # Check for temperature conflicts
         self._check_temperature_conflicts(valid_sources, merged_values, attribution, is_us)
 
@@ -134,6 +136,79 @@ class DataFusionEngine:
         # Create merged CurrentConditions
         merged = CurrentConditions(**merged_values)
         return merged, attribution
+
+    def _apply_visibility_selection(
+        self,
+        valid_sources: list[SourceData],
+        merged_values: dict[str, Any],
+        attribution: SourceAttribution,
+    ) -> None:
+        """Select visibility once and keep both units aligned to the winning source."""
+        visibility = self._select_visibility(valid_sources)
+        if visibility is None:
+            return
+
+        visibility_miles, visibility_km, source_name = visibility
+        if visibility_miles is not None:
+            merged_values["visibility_miles"] = visibility_miles
+            attribution.field_sources["visibility_miles"] = source_name
+        else:
+            merged_values.pop("visibility_miles", None)
+            attribution.field_sources.pop("visibility_miles", None)
+
+        if visibility_km is not None:
+            merged_values["visibility_km"] = visibility_km
+            attribution.field_sources["visibility_km"] = source_name
+        else:
+            merged_values.pop("visibility_km", None)
+            attribution.field_sources.pop("visibility_km", None)
+
+    def _select_visibility(
+        self,
+        valid_sources: list[SourceData],
+    ) -> tuple[float | None, float | None, str] | None:
+        """
+        Pick the most conservative visibility across sources.
+
+        Visibility is treated as one semantic field with two unit representations.
+        We select the source reporting the lowest visibility, then keep both unit
+        variants aligned to that same source instead of mixing sources.
+        """
+        best_source: SourceData | None = None
+        best_miles: float | None = None
+
+        for source in valid_sources:
+            if source.current is None:
+                continue
+
+            miles = self._visibility_miles(source.current)
+            if miles is None:
+                continue
+
+            if best_miles is None or miles < best_miles:
+                best_miles = miles
+                best_source = source
+
+        if best_source is None or best_source.current is None:
+            return None
+
+        visibility_miles = best_source.current.visibility_miles
+        visibility_km = best_source.current.visibility_km
+
+        if visibility_miles is None and visibility_km is not None:
+            visibility_miles = visibility_km / 1.609344
+        if visibility_km is None and visibility_miles is not None:
+            visibility_km = visibility_miles * 1.609344
+
+        return visibility_miles, visibility_km, best_source.source
+
+    def _visibility_miles(self, current: CurrentConditions) -> float | None:
+        """Normalize visibility to miles for comparison."""
+        if current.visibility_miles is not None:
+            return current.visibility_miles
+        if current.visibility_km is not None:
+            return current.visibility_km / 1.609344
+        return None
 
     def _check_temperature_conflicts(
         self,
