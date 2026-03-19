@@ -54,6 +54,28 @@ class LocationManager:
 
                 results = data.get("results", [])
                 if not results:
+                    # Fallback: use OpenMeteoGeocodingClient with Unicode variant expansion
+                    logger.info(
+                        f"No direct results for '{sanitize_log(query)}', trying Unicode fallback..."
+                    )
+                    from .openmeteo_geocoding_client import OpenMeteoGeocodingClient
+
+                    fallback_client = OpenMeteoGeocodingClient(timeout=self.timeout)
+                    fallback_results = fallback_client.search(query, count=limit)
+                    if fallback_results:
+                        logger.info(
+                            f"Unicode fallback found {len(fallback_results)} results "
+                            f"for '{sanitize_log(query)}'"
+                        )
+                        return [
+                            Location(
+                                name=r.display_name or r.name,
+                                latitude=r.latitude,
+                                longitude=r.longitude,
+                                country_code=r.country_code or "",
+                            )
+                            for r in fallback_results[:limit]
+                        ]
                     logger.info(f"No locations found for query: {sanitize_log(query)}")
                     return []
 

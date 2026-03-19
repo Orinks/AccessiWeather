@@ -198,6 +198,85 @@ class TestGeocodeAddress:
         # Verify the search was called with formatted ZIP
         service.client.search.assert_called_with("10001, USA", count=5)
 
+    @pytest.mark.parametrize(
+        ("query", "fallback_query", "name", "country", "admin1"),
+        [
+            ("Tromso", "Tromsø", "Tromsø", "Norway", "Troms"),
+            ("Zurich", "Zürich", "Zürich", "Switzerland", "Zurich"),
+            ("Sao Paulo", "São Paulo", "São Paulo", "Brazil", "Sao Paulo"),
+        ],
+    )
+    def test_geocode_retries_with_unicode_substitutions(
+        self,
+        service,
+        query,
+        fallback_query,
+        name,
+        country,
+        admin1,
+    ):
+        """Test fallback searches for international locations with special characters."""
+        service.data_source = "auto"
+
+        fallback_result = {
+            "results": [
+                {
+                    "name": name,
+                    "latitude": 1.0,
+                    "longitude": 2.0,
+                    "country": country,
+                    "country_code": country[:2].upper(),
+                    "timezone": "UTC",
+                    "admin1": admin1,
+                }
+            ]
+        }
+
+        def make_request(_endpoint, params):
+            return fallback_result if params["name"] == fallback_query else {"results": []}
+
+        service.client._make_request = MagicMock(side_effect=make_request)
+
+        result = service.geocode_address(query)
+
+        assert result == (1.0, 2.0, f"{name}, {admin1}, {country}")
+        queried_names = [
+            call.args[1]["name"] for call in service.client._make_request.call_args_list
+        ]
+        assert queried_names[0] == query
+        assert fallback_query in queried_names
+
+    def test_geocode_single_word_retry_appends_country_name(self, service):
+        """Test single-word fallback queries with a country hint."""
+        service.data_source = "auto"
+
+        fallback_result = {
+            "results": [
+                {
+                    "name": "Tromsø",
+                    "latitude": 69.6492,
+                    "longitude": 18.9553,
+                    "country": "Norway",
+                    "country_code": "NO",
+                    "timezone": "Europe/Oslo",
+                    "admin1": "Troms",
+                }
+            ]
+        }
+
+        def make_request(_endpoint, params):
+            return fallback_result if params["name"] == "Tromsø, Norway" else {"results": []}
+
+        service.client._make_request = MagicMock(side_effect=make_request)
+
+        result = service.geocode_address("Tromso")
+
+        assert result == (69.6492, 18.9553, "Tromsø, Troms, Norway")
+        queried_names = [
+            call.args[1]["name"] for call in service.client._make_request.call_args_list
+        ]
+        assert "Tromsø, Norway" in queried_names
+
 
 class TestSuggestLocations:
     """Tests for location suggestions."""
