@@ -329,6 +329,16 @@ class OpenMeteoMapper:
                     logger.warning(f"Error processing forecast day {i}: {str(e)}")
                     continue
 
+            # Mirror NWS high/low pairing so display layers can render day highs
+            # alongside the following overnight low.
+            for i, period in enumerate(periods):
+                if period.get("isDaytime") and i + 1 < len(periods):
+                    next_period = periods[i + 1]
+                    if not next_period.get("isDaytime"):
+                        night_temperature = next_period.get("temperature")
+                        if night_temperature is not None:
+                            period["temperature_low"] = night_temperature
+
             mapped_data = {
                 "properties": {
                     "updated": datetime.now(UTC).isoformat(),
