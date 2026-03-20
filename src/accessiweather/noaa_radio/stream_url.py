@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -408,3 +409,18 @@ class StreamURLProvider:
                     merged.append(url)
                     seen.add(url)
         return merged
+
+    def prewarm_cache(self) -> None:
+        """
+        Pre-warm the HTTP client caches for faster first-play experience.
+
+        Triggers the WxRadio and WeatherIndex clients to fetch and cache
+        their data in the background. Safe to call multiple times.
+        """
+        if self._wxradio_client is not None:
+            with suppress(Exception):
+                self._wxradio_client.get_streams()
+
+        # WeatherIndex requires call sign specific queries, so we can't
+        # pre-warm all at once - this would require knowing all station
+        # call signs ahead of time. The cache will warm on first play.

@@ -193,20 +193,38 @@ class NOAARadioDialog(wx.Dialog):
         try:
             db = StationDatabase()
             results = db.find_nearest(self._lat, self._lon, limit=25)
-            # Only show stations that have online streams available
-            stations = [
-                r.station
-                for r in results
-                if self._url_provider.get_stream_urls(r.station.call_sign)
-            ][:10]
+            # Show all nearby stations immediately - stream availability is checked on play
+            # This makes UI instant instead of waiting for HTTP requests to complete
+            stations = [r.station for r in results][:10]
 
             choices = [f"{s.call_sign} - {s.name} ({s.frequency} MHz)" for s in stations]
 
             # Update UI on main thread
             wx.CallAfter(self._on_stations_loaded, stations, choices)
+
+            # Pre-warm the stream cache in background for faster play button response
+            # This runs after UI is shown so user sees stations immediately
+            wx.CallAfter(self._prewarm_stream_cache, stations)
         except Exception as e:
             logger.error(f"Failed to load stations: {e}")
             wx.CallAfter(self._set_status, f"Error loading stations: {e}")
+
+    def _prewarm_stream_cache(self, stations: list[Station]) -> None:
+        """Pre-warm stream URL cache in background for faster play response."""
+        thread = threading.Thread(
+            target=self._prewarm_stream_cache_worker,
+            args=(stations,),
+            daemon=True,
+        )
+        thread.start()
+
+    def _prewarm_stream_cache_worker(self, stations: list[Station]) -> None:
+        """Worker that pre-warms stream cache."""
+        try:
+            self._url_provider.prewarm_cache()
+            logger.debug("Pre-warmed stream cache")
+        except Exception as e:
+            logger.debug(f"Failed to pre-warm stream cache: {e}")
 
     def _on_stations_loaded(self, stations: list[Station], choices: list[str]) -> None:
         """Handle stations loaded in background thread."""
