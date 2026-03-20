@@ -4,7 +4,7 @@ Accessible desktop weather for Windows, macOS, and Linux.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
-[![Built with wxPython](https://img.shields.io/badge/Built%20with-wxPython-blue)](https://wxpython.org/)
+[![Built with Toga](https://img.shields.io/badge/Built%20with-Toga%20%28BeeWare%29-blue)](https://toga.readthedocs.io/)
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20macOS%20%7C%20Linux-informational)
 
 AccessiWeather is a screen-reader-friendly weather app with keyboard navigation, desktop notifications, optional alert sounds, and multiple weather sources. It separates current conditions, daily forecast, hourly forecast, and alerts so the information is easier to scan with speech or braille.
@@ -162,7 +162,7 @@ The Settings dialog currently includes these tabs:
 
 - [User Manual](docs/user_manual.md)
 - [Accessibility Guide](docs/ACCESSIBILITY.md)
-- [Sound Pack System](docs/SOUND_PACK_SYSTEM.md)
+- [Sound Packs](docs/SOUND_PACKS.md)
 - [Update System](docs/UPDATE_SYSTEM.md)
 
 ## Support

@@ -69,8 +69,8 @@ Currently supported sound types:
 
 ### Selecting a Sound Pack
 
-1. Open AccessiWeather settings
-2. Go to the "General" tab
+1. Open AccessiWeather settings (`Ctrl+S`)
+2. Go to the "Audio" tab
 3. Find the "Sound Pack" dropdown
 4. Select your preferred sound pack
 5. Click "Preview Sound" to test the selected pack
@@ -78,8 +78,8 @@ Currently supported sound types:
 
 ### Managing Sound Packs
 
-1. Open AccessiWeather settings
-2. Go to the "General" tab
+1. Open AccessiWeather settings (`Ctrl+S`)
+2. Go to the "Audio" tab
 3. Click "Manage Sound Packs..." button
 4. The Sound Pack Manager dialog will open
 

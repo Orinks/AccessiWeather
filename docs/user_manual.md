@@ -2,7 +2,7 @@
 
 ## Overview
 
-AccessiWeather is an accessible desktop weather app built with wxPython. It is designed for screen reader users first, but it is equally usable with keyboard or mouse. The main window separates weather into four core sections:
+AccessiWeather is an accessible desktop weather app built with Toga (BeeWare). It is designed for screen reader users first, but it is equally usable with keyboard or mouse. The main window separates weather into four core sections:
 
 - `Current Conditions`
 - `Daily Forecast`
@@ -85,7 +85,7 @@ The daily forecast is shown in its own section. It is separate from the hourly f
 
 ### Hourly Forecast
 
-The hourly forecast has its own section and is no longer mixed into the daily forecast text. You can choose how many hours to show in `Settings > Display > Hourly forecast hours`.
+The hourly forecast is shown in its own section, separate from the daily forecast. You can choose how many hours to show in `Settings > Display > Hourly forecast hours`.
 
 ### Weather Alerts
 
@@ -214,7 +214,7 @@ Current event-based notification options include:
 
 ## Settings Guide
 
-The Settings dialog currently has these tabs.
+The Settings dialog has these tabs.
 
 ### General
 
@@ -392,7 +392,7 @@ Both AI features require an OpenRouter API key.
 
 ### Weather History
 
-`View > Weather History` shows past weather comparisons. This feature depends on the app's weather history support and may rely on optional source data.
+`View > Weather History` shows past weather comparisons for your selected location. A Visual Crossing API key is required to load historical data. Add it in `Settings > Data Sources`.
 
 ### Air Quality and UV Index
 
@@ -404,7 +404,7 @@ Use `View > Aviation Weather...` to fetch TAF data by ICAO airport code. For int
 
 ### NOAA Weather Radio
 
-Use `View > NOAA Weather Radio...` for NOAA Weather Radio access.
+Use `View > NOAA Weather Radio...` to access NOAA Weather Radio streams for US locations. This opens a dialog where you can browse and play radio broadcasts for your selected area.
 
 ## Keyboard Shortcuts
 

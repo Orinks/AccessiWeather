@@ -140,8 +140,6 @@ AccessiWeather uses GitHub releases for all update channels. There is no user-co
 
 ## 🔗 Related Resources
 
-- **Beta Testing Guide**: `BETA_TESTING.md`
-- **Release Channels Guide**: `update_channels.md`
 - **GitHub Releases**: https://github.com/orinks/accessiweather/releases
 
 ## 📞 Support
@@ -153,6 +151,3 @@ If you encounter issues with the update system:
 3. **GitHub Issues**: Report bugs at https://github.com/orinks/accessiweather/issues
 4. **Include Information**: Provide your platform, version, and error details
 
----
-
-*Last updated: December 2024*
