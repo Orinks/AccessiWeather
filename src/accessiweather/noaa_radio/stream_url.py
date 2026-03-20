@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from accessiweather.noaa_radio.weatherindex_client import WeatherIndexClient
     from accessiweather.noaa_radio.wxradio_client import WxRadioClient
 
 
@@ -301,6 +303,7 @@ class StreamURLProvider:
         custom_urls: dict[str, list[str]] | None = None,
         use_fallback: bool = True,
         wxradio_client: WxRadioClient | None = None,
+        weatherindex_client: WeatherIndexClient | None = None,
     ) -> None:
         """
         Initialize the stream URL provider.
@@ -313,6 +316,8 @@ class StreamURLProvider:
             wxradio_client: Optional WxRadioClient for dynamic stream discovery
                 from wxradio.org. When provided, live streams are checked first
                 and merged with static URLs (dynamic URLs take priority).
+            weatherindex_client: Optional WeatherIndex client for station feed
+                resolution. WeatherIndex URLs are checked before other sources.
 
         """
         self._urls: dict[str, list[str]] = dict(self._STREAM_URLS)
@@ -321,6 +326,7 @@ class StreamURLProvider:
                 self._urls[call_sign.upper()] = urls
         self._use_fallback = use_fallback
         self._wxradio_client = wxradio_client
+        self._weatherindex_client = weatherindex_client
 
     def get_stream_url(self, call_sign: str) -> str | None:
         """
@@ -354,29 +360,25 @@ class StreamURLProvider:
         if not normalized:
             return []
 
-        # Gather dynamic URLs from wxradio.org (if client configured)
-        dynamic_urls: list[str] = []
+        weatherindex_urls: list[str] = []
+        if self._weatherindex_client is not None:
+            try:
+                weatherindex_urls = self._weatherindex_client.get_stream_urls(normalized)
+            except Exception:
+                weatherindex_urls = []
+
+        wxradio_urls: list[str] = []
         if self._wxradio_client is not None:
             try:
                 dynamic_streams = self._wxradio_client.get_streams()
-                dynamic_urls = dynamic_streams.get(normalized, [])
+                wxradio_urls = dynamic_streams.get(normalized, [])
             except Exception:
-                pass
+                wxradio_urls = []
 
         static_urls = list(self._urls.get(normalized, []))
-
-        # Merge: dynamic first, then static (deduplicated)
-        if dynamic_urls:
-            seen = set(dynamic_urls)
-            merged = list(dynamic_urls)
-            for url in static_urls:
-                if url not in seen:
-                    merged.append(url)
-                    seen.add(url)
-            return merged
-
-        if static_urls:
-            return static_urls
+        merged_urls = self._merge_urls(weatherindex_urls, wxradio_urls, static_urls)
+        if merged_urls:
+            return merged_urls
 
         if self._use_fallback:
             return [self._DEFAULT_PATTERN.format(call_sign=normalized)]
@@ -395,3 +397,30 @@ class StreamURLProvider:
 
         """
         return call_sign.upper().strip() in self._urls
+
+    @staticmethod
+    def _merge_urls(*url_groups: list[str]) -> list[str]:
+        """Merge ordered URL groups while removing duplicates."""
+        merged: list[str] = []
+        seen: set[str] = set()
+        for urls in url_groups:
+            for url in urls:
+                if url not in seen:
+                    merged.append(url)
+                    seen.add(url)
+        return merged
+
+    def prewarm_cache(self) -> None:
+        """
+        Pre-warm the HTTP client caches for faster first-play experience.
+
+        Triggers the WxRadio and WeatherIndex clients to fetch and cache
+        their data in the background. Safe to call multiple times.
+        """
+        if self._wxradio_client is not None:
+            with suppress(Exception):
+                self._wxradio_client.get_streams()
+
+        # WeatherIndex requires call sign specific queries, so we can't
+        # pre-warm all at once - this would require knowing all station
+        # call signs ahead of time. The cache will warm on first play.

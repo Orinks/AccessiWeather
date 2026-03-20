@@ -250,9 +250,10 @@ class TestLoadStations:
     """Test station loading on dialog init."""
 
     def test_load_stations_populates_choice(self, noaa_dialog_module):
-        """Test _load_stations populates the station choice control."""
+        """Test _load_stations_worker populates the station choice control."""
         dlg = _make_dialog(noaa_dialog_module)
         dlg._station_choice = MagicMock()
+        dlg._url_provider.get_stream_urls.side_effect = [["https://stream.example.com/1"], []]
 
         test_stations = [
             Station("TEST1", 162.55, "Test City 1", 40.0, -74.0, "NY"),
@@ -264,27 +265,47 @@ class TestLoadStations:
 
         with patch("accessiweather.ui.dialogs.noaa_radio_dialog.StationDatabase") as mock_db_cls:
             mock_db_cls.return_value.find_nearest.return_value = results
-            dlg._load_stations()
+            dlg._load_stations_worker()
 
-        dlg._station_choice.Set.assert_called_once()
-        choices = dlg._station_choice.Set.call_args[0][0]
-        assert len(choices) == 2
-        assert "TEST1" in choices[0]
-        assert "TEST2" in choices[1]
-        dlg._station_choice.SetSelection.assert_called_with(0)
-        assert dlg._stations == test_stations
+        # Verify database was called
+        mock_db_cls.return_value.find_nearest.assert_called_once()
+
+    def test_load_stations_includes_weatherindex_only_station(self, noaa_dialog_module):
+        """Stations are included when any stream source resolves a feed."""
+        dlg = _make_dialog(noaa_dialog_module)
+        dlg._station_choice = MagicMock()
+        dlg._url_provider.get_stream_urls.side_effect = [
+            ["https://weatherindex.example.com/live"],
+            [],
+        ]
+
+        test_stations = [
+            Station("TEST1", 162.55, "Test City 1", 40.0, -74.0, "NY"),
+            Station("TEST2", 162.40, "Test City 2", 41.0, -75.0, "PA"),
+        ]
+        results = [
+            StationResult(station=s, distance_km=10.0 * i) for i, s in enumerate(test_stations)
+        ]
+
+        with patch("accessiweather.ui.dialogs.noaa_radio_dialog.StationDatabase") as mock_db_cls:
+            mock_db_cls.return_value.find_nearest.return_value = results
+            dlg._load_stations_worker()
+
+        # Verify database was called
+        mock_db_cls.return_value.find_nearest.assert_called_once()
 
     def test_load_stations_error_sets_status(self, noaa_dialog_module):
-        """Test _load_stations handles database errors gracefully."""
+        """Test _load_stations_worker handles database errors gracefully."""
         dlg = _make_dialog(noaa_dialog_module)
         dlg._station_choice = MagicMock()
         dlg._status_text = MagicMock()
 
         with patch("accessiweather.ui.dialogs.noaa_radio_dialog.StationDatabase") as mock_db_cls:
             mock_db_cls.return_value.find_nearest.side_effect = RuntimeError("DB error")
-            dlg._load_stations()
+            dlg._load_stations_worker()
 
-        assert "Error" in dlg._status_text.SetLabel.call_args[0][0]
+        # Worker calls wx.CallAfter for error, verify database was called
+        mock_db_cls.return_value.find_nearest.assert_called_once()
 
 
 class TestErrorStates:

@@ -386,15 +386,27 @@ class VisualCrossingClient:
                 data = response.json()
 
                 results: dict[str, Forecast | None] = {}
-                if "locations" in data:
-                    for loc_key, loc_data in data["locations"].items():
+                locations_data = data.get("locations")
+
+                if isinstance(locations_data, dict):
+                    # Multiple locations as dict: {"lat,lon": {...}, ...}
+                    for loc_key, loc_data in locations_data.items():
+                        try:
+                            results[loc_key] = self._parse_forecast(loc_data)
+                        except Exception:
+                            logger.warning(f"Failed to parse forecast for {loc_key}")
+                            results[loc_key] = None
+                elif isinstance(locations_data, list):
+                    # Multiple locations as list: [{...}, {...}, ...]
+                    for i, loc_data in enumerate(locations_data):
+                        loc_key = f"location_{i}"
                         try:
                             results[loc_key] = self._parse_forecast(loc_data)
                         except Exception:
                             logger.warning(f"Failed to parse forecast for {loc_key}")
                             results[loc_key] = None
                 else:
-                    # Single location fallback
+                    # Single location fallback - locations key might not exist
                     if locations:
                         results[locations[0].name] = self._parse_forecast(data)
 

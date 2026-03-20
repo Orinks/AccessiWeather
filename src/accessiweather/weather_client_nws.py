@@ -1102,10 +1102,22 @@ async def get_nws_tafs(
             raise
         return None
 
+    # Check for empty response before trying to parse JSON
+    if not awc_response.text or not awc_response.text.strip():
+        logger.debug("AviationWeather returned empty response for %s", station_id)
+        return None
+
     try:
         awc_data = awc_response.json()
     except Exception as exc:  # noqa: BLE001
-        logger.error("Failed to decode AviationWeather TAF JSON for %s: %s", station_id, exc)
+        # Log first few chars of response to help debug what was returned
+        response_preview = awc_response.text[:200] if awc_response.text else "(empty)"
+        logger.error(
+            "Failed to decode AviationWeather TAF JSON for %s: %s. Response preview: %s",
+            station_id,
+            exc,
+            response_preview,
+        )
         return None
 
     entries: list[dict[str, Any]] = []
