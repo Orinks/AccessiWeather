@@ -583,11 +583,9 @@ class AlertManager:
             self.last_global_notification = current_time
             self.notifications_this_hour += len(notifications_to_send)
 
-        # Save state changes
-        if notifications_to_send or any(
-            alert.get_unique_id() not in self.alert_states for alert in active_alerts
-        ):
-            self._save_state()
+        # Save state changes - always save to persist any alert state modifications
+        # This ensures alert history, notification counts, and last_notified times persist
+        self._save_state()
 
         logger.info(
             f"Processed {len(active_alerts)} alerts, {len(notifications_to_send)} notifications to send"

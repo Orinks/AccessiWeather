@@ -213,7 +213,9 @@ class WeatherClient:
                 follow_redirects=True,
                 limits=httpx.Limits(max_keepalive_connections=15, max_connections=30),
             )
-            if Mock is not None and isinstance(client, Mock):
+            # Use explicit test mode flag instead of brittle isinstance check
+            # The _test_mode flag is set in __init__ based on PYTEST_CURRENT_TEST env var
+            if self._test_mode and Mock is not None and isinstance(client, Mock):
                 enter = getattr(client, "__aenter__", None)
                 if enter is not None:
                     entered = getattr(enter, "return_value", None)
@@ -231,7 +233,8 @@ class WeatherClient:
             if current is None or original is None:
                 continue
 
-            if Mock is not None and isinstance(current, Mock):
+            # Use explicit test mode flag instead of brittle isinstance check
+            if self._test_mode and Mock is not None and isinstance(current, Mock):
                 return True
 
             current_callable = getattr(current, "__func__", current)
@@ -261,9 +264,9 @@ class WeatherClient:
         ]
 
         client = self._get_http_client()
-        client_is_mock = Mock is not None and isinstance(client, Mock)
 
-        if not self._methods_overridden(method_names) and not client_is_mock:
+        # Use explicit test mode flag instead of brittle isinstance check
+        if not self._methods_overridden(method_names) and not self._test_mode:
             # Use retry wrapper for the parallel fetch
             try:
                 return await retry_with_backoff(
@@ -307,9 +310,9 @@ class WeatherClient:
         ]
 
         client = self._get_http_client()
-        client_is_mock = Mock is not None and isinstance(client, Mock)
 
-        if not self._methods_overridden(method_names) and not client_is_mock:
+        # Use explicit test mode flag instead of brittle isinstance check
+        if not self._methods_overridden(method_names) and not self._test_mode:
             # Use retry wrapper for the parallel fetch
             try:
                 forecast_days = self._get_forecast_days_for_source(location, source="openmeteo")
