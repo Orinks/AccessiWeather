@@ -68,6 +68,7 @@ class TestSetSecureFilePermissions:
             assert result is True
             mock_windows.assert_called_once_with(test_file)
 
+    @patch("os.name", "posix")
     def test_unexpected_exception_handled(self, tmp_path):
         """Test that unexpected exceptions are caught and handled."""
         test_file = tmp_path / "test.txt"
@@ -320,6 +321,7 @@ class TestIntegration:
             file_mode = file_stat.st_mode & 0o777  # Extract permission bits
             assert file_mode == POSIX_PERMISSIONS
 
+    @patch("os.name", "posix")
     def test_read_only_filesystem_handled(self, tmp_path):
         """Test behavior with read-only filesystem (simulation)."""
         test_file = tmp_path / "test.txt"
@@ -332,6 +334,7 @@ class TestIntegration:
             # Should fail gracefully
             assert result is False
 
+    @patch("os.name", "posix")
     def test_network_drive_simulation(self, tmp_path):
         """Test behavior simulating a network drive with limited permission support."""
         test_file = tmp_path / "test.txt"

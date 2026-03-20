@@ -58,7 +58,9 @@ class _FakeTextEntryDialog:
         return getattr(wx, "ID_OK", 1)
 
     def GetValue(self):
-        return self._responses.pop(0)
+        if self._responses:
+            return self._responses.pop(0)
+        return ""
 
 
 def test_portable_missing_api_keys_hint_shown_once_and_persists(monkeypatch, tmp_path):

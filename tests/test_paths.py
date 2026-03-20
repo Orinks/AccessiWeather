@@ -43,14 +43,15 @@ class TestGetBasePath:
             result = p._get_base_path()
         assert result == tmp_path / "Orinks" / "AccessiWeather"
 
-    def test_windows_without_localappdata(self):
+    def test_windows_without_localappdata(self, tmp_path):
         p = Paths()
         with (
             patch.object(sys, "platform", "win32"),
             patch.dict("os.environ", {}, clear=True),
+            patch("pathlib.Path.home", return_value=tmp_path),
         ):
             result = p._get_base_path()
-        assert result == Path.home() / "AppData" / "Local" / "Orinks" / "AccessiWeather"
+        assert result == tmp_path / "AppData" / "Local" / "Orinks" / "AccessiWeather"
 
     def test_macos(self):
         p = Paths()
@@ -67,14 +68,15 @@ class TestGetBasePath:
             result = p._get_base_path()
         assert result == tmp_path / "accessiweather"
 
-    def test_linux_without_xdg(self):
+    def test_linux_without_xdg(self, tmp_path):
         p = Paths()
         with (
             patch.object(sys, "platform", "linux"),
             patch.dict("os.environ", {}, clear=True),
+            patch("pathlib.Path.home", return_value=tmp_path),
         ):
             result = p._get_base_path()
-        assert result == Path.home() / ".local" / "share" / "accessiweather"
+        assert result == tmp_path / ".local" / "share" / "accessiweather"
 
     def test_caches_base_path(self, tmp_path):
         """Base path is computed once and cached."""
