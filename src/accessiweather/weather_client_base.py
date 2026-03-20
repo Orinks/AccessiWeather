@@ -842,7 +842,8 @@ class WeatherClient:
             ["openmeteo", "pirateweather", "visualcrossing"],
         )
         config = SourcePriorityConfig(us_default=us_priority, international_default=intl_priority)
-        coordinator = ParallelFetchCoordinator(timeout=5.0)
+        parallel_timeout = getattr(self.settings, "parallel_fetch_timeout", 5.0)
+        coordinator = ParallelFetchCoordinator(timeout=parallel_timeout)
         fusion_engine = DataFusionEngine(config)
         alert_aggregator = AlertAggregator()
 
@@ -1236,8 +1237,9 @@ class WeatherClient:
         Check if location is within the United States.
 
         Uses country_code when available for accurate detection. Falls back to
-        coordinate bounds for legacy locations, but logs a warning since this
-        can misclassify Canadian border cities like Toronto.
+        coordinate bounds only for clear-cut cases. For ambiguous regions (near US-Canada
+        border), requires country_code to be set - otherwise returns False to avoid
+        misclassifying Canadian cities like Toronto, Montreal, Ottawa as US locations.
         """
         country_code = getattr(location, "country_code", None)
         if country_code:
@@ -1245,10 +1247,6 @@ class WeatherClient:
 
         lat = location.latitude
         lon = location.longitude
-
-        # Without country_code, use coordinate bounds as fallback
-        # Note: This can misclassify Canadian cities near the US border
-        # (e.g., Toronto, Montreal, Ottawa) as US locations.
 
         # Continental US bounds (approximate)
         in_continental_bounds = 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0
@@ -1259,18 +1257,32 @@ class WeatherClient:
         # Hawaii bounds (18-23°N, 154-161°W)
         in_hawaii_bounds = 18.0 <= lat <= 23.0 and -161.0 <= lon <= -154.0
 
-        is_us = in_continental_bounds or in_alaska_bounds or in_hawaii_bounds
+        # For clear-cut cases (far from borders), coordinate bounds are reliable
+        # - Hawaii (obvious island)
+        # - Alaska (far northwest, separated from Canada)
+        # - Deep in continental US (away from Canadian/Mexican borders)
+        if in_hawaii_bounds or in_alaska_bounds:
+            return True
 
-        if is_us and not country_code:
-            # Log warning for locations without country_code in ambiguous regions
-            # This helps identify locations that may need country_code to be set
-            logger.debug(
-                f"Location '{location.name}' ({lat:.2f}, {lon:.2f}) detected as US by "
-                f"coordinates but has no country_code. If this is incorrect (e.g., Canadian "
-                f"city), re-add the location to set country_code via geocoding."
-            )
+        # For continental US, use both lat/lon to identify clearly US vs ambiguous zones
+        if in_continental_bounds:
+            # Canadian border cities (Toronto ~43°N/-79°, Montreal ~45.5°N/-73°, Ottawa ~45.4°N/-75°)
+            # are in the eastern half of the continent (east of ~-95° longitude)
+            # US Pacific Northwest (Seattle ~47.6°N/-122°, Portland ~45.5°N/-122°) is further west
+            # Use lon < -95 as a proxy for "eastern region where Canadian cities cluster"
+            if lat >= 43.0 and lon > -95.0 and lon < -70.0:
+                # Eastern region near Canadian border - require country_code for accurate detection
+                # This catches Canadian cities while allowing US Pacific Northwest
+                logger.debug(
+                    f"Location '{location.name}' ({lat:.2f}, {lon:.2f}) is in eastern "
+                    f"North America near Canadian border but has no country_code. "
+                    f"To ensure correct detection, re-add the location to set country_code via geocoding."
+                )
+                return False
+            return True
 
-        return is_us
+        # Outside all US bounds - definitely not US
+        return False
 
     def _set_empty_weather_data(self, weather_data: WeatherData) -> None:
         """Set empty weather data when all APIs fail."""

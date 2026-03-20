@@ -200,6 +200,8 @@ class AppSettings:
     portable_missing_api_keys_hint_shown: bool = False
     # Display precision
     round_values: bool = False
+    # Parallel fetch timeout for smart auto mode (seconds)
+    parallel_fetch_timeout: float = 5.0
 
     @staticmethod
     def _as_bool(value, default: bool) -> bool:
