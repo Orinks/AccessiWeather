@@ -25,6 +25,7 @@ class WeatherIndexClient:
         timeout: int = DEFAULT_TIMEOUT,
         session: requests.Session | None = None,
     ) -> None:
+        """Configure API URL template, cache TTL, timeout, and optional session."""
         self._api_url_template = api_url_template
         self._cache_ttl = cache_ttl
         self._timeout = timeout
