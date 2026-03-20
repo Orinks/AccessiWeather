@@ -68,8 +68,17 @@ def get_fallback_notifier(window: MainWindow):
 
 
 def on_notification_event_data_received(window: MainWindow, weather_data) -> None:
-    """Handle lightweight event data without refreshing the visible weather UI."""
+    """
+    Handle lightweight event data without refreshing the visible weather UI.
+
+    Note: We only process alert notifications here, NOT discussion updates.
+    Discussion updates are handled in _on_weather_data_received after full weather
+    refreshes. This prevents duplicate notifications when full refresh and event
+    poll happen around the same time.
+    """
     try:
+        # Only process alerts in the lightweight path - discussion updates are handled
+        # in _on_weather_data_received to prevent duplicate notifications
         if (
             weather_data.alerts
             and weather_data.alerts.has_alerts()
@@ -90,7 +99,9 @@ def on_notification_event_data_received(window: MainWindow, weather_data) -> Non
                 )
             )
 
-        window._process_notification_events(weather_data)
+        # Note: DO NOT call window._process_notification_events here.
+        # Discussion updates and severe risk changes are processed in
+        # _on_weather_data_received after full weather refreshes.
     except Exception as e:
         logger.debug(f"Failed to process lightweight notification event data: {e}")
 

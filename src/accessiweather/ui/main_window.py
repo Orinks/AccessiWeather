@@ -1127,27 +1127,9 @@ class MainWindow(SizedFrame):
             # Update alerts
             self._update_alerts(weather_data.alerts, self._alert_lifecycle_labels)
 
-            # Process alerts for desktop notifications
-            if (
-                weather_data.alerts
-                and weather_data.alerts.has_alerts()
-                and self.app.alert_notification_system
-            ):
-                self.app.run_async(
-                    self.app.alert_notification_system.process_and_notify(weather_data.alerts)
-                )
-
-            # Fire notifications for updated / cancelled alerts via lifecycle diff
-            if (
-                self.app.alert_notification_system
-                and weather_data.alert_lifecycle_diff is not None
-                and weather_data.alert_lifecycle_diff.has_changes
-            ):
-                self.app.run_async(
-                    self.app.alert_notification_system.notify_lifecycle_changes(
-                        weather_data.alert_lifecycle_diff
-                    )
-                )
+            # Note: Alert notifications are handled ONLY in the lightweight event poll
+            # (on_notification_event_data_received), not here, to prevent duplicate
+            # notifications when full refresh and event poll happen around the same time.
 
             location = self.app.config_manager.get_current_location()
             location_name = location.name if location else "Unknown"

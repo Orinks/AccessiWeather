@@ -251,7 +251,13 @@ class TestFetchNotificationEventData:
 
 
 class TestOnNotificationEventDataReceived:
-    """Tests for MainWindow._on_notification_event_data_received."""
+    """
+    Tests for MainWindow._on_notification_event_data_received.
+
+    Note: Under the split-timer architecture, the lightweight event path handles
+    alerts ONLY. Discussion/risk notifications are handled in _on_weather_data_received
+    after full weather refreshes to prevent duplicate notifications.
+    """
 
     def _make_window(self):
         from accessiweather.ui.main_window import MainWindow
@@ -263,7 +269,8 @@ class TestOnNotificationEventDataReceived:
         win._fallback_notifier = None
         return win
 
-    def test_processes_alerts(self):
+    def test_processes_alerts_only_not_discussion(self):
+        """Lightweight path processes alerts but NOT _process_notification_events."""
         win = self._make_window()
         alerts = MagicMock()
         alerts.has_alerts.return_value = True
@@ -274,10 +281,13 @@ class TestOnNotificationEventDataReceived:
 
         win._on_notification_event_data_received(weather_data)
 
+        # Alerts are processed
         win.app.run_async.assert_called_once()
-        win._process_notification_events.assert_called_once_with(weather_data)
+        # But _process_notification_events is NOT called (discussion handled elsewhere)
+        win._process_notification_events.assert_not_called()
 
-    def test_processes_lifecycle_diff(self):
+    def test_processes_lifecycle_diff_only_not_discussion(self):
+        """Lightweight path processes lifecycle diff but NOT _process_notification_events."""
         win = self._make_window()
         alerts = MagicMock()
         alerts.has_alerts.return_value = False
@@ -291,11 +301,13 @@ class TestOnNotificationEventDataReceived:
 
         win._on_notification_event_data_received(weather_data)
 
-        # Should be called for lifecycle diff
+        # Lifecycle diff is processed
         assert win.app.run_async.call_count == 1
-        win._process_notification_events.assert_called_once_with(weather_data)
+        # But _process_notification_events is NOT called
+        win._process_notification_events.assert_not_called()
 
-    def test_both_alerts_and_lifecycle(self):
+    def test_both_alerts_and_lifecycle_only_not_discussion(self):
+        """Lightweight path processes both alerts and lifecycle, but not discussion."""
         win = self._make_window()
         alerts = MagicMock()
         alerts.has_alerts.return_value = True
@@ -311,9 +323,11 @@ class TestOnNotificationEventDataReceived:
 
         # Two run_async calls: one for alerts, one for lifecycle
         assert win.app.run_async.call_count == 2
-        win._process_notification_events.assert_called_once_with(weather_data)
+        # _process_notification_events is NOT called
+        win._process_notification_events.assert_not_called()
 
-    def test_no_alerts_no_diff(self):
+    def test_no_alerts_no_diff_does_nothing(self):
+        """When there's nothing to process, nothing is done."""
         win = self._make_window()
         weather_data = MagicMock()
         weather_data.alerts = None
@@ -322,11 +336,13 @@ class TestOnNotificationEventDataReceived:
         win._on_notification_event_data_received(weather_data)
 
         win.app.run_async.assert_not_called()
-        win._process_notification_events.assert_called_once_with(weather_data)
+        win._process_notification_events.assert_not_called()
 
     def test_exception_is_caught(self):
+        """Exceptions in alert processing are caught and logged."""
         win = self._make_window()
-        win._process_notification_events.side_effect = RuntimeError("boom")
+        # Force an exception in run_async
+        win.app.run_async.side_effect = RuntimeError("boom")
 
         weather_data = MagicMock()
         weather_data.alerts = None
