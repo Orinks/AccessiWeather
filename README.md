@@ -34,6 +34,7 @@ AccessiWeather supports four weather providers:
 - For **US locations**, AccessiWeather uses **NWS alerts only**. Pirate Weather and Visual Crossing alerts are intentionally ignored there to avoid duplicate alerts with weaker metadata.
 - For **international locations**, AccessiWeather uses **Pirate Weather alerts when available**, otherwise **Visual Crossing** if configured.
 - If you add a Pirate Weather key, Automatic mode can also pull **minutely precipitation** guidance.
+- `Automatic` still uses your configured **US** and **International** source-priority presets for current conditions and forecast merging.
 
 ## Alerts
 
@@ -80,7 +81,7 @@ Settings export/import does not include API keys. If you want to move keys betwe
 
 ### Prebuilt Downloads
 
-Download builds from [accessiweather.orinks.net](https://accessiweather.orinks.net) or the [GitHub releases page](https://github.com/Orinks/AccessiWeather/releases).
+Download builds from [orinks.net/accessiweather](https://orinks.net/accessiweather) or the [GitHub releases page](https://github.com/Orinks/AccessiWeather/releases).
 
 - **Windows**: MSI installer or portable ZIP
 - **macOS**: DMG
@@ -116,11 +117,15 @@ accessiweather --portable
 
 ## First Run
 
+On a fresh setup, AccessiWeather shows a short onboarding wizard.
+
 1. Launch AccessiWeather.
-2. Add a location.
-3. Leave `Weather Data Source` on `Automatic` unless you have a reason to force one provider.
-4. Open `Settings` and add optional API keys only if you need those extra features.
-5. Refresh to load current conditions, daily forecast, hourly forecast, and alerts.
+2. In the onboarding wizard, add your first location or skip it for now.
+3. Optionally enter OpenRouter, Visual Crossing, and Pirate Weather API keys during onboarding.
+4. In portable mode, if you enter API keys, you can also create an encrypted portable key bundle during onboarding.
+5. After the wizard closes, review the readiness summary, then refresh to load current conditions, daily forecast, hourly forecast, and alerts.
+
+If you need to run the onboarding wizard again manually, launch the app with `--wizard`.
 
 ## Main Views
 
@@ -131,6 +136,8 @@ accessiweather --portable
 - **Forecast Discussion**: NWS Area Forecast Discussion for US locations
 - **Explain Weather**: One-shot AI summary of the current weather
 - **Weather Assistant**: Chat-style AI weather help
+
+The main window also includes quick-action buttons for common tasks such as Add, Remove, Refresh, Explain, Discussion, Settings, and View Alert Details.
 
 If Pirate Weather minutely data is available, AccessiWeather adds a short precipitation outlook to current conditions and can notify you when precipitation is about to start or stop.
 
@@ -149,14 +156,17 @@ The Settings dialog currently includes these tabs:
 
 ## Keyboard Shortcuts
 
+The current code binds these global shortcuts:
+
+- `Ctrl+R` or `F5`: Refresh weather
 - `Ctrl+L`: Add location
 - `Ctrl+D`: Remove location
-- `Ctrl+R` or `F5`: Refresh weather
-- `Ctrl+S`: Open settings
-- `Ctrl+E`: Explain weather
 - `Ctrl+H`: Weather history
-- `Ctrl+T`: Weather Assistant
+- `Ctrl+S`: Open settings
 - `Ctrl+Q`: Quit
+- `Ctrl+E`: Explain Weather
+- `Ctrl+T`: Open Weather Assistant
+- `Ctrl+Shift+R`: Open NOAA Weather Radio
 
 ## Documentation
 
@@ -169,7 +179,8 @@ The Settings dialog currently includes these tabs:
 
 - [GitHub Issues](https://github.com/Orinks/AccessiWeather/issues)
 - [GitHub Discussions](https://github.com/Orinks/AccessiWeather/discussions)
-- [Project website](https://accessiweather.orinks.net)
+- [Project website](https://orinks.net/accessiweather)
+- [GitHub Releases](https://github.com/Orinks/AccessiWeather/releases)
 
 ## Contributing
 
