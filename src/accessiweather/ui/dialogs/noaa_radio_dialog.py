@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 from typing import TYPE_CHECKING
 
 import wx
@@ -16,6 +17,20 @@ if TYPE_CHECKING:
     pass
 
 logger = logging.getLogger(__name__)
+
+# Module-level cache for WxRadioClient to leverage HTTP caching across dialog opens
+_wxradio_client: WxRadioClient | None = None
+_client_lock = threading.Lock()
+
+
+def _get_wxradio_client() -> WxRadioClient:
+    """Get or create a cached WxRadioClient instance (thread-safe)."""
+    global _wxradio_client
+    with _client_lock:
+        if _wxradio_client is None:
+            _wxradio_client = WxRadioClient()
+            logger.debug("Created cached WxRadioClient instance")
+        return _wxradio_client
 
 
 def show_noaa_radio_dialog(parent: wx.Window, lat: float, lon: float) -> NOAARadioDialog:
@@ -68,7 +83,10 @@ class NOAARadioDialog(wx.Dialog):
             on_stalled=self._on_stalled,
             on_reconnecting=self._on_reconnecting,
         )
-        self._url_provider = StreamURLProvider(use_fallback=False, wxradio_client=WxRadioClient())
+        # Use cached WxRadioClient to leverage HTTP response caching across dialog opens
+        self._url_provider = StreamURLProvider(
+            use_fallback=False, wxradio_client=_get_wxradio_client()
+        )
         app = wx.GetApp()
         prefs_path = (
             getattr(getattr(app, "runtime_paths", None), "noaa_radio_preferences_file", None)
@@ -83,7 +101,8 @@ class NOAARadioDialog(wx.Dialog):
 
         self._init_ui()
         self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
-        self._load_stations()
+        # Start station loading in background thread to not block UI initialization
+        self._load_stations_async()
 
     def _init_ui(self) -> None:
         """Create and layout all UI controls."""
@@ -151,23 +170,46 @@ class NOAARadioDialog(wx.Dialog):
 
         self.Bind(wx.EVT_CLOSE, self._on_close)
 
-    def _load_stations(self) -> None:
-        """Load nearest stations into the selector."""
+    def _load_stations_async(self) -> None:
+        """Load stations in a background thread to not block UI initialization."""
+        # Show loading state immediately
+        self._station_choice.Set(["Loading stations..."])
+        self._set_status("Finding nearest stations...")
+
+        # Run station loading in background thread
+        thread = threading.Thread(target=self._load_stations_worker, daemon=True)
+        thread.start()
+
+    def _load_stations_worker(self) -> None:
+        """Worker method that loads stations in background thread."""
         try:
             db = StationDatabase()
             results = db.find_nearest(self._lat, self._lon, limit=25)
             # Only show stations that have online streams available
-            self._stations = [
+            stations = [
                 r.station for r in results if self._url_provider.has_known_url(r.station.call_sign)
             ][:10]
 
-            choices = [f"{s.call_sign} - {s.name} ({s.frequency} MHz)" for s in self._stations]
-            self._station_choice.Set(choices)
-            if choices:
-                self._station_choice.SetSelection(0)
+            choices = [f"{s.call_sign} - {s.name} ({s.frequency} MHz)" for s in stations]
+
+            # Update UI on main thread
+            wx.CallAfter(self._on_stations_loaded, stations, choices)
         except Exception as e:
             logger.error(f"Failed to load stations: {e}")
-            self._set_status(f"Error loading stations: {e}")
+            wx.CallAfter(self._set_status, f"Error loading stations: {e}")
+
+    def _on_stations_loaded(self, stations: list[Station], choices: list[str]) -> None:
+        """Handle stations loaded in background thread."""
+        # Check if dialog was closed while background thread was running
+        if self._station_choice is None:
+            return
+        self._stations = stations
+        self._station_choice.Set(choices)
+        if choices:
+            self._station_choice.SetSelection(0)
+            self._set_status("Ready")
+        else:
+            self._set_status("No stations with streams available")
 
     def _get_selected_station(self) -> Station | None:
         """Return the currently selected station, or None."""
