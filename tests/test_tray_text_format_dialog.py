@@ -8,6 +8,7 @@ Covers:
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -120,6 +121,31 @@ class TestTrayTextFormatDialogPreview:
         updater = TaskbarIconUpdater(text_enabled=True)
         result = updater.build_preview("{temp}", weather_data=None)
         assert "72F" in result or "22C" in result
+
+    def test_format_tooltip_converts_numeric_wind_direction_to_cardinal(self):
+        """Numeric wind directions should not leak raw degrees into tray placeholders."""
+        updater = TaskbarIconUpdater(text_enabled=True, format_string="{wind} | {wind_dir}")
+        current = SimpleNamespace(
+            temperature_f=36.0,
+            temperature_c=2.2,
+            condition="Clear",
+            humidity=75,
+            wind_speed=0.0,
+            wind_direction=297,
+            pressure_in=30.0,
+            feels_like_f=27.0,
+            feels_like_c=-2.8,
+        )
+        current.has_data = lambda: True
+        weather_data = SimpleNamespace(
+            current_conditions=current,
+            forecast=None,
+            location=SimpleNamespace(country_code="US"),
+        )
+
+        result = updater.format_tooltip(weather_data, "Test City")
+
+        assert result == "WNW at 0 mph | WNW"
 
     @pytest.mark.parametrize(
         ("temperature_unit", "expected"),

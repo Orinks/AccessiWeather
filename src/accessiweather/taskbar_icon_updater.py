@@ -19,6 +19,7 @@ from .utils.temperature_utils import (
     fahrenheit_to_celsius,
 )
 from .utils.unit_utils import (
+    convert_wind_direction_to_cardinal,
     format_precipitation,
     format_pressure,
     format_visibility,
@@ -221,9 +222,7 @@ class TaskbarIconUpdater:
         data["humidity"] = self._format_numeric(humidity, "%")
         data["wind"] = self._format_wind(current)
         data["wind_speed"] = self._format_wind_speed(current)
-        # wind_direction can be str ("NW") or int (270 degrees) - ensure it's a string
-        wind_dir = getattr(current, "wind_direction", None)
-        data["wind_dir"] = str(wind_dir) if wind_dir is not None else PLACEHOLDER_NA
+        data["wind_dir"] = self._format_wind_direction(getattr(current, "wind_direction", None))
         data["pressure"] = self._format_pressure(current)
         data["feels_like"] = self._format_feels_like(current)
         data["uv"] = self._format_numeric(getattr(current, "uv_index", None), "")
@@ -315,6 +314,14 @@ class TaskbarIconUpdater:
             return f"{value:.1f}{suffix}"
         return f"{value}{suffix}"
 
+    def _format_wind_direction(self, direction: Any) -> str:
+        """Format wind direction as a cardinal string when possible."""
+        if direction is None:
+            return PLACEHOLDER_NA
+        if isinstance(direction, (int, float)):
+            return convert_wind_direction_to_cardinal(float(direction))
+        return str(direction)
+
     def _format_wind(self, current: Any) -> str:
         """Format wind direction and speed."""
         direction = getattr(current, "wind_direction", None)
@@ -324,9 +331,9 @@ class TaskbarIconUpdater:
             return PLACEHOLDER_NA
 
         parts = []
-        if direction is not None:
-            # Convert to string - direction can be str ("NW") or int (270 degrees)
-            parts.append(str(direction))
+        formatted_direction = self._format_wind_direction(direction)
+        if formatted_direction != PLACEHOLDER_NA:
+            parts.append(formatted_direction)
         if speed is not None:
             parts.append(f"at {speed:.0f} mph")
 
