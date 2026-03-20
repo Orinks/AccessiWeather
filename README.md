@@ -34,6 +34,7 @@ AccessiWeather supports four weather providers:
 - For **US locations**, AccessiWeather uses **NWS alerts only**. Pirate Weather and Visual Crossing alerts are intentionally ignored there to avoid duplicate alerts with weaker metadata.
 - For **international locations**, AccessiWeather uses **Pirate Weather alerts when available**, otherwise **Visual Crossing** if configured.
 - If you add a Pirate Weather key, Automatic mode can also pull **minutely precipitation** guidance.
+- `Automatic` still uses your configured **US** and **International** source-priority presets for current conditions and forecast merging.
 
 ## Alerts
 
@@ -117,7 +118,7 @@ accessiweather --portable
 ## First Run
 
 1. Launch AccessiWeather.
-2. Add a location.
+2. Add a location by searching for it and selecting a result.
 3. Leave `Weather Data Source` on `Automatic` unless you have a reason to force one provider.
 4. Open `Settings` and add optional API keys only if you need those extra features.
 5. Refresh to load current conditions, daily forecast, hourly forecast, and alerts.
@@ -149,14 +150,17 @@ The Settings dialog currently includes these tabs:
 
 ## Keyboard Shortcuts
 
+The current code binds these global shortcuts:
+
+- `Ctrl+R`: Refresh weather
 - `Ctrl+L`: Add location
 - `Ctrl+D`: Remove location
-- `Ctrl+R` or `F5`: Refresh weather
-- `Ctrl+S`: Open settings
-- `Ctrl+E`: Explain weather
 - `Ctrl+H`: Weather history
-- `Ctrl+T`: Weather Assistant
+- `Ctrl+S`: Open settings
 - `Ctrl+Q`: Quit
+- `F5`: Refresh weather
+
+Some menu items currently display additional shortcut labels, but not all of those labels are backed by the active global accelerator table in the current build. If one of those menu-labeled shortcuts does not respond, use the menu item directly.
 
 ## Documentation
 
