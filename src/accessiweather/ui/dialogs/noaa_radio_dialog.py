@@ -10,6 +10,7 @@ import wx
 from accessiweather.noaa_radio import Station, StationDatabase, StreamURLProvider
 from accessiweather.noaa_radio.player import RadioPlayer
 from accessiweather.noaa_radio.preferences import RadioPreferences
+from accessiweather.noaa_radio.weatherindex_client import WeatherIndexClient
 from accessiweather.noaa_radio.wxradio_client import WxRadioClient
 
 if TYPE_CHECKING:
@@ -68,7 +69,11 @@ class NOAARadioDialog(wx.Dialog):
             on_stalled=self._on_stalled,
             on_reconnecting=self._on_reconnecting,
         )
-        self._url_provider = StreamURLProvider(use_fallback=False, wxradio_client=WxRadioClient())
+        self._url_provider = StreamURLProvider(
+            use_fallback=False,
+            wxradio_client=WxRadioClient(),
+            weatherindex_client=WeatherIndexClient(),
+        )
         app = wx.GetApp()
         prefs_path = (
             getattr(getattr(app, "runtime_paths", None), "noaa_radio_preferences_file", None)
@@ -158,7 +163,7 @@ class NOAARadioDialog(wx.Dialog):
             results = db.find_nearest(self._lat, self._lon, limit=25)
             # Only show stations that have online streams available
             self._stations = [
-                r.station for r in results if self._url_provider.has_known_url(r.station.call_sign)
+                r.station for r in results if self._url_provider.get_stream_urls(r.station.call_sign)
             ][:10]
 
             choices = [f"{s.call_sign} - {s.name} ({s.frequency} MHz)" for s in self._stations]

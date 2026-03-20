@@ -1,6 +1,10 @@
 """Tests for NOAA Weather Radio stream URL provider."""
 
+from unittest.mock import MagicMock
+
 from accessiweather.noaa_radio.stream_url import StreamURLProvider
+from accessiweather.noaa_radio.weatherindex_client import WeatherIndexClient
+from accessiweather.noaa_radio.wxradio_client import WxRadioClient
 
 
 class TestStreamURLProvider:
@@ -93,3 +97,71 @@ class TestStreamURLProvider:
         """Whitespace-padded call sign is normalized."""
         provider = StreamURLProvider()
         assert provider.get_stream_url("  WXJ76  ") == provider.get_stream_url("WXJ76")
+
+    def test_weatherindex_urls_are_first(self) -> None:
+        weatherindex_client = MagicMock(spec=WeatherIndexClient)
+        weatherindex_client.get_stream_urls.return_value = [
+            "https://weatherindex.example.com/live",
+            "https://weatherindex.example.com/backup",
+        ]
+        wxradio_client = MagicMock(spec=WxRadioClient)
+        wxradio_client.get_streams.return_value = {"WXJ76": ["https://wxradio.example.com/live"]}
+
+        provider = StreamURLProvider(
+            use_fallback=True,
+            wxradio_client=wxradio_client,
+            weatherindex_client=weatherindex_client,
+            custom_urls={"WXJ76": ["https://static.example.com/live"]},
+        )
+
+        assert provider.get_stream_urls("WXJ76") == [
+            "https://weatherindex.example.com/live",
+            "https://weatherindex.example.com/backup",
+            "https://wxradio.example.com/live",
+            "https://static.example.com/live",
+        ]
+
+    def test_merge_deduplicates_preserving_order(self) -> None:
+        weatherindex_client = MagicMock(spec=WeatherIndexClient)
+        weatherindex_client.get_stream_urls.return_value = [
+            "https://shared.example.com/live",
+            "https://weatherindex.example.com/backup",
+        ]
+        wxradio_client = MagicMock(spec=WxRadioClient)
+        wxradio_client.get_streams.return_value = {
+            "WXJ76": [
+                "https://shared.example.com/live",
+                "https://wxradio.example.com/live",
+            ]
+        }
+
+        provider = StreamURLProvider(
+            use_fallback=True,
+            wxradio_client=wxradio_client,
+            weatherindex_client=weatherindex_client,
+            custom_urls={"WXJ76": ["https://wxradio.example.com/live"]},
+        )
+
+        assert provider.get_stream_urls("WXJ76") == [
+            "https://shared.example.com/live",
+            "https://weatherindex.example.com/backup",
+            "https://wxradio.example.com/live",
+        ]
+
+    def test_generated_fallback_is_last_when_enabled(self) -> None:
+        weatherindex_client = MagicMock(spec=WeatherIndexClient)
+        weatherindex_client.get_stream_urls.return_value = []
+        wxradio_client = MagicMock(spec=WxRadioClient)
+        wxradio_client.get_streams.return_value = {}
+
+        provider = StreamURLProvider(
+            use_fallback=True,
+            wxradio_client=wxradio_client,
+            weatherindex_client=weatherindex_client,
+            custom_urls={"WXJ76": ["https://static.example.com/live"]},
+        )
+
+        assert provider.get_stream_urls("WXJ76") == ["https://static.example.com/live"]
+        assert provider.get_stream_urls("UNKNOWN99") == [
+            "https://broadcastify.cdnstream1.com/noaa/UNKNOWN99"
+        ]
