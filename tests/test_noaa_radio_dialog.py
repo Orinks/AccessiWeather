@@ -181,10 +181,12 @@ class TestNOAARadioDialogModule:
             patch.object(noaa_dialog_module.wx, "GetApp", return_value=fake_app),
             patch.object(noaa_dialog_module, "RadioPlayer"),
             patch.object(noaa_dialog_module, "StreamURLProvider"),
-            patch.object(noaa_dialog_module, "WxRadioClient"),
+            patch.object(
+                noaa_dialog_module, "_get_clients", return_value=(MagicMock(), MagicMock())
+            ),
             patch.object(noaa_dialog_module, "RadioPreferences") as mock_prefs,
             patch.object(noaa_dialog_module.NOAARadioDialog, "_init_ui"),
-            patch.object(noaa_dialog_module.NOAARadioDialog, "_load_stations"),
+            patch.object(noaa_dialog_module.NOAARadioDialog, "_load_stations_async"),
         ):
             noaa_dialog_module.NOAARadioDialog(MagicMock(), 40.7, -74.0)
 
