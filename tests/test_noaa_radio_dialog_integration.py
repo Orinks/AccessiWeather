@@ -278,7 +278,10 @@ class TestLoadStations:
         """Stations are included when any stream source resolves a feed."""
         dlg = _make_dialog(noaa_dialog_module)
         dlg._station_choice = MagicMock()
-        dlg._url_provider.get_stream_urls.side_effect = [["https://weatherindex.example.com/live"], []]
+        dlg._url_provider.get_stream_urls.side_effect = [
+            ["https://weatherindex.example.com/live"],
+            [],
+        ]
 
         test_stations = [
             Station("TEST1", 162.55, "Test City 1", 40.0, -74.0, "NY"),
