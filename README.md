@@ -117,11 +117,15 @@ accessiweather --portable
 
 ## First Run
 
+On a fresh setup, AccessiWeather shows a short onboarding wizard.
+
 1. Launch AccessiWeather.
-2. Add a location by searching for it and selecting a result.
-3. Leave `Weather Data Source` on `Automatic` unless you have a reason to force one provider.
-4. Open `Settings` and add optional API keys only if you need those extra features.
-5. Refresh to load current conditions, daily forecast, hourly forecast, and alerts.
+2. In the onboarding wizard, add your first location or skip it for now.
+3. Optionally enter OpenRouter, Visual Crossing, and Pirate Weather API keys during onboarding.
+4. In portable mode, if you enter API keys, you can also create an encrypted portable key bundle during onboarding.
+5. After the wizard closes, review the readiness summary, then refresh to load current conditions, daily forecast, hourly forecast, and alerts.
+
+If you need to run the onboarding wizard again manually, launch the app with `--wizard`.
 
 ## Main Views
 

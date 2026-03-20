@@ -55,12 +55,31 @@ accessiweather --portable
 
 ## First-Time Setup
 
-1. Launch AccessiWeather.
-2. Leave `Nationwide` visible if you want access to national forecast discussions; hide it later if you do not use it.
-3. Add your own location with `Location > Add Location` or `Ctrl+L`.
-4. Leave `Settings > Data Sources > Weather Data Source` on `Automatic` unless you have a specific reason to force one provider.
-5. Add optional API keys only for the extra features you want.
-6. Refresh weather if the app has not already done it for you.
+On a fresh setup, AccessiWeather shows a short onboarding wizard.
+
+What the onboarding wizard does:
+
+1. Offers to add your first location right away.
+2. Lets you enter an optional OpenRouter API key for AI features.
+3. Lets you enter an optional Visual Crossing API key.
+4. Lets you enter an optional Pirate Weather API key.
+5. In portable mode, if you entered keys, offers to save them in an encrypted portable key bundle.
+6. Ends with a readiness summary showing what was configured.
+
+You can skip any optional key step and configure those features later in `Settings`.
+
+After onboarding:
+
+1. Leave `Nationwide` visible if you want access to national forecast discussions; hide it later if you do not use it.
+2. If you skipped adding a location during onboarding, add one with `Location > Add Location` or `Ctrl+L`.
+3. Leave `Settings > Data Sources > Weather Data Source` on `Automatic` unless you have a specific reason to force one provider.
+4. Refresh weather if the app has not already done it for you.
+
+If you want to force the onboarding wizard to appear again later, start AccessiWeather with:
+
+```bash
+accessiweather --wizard
+```
 
 ## Adding and Managing Locations
 
