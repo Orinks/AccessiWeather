@@ -250,7 +250,7 @@ class TestLoadStations:
     """Test station loading on dialog init."""
 
     def test_load_stations_populates_choice(self, noaa_dialog_module):
-        """Test _load_stations_worker populates the station choice control."""
+        """Test _load_stations populates the station choice control."""
         dlg = _make_dialog(noaa_dialog_module)
         dlg._station_choice = MagicMock()
 
@@ -264,25 +264,27 @@ class TestLoadStations:
 
         with patch("accessiweather.ui.dialogs.noaa_radio_dialog.StationDatabase") as mock_db_cls:
             mock_db_cls.return_value.find_nearest.return_value = results
-            dlg._load_stations_worker()
+            dlg._load_stations()
 
-        # Check that _on_stations_loaded was called with wx.CallAfter
-        # The worker method calls wx.CallAfter which we can't test directly in this mock setup
-        # Instead verify the logic by checking the mock was called
-        mock_db_cls.return_value.find_nearest.assert_called_once()
+        dlg._station_choice.Set.assert_called_once()
+        choices = dlg._station_choice.Set.call_args[0][0]
+        assert len(choices) == 2
+        assert "TEST1" in choices[0]
+        assert "TEST2" in choices[1]
+        dlg._station_choice.SetSelection.assert_called_with(0)
+        assert dlg._stations == test_stations
 
     def test_load_stations_error_sets_status(self, noaa_dialog_module):
-        """Test _load_stations_worker handles database errors gracefully."""
+        """Test _load_stations handles database errors gracefully."""
         dlg = _make_dialog(noaa_dialog_module)
         dlg._station_choice = MagicMock()
         dlg._status_text = MagicMock()
 
         with patch("accessiweather.ui.dialogs.noaa_radio_dialog.StationDatabase") as mock_db_cls:
             mock_db_cls.return_value.find_nearest.side_effect = RuntimeError("DB error")
-            dlg._load_stations_worker()
+            dlg._load_stations()
 
-        # Worker calls wx.CallAfter for error, verify database was called
-        mock_db_cls.return_value.find_nearest.assert_called_once()
+        assert "Error" in dlg._status_text.SetLabel.call_args[0][0]
 
 
 class TestErrorStates:
