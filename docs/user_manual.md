@@ -17,7 +17,7 @@ The app also includes forecast discussions, air quality, UV index, aviation weat
 
 ### Prebuilt Downloads
 
-Download builds from [accessiweather.orinks.net](https://accessiweather.orinks.net) or the [GitHub releases page](https://github.com/Orinks/AccessiWeather/releases).
+Download builds from [orinks.net/accessiweather](https://orinks.net/accessiweather) or the [GitHub releases page](https://github.com/Orinks/AccessiWeather/releases).
 
 - Windows: MSI installer or portable ZIP
 - macOS: DMG
@@ -1277,17 +1277,15 @@ Use it when:
 
 The current code binds these global shortcuts:
 
-- `Ctrl+R`: Refresh weather
+- `Ctrl+R` or `F5`: Refresh weather
 - `Ctrl+L`: Add location
 - `Ctrl+D`: Remove selected location
 - `Ctrl+H`: Open Weather History
 - `Ctrl+S`: Open Settings
 - `Ctrl+Q`: Quit
-- `F5`: Refresh weather
-
-Important caveat:
-
-- Some menu items currently display extra shortcut labels such as `Ctrl+E`, `Ctrl+T`, and `Ctrl+Shift+R`, but the global accelerator table in the current code does not bind all of those menu-labeled shortcuts. Use the menu items directly if one of those displayed shortcuts does not respond in your build.
+- `Ctrl+E`: Explain Weather
+- `Ctrl+T`: Open Weather Assistant
+- `Ctrl+Shift+R`: Open NOAA Weather Radio
 
 ## Config and Portability
 

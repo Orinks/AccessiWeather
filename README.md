@@ -81,7 +81,7 @@ Settings export/import does not include API keys. If you want to move keys betwe
 
 ### Prebuilt Downloads
 
-Download builds from [accessiweather.orinks.net](https://accessiweather.orinks.net) or the [GitHub releases page](https://github.com/Orinks/AccessiWeather/releases).
+Download builds from [orinks.net/accessiweather](https://orinks.net/accessiweather) or the [GitHub releases page](https://github.com/Orinks/AccessiWeather/releases).
 
 - **Windows**: MSI installer or portable ZIP
 - **macOS**: DMG
@@ -156,15 +156,15 @@ The Settings dialog currently includes these tabs:
 
 The current code binds these global shortcuts:
 
-- `Ctrl+R`: Refresh weather
+- `Ctrl+R` or `F5`: Refresh weather
 - `Ctrl+L`: Add location
 - `Ctrl+D`: Remove location
 - `Ctrl+H`: Weather history
 - `Ctrl+S`: Open settings
 - `Ctrl+Q`: Quit
-- `F5`: Refresh weather
-
-Some menu items currently display additional shortcut labels, but not all of those labels are backed by the active global accelerator table in the current build. If one of those menu-labeled shortcuts does not respond, use the menu item directly.
+- `Ctrl+E`: Explain Weather
+- `Ctrl+T`: Open Weather Assistant
+- `Ctrl+Shift+R`: Open NOAA Weather Radio
 
 ## Documentation
 
@@ -177,7 +177,8 @@ Some menu items currently display additional shortcut labels, but not all of tho
 
 - [GitHub Issues](https://github.com/Orinks/AccessiWeather/issues)
 - [GitHub Discussions](https://github.com/Orinks/AccessiWeather/discussions)
-- [Project website](https://accessiweather.orinks.net)
+- [Project website](https://orinks.net/accessiweather)
+- [GitHub Releases](https://github.com/Orinks/AccessiWeather/releases)
 
 ## Contributing
 
