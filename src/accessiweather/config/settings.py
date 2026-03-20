@@ -56,13 +56,6 @@ class SettingsOperations:
             settings.data_source = "auto"
             config_changed = True
 
-        if settings.data_source == "pirateweather" and not settings.pirate_weather_api_key:
-            self.logger.warning(
-                "Pirate Weather selected but no API key provided, switching to 'auto'"
-            )
-            settings.data_source = "auto"
-            config_changed = True
-
         if settings.data_source == "visualcrossing" and not settings.visual_crossing_api_key:
             self.logger.warning(
                 "Visual Crossing selected but no API key provided, switching to 'auto'"
