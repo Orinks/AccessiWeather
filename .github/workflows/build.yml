@@ -63,14 +63,20 @@ jobs:
             else
               RANGE="$LAST_TAG"..HEAD
 
-              # Build only when there is at least one user-facing commit.
-              # This avoids shipping nightlies for test/chore/ci-only changes.
-              USER_FACING_COUNT=$(git log "$RANGE" --pretty='%s' --no-merges --first-parent | \
-                grep -Ei '^(feat|fix|perf|security)(\([^)]+\))?:' | \
-                grep -Eiv '^fix\((test|ci|build|chore|docs|style|refactor)\):' | \
-                wc -l | tr -d ' ')
+              # Build only when there is at least one user-facing file change.
+              # This avoids shipping nightlies for docs/test/ci-only changes and
+              # works even when squash merges or sync commits hide the original
+              # commit subjects on first-parent history.
+              USER_FACING_PATHS=$(git diff --name-only "$RANGE" -- \
+                src/ \
+                installer/ \
+                scripts/generate_build_meta.py \
+                pyproject.toml \
+                accessiweather.spec \
+                '*.spec' \
+                soundpacks/ | sed '/^$/d')
 
-              if [ "${USER_FACING_COUNT:-0}" -gt 0 ]; then
+              if [ -n "$USER_FACING_PATHS" ]; then
                 echo "should_build=true" >> $GITHUB_OUTPUT
               else
                 echo "should_build=false" >> $GITHUB_OUTPUT
