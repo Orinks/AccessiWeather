@@ -157,7 +157,10 @@ ALERT_STATE_RETENTION_DAYS = 7
 
 # Maximum number of historical content hashes to track per alert
 # (for change detection and escalation tracking)
-ALERT_HISTORY_MAX_LENGTH = 5
+# Must be large enough to track multiple update cycles without silently dropping
+# escalation detection data - 5 is too small as alerts can cycle through
+# update -> escalation -> update in quick succession
+ALERT_HISTORY_MAX_LENGTH = 15
 
 # Default Alert Settings
 # Default minimum severity level to trigger notifications

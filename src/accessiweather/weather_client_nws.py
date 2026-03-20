@@ -105,6 +105,12 @@ def _scrub_measurements(properties: dict[str, Any]) -> None:
             qc = measurement.get("qualityControl")
             if qc not in VALID_QC_CODES:
                 measurement["value"] = None
+                logger.debug(
+                    "Scrubbed measurement %r due to invalid QC code %r (valid: %s)",
+                    key,
+                    qc,
+                    VALID_QC_CODES,
+                )
 
 
 def _current_data_score(current: CurrentConditions) -> int:

@@ -132,7 +132,7 @@ class ParallelFetchCoordinator:
         )
 
         # Process results
-        for (source_name, _), result in zip(tasks, task_results, strict=False):
+        for (source_name, _), result in zip(tasks, task_results, strict=True):
             if isinstance(result, Exception):
                 # Handle exception
                 source_data = self._handle_source_failure(source_name, result)
