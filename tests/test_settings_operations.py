@@ -77,21 +77,34 @@ class TestValidateAndFixConfig:
 
     def test_valid_data_sources_unchanged(self, mock_manager, operations):
         """Test that valid data sources are not changed."""
-        valid_sources = ["auto", "nws", "openmeteo", "visualcrossing"]
+        valid_sources = ["auto", "nws", "openmeteo", "visualcrossing", "pirateweather"]
 
         for source in valid_sources:
             mock_manager._config.settings.data_source = source
-            # visualcrossing requires an API key to stay valid
+            # visualcrossing requires an API key to stay valid at load time
             if source == "visualcrossing":
                 mock_manager._config.settings.visual_crossing_api_key = "test_key"
             else:
                 mock_manager._config.settings.visual_crossing_api_key = ""
+            mock_manager._config.settings.pirate_weather_api_key = ""
             mock_manager.save_config.reset_mock()
 
             operations._validate_and_fix_config()
 
             assert mock_manager._config.settings.data_source == source
             mock_manager.save_config.assert_not_called()
+
+    def test_pirateweather_without_api_key_preserves_saved_preference(
+        self, mock_manager, operations
+    ):
+        """Test that pirateweather remains selected without rewriting persisted preference."""
+        mock_manager._config.settings.data_source = "pirateweather"
+        mock_manager._config.settings.pirate_weather_api_key = ""
+
+        operations._validate_and_fix_config()
+
+        assert mock_manager._config.settings.data_source == "pirateweather"
+        mock_manager.save_config.assert_not_called()
 
     def test_visualcrossing_without_api_key_switches_to_auto(self, mock_manager, operations):
         """Test that visualcrossing without API key switches to auto."""

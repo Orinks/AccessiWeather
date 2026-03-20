@@ -452,16 +452,16 @@ class TestSettingsPirateWeatherValidation:
 
         return manager
 
-    def test_pirateweather_without_api_key_falls_back_to_auto(self, mock_manager):
-        """Lines 60, 63-64: pirateweather selected but no key → switch to auto."""
+    def test_pirateweather_without_api_key_preserves_saved_preference(self, mock_manager):
+        """Load-time validation should not rewrite a persisted Pirate Weather preference."""
         from accessiweather.config.settings import SettingsOperations
 
         ops = SettingsOperations(mock_manager)
         ops._validate_and_fix_config()
 
         config = mock_manager.get_config()
-        assert config.settings.data_source == "auto"
-        mock_manager.save_config.assert_called()
+        assert config.settings.data_source == "pirateweather"
+        mock_manager.save_config.assert_not_called()
 
 
 # ---------------------------------------------------------------------------
