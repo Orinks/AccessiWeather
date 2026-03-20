@@ -103,6 +103,20 @@ Use `Location > Remove Location` or `Ctrl+D` to remove the currently selected sa
 
 ## Main Window
 
+The main window is not just a read-only weather display. It also includes a row of quick-action buttons so you do not have to open the menu bar for common tasks.
+
+### Quick-Action Buttons
+
+The main window includes these buttons:
+
+- `Add`: open the add-location dialog
+- `Remove`: remove the currently selected saved location
+- `Refresh`: refresh the selected location now
+- `Explain`: open a one-shot AI explanation of the current weather
+- `Discussion`: open the forecast discussion for the current location
+- `Settings`: open the Settings dialog
+- `View Alert Details`: open the full text of the selected alert when alerts are present
+
 ### Location Selector
 
 The location drop-down at the top picks which saved location the app should show. When you switch locations, AccessiWeather may show cached data first and then refresh in the background.
@@ -252,6 +266,8 @@ NWS alerts usually include stronger metadata such as severity, urgency, certaint
 
 ## Forecast Discussions
 
+You can open forecast discussions either from the main window `Discussion` button or from `View > Forecast Discussion...`.
+
 `View > Forecast Discussion...` behaves differently depending on the selected location:
 
 - For a normal US location, it opens the local NWS Area Forecast Discussion.
@@ -332,6 +348,8 @@ Important caveats:
 AccessiWeather has two separate AI features. Both require an OpenRouter API key.
 
 ### Explain Weather
+
+You can open this from the main window `Explain` button or from `View > Explain Weather`.
 
 `View > Explain Weather` generates a one-shot explanation of the currently loaded weather.
 

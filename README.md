@@ -137,6 +137,8 @@ If you need to run the onboarding wizard again manually, launch the app with `--
 - **Explain Weather**: One-shot AI summary of the current weather
 - **Weather Assistant**: Chat-style AI weather help
 
+The main window also includes quick-action buttons for common tasks such as Add, Remove, Refresh, Explain, Discussion, Settings, and View Alert Details.
+
 If Pirate Weather minutely data is available, AccessiWeather adds a short precipitation outlook to current conditions and can notify you when precipitation is about to start or stop.
 
 ## Settings Overview
