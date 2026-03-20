@@ -224,8 +224,34 @@ jobs:
           if [ "$IS_NIGHTLY" = "true" ]; then
             LAST_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -1)
             if [ -n "$LAST_TAG" ]; then
-              npx git-cliff@latest "$LAST_TAG"..HEAD --strip all > notes.md.tmp || true
-              awk '!seen[$0]++' notes.md.tmp > notes.md && rm -f notes.md.tmp
+              RANGE="$LAST_TAG"..HEAD
+              ADDED=$(git log "$RANGE" --pretty='%s' --no-merges | \
+                grep -Ei '^(feat|security)(\([^)]+\))?:' | \
+                sed -E 's/^(feat|security)(\([^)]+\))?:[[:space:]]*//' || true)
+              FIXED=$(git log "$RANGE" --pretty='%s' --no-merges | \
+                grep -Ei '^fix(\([^)]+\))?:' | \
+                grep -Eiv '^fix\((test|ci|build|chore|docs|style|refactor)\):' | \
+                sed -E 's/^fix(\([^)]+\))?:[[:space:]]*//' || true)
+              PERF=$(git log "$RANGE" --pretty='%s' --no-merges | \
+                grep -Ei '^perf(\([^)]+\))?:' | \
+                sed -E 's/^perf(\([^)]+\))?:[[:space:]]*//' || true)
+
+              : > notes.md
+              if [ -n "$ADDED" ]; then
+                echo '## Added' >> notes.md
+                printf '%s\n' "$ADDED" | awk 'NF && !seen[$0]++ {print "- "$0}' >> notes.md
+              fi
+              if [ -n "$FIXED" ]; then
+                [ -s notes.md ] && echo >> notes.md
+                echo '## Fixed' >> notes.md
+                printf '%s\n' "$FIXED" | awk 'NF && !seen[$0]++ {print "- "$0}' >> notes.md
+              fi
+              if [ -n "$PERF" ]; then
+                [ -s notes.md ] && echo >> notes.md
+                echo '## Improved' >> notes.md
+                printf '%s\n' "$PERF" | awk 'NF && !seen[$0]++ {print "- "$0}' >> notes.md
+              fi
+
               [ -s notes.md ] || echo "- No user-facing changes" > notes.md
             else
               echo "Initial nightly build" > notes.md
