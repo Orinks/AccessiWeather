@@ -199,6 +199,28 @@ class ConfigManager:
             setattr(settings, key, lazy_value)
             logger.debug(f"Set up lazy loader for {key}")
 
+        # Eagerly probe keyring for API keys and log which are present vs missing.
+        # This catches silent keyring loss early (e.g., after updates or reinstalls).
+        api_key_names = [k for k in secure_keys if k not in portable_api_keys or not is_portable]
+        present = []
+        missing = []
+        for key in api_key_names:
+            val = getattr(settings, key, None)
+            # Resolve LazySecureStorage to check actual keyring presence
+            resolved = str(val) if val is not None else ""
+            if resolved:
+                present.append(key)
+            else:
+                missing.append(key)
+        if present:
+            logger.info("Keyring keys loaded: %s", ", ".join(present))
+        if missing:
+            logger.warning(
+                "Keyring keys MISSING (empty or not found): %s — "
+                "re-enter these in Settings if they were previously configured",
+                ", ".join(missing),
+            )
+
     def save_config(self) -> bool:
         """
         Save configuration to file using atomic write.
