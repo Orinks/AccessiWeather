@@ -413,6 +413,13 @@ class MainWindow(SizedFrame):
         result = show_add_location_dialog(self, self.app)
         if result:
             self._populate_locations()
+            # Auto-select the newly added location so the user lands on it immediately
+            new_name = result
+            if new_name:
+                idx = self.location_dropdown.FindString(new_name)
+                if idx != wx.NOT_FOUND:
+                    self.location_dropdown.SetSelection(idx)
+                    self._set_current_location(new_name)
             self.refresh_weather_async()
 
     def on_remove_location(self) -> None:
