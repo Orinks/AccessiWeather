@@ -1189,10 +1189,19 @@ class WeatherClient:
 
         if self.data_source == "pirateweather":
             if not self.pirate_weather_client:
-                logger.warning(
-                    "Pirate Weather selected but no API key provided, falling back to auto"
-                )
-                return "nws" if self._is_us_location(location) else "openmeteo"
+                # The lazy key may have cached an empty result from a transient
+                # keyring failure (e.g., right after an MSI update).  Reset and
+                # retry once before giving up.
+                lazy = self._pirate_weather_api_key
+                if hasattr(lazy, "reset"):
+                    lazy.reset()
+                    # Force re-evaluation after reset
+                    self._pirate_weather_client = None
+                if not self.pirate_weather_client:
+                    logger.warning(
+                        "Pirate Weather selected but no API key provided, falling back to auto"
+                    )
+                    return "nws" if self._is_us_location(location) else "openmeteo"
             return "pirateweather"
         if self.data_source == "visualcrossing":
             # Check if Visual Crossing client is available
