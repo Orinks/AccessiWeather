@@ -819,3 +819,51 @@ class TestForecastSummaryPresentation:
         assert result.hourly_summary == "Hourly outlook: Partly cloudy until this afternoon."
         assert result.hourly_section_text.startswith("Hourly forecast:")
         assert "Hourly outlook: Partly cloudy until this afternoon." in result.fallback_text
+
+
+class TestPirateWeatherLazyKeyRetry:
+    """Cover the lazy keyring retry in _determine_api_choice."""
+
+    def test_determine_api_choice_retries_lazy_key_on_transient_failure(self):
+        """When PW is selected but lazy key initially returns empty, retry after reset."""
+
+        class FakeLazy:
+            def __init__(self):
+                self._calls = 0
+
+            def reset(self):
+                self._calls += 1
+
+            def __str__(self):
+                # First call returns empty (transient failure), second returns key
+                return "test-key" if self._calls > 0 else ""
+
+            def __bool__(self):
+                return bool(str(self))
+
+        wc = WeatherClient(data_source="pirateweather", pirate_weather_api_key="")
+        wc._pirate_weather_api_key = FakeLazy()
+
+        location = Location(name="Test", latitude=40.0, longitude=-74.0)
+        result = wc._determine_api_choice(location)
+        assert result == "pirateweather"
+
+    def test_determine_api_choice_falls_back_when_retry_also_fails(self):
+        """When PW is selected and retry also returns empty, fall back to auto."""
+
+        class FakeLazy:
+            def reset(self):
+                pass
+
+            def __str__(self):
+                return ""
+
+            def __bool__(self):
+                return False
+
+        wc = WeatherClient(data_source="pirateweather", pirate_weather_api_key="")
+        wc._pirate_weather_api_key = FakeLazy()
+
+        location = Location(name="Test", latitude=40.0, longitude=-74.0)
+        result = wc._determine_api_choice(location)
+        assert result == "nws"  # US location falls back to NWS
