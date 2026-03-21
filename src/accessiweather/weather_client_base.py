@@ -514,7 +514,20 @@ class WeatherClient:
             else:
                 weather_data.alerts = WeatherAlerts(alerts=[])
 
-            weather_data.minutely_precipitation = await self._get_pirate_weather_minutely(location)
+            # Only fetch PW minutely in the lightweight poll if the user actually
+            # wants precipitation start/stop notifications AND a PW client exists.
+            # This avoids an extra API call every 60s for users who don't use it.
+            if self.pirate_weather_client and self.settings:
+                _want_start = getattr(
+                    self.settings, "notify_minutely_precipitation_start", False
+                )
+                _want_stop = getattr(
+                    self.settings, "notify_minutely_precipitation_stop", False
+                )
+                if _want_start or _want_stop:
+                    weather_data.minutely_precipitation = (
+                        await self._get_pirate_weather_minutely(location)
+                    )
 
             loc_key = self._location_key(location)
             previous_alerts = self._previous_alerts.get(loc_key)
