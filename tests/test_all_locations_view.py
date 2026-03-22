@@ -355,7 +355,7 @@ class TestShowAlertDetailsAllLocations:
 
         from accessiweather.ui.main_window import MainWindow
 
-        with patch("accessiweather.ui.main_window.show_alert_dialog") as mock_dialog:
+        with patch("accessiweather.ui.dialogs.show_alert_dialog") as mock_dialog:
             MainWindow._show_alert_details(win, 0)
             mock_dialog.assert_called_once_with(win, alert)
 
@@ -412,16 +412,16 @@ class TestRemoveLocationGuard:
 
 
 class TestRefreshWeatherAsyncAllLocations:
-    def test_refresh_in_all_locations_mode_calls_summary(self):
+    def test_refresh_in_all_locations_mode_starts_async_fetch(self):
         win = _make_window()
         win._all_locations_active = True
         win._show_all_locations_summary = MagicMock()
 
         win.refresh_weather_async()
 
-        win._show_all_locations_summary.assert_called_once()
-        # Should NOT start an async fetch
-        win.app.run_async.assert_not_called()
+        # Should fire an async fetch for all locations, not just re-render from cache
+        win.app.run_async.assert_called_once()
+        win.refresh_button.Disable.assert_called_once()
 
     def test_refresh_in_normal_mode_starts_async_fetch(self):
         win = _make_window()
@@ -477,3 +477,49 @@ class TestOnLocationChanged:
 
         assert win._all_locations_active is False
         assert win._all_locations_alerts_data == []
+
+
+# ---------------------------------------------------------------------------
+# refresh_weather_async — All Locations refresh triggers fetch
+# ---------------------------------------------------------------------------
+
+
+class TestAllLocationsRefresh:
+    def test_refresh_triggers_fetch_for_all_locations(self):
+        """Refresh in All Locations mode fires _fetch_all_locations_data, not just cache render."""
+        from accessiweather.ui.main_window import MainWindow
+
+        win = _make_window()
+        win._all_locations_active = True
+        win.app.run_async = MagicMock()
+
+        MainWindow.refresh_weather_async(win)
+
+        win.refresh_button.Disable.assert_called_once()
+        win.app.run_async.assert_called_once()
+
+    def test_on_all_locations_refresh_complete_rerenders_summary(self):
+        """_on_all_locations_refresh_complete re-renders summary when view is still active."""
+        from accessiweather.ui.main_window import MainWindow
+
+        win = _make_window()
+        win._all_locations_active = True
+        win._show_all_locations_summary = MagicMock()
+
+        MainWindow._on_all_locations_refresh_complete(win)
+
+        win._show_all_locations_summary.assert_called_once()
+        win.refresh_button.Enable.assert_called_once()
+
+    def test_on_all_locations_refresh_complete_skips_render_if_view_changed(self):
+        """_on_all_locations_refresh_complete does not render if user switched away."""
+        from accessiweather.ui.main_window import MainWindow
+
+        win = _make_window()
+        win._all_locations_active = False
+        win._show_all_locations_summary = MagicMock()
+
+        MainWindow._on_all_locations_refresh_complete(win)
+
+        win._show_all_locations_summary.assert_not_called()
+        win.refresh_button.Enable.assert_called_once()

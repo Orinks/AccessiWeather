@@ -14,7 +14,6 @@ import wx
 from wx.lib.sized_controls import SizedFrame, SizedPanel
 
 from . import main_window_notification_events
-from .dialogs import show_alert_dialog
 
 if TYPE_CHECKING:
     from ..app import AccessiWeatherApp
@@ -966,9 +965,11 @@ class MainWindow(SizedFrame):
         When the All Locations view is active the summary is rebuilt from
         whatever is currently in the cache — no new network requests are made.
         """
-        # All Locations view: just re-render from cache (no API calls).
+        # All Locations view: fetch fresh data for all locations sequentially then re-render.
         if getattr(self, "_all_locations_active", False):
-            self._show_all_locations_summary()
+            self.set_status("Refreshing all locations...")
+            self.refresh_button.Disable()
+            self.app.run_async(self._fetch_all_locations_data())
             return
 
         # Increment generation to invalidate any in-flight fetches
@@ -1103,6 +1104,28 @@ class MainWindow(SizedFrame):
         finally:
             self.app.is_updating = False
             self.refresh_button.Enable()
+
+    async def _fetch_all_locations_data(self) -> None:
+        """Fetch fresh weather data for all saved locations sequentially, then re-render summary."""
+        try:
+            all_locations = [
+                loc
+                for loc in self.app.config_manager.get_all_locations()
+                if loc.name != "Nationwide"
+            ]
+            if all_locations and self.app.weather_client:
+                await self.app.weather_client.pre_warm_batch(all_locations)
+        except Exception as e:
+            logger.error(f"Failed to refresh all locations: {e}")
+        finally:
+            wx.CallAfter(self._on_all_locations_refresh_complete)
+
+    def _on_all_locations_refresh_complete(self) -> None:
+        """Handle completion of all-locations background refresh on the main thread."""
+        if getattr(self, "_all_locations_active", False):
+            self._show_all_locations_summary()
+        self.refresh_button.Enable()
+        self.app.is_updating = False
 
     async def _pre_warm_other_locations(self, current_location: Location) -> None:
         """Pre-warm cache for non-current locations so switching is instant."""
@@ -1300,6 +1323,8 @@ class MainWindow(SizedFrame):
             data = getattr(self, "_all_locations_alerts_data", [])
             if 0 <= alert_index < len(data):
                 _loc_name, alert = data[alert_index]
+                from .dialogs import show_alert_dialog
+
                 show_alert_dialog(self, alert)
             return
 
@@ -1309,6 +1334,8 @@ class MainWindow(SizedFrame):
         alerts = self.app.current_weather_data.alerts
         if 0 <= alert_index < len(alerts.alerts):
             alert = alerts.alerts[alert_index]
+            from .dialogs import show_alert_dialog
+
             show_alert_dialog(self, alert)
 
     def _show_all_locations_summary(self) -> None:
