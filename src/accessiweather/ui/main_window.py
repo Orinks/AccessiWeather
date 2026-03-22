@@ -13,6 +13,9 @@ from typing import TYPE_CHECKING
 import wx
 from wx.lib.sized_controls import SizedFrame, SizedPanel
 
+from ..display.presentation.formatters import get_temperature_precision
+from ..units import resolve_temperature_unit_preference
+from ..utils.temperature_utils import format_temperature
 from . import main_window_notification_events
 
 if TYPE_CHECKING:
@@ -20,6 +23,9 @@ if TYPE_CHECKING:
     from ..models.location import Location
 
 logger = logging.getLogger(__name__)
+
+# Sentinel string used for the "All Locations" summary entry in the dropdown.
+ALL_LOCATIONS_SENTINEL = "All Locations"
 
 
 class MainWindow(SizedFrame):
@@ -51,6 +57,10 @@ class MainWindow(SizedFrame):
         # Persistent map of alert_id -> lifecycle label ("New", "Updated", "Escalated", "Extended").
         # Updated on each successful weather fetch; cleared when the location changes.
         self._alert_lifecycle_labels: dict[str, str] = {}
+        # True when "All Locations" is the active view (no real location selected).
+        self._all_locations_active: bool = False
+        # Aggregated (location_name, alert) pairs shown in All Locations mode.
+        self._all_locations_alerts_data: list[tuple[str, object]] = []
 
         # Create the UI
         self._create_widgets()
@@ -99,7 +109,7 @@ class MainWindow(SizedFrame):
         self.current_conditions.SetSizerProps(expand=True, proportion=1)
 
         # Forecast section
-        wx.StaticText(panel, label="Daily Forecast:")
+        self._daily_forecast_label = wx.StaticText(panel, label="Daily Forecast:")
         self.daily_forecast_display = wx.TextCtrl(
             panel,
             style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
@@ -108,7 +118,7 @@ class MainWindow(SizedFrame):
         self.daily_forecast_display.SetSizerProps(expand=True, proportion=1)
         self.forecast_display = self.daily_forecast_display
 
-        wx.StaticText(panel, label="Hourly Forecast:")
+        self._hourly_forecast_label = wx.StaticText(panel, label="Hourly Forecast:")
         self.hourly_forecast_display = wx.TextCtrl(
             panel,
             style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
@@ -192,18 +202,29 @@ class MainWindow(SizedFrame):
             logger.debug(f"Could not set initial focus: {e}")
 
     def _populate_locations(self) -> None:
-        """Populate the location dropdown with saved locations."""
+        """
+        Populate the location dropdown with saved locations.
+
+        "All Locations" is always the first entry.  Nationwide is not shown
+        while the All Locations view is active (it is excluded from the
+        per-location summary and does not make sense as a summary entry).
+        """
         try:
             locations = self.app.config_manager.get_all_locations()
+            # Exclude Nationwide from the per-location summary list but keep it
+            # in the dropdown as its own selectable entry.
             location_names = [loc.name for loc in locations]
+            all_names = [ALL_LOCATIONS_SENTINEL] + location_names
             self.location_dropdown.Clear()
-            self.location_dropdown.Append(location_names)
+            self.location_dropdown.Append(all_names)
 
-            # Select current location
+            # Select current location if set; otherwise land on "All Locations".
             current = self.app.config_manager.get_current_location()
-            if current and current.name in location_names:
-                idx = location_names.index(current.name)
+            if current and current.name in all_names:
+                idx = all_names.index(current.name)
                 self.location_dropdown.SetSelection(idx)
+            else:
+                self.location_dropdown.SetSelection(0)
         except Exception as e:
             logger.error(f"Failed to populate locations: {e}")
 
@@ -376,6 +397,24 @@ class MainWindow(SizedFrame):
         logger.info(f"Location changed to: {selected}")
         # Clear lifecycle labels when switching locations so stale labels never bleed across
         self._alert_lifecycle_labels = {}
+
+        # --- All Locations special case ---
+        if selected == ALL_LOCATIONS_SENTINEL:
+            self._all_locations_active = True
+            # Increment generation to invalidate any in-flight fetches for the previous location
+            self._fetch_generation += 1
+            # Use CallAfter so the summary renders after any already-queued wx.CallAfter
+            # callbacks (e.g. a just-completed fetch posting _on_weather_data_received) are
+            # drained first, preventing stale data from overwriting the summary.
+            wx.CallAfter(self._show_all_locations_summary)
+            self.app.run_async(self._fetch_all_locations_data())
+            return
+
+        # Switching away from All Locations view → clear the flag and stored data.
+        self._all_locations_active = False
+        self._all_locations_alerts_data = []
+        self._set_forecast_sections_visible(True)
+
         self._set_current_location(selected)
 
         # Show cached data instantly if available
@@ -425,9 +464,9 @@ class MainWindow(SizedFrame):
     def on_remove_location(self) -> None:
         """Handle remove location button click."""
         selected = self.location_dropdown.GetStringSelection()
-        if not selected:
+        if not selected or selected == ALL_LOCATIONS_SENTINEL:
             wx.MessageBox(
-                "Please select a location to remove.",
+                "Please select a specific location to remove.",
                 "No Location Selected",
                 wx.OK | wx.ICON_WARNING,
             )
@@ -929,7 +968,19 @@ class MainWindow(SizedFrame):
             logger.error(f"Failed to set current location: {e}")
 
     def refresh_weather_async(self, force_refresh: bool = False) -> None:
-        """Refresh weather data asynchronously."""
+        """
+        Refresh weather data asynchronously.
+
+        When the All Locations view is active the summary is rebuilt from
+        whatever is currently in the cache — no new network requests are made.
+        """
+        # All Locations view: fetch fresh data for all locations sequentially then re-render.
+        if getattr(self, "_all_locations_active", False):
+            self.set_status("Refreshing all locations...")
+            self.refresh_button.Disable()
+            self.app.run_async(self._fetch_all_locations_data())
+            return
+
         # Increment generation to invalidate any in-flight fetches
         self._fetch_generation += 1
 
@@ -1063,6 +1114,28 @@ class MainWindow(SizedFrame):
             self.app.is_updating = False
             self.refresh_button.Enable()
 
+    async def _fetch_all_locations_data(self) -> None:
+        """Fetch fresh weather data for all saved locations sequentially, then re-render summary."""
+        try:
+            all_locations = [
+                loc
+                for loc in self.app.config_manager.get_all_locations()
+                if loc.name != "Nationwide"
+            ]
+            if all_locations and self.app.weather_client:
+                await self.app.weather_client.pre_warm_batch(all_locations)
+        except Exception as e:
+            logger.error(f"Failed to refresh all locations: {e}")
+        finally:
+            wx.CallAfter(self._on_all_locations_refresh_complete)
+
+    def _on_all_locations_refresh_complete(self) -> None:
+        """Handle completion of all-locations background refresh on the main thread."""
+        if getattr(self, "_all_locations_active", False):
+            self._show_all_locations_summary()
+        self.refresh_button.Enable()
+        self.app.is_updating = False
+
     async def _pre_warm_other_locations(self, current_location: Location) -> None:
         """Pre-warm cache for non-current locations so switching is instant."""
         try:
@@ -1084,6 +1157,10 @@ class MainWindow(SizedFrame):
 
     def _on_weather_data_received(self, weather_data) -> None:
         """Handle received weather data (called on main thread)."""
+        # Guard: if we switched to All Locations view, ignore stale single-location data.
+        if getattr(self, "_all_locations_active", False):
+            logger.debug("Ignoring stale weather data received while All Locations view is active")
+            return
         try:
             self.app.current_weather_data = weather_data
 
@@ -1173,6 +1250,21 @@ class MainWindow(SizedFrame):
         self.daily_forecast_display.SetValue(daily_text)
         self.hourly_forecast_display.SetValue(hourly_text)
 
+    def _set_forecast_sections_visible(self, visible: bool) -> None:
+        """Show or hide the daily/hourly forecast labels and controls."""
+        for attr in (
+            "_daily_forecast_label",
+            "daily_forecast_display",
+            "_hourly_forecast_label",
+            "hourly_forecast_display",
+        ):
+            widget = getattr(self, attr, None)
+            if widget is not None:
+                widget.Show(visible)
+        sizer = self.GetSizer() if callable(getattr(self, "GetSizer", None)) else None
+        if sizer:
+            sizer.Layout()
+
     def _on_weather_error(self, error_message: str) -> None:
         """Handle weather fetch error (called on main thread)."""
         self.set_status(f"Error: {error_message}")
@@ -1239,6 +1331,16 @@ class MainWindow(SizedFrame):
 
     def _show_alert_details(self, alert_index: int) -> None:
         """Show details for the selected alert."""
+        # In All Locations mode alerts come from the aggregated list, not current_weather_data.
+        if getattr(self, "_all_locations_active", False):
+            data = getattr(self, "_all_locations_alerts_data", [])
+            if 0 <= alert_index < len(data):
+                _loc_name, alert = data[alert_index]
+                from .dialogs import show_alert_dialog
+
+                show_alert_dialog(self, alert)
+            return
+
         if not self.app.current_weather_data or not self.app.current_weather_data.alerts:
             return
 
@@ -1248,6 +1350,202 @@ class MainWindow(SizedFrame):
             from .dialogs import show_alert_dialog
 
             show_alert_dialog(self, alert)
+
+    def _show_all_locations_summary(self) -> None:
+        """
+        Build and display a cached-data summary for every saved location.
+
+        No network requests are made.  The daily and hourly forecast sections
+        are replaced with a short explanatory message because per-location
+        forecasts are not meaningful in this aggregate view.  Alerts from all
+        locations are collected and shown in the alerts list with the location
+        name as a prefix so screen-reader users can identify the source.
+
+        Nationwide is excluded from the summary because it is a special
+        aggregate view of its own, not an individual saved location.
+        """
+        try:
+            all_locs = [
+                loc
+                for loc in self.app.config_manager.get_all_locations()
+                if loc.name != "Nationwide"
+            ]
+        except Exception as e:
+            logger.error(f"Failed to get locations for All Locations summary: {e}")
+            all_locs = []
+
+        if not all_locs:
+            self.current_conditions.SetValue(
+                "No locations configured.\nUse the Add button or Ctrl+L to add a location."
+            )
+            self._set_forecast_sections("", "")
+            self.alerts_list.Clear()
+            self.view_alert_button.Disable()
+            self.set_status("All Locations — no locations configured")
+            return
+
+        lines: list[str] = ["All Locations Summary", ""]
+        location_alerts: list[tuple[str, object]] = []
+
+        weather_client = (
+            self.app.weather_client
+            if hasattr(self.app, "weather_client") and self.app.weather_client
+            else None
+        )
+
+        for loc in all_locs:
+            lines.append(f"--- {loc.name} ---")
+            cached = weather_client.get_cached_weather(loc) if weather_client else None
+
+            if cached and cached.has_any_data() and cached.current:
+                cc = cached.current
+                settings = self.app.config_manager.get_settings()
+                temp_unit_pref = settings.temperature_unit
+                temp_unit = resolve_temperature_unit_preference(temp_unit_pref, loc)
+                round_values = getattr(settings, "round_values", False) if settings else False
+                precision = 0 if round_values else get_temperature_precision(temp_unit)
+                temp_str = format_temperature(
+                    cc.temperature_f,
+                    unit=temp_unit,
+                    temperature_c=cc.temperature_c,
+                    precision=precision,
+                )
+                cond_str = cc.condition or "Unknown"
+                lines.append(f"  Temperature: {temp_str}")
+                lines.append(f"  Condition: {cond_str}")
+
+                # Collect active alerts for this location.
+                active_alerts: list[object] = []
+                if cached.alerts is not None:
+                    if hasattr(cached.alerts, "get_active_alerts"):
+                        active_alerts = cached.alerts.get_active_alerts() or []
+                    elif hasattr(cached.alerts, "alerts"):
+                        active_alerts = cached.alerts.alerts or []
+
+                if active_alerts:
+                    lines.append(f"  Active Alerts: {len(active_alerts)}")
+                    for alert in active_alerts:
+                        event = getattr(alert, "event", "Unknown")
+                        severity = getattr(alert, "severity", "Unknown")
+                        lines.append(f"    • {event} ({severity})")
+                        location_alerts.append((loc.name, alert))
+                else:
+                    lines.append("  Active Alerts: None")
+
+                if getattr(cached, "stale", False):
+                    lines.append("  (Cached — data may be outdated)")
+            else:
+                lines.append("  (No cached data — select this location to load current conditions)")
+
+            lines.append("")
+
+        summary_text = "\n".join(lines)
+        self.current_conditions.SetValue(summary_text)
+
+        self._set_forecast_sections_visible(False)
+
+        self._all_locations_alerts_data = location_alerts
+        self._update_all_locations_alerts(location_alerts)
+
+        # Update tray icon with data from the highest-priority location.
+        tray_data, tray_loc_name = self._get_all_locations_tray_data()
+        self.app.update_tray_tooltip(tray_data, tray_loc_name)
+
+        self.stale_warning_label.SetLabel("")
+        self.set_status(f"All Locations summary — {len(all_locs)} location(s)")
+
+        # Ensure the refresh button stays enabled in this view.
+        self.app.is_updating = False
+        self.refresh_button.Enable()
+
+    def _update_all_locations_alerts(self, location_alerts: list[tuple[str, object]]) -> None:
+        """
+        Populate the alerts list from aggregated all-locations alert data.
+
+        Each item is prefixed with the location name so screen-reader users
+        know which location triggered the alert without having to open details.
+
+        Args:
+            location_alerts: List of (location_name, WeatherAlert) pairs.
+
+        """
+        self.alerts_list.Clear()
+
+        if location_alerts:
+            items = []
+            for loc_name, alert in location_alerts:
+                event = getattr(alert, "event", "Unknown")
+                severity = getattr(alert, "severity", "Unknown")
+                items.append(f"{loc_name}: {event} ({severity})")
+            self.alerts_list.Append(items)
+            self.view_alert_button.Enable()
+        else:
+            self.view_alert_button.Disable()
+
+    def _get_all_locations_tray_data(self):
+        """
+        Return (weather_data, location_name) for the highest-priority location for tray display.
+
+        Priority order:
+        1. Location with the most severe active alert (Extreme > Severe > Moderate > Minor > Unknown)
+        2. First location that has any cached data (fallback when no alerts exist)
+
+        Returns None, None when no cached data is available at all.
+        """
+        SEVERITY_ORDER = ["Extreme", "Severe", "Moderate", "Minor", "Unknown"]
+
+        weather_client = (
+            self.app.weather_client
+            if hasattr(self.app, "weather_client") and self.app.weather_client
+            else None
+        )
+
+        try:
+            all_locs = [
+                loc
+                for loc in self.app.config_manager.get_all_locations()
+                if loc.name != "Nationwide"
+            ]
+        except Exception:
+            return None, None
+
+        best_data = None
+        best_name = None
+        best_severity_idx = len(SEVERITY_ORDER)  # sentinel: no alert yet
+
+        first_with_data = None
+        first_with_data_name = None
+
+        for loc in all_locs:
+            cached = weather_client.get_cached_weather(loc) if weather_client else None
+            if not cached or not cached.has_any_data():
+                continue
+
+            if first_with_data is None:
+                first_with_data = cached
+                first_with_data_name = loc.name
+
+            # Find the most severe alert for this location.
+            active_alerts: list = []
+            if cached.alerts is not None:
+                if hasattr(cached.alerts, "get_active_alerts"):
+                    active_alerts = cached.alerts.get_active_alerts() or []
+                elif hasattr(cached.alerts, "alerts"):
+                    active_alerts = cached.alerts.alerts or []
+
+            for alert in active_alerts:
+                severity = getattr(alert, "severity", None) or "Unknown"
+                if severity not in SEVERITY_ORDER:
+                    severity = "Unknown"
+                idx = SEVERITY_ORDER.index(severity)
+                if idx < best_severity_idx:
+                    best_severity_idx = idx
+                    best_data = cached
+                    best_name = loc.name
+
+        if best_data is not None:
+            return best_data, best_name
+        return first_with_data, first_with_data_name
 
     def set_status(self, message: str) -> None:
         """Set the status label text."""
