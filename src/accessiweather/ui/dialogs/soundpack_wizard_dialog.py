@@ -73,7 +73,6 @@ class SoundPackWizardDialog(wx.Dialog):
         self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
         self._render_step()
         self.Centre()
-        self.Bind(wx.EVT_CHAR_HOOK, self._on_key)
 
     def _create_ui(self) -> None:
         """Create the wizard UI."""

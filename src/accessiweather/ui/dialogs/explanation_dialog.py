@@ -268,6 +268,7 @@ class LoadingDialog(wx.Dialog):
         self.location = location
         self.is_cancelled = False
         self._create_ui()
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
 
     def _create_ui(self):
         """Create the loading dialog UI."""
@@ -304,6 +305,13 @@ class LoadingDialog(wx.Dialog):
     def _on_timer(self, event):
         """Update the gauge pulse."""
         self.gauge.Pulse()
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle key events — Escape cancels the loading dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self._on_cancel(event)
+        else:
+            event.Skip()
 
     def _on_cancel(self, event):
         """Handle cancel button press."""

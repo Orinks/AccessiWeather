@@ -66,12 +66,12 @@ class SettingsDialogSimple(wx.Dialog):
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
         button_sizer.AddStretchSpacer()
 
-        cancel_btn = wx.Button(self, wx.ID_CANCEL, "Cancel")
         ok_btn = wx.Button(self, wx.ID_OK, "OK")
         ok_btn.Bind(wx.EVT_BUTTON, self._on_ok)
+        cancel_btn = wx.Button(self, wx.ID_CANCEL, "Cancel")
 
-        button_sizer.Add(cancel_btn, 0, wx.RIGHT, 10)
-        button_sizer.Add(ok_btn, 0)
+        button_sizer.Add(ok_btn, 0, wx.RIGHT, 10)
+        button_sizer.Add(cancel_btn, 0)
         main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         self.SetSizer(main_sizer)
@@ -928,10 +928,10 @@ class SettingsDialogSimple(wx.Dialog):
 
         button_row = wx.BoxSizer(wx.HORIZONTAL)
         button_row.AddStretchSpacer()
-        cancel_btn = wx.Button(dialog, wx.ID_CANCEL, "Cancel")
         ok_btn = wx.Button(dialog, wx.ID_OK, "OK")
-        button_row.Add(cancel_btn, 0, wx.RIGHT, 10)
-        button_row.Add(ok_btn, 0)
+        cancel_btn = wx.Button(dialog, wx.ID_CANCEL, "Cancel")
+        button_row.Add(ok_btn, 0, wx.RIGHT, 10)
+        button_row.Add(cancel_btn, 0)
         main_sizer.Add(button_row, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         dialog.SetSizer(main_sizer)
@@ -1782,7 +1782,7 @@ class SettingsDialogSimple(wx.Dialog):
             "verbosity_level": "Verbosity level",
             "severe_weather_override": "Automatically prioritize severe weather info",
             "data_source": "Weather Data Source",
-            "vc_key": "API Key",
+            "vc_key": "Visual Crossing API Key",
             "pw_key": "Pirate Weather API Key",
             "us_priority": "US Locations Priority",
             "intl_priority": "International Locations Priority",

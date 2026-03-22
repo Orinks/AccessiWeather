@@ -138,6 +138,7 @@ class ModelBrowserDialog(wx.Dialog):
         self.model_list = wx.ListBox(self, style=wx.LB_SINGLE, size=(-1, 200))
         self.model_list.Bind(wx.EVT_LISTBOX, self._on_model_selected)
         self.model_list.Bind(wx.EVT_LISTBOX_DCLICK, self._on_model_double_click)
+        self.model_list.Bind(wx.EVT_CHAR_HOOK, self._on_list_key)
         main_sizer.Add(self.model_list, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
         # Description display
@@ -172,6 +173,9 @@ class ModelBrowserDialog(wx.Dialog):
         main_sizer.Add(btn_sizer, 0, wx.EXPAND | wx.ALL, 10)
 
         self.SetSizer(main_sizer)
+
+        if hasattr(self, "search_box"):
+            self.search_box.SetFocus()
 
     def _setup_accessibility(self):
         """Set up accessibility labels for screen readers."""
@@ -215,6 +219,13 @@ class ModelBrowserDialog(wx.Dialog):
             model = self._filtered_models[index]
             self._selected_model_id = model.id
             self.EndModal(wx.ID_OK)
+
+    def _on_list_key(self, event: wx.KeyEvent) -> None:
+        """Handle key events on the model list — Enter selects the highlighted item."""
+        if event.GetKeyCode() in (wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER):
+            self._on_select(event)
+        else:
+            event.Skip()
 
     def _on_refresh(self, event):
         """Refresh the model list."""
