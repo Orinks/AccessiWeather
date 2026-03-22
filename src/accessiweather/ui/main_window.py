@@ -399,6 +399,7 @@ class MainWindow(SizedFrame):
         if selected == ALL_LOCATIONS_SENTINEL:
             self._all_locations_active = True
             self._show_all_locations_summary()
+            self.app.run_async(self._fetch_all_locations_data())
             return
 
         # Switching away from All Locations view → clear the flag and stored data.

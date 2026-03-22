@@ -469,6 +469,8 @@ class TestOnLocationChanged:
         win._show_all_locations_summary.assert_called_once()
         # Should NOT call _set_current_location for the sentinel
         win.app.config_manager.set_current_location.assert_not_called()
+        # Should kick off a background fetch
+        win.app.run_async.assert_called_once()
 
     def test_normal_location_clears_all_locations_flag(self):
         from accessiweather.ui.main_window import MainWindow
