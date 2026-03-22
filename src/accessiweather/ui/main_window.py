@@ -1435,6 +1435,10 @@ class MainWindow(SizedFrame):
         self._all_locations_alerts_data = location_alerts
         self._update_all_locations_alerts(location_alerts)
 
+        # Update tray icon with data from the highest-priority location.
+        tray_data, tray_loc_name = self._get_all_locations_tray_data()
+        self.app.update_tray_tooltip(tray_data, tray_loc_name)
+
         self.stale_warning_label.SetLabel("")
         self.set_status(f"All Locations summary — {len(all_locs)} location(s)")
 
@@ -1465,6 +1469,71 @@ class MainWindow(SizedFrame):
             self.view_alert_button.Enable()
         else:
             self.view_alert_button.Disable()
+
+    def _get_all_locations_tray_data(self):
+        """
+        Return (weather_data, location_name) for the highest-priority location for tray display.
+
+        Priority order:
+        1. Location with the most severe active alert (Extreme > Severe > Moderate > Minor > Unknown)
+        2. First location that has any cached data (fallback when no alerts exist)
+
+        Returns None, None when no cached data is available at all.
+        """
+        SEVERITY_ORDER = ["Extreme", "Severe", "Moderate", "Minor", "Unknown"]
+
+        weather_client = (
+            self.app.weather_client
+            if hasattr(self.app, "weather_client") and self.app.weather_client
+            else None
+        )
+
+        try:
+            all_locs = [
+                loc
+                for loc in self.app.config_manager.get_all_locations()
+                if loc.name != "Nationwide"
+            ]
+        except Exception:
+            return None, None
+
+        best_data = None
+        best_name = None
+        best_severity_idx = len(SEVERITY_ORDER)  # sentinel: no alert yet
+
+        first_with_data = None
+        first_with_data_name = None
+
+        for loc in all_locs:
+            cached = weather_client.get_cached_weather(loc) if weather_client else None
+            if not cached or not cached.has_any_data():
+                continue
+
+            if first_with_data is None:
+                first_with_data = cached
+                first_with_data_name = loc.name
+
+            # Find the most severe alert for this location.
+            active_alerts: list = []
+            if cached.alerts is not None:
+                if hasattr(cached.alerts, "get_active_alerts"):
+                    active_alerts = cached.alerts.get_active_alerts() or []
+                elif hasattr(cached.alerts, "alerts"):
+                    active_alerts = cached.alerts.alerts or []
+
+            for alert in active_alerts:
+                severity = getattr(alert, "severity", None) or "Unknown"
+                if severity not in SEVERITY_ORDER:
+                    severity = "Unknown"
+                idx = SEVERITY_ORDER.index(severity)
+                if idx < best_severity_idx:
+                    best_severity_idx = idx
+                    best_data = cached
+                    best_name = loc.name
+
+        if best_data is not None:
+            return best_data, best_name
+        return first_with_data, first_with_data_name
 
     def set_status(self, message: str) -> None:
         """Set the status label text."""

@@ -67,6 +67,9 @@ def _make_window():
     win._update_all_locations_alerts = MainWindow._update_all_locations_alerts.__get__(
         win, MainWindow
     )
+    win._get_all_locations_tray_data = MainWindow._get_all_locations_tray_data.__get__(
+        win, MainWindow
+    )
     win._show_alert_details = MainWindow._show_alert_details.__get__(win, MainWindow)
     win.refresh_weather_async = MainWindow.refresh_weather_async.__get__(win, MainWindow)
 
@@ -543,3 +546,142 @@ class TestAllLocationsRefresh:
 
         win._show_all_locations_summary.assert_not_called()
         win.refresh_button.Enable.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# _get_all_locations_tray_data — tray priority logic
+# ---------------------------------------------------------------------------
+
+
+class TestGetAllLocationsTrayData:
+    def test_returns_none_when_no_cached_data(self):
+        win = _make_window()
+        win.app.config_manager.get_all_locations.return_value = [_make_location("Boston")]
+        win.app.weather_client.get_cached_weather.return_value = None
+
+        data, name = win._get_all_locations_tray_data()
+
+        assert data is None
+        assert name is None
+
+    def test_returns_first_location_with_data_when_no_alerts(self):
+        win = _make_window()
+        locs = [_make_location("Boston"), _make_location("Austin")]
+        win.app.config_manager.get_all_locations.return_value = locs
+
+        wd_boston = _make_weather_data(locs[0], temp_f=55.0, alerts=[])
+        wd_austin = _make_weather_data(locs[1], temp_f=80.0, alerts=[])
+
+        def get_cached(loc):
+            return wd_boston if loc.name == "Boston" else wd_austin
+
+        win.app.weather_client.get_cached_weather.side_effect = get_cached
+
+        data, name = win._get_all_locations_tray_data()
+
+        assert data is wd_boston
+        assert name == "Boston"
+
+    def test_returns_location_with_most_severe_alert(self):
+        win = _make_window()
+        locs = [_make_location("Boston"), _make_location("Austin")]
+        win.app.config_manager.get_all_locations.return_value = locs
+
+        moderate_alert = _make_alert("Flood Warning", "Moderate")
+        severe_alert = _make_alert("Tornado Watch", "Severe")
+
+        wd_boston = _make_weather_data(locs[0], alerts=[moderate_alert])
+        wd_austin = _make_weather_data(locs[1], alerts=[severe_alert])
+
+        def get_cached(loc):
+            return wd_boston if loc.name == "Boston" else wd_austin
+
+        win.app.weather_client.get_cached_weather.side_effect = get_cached
+
+        data, name = win._get_all_locations_tray_data()
+
+        assert data is wd_austin
+        assert name == "Austin"
+
+    def test_extreme_beats_severe(self):
+        win = _make_window()
+        locs = [_make_location("Boston"), _make_location("Austin")]
+        win.app.config_manager.get_all_locations.return_value = locs
+
+        severe_alert = _make_alert("Tornado Warning", "Severe")
+        extreme_alert = _make_alert("Extreme Wind Warning", "Extreme")
+
+        wd_boston = _make_weather_data(locs[0], alerts=[severe_alert])
+        wd_austin = _make_weather_data(locs[1], alerts=[extreme_alert])
+
+        def get_cached(loc):
+            return wd_boston if loc.name == "Boston" else wd_austin
+
+        win.app.weather_client.get_cached_weather.side_effect = get_cached
+
+        data, name = win._get_all_locations_tray_data()
+
+        assert data is wd_austin
+        assert name == "Austin"
+
+    def test_unknown_severity_treated_as_lowest(self):
+        win = _make_window()
+        locs = [_make_location("Boston"), _make_location("Austin")]
+        win.app.config_manager.get_all_locations.return_value = locs
+
+        unknown_alert = _make_alert("Special Statement", "Unknown")
+        minor_alert = _make_alert("Dense Fog Advisory", "Minor")
+
+        wd_boston = _make_weather_data(locs[0], alerts=[unknown_alert])
+        wd_austin = _make_weather_data(locs[1], alerts=[minor_alert])
+
+        def get_cached(loc):
+            return wd_boston if loc.name == "Boston" else wd_austin
+
+        win.app.weather_client.get_cached_weather.side_effect = get_cached
+
+        data, name = win._get_all_locations_tray_data()
+
+        assert data is wd_austin
+        assert name == "Austin"
+
+    def test_nationwide_excluded(self):
+        win = _make_window()
+        nationwide = _make_location("Nationwide")
+        boston = _make_location("Boston")
+        win.app.config_manager.get_all_locations.return_value = [nationwide, boston]
+
+        wd_nationwide = _make_weather_data(nationwide, temp_f=70.0, alerts=[])
+        wd_boston = _make_weather_data(boston, temp_f=55.0, alerts=[])
+
+        def get_cached(loc):
+            return wd_nationwide if loc.name == "Nationwide" else wd_boston
+
+        win.app.weather_client.get_cached_weather.side_effect = get_cached
+
+        data, name = win._get_all_locations_tray_data()
+
+        assert name == "Boston"
+        assert data is wd_boston
+
+    def test_tray_update_called_from_show_all_locations_summary(self):
+        win = _make_window()
+        locs = [_make_location("Boston")]
+        win.app.config_manager.get_all_locations.return_value = locs
+
+        severe_alert = _make_alert("Tornado Warning", "Severe")
+        wd = _make_weather_data(locs[0], alerts=[severe_alert])
+        win.app.weather_client.get_cached_weather.return_value = wd
+
+        win._show_all_locations_summary()
+
+        win.app.update_tray_tooltip.assert_called_once_with(wd, "Boston")
+
+    def test_tray_update_called_with_none_when_no_data(self):
+        win = _make_window()
+        win.app.config_manager.get_all_locations.return_value = [_make_location("Boston")]
+        win.app.weather_client.get_cached_weather.return_value = None
+
+        win._show_all_locations_summary()
+
+        win.app.update_tray_tooltip.assert_called_once_with(None, None)
