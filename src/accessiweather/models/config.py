@@ -194,7 +194,7 @@ class AppSettings:
             "uv_index",
         ]
     )
-    severe_weather_override: bool = True
+    severe_weather_override: bool = False
     # Startup UX guidance flags
     onboarding_wizard_shown: bool = False
     portable_missing_api_keys_hint_shown: bool = False
@@ -573,7 +573,7 @@ class AppSettings:
                     "uv_index",
                 ],
             ),
-            severe_weather_override=cls._as_bool(data.get("severe_weather_override"), True),
+            severe_weather_override=cls._as_bool(data.get("severe_weather_override"), False),
             onboarding_wizard_shown=cls._as_bool(data.get("onboarding_wizard_shown"), False),
             portable_missing_api_keys_hint_shown=cls._as_bool(
                 data.get("portable_missing_api_keys_hint_shown"), False
