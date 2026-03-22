@@ -14,6 +14,7 @@ import wx
 from wx.lib.sized_controls import SizedFrame, SizedPanel
 
 from . import main_window_notification_events
+from .dialogs import show_alert_dialog
 
 if TYPE_CHECKING:
     from ..app import AccessiWeatherApp
@@ -106,7 +107,7 @@ class MainWindow(SizedFrame):
         self.current_conditions.SetSizerProps(expand=True, proportion=1)
 
         # Forecast section
-        wx.StaticText(panel, label="Daily Forecast:")
+        self._daily_forecast_label = wx.StaticText(panel, label="Daily Forecast:")
         self.daily_forecast_display = wx.TextCtrl(
             panel,
             style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
@@ -115,7 +116,7 @@ class MainWindow(SizedFrame):
         self.daily_forecast_display.SetSizerProps(expand=True, proportion=1)
         self.forecast_display = self.daily_forecast_display
 
-        wx.StaticText(panel, label="Hourly Forecast:")
+        self._hourly_forecast_label = wx.StaticText(panel, label="Hourly Forecast:")
         self.hourly_forecast_display = wx.TextCtrl(
             panel,
             style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
@@ -404,6 +405,7 @@ class MainWindow(SizedFrame):
         # Switching away from All Locations view → clear the flag and stored data.
         self._all_locations_active = False
         self._all_locations_alerts_data = []
+        self._set_forecast_sections_visible(True)
 
         self._set_current_location(selected)
 
@@ -1212,6 +1214,17 @@ class MainWindow(SizedFrame):
         self.daily_forecast_display.SetValue(daily_text)
         self.hourly_forecast_display.SetValue(hourly_text)
 
+    def _set_forecast_sections_visible(self, visible: bool) -> None:
+        """Show or hide the daily/hourly forecast labels and controls."""
+        for widget in (
+            self._daily_forecast_label,
+            self.daily_forecast_display,
+            self._hourly_forecast_label,
+            self.hourly_forecast_display,
+        ):
+            widget.Show(visible)
+        self.GetSizer().Layout() if self.GetSizer() else None
+
     def _on_weather_error(self, error_message: str) -> None:
         """Handle weather fetch error (called on main thread)."""
         self.set_status(f"Error: {error_message}")
@@ -1283,8 +1296,6 @@ class MainWindow(SizedFrame):
             data = getattr(self, "_all_locations_alerts_data", [])
             if 0 <= alert_index < len(data):
                 _loc_name, alert = data[alert_index]
-                from .dialogs import show_alert_dialog
-
                 show_alert_dialog(self, alert)
             return
 
@@ -1294,8 +1305,6 @@ class MainWindow(SizedFrame):
         alerts = self.app.current_weather_data.alerts
         if 0 <= alert_index < len(alerts.alerts):
             alert = alerts.alerts[alert_index]
-            from .dialogs import show_alert_dialog
-
             show_alert_dialog(self, alert)
 
     def _show_all_locations_summary(self) -> None:
@@ -1380,11 +1389,7 @@ class MainWindow(SizedFrame):
         summary_text = "\n".join(lines)
         self.current_conditions.SetValue(summary_text)
 
-        not_available_msg = (
-            "Daily and hourly forecasts are not shown in All Locations view.\n"
-            "Select a specific location from the dropdown to see its forecast."
-        )
-        self._set_forecast_sections(not_available_msg, not_available_msg)
+        self._set_forecast_sections_visible(False)
 
         self._all_locations_alerts_data = location_alerts
         self._update_all_locations_alerts(location_alerts)

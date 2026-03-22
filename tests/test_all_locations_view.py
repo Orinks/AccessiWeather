@@ -27,13 +27,17 @@ def _make_window():
     # UI widgets
     win.location_dropdown = MagicMock()
     win.current_conditions = MagicMock()
+    win._daily_forecast_label = MagicMock()
     win.daily_forecast_display = MagicMock()
+    win._hourly_forecast_label = MagicMock()
     win.hourly_forecast_display = MagicMock()
     win.alerts_list = MagicMock()
     win.view_alert_button = MagicMock()
     win.refresh_button = MagicMock()
     win.status_label = MagicMock()
     win.stale_warning_label = MagicMock()
+
+    win.GetSizer = MagicMock(return_value=None)
 
     # State
     win._all_locations_active = False
@@ -44,6 +48,9 @@ def _make_window():
     # Delegate the real implementations we want to test.
     win.set_status = MainWindow.set_status.__get__(win, MainWindow)
     win._set_forecast_sections = MainWindow._set_forecast_sections.__get__(win, MainWindow)
+    win._set_forecast_sections_visible = MainWindow._set_forecast_sections_visible.__get__(
+        win, MainWindow
+    )
     win._show_all_locations_summary = MainWindow._show_all_locations_summary.__get__(
         win, MainWindow
     )
@@ -215,7 +222,7 @@ class TestShowAllLocationsSummary:
         text = win.current_conditions.SetValue.call_args[0][0]
         assert "No cached data" in text
 
-    def test_forecast_sections_show_not_available_message(self):
+    def test_forecast_sections_hidden_in_all_locations_view(self):
         win = _make_window()
         locs = [_make_location("Boston")]
         win.app.config_manager.get_all_locations.return_value = locs
@@ -223,10 +230,10 @@ class TestShowAllLocationsSummary:
 
         win._show_all_locations_summary()
 
-        daily_text = win.daily_forecast_display.SetValue.call_args[0][0]
-        hourly_text = win.hourly_forecast_display.SetValue.call_args[0][0]
-        assert "not shown in All Locations" in daily_text
-        assert "not shown in All Locations" in hourly_text
+        win._daily_forecast_label.Show.assert_called_with(False)
+        win.daily_forecast_display.Show.assert_called_with(False)
+        win._hourly_forecast_label.Show.assert_called_with(False)
+        win.hourly_forecast_display.Show.assert_called_with(False)
 
     def test_no_locations_shows_informative_message(self):
         win = _make_window()
@@ -343,8 +350,6 @@ class TestShowAlertDetailsAllLocations:
 
     def test_show_alert_details_uses_all_locations_data_when_active(self):
         """In All Locations mode the method opens the alert from the aggregated list."""
-        import accessiweather.ui.dialogs as dialogs_module
-
         win = _make_window()
         win._all_locations_active = True
         alert = _make_alert("Tornado Watch", "Severe")
@@ -352,7 +357,7 @@ class TestShowAlertDetailsAllLocations:
 
         from accessiweather.ui.main_window import MainWindow
 
-        with patch.object(dialogs_module, "show_alert_dialog") as mock_dialog:
+        with patch("accessiweather.ui.main_window.show_alert_dialog") as mock_dialog:
             MainWindow._show_alert_details(win, 0)
             mock_dialog.assert_called_once_with(win, alert)
 
