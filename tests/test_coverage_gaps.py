@@ -246,18 +246,23 @@ class TestMainWindowLocationSwitchAlertCheck:
     def _make_window(self):
         from accessiweather.ui.main_window import MainWindow
 
-        with patch.object(MainWindow, "__init__", lambda self, *a, **kw: None):
-            win = MainWindow.__new__(MainWindow)
+        class _Stub:
+            pass
 
+        win = _Stub()
         win.location_dropdown = MagicMock()
         win.app = MagicMock()
         win.app.weather_client = MagicMock()
         win.app.config_manager = MagicMock()
         win._alert_lifecycle_labels = {}
+        win._all_locations_active = False
+        win._all_locations_alerts_data = []
         win._set_current_location = MagicMock()
+        win._set_forecast_sections_visible = MagicMock()
         win._on_weather_data_received = MagicMock()
         win.refresh_notification_events_async = MagicMock()
         win.Bind = MagicMock()
+        win._on_location_changed = MainWindow._on_location_changed.__get__(win, MainWindow)
         return win
 
     def test_location_change_fires_alert_check(self):
