@@ -15,7 +15,9 @@ from pathlib import Path
 try:
     from datetime import UTC
 except ImportError:
-    UTC = UTC
+    from datetime import timezone
+
+    UTC = timezone.utc
 from typing import Any
 
 from dateutil.parser import isoparse  # type: ignore # requires python-dateutil

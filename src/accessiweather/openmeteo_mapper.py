@@ -13,7 +13,9 @@ from typing import Any
 try:
     from datetime import UTC
 except ImportError:
-    UTC = UTC
+    from datetime import timezone
+
+    UTC = timezone.utc
 
 from .models import HourlyUVIndex
 from .openmeteo_client import OpenMeteoApiClient
