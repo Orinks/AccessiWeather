@@ -39,6 +39,7 @@ class FormatStringParser:
         "low": "Forecast low temperature when available (follows your temperature unit setting)",
         "precip": "Precipitation amount (follows your temperature unit setting)",
         "precip_chance": "Chance of precipitation percentage",
+        "alert": "Most severe active weather alert event name (e.g. 'Tornado Watch'), or empty if none",
     }
 
     def __init__(self):
