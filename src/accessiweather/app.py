@@ -282,6 +282,11 @@ class AccessiWeatherApp(wx.App):
                 if self.config_manager.import_encrypted_api_keys(keys_path, stored):
                     self._portable_keys_imported_this_session = True
                     self._write_keys_file_after_import(config_dir, stored)
+                    self.refresh_runtime_settings()
+                    if self.main_window and hasattr(
+                        self.main_window, "refresh_weather_async"
+                    ):  # pragma: no cover
+                        self.main_window.refresh_weather_async(force_refresh=True)
                     logger.info("Portable API keys auto-imported silently.")
                     return
             except Exception as exc:
@@ -316,6 +321,11 @@ class AccessiWeatherApp(wx.App):
                 # Cache passphrase in keyring so next launch is silent.
                 SecureStorage.set_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY, passphrase)
                 self._write_keys_file_after_import(config_dir, passphrase)
+                self.refresh_runtime_settings()
+                if self.main_window and hasattr(
+                    self.main_window, "refresh_weather_async"
+                ):  # pragma: no cover
+                    self.main_window.refresh_weather_async(force_refresh=True)
                 wx.MessageBox(
                     "API keys imported successfully. They are now active.",
                     "Keys imported",

@@ -517,6 +517,8 @@ class MainWindow(SizedFrame):
             self.app.refresh_runtime_settings()
             # Update menu label in case update channel changed
             self.update_check_updates_menu_label()
+            # Immediately refresh weather so source/key changes take effect
+            self.refresh_weather_async(force_refresh=True)
 
     def on_view_history(self) -> None:
         """View weather history comparison."""
