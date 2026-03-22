@@ -1042,15 +1042,6 @@ class SettingsDialogSimple(wx.Dialog):
             wx.ALL,
             5,
         )
-        sizer.Add(
-            wx.StaticText(
-                panel, label="Required for all models. Get a free key at openrouter.ai/keys"
-            ),
-            0,
-            wx.LEFT | wx.BOTTOM,
-            5,
-        )
-
         self._controls["openrouter_key"] = wx.TextCtrl(panel, style=wx.TE_PASSWORD, size=(300, -1))
         self._controls["openrouter_key"].SetName("OpenRouter API Key")
         self._controls["openrouter_key"].SetHelpText(
