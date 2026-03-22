@@ -1384,7 +1384,7 @@ class MainWindow(SizedFrame):
             self.set_status("All Locations — no locations configured")
             return
 
-        lines: list[str] = ["=== All Locations Summary (cached data) ===", ""]
+        lines: list[str] = ["All Locations Summary", ""]
         location_alerts: list[tuple[str, object]] = []
 
         weather_client = (
