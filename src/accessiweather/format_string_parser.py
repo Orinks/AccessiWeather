@@ -22,24 +22,24 @@ class FormatStringParser:
 
     # Define the supported placeholders and their descriptions
     SUPPORTED_PLACEHOLDERS = {
-        "temp": "Current temperature (follows your temperature unit setting)",
-        "temp_f": "Current temperature in Fahrenheit",
-        "temp_c": "Current temperature in Celsius",
+        "alert": "Most severe active weather alert event name (e.g. 'Tornado Watch'), or empty if none",
         "condition": "Current weather condition (e.g., 'Partly Cloudy')",
-        "humidity": "Current humidity percentage",
-        "wind": "Wind direction with speed text (e.g., 'NW at 5 mph')",
-        "wind_speed": "Wind speed (follows your temperature unit setting)",
-        "wind_dir": "Wind direction (e.g., 'NW')",
-        "pressure": "Barometric pressure (follows your temperature unit setting)",
-        "location": "Current location name",
         "feels_like": "Feels-like temperature (follows your temperature unit setting)",
-        "uv": "UV index",
-        "visibility": "Visibility (follows your temperature unit setting)",
         "high": "Forecast high temperature when available (follows your temperature unit setting)",
+        "humidity": "Current humidity percentage",
+        "location": "Current location name",
         "low": "Forecast low temperature when available (follows your temperature unit setting)",
         "precip": "Precipitation amount (follows your temperature unit setting)",
         "precip_chance": "Chance of precipitation percentage",
-        "alert": "Most severe active weather alert event name (e.g. 'Tornado Watch'), or empty if none",
+        "pressure": "Barometric pressure (follows your temperature unit setting)",
+        "temp": "Current temperature (follows your temperature unit setting)",
+        "temp_c": "Current temperature in Celsius",
+        "temp_f": "Current temperature in Fahrenheit",
+        "uv": "UV index",
+        "visibility": "Visibility (follows your temperature unit setting)",
+        "wind": "Wind direction with speed text (e.g., 'NW at 5 mph')",
+        "wind_dir": "Wind direction (e.g., 'NW')",
+        "wind_speed": "Wind speed (follows your temperature unit setting)",
     }
 
     def __init__(self):
