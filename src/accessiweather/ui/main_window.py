@@ -1300,12 +1300,14 @@ class MainWindow(SizedFrame):
         alert_items = []
         alert_list = []
 
-        # Handle WeatherAlerts object or list
+        # Handle WeatherAlerts object or list.
+        # Prefer get_active_alerts() so expired alerts are never shown in the
+        # listbox (cached data may contain alerts that expired while cached).
         if alerts:
-            if hasattr(alerts, "alerts"):
-                alert_list = alerts.alerts or []
-            elif hasattr(alerts, "get_active_alerts"):
+            if hasattr(alerts, "get_active_alerts"):
                 alert_list = alerts.get_active_alerts() or []
+            elif hasattr(alerts, "alerts"):
+                alert_list = alerts.alerts or []
             elif isinstance(alerts, list):
                 alert_list = alerts
 
@@ -1347,8 +1349,9 @@ class MainWindow(SizedFrame):
             return
 
         alerts = self.app.current_weather_data.alerts
-        if 0 <= alert_index < len(alerts.alerts):
-            alert = alerts.alerts[alert_index]
+        active = alerts.get_active_alerts()
+        if 0 <= alert_index < len(active):
+            alert = active[alert_index]
             from .dialogs import show_alert_dialog
 
             show_alert_dialog(self, alert)
