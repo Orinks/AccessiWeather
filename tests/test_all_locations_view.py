@@ -463,7 +463,13 @@ class TestOnLocationChanged:
         win.location_dropdown.GetStringSelection.return_value = ALL_LOCATIONS_SENTINEL
         win._show_all_locations_summary = MagicMock()
 
-        MainWindow._on_location_changed(win, self._make_event())
+        # wx.CallAfter is used so the summary renders after any pending callbacks;
+        # patch it to run synchronously so the mock is called within this test.
+        with patch(
+            "accessiweather.ui.main_window.wx.CallAfter",
+            side_effect=lambda fn, *a, **kw: fn(*a, **kw),
+        ):
+            MainWindow._on_location_changed(win, self._make_event())
 
         assert win._all_locations_active is True
         win._show_all_locations_summary.assert_called_once()

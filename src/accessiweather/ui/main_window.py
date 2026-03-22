@@ -398,7 +398,12 @@ class MainWindow(SizedFrame):
         # --- All Locations special case ---
         if selected == ALL_LOCATIONS_SENTINEL:
             self._all_locations_active = True
-            self._show_all_locations_summary()
+            # Increment generation to invalidate any in-flight fetches for the previous location
+            self._fetch_generation += 1
+            # Use CallAfter so the summary renders after any already-queued wx.CallAfter
+            # callbacks (e.g. a just-completed fetch posting _on_weather_data_received) are
+            # drained first, preventing stale data from overwriting the summary.
+            wx.CallAfter(self._show_all_locations_summary)
             self.app.run_async(self._fetch_all_locations_data())
             return
 
@@ -1149,6 +1154,10 @@ class MainWindow(SizedFrame):
 
     def _on_weather_data_received(self, weather_data) -> None:
         """Handle received weather data (called on main thread)."""
+        # Guard: if we switched to All Locations view, ignore stale single-location data.
+        if getattr(self, "_all_locations_active", False):
+            logger.debug("Ignoring stale weather data received while All Locations view is active")
+            return
         try:
             self.app.current_weather_data = weather_data
 
