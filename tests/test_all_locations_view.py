@@ -13,8 +13,14 @@ def _make_window():
     """Create a minimal MainWindow instance with all UI mocked out."""
     from accessiweather.ui.main_window import MainWindow
 
-    with patch.object(MainWindow, "__init__", lambda self, *a, **kw: None):
-        win = MainWindow.__new__(MainWindow)
+    # Avoid calling wx.Window.__new__ (which requires a real C++ wx context and
+    # raises RuntimeError in CI where real wxPython is installed but no __init__
+    # is called).  A plain Python object is sufficient — the methods under test
+    # only access attributes that we set explicitly below.
+    class _Stub:
+        pass
+
+    win = _Stub()
 
     win.app = MagicMock()
     win.app.is_updating = False
@@ -42,6 +48,12 @@ def _make_window():
     win._all_locations_alerts_data = []
     win._alert_lifecycle_labels = {}
     win._fetch_generation = 0
+
+    # Async helpers called indirectly by the methods under test — mock so they
+    # don't attempt real wx or network operations.
+    win._fetch_all_locations_data = MagicMock(return_value=MagicMock())
+    win._fetch_weather_data = MagicMock(return_value=MagicMock())
+    win._set_current_location = MagicMock()
 
     # Delegate the real implementations we want to test.
     win.set_status = MainWindow.set_status.__get__(win, MainWindow)
