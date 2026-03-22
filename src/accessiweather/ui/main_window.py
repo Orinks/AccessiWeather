@@ -21,6 +21,9 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# Sentinel string used for the "All Locations" summary entry in the dropdown.
+ALL_LOCATIONS_SENTINEL = "All Locations"
+
 
 class MainWindow(SizedFrame):
     """
@@ -51,6 +54,10 @@ class MainWindow(SizedFrame):
         # Persistent map of alert_id -> lifecycle label ("New", "Updated", "Escalated", "Extended").
         # Updated on each successful weather fetch; cleared when the location changes.
         self._alert_lifecycle_labels: dict[str, str] = {}
+        # True when "All Locations" is the active view (no real location selected).
+        self._all_locations_active: bool = False
+        # Aggregated (location_name, alert) pairs shown in All Locations mode.
+        self._all_locations_alerts_data: list[tuple[str, object]] = []
 
         # Create the UI
         self._create_widgets()
@@ -192,18 +199,29 @@ class MainWindow(SizedFrame):
             logger.debug(f"Could not set initial focus: {e}")
 
     def _populate_locations(self) -> None:
-        """Populate the location dropdown with saved locations."""
+        """
+        Populate the location dropdown with saved locations.
+
+        "All Locations" is always the first entry.  Nationwide is not shown
+        while the All Locations view is active (it is excluded from the
+        per-location summary and does not make sense as a summary entry).
+        """
         try:
             locations = self.app.config_manager.get_all_locations()
+            # Exclude Nationwide from the per-location summary list but keep it
+            # in the dropdown as its own selectable entry.
             location_names = [loc.name for loc in locations]
+            all_names = [ALL_LOCATIONS_SENTINEL] + location_names
             self.location_dropdown.Clear()
-            self.location_dropdown.Append(location_names)
+            self.location_dropdown.Append(all_names)
 
-            # Select current location
+            # Select current location if set; otherwise land on "All Locations".
             current = self.app.config_manager.get_current_location()
-            if current and current.name in location_names:
-                idx = location_names.index(current.name)
+            if current and current.name in all_names:
+                idx = all_names.index(current.name)
                 self.location_dropdown.SetSelection(idx)
+            else:
+                self.location_dropdown.SetSelection(0)
         except Exception as e:
             logger.error(f"Failed to populate locations: {e}")
 
@@ -376,6 +394,17 @@ class MainWindow(SizedFrame):
         logger.info(f"Location changed to: {selected}")
         # Clear lifecycle labels when switching locations so stale labels never bleed across
         self._alert_lifecycle_labels = {}
+
+        # --- All Locations special case ---
+        if selected == ALL_LOCATIONS_SENTINEL:
+            self._all_locations_active = True
+            self._show_all_locations_summary()
+            return
+
+        # Switching away from All Locations view → clear the flag and stored data.
+        self._all_locations_active = False
+        self._all_locations_alerts_data = []
+
         self._set_current_location(selected)
 
         # Show cached data instantly if available
@@ -425,9 +454,9 @@ class MainWindow(SizedFrame):
     def on_remove_location(self) -> None:
         """Handle remove location button click."""
         selected = self.location_dropdown.GetStringSelection()
-        if not selected:
+        if not selected or selected == ALL_LOCATIONS_SENTINEL:
             wx.MessageBox(
-                "Please select a location to remove.",
+                "Please select a specific location to remove.",
                 "No Location Selected",
                 wx.OK | wx.ICON_WARNING,
             )
@@ -929,7 +958,17 @@ class MainWindow(SizedFrame):
             logger.error(f"Failed to set current location: {e}")
 
     def refresh_weather_async(self, force_refresh: bool = False) -> None:
-        """Refresh weather data asynchronously."""
+        """
+        Refresh weather data asynchronously.
+
+        When the All Locations view is active the summary is rebuilt from
+        whatever is currently in the cache — no new network requests are made.
+        """
+        # All Locations view: just re-render from cache (no API calls).
+        if getattr(self, "_all_locations_active", False):
+            self._show_all_locations_summary()
+            return
+
         # Increment generation to invalidate any in-flight fetches
         self._fetch_generation += 1
 
@@ -1239,6 +1278,16 @@ class MainWindow(SizedFrame):
 
     def _show_alert_details(self, alert_index: int) -> None:
         """Show details for the selected alert."""
+        # In All Locations mode alerts come from the aggregated list, not current_weather_data.
+        if getattr(self, "_all_locations_active", False):
+            data = getattr(self, "_all_locations_alerts_data", [])
+            if 0 <= alert_index < len(data):
+                _loc_name, alert = data[alert_index]
+                from .dialogs import show_alert_dialog
+
+                show_alert_dialog(self, alert)
+            return
+
         if not self.app.current_weather_data or not self.app.current_weather_data.alerts:
             return
 
@@ -1248,6 +1297,128 @@ class MainWindow(SizedFrame):
             from .dialogs import show_alert_dialog
 
             show_alert_dialog(self, alert)
+
+    def _show_all_locations_summary(self) -> None:
+        """
+        Build and display a cached-data summary for every saved location.
+
+        No network requests are made.  The daily and hourly forecast sections
+        are replaced with a short explanatory message because per-location
+        forecasts are not meaningful in this aggregate view.  Alerts from all
+        locations are collected and shown in the alerts list with the location
+        name as a prefix so screen-reader users can identify the source.
+
+        Nationwide is excluded from the summary because it is a special
+        aggregate view of its own, not an individual saved location.
+        """
+        try:
+            all_locs = [
+                loc
+                for loc in self.app.config_manager.get_all_locations()
+                if loc.name != "Nationwide"
+            ]
+        except Exception as e:
+            logger.error(f"Failed to get locations for All Locations summary: {e}")
+            all_locs = []
+
+        if not all_locs:
+            self.current_conditions.SetValue(
+                "No locations configured.\nUse the Add button or Ctrl+L to add a location."
+            )
+            self._set_forecast_sections("", "")
+            self.alerts_list.Clear()
+            self.view_alert_button.Disable()
+            self.set_status("All Locations — no locations configured")
+            return
+
+        lines: list[str] = ["=== All Locations Summary (cached data) ===", ""]
+        location_alerts: list[tuple[str, object]] = []
+
+        weather_client = (
+            self.app.weather_client
+            if hasattr(self.app, "weather_client") and self.app.weather_client
+            else None
+        )
+
+        for loc in all_locs:
+            lines.append(f"--- {loc.name} ---")
+            cached = weather_client.get_cached_weather(loc) if weather_client else None
+
+            if cached and cached.has_any_data() and cached.current:
+                cc = cached.current
+                temp_f = cc.temperature_f
+                temp_str = f"{temp_f:.0f}°F" if temp_f is not None else "N/A"
+                cond_str = cc.condition or "Unknown"
+                lines.append(f"  Temperature: {temp_str}")
+                lines.append(f"  Condition: {cond_str}")
+
+                # Collect active alerts for this location.
+                active_alerts: list[object] = []
+                if cached.alerts is not None:
+                    if hasattr(cached.alerts, "get_active_alerts"):
+                        active_alerts = cached.alerts.get_active_alerts() or []
+                    elif hasattr(cached.alerts, "alerts"):
+                        active_alerts = cached.alerts.alerts or []
+
+                if active_alerts:
+                    lines.append(f"  Active Alerts: {len(active_alerts)}")
+                    for alert in active_alerts:
+                        event = getattr(alert, "event", "Unknown")
+                        severity = getattr(alert, "severity", "Unknown")
+                        lines.append(f"    • {event} ({severity})")
+                        location_alerts.append((loc.name, alert))
+                else:
+                    lines.append("  Active Alerts: None")
+
+                if getattr(cached, "stale", False):
+                    lines.append("  (Cached — data may be outdated)")
+            else:
+                lines.append("  (No cached data — select this location to load current conditions)")
+
+            lines.append("")
+
+        summary_text = "\n".join(lines)
+        self.current_conditions.SetValue(summary_text)
+
+        not_available_msg = (
+            "Daily and hourly forecasts are not shown in All Locations view.\n"
+            "Select a specific location from the dropdown to see its forecast."
+        )
+        self._set_forecast_sections(not_available_msg, not_available_msg)
+
+        self._all_locations_alerts_data = location_alerts
+        self._update_all_locations_alerts(location_alerts)
+
+        self.stale_warning_label.SetLabel("")
+        self.set_status(f"All Locations summary — {len(all_locs)} location(s)")
+
+        # Ensure the refresh button stays enabled in this view.
+        self.app.is_updating = False
+        self.refresh_button.Enable()
+
+    def _update_all_locations_alerts(self, location_alerts: list[tuple[str, object]]) -> None:
+        """
+        Populate the alerts list from aggregated all-locations alert data.
+
+        Each item is prefixed with the location name so screen-reader users
+        know which location triggered the alert without having to open details.
+
+        Args:
+            location_alerts: List of (location_name, WeatherAlert) pairs.
+
+        """
+        self.alerts_list.Clear()
+
+        if location_alerts:
+            items = []
+            for loc_name, alert in location_alerts:
+                event = getattr(alert, "event", "Unknown")
+                severity = getattr(alert, "severity", "Unknown")
+                items.append(f"{loc_name}: {event} ({severity})")
+            self.alerts_list.Append(items)
+            self.view_alert_button.Enable()
+        else:
+            self.view_alert_button.Disable()
 
     def set_status(self, message: str) -> None:
         """Set the status label text."""
