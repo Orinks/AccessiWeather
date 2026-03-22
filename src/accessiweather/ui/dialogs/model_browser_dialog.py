@@ -90,7 +90,6 @@ class ModelBrowserDialog(wx.Dialog):
         self._providers: list[str] = []
 
         self._create_ui()
-        self._setup_accessibility()
         self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
         self._load_models()
 
@@ -176,14 +175,6 @@ class ModelBrowserDialog(wx.Dialog):
 
         if hasattr(self, "search_box"):
             self.search_box.SetFocus()
-
-    def _setup_accessibility(self):
-        """Set up accessibility labels for screen readers."""
-        self.search_box.SetName("Search for AI models by name or description")
-        self.model_list.SetName("Available AI models list")
-        self.description_text.SetName("Description of selected model")
-        self.free_only_checkbox.SetName("Filter to show only free models")
-        self.provider_choice.SetName("Filter by model provider")
 
     def _on_search_changed(self, event):
         """Handle search text changed."""

@@ -1043,10 +1043,6 @@ class SettingsDialogSimple(wx.Dialog):
             5,
         )
         self._controls["openrouter_key"] = wx.TextCtrl(panel, style=wx.TE_PASSWORD, size=(300, -1))
-        self._controls["openrouter_key"].SetName("OpenRouter API Key")
-        self._controls["openrouter_key"].SetHelpText(
-            "Required for all models. Get a free key at openrouter.ai/keys"
-        )
         sizer.Add(self._controls["openrouter_key"], 0, wx.LEFT, 10)
 
         validate_btn = wx.Button(panel, label="Validate API Key")

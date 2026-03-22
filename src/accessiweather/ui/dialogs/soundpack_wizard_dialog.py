@@ -112,13 +112,6 @@ class SoundPackWizardDialog(wx.Dialog):
         main_sizer.Add(nav_sizer, 0, wx.EXPAND | wx.ALL, 10)
 
         self.panel.SetSizer(main_sizer)
-        self._setup_accessibility()
-
-    def _setup_accessibility(self) -> None:
-        """Set up accessibility labels for always-visible controls."""
-        self.prev_btn.SetName("Go to previous wizard step")
-        self.next_btn.SetName("Go to next wizard step")
-        self.cancel_btn.SetName("Cancel sound pack creation")
 
     def _render_step(self) -> None:
         """Render the current step."""
@@ -150,28 +143,6 @@ class SoundPackWizardDialog(wx.Dialog):
 
         self.content_panel.Layout()
         self.panel.Layout()
-        self._setup_step_accessibility()
-
-    def _setup_step_accessibility(self) -> None:
-        """Set accessibility labels for step-specific controls."""
-        if self.current_step == 1:
-            self.name_input.SetName("Pack name (required)")
-            self.author_input.SetName("Author (optional)")
-            self.desc_input.SetName("Description (optional)")
-        elif self.current_step == 2:
-            for _, checkbox in self.category_checks:
-                checkbox.SetName(checkbox.GetLabel())
-            if hasattr(self, "select_common_btn"):
-                self.select_common_btn.SetName("Select common alert types")
-            if hasattr(self, "clear_all_btn"):
-                self.clear_all_btn.SetName("Clear all alert type selections")
-        elif self.current_step == 3:
-            for key, file_ctrl in self.mapping_controls:
-                friendly = key.replace("_", " ")
-                file_ctrl.SetName(f"{friendly} selected sound file")
-        else:
-            if hasattr(self, "test_all_btn"):
-                self.test_all_btn.SetName("Test all assigned sounds")
 
     def _build_step1(self) -> None:
         """Step 1: Pack details."""
@@ -321,7 +292,6 @@ class SoundPackWizardDialog(wx.Dialog):
                 lambda evt, k=key, fc=file_ctrl: self._choose_sound_file(k, fc),
             )
             scroll_sizer.Add(choose_btn, 0)
-            choose_btn.SetName(f"Choose sound file for {friendly}")
             self.choose_buttons.append(choose_btn)
 
             self.mapping_controls.append((key, file_ctrl))
@@ -404,7 +374,6 @@ class SoundPackWizardDialog(wx.Dialog):
                 lambda evt, k=key: self._preview_sound(k),
             )
             preview_btn.Enable(key in self.state.sound_mappings)
-            preview_btn.SetName(f"Preview sound for {friendly}")
             scroll_sizer.Add(preview_btn, 0)
             self.preview_buttons.append(preview_btn)
 
