@@ -715,11 +715,6 @@ class SettingsDialogSimple(wx.Dialog):
             wx.ALL,
             5,
         )
-        advanced_btn = wx.Button(panel, label="Advanced...")
-        advanced_btn.SetName("Advanced alert timing settings")
-        advanced_btn.SetToolTip("Configure cooldown periods and alert freshness window")
-        advanced_btn.Bind(wx.EVT_BUTTON, self._on_alert_advanced)
-        sizer.Add(advanced_btn, 0, wx.LEFT, 10)
 
         # Max notifications per hour
         row_max = wx.BoxSizer(wx.HORIZONTAL)
@@ -732,6 +727,12 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["max_notifications"] = wx.SpinCtrl(panel, min=1, max=100, initial=10)
         row_max.Add(self._controls["max_notifications"], 0)
         sizer.Add(row_max, 0, wx.LEFT | wx.TOP, 10)
+
+        advanced_btn = wx.Button(panel, label="Advanced...")
+        advanced_btn.SetName("Advanced alert timing settings")
+        advanced_btn.SetToolTip("Configure cooldown periods and alert freshness window")
+        advanced_btn.Bind(wx.EVT_BUTTON, self._on_alert_advanced)
+        sizer.Add(advanced_btn, 0, wx.LEFT | wx.TOP, 10)
 
         panel.SetSizer(sizer)
         self.notebook.AddPage(panel, "Notifications")
