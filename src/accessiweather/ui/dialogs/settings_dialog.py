@@ -22,6 +22,80 @@ API_KEYS_TRANSFER_NOTE = (
 )
 
 
+class AlertAdvancedSettingsDialog(wx.Dialog):
+    """Small dialog for advanced alert timing settings."""
+
+    def __init__(self, parent, controls: dict):
+        """Initialize the advanced alert timing dialog."""
+        super().__init__(parent, title="Advanced Alert Timing", style=wx.DEFAULT_DIALOG_STYLE)
+        self._parent_controls = controls
+        self._create_ui()
+        self._load_values()
+
+    def _create_ui(self):
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        row_gc = wx.BoxSizer(wx.HORIZONTAL)
+        row_gc.Add(
+            wx.StaticText(self, label="Minimum time between any alert notifications (minutes):"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._spin_global = wx.SpinCtrl(self, min=0, max=60, initial=5)
+        self._spin_global.SetName("Minimum time between any alert notifications (minutes)")
+        row_gc.Add(self._spin_global, 0)
+        sizer.Add(row_gc, 0, wx.ALL, 10)
+
+        row_pac = wx.BoxSizer(wx.HORIZONTAL)
+        row_pac.Add(
+            wx.StaticText(self, label="Re-notify for same alert after (minutes):"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._spin_per_alert = wx.SpinCtrl(self, min=0, max=1440, initial=60)
+        self._spin_per_alert.SetName("Re-notify for same alert after (minutes)")
+        row_pac.Add(self._spin_per_alert, 0)
+        sizer.Add(row_pac, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        row_fw = wx.BoxSizer(wx.HORIZONTAL)
+        row_fw.Add(
+            wx.StaticText(self, label="Only notify for alerts issued within (minutes):"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._spin_freshness = wx.SpinCtrl(self, min=0, max=120, initial=15)
+        self._spin_freshness.SetName("Only notify for alerts issued within (minutes)")
+        row_fw.Add(self._spin_freshness, 0)
+        sizer.Add(row_fw, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        btn_sizer = wx.StdDialogButtonSizer()
+        ok_btn = wx.Button(self, wx.ID_OK)
+        ok_btn.SetDefault()
+        ok_btn.Bind(wx.EVT_BUTTON, self._on_ok)
+        btn_sizer.AddButton(ok_btn)
+        cancel_btn = wx.Button(self, wx.ID_CANCEL)
+        btn_sizer.AddButton(cancel_btn)
+        btn_sizer.Realize()
+        sizer.Add(btn_sizer, 0, wx.EXPAND | wx.ALL, 10)
+
+        self.SetSizer(sizer)
+        self.Fit()
+
+    def _load_values(self):
+        self._spin_global.SetValue(self._parent_controls["global_cooldown"].GetValue())
+        self._spin_per_alert.SetValue(self._parent_controls["per_alert_cooldown"].GetValue())
+        self._spin_freshness.SetValue(self._parent_controls["freshness_window"].GetValue())
+
+    def _on_ok(self, event):
+        self._parent_controls["global_cooldown"].SetValue(self._spin_global.GetValue())
+        self._parent_controls["per_alert_cooldown"].SetValue(self._spin_per_alert.GetValue())
+        self._parent_controls["freshness_window"].SetValue(self._spin_freshness.GetValue())
+        self.EndModal(wx.ID_OK)
+
+
 class SettingsDialogSimple(wx.Dialog):
     """Comprehensive settings dialog matching Toga version functionality."""
 
@@ -626,6 +700,14 @@ class SettingsDialogSimple(wx.Dialog):
         )
         sizer.Add(self._controls["notify_minutely_precipitation_stop"], 0, wx.LEFT | wx.BOTTOM, 10)
 
+        # Alert timing controls (hidden; values managed via Advanced dialog)
+        self._controls["global_cooldown"] = wx.SpinCtrl(panel, min=0, max=60, initial=5)
+        self._controls["global_cooldown"].Hide()
+        self._controls["per_alert_cooldown"] = wx.SpinCtrl(panel, min=0, max=1440, initial=60)
+        self._controls["per_alert_cooldown"].Hide()
+        self._controls["freshness_window"] = wx.SpinCtrl(panel, min=0, max=120, initial=15)
+        self._controls["freshness_window"].Hide()
+
         # Rate Limiting Section
         sizer.Add(
             wx.StaticText(panel, label="Rate Limiting:"),
@@ -633,48 +715,6 @@ class SettingsDialogSimple(wx.Dialog):
             wx.ALL,
             5,
         )
-        sizer.Add(
-            wx.StaticText(panel, label="Prevent notification spam by setting cooldown periods:"),
-            0,
-            wx.LEFT | wx.BOTTOM,
-            5,
-        )
-
-        # Global cooldown
-        row_gc = wx.BoxSizer(wx.HORIZONTAL)
-        row_gc.Add(
-            wx.StaticText(panel, label="Global cooldown (minutes):"),
-            0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
-            10,
-        )
-        self._controls["global_cooldown"] = wx.SpinCtrl(panel, min=0, max=60, initial=5)
-        row_gc.Add(self._controls["global_cooldown"], 0)
-        sizer.Add(row_gc, 0, wx.LEFT, 10)
-
-        # Per-alert cooldown
-        row_pac = wx.BoxSizer(wx.HORIZONTAL)
-        row_pac.Add(
-            wx.StaticText(panel, label="Per-alert cooldown (minutes):"),
-            0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
-            10,
-        )
-        self._controls["per_alert_cooldown"] = wx.SpinCtrl(panel, min=0, max=1440, initial=60)
-        row_pac.Add(self._controls["per_alert_cooldown"], 0)
-        sizer.Add(row_pac, 0, wx.LEFT | wx.TOP, 10)
-
-        # Alert freshness window
-        row_fw = wx.BoxSizer(wx.HORIZONTAL)
-        row_fw.Add(
-            wx.StaticText(panel, label="Alert freshness window (minutes):"),
-            0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
-            10,
-        )
-        self._controls["freshness_window"] = wx.SpinCtrl(panel, min=0, max=120, initial=15)
-        row_fw.Add(self._controls["freshness_window"], 0)
-        sizer.Add(row_fw, 0, wx.LEFT | wx.TOP, 10)
 
         # Max notifications per hour
         row_max = wx.BoxSizer(wx.HORIZONTAL)
@@ -687,6 +727,12 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["max_notifications"] = wx.SpinCtrl(panel, min=1, max=100, initial=10)
         row_max.Add(self._controls["max_notifications"], 0)
         sizer.Add(row_max, 0, wx.LEFT | wx.TOP, 10)
+
+        advanced_btn = wx.Button(panel, label="Advanced...")
+        advanced_btn.SetName("Advanced alert timing settings")
+        advanced_btn.SetToolTip("Configure cooldown periods and alert freshness window")
+        advanced_btn.Bind(wx.EVT_BUTTON, self._on_alert_advanced)
+        sizer.Add(advanced_btn, 0, wx.LEFT | wx.TOP, 10)
 
         panel.SetSizer(sizer)
         self.notebook.AddPage(panel, "Notifications")
@@ -1791,9 +1837,9 @@ class SettingsDialogSimple(wx.Dialog):
             "notify_severe_risk_change": "Notify when severe weather risk level changes (Visual Crossing only)",
             "notify_minutely_precipitation_start": "Notify when precipitation is expected to start soon (Pirate Weather)",
             "notify_minutely_precipitation_stop": "Notify when precipitation is expected to stop soon (Pirate Weather)",
-            "global_cooldown": "Global cooldown (minutes)",
-            "per_alert_cooldown": "Per-alert cooldown (minutes)",
-            "freshness_window": "Alert freshness window (minutes)",
+            "global_cooldown": "Minimum time between any alert notifications (minutes)",
+            "per_alert_cooldown": "Re-notify for same alert after (minutes)",
+            "freshness_window": "Only notify for alerts issued within (minutes)",
             "max_notifications": "Maximum notifications per hour",
             "sound_enabled": "Enable Sounds",
             "sound_pack": "Active sound pack",
@@ -1829,6 +1875,12 @@ class SettingsDialogSimple(wx.Dialog):
         if selection == 3 and self._selected_specific_model:
             return self._selected_specific_model
         return "openrouter/free"
+
+    def _on_alert_advanced(self, event):
+        """Open the advanced alert timing settings dialog."""
+        dlg = AlertAdvancedSettingsDialog(self, self._controls)
+        dlg.ShowModal()
+        dlg.Destroy()
 
     def _on_ok(self, event):
         """Handle OK button press."""
