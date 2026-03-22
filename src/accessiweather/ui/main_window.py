@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 import wx
 from wx.lib.sized_controls import SizedFrame, SizedPanel
 
+from ..display.presentation.formatters import get_temperature_precision
 from ..units import resolve_temperature_unit_preference
 from ..utils.temperature_utils import format_temperature
 from . import main_window_notification_events
@@ -1398,10 +1399,16 @@ class MainWindow(SizedFrame):
 
             if cached and cached.has_any_data() and cached.current:
                 cc = cached.current
-                temp_unit_pref = self.app.config_manager.get_settings().temperature_unit
+                settings = self.app.config_manager.get_settings()
+                temp_unit_pref = settings.temperature_unit
                 temp_unit = resolve_temperature_unit_preference(temp_unit_pref, loc)
+                round_values = getattr(settings, "round_values", False) if settings else False
+                precision = 0 if round_values else get_temperature_precision(temp_unit)
                 temp_str = format_temperature(
-                    cc.temperature_f, unit=temp_unit, temperature_c=cc.temperature_c
+                    cc.temperature_f,
+                    unit=temp_unit,
+                    temperature_c=cc.temperature_c,
+                    precision=precision,
                 )
                 cond_str = cc.condition or "Unknown"
                 lines.append(f"  Temperature: {temp_str}")
