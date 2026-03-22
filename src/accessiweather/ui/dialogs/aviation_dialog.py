@@ -114,12 +114,12 @@ class AviationDialog(wx.Dialog):
         )
         avwx_row.Add(self.avwx_key_input, 0, wx.RIGHT, 10)
 
-        avwx_signup_btn = wx.Button(panel, label="Get Free Key")
-        avwx_signup_btn.Bind(
+        self.avwx_signup_btn = wx.Button(panel, label="Get Free Key")
+        self.avwx_signup_btn.Bind(
             wx.EVT_BUTTON,
             lambda _evt: __import__("webbrowser").open("https://account.avwx.rest"),
         )
-        avwx_row.Add(avwx_signup_btn, 0)
+        avwx_row.Add(self.avwx_signup_btn, 0)
 
         main_sizer.Add(avwx_row, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
 
@@ -218,6 +218,8 @@ class AviationDialog(wx.Dialog):
     def _setup_accessibility(self):
         """Set up accessibility labels."""
         self.station_input.SetName("ICAO airport code input")
+        self.avwx_key_input.SetName("AVWX API Key (optional)")
+        self.avwx_signup_btn.SetName("Get free AVWX API key, opens browser")
         self.raw_taf_display.SetName("Raw TAF display")
         self.decoded_taf_display.SetName("Decoded TAF display")
         self.advisories_list.SetName("Aviation advisories list")

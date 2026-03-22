@@ -119,29 +119,24 @@ class NOAARadioDialog(wx.Dialog):
 
         # Station selector
         station_label = wx.StaticText(panel, label="Station:")
-        station_label.SetName("Station Label")
         sizer.Add(station_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
         self._station_choice = wx.Choice(panel, choices=[])
-        self._station_choice.SetName("Station")
         sizer.Add(self._station_choice, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
         # Button row
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         self._play_stop_btn = wx.Button(panel, label="Play")
-        self._play_stop_btn.SetName("Play/Stop")
         self._play_stop_btn.Bind(wx.EVT_BUTTON, self._on_play_stop)
         btn_sizer.Add(self._play_stop_btn, 0, wx.RIGHT, 5)
 
         self._next_stream_btn = wx.Button(panel, label="Try Next Stream")
-        self._next_stream_btn.SetName("Try Next Stream")
         self._next_stream_btn.Bind(wx.EVT_BUTTON, self._on_next_stream)
         self._next_stream_btn.Enable(False)
         btn_sizer.Add(self._next_stream_btn, 0, wx.RIGHT, 5)
 
         self._prefer_btn = wx.Button(panel, label="Set as Preferred")
-        self._prefer_btn.SetName("Set as Preferred")
         self._prefer_btn.Bind(wx.EVT_BUTTON, self._on_set_preferred)
         self._prefer_btn.Enable(False)
         btn_sizer.Add(self._prefer_btn, 0, wx.RIGHT, 5)
@@ -150,7 +145,6 @@ class NOAARadioDialog(wx.Dialog):
 
         # Volume slider
         volume_label = wx.StaticText(panel, label="Volume:")
-        volume_label.SetName("Volume Label")
         sizer.Add(volume_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
         self._volume_slider = wx.Slider(
@@ -160,13 +154,11 @@ class NOAARadioDialog(wx.Dialog):
             maxValue=100,
             style=wx.SL_HORIZONTAL,
         )
-        self._volume_slider.SetName("Volume")
         self._volume_slider.Bind(wx.EVT_SLIDER, self._on_volume_change)
         sizer.Add(self._volume_slider, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
         # Status text
         self._status_text = wx.StaticText(panel, label="Ready")
-        self._status_text.SetName("Status")
         sizer.Add(self._status_text, 0, wx.ALL, 10)
 
         # Close button

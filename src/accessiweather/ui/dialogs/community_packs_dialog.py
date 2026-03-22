@@ -60,6 +60,8 @@ class CommunityPacksBrowserDialog(wx.Dialog):
         self._setup_accessibility()
         self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
         self.Centre()
+        if hasattr(self, "search_input"):
+            self.search_input.SetFocus()
 
         # Load packs after dialog is shown
         wx.CallAfter(self._start_loading)
