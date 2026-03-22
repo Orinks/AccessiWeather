@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING
 import wx
 from wx.lib.sized_controls import SizedFrame, SizedPanel
 
+from ..units import resolve_temperature_unit_preference
+from ..utils.temperature_utils import format_temperature
 from . import main_window_notification_events
 
 if TYPE_CHECKING:
@@ -1396,8 +1398,11 @@ class MainWindow(SizedFrame):
 
             if cached and cached.has_any_data() and cached.current:
                 cc = cached.current
-                temp_f = cc.temperature_f
-                temp_str = f"{temp_f:.0f}°F" if temp_f is not None else "N/A"
+                temp_unit_pref = self.app.config_manager.get_settings().temperature_unit
+                temp_unit = resolve_temperature_unit_preference(temp_unit_pref, loc)
+                temp_str = format_temperature(
+                    cc.temperature_f, unit=temp_unit, temperature_c=cc.temperature_c
+                )
                 cond_str = cc.condition or "Unknown"
                 lines.append(f"  Temperature: {temp_str}")
                 lines.append(f"  Condition: {cond_str}")

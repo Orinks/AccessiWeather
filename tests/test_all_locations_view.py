@@ -28,6 +28,7 @@ def _make_window():
         sound_enabled=False,
         sound_pack="default",
         muted_sound_events=[],
+        temperature_unit="fahrenheit",
     )
 
     # UI widgets
@@ -87,6 +88,7 @@ def _make_location(name: str, lat: float = 40.0, lon: float = -75.0):
 def _make_current_conditions(temp_f: float = 72.0, condition: str = "Sunny"):
     cc = MagicMock()
     cc.temperature_f = temp_f
+    cc.temperature_c = None
     cc.condition = condition
     return cc
 
