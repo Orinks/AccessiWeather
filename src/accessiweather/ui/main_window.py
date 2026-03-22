@@ -59,6 +59,7 @@ class MainWindow(SizedFrame):
         self._alert_lifecycle_labels: dict[str, str] = {}
         # True when "All Locations" is the active view (no real location selected).
         self._all_locations_active: bool = False
+        self._last_single_location_name: str | None = None
         # Aggregated (location_name, alert) pairs shown in All Locations mode.
         self._all_locations_alerts_data: list[tuple[str, object]] = []
 
@@ -413,6 +414,7 @@ class MainWindow(SizedFrame):
         # Switching away from All Locations view → clear the flag and stored data.
         self._all_locations_active = False
         self._all_locations_alerts_data = []
+        self._last_single_location_name = selected
         self._set_forecast_sections_visible(True)
 
         self._set_current_location(selected)
@@ -1545,6 +1547,16 @@ class MainWindow(SizedFrame):
 
         if best_data is not None:
             return best_data, best_name
+
+        # Fallback: use the last single location the user was viewing
+        last_name = getattr(self, "_last_single_location_name", None)
+        if last_name and weather_client:
+            for loc in all_locs:
+                if loc.name == last_name:
+                    cached = weather_client.get_cached_weather(loc)
+                    if cached and cached.has_any_data():
+                        return cached, last_name
+
         return first_with_data, first_with_data_name
 
     def set_status(self, message: str) -> None:
