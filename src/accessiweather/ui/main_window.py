@@ -1216,14 +1216,18 @@ class MainWindow(SizedFrame):
 
     def _set_forecast_sections_visible(self, visible: bool) -> None:
         """Show or hide the daily/hourly forecast labels and controls."""
-        for widget in (
-            self._daily_forecast_label,
-            self.daily_forecast_display,
-            self._hourly_forecast_label,
-            self.hourly_forecast_display,
+        for attr in (
+            "_daily_forecast_label",
+            "daily_forecast_display",
+            "_hourly_forecast_label",
+            "hourly_forecast_display",
         ):
-            widget.Show(visible)
-        self.GetSizer().Layout() if self.GetSizer() else None
+            widget = getattr(self, attr, None)
+            if widget is not None:
+                widget.Show(visible)
+        sizer = self.GetSizer() if callable(getattr(self, "GetSizer", None)) else None
+        if sizer:
+            sizer.Layout()
 
     def _on_weather_error(self, error_message: str) -> None:
         """Handle weather fetch error (called on main thread)."""

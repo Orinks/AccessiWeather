@@ -37,8 +37,6 @@ def _make_window():
     win.status_label = MagicMock()
     win.stale_warning_label = MagicMock()
 
-    win.GetSizer = MagicMock(return_value=None)
-
     # State
     win._all_locations_active = False
     win._all_locations_alerts_data = []
