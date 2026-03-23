@@ -270,11 +270,6 @@ class SettingsDialogSimple(wx.Dialog):
         )
         sizer.Add(self._controls["round_values"], 0, wx.LEFT | wx.TOP, 10)
 
-        self._controls["detailed_forecast"] = wx.CheckBox(
-            panel, label="Show detailed forecast information"
-        )
-        sizer.Add(self._controls["detailed_forecast"], 0, wx.LEFT | wx.TOP, 10)
-
         row_forecast_duration = wx.BoxSizer(wx.HORIZONTAL)
         row_forecast_duration.Add(
             wx.StaticText(panel, label="Forecast duration:"),
@@ -1358,9 +1353,6 @@ class SettingsDialogSimple(wx.Dialog):
                 getattr(settings, "show_pressure_trend", True)
             )
             self._controls["round_values"].SetValue(getattr(settings, "round_values", False))
-            self._controls["detailed_forecast"].SetValue(
-                getattr(settings, "show_detailed_forecast", True)
-            )
             forecast_duration_days = getattr(settings, "forecast_duration_days", 7)
             forecast_duration_map = {3: 0, 5: 1, 7: 2, 10: 3, 14: 4, 15: 5}
             self._controls["forecast_duration_days"].SetSelection(
@@ -1648,7 +1640,6 @@ class SettingsDialogSimple(wx.Dialog):
                 "show_uv_index": self._controls["show_uv_index"].GetValue(),
                 "show_pressure_trend": self._controls["show_pressure_trend"].GetValue(),
                 "round_values": self._controls["round_values"].GetValue(),
-                "show_detailed_forecast": self._controls["detailed_forecast"].GetValue(),
                 "forecast_duration_days": forecast_duration_values[
                     self._controls["forecast_duration_days"].GetSelection()
                 ],
@@ -1795,7 +1786,6 @@ class SettingsDialogSimple(wx.Dialog):
             "show_visibility": "Show visibility",
             "show_uv_index": "Show UV index",
             "show_pressure_trend": "Show pressure trend",
-            "detailed_forecast": "Show detailed forecast information",
             "forecast_duration_days": "Forecast duration",
             "hourly_forecast_hours": "Hourly forecast hours",
             "forecast_time_reference": "Forecast time display",
