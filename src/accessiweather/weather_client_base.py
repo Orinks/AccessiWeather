@@ -487,7 +487,7 @@ class WeatherClient:
         weather_data = WeatherData(location=location)
 
         try:
-            if self._is_us_location(location):
+            if self.data_source in ("auto", "nws") and self._is_us_location(location):
                 # Use discussion-only fetch so a forecast API failure can never
                 # silently suppress AFD update notifications.
                 discussion_task = asyncio.create_task(self._get_nws_discussion_only(location))
@@ -503,14 +503,14 @@ class WeatherClient:
                 weather_data.discussion = discussion
                 weather_data.discussion_issuance_time = discussion_issuance_time
                 weather_data.alerts = alerts or WeatherAlerts(alerts=[])
-            elif self.visual_crossing_client:
+            elif self.data_source in ("auto", "visualcrossing") and self.visual_crossing_client:
                 current_task = asyncio.create_task(
                     self.visual_crossing_client.get_current_conditions(location)
                 )
                 alerts_task = asyncio.create_task(self.visual_crossing_client.get_alerts(location))
                 weather_data.current = await current_task
                 weather_data.alerts = await alerts_task or WeatherAlerts(alerts=[])
-            elif self.pirate_weather_client:
+            elif self.data_source in ("auto", "pirateweather") and self.pirate_weather_client:
                 current_task = asyncio.create_task(
                     self.pirate_weather_client.get_current_conditions(location)
                 )
@@ -518,12 +518,17 @@ class WeatherClient:
                 weather_data.current = await current_task
                 weather_data.alerts = await alerts_task or WeatherAlerts(alerts=[])
             else:
+                # openmeteo provides no alerts; also handles misconfigured clients
                 weather_data.alerts = WeatherAlerts(alerts=[])
 
             # Only fetch PW minutely in the lightweight poll if the user actually
-            # wants precipitation start/stop notifications AND a PW client exists.
+            # wants precipitation start/stop notifications AND PW is the active source.
             # This avoids an extra API call every 60s for users who don't use it.
-            if self.pirate_weather_client and self.settings:
+            if (
+                self.data_source in ("auto", "pirateweather")
+                and self.pirate_weather_client
+                and self.settings
+            ):
                 _want_start = getattr(self.settings, "notify_minutely_precipitation_start", False)
                 _want_stop = getattr(self.settings, "notify_minutely_precipitation_stop", False)
                 if _want_start or _want_stop:
@@ -533,7 +538,10 @@ class WeatherClient:
 
             loc_key = self._location_key(location)
             previous_alerts = self._previous_alerts.get(loc_key)
-            _cancel_refs = await self._fetch_nws_cancel_references()
+            if self.data_source in ("auto", "nws"):
+                _cancel_refs = await self._fetch_nws_cancel_references()
+            else:
+                _cancel_refs = set()
             weather_data.alert_lifecycle_diff = diff_alerts(
                 previous_alerts, weather_data.alerts, confirmed_cancel_ids=_cancel_refs
             )
