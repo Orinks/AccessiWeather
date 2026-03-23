@@ -417,6 +417,42 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["data_source"].Bind(wx.EVT_CHOICE, self._on_data_source_changed)
         sizer.Add(row1, 0, wx.ALL, 5)
 
+        # Auto Mode Source Selection (shown only when data_source == 'auto')
+        auto_sources_box = wx.StaticBox(panel, label="Auto mode sources:")
+        self._auto_sources_sizer = wx.StaticBoxSizer(auto_sources_box, wx.VERTICAL)
+
+        us_label = wx.StaticText(panel, label="US locations:")
+        self._auto_sources_sizer.Add(us_label, 0, wx.ALL, 5)
+        us_cb_row = wx.BoxSizer(wx.HORIZONTAL)
+        self._controls["auto_src_us_nws"] = wx.CheckBox(panel, label="NWS")
+        self._controls["auto_src_us_openmeteo"] = wx.CheckBox(panel, label="Open-Meteo")
+        self._controls["auto_src_us_visualcrossing"] = wx.CheckBox(panel, label="Visual Crossing")
+        self._controls["auto_src_us_pirateweather"] = wx.CheckBox(panel, label="Pirate Weather")
+        for key in (
+            "auto_src_us_nws",
+            "auto_src_us_openmeteo",
+            "auto_src_us_visualcrossing",
+            "auto_src_us_pirateweather",
+        ):
+            us_cb_row.Add(self._controls[key], 0, wx.RIGHT, 10)
+        self._auto_sources_sizer.Add(us_cb_row, 0, wx.LEFT | wx.BOTTOM, 10)
+
+        intl_label = wx.StaticText(panel, label="International locations:")
+        self._auto_sources_sizer.Add(intl_label, 0, wx.ALL, 5)
+        intl_cb_row = wx.BoxSizer(wx.HORIZONTAL)
+        self._controls["auto_src_intl_openmeteo"] = wx.CheckBox(panel, label="Open-Meteo")
+        self._controls["auto_src_intl_visualcrossing"] = wx.CheckBox(panel, label="Visual Crossing")
+        self._controls["auto_src_intl_pirateweather"] = wx.CheckBox(panel, label="Pirate Weather")
+        for key in (
+            "auto_src_intl_openmeteo",
+            "auto_src_intl_visualcrossing",
+            "auto_src_intl_pirateweather",
+        ):
+            intl_cb_row.Add(self._controls[key], 0, wx.RIGHT, 10)
+        self._auto_sources_sizer.Add(intl_cb_row, 0, wx.LEFT | wx.BOTTOM, 10)
+
+        sizer.Add(self._auto_sources_sizer, 0, wx.ALL | wx.EXPAND, 5)
+
         # Visual Crossing Configuration
         self._vc_config_sizer = wx.BoxSizer(wx.VERTICAL)
         self._vc_config_sizer.Add(
@@ -1422,7 +1458,6 @@ class SettingsDialogSimple(wx.Dialog):
                 "pirateweather": 4,
             }
             self._controls["data_source"].SetSelection(source_map.get(data_source, 0))
-            self._update_api_key_visibility()
 
             vc_key = getattr(settings, "visual_crossing_api_key", "") or ""
             self._controls["vc_key"].SetValue(str(vc_key))
@@ -1440,6 +1475,27 @@ class SettingsDialogSimple(wx.Dialog):
                 self._controls["pw_key"].Bind(
                     wx.EVT_TEXT, lambda e: setattr(self, "_pw_key_cleared", True)
                 )
+
+            # Auto mode sources
+            auto_src_us = getattr(
+                settings, "auto_sources_us", ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+            )
+            auto_src_intl = getattr(
+                settings,
+                "auto_sources_international",
+                ["openmeteo", "pirateweather", "visualcrossing"],
+            )
+            self._controls["auto_src_us_nws"].SetValue("nws" in auto_src_us)
+            self._controls["auto_src_us_openmeteo"].SetValue("openmeteo" in auto_src_us)
+            self._controls["auto_src_us_visualcrossing"].SetValue("visualcrossing" in auto_src_us)
+            self._controls["auto_src_us_pirateweather"].SetValue("pirateweather" in auto_src_us)
+            self._controls["auto_src_intl_openmeteo"].SetValue("openmeteo" in auto_src_intl)
+            self._controls["auto_src_intl_visualcrossing"].SetValue(
+                "visualcrossing" in auto_src_intl
+            )
+            self._controls["auto_src_intl_pirateweather"].SetValue("pirateweather" in auto_src_intl)
+
+            self._update_api_key_visibility()
 
             # Source priority
             us_priority = getattr(
@@ -1784,6 +1840,32 @@ class SettingsDialogSimple(wx.Dialog):
                 intl_idx if intl_idx >= 0 else 0
             ]
 
+            # Auto mode sources
+            auto_sources_us = [
+                src
+                for src, key in (
+                    ("nws", "auto_src_us_nws"),
+                    ("openmeteo", "auto_src_us_openmeteo"),
+                    ("visualcrossing", "auto_src_us_visualcrossing"),
+                    ("pirateweather", "auto_src_us_pirateweather"),
+                )
+                if self._controls[key].GetValue()
+            ]
+            settings_dict["auto_sources_us"] = auto_sources_us or ["openmeteo"]
+
+            auto_sources_international = [
+                src
+                for src, key in (
+                    ("openmeteo", "auto_src_intl_openmeteo"),
+                    ("visualcrossing", "auto_src_intl_visualcrossing"),
+                    ("pirateweather", "auto_src_intl_pirateweather"),
+                )
+                if self._controls[key].GetValue()
+            ]
+            settings_dict["auto_sources_international"] = auto_sources_international or [
+                "openmeteo"
+            ]
+
             # If the field is blank but was non-empty when the dialog opened,
             # only preserve the key if the user never interacted with the field
             # (i.e. keyring failed to load). If the user explicitly cleared the
@@ -1841,6 +1923,13 @@ class SettingsDialogSimple(wx.Dialog):
             "data_source": "Weather Data Source",
             "vc_key": "Visual Crossing API Key",
             "pw_key": "Pirate Weather API Key",
+            "auto_src_us_nws": "Auto mode US: NWS",
+            "auto_src_us_openmeteo": "Auto mode US: Open-Meteo",
+            "auto_src_us_visualcrossing": "Auto mode US: Visual Crossing",
+            "auto_src_us_pirateweather": "Auto mode US: Pirate Weather",
+            "auto_src_intl_openmeteo": "Auto mode International: Open-Meteo",
+            "auto_src_intl_visualcrossing": "Auto mode International: Visual Crossing",
+            "auto_src_intl_pirateweather": "Auto mode International: Pirate Weather",
             "us_priority": "US Locations Priority",
             "intl_priority": "International Locations Priority",
             "openmeteo_model": "Open-Meteo Weather Model",
@@ -1922,10 +2011,23 @@ class SettingsDialogSimple(wx.Dialog):
         show_pw = selection in (0, 4)  # auto or PW
         self._vc_config_sizer.ShowItems(show_vc)
         self._pw_config_sizer.ShowItems(show_pw)
+        # Show auto sources section only in auto mode
+        self._auto_sources_sizer.ShowItems(selection == 0)
+        if selection == 0:
+            self._update_auto_source_key_state()
         # Re-layout the panel
         parent = self._controls["data_source"].GetParent()
         parent.Layout()
         parent.FitInside()
+
+    def _update_auto_source_key_state(self):
+        """Enable/disable API-key-requiring checkboxes based on configured keys."""
+        vc_key = self._controls["vc_key"].GetValue().strip()
+        pw_key = self._controls["pw_key"].GetValue().strip()
+        self._controls["auto_src_us_visualcrossing"].Enable(bool(vc_key))
+        self._controls["auto_src_intl_visualcrossing"].Enable(bool(vc_key))
+        self._controls["auto_src_us_pirateweather"].Enable(bool(pw_key))
+        self._controls["auto_src_intl_pirateweather"].Enable(bool(pw_key))
 
     def _on_get_pw_api_key(self, event):
         """Open Pirate Weather signup page."""
