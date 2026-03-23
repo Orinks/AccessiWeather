@@ -90,6 +90,8 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "taskbar_icon_text_format",
     "source_priority_us",
     "source_priority_international",
+    "auto_sources_us",
+    "auto_sources_international",
     "openmeteo_weather_model",
     "station_selection_strategy",
 }
@@ -202,6 +204,13 @@ class AppSettings:
     round_values: bool = False
     # Parallel fetch timeout for smart auto mode (seconds)
     parallel_fetch_timeout: float = 5.0
+    # Auto mode source selection — which sources participate in auto mode
+    auto_sources_us: list[str] = field(
+        default_factory=lambda: ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+    )
+    auto_sources_international: list[str] = field(
+        default_factory=lambda: ["openmeteo", "pirateweather", "visualcrossing"]
+    )
 
     @staticmethod
     def _as_bool(value, default: bool) -> bool:
@@ -356,30 +365,24 @@ class AppSettings:
             if value not in valid_strategies:
                 setattr(self, setting_name, "hybrid_default")
 
-        elif setting_name in {"source_priority_us", "source_priority_international"}:
+        elif setting_name in {
+            "source_priority_us",
+            "source_priority_international",
+            "auto_sources_us",
+            "auto_sources_international",
+        }:
             # Ensure valid list of source names
             valid_sources = {"nws", "openmeteo", "visualcrossing", "pirateweather"}
+            us_default = ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+            intl_default = ["openmeteo", "pirateweather", "visualcrossing"]
+            is_us_setting = setting_name in {"source_priority_us", "auto_sources_us"}
             if not isinstance(value, list):
-                if setting_name == "source_priority_us":
-                    setattr(
-                        self, setting_name, ["nws", "openmeteo", "visualcrossing", "pirateweather"]
-                    )
-                else:
-                    setattr(self, setting_name, ["openmeteo", "pirateweather", "visualcrossing"])
+                setattr(self, setting_name, us_default if is_us_setting else intl_default)
             else:
                 # Filter to only valid sources
                 filtered = [s for s in value if s in valid_sources]
                 if not filtered:
-                    if setting_name == "source_priority_us":
-                        setattr(
-                            self,
-                            setting_name,
-                            ["nws", "openmeteo", "visualcrossing", "pirateweather"],
-                        )
-                    else:
-                        setattr(
-                            self, setting_name, ["openmeteo", "pirateweather", "visualcrossing"]
-                        )
+                    setattr(self, setting_name, us_default if is_us_setting else intl_default)
                 elif filtered != value:
                     setattr(self, setting_name, filtered)
 
@@ -459,6 +462,8 @@ class AppSettings:
             "taskbar_icon_text_format": self.taskbar_icon_text_format,
             "source_priority_us": self.source_priority_us,
             "source_priority_international": self.source_priority_international,
+            "auto_sources_us": self.auto_sources_us,
+            "auto_sources_international": self.auto_sources_international,
             "openmeteo_weather_model": self.openmeteo_weather_model,
             "station_selection_strategy": self.station_selection_strategy,
             # AI settings and AVWX key stored in secure storage, not here
@@ -548,6 +553,12 @@ class AppSettings:
             ),
             source_priority_international=data.get(
                 "source_priority_international", ["openmeteo", "pirateweather", "visualcrossing"]
+            ),
+            auto_sources_us=data.get(
+                "auto_sources_us", ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+            ),
+            auto_sources_international=data.get(
+                "auto_sources_international", ["openmeteo", "pirateweather", "visualcrossing"]
             ),
             openmeteo_weather_model=data.get("openmeteo_weather_model", "best_match"),
             station_selection_strategy=data.get("station_selection_strategy", "hybrid_default"),
