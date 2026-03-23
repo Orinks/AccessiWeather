@@ -168,9 +168,9 @@ class OpenMeteoMapper:
                         "qualityControl": "qc:V",
                     },
                     "visibility": {
-                        "value": None,  # Open-Meteo doesn't provide visibility
+                        "value": current.get("visibility"),  # meters
                         "unitCode": "wmoUnit:m",
-                        "qualityControl": "qc:Z",
+                        "qualityControl": "qc:V",
                     },
                     "uvIndex": {
                         "value": uv_index_value,
