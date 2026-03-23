@@ -14,6 +14,7 @@ import wx
 from wx.lib.sized_controls import SizedFrame, SizedPanel
 
 from ..display.presentation.formatters import get_temperature_precision
+from ..screen_reader import ScreenReaderAnnouncer
 from ..units import resolve_temperature_unit_preference
 from ..utils.temperature_utils import format_temperature
 from . import main_window_notification_events
@@ -62,6 +63,9 @@ class MainWindow(SizedFrame):
         self._last_single_location_name: str | None = None
         # Aggregated (location_name, alert) pairs shown in All Locations mode.
         self._all_locations_alerts_data: list[tuple[str, object]] = []
+
+        # Screen reader announcer for dynamic status updates
+        self._announcer = ScreenReaderAnnouncer()
 
         # Create the UI
         self._create_widgets()
@@ -1565,9 +1569,11 @@ class MainWindow(SizedFrame):
         return first_with_data, first_with_data_name
 
     def set_status(self, message: str) -> None:
-        """Set the status label text."""
+        """Set the status label text and announce via screen reader."""
         self.status_label.SetLabel(message)
         logger.info(f"Status: {message}")
+        if message:
+            self._announcer.announce(message)
 
     def _get_notification_event_manager(self):
         """Get or create the notification event manager for AFD/severe risk notifications."""
