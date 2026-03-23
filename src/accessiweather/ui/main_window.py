@@ -1043,6 +1043,12 @@ class MainWindow(SizedFrame):
                 )
                 return
 
+            # Debug: log visibility before display
+            if weather_data.current:
+                logger.info(
+                    f"DEBUG visibility before display: {weather_data.current.visibility_miles} mi "
+                    f"(source: {getattr(weather_data.source_attribution, 'contributing_sources', 'unknown')})"
+                )
             # Update UI on main thread
             wx.CallAfter(self._on_weather_data_received, weather_data)
 
