@@ -339,9 +339,15 @@ class WeatherClient:
     def _should_use_openmeteo_for_extended_forecast(
         self, location: Location, source: str | None = None
     ) -> bool:
-        """Use Open-Meteo for full-range forecasts when NWS-style sources exceed 7 days."""
+        """
+        Use Open-Meteo for full-range forecasts only in auto mode when forecast exceeds 7 days.
+
+        When the user explicitly selects a specific source (e.g. 'nws'), Open-Meteo must not
+        silently contribute data or appear in the attribution.  The fallback is only allowed
+        in 'auto' mode where multi-source blending is expected.
+        """
         normalized_source = (source or self.data_source).strip().lower()
-        if normalized_source not in {"nws", "pw", "auto"}:
+        if normalized_source != "auto":
             return False
         if not self._is_us_location(location):
             return False
