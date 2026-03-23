@@ -853,18 +853,22 @@ class WeatherClient:
         """
         logger.info(f"Using smart auto source for {location.name}")
 
-        # Initialize components with user's source priority settings
-        us_priority = getattr(
+        # Get user-configured auto mode source lists
+        auto_sources_us = getattr(
             self.settings,
-            "source_priority_us",
+            "auto_sources_us",
             ["nws", "openmeteo", "visualcrossing", "pirateweather"],
         )
-        intl_priority = getattr(
+        auto_sources_international = getattr(
             self.settings,
-            "source_priority_international",
+            "auto_sources_international",
             ["openmeteo", "pirateweather", "visualcrossing"],
         )
-        config = SourcePriorityConfig(us_default=us_priority, international_default=intl_priority)
+
+        # Initialize components with user's source priority settings
+        config = SourcePriorityConfig(
+            us_default=auto_sources_us, international_default=auto_sources_international
+        )
         parallel_timeout = getattr(self.settings, "parallel_fetch_timeout", 5.0)
         coordinator = ParallelFetchCoordinator(timeout=parallel_timeout)
         fusion_engine = DataFusionEngine(config)
@@ -872,6 +876,7 @@ class WeatherClient:
 
         # Prepare fetch coroutines for available sources
         is_us = self._is_us_location(location)
+        active_sources = auto_sources_us if is_us else auto_sources_international
 
         # Always fetch from Open-Meteo (works globally)
         async def fetch_openmeteo():
@@ -917,13 +922,21 @@ class WeatherClient:
             alerts = await pirate_weather_client.get_alerts(location)
             return (current, forecast, hourly, alerts)
 
-        # Fetch from all sources in parallel
+        # Fetch from all sources in parallel, respecting user's auto source selection
         source_results = await coordinator.fetch_all(
             location=location,
-            fetch_nws=fetch_nws() if is_us else None,
-            fetch_openmeteo=fetch_openmeteo(),
-            fetch_visualcrossing=fetch_vc() if self.visual_crossing_client else None,
-            fetch_pirateweather=fetch_pw() if self.pirate_weather_api_key else None,
+            fetch_nws=fetch_nws() if (is_us and "nws" in active_sources) else None,
+            fetch_openmeteo=fetch_openmeteo() if "openmeteo" in active_sources else None,
+            fetch_visualcrossing=(
+                fetch_vc()
+                if (self.visual_crossing_client and "visualcrossing" in active_sources)
+                else None
+            ),
+            fetch_pirateweather=(
+                fetch_pw()
+                if (self.pirate_weather_api_key and "pirateweather" in active_sources)
+                else None
+            ),
         )
 
         # Check if all sources failed
