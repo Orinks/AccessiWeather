@@ -1427,9 +1427,19 @@ class SettingsDialogSimple(wx.Dialog):
             vc_key = getattr(settings, "visual_crossing_api_key", "") or ""
             self._controls["vc_key"].SetValue(str(vc_key))
             self._original_vc_key = str(vc_key)
+            self._vc_key_cleared = False
+            if hasattr(wx, "EVT_TEXT"):
+                self._controls["vc_key"].Bind(
+                    wx.EVT_TEXT, lambda e: setattr(self, "_vc_key_cleared", True)
+                )
             pw_key = getattr(settings, "pirate_weather_api_key", "") or ""
             self._controls["pw_key"].SetValue(str(pw_key))
             self._original_pw_key = str(pw_key)
+            self._pw_key_cleared = False
+            if hasattr(wx, "EVT_TEXT"):
+                self._controls["pw_key"].Bind(
+                    wx.EVT_TEXT, lambda e: setattr(self, "_pw_key_cleared", True)
+                )
 
             # Source priority
             us_priority = getattr(
@@ -1564,6 +1574,11 @@ class SettingsDialogSimple(wx.Dialog):
             openrouter_key = getattr(settings, "openrouter_api_key", "") or ""
             self._controls["openrouter_key"].SetValue(str(openrouter_key))
             self._original_openrouter_key = str(openrouter_key)
+            self._openrouter_key_cleared = False
+            if hasattr(wx, "EVT_TEXT"):
+                self._controls["openrouter_key"].Bind(
+                    wx.EVT_TEXT, lambda e: setattr(self, "_openrouter_key_cleared", True)
+                )
 
             ai_model = getattr(settings, "ai_model_preference", "openrouter/free")
             if ai_model == "openrouter/free":
@@ -1769,21 +1784,26 @@ class SettingsDialogSimple(wx.Dialog):
                 intl_idx if intl_idx >= 0 else 0
             ]
 
-            # Guard: never wipe a previously-set API key with an empty string.
-            # If the field is blank but the original value was non-empty, the
-            # keyring load failed transiently — keep the existing keyring value.
-            for key, orig_attr in (
-                ("visual_crossing_api_key", "_original_vc_key"),
-                ("pirate_weather_api_key", "_original_pw_key"),
-                ("openrouter_api_key", "_original_openrouter_key"),
+            # If the field is blank but was non-empty when the dialog opened,
+            # only preserve the key if the user never interacted with the field
+            # (i.e. keyring failed to load). If the user explicitly cleared the
+            # field (_key_explicitly_cleared flag), honor the deletion.
+            for key, orig_attr, cleared_attr in (
+                ("visual_crossing_api_key", "_original_vc_key", "_vc_key_cleared"),
+                ("pirate_weather_api_key", "_original_pw_key", "_pw_key_cleared"),
+                ("openrouter_api_key", "_original_openrouter_key", "_openrouter_key_cleared"),
             ):
                 if not settings_dict.get(key) and getattr(self, orig_attr, ""):
-                    logger.warning(
-                        "Skipping empty %s save — original value was non-empty; "
-                        "keyring may have failed to load. Existing keyring value preserved.",
-                        key,
-                    )
-                    settings_dict.pop(key, None)
+                    if getattr(self, cleared_attr, False):
+                        # User deliberately cleared the field — allow deletion
+                        logger.info("API key %s explicitly cleared by user.", key)
+                    else:
+                        logger.warning(
+                            "Skipping empty %s save — original value was non-empty; "
+                            "keyring may have failed to load. Existing keyring value preserved.",
+                            key,
+                        )
+                        settings_dict.pop(key, None)
 
             success = self.config_manager.update_settings(**settings_dict)
             if success:
