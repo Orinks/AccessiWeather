@@ -60,7 +60,6 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "visual_crossing_api_key",
     # Display preferences
     "round_values",
-    "show_detailed_forecast",
     "enable_alerts",
     "minimize_to_tray",
     "minimize_on_startup",
@@ -103,7 +102,6 @@ class AppSettings:
 
     temperature_unit: str = "both"
     update_interval_minutes: int = 10
-    show_detailed_forecast: bool = True
     enable_alerts: bool = True
     minimize_to_tray: bool = False
     minimize_on_startup: bool = False
@@ -407,7 +405,6 @@ class AppSettings:
         return {
             "temperature_unit": self.temperature_unit,
             "update_interval_minutes": self.update_interval_minutes,
-            "show_detailed_forecast": self.show_detailed_forecast,
             "enable_alerts": self.enable_alerts,
             "minimize_to_tray": self.minimize_to_tray,
             "minimize_on_startup": self.minimize_on_startup,
@@ -488,7 +485,6 @@ class AppSettings:
         return cls(
             temperature_unit=data.get("temperature_unit", "both"),
             update_interval_minutes=data.get("update_interval_minutes", 10),
-            show_detailed_forecast=cls._as_bool(data.get("show_detailed_forecast"), True),
             enable_alerts=cls._as_bool(data.get("enable_alerts"), True),
             minimize_to_tray=cls._as_bool(data.get("minimize_to_tray"), False),
             minimize_on_startup=cls._as_bool(data.get("minimize_on_startup"), False),

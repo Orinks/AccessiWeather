@@ -543,6 +543,18 @@ class TestMergeForecasts:
     def _make_forecast(self):
         return Forecast(periods=[ForecastPeriod(name="Tonight", temperature=55.0)])
 
+    def _make_nws_forecast_with_details(self):
+        return Forecast(
+            periods=[
+                ForecastPeriod(
+                    name="Today",
+                    temperature=75.0,
+                    short_forecast="Sunny",
+                    detailed_forecast="Sunny, with a high near 75. Northwest wind 10 mph.",
+                )
+            ]
+        )
+
     def test_no_sources(self, engine, us_location):
         result, sources = engine.merge_forecasts([], us_location)
         assert result is None
@@ -587,6 +599,22 @@ class TestMergeForecasts:
         result, field_sources = engine.merge_forecasts(sources, us_location)
         assert result is not None
         assert field_sources["forecast_source"] == "mystery_api"
+
+    def test_nws_detailed_forecast_preserved_through_merge(self, engine, us_location):
+        """merge_forecasts must not drop detailed_forecast from NWS periods."""
+        nws_fc = self._make_nws_forecast_with_details()
+        om_fc = Forecast(periods=[ForecastPeriod(name="Today", temperature=70.0)])
+        sources = [
+            _make_source("nws", forecast=nws_fc),
+            _make_source("openmeteo", forecast=om_fc),
+        ]
+        result, field_sources = engine.merge_forecasts(sources, us_location)
+        assert field_sources["forecast_source"] == "nws"
+        assert result is not None
+        assert (
+            result.periods[0].detailed_forecast
+            == "Sunny, with a high near 75. Northwest wind 10 mph."
+        )
 
     def test_sources_with_none_forecast_filtered(self, engine, us_location):
         fc = self._make_forecast()

@@ -68,6 +68,23 @@ class TestNwsHighLowPairing:
         forecast = parse_nws_forecast(data)
         assert forecast.periods[0].temperature_low is None
 
+    def test_detailed_forecast_preserved(self):
+        """detailed_forecast is mapped from NWS detailedForecast field."""
+        data = _wrap(
+            [
+                {
+                    **_make_period("Today", 34, is_daytime=True),
+                    "detailedForecast": "Sunny, with a high near 34. Northwest wind 10 mph.",
+                    "shortForecast": "Sunny",
+                }
+            ]
+        )
+        forecast = parse_nws_forecast(data)
+        assert (
+            forecast.periods[0].detailed_forecast
+            == "Sunny, with a high near 34. Northwest wind 10 mph."
+        )
+
     def test_empty_periods(self):
         forecast = parse_nws_forecast({"properties": {"periods": []}})
         assert len(forecast.periods) == 0
