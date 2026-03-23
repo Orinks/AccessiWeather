@@ -208,7 +208,8 @@ def _build_environmental_metrics(
                 if pollen_value
                 else environmental.pollen_primary_allergen
             )
-        metrics.append(Metric("Pollen", pollen_value or "Data unavailable"))
+        if pollen_value:
+            metrics.append(Metric("Pollen", pollen_value))
 
     return metrics
 
