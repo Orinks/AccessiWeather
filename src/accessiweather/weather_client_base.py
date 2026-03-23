@@ -50,6 +50,7 @@ from .visual_crossing_client import VisualCrossingApiError, VisualCrossingClient
 from .weather_client_alerts import AlertAggregator
 from .weather_client_fusion import DataFusionEngine
 from .weather_client_parallel import ParallelFetchCoordinator
+from .weather_client_validators import PlausibilityValidator
 
 logger = logging.getLogger(__name__)
 
@@ -922,6 +923,11 @@ class WeatherClient:
         merged_current, current_attribution = fusion_engine.merge_current_conditions(
             source_results, location
         )
+
+        # Run plausibility validation on merged current conditions
+        if merged_current is not None:
+            validator = PlausibilityValidator()
+            merged_current = validator.validate(merged_current, location)
 
         # Merge forecasts
         requested_days = getattr(self.settings, "forecast_duration_days", 7)
