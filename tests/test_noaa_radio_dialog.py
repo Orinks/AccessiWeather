@@ -151,6 +151,7 @@ def _make_dialog_instance(module):
     dlg._next_stream_btn = MagicMock()
     dlg._prefer_btn = MagicMock()
     dlg._auto_advance_stream = True
+    dlg._playing_station = None
     return dlg
 
 
@@ -332,3 +333,119 @@ class TestSetStatus:
         dlg = _make_dialog_instance(noaa_dialog_module)
         dlg._set_status("Testing")
         dlg._status_text.SetLabel.assert_called_with("Testing")
+
+
+class TestPlayStopSwitch:
+    """Tests for the 3-way play/stop/switch logic in _on_play_stop."""
+
+    def test_not_playing_triggers_play(self, noaa_dialog_module):
+        """When nothing is playing, _on_play_stop should start playback."""
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._player.is_playing.return_value = False
+        dlg._url_provider.get_stream_urls.return_value = ["https://example.com/s"]
+        dlg._prefs.reorder_urls.return_value = ["https://example.com/s"]
+        dlg._on_play_stop(MagicMock())
+        dlg._player.play.assert_called()
+
+    def test_same_station_playing_triggers_stop(self, noaa_dialog_module):
+        """When the selected station is already playing, _on_play_stop should stop."""
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._player.is_playing.return_value = True
+        # Playing station matches selection (index 0 = KEC49)
+        dlg._playing_station = dlg._stations[0]
+        dlg._station_choice.GetSelection.return_value = 0
+        dlg._on_play_stop(MagicMock())
+        dlg._player.stop.assert_called()
+        dlg._player.play.assert_not_called()
+
+    def test_different_station_playing_triggers_switch(self, noaa_dialog_module):
+        """When a different station is selected while one plays, switch immediately."""
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._player.is_playing.return_value = True
+        # Playing KEC49 (index 0) but user selected WXJ76 (index 1)
+        dlg._playing_station = dlg._stations[0]
+        dlg._station_choice.GetSelection.return_value = 1
+        dlg._url_provider.get_stream_urls.return_value = ["https://example.com/s2"]
+        dlg._prefs.reorder_urls.return_value = ["https://example.com/s2"]
+        dlg._on_play_stop(MagicMock())
+        # Should have stopped old and started new in one action
+        dlg._player.stop.assert_called()
+        dlg._player.play.assert_called_with("https://example.com/s2")
+
+    def test_playing_station_set_on_play(self, noaa_dialog_module):
+        """_playing_station is set when _on_play is called."""
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._player.is_playing.return_value = False
+        dlg._url_provider.get_stream_urls.return_value = ["https://example.com/s"]
+        dlg._prefs.reorder_urls.return_value = ["https://example.com/s"]
+        dlg._on_play(MagicMock())
+        assert dlg._playing_station is dlg._stations[0]
+
+    def test_playing_station_cleared_on_stopped(self, noaa_dialog_module):
+        """_playing_station is cleared when _on_stopped fires."""
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._playing_station = dlg._stations[0]
+        dlg._on_stopped()
+        assert dlg._playing_station is None
+
+    def test_playing_station_cleared_on_error(self, noaa_dialog_module):
+        """_playing_station is cleared when _on_error fires."""
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._playing_station = dlg._stations[0]
+        dlg._on_error("Connection failed")
+        assert dlg._playing_station is None
+
+
+class TestUpdatePlayBtnLabel:
+    """Tests for _update_play_btn_label."""
+
+    def test_label_play_when_not_playing(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._player.is_playing.return_value = False
+        dlg._update_play_btn_label()
+        dlg._play_stop_btn.SetLabel.assert_called_with("Play")
+
+    def test_label_stop_when_same_station_playing(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._player.is_playing.return_value = True
+        dlg._playing_station = dlg._stations[0]
+        dlg._station_choice.GetSelection.return_value = 0
+        dlg._update_play_btn_label()
+        dlg._play_stop_btn.SetLabel.assert_called_with("Stop")
+
+    def test_label_switch_when_different_station_selected(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._player.is_playing.return_value = True
+        dlg._playing_station = dlg._stations[0]  # KEC49 playing
+        dlg._station_choice.GetSelection.return_value = 1  # WXJ76 selected
+        dlg._update_play_btn_label()
+        dlg._play_stop_btn.SetLabel.assert_called_with("Switch")
+
+
+class TestChoiceKeyHandler:
+    """Tests for Enter key on the station choice widget."""
+
+    def test_enter_triggers_play_stop(self, noaa_dialog_module):
+        """Pressing Enter on the choice calls _on_play_stop."""
+        import wx
+
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._player.is_playing.return_value = False
+        dlg._url_provider.get_stream_urls.return_value = ["https://example.com/s"]
+        dlg._prefs.reorder_urls.return_value = ["https://example.com/s"]
+
+        key_event = MagicMock()
+        key_event.GetKeyCode.return_value = wx.WXK_RETURN
+        dlg._on_choice_key(key_event)
+        dlg._player.play.assert_called()
+        key_event.Skip.assert_not_called()
+
+    def test_other_keys_are_skipped(self, noaa_dialog_module):
+        """Non-Enter keys are passed through via Skip."""
+        import wx
+
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        key_event = MagicMock()
+        key_event.GetKeyCode.return_value = wx.WXK_TAB
+        dlg._on_choice_key(key_event)
+        key_event.Skip.assert_called_once()

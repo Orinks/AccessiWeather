@@ -104,6 +104,7 @@ class NOAARadioDialog(wx.Dialog):
         self._prefs = RadioPreferences(path=prefs_path)
         self._current_urls: list[str] = []
         self._current_url_index: int = 0
+        self._playing_station: Station | None = None
         self._health_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self._on_health_check, self._health_timer)
 
@@ -122,6 +123,8 @@ class NOAARadioDialog(wx.Dialog):
         sizer.Add(station_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
         self._station_choice = wx.Choice(panel, choices=[])
+        self._station_choice.Bind(wx.EVT_CHOICE, self._on_station_changed)
+        self._station_choice.Bind(wx.EVT_CHAR_HOOK, self._on_choice_key)
         sizer.Add(self._station_choice, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
         # Button row
@@ -239,11 +242,27 @@ class NOAARadioDialog(wx.Dialog):
         return self._stations[idx]
 
     def _on_play_stop(self, event: wx.CommandEvent) -> None:
-        """Toggle playback from a single Play/Stop button."""
-        if self._player.is_playing():
-            self._on_stop(event)
-        else:
+        """
+        Handle Play/Stop/Switch action from button or Enter key on station choice.
+
+        Behaviour:
+        - Not playing → start the selected station.
+        - Same station already playing → stop it.
+        - Different station selected while one is playing → switch immediately.
+        """
+        if not self._player.is_playing():
             self._on_play(event)
+        else:
+            selected = self._get_selected_station()
+            if (
+                selected is not None
+                and self._playing_station is not None
+                and selected.call_sign == self._playing_station.call_sign
+            ):
+                self._on_stop(event)
+            else:
+                # Different station (or unknown) — switch without a second press
+                self._on_play(event)
 
     def _on_play(self, _event: wx.CommandEvent) -> None:
         """Handle Play action."""
@@ -269,6 +288,7 @@ class NOAARadioDialog(wx.Dialog):
             )
             return
 
+        self._playing_station = station
         self._current_urls = self._prefs.reorder_urls(station.call_sign, urls)
         self._current_url_index = 0
         self._try_play_current(station.call_sign)
@@ -319,6 +339,7 @@ class NOAARadioDialog(wx.Dialog):
 
     def _on_stopped(self) -> None:
         """Handle playback stopped event."""
+        self._playing_station = None
         self._set_status("Stopped")
         self._play_stop_btn.Enable(True)
         self._play_stop_btn.SetLabel("Play")
@@ -327,6 +348,7 @@ class NOAARadioDialog(wx.Dialog):
 
     def _on_error(self, message: str) -> None:
         """Handle playback error event."""
+        self._playing_station = None
         self._health_timer.Stop()
         self._set_status(f"Error: {message}")
         self._play_stop_btn.Enable(True)
@@ -394,6 +416,39 @@ class NOAARadioDialog(wx.Dialog):
     def _set_status(self, text: str) -> None:
         """Update the status text."""
         self._status_text.SetLabel(text)
+
+    def _on_station_changed(self, event: wx.CommandEvent) -> None:
+        """Update button label when the user picks a different station."""
+        self._update_play_btn_label()
+        event.Skip()
+
+    def _on_choice_key(self, event: wx.KeyEvent) -> None:
+        """Trigger play/switch when Enter is pressed while the station choice is focused."""
+        if event.GetKeyCode() in (wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER):
+            self._on_play_stop(event)
+            return
+        event.Skip()
+
+    def _update_play_btn_label(self) -> None:
+        """
+        Set play/stop button label to reflect current playback state.
+
+        - 'Play'   — nothing is playing.
+        - 'Stop'   — the selected station is the one currently playing.
+        - 'Switch' — a different station is selected while one is playing.
+        """
+        if not self._player.is_playing():
+            self._play_stop_btn.SetLabel("Play")
+            return
+        selected = self._get_selected_station()
+        if (
+            selected is not None
+            and self._playing_station is not None
+            and selected.call_sign == self._playing_station.call_sign
+        ):
+            self._play_stop_btn.SetLabel("Stop")
+        else:
+            self._play_stop_btn.SetLabel("Switch")
 
     def _on_char_hook(self, event: wx.KeyEvent) -> None:
         """Handle keyboard shortcuts for the dialog."""

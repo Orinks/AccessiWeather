@@ -236,3 +236,58 @@ def test_parse_openmeteo_hourly_forecast_calculates_dewpoint_when_missing():
     assert period.humidity == 55
     assert period.dewpoint_f is not None
     assert period.dewpoint_c is not None
+
+
+def _make_current_data(uv_current=None, uv_daily_max=None):
+    """Build minimal parse_openmeteo_current_conditions input."""
+    data = {
+        "current": {
+            "temperature_2m": 55.0,
+            "relative_humidity_2m": 78,
+            "apparent_temperature": 50.0,
+            "weather_code": 3,
+            "wind_speed_10m": 10.0,
+            "wind_direction_10m": 90,
+            "pressure_msl": 1013.0,
+            "rain": 0.0,
+            "showers": 0.0,
+            "snowfall": 0.0,
+            "snow_depth": 0.0,
+            "visibility": 10000,
+        },
+        "current_units": {
+            "temperature_2m": "°F",
+            "apparent_temperature": "°F",
+            "wind_speed_10m": "mph",
+            "pressure_msl": "hPa",
+            "snow_depth": "m",
+        },
+        "daily": {"sunrise": [], "sunset": [], "uv_index_max": []},
+    }
+    if uv_current is not None:
+        data["current"]["uv_index"] = uv_current
+    if uv_daily_max is not None:
+        data["daily"]["uv_index_max"] = [uv_daily_max]
+    return data
+
+
+def test_uv_index_uses_realtime_current_value_when_present():
+    """Real-time current.uv_index should be used, not the daily max."""
+    data = _make_current_data(uv_current=0.0, uv_daily_max=4.25)
+    current = parse_openmeteo_current_conditions(data)
+    assert current.uv_index == 0.0
+
+
+def test_uv_index_falls_back_to_daily_max_when_current_absent():
+    """When current block has no uv_index, fall back to daily uv_index_max."""
+    data = _make_current_data(uv_daily_max=4.25)
+    current = parse_openmeteo_current_conditions(data)
+    assert current.uv_index == 4.25
+
+
+def test_uv_index_invalid_value_returns_none():
+    """A non-numeric uv_index in the current block should produce None."""
+    data = _make_current_data(uv_daily_max=3.0)
+    data["current"]["uv_index"] = "bad"
+    current = parse_openmeteo_current_conditions(data)
+    assert current.uv_index is None
