@@ -447,6 +447,11 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         snow_depth_cm = None
 
     visibility_m = current.get("visibility")  # meters
+    # Open-Meteo provides model-derived visibility which can be unrealistically high.
+    # Standard surface observation cap is 10 statute miles (16,093 m). Cap at that.
+    _VISIBILITY_CAP_M = 16093.4  # 10 statute miles in meters
+    if visibility_m is not None:
+        visibility_m = min(visibility_m, _VISIBILITY_CAP_M)
     visibility_miles = visibility_m / 1609.344 if visibility_m is not None else None
     visibility_km = visibility_m / 1000 if visibility_m is not None else None
 
@@ -574,6 +579,9 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
         freezing_level_ft = freezing_level_m * 3.28084 if freezing_level_m is not None else None
 
         visibility_m = visibilities[i] if i < len(visibilities) else None
+        # Cap at 10 statute miles — Open-Meteo model visibility is unreliable above this
+        if visibility_m is not None:
+            visibility_m = min(visibility_m, 16093.4)
         visibility_miles = visibility_m / 1609.344 if visibility_m is not None else None
 
         apparent_temp = apparent_temps[i] if i < len(apparent_temps) else None
