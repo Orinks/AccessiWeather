@@ -43,6 +43,7 @@ def _make_window():
     win.refresh_button = MagicMock()
     win.status_label = MagicMock()
     win.stale_warning_label = MagicMock()
+    win._announcer = MagicMock()
 
     # State
     win._all_locations_active = False
