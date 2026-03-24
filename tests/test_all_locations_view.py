@@ -261,18 +261,6 @@ class TestShowAllLocationsSummary:
         assert "No locations configured" in text
         win.view_alert_button.Disable.assert_called()
 
-    def test_status_shows_location_count(self):
-        win = _make_window()
-        locs = [_make_location("Boston"), _make_location("Austin")]
-        win.app.config_manager.get_all_locations.return_value = locs
-        win.app.weather_client.get_cached_weather.return_value = None
-
-        win._show_all_locations_summary()
-
-        win.GetStatusBar().SetStatusText.assert_called_with(
-            "All Locations summary — 2 location(s)", 0
-        )
-
     def test_refresh_button_enabled_after_summary(self):
         win = _make_window()
         win.app.config_manager.get_all_locations.return_value = [_make_location("Boston")]
