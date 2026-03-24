@@ -991,7 +991,6 @@ class MainWindow(SizedFrame):
         """
         # All Locations view: fetch fresh data for all locations sequentially then re-render.
         if getattr(self, "_all_locations_active", False):
-            self.set_status("Refreshing all locations...")
             self.refresh_button.Disable()
             self.app.run_async(self._fetch_all_locations_data())
             return
@@ -1004,7 +1003,6 @@ class MainWindow(SizedFrame):
             return
 
         self.app.is_updating = True
-        self.set_status("Updating weather data...")
         self.refresh_button.Disable()
 
         # Run async weather fetch with current generation
@@ -1122,7 +1120,6 @@ class MainWindow(SizedFrame):
             self.current_conditions.SetValue(current_text)
             self._set_forecast_sections(forecast_text, "")
             self.stale_warning_label.SetLabel("")
-            self.set_status("Nationwide discussions updated")
         except Exception as e:
             logger.error(f"Error updating nationwide display: {e}")
         finally:
@@ -1232,7 +1229,6 @@ class MainWindow(SizedFrame):
 
             location = self.app.config_manager.get_current_location()
             location_name = location.name if location else "Unknown"
-            self.set_status(f"Weather updated for {location_name}")
 
             # Update system tray tooltip with current weather
             self.app.update_tray_tooltip(weather_data, location_name)
@@ -1399,7 +1395,6 @@ class MainWindow(SizedFrame):
             self._set_forecast_sections("", "")
             self.alerts_list.Clear()
             self.view_alert_button.Disable()
-            self.set_status("All Locations — no locations configured")
             return
 
         lines: list[str] = ["All Locations Summary", ""]
@@ -1470,7 +1465,6 @@ class MainWindow(SizedFrame):
         self.app.update_tray_tooltip(tray_data, tray_loc_name)
 
         self.stale_warning_label.SetLabel("")
-        self.set_status(f"All Locations summary — {len(all_locs)} location(s)")
 
         # Ensure the refresh button stays enabled in this view.
         self.app.is_updating = False
