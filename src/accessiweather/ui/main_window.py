@@ -29,6 +29,16 @@ logger = logging.getLogger(__name__)
 ALL_LOCATIONS_SENTINEL = "All Locations"
 
 
+class _StaleWarningProxy:
+    """Delegates SetLabel() calls to the second field of the wx.StatusBar."""
+
+    def __init__(self, window: MainWindow) -> None:
+        self._window = window
+
+    def SetLabel(self, text: str) -> None:
+        self._window.GetStatusBar().SetStatusText(text, 1)
+
+
 class MainWindow(SizedFrame):
     """
     Main application window using plain wxPython.
@@ -96,14 +106,6 @@ class MainWindow(SizedFrame):
         )
         self.location_dropdown.SetSizerProps(expand=True, proportion=1)
 
-        # Status display
-        self.status_label = wx.StaticText(panel, label="")
-        self.status_label.SetSizerProps(expand=True)
-
-        # Stale/cached data warning
-        self.stale_warning_label = wx.StaticText(panel, label="")
-        self.stale_warning_label.SetSizerProps(expand=True)
-
         # Current conditions section
         wx.StaticText(panel, label="Current Conditions:")
         self.current_conditions = wx.TextCtrl(
@@ -157,6 +159,11 @@ class MainWindow(SizedFrame):
         self.explain_button = wx.Button(button_panel, label="&Explain")
         self.discussion_button = wx.Button(button_panel, label="&Discussion")
         self.settings_button = wx.Button(button_panel, label="&Settings")
+
+        # Status bar — two fields: [0] main status, [1] stale/cached warning
+        self.CreateStatusBar(2)
+        self.GetStatusBar().SetStatusWidths([-2, -1])
+        self.stale_warning_label = _StaleWarningProxy(self)
 
     def _bind_events(self) -> None:
         """Bind all event handlers."""
@@ -1569,8 +1576,8 @@ class MainWindow(SizedFrame):
         return first_with_data, first_with_data_name
 
     def set_status(self, message: str) -> None:
-        """Set the status label text and announce via screen reader."""
-        self.status_label.SetLabel(message)
+        """Set the status bar text and announce via screen reader."""
+        self.GetStatusBar().SetStatusText(message, 0)
         logger.info(f"Status: {message}")
         if message:
             self._announcer.announce(message)
