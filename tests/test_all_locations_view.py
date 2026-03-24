@@ -41,8 +41,8 @@ def _make_window():
     win.alerts_list = MagicMock()
     win.view_alert_button = MagicMock()
     win.refresh_button = MagicMock()
-    win.status_label = MagicMock()
     win.stale_warning_label = MagicMock()
+    win.GetStatusBar = MagicMock(return_value=MagicMock())
     win._announcer = MagicMock()
 
     # State
@@ -269,7 +269,9 @@ class TestShowAllLocationsSummary:
 
         win._show_all_locations_summary()
 
-        win.status_label.SetLabel.assert_called_with("All Locations summary — 2 location(s)")
+        win.GetStatusBar().SetStatusText.assert_called_with(
+            "All Locations summary — 2 location(s)", 0
+        )
 
     def test_refresh_button_enabled_after_summary(self):
         win = _make_window()
