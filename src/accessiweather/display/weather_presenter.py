@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
     from ..forecast_confidence import ForecastConfidence
 
+from ..impact_summary import ImpactSummary
 from ..models import (
     AppSettings,
     AviationData,
@@ -86,6 +87,7 @@ class CurrentConditionsPresentation:
     metrics: list[Metric] = field(default_factory=list)
     fallback_text: str = ""
     trends: list[str] = field(default_factory=list)
+    impact_summary: ImpactSummary | None = None
 
     @property
     def trend_summary(self) -> list[str]:  # pragma: no cover - backward compatibility
@@ -107,6 +109,7 @@ class ForecastPresentation:
     hourly_section_text: str = ""
     confidence_label: str | None = None
     summary: str | None = None
+    impact_summary: ImpactSummary | None = None
 
 
 @dataclass(slots=True)
