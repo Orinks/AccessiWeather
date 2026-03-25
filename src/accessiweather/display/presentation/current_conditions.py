@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Iterable
 
+from ...impact_summary import build_impact_summary
 from ...models import (
     AppSettings,
     CurrentConditions,
@@ -508,6 +509,15 @@ def build_current_conditions(
     metrics.extend(_build_environmental_metrics(environmental, air_quality))
     metrics.extend(_build_trend_metrics(trends, current, hourly_forecast, show_pressure_trend))
 
+    # Build impact summary
+    impact = build_impact_summary(current, environmental)
+    if impact.outdoor:
+        metrics.append(Metric("Impact: Outdoor", impact.outdoor))
+    if impact.driving:
+        metrics.append(Metric("Impact: Driving", impact.driving))
+    if impact.allergy:
+        metrics.append(Metric("Impact: Allergy", impact.allergy))
+
     # Build fallback text
     # Use metric.label for all metrics — after priority reordering, metrics[0]
     # may no longer be the Temperature metric (e.g. Visibility moves first during fog alerts)
@@ -530,6 +540,7 @@ def build_current_conditions(
         metrics=metrics,
         fallback_text=fallback_text,
         trends=trend_lines,
+        impact_summary=impact if impact.has_content() else None,
     )
 
 

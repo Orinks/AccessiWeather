@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Weather impact summaries now appear in the current conditions and forecast sections. You'll see plain-language guidance for three areas: outdoor comfort and activity, driving caution (visibility, ice, wind, precipitation), and allergy risk (pollen level, primary allergen, wind dispersion, air quality). All rules are transparent and documented — no opaque AI decisions. Screen readers announce concise, labelled lines such as "Impact: Outdoor: Comfortable - good conditions for outdoor activities."
 - Implemented Nationwide weather discussions feature, including:
     - "Show Nationwide location" setting and dynamic filtering of the Nationwide location.
     - Main window integration for displaying discussion summaries.

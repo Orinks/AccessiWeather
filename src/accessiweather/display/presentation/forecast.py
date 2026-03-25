@@ -6,6 +6,7 @@ from collections.abc import Iterable
 from datetime import datetime, tzinfo
 
 from ...forecast_confidence import ForecastConfidence
+from ...impact_summary import build_forecast_impact_summary
 from ...models import AppSettings, Forecast, ForecastPeriod, HourlyForecast, Location
 from ...utils import TemperatureUnit, calculate_dewpoint
 from ..weather_presenter import (
@@ -264,6 +265,10 @@ def build_forecast(
         fallback_sections.append(hourly_section_text)
     fallback_text = "\n\n".join(section for section in fallback_sections if section).rstrip()
 
+    # Build impact summary from the first daily period when available
+    first_period = forecast.periods[0] if forecast.periods else None
+    forecast_impact = build_forecast_impact_summary(first_period) if first_period else None
+
     return ForecastPresentation(
         title=title,
         periods=periods,
@@ -275,6 +280,9 @@ def build_forecast(
         hourly_section_text=hourly_section_text,
         confidence_label=confidence_label,
         summary=summary_line,
+        impact_summary=forecast_impact
+        if forecast_impact and forecast_impact.has_content()
+        else None,
     )
 
 
