@@ -850,6 +850,7 @@ class WeatherClient:
             "source_priority_international",
             ["openmeteo", "pirateweather", "visualcrossing"],
         )
+        enabled_sources = set(us_priority) | set(intl_priority)
         config = SourcePriorityConfig(us_default=us_priority, international_default=intl_priority)
         parallel_timeout = getattr(self.settings, "parallel_fetch_timeout", 5.0)
         coordinator = ParallelFetchCoordinator(timeout=parallel_timeout)
@@ -906,10 +907,10 @@ class WeatherClient:
         # Fetch from all sources in parallel
         source_results = await coordinator.fetch_all(
             location=location,
-            fetch_nws=fetch_nws() if is_us else None,
-            fetch_openmeteo=fetch_openmeteo(),
-            fetch_visualcrossing=fetch_vc() if self.visual_crossing_client else None,
-            fetch_pirateweather=fetch_pw() if self.pirate_weather_api_key else None,
+            fetch_nws=fetch_nws() if (is_us and "nws" in enabled_sources) else None,
+            fetch_openmeteo=fetch_openmeteo() if "openmeteo" in enabled_sources else None,
+            fetch_visualcrossing=fetch_vc() if (self.visual_crossing_client and "visualcrossing" in enabled_sources) else None,
+            fetch_pirateweather=fetch_pw() if (self.pirate_weather_api_key and "pirateweather" in enabled_sources) else None,
         )
 
         # Check if all sources failed
