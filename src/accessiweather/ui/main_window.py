@@ -896,6 +896,7 @@ class MainWindow(SizedFrame):
             return
 
         # Otherwise, exit the application
+        self._announcer.shutdown()
         self.app.request_exit()
 
     def _on_iconize(self, event) -> None:
@@ -995,13 +996,12 @@ class MainWindow(SizedFrame):
             self.app.run_async(self._fetch_all_locations_data())
             return
 
-        # Increment generation to invalidate any in-flight fetches
-        self._fetch_generation += 1
-
         if self.app.is_updating and not force_refresh:
             logger.debug("Already updating, skipping refresh")
             return
 
+        # Increment generation to invalidate any in-flight fetches
+        self._fetch_generation += 1
         self.app.is_updating = True
         self.refresh_button.Disable()
 

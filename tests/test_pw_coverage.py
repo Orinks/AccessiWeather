@@ -729,11 +729,19 @@ class TestFetchPirateWeatherInAutoMode:
         mock_forecast_attribution = {"summary": "pirateweather"}
         mock_hourly_attribution = {"temperature": "pirateweather"}
 
+        import asyncio as _asyncio
+
+        async def _mock_fetch_all(_coordinator, location, **kwargs):
+            for coro in kwargs.values():
+                if _asyncio.iscoroutine(coro):
+                    coro.close()
+            return [pw_source]
+
         with (
             patch.object(
                 ParallelFetchCoordinator,
                 "fetch_all",
-                return_value=[pw_source],
+                new=_mock_fetch_all,
             ),
             patch.object(wc, "_fetch_nws_cancel_references", return_value=set()),
             patch.object(

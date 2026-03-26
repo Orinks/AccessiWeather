@@ -13,6 +13,7 @@ from .alerts import WeatherAlerts
 if TYPE_CHECKING:
     from accessiweather.alert_lifecycle import AlertLifecycleDiff
     from accessiweather.forecast_confidence import ForecastConfidence
+    from accessiweather.weather_anomaly import AnomalyCallout
 
 # Note: CurrentConditions, Forecast, HourlyForecast are defined later in this file
 # and used in SourceData via forward references (string annotations)
@@ -559,6 +560,8 @@ class WeatherData:
     alert_lifecycle_diff: AlertLifecycleDiff | None = None
     # Cross-source forecast confidence (only set for multi-source fetches)
     forecast_confidence: ForecastConfidence | None = None
+    # Historical anomaly callout (computed on demand, optional)
+    anomaly_callout: AnomalyCallout | None = None
 
     @property
     def current_conditions(self) -> CurrentConditions | None:
