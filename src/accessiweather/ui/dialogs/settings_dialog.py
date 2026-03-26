@@ -112,6 +112,7 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls = {}
         self._selected_specific_model: str | None = None
         self._event_sound_states = self._build_default_event_sound_states()
+        self._source_settings_states = self._build_default_source_settings_states()
 
         self._create_ui()
         self._load_settings()
@@ -412,42 +413,6 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["data_source"].Bind(wx.EVT_CHOICE, self._on_data_source_changed)
         sizer.Add(row1, 0, wx.ALL, 5)
 
-        # Auto Mode Source Selection (shown only when data_source == 'auto')
-        auto_sources_box = wx.StaticBox(panel, label="Auto mode sources:")
-        self._auto_sources_sizer = wx.StaticBoxSizer(auto_sources_box, wx.VERTICAL)
-
-        us_label = wx.StaticText(panel, label="US locations:")
-        self._auto_sources_sizer.Add(us_label, 0, wx.ALL, 5)
-        us_cb_row = wx.BoxSizer(wx.HORIZONTAL)
-        self._controls["auto_src_us_nws"] = wx.CheckBox(panel, label="NWS")
-        self._controls["auto_src_us_openmeteo"] = wx.CheckBox(panel, label="Open-Meteo")
-        self._controls["auto_src_us_visualcrossing"] = wx.CheckBox(panel, label="Visual Crossing")
-        self._controls["auto_src_us_pirateweather"] = wx.CheckBox(panel, label="Pirate Weather")
-        for key in (
-            "auto_src_us_nws",
-            "auto_src_us_openmeteo",
-            "auto_src_us_visualcrossing",
-            "auto_src_us_pirateweather",
-        ):
-            us_cb_row.Add(self._controls[key], 0, wx.RIGHT, 10)
-        self._auto_sources_sizer.Add(us_cb_row, 0, wx.LEFT | wx.BOTTOM, 10)
-
-        intl_label = wx.StaticText(panel, label="International locations:")
-        self._auto_sources_sizer.Add(intl_label, 0, wx.ALL, 5)
-        intl_cb_row = wx.BoxSizer(wx.HORIZONTAL)
-        self._controls["auto_src_intl_openmeteo"] = wx.CheckBox(panel, label="Open-Meteo")
-        self._controls["auto_src_intl_visualcrossing"] = wx.CheckBox(panel, label="Visual Crossing")
-        self._controls["auto_src_intl_pirateweather"] = wx.CheckBox(panel, label="Pirate Weather")
-        for key in (
-            "auto_src_intl_openmeteo",
-            "auto_src_intl_visualcrossing",
-            "auto_src_intl_pirateweather",
-        ):
-            intl_cb_row.Add(self._controls[key], 0, wx.RIGHT, 10)
-        self._auto_sources_sizer.Add(intl_cb_row, 0, wx.LEFT | wx.BOTTOM, 10)
-
-        sizer.Add(self._auto_sources_sizer, 0, wx.ALL | wx.EXPAND, 5)
-
         # Visual Crossing Configuration
         self._vc_config_sizer = wx.BoxSizer(wx.VERTICAL)
         self._vc_config_sizer.Add(
@@ -510,51 +475,27 @@ class SettingsDialogSimple(wx.Dialog):
         self._pw_config_sizer.Add(btn_row_pw, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
         sizer.Add(self._pw_config_sizer, 0, wx.EXPAND)
 
-        # Open-Meteo Weather Model
+        # Source Settings summary + button
         sizer.Add(
-            wx.StaticText(panel, label="Open-Meteo Weather Model:"),
+            wx.StaticText(panel, label="Source Settings:"),
             0,
             wx.ALL,
             5,
         )
-
-        self._controls["openmeteo_model"] = wx.Choice(
+        self._controls["source_settings_summary"] = wx.TextCtrl(
             panel,
-            choices=[
-                "Best Match (Automatic)",
-                "ICON Seamless (DWD, Europe/Global)",
-                "ICON Global (DWD, 13km)",
-                "ICON EU (DWD, 6.5km Europe)",
-                "ICON D2 (DWD, 2km Germany)",
-                "GFS Seamless (NOAA, Americas/Global)",
-                "GFS Global (NOAA, 28km)",
-                "ECMWF IFS (9km Global)",
-                "Météo-France (Europe)",
-                "GEM (Canadian, North America)",
-                "JMA (Japan/Asia)",
-            ],
+            value=self._get_source_settings_summary_text(),
+            size=(-1, 44),
+            style=wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_NO_VSCROLL,
         )
-        sizer.Add(self._controls["openmeteo_model"], 0, wx.LEFT, 10)
-
-        sizer.Add(
-            wx.StaticText(panel, label="NWS Station Selection (Current Conditions):"),
-            0,
-            wx.ALL,
-            5,
+        sizer.Add(self._controls["source_settings_summary"], 0, wx.LEFT | wx.BOTTOM | wx.EXPAND, 5)
+        self._controls["configure_source_settings"] = wx.Button(
+            panel, label="Configure Source Settings..."
         )
-        self._controls["station_selection_strategy"] = wx.Choice(
-            panel,
-            choices=[
-                "Hybrid default (recommended: fresh + major station with distance guardrail)",
-                "Nearest station (pure distance)",
-                "Major airport preferred (within radius, else nearest)",
-                "Freshest observation (among nearest stations)",
-            ],
+        self._controls["configure_source_settings"].Bind(
+            wx.EVT_BUTTON, self._on_configure_source_settings
         )
-        self._controls["station_selection_strategy"].SetToolTip(
-            "Applies to NWS current conditions. In Auto mode, applies when NWS is selected or used as fallback."
-        )
-        sizer.Add(self._controls["station_selection_strategy"], 0, wx.LEFT, 10)
+        sizer.Add(self._controls["configure_source_settings"], 0, wx.LEFT | wx.BOTTOM, 5)
 
         panel.SetSizer(sizer)
         self.notebook.AddPage(panel, "Data Sources")
@@ -987,6 +928,181 @@ class SettingsDialogSimple(wx.Dialog):
             for event_key, _label in self._get_mutable_sound_events()
         }
         self._refresh_event_sound_summary()
+
+    @staticmethod
+    def _build_default_source_settings_states() -> dict:
+        """Return default source settings state."""
+        return {
+            "auto_use_nws": True,
+            "auto_use_openmeteo": True,
+            "auto_use_visualcrossing": True,
+            "auto_use_pirateweather": True,
+            "station_selection_strategy": 0,
+        }
+
+    def _get_source_settings_summary_text(self) -> str:
+        """Build summary text shown on the data sources tab."""
+        state = (
+            getattr(self, "_source_settings_states", None)
+            or self._build_default_source_settings_states()
+        )
+        strategy_labels = [
+            "Hybrid default",
+            "Nearest station",
+            "Major airport preferred",
+            "Freshest observation",
+        ]
+        strat_idx = state.get("station_selection_strategy", 0)
+        strat_text = (
+            strategy_labels[strat_idx]
+            if 0 <= strat_idx < len(strategy_labels)
+            else strategy_labels[0]
+        )
+        sources = ["NWS", "Open-Meteo", "Visual Crossing", "Pirate Weather"]
+        keys = [
+            "auto_use_nws",
+            "auto_use_openmeteo",
+            "auto_use_visualcrossing",
+            "auto_use_pirateweather",
+        ]
+        enabled = [s for s, k in zip(sources, keys, strict=True) if state.get(k, True)]
+        enabled_text = ", ".join(enabled) if enabled else "None"
+        return f"Auto sources: {enabled_text} | Station: {strat_text}"
+
+    def _refresh_source_settings_summary(self) -> None:
+        """Refresh the source settings summary shown on the data sources tab."""
+        ctrl = self._controls.get("source_settings_summary")
+        if ctrl is not None:
+            ctrl.SetValue(self._get_source_settings_summary_text())
+
+    def _run_source_settings_dialog(self) -> dict | None:
+        """Show the source settings modal (tabbed) and return updated state when accepted."""
+        state = dict(
+            getattr(self, "_source_settings_states", None)
+            or self._build_default_source_settings_states()
+        )
+
+        dialog = wx.Dialog(
+            self,
+            title="Configure Source Settings",
+            size=(500, 400),
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+        )
+
+        main_sizer = wx.BoxSizer(wx.VERTICAL)
+        notebook = wx.Notebook(dialog)
+
+        # ── Tab 1: Current Conditions ──────────────────────────────────────
+        cc_panel = wx.ScrolledWindow(notebook)
+        cc_panel.SetScrollRate(0, 20)
+        cc_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        cc_sizer.Add(
+            wx.StaticText(
+                cc_panel,
+                label=(
+                    "These settings control how current conditions are fetched "
+                    "when using NWS (US locations)."
+                ),
+            ),
+            0,
+            wx.ALL | wx.EXPAND,
+            10,
+        )
+
+        cc_sizer.Add(
+            wx.StaticText(cc_panel, label="NWS station selection strategy:"),
+            0,
+            wx.LEFT | wx.RIGHT,
+            10,
+        )
+        strategy_ctrl = wx.Choice(
+            cc_panel,
+            choices=[
+                "Hybrid default (recommended: fresh + major station with distance guardrail)",
+                "Nearest station (pure distance)",
+                "Major airport preferred (within radius, else nearest)",
+                "Freshest observation (among nearest stations)",
+            ],
+        )
+        strategy_ctrl.SetSelection(state.get("station_selection_strategy", 0))
+        cc_sizer.Add(strategy_ctrl, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 10)
+
+        cc_panel.SetSizer(cc_sizer)
+        notebook.AddPage(cc_panel, "Current Conditions")
+
+        # ── Tab 2: Auto Mode ───────────────────────────────────────────────
+        auto_panel = wx.ScrolledWindow(notebook)
+        auto_panel.SetScrollRate(0, 20)
+        auto_sizer = wx.BoxSizer(wx.VERTICAL)
+
+        auto_sizer.Add(
+            wx.StaticText(
+                auto_panel,
+                label=(
+                    "Select which weather sources are used when Automatic mode is active. "
+                    "Unchecking a source prevents it from being fetched entirely. "
+                    "NWS is only available for US locations."
+                ),
+            ),
+            0,
+            wx.ALL | wx.EXPAND,
+            10,
+        )
+
+        nws_cb = wx.CheckBox(auto_panel, label="National Weather Service (US locations only)")
+        nws_cb.SetValue(state.get("auto_use_nws", True))
+        auto_sizer.Add(nws_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        openmeteo_cb = wx.CheckBox(auto_panel, label="Open-Meteo")
+        openmeteo_cb.SetValue(state.get("auto_use_openmeteo", True))
+        auto_sizer.Add(openmeteo_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        vc_cb = wx.CheckBox(auto_panel, label="Visual Crossing (requires API key)")
+        vc_cb.SetValue(state.get("auto_use_visualcrossing", True))
+        auto_sizer.Add(vc_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        pw_cb = wx.CheckBox(auto_panel, label="Pirate Weather (requires API key)")
+        pw_cb.SetValue(state.get("auto_use_pirateweather", True))
+        auto_sizer.Add(pw_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        auto_panel.SetSizer(auto_sizer)
+        notebook.AddPage(auto_panel, "Auto Mode")
+
+        main_sizer.Add(notebook, 1, wx.EXPAND | wx.ALL, 10)
+
+        button_row = wx.BoxSizer(wx.HORIZONTAL)
+        button_row.AddStretchSpacer()
+        cancel_btn = wx.Button(dialog, wx.ID_CANCEL, "Cancel")
+        ok_btn = wx.Button(dialog, wx.ID_OK, "OK")
+        button_row.Add(cancel_btn, 0, wx.RIGHT, 10)
+        button_row.Add(ok_btn, 0)
+        main_sizer.Add(button_row, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        dialog.SetSizer(main_sizer)
+        self._configure_modal_dialog_buttons(dialog, ok_btn, cancel_btn, focus_target=notebook)
+
+        try:
+            if dialog.ShowModal() != wx.ID_OK:
+                return None
+            return {
+                "auto_use_nws": nws_cb.GetValue(),
+                "auto_use_openmeteo": openmeteo_cb.GetValue(),
+                "auto_use_visualcrossing": vc_cb.GetValue(),
+                "auto_use_pirateweather": pw_cb.GetValue(),
+                "station_selection_strategy": strategy_ctrl.GetSelection(),
+            }
+        finally:
+            if hasattr(dialog, "Destroy"):
+                dialog.Destroy()
+
+    def _on_configure_source_settings(self, event) -> None:
+        """Open the source settings modal and persist accepted in-memory state."""
+        updated = self._run_source_settings_dialog()
+        if updated is None:
+            return
+        self._source_settings_states = updated
+        self._refresh_source_settings_summary()
 
     def _create_updates_tab(self):
         """Create the updates tab."""
@@ -1422,52 +1538,43 @@ class SettingsDialogSimple(wx.Dialog):
 
                 self._controls["pw_key"].Bind(wx.EVT_TEXT, _on_pw_key_text)
 
-            # Auto mode sources
-            auto_src_us = getattr(
-                settings, "auto_sources_us", ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+            # Source settings sub-dialog state
+            station_strategy_values = [
+                "hybrid_default",
+                "nearest",
+                "major_airport_preferred",
+                "freshest_observation",
+            ]
+            saved_strategy = getattr(settings, "station_selection_strategy", "hybrid_default")
+            strat_idx = (
+                station_strategy_values.index(saved_strategy)
+                if saved_strategy in station_strategy_values
+                else 0
             )
-            auto_src_intl = getattr(
-                settings,
-                "auto_sources_international",
-                ["openmeteo", "pirateweather", "visualcrossing"],
+            saved_us = list(
+                getattr(
+                    settings,
+                    "source_priority_us",
+                    ["nws", "openmeteo", "visualcrossing", "pirateweather"],
+                )
             )
-            self._controls["auto_src_us_nws"].SetValue("nws" in auto_src_us)
-            self._controls["auto_src_us_openmeteo"].SetValue("openmeteo" in auto_src_us)
-            self._controls["auto_src_us_visualcrossing"].SetValue("visualcrossing" in auto_src_us)
-            self._controls["auto_src_us_pirateweather"].SetValue("pirateweather" in auto_src_us)
-            self._controls["auto_src_intl_openmeteo"].SetValue("openmeteo" in auto_src_intl)
-            self._controls["auto_src_intl_visualcrossing"].SetValue(
-                "visualcrossing" in auto_src_intl
+            saved_intl = list(
+                getattr(
+                    settings,
+                    "source_priority_international",
+                    ["openmeteo", "pirateweather", "visualcrossing"],
+                )
             )
-            self._controls["auto_src_intl_pirateweather"].SetValue("pirateweather" in auto_src_intl)
-
+            all_sources_combined = set(saved_us) | set(saved_intl)
+            self._source_settings_states = {
+                "auto_use_nws": "nws" in all_sources_combined,
+                "auto_use_openmeteo": "openmeteo" in all_sources_combined,
+                "auto_use_visualcrossing": "visualcrossing" in all_sources_combined,
+                "auto_use_pirateweather": "pirateweather" in all_sources_combined,
+                "station_selection_strategy": strat_idx,
+            }
+            self._refresh_source_settings_summary()
             self._update_api_key_visibility()
-
-            # Open-Meteo model
-            model = getattr(settings, "openmeteo_weather_model", "best_match")
-            model_map = {
-                "best_match": 0,
-                "icon_seamless": 1,
-                "icon_global": 2,
-                "icon_eu": 3,
-                "icon_d2": 4,
-                "gfs_seamless": 5,
-                "gfs_global": 6,
-                "ecmwf_ifs04": 7,
-                "meteofrance_seamless": 8,
-                "gem_seamless": 9,
-                "jma_seamless": 10,
-            }
-            self._controls["openmeteo_model"].SetSelection(model_map.get(model, 0))
-
-            strategy = getattr(settings, "station_selection_strategy", "hybrid_default")
-            strategy_map = {
-                "hybrid_default": 0,
-                "nearest": 1,
-                "major_airport_preferred": 2,
-                "freshest_observation": 3,
-            }
-            self._controls["station_selection_strategy"].SetSelection(strategy_map.get(strategy, 0))
 
             # Notifications tab
             self._controls["enable_alerts"].SetValue(getattr(settings, "enable_alerts", True))
@@ -1605,26 +1712,7 @@ class SettingsDialogSimple(wx.Dialog):
             forecast_time_reference_values = ["location", "user_local"]
             time_mode_values = ["local", "utc", "both"]
             verbosity_values = ["minimal", "standard", "detailed"]
-            model_values = [
-                "best_match",
-                "icon_seamless",
-                "icon_global",
-                "icon_eu",
-                "icon_d2",
-                "gfs_seamless",
-                "gfs_global",
-                "ecmwf_ifs04",
-                "meteofrance_seamless",
-                "gem_seamless",
-                "jma_seamless",
-            ]
             style_values = ["brief", "standard", "detailed"]
-            station_strategy_values = [
-                "hybrid_default",
-                "nearest",
-                "major_airport_preferred",
-                "freshest_observation",
-            ]
 
             # Update nationwide visibility
             show_nationwide = self._controls["show_nationwide"].GetValue()
@@ -1666,12 +1754,65 @@ class SettingsDialogSimple(wx.Dialog):
                 "data_source": source_values[self._controls["data_source"].GetSelection()],
                 "visual_crossing_api_key": self._controls["vc_key"].GetValue(),
                 "pirate_weather_api_key": self._controls["pw_key"].GetValue(),
-                "openmeteo_weather_model": model_values[
-                    self._controls["openmeteo_model"].GetSelection()
+                "source_priority_us": [
+                    s
+                    for s in ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+                    if self._source_settings_states.get(
+                        {
+                            "nws": "auto_use_nws",
+                            "openmeteo": "auto_use_openmeteo",
+                            "visualcrossing": "auto_use_visualcrossing",
+                            "pirateweather": "auto_use_pirateweather",
+                        }[s],
+                        True,
+                    )
                 ],
-                "station_selection_strategy": station_strategy_values[
-                    max(0, self._controls["station_selection_strategy"].GetSelection())
+                "source_priority_international": [
+                    s
+                    for s in ["openmeteo", "visualcrossing", "pirateweather"]
+                    if self._source_settings_states.get(
+                        {
+                            "openmeteo": "auto_use_openmeteo",
+                            "visualcrossing": "auto_use_visualcrossing",
+                            "pirateweather": "auto_use_pirateweather",
+                        }[s],
+                        True,
+                    )
                 ],
+                "auto_sources_us": [
+                    s
+                    for s in ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+                    if self._source_settings_states.get(
+                        {
+                            "nws": "auto_use_nws",
+                            "openmeteo": "auto_use_openmeteo",
+                            "visualcrossing": "auto_use_visualcrossing",
+                            "pirateweather": "auto_use_pirateweather",
+                        }[s],
+                        True,
+                    )
+                ]
+                or ["openmeteo"],
+                "auto_sources_international": [
+                    s
+                    for s in ["openmeteo", "visualcrossing", "pirateweather"]
+                    if self._source_settings_states.get(
+                        {
+                            "openmeteo": "auto_use_openmeteo",
+                            "visualcrossing": "auto_use_visualcrossing",
+                            "pirateweather": "auto_use_pirateweather",
+                        }[s],
+                        True,
+                    )
+                ]
+                or ["openmeteo"],
+                "openmeteo_weather_model": "best_match",
+                "station_selection_strategy": [
+                    "hybrid_default",
+                    "nearest",
+                    "major_airport_preferred",
+                    "freshest_observation",
+                ][max(0, self._source_settings_states.get("station_selection_strategy", 0))],
                 # Notifications
                 "enable_alerts": self._controls["enable_alerts"].GetValue(),
                 "alert_notifications_enabled": self._controls["alert_notif"].GetValue(),
@@ -1721,32 +1862,6 @@ class SettingsDialogSimple(wx.Dialog):
                 "startup_enabled": self._controls["startup"].GetValue(),
                 "weather_history_enabled": self._controls["weather_history"].GetValue(),
             }
-            # Auto mode sources
-            auto_sources_us = [
-                src
-                for src, key in (
-                    ("nws", "auto_src_us_nws"),
-                    ("openmeteo", "auto_src_us_openmeteo"),
-                    ("visualcrossing", "auto_src_us_visualcrossing"),
-                    ("pirateweather", "auto_src_us_pirateweather"),
-                )
-                if self._controls[key].GetValue()
-            ]
-            settings_dict["auto_sources_us"] = auto_sources_us or ["openmeteo"]
-
-            auto_sources_international = [
-                src
-                for src, key in (
-                    ("openmeteo", "auto_src_intl_openmeteo"),
-                    ("visualcrossing", "auto_src_intl_visualcrossing"),
-                    ("pirateweather", "auto_src_intl_pirateweather"),
-                )
-                if self._controls[key].GetValue()
-            ]
-            settings_dict["auto_sources_international"] = auto_sources_international or [
-                "openmeteo"
-            ]
-
             # If the field is blank but was non-empty when the dialog opened,
             # only preserve the key if the user never interacted with the field
             # (i.e. keyring failed to load). If the user explicitly cleared the
@@ -1803,15 +1918,8 @@ class SettingsDialogSimple(wx.Dialog):
             "data_source": "Weather Data Source",
             "vc_key": "Visual Crossing API Key",
             "pw_key": "Pirate Weather API Key",
-            "auto_src_us_nws": "Auto mode US: NWS",
-            "auto_src_us_openmeteo": "Auto mode US: Open-Meteo",
-            "auto_src_us_visualcrossing": "Auto mode US: Visual Crossing",
-            "auto_src_us_pirateweather": "Auto mode US: Pirate Weather",
-            "auto_src_intl_openmeteo": "Auto mode International: Open-Meteo",
-            "auto_src_intl_visualcrossing": "Auto mode International: Visual Crossing",
-            "auto_src_intl_pirateweather": "Auto mode International: Pirate Weather",
-            "openmeteo_model": "Open-Meteo Weather Model",
-            "station_selection_strategy": "Station selection strategy",
+            "source_settings_summary": "Source settings summary",
+            "configure_source_settings": "Configure source settings",
             "enable_alerts": "Enable weather alerts",
             "alert_notif": "Enable alert notifications",
             "alert_radius_type": "Alert Area",
@@ -1889,23 +1997,15 @@ class SettingsDialogSimple(wx.Dialog):
         show_pw = selection in (0, 4)  # auto or PW
         self._vc_config_sizer.ShowItems(show_vc)
         self._pw_config_sizer.ShowItems(show_pw)
-        # Show auto sources section only in auto mode
-        self._auto_sources_sizer.ShowItems(selection == 0)
-        if selection == 0:
-            self._update_auto_source_key_state()
+        self._update_auto_source_key_state()
         # Re-layout the panel
         parent = self._controls["data_source"].GetParent()
         parent.Layout()
         parent.FitInside()
 
     def _update_auto_source_key_state(self):
-        """Enable/disable API-key-requiring checkboxes based on configured keys."""
-        vc_key = self._controls["vc_key"].GetValue().strip()
-        pw_key = self._controls["pw_key"].GetValue().strip()
-        self._controls["auto_src_us_visualcrossing"].Enable(bool(vc_key))
-        self._controls["auto_src_intl_visualcrossing"].Enable(bool(vc_key))
-        self._controls["auto_src_us_pirateweather"].Enable(bool(pw_key))
-        self._controls["auto_src_intl_pirateweather"].Enable(bool(pw_key))
+        """Keep the source settings summary in sync with API-key edits."""
+        self._refresh_source_settings_summary()
 
     def _on_get_pw_api_key(self, event):
         """Open Pirate Weather signup page."""
