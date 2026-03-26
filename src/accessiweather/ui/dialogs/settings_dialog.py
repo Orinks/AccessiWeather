@@ -942,7 +942,10 @@ class SettingsDialogSimple(wx.Dialog):
 
     def _get_source_settings_summary_text(self) -> str:
         """Build summary text shown on the data sources tab."""
-        state = getattr(self, "_source_settings_states", None) or self._build_default_source_settings_states()
+        state = (
+            getattr(self, "_source_settings_states", None)
+            or self._build_default_source_settings_states()
+        )
         strategy_labels = [
             "Hybrid default",
             "Nearest station",
@@ -950,9 +953,18 @@ class SettingsDialogSimple(wx.Dialog):
             "Freshest observation",
         ]
         strat_idx = state.get("station_selection_strategy", 0)
-        strat_text = strategy_labels[strat_idx] if 0 <= strat_idx < len(strategy_labels) else strategy_labels[0]
+        strat_text = (
+            strategy_labels[strat_idx]
+            if 0 <= strat_idx < len(strategy_labels)
+            else strategy_labels[0]
+        )
         sources = ["NWS", "Open-Meteo", "Visual Crossing", "Pirate Weather"]
-        keys = ["auto_use_nws", "auto_use_openmeteo", "auto_use_visualcrossing", "auto_use_pirateweather"]
+        keys = [
+            "auto_use_nws",
+            "auto_use_openmeteo",
+            "auto_use_visualcrossing",
+            "auto_use_pirateweather",
+        ]
         enabled = [s for s, k in zip(sources, keys) if state.get(k, True)]
         enabled_text = ", ".join(enabled) if enabled else "None"
         return f"Auto sources: {enabled_text} | Station: {strat_text}"
@@ -966,7 +978,8 @@ class SettingsDialogSimple(wx.Dialog):
     def _run_source_settings_dialog(self) -> dict | None:
         """Show the source settings modal (tabbed) and return updated state when accepted."""
         state = dict(
-            getattr(self, "_source_settings_states", None) or self._build_default_source_settings_states()
+            getattr(self, "_source_settings_states", None)
+            or self._build_default_source_settings_states()
         )
 
         dialog = wx.Dialog(
@@ -1067,9 +1080,7 @@ class SettingsDialogSimple(wx.Dialog):
         main_sizer.Add(button_row, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         dialog.SetSizer(main_sizer)
-        self._configure_modal_dialog_buttons(
-            dialog, ok_btn, cancel_btn, focus_target=notebook
-        )
+        self._configure_modal_dialog_buttons(dialog, ok_btn, cancel_btn, focus_target=notebook)
 
         try:
             if dialog.ShowModal() != wx.ID_OK:
@@ -1744,7 +1755,8 @@ class SettingsDialogSimple(wx.Dialog):
                 "visual_crossing_api_key": self._controls["vc_key"].GetValue(),
                 "pirate_weather_api_key": self._controls["pw_key"].GetValue(),
                 "source_priority_us": [
-                    s for s in ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+                    s
+                    for s in ["nws", "openmeteo", "visualcrossing", "pirateweather"]
                     if self._source_settings_states.get(
                         {
                             "nws": "auto_use_nws",
@@ -1756,7 +1768,8 @@ class SettingsDialogSimple(wx.Dialog):
                     )
                 ],
                 "source_priority_international": [
-                    s for s in ["openmeteo", "visualcrossing", "pirateweather"]
+                    s
+                    for s in ["openmeteo", "visualcrossing", "pirateweather"]
                     if self._source_settings_states.get(
                         {
                             "openmeteo": "auto_use_openmeteo",
