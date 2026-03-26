@@ -94,68 +94,122 @@ def _make_dialog_for_settings(settings: SimpleNamespace) -> SettingsDialogSimple
     return dialog
 
 
-def test_load_settings_maps_us_source_priority_to_index_1():
-    # 4-element list (current format)
+def test_load_settings_all_sources_enabled_by_default():
     settings = SimpleNamespace(
-        source_priority_us=["nws", "visualcrossing", "openmeteo", "pirateweather"],
+        source_priority_us=["nws", "openmeteo", "visualcrossing", "pirateweather"],
         source_priority_international=["openmeteo", "pirateweather", "visualcrossing"],
     )
     dialog = _make_dialog_for_settings(settings)
 
     dialog._load_settings()
 
-    assert dialog._source_settings_states["us_priority"] == 1
+    assert dialog._source_settings_states["auto_use_nws"] is True
+    assert dialog._source_settings_states["auto_use_openmeteo"] is True
+    assert dialog._source_settings_states["auto_use_visualcrossing"] is True
+    assert dialog._source_settings_states["auto_use_pirateweather"] is True
 
 
-def test_load_settings_maps_us_source_priority_legacy_3_element_to_index_1():
-    # 3-element list (legacy config without pirateweather) - should still map correctly
+def test_load_settings_nws_disabled_when_absent_from_both_lists():
     settings = SimpleNamespace(
-        source_priority_us=["nws", "visualcrossing", "openmeteo"],
+        source_priority_us=["openmeteo", "visualcrossing", "pirateweather"],
+        source_priority_international=["openmeteo", "pirateweather", "visualcrossing"],
+    )
+    dialog = _make_dialog_for_settings(settings)
+
+    dialog._load_settings()
+
+    assert dialog._source_settings_states["auto_use_nws"] is False
+    assert dialog._source_settings_states["auto_use_openmeteo"] is True
+
+
+def test_load_settings_pirateweather_disabled_when_absent():
+    settings = SimpleNamespace(
+        source_priority_us=["nws", "openmeteo", "visualcrossing"],
         source_priority_international=["openmeteo", "visualcrossing"],
     )
     dialog = _make_dialog_for_settings(settings)
 
     dialog._load_settings()
 
-    assert dialog._source_settings_states["us_priority"] == 1
+    assert dialog._source_settings_states["auto_use_pirateweather"] is False
+    assert dialog._source_settings_states["auto_use_nws"] is True
+    assert dialog._source_settings_states["auto_use_openmeteo"] is True
+    assert dialog._source_settings_states["auto_use_visualcrossing"] is True
 
 
-def test_load_settings_maps_international_source_priority_to_index_1():
-    # 3-element list (current format)
+def test_load_settings_visualcrossing_disabled_when_absent():
     settings = SimpleNamespace(
-        source_priority_us=["nws", "openmeteo", "visualcrossing", "pirateweather"],
-        source_priority_international=["visualcrossing", "openmeteo", "pirateweather"],
+        source_priority_us=["nws", "openmeteo", "pirateweather"],
+        source_priority_international=["openmeteo", "pirateweather"],
     )
     dialog = _make_dialog_for_settings(settings)
 
     dialog._load_settings()
 
-    assert dialog._source_settings_states["intl_priority"] == 1
+    assert dialog._source_settings_states["auto_use_visualcrossing"] is False
 
 
-def test_load_settings_maps_international_source_priority_legacy_2_element_to_index_1():
-    # 2-element list (legacy config without pirateweather) - should still map correctly
-    settings = SimpleNamespace(
-        source_priority_us=["nws", "openmeteo", "visualcrossing"],
-        source_priority_international=["visualcrossing", "openmeteo"],
-    )
-    dialog = _make_dialog_for_settings(settings)
-
-    dialog._load_settings()
-
-    assert dialog._source_settings_states["intl_priority"] == 1
-
-
-def test_save_settings_persists_selected_us_source_priority_index_2():
+def test_save_settings_all_enabled_produces_full_lists():
     settings = SimpleNamespace()
     dialog = _make_dialog_for_settings(settings)
     dialog._get_ai_model_preference = lambda: "openrouter/free"
     dialog.config_manager.update_settings.return_value = True
-    dialog._source_settings_states["us_priority"] = 2
-    dialog._source_settings_states["intl_priority"] = 0
+    dialog._source_settings_states["auto_use_nws"] = True
+    dialog._source_settings_states["auto_use_openmeteo"] = True
+    dialog._source_settings_states["auto_use_visualcrossing"] = True
+    dialog._source_settings_states["auto_use_pirateweather"] = True
 
     success = dialog._save_settings()
 
     assert success is True
     kwargs = dialog.config_manager.update_settings.call_args.kwargs
-    assert kwargs["source_priority_us"] == ["openmeteo", "nws", "visualcrossing", "pirateweather"]
+    assert kwargs["source_priority_us"] == ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+    assert kwargs["source_priority_international"] == ["openmeteo", "visualcrossing", "pirateweather"]
+
+
+def test_save_settings_nws_disabled_excludes_nws_from_us():
+    settings = SimpleNamespace()
+    dialog = _make_dialog_for_settings(settings)
+    dialog._get_ai_model_preference = lambda: "openrouter/free"
+    dialog.config_manager.update_settings.return_value = True
+    dialog._source_settings_states["auto_use_nws"] = False
+    dialog._source_settings_states["auto_use_openmeteo"] = True
+    dialog._source_settings_states["auto_use_visualcrossing"] = True
+    dialog._source_settings_states["auto_use_pirateweather"] = True
+
+    success = dialog._save_settings()
+
+    assert success is True
+    kwargs = dialog.config_manager.update_settings.call_args.kwargs
+    assert "nws" not in kwargs["source_priority_us"]
+    assert kwargs["source_priority_us"] == ["openmeteo", "visualcrossing", "pirateweather"]
+
+
+def test_save_settings_pirateweather_disabled_excludes_from_both():
+    settings = SimpleNamespace()
+    dialog = _make_dialog_for_settings(settings)
+    dialog._get_ai_model_preference = lambda: "openrouter/free"
+    dialog.config_manager.update_settings.return_value = True
+    dialog._source_settings_states["auto_use_nws"] = True
+    dialog._source_settings_states["auto_use_openmeteo"] = True
+    dialog._source_settings_states["auto_use_visualcrossing"] = True
+    dialog._source_settings_states["auto_use_pirateweather"] = False
+
+    success = dialog._save_settings()
+
+    assert success is True
+    kwargs = dialog.config_manager.update_settings.call_args.kwargs
+    assert "pirateweather" not in kwargs["source_priority_us"]
+    assert "pirateweather" not in kwargs["source_priority_international"]
+
+
+def test_save_settings_openmeteo_weather_model_hardcoded_best_match():
+    settings = SimpleNamespace()
+    dialog = _make_dialog_for_settings(settings)
+    dialog._get_ai_model_preference = lambda: "openrouter/free"
+    dialog.config_manager.update_settings.return_value = True
+
+    dialog._save_settings()
+
+    kwargs = dialog.config_manager.update_settings.call_args.kwargs
+    assert kwargs["openmeteo_weather_model"] == "best_match"
