@@ -896,6 +896,7 @@ class MainWindow(SizedFrame):
             return
 
         # Otherwise, exit the application
+        self._announcer.shutdown()
         self.app.request_exit()
 
     def _on_iconize(self, event) -> None:
