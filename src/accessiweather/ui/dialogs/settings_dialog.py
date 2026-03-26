@@ -22,6 +22,80 @@ API_KEYS_TRANSFER_NOTE = (
 )
 
 
+class AlertAdvancedSettingsDialog(wx.Dialog):
+    """Small dialog for advanced alert timing settings."""
+
+    def __init__(self, parent, controls: dict):
+        """Initialize the advanced alert timing dialog."""
+        super().__init__(parent, title="Advanced Alert Timing", style=wx.DEFAULT_DIALOG_STYLE)
+        self._parent_controls = controls
+        self._create_ui()
+        self._load_values()
+
+    def _create_ui(self):
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        row_gc = wx.BoxSizer(wx.HORIZONTAL)
+        row_gc.Add(
+            wx.StaticText(self, label="Minimum time between any alert notifications (minutes):"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._spin_global = wx.SpinCtrl(self, min=0, max=60, initial=5)
+        self._spin_global.SetName("Minimum time between any alert notifications (minutes)")
+        row_gc.Add(self._spin_global, 0)
+        sizer.Add(row_gc, 0, wx.ALL, 10)
+
+        row_pac = wx.BoxSizer(wx.HORIZONTAL)
+        row_pac.Add(
+            wx.StaticText(self, label="Re-notify for same alert after (minutes):"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._spin_per_alert = wx.SpinCtrl(self, min=0, max=1440, initial=60)
+        self._spin_per_alert.SetName("Re-notify for same alert after (minutes)")
+        row_pac.Add(self._spin_per_alert, 0)
+        sizer.Add(row_pac, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        row_fw = wx.BoxSizer(wx.HORIZONTAL)
+        row_fw.Add(
+            wx.StaticText(self, label="Only notify for alerts issued within (minutes):"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        self._spin_freshness = wx.SpinCtrl(self, min=0, max=120, initial=15)
+        self._spin_freshness.SetName("Only notify for alerts issued within (minutes)")
+        row_fw.Add(self._spin_freshness, 0)
+        sizer.Add(row_fw, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        btn_sizer = wx.StdDialogButtonSizer()
+        ok_btn = wx.Button(self, wx.ID_OK)
+        ok_btn.SetDefault()
+        ok_btn.Bind(wx.EVT_BUTTON, self._on_ok)
+        btn_sizer.AddButton(ok_btn)
+        cancel_btn = wx.Button(self, wx.ID_CANCEL)
+        btn_sizer.AddButton(cancel_btn)
+        btn_sizer.Realize()
+        sizer.Add(btn_sizer, 0, wx.EXPAND | wx.ALL, 10)
+
+        self.SetSizer(sizer)
+        self.Fit()
+
+    def _load_values(self):
+        self._spin_global.SetValue(self._parent_controls["global_cooldown"].GetValue())
+        self._spin_per_alert.SetValue(self._parent_controls["per_alert_cooldown"].GetValue())
+        self._spin_freshness.SetValue(self._parent_controls["freshness_window"].GetValue())
+
+    def _on_ok(self, event):
+        self._parent_controls["global_cooldown"].SetValue(self._spin_global.GetValue())
+        self._parent_controls["per_alert_cooldown"].SetValue(self._spin_per_alert.GetValue())
+        self._parent_controls["freshness_window"].SetValue(self._spin_freshness.GetValue())
+        self.EndModal(wx.ID_OK)
+
+
 class SettingsDialogSimple(wx.Dialog):
     """Comprehensive settings dialog matching Toga version functionality."""
 
@@ -67,12 +141,12 @@ class SettingsDialogSimple(wx.Dialog):
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
         button_sizer.AddStretchSpacer()
 
-        cancel_btn = wx.Button(self, wx.ID_CANCEL, "Cancel")
         ok_btn = wx.Button(self, wx.ID_OK, "OK")
         ok_btn.Bind(wx.EVT_BUTTON, self._on_ok)
+        cancel_btn = wx.Button(self, wx.ID_CANCEL, "Cancel")
 
-        button_sizer.Add(cancel_btn, 0, wx.RIGHT, 10)
-        button_sizer.Add(ok_btn, 0)
+        button_sizer.Add(ok_btn, 0, wx.RIGHT, 10)
+        button_sizer.Add(cancel_btn, 0)
         main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         self.SetSizer(main_sizer)
@@ -196,11 +270,6 @@ class SettingsDialogSimple(wx.Dialog):
             panel, label="Show values as whole numbers (no decimals)"
         )
         sizer.Add(self._controls["round_values"], 0, wx.LEFT | wx.TOP, 10)
-
-        self._controls["detailed_forecast"] = wx.CheckBox(
-            panel, label="Show detailed forecast information"
-        )
-        sizer.Add(self._controls["detailed_forecast"], 0, wx.LEFT | wx.TOP, 10)
 
         row_forecast_duration = wx.BoxSizer(wx.HORIZONTAL)
         row_forecast_duration.Add(
@@ -551,6 +620,14 @@ class SettingsDialogSimple(wx.Dialog):
         )
         sizer.Add(self._controls["notify_minutely_precipitation_stop"], 0, wx.LEFT | wx.BOTTOM, 10)
 
+        # Alert timing controls (hidden; values managed via Advanced dialog)
+        self._controls["global_cooldown"] = wx.SpinCtrl(panel, min=0, max=60, initial=5)
+        self._controls["global_cooldown"].Hide()
+        self._controls["per_alert_cooldown"] = wx.SpinCtrl(panel, min=0, max=1440, initial=60)
+        self._controls["per_alert_cooldown"].Hide()
+        self._controls["freshness_window"] = wx.SpinCtrl(panel, min=0, max=120, initial=15)
+        self._controls["freshness_window"].Hide()
+
         # Rate Limiting Section
         sizer.Add(
             wx.StaticText(panel, label="Rate Limiting:"),
@@ -558,48 +635,6 @@ class SettingsDialogSimple(wx.Dialog):
             wx.ALL,
             5,
         )
-        sizer.Add(
-            wx.StaticText(panel, label="Prevent notification spam by setting cooldown periods:"),
-            0,
-            wx.LEFT | wx.BOTTOM,
-            5,
-        )
-
-        # Global cooldown
-        row_gc = wx.BoxSizer(wx.HORIZONTAL)
-        row_gc.Add(
-            wx.StaticText(panel, label="Global cooldown (minutes):"),
-            0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
-            10,
-        )
-        self._controls["global_cooldown"] = wx.SpinCtrl(panel, min=0, max=60, initial=5)
-        row_gc.Add(self._controls["global_cooldown"], 0)
-        sizer.Add(row_gc, 0, wx.LEFT, 10)
-
-        # Per-alert cooldown
-        row_pac = wx.BoxSizer(wx.HORIZONTAL)
-        row_pac.Add(
-            wx.StaticText(panel, label="Per-alert cooldown (minutes):"),
-            0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
-            10,
-        )
-        self._controls["per_alert_cooldown"] = wx.SpinCtrl(panel, min=0, max=1440, initial=60)
-        row_pac.Add(self._controls["per_alert_cooldown"], 0)
-        sizer.Add(row_pac, 0, wx.LEFT | wx.TOP, 10)
-
-        # Alert freshness window
-        row_fw = wx.BoxSizer(wx.HORIZONTAL)
-        row_fw.Add(
-            wx.StaticText(panel, label="Alert freshness window (minutes):"),
-            0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
-            10,
-        )
-        self._controls["freshness_window"] = wx.SpinCtrl(panel, min=0, max=120, initial=15)
-        row_fw.Add(self._controls["freshness_window"], 0)
-        sizer.Add(row_fw, 0, wx.LEFT | wx.TOP, 10)
 
         # Max notifications per hour
         row_max = wx.BoxSizer(wx.HORIZONTAL)
@@ -612,6 +647,12 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["max_notifications"] = wx.SpinCtrl(panel, min=1, max=100, initial=10)
         row_max.Add(self._controls["max_notifications"], 0)
         sizer.Add(row_max, 0, wx.LEFT | wx.TOP, 10)
+
+        advanced_btn = wx.Button(panel, label="Advanced...")
+        advanced_btn.SetName("Advanced alert timing settings")
+        advanced_btn.SetToolTip("Configure cooldown periods and alert freshness window")
+        advanced_btn.Bind(wx.EVT_BUTTON, self._on_alert_advanced)
+        sizer.Add(advanced_btn, 0, wx.LEFT | wx.TOP, 10)
 
         panel.SetSizer(sizer)
         self.notebook.AddPage(panel, "Notifications")
@@ -853,10 +894,10 @@ class SettingsDialogSimple(wx.Dialog):
 
         button_row = wx.BoxSizer(wx.HORIZONTAL)
         button_row.AddStretchSpacer()
-        cancel_btn = wx.Button(dialog, wx.ID_CANCEL, "Cancel")
         ok_btn = wx.Button(dialog, wx.ID_OK, "OK")
-        button_row.Add(cancel_btn, 0, wx.RIGHT, 10)
-        button_row.Add(ok_btn, 0)
+        cancel_btn = wx.Button(dialog, wx.ID_CANCEL, "Cancel")
+        button_row.Add(ok_btn, 0, wx.RIGHT, 10)
+        button_row.Add(cancel_btn, 0)
         main_sizer.Add(button_row, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         dialog.SetSizer(main_sizer)
@@ -1131,15 +1172,6 @@ class SettingsDialogSimple(wx.Dialog):
             wx.ALL,
             5,
         )
-        sizer.Add(
-            wx.StaticText(
-                panel, label="Required for all models. Get a free key at openrouter.ai/keys"
-            ),
-            0,
-            wx.LEFT | wx.BOTTOM,
-            5,
-        )
-
         self._controls["openrouter_key"] = wx.TextCtrl(panel, style=wx.TE_PASSWORD, size=(300, -1))
         sizer.Add(self._controls["openrouter_key"], 0, wx.LEFT, 10)
 
@@ -1426,9 +1458,6 @@ class SettingsDialogSimple(wx.Dialog):
                 getattr(settings, "show_pressure_trend", True)
             )
             self._controls["round_values"].SetValue(getattr(settings, "round_values", False))
-            self._controls["detailed_forecast"].SetValue(
-                getattr(settings, "show_detailed_forecast", True)
-            )
             forecast_duration_days = getattr(settings, "forecast_duration_days", 7)
             forecast_duration_map = {3: 0, 5: 1, 7: 2, 10: 3, 14: 4, 15: 5}
             self._controls["forecast_duration_days"].SetSelection(
@@ -1474,23 +1503,57 @@ class SettingsDialogSimple(wx.Dialog):
                 "pirateweather": 4,
             }
             self._controls["data_source"].SetSelection(source_map.get(data_source, 0))
-            self._update_api_key_visibility()
 
             vc_key = getattr(settings, "visual_crossing_api_key", "") or ""
             self._controls["vc_key"].SetValue(str(vc_key))
             self._original_vc_key = str(vc_key)
+            self._vc_key_cleared = False
+            if hasattr(wx, "EVT_TEXT"):
+
+                def _on_vc_key_text(e, _self=self):
+                    _self._vc_key_cleared = True
+                    _self._update_auto_source_key_state()
+
+                self._controls["vc_key"].Bind(wx.EVT_TEXT, _on_vc_key_text)
             pw_key = getattr(settings, "pirate_weather_api_key", "") or ""
             self._controls["pw_key"].SetValue(str(pw_key))
             self._original_pw_key = str(pw_key)
+            self._pw_key_cleared = False
+            if hasattr(wx, "EVT_TEXT"):
+
+                def _on_pw_key_text(e, _self=self):
+                    _self._pw_key_cleared = True
+                    _self._update_auto_source_key_state()
+
+                self._controls["pw_key"].Bind(wx.EVT_TEXT, _on_pw_key_text)
 
             # Source settings sub-dialog state
             station_strategy_values = [
-                "hybrid_default", "nearest", "major_airport_preferred", "freshest_observation",
+                "hybrid_default",
+                "nearest",
+                "major_airport_preferred",
+                "freshest_observation",
             ]
             saved_strategy = getattr(settings, "station_selection_strategy", "hybrid_default")
-            strat_idx = station_strategy_values.index(saved_strategy) if saved_strategy in station_strategy_values else 0
-            saved_us = list(getattr(settings, "source_priority_us", ["nws", "openmeteo", "visualcrossing", "pirateweather"]))
-            saved_intl = list(getattr(settings, "source_priority_international", ["openmeteo", "pirateweather", "visualcrossing"]))
+            strat_idx = (
+                station_strategy_values.index(saved_strategy)
+                if saved_strategy in station_strategy_values
+                else 0
+            )
+            saved_us = list(
+                getattr(
+                    settings,
+                    "source_priority_us",
+                    ["nws", "openmeteo", "visualcrossing", "pirateweather"],
+                )
+            )
+            saved_intl = list(
+                getattr(
+                    settings,
+                    "source_priority_international",
+                    ["openmeteo", "pirateweather", "visualcrossing"],
+                )
+            )
             all_sources_combined = set(saved_us) | set(saved_intl)
             self._source_settings_states = {
                 "auto_use_nws": "nws" in all_sources_combined,
@@ -1500,6 +1563,7 @@ class SettingsDialogSimple(wx.Dialog):
                 "station_selection_strategy": strat_idx,
             }
             self._refresh_source_settings_summary()
+            self._update_api_key_visibility()
 
             # Notifications tab
             self._controls["enable_alerts"].SetValue(getattr(settings, "enable_alerts", True))
@@ -1571,6 +1635,11 @@ class SettingsDialogSimple(wx.Dialog):
             openrouter_key = getattr(settings, "openrouter_api_key", "") or ""
             self._controls["openrouter_key"].SetValue(str(openrouter_key))
             self._original_openrouter_key = str(openrouter_key)
+            self._openrouter_key_cleared = False
+            if hasattr(wx, "EVT_TEXT"):
+                self._controls["openrouter_key"].Bind(
+                    wx.EVT_TEXT, lambda e: setattr(self, "_openrouter_key_cleared", True)
+                )
 
             ai_model = getattr(settings, "ai_model_preference", "openrouter/free")
             if ai_model == "openrouter/free":
@@ -1654,7 +1723,6 @@ class SettingsDialogSimple(wx.Dialog):
                 "show_uv_index": self._controls["show_uv_index"].GetValue(),
                 "show_pressure_trend": self._controls["show_pressure_trend"].GetValue(),
                 "round_values": self._controls["round_values"].GetValue(),
-                "show_detailed_forecast": self._controls["detailed_forecast"].GetValue(),
                 "forecast_duration_days": forecast_duration_values[
                     self._controls["forecast_duration_days"].GetSelection()
                 ],
@@ -1678,22 +1746,59 @@ class SettingsDialogSimple(wx.Dialog):
                 "source_priority_us": [
                     s for s in ["nws", "openmeteo", "visualcrossing", "pirateweather"]
                     if self._source_settings_states.get(
-                        {"nws": "auto_use_nws", "openmeteo": "auto_use_openmeteo",
-                         "visualcrossing": "auto_use_visualcrossing", "pirateweather": "auto_use_pirateweather"}[s],
+                        {
+                            "nws": "auto_use_nws",
+                            "openmeteo": "auto_use_openmeteo",
+                            "visualcrossing": "auto_use_visualcrossing",
+                            "pirateweather": "auto_use_pirateweather",
+                        }[s],
                         True,
                     )
                 ],
                 "source_priority_international": [
                     s for s in ["openmeteo", "visualcrossing", "pirateweather"]
                     if self._source_settings_states.get(
-                        {"openmeteo": "auto_use_openmeteo",
-                         "visualcrossing": "auto_use_visualcrossing", "pirateweather": "auto_use_pirateweather"}[s],
+                        {
+                            "openmeteo": "auto_use_openmeteo",
+                            "visualcrossing": "auto_use_visualcrossing",
+                            "pirateweather": "auto_use_pirateweather",
+                        }[s],
                         True,
                     )
                 ],
+                "auto_sources_us": [
+                    s
+                    for s in ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+                    if self._source_settings_states.get(
+                        {
+                            "nws": "auto_use_nws",
+                            "openmeteo": "auto_use_openmeteo",
+                            "visualcrossing": "auto_use_visualcrossing",
+                            "pirateweather": "auto_use_pirateweather",
+                        }[s],
+                        True,
+                    )
+                ]
+                or ["openmeteo"],
+                "auto_sources_international": [
+                    s
+                    for s in ["openmeteo", "visualcrossing", "pirateweather"]
+                    if self._source_settings_states.get(
+                        {
+                            "openmeteo": "auto_use_openmeteo",
+                            "visualcrossing": "auto_use_visualcrossing",
+                            "pirateweather": "auto_use_pirateweather",
+                        }[s],
+                        True,
+                    )
+                ]
+                or ["openmeteo"],
                 "openmeteo_weather_model": "best_match",
                 "station_selection_strategy": [
-                    "hybrid_default", "nearest", "major_airport_preferred", "freshest_observation",
+                    "hybrid_default",
+                    "nearest",
+                    "major_airport_preferred",
+                    "freshest_observation",
                 ][max(0, self._source_settings_states.get("station_selection_strategy", 0))],
                 # Notifications
                 "enable_alerts": self._controls["enable_alerts"].GetValue(),
@@ -1744,21 +1849,26 @@ class SettingsDialogSimple(wx.Dialog):
                 "startup_enabled": self._controls["startup"].GetValue(),
                 "weather_history_enabled": self._controls["weather_history"].GetValue(),
             }
-            # Guard: never wipe a previously-set API key with an empty string.
-            # If the field is blank but the original value was non-empty, the
-            # keyring load failed transiently — keep the existing keyring value.
-            for key, orig_attr in (
-                ("visual_crossing_api_key", "_original_vc_key"),
-                ("pirate_weather_api_key", "_original_pw_key"),
-                ("openrouter_api_key", "_original_openrouter_key"),
+            # If the field is blank but was non-empty when the dialog opened,
+            # only preserve the key if the user never interacted with the field
+            # (i.e. keyring failed to load). If the user explicitly cleared the
+            # field (_key_explicitly_cleared flag), honor the deletion.
+            for key, orig_attr, cleared_attr in (
+                ("visual_crossing_api_key", "_original_vc_key", "_vc_key_cleared"),
+                ("pirate_weather_api_key", "_original_pw_key", "_pw_key_cleared"),
+                ("openrouter_api_key", "_original_openrouter_key", "_openrouter_key_cleared"),
             ):
                 if not settings_dict.get(key) and getattr(self, orig_attr, ""):
-                    logger.warning(
-                        "Skipping empty %s save — original value was non-empty; "
-                        "keyring may have failed to load. Existing keyring value preserved.",
-                        key,
-                    )
-                    settings_dict.pop(key, None)
+                    if getattr(self, cleared_attr, False):
+                        # User deliberately cleared the field — allow deletion
+                        logger.info("API key %s explicitly cleared by user.", key)
+                    else:
+                        logger.warning(
+                            "Skipping empty %s save — original value was non-empty; "
+                            "keyring may have failed to load. Existing keyring value preserved.",
+                            key,
+                        )
+                        settings_dict.pop(key, None)
 
             success = self.config_manager.update_settings(**settings_dict)
             if success:
@@ -1784,7 +1894,6 @@ class SettingsDialogSimple(wx.Dialog):
             "show_visibility": "Show visibility",
             "show_uv_index": "Show UV index",
             "show_pressure_trend": "Show pressure trend",
-            "detailed_forecast": "Show detailed forecast information",
             "forecast_duration_days": "Forecast duration",
             "hourly_forecast_hours": "Hourly forecast hours",
             "forecast_time_reference": "Forecast time display",
@@ -1794,7 +1903,7 @@ class SettingsDialogSimple(wx.Dialog):
             "verbosity_level": "Verbosity level",
             "severe_weather_override": "Automatically prioritize severe weather info",
             "data_source": "Weather Data Source",
-            "vc_key": "API Key",
+            "vc_key": "Visual Crossing API Key",
             "pw_key": "Pirate Weather API Key",
             "source_settings_summary": "Source settings summary",
             "configure_source_settings": "Configure source settings",
@@ -1810,9 +1919,9 @@ class SettingsDialogSimple(wx.Dialog):
             "notify_severe_risk_change": "Notify when severe weather risk level changes (Visual Crossing only)",
             "notify_minutely_precipitation_start": "Notify when precipitation is expected to start soon (Pirate Weather)",
             "notify_minutely_precipitation_stop": "Notify when precipitation is expected to stop soon (Pirate Weather)",
-            "global_cooldown": "Global cooldown (minutes)",
-            "per_alert_cooldown": "Per-alert cooldown (minutes)",
-            "freshness_window": "Alert freshness window (minutes)",
+            "global_cooldown": "Minimum time between any alert notifications (minutes)",
+            "per_alert_cooldown": "Re-notify for same alert after (minutes)",
+            "freshness_window": "Only notify for alerts issued within (minutes)",
             "max_notifications": "Maximum notifications per hour",
             "sound_enabled": "Enable Sounds",
             "sound_pack": "Active sound pack",
@@ -1849,6 +1958,12 @@ class SettingsDialogSimple(wx.Dialog):
             return self._selected_specific_model
         return "openrouter/free"
 
+    def _on_alert_advanced(self, event):
+        """Open the advanced alert timing settings dialog."""
+        dlg = AlertAdvancedSettingsDialog(self, self._controls)
+        dlg.ShowModal()
+        dlg.Destroy()
+
     def _on_ok(self, event):
         """Handle OK button press."""
         if self._save_settings():
@@ -1869,10 +1984,15 @@ class SettingsDialogSimple(wx.Dialog):
         show_pw = selection in (0, 4)  # auto or PW
         self._vc_config_sizer.ShowItems(show_vc)
         self._pw_config_sizer.ShowItems(show_pw)
+        self._update_auto_source_key_state()
         # Re-layout the panel
         parent = self._controls["data_source"].GetParent()
         parent.Layout()
         parent.FitInside()
+
+    def _update_auto_source_key_state(self):
+        """Keep the source settings summary in sync with API-key edits."""
+        self._refresh_source_settings_summary()
 
     def _on_get_pw_api_key(self, event):
         """Open Pirate Weather signup page."""

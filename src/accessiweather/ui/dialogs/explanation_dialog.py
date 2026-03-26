@@ -51,7 +51,6 @@ class ExplanationDialog(wx.Dialog):
         self.location = location
         self.app = app
         self._create_ui()
-        self._setup_accessibility()
         self.Bind(wx.EVT_CHAR_HOOK, self._on_key)
 
     def _create_ui(self):
@@ -78,6 +77,7 @@ class ExplanationDialog(wx.Dialog):
         main_sizer.Add(self.timestamp_label, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         # Explanation text (main content)
+        main_sizer.Add(wx.StaticText(self, label="Explanation:"), 0, wx.LEFT | wx.RIGHT, 10)
         explanation_text = self.explanation.text or "(No explanation text received)"
         self.text_ctrl = wx.TextCtrl(
             self,
@@ -242,10 +242,6 @@ class ExplanationDialog(wx.Dialog):
         else:
             event.Skip()
 
-    def _setup_accessibility(self):
-        """Set up accessibility labels."""
-        self.text_ctrl.SetName("Weather explanation")
-
 
 class LoadingDialog(wx.Dialog):
     """Dialog showing loading state while generating explanation."""
@@ -268,6 +264,7 @@ class LoadingDialog(wx.Dialog):
         self.location = location
         self.is_cancelled = False
         self._create_ui()
+        self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
 
     def _create_ui(self):
         """Create the loading dialog UI."""
@@ -304,6 +301,13 @@ class LoadingDialog(wx.Dialog):
     def _on_timer(self, event):
         """Update the gauge pulse."""
         self.gauge.Pulse()
+
+    def _on_char_hook(self, event: wx.KeyEvent) -> None:
+        """Handle key events — Escape cancels the loading dialog."""
+        if event.GetKeyCode() == wx.WXK_ESCAPE:
+            self._on_cancel(event)
+        else:
+            event.Skip()
 
     def _on_cancel(self, event):
         """Handle cancel button press."""

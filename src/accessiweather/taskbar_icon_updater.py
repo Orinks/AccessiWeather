@@ -232,6 +232,7 @@ class TaskbarIconUpdater:
         data["precip_chance"] = self._format_numeric(
             getattr(current, "precipitation_probability", None), ""
         )
+        data["alert"] = self._extract_alert_event(weather_data)
 
         return data
 
@@ -445,6 +446,17 @@ class TaskbarIconUpdater:
             return self._format_temp_value(temp_c, "C")
         return f"{temp_f:.0f}F/{temp_c:.0f}C"
 
+    def _extract_alert_event(self, weather_data: Any) -> str:
+        """Return the event name of the most severe active alert, or empty string."""
+        alerts_container = getattr(weather_data, "alerts", None)
+        if alerts_container is None:
+            return ""
+        alerts_list = getattr(alerts_container, "alerts", None) or []
+        if not alerts_list:
+            return ""
+        most_severe = max(alerts_list, key=lambda a: a.get_severity_priority())
+        return most_severe.event or most_severe.title or ""
+
     def _is_day_period(self, period: Any) -> bool:
         """Best-effort detection for daytime forecast periods."""
         name = str(getattr(period, "name", "") or "").lower()
@@ -485,7 +497,7 @@ class TaskbarIconUpdater:
                 SimpleNamespace(name="Tonight", temperature=61.0, temperature_unit="F"),
             ]
         )
-        return SimpleNamespace(current_conditions=current, forecast=forecast)
+        return SimpleNamespace(current_conditions=current, forecast=forecast, alerts=None)
 
     def _format_with_fallback(self, format_string: str, data: dict[str, str]) -> str:
         """

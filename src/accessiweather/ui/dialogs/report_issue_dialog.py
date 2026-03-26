@@ -29,7 +29,6 @@ class ReportIssueDialog(wx.Dialog):
         self._create_controls()
         self._do_layout()
         self._bind_events()
-        self._setup_accessibility()
         self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
 
         self.SetSize((500, 400))
@@ -108,15 +107,6 @@ class ReportIssueDialog(wx.Dialog):
         """Bind event handlers."""
         self.submit_btn.Bind(wx.EVT_BUTTON, self._on_submit)
         self.cancel_btn.Bind(wx.EVT_BUTTON, self._on_close)
-
-    def _setup_accessibility(self) -> None:
-        """Set up accessibility labels for interactive controls."""
-        self.type_choice.SetName("Issue Type")
-        self.title_input.SetName("Title")
-        self.desc_input.SetName("Description")
-        self.info_text.SetName("System info (auto-collected)")
-        self.submit_btn.SetName("Open in Browser")
-        self.cancel_btn.SetName("Cancel")
 
     def _get_system_info(self) -> str:
         """Collect system information."""

@@ -364,7 +364,7 @@ class OpenMeteoApiClient:
         """
         description = weather_code_to_description(weather_code)
         if description is None:
-            return "Unknown weather code: None"
+            return f"Unknown weather code: {weather_code}"
 
         if description.startswith("Weather code "):
             suffix = description.split("Weather code ", 1)[1]

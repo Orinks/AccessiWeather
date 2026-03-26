@@ -166,6 +166,8 @@ class SoundPackManagerDialog(wx.Dialog):
         self._create_ui()
         self._refresh_pack_list()
         self.Centre()
+        if hasattr(self, "pack_listbox"):
+            self.pack_listbox.SetFocus()
 
         # Bind close event to stop any playing preview
         self.Bind(wx.EVT_CLOSE, self._on_dialog_close)

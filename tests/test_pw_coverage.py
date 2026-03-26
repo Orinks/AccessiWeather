@@ -536,8 +536,26 @@ class TestSourcePriorityValidation:
 
 class TestGetNotificationEventDataPirateWeatherBranch:
     @pytest.mark.asyncio
-    async def test_pirate_weather_used_when_no_vc_client_intl_location(self, intl_location):
-        """Lines 475, 478-480: pw client used for notification data when no VC and intl location."""
+    async def test_pirate_weather_used_when_pirateweather_source(self, intl_location):
+        """PW client used for notification data when data_source='pirateweather'."""
+        wc = WeatherClient(data_source="pirateweather")
+
+        mock_pw = MagicMock()
+        mock_pw.get_current_conditions = AsyncMock(return_value=MagicMock())
+        mock_pw.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+        wc._pirate_weather_client = mock_pw
+        wc._visual_crossing_client = None
+
+        with patch.object(wc, "_is_us_location", return_value=False):
+            result = await wc.get_notification_event_data(intl_location)
+
+        assert result is not None
+        mock_pw.get_current_conditions.assert_called_once_with(intl_location)
+        mock_pw.get_alerts.assert_called_once_with(intl_location)
+
+    @pytest.mark.asyncio
+    async def test_openmeteo_source_skips_pirate_weather(self, intl_location):
+        """When data_source='openmeteo', PW client must NOT be contacted for alerts."""
         wc = WeatherClient(data_source="openmeteo")
 
         mock_pw = MagicMock()
@@ -546,14 +564,13 @@ class TestGetNotificationEventDataPirateWeatherBranch:
         wc._pirate_weather_client = mock_pw
         wc._visual_crossing_client = None
 
-        wc._fetch_nws_cancel_references = AsyncMock(return_value=set())
-
         with patch.object(wc, "_is_us_location", return_value=False):
             result = await wc.get_notification_event_data(intl_location)
 
         assert result is not None
-        mock_pw.get_current_conditions.assert_called_once_with(intl_location)
-        mock_pw.get_alerts.assert_called_once_with(intl_location)
+        assert result.alerts is not None
+        mock_pw.get_current_conditions.assert_not_called()
+        mock_pw.get_alerts.assert_not_called()
 
 
 # ---------------------------------------------------------------------------
@@ -712,11 +729,19 @@ class TestFetchPirateWeatherInAutoMode:
         mock_forecast_attribution = {"summary": "pirateweather"}
         mock_hourly_attribution = {"temperature": "pirateweather"}
 
+        import asyncio as _asyncio
+
+        async def _mock_fetch_all(_coordinator, location, **kwargs):
+            for coro in kwargs.values():
+                if _asyncio.iscoroutine(coro):
+                    coro.close()
+            return [pw_source]
+
         with (
             patch.object(
                 ParallelFetchCoordinator,
                 "fetch_all",
-                return_value=[pw_source],
+                new=_mock_fetch_all,
             ),
             patch.object(wc, "_fetch_nws_cancel_references", return_value=set()),
             patch.object(

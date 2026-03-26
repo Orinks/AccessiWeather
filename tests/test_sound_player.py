@@ -479,7 +479,7 @@ class TestParseSoundEntry:
 
         entry = {"volume": 0.8}
         filename, volume = _parse_sound_entry(entry, "warning")
-        assert filename == "warning.wav"
+        assert filename == "warning.ogg"
         assert volume == 0.8
 
     def test_parse_volume_clamped_above_one(self):
@@ -511,7 +511,7 @@ class TestParseSoundEntry:
         from accessiweather.notifications.sound_player import _parse_sound_entry
 
         filename, volume = _parse_sound_entry("", "alert")
-        assert filename == "alert.wav"
+        assert filename == "alert.ogg"
         assert volume == 1.0
 
 

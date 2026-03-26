@@ -361,14 +361,13 @@ class DataFusionEngine:
         valid_sources: list[SourceData],
     ) -> tuple[float | None, float | None, str] | None:
         """
-        Pick the most conservative visibility across sources.
+        Select visibility from the highest-priority source that has data.
 
         Visibility is treated as one semantic field with two unit representations.
-        We select the source reporting the lowest visibility, then keep both unit
-        variants aligned to that same source instead of mixing sources.
+        We use the highest-priority source's value directly rather than trying
+        to pick the "most conservative" — the API returns what it returns.
         """
         best_source: SourceData | None = None
-        best_miles: float | None = None
 
         for source in valid_sources:
             if source.current is None:
@@ -378,9 +377,9 @@ class DataFusionEngine:
             if miles is None:
                 continue
 
-            if best_miles is None or miles < best_miles:
-                best_miles = miles
-                best_source = source
+            # Take first source with data (valid_sources is already priority-ordered)
+            best_source = source
+            break
 
         if best_source is None or best_source.current is None:
             return None

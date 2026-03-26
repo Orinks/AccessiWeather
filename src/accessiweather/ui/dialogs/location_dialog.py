@@ -155,12 +155,12 @@ class AddLocationDialog(wx.Dialog):
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
         button_sizer.AddStretchSpacer()
 
-        cancel_btn = wx.Button(panel, wx.ID_CANCEL, "Cancel")
-        button_sizer.Add(cancel_btn, 0, wx.RIGHT, 10)
-
         self.save_button = wx.Button(panel, wx.ID_OK, "Save Location")
         self.save_button.Bind(wx.EVT_BUTTON, self._on_save)
-        button_sizer.Add(self.save_button, 0)
+        button_sizer.Add(self.save_button, 0, wx.RIGHT, 10)
+
+        cancel_btn = wx.Button(panel, wx.ID_CANCEL, "Cancel")
+        button_sizer.Add(cancel_btn, 0)
 
         main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 10)
 

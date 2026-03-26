@@ -60,7 +60,6 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "visual_crossing_api_key",
     # Display preferences
     "round_values",
-    "show_detailed_forecast",
     "enable_alerts",
     "minimize_to_tray",
     "minimize_on_startup",
@@ -90,6 +89,8 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "taskbar_icon_text_format",
     "source_priority_us",
     "source_priority_international",
+    "auto_sources_us",
+    "auto_sources_international",
     "openmeteo_weather_model",
     "station_selection_strategy",
 }
@@ -101,7 +102,6 @@ class AppSettings:
 
     temperature_unit: str = "both"
     update_interval_minutes: int = 10
-    show_detailed_forecast: bool = True
     enable_alerts: bool = True
     minimize_to_tray: bool = False
     minimize_on_startup: bool = False
@@ -194,7 +194,7 @@ class AppSettings:
             "uv_index",
         ]
     )
-    severe_weather_override: bool = True
+    severe_weather_override: bool = False
     # Startup UX guidance flags
     onboarding_wizard_shown: bool = False
     portable_missing_api_keys_hint_shown: bool = False
@@ -202,6 +202,13 @@ class AppSettings:
     round_values: bool = False
     # Parallel fetch timeout for smart auto mode (seconds)
     parallel_fetch_timeout: float = 5.0
+    # Auto mode source selection — which sources participate in auto mode
+    auto_sources_us: list[str] = field(
+        default_factory=lambda: ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+    )
+    auto_sources_international: list[str] = field(
+        default_factory=lambda: ["openmeteo", "pirateweather", "visualcrossing"]
+    )
 
     @staticmethod
     def _as_bool(value, default: bool) -> bool:
@@ -356,30 +363,24 @@ class AppSettings:
             if value not in valid_strategies:
                 setattr(self, setting_name, "hybrid_default")
 
-        elif setting_name in {"source_priority_us", "source_priority_international"}:
+        elif setting_name in {
+            "source_priority_us",
+            "source_priority_international",
+            "auto_sources_us",
+            "auto_sources_international",
+        }:
             # Ensure valid list of source names
             valid_sources = {"nws", "openmeteo", "visualcrossing", "pirateweather"}
+            us_default = ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+            intl_default = ["openmeteo", "pirateweather", "visualcrossing"]
+            is_us_setting = setting_name in {"source_priority_us", "auto_sources_us"}
             if not isinstance(value, list):
-                if setting_name == "source_priority_us":
-                    setattr(
-                        self, setting_name, ["nws", "openmeteo", "visualcrossing", "pirateweather"]
-                    )
-                else:
-                    setattr(self, setting_name, ["openmeteo", "pirateweather", "visualcrossing"])
+                setattr(self, setting_name, us_default if is_us_setting else intl_default)
             else:
                 # Filter to only valid sources
                 filtered = [s for s in value if s in valid_sources]
                 if not filtered:
-                    if setting_name == "source_priority_us":
-                        setattr(
-                            self,
-                            setting_name,
-                            ["nws", "openmeteo", "visualcrossing", "pirateweather"],
-                        )
-                    else:
-                        setattr(
-                            self, setting_name, ["openmeteo", "pirateweather", "visualcrossing"]
-                        )
+                    setattr(self, setting_name, us_default if is_us_setting else intl_default)
                 elif filtered != value:
                     setattr(self, setting_name, filtered)
 
@@ -404,7 +405,6 @@ class AppSettings:
         return {
             "temperature_unit": self.temperature_unit,
             "update_interval_minutes": self.update_interval_minutes,
-            "show_detailed_forecast": self.show_detailed_forecast,
             "enable_alerts": self.enable_alerts,
             "minimize_to_tray": self.minimize_to_tray,
             "minimize_on_startup": self.minimize_on_startup,
@@ -459,6 +459,8 @@ class AppSettings:
             "taskbar_icon_text_format": self.taskbar_icon_text_format,
             "source_priority_us": self.source_priority_us,
             "source_priority_international": self.source_priority_international,
+            "auto_sources_us": self.auto_sources_us,
+            "auto_sources_international": self.auto_sources_international,
             "openmeteo_weather_model": self.openmeteo_weather_model,
             "station_selection_strategy": self.station_selection_strategy,
             # AI settings and AVWX key stored in secure storage, not here
@@ -483,7 +485,6 @@ class AppSettings:
         return cls(
             temperature_unit=data.get("temperature_unit", "both"),
             update_interval_minutes=data.get("update_interval_minutes", 10),
-            show_detailed_forecast=cls._as_bool(data.get("show_detailed_forecast"), True),
             enable_alerts=cls._as_bool(data.get("enable_alerts"), True),
             minimize_to_tray=cls._as_bool(data.get("minimize_to_tray"), False),
             minimize_on_startup=cls._as_bool(data.get("minimize_on_startup"), False),
@@ -549,6 +550,12 @@ class AppSettings:
             source_priority_international=data.get(
                 "source_priority_international", ["openmeteo", "pirateweather", "visualcrossing"]
             ),
+            auto_sources_us=data.get(
+                "auto_sources_us", ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+            ),
+            auto_sources_international=data.get(
+                "auto_sources_international", ["openmeteo", "pirateweather", "visualcrossing"]
+            ),
             openmeteo_weather_model=data.get("openmeteo_weather_model", "best_match"),
             station_selection_strategy=data.get("station_selection_strategy", "hybrid_default"),
             # AVWX and AI settings (stored in secure storage)
@@ -573,7 +580,7 @@ class AppSettings:
                     "uv_index",
                 ],
             ),
-            severe_weather_override=cls._as_bool(data.get("severe_weather_override"), True),
+            severe_weather_override=cls._as_bool(data.get("severe_weather_override"), False),
             onboarding_wizard_shown=cls._as_bool(data.get("onboarding_wizard_shown"), False),
             portable_missing_api_keys_hint_shown=cls._as_bool(
                 data.get("portable_missing_api_keys_hint_shown"), False

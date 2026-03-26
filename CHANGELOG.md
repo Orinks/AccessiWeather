@@ -2,43 +2,61 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [0.4.5] - 2026-03-26
 
 ### Added
-- Implemented Nationwide weather discussions feature, including:
-    - "Show Nationwide location" setting and dynamic filtering of the Nationwide location.
-    - Main window integration for displaying discussion summaries.
-    - AI summarization button in the nationwide dialog.
-    - Shared `NationalDiscussionService` instance with caching.
-- Added opt-in Pirate Weather minutely precipitation notifications, including "starting soon" and "stopping soon" toggles that can announce transitions like "Rain starting in 12 minutes."
-- Bundled `prismatoid`/`prism` in PyInstaller nightly builds (PR #294).
-- Added missing tests for `national_discussion_service.py` to meet coverage gate requirements.
-- Updated Antfarm to v0.2.2 and configured feature-dev workflow for 80% diff-coverage.
-- Scheduled weekly disk cleanup cron job.
-- Added a forecast duration setting under Settings > Forecast so you can choose 3, 5, 7, 10, 14, or 15 days (default stays 7).
-- Replaced the four inline source priority dropdowns in Settings > Data Sources with a "Configure Source Settings..." button that opens a cleaner tabbed dialog — "Current Conditions" (NWS station strategy) and "Auto Mode" (US priority, international priority, Open-Meteo model).
+- **Pirate Weather full integration** — Pirate Weather is now a first-class data source with alerts, hourly and minutely forecasts, and automatic fusion alongside NWS and Open-Meteo (#479)
+- **AVWX aviation source** — TAF and METAR data from AVWX for international locations (#480)
+- **All Locations summary view** — see a compact weather overview for all your saved locations at once (#518)
+- **ScreenReaderAnnouncer** — new dynamic announcement system for status changes, ensuring NVDA and other screen readers get timely updates without polluting the status bar (#525)
+- **Configurable auto mode source list** — choose which sources are eligible when using Smart Auto mode (#531)
+- **All Locations tray placeholder** — `{alert}` tray text placeholder shows the most severe active alert across all locations (#519)
+- **Whole-numbers display setting** — global option to round all displayed values to whole numbers (#476)
+- **Auto unit preference** — units default to metric or imperial based on the detected country of the selected location (#490)
+- **Improved geocoding** — international locations with special characters (accents, non-ASCII) now resolve correctly (#491)
+- **Humidity and dewpoint in hourly forecasts** (#499)
+- **Pirate Weather hourly/minutely summaries** surfaced in auto mode (#498)
+- **AFD section extraction** — Area Forecast Discussion change notifications now summarize the relevant changed sections (#453)
+- **Version shown in About dialog** (#451)
+- **Alert timing controls moved to Advanced dialog** — declutters the main Settings window (#524)
+- **Separate daily and hourly forecast sections** — navigable independently with screen readers (#501)
 
 ### Changed
-- Consolidated CPC outlooks into a single "6-10 & 8-14 Day Outlook" field.
-- Updated tab labels to show full names (e.g., "WPC (Weather Prediction Center)").
-- Tabs with no available data are now hidden, and the NHC tab is only shown during hurricane season.
-- Standardized classification of PMD/SWO discussions using WMO header codes.
+- **Open-Meteo now handles extended forecasts** — replaces the previous NWS+OM stitching approach for cleaner multi-day data (#484)
+- **Default soundpack converted from WAV to OGG** — smaller file size, same quality (#542)
+- **Status bar replaces custom status label** — NVDA End-key navigation now works correctly in the main window (#539)
+- **Redundant US/international priority combo boxes removed** from Settings (#535)
+- **Minimum Python version bumped to 3.11**
+- **Parallel fetch timeout is now configurable**
+- Runtime alert and notification state migrated to normalized storage roots (#468)
 
 ### Fixed
-- Added per-event sound toggles in Settings > Audio, so you can mute sounds like weather refreshes without editing the active sound pack. Weather refresh sounds now stay off by default until you turn them back on.
-- Muted and zero-volume sounds now stop before fallback playback, so backends like `playsound3` no longer leak audio when an event should be silent.
-- Pirate Weather alert tracking now keeps a stable ID across provider revisions and no longer announces false cancellations when an alert briefly disappears upstream.
-- Pirate Weather / WMO alerts now stay conservative: lower-severity regional alerts are filtered out, and the remaining alerts are labeled as regional coverage instead of pretending to match your exact county or zone.
-- Fixed PyInstaller bundling for `prismatoid`/`prism` in nightly builds.
-- Enabled "Show Nationwide location" checkbox and correctly handled Nationwide location in `set_current_location()`.
-- Corrected CPC URLs to point to the actual discussion page (`fxus06.html`).
-- Ensured AI explanation logic correctly uses configured models and respects system prompt instructions.
-- Improved CI coverage gate to require >=80% on changed non-UI lines.
-- Fixed packaged Windows launches dropping discussion/alert toasts by no longer overriding the installer's AppUserModelID at runtime.
-- Added a forecast time reference setting so hourly forecasts can show either the location's timezone (default) or your local system timezone.
-- Forecast length now follows your configured duration, with automatic source caps (Open-Meteo up to 16, Visual Crossing up to 15, and US/NWS locations capped at 7).
-- Hardened Windows Inno installer scope handling to reduce duplicate Add/Remove Programs entries from mixed per-user/per-machine installs while preserving AppId-based upgrades.
-- Rebranded encrypted API key bundle extension to `.keys`; import and startup auto-import still accept legacy `.awkeys` bundles.
+- **Permanent refresh freeze** — weather updates no longer stop indefinitely when a location is added or removed while a background fetch is in progress (#545)
+- **stop_all_sounds() now works** — was silently doing nothing; now properly stops all active audio streams (#545)
+- **Announcer cleanup on exit** — ScreenReaderAnnouncer is now shut down properly when the window closes (#545)
+- **Auto-source checkboxes update immediately** when a VC/PW API key is entered or cleared in Settings (#545)
+- **Routine status bar calls removed** — NVDA no longer announces every background weather refresh as a status change (#543)
+- **NWS detailed forecast text restored** — was accidentally hidden by a removed setting (#537)
+- **Data source is now strictly respected** — selecting a specific source no longer silently falls back to NWS (#530)
+- **Fields hidden when not provided by source** — no more blank or stale values from a previous source showing through (#528)
+- **Visibility capped at 10 statute miles** in Open-Meteo output (#532)
+- **UV index uses real-time value** in Open-Meteo current conditions, not the daily maximum (#533)
+- **API key portable bundle** now applies to the weather client on startup and refreshes when settings change (#523)
+- **severe_weather_override defaults to False** — was accidentally opt-in on fresh installs
+- **Pirate Weather source preference preserved** across restarts (#512)
+- **Pirate Weather alert cancellation stabilized** — no more false cancellation announcements when an alert briefly disappears upstream (#503)
+- **Pirate Weather WMO alerts treated as regional** — correctly labeled, not matched to county/zone (#504)
+- **Duplicate NWS discussion notifications prevented** (#notifications)
+- **Pirate Weather keyring resolution retried on startup** — fixes missing PW data after first launch (#515)
+- **Tray wind direction** now displays as cardinal (N/NE/etc.) instead of raw degrees (#511)
+- **Tray text format configuration improved** (#460)
+- **AFD update notifications** now use cleaner, more informative text (#462)
+- **Visual Crossing timeline API path corrected** (#465)
+- **Canadian border city detection fixed** — cities near the US/Canada border now resolve to the correct country
+- **Open-Meteo overnight lows** now display correctly (#497)
+- **Auto-select newly added location** (#516)
+- **UTC fallback crash, weather code messages, and expired alert display** fixed in combined bug hunt pass (#522)
+- **Accessibility audit fixes** — button order, accessible labels, and keyboard focus corrected throughout (#520)
 
 ---
 

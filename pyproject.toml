@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "accessiweather"
-version = "0.4.4"
+version = "0.4.5"
 description = "AccessiWeather: An accessible weather application with NOAA and Open-Meteo support, built with wxPython for screen reader compatibility"
 authors = [
     { name = "Orinks" }
 ]
 license = {text = "MIT"}
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "wxPython>=4.2.5",
     "gui_builder @ git+https://github.com/accessibleapps/gui_builder.git",

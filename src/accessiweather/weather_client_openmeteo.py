@@ -222,7 +222,7 @@ async def get_openmeteo_current_conditions(
             "current": (
                 "temperature_2m,relative_humidity_2m,apparent_temperature,"
                 "weather_code,wind_speed_10m,wind_direction_10m,pressure_msl,"
-                "precipitation,rain,showers,snowfall,snow_depth,visibility"
+                "precipitation,rain,showers,snowfall,snow_depth,visibility,uv_index"
             ),
             "daily": "sunrise,sunset,uv_index_max",
             "temperature_unit": "fahrenheit",
@@ -407,8 +407,17 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         if sunset_list and len(sunset_list) > 0:
             sunset_time = _parse_iso_datetime(sunset_list[0], utc_offset_seconds)
 
+    # Use real-time uv_index from current block if available (accurate for time of day).
+    # Only fall back to daily uv_index_max if the current field is absent — the daily
+    # max is a daytime peak and will be wrong at night.
     uv_index = None
-    if daily:
+    raw_current_uv = current.get("uv_index")
+    if raw_current_uv is not None:
+        try:
+            uv_index = float(raw_current_uv)
+        except (TypeError, ValueError):
+            uv_index = None
+    elif daily:
         uv_values = daily.get("uv_index_max") or []
         if uv_values:
             try:
@@ -447,6 +456,11 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         snow_depth_cm = None
 
     visibility_m = current.get("visibility")  # meters
+    # Open-Meteo provides model-derived visibility which can be unrealistically high.
+    # Standard surface observation cap is 10 statute miles (16,093 m). Cap at that.
+    _VISIBILITY_CAP_M = 16093.4  # 10 statute miles in meters
+    if visibility_m is not None:
+        visibility_m = min(visibility_m, _VISIBILITY_CAP_M)
     visibility_miles = visibility_m / 1609.344 if visibility_m is not None else None
     visibility_km = visibility_m / 1000 if visibility_m is not None else None
 
@@ -574,6 +588,9 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
         freezing_level_ft = freezing_level_m * 3.28084 if freezing_level_m is not None else None
 
         visibility_m = visibilities[i] if i < len(visibilities) else None
+        # Cap at 10 statute miles — Open-Meteo model visibility is unreliable above this
+        if visibility_m is not None:
+            visibility_m = min(visibility_m, 16093.4)
         visibility_miles = visibility_m / 1609.344 if visibility_m is not None else None
 
         apparent_temp = apparent_temps[i] if i < len(apparent_temps) else None

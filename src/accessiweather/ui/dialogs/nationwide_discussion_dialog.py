@@ -49,6 +49,7 @@ class NationwideDiscussionDialog(wx.Dialog):
         self._create_widgets()
         self._bind_events()
         self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
+        wx.CallAfter(self.wpc_short_range.SetFocus)
 
         self.SetSize((800, 600))
         self.CenterOnParent()

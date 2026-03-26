@@ -222,6 +222,7 @@ class WeatherPresenter:
                 air_quality=air_quality_panel,
                 alerts=weather_data.alerts,
                 unit_system=unit_system,
+                anomaly_callout=getattr(weather_data, "anomaly_callout", None),
             )
             if weather_data.current
             else None
@@ -341,6 +342,7 @@ class WeatherPresenter:
         air_quality: AirQualityPresentation | None = None,
         alerts: WeatherAlerts | None = None,
         unit_system=None,
+        anomaly_callout=None,
     ) -> CurrentConditionsPresentation:
         return build_current_conditions(
             current,
@@ -354,6 +356,7 @@ class WeatherPresenter:
             air_quality=air_quality,
             alerts=alerts,
             unit_system=unit_system,
+            anomaly_callout=anomaly_callout,
         )
 
     def _build_forecast(

@@ -86,11 +86,11 @@ def _parse_sound_entry(
     """
     if isinstance(entry, dict):
         # Inline format: {"file": "alert.wav", "volume": 0.7}
-        filename = entry.get("file", f"{event}.wav")
+        filename = entry.get("file", f"{event}.ogg")
         volume = entry.get("volume", 1.0)
     else:
         # String format
-        filename = str(entry) if entry else f"{event}.wav"
+        filename = str(entry) if entry else f"{event}.ogg"
         # Check for volume in separate volumes section
         volume = 1.0
         if volumes and event in volumes:
@@ -142,7 +142,7 @@ def get_sound_entry(event: str, pack_dir: str) -> tuple[Path | None, float]:
         if not isinstance(volumes, dict):
             volumes = {}
 
-        entry = sounds.get(event, f"{event}.wav")
+        entry = sounds.get(event, f"{event}.ogg")
         filename, volume = _parse_sound_entry(entry, event, volumes)
 
         sound_file = pack_path / filename
@@ -260,8 +260,14 @@ def stop_all_sounds() -> None:
     Stop all currently playing sounds.
 
     Note: playsound3 doesn't support stopping sounds mid-playback.
-    This function is kept for API compatibility.
+    Only streams created with sound_lib are stopped.
     """
+    import contextlib
+
+    for s in list(_active_streams):
+        with contextlib.suppress(Exception):
+            s.stop()
+    _active_streams.clear()
 
 
 class PreviewPlayer:
@@ -609,7 +615,7 @@ def get_sound_pack_sounds(pack_dir: str) -> dict[str, str]:
         result: dict[str, str] = {}
         for event, entry in sounds.items():
             if isinstance(entry, dict):
-                result[event] = entry.get("file", f"{event}.wav")
+                result[event] = entry.get("file", f"{event}.ogg")
             else:
                 result[event] = str(entry)
         return result
@@ -661,7 +667,7 @@ def get_sound_entry_for_candidates(
             if entry is not None:
                 filename, volume = _parse_sound_entry(entry, event, volumes)
             else:
-                filename = f"{event}.wav"
+                filename = f"{event}.ogg"
                 volume = volumes.get(event, 1.0)
             candidate_path = pack_path / filename
             if candidate_path.exists():
@@ -677,7 +683,7 @@ def get_sound_entry_for_candidates(
             if entry is not None:
                 filename, volume = _parse_sound_entry(entry, event, default_volumes)
             else:
-                filename = f"{event}.wav"
+                filename = f"{event}.ogg"
                 volume = default_volumes.get(event, 1.0)
             candidate_path = default_pack_path / filename
             if candidate_path.exists():
@@ -786,7 +792,7 @@ def validate_sound_pack(pack_path: Path) -> tuple[bool, str]:
         for sound_name, sound_entry in sounds.items():
             # Handle both string and dict formats
             if isinstance(sound_entry, dict):
-                sound_file = sound_entry.get("file", f"{sound_name}.wav")
+                sound_file = sound_entry.get("file", f"{sound_name}.ogg")
             else:
                 sound_file = str(sound_entry)
 

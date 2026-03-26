@@ -85,6 +85,7 @@ def _make_dialog_for_settings(settings: SimpleNamespace) -> SettingsDialogSimple
     dialog._vc_config_sizer = _DummySizer()
     dialog._pw_config_sizer = _DummySizer()
     dialog._source_settings_states = SettingsDialogSimple._build_default_source_settings_states()
+    dialog._auto_sources_sizer = _DummySizer()
     dialog.config_manager = MagicMock()
     dialog.config_manager.get_settings.return_value = settings
     return dialog

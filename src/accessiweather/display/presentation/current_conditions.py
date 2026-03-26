@@ -19,6 +19,7 @@ from ...models import (
 from ...units import DisplayUnitSystem
 from ...utils import TemperatureUnit
 from ...utils.unit_utils import format_precipitation, format_wind_speed
+from ...weather_anomaly import AnomalyCallout
 from ..priority_engine import PriorityEngine, WeatherCategory
 from ..weather_presenter import CurrentConditionsPresentation, Metric
 from .environmental import AirQualityPresentation
@@ -208,7 +209,8 @@ def _build_environmental_metrics(
                 if pollen_value
                 else environmental.pollen_primary_allergen
             )
-        metrics.append(Metric("Pollen", pollen_value or "Data unavailable"))
+        if pollen_value:
+            metrics.append(Metric("Pollen", pollen_value))
 
     return metrics
 
@@ -442,6 +444,7 @@ def build_current_conditions(
     air_quality: AirQualityPresentation | None = None,
     alerts: WeatherAlerts | None = None,
     unit_system: DisplayUnitSystem | str | None = None,
+    anomaly_callout: AnomalyCallout | None = None,
 ) -> CurrentConditionsPresentation:
     """Create a structured presentation for the current weather using helper functions."""
     title = f"Current conditions for {location.name}"
@@ -506,6 +509,9 @@ def build_current_conditions(
 
     metrics.extend(_build_environmental_metrics(environmental, air_quality))
     metrics.extend(_build_trend_metrics(trends, current, hourly_forecast, show_pressure_trend))
+
+    if anomaly_callout is not None:
+        metrics.append(Metric("Historical context", anomaly_callout.temp_anomaly_description))
 
     # Build fallback text
     # Use metric.label for all metrics — after priority reordering, metrics[0]
