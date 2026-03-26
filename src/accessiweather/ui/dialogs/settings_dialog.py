@@ -1404,17 +1404,23 @@ class SettingsDialogSimple(wx.Dialog):
             self._original_vc_key = str(vc_key)
             self._vc_key_cleared = False
             if hasattr(wx, "EVT_TEXT"):
-                self._controls["vc_key"].Bind(
-                    wx.EVT_TEXT, lambda e: setattr(self, "_vc_key_cleared", True)
-                )
+
+                def _on_vc_key_text(e, _self=self):
+                    _self._vc_key_cleared = True
+                    _self._update_auto_source_key_state()
+
+                self._controls["vc_key"].Bind(wx.EVT_TEXT, _on_vc_key_text)
             pw_key = getattr(settings, "pirate_weather_api_key", "") or ""
             self._controls["pw_key"].SetValue(str(pw_key))
             self._original_pw_key = str(pw_key)
             self._pw_key_cleared = False
             if hasattr(wx, "EVT_TEXT"):
-                self._controls["pw_key"].Bind(
-                    wx.EVT_TEXT, lambda e: setattr(self, "_pw_key_cleared", True)
-                )
+
+                def _on_pw_key_text(e, _self=self):
+                    _self._pw_key_cleared = True
+                    _self._update_auto_source_key_state()
+
+                self._controls["pw_key"].Bind(wx.EVT_TEXT, _on_pw_key_text)
 
             # Auto mode sources
             auto_src_us = getattr(
