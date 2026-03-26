@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Updated Antfarm to v0.2.2 and configured feature-dev workflow for 80% diff-coverage.
 - Scheduled weekly disk cleanup cron job.
 - Added a forecast duration setting under Settings > Forecast so you can choose 3, 5, 7, 10, 14, or 15 days (default stays 7).
+- Replaced the four inline source priority dropdowns in Settings > Data Sources with a "Configure Source Settings..." button that opens a cleaner tabbed dialog — "Current Conditions" (NWS station strategy) and "Auto Mode" (US priority, international priority, Open-Meteo model).
 
 ### Changed
 - Consolidated CPC outlooks into a single "6-10 & 8-14 Day Outlook" field.

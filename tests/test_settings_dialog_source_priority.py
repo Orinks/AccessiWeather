@@ -30,6 +30,7 @@ class _DummyControl:
         self._selection = 0
         self._value = False
         self._parent = _DummyParent()
+        self._label = ""
 
     def SetSelection(self, value: int) -> None:
         self._selection = value
@@ -42,6 +43,12 @@ class _DummyControl:
 
     def GetValue(self):
         return self._value
+
+    def SetLabel(self, label: str) -> None:
+        self._label = label
+
+    def GetLabel(self) -> str:
+        return self._label
 
     def Append(self, _value: str) -> None:
         return None
@@ -81,6 +88,7 @@ def _make_dialog_for_settings(settings: SimpleNamespace) -> SettingsDialogSimple
     dialog._update_minimize_on_startup_state = lambda _enabled: None
     dialog._vc_config_sizer = _DummySizer()
     dialog._pw_config_sizer = _DummySizer()
+    dialog._source_settings_states = SettingsDialogSimple._build_default_source_settings_states()
     dialog.config_manager = MagicMock()
     dialog.config_manager.get_settings.return_value = settings
     return dialog
@@ -96,7 +104,7 @@ def test_load_settings_maps_us_source_priority_to_index_1():
 
     dialog._load_settings()
 
-    assert dialog._controls["us_priority"].GetSelection() == 1
+    assert dialog._source_settings_states["us_priority"] == 1
 
 
 def test_load_settings_maps_us_source_priority_legacy_3_element_to_index_1():
@@ -109,7 +117,7 @@ def test_load_settings_maps_us_source_priority_legacy_3_element_to_index_1():
 
     dialog._load_settings()
 
-    assert dialog._controls["us_priority"].GetSelection() == 1
+    assert dialog._source_settings_states["us_priority"] == 1
 
 
 def test_load_settings_maps_international_source_priority_to_index_1():
@@ -122,7 +130,7 @@ def test_load_settings_maps_international_source_priority_to_index_1():
 
     dialog._load_settings()
 
-    assert dialog._controls["intl_priority"].GetSelection() == 1
+    assert dialog._source_settings_states["intl_priority"] == 1
 
 
 def test_load_settings_maps_international_source_priority_legacy_2_element_to_index_1():
@@ -135,7 +143,7 @@ def test_load_settings_maps_international_source_priority_legacy_2_element_to_in
 
     dialog._load_settings()
 
-    assert dialog._controls["intl_priority"].GetSelection() == 1
+    assert dialog._source_settings_states["intl_priority"] == 1
 
 
 def test_save_settings_persists_selected_us_source_priority_index_2():
@@ -143,8 +151,8 @@ def test_save_settings_persists_selected_us_source_priority_index_2():
     dialog = _make_dialog_for_settings(settings)
     dialog._get_ai_model_preference = lambda: "openrouter/free"
     dialog.config_manager.update_settings.return_value = True
-    dialog._controls["us_priority"].SetSelection(2)
-    dialog._controls["intl_priority"].SetSelection(0)
+    dialog._source_settings_states["us_priority"] = 2
+    dialog._source_settings_states["intl_priority"] = 0
 
     success = dialog._save_settings()
 
