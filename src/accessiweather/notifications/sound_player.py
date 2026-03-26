@@ -260,8 +260,14 @@ def stop_all_sounds() -> None:
     Stop all currently playing sounds.
 
     Note: playsound3 doesn't support stopping sounds mid-playback.
-    This function is kept for API compatibility.
+    Only streams created with sound_lib are stopped.
     """
+    import contextlib
+
+    for s in list(_active_streams):
+        with contextlib.suppress(Exception):
+            s.stop()
+    _active_streams.clear()
 
 
 class PreviewPlayer:
