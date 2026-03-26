@@ -416,7 +416,8 @@ class SettingsDialogSimple(wx.Dialog):
         self._controls["source_settings_summary"] = wx.TextCtrl(
             panel,
             value=self._get_source_settings_summary_text(),
-            style=wx.TE_READONLY,
+            size=(-1, 44),
+            style=wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_NO_VSCROLL,
         )
         sizer.Add(self._controls["source_settings_summary"], 0, wx.LEFT | wx.BOTTOM | wx.EXPAND, 5)
         self._controls["configure_source_settings"] = wx.Button(
