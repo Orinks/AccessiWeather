@@ -413,10 +413,12 @@ class SettingsDialogSimple(wx.Dialog):
             wx.ALL,
             5,
         )
-        self._controls["source_settings_summary"] = wx.StaticText(
-            panel, label=self._get_source_settings_summary_text()
+        self._controls["source_settings_summary"] = wx.TextCtrl(
+            panel,
+            value=self._get_source_settings_summary_text(),
+            style=wx.TE_READONLY,
         )
-        sizer.Add(self._controls["source_settings_summary"], 0, wx.LEFT | wx.BOTTOM, 5)
+        sizer.Add(self._controls["source_settings_summary"], 0, wx.LEFT | wx.BOTTOM | wx.EXPAND, 5)
         self._controls["configure_source_settings"] = wx.Button(
             panel, label="Configure Source Settings..."
         )
@@ -917,7 +919,7 @@ class SettingsDialogSimple(wx.Dialog):
         """Refresh the source settings summary shown on the data sources tab."""
         ctrl = self._controls.get("source_settings_summary")
         if ctrl is not None:
-            ctrl.SetLabel(self._get_source_settings_summary_text())
+            ctrl.SetValue(self._get_source_settings_summary_text())
 
     def _run_source_settings_dialog(self) -> dict | None:
         """Show the source settings modal (tabbed) and return updated state when accepted."""
