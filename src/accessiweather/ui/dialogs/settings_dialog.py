@@ -965,7 +965,7 @@ class SettingsDialogSimple(wx.Dialog):
             "auto_use_visualcrossing",
             "auto_use_pirateweather",
         ]
-        enabled = [s for s, k in zip(sources, keys) if state.get(k, True)]
+        enabled = [s for s, k in zip(sources, keys, strict=True) if state.get(k, True)]
         enabled_text = ", ".join(enabled) if enabled else "None"
         return f"Auto sources: {enabled_text} | Station: {strat_text}"
 
