@@ -1201,9 +1201,11 @@ class MainWindow(SizedFrame):
 
             # Update forecast
             if presentation.forecast:
-                daily_text = (
-                    presentation.forecast.daily_section_text or "No daily forecast available."
-                )
+                daily_sections = [presentation.forecast.daily_section_text]
+                if presentation.forecast.marine_section_text:
+                    daily_sections.append(presentation.forecast.marine_section_text)
+                daily_text = "\n\n".join(section for section in daily_sections if section).rstrip()
+                daily_text = daily_text or "No daily forecast available."
                 hourly_text = (
                     presentation.forecast.hourly_section_text or "No hourly forecast available."
                 )

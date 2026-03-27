@@ -107,6 +107,15 @@ class AddLocationDialog(wx.Dialog):
         help_text.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
         name_sizer.Add(help_text, 0, wx.TOP, 5)
 
+        self.marine_mode_checkbox = wx.CheckBox(
+            panel,
+            label="Enable Marine Mode for this location (coastal essentials only)",
+        )
+        self.marine_mode_checkbox.SetToolTip(
+            "Adds nearby NWS marine zone summary, wind and wave highlights, and marine advisories."
+        )
+        name_sizer.Add(self.marine_mode_checkbox, 0, wx.TOP, 8)
+
         main_sizer.Add(name_sizer, 0, wx.EXPAND | wx.ALL, 10)
 
         # Search section
@@ -174,6 +183,7 @@ class AddLocationDialog(wx.Dialog):
         self.name_input.SetName("Location name input")
         self.search_input.SetName("Search for location")
         self.results_list.SetName("Search results")
+        self.marine_mode_checkbox.SetName("Enable Marine Mode for this location")
 
     def _on_key(self, event: wx.KeyEvent) -> None:
         """Handle key events."""
@@ -307,7 +317,11 @@ class AddLocationDialog(wx.Dialog):
 
             # Add location
             success = self.config_manager.add_location(
-                name, latitude, longitude, country_code=country_code
+                name,
+                latitude,
+                longitude,
+                country_code=country_code,
+                marine_mode=self.marine_mode_checkbox.GetValue(),
             )
 
             if success:
