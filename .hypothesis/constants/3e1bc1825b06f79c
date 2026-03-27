@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/services/update_service/releases.py
+# hypothesis_version: 6.151.9
+
+[2.0, 45.0, 304, 403, 3600, ',', '.appimage', '.asc', '.deb', '.dmg', '.exe', '.json', '.md5', '.msi', '.pkg', '.plist', '.rpm', '.sha256', '.sha512', '.sig', '.tar.gz', '.txt', '.whl', '.xml', '.zip', '<', '>', '?per_page=50', 'If-None-Match', 'Link', 'X-RateLimit-Reset', 'assets', 'channel', 'checksum', 'darwin', 'dev', 'etag', 'hash', 'last_check', 'linux', 'mac', 'macos', 'name', 'nightly-', 'owner', 'portable', 'prerelease', 'published_at', 'rel="next"', 'releases', 'repo', 'signature', 'source', 'stable', 'sum', 'tag_name', 'utf-8', 'v', 'verify', 'w', 'win', 'windows']

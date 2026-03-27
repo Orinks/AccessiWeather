@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/utils/temperature_utils.py
+# hypothesis_version: 6.151.9
+
+[0.1, 17.27, 100.0, 237.7, 'C', 'F', 'N/A', 'both', 'c', 'celsius', 'degc', 'degf', 'f', 'fahrenheit', 'wmounit:degc', 'wmounit:degf', '°c', '°f']

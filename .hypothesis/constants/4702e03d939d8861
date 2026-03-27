@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/display/weather_presenter.py
+# hypothesis_version: 6.151.9
+
+[' - ', '+00:00', ', ', '. ', '; ', 'Aviation Weather', 'Cached data', 'Open-Meteo', 'Raw TAF message:', 'SIGMET', 'Visual Crossing', 'Z', 'airspace', 'anomaly_callout', 'area', 'beginTime', 'both', 'cached data', 'cwsu', 'description', 'endTime', 'event', 'expires', 'fir', 'hazard', 'intensity', 'issueTime', 'issuingOffice', 'local', 'name', 'nws', 'openmeteo', 'phenomenon', 'productType', 'regions', 'severity', 'show_pressure_trend', 'show_timezone_suffix', 'startTime', 'summary', 'temperature_unit', 'text', 'time_display_mode', 'time_format_12hour', 'validTimeEnd', 'validTimeStart', 'validUntil', 'visualcrossing']

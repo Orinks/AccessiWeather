@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_gov_api_client/api/default/alerts_active.py
+# hypothesis_version: 6.151.9
+
+[200, 301, 500, '/alerts/active', 'area', 'certainty', 'code', 'event', 'get', 'limit', 'message_type', 'method', 'params', 'point', 'region', 'region_type', 'severity', 'status', 'urgency', 'url', 'zone']

@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/ui/dialogs/uv_index_dialog.py
+# hypothesis_version: 6.151.9
+
+[1.05, 1.1, 100, 500, 550, 600, '%B %d, %Y', '%I:%M %p', '0', 'Close', 'Current UV Index', 'Error', 'Extreme', 'High', 'Hourly Forecast', 'Low', 'Moderate', 'No Location Selected', 'No forecast data.', 'Very High', '_hourly_display', 'current_weather_data', 'environmental', 'has_data', 'hourly_uv_index', 'time', 'updated_at', 'uv_category', 'uv_index']

@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/ui/dialogs/weather_assistant_dialog.py
+# hypothesis_version: 6.151.9
+
+[30.0, 500, 650, 2000, '\nActive Alerts:', '\nForecast:', '\nTrend Insights:', '%I:%M %p', '&Close', '&Conversation:', '&Message:', '&Send', '400', '401', '429', 'Alert', 'C&lear Chat', 'Conversation history', 'Cop&y Chat', 'HTTP-Referer', 'NONE', 'Ready', 'Thinking...', 'Tool executor: %s', 'Type your message', 'Unknown', 'Weather Assistant', 'X-Title', 'You', 'api key', 'arguments', 'assistant', 'available', 'config_manager', 'content', 'event', 'features', 'function', 'id', 'name', 'openrouter/free', 'rate', 'rate limit', 'role', 'severity', 'system', 'timed out', 'timeout', 'title', 'to_dict', 'tool', 'tool_call_id', 'tool_calls', 'tools', 'type', 'user', 'your area']

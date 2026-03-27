@@ -1,0 +1,4 @@
+# file: /usr/lib/python3/dist-packages/charset_normalizer/cd.py
+# hypothesis_version: 6.151.9
+
+[0.1, 0.15, 0.2, 0.4, 0.8, 255, 2048, ',', 'Chinese', 'Japanese', 'Korean', 'Latin', 'Latin Based', 'cp932', 'euc_j', 'gb', 'ignore', 'iso2022_jp', 'iso2022_kr', 'shift_', '—']

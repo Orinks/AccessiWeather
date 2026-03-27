@@ -1,0 +1,4 @@
+# file: /usr/lib/python3/dist-packages/_pytest/deprecated.py
+# hypothesis_version: 6.151.9
+
+['pytest_capturelog', 'pytest_catchlog', 'pytest_faulthandler']

@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_gov_api_client/models/alert_atom_entry_author.py
+# hypothesis_version: 6.151.9
+
+['AlertAtomEntryAuthor', 'T', 'name']

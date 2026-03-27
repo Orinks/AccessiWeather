@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/utils/retry_utils.py
+# hypothesis_version: 6.151.9
+
+[0.0, 408, 409, 425, 429, 500, 'T', '__cause__', '__context__', 'attempt must be >= 1', 'response', 'status_code']

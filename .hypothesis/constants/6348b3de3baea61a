@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_gov_api_client/models/alert_atom_entry.py
+# hypothesis_version: 6.151.9
+
+['AlertAtomEntry', 'AlertAtomEntryAuthor', 'AlertXMLParameter', 'T', 'areaDesc', 'author', 'category', 'certainty', 'effective', 'event', 'expires', 'geocode', 'id', 'msgType', 'parameter', 'polygon', 'published', 'sent', 'severity', 'status', 'summary', 'updated', 'urgency']

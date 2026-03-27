@@ -231,9 +231,7 @@ def build_forecast(
             daily_lines.append(f"  Wind gusts: {gust_val}")
         # Bug 6: compact precip – combine type, amount, and chance on one line
         precip_type_str = (
-            ", ".join(period.precipitation_type)
-            if period.precipitation_type
-            else None
+            ", ".join(period.precipitation_type) if period.precipitation_type else None
         )
         precip_parts: list[str] = []
         if precip_type_str:

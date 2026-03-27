@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/services/weather_service/api_client_manager.py
+# hypothesis_version: 6.151.9
+
+['auto', 'celsius', 'data_source', 'fahrenheit', 'settings']

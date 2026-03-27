@@ -1,0 +1,4 @@
+# file: /usr/lib/python3/dist-packages/cryptography/fernet.py
+# hypothesis_version: 6.151.9
+
+[b'\x80', 128, 'big', 'data']

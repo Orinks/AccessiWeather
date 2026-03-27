@@ -1,0 +1,4 @@
+# file: /usr/lib/python3/dist-packages/_pytest/__init__.py
+# hypothesis_version: 6.151.9
+
+['__version__', 'unknown', 'version_tuple']

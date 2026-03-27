@@ -1,5 +1,5 @@
 """
-Regression / property tests for unit-preference bugs:
+Regression and property tests for unit-preference bugs.
 
 Bug 1  – Temperature trend shows °F even when user prefers °C.
 Bug 2  – Hourly precip always renders "0.00 in" (ignores mm preference).
@@ -9,25 +9,23 @@ Bug 4  – Daily forecast is capped at 7 days even when 15-day is configured.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
-import pytest
-from hypothesis import given, settings
-from hypothesis import strategies as st
+from hypothesis import (
+    given,
+    settings,
+    strategies as st,
+)
 
 from accessiweather.display.presentation.current_conditions import (
     _adapt_temperature_trend_summary,
-    _build_basic_metrics,
     _build_trend_metrics,
-    build_current_conditions,
     format_trend_lines,
 )
 from accessiweather.display.presentation.forecast import build_hourly_summary
 from accessiweather.models import (
     AppSettings,
     CurrentConditions,
-    Forecast,
-    ForecastPeriod,
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
@@ -412,7 +410,9 @@ class TestDailyForecastDaysRegressionPirateWeather:
         raw_forecast = client._parse_forecast(payload)
         location = Location(name="Test City", latitude=40.0, longitude=-74.0, country_code="US")
         settings = _make_settings(forecast_duration_days=15)
-        presentation = build_forecast(raw_forecast, None, location, TemperatureUnit.FAHRENHEIT, settings)
+        presentation = build_forecast(
+            raw_forecast, None, location, TemperatureUnit.FAHRENHEIT, settings
+        )
         assert len(presentation.periods) == 15
 
     def test_7_day_setting_shows_7_days(self):
@@ -424,5 +424,7 @@ class TestDailyForecastDaysRegressionPirateWeather:
         raw_forecast = client._parse_forecast(payload)
         location = Location(name="Test City", latitude=40.0, longitude=-74.0, country_code="US")
         settings = _make_settings(forecast_duration_days=7)
-        presentation = build_forecast(raw_forecast, None, location, TemperatureUnit.FAHRENHEIT, settings)
+        presentation = build_forecast(
+            raw_forecast, None, location, TemperatureUnit.FAHRENHEIT, settings
+        )
         assert len(presentation.periods) == 7

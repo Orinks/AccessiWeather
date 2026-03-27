@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/alert_manager.py
+# hypothesis_version: 6.151.9
+
+[1.0, 'Alert state cleared', 'AlertState', 'alert_expired', 'alert_id', 'alert_sent_time', 'alert_states', 'alerts', 'allowed', 'available_tokens', 'capacity', 'content_changed', 'content_hash', 'escalation', 'first_seen', 'fresh_alert', 'hash_history', 'last_notified', 'new_alert', 'notification_count', 'rate_limit_exceeded', 'rate_limiter', 'recent_notifications', 'settings', 'total_tracked_alerts', 'unknown']

@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/runtime_state.py
+# hypothesis_version: 6.151.9
+
+['.json.tmp', 'alert_state.json', 'alert_states', 'alerts', 'discussion', 'last_check_time', 'last_discussion_text', 'last_issuance_time', 'last_severe_risk', 'last_text', 'last_value', 'meta', 'migrated_at', 'migrated_from', 'notification_events', 'nt', 'runtime_state.json', 'schema_version', 'severe_risk', 'state', 'utf-8', 'w']

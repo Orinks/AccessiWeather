@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/openmeteo_client.py
+# hypothesis_version: 6.151.9
+
+[1.0, 30.0, 384, 400, 429, 500, 'AccessiWeather', 'Bad request', 'Rate limit exceeded', 'User-Agent', 'Weather code ', 'apparent_temperature', 'auto', 'best_match', 'client', 'cloud_cover', 'current', 'daily', 'dew_point_2m', 'fahrenheit', 'forecast', 'forecast_days', 'forecast_hours', 'hourly', 'inch', 'is_day', 'latitude', 'longitude', 'models', 'mph', 'precipitation', 'precipitation_sum', 'precipitation_unit', 'pressure_msl', 'reason', 'relative_humidity_2m', 'snow_depth', 'snowfall', 'snowfall_sum', 'sunrise', 'sunset', 'surface_pressure', 'temperature_2m', 'temperature_2m_max', 'temperature_2m_min', 'temperature_unit', 'timezone', 'uv_index', 'uv_index_max', 'visibility', 'weather_code', 'wind_direction_10m', 'wind_gusts_10m', 'wind_gusts_10m_max', 'wind_speed_10m', 'wind_speed_10m_max', 'wind_speed_unit']

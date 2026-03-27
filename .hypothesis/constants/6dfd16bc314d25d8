@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_client_trends.py
+# hypothesis_version: 6.151.9
+
+[0.02, 0.05, 0.5, 1.0, 1.5, 2.0, 3.0, 'F', 'cooler', 'daily_trend', 'falling', 'inHg', 'mb', 'pressure', 'rising', 'similar', 'steady', 'temperature', 'warmer', '°C', '°F', '↑', '↑↑', '→', '↓', '↓↓']

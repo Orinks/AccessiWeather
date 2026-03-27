@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/api_client/core_client.py
+# hypothesis_version: 6.151.9
+
+[0.0, 0.5, 300, 400, 404, 429, 500, '/county/', '/fire/', '/forecast/', 'Accept', 'AccessiWeather', 'User-Agent', 'application/geo+json', 'county', 'features', 'fire', 'fireWeatherZone', 'forecast', 'forecastHourly', 'forecastZone', 'observationStations', 'params', 'properties', 'relativeLocation', 'state', 'stationIdentifier', 'url']

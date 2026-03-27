@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_gov_api_client/models/relative_location.py
+# hypothesis_version: 6.151.9
+
+['QuantitativeValue', 'RelativeLocation', 'T', 'bearing', 'city', 'distance', 'state']

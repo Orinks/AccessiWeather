@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/notifications/sound_pack_installer.py
+# hypothesis_version: 6.151.9
+
+['*', '1.0.0', 'Custom sound pack', 'Invalid ZIP file', 'No description', 'Sound pack is valid', 'Unknown', 'alert', 'alert.wav', 'author', 'default', 'description', 'directory', 'error', 'error.wav', 'exit', 'exit.wav', 'name', 'notify', 'notify.wav', 'pack.json', 'path', 'r', 'sounds', 'startup', 'startup.wav', 'success', 'success.wav', 'utf-8', 'version', 'w']

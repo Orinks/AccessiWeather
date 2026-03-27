@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/ui/dialogs/noaa_radio_dialog.py
+# hypothesis_version: 6.151.9
+
+[100.0, 100, 350, 450, 5000, 'All streams failed', 'Close', 'Loading stations...', 'NOAA Weather Radio', 'No station selected', 'Play', 'Ready', 'Set as Preferred', 'Station:', 'Stop', 'Stopped', 'Stream Not Available', 'Stream has no audio', 'Switch', 'Try Next Stream', 'Unknown', 'Volume:', 'runtime_paths']

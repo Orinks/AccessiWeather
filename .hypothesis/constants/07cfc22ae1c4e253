@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/services/weather_service/fallback_handler.py
+# hypothesis_version: 6.151.9
+
+['get_forecast', 'get_hourly_forecast']

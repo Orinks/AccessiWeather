@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_client_openmeteo.py
+# hypothesis_version: 6.151.9
+
+[0.0, 0.0005, 0.001, 0.02, 0.0295299830714, 1.0, 1.5, 3.28084, 20.0, 25.0, 30.48, 39.3701, 1609.344, 16093.4, 100, 1000, '+00:00', 'F', 'Light drizzle', 'Mixed rain and snow', 'Slight rain', 'Z', 'apparent_temperature', 'auto', 'best_match', 'current', 'current_units', 'daily', 'dew_point_2m', 'fahrenheit', 'feet', 'forecast_days', 'ft', 'hourly', 'inch', 'latitude', 'longitude', 'm', 'mm', 'models', 'mph', 'precipitation_unit', 'pressure_msl', 'rain', 'relative_humidity_2m', 'showers', 'snow', 'snow_depth', 'snowfall', 'snowfall_sum', 'sunrise', 'sunset', 'temperature_2m', 'temperature_2m_max', 'temperature_unit', 'time', 'timezone', 'utc_offset_seconds', 'uv_index', 'uv_index_max', 'visibility', 'weather_code', 'wind_direction_10m', 'wind_speed_10m', 'wind_speed_unit']

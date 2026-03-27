@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/app_initialization.py
+# hypothesis_version: 6.151.9
+
+[100, 200, 300, 500, 'AI Model Not Found', 'AccessiWeather', 'AccessiWeather/2.0', 'Error', 'Loading initial data', 'Model Reset', 'Open Settings', 'Reset to Default', '_config_dir', '_portable_mode', 'ai_cache_ttl', 'ai_model_preference', 'auto', 'data_updated', 'debug_mode', 'default', 'muted_sound_events', 'openrouter/auto', 'openrouter_api_key', 'sound_enabled', 'sound_pack']

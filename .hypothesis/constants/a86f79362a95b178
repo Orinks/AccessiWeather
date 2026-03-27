@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/api/openmeteo_wrapper.py
+# hypothesis_version: 6.151.9
+
+[1.0, 30.0, 'Rate limit', 'best_match', 'current', 'current_units', 'daily', 'daily_units', 'data', 'days', 'fahrenheit', 'force_refresh', 'hourly', 'hourly_units', 'hours', 'inch', 'lat', 'lon', 'model', 'mph', 'openmeteo_client', 'openmeteo_current', 'openmeteo_forecast', 'openmeteo_hourly', 'precip_unit', 'precipitation_unit', 'temp_unit', 'temperature_unit', 'type', 'wind_speed_unit', 'wind_unit']

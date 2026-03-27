@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_gov_api_client/models/gridpoint.py
+# hypothesis_version: 6.151.9
+
+['@context', '@id', '@type', 'Gridpoint', 'GridpointHazards', 'GridpointWeather', 'JsonLdContextType1', 'QuantitativeValue', 'T', 'elevation', 'forecastOffice', 'geometry', 'gridId', 'gridX', 'gridY', 'hazards', 'updateTime', 'validTimes', 'weather']

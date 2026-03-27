@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/api/avwx_client.py
+# hypothesis_version: 6.151.9
+
+[10.0, 100, 200, 401, 404, '+00:00', '.', '; ', 'AVWX_BASE_URL', 'Accept', 'AvwxApiError', 'BECMG', 'Becoming', 'FM', 'FROM', 'From', 'K', 'PA', 'PF', 'PG', 'PH', 'PK', 'PP', 'PROB', 'PROBABILITY', 'Probability', 'TEMPO', 'Temporary', 'Z', 'application/json', 'city', 'clouds', 'dt', 'end_time', 'fetch_avwx_taf', 'flight_rules', 'forecast', 'info', 'is_us_station', 'name', 'nd', 'options', 'probability', 'raw', 'rd', 'repr', 'speech', 'st', 'start_time', 'th', 'token', 'translate', 'type', 'value', 'visibility', 'wind', 'wx_codes']

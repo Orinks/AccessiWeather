@@ -1,0 +1,4 @@
+# file: /usr/lib/python3/dist-packages/_pytest/runner.py
+# hypothesis_version: 6.151.9
+
+[0.005, '\x00', ' (fixtures used: {})', '(null)', ', ', '--durations', '--durations-min', '=', 'E', 'ERROR', 'N', 'PYTEST_CURRENT_TEST', 'Reporting', 'SKIPPED', 'TResult', '_request', 'call', 'collect', 'duration', 'error', 'failed', 'fixturenames', 'general', 'importmode', 'line', 'passed', 's', 'setup', 'setuponly', 'setupshow', 'skipped', 'slowest durations', 'store', 'teardown', 'terminal reporting', 'toterminal', 'unittest', 'usepdb', 'wasxfail']

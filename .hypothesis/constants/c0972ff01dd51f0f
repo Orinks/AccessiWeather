@@ -1,0 +1,4 @@
+# file: /usr/lib/python3/dist-packages/_pytest/warning_types.py
+# hypothesis_version: 6.151.9
+
+['_W', '__warningregistry__', 'pytest']

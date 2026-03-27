@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/api_client/alerts_and_products.py
+# hypothesis_version: 6.151.9
+
+[100, '6_10_day', '8_14_day', '@graph', 'ACUS01', 'ACUS02', 'FXUS01', 'FXUS02', 'FXUS05', 'FXUS06', 'FXUS07', 'KNHC', 'KWNC', 'KWNH', 'KWNS', 'MI', 'MIATWOAT', 'MIATWOEP', '\\n', 'alerts/active', 'area', 'atlantic', 'county', 'cpc', 'day1', 'day1_summary', 'day2', 'east_pacific', 'extended', 'fire', 'forecast', 'gridId', 'id', 'medium_range', 'nhc', 'point', 'productText', 'properties', 'qpf', 'radius', 'short_range', 'short_range_summary', 'spc', 'state', 'wpc', 'zone']

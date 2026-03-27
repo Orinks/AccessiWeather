@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_gov_api_client/models/alert.py
+# hypothesis_version: 6.151.9
+
+['Alert', 'AlertGeocode', 'AlertParameters', 'AlertReferencesItem', 'T', 'affectedZones', 'areaDesc', 'category', 'certainty', 'description', 'effective', 'ends', 'event', 'expires', 'geocode', 'headline', 'id', 'instruction', 'messageType', 'onset', 'parameters', 'references', 'response', 'sender', 'senderName', 'sent', 'severity', 'status', 'urgency']

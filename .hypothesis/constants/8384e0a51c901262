@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/noaa_radio/wxradio_client.py
+# hypothesis_version: 6.151.9
+
+[0.0, 1800, '-', '/', '^[A-Z]{2,4}\\d{2,4}$', 'icestats', 'listenurl', 'server_name', 'source']

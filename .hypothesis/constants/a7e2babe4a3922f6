@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/services/national_discussion_scraper.py
+# hypothesis_version: 6.151.9
+
+[1.0, 1.5, 100, 150, '...', '...SUMMARY...', '6-10 Day', '8-14 Day', 'Connection error', 'Convective Outlook', 'Error fetching', 'Request timed out', 'Too many redirects', 'Unknown error', 'User-Agent', 'attribution', 'body', 'class_', 'connection', 'content', 'contentArea', 'cpc.ncep.noaa.gov', 'day1_full', 'day1_summary', 'discussion', 'div', 'error', 'error_type', 'full', 'full_text', 'html.parser', 'http', 'id', 'mainContent', 'outlook_6_10', 'outlook_8_14', 'p', 'pre', 'redirects', 'request', 'response', 'short_range_full', 'short_range_summary', 'spc', 'spc.noaa.gov', 'status_code', 'success', 'summary', 'text', 'timeout', 'wpc', 'wpc.ncep.noaa.gov']

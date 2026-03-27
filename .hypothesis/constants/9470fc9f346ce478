@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/display/priority_engine.py
+# hypothesis_version: 6.151.9
+
+['blizzard', 'cloud_cover', 'cold', 'dense fog', 'detailed', 'dewpoint', 'excessive heat', 'feels_like', 'flash flood', 'flood', 'fog', 'freeze', 'frost', 'gale', 'heat', 'heat_index', 'high wind', 'humidity', 'humidity_pressure', 'hurricane', 'ice storm', 'minimal', 'precipitation', 'precipitation_amount', 'precipitation_chance', 'precipitation_type', 'pressure', 'pressure_trend', 'rain', 'severe thunderstorm', 'smoke', 'snow', 'snowfall', 'standard', 'temperature', 'thunderstorm', 'tornado', 'tropical storm', 'uv_index', 'visibility', 'visibility_clouds', 'wind', 'wind_chill', 'wind_direction', 'wind_gusts', 'wind_speed', 'winter storm', 'winter weather']

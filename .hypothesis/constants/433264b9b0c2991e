@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/utils/unit_utils.py
+# hypothesis_version: 6.151.9
+
+[0.621371, 1.60934, 3.6, 22.5, 25.4, 33.8639, 'Calm', 'E', 'ENE', 'ESE', 'N', 'N/A', 'NE', 'NNE', 'NNW', 'NW', 'S', 'SE', 'SSE', 'SSW', 'SW', 'W', 'WNW', 'WSW', 'mph', 'uk', 'uk2']

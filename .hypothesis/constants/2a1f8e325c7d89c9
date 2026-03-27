@@ -1,0 +1,4 @@
+# file: /usr/lib/python3/dist-packages/cryptography/hazmat/decrepit/ciphers/algorithms.py
+# hypothesis_version: 6.151.9
+
+[128, 129, 160, 192, 256, 449, '3DES', 'Blowfish', 'CAST5', 'IDEA', 'RC2', 'RC4', 'SEED']

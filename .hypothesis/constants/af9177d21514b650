@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/services/simple_update.py
+# hypothesis_version: 6.151.9
+
+[30.0, 128, 448, 65536, '*', '.appimage', '.asc', '.deb', '.dmg', '.exe', '.json', '.md5', '.msi', '.pkg', '.rpm', '.sha256', '.sha512', '.sig', '.tar.gz', '.txt', '.zip', 'C:\\Program Files', 'GET', 'PROGRAMFILES', 'PROGRAMFILES(X86)', 'User-Agent', '\\b[0-9a-f]{7,40}\\b', 'assets', 'bash', 'body', 'browser_download_url', 'checksums.sha256', 'checksums.sha512', 'checksums.txt', 'content-length', 'created_at', 'darwin', 'frozen', 'mac', 'macos_script', 'md5', 'name', 'nightly', 'nightly-(\\d{8})', 'portable', 'prerelease', 'published_at', 'rb', 'sha256', 'sha256sums', 'sha512', 'sha512sums', 'signature', 'stable', 'tag_name', 'unsupported', 'utf-8', 'v', 'verify', 'wb', 'windows', 'windows_installer']

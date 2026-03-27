@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_gov_api_client/models/geo_json_point.py
+# hypothesis_version: 6.151.9
+
+['GeoJSONPoint', 'T', 'bbox', 'coordinates', 'type']

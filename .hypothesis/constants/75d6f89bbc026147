@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/app_timer_manager.py
+# hypothesis_version: 6.151.9
+
+[1000, '_event_check_timer', '_update_timer', 'auto_update_enabled']

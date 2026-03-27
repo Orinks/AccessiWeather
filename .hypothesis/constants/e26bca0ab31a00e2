@@ -1,0 +1,4 @@
+# file: /usr/lib/python3/dist-packages/_pytest/hookspec.py
+# hypothesis_version: 6.151.9
+
+['collect', 'collection_path', 'config', 'file_path', 'module_path', 'path', 'pytest', 'runtest', 'start_path', 'startdir']

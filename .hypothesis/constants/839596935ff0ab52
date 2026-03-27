@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/models/weather.py
+# hypothesis_version: 6.151.9
+
+['F', 'fall', 'northern', 'southern', 'spring', 'summer', 'winter']

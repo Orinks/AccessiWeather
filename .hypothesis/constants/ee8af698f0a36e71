@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/utils/log_sanitize.py
+# hypothesis_version: 6.151.9
+
+['[\\x00-\\x1f\\x7f-\\x9f]']

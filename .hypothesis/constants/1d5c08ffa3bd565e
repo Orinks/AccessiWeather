@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_gov_api_client/models/geo_json_multi_point.py
+# hypothesis_version: 6.151.9
+
+['GeoJSONMultiPoint', 'T', 'bbox', 'coordinates', 'type']

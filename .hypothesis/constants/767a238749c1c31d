@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/config/locations.py
+# hypothesis_version: 6.151.9
+
+[-98.5795, 39.8283, 'Nationwide', 'auto', 'data_source', 'nws']

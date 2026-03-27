@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/api/openrouter_models.py
+# hypothesis_version: 6.151.9
+
+[0.0, 30.0, 1000, 1000000, ' (Free)', '/', ':free', 'Authorization', 'Unknown', 'architecture', 'completion', 'context_length', 'data', 'description', 'id', 'input_modalities', 'is_moderated', 'name', 'output_modalities', 'pricing', 'prompt', 'text', 'top_provider', 'unknown']

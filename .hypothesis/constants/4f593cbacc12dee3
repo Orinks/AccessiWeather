@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/display/presentation/forecast.py
+# hypothesis_version: 6.151.9
+
+[-172.0, -161.0, -154.0, -130.0, -125.0, -66.0, 18.0, 23.0, 24.0, 25.4, 49.0, 51.0, 71.5, 3600.0, 168, ' - ', ', ', 'F', 'Hourly forecast:', 'US', 'Unknown', 'country_code', 'detailed', 'local', 'location', 'night ', 'overnight', 'round_values', 'show_timezone_suffix', 'standard', 'this afternoon', 'this evening', 'time_display_mode', 'time_format_12hour', 'tonight', 'user_local', 'verbosity_level']

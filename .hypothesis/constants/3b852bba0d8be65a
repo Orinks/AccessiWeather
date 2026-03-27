@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_gov_api_client/api/default/station_observation_latest.py
+# hypothesis_version: 6.151.9
+
+[200, 'get', 'method', 'params', 'require_qc', 'url']

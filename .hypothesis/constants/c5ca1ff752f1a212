@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/services/environmental_client.py
+# hypothesis_version: 6.151.9
+
+[-1.0, 1.0, 10.0, 15.0, 100, 120, 150, 200, 300, '+00:00', 'AccessiWeather/2.0', 'Good', 'Grass', 'Hazardous', 'High', 'Low', 'Moderate', 'Open-Meteo Pollen', 'Tree', 'Unhealthy', 'User-Agent', 'Very High', 'Very Unhealthy', 'Weed', 'Z', 'aqi', 'aqius', 'auto', 'carbon_monoxide', 'category', 'forecast_days', 'grass_pollen', 'hourly', 'latitude', 'longitude', 'nitrogen_dioxide', 'ozone', 'pm10', 'pm2_5', 'sulphur_dioxide', 'time', 'timestamp', 'timezone', 'tree_pollen', 'us_aqi', 'us_aqi_pm10', 'us_aqi_pm2_5', 'uv_index', 'weed_pollen']

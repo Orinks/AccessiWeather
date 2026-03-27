@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/notifications/weather_notifier.py
+# hypothesis_version: 6.151.9
+
+[' Borough', ' County', ' Parish', '1.0', 'AccessiWeather', 'Extreme', 'Minor', 'Moderate', 'Severe', 'Unknown', 'Unknown Event', 'Weather Alerts', 'active_alerts', 'alert', 'alert_state.json', 'alerts', 'areaDesc', 'category', 'description', 'effective', 'event', 'expires', 'features', 'headline', 'id', 'instruction', 'last_updated', 'messageType', 'parameters', 'properties', 'response', 'sent', 'severity', 'status', 'urgency', 'version', 'w', '|']

@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/notifications/notification_event_manager.py
+# hypothesis_version: 6.151.9
+
+[300, '$', '%I:%M %p', '&&', '.', '.KEY MESSAGES', '.WHAT HAS CHANGED', '0', 'discussion', 'discussion_update', 'extreme', 'high', 'last_check_time', 'last_discussion_text', 'last_issuance_time', 'last_severe_risk', 'last_text', 'last_value', 'low', 'minimal', 'moderate', 'notification_events', 'notify', 'severe_risk', 'severe_weather_risk', 'starting', 'stopping', 'strftime', 'utf-8', 'w']

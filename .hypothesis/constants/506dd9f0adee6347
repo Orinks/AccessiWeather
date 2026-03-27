@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/display/presentation/alerts.py
+# hypothesis_version: 6.151.9
+
+[150, 200, '%m/%d', ', ', ':', 'Areas', 'Regions', 'Unknown', 'local', 'pirateweather', 'show_timezone_suffix', 'time_display_mode', 'time_format_12hour']

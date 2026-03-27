@@ -1,0 +1,4 @@
+# file: /usr/lib/python3/dist-packages/charset_normalizer/models.py
+# hypothesis_version: 6.151.9
+
+[0.0, 0.01, 0.02, 1.0, 100, 8192, '-', 'English', 'Latin Based', 'Unknown', '_', 'alphabets', 'ascii', 'chaos', 'coherence', 'encoding', 'encoding_aliases', 'has_sig_or_bom', 'is_preferred', 'language', 'path', 'replace', 'strict', 'unicode_path', 'utf-8', 'utf8', 'utf_8']

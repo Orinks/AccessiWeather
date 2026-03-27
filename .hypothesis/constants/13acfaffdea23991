@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_client_parallel.py
+# hypothesis_version: 6.151.9
+
+[5.0, 'Request timed out', 'nws', 'openmeteo', 'pirateweather', 'visualcrossing']

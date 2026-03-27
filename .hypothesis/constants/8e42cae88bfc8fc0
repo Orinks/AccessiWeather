@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/config/source_priority.py
+# hypothesis_version: 6.151.9
+
+[5.0, 'field_priorities', 'nws', 'openmeteo', 'pirateweather', 'us_default', 'visualcrossing']

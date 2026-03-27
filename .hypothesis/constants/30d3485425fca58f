@@ -1,0 +1,4 @@
+# file: /usr/lib/python3/dist-packages/requests/adapters.py
+# hypothesis_version: 6.151.9
+
+['//', 'CERT_NONE', 'CERT_REQUIRED', 'Content-Length', 'PoolManager', 'PreparedRequest', 'Proxy-Authorization', '_pool_block', '_pool_connections', '_pool_maxsize', 'bool | str | None', 'ca_cert_dir', 'ca_certs', 'cert_file', 'cert_reqs', 'config', 'connection_pool_kw', 'headers', 'host', 'http', 'https', 'key_file', 'max_retries', 'port', 'scheme', 'socks', 'ssl_context', 'status', 'utf-8']

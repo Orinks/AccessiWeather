@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/paths.py
+# hypothesis_version: 6.151.9
+
+['.local', '.portable', '1', 'AccessiWeather', 'AppData', 'Application Support', 'Cache', 'Config', 'Data', 'LOCALAPPDATA', 'Library', 'Local', 'Logs', 'Orinks', 'XDG_DATA_HOME', 'accessiweather.json', 'accessiweather.lock', 'config', 'darwin', 'frozen', 'runtime_state.json', 'share', 'state', 'true', 'weather_cache', 'win32', 'yes']

@@ -76,7 +76,9 @@ class TestPirateWeatherForecast:
 
     @integration_vcr.use_cassette("pirate_weather/forecast_nyc.yaml")
     @pytest.mark.asyncio
-    async def test_get_forecast_returns_all_available_days(self, us_location, pirate_weather_api_key):
+    async def test_get_forecast_returns_all_available_days(
+        self, us_location, pirate_weather_api_key
+    ):
         """_parse_forecast returns ALL available days; display layer applies the limit."""
         from accessiweather.pirate_weather_client import PirateWeatherClient
 

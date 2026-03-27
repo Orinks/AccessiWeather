@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/display/presentation/environmental.py
+# hypothesis_version: 6.151.9
+
+[100, ' (dominant)', ' - ', '%B %d, %Y', '%H:%M', '%I:%M %p', ', ', '0', 'CO', 'Carbon Monoxide', 'Extreme', 'Good', 'Hazardous', 'High', 'Hourly Forecast:', 'Improving', 'Low', 'Moderate', 'NO2', 'Nitrogen Dioxide', 'O3', 'OZONE', 'Ozone', 'PM10', 'PM2.5', 'PM2_5', 'Pollen Levels: ', 'SO2', 'Stable', 'Sulfur Dioxide', 'Trend: Stable', 'Unhealthy', 'Very High', 'Very Unhealthy', 'Worsening', '_', 'local', 'show_timezone_suffix', 'time_display_mode', 'time_format_12hour', 'µg/m³']

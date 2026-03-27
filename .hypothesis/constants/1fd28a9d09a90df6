@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/api_client/exceptions.py
+# hypothesis_version: 6.151.9
+
+[' | ', 'api', 'authentication', 'client', 'connection', 'county', 'fire', 'forecast', 'http', 'network', 'not_found', 'parse', 'rate_limit', 'server', 'state', 'timeout', 'unknown']

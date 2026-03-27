@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/installer/spec_utils.py
+# hypothesis_version: 6.151.9
+
+['.bundle', '.dll', '.dylib', '.exe', '.pyd', '.so', '/', 'Darwin', 'Linux', 'Windows', '\\', '\\.so(\\.\\d+)*$', 'sound_lib/lib/', 'sound_lib/lib/x86']

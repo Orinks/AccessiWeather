@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/config/settings.py
+# hypothesis_version: 6.151.9
+
+['***redacted***', '_portable_mode', 'auto', 'avwx_api_key', 'github_app_id', 'nws', 'openmeteo', 'openrouter_api_key', 'pirateweather', 'visualcrossing']

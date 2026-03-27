@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/ui/dialogs/air_quality_dialog.py
+# hypothesis_version: 6.151.9
+
+[1.05, 1.1, 100, 500, 550, 600, ' (dominant)', '%B %d, %Y', '%I:%M %p', '0', 'CO', 'Carbon Monoxide', 'Close', 'Current Air Quality', 'Error', 'Good', 'Hazardous', 'Hourly Forecast', 'Moderate', 'NO2', 'Nitrogen Dioxide', 'No Location Selected', 'No forecast data.', 'O3', 'Ozone', 'PM10', 'PM2_5', 'SO2', 'Sulfur Dioxide', 'Unhealthy', 'Very Unhealthy', '_hourly_display', 'air_quality_category', 'air_quality_index', 'aqi', 'carbon_monoxide', 'current_weather_data', 'environmental', 'has_data', 'hourly_air_quality', 'nitrogen_dioxide', 'ozone', 'pm10', 'pm2_5', 'sulphur_dioxide', 'time', 'updated_at', 'µg/m³']

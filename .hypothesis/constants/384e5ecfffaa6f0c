@@ -1,0 +1,4 @@
+# file: /usr/lib/python3/dist-packages/_pytest/mark/structures.py
+# hypothesis_version: 6.151.9
+
+['(', ',', ':', '<lambda>', 'Markable', '_', '__name__', '_markers', '_param_ids_from', '_param_ids_generated', 'args', 'fail_at_collect', 'ids', 'kwargs', 'mark', 'markers', 'name', 'node', 'parameterise', 'parameterize', 'parametrise', 'parametrize', 'parent', 'pytestmark', 'skip', 'xfail']

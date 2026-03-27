@@ -1,0 +1,4 @@
+# file: /usr/lib/python3/dist-packages/_pytest/assertion/__init__.py
+# hypothesis_version: 6.151.9
+
+['\n~', '%', '%%', '--assert', 'MODE', '\\n', 'assertion', 'assertmode', 'bool', 'debugconfig', 'plain', 'rewrite', 'store']

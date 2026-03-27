@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/units.py
+# hypothesis_version: 6.151.9
+
+['CA', 'GB', 'US', 'auto', 'both', 'c', 'ca', 'celsius', 'country_code', 'f', 'fahrenheit', 'si', 'uk', 'us']

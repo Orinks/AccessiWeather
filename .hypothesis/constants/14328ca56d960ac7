@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/services/update_service/github_update_service.py
+# hypothesis_version: 6.151.9
+
+[30.0, '0.0.0', 'User-Agent', 'Windows', '_owner', '_repo', 'api_status', 'body', 'browser_download_url', 'cache_age', 'cache_exists', 'channel', 'download_manager', 'http_client', 'last_check', 'name', 'platform', 'prerelease', 'release_manager', 'releases', 'repo', 'size', 'stable', 'tag_name', 'update_channel', 'update_tmp', 'v', 'w']

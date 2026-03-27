@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/ui/dialogs/discussion_dialog.py
+# hypothesis_version: 6.151.9
+
+[0.0, 600, 700, '\nCached: Yes', '&Close', '&Explain with AI', '&Refresh', 'Error', 'Explanation failed.', 'Forecast Discussion:', 'Loading...', 'Model Information:', 'Model information', 'No cost', 'ai_explanation_cache', 'ai_model_preference', 'auto', 'control', 'current location', 'current_weather_data', 'custom_instructions', 'custom_system_prompt', 'openrouter/auto', 'openrouter_api_key', 'weather_client', 'your area']

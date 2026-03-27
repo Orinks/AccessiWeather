@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/api/nws/alerts_discussions.py
+# hypothesis_version: 6.151.9
+
+[10.0, 304, '/', '@graph', 'ACUS01', 'ACUS02', 'ETag', 'FXUS01', 'FXUS02', 'FXUS06', 'FXUS07', 'If-Modified-Since', 'If-None-Match', 'KNHC', 'KWNH', 'KWNS', 'Last-Modified', 'MIATWOAT', 'MIATWOEP', 'User-Agent', 'alerts_all', 'alerts_point', 'alerts_state', 'alerts_zone', 'atlantic', 'county', 'day1', 'day2', 'east_pacific', 'extended', 'fire', 'forecast', 'id', 'lat', 'lon', 'medium_range', 'nhc', 'productText', 'properties', 'qpf', 'radius', 'short_range', 'spc', 'state', 'to_dict', 'wpc', 'zone_id']

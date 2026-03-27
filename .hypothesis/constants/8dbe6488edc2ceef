@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/config/import_export.py
+# hypothesis_version: 6.151.9
+
+['...', '.json.backup', '_portable_mode', 'app', 'auto', 'avwx_api_key', 'country_code', 'data_source', 'exported_at', 'latitude', 'locations', 'longitude', 'name', 'nws', 'openmeteo', 'openrouter_api_key', 'settings', 'utf-8', 'visualcrossing', 'w']

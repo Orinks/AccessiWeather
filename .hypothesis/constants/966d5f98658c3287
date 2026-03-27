@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_gov_api_client/models/text_product_type_collection.py
+# hypothesis_version: 6.151.9
+
+['@context', '@graph', 'JsonLdContextType1', 'T']

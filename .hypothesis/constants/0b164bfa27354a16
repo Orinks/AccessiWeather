@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/api/nws/core_client.py
+# hypothesis_version: 6.151.9
+
+[10.0, 404, 429, 500, 'Accept', 'User-Agent', 'application/geo+json', 'client', 'replace', 'url', 'utf-8']

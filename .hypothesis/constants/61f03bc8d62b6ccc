@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/services/national_discussion_service.py
+# hypothesis_version: 6.151.9
+
+[0.0, 1.0, 1.5, 100, 3600, '/', '3-7 day', '6-10 & 8-14 Day', '8-10', '@graph', '@id', 'Accept', 'Connection error', 'PMD', 'PMDEPD', 'PMDET', 'PMDSPD', 'QPF', 'Request timed out', 'SWO', 'SWODY1', 'SWODY2', 'SWODY3', 'User-Agent', 'application/geo+json', 'atlantic_outlook', 'body', 'class_', 'content', 'contentArea', 'cpc', 'data', 'day 1', 'day 2', 'day 3', 'day 8', 'day1', 'day2', 'day3', 'div', 'east_pacific_outlook', 'error', 'extended', 'html', 'html.parser', 'id', 'mainContent', 'medium range', 'medium_range', 'nhc', 'outlook', 'p', 'pre', 'productText', 'products', 'qpf', 'short range', 'short_range', 'spc', 'success', 'text', 'title', 'wpc']

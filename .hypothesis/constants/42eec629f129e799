@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/config/file_permissions.py
+# hypothesis_version: 6.151.9
+
+[384, 134217728, '/grant:r', '/inheritance:r', 'CREATE_NO_WINDOW', 'USERNAME', 'icacls', 'nt']

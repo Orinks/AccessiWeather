@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/alert_notification_system.py
+# hypothesis_version: 6.151.9
+
+['%b %d', ', ', '...', 'Alert Cancelled', 'Immediate', 'Moderate', 'Observed', 'Test Alert', 'Test Area', 'Test Weather Alert', 'Unknown', 'Weather Alert', 'content_changed', 'escalation', 'expected', 'extended', 'ignored_categories', 'immediate', 'local', 'new_alert', 'notify_extreme', 'notify_minor', 'notify_moderate', 'notify_severe', 'notify_unknown', 'reminder', 'show_affected_areas', 'show_expiration_time', 'show_timezone_suffix', 'sound_enabled', 'test-alert-', 'time_display_mode', 'time_format_12hour', 'unknown']

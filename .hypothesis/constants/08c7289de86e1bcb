@@ -1,0 +1,4 @@
+# file: /usr/lib/python3/dist-packages/charset_normalizer/api.py
+# hypothesis_version: 6.151.9
+
+[0.0, 0.1, 0.2, 50000.0, 500000.0, 100, 512, ',', ', ', 'ascii', 'charset_normalizer', 'rb', 'strict', 'utf_16', 'utf_32', 'utf_7', 'utf_8']

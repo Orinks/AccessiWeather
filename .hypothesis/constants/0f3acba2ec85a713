@@ -1,0 +1,4 @@
+# file: /usr/lib/python3/dist-packages/urllib3/http2/probe.py
+# hypothesis_version: 6.151.9
+
+['_cache_locks', '_cache_values', '_lock', 'acquire_and_get', 'set_and_release']

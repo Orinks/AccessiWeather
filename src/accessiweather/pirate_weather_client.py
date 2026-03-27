@@ -348,7 +348,8 @@ class PirateWeatherClient:
         )
 
     def _parse_forecast(self, data: dict, days: int | None = None) -> Forecast:
-        """Parse Pirate Weather ``daily`` block into a Forecast.
+        """
+        Parse Pirate Weather ``daily`` block into a Forecast.
 
         All available daily periods are returned so that the display layer
         (``_select_periods_by_day_window``) can apply the user's configured

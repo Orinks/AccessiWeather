@@ -1,0 +1,4 @@
+# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/ui/dialogs/weather_history_dialog.py
+# hypothesis_version: 6.151.9
+
+[1.2, 500, 700, '%A, %b %d', 'Close', 'Error', 'No Data', 'No Location Selected', 'No data available.', 'Today vs Yesterday', 'Unknown', 'Weather Trends', 'Weather history text', 'about the same', 'condition', 'cooler', 'current', 'current_weather_data', 'daily_history', 'description', 'name', 'short_forecast', 'start_time', 'strftime', 'temperature', 'temperature_f', 'trend_insights', 'trend_type', 'warmer']
