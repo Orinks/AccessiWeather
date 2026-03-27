@@ -30,6 +30,7 @@ class LocationOperations:
         latitude: float,
         longitude: float,
         country_code: str | None = None,
+        marine_mode: bool = False,
     ) -> bool:
         """Add a new location if it doesn't already exist."""
         config = self._manager.get_config()
@@ -44,6 +45,7 @@ class LocationOperations:
             latitude=latitude,
             longitude=longitude,
             country_code=country_code,
+            marine_mode=marine_mode,
         )
         config.locations.append(new_location)
 
