@@ -636,6 +636,7 @@ class AppConfig:
                     "latitude": loc.latitude,
                     "longitude": loc.longitude,
                     **({"country_code": loc.country_code} if loc.country_code else {}),
+                    **({"marine_mode": True} if loc.marine_mode else {}),
                 }
                 for loc in self.locations
             ],
@@ -648,6 +649,7 @@ class AppConfig:
                     if self.current_location.country_code
                     else {}
                 ),
+                **({"marine_mode": True} if self.current_location.marine_mode else {}),
             }
             if self.current_location
             else None,
@@ -666,6 +668,7 @@ class AppConfig:
                     latitude=loc_data["latitude"],
                     longitude=loc_data["longitude"],
                     country_code=loc_data.get("country_code"),
+                    marine_mode=bool(loc_data.get("marine_mode", False)),
                 )
             )
 
@@ -677,6 +680,7 @@ class AppConfig:
                 latitude=loc_data["latitude"],
                 longitude=loc_data["longitude"],
                 country_code=loc_data.get("country_code"),
+                marine_mode=bool(loc_data.get("marine_mode", False)),
             )
 
         return cls(

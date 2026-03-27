@@ -6,7 +6,14 @@ from collections.abc import Iterable
 from datetime import datetime, tzinfo
 
 from ...forecast_confidence import ForecastConfidence
-from ...models import AppSettings, Forecast, ForecastPeriod, HourlyForecast, Location
+from ...models import (
+    AppSettings,
+    Forecast,
+    ForecastPeriod,
+    HourlyForecast,
+    Location,
+    MarineForecast,
+)
 from ...utils import TemperatureUnit, calculate_dewpoint
 from ...utils.unit_utils import format_precipitation, format_wind_speed
 from ..weather_presenter import (
@@ -105,6 +112,7 @@ def build_forecast(
     unit_pref: TemperatureUnit,
     settings: AppSettings | None = None,
     *,
+    marine: MarineForecast | None = None,
     confidence: ForecastConfidence | None = None,
 ) -> ForecastPresentation:
     """Create a structured forecast including optional hourly highlights."""
@@ -277,7 +285,32 @@ def build_forecast(
         hours=hourly_hours,
         summary_line=hourly_summary_line,
     )
+
+    marine_summary = None
+    marine_highlights: list[str] = []
+    marine_section_text = ""
+    if marine and marine.has_data():
+        marine_lines = [f"Marine conditions for {location.name}:"]
+        if marine.zone_name:
+            zone_label = marine.zone_name
+            if marine.zone_id:
+                zone_label = f"{zone_label} ({marine.zone_id})"
+            marine_lines.append(f"Marine zone: {zone_label}")
+        marine_summary = marine.forecast_summary
+        if marine_summary:
+            marine_lines.append(f"Summary: {marine_summary}")
+        marine_highlights = marine.highlights[:4]
+        if marine_highlights:
+            marine_lines.append("Wind and wave highlights:")
+            marine_lines.extend(f"  • {highlight}" for highlight in marine_highlights)
+        for period in marine.periods[:3]:
+            if period.summary:
+                marine_lines.append(f"{period.name}: {wrap_text(period.summary, 80)}")
+        marine_section_text = "\n".join(marine_lines).rstrip()
+
     fallback_sections = [daily_section_text]
+    if marine_section_text:
+        fallback_sections.append(marine_section_text)
     if hourly_section_text:
         fallback_sections.append(hourly_section_text)
     fallback_text = "\n\n".join(section for section in fallback_sections if section).rstrip()
@@ -291,6 +324,9 @@ def build_forecast(
         fallback_text=fallback_text,
         daily_section_text=daily_section_text,
         hourly_section_text=hourly_section_text,
+        marine_section_text=marine_section_text,
+        marine_summary=marine_summary,
+        marine_highlights=marine_highlights,
         confidence_label=confidence_label,
         summary=summary_line,
     )

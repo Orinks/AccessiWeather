@@ -15,6 +15,8 @@ from accessiweather.models import (
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    MarineForecast,
+    MarineForecastPeriod,
 )
 from accessiweather.utils import TemperatureUnit
 
@@ -115,3 +117,48 @@ def test_build_forecast_exposes_daily_and_hourly_sections():
     assert "Hourly outlook: Clear through mid afternoon." in result.hourly_section_text
     assert "Next 1 Hours:" in result.hourly_section_text
     assert result.fallback_text == (f"{result.daily_section_text}\n\n{result.hourly_section_text}")
+
+
+def test_build_forecast_includes_marine_section_in_fallback_text():
+    forecast = Forecast(
+        periods=[
+            ForecastPeriod(
+                name="Today",
+                temperature=70.0,
+                temperature_low=54.0,
+                temperature_unit="F",
+                short_forecast="Sunny",
+            )
+        ]
+    )
+    marine = MarineForecast(
+        zone_id="ANZ530",
+        zone_name="Chesapeake Bay from Pooles Island to Sandy Point",
+        forecast_summary="South winds 10 to 15 knots with waves 1 to 2 feet.",
+        highlights=["South winds 10 to 15 knots", "Waves 1 to 2 feet"],
+        periods=[
+            MarineForecastPeriod(
+                name="Tonight",
+                summary="South winds 10 to 15 knots with waves 1 to 2 feet.",
+            )
+        ],
+    )
+
+    result = build_forecast(
+        forecast,
+        None,
+        Location(name="Annapolis", latitude=38.9784, longitude=-76.4922, marine_mode=True),
+        TemperatureUnit.FAHRENHEIT,
+        settings=AppSettings(),
+        marine=marine,
+    )
+
+    assert result.marine_summary == marine.forecast_summary
+    assert result.marine_highlights == marine.highlights
+    assert "Marine conditions for Annapolis:" in result.marine_section_text
+    assert (
+        "Marine zone: Chesapeake Bay from Pooles Island to Sandy Point (ANZ530)"
+        in result.marine_section_text
+    )
+    assert "Wind and wave highlights:" in result.marine_section_text
+    assert result.fallback_text == (f"{result.daily_section_text}\n\n{result.marine_section_text}")

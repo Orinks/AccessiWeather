@@ -231,6 +231,27 @@ class TestGenerateForecastHtml:
         assert "Forecast generated: 2026-02-14 02:00 UTC" in html
         assert "generated-at" in html
 
+    def test_with_marine_section(self):
+        pres = ForecastPresentation(
+            title="Forecast",
+            marine_section_text=(
+                "Marine conditions for Annapolis:\n"
+                "Marine zone: Chesapeake Bay (ANZ530)\n"
+                "Summary: South winds 10 to 15 knots with waves 1 to 2 feet.\n"
+                "Wind and wave highlights:\n"
+                "  • South winds 10 to 15 knots\n"
+                "Tonight: South winds 10 to 15 knots with waves 1 to 2 feet."
+            ),
+            marine_summary="South winds 10 to 15 knots with waves 1 to 2 feet.",
+            marine_highlights=["South winds 10 to 15 knots", "Waves 1 to 2 feet"],
+        )
+        html = generate_forecast_html(pres)
+        assert 'aria-label="Marine forecast"' in html
+        assert "Marine Forecast" in html
+        assert "Marine Highlights" in html
+        assert "South winds 10 to 15 knots" in html
+        assert "Tonight: South winds 10 to 15 knots with waves 1 to 2 feet." in html
+
     def test_no_generated_at(self):
         pres = ForecastPresentation(title="F")
         html = generate_forecast_html(pres)

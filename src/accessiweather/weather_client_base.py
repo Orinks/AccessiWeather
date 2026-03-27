@@ -1174,6 +1174,9 @@ class WeatherClient:
         tasks["aviation"] = asyncio.create_task(
             enrichment.enrich_with_aviation_data(self, weather_data, location)
         )
+        tasks["marine"] = asyncio.create_task(
+            enrichment.enrich_with_marine_data(self, weather_data, location)
+        )
 
         return tasks
 

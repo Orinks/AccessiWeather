@@ -130,6 +130,7 @@ class Location:
     longitude: float
     timezone: str | None = None
     country_code: str | None = None
+    marine_mode: bool = False
 
     def __str__(self) -> str:
         return self.name
@@ -533,6 +534,30 @@ class AviationData:
 
 
 @dataclass
+class MarineForecastPeriod:
+    """Single marine forecast period from an NWS marine zone product."""
+
+    name: str
+    summary: str
+
+
+@dataclass
+class MarineForecast:
+    """Marine zone essentials for a coastal location."""
+
+    zone_id: str | None = None
+    zone_name: str | None = None
+    forecast_summary: str | None = None
+    issued_at: datetime | None = None
+    periods: list[MarineForecastPeriod] = field(default_factory=list)
+    highlights: list[str] = field(default_factory=list)
+
+    def has_data(self) -> bool:
+        """Return True when any marine essentials are available."""
+        return bool(self.forecast_summary or self.zone_name or self.periods or self.highlights)
+
+
+@dataclass
 class WeatherData:
     """Complete weather data for a location."""
 
@@ -547,6 +572,7 @@ class WeatherData:
     alerts: WeatherAlerts | None = None
     environmental: EnvironmentalConditions | None = None
     aviation: AviationData | None = None
+    marine: MarineForecast | None = None
     trend_insights: list[TrendInsight] = field(default_factory=list)
     stale: bool = False
     stale_since: datetime | None = None
@@ -584,5 +610,6 @@ class WeatherData:
                 self.alerts and self.alerts.has_alerts(),
                 self.environmental and self.environmental.has_data(),
                 self.aviation and self.aviation.has_taf(),
+                self.marine and self.marine.has_data(),
             ]
         )

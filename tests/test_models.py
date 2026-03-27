@@ -17,6 +17,8 @@ from accessiweather.models import (
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    MarineForecast,
+    MarineForecastPeriod,
     MinutelyPrecipitationForecast,
     MinutelyPrecipitationPoint,
     WeatherAlert,
@@ -358,6 +360,20 @@ class TestWeatherData:
             ),
         )
         assert with_minutely.has_any_data() is True
+
+        with_marine = WeatherData(
+            location=loc,
+            marine=MarineForecast(
+                zone_id="ANZ530",
+                periods=[
+                    MarineForecastPeriod(
+                        name="Tonight",
+                        summary="South winds 10 to 15 knots with waves 1 to 2 feet.",
+                    )
+                ],
+            ),
+        )
+        assert with_marine.has_any_data() is True
 
 
 class TestAppSettings:

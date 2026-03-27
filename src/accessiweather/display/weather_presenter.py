@@ -25,6 +25,7 @@ from ..models import (
     Forecast,
     HourlyForecast,
     Location,
+    MarineForecast,
     TrendInsight,
     WeatherAlerts,
     WeatherData,
@@ -105,6 +106,9 @@ class ForecastPresentation:
     fallback_text: str = ""
     daily_section_text: str = ""
     hourly_section_text: str = ""
+    marine_section_text: str = ""
+    marine_summary: str | None = None
+    marine_highlights: list[str] = field(default_factory=list)
     confidence_label: str | None = None
     summary: str | None = None
 
@@ -233,6 +237,7 @@ class WeatherPresenter:
                 weather_data.hourly_forecast,
                 weather_data.location,
                 unit_pref,
+                marine=weather_data.marine,
                 confidence=weather_data.forecast_confidence,
             )
             if weather_data.forecast
@@ -308,13 +313,19 @@ class WeatherPresenter:
         forecast: Forecast | None,
         location: Location,
         hourly_forecast: HourlyForecast | None = None,
+        marine: MarineForecast | None = None,
         confidence: ForecastConfidence | None = None,
     ) -> ForecastPresentation | None:
         if not forecast or not forecast.has_data():
             return None
         unit_pref, _unit_system = self._resolve_unit_preferences(location)
         return self._build_forecast(
-            forecast, hourly_forecast, location, unit_pref, confidence=confidence
+            forecast,
+            hourly_forecast,
+            location,
+            unit_pref,
+            marine=marine,
+            confidence=confidence,
         )
 
     def present_alerts(
@@ -365,6 +376,7 @@ class WeatherPresenter:
         hourly_forecast: HourlyForecast | None,
         location: Location,
         unit_pref: TemperatureUnit,
+        marine: MarineForecast | None = None,
         confidence: ForecastConfidence | None = None,
     ) -> ForecastPresentation:
         return build_forecast(
@@ -373,6 +385,7 @@ class WeatherPresenter:
             location,
             unit_pref,
             settings=self.settings,
+            marine=marine,
             confidence=confidence,
         )
 
