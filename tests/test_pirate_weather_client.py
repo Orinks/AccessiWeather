@@ -389,6 +389,54 @@ class TestParseHourlyForecast:
         result = client._parse_hourly_forecast(payload)
         assert result.periods == []
 
+    # ------------------------------------------------------------------
+    # Regression tests – wind_speed_mph unit normalisation (bug fix)
+    # ------------------------------------------------------------------
+
+    def test_hourly_wind_speed_mph_stored_for_us_units(self, client, sample_forecast_payload):
+        """US units: windSpeed is already in mph, wind_speed_mph == raw value."""
+        result = client._parse_hourly_forecast(sample_forecast_payload)
+        period = result.periods[0]
+        assert period.wind_speed_mph == 10.0
+
+    def test_hourly_wind_speed_mph_stored_for_si_units(self, sample_forecast_payload):
+        """SI units: windSpeed is m/s; wind_speed_mph = raw * 2.23694."""
+        si_client = PirateWeatherClient(api_key="key", units="si")
+        result = si_client._parse_hourly_forecast(sample_forecast_payload)
+        period = result.periods[0]
+        assert period.wind_speed is not None
+        assert "m/s" in period.wind_speed
+        # 10 m/s * 2.23694 ≈ 22.37 mph
+        assert period.wind_speed_mph is not None
+        assert abs(period.wind_speed_mph - 10.0 * 2.23694) < 0.01
+
+    def test_hourly_wind_speed_mph_stored_for_ca_units(self, sample_forecast_payload):
+        """CA units: windSpeed is km/h; wind_speed_mph = raw / 1.60934."""
+        ca_client = PirateWeatherClient(api_key="key", units="ca")
+        result = ca_client._parse_hourly_forecast(sample_forecast_payload)
+        period = result.periods[0]
+        assert period.wind_speed is not None
+        assert "km/h" in period.wind_speed
+        # 10 km/h / 1.60934 ≈ 6.21 mph
+        assert period.wind_speed_mph is not None
+        assert abs(period.wind_speed_mph - 10.0 / 1.60934) < 0.01
+
+    def test_hourly_wind_speed_mph_stored_for_uk2_units(self, sample_forecast_payload):
+        """UK2 units: windSpeed is mph, same as US."""
+        uk2_client = PirateWeatherClient(api_key="key", units="uk2")
+        result = uk2_client._parse_hourly_forecast(sample_forecast_payload)
+        period = result.periods[0]
+        assert period.wind_speed_mph == 10.0
+
+    def test_hourly_wind_speed_mph_none_when_wind_missing(self, client, sample_forecast_payload):
+        """wind_speed_mph is None when windSpeed is absent from the API response."""
+        payload = dict(sample_forecast_payload)
+        hour = dict(sample_forecast_payload["hourly"]["data"][0])
+        del hour["windSpeed"]
+        payload["hourly"] = {"data": [hour]}
+        result = client._parse_hourly_forecast(payload)
+        assert result.periods[0].wind_speed_mph is None
+
 
 # ---------------------------------------------------------------------------
 # Unit tests – _parse_alerts
