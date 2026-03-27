@@ -62,8 +62,25 @@ def _build_basic_metrics(
         metrics.append(Metric("Humidity", f"{current.humidity:.0f}%"))
 
     wind_value = format_wind(current, unit_pref, precision=precision, unit_system=unit_system)
-    if wind_value:
+
+    gust_value: str | None = None
+    if current.wind_gust_mph is not None:
+        gust_value = format_wind_speed(
+            current.wind_gust_mph,
+            unit=unit_pref,
+            wind_speed_kph=current.wind_gust_kph,
+            precision=0,
+            unit_system=unit_system,
+        )
+        if unit_system is None:
+            gust_value = gust_value.replace("km/h", "kph")
+
+    if wind_value and gust_value:
+        metrics.append(Metric("Wind", f"{wind_value}, gusting to {gust_value}"))
+    elif wind_value:
         metrics.append(Metric("Wind", wind_value))
+    elif gust_value:
+        metrics.append(Metric("Wind gusts", gust_value))
 
     dewpoint_value = format_dewpoint(current, unit_pref, precision)
     if show_dewpoint and dewpoint_value:
@@ -93,18 +110,6 @@ def _build_basic_metrics(
 
     if current.cloud_cover is not None:
         metrics.append(Metric("Cloud cover", f"{current.cloud_cover:.0f}%"))
-
-    if current.wind_gust_mph is not None:
-        gust_value = format_wind_speed(
-            current.wind_gust_mph,
-            unit=unit_pref,
-            wind_speed_kph=current.wind_gust_kph,
-            precision=0,
-            unit_system=unit_system,
-        )
-        if unit_system is None:
-            gust_value = gust_value.replace("km/h", "kph")
-        metrics.append(Metric("Wind gusts", gust_value))
 
     if current.precipitation_in is not None and current.precipitation_in > 0:
         precip_value = format_precipitation(
@@ -215,11 +220,40 @@ def _build_environmental_metrics(
     return metrics
 
 
+def _adapt_temperature_trend_summary(trend: TrendInsight, unit_pref: TemperatureUnit) -> str:
+    """Return a temperature-trend summary adapted to the user's unit preference."""
+    if trend.change is None or trend.unit not in {"°F", "°C"}:
+        return trend.summary or describe_trend(trend)
+
+    src_unit = trend.unit
+    direction = trend.direction or "steady"
+    hours = trend.timeframe_hours or 24
+
+    if src_unit == "°F":
+        change_f = trend.change
+        change_c = change_f * 5.0 / 9.0
+        if unit_pref == TemperatureUnit.CELSIUS:
+            return f"Temperature {direction} {change_c:+.1f}°C over {hours}h"
+        if unit_pref == TemperatureUnit.BOTH:
+            return f"Temperature {direction} {change_f:+.1f}°F ({change_c:+.1f}°C) over {hours}h"
+        return trend.summary or describe_trend(trend)  # FAHRENHEIT – already correct
+
+    # src_unit == "°C"
+    change_c = trend.change
+    change_f = change_c * 9.0 / 5.0
+    if unit_pref == TemperatureUnit.FAHRENHEIT:
+        return f"Temperature {direction} {change_f:+.1f}°F over {hours}h"
+    if unit_pref == TemperatureUnit.BOTH:
+        return f"Temperature {direction} {change_f:+.1f}°F ({change_c:+.1f}°C) over {hours}h"
+    return trend.summary or describe_trend(trend)  # CELSIUS – already correct
+
+
 def _build_trend_metrics(
     trends: Iterable[TrendInsight] | None,
     current: CurrentConditions,
     hourly_forecast: HourlyForecast | None,
     show_pressure_trend: bool,
+    unit_pref: TemperatureUnit = TemperatureUnit.FAHRENHEIT,
 ) -> list[Metric]:
     """Build trend metrics (temperature, pressure, etc. trends)."""
     metrics: list[Metric] = []
@@ -227,13 +261,19 @@ def _build_trend_metrics(
 
     if trends:
         for trend in trends:
-            summary = trend.summary or describe_trend(trend)
-            if trend.sparkline:
-                summary = f"{summary} {trend.sparkline}".strip()
             metric_name = getattr(trend, "metric", "")
             is_pressure = isinstance(metric_name, str) and metric_name.lower() == "pressure"
             if is_pressure and not show_pressure_trend:
                 continue
+
+            is_temperature = isinstance(metric_name, str) and metric_name.lower() == "temperature"
+            if is_temperature:
+                summary = _adapt_temperature_trend_summary(trend, unit_pref)
+            else:
+                summary = trend.summary or describe_trend(trend)
+
+            if trend.sparkline:
+                summary = f"{summary} {trend.sparkline}".strip()
             metrics.append(Metric(f"{trend.metric.title()} trend", summary))
             if is_pressure:
                 pressure_trend_present = True
@@ -508,7 +548,9 @@ def build_current_conditions(
     )
 
     metrics.extend(_build_environmental_metrics(environmental, air_quality))
-    metrics.extend(_build_trend_metrics(trends, current, hourly_forecast, show_pressure_trend))
+    metrics.extend(
+        _build_trend_metrics(trends, current, hourly_forecast, show_pressure_trend, unit_pref)
+    )
 
     if anomaly_callout is not None:
         metrics.append(Metric("Historical context", anomaly_callout.temp_anomaly_description))
@@ -527,6 +569,7 @@ def build_current_conditions(
         current=current,
         hourly_forecast=hourly_forecast,
         include_pressure=show_pressure_trend,
+        unit_pref=unit_pref,
     )
 
     return CurrentConditionsPresentation(
@@ -544,6 +587,7 @@ def format_trend_lines(
     current: CurrentConditions | None = None,
     hourly_forecast: HourlyForecast | None = None,
     include_pressure: bool = True,
+    unit_pref: TemperatureUnit = TemperatureUnit.FAHRENHEIT,
 ) -> list[str]:
     """Generate human readable summaries for trend insights."""
     lines: list[str] = []
@@ -551,13 +595,19 @@ def format_trend_lines(
 
     if trends:
         for trend in trends:
-            summary = trend.summary or describe_trend(trend)
-            if trend.sparkline:
-                summary = f"{summary} {trend.sparkline}".strip()
             metric_name = getattr(trend, "metric", "")
             is_pressure = isinstance(metric_name, str) and metric_name.lower() == "pressure"
             if is_pressure and not include_pressure:
                 continue
+
+            is_temperature = isinstance(metric_name, str) and metric_name.lower() == "temperature"
+            if is_temperature:
+                summary = _adapt_temperature_trend_summary(trend, unit_pref)
+            else:
+                summary = trend.summary or describe_trend(trend)
+
+            if trend.sparkline:
+                summary = f"{summary} {trend.sparkline}".strip()
             if summary:
                 lines.append(summary)
             if is_pressure:
