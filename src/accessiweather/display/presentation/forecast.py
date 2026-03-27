@@ -8,6 +8,7 @@ from datetime import datetime, tzinfo
 from ...forecast_confidence import ForecastConfidence
 from ...models import AppSettings, Forecast, ForecastPeriod, HourlyForecast, Location
 from ...utils import TemperatureUnit, calculate_dewpoint
+from ...utils.unit_utils import format_precipitation, format_wind_speed
 from ..weather_presenter import (
     ForecastPeriodPresentation,
     ForecastPresentation,
@@ -190,7 +191,12 @@ def build_forecast(
         )
         gust_val = period.wind_gust if include_wind_gust and period.wind_gust else None
         precip_amt = (
-            f"{period.precipitation_amount:.{precision}f} in"
+            format_precipitation(
+                period.precipitation_amount,
+                unit_pref,
+                precipitation_mm=period.precipitation_amount * 25.4,
+                precision=precision,
+            )
             if include_precipitation
             and period.precipitation_amount is not None
             and period.precipitation_amount > 0
@@ -216,14 +222,28 @@ def build_forecast(
         daily_lines.append(f"{period.name or 'Unknown'}: {temp_pair or 'N/A'}")
         if period.short_forecast:
             daily_lines.append(f"  Conditions: {period.short_forecast}")
-        if wind_value:
+        # Bug 5: compact wind – combine speed and gust on one line
+        if wind_value and gust_val:
+            daily_lines.append(f"  Wind: {wind_value}, gusting to {gust_val}")
+        elif wind_value:
             daily_lines.append(f"  Wind: {wind_value}")
-        if gust_val:
+        elif gust_val:
             daily_lines.append(f"  Wind gusts: {gust_val}")
-        if precip_prob:
-            daily_lines.append(f"  Precipitation: {precip_prob}")
+        # Bug 6: compact precip – combine type, amount, and chance on one line
+        precip_type_str = (
+            ", ".join(period.precipitation_type)
+            if period.precipitation_type
+            else None
+        )
+        precip_parts: list[str] = []
+        if precip_type_str:
+            precip_parts.append(precip_type_str)
         if precip_amt:
-            daily_lines.append(f"  Precipitation amount: {precip_amt}")
+            precip_parts.append(precip_amt)
+        if precip_prob:
+            precip_parts.append(f"{precip_prob} chance")
+        if precip_parts:
+            daily_lines.append(f"  Precipitation: {', '.join(precip_parts)}")
         if snowfall_val:
             daily_lines.append(f"  Snowfall: {snowfall_val}")
         if cloud_val:
@@ -363,12 +383,17 @@ def build_hourly_summary(
             else None
         )
         gust_val = (
-            f"{period.wind_gust_mph:.0f} mph"
+            format_wind_speed(period.wind_gust_mph, unit_pref, precision=0)
             if include_wind_gust and period.wind_gust_mph is not None
             else None
         )
         precip_amt = (
-            f"{period.precipitation_amount:.{precision}f} in"
+            format_precipitation(
+                period.precipitation_amount,
+                unit_pref,
+                precipitation_mm=period.precipitation_amount * 25.4,
+                precision=precision,
+            )
             if include_precipitation
             and period.precipitation_amount is not None
             and period.precipitation_amount > 0
@@ -426,22 +451,29 @@ def render_hourly_fallback(hourly: Iterable[HourlyPeriodPresentation], hours: in
             parts.append(period.temperature)
         if period.conditions:
             parts.append(period.conditions)
-        if period.wind:
+        # Bug 5: compact wind – combine speed and gust on one line
+        if period.wind and period.wind_gust:
+            parts.append(f"Wind {period.wind}, gusting to {period.wind_gust}")
+        elif period.wind:
             parts.append(f"Wind {period.wind}")
+        elif period.wind_gust:
+            parts.append(f"Gusts {period.wind_gust}")
         if period.humidity:
             parts.append(f"Humidity {period.humidity}")
         if period.dewpoint:
             parts.append(f"Dewpoint {period.dewpoint}")
+        # Bug 6: compact precip – combine amount and chance on one line
+        precip_parts: list[str] = []
+        if period.precipitation_amount:
+            precip_parts.append(period.precipitation_amount)
         if period.precipitation_probability:
-            parts.append(f"Precip {period.precipitation_probability}")
+            precip_parts.append(f"{period.precipitation_probability} chance")
+        if precip_parts:
+            parts.append(f"Precip {', '.join(precip_parts)}")
         if period.snowfall:
             parts.append(f"Snow {period.snowfall}")
         if period.cloud_cover:
             parts.append(f"Clouds {period.cloud_cover}")
-        if period.wind_gust:
-            parts.append(f"Gusts {period.wind_gust}")
-        if period.precipitation_amount:
-            parts.append(f"Precip amt {period.precipitation_amount}")
         if period.uv_index:
             parts.append(f"UV {period.uv_index}")
         lines.append("  " + " - ".join(parts))

@@ -259,14 +259,25 @@ class TestParseForecast:
         result = client._parse_forecast(payload)
         assert result.periods[1].name == "Tomorrow"
 
-    def test_days_cap_respected(self, client, sample_forecast_payload):
-        # Add 10 days worth of data
+    def test_all_days_returned(self, client, sample_forecast_payload):
+        # _parse_forecast must return ALL available periods; the display layer
+        # applies the configured forecast_duration_days limit, not the parser.
         base_day = sample_forecast_payload["daily"]["data"][0]
         days = [dict(base_day, time=base_day["time"] + i * 86400) for i in range(10)]
         payload = dict(sample_forecast_payload)
         payload["daily"] = {"data": days}
+        result = client._parse_forecast(payload)
+        assert len(result.periods) == 10
+
+    def test_days_param_does_not_restrict_output(self, client, sample_forecast_payload):
+        # The legacy ``days`` kwarg is preserved for backward-compat but no longer
+        # truncates the output.
+        base_day = sample_forecast_payload["daily"]["data"][0]
+        all_days = [dict(base_day, time=base_day["time"] + i * 86400) for i in range(10)]
+        payload = dict(sample_forecast_payload)
+        payload["daily"] = {"data": all_days}
         result = client._parse_forecast(payload, days=3)
-        assert len(result.periods) == 3
+        assert len(result.periods) == 10
 
     def test_wind_string_us_units(self, client, sample_forecast_payload):
         result = client._parse_forecast(sample_forecast_payload)

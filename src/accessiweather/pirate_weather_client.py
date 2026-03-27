@@ -347,15 +347,22 @@ class PirateWeatherClient:
             sunset_time=sunset_time,
         )
 
-    def _parse_forecast(self, data: dict, days: int = 7) -> Forecast:
-        """Parse Pirate Weather ``daily`` block into a Forecast."""
+    def _parse_forecast(self, data: dict, days: int | None = None) -> Forecast:
+        """Parse Pirate Weather ``daily`` block into a Forecast.
+
+        All available daily periods are returned so that the display layer
+        (``_select_periods_by_day_window``) can apply the user's configured
+        ``forecast_duration_days`` setting without being constrained here.
+        The ``days`` parameter is kept for backward compatibility but is no
+        longer used to limit the output.
+        """
         daily_data = data.get("daily", {}).get("data", [])
         tz_offset = data.get("offset", 0)
         location_tz = timezone(timedelta(hours=tz_offset))
         using_us = self.units == "us"
 
         periods: list[ForecastPeriod] = []
-        for i, day in enumerate(daily_data[:days]):
+        for i, day in enumerate(daily_data):
             time_val = day.get("time")
             if time_val:
                 dt = datetime.fromtimestamp(time_val, tz=location_tz)

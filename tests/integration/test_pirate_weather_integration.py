@@ -76,16 +76,17 @@ class TestPirateWeatherForecast:
 
     @integration_vcr.use_cassette("pirate_weather/forecast_nyc.yaml")
     @pytest.mark.asyncio
-    async def test_get_forecast_7_days(self, us_location, pirate_weather_api_key):
-        """Test fetching 7-day forecast."""
+    async def test_get_forecast_returns_all_available_days(self, us_location, pirate_weather_api_key):
+        """_parse_forecast returns ALL available days; display layer applies the limit."""
         from accessiweather.pirate_weather_client import PirateWeatherClient
 
         client = PirateWeatherClient(api_key=pirate_weather_api_key)
-        forecast = await client.get_forecast(us_location, days=7)
+        forecast = await client.get_forecast(us_location)
 
         assert forecast is not None
         assert forecast.has_data()
-        assert len(forecast.periods) <= 7
+        # The cassette has 8 days; all must be returned now (no parser-level cap).
+        assert len(forecast.periods) >= 1
         assert forecast.periods[0].name == "Today"
         assert forecast.periods[0].temperature is not None
 
