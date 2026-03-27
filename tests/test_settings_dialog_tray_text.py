@@ -1,28 +1,11 @@
 from __future__ import annotations
 
-import importlib.util
-from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-
-def _load_settings_dialog_class():
-    module_path = (
-        Path(__file__).resolve().parents[1]
-        / "src"
-        / "accessiweather"
-        / "ui"
-        / "dialogs"
-        / "settings_dialog.py"
-    )
-    spec = importlib.util.spec_from_file_location("test_settings_dialog_module", module_path)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.SettingsDialogSimple
-
-
-SettingsDialogSimple = _load_settings_dialog_class()
+from accessiweather.ui.dialogs.settings_dialog import SettingsDialogSimple
+from accessiweather.ui.dialogs.settings_tabs.display import DisplayTab
+from accessiweather.ui.dialogs.settings_tabs.general import GeneralTab
 
 
 class _DummyControl:
@@ -88,6 +71,13 @@ def _make_dialog_for_settings(settings: SimpleNamespace) -> SettingsDialogSimple
     dialog._auto_sources_sizer = _DummySizer()
     dialog.config_manager = MagicMock()
     dialog.config_manager.get_settings.return_value = settings
+
+    # Wire up tab objects so _load_settings/_save_settings delegate correctly
+    general_tab = GeneralTab(dialog)
+    display_tab = DisplayTab(dialog)
+    dialog._display_tab = display_tab
+    dialog._tab_objects = [general_tab, display_tab]
+
     return dialog
 
 
