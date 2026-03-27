@@ -511,6 +511,7 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
 def parse_openmeteo_forecast(data: dict) -> Forecast:
     """Parse Open-Meteo daily forecast payload into a Forecast model."""
     daily = data.get("daily", {})
+    utc_offset_seconds = data.get("utc_offset_seconds")
     periods = []
 
     dates = daily.get("time", [])
@@ -525,7 +526,12 @@ def parse_openmeteo_forecast(data: dict) -> Forecast:
             precip_prob = precip_probs[i] if i < len(precip_probs) else None
             snowfall = snowfall_sums[i] if i < len(snowfall_sums) else None
             uv_index = uv_indices[i] if i < len(uv_indices) else None
-            start_time = _parse_iso_datetime(f"{date}T12:00:00") or datetime.now()
+            # Pass utc_offset_seconds so the noon timestamp is tagged with the
+            # location's local timezone, not UTC.  Without this, for offsets ≥ 12 h
+            # the UTC .date() can land on the wrong calendar day.
+            start_time = _parse_iso_datetime(
+                f"{date}T12:00:00", utc_offset_seconds
+            ) or datetime.now(UTC)
             period = ForecastPeriod(
                 name=format_date_name(date, i),
                 temperature=max_temps[i],
