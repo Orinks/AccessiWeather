@@ -954,3 +954,58 @@ class TestBuildBasicMetricsNewFields:
             show_uv_index=False,
         )
         assert not any(m.label == "Precipitation" for m in metrics)
+
+
+# ── _build_trend_metrics – regression: daily_trend label (Bug 1) ──
+
+
+class TestBuildTrendMetricsDailyTrendLabel:
+    """Regression tests for 'Daily_Trend trend' label bug (underscore in .title())."""
+
+    def _make_daily_trend_insight(self) -> TrendInsight:
+        return TrendInsight(
+            metric="daily_trend",
+            direction="warmer",
+            change=5.0,
+            unit="F",
+            timeframe_hours=24,
+            summary="5°F warmer than yesterday",
+            sparkline="↑",
+        )
+
+    def test_daily_trend_label_has_no_underscore(self):
+        """'daily_trend' metric must render as 'Daily Trend trend', not 'Daily_Trend trend'."""
+        insight = self._make_daily_trend_insight()
+        current = CurrentConditions(temperature_f=75.0)
+        metrics = _build_trend_metrics(
+            [insight],
+            current,
+            hourly_forecast=None,
+            show_pressure_trend=False,
+        )
+        assert len(metrics) == 1
+        assert "_" not in metrics[0].label, (
+            f"Label contains underscore: {metrics[0].label!r}"
+        )
+        assert metrics[0].label == "Daily Trend trend"
+
+    def test_metric_with_multiple_underscores_renders_correctly(self):
+        """Any multi-word metric name with underscores must be space-separated and title-cased."""
+        insight = TrendInsight(
+            metric="some_multi_word_metric",
+            direction="rising",
+            change=1.0,
+            unit="F",
+            timeframe_hours=6,
+            summary="Some summary",
+            sparkline=None,
+        )
+        current = CurrentConditions(temperature_f=70.0)
+        metrics = _build_trend_metrics(
+            [insight],
+            current,
+            hourly_forecast=None,
+            show_pressure_trend=False,
+        )
+        assert len(metrics) == 1
+        assert metrics[0].label == "Some Multi Word Metric trend"
