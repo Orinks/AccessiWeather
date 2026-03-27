@@ -984,9 +984,7 @@ class TestBuildTrendMetricsDailyTrendLabel:
             show_pressure_trend=False,
         )
         assert len(metrics) == 1
-        assert "_" not in metrics[0].label, (
-            f"Label contains underscore: {metrics[0].label!r}"
-        )
+        assert "_" not in metrics[0].label, f"Label contains underscore: {metrics[0].label!r}"
         assert metrics[0].label == "Daily Trend trend"
 
     def test_metric_with_multiple_underscores_renders_correctly(self):

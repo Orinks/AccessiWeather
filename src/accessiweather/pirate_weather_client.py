@@ -486,13 +486,17 @@ class PirateWeatherClient:
             pressure_in = pressure_mb / 33.8639 if pressure_mb is not None else None
 
             wind_raw = hour.get("windSpeed")
+            wind_speed_mph: float | None = None
             if wind_raw is not None:
                 if using_us or self.units == "uk2":
                     wind_str = f"{round(wind_raw)} mph"
+                    wind_speed_mph = float(wind_raw)
                 elif self.units == "ca":
                     wind_str = f"{round(wind_raw)} km/h"
+                    wind_speed_mph = float(wind_raw) / 1.60934
                 else:
                     wind_str = f"{round(wind_raw)} m/s"
+                    wind_speed_mph = float(wind_raw) * 2.23694
             else:
                 wind_str = None
 
@@ -547,6 +551,7 @@ class PirateWeatherClient:
                 temperature_unit="F",
                 short_forecast=condition,
                 wind_speed=wind_str,
+                wind_speed_mph=wind_speed_mph,
                 wind_direction=degrees_to_cardinal(hour.get("windBearing")),
                 humidity=humidity,
                 dewpoint_f=dewpoint_f,
