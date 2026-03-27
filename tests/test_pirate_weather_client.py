@@ -6,6 +6,7 @@ Tests the Pirate Weather API client (https://pirateweather.net).
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -335,6 +336,76 @@ class TestParseForecast:
         result = client._parse_forecast(payload)
         assert result.summary == "Possible drizzle on Thursday."
         assert result.periods == []
+
+    def test_uses_timezone_name_to_normalize_london_dst_daily_dates(self, client):
+        """Europe/London daily periods should normalize to consecutive local noon dates."""
+        start_dates = [
+            datetime(2025, 10, 26, 0, 0, tzinfo=UTC),
+            datetime(2025, 10, 27, 0, 0, tzinfo=UTC),
+            datetime(2025, 10, 28, 0, 0, tzinfo=UTC),
+        ]
+        payload = {
+            "timezone": "Europe/London",
+            "offset": 1,
+            "daily": {
+                "data": [
+                    {
+                        "time": int(start.timestamp()),
+                        "temperatureHigh": 60.0 + i,
+                        "temperatureLow": 45.0 + i,
+                        "summary": "Cloudy",
+                    }
+                    for i, start in enumerate(start_dates)
+                ]
+            },
+        }
+
+        result = client._parse_forecast(payload)
+
+        assert result is not None
+        dates = [
+            period.start_time.date() for period in result.periods if period.start_time is not None
+        ]
+        assert dates == [
+            datetime(2025, 10, 26).date(),
+            datetime(2025, 10, 27).date(),
+            datetime(2025, 10, 28).date(),
+        ]
+        assert len(dates) == len(set(dates))
+        for idx in range(1, len(dates)):
+            assert dates[idx] - dates[idx - 1] == timedelta(days=1)
+        assert all(period.start_time.hour == 12 for period in result.periods if period.start_time)
+
+    def test_rejects_duplicate_local_dates_after_london_dst_fallback(self, client):
+        """Malformed PW daily timestamps should be rejected instead of shown with duplicates."""
+        payload = {
+            "timezone": "Europe/London",
+            "offset": 1,
+            "daily": {
+                "data": [
+                    {
+                        "time": int(datetime(2025, 10, 25, 23, 0, tzinfo=UTC).timestamp()),
+                        "temperatureHigh": 60.0,
+                        "temperatureLow": 45.0,
+                        "summary": "Cloudy",
+                    },
+                    {
+                        "time": int(datetime(2025, 10, 26, 23, 0, tzinfo=UTC).timestamp()),
+                        "temperatureHigh": 61.0,
+                        "temperatureLow": 46.0,
+                        "summary": "Cloudy",
+                    },
+                    {
+                        "time": int(datetime(2025, 10, 27, 23, 0, tzinfo=UTC).timestamp()),
+                        "temperatureHigh": 62.0,
+                        "temperatureLow": 47.0,
+                        "summary": "Cloudy",
+                    },
+                ]
+            },
+        }
+
+        assert client._parse_forecast(payload) is None
 
 
 # ---------------------------------------------------------------------------
