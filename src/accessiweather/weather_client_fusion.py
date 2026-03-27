@@ -456,7 +456,8 @@ class DataFusionEngine:
         merged_values: dict[str, Any],
         attribution: SourceAttribution,
     ) -> None:
-        """Drop wind gust when it is physically impossible (gust < sustained speed).
+        """
+        Drop wind gust when it is physically impossible (gust < sustained speed).
 
         This can happen when wind_speed and wind_gust are selected from different
         sources during cross-source fusion, leaving the two values in inconsistent

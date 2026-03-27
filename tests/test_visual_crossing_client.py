@@ -783,11 +783,15 @@ class TestParseForecastDeduplication:
         assert len(forecast.periods) == 3
 
     def test_duplicate_sunday_in_extended_forecast(self, client):
-        """15-day forecast wraps weekday names: day 0 and day 7 could both be 'Sunday'
-        but they are different dates, so both must appear."""
+        """15-day forecast wraps weekday names.
+
+        Day 0 and day 7 could both be 'Sunday' but they are different dates,
+        so both must appear.
+        """
         # Start on a Sunday (2024-03-24 was a Sunday)
         dates = [
-            f"2024-03-{d:02d}" for d in range(24, 31)  # 7 days
+            f"2024-03-{d:02d}"
+            for d in range(24, 31)  # 7 days
         ] + [
             f"2024-03-31",
             f"2024-04-01",
