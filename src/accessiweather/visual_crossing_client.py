@@ -544,9 +544,23 @@ class VisualCrossingClient:
         periods = []
         days = data.get("days", [])
 
-        for i, day_data in enumerate(days):
-            # Format period name
+        # Deduplicate by date string — VC can return the same calendar date twice
+        # near DST transitions or when the response straddles a day boundary in
+        # non-UTC timezones.  Keep only the first occurrence of each date.
+        seen_dates: set[str] = set()
+        processed_count = 0
+        for day_data in days:
             date_str = day_data.get("datetime", "")
+            if date_str and date_str in seen_dates:
+                logger.debug("Skipping duplicate VC forecast date: %s", date_str)
+                continue
+            if date_str:
+                seen_dates.add(date_str)
+
+            i = processed_count
+            processed_count += 1
+
+            # Format period name
             if i == 0:
                 name = "Today"
             elif i == 1:

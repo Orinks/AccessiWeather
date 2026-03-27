@@ -305,6 +305,7 @@ class HourlyForecastPeriod:
     snowfall: float | None = None
     uv_index: float | None = None
     cloud_cover: float | None = None  # Cloud cover percentage (0-100)
+    wind_speed_mph: float | None = None  # Wind speed as numeric mph (for unit-correct display)
     wind_gust_mph: float | None = None  # Wind gust speed (mph)
     precipitation_amount: float | None = None  # Precipitation amount (inches)
 

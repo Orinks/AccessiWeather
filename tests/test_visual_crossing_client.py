@@ -738,3 +738,95 @@ class TestVisualCrossingBatchQueries:
             result = await client.get_air_quality(Location("NYC", 40.7, -74.0))
 
         assert result is None
+
+
+# ── _parse_forecast – regression: duplicate day deduplication (Bug 3) ──
+
+
+class TestParseForecastDeduplication:
+    """Regression: duplicate calendar dates in VC response must be deduplicated."""
+
+    @pytest.fixture
+    def client(self):
+        return VisualCrossingClient(api_key="test-key")
+
+    def _make_day(self, date_str: str, tempmax: float = 75.0) -> dict:
+        return {
+            "datetime": date_str,
+            "tempmax": tempmax,
+            "tempmin": 55.0,
+            "conditions": "Clear",
+            "description": "A clear day.",
+            "windspeed": 10.0,
+            "winddir": 180,
+            "precipprob": 0,
+            "icon": "clear-day",
+        }
+
+    def test_unique_dates_all_kept(self, client):
+        """Normal case: 7 unique days → 7 periods."""
+        days = [self._make_day(f"2024-03-{d:02d}") for d in range(24, 31)]
+        data = {"days": days}
+        forecast = client._parse_forecast(data)
+        assert len(forecast.periods) == 7
+
+    def test_duplicate_date_produces_single_period(self, client):
+        """Same date appearing twice → only one period for that date."""
+        days = [
+            self._make_day("2024-03-24"),  # Today
+            self._make_day("2024-03-24"),  # Duplicate — must be dropped
+            self._make_day("2024-03-25"),
+            self._make_day("2024-03-26"),
+        ]
+        data = {"days": days}
+        forecast = client._parse_forecast(data)
+        assert len(forecast.periods) == 3
+
+    def test_duplicate_sunday_in_extended_forecast(self, client):
+        """15-day forecast wraps weekday names; both Sundays must appear."""
+        # Start on a Sunday (2024-03-24 was a Sunday)
+        dates = [
+            f"2024-03-{d:02d}"
+            for d in range(24, 31)  # 7 days
+        ] + [
+            f"2024-03-31",
+            f"2024-04-01",
+            f"2024-04-02",
+            f"2024-04-03",
+            f"2024-04-04",
+            f"2024-04-05",
+            f"2024-04-06",
+            f"2024-04-07",
+        ]  # 8 more = 15 total
+        days = [self._make_day(d) for d in dates]
+        data = {"days": days}
+        forecast = client._parse_forecast(data)
+        # All 15 unique dates must appear
+        assert len(forecast.periods) == 15
+
+    def test_duplicate_date_in_dst_boundary_scenario(self, client):
+        """Two identical date strings (DST boundary edge case) → deduplicated to one."""
+        days = [
+            self._make_day("2024-03-31", tempmax=60.0),
+            self._make_day("2024-03-31", tempmax=62.0),  # Duplicate — dropped
+            self._make_day("2024-04-01", tempmax=65.0),
+        ]
+        data = {"days": days}
+        forecast = client._parse_forecast(data)
+        assert len(forecast.periods) == 2
+        # First occurrence wins
+        assert forecast.periods[0].temperature == 60.0
+
+    def test_period_names_assigned_by_position_after_dedup(self, client):
+        """After deduplication, Today/Tomorrow/weekday names use insertion order."""
+        days = [
+            self._make_day("2024-03-24"),  # pos 0 → Today
+            self._make_day("2024-03-24"),  # duplicate, dropped
+            self._make_day("2024-03-25"),  # pos 1 → Tomorrow
+            self._make_day("2024-03-26"),  # pos 2 → Tuesday
+        ]
+        data = {"days": days}
+        forecast = client._parse_forecast(data)
+        assert len(forecast.periods) == 3
+        assert forecast.periods[0].name == "Today"
+        assert forecast.periods[1].name == "Tomorrow"

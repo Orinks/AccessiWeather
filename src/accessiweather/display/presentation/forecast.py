@@ -339,7 +339,7 @@ def build_hourly_summary(
         if not period.has_data():
             continue
         temperature = format_period_temperature(period, unit_pref, precision)
-        wind = format_hourly_wind(period) if include_wind else None
+        wind = format_hourly_wind(period, unit_pref) if include_wind else None
 
         # Use enhanced time formatter with user preferences
         display_time = _resolve_forecast_display_time(
