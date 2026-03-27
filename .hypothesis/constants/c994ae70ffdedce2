@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/ui/dialogs/explanation_dialog.py
-# hypothesis_version: 6.151.9
-
-[100, 150, 200, 350, 450, 550, '\nCached: Yes', '%Y-%m-%d %H:%M', '%Y-%m-%d %H:%M UTC', '&Regenerate', 'AI Explanation Error', 'Cancel', 'Cancelling...', 'Close', 'Explanation:', 'F', 'Model Information:', 'Model information', 'No cost', 'Please wait...', 'Regenerating...', 'afternoon', 'ai_explanation_cache', 'alerts', 'auto', 'brief', 'cancelled', 'conditions', 'current_weather_data', 'custom_instructions', 'custom_system_prompt', 'detailed', 'dialog_closed', 'evening', 'forecast_periods', 'humidity', 'local_time', 'morning', 'name', 'night', 'openrouter/auto', 'pressure', 'severity', 'short_forecast', 'standard', 'temperature', 'temperature_unit', 'time_of_day', 'timezone', 'title', 'utc_time', 'visibility', 'wind_direction', 'wind_speed']

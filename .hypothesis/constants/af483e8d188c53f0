@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/ui/dialogs/location_dialog.py
-# hypothesis_version: 6.151.9
-
-[200, 300, 400, 500, 600, 'Add Location', 'Add New Location', 'Cancel', 'Coordinates', 'Error', 'Location', 'Location Name:', 'Location name input', 'Save Location', 'Search', 'Search Results:', 'Search for location', 'Search results', 'country_code']

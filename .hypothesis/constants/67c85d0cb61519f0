@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_client_base.py
-# hypothesis_version: 6.151.9
-
-[-172.0, -161.0, -154.0, -130.0, -125.0, -95.0, -70.0, -66.0, 1.0, 3.0, 5.0, 10.0, 18.0, 23.0, 24.0, 43.0, 49.0, 51.0, 71.5, 'AccessiWeather/1.0', 'NWS', 'None', 'Open-Meteo', 'PYTEST_CURRENT_TEST', 'Pirate Weather', 'US', 'Visual Crossing', '__aenter__', '__func__', '_get_nws_alerts', 'alert_radius_type', 'alerts', 'auto', 'auto_sources_us', 'aviation', 'both', 'c', 'ca', 'celsius', 'country_code', 'county', 'current', 'environmental', 'forecast', 'forecast_source', 'get_forecast', 'hourly_forecast', 'hourly_source', 'is_closed', 'nws', 'nws_discussion', 'ok', 'openmeteo', 'pirateweather', 'reset', 'return_value', 'show_pressure_trend', 'sunrise_sunset', 'temperature_unit', 'uk', 'us', 'vc_alerts', 'vc_history', 'vc_moon_data', 'visualcrossing']

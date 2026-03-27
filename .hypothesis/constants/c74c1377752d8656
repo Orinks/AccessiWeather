@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/ui/dialogs/__init__.py
-# hypothesis_version: 6.151.9
-
-['.air_quality_dialog', '.alert_dialog', '.aviation_dialog', '.discussion_dialog', '.explanation_dialog', '.location_dialog', '.noaa_radio_dialog', '.settings_dialog', '.uv_index_dialog', 'NOAARadioDialog', 'show_alert_dialog', 'show_aviation_dialog', 'show_settings_dialog', 'show_uv_index_dialog']

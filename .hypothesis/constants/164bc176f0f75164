@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_anomaly.py
-# hypothesis_version: 6.151.9
-
-[0.5, 2.0, 5.0, 'archive', 'auto', 'cooler', 'daily', 'end_date', 'fahrenheit', 'latitude', 'longitude', 'normal', 'notable', 'significant', 'start_date', 'temperature_2m_mean', 'temperature_unit', 'timezone', 'warmer']

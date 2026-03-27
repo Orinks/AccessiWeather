@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/api/nws/point_location.py
-# hypothesis_version: 6.151.9
-
-['/county/', '/fire/', '/forecast/', 'county', 'fire', 'fireWeatherZone', 'fire_weather_zone', 'forecast', 'forecastGridData', 'forecastHourly', 'forecastZone', 'forecast_grid_data', 'forecast_hourly', 'observationStations', 'observation_stations', 'properties', 'radarStation', 'radar_station', 'relativeLocation', 'state', 'timeZone', 'time_zone']

@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/services/update_service/downloads.py
-# hypothesis_version: 6.151.9
-
-[1.0, 2.0, 15.0, 300.0, 8192, 'Download cancelled', 'GET', 'artifact_name', 'content-length', 'download_url', 'file_size', 'rb', 'updates', 'wb']

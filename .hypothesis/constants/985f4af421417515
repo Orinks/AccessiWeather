@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/utils/thread_manager.py
-# hypothesis_version: 6.151.9
-
-[0.0, 0.9, 1.0, 3.0, 'ThreadManager', 'daemon', 'has_stop_event', 'id', 'name', 'thread']

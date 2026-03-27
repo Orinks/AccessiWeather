@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_client_fusion.py
-# hypothesis_version: 6.151.9
-
-[-125.0, -66.0, 0.3048, 1.609344, 2.54, 24.0, 25.4, 33.8639, 50.0, 'US', 'current_conditions', 'dewpoint', 'dewpoint_c', 'dewpoint_f', 'feels_like', 'feels_like_c', 'feels_like_f', 'forecast_source', 'forecast_summary', 'freezing_level_ft', 'freezing_level_m', 'heat_index', 'heat_index_c', 'heat_index_f', 'hourly_source', 'hourly_summary', 'nws', 'openmeteo', 'pirateweather', 'precipitation_in', 'precipitation_mm', 'pressure', 'pressure_in', 'pressure_mb', 'snow_depth_cm', 'snow_depth_in', 'temperature', 'temperature_c', 'temperature_f', 'visibility_km', 'visibility_miles', 'visualcrossing', 'wind_chill', 'wind_chill_c', 'wind_chill_f', 'wind_gust', 'wind_gust_kph', 'wind_gust_mph', 'wind_speed', 'wind_speed_kph', 'wind_speed_mph']

@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/api/nws/weather_data.py
-# hypothesis_version: 6.151.9
-
-[0.0, 20.0, 25.0, 30.0, 35.0, 60.0, 80.0, 100.0, 6371.0, '+00:00', ',', '/', 'C', 'K', 'P', 'Z', 'afb', 'age_minutes', 'air force base', 'asos', 'awos', 'coordinates', 'dewpoint', 'distance_km', 'features', 'force_refresh', 'forecast', 'forecastHourly', 'freshest_observation', 'geometry', 'hybrid_default', 'inf', 'international', 'intl', 'is_major', 'name', 'nearest', 'observation', 'observationStations', 'properties', 'regional airport', 'station', 'stationIdentifier', 'temperature', 'textDescription', 'timestamp', 'to_dict', 'usable', 'value', 'windSpeed']

@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/notifications/alert_sound_mapper.py
-# hypothesis_version: 6.151.9
-
-['[^a-z0-9]+', '_', '_+', 'advisory', 'air quality', 'air_quality', 'alert', 'blowing dust', 'critical', 'dense fog', 'description', 'dust', 'event', 'excessive heat', 'extreme', 'fire', 'flood', 'fog', 'freezing drizzle', 'freezing rain', 'headline', 'heat', 'heavy snow', 'high', 'high wind', 'hurricane', 'ice', 'low', 'medium', 'minor', 'moderate', 'notify', 'red flag', 'severe', 'severe thunderstorm', 'severity', 'smoke', 'snow', 'statement', 'thunderstorm', 'title', 'tornado', 'warning', 'watch', 'wind', 'winter', 'winter storm']

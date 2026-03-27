@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/config/portable_secrets.py
-# hypothesis_version: 6.151.9
-
-[390000, ',', ':', 'ascii', 'cipher', 'fernet', 'iterations', 'kdf', 'name', 'pbkdf2-sha256', 'salt', 'token', 'utf-8', 'version']

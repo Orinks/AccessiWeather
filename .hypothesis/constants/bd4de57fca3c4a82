@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/services/community_soundpack_service.py
-# hypothesis_version: 6.151.9
-
-[0.0, 1.0, 15.0, 30.0, 45.0, 100.0, 120.0, 200, 300, 403, 65536, '*', '.zip', '0', '1.0', 'Accept', 'Content-Length', 'GET', 'Unknown', 'User-Agent', '_', 'assets', 'author', 'aw_pack_', 'blob', 'body', 'browser_download_url', 'content', 'created_date', 'description', 'dir', 'download_count', 'download_url', 'file_size', 'homepage', 'html_url', 'id', 'login', 'main', 'name', 'packs', 'path', 'preview_image_url', 'published_at', 'release_tag', 'sha', 'size', 'tag_name', 'tree', 'type', 'unknown', 'utf-8', 'v', 'version', 'w', 'wb']

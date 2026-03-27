@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_gov_api_client/models/problem_detail.py
-# hypothesis_version: 6.151.9
-
-['ProblemDetail', 'T', 'about:blank', 'correlationId', 'detail', 'instance', 'status', 'title', 'type']

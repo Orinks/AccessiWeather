@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_gov_api_client/models/alert_category.py
-# hypothesis_version: 6.151.9
-
-['CBRNE', 'Env', 'Fire', 'Geo', 'Health', 'Infra', 'Met', 'Other', 'Rescue', 'Safety', 'Security', 'Transport']

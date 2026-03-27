@@ -1,4 +1,0 @@
-# file: /usr/lib/python3/dist-packages/urllib3/_version.py
-# hypothesis_version: 6.151.9
-
-['2.3.0', '__version__', '__version_tuple__', 'version', 'version_tuple']

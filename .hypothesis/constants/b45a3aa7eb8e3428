@@ -1,4 +1,0 @@
-# file: /usr/lib/python3/dist-packages/yaml/events.py
-# hypothesis_version: 6.151.9
-
-['%s(%s)', '%s=%r', ', ', 'anchor', 'implicit', 'tag', 'value']

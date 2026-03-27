@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_client_enrichment.py
-# hypothesis_version: 6.151.9
-
-['-', '/', '=', 'AMD', 'COR', 'KKCI', 'NIL', 'NO DATA', 'NO TAF', 'TAF', 'US', 'USA', 'Z', 'airspace', 'area', 'avwx_api_key', 'country', 'cwa', 'cwsu', 'cwsuId', 'description', 'event', 'fir', 'hazard', 'issuingOffice', 'name', 'no taf available', 'properties', 'regions', 'state', 'stationId', 'stations', 'summary', 'text', 'wfo']

@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_condition_analyzer.py
-# hypothesis_version: 6.151.9
-
-[100, 110, 1000, 'Extreme', 'Minor', 'Moderate', 'Severe', 'Unknown', 'alert', 'alert_severity', 'calm', 'category', 'clear', 'cloudy', 'cold', 'default', 'error', 'extreme', 'extreme_cold', 'extreme_hot', 'fog', 'freezing', 'has_alerts', 'hot', 'light', 'moderate', 'precipitation', 'primary_alert', 'primary_condition', 'priority_score', 'recommended_template', 'severe_weather', 'severity', 'strong', 'temp', 'temp_f', 'temperature_extreme', 'thunderstorm', 'very', 'very_cold', 'very_hot', 'very_strong', 'weather_code', 'wind_condition', 'wind_speed', 'wind_warning']

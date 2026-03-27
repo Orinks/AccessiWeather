@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/windows_toast_identity.py
-# hypothesis_version: 6.151.9
-
-['-Command', '-ExecutionPolicy', '-NoProfile', '/', 'AccessiWeather', 'AppData', 'Bypass', 'CREATE_NO_WINDOW', 'Microsoft', 'Programs', 'Roaming', 'SW_HIDE', 'Start Menu', 'Windows', '\\', '\\\\', 'app_version', 'exe_path', 'fallback_error', 'fallback_verified', 'nt', 'powershell.exe', 'readback_app_id', 'repaired', 'set_error', 'shortcut_exists', 'shortcut_path', 'unknown error', 'utf-8', 'verified', 'win32']

@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_history.py
-# hypothesis_version: 6.151.9
-
-[1.0, 30.0, '.', '. ', 'AccessiWeather/2.0', 'archive', 'auto', 'daily', 'end_date', 'fahrenheit', 'last week', 'latitude', 'longitude', 'start_date', 'temperature_2m_max', 'temperature_2m_mean', 'temperature_2m_min', 'temperature_unit', 'time', 'timezone', 'weather_code', 'wind_speed_10m_max', 'yesterday']

@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/ui/dialogs/alert_dialog.py
-# hypothesis_version: 6.151.9
-
-[500, 700, ', ', 'Alert Info:', 'Alert details', 'Close', 'Details:', 'Error', 'Instructions', 'Instructions:', 'Subject:', 'Weather Alert', 'certainty', 'description', 'details_ctrl', 'event', 'headline', 'info_ctrl', 'instr_ctrl', 'instruction', 'severity', 'urgency']

@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/models/__init__.py
-# hypothesis_version: 6.151.9
-
-['ApiError', 'AppConfig', 'AppSettings', 'AviationData', 'CurrentConditions', 'DataConflict', 'Forecast', 'ForecastPeriod', 'HourlyAirQuality', 'HourlyForecast', 'HourlyForecastPeriod', 'HourlyUVIndex', 'Location', 'SourceAttribution', 'SourceData', 'TrendInsight', 'WeatherAlert', 'WeatherAlerts', 'WeatherData']

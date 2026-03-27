@@ -1,4 +1,0 @@
-# file: /usr/lib/python3/dist-packages/packaging/version.py
-# hypothesis_version: 6.151.9
-
-['+', '.', 'InvalidVersion', 'VERSION_PATTERN', 'Version', '[\\._-]', '\\s*$', '^\\s*', 'a', 'alpha', 'b', 'beta', 'c', 'dev_l', 'dev_n', 'epoch', 'local', 'parse', 'post', 'post_l', 'post_n1', 'post_n2', 'pre', 'pre_l', 'pre_n', 'preview', 'r', 'rc', 'release', 'rev']

@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/ui/dialogs/aviation_dialog.py
-# hypothesis_version: 6.151.9
-
-[100, 150, 200, 250, 350, 620, 900, '--', 'Advisories', 'Airport code:', 'Aviation Weather', 'CWA', 'Close', 'Decoded TAF', 'Decoded TAF display', 'Error', 'Event', 'Get Aviation Data', 'Get Free Key', 'No TAF available.', 'No TAF loaded.', 'Raw TAF', 'Raw TAF display', 'SIGMET', 'Summary', 'Type', 'Valid', '^[A-Z]{4}$', 'avwx_api_key', 'beginTime', 'description', 'e.g., KJFK', 'endTime', 'event', 'expires', 'hazard', 'issueTime', 'name', 'startTime', 'summary', 'text', 'validTimeEnd', 'validTimeStart', 'validUntil', 'weather_client', 'webbrowser']

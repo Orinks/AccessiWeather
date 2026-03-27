@@ -1,4 +1,0 @@
-# file: /usr/lib/python3/dist-packages/_pytest/warnings.py
-# hypothesis_version: 6.151.9
-
-['always', 'collect', 'config', 'filterwarnings', 'markers', 'runtest']

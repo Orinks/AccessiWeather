@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/format_string_parser.py
-# hypothesis_version: 6.151.9
-
-['UV index', '\\{([a-zA-Z_]+)\\}', 'alert', 'condition', 'feels_like', 'high', 'humidity', 'location', 'low', 'precip', 'precip_chance', 'pressure', 'temp', 'temp_c', 'temp_f', 'uv', 'visibility', 'wind', 'wind_dir', 'wind_speed', '{', '}']

@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/notifications/minutely_precipitation.py
-# hypothesis_version: 6.151.9
-
-['Freezing rain', 'Hail', 'Ice', 'Precipitation', 'Rain', 'Sleet', 'Snow', '__none__', 'data', 'freezing-rain', 'hail', 'ice', 'icon', 'minute', 'minutely', 'minutes', 'precipIntensity', 'precipProbability', 'precipType', 'precipitation', 'rain', 'sleet', 'snow', 'starting', 'stopping', 'summary', 'time']

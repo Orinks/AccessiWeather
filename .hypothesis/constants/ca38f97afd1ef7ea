@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/ui/dialogs/soundpack_wizard_dialog.py
-# hypothesis_version: 6.151.9
-
-[100, 250, 300, 350, 500, 550, 650, '(default)', '-', '1.0.0', '< Previous', 'Assign Sounds', 'Author (optional):', 'Cancel', 'Cancel Wizard', 'Choose...', 'Clear All', 'Create Pack', 'Create Sound Pack', 'Missing Name', 'Next >', 'No Selection', 'Pack Created', 'Pack Details', 'Panel', 'Preview', 'Preview & Finalize', 'Select Alert Types', 'Select Common', 'SetScrollRate', 'Test All Sounds', 'Unknown', '_', 'alert', 'author', 'aw_soundpack_wizard_', 'description', 'error', 'exit', 'flood_warning', 'name', 'notify', 'pack.json', 'sounds', 'startup', 'success', 'thunderstorm_warning', 'tornado_warning', 'utf-8', 'version', 'w']

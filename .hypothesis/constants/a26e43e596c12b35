@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_gov_api_client/models/metar_phenomenon_weather.py
-# hypothesis_version: 6.151.9
-
-['drizzle', 'dust', 'dust_storm', 'dust_whirls', 'fog', 'fog_mist', 'funnel_cloud', 'hail', 'haze', 'ice_crystals', 'ice_pellets', 'rain', 'sand', 'sand_storm', 'smoke', 'snow', 'snow_grains', 'snow_pellets', 'spray', 'squalls', 'thunderstorms', 'unknown', 'volcanic_ash']

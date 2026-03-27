@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/services/weather_service/alerts_discussion.py
-# hypothesis_version: 6.151.9
-
-['1.0', '@context', '@vocab', 'FeatureCollection', 'N/A', 'No alerts available', 'features', 'generator', 'generatorVersion', 'title', 'type', 'updated', 'wx']

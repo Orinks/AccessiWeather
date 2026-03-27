@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/geocoding.py
-# hypothesis_version: 6.151.9
-
-[-180.0, -161.0, -154.0, -130.0, -125.0, -68.0, -66.0, -64.0, 13.0, 14.0, 17.0, 18.0, 19.0, 23.0, 24.0, 50.0, 51.0, 55.0, 72.0, 144.0, 146.0, 172.0, 180.0, -180, 180, '-', 'AccessiWeather', 'US', '^\\d{5}(?:-\\d{4})?$', 'nws']

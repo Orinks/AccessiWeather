@@ -1,4 +1,0 @@
-# file: /usr/lib/python3/dist-packages/charset_normalizer/__init__.py
-# hypothesis_version: 6.151.9
-
-['CharsetMatch', 'CharsetMatches', 'VERSION', '__version__', 'charset_normalizer', 'detect', 'from_bytes', 'from_fp', 'from_path', 'is_binary', 'set_logging_handler']

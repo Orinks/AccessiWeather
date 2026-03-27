@@ -1,4 +1,0 @@
-# file: /usr/lib/python3/dist-packages/_pytest/faulthandler.py
-# hypothesis_version: 6.151.9
-
-[0.0, 'faulthandler_timeout']

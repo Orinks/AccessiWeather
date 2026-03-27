@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_gov_api_client/models/observation_station_collection_json_ld.py
-# hypothesis_version: 6.151.9
-
-['@context', '@graph', 'JsonLdContextType1', 'ObservationStation', 'PaginationInfo', 'T', 'observationStations', 'pagination']

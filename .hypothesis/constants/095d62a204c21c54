@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/ui/dialogs/nationwide_discussion_dialog.py
-# hypothesis_version: 6.151.9
-
-[120, 600, 800, '&Close', '&Refresh', '&Summarize with AI', 'AI Summary:', 'Discussion tabs', 'Discussions loaded.', 'Error', 'Extended Forecast:', 'Loading...', 'Not available', 'QPF Discussion:', 'WPC QPF Discussion', 'ai_model_preference', 'atlantic_outlook', 'auto', 'control', 'cpc', 'custom_instructions', 'custom_system_prompt', 'day1', 'day2', 'day3', 'east_pacific_outlook', 'extended', 'medium_range', 'nhc', 'openrouter/auto', 'openrouter_api_key', 'outlook', 'qpf', 'short_range', 'spc', 'text', 'the United States', 'wpc']

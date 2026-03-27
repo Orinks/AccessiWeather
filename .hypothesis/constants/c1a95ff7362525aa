@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_gov_api_client/models/glossary_response_200.py
-# hypothesis_version: 6.151.9
-
-['@context', 'GlossaryResponse200', 'JsonLdContextType1', 'T', 'glossary']

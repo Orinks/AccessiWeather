@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/weather_gov_api_client/models/observation.py
-# hypothesis_version: 6.151.9
-
-['@context', '@id', '@type', 'JsonLdContextType1', 'MetarPhenomenon', 'Observation', 'QuantitativeValue', 'T', 'barometricPressure', 'cloudLayers', 'dewpoint', 'elevation', 'geometry', 'heatIndex', 'icon', 'presentWeather', 'rawMessage', 'relativeHumidity', 'seaLevelPressure', 'station', 'temperature', 'textDescription', 'timestamp', 'visibility', 'windChill', 'windDirection', 'windGust', 'windSpeed']

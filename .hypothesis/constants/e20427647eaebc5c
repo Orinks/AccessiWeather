@@ -1,4 +1,0 @@
-# file: /usr/lib/python3/dist-packages/_pytest/setuponly.py
-# hypothesis_version: 6.151.9
-
-[' (fixtures used: {})', ', ', '--setup-only', '--setup-show', '--setuponly', '--setupshow', 'SETUP', 'TEARDOWN', 'cached_param', 'capturemanager', 'debugconfig', 'param', 'request', 'store_true']

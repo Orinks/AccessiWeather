@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/notifications/toast_notifier.py
-# hypothesis_version: 6.151.9
-
-['AccessiWeather', 'Notification', '_MEIPASS', 'alert', 'alert_type', 'default', 'duration', 'executable', 'frozen', 'msg', 'notification', 'notify', 'pytest', 'send_notification', 'severity', 'title', 'urgent', 'win32']

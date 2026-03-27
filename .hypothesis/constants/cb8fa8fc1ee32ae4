@@ -1,4 +1,0 @@
-# file: /home/openclaw/clawd/AccessiWeather/src/accessiweather/constants.py
-# hypothesis_version: 6.151.9
-
-[100, 168, 3600, 'Advanced', 'Display', 'General', 'Updates', 'alert_radius_miles', 'api_keys', 'auto', 'cache_enabled', 'cache_ttl', 'data_source', 'extreme', 'github_app_id', 'minimize_on_startup', 'minimize_to_tray', 'minor', 'moderate', 'nws', 'openmeteo', 'orinks', 'severe', 'stable', 'temperature_unit', 'unknown', 'update_channel', 'visualcrossing', '{temp} {condition}']
