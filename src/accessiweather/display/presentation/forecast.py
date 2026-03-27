@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime, tzinfo
+from datetime import UTC, date, datetime, tzinfo
 
 from ...forecast_confidence import ForecastConfidence
 from ...models import AppSettings, Forecast, ForecastPeriod, HourlyForecast, Location
@@ -72,6 +72,22 @@ def _configured_forecast_days(settings: AppSettings | None) -> int:
     return max(3, min(configured_days, 16))
 
 
+def _period_sort_key(dt: datetime) -> datetime:
+    """Normalise a possibly-naive datetime to UTC-aware so mixed lists sort safely."""
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=UTC)
+
+
+def _local_date(dt: datetime) -> date:
+    """
+    Return the calendar date in the datetime's own timezone.
+
+    For tz-aware datetimes (e.g. fixed-offset from Open-Meteo) ``.date()``
+    already returns the date component in that offset — i.e. the local date.
+    For naive datetimes (legacy fallback) ``.date()`` is used as-is.
+    """
+    return dt.date()
+
+
 def _select_periods_by_day_window(forecast: Forecast, configured_days: int) -> list[ForecastPeriod]:
     """Select periods within a strict calendar-day window when timestamps are available."""
     periods = forecast.periods or []
@@ -83,9 +99,9 @@ def _select_periods_by_day_window(forecast: Forecast, configured_days: int) -> l
             return periods[: min(configured_days * 2, len(periods))]
         return periods[: min(configured_days, len(periods))]
 
-    unique_days: list = []
-    for p in sorted(dated_periods, key=lambda x: x.start_time):
-        day = p.start_time.date()
+    unique_days: list[date] = []
+    for p in sorted(dated_periods, key=lambda x: _period_sort_key(x.start_time)):
+        day = _local_date(p.start_time)
         if day not in unique_days:
             unique_days.append(day)
         if len(unique_days) >= configured_days:
@@ -95,7 +111,9 @@ def _select_periods_by_day_window(forecast: Forecast, configured_days: int) -> l
         return periods[: min(configured_days, len(periods))]
 
     allowed_days = set(unique_days)
-    return [p for p in periods if p.start_time is not None and p.start_time.date() in allowed_days]
+    return [
+        p for p in periods if p.start_time is not None and _local_date(p.start_time) in allowed_days
+    ]
 
 
 def build_forecast(
