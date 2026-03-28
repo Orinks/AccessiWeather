@@ -672,11 +672,20 @@ def _get_feels_like_reason(current: CurrentConditions, diff_f: float) -> str | N
     return None
 
 
-def format_hourly_wind(period: HourlyForecastPeriod) -> str | None:
+def format_hourly_wind(
+    period: HourlyForecastPeriod,
+    unit_pref: TemperatureUnit = TemperatureUnit.FAHRENHEIT,
+) -> str | None:
     """Return wind description for hourly periods when both pieces are present."""
-    if not period.wind_direction or not period.wind_speed:
+    if not period.wind_direction:
         return None
-    return f"{period.wind_direction} at {period.wind_speed}"
+    if period.wind_speed_mph is not None:
+        speed_str = format_wind_speed(period.wind_speed_mph, unit_pref, precision=0)
+    elif period.wind_speed:
+        speed_str = period.wind_speed
+    else:
+        return None
+    return f"{period.wind_direction} at {speed_str}"
 
 
 # Backwards compatibility alias if needed, though ideally should be removed/replaced

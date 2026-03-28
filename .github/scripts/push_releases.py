@@ -306,7 +306,7 @@ def render_nightly_card(release: ReleaseInfo) -> str:
     actions.append(f'<a href="{html.escape(release.html_url, quote=True)}">Full release</a>')
     return (
         '<li class="accessiweather-nightly-card">'
-        f"<div><strong>{html.escape(release.tag_name)}</strong> ({html.escape(release.published_at)})</div>"
+        f"<h4>{html.escape(release.published_at)} ({html.escape(release.tag_name)})</h4>"
         f"<div>{' · '.join(actions)}"
         f" · {format_count(release.total_downloads)} downloads</div>"
         f'<div class="accessiweather-nightly-notes">{render_nightly_notes_summary(release)}</div>'

@@ -26,3 +26,4 @@ htmlcov/
 uv.lock
 reports/coverage.xml
 .worktrees/
+.hypothesis/
