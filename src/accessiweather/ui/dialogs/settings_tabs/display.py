@@ -40,9 +40,9 @@ class DisplayTab:
             panel,
             choices=[
                 "Auto (based on location)",
-                "Fahrenheit only",
-                "Celsius only",
-                "Both (Fahrenheit and Celsius)",
+                "Imperial (°F)",
+                "Metric (°C)",
+                "Both (°F and °C)",
             ],
         )
         sizer.Add(controls["temp_unit"], 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)

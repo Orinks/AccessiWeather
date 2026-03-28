@@ -513,9 +513,9 @@ Important caveat:
 Choices:
 
 - `Auto (based on location)`
-- `Fahrenheit only`
-- `Celsius only`
-- `Both (Fahrenheit and Celsius)`
+- `Imperial (°F)`
+- `Metric (°C)`
+- `Both (°F and °C)`
 
 Change it when:
 
