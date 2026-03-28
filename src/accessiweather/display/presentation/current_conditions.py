@@ -37,6 +37,13 @@ from .formatters import (
 logger = logging.getLogger(__name__)
 
 
+def _normalize_metric_wind_units(value: str, *, unit_system: DisplayUnitSystem | str | None) -> str:
+    """Keep current-conditions metric wording aligned with the screen's spoken style."""
+    if unit_system is None:
+        return value.replace("km/h", "kph")
+    return value
+
+
 def _build_basic_metrics(
     current: CurrentConditions,
     unit_pref: TemperatureUnit,
@@ -62,6 +69,8 @@ def _build_basic_metrics(
         metrics.append(Metric("Humidity", f"{current.humidity:.0f}%"))
 
     wind_value = format_wind(current, unit_pref, precision=precision, unit_system=unit_system)
+    if wind_value:
+        wind_value = _normalize_metric_wind_units(wind_value, unit_system=unit_system)
 
     gust_value: str | None = None
     if current.wind_gust_mph is not None:
@@ -72,8 +81,7 @@ def _build_basic_metrics(
             precision=0,
             unit_system=unit_system,
         )
-        if unit_system is None:
-            gust_value = gust_value.replace("km/h", "kph")
+        gust_value = _normalize_metric_wind_units(gust_value, unit_system=unit_system)
 
     if wind_value and gust_value:
         metrics.append(Metric("Wind", f"{wind_value}, gusting to {gust_value}"))
@@ -262,6 +270,8 @@ def _build_trend_metrics(
     if trends:
         for trend in trends:
             metric_name = getattr(trend, "metric", "")
+            if isinstance(metric_name, str) and metric_name.lower() == "daily_trend":
+                continue
             is_pressure = isinstance(metric_name, str) and metric_name.lower() == "pressure"
             if is_pressure and not show_pressure_trend:
                 continue
@@ -596,6 +606,8 @@ def format_trend_lines(
     if trends:
         for trend in trends:
             metric_name = getattr(trend, "metric", "")
+            if isinstance(metric_name, str) and metric_name.lower() == "daily_trend":
+                continue
             is_pressure = isinstance(metric_name, str) and metric_name.lower() == "pressure"
             if is_pressure and not include_pressure:
                 continue

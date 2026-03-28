@@ -544,6 +544,21 @@ class TestBuildTrendMetrics:
         metrics = _build_trend_metrics(trends, CurrentConditions(), None, show_pressure_trend=True)
         assert "▁▃▅▇" in metrics[0].value
 
+    def test_daily_trend_omitted_from_conditions_metrics(self):
+        trends = [
+            TrendInsight(
+                metric="daily_trend",
+                direction="cooler",
+                change=-42.0,
+                unit="C",
+                timeframe_hours=24,
+                summary="42°C cooler than yesterday",
+                sparkline="↓",
+            ),
+        ]
+        metrics = _build_trend_metrics(trends, CurrentConditions(), None, show_pressure_trend=True)
+        assert metrics == []
+
 
 # ── compute_pressure_trend_from_hourly ──
 
@@ -608,6 +623,17 @@ class TestFormatTrendLines:
         lines = format_trend_lines(trends, include_pressure=False)
         assert len(lines) == 0
 
+    def test_daily_trend_excluded(self):
+        trends = [
+            TrendInsight(
+                metric="daily_trend",
+                direction="cooler",
+                summary="42°C cooler than yesterday",
+                sparkline="↓",
+            ),
+        ]
+        assert format_trend_lines(trends) == []
+
 
 # ── build_current_conditions (integration) ──
 
@@ -651,6 +677,26 @@ class TestBuildCurrentConditions:
             current, location, TemperatureUnit.FAHRENHEIT, trends=trends
         )
         assert len(result.trends) > 0
+
+    def test_daily_trend_not_announced_in_current_conditions(self):
+        current = CurrentConditions(temperature_f=72.0, condition="Cloudy")
+        location = Location(name="City", latitude=0, longitude=0)
+        trends = [
+            TrendInsight(
+                metric="daily_trend",
+                direction="cooler",
+                change=-42.0,
+                unit="C",
+                timeframe_hours=24,
+                summary="42°C cooler than yesterday",
+                sparkline="↓",
+            ),
+        ]
+        result = build_current_conditions(current, location, TemperatureUnit.CELSIUS, trends=trends)
+
+        assert all(metric.label != "Daily Trend trend" for metric in result.metrics)
+        assert "42°C cooler than yesterday" not in result.fallback_text
+        assert result.trends == []
 
     def test_with_minutely_summary_adds_quick_glance_line(self):
         current = CurrentConditions(temperature_f=72.0, condition="Cloudy")
@@ -797,6 +843,47 @@ class TestBuildBasicMetricsNewFields:
         gusts = [m for m in metrics if m.label == "Wind gusts"]
         assert len(gusts) == 1
         assert "40 kph" in gusts[0].value
+
+    def test_wind_celsius_uses_kph_wording(self):
+        current = self._make_current(
+            wind_speed_mph=10.0,
+            wind_speed_kph=16.1,
+            wind_direction="NW",
+        )
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.CELSIUS,
+            0,
+            show_dewpoint=False,
+            show_visibility=False,
+            show_uv_index=False,
+        )
+        wind = [m for m in metrics if m.label == "Wind"]
+        assert len(wind) == 1
+        assert "16 kph" in wind[0].value
+        assert "km/h" not in wind[0].value
+
+    def test_wind_and_gust_celsius_use_matching_kph_wording(self):
+        current = self._make_current(
+            wind_speed_mph=10.0,
+            wind_speed_kph=16.1,
+            wind_direction="NW",
+            wind_gust_mph=25.0,
+            wind_gust_kph=40.2,
+        )
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.CELSIUS,
+            0,
+            show_dewpoint=False,
+            show_visibility=False,
+            show_uv_index=False,
+        )
+        wind = [m for m in metrics if m.label == "Wind"]
+        assert len(wind) == 1
+        assert "16 kph" in wind[0].value
+        assert "40 kph" in wind[0].value
+        assert "km/h" not in wind[0].value
 
     def test_wind_gusts_celsius_converts_from_mph(self):
         current = self._make_current(wind_gust_mph=10.0, wind_gust_kph=None)
@@ -956,37 +1043,10 @@ class TestBuildBasicMetricsNewFields:
         assert not any(m.label == "Precipitation" for m in metrics)
 
 
-# ── _build_trend_metrics – regression: daily_trend label (Bug 1) ──
+# ── _build_trend_metrics – metric labels ──
 
 
-class TestBuildTrendMetricsDailyTrendLabel:
-    """Regression tests for 'Daily_Trend trend' label bug (underscore in .title())."""
-
-    def _make_daily_trend_insight(self) -> TrendInsight:
-        return TrendInsight(
-            metric="daily_trend",
-            direction="warmer",
-            change=5.0,
-            unit="F",
-            timeframe_hours=24,
-            summary="5°F warmer than yesterday",
-            sparkline="↑",
-        )
-
-    def test_daily_trend_label_has_no_underscore(self):
-        """'daily_trend' metric must render as 'Daily Trend trend', not 'Daily_Trend trend'."""
-        insight = self._make_daily_trend_insight()
-        current = CurrentConditions(temperature_f=75.0)
-        metrics = _build_trend_metrics(
-            [insight],
-            current,
-            hourly_forecast=None,
-            show_pressure_trend=False,
-        )
-        assert len(metrics) == 1
-        assert "_" not in metrics[0].label, f"Label contains underscore: {metrics[0].label!r}"
-        assert metrics[0].label == "Daily Trend trend"
-
+class TestBuildTrendMetricsLabels:
     def test_metric_with_multiple_underscores_renders_correctly(self):
         """Any multi-word metric name with underscores must be space-separated and title-cased."""
         insight = TrendInsight(
