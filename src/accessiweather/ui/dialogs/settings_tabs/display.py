@@ -34,8 +34,8 @@ class DisplayTab:
         sizer = wx.BoxSizer(wx.VERTICAL)
         controls = self.dialog._controls
 
-        # Temperature Display
-        sizer.Add(wx.StaticText(panel, label="Temperature Display:"), 0, wx.ALL | wx.EXPAND, 5)
+        # Unit Preference
+        sizer.Add(wx.StaticText(panel, label="Unit Preference:"), 0, wx.ALL | wx.EXPAND, 5)
         controls["temp_unit"] = wx.Choice(
             panel,
             choices=[
@@ -241,7 +241,7 @@ class DisplayTab:
         """Set accessibility names for Display tab controls."""
         controls = self.dialog._controls
         names = {
-            "temp_unit": "Temperature Display",
+            "temp_unit": "Unit Preference",
             "show_dewpoint": "Show dewpoint",
             "show_visibility": "Show visibility",
             "show_uv_index": "Show UV index",

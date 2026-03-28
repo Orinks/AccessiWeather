@@ -508,7 +508,7 @@ Important caveat:
 
 ### Display
 
-#### Temperature Display
+#### Unit Preference
 
 Choices:
 
