@@ -1,28 +1,10 @@
 from __future__ import annotations
 
-import importlib.util
-from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-
-def _load_settings_dialog_class():
-    module_path = (
-        Path(__file__).resolve().parents[1]
-        / "src"
-        / "accessiweather"
-        / "ui"
-        / "dialogs"
-        / "settings_dialog.py"
-    )
-    spec = importlib.util.spec_from_file_location("test_settings_dialog_audio_module", module_path)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.SettingsDialogSimple
-
-
-SettingsDialogSimple = _load_settings_dialog_class()
+from accessiweather.ui.dialogs.settings_dialog import SettingsDialogSimple
+from accessiweather.ui.dialogs.settings_tabs.audio import AudioTab
 
 
 class _DummyControl:
@@ -88,7 +70,8 @@ def _make_dialog(settings: SimpleNamespace) -> SettingsDialogSimple:
     dialog._controls["configure_event_sounds"] = _DummyControl()
     dialog._sound_pack_ids = ["default"]
     dialog._selected_specific_model = None
-    dialog._event_sound_states = dialog._build_default_event_sound_states()
+    dialog._event_sound_states = AudioTab._build_default_event_sound_states()
+    dialog._source_settings_states = SettingsDialogSimple._build_default_source_settings_states()
     dialog._vc_config_sizer = _DummySizer()
     dialog._pw_config_sizer = _DummySizer()
     dialog._auto_sources_sizer = _DummySizer()
@@ -96,6 +79,12 @@ def _make_dialog(settings: SimpleNamespace) -> SettingsDialogSimple:
     dialog.config_manager.get_settings.return_value = settings
     dialog.config_manager.update_settings.return_value = True
     dialog._get_ai_model_preference = lambda: "openrouter/free"
+
+    # Wire up tab objects so _load_settings/_save_settings delegate correctly
+    audio_tab = AudioTab(dialog)
+    dialog._audio_tab = audio_tab
+    dialog._tab_objects = [audio_tab]
+
     return dialog
 
 
@@ -112,7 +101,7 @@ def test_load_settings_updates_event_sound_state_and_summary():
 
     assert dialog._event_sound_states["data_updated"] is False
     assert dialog._event_sound_states["fetch_error"] is True
-    total_events = len(dialog._build_default_event_sound_states())
+    total_events = len(AudioTab._build_default_event_sound_states())
     assert (
         dialog._controls["event_sounds_summary"].GetLabel()
         == f"{total_events - 1} of {total_events} sound events are enabled."
@@ -150,7 +139,7 @@ def test_configure_event_sounds_applies_modal_result_and_refreshes_summary():
 
     assert dialog._event_sound_states["data_updated"] is False
     assert dialog._event_sound_states["severe_risk"] is False
-    total_events = len(dialog._build_default_event_sound_states())
+    total_events = len(AudioTab._build_default_event_sound_states())
     assert (
         dialog._controls["event_sounds_summary"].GetLabel()
         == f"{total_events - 2} of {total_events} sound events are enabled."

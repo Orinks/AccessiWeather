@@ -758,3 +758,69 @@ class TestEngineInit:
         config = SourcePriorityConfig(temperature_conflict_threshold=10.0)
         engine = DataFusionEngine(config=config)
         assert engine.config.temperature_conflict_threshold == 10.0
+
+
+# --- wind/gust sanity check (Bug 2 regression) ---
+
+
+class TestWindGustSanityCheck:
+    """Regression: fused gust must never be lower than fused wind speed."""
+
+    def test_gust_higher_than_speed_is_kept(self, engine, intl_location):
+        """Normal case: gust > speed → both are preserved."""
+        pw_cc = CurrentConditions(wind_speed_mph=14.0, wind_speed_kph=22.5)
+        vc_cc = CurrentConditions(wind_gust_mph=20.0, wind_gust_kph=32.2)
+        sources = [
+            _make_source("pirateweather", current=pw_cc),
+            _make_source("visualcrossing", current=vc_cc),
+        ]
+        result, attr = engine.merge_current_conditions(sources, intl_location)
+        assert result is not None
+        assert result.wind_speed_mph == pytest.approx(14.0)
+        assert result.wind_gust_mph == pytest.approx(20.0)
+
+    def test_gust_equal_to_speed_is_kept(self, engine, intl_location):
+        """Edge case: gust == speed is physically valid → keep it."""
+        pw_cc = CurrentConditions(wind_speed_mph=14.0, wind_speed_kph=22.5)
+        vc_cc = CurrentConditions(wind_gust_mph=14.0, wind_gust_kph=22.5)
+        sources = [
+            _make_source("pirateweather", current=pw_cc),
+            _make_source("visualcrossing", current=vc_cc),
+        ]
+        result, attr = engine.merge_current_conditions(sources, intl_location)
+        assert result is not None
+        assert result.wind_gust_mph == pytest.approx(14.0)
+
+    def test_gust_lower_than_speed_is_discarded(self, engine, intl_location):
+        """Bug: cross-source gust (11 mph VC) < speed (14 mph PW) → gust dropped."""
+        pw_cc = CurrentConditions(wind_speed_mph=14.0, wind_speed_kph=22.5)
+        vc_cc = CurrentConditions(wind_gust_mph=11.0, wind_gust_kph=17.7)
+        sources = [
+            _make_source("pirateweather", current=pw_cc),
+            _make_source("visualcrossing", current=vc_cc),
+        ]
+        result, attr = engine.merge_current_conditions(sources, intl_location)
+        assert result is not None
+        assert result.wind_speed_mph == pytest.approx(14.0)
+        # Gust must be discarded — impossible for gust < sustained speed
+        assert result.wind_gust_mph is None
+        assert result.wind_gust_kph is None
+        assert "wind_gust_mph" not in attr.field_sources
+        assert "wind_gust_kph" not in attr.field_sources
+
+    def test_gust_without_speed_is_kept(self, engine, intl_location):
+        """If only gust is present (no speed), gust is kept unchanged."""
+        vc_cc = CurrentConditions(wind_gust_mph=20.0, wind_gust_kph=32.2)
+        sources = [_make_source("visualcrossing", current=vc_cc)]
+        result, attr = engine.merge_current_conditions(sources, intl_location)
+        assert result is not None
+        assert result.wind_gust_mph == pytest.approx(20.0)
+
+    def test_speed_without_gust_is_unaffected(self, engine, intl_location):
+        """If only speed is present (no gust), speed is kept and no error occurs."""
+        pw_cc = CurrentConditions(wind_speed_mph=14.0, wind_speed_kph=22.5)
+        sources = [_make_source("pirateweather", current=pw_cc)]
+        result, attr = engine.merge_current_conditions(sources, intl_location)
+        assert result is not None
+        assert result.wind_speed_mph == pytest.approx(14.0)
+        assert result.wind_gust_mph is None

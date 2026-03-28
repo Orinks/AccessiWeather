@@ -6,6 +6,7 @@ Tests the Pirate Weather API client (https://pirateweather.net).
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -259,14 +260,25 @@ class TestParseForecast:
         result = client._parse_forecast(payload)
         assert result.periods[1].name == "Tomorrow"
 
-    def test_days_cap_respected(self, client, sample_forecast_payload):
-        # Add 10 days worth of data
+    def test_all_days_returned(self, client, sample_forecast_payload):
+        # _parse_forecast must return ALL available periods; the display layer
+        # applies the configured forecast_duration_days limit, not the parser.
         base_day = sample_forecast_payload["daily"]["data"][0]
         days = [dict(base_day, time=base_day["time"] + i * 86400) for i in range(10)]
         payload = dict(sample_forecast_payload)
         payload["daily"] = {"data": days}
+        result = client._parse_forecast(payload)
+        assert len(result.periods) == 10
+
+    def test_days_param_does_not_restrict_output(self, client, sample_forecast_payload):
+        # The legacy ``days`` kwarg is preserved for backward-compat but no longer
+        # truncates the output.
+        base_day = sample_forecast_payload["daily"]["data"][0]
+        all_days = [dict(base_day, time=base_day["time"] + i * 86400) for i in range(10)]
+        payload = dict(sample_forecast_payload)
+        payload["daily"] = {"data": all_days}
         result = client._parse_forecast(payload, days=3)
-        assert len(result.periods) == 3
+        assert len(result.periods) == 10
 
     def test_wind_string_us_units(self, client, sample_forecast_payload):
         result = client._parse_forecast(sample_forecast_payload)
@@ -325,6 +337,76 @@ class TestParseForecast:
         assert result.summary == "Possible drizzle on Thursday."
         assert result.periods == []
 
+    def test_uses_timezone_name_to_normalize_london_dst_daily_dates(self, client):
+        """Europe/London daily periods should normalize to consecutive local noon dates."""
+        start_dates = [
+            datetime(2025, 10, 26, 0, 0, tzinfo=UTC),
+            datetime(2025, 10, 27, 0, 0, tzinfo=UTC),
+            datetime(2025, 10, 28, 0, 0, tzinfo=UTC),
+        ]
+        payload = {
+            "timezone": "Europe/London",
+            "offset": 1,
+            "daily": {
+                "data": [
+                    {
+                        "time": int(start.timestamp()),
+                        "temperatureHigh": 60.0 + i,
+                        "temperatureLow": 45.0 + i,
+                        "summary": "Cloudy",
+                    }
+                    for i, start in enumerate(start_dates)
+                ]
+            },
+        }
+
+        result = client._parse_forecast(payload)
+
+        assert result is not None
+        dates = [
+            period.start_time.date() for period in result.periods if period.start_time is not None
+        ]
+        assert dates == [
+            datetime(2025, 10, 26).date(),
+            datetime(2025, 10, 27).date(),
+            datetime(2025, 10, 28).date(),
+        ]
+        assert len(dates) == len(set(dates))
+        for idx in range(1, len(dates)):
+            assert dates[idx] - dates[idx - 1] == timedelta(days=1)
+        assert all(period.start_time.hour == 12 for period in result.periods if period.start_time)
+
+    def test_rejects_duplicate_local_dates_after_london_dst_fallback(self, client):
+        """Malformed PW daily timestamps should be rejected instead of shown with duplicates."""
+        payload = {
+            "timezone": "Europe/London",
+            "offset": 1,
+            "daily": {
+                "data": [
+                    {
+                        "time": int(datetime(2025, 10, 25, 23, 0, tzinfo=UTC).timestamp()),
+                        "temperatureHigh": 60.0,
+                        "temperatureLow": 45.0,
+                        "summary": "Cloudy",
+                    },
+                    {
+                        "time": int(datetime(2025, 10, 26, 23, 0, tzinfo=UTC).timestamp()),
+                        "temperatureHigh": 61.0,
+                        "temperatureLow": 46.0,
+                        "summary": "Cloudy",
+                    },
+                    {
+                        "time": int(datetime(2025, 10, 27, 23, 0, tzinfo=UTC).timestamp()),
+                        "temperatureHigh": 62.0,
+                        "temperatureLow": 47.0,
+                        "summary": "Cloudy",
+                    },
+                ]
+            },
+        }
+
+        assert client._parse_forecast(payload) is None
+
 
 # ---------------------------------------------------------------------------
 # Unit tests – _parse_hourly_forecast
@@ -377,6 +459,54 @@ class TestParseHourlyForecast:
         payload["hourly"] = {"data": []}
         result = client._parse_hourly_forecast(payload)
         assert result.periods == []
+
+    # ------------------------------------------------------------------
+    # Regression tests – wind_speed_mph unit normalisation (bug fix)
+    # ------------------------------------------------------------------
+
+    def test_hourly_wind_speed_mph_stored_for_us_units(self, client, sample_forecast_payload):
+        """US units: windSpeed is already in mph, wind_speed_mph == raw value."""
+        result = client._parse_hourly_forecast(sample_forecast_payload)
+        period = result.periods[0]
+        assert period.wind_speed_mph == 10.0
+
+    def test_hourly_wind_speed_mph_stored_for_si_units(self, sample_forecast_payload):
+        """SI units: windSpeed is m/s; wind_speed_mph = raw * 2.23694."""
+        si_client = PirateWeatherClient(api_key="key", units="si")
+        result = si_client._parse_hourly_forecast(sample_forecast_payload)
+        period = result.periods[0]
+        assert period.wind_speed is not None
+        assert "m/s" in period.wind_speed
+        # 10 m/s * 2.23694 ≈ 22.37 mph
+        assert period.wind_speed_mph is not None
+        assert abs(period.wind_speed_mph - 10.0 * 2.23694) < 0.01
+
+    def test_hourly_wind_speed_mph_stored_for_ca_units(self, sample_forecast_payload):
+        """CA units: windSpeed is km/h; wind_speed_mph = raw / 1.60934."""
+        ca_client = PirateWeatherClient(api_key="key", units="ca")
+        result = ca_client._parse_hourly_forecast(sample_forecast_payload)
+        period = result.periods[0]
+        assert period.wind_speed is not None
+        assert "km/h" in period.wind_speed
+        # 10 km/h / 1.60934 ≈ 6.21 mph
+        assert period.wind_speed_mph is not None
+        assert abs(period.wind_speed_mph - 10.0 / 1.60934) < 0.01
+
+    def test_hourly_wind_speed_mph_stored_for_uk2_units(self, sample_forecast_payload):
+        """UK2 units: windSpeed is mph, same as US."""
+        uk2_client = PirateWeatherClient(api_key="key", units="uk2")
+        result = uk2_client._parse_hourly_forecast(sample_forecast_payload)
+        period = result.periods[0]
+        assert period.wind_speed_mph == 10.0
+
+    def test_hourly_wind_speed_mph_none_when_wind_missing(self, client, sample_forecast_payload):
+        """wind_speed_mph is None when windSpeed is absent from the API response."""
+        payload = dict(sample_forecast_payload)
+        hour = dict(sample_forecast_payload["hourly"]["data"][0])
+        del hour["windSpeed"]
+        payload["hourly"] = {"data": [hour]}
+        result = client._parse_hourly_forecast(payload)
+        assert result.periods[0].wind_speed_mph is None
 
 
 # ---------------------------------------------------------------------------

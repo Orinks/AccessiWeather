@@ -13,7 +13,8 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, time, timedelta, timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import httpx
 
@@ -97,6 +98,32 @@ def _normalize_regions(regions: object) -> list[str]:
         if region_name:
             normalized.append(region_name)
     return normalized
+
+
+def _resolve_response_timezone(data: dict) -> timezone | ZoneInfo:
+    """Resolve the response timezone, preferring IANA names over fixed offsets."""
+    timezone_name = data.get("timezone")
+    if isinstance(timezone_name, str) and timezone_name:
+        try:
+            return ZoneInfo(timezone_name)
+        except ZoneInfoNotFoundError:
+            logger.warning(
+                "Unknown Pirate Weather timezone '%s'; falling back to offset", timezone_name
+            )
+
+    tz_offset = data.get("offset", 0)
+    return timezone(timedelta(hours=tz_offset))
+
+
+def _normalize_daily_start_time(
+    timestamp: int | float,
+    response_tz: timezone | ZoneInfo,
+) -> tuple[date, datetime]:
+    """Convert a Pirate Weather daily timestamp into the local calendar date at noon."""
+    local_dt = datetime.fromtimestamp(timestamp, tz=response_tz)
+    local_date = local_dt.date()
+    normalized = datetime.combine(local_date, time(hour=12), tzinfo=response_tz)
+    return local_date, normalized
 
 
 class PirateWeatherClient:
@@ -347,26 +374,36 @@ class PirateWeatherClient:
             sunset_time=sunset_time,
         )
 
-    def _parse_forecast(self, data: dict, days: int = 7) -> Forecast:
-        """Parse Pirate Weather ``daily`` block into a Forecast."""
+    def _parse_forecast(self, data: dict, days: int | None = None) -> Forecast | None:
+        """
+        Parse Pirate Weather ``daily`` block into a Forecast.
+
+        All available daily periods are returned so that the display layer
+        (``_select_periods_by_day_window``) can apply the user's configured
+        ``forecast_duration_days`` setting without being constrained here.
+        The ``days`` parameter is kept for backward compatibility but is no
+        longer used to limit the output.
+        """
         daily_data = data.get("daily", {}).get("data", [])
-        tz_offset = data.get("offset", 0)
-        location_tz = timezone(timedelta(hours=tz_offset))
+        location_tz = _resolve_response_timezone(data)
         using_us = self.units == "us"
 
         periods: list[ForecastPeriod] = []
-        for i, day in enumerate(daily_data[:days]):
+        parsed_dates: list[date] = []
+        for i, day in enumerate(daily_data):
             time_val = day.get("time")
             if time_val:
-                dt = datetime.fromtimestamp(time_val, tz=location_tz)
+                local_date, start_time = _normalize_daily_start_time(time_val, location_tz)
+                parsed_dates.append(local_date)
                 if i == 0:
                     name = "Today"
                 elif i == 1:
                     name = "Tomorrow"
                 else:
-                    name = dt.strftime("%A")
+                    name = start_time.strftime("%A")
             else:
                 name = f"Day {i + 1}"
+                start_time = None
 
             temp_high = day.get("temperatureHigh") if using_us else day.get("temperatureMax")
             temp_low = day.get("temperatureLow") if using_us else day.get("temperatureMin")
@@ -410,8 +447,6 @@ class PirateWeatherClient:
 
             condition = day.get("summary") or _icon_to_condition(day.get("icon"))
 
-            start_time = datetime.fromtimestamp(time_val, tz=location_tz) if time_val else None
-
             period = ForecastPeriod(
                 name=name,
                 temperature=temp_high,
@@ -429,6 +464,15 @@ class PirateWeatherClient:
                 start_time=start_time,
             )
             periods.append(period)
+
+        if parsed_dates:
+            expected_dates = [parsed_dates[0] + timedelta(days=i) for i in range(len(parsed_dates))]
+            if parsed_dates != expected_dates or len(parsed_dates) != len(set(parsed_dates)):
+                logger.warning(
+                    "Rejecting Pirate Weather daily forecast with non-consecutive local dates: %s",
+                    [day.isoformat() for day in parsed_dates],
+                )
+                return None
 
         daily_summary = data.get("daily", {}).get("summary")
         return Forecast(periods=periods, generated_at=datetime.now(UTC), summary=daily_summary)
@@ -478,13 +522,17 @@ class PirateWeatherClient:
             pressure_in = pressure_mb / 33.8639 if pressure_mb is not None else None
 
             wind_raw = hour.get("windSpeed")
+            wind_speed_mph: float | None = None
             if wind_raw is not None:
                 if using_us or self.units == "uk2":
                     wind_str = f"{round(wind_raw)} mph"
+                    wind_speed_mph = float(wind_raw)
                 elif self.units == "ca":
                     wind_str = f"{round(wind_raw)} km/h"
+                    wind_speed_mph = float(wind_raw) / 1.60934
                 else:
                     wind_str = f"{round(wind_raw)} m/s"
+                    wind_speed_mph = float(wind_raw) * 2.23694
             else:
                 wind_str = None
 
@@ -539,6 +587,7 @@ class PirateWeatherClient:
                 temperature_unit="F",
                 short_forecast=condition,
                 wind_speed=wind_str,
+                wind_speed_mph=wind_speed_mph,
                 wind_direction=degrees_to_cardinal(hour.get("windBearing")),
                 humidity=humidity,
                 dewpoint_f=dewpoint_f,

@@ -260,6 +260,11 @@ class DataFusionEngine:
             field_names=("wind_gust_mph", "wind_gust_kph"),
             value_builder=self._build_wind_gust_values,
         )
+        # Sanity-check: a gust must be >= sustained wind speed.  When the gust
+        # came from a different source than the wind speed (cross-source fusion),
+        # the two values may be in inconsistent units or just stale data.  Drop
+        # the gust if it is physically impossible (gust < speed).
+        self._discard_gust_if_below_wind_speed(merged_values, attribution)
         self._apply_priority_group_selection(
             valid_sources,
             merged_values,
@@ -445,6 +450,32 @@ class DataFusionEngine:
             "wind_speed_mph": speed_mph,
             "wind_speed_kph": speed_kph,
         }
+
+    def _discard_gust_if_below_wind_speed(
+        self,
+        merged_values: dict[str, Any],
+        attribution: SourceAttribution,
+    ) -> None:
+        """
+        Drop wind gust when it is physically impossible (gust < sustained speed).
+
+        This can happen when wind_speed and wind_gust are selected from different
+        sources during cross-source fusion, leaving the two values in inconsistent
+        states.  Dropping the gust is safer than displaying an impossible reading.
+        """
+        speed_mph: float | None = merged_values.get("wind_speed_mph")
+        gust_mph: float | None = merged_values.get("wind_gust_mph")
+        if speed_mph is not None and gust_mph is not None and gust_mph < speed_mph:
+            logger.debug(
+                "Discarding wind gust (%.1f mph) that is lower than wind speed (%.1f mph) "
+                "— likely a cross-source unit mismatch",
+                gust_mph,
+                speed_mph,
+            )
+            merged_values.pop("wind_gust_mph", None)
+            merged_values.pop("wind_gust_kph", None)
+            attribution.field_sources.pop("wind_gust_mph", None)
+            attribution.field_sources.pop("wind_gust_kph", None)
 
     def _build_wind_gust_values(self, current: CurrentConditions) -> dict[str, float | None]:
         """Build aligned wind gust values from a single source."""
