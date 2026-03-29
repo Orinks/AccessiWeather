@@ -177,12 +177,14 @@ class ConfigManager:
             "visual_crossing_api_key",
             "pirate_weather_api_key",
             "openrouter_api_key",
+            "avwx_api_key",
         }
 
         secure_keys = [
             "visual_crossing_api_key",
             "pirate_weather_api_key",
             "openrouter_api_key",
+            "avwx_api_key",
             "github_app_id",
             "github_app_private_key",
             "github_app_installation_id",
