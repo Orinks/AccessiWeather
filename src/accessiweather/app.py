@@ -1175,6 +1175,9 @@ class AccessiWeatherApp(wx.App):
                     settings, "pirate_weather_api_key", ""
                 )
                 self.weather_client._pirate_weather_client = None  # pragma: no cover
+                self.weather_client._avwx_api_key = getattr(  # pragma: no cover
+                    settings, "avwx_api_key", ""
+                )
 
             if self.presenter:
                 self.presenter.settings = settings
