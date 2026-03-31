@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- **Historical anomaly callouts** — current temperature is now compared against a multi-year historical baseline; you'll see a "Historical context" line in current conditions (e.g. "Currently 5.0°F warmer than the 5-year average for this date") when sufficient archive data is available (#325)
+
 ## [0.4.5] - 2026-03-26
 
 ### Added

@@ -42,6 +42,7 @@ from .models import (
     WeatherData,
 )
 from .notifications.minutely_precipitation import parse_pirate_weather_minutely_block
+from .openmeteo_client import OpenMeteoApiClient
 from .pirate_weather_client import PirateWeatherApiError, PirateWeatherClient
 from .services import EnvironmentalDataClient
 from .units import resolve_auto_unit_system
@@ -119,6 +120,9 @@ class WeatherClient:
         # Cache of previous alerts per location key (for lifecycle diff)
         self._previous_alerts: dict[str, WeatherAlerts] = {}
 
+        # Lazy-created client for historical archive queries (anomaly computation)
+        self._openmeteo_archive_client: OpenMeteoApiClient | None = None
+
     @property
     def visual_crossing_api_key(self) -> str:
         """
@@ -185,6 +189,20 @@ class WeatherClient:
         if key is None or key == "":
             return ""
         return str(key)
+
+    @property
+    def openmeteo_archive_client(self) -> OpenMeteoApiClient:
+        """Get (or lazily create) the Open-Meteo client used for archive queries."""
+        if self._openmeteo_archive_client is None:
+            self._openmeteo_archive_client = OpenMeteoApiClient(
+                user_agent=self.user_agent, timeout=30.0
+            )
+        return self._openmeteo_archive_client
+
+    @openmeteo_archive_client.setter
+    def openmeteo_archive_client(self, value: OpenMeteoApiClient | None) -> None:
+        """Allow direct assignment for testing."""
+        self._openmeteo_archive_client = value
 
     def _location_key(self, location: Location) -> str:
         """Generate a unique key for a location to track in-flight requests."""
@@ -1167,6 +1185,17 @@ class WeatherClient:
                 self._enrich_with_visual_crossing_history(weather_data, location)
             )
 
+        # Anomaly callout: compare current temperature against multi-year historical baseline.
+        # Skipped in test mode to avoid real network calls.
+        if (
+            not self._test_mode
+            and weather_data.current
+            and weather_data.current.temperature_f is not None
+        ):
+            tasks["anomaly_callout"] = asyncio.create_task(
+                self._enrich_with_anomaly_callout(weather_data, location)
+            )
+
         # Post-processing enrichments (always run)
         tasks["environmental"] = asyncio.create_task(
             enrichment.populate_environmental_metrics(self, weather_data, location)
@@ -1472,6 +1501,34 @@ class WeatherClient:
             include_cwas=include_cwas,
             cwsu_id=cwsu_id,
         )
+
+    async def _enrich_with_anomaly_callout(
+        self, weather_data: WeatherData, location: Location
+    ) -> None:
+        """Compute and attach a historical temperature anomaly callout to weather_data."""
+        from datetime import date as _date
+
+        from .weather_anomaly import compute_anomaly
+
+        current = weather_data.current
+        if current is None or current.temperature_f is None:
+            return
+
+        client = self.openmeteo_archive_client
+        lat = location.latitude
+        lon = location.longitude
+        temp_f = current.temperature_f
+        today = _date.today()
+
+        loop = asyncio.get_running_loop()
+        try:
+            callout = await loop.run_in_executor(
+                None,
+                lambda: compute_anomaly(lat, lon, temp_f, today, client),
+            )
+            weather_data.anomaly_callout = callout
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("Anomaly callout computation failed: %s", exc)
 
     async def _enrich_with_visual_crossing_history(
         self, weather_data: WeatherData, location: Location
