@@ -234,3 +234,51 @@ class TestExtractWindSpeedMph:
         from accessiweather.weather_client_nws import _extract_wind_speed_mph
 
         assert _extract_wind_speed_mph(None) is None
+
+    def test_dict_max_value_fallback(self) -> None:
+        """Dict with maxValue but no value uses maxValue."""
+        from accessiweather.weather_client_nws import _extract_wind_speed_mph
+
+        result = _extract_wind_speed_mph(
+            {"unitCode": "wmoUnit:km_h-1", "value": None, "maxValue": 16.09}
+        )
+        assert result is not None
+        assert abs(result - 10.0) < 0.5
+
+    def test_dict_min_value_fallback(self) -> None:
+        """Dict with minValue but no value or maxValue uses minValue."""
+        from accessiweather.weather_client_nws import _extract_wind_speed_mph
+
+        result = _extract_wind_speed_mph(
+            {"unitCode": "wmoUnit:km_h-1", "value": None, "maxValue": None, "minValue": 16.09}
+        )
+        assert result is not None
+        assert abs(result - 10.0) < 0.5
+
+    def test_dict_all_none_returns_none(self) -> None:
+        """Dict with no value/maxValue/minValue returns None."""
+        from accessiweather.weather_client_nws import _extract_wind_speed_mph
+
+        assert _extract_wind_speed_mph({"unitCode": "wmoUnit:km_h-1", "value": None}) is None
+
+    def test_non_string_scalar_returns_none(self) -> None:
+        """Non-string scalar (e.g. integer) that is not a dict returns None."""
+        from accessiweather.weather_client_nws import _extract_wind_speed_mph
+
+        assert _extract_wind_speed_mph(42) is None
+
+    def test_kmh_string_converts_to_mph(self) -> None:
+        """String '16 km/h' is converted to mph."""
+        from accessiweather.weather_client_nws import _extract_wind_speed_mph
+
+        result = _extract_wind_speed_mph("16 km/h")
+        assert result is not None
+        assert abs(result - 9.94) < 0.1
+
+    def test_kmh_range_string_uses_last_value(self) -> None:
+        """String '5 to 16 km/h' uses the last (highest) value converted to mph."""
+        from accessiweather.weather_client_nws import _extract_wind_speed_mph
+
+        result = _extract_wind_speed_mph("5 to 16 km/h")
+        assert result is not None
+        assert abs(result - 9.94) < 0.1
