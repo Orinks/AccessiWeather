@@ -292,14 +292,19 @@ def format_forecast_temperature(
     return high_str
 
 
-def format_period_wind(period: ForecastPeriod) -> str | None:
-    """Return a combined wind string for a forecast period, if available."""
+def format_period_wind(
+    period: ForecastPeriod,
+    unit_pref: TemperatureUnit = TemperatureUnit.FAHRENHEIT,
+) -> str | None:
+    """Return a combined wind string for a forecast period, respecting unit preference."""
     if not period.wind_speed and not period.wind_direction:
         return None
     parts: list[str] = []
     if period.wind_direction:
         parts.append(period.wind_direction)
-    if period.wind_speed:
+    if period.wind_speed_mph is not None:
+        parts.append(format_wind_speed(period.wind_speed_mph, unit_pref, precision=0))
+    elif period.wind_speed:
         parts.append(period.wind_speed)
     return " ".join(parts) if parts else None
 

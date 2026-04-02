@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import logging
+import re
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -209,6 +210,37 @@ def _format_wind_speed(value: Any) -> str | None:
     if isinstance(scalar, (int, float)):
         return f"{scalar}"
     return str(scalar)
+
+
+def _extract_wind_speed_mph(value: Any) -> float | None:
+    """Extract numeric mph from a NWS windSpeed value (dict or string)."""
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        unit_code = value.get("unitCode")
+        numeric = _extract_float(value.get("value"))
+        if numeric is None:
+            numeric = _extract_float(value.get("maxValue"))
+        if numeric is None:
+            numeric = _extract_float(value.get("minValue"))
+        if numeric is None:
+            return None
+        mph, _ = convert_wind_speed_to_mph_and_kph(numeric, unit_code)
+        return mph
+    scalar = _extract_scalar(value)
+    if not isinstance(scalar, str):
+        return None
+    # Handles "15 mph", "5 to 15 mph" — use the last (highest) number before "mph"
+    mph_matches = re.findall(r"(\d+(?:\.\d+)?)\s*mph", scalar, re.IGNORECASE)
+    if mph_matches:
+        return float(mph_matches[-1])
+    # Handles km/h strings — convert to mph
+    kmh_matches = re.findall(r"(\d+(?:\.\d+)?)\s*km/h", scalar, re.IGNORECASE)
+    if kmh_matches:
+        kph = float(kmh_matches[-1])
+        mph, _ = convert_wind_speed_to_mph_and_kph(kph, "wmoUnit:km_h-1")
+        return mph
+    return None
 
 
 def _normalize_temperature_unit(unit: Any) -> str | None:
@@ -1377,6 +1409,7 @@ def parse_nws_forecast(data: dict) -> Forecast:
             short_forecast=period_data.get("shortForecast"),
             detailed_forecast=period_data.get("detailedForecast"),
             wind_speed=_format_wind_speed(period_data.get("windSpeed")),
+            wind_speed_mph=_extract_wind_speed_mph(period_data.get("windSpeed")),
             wind_direction=wind_direction,
             icon=period_data.get("icon"),
             start_time=start_time,
