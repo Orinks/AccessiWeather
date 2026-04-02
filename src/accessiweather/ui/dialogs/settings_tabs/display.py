@@ -68,6 +68,11 @@ class DisplayTab:
         controls["show_pressure_trend"] = wx.CheckBox(panel, label="Show pressure trend")
         sizer.Add(controls["show_pressure_trend"], 0, wx.LEFT, 10)
 
+        controls["show_impact_summaries"] = wx.CheckBox(
+            panel, label="Show weather impact analysis (Outdoor, Driving, Allergy)"
+        )
+        sizer.Add(controls["show_impact_summaries"], 0, wx.LEFT, 10)
+
         controls["round_values"] = wx.CheckBox(
             panel, label="Show values as whole numbers (no decimals)"
         )
@@ -180,6 +185,9 @@ class DisplayTab:
         controls["show_visibility"].SetValue(getattr(settings, "show_visibility", True))
         controls["show_uv_index"].SetValue(getattr(settings, "show_uv_index", True))
         controls["show_pressure_trend"].SetValue(getattr(settings, "show_pressure_trend", True))
+        controls["show_impact_summaries"].SetValue(
+            getattr(settings, "show_impact_summaries", False)
+        )
         controls["round_values"].SetValue(getattr(settings, "round_values", False))
 
         forecast_duration_days = getattr(settings, "forecast_duration_days", 7)
@@ -215,6 +223,7 @@ class DisplayTab:
             "show_visibility": controls["show_visibility"].GetValue(),
             "show_uv_index": controls["show_uv_index"].GetValue(),
             "show_pressure_trend": controls["show_pressure_trend"].GetValue(),
+            "show_impact_summaries": controls["show_impact_summaries"].GetValue(),
             "round_values": controls["round_values"].GetValue(),
             "forecast_duration_days": _FORECAST_DURATION_VALUES[
                 controls["forecast_duration_days"].GetSelection()
@@ -246,6 +255,7 @@ class DisplayTab:
             "show_visibility": "Show visibility",
             "show_uv_index": "Show UV index",
             "show_pressure_trend": "Show pressure trend",
+            "show_impact_summaries": "Show weather impact analysis (Outdoor, Driving, Allergy)",
             "forecast_duration_days": "Forecast duration",
             "hourly_forecast_hours": "Hourly forecast hours",
             "forecast_time_reference": "Forecast time display",

@@ -6,6 +6,7 @@ from collections.abc import Iterable
 from datetime import UTC, date, datetime, tzinfo
 
 from ...forecast_confidence import ForecastConfidence
+from ...impact_summary import ImpactSummary, build_forecast_impact_summary
 from ...models import AppSettings, Forecast, ForecastPeriod, HourlyForecast, Location
 from ...utils import TemperatureUnit, calculate_dewpoint
 from ...utils.unit_utils import format_precipitation, format_wind_speed
@@ -300,6 +301,15 @@ def build_forecast(
         fallback_sections.append(hourly_section_text)
     fallback_text = "\n\n".join(section for section in fallback_sections if section).rstrip()
 
+    # Derive an impact summary from the first available forecast period (opt-in only)
+    show_impact_summaries = getattr(settings, "show_impact_summaries", False) if settings else False
+    first_period = selected_periods[0] if selected_periods else None
+    forecast_impact: ImpactSummary | None = (
+        build_forecast_impact_summary(first_period)
+        if show_impact_summaries and first_period is not None
+        else None
+    )
+
     return ForecastPresentation(
         title=title,
         periods=periods,
@@ -311,6 +321,7 @@ def build_forecast(
         hourly_section_text=hourly_section_text,
         confidence_label=confidence_label,
         summary=summary_line,
+        impact_summary=forecast_impact,
     )
 
 
