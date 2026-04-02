@@ -724,6 +724,7 @@ class TestImpactMetricsInPresentation:
 
     def test_impact_metrics_in_current_conditions(self):
         from accessiweather.display.presentation.current_conditions import build_current_conditions
+        from accessiweather.models import AppSettings
         from accessiweather.models.weather import CurrentConditions, Location
         from accessiweather.utils import TemperatureUnit
 
@@ -735,7 +736,10 @@ class TestImpactMetricsInPresentation:
             visibility_miles=10.0,
         )
         location = Location(name="Test City", latitude=40.0, longitude=-74.0)
-        presentation = build_current_conditions(current, location, TemperatureUnit.FAHRENHEIT)
+        settings = AppSettings(show_impact_summaries=True)
+        presentation = build_current_conditions(
+            current, location, TemperatureUnit.FAHRENHEIT, settings=settings
+        )
 
         metric_labels = [m.label for m in presentation.metrics]
         assert "Impact: Outdoor" in metric_labels
@@ -743,6 +747,7 @@ class TestImpactMetricsInPresentation:
 
     def test_impact_summary_attached_to_presentation(self):
         from accessiweather.display.presentation.current_conditions import build_current_conditions
+        from accessiweather.models import AppSettings
         from accessiweather.models.weather import CurrentConditions, Location
         from accessiweather.utils import TemperatureUnit
 
@@ -752,13 +757,17 @@ class TestImpactMetricsInPresentation:
             condition="Sunny",
         )
         location = Location(name="Test City", latitude=40.0, longitude=-74.0)
-        presentation = build_current_conditions(current, location, TemperatureUnit.FAHRENHEIT)
+        settings = AppSettings(show_impact_summaries=True)
+        presentation = build_current_conditions(
+            current, location, TemperatureUnit.FAHRENHEIT, settings=settings
+        )
 
         assert presentation.impact_summary is not None
         assert presentation.impact_summary.outdoor is not None
 
     def test_impact_summary_in_fallback_text(self):
         from accessiweather.display.presentation.current_conditions import build_current_conditions
+        from accessiweather.models import AppSettings
         from accessiweather.models.weather import CurrentConditions, Location
         from accessiweather.utils import TemperatureUnit
 
@@ -768,12 +777,16 @@ class TestImpactMetricsInPresentation:
             condition="Sunny",
         )
         location = Location(name="Test City", latitude=40.0, longitude=-74.0)
-        presentation = build_current_conditions(current, location, TemperatureUnit.FAHRENHEIT)
+        settings = AppSettings(show_impact_summaries=True)
+        presentation = build_current_conditions(
+            current, location, TemperatureUnit.FAHRENHEIT, settings=settings
+        )
 
         assert "Impact: Outdoor" in presentation.fallback_text
 
     def test_allergy_metric_present_with_env_data(self):
         from accessiweather.display.presentation.current_conditions import build_current_conditions
+        from accessiweather.models import AppSettings
         from accessiweather.models.weather import (
             CurrentConditions,
             EnvironmentalConditions,
@@ -789,8 +802,9 @@ class TestImpactMetricsInPresentation:
         )
         env = EnvironmentalConditions(pollen_category="High")
         location = Location(name="Test City", latitude=40.0, longitude=-74.0)
+        settings = AppSettings(show_impact_summaries=True)
         presentation = build_current_conditions(
-            current, location, TemperatureUnit.FAHRENHEIT, environmental=env
+            current, location, TemperatureUnit.FAHRENHEIT, settings=settings, environmental=env
         )
 
         metric_labels = [m.label for m in presentation.metrics]
@@ -820,6 +834,7 @@ class TestImpactMetricsInForecastPresentation:
         from datetime import UTC, datetime
 
         from accessiweather.display.presentation.forecast import build_forecast
+        from accessiweather.models import AppSettings
         from accessiweather.models.weather import Forecast, ForecastPeriod, Location
         from accessiweather.utils import TemperatureUnit
 
@@ -836,7 +851,10 @@ class TestImpactMetricsInForecastPresentation:
             generated_at=datetime.now(UTC),
         )
         location = Location(name="Test City", latitude=40.0, longitude=-74.0, country_code="US")
-        presentation = build_forecast(forecast, None, location, TemperatureUnit.FAHRENHEIT)
+        settings = AppSettings(show_impact_summaries=True)
+        presentation = build_forecast(
+            forecast, None, location, TemperatureUnit.FAHRENHEIT, settings=settings
+        )
 
         assert presentation.impact_summary is not None
         assert presentation.impact_summary.outdoor is not None
@@ -861,6 +879,7 @@ class TestImpactMetricsInForecastPresentation:
         from datetime import UTC, datetime
 
         from accessiweather.display.presentation.forecast import build_forecast
+        from accessiweather.models import AppSettings
         from accessiweather.models.weather import Forecast, ForecastPeriod, Location
         from accessiweather.utils import TemperatureUnit
 
@@ -877,7 +896,10 @@ class TestImpactMetricsInForecastPresentation:
             generated_at=datetime.now(UTC),
         )
         location = Location(name="Test City", latitude=40.0, longitude=-74.0, country_code="US")
-        presentation = build_forecast(forecast, None, location, TemperatureUnit.FAHRENHEIT)
+        settings = AppSettings(show_impact_summaries=True)
+        presentation = build_forecast(
+            forecast, None, location, TemperatureUnit.FAHRENHEIT, settings=settings
+        )
 
         assert presentation.impact_summary is not None
         assert presentation.impact_summary.driving is not None

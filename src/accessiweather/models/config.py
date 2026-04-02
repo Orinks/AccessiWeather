@@ -93,6 +93,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "auto_sources_international",
     "openmeteo_weather_model",
     "station_selection_strategy",
+    "show_impact_summaries",
 }
 
 
@@ -200,6 +201,8 @@ class AppSettings:
     portable_missing_api_keys_hint_shown: bool = False
     # Display precision
     round_values: bool = False
+    # Impact summaries (Outdoor, Driving, Allergy) — opt-in, off by default
+    show_impact_summaries: bool = False
     # Parallel fetch timeout for smart auto mode (seconds)
     parallel_fetch_timeout: float = 5.0
     # Auto mode source selection — which sources participate in auto mode
@@ -477,6 +480,7 @@ class AppSettings:
             "onboarding_wizard_shown": self.onboarding_wizard_shown,
             "portable_missing_api_keys_hint_shown": self.portable_missing_api_keys_hint_shown,
             "round_values": self.round_values,
+            "show_impact_summaries": self.show_impact_summaries,
         }
 
     @classmethod
@@ -586,6 +590,7 @@ class AppSettings:
                 data.get("portable_missing_api_keys_hint_shown"), False
             ),
             round_values=cls._as_bool(data.get("round_values"), False),
+            show_impact_summaries=cls._as_bool(data.get("show_impact_summaries"), False),
         )
 
     def to_alert_settings(self):

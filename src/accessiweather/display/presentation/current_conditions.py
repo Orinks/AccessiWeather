@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Iterable
 
-from ...impact_summary import build_impact_summary
+from ...impact_summary import ImpactSummary, build_impact_summary
 from ...models import (
     AppSettings,
     CurrentConditions,
@@ -566,14 +566,18 @@ def build_current_conditions(
     if anomaly_callout is not None:
         metrics.append(Metric("Historical context", anomaly_callout.temp_anomaly_description))
 
-    # Build impact summary and append as metrics
-    impact = build_impact_summary(current, environmental)
-    if impact.outdoor is not None:
-        metrics.append(Metric("Impact: Outdoor", impact.outdoor))
-    if impact.driving is not None:
-        metrics.append(Metric("Impact: Driving", impact.driving))
-    if impact.allergy is not None:
-        metrics.append(Metric("Impact: Allergy", impact.allergy))
+    # Build impact summary and append as metrics (only when opt-in setting is enabled)
+    show_impact_summaries = getattr(settings, "show_impact_summaries", False) if settings else False
+    impact = (
+        build_impact_summary(current, environmental) if show_impact_summaries else ImpactSummary()
+    )
+    if show_impact_summaries:
+        if impact.outdoor is not None:
+            metrics.append(Metric("Impact: Outdoor", impact.outdoor))
+        if impact.driving is not None:
+            metrics.append(Metric("Impact: Driving", impact.driving))
+        if impact.allergy is not None:
+            metrics.append(Metric("Impact: Allergy", impact.allergy))
 
     # Build fallback text
     # Use metric.label for all metrics — after priority reordering, metrics[0]
