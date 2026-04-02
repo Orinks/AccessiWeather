@@ -4,8 +4,12 @@ from datetime import UTC, datetime
 
 import pytest
 
-from accessiweather.display.presentation.formatters import format_display_time, format_hourly_wind
-from accessiweather.models.weather import HourlyForecastPeriod
+from accessiweather.display.presentation.formatters import (
+    format_display_time,
+    format_hourly_wind,
+    format_period_wind,
+)
+from accessiweather.models.weather import ForecastPeriod, HourlyForecastPeriod
 from accessiweather.utils import TemperatureUnit
 
 
@@ -138,3 +142,95 @@ class TestFormatHourlyWindUnitConsistency:
         assert expected_unit_substr in speed_str, (
             f"Expected '{expected_unit_substr}' in speed '{speed_str}'"
         )
+
+
+# ---------------------------------------------------------------------------
+# Tests – format_period_wind unit preference (bug #563)
+# ---------------------------------------------------------------------------
+
+
+def _make_forecast_period(
+    *,
+    wind_direction: str | None = "SE",
+    wind_speed: str | None = None,
+    wind_speed_mph: float | None = None,
+) -> ForecastPeriod:
+    return ForecastPeriod(
+        name="Tonight",
+        wind_direction=wind_direction,
+        wind_speed=wind_speed,
+        wind_speed_mph=wind_speed_mph,
+    )
+
+
+class TestFormatPeriodWindUnitPreference:
+    """format_period_wind must respect unit_pref when wind_speed_mph is set."""
+
+    def test_fahrenheit_pref_shows_mph_only(self) -> None:
+        """Fahrenheit preference produces mph-only output when numeric mph is available."""
+        period = _make_forecast_period(wind_speed="15 mph (24 km/h)", wind_speed_mph=15.0)
+        result = format_period_wind(period, TemperatureUnit.FAHRENHEIT)
+        assert result is not None
+        assert "mph" in result
+        assert "km/h" not in result
+
+    def test_celsius_pref_shows_kmh_only(self) -> None:
+        """Celsius preference produces km/h-only output when numeric mph is available."""
+        period = _make_forecast_period(wind_speed="15 mph (24 km/h)", wind_speed_mph=15.0)
+        result = format_period_wind(period, TemperatureUnit.CELSIUS)
+        assert result is not None
+        assert "km/h" in result
+        assert "mph" not in result
+
+    def test_fallback_to_raw_string_when_no_numeric(self) -> None:
+        """Periods without wind_speed_mph pass through the pre-formatted string unchanged."""
+        period = _make_forecast_period(wind_speed="15 mph")
+        result = format_period_wind(period, TemperatureUnit.CELSIUS)
+        assert result == "SE 15 mph"
+
+    def test_includes_wind_direction(self) -> None:
+        """Wind direction is always prepended to the speed string."""
+        period = _make_forecast_period(wind_speed_mph=20.0)
+        result = format_period_wind(period, TemperatureUnit.FAHRENHEIT)
+        assert result is not None
+        assert result.startswith("SE")
+
+    def test_returns_none_when_no_wind_data(self) -> None:
+        """Returns None when neither wind_speed nor wind_direction is set."""
+        period = _make_forecast_period(wind_direction=None, wind_speed=None, wind_speed_mph=None)
+        assert format_period_wind(period, TemperatureUnit.FAHRENHEIT) is None
+
+
+# ---------------------------------------------------------------------------
+# Tests – _extract_wind_speed_mph from NWS parser (bug #563)
+# ---------------------------------------------------------------------------
+
+
+class TestExtractWindSpeedMph:
+    """_extract_wind_speed_mph must extract numeric mph from various NWS payloads."""
+
+    def test_mph_string(self) -> None:
+        """Plain '15 mph' string returns 15.0."""
+        from accessiweather.weather_client_nws import _extract_wind_speed_mph
+
+        assert _extract_wind_speed_mph("15 mph") == 15.0
+
+    def test_range_mph_string(self) -> None:
+        """'5 to 15 mph' returns the higher value (15.0)."""
+        from accessiweather.weather_client_nws import _extract_wind_speed_mph
+
+        assert _extract_wind_speed_mph("5 to 15 mph") == 15.0
+
+    def test_dict_km_h_unit(self) -> None:
+        """Dict with km/h unit converts correctly to mph."""
+        from accessiweather.weather_client_nws import _extract_wind_speed_mph
+
+        result = _extract_wind_speed_mph({"unitCode": "wmoUnit:km_h-1", "value": 16.09})
+        assert result is not None
+        assert abs(result - 10.0) < 0.5
+
+    def test_none_returns_none(self) -> None:
+        """None input returns None."""
+        from accessiweather.weather_client_nws import _extract_wind_speed_mph
+
+        assert _extract_wind_speed_mph(None) is None
