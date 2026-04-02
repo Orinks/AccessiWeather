@@ -236,6 +236,7 @@ class ForecastPeriod:
     short_forecast: str | None = None
     detailed_forecast: str | None = None
     wind_speed: str | None = None
+    wind_speed_mph: float | None = None  # Numeric mph value for unit-correct display
     wind_direction: str | None = None
     icon: str | None = None
     start_time: datetime | None = None

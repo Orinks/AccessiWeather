@@ -178,7 +178,7 @@ def build_forecast(
 
     for period in selected_periods:
         temp_pair = format_forecast_temperature(period, unit_pref, precision)
-        wind_value = format_period_wind(period) if include_wind else None
+        wind_value = format_period_wind(period, unit_pref) if include_wind else None
         details = (
             period.detailed_forecast
             if include_details
