@@ -408,6 +408,28 @@ class TestAppSettings:
 
         assert restored.immediate_alert_details_popups is True
 
+    def test_precipitation_sensitivity_round_trip(self):
+        """precipitation_sensitivity should round-trip through to_dict/from_dict."""
+        for level in ("light", "moderate", "heavy"):
+            settings = AppSettings(precipitation_sensitivity=level)
+            restored = AppSettings.from_dict(settings.to_dict())
+            assert restored.precipitation_sensitivity == level
+
+    def test_precipitation_sensitivity_default(self):
+        """precipitation_sensitivity should default to 'light'."""
+        settings = AppSettings()
+        assert settings.precipitation_sensitivity == "light"
+
+        restored = AppSettings.from_dict({})
+        assert restored.precipitation_sensitivity == "light"
+
+    def test_precipitation_sensitivity_validation(self):
+        """Invalid precipitation_sensitivity values should fall back to 'light'."""
+        settings = AppSettings()
+        settings.precipitation_sensitivity = "invalid"
+        assert settings.validate_on_access("precipitation_sensitivity") is True
+        assert settings.precipitation_sensitivity == "light"
+
     def test_forecast_time_reference_validation(self):
         """Ensure invalid forecast_time_reference values fall back to location."""
         settings = AppSettings()

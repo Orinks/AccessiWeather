@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING
 
 from ..runtime_state import RuntimeStateManager
 from .minutely_precipitation import (
+    SENSITIVITY_THRESHOLDS,
     build_minutely_transition_signature,
     detect_minutely_precipitation_transition,
 )
@@ -543,7 +544,10 @@ class NotificationEventManager:
         location_name: str,
     ) -> NotificationEvent | None:
         """Check for a new dry/wet transition in Pirate Weather minutely guidance."""
-        signature = build_minutely_transition_signature(minutely_precipitation)
+        sensitivity = getattr(settings, "precipitation_sensitivity", "light")
+        threshold = SENSITIVITY_THRESHOLDS.get(sensitivity, SENSITIVITY_THRESHOLDS["light"])
+
+        signature = build_minutely_transition_signature(minutely_precipitation, threshold=threshold)
         if signature is None:
             return None
 
@@ -556,7 +560,9 @@ class NotificationEventManager:
             return None
 
         self.state.last_minutely_transition_signature = signature
-        transition = detect_minutely_precipitation_transition(minutely_precipitation)
+        transition = detect_minutely_precipitation_transition(
+            minutely_precipitation, threshold=threshold
+        )
         if transition is None:
             return None
 

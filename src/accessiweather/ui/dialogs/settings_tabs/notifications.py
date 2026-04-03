@@ -11,6 +11,9 @@ logger = logging.getLogger(__name__)
 _RADIUS_TYPE_VALUES = ["county", "point", "zone", "state"]
 _RADIUS_TYPE_MAP = {"county": 0, "point": 1, "zone": 2, "state": 3}
 
+_SENSITIVITY_VALUES = ["light", "moderate", "heavy"]
+_SENSITIVITY_MAP = {"light": 0, "moderate": 1, "heavy": 2}
+
 
 class NotificationsTab:
     """Notifications tab: alert settings, severity levels, event notifications, rate limiting."""
@@ -147,6 +150,25 @@ class NotificationsTab:
             10,
         )
 
+        row_sensitivity = wx.BoxSizer(wx.HORIZONTAL)
+        row_sensitivity.Add(
+            wx.StaticText(panel, label="Notify for:"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        controls["precipitation_sensitivity"] = wx.Choice(
+            panel,
+            choices=[
+                "Light rain and above (default, \u22650.01\u00a0mm/h)",
+                "Moderate rain and above (\u22650.1\u00a0mm/h)",
+                "Heavy rain only (\u22651.0\u00a0mm/h)",
+            ],
+        )
+        row_sensitivity.Add(controls["precipitation_sensitivity"], 0)
+        event_section.Add(row_sensitivity, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        # Hidden alert timing controls (values managed via Advanced dialog)
         controls["global_cooldown"] = wx.SpinCtrl(panel, min=0, max=60, initial=5)
         controls["global_cooldown"].Hide()
         controls["per_alert_cooldown"] = wx.SpinCtrl(panel, min=0, max=1440, initial=60)
@@ -218,6 +240,8 @@ class NotificationsTab:
         controls["notify_minutely_precipitation_stop"].SetValue(
             getattr(settings, "notify_minutely_precipitation_stop", False)
         )
+        sensitivity = getattr(settings, "precipitation_sensitivity", "light")
+        controls["precipitation_sensitivity"].SetSelection(_SENSITIVITY_MAP.get(sensitivity, 0))
 
     def save(self) -> dict:
         """Return Notifications tab settings as a dict."""
@@ -244,6 +268,9 @@ class NotificationsTab:
             "notify_minutely_precipitation_stop": controls[
                 "notify_minutely_precipitation_stop"
             ].GetValue(),
+            "precipitation_sensitivity": _SENSITIVITY_VALUES[
+                controls["precipitation_sensitivity"].GetSelection()
+            ],
         }
 
     def setup_accessibility(self):
@@ -263,6 +290,7 @@ class NotificationsTab:
             "notify_severe_risk_change": "Notify when severe weather risk changes",
             "notify_minutely_precipitation_start": "Notify when precipitation is expected to start soon",
             "notify_minutely_precipitation_stop": "Notify when precipitation is expected to stop soon",
+            "precipitation_sensitivity": "Notify for: precipitation sensitivity level",
             "global_cooldown": "Minimum time between any alert notifications in minutes",
             "per_alert_cooldown": "Minutes before repeating the same alert notification",
             "freshness_window": "Only notify for alerts issued within this many minutes",
