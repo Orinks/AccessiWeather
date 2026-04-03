@@ -34,6 +34,7 @@ from .formatters import (
     get_temperature_precision,
     get_uv_description,
 )
+from .minutely_timeline import build_minutely_timeline, generate_minutely_summary
 
 logger = logging.getLogger(__name__)
 
@@ -550,8 +551,16 @@ def build_current_conditions(
     # Reorder metrics by priority before adding non-reorderable metrics
     metrics = _order_metrics_by_priority(metrics, ordered_categories)
 
-    if minutely_precipitation and minutely_precipitation.summary:
-        metrics.insert(0, Metric("Precipitation outlook", minutely_precipitation.summary))
+    if minutely_precipitation:
+        summary = minutely_precipitation.summary
+        if not summary and minutely_precipitation.points:
+            summary = generate_minutely_summary(minutely_precipitation)
+        if summary:
+            metrics.insert(0, Metric("Precipitation outlook", summary))
+        timeline = build_minutely_timeline(minutely_precipitation)
+        if timeline:
+            insert_pos = 1 if summary else 0
+            metrics.insert(insert_pos, Metric("Next hour precipitation", timeline))
 
     # Add astronomical metrics (these don't need reordering - always at end)
     metrics.extend(
