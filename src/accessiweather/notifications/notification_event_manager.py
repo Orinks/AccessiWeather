@@ -23,7 +23,9 @@ from typing import TYPE_CHECKING
 from ..runtime_state import RuntimeStateManager
 from .minutely_precipitation import (
     SENSITIVITY_THRESHOLDS,
+    build_minutely_likelihood_signature,
     build_minutely_transition_signature,
+    detect_minutely_precipitation_likelihood,
     detect_minutely_precipitation_transition,
 )
 
@@ -185,6 +187,7 @@ class NotificationState:
     last_discussion_text: str | None = None
     last_severe_risk: int | None = None
     last_minutely_transition_signature: str | None = None
+    last_minutely_likelihood_signature: str | None = None
     last_check_time: datetime | None = None
 
     def to_dict(self) -> dict:
@@ -198,6 +201,7 @@ class NotificationState:
             "last_discussion_text": self.last_discussion_text,
             "last_severe_risk": self.last_severe_risk,
             "last_minutely_transition_signature": self.last_minutely_transition_signature,
+            "last_minutely_likelihood_signature": self.last_minutely_likelihood_signature,
             "last_check_time": self.last_check_time.isoformat() if self.last_check_time else None,
         }
 
@@ -213,6 +217,7 @@ class NotificationState:
             last_discussion_text=data.get("last_discussion_text"),
             last_severe_risk=data.get("last_severe_risk"),
             last_minutely_transition_signature=data.get("last_minutely_transition_signature"),
+            last_minutely_likelihood_signature=data.get("last_minutely_likelihood_signature"),
             last_check_time=datetime.fromisoformat(last_check) if last_check else None,
         )
 
@@ -302,6 +307,9 @@ class NotificationEventManager:
             "last_minutely_transition_signature": minutely_precipitation.get(
                 "last_transition_signature"
             ),
+            "last_minutely_likelihood_signature": minutely_precipitation.get(
+                "last_likelihood_signature"
+            ),
             "last_check_time": discussion.get("last_check_time")
             or severe_risk.get("last_check_time")
             or minutely_precipitation.get("last_check_time"),
@@ -323,6 +331,7 @@ class NotificationEventManager:
             },
             "minutely_precipitation": {
                 "last_transition_signature": data.get("last_minutely_transition_signature"),
+                "last_likelihood_signature": data.get("last_minutely_likelihood_signature"),
                 "last_check_time": last_check_time,
             },
         }
@@ -376,6 +385,15 @@ class NotificationEventManager:
             )
             if minutely_event:
                 events.append(minutely_event)
+
+        if getattr(settings, "notify_precipitation_likelihood", True):
+            likelihood_event = self._check_minutely_precipitation_likelihood(
+                weather_data.minutely_precipitation,
+                settings,
+                location_name,
+            )
+            if likelihood_event:
+                events.append(likelihood_event)
 
         # Update check time and save state
         self.state.last_check_time = datetime.now()
@@ -581,6 +599,38 @@ class NotificationEventManager:
             event_type=transition.event_type,
             title=transition.title,
             message=f"{transition.title} for {location_name}.",
+            sound_event="notify",
+        )
+
+    def _check_minutely_precipitation_likelihood(
+        self,
+        minutely_precipitation,
+        settings: AppSettings,
+        location_name: str,
+    ) -> NotificationEvent | None:
+        """Check for probability-based precipitation likelihood in minutely data."""
+        threshold = getattr(settings, "precipitation_likelihood_threshold", 0.5)
+        signature = build_minutely_likelihood_signature(minutely_precipitation, threshold)
+        if signature is None:
+            return None
+
+        if self.state.last_minutely_likelihood_signature is None:
+            self.state.last_minutely_likelihood_signature = signature
+            logger.debug("First minutely likelihood state stored: %s", signature)
+            return None
+
+        if signature == self.state.last_minutely_likelihood_signature:
+            return None
+
+        self.state.last_minutely_likelihood_signature = signature
+        likelihood = detect_minutely_precipitation_likelihood(minutely_precipitation, threshold)
+        if likelihood is None:
+            return None
+
+        return NotificationEvent(
+            event_type=likelihood.event_type,
+            title=likelihood.title,
+            message=f"{likelihood.title} for {location_name}.",
             sound_event="notify",
         )
 

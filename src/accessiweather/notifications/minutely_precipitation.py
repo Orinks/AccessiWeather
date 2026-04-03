@@ -10,6 +10,23 @@ from typing import Any
 from ..models import MinutelyPrecipitationForecast, MinutelyPrecipitationPoint
 
 NO_TRANSITION_SIGNATURE = "__none__"
+NO_LIKELIHOOD_SIGNATURE = "__no_likelihood__"
+
+# Probability band thresholds (upper-exclusive boundaries, from highest to lowest)
+_PROBABILITY_BANDS: list[tuple[float, str]] = [
+    (0.9, "90+"),
+    (0.7, "70-90"),
+    (0.5, "50-70"),
+]
+
+
+def _probability_band(prob: float) -> str:
+    """Return the probability band label for a given probability value."""
+    if prob >= 0.9:
+        return "90%+"
+    if prob >= 0.7:
+        return "70-90%"
+    return "50-70%"
 
 # Intensity thresholds (mm/h) for wet detection.
 # Pirate Weather light rain is typically 0.01–0.1 mm/h; moderate 0.1–1.0 mm/h.
@@ -47,6 +64,25 @@ class MinutelyPrecipitationTransition:
         minute_label = "minute" if self.minutes_until == 1 else "minutes"
         verb = "starting" if self.transition_type == "starting" else "stopping"
         return f"{precipitation_label} {verb} in {self.minutes_until} {minute_label}"
+
+
+@dataclass(frozen=True)
+class MinutelyPrecipitationLikelihood:
+    """Probability-based precipitation likelihood detected in minutely data."""
+
+    max_probability: float
+    precipitation_type: str | None = None
+    probability_band: str = ""
+
+    @property
+    def event_type(self) -> str:
+        return "minutely_precipitation_likelihood"
+
+    @property
+    def title(self) -> str:
+        precipitation_label = precipitation_type_label(self.precipitation_type)
+        pct = int(self.max_probability * 100)
+        return f"{precipitation_label} likely in the next hour ({pct}% chance)"
 
 
 def parse_pirate_weather_minutely_block(
@@ -162,6 +198,66 @@ def build_minutely_transition_signature(
 
     precip_type = transition.precipitation_type or "precipitation"
     return f"{transition.transition_type}:{transition.minutes_until}:{precip_type}"
+
+
+def detect_minutely_precipitation_likelihood(
+    forecast: MinutelyPrecipitationForecast | None,
+    threshold: float = 0.5,
+) -> MinutelyPrecipitationLikelihood | None:
+    """
+    Detect if precipitation probability exceeds *threshold* in the next hour.
+
+    Returns ``None`` when:
+    - *forecast* is ``None`` or has no points.
+    - The first data point is already wet (current conditions are wet).
+    - No point has ``precipitation_probability`` above *threshold*.
+    """
+    if forecast is None or not forecast.points:
+        return None
+
+    # If currently wet, this notification is not applicable
+    if is_wet(forecast.points[0]):
+        return None
+
+    max_prob: float = 0.0
+    max_precip_type: str | None = None
+
+    for point in forecast.points:
+        prob = point.precipitation_probability
+        if prob is not None and prob > max_prob:
+            max_prob = prob
+            max_precip_type = point.precipitation_type
+
+    if max_prob < threshold:
+        return None
+
+    return MinutelyPrecipitationLikelihood(
+        max_probability=max_prob,
+        precipitation_type=max_precip_type,
+        probability_band=_probability_band(max_prob),
+    )
+
+
+def build_minutely_likelihood_signature(
+    forecast: MinutelyPrecipitationForecast | None,
+    threshold: float = 0.5,
+) -> str | None:
+    """
+    Return a stable deduplication signature for the likelihood state.
+
+    Returns ``None`` when the forecast is unavailable,
+    ``NO_LIKELIHOOD_SIGNATURE`` when no likelihood is detected, or
+    ``"likelihood:{band}:{precip_type}"`` otherwise.
+    """
+    if forecast is None or not forecast.points:
+        return None
+
+    likelihood = detect_minutely_precipitation_likelihood(forecast, threshold)
+    if likelihood is None:
+        return NO_LIKELIHOOD_SIGNATURE
+
+    precip_type = likelihood.precipitation_type or "precipitation"
+    return f"likelihood:{likelihood.probability_band}:{precip_type}"
 
 
 def is_wet(point: MinutelyPrecipitationPoint, threshold: float = 0.0) -> bool:

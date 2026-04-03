@@ -44,6 +44,8 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "notify_minutely_precipitation_start",
     "notify_minutely_precipitation_stop",
     "precipitation_sensitivity",
+    "notify_precipitation_likelihood",
+    "precipitation_likelihood_threshold",
     # GitHub settings
     "github_backend_url",
     "github_app_id",
@@ -128,6 +130,8 @@ class AppSettings:
     notify_minutely_precipitation_stop: bool = True
     # Minimum intensity level required to count as precipitation ("light", "moderate", "heavy")
     precipitation_sensitivity: str = "light"
+    notify_precipitation_likelihood: bool = True
+    precipitation_likelihood_threshold: float = 0.5
     github_backend_url: str = ""
     github_app_id: str = ""
     github_app_private_key: str = ""
@@ -443,6 +447,8 @@ class AppSettings:
             "notify_minutely_precipitation_start": self.notify_minutely_precipitation_start,
             "notify_minutely_precipitation_stop": self.notify_minutely_precipitation_stop,
             "precipitation_sensitivity": self.precipitation_sensitivity,
+            "notify_precipitation_likelihood": self.notify_precipitation_likelihood,
+            "precipitation_likelihood_threshold": self.precipitation_likelihood_threshold,
             "github_backend_url": self.github_backend_url,
             "alert_radius_type": self.alert_radius_type,
             "alert_notifications_enabled": self.alert_notifications_enabled,
@@ -532,6 +538,12 @@ class AppSettings:
                 data.get("notify_minutely_precipitation_stop"), True
             ),
             precipitation_sensitivity=data.get("precipitation_sensitivity", "light"),
+            notify_precipitation_likelihood=cls._as_bool(
+                data.get("notify_precipitation_likelihood"), True
+            ),
+            precipitation_likelihood_threshold=float(
+                data.get("precipitation_likelihood_threshold", 0.5)
+            ),
             github_backend_url=data.get("github_backend_url", ""),
             alert_radius_type=data.get("alert_radius_type", "county"),
             alert_notifications_enabled=cls._as_bool(data.get("alert_notifications_enabled"), True),

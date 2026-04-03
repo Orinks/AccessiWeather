@@ -14,6 +14,10 @@ _RADIUS_TYPE_MAP = {"county": 0, "point": 1, "zone": 2, "state": 3}
 _SENSITIVITY_VALUES = ["light", "moderate", "heavy"]
 _SENSITIVITY_MAP = {"light": 0, "moderate": 1, "heavy": 2}
 
+_LIKELIHOOD_THRESHOLD_LABELS = ["50%", "60%", "70%", "80%"]
+_LIKELIHOOD_THRESHOLD_VALUES = [0.5, 0.6, 0.7, 0.8]
+_LIKELIHOOD_THRESHOLD_MAP = {0.5: 0, 0.6: 1, 0.7: 2, 0.8: 3}
+
 
 class NotificationsTab:
     """Notifications tab: alert settings, severity levels, event notifications, rate limiting."""
@@ -168,6 +172,29 @@ class NotificationsTab:
         row_sensitivity.Add(controls["precipitation_sensitivity"], 0)
         event_section.Add(row_sensitivity, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
+        controls["notify_precipitation_likelihood"] = wx.CheckBox(
+            panel, label="Notify when precipitation is likely (probability-based)"
+        )
+        event_section.Add(
+            controls["notify_precipitation_likelihood"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
+
+        row_threshold = wx.BoxSizer(wx.HORIZONTAL)
+        row_threshold.Add(
+            wx.StaticText(panel, label="Precipitation likelihood threshold:"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        controls["precipitation_likelihood_threshold"] = wx.Choice(
+            panel, choices=_LIKELIHOOD_THRESHOLD_LABELS
+        )
+        row_threshold.Add(controls["precipitation_likelihood_threshold"], 0)
+        event_section.Add(row_threshold, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
         # Hidden alert timing controls (values managed via Advanced dialog)
         controls["global_cooldown"] = wx.SpinCtrl(panel, min=0, max=60, initial=5)
         controls["global_cooldown"].Hide()
@@ -242,6 +269,13 @@ class NotificationsTab:
         )
         sensitivity = getattr(settings, "precipitation_sensitivity", "light")
         controls["precipitation_sensitivity"].SetSelection(_SENSITIVITY_MAP.get(sensitivity, 0))
+        controls["notify_precipitation_likelihood"].SetValue(
+            getattr(settings, "notify_precipitation_likelihood", True)
+        )
+        threshold_val = getattr(settings, "precipitation_likelihood_threshold", 0.5)
+        controls["precipitation_likelihood_threshold"].SetSelection(
+            _LIKELIHOOD_THRESHOLD_MAP.get(threshold_val, 0)
+        )
 
     def save(self) -> dict:
         """Return Notifications tab settings as a dict."""
@@ -271,6 +305,12 @@ class NotificationsTab:
             "precipitation_sensitivity": _SENSITIVITY_VALUES[
                 controls["precipitation_sensitivity"].GetSelection()
             ],
+            "notify_precipitation_likelihood": controls[
+                "notify_precipitation_likelihood"
+            ].GetValue(),
+            "precipitation_likelihood_threshold": _LIKELIHOOD_THRESHOLD_VALUES[
+                controls["precipitation_likelihood_threshold"].GetSelection()
+            ],
         }
 
     def setup_accessibility(self):
@@ -291,6 +331,8 @@ class NotificationsTab:
             "notify_minutely_precipitation_start": "Notify when precipitation is expected to start soon",
             "notify_minutely_precipitation_stop": "Notify when precipitation is expected to stop soon",
             "precipitation_sensitivity": "Notify for: precipitation sensitivity level",
+            "notify_precipitation_likelihood": "Notify when precipitation is likely (probability-based)",
+            "precipitation_likelihood_threshold": "Precipitation likelihood threshold",
             "global_cooldown": "Minimum time between any alert notifications in minutes",
             "per_alert_cooldown": "Minutes before repeating the same alert notification",
             "freshness_window": "Only notify for alerts issued within this many minutes",
