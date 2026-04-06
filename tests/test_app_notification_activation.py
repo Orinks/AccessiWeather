@@ -86,3 +86,136 @@ def test_on_init_forwards_activation_to_running_instance_and_exits(tmp_path) -> 
     assert started is False
     assert app.single_instance_manager.write_activation_handoff.called is True
     show_force_start_dialog.assert_not_called()
+
+
+def test_handle_activation_restores_via_main_window_when_no_tray() -> None:
+    """When tray_icon is None, fall back to Show/Iconize/Raise on main_window."""
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app.tray_icon = None
+    mw = MagicMock()
+    app.main_window = mw
+    app.current_weather_data = None
+
+    request = NotificationActivationRequest(kind="discussion")
+    app._handle_notification_activation_request(request)
+
+    mw.Show.assert_called_once_with(True)
+    mw.Iconize.assert_called_once_with(False)
+    mw.Raise.assert_called_once()
+    mw._on_discussion.assert_called_once()
+
+
+def test_handle_activation_returns_early_when_no_main_window() -> None:
+    """When main_window is None, should return without error."""
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app.tray_icon = SimpleNamespace(show_main_window=MagicMock())
+    app.main_window = None
+    app.current_weather_data = None
+
+    request = NotificationActivationRequest(kind="discussion")
+    # Should not raise
+    app._handle_notification_activation_request(request)
+    app.tray_icon.show_main_window.assert_called_once()
+
+
+def test_handle_activation_generic_fallback_only_restores() -> None:
+    """generic_fallback should restore but not route to any dialog."""
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app.tray_icon = SimpleNamespace(show_main_window=MagicMock())
+    app.main_window = _MainWindowStub()
+    app.current_weather_data = None
+
+    request = NotificationActivationRequest(kind="generic_fallback")
+    app._handle_notification_activation_request(request)
+
+    app.tray_icon.show_main_window.assert_called_once()
+    app.main_window._on_discussion.assert_not_called()
+    app.main_window._show_alert_details.assert_not_called()
+
+
+def test_handle_activation_alert_not_found() -> None:
+    """When alert_id doesn't match any active alert, _show_alert_details is not called."""
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app.tray_icon = SimpleNamespace(show_main_window=MagicMock())
+    app.main_window = _MainWindowStub()
+    app.current_weather_data = SimpleNamespace(alerts=_AlertsStub([_AlertStub("alpha")]))
+
+    request = NotificationActivationRequest(kind="alert_details", alert_id="nonexistent")
+    app._handle_notification_activation_request(request)
+
+    app.main_window._show_alert_details.assert_not_called()
+
+
+def test_find_active_alert_index_no_weather_data() -> None:
+    """_find_active_alert_index returns None when current_weather_data is missing."""
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app.current_weather_data = None
+
+    assert app._find_active_alert_index("any-id") is None
+
+
+def test_find_active_alert_index_no_alerts_attr() -> None:
+    """_find_active_alert_index returns None when weather data has no alerts."""
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app.current_weather_data = SimpleNamespace()
+
+    assert app._find_active_alert_index("any-id") is None
+
+
+def test_on_activation_handoff_timer_consumes_request() -> None:
+    """Timer callback should consume handoff and route."""
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app.tray_icon = SimpleNamespace(show_main_window=MagicMock())
+    app.main_window = _MainWindowStub()
+    app.current_weather_data = None
+
+    request = NotificationActivationRequest(kind="discussion")
+    app.single_instance_manager = MagicMock()
+    app.single_instance_manager.consume_activation_handoff.return_value = request
+
+    app._on_activation_handoff_timer(None)
+
+    app.single_instance_manager.consume_activation_handoff.assert_called_once()
+    app.main_window._on_discussion.assert_called_once()
+
+
+def test_on_activation_handoff_timer_noop_when_no_request() -> None:
+    """Timer callback does nothing when no handoff file exists."""
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app.main_window = _MainWindowStub()
+    app.single_instance_manager = MagicMock()
+    app.single_instance_manager.consume_activation_handoff.return_value = None
+
+    app._on_activation_handoff_timer(None)
+    app.main_window._on_discussion.assert_not_called()
+
+
+def test_on_activation_handoff_timer_noop_when_no_single_instance_manager() -> None:
+    """Timer callback does nothing when single_instance_manager is None."""
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app.single_instance_manager = None
+    # Should not raise
+    app._on_activation_handoff_timer(None)
+
+
+def test_schedule_startup_activation_request_calls_handler() -> None:
+    """_schedule_startup_activation_request invokes wx.CallAfter."""
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    request = NotificationActivationRequest(kind="discussion")
+    app._activation_request = request
+
+    with patch("accessiweather.app.wx") as mock_wx:
+        app._schedule_startup_activation_request()
+        mock_wx.CallAfter.assert_called_once_with(
+            app._handle_notification_activation_request, request
+        )
+
+
+def test_schedule_startup_activation_request_noop_when_none() -> None:
+    """_schedule_startup_activation_request does nothing with no request."""
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._activation_request = None
+
+    with patch("accessiweather.app.wx") as mock_wx:
+        app._schedule_startup_activation_request()
+        mock_wx.CallAfter.assert_not_called()
