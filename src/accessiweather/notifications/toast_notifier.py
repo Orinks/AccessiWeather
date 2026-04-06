@@ -118,6 +118,11 @@ class ToastedWindowsNotifier:
         self._worker_ready = threading.Event()
         self._lock = threading.Lock()
         self._app_id_registered = False
+        self._pending_tasks: set[asyncio.Task] = set()
+        # Callback invoked (from worker thread) when user clicks a toast.
+        # Signature: on_activation(result) where result.arguments contains
+        # the serialized activation request string.
+        self.on_activation = None  # Optional[Callable[[Any], None]]
 
         if not TOASTED_AVAILABLE:
             logger.warning("toasted not available, notifications will be logged only")
@@ -252,8 +257,19 @@ class ToastedWindowsNotifier:
             )
             toast.elements = [_Text(title), _Text(message)]  # type: ignore[misc]
             self._set_activation_arguments(toast, activation_arguments)
-            # Fire-and-forget: schedule show and return immediately
-            asyncio.create_task(toast.show(mute_sound=True))
+            # Register activation callback so Action Center clicks are handled
+            # in-process (the toasted library fires this via WinRT events).
+            if activation_arguments and self.on_activation is not None:
+                on_activation = self.on_activation
+
+                @toast.on_result
+                def _on_result(result):
+                    if not getattr(result, "is_dismissed", False):
+                        on_activation(result)
+
+            task = asyncio.create_task(toast.show(mute_sound=True))
+            self._pending_tasks.add(task)
+            task.add_done_callback(self._pending_tasks.discard)
             return True
 
         # Fire and forget — don't block waiting for WinRT confirmation
