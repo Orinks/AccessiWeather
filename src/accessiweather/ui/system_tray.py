@@ -191,6 +191,10 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
         if win is not None:
             win._on_test_discussion_notification()
         else:
+            from ..notification_activation import (
+                NotificationActivationRequest,
+                serialize_activation_request,
+            )
             from ..notifications.toast_notifier import SafeDesktopNotifier
 
             SafeDesktopNotifier().send_notification(
@@ -199,6 +203,9 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
                 timeout=10,
                 sound_candidates=["discussion_update", "notify"],
                 play_sound=True,
+                activation_arguments=serialize_activation_request(
+                    NotificationActivationRequest(kind="discussion")
+                ),
             )
 
     def _on_tray_test_alert(self, event: wx.CommandEvent) -> None:

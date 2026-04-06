@@ -714,6 +714,11 @@ class MainWindow(SizedFrame):
             soundpack=getattr(settings, "sound_pack", "default"),
             muted_sound_events=getattr(settings, "muted_sound_events", ["data_updated"]),
         )
+        from ..notification_activation import (
+            NotificationActivationRequest,
+            serialize_activation_request,
+        )
+
         sent = notifier.send_notification(
             title="NWS Discussion Updated",
             message="The Area Forecast Discussion for your location has been updated. "
@@ -721,6 +726,9 @@ class MainWindow(SizedFrame):
             timeout=10,
             sound_candidates=["discussion_update", "notify"],
             play_sound=True,
+            activation_arguments=serialize_activation_request(
+                NotificationActivationRequest(kind="discussion")
+            ),
         )
         if not sent:
             wx.MessageBox(
