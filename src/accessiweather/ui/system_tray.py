@@ -261,15 +261,27 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
     def show_main_window(self) -> None:
         """Show and restore the main window."""
         if self.app.main_window:
-            # MainWindow is now a SizedFrame directly (no gui_builder wrapper)
             frame = self.app.main_window
             frame.Show(True)
-            frame.Iconize(False)  # Restore if minimized
-            frame.Raise()  # Bring to front
-            if sys.platform == "darwin":
-                # macOS needs RequestUserAttention instead of SetFocus
+            frame.Iconize(False)
+            if sys.platform == "win32":
+                try:
+                    import ctypes
+
+                    hwnd = frame.GetHandle()
+                    user32 = ctypes.windll.user32
+                    SW_RESTORE = 9
+                    if user32.IsIconic(hwnd):
+                        user32.ShowWindow(hwnd, SW_RESTORE)
+                    user32.AllowSetForegroundWindow(ctypes.windll.kernel32.GetCurrentProcessId())
+                    user32.SetForegroundWindow(hwnd)
+                except Exception:
+                    frame.Raise()
+                    frame.SetFocus()
+            elif sys.platform == "darwin":
                 frame.RequestUserAttention()
             else:
+                frame.Raise()
                 frame.SetFocus()
             logger.debug("Main window restored from tray")
 

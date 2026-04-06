@@ -89,7 +89,7 @@ def test_on_init_forwards_activation_to_running_instance_and_exits(tmp_path) -> 
 
 
 def test_handle_activation_restores_via_main_window_when_no_tray() -> None:
-    """When tray_icon is None, fall back to Show/Iconize/Raise on main_window."""
+    """When tray_icon is None, fall back to Show/Iconize/force_foreground on main_window."""
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app.tray_icon = None
     mw = MagicMock()
@@ -97,11 +97,12 @@ def test_handle_activation_restores_via_main_window_when_no_tray() -> None:
     app.current_weather_data = None
 
     request = NotificationActivationRequest(kind="discussion")
-    app._handle_notification_activation_request(request)
+    with patch.object(app, "_force_foreground_window") as mock_force:
+        app._handle_notification_activation_request(request)
 
     mw.Show.assert_called_once_with(True)
     mw.Iconize.assert_called_once_with(False)
-    mw.Raise.assert_called_once()
+    mock_force.assert_called_once_with(mw)
     mw._on_discussion.assert_called_once()
 
 
@@ -219,3 +220,34 @@ def test_schedule_startup_activation_request_noop_when_none() -> None:
     with patch("accessiweather.app.wx") as mock_wx:
         app._schedule_startup_activation_request()
         mock_wx.CallAfter.assert_not_called()
+
+
+def test_notifier_on_activation_wired_to_handle_request() -> None:
+    """App wires notifier.on_activation to route activation requests on UI thread."""
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app.tray_icon = SimpleNamespace(show_main_window=MagicMock())
+    app.main_window = _MainWindowStub()
+    app.current_weather_data = None
+
+    # Create a mock notifier with on_activation attribute
+    mock_notifier = MagicMock()
+    mock_notifier.on_activation = None
+    app._notifier = mock_notifier
+
+    app._wire_notifier_activation_callback()
+
+    assert mock_notifier.on_activation is not None
+
+
+def test_handle_activation_uses_force_foreground_on_windows() -> None:
+    """On Windows, activation should call _force_foreground_window."""
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app.tray_icon = None
+    mw = MagicMock()
+    app.main_window = mw
+    app.current_weather_data = None
+
+    with patch.object(app, "_force_foreground_window") as mock_force:
+        request = NotificationActivationRequest(kind="generic_fallback")
+        app._handle_notification_activation_request(request)
+        mock_force.assert_called_once_with(mw)

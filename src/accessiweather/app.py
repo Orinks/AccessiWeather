@@ -248,6 +248,25 @@ class AccessiWeatherApp(wx.App):
         if self._activation_request is not None:
             wx.CallAfter(self._handle_notification_activation_request, self._activation_request)
 
+    def _wire_notifier_activation_callback(self) -> None:
+        """Connect the notifier's in-process activation callback to the UI thread."""
+        notifier = self._notifier
+        if notifier is None or not hasattr(notifier, "on_activation"):
+            return
+
+        def _on_toast_activated(result) -> None:
+            """Handle toast activation from the notifier worker thread."""
+            arguments = getattr(result, "arguments", None)
+            if not arguments:
+                return
+            from .notification_activation import extract_activation_request_from_argv
+
+            request = extract_activation_request_from_argv([arguments])
+            if request is not None:
+                wx.CallAfter(self._handle_notification_activation_request, request)
+
+        notifier.on_activation = _on_toast_activated
+
     def _start_activation_handoff_polling(self) -> None:
         """Poll for handoff requests on the UI thread."""
         if self._activation_handoff_timer is not None:
@@ -277,7 +296,7 @@ class AccessiWeatherApp(wx.App):
         elif self.main_window is not None:
             self.main_window.Show(True)
             self.main_window.Iconize(False)
-            self.main_window.Raise()
+            self._force_foreground_window(self.main_window)
 
         if self.main_window is None:
             return
@@ -302,6 +321,25 @@ class AccessiWeatherApp(wx.App):
             if callable(get_unique_id) and get_unique_id() == alert_id:
                 return index
         return None
+
+    @staticmethod
+    def _force_foreground_window(frame) -> None:
+        """Use Win32 API to reliably bring window to foreground on Windows."""
+        if sys.platform != "win32":
+            frame.Raise()
+            return
+        try:
+            import ctypes
+
+            hwnd = frame.GetHandle()
+            user32 = ctypes.windll.user32
+            SW_RESTORE = 9
+            if user32.IsIconic(hwnd):
+                user32.ShowWindow(hwnd, SW_RESTORE)
+            user32.AllowSetForegroundWindow(ctypes.windll.kernel32.GetCurrentProcessId())
+            user32.SetForegroundWindow(hwnd)
+        except Exception:
+            frame.Raise()
 
     def _schedule_startup_guidance_prompts(self) -> None:
         """Schedule lightweight first-run and portable hints after startup."""
@@ -897,6 +935,8 @@ class AccessiWeatherApp(wx.App):
 
                 notifier.balloon_fn = _balloon
                 logger.debug("Tray balloon fallback wired into notifier")
+
+            self._wire_notifier_activation_callback()
         except Exception as e:
             logger.warning(f"Failed to initialize system tray icon: {e}")
             self.tray_icon = None
