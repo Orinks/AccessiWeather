@@ -94,7 +94,6 @@ class TestToastedWindowsNotifierInit:
             notifier = toast_notifier.ToastedWindowsNotifier(app_name="Test", sound_enabled=False)
             assert notifier.app_name == "Test"
             assert notifier.sound_enabled is False
-            assert notifier.balloon_fn is None
 
     def test_init_when_toasted_available(self):
         """When TOASTED_AVAILABLE is True, init succeeds."""
@@ -157,18 +156,6 @@ class TestToastedWindowsNotifierSend:
                 logical_event="alert",
                 muted_events=["data_updated"],
             )
-
-    def test_balloon_fallback_called_on_failure(self):
-        """When _send_in_worker fails, balloon_fn fallback is tried."""
-        with patch.object(toast_notifier, "TOASTED_AVAILABLE", True):
-            notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=False)
-            notifier.balloon_fn = MagicMock()
-            # Mock _send_in_worker to return False
-            notifier._send_in_worker = MagicMock(return_value=False)
-
-            result = notifier.send_notification("Title", "Body")
-            assert result is False
-            notifier.balloon_fn.assert_called_once_with("Title", "Body")
 
     def test_send_catches_exceptions(self):
         """send_notification catches and logs exceptions."""
@@ -368,7 +355,6 @@ class TestPlatformSelection:
         # balloon_fn is an instance attribute, verify via instantiation
         with patch.object(toast_notifier, "TOASTED_AVAILABLE", False):
             notifier = toast_notifier.ToastedWindowsNotifier()
-            assert hasattr(notifier, "balloon_fn")
             assert hasattr(notifier, "sound_enabled")
             assert hasattr(notifier, "soundpack")
 
@@ -376,7 +362,7 @@ class TestPlatformSelection:
         """_DesktopNotifierBackend has the same public interface as ToastedWindowsNotifier."""
         # Instance attributes are set in __init__, so instantiate to check
         backend = toast_notifier._DesktopNotifierBackend(sound_enabled=False)
-        for attr in ("send_notification", "balloon_fn", "sound_enabled", "soundpack"):
+        for attr in ("send_notification", "sound_enabled", "soundpack"):
             assert hasattr(backend, attr), f"_DesktopNotifierBackend missing: {attr}"
 
     def test_safe_desktop_notifier_is_correct_type(self):

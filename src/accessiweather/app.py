@@ -920,22 +920,6 @@ class AccessiWeatherApp(wx.App):
             self.tray_icon = SystemTrayIcon(self)
             logger.info("System tray icon initialized")
 
-            # Wire tray balloon fallback into the notifier so toast failures
-            # (e.g. WinRT silent drop when window is hidden) still show a visual.
-            notifier = getattr(self, "_notifier", None)  # pragma: no cover
-            if notifier is not None and hasattr(notifier, "balloon_fn"):  # pragma: no cover
-                import wx
-
-                tray = self.tray_icon
-
-                def _balloon(title: str, message: str) -> None:
-                    # NIIF_INFO (0x1) | NIIF_NOSOUND (0x10) — show info icon,
-                    # suppress the default Windows chime (our soundpack plays instead).
-                    wx.CallAfter(tray.ShowBalloon, title, message, 5000, 0x11)
-
-                notifier.balloon_fn = _balloon
-                logger.debug("Tray balloon fallback wired into notifier")
-
             self._wire_notifier_activation_callback()
         except Exception as e:
             logger.warning(f"Failed to initialize system tray icon: {e}")

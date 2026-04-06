@@ -111,9 +111,6 @@ class ToastedWindowsNotifier:
         )
         self.muted_sound_events: list[str] = normalize_muted_sound_events(initial_muted_events)
 
-        # Optional fallback callable (same contract as SafeDesktopNotifier)
-        self.balloon_fn: Callable[[str, str], None] | None = None
-
         # Persistent worker thread state
         self._worker_loop: asyncio.AbstractEventLoop | None = None
         self._worker_thread: threading.Thread | None = None
@@ -332,13 +329,6 @@ class ToastedWindowsNotifier:
                 logger.warning(
                     "[toasted] _send_in_worker returned False — toast NOT shown: %r", title
                 )
-                # Fallback to tray balloon when available
-                if self.balloon_fn is not None:
-                    try:
-                        self.balloon_fn(title, message)
-                        logger.debug("[toasted] Tray balloon fallback used for: %r", title)
-                    except Exception as bf_exc:
-                        logger.debug("[toasted] Tray balloon fallback failed: %s", bf_exc)
             else:
                 logger.debug("[toasted] Toast dispatched successfully: %r", title)
 
@@ -401,11 +391,6 @@ class _DesktopNotifierBackend:
             DEFAULT_MUTED_SOUND_EVENTS if muted_sound_events is None else muted_sound_events
         )
         self.muted_sound_events: list[str] = normalize_muted_sound_events(initial_muted_events)
-
-        # Optional fallback callable: balloon_fn(title, message) is called when the
-        # WinRT/desktop-notifier toast fails (e.g. window hidden in system tray).
-        # Set this after init — typically wired to tray_icon.ShowBalloon().
-        self.balloon_fn: Callable[[str, str], None] | None = None
 
         # Persistent worker thread state
         self._worker_loop: asyncio.AbstractEventLoop | None = None
@@ -591,13 +576,6 @@ class _DesktopNotifierBackend:
                 logger.warning(
                     "[toast] _send_in_worker returned False — toast NOT shown: %r", title
                 )
-                # Fallback to tray balloon when available (e.g. window hidden in system tray)
-                if self.balloon_fn is not None:
-                    try:
-                        self.balloon_fn(title, message)
-                        logger.debug("[toast] Tray balloon fallback used for: %r", title)
-                    except Exception as bf_exc:
-                        logger.debug("[toast] Tray balloon fallback failed: %s", bf_exc)
             else:
                 logger.debug("[toast] Toast dispatched successfully: %r", title)
 
