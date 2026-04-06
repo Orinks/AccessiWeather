@@ -252,7 +252,8 @@ class ToastedWindowsNotifier:
             )
             toast.elements = [_Text(title), _Text(message)]  # type: ignore[misc]
             self._set_activation_arguments(toast, activation_arguments)
-            await toast.show(mute_sound=True)
+            # Fire-and-forget: schedule show and return immediately
+            asyncio.create_task(toast.show(mute_sound=True))
             return True
 
         # Fire and forget — don't block waiting for WinRT confirmation
