@@ -20,6 +20,7 @@ import wx
 
 from . import app_timer_manager
 from .models import WeatherData
+from .notification_activation import NotificationActivationRequest
 from .paths import Paths, RuntimeStoragePaths, detect_portable_mode, resolve_runtime_storage
 from .single_instance import SingleInstanceManager
 
@@ -53,6 +54,7 @@ class AccessiWeatherApp(wx.App):
         debug: bool = False,
         force_wizard: bool = False,
         updated: bool = False,
+        activation_request: NotificationActivationRequest | None = None,
     ):
         """
         Initialize the AccessiWeather application.
@@ -63,9 +65,11 @@ class AccessiWeatherApp(wx.App):
             debug: If True, enable debug mode (enables debug logging and extra UI tools)
             force_wizard: If True, force the onboarding wizard even if already shown
             updated: If True, skip lock-file prompt (app was restarted after an update)
+            activation_request: Optional toast activation request passed from Windows
 
         """
         self._updated = updated
+        self._activation_request = activation_request
         self._config_dir = config_dir
 
         # Auto-detect portable mode for frozen builds unless explicitly overridden
@@ -122,6 +126,7 @@ class AccessiWeatherApp(wx.App):
         # Background update
         self._update_timer: wx.Timer | None = None
         self._auto_update_check_timer: wx.Timer | None = None
+        self._activation_handoff_timer: wx.Timer | None = None
         self._startup_update_check_deferred: bool = False
         self.is_updating: bool = False
 
@@ -169,6 +174,10 @@ class AccessiWeatherApp(wx.App):
                 self, runtime_paths=self.runtime_paths
             )
             if not self.single_instance_manager.try_acquire_lock():
+                if self._activation_request is not None:
+                    logger.info("Forwarding notification activation to running instance")
+                    self.single_instance_manager.write_activation_handoff(self._activation_request)
+                    return False
                 if self._updated:
                     # After an update restart the old lock file is stale; force-acquire it
                     logger.info("Post-update restart: forcing lock acquisition")
@@ -195,6 +204,7 @@ class AccessiWeatherApp(wx.App):
 
             # Initialize system tray icon
             self._initialize_tray_icon()
+            self._start_activation_handoff_polling()
 
             # Load initial data
             self._load_initial_data()
@@ -210,6 +220,7 @@ class AccessiWeatherApp(wx.App):
 
             # Show window (or minimize to tray if setting enabled)
             self._show_or_minimize_window()
+            self._schedule_startup_activation_request()
 
             # Show one-time startup guidance prompts (non-blocking).
             self._schedule_startup_guidance_prompts()
@@ -231,6 +242,104 @@ class AccessiWeatherApp(wx.App):
                 wx.OK | wx.ICON_ERROR,
             )
             return False
+
+    def _schedule_startup_activation_request(self) -> None:
+        """Route any activation request passed directly to this process."""
+        if self._activation_request is not None:
+            wx.CallAfter(self._handle_notification_activation_request, self._activation_request)
+
+    def _wire_notifier_activation_callback(self) -> None:
+        """Connect the notifier's in-process activation callback to the UI thread."""
+        notifier = self._notifier
+        if notifier is None or not hasattr(notifier, "on_activation"):
+            return
+
+        def _on_toast_activated(result) -> None:
+            """Handle toast activation from the notifier worker thread."""
+            arguments = getattr(result, "arguments", None)
+            if not arguments:
+                return
+            from .notification_activation import extract_activation_request_from_argv
+
+            request = extract_activation_request_from_argv([arguments])
+            if request is not None:
+                wx.CallAfter(self._handle_notification_activation_request, request)
+
+        notifier.on_activation = _on_toast_activated
+
+    def _start_activation_handoff_polling(self) -> None:
+        """Poll for handoff requests on the UI thread."""
+        if self._activation_handoff_timer is not None:
+            self._activation_handoff_timer.Stop()
+        self._activation_handoff_timer = wx.Timer(self)
+        self.Bind(
+            wx.EVT_TIMER,
+            self._on_activation_handoff_timer,
+            self._activation_handoff_timer,
+        )
+        self._activation_handoff_timer.Start(750)
+
+    def _on_activation_handoff_timer(self, event) -> None:
+        """Consume and route any pending notification activation handoff request."""
+        if self.single_instance_manager is None:
+            return
+        request = self.single_instance_manager.consume_activation_handoff()
+        if request is not None:
+            self._handle_notification_activation_request(request)
+
+    def _handle_notification_activation_request(
+        self, request: NotificationActivationRequest
+    ) -> None:
+        """Restore the app and route a notification activation request."""
+        if self.tray_icon is not None:
+            self.tray_icon.show_main_window()
+        elif self.main_window is not None:
+            self.main_window.Show(True)
+            self.main_window.Iconize(False)
+            self._force_foreground_window(self.main_window)
+
+        if self.main_window is None:
+            return
+
+        if request.kind == "discussion":
+            self.main_window._on_discussion()
+            return
+
+        if request.kind == "alert_details" and request.alert_id:
+            alert_index = self._find_active_alert_index(request.alert_id)
+            if alert_index is not None:
+                self.main_window._show_alert_details(alert_index)
+
+    def _find_active_alert_index(self, alert_id: str) -> int | None:
+        """Locate the current active alert index for an activation request."""
+        alerts = getattr(getattr(self, "current_weather_data", None), "alerts", None)
+        if alerts is None or not hasattr(alerts, "get_active_alerts"):
+            return None
+
+        for index, alert in enumerate(alerts.get_active_alerts()):
+            get_unique_id = getattr(alert, "get_unique_id", None)
+            if callable(get_unique_id) and get_unique_id() == alert_id:
+                return index
+        return None
+
+    @staticmethod
+    def _force_foreground_window(frame) -> None:
+        """Use Win32 API to reliably bring window to foreground on Windows."""
+        if sys.platform != "win32":
+            frame.Raise()
+            return
+        try:
+            import ctypes
+
+            hwnd = frame.GetHandle()
+            user32 = ctypes.windll.user32
+            SW_RESTORE = 9
+            if user32.IsIconic(hwnd):
+                user32.ShowWindow(hwnd, SW_RESTORE)
+            user32.AllowSetForegroundWindow(ctypes.windll.kernel32.GetCurrentProcessId())
+            user32.SetForegroundWindow(hwnd)
+        except Exception:
+            frame.Raise()
 
     def _schedule_startup_guidance_prompts(self) -> None:
         """Schedule lightweight first-run and portable hints after startup."""
@@ -811,21 +920,7 @@ class AccessiWeatherApp(wx.App):
             self.tray_icon = SystemTrayIcon(self)
             logger.info("System tray icon initialized")
 
-            # Wire tray balloon fallback into the notifier so toast failures
-            # (e.g. WinRT silent drop when window is hidden) still show a visual.
-            notifier = getattr(self, "_notifier", None)  # pragma: no cover
-            if notifier is not None and hasattr(notifier, "balloon_fn"):  # pragma: no cover
-                import wx
-
-                tray = self.tray_icon
-
-                def _balloon(title: str, message: str) -> None:
-                    # NIIF_INFO (0x1) | NIIF_NOSOUND (0x10) — show info icon,
-                    # suppress the default Windows chime (our soundpack plays instead).
-                    wx.CallAfter(tray.ShowBalloon, title, message, 5000, 0x11)
-
-                notifier.balloon_fn = _balloon
-                logger.debug("Tray balloon fallback wired into notifier")
+            self._wire_notifier_activation_callback()
         except Exception as e:
             logger.warning(f"Failed to initialize system tray icon: {e}")
             self.tray_icon = None
@@ -1110,6 +1205,9 @@ class AccessiWeatherApp(wx.App):
         self._stop_background_updates()
 
         self._stop_auto_update_checks()
+        activation_handoff_timer = getattr(self, "_activation_handoff_timer", None)
+        if activation_handoff_timer:
+            activation_handoff_timer.Stop()
 
         # Play exit sound without blocking shutdown.
         try:
@@ -1175,6 +1273,9 @@ class AccessiWeatherApp(wx.App):
                     settings, "pirate_weather_api_key", ""
                 )
                 self.weather_client._pirate_weather_client = None  # pragma: no cover
+                self.weather_client._avwx_api_key = getattr(  # pragma: no cover
+                    settings, "avwx_api_key", ""
+                )
 
             if self.presenter:
                 self.presenter.settings = settings
@@ -1217,6 +1318,7 @@ def main(
     fake_nightly: str | None = None,
     force_wizard: bool = False,
     updated: bool = False,
+    activation_request: NotificationActivationRequest | None = None,
 ):
     """
     Run AccessiWeather application.
@@ -1229,6 +1331,7 @@ def main(
         fake_nightly: Fake nightly tag for testing updates (e.g., 'nightly-20250101').
         force_wizard: Force the onboarding wizard even if already shown.
         updated: Skip lock-file prompt (app was restarted after an update).
+        activation_request: Optional toast activation request passed from Windows.
 
     """
     app = AccessiWeatherApp(
@@ -1237,6 +1340,7 @@ def main(
         debug=debug,
         force_wizard=force_wizard,
         updated=updated,
+        activation_request=activation_request,
     )
 
     # Override version/build_tag for update testing

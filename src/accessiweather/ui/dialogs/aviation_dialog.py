@@ -104,7 +104,7 @@ class AviationDialog(wx.Dialog):
         avwx_row.Add(avwx_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10)
 
         # Pre-fill from settings
-        current_key = (
+        current_key = str(
             getattr(self.app.config_manager.get_settings(), "avwx_api_key", "")
             if self.app and self.app.config_manager
             else ""
@@ -268,7 +268,7 @@ class AviationDialog(wx.Dialog):
         if hasattr(self.app, "weather_client") and self.app.weather_client:
             self.app.weather_client._avwx_api_key = avwx_key
         if self.app.config_manager:
-            current_saved = (
+            current_saved = str(
                 getattr(self.app.config_manager.get_settings(), "avwx_api_key", "") or ""
             )
             if avwx_key != current_saved:

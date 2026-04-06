@@ -148,7 +148,6 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -e .[dev] pyinstaller pillow
-          brew install create-dmg || true
 
       - name: Build
         run: |
@@ -156,18 +155,15 @@ jobs:
           python installer/create_icons.py
           python -m PyInstaller --clean --noconfirm installer/accessiweather.spec
 
-      - name: Create DMG
+      - name: Create app ZIP
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
-          create-dmg --volname "AccessiWeather" --icon-size 100 \
-            --icon "AccessiWeather.app" 175 190 --app-drop-link 425 190 \
-            "dist/AccessiWeather_v${VERSION}.dmg" "dist/AccessiWeather.app" || \
-          hdiutil create -volname "AccessiWeather" -srcfolder "dist/AccessiWeather.app" -ov -format UDZO "dist/AccessiWeather_v${VERSION}.dmg"
+          cd dist && zip -r "AccessiWeather_v${VERSION}_macOS.zip" AccessiWeather.app
 
       - uses: actions/upload-artifact@v7
         with:
           name: macos
-          path: dist/AccessiWeather_*.dmg
+          path: dist/AccessiWeather_*_macOS.zip
 
   release:
     name: Release
@@ -198,20 +194,20 @@ jobs:
           TIMESTAMP=$(date -u +%Y%m%d)
 
           # Rename assets based on release type
-          for f in dist/*.exe dist/*.dmg dist/*.zip; do
+          for f in dist/*.exe dist/*.zip; do
             [ -f "$f" ] || continue
             name=$(basename "$f")
             if [ "$IS_NIGHTLY" = "true" ]; then
               case "$name" in
                 *Setup*.exe) mv "$f" "assets/AccessiWeather-nightly-${TIMESTAMP}-windows-setup.exe" ;;
                 *Portable*.zip) mv "$f" "assets/AccessiWeather-nightly-${TIMESTAMP}-windows-portable.zip" ;;
-                *.dmg) mv "$f" "assets/AccessiWeather-nightly-${TIMESTAMP}-macOS.dmg" ;;
+                *macOS*.zip) mv "$f" "assets/AccessiWeather-nightly-${TIMESTAMP}-macOS.zip" ;;
               esac
             else
               case "$name" in
                 *Setup*.exe) mv "$f" "assets/AccessiWeather-${VERSION}-windows-setup.exe" ;;
                 *Portable*.zip) mv "$f" "assets/AccessiWeather-${VERSION}-windows-portable.zip" ;;
-                *.dmg) mv "$f" "assets/AccessiWeather-${VERSION}-macOS.dmg" ;;
+                *macOS*.zip) mv "$f" "assets/AccessiWeather-${VERSION}-macOS.zip" ;;
               esac
             fi
           done
