@@ -327,11 +327,6 @@ class MainWindow(SizedFrame):
                 "Test: &Alert Notification...",
                 "Send a test alert notification (choose type and severity)",
             )
-            self._debug_menu_items["balloon"] = debug_menu.Append(
-                wx.ID_ANY,
-                "Test: Tray &Balloon (direct)",
-                "Directly invoke the tray balloon fallback to verify it is wired up",
-            )
             self._debug_menu_items["simulate_alert"] = debug_menu.Append(
                 wx.ID_ANY,
                 "Test: &Simulate Alert Change (poll cycle)",
@@ -381,11 +376,6 @@ class MainWindow(SizedFrame):
                 wx.EVT_MENU,
                 lambda e: self._on_test_alert_notification(),
                 self._debug_menu_items["alert"],
-            )
-            self.Bind(
-                wx.EVT_MENU,
-                lambda e: self._on_test_tray_balloon(),
-                self._debug_menu_items["balloon"],
             )
             self.Bind(
                 wx.EVT_MENU,
@@ -724,6 +714,11 @@ class MainWindow(SizedFrame):
             soundpack=getattr(settings, "sound_pack", "default"),
             muted_sound_events=getattr(settings, "muted_sound_events", ["data_updated"]),
         )
+        from ..notification_activation import (
+            NotificationActivationRequest,
+            serialize_activation_request,
+        )
+
         sent = notifier.send_notification(
             title="NWS Discussion Updated",
             message="The Area Forecast Discussion for your location has been updated. "
@@ -731,37 +726,15 @@ class MainWindow(SizedFrame):
             timeout=10,
             sound_candidates=["discussion_update", "notify"],
             play_sound=True,
+            activation_arguments=serialize_activation_request(
+                NotificationActivationRequest(kind="discussion")
+            ),
         )
         if not sent:
             wx.MessageBox(
                 "Discussion notification could not be sent.\n"
                 "Check that desktop notifications are enabled on your system.",
                 "Debug: Discussion Notification",
-                wx.OK | wx.ICON_WARNING,
-            )
-
-    def _on_test_tray_balloon(self) -> None:
-        """Directly invoke the tray balloon fallback to verify it is wired up."""
-        notifier = getattr(self.app, "_notifier", None)
-        if notifier is not None and getattr(notifier, "balloon_fn", None) is not None:
-            notifier.balloon_fn(
-                "Tray Balloon Test",
-                "balloon_fn is wired — fallback will work when WinRT drops the toast.",
-            )
-            # Mirror what send_notification does after balloon_fn: play our custom sound
-            if getattr(notifier, "sound_enabled", True):
-                notifier._play_sound("notify", None)
-        elif self.app.tray_icon is not None:
-            self.app.tray_icon.ShowBalloon(
-                "Tray Balloon Test",
-                "balloon_fn not set — tray balloon called directly.",
-                5000,
-                0x11,  # NIIF_INFO | NIIF_NOSOUND
-            )
-        else:
-            wx.MessageBox(
-                "No tray icon available. Run with --debug and a system tray to test this.",
-                "Debug: Tray Balloon",
                 wx.OK | wx.ICON_WARNING,
             )
 

@@ -23,6 +23,7 @@ from .constants import (
 )
 from .display.presentation.formatters import format_display_datetime
 from .models import AppSettings, WeatherAlert, WeatherAlerts
+from .notification_activation import NotificationActivationRequest, serialize_activation_request
 from .notifications.toast_notifier import SafeDesktopNotifier
 
 logger = logging.getLogger(__name__)
@@ -258,6 +259,12 @@ class AlertNotificationSystem:
                 timeout=15,  # Longer timeout for weather alerts
                 sound_candidates=sound_candidates,
                 play_sound=play_sound,
+                activation_arguments=serialize_activation_request(
+                    NotificationActivationRequest(
+                        kind="alert_details",
+                        alert_id=alert.get_unique_id(),
+                    )
+                ),
             )
 
             if success:
