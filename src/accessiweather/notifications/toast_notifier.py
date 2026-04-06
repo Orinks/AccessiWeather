@@ -16,6 +16,8 @@ import contextlib
 import logging
 import sys
 import threading
+from collections.abc import Callable
+from typing import Any
 
 from ..constants import WINDOWS_APP_USER_MODEL_ID
 from ..sound_events import DEFAULT_MUTED_SOUND_EVENTS
@@ -110,7 +112,7 @@ class ToastedWindowsNotifier:
         self.muted_sound_events: list[str] = normalize_muted_sound_events(initial_muted_events)
 
         # Optional fallback callable (same contract as SafeDesktopNotifier)
-        self.balloon_fn = None  # Optional[Callable[[str, str], None]]
+        self.balloon_fn: Callable[[str, str], None] | None = None
 
         # Persistent worker thread state
         self._worker_loop: asyncio.AbstractEventLoop | None = None
@@ -122,7 +124,7 @@ class ToastedWindowsNotifier:
         # Callback invoked (from worker thread) when user clicks a toast.
         # Signature: on_activation(result) where result.arguments contains
         # the serialized activation request string.
-        self.on_activation = None  # Optional[Callable[[Any], None]]
+        self.on_activation: Callable[[Any], None] | None = None
 
         if not TOASTED_AVAILABLE:
             logger.warning("toasted not available, notifications will be logged only")
@@ -403,7 +405,7 @@ class _DesktopNotifierBackend:
         # Optional fallback callable: balloon_fn(title, message) is called when the
         # WinRT/desktop-notifier toast fails (e.g. window hidden in system tray).
         # Set this after init — typically wired to tray_icon.ShowBalloon().
-        self.balloon_fn = None  # Optional[Callable[[str, str], None]] — set after init
+        self.balloon_fn: Callable[[str, str], None] | None = None
 
         # Persistent worker thread state
         self._worker_loop: asyncio.AbstractEventLoop | None = None
