@@ -10,6 +10,7 @@ import sys
 
 from accessiweather.app import main as app_main
 from accessiweather.main import setup_logging
+from accessiweather.notification_activation import extract_activation_request_from_argv
 
 
 def parse_args(args: list[str] | None = None) -> argparse.Namespace:
@@ -41,7 +42,14 @@ def parse_args(args: list[str] | None = None) -> argparse.Namespace:
         help="Run in portable mode (saves configuration to local directory instead of user directory)",
     )
 
-    return parser.parse_args(args)
+    parsed_args, extras = parser.parse_known_args(args)
+    parsed_args.activation_request = extract_activation_request_from_argv(
+        [sys.argv[0], *extras] if args is None else extras
+    )
+    unknown = [arg for arg in extras if extract_activation_request_from_argv([arg]) is None]
+    if unknown:
+        parser.error(f"unrecognized arguments: {' '.join(unknown)}")
+    return parsed_args
 
 
 def main() -> int:
@@ -63,6 +71,7 @@ def main() -> int:
             config_dir=args.config,
             portable_mode=args.portable,
             debug=args.debug,
+            activation_request=args.activation_request,
         )
         return 0
     except Exception as e:

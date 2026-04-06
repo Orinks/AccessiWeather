@@ -12,6 +12,7 @@ toasted is unavailable.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import sys
 import threading
@@ -210,7 +211,23 @@ class ToastedWindowsNotifier:
 
     # -- sending ------------------------------------------------------------
 
-    def _send_in_worker(self, title: str, message: str, timeout: int = 10) -> bool:
+    def _set_activation_arguments(self, toast, activation_arguments: str | None) -> None:
+        """Attach launch arguments to the toast when the backend supports it."""
+        if not activation_arguments:
+            return
+        for attr in ("arguments", "launch"):
+            with contextlib.suppress(Exception):
+                setattr(toast, attr, activation_arguments)
+                return
+
+    def _send_in_worker(
+        self,
+        title: str,
+        message: str,
+        timeout: int = 10,
+        *,
+        activation_arguments: str | None = None,
+    ) -> bool:
         """Send a notification via the persistent worker thread."""
         worker_ok = self._ensure_worker()
         logger.debug(
@@ -234,8 +251,8 @@ class ToastedWindowsNotifier:
                 sound=None,  # we handle sounds ourselves
             )
             toast.elements = [_Text(title), _Text(message)]  # type: ignore[misc]
-            # Fire-and-forget: schedule show and return immediately
-            asyncio.create_task(toast.show(mute_sound=True))
+            self._set_activation_arguments(toast, activation_arguments)
+            await toast.show(mute_sound=True)
             return True
 
         # Fire and forget — don't block waiting for WinRT confirmation
@@ -252,6 +269,7 @@ class ToastedWindowsNotifier:
         sound_event: str | None = None,
         sound_candidates: list[str] | None = None,
         play_sound: bool = True,
+        activation_arguments: str | None = None,
     ) -> bool:
         """Send a notification synchronously (same interface as SafeDesktopNotifier)."""
         logger.debug(
@@ -285,7 +303,12 @@ class ToastedWindowsNotifier:
                 ).start()
                 logger.debug("[toasted] Sound thread started")
 
-            success = self._send_in_worker(title, message, timeout)
+            success = self._send_in_worker(
+                title,
+                message,
+                timeout,
+                activation_arguments=activation_arguments,
+            )
             if not success:
                 logger.warning(
                     "[toasted] _send_in_worker returned False — toast NOT shown: %r", title
@@ -507,6 +530,7 @@ class _DesktopNotifierBackend:
         sound_event: str | None = None,
         sound_candidates: list[str] | None = None,
         play_sound: bool = True,
+        activation_arguments: str | None = None,
     ) -> bool:
         """Send a notification synchronously."""
         logger.debug(
@@ -643,6 +667,36 @@ class SafeToastNotifier:
             return bool(m(title, message, timeout))
         logger.info("Notification (desktop notifier unavailable): %s - %s", title, message)
         return True
+
+    def send_notification(
+        self,
+        title: str,
+        message: str,
+        timeout: int = 10,
+        *,
+        sound_event: str | None = None,
+        sound_candidates: list[str] | None = None,
+        play_sound: bool = True,
+        activation_arguments: str | None = None,
+    ) -> bool:
+        """Send a notification through the active backend when available."""
+        notifier = self._desktop_notifier
+        method = getattr(notifier, "send_notification", None) if notifier is not None else None
+        if method is None or not callable(method):
+            logger.info("Notification (desktop notifier unavailable): %s - %s", title, message)
+            return True
+
+        return bool(
+            method(
+                title,
+                message,
+                timeout,
+                sound_event=sound_event,
+                sound_candidates=sound_candidates,
+                play_sound=play_sound,
+                activation_arguments=activation_arguments,
+            )
+        )
 
     def show_toast(self, **kwargs) -> bool:
         """Show a toast notification."""

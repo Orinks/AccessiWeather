@@ -21,6 +21,7 @@ class _FakeToast:
         self.sound = sound
         self.elements = []
         self._shown = False
+        self.arguments = None
 
     async def show(self, mute_sound=False):
         self._shown = True
@@ -176,6 +177,16 @@ class TestToastedWindowsNotifierWorker:
                 notifier._worker_loop.call_soon_threadsafe(notifier._worker_loop.stop)
             if notifier._worker_thread:
                 notifier._worker_thread.join(timeout=2)
+
+    def test_set_activation_arguments_sets_launch_context(self):
+        """Toast launch arguments are attached so Action Center clicks relaunch with context."""
+        with patch.object(toast_notifier, "TOASTED_AVAILABLE", False):
+            notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=False)
+
+        toast = _FakeToast()
+        notifier._set_activation_arguments(toast, "accessiweather-toast:kind=discussion")
+
+        assert toast.arguments == "accessiweather-toast:kind=discussion"
 
     def test_worker_registers_app_id(self):
         """Worker thread registers the AUMID on first run."""
