@@ -352,7 +352,6 @@ class TestPlatformSelection:
     def test_on_windows_with_toasted(self):
         """On win32 + toasted available, ToastedWindowsNotifier has correct interface."""
         assert hasattr(toast_notifier.ToastedWindowsNotifier, "send_notification")
-        # balloon_fn is an instance attribute, verify via instantiation
         with patch.object(toast_notifier, "TOASTED_AVAILABLE", False):
             notifier = toast_notifier.ToastedWindowsNotifier()
             assert hasattr(notifier, "sound_enabled")
