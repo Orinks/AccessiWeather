@@ -38,6 +38,11 @@ logger = logging.getLogger(__name__)
 TOASTED_AVAILABLE = False
 _Toast = None
 _Text = None
+# Direct WinRT access for persistent Action Center activation handlers.
+# The toasted library's show() deregisters WinRT event handlers after the popup
+# is dismissed, so Action Center clicks never fire the activated callback.
+# We use WinRT directly to keep the activated handler alive.
+WINRT_AVAILABLE = False
 
 if sys.platform == "win32":
     try:
@@ -49,6 +54,18 @@ if sys.platform == "win32":
         TOASTED_AVAILABLE = True
     except ImportError:
         logger.info("toasted not available on Windows, will try desktop-notifier")
+
+    try:
+        from winsdk.windows.data.xml.dom import XmlDocument as _WinRT_XmlDocument
+        from winsdk.windows.ui.notifications import (
+            ToastActivatedEventArgs as _WinRT_ToastActivatedEventArgs,
+            ToastNotification as _WinRT_ToastNotification,
+            ToastNotificationManager as _WinRT_ToastNotificationManager,
+        )
+
+        WINRT_AVAILABLE = True
+    except ImportError:
+        logger.info("winsdk not available, Action Center click handling disabled")
 
 # Try desktop-notifier (cross-platform fallback)
 try:
@@ -75,6 +92,21 @@ def _log_packaging_notifier_diagnostics() -> None:
         getattr(sys, "_MEIPASS", None),
         getattr(sys, "executable", None),
     )
+
+
+# ---------------------------------------------------------------------------
+# Lightweight result object for direct WinRT activation callbacks
+# ---------------------------------------------------------------------------
+
+
+class _ActivationResult:
+    """Minimal result object compatible with the ``on_activation`` callback."""
+
+    __slots__ = ("arguments", "is_dismissed")
+
+    def __init__(self, arguments: str) -> None:
+        self.arguments = arguments
+        self.is_dismissed = False
 
 
 # ---------------------------------------------------------------------------
@@ -123,6 +155,11 @@ class ToastedWindowsNotifier:
         # Signature: on_activation(result) where result.arguments contains
         # the serialized activation request string.
         self.on_activation: Callable[[Any], None] | None = None
+        # Keep WinRT ToastNotification objects alive so their activated
+        # handlers persist for Action Center clicks (the toasted library's
+        # show() deregisters handlers after popup dismissal).
+        self._live_notifications: list[Any] = []
+        self._MAX_LIVE_NOTIFICATIONS = 20
 
         if not TOASTED_AVAILABLE:
             logger.warning("toasted not available, notifications will be logged only")
@@ -260,8 +297,16 @@ class ToastedWindowsNotifier:
             # invalid XML and a silent 0xc00ce50d error from WinRT.
             toast.elements = [_Text(_xml_escape(title)), _Text(_xml_escape(message))]  # type: ignore[misc]
             self._set_activation_arguments(toast, activation_arguments)
-            # Register activation callback so Action Center clicks are handled
-            # in-process (the toasted library fires this via WinRT events).
+
+            # Bypass toasted's show() which deregisters WinRT event handlers
+            # after popup dismissal, breaking Action Center click activation.
+            # Instead, use WinRT directly so our activated handler persists.
+            if WINRT_AVAILABLE and self._show_toast_direct(toast, activation_arguments):
+                return True
+
+            # Fallback: use toasted's show() (Action Center clicks won't work
+            # after popup dismissal, but popup-click still works).
+            logger.debug("[toasted] Falling back to toasted.show()")
             if activation_arguments and self.on_activation is not None:
                 on_activation = self.on_activation
 
@@ -279,6 +324,69 @@ class ToastedWindowsNotifier:
         logger.debug("[toasted] Submitting toast to worker loop (fire-and-forget): title=%r", title)
         asyncio.run_coroutine_threadsafe(_show_toast(), loop)
         return True
+
+    def _show_toast_direct(self, toast, activation_arguments: str | None) -> bool:
+        """
+        Show a toast via WinRT directly, keeping the activated handler alive.
+
+        The toasted library's ``show()`` awaits ``asyncio.wait(futures,
+        return_when=FIRST_COMPLETED)`` then **deregisters all WinRT event
+        handlers** — including the ``activated`` handler.  When the popup
+        times out and moves to Action Center, ``dismissed`` fires first,
+        so the ``activated`` token is removed.  Later Action Center clicks
+        find no handler and silently do nothing.
+
+        By creating and showing the ``ToastNotification`` ourselves we keep
+        the ``activated`` handler registered for the lifetime of the object
+        reference in ``_live_notifications``.
+        """
+        if not WINRT_AVAILABLE:
+            return False
+
+        try:
+            # Generate XML from the toasted Toast object
+            xml_string = toast.to_xml_string()
+
+            xml_doc = _WinRT_XmlDocument()
+            xml_doc.load_xml(xml_string)
+            notification = _WinRT_ToastNotification(xml_doc)
+
+            # Register persistent activated handler
+            if activation_arguments and self.on_activation is not None:
+                on_activation = self.on_activation
+
+                def _on_activated(sender, args):
+                    try:
+                        event_args = _WinRT_ToastActivatedEventArgs._from(args)
+                        # Build a result-like object matching what _on_result expects
+                        result = _ActivationResult(arguments=event_args.arguments)
+                        on_activation(result)
+                    except Exception:
+                        logger.debug("[toasted] Activation handler error", exc_info=True)
+
+                notification.add_activated(_on_activated)
+
+            # Show via WinRT ToastNotificationManager
+            notifier = _WinRT_ToastNotificationManager.create_toast_notifier(
+                WINDOWS_APP_USER_MODEL_ID
+            )
+            notifier.show(notification)
+
+            # Keep the notification object alive so the activated handler
+            # persists for Action Center clicks.  Trim old entries to
+            # prevent unbounded growth.
+            self._live_notifications.append(notification)
+            if len(self._live_notifications) > self._MAX_LIVE_NOTIFICATIONS:
+                self._live_notifications = self._live_notifications[-self._MAX_LIVE_NOTIFICATIONS :]
+
+            logger.debug(
+                "[toasted] Toast shown via direct WinRT (persistent activation): live_count=%d",
+                len(self._live_notifications),
+            )
+            return True
+        except Exception:
+            logger.warning("[toasted] Direct WinRT show failed", exc_info=True)
+            return False
 
     def send_notification(
         self,

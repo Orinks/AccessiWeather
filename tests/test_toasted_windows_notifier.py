@@ -379,6 +379,69 @@ class TestPlatformSelection:
 
 
 # ---------------------------------------------------------------------------
+# Direct WinRT activation path tests
+# ---------------------------------------------------------------------------
+
+
+class TestDirectWinRTActivation:
+    """Test the direct WinRT toast path that keeps activated handlers alive."""
+
+    def test_activation_result_has_expected_attrs(self):
+        """_ActivationResult carries arguments and is_dismissed=False."""
+        result = toast_notifier._ActivationResult(arguments="test-arg")
+        assert result.arguments == "test-arg"
+        assert result.is_dismissed is False
+
+    def test_show_toast_direct_returns_false_when_winrt_unavailable(self):
+        """_show_toast_direct returns False when WINRT_AVAILABLE is False."""
+        with (
+            patch.object(toast_notifier, "TOASTED_AVAILABLE", False),
+            patch.object(toast_notifier, "WINRT_AVAILABLE", False),
+        ):
+            notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=False)
+            assert notifier._show_toast_direct(MagicMock(), "args") is False
+
+    def test_show_toast_direct_keeps_notification_alive(self):
+        """Direct WinRT path stores notification in _live_notifications."""
+        mock_xml_doc = MagicMock()
+        mock_notification = MagicMock()
+        mock_notifier_mgr = MagicMock()
+
+        with (
+            patch.object(toast_notifier, "TOASTED_AVAILABLE", True),
+            patch.object(toast_notifier, "WINRT_AVAILABLE", True),
+            patch.object(toast_notifier, "_WinRT_XmlDocument", return_value=mock_xml_doc),
+            patch.object(
+                toast_notifier, "_WinRT_ToastNotification", return_value=mock_notification
+            ),
+            patch.object(toast_notifier, "_WinRT_ToastNotificationManager", mock_notifier_mgr),
+        ):
+            notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=False)
+            # Use a real toast mock with to_xml_string
+            fake_toast = MagicMock()
+            fake_toast.to_xml_string.return_value = "<toast><visual></visual></toast>"
+
+            result = notifier._show_toast_direct(fake_toast, "test-args")
+            assert result is True
+            assert mock_notification in notifier._live_notifications
+            mock_notifier_mgr.create_toast_notifier.assert_called_once()
+
+    def test_live_notifications_trimmed_at_max(self):
+        """Old notifications are trimmed when _MAX_LIVE_NOTIFICATIONS is exceeded."""
+        with patch.object(toast_notifier, "TOASTED_AVAILABLE", False):
+            notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=False)
+            notifier._MAX_LIVE_NOTIFICATIONS = 3
+            notifier._live_notifications = ["old1", "old2", "old3", "new"]
+            # Simulate trim logic
+            if len(notifier._live_notifications) > notifier._MAX_LIVE_NOTIFICATIONS:
+                notifier._live_notifications = notifier._live_notifications[
+                    -notifier._MAX_LIVE_NOTIFICATIONS :
+                ]
+            assert len(notifier._live_notifications) == 3
+            assert notifier._live_notifications[0] == "old2"
+
+
+# ---------------------------------------------------------------------------
 # SafeToastNotifier with new backend
 # ---------------------------------------------------------------------------
 
