@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from accessiweather.display.presentation.forecast import (
     build_forecast,
@@ -115,3 +116,77 @@ def test_build_forecast_exposes_daily_and_hourly_sections():
     assert "Hourly outlook: Clear through mid afternoon." in result.hourly_section_text
     assert "Next 1 Hours:" in result.hourly_section_text
     assert result.fallback_text == (f"{result.daily_section_text}\n\n{result.hourly_section_text}")
+
+
+def test_build_forecast_formats_generated_time_in_location_timezone():
+    forecast = Forecast(
+        periods=[
+            ForecastPeriod(
+                name="Today",
+                temperature=70.0,
+                temperature_low=54.0,
+                temperature_unit="F",
+                short_forecast="Sunny",
+            )
+        ],
+        generated_at=datetime(2026, 7, 1, 12, tzinfo=UTC),
+    )
+
+    result = build_forecast(
+        forecast,
+        None,
+        Location(
+            name="London",
+            latitude=51.5074,
+            longitude=-0.1278,
+            timezone="Europe/London",
+        ),
+        TemperatureUnit.FAHRENHEIT,
+        settings=AppSettings(show_timezone_suffix=True),
+    )
+
+    expected_generated = "1:00 PM BST"
+    assert result.generated_at == expected_generated
+    assert f"Forecast generated: {expected_generated}" in result.daily_section_text
+
+
+def test_build_forecast_normalizes_hourly_timezone_label_from_offset_to_location_name():
+    london_tz = ZoneInfo("Europe/London")
+    forecast = Forecast(
+        periods=[
+            ForecastPeriod(
+                name="Today",
+                temperature=70.0,
+                temperature_low=54.0,
+                temperature_unit="F",
+                short_forecast="Sunny",
+            )
+        ]
+    )
+    hourly = HourlyForecast(
+        periods=[
+            HourlyForecastPeriod(
+                start_time=datetime(2026, 7, 1, 13, tzinfo=timezone(timedelta(hours=1))),
+                temperature=72.0,
+                temperature_unit="F",
+                short_forecast="Sunny",
+            )
+        ]
+    )
+
+    result = build_forecast(
+        forecast,
+        hourly,
+        Location(
+            name="London",
+            latitude=51.5074,
+            longitude=-0.1278,
+            timezone="Europe/London",
+        ),
+        TemperatureUnit.FAHRENHEIT,
+        settings=AppSettings(show_timezone_suffix=True, hourly_forecast_hours=1),
+    )
+
+    expected_label = result.hourly_periods[0].time
+    assert expected_label == "1:00 PM BST"
+    assert expected_label.endswith(london_tz.tzname(datetime(2026, 7, 1, 13, tzinfo=london_tz)))
