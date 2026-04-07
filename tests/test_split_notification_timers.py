@@ -11,11 +11,18 @@ Covers:
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from accessiweather.models import Location, WeatherAlerts, WeatherData
+from accessiweather.models import (
+    HourlyForecast,
+    HourlyForecastPeriod,
+    Location,
+    WeatherAlerts,
+    WeatherData,
+)
 from accessiweather.notifications.notification_event_manager import summarize_discussion_change
 
 # ---------------------------------------------------------------------------
@@ -575,3 +582,89 @@ class TestGetNotificationEventData:
 
         assert result.alerts is not None
         assert len(result.alerts.alerts) == 0
+
+    @pytest.mark.asyncio
+    async def test_minutely_precipitation_fetch_uses_normal_interval_when_clear(
+        self, client, intl_location
+    ):
+        settings = client.settings
+        settings.update_interval_minutes = 30
+        settings.notify_minutely_precipitation_start = True
+        settings.notify_minutely_precipitation_stop = True
+        client.data_source = "pirateweather"
+        client.pirate_weather_client = MagicMock()
+        client.pirate_weather_client.get_current_conditions = AsyncMock(return_value=MagicMock())
+        client.pirate_weather_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+        client._get_pirate_weather_minutely = AsyncMock(return_value=MagicMock())
+
+        now = datetime(2026, 4, 7, 12, 0, tzinfo=UTC)
+        client._latest_weather_by_location[client._location_key(intl_location)] = WeatherData(
+            location=intl_location,
+            hourly_forecast=HourlyForecast(
+                periods=[
+                    HourlyForecastPeriod(
+                        start_time=now + timedelta(hours=1),
+                        precipitation_probability=10,
+                    )
+                ]
+            ),
+        )
+
+        client._utcnow = MagicMock(
+            side_effect=[
+                now,
+                now,
+                now + timedelta(minutes=1),
+                now + timedelta(minutes=31),
+                now + timedelta(minutes=31),
+            ]
+        )
+
+        await client.get_notification_event_data(intl_location)
+        await client.get_notification_event_data(intl_location)
+        await client.get_notification_event_data(intl_location)
+
+        assert client._get_pirate_weather_minutely.await_count == 2
+
+    @pytest.mark.asyncio
+    async def test_minutely_precipitation_fetch_uses_fast_interval_when_rain_is_likely(
+        self, client, intl_location
+    ):
+        settings = client.settings
+        settings.update_interval_minutes = 30
+        settings.notify_minutely_precipitation_start = True
+        settings.notify_minutely_precipitation_stop = True
+        client.data_source = "pirateweather"
+        client.pirate_weather_client = MagicMock()
+        client.pirate_weather_client.get_current_conditions = AsyncMock(return_value=MagicMock())
+        client.pirate_weather_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+        client._get_pirate_weather_minutely = AsyncMock(return_value=MagicMock())
+
+        now = datetime(2026, 4, 7, 12, 0, tzinfo=UTC)
+        client._latest_weather_by_location[client._location_key(intl_location)] = WeatherData(
+            location=intl_location,
+            hourly_forecast=HourlyForecast(
+                periods=[
+                    HourlyForecastPeriod(
+                        start_time=now + timedelta(hours=1),
+                        precipitation_probability=40,
+                    )
+                ]
+            ),
+        )
+
+        client._utcnow = MagicMock(
+            side_effect=[
+                now,
+                now,
+                now + timedelta(minutes=4),
+                now + timedelta(minutes=6),
+                now + timedelta(minutes=6),
+            ]
+        )
+
+        await client.get_notification_event_data(intl_location)
+        await client.get_notification_event_data(intl_location)
+        await client.get_notification_event_data(intl_location)
+
+        assert client._get_pirate_weather_minutely.await_count == 2
