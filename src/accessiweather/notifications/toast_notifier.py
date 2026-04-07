@@ -18,6 +18,7 @@ import sys
 import threading
 from collections.abc import Callable
 from typing import Any
+from xml.sax.saxutils import escape as _xml_escape
 
 from ..constants import WINDOWS_APP_USER_MODEL_ID
 from ..sound_events import DEFAULT_MUTED_SOUND_EVENTS
@@ -254,7 +255,10 @@ class ToastedWindowsNotifier:
                 app_id=WINDOWS_APP_USER_MODEL_ID,
                 sound=None,  # we handle sounds ourselves
             )
-            toast.elements = [_Text(title), _Text(message)]  # type: ignore[misc]
+            # The toasted library does not XML-escape text content, so
+            # characters like & < > in alert descriptions would produce
+            # invalid XML and a silent 0xc00ce50d error from WinRT.
+            toast.elements = [_Text(_xml_escape(title)), _Text(_xml_escape(message))]  # type: ignore[misc]
             self._set_activation_arguments(toast, activation_arguments)
             # Register activation callback so Action Center clicks are handled
             # in-process (the toasted library fires this via WinRT events).
