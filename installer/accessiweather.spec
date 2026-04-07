@@ -112,6 +112,16 @@ hiddenimports = [
     "sound_lib",
     "sound_lib.stream",
     "sound_lib.output",
+    # sound_lib transitive deps (PyInstaller may not trace these automatically)
+    "platform_utils",
+    "platform_utils.paths",
+    "libloader",
+    "libloader.libloader",
+    # toasted (WinRT toast notifications)
+    "toasted",
+    "toasted.toast",
+    "toasted.elements",
+    "toasted.common",
     "openai",
     "attrs",
     "dateutil",
@@ -130,7 +140,10 @@ hiddenimports = [
 # Desktop notifier backends and metadata are dynamically loaded.
 hiddenimports += _safe_collect_submodules("desktop_notifier")
 hiddenimports += _safe_collect_submodules("sound_lib")
+hiddenimports += _safe_collect_submodules("platform_utils")
+hiddenimports += _safe_collect_submodules("libloader")
 hiddenimports += _safe_collect_submodules("playsound3")
+hiddenimports += _safe_collect_submodules("toasted")
 hiddenimports += _safe_collect_submodules("winsdk")
 hiddenimports += _safe_collect_submodules("winrt")
 

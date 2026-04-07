@@ -165,8 +165,11 @@ class AccessiWeatherApp(wx.App):
         """Initialize the application (wxPython entry point)."""
         logger.info("Starting AccessiWeather application (wxPython)")
 
-        # Startup identity repair disabled to avoid visible terminal popups.
-        # Toast behavior now relies on installer/runtime defaults without shelling out.
+        # Ensure Start Menu shortcut has the correct AUMID for Action Center clicks.
+        # Uses pure Python ctypes COM — no subprocess, no visible terminal window.
+        from .windows_toast_identity import ensure_windows_toast_identity
+
+        ensure_windows_toast_identity()
 
         try:
             # Check for single instance

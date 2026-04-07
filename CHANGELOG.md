@@ -32,6 +32,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - **Action Center notification clicks now reopen AccessiWeather** — clicking a weather alert or discussion update restores the running app and opens the matching dialog instead of doing nothing (#573)
+- **Forecast timezone labels now honor the location timezone consistently** — daily generated times and hourly forecast labels use named zones like BST when available instead of falling back to UTC/GMT offsets (#572)
 - **Permanent refresh freeze** — weather updates no longer stop indefinitely when a location is added or removed while a background fetch is in progress (#545)
 - **stop_all_sounds() now works** — was silently doing nothing; now properly stops all active audio streams (#545)
 - **Announcer cleanup on exit** — ScreenReaderAnnouncer is now shut down properly when the window closes (#545)
