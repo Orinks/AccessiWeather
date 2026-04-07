@@ -37,7 +37,8 @@ class _SingleInstanceManagerStub:
         self.write_activation_handoff = MagicMock(return_value=True)
 
 
-def test_handle_notification_activation_restores_and_routes_discussion() -> None:
+def test_handle_notification_activation_routes_discussion_without_restore() -> None:
+    """Discussion activation opens dialog directly without restoring the main window."""
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app.tray_icon = SimpleNamespace(show_main_window=MagicMock())
     app.main_window = _MainWindowStub()
@@ -47,12 +48,13 @@ def test_handle_notification_activation_restores_and_routes_discussion() -> None
 
     app._handle_notification_activation_request(request)
 
-    app.tray_icon.show_main_window.assert_called_once_with()
+    app.tray_icon.show_main_window.assert_not_called()
     app.main_window._on_discussion.assert_called_once_with()
     app.main_window._show_alert_details.assert_not_called()
 
 
-def test_handle_notification_activation_restores_and_routes_alert_details() -> None:
+def test_handle_notification_activation_routes_alert_details_without_restore() -> None:
+    """Alert details activation opens dialog directly without restoring the main window."""
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app.tray_icon = SimpleNamespace(show_main_window=MagicMock())
     app.main_window = _MainWindowStub()
@@ -64,7 +66,7 @@ def test_handle_notification_activation_restores_and_routes_alert_details() -> N
 
     app._handle_notification_activation_request(request)
 
-    app.tray_icon.show_main_window.assert_called_once_with()
+    app.tray_icon.show_main_window.assert_not_called()
     app.main_window._show_alert_details.assert_called_once_with(1)
     app.main_window._on_discussion.assert_not_called()
 
@@ -89,25 +91,24 @@ def test_on_init_forwards_activation_to_running_instance_and_exits(tmp_path) -> 
 
 
 def test_handle_activation_restores_via_main_window_when_no_tray() -> None:
-    """When tray_icon is None, fall back to Show/Iconize/force_foreground on main_window."""
+    """When tray_icon is None, generic_fallback falls back to Show/Iconize/force_foreground."""
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app.tray_icon = None
     mw = MagicMock()
     app.main_window = mw
     app.current_weather_data = None
 
-    request = NotificationActivationRequest(kind="discussion")
+    request = NotificationActivationRequest(kind="generic_fallback")
     with patch.object(app, "_force_foreground_window") as mock_force:
         app._handle_notification_activation_request(request)
 
     mw.Show.assert_called_once_with(True)
     mw.Iconize.assert_called_once_with(False)
     mock_force.assert_called_once_with(mw)
-    mw._on_discussion.assert_called_once()
 
 
 def test_handle_activation_returns_early_when_no_main_window() -> None:
-    """When main_window is None, should return without error."""
+    """When main_window is None, should return without error or window restore."""
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app.tray_icon = SimpleNamespace(show_main_window=MagicMock())
     app.main_window = None
@@ -116,7 +117,8 @@ def test_handle_activation_returns_early_when_no_main_window() -> None:
     request = NotificationActivationRequest(kind="discussion")
     # Should not raise
     app._handle_notification_activation_request(request)
-    app.tray_icon.show_main_window.assert_called_once()
+    # No window to show, so show_main_window should not be called
+    app.tray_icon.show_main_window.assert_not_called()
 
 
 def test_handle_activation_generic_fallback_only_restores() -> None:

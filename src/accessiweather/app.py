@@ -293,17 +293,12 @@ class AccessiWeatherApp(wx.App):
     def _handle_notification_activation_request(
         self, request: NotificationActivationRequest
     ) -> None:
-        """Restore the app and route a notification activation request."""
-        if self.tray_icon is not None:
-            self.tray_icon.show_main_window()
-        elif self.main_window is not None:
-            self.main_window.Show(True)
-            self.main_window.Iconize(False)
-            self._force_foreground_window(self.main_window)
-
+        """Route a notification activation request, restoring the window only when needed."""
         if self.main_window is None:
             return
 
+        # For discussion/alert_details, show the dialog directly without
+        # restoring the main window — the modal dialog appears on its own.
         if request.kind == "discussion":
             self.main_window._on_discussion()
             return
@@ -312,6 +307,15 @@ class AccessiWeatherApp(wx.App):
             alert_index = self._find_active_alert_index(request.alert_id)
             if alert_index is not None:
                 self.main_window._show_alert_details(alert_index)
+            return
+
+        # generic_fallback and any unknown kind: just restore the main window.
+        if self.tray_icon is not None:
+            self.tray_icon.show_main_window()
+        else:
+            self.main_window.Show(True)
+            self.main_window.Iconize(False)
+            self._force_foreground_window(self.main_window)
 
     def _find_active_alert_index(self, alert_id: str) -> int | None:
         """Locate the current active alert index for an activation request."""
