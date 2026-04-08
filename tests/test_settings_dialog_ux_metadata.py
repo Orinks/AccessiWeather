@@ -57,29 +57,43 @@ def test_source_settings_summary_uses_plain_language():
     )
 
 
-def test_create_section_does_not_insert_helper_text_before_controls(monkeypatch):
+def test_create_section_uses_heading_and_plain_sizer_for_accessibility(monkeypatch):
     fake_section = MagicMock()
+    fake_heading = MagicMock()
     monkeypatch.setattr(
         settings_module.wx,
-        "StaticBoxSizer",
+        "BoxSizer",
         MagicMock(return_value=fake_section),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        settings_module.wx,
+        "StaticText",
+        MagicMock(return_value=fake_heading),
         raising=False,
     )
     monkeypatch.setattr(settings_module.wx, "VERTICAL", 0, raising=False)
     monkeypatch.setattr(settings_module.wx, "EXPAND", 0, raising=False)
-    monkeypatch.setattr(settings_module.wx, "ALL", 0, raising=False)
+    monkeypatch.setattr(settings_module.wx, "LEFT", 0, raising=False)
+    monkeypatch.setattr(settings_module.wx, "RIGHT", 0, raising=False)
+    monkeypatch.setattr(settings_module.wx, "TOP", 0, raising=False)
+    monkeypatch.setattr(settings_module.wx, "BOTTOM", 0, raising=False)
 
     dialog = SettingsDialogSimple.__new__(SettingsDialogSimple)
     dialog.add_help_text = MagicMock()
+    dialog._wrap_static_text = MagicMock()
     parent_sizer = MagicMock()
+    parent = MagicMock()
 
     section = dialog.create_section(
-        parent=MagicMock(),
+        parent=parent,
         parent_sizer=parent_sizer,
         title="Weather refresh",
         description="This should not be injected before the first control.",
     )
 
     assert section is fake_section
+    settings_module.wx.StaticText.assert_called_once_with(parent, label="Weather refresh")
+    dialog._wrap_static_text.assert_called_once_with(fake_heading)
     dialog.add_help_text.assert_not_called()
-    parent_sizer.Add.assert_called_once()
+    assert parent_sizer.Add.call_count == 2

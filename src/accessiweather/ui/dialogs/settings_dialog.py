@@ -208,17 +208,22 @@ class SettingsDialogSimple(wx.Dialog):
         parent_sizer: wx.Sizer,
         title: str,
         description: str | None = None,
-    ) -> wx.StaticBoxSizer:
+    ) -> wx.BoxSizer:
         """
         Create a titled settings section.
 
-        The description parameter is accepted for call-site readability, but we do
-        not auto-render it above the first interactive control. Doing so can cause
-        screen readers to announce helper copy before the actual control label.
+        We intentionally avoid StaticBoxSizer here because screen readers can
+        announce the group label as part of the first interactive control in the
+        section. The description parameter is accepted for call-site readability,
+        but we do not auto-render it above the first interactive control.
         """
         del description
-        section = wx.StaticBoxSizer(wx.VERTICAL, parent, title)
-        parent_sizer.Add(section, 0, wx.EXPAND | wx.ALL, 5)
+        heading = wx.StaticText(parent, label=title)
+        self._wrap_static_text(heading)
+        parent_sizer.Add(heading, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.EXPAND, 5)
+
+        section = wx.BoxSizer(wx.VERTICAL)
+        parent_sizer.Add(section, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
         return section
 
     def _create_ui(self):
