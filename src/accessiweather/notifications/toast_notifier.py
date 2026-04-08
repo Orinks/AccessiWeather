@@ -16,12 +16,14 @@ import contextlib
 import logging
 import sys
 import threading
+import xml.etree.ElementTree as ET
 from collections.abc import Callable
 from typing import Any
 from xml.sax.saxutils import escape as _xml_escape
 
 from ..constants import WINDOWS_APP_USER_MODEL_ID
 from ..sound_events import DEFAULT_MUTED_SOUND_EVENTS
+from ..windows_toast_identity import WINDOWS_TOAST_PROTOCOL_SCHEME
 from .sound_player import (
     normalize_muted_sound_events,
     play_notification_sound,
@@ -111,6 +113,33 @@ class _ActivationResult:
     def __init__(self, arguments: str) -> None:
         self.arguments = arguments
         self.is_dismissed = False
+
+
+def _uses_protocol_activation(activation_arguments: str | None) -> bool:
+    """Return True when the activation payload is a registered URI scheme."""
+    return bool(
+        activation_arguments
+        and activation_arguments.startswith(f"{WINDOWS_TOAST_PROTOCOL_SCHEME}:")
+    )
+
+
+def _apply_protocol_activation_to_xml(xml_payload: str, activation_arguments: str | None) -> str:
+    """Force protocol activation on the toast root element for stub-CLSID mode."""
+    if not _uses_protocol_activation(activation_arguments):
+        return xml_payload
+
+    try:
+        root = ET.fromstring(xml_payload)
+    except ET.ParseError:
+        logger.debug("[toasted] Failed to parse toast XML for protocol activation", exc_info=True)
+        return xml_payload
+
+    if root.tag != "toast":
+        return xml_payload
+
+    root.set("activationType", "protocol")
+    root.set("launch", activation_arguments or "")
+    return ET.tostring(root, encoding="unicode")
 
 
 # ---------------------------------------------------------------------------
@@ -264,7 +293,10 @@ class ToastedWindowsNotifier:
         for attr in ("arguments", "launch"):
             with contextlib.suppress(Exception):
                 setattr(toast, attr, activation_arguments)
-                return
+        if _uses_protocol_activation(activation_arguments):
+            for attr in ("activation_type", "activationType"):
+                with contextlib.suppress(Exception):
+                    setattr(toast, attr, "protocol")
 
     def _send_in_worker(
         self,
@@ -350,13 +382,18 @@ class ToastedWindowsNotifier:
         try:
             # Generate XML from the toasted Toast object
             xml_string = toast.to_xml_string()
+            xml_string = _apply_protocol_activation_to_xml(xml_string, activation_arguments)
 
             xml_doc = _WinRT_XmlDocument()
             xml_doc.load_xml(xml_string)
             notification = _WinRT_ToastNotification(xml_doc)
 
             # Register persistent activated handler
-            if activation_arguments and self.on_activation is not None:
+            if (
+                activation_arguments
+                and self.on_activation is not None
+                and not _uses_protocol_activation(activation_arguments)
+            ):
                 on_activation = self.on_activation
 
                 def _on_activated(sender, args):
