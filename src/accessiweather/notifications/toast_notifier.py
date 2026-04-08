@@ -38,6 +38,10 @@ logger = logging.getLogger(__name__)
 TOASTED_AVAILABLE = False
 _Toast = None
 _Text = None
+_WinRT_XmlDocument = None
+_WinRT_ToastActivatedEventArgs = None
+_WinRT_ToastNotification = None
+_WinRT_ToastNotificationManager = None
 # Direct WinRT access for persistent Action Center activation handlers.
 # The toasted library's show() deregisters WinRT event handlers after the popup
 # is dismissed, so Action Center clicks never fire the activated callback.
