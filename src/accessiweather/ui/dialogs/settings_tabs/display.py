@@ -79,22 +79,39 @@ class DisplayTab:
             "Forecast range",
             "Choose how many days and hours of forecast detail AccessiWeather should show.",
         )
+        daily_forecast_row = wx.BoxSizer(wx.HORIZONTAL)
+        daily_forecast_row.Add(
+            wx.StaticText(panel, label="Daily forecast range:"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
         controls["forecast_duration_days"] = wx.Choice(
             panel,
             choices=["3 days", "5 days", "7 days (default)", "10 days", "14 days", "15 days"],
         )
-        self.dialog.add_labeled_row(
-            panel,
-            forecast_section,
-            "Daily forecast range:",
-            controls["forecast_duration_days"],
+        daily_forecast_row.Add(controls["forecast_duration_days"], 0)
+        forecast_section.Add(
+            daily_forecast_row,
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            8,
+        )
+
+        hourly_forecast_row = wx.BoxSizer(wx.HORIZONTAL)
+        hourly_forecast_row.Add(
+            wx.StaticText(panel, label="Hourly forecast range (hours):"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
         )
         controls["hourly_forecast_hours"] = wx.SpinCtrl(panel, min=1, max=168, initial=6)
-        self.dialog.add_labeled_row(
-            panel,
-            forecast_section,
-            "Hourly forecast range (hours):",
-            controls["hourly_forecast_hours"],
+        hourly_forecast_row.Add(controls["hourly_forecast_hours"], 0)
+        forecast_section.Add(
+            hourly_forecast_row,
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            8,
         )
 
         details_section = self.dialog.create_section(
