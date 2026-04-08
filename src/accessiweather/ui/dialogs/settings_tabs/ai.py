@@ -19,61 +19,61 @@ class AITab:
         """Store reference to the parent settings dialog."""
         self.dialog = dialog
 
-    def create(self):
+    def create(self, page_label: str = "AI"):
         """Build the AI tab panel and add it to the notebook."""
         panel = wx.ScrolledWindow(self.dialog.notebook)
         panel.SetScrollRate(0, 20)
         sizer = wx.BoxSizer(wx.VERTICAL)
         controls = self.dialog._controls
 
-        sizer.Add(wx.StaticText(panel, label="AI Weather Explanations"), 0, wx.ALL, 5)
-        sizer.Add(
-            wx.StaticText(
-                panel,
-                label="Get natural language explanations of weather conditions using AI.",
-            ),
-            0,
-            wx.LEFT | wx.BOTTOM,
-            5,
+        self.dialog.add_help_text(
+            panel,
+            sizer,
+            "Use AI explanations if you want plain-language weather summaries powered by OpenRouter.",
+            left=5,
         )
 
-        sizer.Add(wx.StaticText(panel, label="OpenRouter API Key:"), 0, wx.ALL, 5)
-        controls["openrouter_key"] = wx.TextCtrl(panel, style=wx.TE_PASSWORD, size=(300, -1))
-        sizer.Add(controls["openrouter_key"], 0, wx.LEFT, 10)
-
-        validate_btn = wx.Button(panel, label="Validate API Key")
+        key_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "OpenRouter access",
+            "Add and validate your OpenRouter API key before choosing a model.",
+        )
+        controls["openrouter_key"] = wx.TextCtrl(panel, style=wx.TE_PASSWORD, size=(320, -1))
+        self.dialog.add_labeled_row(
+            panel,
+            key_section,
+            "OpenRouter API key:",
+            controls["openrouter_key"],
+            expand_control=True,
+        )
+        validate_btn = wx.Button(panel, label="Validate OpenRouter key")
         validate_btn.Bind(wx.EVT_BUTTON, self.dialog._on_validate_openrouter_key)
-        sizer.Add(validate_btn, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
+        key_section.Add(validate_btn, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
-        row_model = wx.BoxSizer(wx.HORIZONTAL)
-        row_model.Add(
-            wx.StaticText(panel, label="Model Preference:"),
-            0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
-            10,
+        model_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Model and explanation style",
+            "Free options are easiest to start with. Paid routing can unlock more model choices.",
         )
         controls["ai_model"] = wx.Choice(
             panel,
             choices=[
-                "Free Router (Auto, Free)",
-                "Llama 3.3 70B (Free)",
-                "Auto Router (Paid)",
+                "Free router (automatic, free)",
+                "Llama 3.3 70B (free)",
+                "Auto router (paid)",
             ],
         )
-        row_model.Add(controls["ai_model"], 0)
-        sizer.Add(row_model, 0, wx.LEFT, 10)
-
-        browse_btn = wx.Button(panel, label="Browse Models...")
-        browse_btn.Bind(wx.EVT_BUTTON, self.dialog._on_browse_models)
-        sizer.Add(browse_btn, 0, wx.LEFT | wx.TOP, 10)
-
-        row_style = wx.BoxSizer(wx.HORIZONTAL)
-        row_style.Add(
-            wx.StaticText(panel, label="Explanation Style:"),
-            0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
-            10,
+        self.dialog.add_labeled_row(
+            panel,
+            model_section,
+            "Model preference:",
+            controls["ai_model"],
         )
+        browse_btn = wx.Button(panel, label="Browse OpenRouter models...")
+        browse_btn.Bind(wx.EVT_BUTTON, self.dialog._on_browse_models)
+        model_section.Add(browse_btn, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
         controls["ai_style"] = wx.Choice(
             panel,
             choices=[
@@ -82,50 +82,70 @@ class AITab:
                 "Detailed (full paragraph)",
             ],
         )
-        row_style.Add(controls["ai_style"], 0)
-        sizer.Add(row_style, 0, wx.LEFT | wx.TOP, 10)
+        self.dialog.add_labeled_row(
+            panel,
+            model_section,
+            "Explanation style:",
+            controls["ai_style"],
+        )
 
-        sizer.Add(
-            wx.StaticText(panel, label="Custom System Prompt (optional):"),
+        prompt_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Custom prompts",
+            "Leave these blank to use the default behavior. Add text only if you want more control over tone or focus.",
+        )
+        controls["custom_prompt"] = wx.TextCtrl(panel, style=wx.TE_MULTILINE, size=(420, 70))
+        prompt_section.Add(
+            wx.StaticText(panel, label="Custom system prompt (optional):"),
             0,
-            wx.LEFT | wx.TOP,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
             10,
         )
-        controls["custom_prompt"] = wx.TextCtrl(panel, style=wx.TE_MULTILINE, size=(400, 60))
-        sizer.Add(controls["custom_prompt"], 0, wx.LEFT | wx.EXPAND, 10)
-
-        reset_prompt_btn = wx.Button(panel, label="Reset to Default")
+        prompt_section.Add(
+            controls["custom_prompt"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
+        reset_prompt_btn = wx.Button(panel, label="Reset prompt to default")
         reset_prompt_btn.Bind(wx.EVT_BUTTON, self.dialog._on_reset_prompt)
-        sizer.Add(reset_prompt_btn, 0, wx.LEFT | wx.TOP, 10)
-
-        sizer.Add(
-            wx.StaticText(panel, label="Custom Instructions (optional):"),
+        prompt_section.Add(reset_prompt_btn, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        controls["custom_instructions"] = wx.TextCtrl(
+            panel,
+            style=wx.TE_MULTILINE,
+            size=(420, 50),
+        )
+        controls["custom_instructions"].SetHint(
+            "For example: focus on outdoor activities, keep responses under 50 words"
+        )
+        prompt_section.Add(
+            wx.StaticText(panel, label="Custom instructions (optional):"),
             0,
-            wx.LEFT | wx.TOP,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
             10,
         )
-        controls["custom_instructions"] = wx.TextCtrl(panel, style=wx.TE_MULTILINE, size=(400, 40))
-        controls["custom_instructions"].SetHint(
-            "e.g., Focus on outdoor activities, Keep responses under 50 words"
+        prompt_section.Add(
+            controls["custom_instructions"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
         )
-        sizer.Add(controls["custom_instructions"], 0, wx.LEFT | wx.EXPAND, 10)
 
-        sizer.Add(wx.StaticText(panel, label="Cost Information:"), 0, wx.LEFT | wx.TOP, 10)
-        sizer.Add(
-            wx.StaticText(panel, label="Free models: No cost, may have rate limits"),
-            0,
-            wx.LEFT,
-            15,
+        cost_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Cost notes",
+            None,
         )
-        sizer.Add(
-            wx.StaticText(panel, label="Paid models: ~$0.001 per explanation (varies by model)"),
-            0,
-            wx.LEFT,
-            15,
+        self.dialog.add_help_text(
+            panel,
+            cost_section,
+            "Free models do not cost money but may be rate limited. Paid models often cost around $0.001 per explanation, depending on the model.",
         )
 
         panel.SetSizer(sizer)
-        self.dialog.notebook.AddPage(panel, "AI")
+        self.dialog.notebook.AddPage(panel, page_label)
         return panel
 
     def load(self, settings):
@@ -139,7 +159,7 @@ class AITab:
         if hasattr(wx, "EVT_TEXT"):
             controls["openrouter_key"].Bind(
                 wx.EVT_TEXT,
-                lambda e: setattr(self.dialog, "_openrouter_key_cleared", True),
+                lambda _event: setattr(self.dialog, "_openrouter_key_cleared", True),
             )
 
         ai_model = getattr(settings, "ai_model_preference", "openrouter/free")
@@ -179,11 +199,11 @@ class AITab:
         """Set accessibility names for AI tab controls."""
         controls = self.dialog._controls
         names = {
-            "openrouter_key": "OpenRouter API Key",
-            "ai_model": "Model Preference",
-            "ai_style": "Explanation Style",
-            "custom_prompt": "Custom System Prompt (optional)",
-            "custom_instructions": "Custom Instructions (optional)",
+            "openrouter_key": "OpenRouter API key",
+            "ai_model": "AI model preference",
+            "ai_style": "AI explanation style",
+            "custom_prompt": "Custom system prompt",
+            "custom_instructions": "Custom instructions",
         }
         for key, name in names.items():
             controls[key].SetName(name)
