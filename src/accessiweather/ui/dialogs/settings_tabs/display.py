@@ -41,11 +41,11 @@ class DisplayTab:
             left=5,
         )
 
-        units_section = self.dialog.create_section(
+        temperature_section = self.dialog.create_section(
             panel,
             sizer,
-            "Units and forecast length",
-            "These settings control the overall scale and amount of forecast information you see.",
+            "Temperature units",
+            "Choose whether temperatures are shown automatically, in Fahrenheit, in Celsius, or both.",
         )
         controls["temp_unit"] = wx.Choice(
             panel,
@@ -58,9 +58,26 @@ class DisplayTab:
         )
         self.dialog.add_labeled_row(
             panel,
-            units_section,
+            temperature_section,
             "Temperature units:",
             controls["temp_unit"],
+        )
+        controls["round_values"] = wx.CheckBox(
+            panel,
+            label="Show values as whole numbers when possible",
+        )
+        temperature_section.Add(
+            controls["round_values"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
+
+        forecast_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Forecast length",
+            "Choose how many days and hours of forecast detail AccessiWeather should show.",
         )
         controls["forecast_duration_days"] = wx.Choice(
             panel,
@@ -68,26 +85,16 @@ class DisplayTab:
         )
         self.dialog.add_labeled_row(
             panel,
-            units_section,
+            forecast_section,
             "Forecast length:",
             controls["forecast_duration_days"],
         )
         controls["hourly_forecast_hours"] = wx.SpinCtrl(panel, min=1, max=168, initial=6)
         self.dialog.add_labeled_row(
             panel,
-            units_section,
+            forecast_section,
             "Hourly forecast hours:",
             controls["hourly_forecast_hours"],
-        )
-        controls["round_values"] = wx.CheckBox(
-            panel,
-            label="Show values as whole numbers when possible",
-        )
-        units_section.Add(
-            controls["round_values"],
-            0,
-            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
-            10,
         )
 
         details_section = self.dialog.create_section(
