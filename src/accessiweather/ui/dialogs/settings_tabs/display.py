@@ -93,7 +93,7 @@ class DisplayTab:
         self.dialog.add_labeled_row(
             panel,
             forecast_section,
-            "Hourly forecast hours:",
+            "Show hourly forecast for (hours):",
             controls["hourly_forecast_hours"],
         )
 
@@ -293,7 +293,7 @@ class DisplayTab:
             "show_impact_summaries": "Show impact summaries for outdoor driving and allergy conditions",
             "round_values": "Show values as whole numbers when possible",
             "forecast_duration_days": "Forecast length",
-            "hourly_forecast_hours": "Hourly forecast hours",
+            "hourly_forecast_hours": "Show hourly forecast for hours",
             "forecast_time_reference": "Forecast time reference",
             "time_display_mode": "Time display mode",
             "time_format_12hour": "Use 12-hour time format",
