@@ -6,6 +6,8 @@ import argparse
 import logging
 import sys
 
+from .notification_activation import extract_activation_request_from_argv
+
 
 def setup_logging(debug: bool = False) -> None:
     """Set up logging configuration."""
@@ -17,8 +19,8 @@ def setup_logging(debug: bool = False) -> None:
     )
 
 
-def main() -> None:
-    """Run the AccessiWeather application."""
+def _build_parser() -> argparse.ArgumentParser:
+    """Build the shared parser for desktop entrypoints."""
     parser = argparse.ArgumentParser(description="AccessiWeather - Accessible Weather Application")
     parser.add_argument(
         "--config-dir",
@@ -55,7 +57,24 @@ def main() -> None:
         action="store_true",
         help="Skip lock-file prompt (set automatically after an update restart)",
     )
-    args = parser.parse_args()
+    return parser
+
+
+def parse_args(args: list[str] | None = None) -> argparse.Namespace:
+    """Parse desktop entrypoint arguments, allowing Windows toast activation tokens."""
+    parser = _build_parser()
+    parsed_args, extras = parser.parse_known_args(args)
+    token_argv = [sys.argv[0], *extras] if args is None else extras
+    parsed_args.activation_request = extract_activation_request_from_argv(token_argv)
+    unknown = [arg for arg in extras if extract_activation_request_from_argv([arg]) is None]
+    if unknown:
+        parser.error(f"unrecognized arguments: {' '.join(unknown)}")
+    return parsed_args
+
+
+def main() -> None:
+    """Run the AccessiWeather application."""
+    args = parse_args()
 
     setup_logging(debug=args.debug)
 
@@ -69,6 +88,7 @@ def main() -> None:
         fake_nightly=args.fake_nightly,
         force_wizard=args.wizard,
         updated=args.updated,
+        activation_request=args.activation_request,
     )
 
 
