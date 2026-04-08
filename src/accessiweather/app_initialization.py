@@ -108,7 +108,7 @@ def initialize_components(app: AccessiWeatherApp) -> None:
         app.alert_manager,
         app._notifier,
         config.settings,
-        on_alerts_popup=app._queue_immediate_alert_popup,
+        on_alerts_popup=getattr(app, "_queue_immediate_alert_popup", None),
     )
 
     # Defer weather history service initialization
