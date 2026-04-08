@@ -105,7 +105,10 @@ def initialize_components(app: AccessiWeatherApp) -> None:
         runtime_state_manager=app.runtime_state_manager,
     )
     app.alert_notification_system = AlertNotificationSystem(
-        app.alert_manager, app._notifier, config.settings
+        app.alert_manager,
+        app._notifier,
+        config.settings,
+        on_alerts_popup=app._queue_immediate_alert_popup,
     )
 
     # Defer weather history service initialization

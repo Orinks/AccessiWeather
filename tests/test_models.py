@@ -400,6 +400,14 @@ class TestAppSettings:
         assert restored.notify_minutely_precipitation_start is True
         assert restored.notify_minutely_precipitation_stop is False
 
+    def test_immediate_alert_popup_setting_round_trip(self):
+        """Immediate alert popup opt-in should serialize and load cleanly."""
+        settings = AppSettings(immediate_alert_details_popups=True)
+
+        restored = AppSettings.from_dict(settings.to_dict())
+
+        assert restored.immediate_alert_details_popups is True
+
     def test_forecast_time_reference_validation(self):
         """Ensure invalid forecast_time_reference values fall back to location."""
         settings = AppSettings()
