@@ -209,10 +209,15 @@ class SettingsDialogSimple(wx.Dialog):
         title: str,
         description: str | None = None,
     ) -> wx.StaticBoxSizer:
-        """Create a titled settings section with optional helper copy."""
+        """
+        Create a titled settings section.
+
+        The description parameter is accepted for call-site readability, but we do
+        not auto-render it above the first interactive control. Doing so can cause
+        screen readers to announce helper copy before the actual control label.
+        """
+        del description
         section = wx.StaticBoxSizer(wx.VERTICAL, parent, title)
-        if description:
-            self.add_help_text(parent, section, description)
         parent_sizer.Add(section, 0, wx.EXPAND | wx.ALL, 5)
         return section
 
