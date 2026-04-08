@@ -76,8 +76,8 @@ class DiscussionDialog(wx.Dialog):
         main_sizer.Add(self.discussion_display, 1, wx.ALL | wx.EXPAND, 10)
 
         # AI Explanation section
-        explanation_header = wx.StaticText(panel, label="Plain Language Summary:")
-        main_sizer.Add(explanation_header, 0, wx.LEFT | wx.RIGHT, 10)
+        self.explanation_header = wx.StaticText(panel, label="Plain Language Summary:")
+        main_sizer.Add(self.explanation_header, 0, wx.LEFT | wx.RIGHT, 10)
 
         self.explanation_display = wx.TextCtrl(
             panel,
@@ -135,11 +135,53 @@ class DiscussionDialog(wx.Dialog):
     def _setup_initial_state(self) -> None:
         """Set up initial state."""
         self.discussion_display.SetValue("Loading...")
-        self.explanation_display.SetValue(
-            "Click 'Explain with AI' to generate a plain language summary.\n\n"
-            "Note: Requires an OpenRouter API key configured in Settings."
-        )
+        self.explanation_display.SetValue("")
+        self.model_info.SetValue("")
+        DiscussionDialog._hide_ai_summary_section(self)
+        DiscussionDialog._hide_model_info(self)
+        DiscussionDialog._set_post_explain_buttons(self, has_attempted_explanation=False)
         self.explain_button.Disable()
+
+    def _layout_dialog(self) -> None:
+        """Refresh dialog layout after visibility changes."""
+        sizer = self.GetSizer()
+        if sizer:
+            sizer.Layout()
+
+    def _show_ai_summary_section(self) -> None:
+        """Show the AI summary header and textbox."""
+        self.explanation_header.Show()
+        self.explanation_display.Show()
+        DiscussionDialog._layout_dialog(self)
+
+    def _hide_ai_summary_section(self) -> None:
+        """Hide the AI summary header and textbox."""
+        self.explanation_header.Hide()
+        self.explanation_display.Hide()
+        DiscussionDialog._layout_dialog(self)
+
+    def _show_model_info(self) -> None:
+        """Show model information controls."""
+        self.model_info_label.Show()
+        self.model_info.Show()
+        DiscussionDialog._layout_dialog(self)
+
+    def _hide_model_info(self) -> None:
+        """Hide model information controls and clear stale text."""
+        self.model_info.SetValue("")
+        self.model_info_label.Hide()
+        self.model_info.Hide()
+        DiscussionDialog._layout_dialog(self)
+
+    def _set_post_explain_buttons(self, has_attempted_explanation: bool) -> None:
+        """Toggle explain/regenerate buttons based on explanation history."""
+        if has_attempted_explanation:
+            self.explain_button.Hide()
+            self.regenerate_button.Show()
+        else:
+            self.explain_button.Show()
+            self.regenerate_button.Hide()
+        DiscussionDialog._layout_dialog(self)
 
     def _set_status(self, message: str) -> None:
         """Update the status label."""
@@ -262,6 +304,9 @@ class DiscussionDialog(wx.Dialog):
             return
 
         self._is_explaining = True
+        DiscussionDialog._show_ai_summary_section(self)
+        DiscussionDialog._hide_model_info(self)
+        DiscussionDialog._set_post_explain_buttons(self, has_attempted_explanation=False)
         self.explain_button.Disable()
         self.explanation_display.SetValue("Generating plain language summary...")
         self._set_status("Generating AI explanation...")
@@ -330,17 +375,15 @@ class DiscussionDialog(wx.Dialog):
     ) -> None:
         """Handle explanation completion."""
         self._is_explaining = False
-        self.explain_button.Enable()
+        DiscussionDialog._show_ai_summary_section(self)
+        DiscussionDialog._set_post_explain_buttons(self, has_attempted_explanation=True)
         self.explanation_display.SetValue(explanation)
         cost_text = "No cost" if estimated_cost == 0 else f"~${estimated_cost:.6f}"
         info = f"Model: {model_used}\nTokens: {token_count}\nCost: {cost_text}"
         if cached:
             info += "\nCached: Yes"
         self.model_info.SetValue(info)
-        self.model_info_label.Show()
-        self.model_info.Show()
-        self.regenerate_button.Show()
-        self.GetSizer().Layout()
+        DiscussionDialog._show_model_info(self)
         self._set_status(f"Explanation generated using {model_used}.")
 
     def _on_regenerate(self, event) -> None:
@@ -353,7 +396,9 @@ class DiscussionDialog(wx.Dialog):
     def _on_explain_error(self, error: str) -> None:
         """Handle explanation error."""
         self._is_explaining = False
-        self.explain_button.Enable()
+        DiscussionDialog._show_ai_summary_section(self)
+        DiscussionDialog._hide_model_info(self)
+        DiscussionDialog._set_post_explain_buttons(self, has_attempted_explanation=True)
         self.explanation_display.SetValue(
             f"Failed to generate explanation: {error}\n\n"
             "Please check your OpenRouter API key in Settings."
