@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [0.4.5] - 2026-03-26
 
 ### Added
+- **Optional in-app alert detail popups** — while AccessiWeather is already running, you can now choose to open newly eligible alert details immediately instead of only getting toast notifications (#578)
 - **Pirate Weather full integration** — Pirate Weather is now a first-class data source with alerts, hourly and minutely forecasts, and automatic fusion alongside NWS and Open-Meteo (#479)
 - **AVWX aviation source** — TAF and METAR data from AVWX for international locations (#480)
 - **All Locations summary view** — see a compact weather overview for all your saved locations at once (#518)

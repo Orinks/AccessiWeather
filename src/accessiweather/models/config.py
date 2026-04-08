@@ -26,6 +26,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "alert_notify_moderate",
     "alert_notify_minor",
     "alert_notify_unknown",
+    "immediate_alert_details_popups",
     "alert_global_cooldown_minutes",
     "alert_per_alert_cooldown_minutes",
     "alert_escalation_cooldown_minutes",
@@ -134,6 +135,7 @@ class AppSettings:
     alert_notify_moderate: bool = True
     alert_notify_minor: bool = False
     alert_notify_unknown: bool = False
+    immediate_alert_details_popups: bool = False
     alert_global_cooldown_minutes: int = 5
     alert_per_alert_cooldown_minutes: int = 60
     alert_escalation_cooldown_minutes: int = 15
@@ -433,6 +435,7 @@ class AppSettings:
             "alert_notify_moderate": self.alert_notify_moderate,
             "alert_notify_minor": self.alert_notify_minor,
             "alert_notify_unknown": self.alert_notify_unknown,
+            "immediate_alert_details_popups": self.immediate_alert_details_popups,
             "alert_global_cooldown_minutes": self.alert_global_cooldown_minutes,
             "alert_per_alert_cooldown_minutes": self.alert_per_alert_cooldown_minutes,
             "alert_escalation_cooldown_minutes": self.alert_escalation_cooldown_minutes,
@@ -519,6 +522,9 @@ class AppSettings:
             alert_notify_moderate=cls._as_bool(data.get("alert_notify_moderate"), True),
             alert_notify_minor=cls._as_bool(data.get("alert_notify_minor"), False),
             alert_notify_unknown=cls._as_bool(data.get("alert_notify_unknown"), False),
+            immediate_alert_details_popups=cls._as_bool(
+                data.get("immediate_alert_details_popups"), False
+            ),
             alert_global_cooldown_minutes=data.get("alert_global_cooldown_minutes", 5),
             alert_per_alert_cooldown_minutes=data.get("alert_per_alert_cooldown_minutes", 60),
             alert_escalation_cooldown_minutes=data.get("alert_escalation_cooldown_minutes", 15),

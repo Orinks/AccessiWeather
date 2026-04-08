@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 from accessiweather.ui.dialogs.settings_dialog import SettingsDialogSimple
 from accessiweather.ui.dialogs.settings_tabs.display import DisplayTab
 from accessiweather.ui.dialogs.settings_tabs.general import GeneralTab
+from accessiweather.ui.dialogs.settings_tabs.notifications import NotificationsTab
 
 
 class _DummyControl:
@@ -75,8 +76,9 @@ def _make_dialog_for_settings(settings: SimpleNamespace) -> SettingsDialogSimple
     # Wire up tab objects so _load_settings/_save_settings delegate correctly
     general_tab = GeneralTab(dialog)
     display_tab = DisplayTab(dialog)
+    notifications_tab = NotificationsTab(dialog)
     dialog._display_tab = display_tab
-    dialog._tab_objects = [general_tab, display_tab]
+    dialog._tab_objects = [general_tab, display_tab, notifications_tab]
 
     return dialog
 
@@ -130,6 +132,28 @@ def test_save_settings_persists_tray_text_fields():
     assert kwargs["taskbar_icon_text_enabled"] is True
     assert kwargs["taskbar_icon_dynamic_enabled"] is False
     assert kwargs["taskbar_icon_text_format"] == "{temp}"
+
+
+def test_load_settings_populates_immediate_alert_popup_opt_in():
+    settings = SimpleNamespace(immediate_alert_details_popups=True)
+    dialog = _make_dialog_for_settings(settings)
+
+    dialog._load_settings()
+
+    assert dialog._controls["immediate_alert_details_popups"].GetValue() is True
+
+
+def test_save_settings_persists_immediate_alert_popup_opt_in():
+    dialog = _make_dialog_for_settings(SimpleNamespace())
+    dialog._get_ai_model_preference = lambda: "openrouter/free"
+    dialog.config_manager.update_settings.return_value = True
+    dialog._controls["immediate_alert_details_popups"].SetValue(True)
+
+    success = dialog._save_settings()
+
+    assert success is True
+    kwargs = dialog.config_manager.update_settings.call_args.kwargs
+    assert kwargs["immediate_alert_details_popups"] is True
 
 
 def test_get_selected_temperature_unit_uses_current_choice():

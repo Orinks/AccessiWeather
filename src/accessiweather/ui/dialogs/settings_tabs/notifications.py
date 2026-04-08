@@ -43,6 +43,12 @@ class NotificationsTab:
         controls["alert_notif"] = wx.CheckBox(panel, label="Enable alert notifications")
         sizer.Add(controls["alert_notif"], 0, wx.LEFT | wx.BOTTOM, 5)
 
+        controls["immediate_alert_details_popups"] = wx.CheckBox(
+            panel,
+            label="Open alert details popups immediately while AccessiWeather is running",
+        )
+        sizer.Add(controls["immediate_alert_details_popups"], 0, wx.LEFT | wx.BOTTOM, 5)
+
         row_area = wx.BoxSizer(wx.HORIZONTAL)
         row_area.Add(
             wx.StaticText(panel, label="Alert Area:"),
@@ -164,6 +170,9 @@ class NotificationsTab:
         controls["notify_moderate"].SetValue(getattr(settings, "alert_notify_moderate", True))
         controls["notify_minor"].SetValue(getattr(settings, "alert_notify_minor", False))
         controls["notify_unknown"].SetValue(getattr(settings, "alert_notify_unknown", False))
+        controls["immediate_alert_details_popups"].SetValue(
+            getattr(settings, "immediate_alert_details_popups", False)
+        )
 
         controls["global_cooldown"].SetValue(getattr(settings, "alert_global_cooldown_minutes", 5))
         controls["per_alert_cooldown"].SetValue(
@@ -201,6 +210,7 @@ class NotificationsTab:
             "alert_notify_moderate": controls["notify_moderate"].GetValue(),
             "alert_notify_minor": controls["notify_minor"].GetValue(),
             "alert_notify_unknown": controls["notify_unknown"].GetValue(),
+            "immediate_alert_details_popups": controls["immediate_alert_details_popups"].GetValue(),
             "alert_global_cooldown_minutes": controls["global_cooldown"].GetValue(),
             "alert_per_alert_cooldown_minutes": controls["per_alert_cooldown"].GetValue(),
             "alert_freshness_window_minutes": controls["freshness_window"].GetValue(),
@@ -227,6 +237,7 @@ class NotificationsTab:
             "notify_moderate": "Moderate - Potentially hazardous (e.g., Winter Weather Advisory)",
             "notify_minor": "Minor - Low impact events (e.g., Frost Advisory, Fog Advisory)",
             "notify_unknown": "Unknown - Uncategorized alerts",
+            "immediate_alert_details_popups": "Open alert details popups immediately while AccessiWeather is running",
             "notify_discussion_update": "Notify when Area Forecast Discussion is updated (NWS US only)",
             "notify_severe_risk_change": "Notify when severe weather risk level changes (Visual Crossing only)",
             "notify_minutely_precipitation_start": "Notify when precipitation is expected to start soon (Pirate Weather)",
