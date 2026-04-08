@@ -100,14 +100,14 @@ def _normalize_clsid(clsid: str | None) -> str | None:
         return None
 
 
-def _guid_from_string(clsid: str) -> GUID:
+def _guid_from_string(clsid: str) -> GUID:  # pragma: no cover
     """Convert a CLSID string into the local GUID structure."""
     parsed = uuid.UUID(clsid)
     data4 = tuple(parsed.bytes[8:])
     return GUID(parsed.time_low, parsed.time_mid, parsed.time_hi_version, data4)
 
 
-def _guid_to_string(guid: GUID) -> str:
+def _guid_to_string(guid: GUID) -> str:  # pragma: no cover
     """Convert a local GUID structure to uppercase-braced string form."""
     return (
         "{"
@@ -473,7 +473,9 @@ def _create_shortcut_ctypes(shortcut_path: Path, target_path: str, display_name:
     return True
 
 
-def _read_shortcut_string_property(shortcut_path: Path, property_key: PROPERTYKEY) -> str | None:
+def _read_shortcut_string_property(  # pragma: no cover
+    shortcut_path: Path, property_key: PROPERTYKEY
+) -> str | None:
     """Read a string-valued property from a shortcut via IPropertyStore."""
     if sys.platform != "win32" or not shortcut_path.exists() or _shell32 is None:
         return None
@@ -512,7 +514,7 @@ def _read_shortcut_string_property(shortcut_path: Path, property_key: PROPERTYKE
         return None
 
 
-def _set_shortcut_string_property(
+def _set_shortcut_string_property(  # pragma: no cover
     shortcut_path: Path, property_key: PROPERTYKEY, value: str
 ) -> bool:
     """Set a string-valued property on a shortcut via IPropertyStore."""
@@ -573,7 +575,9 @@ def _set_shortcut_string_property(
         return False
 
 
-def _read_shortcut_guid_property(shortcut_path: Path, property_key: PROPERTYKEY) -> str | None:
+def _read_shortcut_guid_property(  # pragma: no cover
+    shortcut_path: Path, property_key: PROPERTYKEY
+) -> str | None:
     """Read a GUID-valued property from a shortcut via IPropertyStore."""
     if sys.platform != "win32" or not shortcut_path.exists() or _shell32 is None:
         return None
@@ -610,7 +614,9 @@ def _read_shortcut_guid_property(shortcut_path: Path, property_key: PROPERTYKEY)
         return None
 
 
-def _set_shortcut_guid_property(shortcut_path: Path, property_key: PROPERTYKEY, value: str) -> bool:
+def _set_shortcut_guid_property(  # pragma: no cover
+    shortcut_path: Path, property_key: PROPERTYKEY, value: str
+) -> bool:
     """Set a GUID-valued property on a shortcut via IPropertyStore."""
     if sys.platform != "win32" or _shell32 is None:
         return False

@@ -10,12 +10,18 @@ from accessiweather.app import AccessiWeatherApp
 from accessiweather.constants import WINDOWS_APP_USER_MODEL_ID
 from accessiweather.windows_toast_identity import (
     WINDOWS_TOAST_ACTIVATOR_CLSID,
+    WINDOWS_TOAST_PROTOCOL_SCHEME,
+    _build_protocol_handler_command,
     _is_unc_path,
     _load_toast_identity_stamp,
     _needs_shortcut_repair,
+    _normalize_clsid,
+    _register_protocol_activation_handler,
+    _resolve_notification_launch_command,
     _resolve_start_menu_shortcut_path,
     _run_powershell_json,
     _should_repair_shortcut,
+    _write_toast_identity_stamp,
     ensure_windows_toast_identity,
     set_windows_app_user_model_id,
 )
@@ -68,6 +74,195 @@ def test_skips_app_user_model_id_on_non_windows(monkeypatch):
 def test_is_unc_path_detects_network_paths():
     assert _is_unc_path(r"\\server\share\AccessiWeather.exe") is True
     assert _is_unc_path(r"C:\Apps\AccessiWeather.exe") is False
+
+
+def test_normalize_clsid_accepts_valid_guid_and_rejects_invalid():
+    assert _normalize_clsid("0d3c3f8e-7303-4c9b-81c7-ff8d8c1afc07") == WINDOWS_TOAST_ACTIVATOR_CLSID
+    assert _normalize_clsid("not-a-guid") is None
+    assert _normalize_clsid(None) is None
+
+
+def test_resolve_notification_launch_command_prefers_frozen_executable(monkeypatch, tmp_path):
+    exe_path = tmp_path / "AccessiWeather.exe"
+    monkeypatch.setattr("accessiweather.windows_toast_identity.sys.frozen", True, raising=False)
+    monkeypatch.setattr("accessiweather.windows_toast_identity.sys.executable", str(exe_path))
+
+    assert _resolve_notification_launch_command() == [str(exe_path.resolve())]
+
+
+def test_resolve_notification_launch_command_prefers_module_launch(monkeypatch, tmp_path):
+    monkeypatch.delattr(sys, "frozen", raising=False)
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity.sys.executable", str(tmp_path / "python")
+    )
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity.importlib.util.find_spec",
+        lambda name: object() if name == "accessiweather" else None,
+    )
+
+    assert _resolve_notification_launch_command() == [
+        str((tmp_path / "python").resolve()),
+        "-m",
+        "accessiweather",
+    ]
+
+
+def test_resolve_notification_launch_command_falls_back_to_script_path(monkeypatch, tmp_path):
+    monkeypatch.delattr(sys, "frozen", raising=False)
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity.sys.executable", str(tmp_path / "python")
+    )
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity.sys.argv", [str(tmp_path / "launcher.py")]
+    )
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity.importlib.util.find_spec", lambda _name: None
+    )
+
+    assert _resolve_notification_launch_command() == [
+        str((tmp_path / "python").resolve()),
+        str((tmp_path / "launcher.py").resolve()),
+    ]
+
+
+def test_resolve_notification_launch_command_falls_back_to_executable_when_argv_empty(
+    monkeypatch, tmp_path
+):
+    monkeypatch.delattr(sys, "frozen", raising=False)
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity.sys.executable", str(tmp_path / "python")
+    )
+    monkeypatch.setattr("accessiweather.windows_toast_identity.sys.argv", [])
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity.importlib.util.find_spec", lambda _name: None
+    )
+
+    assert _resolve_notification_launch_command() == [str((tmp_path / "python").resolve())]
+
+
+def test_build_protocol_handler_command_quotes_protocol_argument(monkeypatch):
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity._resolve_notification_launch_command",
+        lambda: [r"C:\Program Files\AccessiWeather\AccessiWeather.exe"],
+    )
+
+    command = _build_protocol_handler_command()
+
+    assert '"C:\\Program Files\\AccessiWeather\\AccessiWeather.exe"' in command
+    assert "%1" in command
+
+
+def test_register_protocol_activation_handler_returns_false_off_windows(monkeypatch):
+    monkeypatch.setattr("accessiweather.windows_toast_identity.sys.platform", "linux")
+
+    assert _register_protocol_activation_handler() is False
+
+
+def test_register_protocol_activation_handler_returns_false_without_winreg(monkeypatch):
+    monkeypatch.setattr("accessiweather.windows_toast_identity.sys.platform", "win32")
+    original_import = __import__
+
+    def _fake_import(name, *args, **kwargs):
+        if name == "winreg":
+            raise ImportError("no winreg")
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr("builtins.__import__", _fake_import)
+
+    assert _register_protocol_activation_handler() is False
+
+
+def test_register_protocol_activation_handler_writes_expected_registry_keys(monkeypatch):
+    monkeypatch.setattr("accessiweather.windows_toast_identity.sys.platform", "win32")
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity._resolve_notification_launch_command",
+        lambda: [r"C:\AccessiWeather\AccessiWeather.exe"],
+    )
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity._build_protocol_handler_command",
+        lambda protocol_argument="%1": f'"C:\\AccessiWeather\\AccessiWeather.exe" "{protocol_argument}"',
+    )
+
+    writes: list[tuple[str, str | None, str]] = []
+
+    class _Key:
+        def __init__(self, path: str):
+            self.path = path
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    fake_winreg = SimpleNamespace(
+        HKEY_CURRENT_USER="HKCU",
+        REG_SZ="REG_SZ",
+        CreateKey=lambda hive, path: _Key(path),
+        SetValueEx=lambda key, name, _reserved, _reg_type, value: writes.append(
+            (key.path, name, value)
+        ),
+    )
+    monkeypatch.setitem(sys.modules, "winreg", fake_winreg)
+
+    assert _register_protocol_activation_handler() is True
+    assert (
+        rf"Software\Classes\{WINDOWS_TOAST_PROTOCOL_SCHEME}",
+        None,
+        "URL:AccessiWeather Toast",
+    ) in writes
+    assert (rf"Software\Classes\{WINDOWS_TOAST_PROTOCOL_SCHEME}", "URL Protocol", "") in writes
+    assert (
+        rf"Software\Classes\{WINDOWS_TOAST_PROTOCOL_SCHEME}\shell\open\command",
+        None,
+        '"C:\\AccessiWeather\\AccessiWeather.exe" "%1"',
+    ) in writes
+
+
+def test_register_protocol_activation_handler_returns_false_when_registry_write_fails(monkeypatch):
+    monkeypatch.setattr("accessiweather.windows_toast_identity.sys.platform", "win32")
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity._resolve_notification_launch_command",
+        lambda: [r"C:\AccessiWeather\AccessiWeather.exe"],
+    )
+
+    class _Key:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+    fake_winreg = SimpleNamespace(
+        HKEY_CURRENT_USER="HKCU",
+        REG_SZ="REG_SZ",
+        CreateKey=lambda hive, path: _Key(),
+        SetValueEx=lambda *args, **kwargs: (_ for _ in ()).throw(OSError("registry write failed")),
+    )
+    monkeypatch.setitem(sys.modules, "winreg", fake_winreg)
+
+    assert _register_protocol_activation_handler() is False
+
+
+def test_write_toast_identity_stamp_persists_protocol_and_normalized_clsid(tmp_path):
+    stamp_path = tmp_path / "toast_identity_stamp.json"
+    shortcut_path = tmp_path / "AccessiWeather.lnk"
+
+    _write_toast_identity_stamp(
+        stamp_path=stamp_path,
+        shortcut_path=shortcut_path,
+        exe_path=r"C:\AccessiWeather\AccessiWeather.exe",
+        app_version="1.2.3",
+        verified=True,
+        readback_app_id=WINDOWS_TOAST_PROTOCOL_SCHEME,
+        toast_activator_clsid="0d3c3f8e-7303-4c9b-81c7-ff8d8c1afc07",
+        protocol_handler_registered=True,
+    )
+
+    payload = _load_toast_identity_stamp(stamp_path)
+    assert payload is not None
+    assert payload["toast_activator_clsid"] == WINDOWS_TOAST_ACTIVATOR_CLSID
+    assert payload["protocol_handler_registered"] is True
 
 
 def test_resolve_start_menu_shortcut_path_prefers_nested_installer_shortcut(tmp_path, monkeypatch):
