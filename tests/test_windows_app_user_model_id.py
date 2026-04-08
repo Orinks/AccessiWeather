@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 from accessiweather.app import AccessiWeatherApp
 from accessiweather.constants import WINDOWS_APP_USER_MODEL_ID
 from accessiweather.windows_toast_identity import (
+    WINDOWS_TOAST_ACTIVATOR_CLSID,
     _is_unc_path,
     _load_toast_identity_stamp,
     _needs_shortcut_repair,
@@ -140,6 +141,7 @@ def test_should_repair_shortcut_cache_logic(tmp_path):
     version = "1.2.3"
 
     good_stamp = {
+        "schema_version": 2,
         "verified": True,
         "exe_path": exe,
         "app_version": version,
@@ -420,6 +422,7 @@ def test_ensure_windows_toast_identity_skips_repair_when_stamp_valid(monkeypatch
     monkeypatch.setattr(
         "accessiweather.windows_toast_identity._load_toast_identity_stamp",
         lambda _p: {
+            "schema_version": 2,
             "verified": True,
             "exe_path": str(tmp_path / "AccessiWeather.exe"),
             "app_version": "1.0.0",
@@ -433,6 +436,80 @@ def test_ensure_windows_toast_identity_skips_repair_when_stamp_valid(monkeypatch
     ensure_windows_toast_identity()
 
     assert run_mock.call_count == 0
+
+
+def test_ensure_windows_toast_identity_sets_toast_activator_and_protocol_handler(
+    monkeypatch, tmp_path
+):
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity._TOAST_IDENTITY_ENSURED_THIS_STARTUP", False
+    )
+    monkeypatch.setattr("accessiweather.windows_toast_identity.sys.platform", "win32")
+    exe_path = tmp_path / "AccessiWeather.exe"
+    monkeypatch.setattr("accessiweather.windows_toast_identity.sys.executable", str(exe_path))
+    monkeypatch.setattr("accessiweather.windows_toast_identity.Path.home", lambda: tmp_path)
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity.set_windows_app_user_model_id", MagicMock()
+    )
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity._load_toast_identity_stamp", lambda _: None
+    )
+    monkeypatch.setattr("accessiweather.windows_toast_identity._ole32", MagicMock())
+    monkeypatch.setattr("accessiweather.windows_toast_identity._shell32", MagicMock())
+
+    shortcut_path = (
+        tmp_path
+        / "AppData"
+        / "Roaming"
+        / "Microsoft"
+        / "Windows"
+        / "Start Menu"
+        / "Programs"
+        / "AccessiWeather"
+        / "AccessiWeather.lnk"
+    )
+    shortcut_path.parent.mkdir(parents=True)
+    shortcut_path.write_text("lnk")
+
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity._resolve_start_menu_shortcut_path",
+        lambda _display_name: shortcut_path,
+    )
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity._read_shortcut_target_wscript",
+        lambda _shortcut_path: str(exe_path),
+    )
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity._read_shortcut_app_id",
+        lambda _shortcut_path: WINDOWS_APP_USER_MODEL_ID,
+    )
+    activator_reads = iter([None, WINDOWS_TOAST_ACTIVATOR_CLSID])
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity._read_shortcut_toast_activator_clsid",
+        lambda _shortcut_path: next(activator_reads),
+    )
+
+    set_clsid = MagicMock(return_value=True)
+    register_protocol = MagicMock(return_value=True)
+    written: list[dict] = []
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity._set_shortcut_toast_activator_clsid",
+        set_clsid,
+    )
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity._register_protocol_activation_handler",
+        register_protocol,
+    )
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity._write_toast_identity_stamp",
+        lambda **kwargs: written.append(kwargs),
+    )
+
+    ensure_windows_toast_identity()
+
+    set_clsid.assert_called_once_with(shortcut_path, WINDOWS_TOAST_ACTIVATOR_CLSID)
+    register_protocol.assert_called_once()
+    assert written and written[0]["verified"] is True
 
 
 def test_accessiweather_app_init_falls_back_when_portable_detection_errors(monkeypatch):
