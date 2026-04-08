@@ -180,7 +180,9 @@ def test_register_protocol_activation_handler_writes_expected_registry_keys(monk
     )
     monkeypatch.setattr(
         "accessiweather.windows_toast_identity._build_protocol_handler_command",
-        lambda protocol_argument="%1": f'"C:\\AccessiWeather\\AccessiWeather.exe" "{protocol_argument}"',
+        lambda protocol_argument="%1": (
+            f'"C:\\AccessiWeather\\AccessiWeather.exe" "{protocol_argument}"'
+        ),
     )
 
     writes: list[tuple[str, str | None, str]] = []
