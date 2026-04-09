@@ -47,20 +47,19 @@ class DisplayTab:
             "Temperature units",
             "Choose whether temperatures are shown automatically, in Fahrenheit, in Celsius, or both.",
         )
-        controls["temp_unit"] = wx.Choice(
-            panel,
-            choices=[
-                "Auto (based on location)",
-                "Imperial (°F)",
-                "Metric (°C)",
-                "Both (°F and °C)",
-            ],
-        )
-        self.dialog.add_labeled_row(
+        controls["temp_unit"] = self.dialog.add_labeled_control_row(
             panel,
             temperature_section,
             "Temperature units:",
-            controls["temp_unit"],
+            lambda parent: wx.Choice(
+                parent,
+                choices=[
+                    "Auto (based on location)",
+                    "Imperial (°F)",
+                    "Metric (°C)",
+                    "Both (°F and °C)",
+                ],
+            ),
         )
         controls["round_values"] = wx.CheckBox(
             panel,
@@ -150,25 +149,23 @@ class DisplayTab:
             "Time display",
             "Choose whose timezone to use and how timestamps should be formatted.",
         )
-        controls["forecast_time_reference"] = wx.Choice(
-            panel,
-            choices=["Location timezone (default)", "My local timezone"],
-        )
-        self.dialog.add_labeled_row(
+        controls["forecast_time_reference"] = self.dialog.add_labeled_control_row(
             panel,
             time_section,
             "Forecast times are based on:",
-            controls["forecast_time_reference"],
+            lambda parent: wx.Choice(
+                parent,
+                choices=["Location timezone (default)", "My local timezone"],
+            ),
         )
-        controls["time_display_mode"] = wx.Choice(
-            panel,
-            choices=["Local time only", "UTC time only", "Both local and UTC"],
-        )
-        self.dialog.add_labeled_row(
+        controls["time_display_mode"] = self.dialog.add_labeled_control_row(
             panel,
             time_section,
             "Show times as:",
-            controls["time_display_mode"],
+            lambda parent: wx.Choice(
+                parent,
+                choices=["Local time only", "UTC time only", "Both local and UTC"],
+            ),
         )
         controls["time_format_12hour"] = wx.CheckBox(
             panel,
@@ -197,19 +194,18 @@ class DisplayTab:
             "Reading priority",
             "Decide how compact or detailed the spoken and displayed forecast should be.",
         )
-        controls["verbosity_level"] = wx.Choice(
-            panel,
-            choices=[
-                "Minimal (essentials only)",
-                "Standard (recommended)",
-                "Detailed (all available info)",
-            ],
-        )
-        self.dialog.add_labeled_row(
+        controls["verbosity_level"] = self.dialog.add_labeled_control_row(
             panel,
             priority_section,
             "Verbosity level:",
-            controls["verbosity_level"],
+            lambda parent: wx.Choice(
+                parent,
+                choices=[
+                    "Minimal (essentials only)",
+                    "Standard (recommended)",
+                    "Detailed (all available info)",
+                ],
+            ),
         )
         controls["severe_weather_override"] = wx.CheckBox(
             panel,

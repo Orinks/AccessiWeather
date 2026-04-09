@@ -39,12 +39,11 @@ class AITab:
             "OpenRouter access",
             "Add and validate your OpenRouter API key before choosing a model.",
         )
-        controls["openrouter_key"] = wx.TextCtrl(panel, style=wx.TE_PASSWORD, size=(320, -1))
-        self.dialog.add_labeled_row(
+        controls["openrouter_key"] = self.dialog.add_labeled_control_row(
             panel,
             key_section,
             "OpenRouter API key:",
-            controls["openrouter_key"],
+            lambda parent: wx.TextCtrl(parent, style=wx.TE_PASSWORD, size=(320, -1)),
             expand_control=True,
         )
         validate_btn = wx.Button(panel, label="Validate OpenRouter key")
@@ -57,36 +56,34 @@ class AITab:
             "Model and explanation style",
             "Free options are easiest to start with. Paid routing can unlock more model choices.",
         )
-        controls["ai_model"] = wx.Choice(
-            panel,
-            choices=[
-                "Free router (automatic, free)",
-                "Llama 3.3 70B (free)",
-                "Auto router (paid)",
-            ],
-        )
-        self.dialog.add_labeled_row(
+        controls["ai_model"] = self.dialog.add_labeled_control_row(
             panel,
             model_section,
             "Model preference:",
-            controls["ai_model"],
+            lambda parent: wx.Choice(
+                parent,
+                choices=[
+                    "Free router (automatic, free)",
+                    "Llama 3.3 70B (free)",
+                    "Auto router (paid)",
+                ],
+            ),
         )
         browse_btn = wx.Button(panel, label="Browse OpenRouter models...")
         browse_btn.Bind(wx.EVT_BUTTON, self.dialog._on_browse_models)
         model_section.Add(browse_btn, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
-        controls["ai_style"] = wx.Choice(
-            panel,
-            choices=[
-                "Brief (1-2 sentences)",
-                "Standard (3-4 sentences)",
-                "Detailed (full paragraph)",
-            ],
-        )
-        self.dialog.add_labeled_row(
+        controls["ai_style"] = self.dialog.add_labeled_control_row(
             panel,
             model_section,
             "Explanation style:",
-            controls["ai_style"],
+            lambda parent: wx.Choice(
+                parent,
+                choices=[
+                    "Brief (1-2 sentences)",
+                    "Standard (3-4 sentences)",
+                    "Detailed (full paragraph)",
+                ],
+            ),
         )
 
         prompt_section = self.dialog.create_section(

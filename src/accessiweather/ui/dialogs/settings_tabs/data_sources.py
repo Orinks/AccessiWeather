@@ -82,23 +82,22 @@ class DataSourcesTab:
             "Choose a weather source",
             "Automatic mode combines available providers. Single-source options keep behavior predictable when you prefer one provider.",
         )
-        controls["data_source"] = wx.Choice(
-            panel,
-            choices=[
-                "Automatic (combine all available sources)",
-                "National Weather Service (US only, forecast and alerts)",
-                "Open-Meteo (global forecast, no alerts, no API key)",
-                "Visual Crossing (global forecast, regional alerts, API key)",
-                "Pirate Weather (global forecast and alerts, API key)",
-            ],
-        )
-        controls["data_source"].Bind(wx.EVT_CHOICE, self.dialog._on_data_source_changed)
-        self.dialog.add_labeled_row(
+        controls["data_source"] = self.dialog.add_labeled_control_row(
             panel,
             source_section,
             "Weather source:",
-            controls["data_source"],
+            lambda parent: wx.Choice(
+                parent,
+                choices=[
+                    "Automatic (combine all available sources)",
+                    "National Weather Service (US only, forecast and alerts)",
+                    "Open-Meteo (global forecast, no alerts, no API key)",
+                    "Visual Crossing (global forecast, regional alerts, API key)",
+                    "Pirate Weather (global forecast and alerts, API key)",
+                ],
+            ),
         )
+        controls["data_source"].Bind(wx.EVT_CHOICE, self.dialog._on_data_source_changed)
 
         auto_section = self.dialog.create_section(
             panel,
@@ -140,28 +139,18 @@ class DataSourcesTab:
             "Only Visual Crossing and Pirate Weather need keys. Stored keys stay in secure storage unless you explicitly export them.",
         )
 
-        self.dialog._vc_config_sizer = wx.StaticBoxSizer(
-            wx.VERTICAL,
-            panel,
-            "Visual Crossing",
-        )
-        vc_key_help = wx.StaticText(
-            panel,
-            label="Use this provider for global forecasts and regional alerts where available.",
-        )
-        self.dialog._wrap_static_text(vc_key_help)
+        self.dialog._vc_config_sizer = wx.BoxSizer(wx.VERTICAL)
         self.dialog._vc_config_sizer.Add(
-            vc_key_help,
+            wx.StaticText(panel, label="Visual Crossing"),
             0,
             wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
             10,
         )
-        controls["vc_key"] = wx.TextCtrl(panel, style=wx.TE_PASSWORD, size=(280, -1))
-        self.dialog.add_labeled_row(
+        controls["vc_key"] = self.dialog.add_labeled_control_row(
             panel,
             self.dialog._vc_config_sizer,
             "Visual Crossing API key:",
-            controls["vc_key"],
+            lambda parent: wx.TextCtrl(parent, style=wx.TE_PASSWORD, size=(280, -1)),
             expand_control=True,
         )
         vc_button_row = wx.BoxSizer(wx.HORIZONTAL)
@@ -177,30 +166,27 @@ class DataSourcesTab:
             wx.LEFT | wx.RIGHT | wx.BOTTOM,
             10,
         )
+        self.dialog.add_help_text(
+            panel,
+            self.dialog._vc_config_sizer,
+            "Use this provider for global forecasts and regional alerts where available.",
+            left=10,
+            bottom=10,
+        )
         keys_section.Add(self.dialog._vc_config_sizer, 0, wx.EXPAND | wx.BOTTOM, 8)
 
-        self.dialog._pw_config_sizer = wx.StaticBoxSizer(
-            wx.VERTICAL,
-            panel,
-            "Pirate Weather",
-        )
-        pw_key_help = wx.StaticText(
-            panel,
-            label="Use this provider for global forecasts and broader alert coverage.",
-        )
-        self.dialog._wrap_static_text(pw_key_help)
+        self.dialog._pw_config_sizer = wx.BoxSizer(wx.VERTICAL)
         self.dialog._pw_config_sizer.Add(
-            pw_key_help,
+            wx.StaticText(panel, label="Pirate Weather"),
             0,
             wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
             10,
         )
-        controls["pw_key"] = wx.TextCtrl(panel, style=wx.TE_PASSWORD, size=(280, -1))
-        self.dialog.add_labeled_row(
+        controls["pw_key"] = self.dialog.add_labeled_control_row(
             panel,
             self.dialog._pw_config_sizer,
             "Pirate Weather API key:",
-            controls["pw_key"],
+            lambda parent: wx.TextCtrl(parent, style=wx.TE_PASSWORD, size=(280, -1)),
             expand_control=True,
         )
         pw_button_row = wx.BoxSizer(wx.HORIZONTAL)
@@ -215,6 +201,13 @@ class DataSourcesTab:
             0,
             wx.LEFT | wx.RIGHT | wx.BOTTOM,
             10,
+        )
+        self.dialog.add_help_text(
+            panel,
+            self.dialog._pw_config_sizer,
+            "Use this provider for global forecasts and broader alert coverage.",
+            left=10,
+            bottom=10,
         )
         keys_section.Add(self.dialog._pw_config_sizer, 0, wx.EXPAND)
 

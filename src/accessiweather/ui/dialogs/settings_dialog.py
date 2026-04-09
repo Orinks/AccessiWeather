@@ -202,6 +202,29 @@ class SettingsDialogSimple(wx.Dialog):
         parent_sizer.Add(row, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, bottom)
         return row
 
+    def add_labeled_control_row(
+        self,
+        parent: wx.Window,
+        parent_sizer: wx.Sizer,
+        label: str,
+        control_factory,
+        *,
+        expand_control: bool = False,
+        bottom: int = 8,
+    ) -> wx.Window:
+        """Create the visible label before the control for wx/NVDA association stability."""
+        row = wx.BoxSizer(wx.HORIZONTAL)
+        row.Add(
+            wx.StaticText(parent, label=label),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        control = control_factory(parent)
+        row.Add(control, 1 if expand_control else 0, wx.EXPAND if expand_control else 0)
+        parent_sizer.Add(row, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, bottom)
+        return control
+
     def create_section(
         self,
         parent: wx.Window,
@@ -445,9 +468,11 @@ class SettingsDialogSimple(wx.Dialog):
         scroll_sizer = wx.BoxSizer(wx.VERTICAL)
 
         for section_title, description, event_keys in self._get_event_sound_sections():
-            section = wx.StaticBoxSizer(wx.VERTICAL, scroll, section_title)
+            section = wx.BoxSizer(wx.VERTICAL)
+            heading = wx.StaticText(scroll, label=section_title)
+            self._wrap_static_text(heading, width=380)
             section.Add(
-                wx.StaticText(scroll, label=description),
+                heading,
                 0,
                 wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
                 5,
@@ -457,6 +482,14 @@ class SettingsDialogSimple(wx.Dialog):
                 checkbox.SetValue(state_map.get(event_key, True))
                 dialog_controls[event_key] = checkbox
                 section.Add(checkbox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+            description_text = wx.StaticText(scroll, label=description)
+            self._wrap_static_text(description_text, width=380)
+            section.Add(
+                description_text,
+                0,
+                wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+                5,
+            )
             scroll_sizer.Add(section, 0, wx.ALL | wx.EXPAND, 5)
 
         scroll.SetSizer(scroll_sizer)
@@ -523,23 +556,23 @@ class SettingsDialogSimple(wx.Dialog):
             10,
         )
 
-        cc_sizer.Add(
-            wx.StaticText(cc_panel, label="NWS station selection strategy:"),
-            0,
-            wx.LEFT | wx.RIGHT,
-            10,
-        )
-        strategy_ctrl = wx.Choice(
+        strategy_ctrl = self.add_labeled_control_row(
             cc_panel,
-            choices=[
-                "Hybrid default (recommended: fresh + major station with distance guardrail)",
-                "Nearest station (pure distance)",
-                "Major airport preferred (within radius, else nearest)",
-                "Freshest observation (among nearest stations)",
-            ],
+            cc_sizer,
+            "NWS station selection strategy:",
+            lambda parent: wx.Choice(
+                parent,
+                choices=[
+                    "Hybrid default (recommended: fresh + major station with distance guardrail)",
+                    "Nearest station (pure distance)",
+                    "Major airport preferred (within radius, else nearest)",
+                    "Freshest observation (among nearest stations)",
+                ],
+            ),
+            expand_control=True,
+            bottom=10,
         )
         strategy_ctrl.SetSelection(state.get("station_selection_strategy", 0))
-        cc_sizer.Add(strategy_ctrl, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 10)
 
         cc_panel.SetSizer(cc_sizer)
         notebook.AddPage(cc_panel, "Current Conditions")

@@ -36,12 +36,11 @@ class GeneralTab:
             "Weather refresh",
             "These settings affect general app behavior for everyday use.",
         )
-        controls["update_interval"] = wx.SpinCtrl(panel, min=1, max=120, initial=10)
-        self.dialog.add_labeled_row(
+        controls["update_interval"] = self.dialog.add_labeled_control_row(
             panel,
             refresh_section,
             "Refresh weather every (minutes):",
-            controls["update_interval"],
+            lambda parent: wx.SpinCtrl(parent, min=1, max=120, initial=10),
         )
 
         controls["show_nationwide"] = wx.CheckBox(
@@ -92,16 +91,15 @@ class GeneralTab:
             10,
         )
 
-        controls["taskbar_icon_text_format"] = wx.TextCtrl(
-            panel,
-            size=(320, -1),
-            style=wx.TE_READONLY,
-        )
-        self.dialog.add_labeled_row(
+        controls["taskbar_icon_text_format"] = self.dialog.add_labeled_control_row(
             panel,
             tray_section,
             "Current tray text format:",
-            controls["taskbar_icon_text_format"],
+            lambda parent: wx.TextCtrl(
+                parent,
+                size=(320, -1),
+                style=wx.TE_READONLY,
+            ),
             expand_control=True,
         )
         controls["taskbar_icon_text_format_dialog"] = wx.Button(

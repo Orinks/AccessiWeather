@@ -43,25 +43,23 @@ class UpdatesTab:
             wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
             10,
         )
-        controls["update_channel"] = wx.Choice(
-            panel,
-            choices=[
-                "Stable (production releases only)",
-                "Development (latest features, may be unstable)",
-            ],
-        )
-        self.dialog.add_labeled_row(
+        controls["update_channel"] = self.dialog.add_labeled_control_row(
             panel,
             auto_section,
             "Release channel:",
-            controls["update_channel"],
+            lambda parent: wx.Choice(
+                parent,
+                choices=[
+                    "Stable (production releases only)",
+                    "Development (latest features, may be unstable)",
+                ],
+            ),
         )
-        controls["update_check_interval"] = wx.SpinCtrl(panel, min=1, max=168, initial=24)
-        self.dialog.add_labeled_row(
+        controls["update_check_interval"] = self.dialog.add_labeled_control_row(
             panel,
             auto_section,
             "Check every (hours):",
-            controls["update_check_interval"],
+            lambda parent: wx.SpinCtrl(parent, min=1, max=168, initial=24),
         )
 
         manual_section = self.dialog.create_section(

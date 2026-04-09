@@ -60,20 +60,19 @@ class NotificationsTab:
             "Coverage and severity",
             "Smaller alert areas are quieter. Broader areas catch more alerts but can be noisier.",
         )
-        controls["alert_radius_type"] = wx.Choice(
-            panel,
-            choices=[
-                "County (recommended)",
-                "Point (exact coordinate, may miss alerts)",
-                "Zone (slightly broader than county)",
-                "State (broadest and noisiest)",
-            ],
-        )
-        self.dialog.add_labeled_row(
+        controls["alert_radius_type"] = self.dialog.add_labeled_control_row(
             panel,
             coverage_section,
             "Alert area:",
-            controls["alert_radius_type"],
+            lambda parent: wx.Choice(
+                parent,
+                choices=[
+                    "County (recommended)",
+                    "Point (exact coordinate, may miss alerts)",
+                    "Zone (slightly broader than county)",
+                    "State (broadest and noisiest)",
+                ],
+            ),
         )
         controls["notify_extreme"] = wx.CheckBox(
             panel,
@@ -161,12 +160,11 @@ class NotificationsTab:
             "Rate limiting",
             "Use the advanced timing dialog if you need cooldown and freshness controls beyond the hourly limit.",
         )
-        controls["max_notifications"] = wx.SpinCtrl(panel, min=1, max=100, initial=10)
-        self.dialog.add_labeled_row(
+        controls["max_notifications"] = self.dialog.add_labeled_control_row(
             panel,
             rate_section,
             "Maximum notifications per hour:",
-            controls["max_notifications"],
+            lambda parent: wx.SpinCtrl(parent, min=1, max=100, initial=10),
         )
         advanced_btn = wx.Button(panel, label="Advanced timing...")
         advanced_btn.SetName("Advanced alert timing settings")

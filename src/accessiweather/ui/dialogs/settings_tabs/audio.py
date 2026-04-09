@@ -129,12 +129,11 @@ class AudioTab:
         except Exception as e:
             logger.warning(f"Failed to load sound packs: {e}")
 
-        controls["sound_pack"] = wx.Choice(panel, choices=pack_names)
-        self.dialog.add_labeled_row(
+        controls["sound_pack"] = self.dialog.add_labeled_control_row(
             panel,
             playback_section,
             "Sound pack:",
-            controls["sound_pack"],
+            lambda parent: wx.Choice(parent, choices=pack_names),
         )
         action_row = wx.BoxSizer(wx.HORIZONTAL)
         test_btn = wx.Button(panel, label="Play sample sound")
