@@ -16,52 +16,74 @@ class UpdatesTab:
         """Store reference to the parent settings dialog."""
         self.dialog = dialog
 
-    def create(self):
+    def create(self, page_label: str = "Updates"):
         """Build the Updates tab panel and add it to the notebook."""
-        panel = wx.Panel(self.dialog.notebook)
+        panel = wx.ScrolledWindow(self.dialog.notebook)
+        panel.SetScrollRate(0, 20)
         sizer = wx.BoxSizer(wx.VERTICAL)
         controls = self.dialog._controls
 
-        controls["auto_update"] = wx.CheckBox(panel, label="Check for updates automatically")
-        sizer.Add(controls["auto_update"], 0, wx.ALL, 5)
-
-        row_ch = wx.BoxSizer(wx.HORIZONTAL)
-        row_ch.Add(
-            wx.StaticText(panel, label="Update Channel:"),
-            0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
-            10,
-        )
-        controls["update_channel"] = wx.Choice(
+        self.dialog.add_help_text(
             panel,
-            choices=[
-                "Stable (Production releases only)",
-                "Development (Latest features, may be unstable)",
-            ],
+            sizer,
+            "Choose how AccessiWeather checks for new releases and when you want to check manually.",
+            left=5,
         )
-        row_ch.Add(controls["update_channel"], 0)
-        sizer.Add(row_ch, 0, wx.LEFT, 5)
 
-        row_int = wx.BoxSizer(wx.HORIZONTAL)
-        row_int.Add(
-            wx.StaticText(panel, label="Check Interval (hours):"),
+        auto_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Automatic update checks",
+            "Stable is safest for everyday use. Development includes the latest work but may be less predictable.",
+        )
+        controls["auto_update"] = wx.CheckBox(panel, label="Check for updates automatically")
+        auto_section.Add(
+            controls["auto_update"],
             0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
             10,
         )
-        controls["update_check_interval"] = wx.SpinCtrl(panel, min=1, max=168, initial=24)
-        row_int.Add(controls["update_check_interval"], 0)
-        sizer.Add(row_int, 0, wx.LEFT | wx.TOP, 5)
+        controls["update_channel"] = self.dialog.add_labeled_control_row(
+            panel,
+            auto_section,
+            "Release channel:",
+            lambda parent: wx.Choice(
+                parent,
+                choices=[
+                    "Stable (production releases only)",
+                    "Development (latest features, may be unstable)",
+                ],
+            ),
+        )
+        controls["update_check_interval"] = self.dialog.add_labeled_control_row(
+            panel,
+            auto_section,
+            "Check every (hours):",
+            lambda parent: wx.SpinCtrl(parent, min=1, max=168, initial=24),
+        )
 
-        check_btn = wx.Button(panel, label="Check for Updates Now")
+        manual_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Check now",
+            "Use this if you want an immediate update check instead of waiting for the next scheduled one.",
+        )
+        check_btn = wx.Button(panel, label="Check for updates now")
         check_btn.Bind(wx.EVT_BUTTON, self.dialog._on_check_updates)
-        sizer.Add(check_btn, 0, wx.ALL, 10)
-
-        controls["update_status"] = wx.StaticText(panel, label="Ready to check for updates")
-        sizer.Add(controls["update_status"], 0, wx.LEFT, 10)
+        manual_section.Add(check_btn, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        controls["update_status"] = wx.StaticText(
+            panel,
+            label="Ready to check for updates.",
+        )
+        manual_section.Add(
+            controls["update_status"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
 
         panel.SetSizer(sizer)
-        self.dialog.notebook.AddPage(panel, "Updates")
+        self.dialog.notebook.AddPage(panel, page_label)
         return panel
 
     def load(self, settings):
@@ -88,8 +110,8 @@ class UpdatesTab:
         controls = self.dialog._controls
         names = {
             "auto_update": "Check for updates automatically",
-            "update_channel": "Update Channel",
-            "update_check_interval": "Check Interval (hours)",
+            "update_channel": "Release channel",
+            "update_check_interval": "Update check interval in hours",
         }
         for key, name in names.items():
             controls[key].SetName(name)

@@ -19,112 +19,134 @@ class NotificationsTab:
         """Store reference to the parent settings dialog."""
         self.dialog = dialog
 
-    def create(self):
+    def create(self, page_label: str = "Alerts"):
         """Build the Notifications tab panel and add it to the notebook."""
         panel = wx.ScrolledWindow(self.dialog.notebook)
         panel.SetScrollRate(0, 20)
         sizer = wx.BoxSizer(wx.VERTICAL)
         controls = self.dialog._controls
 
-        sizer.Add(wx.StaticText(panel, label="Alert Notification Settings"), 0, wx.ALL, 5)
-        sizer.Add(
-            wx.StaticText(
-                panel,
-                label="Configure which weather alerts trigger notifications based on severity.",
-            ),
-            0,
-            wx.LEFT | wx.BOTTOM,
-            5,
+        self.dialog.add_help_text(
+            panel,
+            sizer,
+            "Control which alerts notify you, how broad the alert area is, and how aggressively notifications repeat.",
+            left=5,
         )
 
-        controls["enable_alerts"] = wx.CheckBox(panel, label="Enable weather alerts")
-        sizer.Add(controls["enable_alerts"], 0, wx.ALL, 5)
-
-        controls["alert_notif"] = wx.CheckBox(panel, label="Enable alert notifications")
-        sizer.Add(controls["alert_notif"], 0, wx.LEFT | wx.BOTTOM, 5)
-
+        delivery_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Alert delivery",
+            "Turn alert monitoring on or off, then choose whether AccessiWeather should notify you when alerts arrive.",
+        )
+        controls["enable_alerts"] = wx.CheckBox(panel, label="Monitor weather alerts")
+        delivery_section.Add(controls["enable_alerts"], 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        controls["alert_notif"] = wx.CheckBox(panel, label="Send alert notifications")
+        delivery_section.Add(controls["alert_notif"], 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
         controls["immediate_alert_details_popups"] = wx.CheckBox(
             panel,
-            label="Open alert details popups immediately while AccessiWeather is running",
+            label="Open alert details immediately while AccessiWeather is running",
         )
-        sizer.Add(controls["immediate_alert_details_popups"], 0, wx.LEFT | wx.BOTTOM, 5)
-
-        row_area = wx.BoxSizer(wx.HORIZONTAL)
-        row_area.Add(
-            wx.StaticText(panel, label="Alert Area:"),
+        delivery_section.Add(
+            controls["immediate_alert_details_popups"],
             0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
             10,
         )
-        controls["alert_radius_type"] = wx.Choice(
+
+        coverage_section = self.dialog.create_section(
             panel,
-            choices=[
-                "County (recommended — alerts for your county only)",
-                "Point (exact coordinate — may miss alerts)",
-                "Zone (NWS forecast zone — slightly broader than county)",
-                "State (entire state — noisy)",
-            ],
+            sizer,
+            "Coverage and severity",
+            "Smaller alert areas are quieter. Broader areas catch more alerts but can be noisier.",
         )
-        row_area.Add(controls["alert_radius_type"], 0)
-        sizer.Add(row_area, 0, wx.ALL, 5)
-
-        sizer.Add(wx.StaticText(panel, label="Alert Severity Levels:"), 0, wx.ALL, 5)
-
-        controls["notify_extreme"] = wx.CheckBox(
-            panel, label="Extreme - Life-threatening events (e.g., Tornado Warning)"
-        )
-        sizer.Add(controls["notify_extreme"], 0, wx.LEFT, 10)
-
-        controls["notify_severe"] = wx.CheckBox(
-            panel, label="Severe - Significant hazards (e.g., Severe Thunderstorm Warning)"
-        )
-        sizer.Add(controls["notify_severe"], 0, wx.LEFT, 10)
-
-        controls["notify_moderate"] = wx.CheckBox(
-            panel, label="Moderate - Potentially hazardous (e.g., Winter Weather Advisory)"
-        )
-        sizer.Add(controls["notify_moderate"], 0, wx.LEFT, 10)
-
-        controls["notify_minor"] = wx.CheckBox(
-            panel, label="Minor - Low impact events (e.g., Frost Advisory, Fog Advisory)"
-        )
-        sizer.Add(controls["notify_minor"], 0, wx.LEFT, 10)
-
-        controls["notify_unknown"] = wx.CheckBox(panel, label="Unknown - Uncategorized alerts")
-        sizer.Add(controls["notify_unknown"], 0, wx.LEFT, 10)
-
-        sizer.Add(wx.StaticText(panel, label="Event-Based Notifications:"), 0, wx.ALL, 5)
-        sizer.Add(
-            wx.StaticText(
-                panel,
-                label="Get notified when specific weather events occur (disabled by default).",
+        controls["alert_radius_type"] = self.dialog.add_labeled_control_row(
+            panel,
+            coverage_section,
+            "Alert area:",
+            lambda parent: wx.Choice(
+                parent,
+                choices=[
+                    "County (recommended)",
+                    "Point (exact coordinate, may miss alerts)",
+                    "Zone (slightly broader than county)",
+                    "State (broadest and noisiest)",
+                ],
             ),
-            0,
-            wx.LEFT | wx.BOTTOM,
-            5,
         )
+        controls["notify_extreme"] = wx.CheckBox(
+            panel,
+            label="Extreme severity alerts",
+        )
+        coverage_section.Add(controls["notify_extreme"], 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        controls["notify_severe"] = wx.CheckBox(
+            panel,
+            label="Severe severity alerts",
+        )
+        coverage_section.Add(controls["notify_severe"], 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        controls["notify_moderate"] = wx.CheckBox(
+            panel,
+            label="Moderate severity alerts",
+        )
+        coverage_section.Add(controls["notify_moderate"], 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        controls["notify_minor"] = wx.CheckBox(
+            panel,
+            label="Minor severity alerts",
+        )
+        coverage_section.Add(controls["notify_minor"], 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        controls["notify_unknown"] = wx.CheckBox(
+            panel,
+            label="Uncategorized alerts",
+        )
+        coverage_section.Add(controls["notify_unknown"], 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
+        event_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Extra weather event notifications",
+            "These are optional updates beyond standard alerts and are off unless you turn them on.",
+        )
         controls["notify_discussion_update"] = wx.CheckBox(
-            panel, label="Notify when Area Forecast Discussion is updated (NWS US only)"
+            panel,
+            label="Notify when the Area Forecast Discussion changes (NWS US only)",
         )
-        sizer.Add(controls["notify_discussion_update"], 0, wx.LEFT, 10)
-
+        event_section.Add(
+            controls["notify_discussion_update"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
         controls["notify_severe_risk_change"] = wx.CheckBox(
-            panel, label="Notify when severe weather risk level changes (Visual Crossing only)"
+            panel,
+            label="Notify when severe weather risk changes (Visual Crossing)",
         )
-        sizer.Add(controls["notify_severe_risk_change"], 0, wx.LEFT | wx.BOTTOM, 10)
-
+        event_section.Add(
+            controls["notify_severe_risk_change"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
         controls["notify_minutely_precipitation_start"] = wx.CheckBox(
-            panel, label="Notify when precipitation is expected to start soon (Pirate Weather)"
+            panel,
+            label="Notify when precipitation is expected to start soon (Pirate Weather)",
         )
-        sizer.Add(controls["notify_minutely_precipitation_start"], 0, wx.LEFT, 10)
-
+        event_section.Add(
+            controls["notify_minutely_precipitation_start"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
         controls["notify_minutely_precipitation_stop"] = wx.CheckBox(
-            panel, label="Notify when precipitation is expected to stop soon (Pirate Weather)"
+            panel,
+            label="Notify when precipitation is expected to stop soon (Pirate Weather)",
         )
-        sizer.Add(controls["notify_minutely_precipitation_stop"], 0, wx.LEFT | wx.BOTTOM, 10)
+        event_section.Add(
+            controls["notify_minutely_precipitation_stop"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
 
-        # Hidden alert timing controls (values managed via Advanced dialog)
         controls["global_cooldown"] = wx.SpinCtrl(panel, min=0, max=60, initial=5)
         controls["global_cooldown"].Hide()
         controls["per_alert_cooldown"] = wx.SpinCtrl(panel, min=0, max=1440, initial=60)
@@ -132,27 +154,26 @@ class NotificationsTab:
         controls["freshness_window"] = wx.SpinCtrl(panel, min=0, max=120, initial=15)
         controls["freshness_window"].Hide()
 
-        sizer.Add(wx.StaticText(panel, label="Rate Limiting:"), 0, wx.ALL, 5)
-
-        row_max = wx.BoxSizer(wx.HORIZONTAL)
-        row_max.Add(
-            wx.StaticText(panel, label="Maximum notifications per hour:"),
-            0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
-            10,
+        rate_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Rate limiting",
+            "Use the advanced timing dialog if you need cooldown and freshness controls beyond the hourly limit.",
         )
-        controls["max_notifications"] = wx.SpinCtrl(panel, min=1, max=100, initial=10)
-        row_max.Add(controls["max_notifications"], 0)
-        sizer.Add(row_max, 0, wx.LEFT | wx.TOP, 10)
-
-        advanced_btn = wx.Button(panel, label="Advanced...")
+        controls["max_notifications"] = self.dialog.add_labeled_control_row(
+            panel,
+            rate_section,
+            "Maximum notifications per hour:",
+            lambda parent: wx.SpinCtrl(parent, min=1, max=100, initial=10),
+        )
+        advanced_btn = wx.Button(panel, label="Advanced timing...")
         advanced_btn.SetName("Advanced alert timing settings")
-        advanced_btn.SetToolTip("Configure cooldown periods and alert freshness window")
+        advanced_btn.SetToolTip("Configure cooldown periods and the alert freshness window")
         advanced_btn.Bind(wx.EVT_BUTTON, self.dialog._on_alert_advanced)
-        sizer.Add(advanced_btn, 0, wx.LEFT | wx.TOP, 10)
+        rate_section.Add(advanced_btn, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         panel.SetSizer(sizer)
-        self.dialog.notebook.AddPage(panel, "Notifications")
+        self.dialog.notebook.AddPage(panel, page_label)
         return panel
 
     def load(self, settings):
@@ -229,22 +250,22 @@ class NotificationsTab:
         """Set accessibility names for Notifications tab controls."""
         controls = self.dialog._controls
         names = {
-            "enable_alerts": "Enable weather alerts",
-            "alert_notif": "Enable alert notifications",
-            "alert_radius_type": "Alert Area",
-            "notify_extreme": "Extreme - Life-threatening events (e.g., Tornado Warning)",
-            "notify_severe": "Severe - Significant hazards (e.g., Severe Thunderstorm Warning)",
-            "notify_moderate": "Moderate - Potentially hazardous (e.g., Winter Weather Advisory)",
-            "notify_minor": "Minor - Low impact events (e.g., Frost Advisory, Fog Advisory)",
-            "notify_unknown": "Unknown - Uncategorized alerts",
-            "immediate_alert_details_popups": "Open alert details popups immediately while AccessiWeather is running",
-            "notify_discussion_update": "Notify when Area Forecast Discussion is updated (NWS US only)",
-            "notify_severe_risk_change": "Notify when severe weather risk level changes (Visual Crossing only)",
-            "notify_minutely_precipitation_start": "Notify when precipitation is expected to start soon (Pirate Weather)",
-            "notify_minutely_precipitation_stop": "Notify when precipitation is expected to stop soon (Pirate Weather)",
-            "global_cooldown": "Minimum time between any alert notifications (minutes)",
-            "per_alert_cooldown": "Re-notify for same alert after (minutes)",
-            "freshness_window": "Only notify for alerts issued within (minutes)",
+            "enable_alerts": "Monitor weather alerts",
+            "alert_notif": "Send alert notifications",
+            "alert_radius_type": "Alert area",
+            "notify_extreme": "Extreme severity alerts",
+            "notify_severe": "Severe severity alerts",
+            "notify_moderate": "Moderate severity alerts",
+            "notify_minor": "Minor severity alerts",
+            "notify_unknown": "Uncategorized alerts",
+            "immediate_alert_details_popups": "Open alert details immediately while AccessiWeather is running",
+            "notify_discussion_update": "Notify when the Area Forecast Discussion changes",
+            "notify_severe_risk_change": "Notify when severe weather risk changes",
+            "notify_minutely_precipitation_start": "Notify when precipitation is expected to start soon",
+            "notify_minutely_precipitation_stop": "Notify when precipitation is expected to stop soon",
+            "global_cooldown": "Minimum time between any alert notifications in minutes",
+            "per_alert_cooldown": "Minutes before repeating the same alert notification",
+            "freshness_window": "Only notify for alerts issued within this many minutes",
             "max_notifications": "Maximum notifications per hour",
         }
         for key, name in names.items():

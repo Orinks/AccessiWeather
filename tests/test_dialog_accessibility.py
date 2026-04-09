@@ -92,7 +92,14 @@ def test_run_event_sounds_dialog_configures_default_button_and_focus(monkeypatch
     monkeypatch.setattr(settings_module.wx, "StaticText", FakeWindow, raising=False)
     monkeypatch.setattr(settings_module.wx, "BoxSizer", FakeSizer, raising=False)
     monkeypatch.setattr(settings_module.wx, "ScrolledWindow", FakeScrolledWindow, raising=False)
-    monkeypatch.setattr(settings_module.wx, "StaticBoxSizer", FakeSizer, raising=False)
+    monkeypatch.setattr(
+        settings_module.wx,
+        "StaticBoxSizer",
+        lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError("StaticBoxSizer should not be used in the event sounds dialog")
+        ),
+        raising=False,
+    )
     monkeypatch.setattr(settings_module.wx, "CheckBox", FakeCheckBox, raising=False)
     monkeypatch.setattr(settings_module.wx, "Button", FakeButton, raising=False)
     for name in [

@@ -104,7 +104,7 @@ def test_load_settings_updates_event_sound_state_and_summary():
     total_events = len(AudioTab._build_default_event_sound_states())
     assert (
         dialog._controls["event_sounds_summary"].GetLabel()
-        == f"{total_events - 1} of {total_events} sound events are enabled."
+        == f"Sounds will play for {total_events - 1} of {total_events} selectable event types."
     )
 
 
@@ -142,7 +142,7 @@ def test_configure_event_sounds_applies_modal_result_and_refreshes_summary():
     total_events = len(AudioTab._build_default_event_sound_states())
     assert (
         dialog._controls["event_sounds_summary"].GetLabel()
-        == f"{total_events - 2} of {total_events} sound events are enabled."
+        == f"Sounds will play for {total_events - 2} of {total_events} selectable event types."
     )
 
 
