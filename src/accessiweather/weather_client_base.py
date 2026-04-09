@@ -837,7 +837,9 @@ class WeatherClient:
 
         if weather_data.has_any_data():
             # Launch enrichment tasks in parallel
-            enrichment_tasks = self._launch_enrichment_tasks(weather_data, location)
+            enrichment_tasks = self._launch_enrichment_tasks(
+                weather_data, location, skip_notifications
+            )
             # Await enrichment completion (which includes persisting to cache)
             await self._await_enrichments(enrichment_tasks, weather_data)
 

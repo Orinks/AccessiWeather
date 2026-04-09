@@ -437,6 +437,7 @@ class TestNotificationEventHelpers:
             timeout=10,
             sound_event="discussion_update",
             play_sound=True,
+            activation_arguments="accessiweather-toast:kind=discussion",
         )
 
 

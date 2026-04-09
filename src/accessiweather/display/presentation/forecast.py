@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import UTC, date, datetime, tzinfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from ...forecast_confidence import ForecastConfidence
+from ...impact_summary import ImpactSummary, build_forecast_impact_summary
 from ...models import AppSettings, Forecast, ForecastPeriod, HourlyForecast, Location
 from ...utils import TemperatureUnit, calculate_dewpoint
 from ...utils.unit_utils import format_precipitation, format_wind_speed
@@ -70,6 +72,18 @@ def _configured_forecast_days(settings: AppSettings | None) -> int:
     if not isinstance(configured_days, int):
         configured_days = 7
     return max(3, min(configured_days, 16))
+
+
+def _resolve_location_timezone(location: Location) -> tzinfo | None:
+    """Return the configured location timezone when it resolves to an IANA zone."""
+    timezone_name = getattr(location, "timezone", None)
+    if not timezone_name:
+        return None
+
+    try:
+        return ZoneInfo(timezone_name)
+    except ZoneInfoNotFoundError:
+        return None
 
 
 def _period_sort_key(dt: datetime) -> datetime:
@@ -141,21 +155,30 @@ def build_forecast(
     if summary_line:
         daily_lines.append(summary_line)
 
+    location_timezone = _resolve_location_timezone(location)
+
     hourly_hours = getattr(settings, "hourly_forecast_hours", 6) if settings else 6
     hourly_hours = max(1, min(hourly_hours, 168))
 
     if hourly_forecast and hourly_forecast.has_data():
-        hourly = build_hourly_summary(hourly_forecast, unit_pref, settings=settings)
+        hourly = build_hourly_summary(
+            hourly_forecast,
+            unit_pref,
+            settings=settings,
+            location_timezone=location_timezone,
+        )
     else:
         hourly = []
 
     # Extract time display preferences and verbosity from settings
     if settings:
+        forecast_time_reference = getattr(settings, "forecast_time_reference", "location")
         time_display_mode = getattr(settings, "time_display_mode", "local")
         time_format_12hour = getattr(settings, "time_format_12hour", True)
         show_timezone_suffix = getattr(settings, "show_timezone_suffix", False)
         verbosity_level = getattr(settings, "verbosity_level", "standard")
     else:
+        forecast_time_reference = "location"
         time_display_mode = "local"
         time_format_12hour = True
         show_timezone_suffix = False
@@ -177,7 +200,7 @@ def build_forecast(
 
     for period in selected_periods:
         temp_pair = format_forecast_temperature(period, unit_pref, precision)
-        wind_value = format_period_wind(period) if include_wind else None
+        wind_value = format_period_wind(period, unit_pref) if include_wind else None
         details = (
             period.detailed_forecast
             if include_details
@@ -271,7 +294,11 @@ def build_forecast(
 
     generated_at = (
         format_timestamp(
-            forecast.generated_at,
+            _resolve_forecast_display_time(
+                forecast.generated_at,
+                forecast_time_reference=forecast_time_reference,
+                location_timezone=location_timezone,
+            ),
             time_display_mode=time_display_mode,
             use_12hour=time_format_12hour,
             show_timezone=show_timezone_suffix,
@@ -300,6 +327,15 @@ def build_forecast(
         fallback_sections.append(hourly_section_text)
     fallback_text = "\n\n".join(section for section in fallback_sections if section).rstrip()
 
+    # Derive an impact summary from the first available forecast period (opt-in only)
+    show_impact_summaries = getattr(settings, "show_impact_summaries", False) if settings else False
+    first_period = selected_periods[0] if selected_periods else None
+    forecast_impact: ImpactSummary | None = (
+        build_forecast_impact_summary(first_period)
+        if show_impact_summaries and first_period is not None
+        else None
+    )
+
     return ForecastPresentation(
         title=title,
         periods=periods,
@@ -311,6 +347,7 @@ def build_forecast(
         hourly_section_text=hourly_section_text,
         confidence_label=confidence_label,
         summary=summary_line,
+        impact_summary=forecast_impact,
     )
 
 
@@ -318,6 +355,8 @@ def build_hourly_summary(
     hourly_forecast: HourlyForecast,
     unit_pref: TemperatureUnit,
     settings: AppSettings | None = None,
+    *,
+    location_timezone: tzinfo | None = None,
 ) -> list[HourlyPeriodPresentation]:
     """Generate the next six hours of simplified forecast data."""
     round_values = getattr(settings, "round_values", False) if settings else False
@@ -363,6 +402,7 @@ def build_hourly_summary(
         display_time = _resolve_forecast_display_time(
             period.start_time,
             forecast_time_reference=forecast_time_reference,
+            location_timezone=location_timezone,
         )
         time_str = format_display_time(
             display_time,
@@ -439,6 +479,7 @@ def _resolve_forecast_display_time(
     start_time: datetime,
     *,
     forecast_time_reference: str,
+    location_timezone: tzinfo | None = None,
     local_timezone: tzinfo | None = None,
 ) -> datetime:
     """
@@ -447,10 +488,13 @@ def _resolve_forecast_display_time(
     Location mode keeps the source timestamp unchanged. My-local mode converts
     timezone-aware values to the system's local timezone.
     """
-    if forecast_time_reference != "user_local":
-        return start_time
     if start_time.tzinfo is None:
         return start_time
+
+    if forecast_time_reference != "user_local":
+        if location_timezone is None:
+            return start_time
+        return start_time.astimezone(location_timezone)
 
     target_tz = local_timezone or datetime.now().astimezone().tzinfo
     if target_tz is None:

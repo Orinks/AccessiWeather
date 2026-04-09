@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 import wx
 
+from ..notification_activation import NotificationActivationRequest, serialize_activation_request
 from ..notifications.notification_event_manager import NotificationEventManager
 from ..notifications.toast_notifier import SafeDesktopNotifier
 from ..runtime_state import RuntimeStateManager
@@ -177,6 +178,15 @@ def process_notification_events(window: MainWindow, weather_data) -> None:
                     timeout=10,
                     sound_event=event.sound_event,
                     play_sound=settings.sound_enabled,
+                    activation_arguments=(
+                        serialize_activation_request(
+                            NotificationActivationRequest(kind="discussion")
+                        )
+                        if event.event_type == "discussion_update"
+                        else serialize_activation_request(
+                            NotificationActivationRequest(kind="generic_fallback")
+                        )
+                    ),
                 )
 
                 if success:

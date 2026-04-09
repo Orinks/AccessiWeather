@@ -14,6 +14,11 @@ import subprocess
 import time
 from pathlib import Path
 
+from .notification_activation import (
+    NotificationActivationRequest,
+    consume_activation_request_handoff,
+    write_activation_request_handoff,
+)
 from .paths import RuntimeStoragePaths
 
 logger = logging.getLogger(__name__)
@@ -55,6 +60,20 @@ class SingleInstanceManager:
 
         lock_dir = self.app.paths.data
         return lock_dir / self.lock_filename
+
+    def write_activation_handoff(self, request: NotificationActivationRequest) -> bool:
+        """Write a notification activation request for the primary instance."""
+        runtime_paths = self.runtime_paths or getattr(self.app, "runtime_paths", None)
+        if runtime_paths is None:
+            return False
+        return write_activation_request_handoff(runtime_paths, request)
+
+    def consume_activation_handoff(self) -> NotificationActivationRequest | None:
+        """Read and remove any pending notification activation request."""
+        runtime_paths = self.runtime_paths or getattr(self.app, "runtime_paths", None)
+        if runtime_paths is None:
+            return None
+        return consume_activation_request_handoff(runtime_paths)
 
     def try_acquire_lock(self) -> bool:
         """

@@ -8,6 +8,7 @@ with proper cooldown and filtering capabilities.
 
 import asyncio
 import logging
+from collections.abc import Callable
 
 from .alert_lifecycle import AlertLifecycleDiff
 from .alert_manager import AlertManager, AlertSettings
@@ -23,6 +24,7 @@ from .constants import (
 )
 from .display.presentation.formatters import format_display_datetime
 from .models import AppSettings, WeatherAlert, WeatherAlerts
+from .notification_activation import NotificationActivationRequest, serialize_activation_request
 from .notifications.toast_notifier import SafeDesktopNotifier
 
 logger = logging.getLogger(__name__)
@@ -133,11 +135,13 @@ class AlertNotificationSystem:
         alert_manager: AlertManager,
         notifier: SafeDesktopNotifier | None = None,
         settings: AppSettings | None = None,
+        on_alerts_popup: Callable[[list[WeatherAlert]], None] | None = None,
     ):
         """Initialize the instance."""
         self.alert_manager = alert_manager
         self.notifier = notifier or SafeDesktopNotifier()
         self.settings = settings
+        self.on_alerts_popup = on_alerts_popup
 
         logger.info("AlertNotificationSystem initialized")
 
@@ -181,6 +185,8 @@ class AlertNotificationSystem:
                 reverse=True,
             )
 
+            self._trigger_immediate_alert_popup_if_enabled(sorted_notifications)
+
             # Send notifications - only play sound for the first (most severe) one
             notifications_sent = 0
             for i, (alert, reason) in enumerate(sorted_notifications):
@@ -205,6 +211,25 @@ class AlertNotificationSystem:
         except Exception as e:
             logger.error(f"Error processing alert notifications: {e}")
             return 0
+
+    def _trigger_immediate_alert_popup_if_enabled(
+        self,
+        sorted_notifications: list[tuple[WeatherAlert, str]],
+    ) -> None:
+        """Open in-app alert popups for the current eligible batch when opted in."""
+        if not getattr(self.settings, "immediate_alert_details_popups", False):
+            return
+        if not callable(self.on_alerts_popup):
+            return
+
+        popup_alerts = [alert for alert, _reason in sorted_notifications]
+        if not popup_alerts:
+            return
+
+        try:
+            self.on_alerts_popup(popup_alerts)
+        except Exception as exc:
+            logger.error("Failed to trigger immediate alert popup: %s", exc)
 
     async def _send_alert_notification(
         self, alert: WeatherAlert, reason: str, play_sound: bool = True
@@ -258,6 +283,12 @@ class AlertNotificationSystem:
                 timeout=15,  # Longer timeout for weather alerts
                 sound_candidates=sound_candidates,
                 play_sound=play_sound,
+                activation_arguments=serialize_activation_request(
+                    NotificationActivationRequest(
+                        kind="alert_details",
+                        alert_id=alert.get_unique_id(),
+                    )
+                ),
             )
 
             if success:

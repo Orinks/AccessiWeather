@@ -170,13 +170,11 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
             debug_menu = wx.Menu()
             discussion_item = debug_menu.Append(wx.ID_ANY, "Test: &Discussion Updated")
             alert_item = debug_menu.Append(wx.ID_ANY, "Test: &Alert Notification...")
-            balloon_item = debug_menu.Append(wx.ID_ANY, "Test: Tray &Balloon (direct)")
             debug_menu.AppendSeparator()
             diag_item = debug_menu.Append(wx.ID_ANY, "Run Notification &Diagnostics")
             menu.AppendSubMenu(debug_menu, "&Debug")
             self.Bind(wx.EVT_MENU, self._on_tray_test_discussion, discussion_item)
             self.Bind(wx.EVT_MENU, self._on_tray_test_alert, alert_item)
-            self.Bind(wx.EVT_MENU, self._on_tray_test_balloon, balloon_item)
             self.Bind(wx.EVT_MENU, self._on_test_notifications_menu, diag_item)
 
         menu.AppendSeparator()
@@ -193,6 +191,10 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
         if win is not None:
             win._on_test_discussion_notification()
         else:
+            from ..notification_activation import (
+                NotificationActivationRequest,
+                serialize_activation_request,
+            )
             from ..notifications.toast_notifier import SafeDesktopNotifier
 
             SafeDesktopNotifier().send_notification(
@@ -201,25 +203,9 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
                 timeout=10,
                 sound_candidates=["discussion_update", "notify"],
                 play_sound=True,
-            )
-
-    def _on_tray_test_balloon(self, event: wx.CommandEvent) -> None:
-        """Directly invoke the tray balloon fallback to verify it's wired up."""
-        notifier = getattr(self.app, "_notifier", None)
-        if notifier is not None and getattr(notifier, "balloon_fn", None) is not None:
-            notifier.balloon_fn(
-                "Tray Balloon Test",
-                "balloon_fn is wired — fallback will work when WinRT drops the toast.",
-            )
-            # Mirror what send_notification does after balloon_fn: play our custom sound
-            if getattr(notifier, "sound_enabled", True):
-                notifier._play_sound("notify", None)
-        else:
-            self.ShowBalloon(
-                "Tray Balloon Test",
-                "balloon_fn not set — tray balloon called directly from tray icon.",
-                5000,
-                0x11,  # NIIF_INFO | NIIF_NOSOUND
+                activation_arguments=serialize_activation_request(
+                    NotificationActivationRequest(kind="discussion")
+                ),
             )
 
     def _on_tray_test_alert(self, event: wx.CommandEvent) -> None:
@@ -261,15 +247,27 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
     def show_main_window(self) -> None:
         """Show and restore the main window."""
         if self.app.main_window:
-            # MainWindow is now a SizedFrame directly (no gui_builder wrapper)
             frame = self.app.main_window
             frame.Show(True)
-            frame.Iconize(False)  # Restore if minimized
-            frame.Raise()  # Bring to front
-            if sys.platform == "darwin":
-                # macOS needs RequestUserAttention instead of SetFocus
+            frame.Iconize(False)
+            if sys.platform == "win32":
+                try:
+                    import ctypes
+
+                    hwnd = frame.GetHandle()
+                    user32 = ctypes.windll.user32
+                    SW_RESTORE = 9
+                    if user32.IsIconic(hwnd):
+                        user32.ShowWindow(hwnd, SW_RESTORE)
+                    user32.AllowSetForegroundWindow(ctypes.windll.kernel32.GetCurrentProcessId())
+                    user32.SetForegroundWindow(hwnd)
+                except Exception:
+                    frame.Raise()
+                    frame.SetFocus()
+            elif sys.platform == "darwin":
                 frame.RequestUserAttention()
             else:
+                frame.Raise()
                 frame.SetFocus()
             logger.debug("Main window restored from tray")
 

@@ -242,6 +242,93 @@ class TestAlertNotificationSoundControl:
         assert call_kwargs.get("play_sound") is False
 
 
+class TestImmediateAlertPopupOptIn:
+    """Tests for immediate in-app alert popup opt-in behavior."""
+
+    @pytest.fixture
+    def mock_notifier(self):
+        notifier = MagicMock()
+        notifier.send_notification = MagicMock(return_value=True)
+        notifier.sound_enabled = True
+        return notifier
+
+    @pytest.fixture
+    def popup_callback(self):
+        return MagicMock()
+
+    @pytest.fixture
+    def alert_manager(self, tmp_path):
+        return AlertManager(str(tmp_path / "alerts"))
+
+    @pytest.fixture
+    def popup_enabled_system(self, alert_manager, mock_notifier, popup_callback):
+        settings = MagicMock()
+        settings.immediate_alert_details_popups = True
+        return AlertNotificationSystem(
+            alert_manager=alert_manager,
+            notifier=mock_notifier,
+            settings=settings,
+            on_alerts_popup=popup_callback,
+        )
+
+    @pytest.fixture
+    def popup_disabled_system(self, alert_manager, mock_notifier, popup_callback):
+        settings = MagicMock()
+        settings.immediate_alert_details_popups = False
+        return AlertNotificationSystem(
+            alert_manager=alert_manager,
+            notifier=mock_notifier,
+            settings=settings,
+            on_alerts_popup=popup_callback,
+        )
+
+    @pytest.fixture
+    def eligible_alerts(self):
+        now = datetime.now(UTC)
+        return WeatherAlerts(
+            alerts=[
+                WeatherAlert(
+                    id="alert-one",
+                    title="Severe Thunderstorm Warning",
+                    description="Severe thunderstorms expected.",
+                    severity="Severe",
+                    urgency="Immediate",
+                    certainty="Observed",
+                    event="Severe Thunderstorm Warning",
+                    expires=now + timedelta(hours=1),
+                ),
+                WeatherAlert(
+                    id="alert-two",
+                    title="Tornado Warning",
+                    description="A tornado has been spotted.",
+                    severity="Extreme",
+                    urgency="Immediate",
+                    certainty="Observed",
+                    event="Tornado Warning",
+                    expires=now + timedelta(hours=1),
+                ),
+            ]
+        )
+
+    @pytest.mark.asyncio
+    async def test_process_and_notify_triggers_popup_callback_for_newly_eligible_alerts(
+        self, popup_enabled_system, popup_callback, eligible_alerts
+    ):
+        await popup_enabled_system.process_and_notify(eligible_alerts)
+
+        popup_callback.assert_called_once()
+        popup_alerts = popup_callback.call_args.args[0]
+        assert [alert.get_unique_id() for alert in popup_alerts] == ["alert-two", "alert-one"]
+
+    @pytest.mark.asyncio
+    async def test_process_and_notify_skips_popup_callback_when_opt_out(
+        self, popup_disabled_system, popup_callback, eligible_alerts
+    ):
+        await popup_disabled_system.process_and_notify(eligible_alerts)
+
+        popup_callback.assert_not_called()
+
+
 class TestNotifyLifecycleChanges:
     """Tests for AlertNotificationSystem.notify_lifecycle_changes()."""
 

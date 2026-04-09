@@ -26,6 +26,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "alert_notify_moderate",
     "alert_notify_minor",
     "alert_notify_unknown",
+    "immediate_alert_details_popups",
     "alert_global_cooldown_minutes",
     "alert_per_alert_cooldown_minutes",
     "alert_escalation_cooldown_minutes",
@@ -93,6 +94,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "auto_sources_international",
     "openmeteo_weather_model",
     "station_selection_strategy",
+    "show_impact_summaries",
 }
 
 
@@ -133,6 +135,7 @@ class AppSettings:
     alert_notify_moderate: bool = True
     alert_notify_minor: bool = False
     alert_notify_unknown: bool = False
+    immediate_alert_details_popups: bool = False
     alert_global_cooldown_minutes: int = 5
     alert_per_alert_cooldown_minutes: int = 60
     alert_escalation_cooldown_minutes: int = 15
@@ -200,6 +203,8 @@ class AppSettings:
     portable_missing_api_keys_hint_shown: bool = False
     # Display precision
     round_values: bool = False
+    # Impact summaries (Outdoor, Driving, Allergy) — opt-in, off by default
+    show_impact_summaries: bool = False
     # Parallel fetch timeout for smart auto mode (seconds)
     parallel_fetch_timeout: float = 5.0
     # Auto mode source selection — which sources participate in auto mode
@@ -430,6 +435,7 @@ class AppSettings:
             "alert_notify_moderate": self.alert_notify_moderate,
             "alert_notify_minor": self.alert_notify_minor,
             "alert_notify_unknown": self.alert_notify_unknown,
+            "immediate_alert_details_popups": self.immediate_alert_details_popups,
             "alert_global_cooldown_minutes": self.alert_global_cooldown_minutes,
             "alert_per_alert_cooldown_minutes": self.alert_per_alert_cooldown_minutes,
             "alert_escalation_cooldown_minutes": self.alert_escalation_cooldown_minutes,
@@ -477,6 +483,7 @@ class AppSettings:
             "onboarding_wizard_shown": self.onboarding_wizard_shown,
             "portable_missing_api_keys_hint_shown": self.portable_missing_api_keys_hint_shown,
             "round_values": self.round_values,
+            "show_impact_summaries": self.show_impact_summaries,
         }
 
     @classmethod
@@ -515,6 +522,9 @@ class AppSettings:
             alert_notify_moderate=cls._as_bool(data.get("alert_notify_moderate"), True),
             alert_notify_minor=cls._as_bool(data.get("alert_notify_minor"), False),
             alert_notify_unknown=cls._as_bool(data.get("alert_notify_unknown"), False),
+            immediate_alert_details_popups=cls._as_bool(
+                data.get("immediate_alert_details_popups"), False
+            ),
             alert_global_cooldown_minutes=data.get("alert_global_cooldown_minutes", 5),
             alert_per_alert_cooldown_minutes=data.get("alert_per_alert_cooldown_minutes", 60),
             alert_escalation_cooldown_minutes=data.get("alert_escalation_cooldown_minutes", 15),
@@ -586,6 +596,7 @@ class AppSettings:
                 data.get("portable_missing_api_keys_hint_shown"), False
             ),
             round_values=cls._as_bool(data.get("round_values"), False),
+            show_impact_summaries=cls._as_bool(data.get("show_impact_summaries"), False),
         )
 
     def to_alert_settings(self):

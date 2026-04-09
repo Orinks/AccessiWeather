@@ -12,12 +12,18 @@ toasted is unavailable.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import sys
 import threading
+import xml.etree.ElementTree as ET
+from collections.abc import Callable
+from typing import Any
+from xml.sax.saxutils import escape as _xml_escape
 
 from ..constants import WINDOWS_APP_USER_MODEL_ID
 from ..sound_events import DEFAULT_MUTED_SOUND_EVENTS
+from ..windows_toast_identity import WINDOWS_TOAST_PROTOCOL_SCHEME
 from .sound_player import (
     normalize_muted_sound_events,
     play_notification_sound,
@@ -34,6 +40,15 @@ logger = logging.getLogger(__name__)
 TOASTED_AVAILABLE = False
 _Toast = None
 _Text = None
+_WinRT_XmlDocument = None
+_WinRT_ToastActivatedEventArgs = None
+_WinRT_ToastNotification = None
+_WinRT_ToastNotificationManager = None
+# Direct WinRT access for persistent Action Center activation handlers.
+# The toasted library's show() deregisters WinRT event handlers after the popup
+# is dismissed, so Action Center clicks never fire the activated callback.
+# We use WinRT directly to keep the activated handler alive.
+WINRT_AVAILABLE = False
 
 if sys.platform == "win32":
     try:
@@ -45,6 +60,18 @@ if sys.platform == "win32":
         TOASTED_AVAILABLE = True
     except ImportError:
         logger.info("toasted not available on Windows, will try desktop-notifier")
+
+    try:
+        from winsdk.windows.data.xml.dom import XmlDocument as _WinRT_XmlDocument
+        from winsdk.windows.ui.notifications import (
+            ToastActivatedEventArgs as _WinRT_ToastActivatedEventArgs,
+            ToastNotification as _WinRT_ToastNotification,
+            ToastNotificationManager as _WinRT_ToastNotificationManager,
+        )
+
+        WINRT_AVAILABLE = True
+    except ImportError:
+        logger.info("winsdk not available, Action Center click handling disabled")
 
 # Try desktop-notifier (cross-platform fallback)
 try:
@@ -71,6 +98,48 @@ def _log_packaging_notifier_diagnostics() -> None:
         getattr(sys, "_MEIPASS", None),
         getattr(sys, "executable", None),
     )
+
+
+# ---------------------------------------------------------------------------
+# Lightweight result object for direct WinRT activation callbacks
+# ---------------------------------------------------------------------------
+
+
+class _ActivationResult:
+    """Minimal result object compatible with the ``on_activation`` callback."""
+
+    __slots__ = ("arguments", "is_dismissed")
+
+    def __init__(self, arguments: str) -> None:
+        self.arguments = arguments
+        self.is_dismissed = False
+
+
+def _uses_protocol_activation(activation_arguments: str | None) -> bool:
+    """Return True when the activation payload is a registered URI scheme."""
+    return bool(
+        activation_arguments
+        and activation_arguments.startswith(f"{WINDOWS_TOAST_PROTOCOL_SCHEME}:")
+    )
+
+
+def _apply_protocol_activation_to_xml(xml_payload: str, activation_arguments: str | None) -> str:
+    """Force protocol activation on the toast root element for stub-CLSID mode."""
+    if not _uses_protocol_activation(activation_arguments):
+        return xml_payload
+
+    try:
+        root = ET.fromstring(xml_payload)
+    except ET.ParseError:
+        logger.debug("[toasted] Failed to parse toast XML for protocol activation", exc_info=True)
+        return xml_payload
+
+    if root.tag != "toast":
+        return xml_payload
+
+    root.set("activationType", "protocol")
+    root.set("launch", activation_arguments or "")
+    return ET.tostring(root, encoding="unicode")
 
 
 # ---------------------------------------------------------------------------
@@ -108,15 +177,22 @@ class ToastedWindowsNotifier:
         )
         self.muted_sound_events: list[str] = normalize_muted_sound_events(initial_muted_events)
 
-        # Optional fallback callable (same contract as SafeDesktopNotifier)
-        self.balloon_fn = None  # Optional[Callable[[str, str], None]]
-
         # Persistent worker thread state
         self._worker_loop: asyncio.AbstractEventLoop | None = None
         self._worker_thread: threading.Thread | None = None
         self._worker_ready = threading.Event()
         self._lock = threading.Lock()
         self._app_id_registered = False
+        self._pending_tasks: set[asyncio.Task] = set()
+        # Callback invoked (from worker thread) when user clicks a toast.
+        # Signature: on_activation(result) where result.arguments contains
+        # the serialized activation request string.
+        self.on_activation: Callable[[Any], None] | None = None
+        # Keep WinRT ToastNotification objects alive so their activated
+        # handlers persist for Action Center clicks (the toasted library's
+        # show() deregisters handlers after popup dismissal).
+        self._live_notifications: list[Any] = []
+        self._MAX_LIVE_NOTIFICATIONS = 20
 
         if not TOASTED_AVAILABLE:
             logger.warning("toasted not available, notifications will be logged only")
@@ -210,7 +286,26 @@ class ToastedWindowsNotifier:
 
     # -- sending ------------------------------------------------------------
 
-    def _send_in_worker(self, title: str, message: str, timeout: int = 10) -> bool:
+    def _set_activation_arguments(self, toast, activation_arguments: str | None) -> None:
+        """Attach launch arguments to the toast when the backend supports it."""
+        if not activation_arguments:
+            return
+        for attr in ("arguments", "launch"):
+            with contextlib.suppress(Exception):
+                setattr(toast, attr, activation_arguments)
+        if _uses_protocol_activation(activation_arguments):
+            for attr in ("activation_type", "activationType"):
+                with contextlib.suppress(Exception):
+                    setattr(toast, attr, "protocol")
+
+    def _send_in_worker(
+        self,
+        title: str,
+        message: str,
+        timeout: int = 10,
+        *,
+        activation_arguments: str | None = None,
+    ) -> bool:
         """Send a notification via the persistent worker thread."""
         worker_ok = self._ensure_worker()
         logger.debug(
@@ -233,15 +328,106 @@ class ToastedWindowsNotifier:
                 app_id=WINDOWS_APP_USER_MODEL_ID,
                 sound=None,  # we handle sounds ourselves
             )
-            toast.elements = [_Text(title), _Text(message)]  # type: ignore[misc]
-            # Fire-and-forget: schedule show and return immediately
-            asyncio.create_task(toast.show(mute_sound=True))
+            # The toasted library does not XML-escape text content, so
+            # characters like & < > in alert descriptions would produce
+            # invalid XML and a silent 0xc00ce50d error from WinRT.
+            toast.elements = [_Text(_xml_escape(title)), _Text(_xml_escape(message))]  # type: ignore[misc]
+            self._set_activation_arguments(toast, activation_arguments)
+
+            # Bypass toasted's show() which deregisters WinRT event handlers
+            # after popup dismissal, breaking Action Center click activation.
+            # Instead, use WinRT directly so our activated handler persists.
+            if WINRT_AVAILABLE and self._show_toast_direct(toast, activation_arguments):
+                return True
+
+            # Fallback: use toasted's show() (Action Center clicks won't work
+            # after popup dismissal, but popup-click still works).
+            logger.debug("[toasted] Falling back to toasted.show()")
+            if activation_arguments and self.on_activation is not None:
+                on_activation = self.on_activation
+
+                @toast.on_result
+                def _on_result(result):
+                    if not getattr(result, "is_dismissed", False):
+                        on_activation(result)
+
+            task = asyncio.create_task(toast.show(mute_sound=True))
+            self._pending_tasks.add(task)
+            task.add_done_callback(self._pending_tasks.discard)
             return True
 
         # Fire and forget — don't block waiting for WinRT confirmation
         logger.debug("[toasted] Submitting toast to worker loop (fire-and-forget): title=%r", title)
         asyncio.run_coroutine_threadsafe(_show_toast(), loop)
         return True
+
+    def _show_toast_direct(self, toast, activation_arguments: str | None) -> bool:
+        """
+        Show a toast via WinRT directly, keeping the activated handler alive.
+
+        The toasted library's ``show()`` awaits ``asyncio.wait(futures,
+        return_when=FIRST_COMPLETED)`` then **deregisters all WinRT event
+        handlers** — including the ``activated`` handler.  When the popup
+        times out and moves to Action Center, ``dismissed`` fires first,
+        so the ``activated`` token is removed.  Later Action Center clicks
+        find no handler and silently do nothing.
+
+        By creating and showing the ``ToastNotification`` ourselves we keep
+        the ``activated`` handler registered for the lifetime of the object
+        reference in ``_live_notifications``.
+        """
+        if not WINRT_AVAILABLE:
+            return False
+
+        try:
+            # Generate XML from the toasted Toast object
+            xml_string = toast.to_xml_string()
+            xml_string = _apply_protocol_activation_to_xml(xml_string, activation_arguments)
+
+            xml_doc = _WinRT_XmlDocument()
+            xml_doc.load_xml(xml_string)
+            notification = _WinRT_ToastNotification(xml_doc)
+
+            # Register persistent activated handler
+            if (
+                activation_arguments
+                and self.on_activation is not None
+                and not _uses_protocol_activation(activation_arguments)
+            ):
+                on_activation = self.on_activation
+
+                def _on_activated(sender, args):
+                    try:
+                        event_args = _WinRT_ToastActivatedEventArgs._from(args)
+                        # Build a result-like object matching what _on_result expects
+                        result = _ActivationResult(arguments=event_args.arguments)
+                        on_activation(result)
+                    except Exception:
+                        logger.debug("[toasted] Activation handler error", exc_info=True)
+
+                notification.add_activated(_on_activated)
+
+            # Show via WinRT ToastNotificationManager
+            notifier = _WinRT_ToastNotificationManager.create_toast_notifier(
+                WINDOWS_APP_USER_MODEL_ID
+            )
+            notifier.show(notification)
+
+            # Keep the notification object alive so the activated handler
+            # persists for Action Center clicks.  Trim old entries to
+            # prevent unbounded growth.
+            self._live_notifications.append(notification)
+            if len(self._live_notifications) > self._MAX_LIVE_NOTIFICATIONS:
+                self._live_notifications = self._live_notifications[-self._MAX_LIVE_NOTIFICATIONS :]
+
+            logger.debug(
+                "[toasted] Toast shown via direct WinRT (persistent activation): live_count=%d",
+                len(self._live_notifications),
+            )
+            return True
+        except Exception:
+            logger.warning("[toasted] Direct WinRT show failed", exc_info=True)
+            return False
 
     def send_notification(
         self,
@@ -252,6 +438,7 @@ class ToastedWindowsNotifier:
         sound_event: str | None = None,
         sound_candidates: list[str] | None = None,
         play_sound: bool = True,
+        activation_arguments: str | None = None,
     ) -> bool:
         """Send a notification synchronously (same interface as SafeDesktopNotifier)."""
         logger.debug(
@@ -285,18 +472,16 @@ class ToastedWindowsNotifier:
                 ).start()
                 logger.debug("[toasted] Sound thread started")
 
-            success = self._send_in_worker(title, message, timeout)
+            success = self._send_in_worker(
+                title,
+                message,
+                timeout,
+                activation_arguments=activation_arguments,
+            )
             if not success:
                 logger.warning(
                     "[toasted] _send_in_worker returned False — toast NOT shown: %r", title
                 )
-                # Fallback to tray balloon when available
-                if self.balloon_fn is not None:
-                    try:
-                        self.balloon_fn(title, message)
-                        logger.debug("[toasted] Tray balloon fallback used for: %r", title)
-                    except Exception as bf_exc:
-                        logger.debug("[toasted] Tray balloon fallback failed: %s", bf_exc)
             else:
                 logger.debug("[toasted] Toast dispatched successfully: %r", title)
 
@@ -359,11 +544,6 @@ class _DesktopNotifierBackend:
             DEFAULT_MUTED_SOUND_EVENTS if muted_sound_events is None else muted_sound_events
         )
         self.muted_sound_events: list[str] = normalize_muted_sound_events(initial_muted_events)
-
-        # Optional fallback callable: balloon_fn(title, message) is called when the
-        # WinRT/desktop-notifier toast fails (e.g. window hidden in system tray).
-        # Set this after init — typically wired to tray_icon.ShowBalloon().
-        self.balloon_fn = None  # Optional[Callable[[str, str], None]] — set after init
 
         # Persistent worker thread state
         self._worker_loop: asyncio.AbstractEventLoop | None = None
@@ -507,6 +687,7 @@ class _DesktopNotifierBackend:
         sound_event: str | None = None,
         sound_candidates: list[str] | None = None,
         play_sound: bool = True,
+        activation_arguments: str | None = None,
     ) -> bool:
         """Send a notification synchronously."""
         logger.debug(
@@ -548,13 +729,6 @@ class _DesktopNotifierBackend:
                 logger.warning(
                     "[toast] _send_in_worker returned False — toast NOT shown: %r", title
                 )
-                # Fallback to tray balloon when available (e.g. window hidden in system tray)
-                if self.balloon_fn is not None:
-                    try:
-                        self.balloon_fn(title, message)
-                        logger.debug("[toast] Tray balloon fallback used for: %r", title)
-                    except Exception as bf_exc:
-                        logger.debug("[toast] Tray balloon fallback failed: %s", bf_exc)
             else:
                 logger.debug("[toast] Toast dispatched successfully: %r", title)
 
@@ -643,6 +817,36 @@ class SafeToastNotifier:
             return bool(m(title, message, timeout))
         logger.info("Notification (desktop notifier unavailable): %s - %s", title, message)
         return True
+
+    def send_notification(
+        self,
+        title: str,
+        message: str,
+        timeout: int = 10,
+        *,
+        sound_event: str | None = None,
+        sound_candidates: list[str] | None = None,
+        play_sound: bool = True,
+        activation_arguments: str | None = None,
+    ) -> bool:
+        """Send a notification through the active backend when available."""
+        notifier = self._desktop_notifier
+        method = getattr(notifier, "send_notification", None) if notifier is not None else None
+        if method is None or not callable(method):
+            logger.info("Notification (desktop notifier unavailable): %s - %s", title, message)
+            return True
+
+        return bool(
+            method(
+                title,
+                message,
+                timeout,
+                sound_event=sound_event,
+                sound_candidates=sound_candidates,
+                play_sound=play_sound,
+                activation_arguments=activation_arguments,
+            )
+        )
 
     def show_toast(self, **kwargs) -> bool:
         """Show a toast notification."""

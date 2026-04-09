@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 ## [0.4.5] - 2026-03-26
 
 ### Added
+- **Optional in-app alert detail popups** — while AccessiWeather is already running, you can now choose to open newly eligible alert details immediately instead of only getting toast notifications (#578)
 - **Pirate Weather full integration** — Pirate Weather is now a first-class data source with alerts, hourly and minutely forecasts, and automatic fusion alongside NWS and Open-Meteo (#479)
 - **AVWX aviation source** — TAF and METAR data from AVWX for international locations (#480)
 - **All Locations summary view** — see a compact weather overview for all your saved locations at once (#518)
@@ -36,6 +37,8 @@ All notable changes to this project will be documented in this file.
 - Runtime alert and notification state migrated to normalized storage roots (#468)
 
 ### Fixed
+- **Action Center notification clicks now reopen AccessiWeather** — clicking a weather alert or discussion update restores the running app and opens the matching dialog instead of doing nothing (#573)
+- **Forecast timezone labels now honor the location timezone consistently** — daily generated times and hourly forecast labels use named zones like BST when available instead of falling back to UTC/GMT offsets (#572)
 - **Permanent refresh freeze** — weather updates no longer stop indefinitely when a location is added or removed while a background fetch is in progress (#545)
 - **stop_all_sounds() now works** — was silently doing nothing; now properly stops all active audio streams (#545)
 - **Announcer cleanup on exit** — ScreenReaderAnnouncer is now shut down properly when the window closes (#545)

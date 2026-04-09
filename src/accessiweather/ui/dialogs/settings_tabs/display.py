@@ -27,55 +27,60 @@ class DisplayTab:
         """Store reference to the parent settings dialog."""
         self.dialog = dialog
 
-    def create(self):
+    def create(self, page_label: str = "Display"):
         """Build the Display tab panel and add it to the notebook."""
         panel = wx.ScrolledWindow(self.dialog.notebook)
         panel.SetScrollRate(0, 20)
         sizer = wx.BoxSizer(wx.VERTICAL)
         controls = self.dialog._controls
 
-        # Unit Preference
-        sizer.Add(wx.StaticText(panel, label="Unit Preference:"), 0, wx.ALL | wx.EXPAND, 5)
-        controls["temp_unit"] = wx.Choice(
+        self.dialog.add_help_text(
             panel,
-            choices=[
-                "Auto (based on location)",
-                "Imperial (°F)",
-                "Metric (°C)",
-                "Both (°F and °C)",
-            ],
-        )
-        sizer.Add(controls["temp_unit"], 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
-
-        # Metric Visibility
-        sizer.Add(wx.StaticText(panel, label="Metric Visibility:", style=wx.BOLD), 0, wx.ALL, 5)
-        sizer.Add(
-            wx.StaticText(panel, label="Select which weather metrics to display:"),
-            0,
-            wx.LEFT | wx.BOTTOM,
-            5,
+            sizer,
+            "Choose what weather details appear and how forecast times and units are shown.",
+            left=5,
         )
 
-        controls["show_dewpoint"] = wx.CheckBox(panel, label="Show dewpoint")
-        sizer.Add(controls["show_dewpoint"], 0, wx.LEFT, 10)
-
-        controls["show_visibility"] = wx.CheckBox(panel, label="Show visibility")
-        sizer.Add(controls["show_visibility"], 0, wx.LEFT, 10)
-
-        controls["show_uv_index"] = wx.CheckBox(panel, label="Show UV index")
-        sizer.Add(controls["show_uv_index"], 0, wx.LEFT, 10)
-
-        controls["show_pressure_trend"] = wx.CheckBox(panel, label="Show pressure trend")
-        sizer.Add(controls["show_pressure_trend"], 0, wx.LEFT, 10)
-
+        temperature_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Temperature units",
+            "Choose whether temperatures are shown automatically, in Fahrenheit, in Celsius, or both.",
+        )
+        controls["temp_unit"] = self.dialog.add_labeled_control_row(
+            panel,
+            temperature_section,
+            "Temperature units:",
+            lambda parent: wx.Choice(
+                parent,
+                choices=[
+                    "Auto (based on location)",
+                    "Imperial (°F)",
+                    "Metric (°C)",
+                    "Both (°F and °C)",
+                ],
+            ),
+        )
         controls["round_values"] = wx.CheckBox(
-            panel, label="Show values as whole numbers (no decimals)"
+            panel,
+            label="Show values as whole numbers when possible",
         )
-        sizer.Add(controls["round_values"], 0, wx.LEFT | wx.TOP, 10)
+        temperature_section.Add(
+            controls["round_values"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
 
-        row_forecast_duration = wx.BoxSizer(wx.HORIZONTAL)
-        row_forecast_duration.Add(
-            wx.StaticText(panel, label="Forecast duration:"),
+        forecast_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Forecast range",
+            "Choose how many days and hours of forecast detail AccessiWeather should show.",
+        )
+        daily_forecast_row = wx.BoxSizer(wx.HORIZONTAL)
+        daily_forecast_row.Add(
+            wx.StaticText(panel, label="Daily forecast range:"),
             0,
             wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
             10,
@@ -84,89 +89,137 @@ class DisplayTab:
             panel,
             choices=["3 days", "5 days", "7 days (default)", "10 days", "14 days", "15 days"],
         )
-        row_forecast_duration.Add(controls["forecast_duration_days"], 0)
-        sizer.Add(row_forecast_duration, 0, wx.LEFT | wx.TOP, 10)
+        daily_forecast_row.Add(controls["forecast_duration_days"], 0)
+        forecast_section.Add(
+            daily_forecast_row,
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            8,
+        )
 
-        row_hourly_hours = wx.BoxSizer(wx.HORIZONTAL)
-        row_hourly_hours.Add(
-            wx.StaticText(panel, label="Hourly forecast hours:"),
+        hourly_forecast_row = wx.BoxSizer(wx.HORIZONTAL)
+        hourly_forecast_row.Add(
+            wx.StaticText(panel, label="Hourly forecast range (hours):"),
             0,
             wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
             10,
         )
         controls["hourly_forecast_hours"] = wx.SpinCtrl(panel, min=1, max=168, initial=6)
-        row_hourly_hours.Add(controls["hourly_forecast_hours"], 0)
-        sizer.Add(row_hourly_hours, 0, wx.LEFT | wx.TOP, 10)
-
-        # Time & Date Display
-        sizer.Add(wx.StaticText(panel, label="Time & Date Display:"), 0, wx.ALL, 5)
-
-        row_time_ref = wx.BoxSizer(wx.HORIZONTAL)
-        row_time_ref.Add(
-            wx.StaticText(panel, label="Forecast time display:"),
+        hourly_forecast_row.Add(controls["hourly_forecast_hours"], 0)
+        forecast_section.Add(
+            hourly_forecast_row,
             0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            8,
+        )
+
+        details_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Extra weather details",
+            "Turn on the details that matter to you most.",
+        )
+        controls["show_dewpoint"] = wx.CheckBox(panel, label="Show dew point")
+        details_section.Add(controls["show_dewpoint"], 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        controls["show_visibility"] = wx.CheckBox(panel, label="Show visibility")
+        details_section.Add(controls["show_visibility"], 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        controls["show_uv_index"] = wx.CheckBox(panel, label="Show UV index")
+        details_section.Add(controls["show_uv_index"], 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        controls["show_pressure_trend"] = wx.CheckBox(panel, label="Show pressure trend")
+        details_section.Add(
+            controls["show_pressure_trend"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
             10,
         )
-        controls["forecast_time_reference"] = wx.Choice(
+        controls["show_impact_summaries"] = wx.CheckBox(
             panel,
-            choices=["Location's timezone (default)", "My local timezone"],
+            label="Show impact summaries for outdoor, driving, and allergy conditions",
         )
-        row_time_ref.Add(controls["forecast_time_reference"], 0)
-        sizer.Add(row_time_ref, 0, wx.LEFT, 10)
-
-        row_tz = wx.BoxSizer(wx.HORIZONTAL)
-        row_tz.Add(
-            wx.StaticText(panel, label="Time zone display:"),
+        details_section.Add(
+            controls["show_impact_summaries"],
             0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
             10,
         )
-        controls["time_display_mode"] = wx.Choice(
-            panel,
-            choices=["Local time only", "UTC time only", "Both (Local and UTC)"],
-        )
-        row_tz.Add(controls["time_display_mode"], 0)
-        sizer.Add(row_tz, 0, wx.LEFT, 10)
 
+        time_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Time display",
+            "Choose whose timezone to use and how timestamps should be formatted.",
+        )
+        controls["forecast_time_reference"] = self.dialog.add_labeled_control_row(
+            panel,
+            time_section,
+            "Forecast times are based on:",
+            lambda parent: wx.Choice(
+                parent,
+                choices=["Location timezone (default)", "My local timezone"],
+            ),
+        )
+        controls["time_display_mode"] = self.dialog.add_labeled_control_row(
+            panel,
+            time_section,
+            "Show times as:",
+            lambda parent: wx.Choice(
+                parent,
+                choices=["Local time only", "UTC time only", "Both local and UTC"],
+            ),
+        )
         controls["time_format_12hour"] = wx.CheckBox(
-            panel, label="Use 12-hour time format (e.g., 3:00 PM)"
+            panel,
+            label="Use 12-hour time format (for example, 3:00 PM)",
         )
-        sizer.Add(controls["time_format_12hour"], 0, wx.LEFT | wx.TOP, 10)
-
-        controls["show_timezone_suffix"] = wx.CheckBox(
-            panel, label="Show timezone abbreviations (e.g., EST, UTC)"
-        )
-        sizer.Add(controls["show_timezone_suffix"], 0, wx.LEFT, 10)
-
-        # Verbosity
-        sizer.Add(wx.StaticText(panel, label="Information Priority:"), 0, wx.ALL, 5)
-
-        row_verb = wx.BoxSizer(wx.HORIZONTAL)
-        row_verb.Add(
-            wx.StaticText(panel, label="Verbosity level:"),
+        time_section.Add(
+            controls["time_format_12hour"],
             0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
             10,
         )
-        controls["verbosity_level"] = wx.Choice(
+        controls["show_timezone_suffix"] = wx.CheckBox(
             panel,
-            choices=[
-                "Minimal (essentials only)",
-                "Standard (recommended)",
-                "Detailed (all available info)",
-            ],
+            label="Show timezone abbreviations (for example, EST or UTC)",
         )
-        row_verb.Add(controls["verbosity_level"], 0)
-        sizer.Add(row_verb, 0, wx.LEFT, 10)
+        time_section.Add(
+            controls["show_timezone_suffix"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
 
-        controls["severe_weather_override"] = wx.CheckBox(
-            panel, label="Automatically prioritize severe weather info"
+        priority_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Reading priority",
+            "Decide how compact or detailed the spoken and displayed forecast should be.",
         )
-        sizer.Add(controls["severe_weather_override"], 0, wx.ALL, 10)
+        controls["verbosity_level"] = self.dialog.add_labeled_control_row(
+            panel,
+            priority_section,
+            "Verbosity level:",
+            lambda parent: wx.Choice(
+                parent,
+                choices=[
+                    "Minimal (essentials only)",
+                    "Standard (recommended)",
+                    "Detailed (all available info)",
+                ],
+            ),
+        )
+        controls["severe_weather_override"] = wx.CheckBox(
+            panel,
+            label="Automatically prioritize severe weather details",
+        )
+        priority_section.Add(
+            controls["severe_weather_override"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
 
         panel.SetSizer(sizer)
-        self.dialog.notebook.AddPage(panel, "Display")
+        self.dialog.notebook.AddPage(panel, page_label)
         return panel
 
     def load(self, settings):
@@ -180,6 +233,9 @@ class DisplayTab:
         controls["show_visibility"].SetValue(getattr(settings, "show_visibility", True))
         controls["show_uv_index"].SetValue(getattr(settings, "show_uv_index", True))
         controls["show_pressure_trend"].SetValue(getattr(settings, "show_pressure_trend", True))
+        controls["show_impact_summaries"].SetValue(
+            getattr(settings, "show_impact_summaries", False)
+        )
         controls["round_values"].SetValue(getattr(settings, "round_values", False))
 
         forecast_duration_days = getattr(settings, "forecast_duration_days", 7)
@@ -215,6 +271,7 @@ class DisplayTab:
             "show_visibility": controls["show_visibility"].GetValue(),
             "show_uv_index": controls["show_uv_index"].GetValue(),
             "show_pressure_trend": controls["show_pressure_trend"].GetValue(),
+            "show_impact_summaries": controls["show_impact_summaries"].GetValue(),
             "round_values": controls["round_values"].GetValue(),
             "forecast_duration_days": _FORECAST_DURATION_VALUES[
                 controls["forecast_duration_days"].GetSelection()
@@ -241,19 +298,21 @@ class DisplayTab:
         """Set accessibility names for Display tab controls."""
         controls = self.dialog._controls
         names = {
-            "temp_unit": "Unit Preference",
-            "show_dewpoint": "Show dewpoint",
+            "temp_unit": "Temperature units",
+            "show_dewpoint": "Show dew point",
             "show_visibility": "Show visibility",
             "show_uv_index": "Show UV index",
             "show_pressure_trend": "Show pressure trend",
-            "forecast_duration_days": "Forecast duration",
-            "hourly_forecast_hours": "Hourly forecast hours",
-            "forecast_time_reference": "Forecast time display",
-            "time_display_mode": "Time zone display",
-            "time_format_12hour": "Use 12-hour time format (e.g., 3:00 PM)",
-            "show_timezone_suffix": "Show timezone abbreviations (e.g., EST, UTC)",
+            "show_impact_summaries": "Show impact summaries for outdoor driving and allergy conditions",
+            "round_values": "Show values as whole numbers when possible",
+            "forecast_duration_days": "Daily forecast range",
+            "hourly_forecast_hours": "Hourly forecast range in hours",
+            "forecast_time_reference": "Forecast time reference",
+            "time_display_mode": "Time display mode",
+            "time_format_12hour": "Use 12-hour time format",
+            "show_timezone_suffix": "Show timezone abbreviations",
             "verbosity_level": "Verbosity level",
-            "severe_weather_override": "Automatically prioritize severe weather info",
+            "severe_weather_override": "Automatically prioritize severe weather details",
         }
         for key, name in names.items():
             controls[key].SetName(name)

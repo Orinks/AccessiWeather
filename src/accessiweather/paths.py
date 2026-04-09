@@ -159,6 +159,10 @@ class RuntimeStoragePaths:
     def lock_file(self) -> Path:
         return self.state_dir / "accessiweather.lock"
 
+    @property
+    def activation_request_file(self) -> Path:
+        return self.state_dir / "activation_request.json"
+
 
 def resolve_runtime_storage(
     app_paths: Paths,
