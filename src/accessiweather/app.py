@@ -1327,6 +1327,7 @@ class AccessiWeatherApp(wx.App):
 
             if self.alert_notification_system:
                 self.alert_notification_system.settings = settings
+                self.alert_notification_system.update_settings(settings.to_alert_settings())
 
             # Update taskbar icon updater settings
             if self.taskbar_icon_updater:

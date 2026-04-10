@@ -125,6 +125,7 @@ def test_request_exit_stops_timers_when_present():
 
 def test_refresh_runtime_settings_restarts_auto_update_checks():
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    alert_settings = object()
     settings = SimpleNamespace(
         data_source="auto",
         enable_alerts=True,
@@ -135,6 +136,7 @@ def test_refresh_runtime_settings_restarts_auto_update_checks():
         taskbar_icon_text_format="{temp} {condition}",
         temperature_unit="both",
         verbosity_level="standard",
+        to_alert_settings=MagicMock(return_value=alert_settings),
     )
     app.config_manager = MagicMock()
     app.config_manager.get_settings.return_value = settings
@@ -142,13 +144,16 @@ def test_refresh_runtime_settings_restarts_auto_update_checks():
     app.presenter = None
     app._notifier = None
     app._force_wizard = False
-    app.alert_notification_system = None
+    app.alert_notification_system = MagicMock()
     app.taskbar_icon_updater = None
     app._start_auto_update_checks = MagicMock()
+    app._start_background_updates = MagicMock()
     app._force_wizard = False
 
     app.refresh_runtime_settings()
 
+    settings.to_alert_settings.assert_called_once_with()
+    app.alert_notification_system.update_settings.assert_called_once_with(alert_settings)
     app._start_auto_update_checks.assert_called_once()
 
 
