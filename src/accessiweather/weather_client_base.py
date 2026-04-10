@@ -7,7 +7,7 @@ import inspect
 import logging
 import os
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import date, datetime
 
 import httpx
 
@@ -17,6 +17,7 @@ except ImportError:  # pragma: no cover
     Mock = None
 
 from . import (
+    weather_anomaly,
     weather_client_enrichment as enrichment,
     weather_client_nws as nws_client,
     weather_client_openmeteo as openmeteo_client,
@@ -42,6 +43,7 @@ from .models import (
     WeatherData,
 )
 from .notifications.minutely_precipitation import parse_pirate_weather_minutely_block
+from .openmeteo_client import OpenMeteoApiClient
 from .pirate_weather_client import PirateWeatherApiError, PirateWeatherClient
 from .services import EnvironmentalDataClient
 from .units import resolve_auto_unit_system
@@ -98,6 +100,7 @@ class WeatherClient:
         self._visual_crossing_client: VisualCrossingClient | None = None
         self._pirate_weather_api_key = pirate_weather_api_key
         self._pirate_weather_client: PirateWeatherClient | None = None
+        self._openmeteo_archive_client: OpenMeteoApiClient | None = None
 
         # AVWX API key for international aviation weather (stored as a plain string or
         # LazySecureStorage; resolved to str on first access via avwx_api_key property).
@@ -177,6 +180,21 @@ class WeatherClient:
     def pirate_weather_client(self, value: PirateWeatherClient | None) -> None:
         """Allow direct assignment for backward compatibility and testing."""
         self._pirate_weather_client = value
+
+    @property
+    def openmeteo_archive_client(self) -> OpenMeteoApiClient:
+        """Get the Open-Meteo archive client, creating it lazily on first use."""
+        if self._openmeteo_archive_client is None:
+            self._openmeteo_archive_client = OpenMeteoApiClient(
+                user_agent=self.user_agent,
+                timeout=self.timeout,
+            )
+        return self._openmeteo_archive_client
+
+    @openmeteo_archive_client.setter
+    def openmeteo_archive_client(self, value: OpenMeteoApiClient | None) -> None:
+        """Allow tests to inject an archive client."""
+        self._openmeteo_archive_client = value
 
     @property
     def avwx_api_key(self) -> str:
@@ -1177,7 +1195,48 @@ class WeatherClient:
             enrichment.enrich_with_aviation_data(self, weather_data, location)
         )
 
+        current_temp_f = self._current_temperature_f(weather_data.current)
+        if not self._test_mode and current_temp_f is not None:
+            tasks["anomaly_callout"] = asyncio.create_task(
+                self._enrich_with_anomaly_callout(weather_data, location)
+            )
+
         return tasks
+
+    @staticmethod
+    def _current_temperature_f(current: CurrentConditions | None) -> float | None:
+        """Return current temperature in Fahrenheit when available."""
+        if current is None:
+            return None
+        if current.temperature_f is not None:
+            return current.temperature_f
+        if current.temperature_c is not None:
+            return (current.temperature_c * 9.0 / 5.0) + 32.0
+        return None
+
+    async def _enrich_with_anomaly_callout(
+        self, weather_data: WeatherData, location: Location
+    ) -> None:
+        """Attach historical temperature anomaly context when enough archive data exists."""
+        current_temp_f = self._current_temperature_f(weather_data.current)
+        if current_temp_f is None:
+            return
+
+        try:
+            callout = await asyncio.to_thread(
+                weather_anomaly.compute_anomaly,
+                location.latitude,
+                location.longitude,
+                current_temp_f,
+                date.today(),
+                self.openmeteo_archive_client,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("Failed to compute historical anomaly callout: %s", exc)
+            return
+
+        if callout is not None:
+            weather_data.anomaly_callout = callout
 
     async def _await_enrichments(
         self, tasks: dict[str, asyncio.Task], weather_data: WeatherData
