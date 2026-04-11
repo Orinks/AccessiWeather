@@ -874,7 +874,17 @@ class AccessiWeatherApp(wx.App):
     def run_async(self, coro) -> None:
         """Run a coroutine in the background async loop."""
         if self._async_loop:
-            asyncio.run_coroutine_threadsafe(coro, self._async_loop)
+            future = asyncio.run_coroutine_threadsafe(coro, self._async_loop)
+            logger.debug("[async] scheduled coroutine: %r", coro)
+
+            def _log_future_result(done_future) -> None:
+                try:
+                    result = done_future.result()
+                    logger.debug("[async] coroutine completed: %r -> %r", coro, result)
+                except Exception as exc:
+                    logger.error("[async] coroutine failed: %r (%s)", coro, exc, exc_info=True)
+
+            future.add_done_callback(_log_future_result)
 
     def call_after_async(self, callback, *args) -> None:
         """Call a function on the main thread after async operation."""
@@ -1326,6 +1336,18 @@ class AccessiWeatherApp(wx.App):
                 )
 
             if self.alert_notification_system:
+                logger.debug(
+                    "[notify] refresh_runtime_settings: applying alert settings "
+                    "(app_enabled=%s, sound_enabled=%s, threshold_flags={extreme:%s,severe:%s,"
+                    "moderate:%s,minor:%s,unknown:%s})",
+                    getattr(settings, "alert_notifications_enabled", None),
+                    getattr(settings, "sound_enabled", None),
+                    getattr(settings, "alert_notify_extreme", None),
+                    getattr(settings, "alert_notify_severe", None),
+                    getattr(settings, "alert_notify_moderate", None),
+                    getattr(settings, "alert_notify_minor", None),
+                    getattr(settings, "alert_notify_unknown", None),
+                )
                 self.alert_notification_system.settings = settings
                 self.alert_notification_system.update_settings(settings.to_alert_settings())
 

@@ -283,6 +283,20 @@ class AlertManager:
         self._state_loaded = False
 
         logger.info("AlertManager initialized with runtime state file: %s", self.state_file)
+        logger.debug("[alertmgr] Initial settings: %s", self._settings_debug_summary())
+
+    def _settings_debug_summary(self) -> dict[str, object]:
+        """Return a compact settings snapshot for debug logging."""
+        return {
+            "notifications_enabled": self.settings.notifications_enabled,
+            "sound_enabled": self.settings.sound_enabled,
+            "min_severity_priority": self.settings.min_severity_priority,
+            "global_cooldown_minutes": self.settings.global_cooldown,
+            "per_alert_cooldown_minutes": self.settings.per_alert_cooldown,
+            "freshness_window_minutes": self.settings.freshness_window_minutes,
+            "max_notifications_per_hour": self.settings.max_notifications_per_hour,
+            "ignored_categories": sorted(self.settings.ignored_categories),
+        }
 
     def _ensure_state_loaded(self):
         """Ensure state is loaded before first use (lazy loading)."""
@@ -511,6 +525,11 @@ class AlertManager:
         notifications_to_send = []
         active_alerts = alerts.get_active_alerts()
         current_time = datetime.now(UTC)
+        logger.debug(
+            "[alertmgr] process_alerts: active_alerts=%d settings=%s",
+            len(active_alerts),
+            self._settings_debug_summary(),
+        )
 
         for alert in active_alerts:
             alert_id = alert.get_unique_id()
@@ -524,10 +543,15 @@ class AlertManager:
             should_notify, reason = self._should_notify_alert(alert)
             if not should_notify:
                 logger.info(
-                    "[alertmgr] Skipping alert %r: %s (severity=%s)",
+                    "[alertmgr] Skipping alert %r: %s (severity=%s, threshold=%s, "
+                    "notifications_enabled=%s, global_cooldown=%sm, available_tokens=%.2f)",
                     alert_id,
                     reason,
                     alert.severity,
+                    self.settings.min_severity_priority,
+                    self.settings.notifications_enabled,
+                    self.settings.global_cooldown,
+                    self._rate_limit_tokens,
                 )
                 continue
 
@@ -639,6 +663,7 @@ class AlertManager:
 
     def update_settings(self, new_settings: AlertSettings):
         """Update alert settings and reconfigure rate limiter."""
+        old_summary = self._settings_debug_summary()
         old_max = self.settings.max_notifications_per_hour
         self.settings = new_settings
 
@@ -662,7 +687,11 @@ class AlertManager:
                 f"refill_rate={self._rate_limit_refill_rate:.4f} tokens/sec"
             )
 
-        logger.info("Alert settings updated")
+        logger.info(
+            "[alertmgr] Alert settings updated: old=%s new=%s",
+            old_summary,
+            self._settings_debug_summary(),
+        )
 
     def clear_state(self):
         """Clear all alert state (for testing or reset)."""

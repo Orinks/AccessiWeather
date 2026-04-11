@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import time
 from unittest.mock import MagicMock, patch
 
@@ -27,6 +28,13 @@ class _FakeToast:
     async def show(self, mute_sound=False):
         self._shown = True
         return MagicMock(is_dismissed=False)
+
+    def to_xml_string(self):
+        launch_attr = f' launch="{self.arguments}"' if self.arguments else ""
+        activation_attr = ""
+        if getattr(self, "activation_type", None):
+            activation_attr = f' activationType="{self.activation_type}"'
+        return f"<toast{activation_attr}{launch_attr}><visual></visual></toast>"
 
     @staticmethod
     def register_app_id(handle, **_kw):
@@ -211,6 +219,21 @@ class TestToastedWindowsNotifierWorker:
 
         assert toast.arguments == "accessiweather-toast:kind=discussion"
 
+    def test_set_activation_arguments_escapes_xml_unsafe_characters(self):
+        """Protocol launch arguments with query separators are XML-escaped before toast rendering."""
+        with patch.object(toast_notifier, "TOASTED_AVAILABLE", False):
+            notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=False)
+
+        toast = _FakeToast()
+        notifier._set_activation_arguments(
+            toast,
+            "accessiweather-toast:kind=alert_details&alert_id=https%3A%2F%2Fapi.weather.gov",
+        )
+
+        assert toast.arguments == (
+            "accessiweather-toast:kind=alert_details&amp;alert_id=https%3A%2F%2Fapi.weather.gov"
+        )
+
     def test_worker_registers_app_id(self):
         """Worker thread registers the AUMID on first run."""
         _FakeToast._registered.clear()
@@ -250,25 +273,37 @@ class TestToastedWindowsNotifierWorker:
 
         with (
             patch.object(toast_notifier, "TOASTED_AVAILABLE", True),
+            patch.object(toast_notifier, "WINRT_AVAILABLE", False),
             patch.object(toast_notifier, "_Toast", _FakeToast),
             patch.object(toast_notifier, "_Text", _FakeText),
         ):
             notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=False)
             tracking = _TrackingSet()
             notifier._pending_tasks = tracking
+            notifier._worker_loop = MagicMock()
+            notifier._worker_loop.is_running.return_value = True
+            notifier._worker_thread = MagicMock()
+            notifier._worker_thread.is_alive.return_value = True
+            notifier._ensure_worker = MagicMock(return_value=True)
 
-            notifier._send_in_worker("Title", "Body")
-            # Give worker loop time to process the coroutine
-            time.sleep(0.3)
+            def _run_immediately(coro, _loop):
+                class _CompletedTask:
+                    def add_done_callback(self, callback):
+                        callback(self)
+
+                def _create_task(task_coro):
+                    task_coro.close()
+                    return _CompletedTask()
+
+                with patch.object(toast_notifier.asyncio, "create_task", _create_task):
+                    asyncio.run(coro)
+                return MagicMock()
+
+            with patch.object(toast_notifier.asyncio, "run_coroutine_threadsafe", _run_immediately):
+                notifier._send_in_worker("Title", "Body")
 
             # At least one task should have been added (even if already completed)
             assert len(tracking.ever_added) >= 1
-
-            # Clean up
-            if notifier._worker_loop and notifier._worker_loop.is_running():
-                notifier._worker_loop.call_soon_threadsafe(notifier._worker_loop.stop)
-            if notifier._worker_thread:
-                notifier._worker_thread.join(timeout=2)
 
 
 # ---------------------------------------------------------------------------
@@ -322,6 +357,7 @@ class TestToastedActivationCallback:
 
         with (
             patch.object(toast_notifier, "TOASTED_AVAILABLE", True),
+            patch.object(toast_notifier, "WINRT_AVAILABLE", False),
             patch.object(toast_notifier, "_Toast", _FakeToastWithCallback),
             patch.object(toast_notifier, "_Text", _FakeText),
         ):
@@ -329,16 +365,29 @@ class TestToastedActivationCallback:
             callback = MagicMock()
             notifier.on_activation = callback
 
-            notifier._send_in_worker("Title", "Body")  # no activation_arguments
-            time.sleep(0.3)
+            notifier._worker_loop = MagicMock()
+            notifier._worker_loop.is_running.return_value = True
+            notifier._worker_thread = MagicMock()
+            notifier._worker_thread.is_alive.return_value = True
+            notifier._ensure_worker = MagicMock(return_value=True)
+
+            def _run_immediately(coro, _loop):
+                class _CompletedTask:
+                    def add_done_callback(self, callback):
+                        callback(self)
+
+                def _create_task(task_coro):
+                    task_coro.close()
+                    return _CompletedTask()
+
+                with patch.object(toast_notifier.asyncio, "create_task", _create_task):
+                    asyncio.run(coro)
+                return MagicMock()
+
+            with patch.object(toast_notifier.asyncio, "run_coroutine_threadsafe", _run_immediately):
+                notifier._send_in_worker("Title", "Body")  # no activation_arguments
 
             callback.assert_not_called()
-
-            # Clean up
-            if notifier._worker_loop and notifier._worker_loop.is_running():
-                notifier._worker_loop.call_soon_threadsafe(notifier._worker_loop.stop)
-            if notifier._worker_thread:
-                notifier._worker_thread.join(timeout=2)
 
 
 # ---------------------------------------------------------------------------
@@ -451,6 +500,38 @@ class TestDirectWinRTActivation:
             xml_payload = mock_xml_doc.load_xml.call_args.args[0]
             assert 'activationType="protocol"' in xml_payload
             assert 'launch="accessiweather-toast:kind=discussion"' in xml_payload
+
+    def test_show_toast_direct_escapes_protocol_launch_query_separators(self):
+        """Alert-details protocol activation escapes '&' so WinRT XML stays valid."""
+        mock_xml_doc = MagicMock()
+        mock_notification = MagicMock()
+        mock_notifier_mgr = MagicMock()
+
+        with (
+            patch.object(toast_notifier, "TOASTED_AVAILABLE", True),
+            patch.object(toast_notifier, "WINRT_AVAILABLE", True),
+            patch.object(toast_notifier, "_WinRT_XmlDocument", return_value=mock_xml_doc),
+            patch.object(
+                toast_notifier, "_WinRT_ToastNotification", return_value=mock_notification
+            ),
+            patch.object(toast_notifier, "_WinRT_ToastNotificationManager", mock_notifier_mgr),
+        ):
+            notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=False)
+            fake_toast = MagicMock()
+            fake_toast.to_xml_string.return_value = (
+                '<toast launch="accessiweather-toast:kind=alert_details&amp;'
+                'alert_id=https%3A%2F%2Fapi.weather.gov"><visual></visual></toast>'
+            )
+
+            result = notifier._show_toast_direct(
+                fake_toast,
+                "accessiweather-toast:kind=alert_details&alert_id=https%3A%2F%2Fapi.weather.gov",
+            )
+
+            assert result is True
+            xml_payload = mock_xml_doc.load_xml.call_args.args[0]
+            assert 'activationType="protocol"' in xml_payload
+            assert "alert_details&amp;alert_id=" in xml_payload
 
     def test_live_notifications_trimmed_at_max(self):
         """Old notifications are trimmed when _MAX_LIVE_NOTIFICATIONS is exceeded."""
