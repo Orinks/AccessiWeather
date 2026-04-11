@@ -209,7 +209,7 @@ class AppSettings:
     # Parallel fetch timeout for smart auto mode (seconds)
     parallel_fetch_timeout: float = 5.0
     # Auto mode source selection — which sources participate in auto mode
-    auto_mode_api_budget: str = "economy"
+    auto_mode_api_budget: str = "max_coverage"
     auto_sources_us: list[str] = field(
         default_factory=lambda: ["nws", "openmeteo", "visualcrossing", "pirateweather"]
     )
@@ -373,7 +373,7 @@ class AppSettings:
         elif setting_name == "auto_mode_api_budget":
             valid_budgets = {"economy", "balanced", "max_coverage"}
             if value not in valid_budgets:
-                setattr(self, setting_name, "economy")
+                setattr(self, setting_name, "max_coverage")
 
         elif setting_name in {
             "source_priority_us",
@@ -497,7 +497,7 @@ class AppSettings:
     @classmethod
     def from_dict(cls, data: dict) -> AppSettings:
         """Create from dictionary."""
-        return cls(
+        settings = cls(
             temperature_unit=data.get("temperature_unit", "both"),
             update_interval_minutes=data.get("update_interval_minutes", 10),
             enable_alerts=cls._as_bool(data.get("enable_alerts"), True),
@@ -568,7 +568,7 @@ class AppSettings:
             source_priority_international=data.get(
                 "source_priority_international", ["openmeteo", "pirateweather", "visualcrossing"]
             ),
-            auto_mode_api_budget=data.get("auto_mode_api_budget", "economy"),
+            auto_mode_api_budget=data.get("auto_mode_api_budget", "max_coverage"),
             auto_sources_us=data.get(
                 "auto_sources_us", ["nws", "openmeteo", "visualcrossing", "pirateweather"]
             ),
@@ -607,6 +607,8 @@ class AppSettings:
             round_values=cls._as_bool(data.get("round_values"), False),
             show_impact_summaries=cls._as_bool(data.get("show_impact_summaries"), False),
         )
+        settings.validate_on_access("auto_mode_api_budget")
+        return settings
 
     def to_alert_settings(self):
         """Convert to AlertSettings for the alert management system."""

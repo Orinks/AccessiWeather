@@ -12,6 +12,9 @@ _SOURCE_VALUES = ["auto", "nws", "openmeteo", "visualcrossing", "pirateweather"]
 _SOURCE_MAP = {"auto": 0, "nws": 1, "openmeteo": 2, "visualcrossing": 3, "pirateweather": 4}
 _AUTO_MODE_BUDGET_VALUES = ["economy", "balanced", "max_coverage"]
 _AUTO_MODE_BUDGET_LABELS = ["Economy", "Balanced", "Max coverage"]
+_DEFAULT_AUTO_SOURCES_US = ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+_DEFAULT_AUTO_SOURCES_INTERNATIONAL = ["openmeteo", "pirateweather", "visualcrossing"]
+_DEFAULT_BUDGET_INDEX = _AUTO_MODE_BUDGET_VALUES.index("max_coverage")
 _STATION_STRATEGY_VALUES = [
     "hybrid_default",
     "nearest",
@@ -24,6 +27,12 @@ _STATION_STRATEGY_LABELS = [
     "Major airport preferred",
     "Freshest observation",
 ]
+_SOURCE_LABELS = {
+    "nws": "NWS",
+    "openmeteo": "Open-Meteo",
+    "visualcrossing": "Visual Crossing",
+    "pirateweather": "Pirate Weather",
+}
 
 
 class DataSourcesTab:
@@ -37,22 +46,34 @@ class DataSourcesTab:
     def _build_default_source_settings_states() -> dict:
         """Return default source settings state."""
         return {
-            "auto_mode_api_budget": 0,
-            "auto_use_nws": True,
-            "auto_use_openmeteo": True,
-            "auto_use_visualcrossing": True,
-            "auto_use_pirateweather": True,
+            "auto_mode_api_budget": _DEFAULT_BUDGET_INDEX,
+            "auto_sources_us": list(_DEFAULT_AUTO_SOURCES_US),
+            "auto_sources_international": list(_DEFAULT_AUTO_SOURCES_INTERNATIONAL),
             "station_selection_strategy": 0,
         }
 
     @staticmethod
+    def _get_state_sources(state: dict, region: str) -> list[str]:
+        """Return the normalized configured source order for a region."""
+        key = "auto_sources_us" if region == "us" else "auto_sources_international"
+        default_sources = (
+            _DEFAULT_AUTO_SOURCES_US if region == "us" else _DEFAULT_AUTO_SOURCES_INTERNATIONAL
+        )
+        saved_sources = state.get(key, default_sources)
+        if not isinstance(saved_sources, list):
+            return list(default_sources)
+        valid_sources = set(_SOURCE_LABELS)
+        normalized = [source for source in saved_sources if source in valid_sources]
+        return normalized or list(default_sources)
+
+    @staticmethod
     def build_source_settings_summary_text(state: dict) -> str:
         """Build plain-language summary text shown on the data sources tab."""
-        budget_idx = state.get("auto_mode_api_budget", 0)
+        budget_idx = state.get("auto_mode_api_budget", _DEFAULT_BUDGET_INDEX)
         if 0 <= budget_idx < len(_AUTO_MODE_BUDGET_LABELS):
             budget_text = _AUTO_MODE_BUDGET_LABELS[budget_idx]
         else:
-            budget_text = _AUTO_MODE_BUDGET_LABELS[0]
+            budget_text = _AUTO_MODE_BUDGET_LABELS[_DEFAULT_BUDGET_INDEX]
 
         strat_idx = state.get("station_selection_strategy", 0)
         if 0 <= strat_idx < len(_STATION_STRATEGY_LABELS):
@@ -60,18 +81,14 @@ class DataSourcesTab:
         else:
             strat_text = _STATION_STRATEGY_LABELS[0]
 
-        sources = ["NWS", "Open-Meteo", "Visual Crossing", "Pirate Weather"]
-        keys = [
-            "auto_use_nws",
-            "auto_use_openmeteo",
-            "auto_use_visualcrossing",
-            "auto_use_pirateweather",
-        ]
-        enabled = [s for s, k in zip(sources, keys, strict=True) if state.get(k, True)]
-        enabled_text = ", ".join(enabled) if enabled else "Open-Meteo only"
+        us_enabled = DataSourcesTab._get_state_sources(state, "us")
+        intl_enabled = DataSourcesTab._get_state_sources(state, "international")
+        us_text = ", ".join(_SOURCE_LABELS[source] for source in us_enabled)
+        intl_text = ", ".join(_SOURCE_LABELS[source] for source in intl_enabled)
         return (
             f"Automatic mode budget: {budget_text}. "
-            f"Allowed automatic sources: {enabled_text}. "
+            f"US automatic sources: {us_text}. "
+            f"International automatic sources: {intl_text}. "
             f"NWS station strategy: {strat_text}."
         )
 
@@ -279,33 +296,20 @@ class DataSourcesTab:
             if saved_strategy in _STATION_STRATEGY_VALUES
             else 0
         )
-        saved_budget = getattr(settings, "auto_mode_api_budget", "economy")
+        saved_budget = getattr(settings, "auto_mode_api_budget", "max_coverage")
         budget_idx = (
             _AUTO_MODE_BUDGET_VALUES.index(saved_budget)
             if saved_budget in _AUTO_MODE_BUDGET_VALUES
-            else 0
+            else _DEFAULT_BUDGET_INDEX
         )
-        saved_us = list(
-            getattr(
-                settings,
-                "source_priority_us",
-                ["nws", "openmeteo", "visualcrossing", "pirateweather"],
-            )
-        )
+        saved_us = list(getattr(settings, "auto_sources_us", _DEFAULT_AUTO_SOURCES_US))
         saved_intl = list(
-            getattr(
-                settings,
-                "source_priority_international",
-                ["openmeteo", "pirateweather", "visualcrossing"],
-            )
+            getattr(settings, "auto_sources_international", _DEFAULT_AUTO_SOURCES_INTERNATIONAL)
         )
-        all_sources = set(saved_us) | set(saved_intl)
         self.dialog._source_settings_states = {
             "auto_mode_api_budget": budget_idx,
-            "auto_use_nws": "nws" in all_sources,
-            "auto_use_openmeteo": "openmeteo" in all_sources,
-            "auto_use_visualcrossing": "visualcrossing" in all_sources,
-            "auto_use_pirateweather": "pirateweather" in all_sources,
+            "auto_sources_us": saved_us or list(_DEFAULT_AUTO_SOURCES_US),
+            "auto_sources_international": saved_intl or list(_DEFAULT_AUTO_SOURCES_INTERNATIONAL),
             "station_selection_strategy": strat_idx,
         }
         self.refresh_source_settings_summary()
@@ -316,32 +320,12 @@ class DataSourcesTab:
         controls = self.dialog._controls
         state = getattr(self.dialog, "_source_settings_states", None) or {}
 
-        def _src_enabled(_source_key: str, flag_key: str) -> bool:
-            return state.get(flag_key, True)
-
-        source_priority_us = [
-            s
-            for s, k in [
-                ("nws", "auto_use_nws"),
-                ("openmeteo", "auto_use_openmeteo"),
-                ("visualcrossing", "auto_use_visualcrossing"),
-                ("pirateweather", "auto_use_pirateweather"),
-            ]
-            if _src_enabled(s, k)
-        ]
-        source_priority_intl = [
-            s
-            for s, k in [
-                ("openmeteo", "auto_use_openmeteo"),
-                ("visualcrossing", "auto_use_visualcrossing"),
-                ("pirateweather", "auto_use_pirateweather"),
-            ]
-            if _src_enabled(s, k)
-        ]
+        source_priority_us = self._get_state_sources(state, "us")
+        source_priority_intl = self._get_state_sources(state, "international")
 
         strat_idx = max(0, state.get("station_selection_strategy", 0))
         station_strategy = _STATION_STRATEGY_VALUES[strat_idx]
-        budget_idx = max(0, state.get("auto_mode_api_budget", 0))
+        budget_idx = max(0, state.get("auto_mode_api_budget", _DEFAULT_BUDGET_INDEX))
         auto_mode_api_budget = _AUTO_MODE_BUDGET_VALUES[
             min(budget_idx, len(_AUTO_MODE_BUDGET_VALUES) - 1)
         ]

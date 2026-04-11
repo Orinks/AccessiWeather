@@ -587,8 +587,8 @@ class SettingsDialogSimple(wx.Dialog):
                 auto_panel,
                 label=(
                     "Choose how aggressively Automatic mode should spend API calls. "
-                    "Then select which weather sources it is allowed to use when extra coverage is needed. "
-                    "Unchecking a source prevents it from being fetched entirely. NWS is only available for US locations."
+                    "Max coverage keeps the historical fusion-first behavior. Economy and Balanced are reduced-call opt-in modes. "
+                    "Set US and international source lists separately so each region keeps its own exact ordering."
                 ),
             ),
             0,
@@ -613,21 +613,49 @@ class SettingsDialogSimple(wx.Dialog):
         )
         auto_budget_ctrl.SetSelection(state.get("auto_mode_api_budget", 0))
 
-        nws_cb = wx.CheckBox(auto_panel, label="National Weather Service (US locations only)")
-        nws_cb.SetValue(state.get("auto_use_nws", True))
-        auto_sizer.Add(nws_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        us_sources = list(
+            state.get("auto_sources_us", ["nws", "openmeteo", "visualcrossing", "pirateweather"])
+        )
+        intl_sources = list(
+            state.get(
+                "auto_sources_international", ["openmeteo", "pirateweather", "visualcrossing"]
+            )
+        )
 
-        openmeteo_cb = wx.CheckBox(auto_panel, label="Open-Meteo")
-        openmeteo_cb.SetValue(state.get("auto_use_openmeteo", True))
-        auto_sizer.Add(openmeteo_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        auto_sizer.Add(
+            wx.StaticText(auto_panel, label="US automatic sources:"),
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            10,
+        )
+        us_nws_cb = wx.CheckBox(auto_panel, label="National Weather Service")
+        us_nws_cb.SetValue("nws" in us_sources)
+        auto_sizer.Add(us_nws_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
+        us_openmeteo_cb = wx.CheckBox(auto_panel, label="Open-Meteo")
+        us_openmeteo_cb.SetValue("openmeteo" in us_sources)
+        auto_sizer.Add(us_openmeteo_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
+        us_vc_cb = wx.CheckBox(auto_panel, label="Visual Crossing (requires API key)")
+        us_vc_cb.SetValue("visualcrossing" in us_sources)
+        auto_sizer.Add(us_vc_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
+        us_pw_cb = wx.CheckBox(auto_panel, label="Pirate Weather (requires API key)")
+        us_pw_cb.SetValue("pirateweather" in us_sources)
+        auto_sizer.Add(us_pw_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
 
-        vc_cb = wx.CheckBox(auto_panel, label="Visual Crossing (requires API key)")
-        vc_cb.SetValue(state.get("auto_use_visualcrossing", True))
-        auto_sizer.Add(vc_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
-
-        pw_cb = wx.CheckBox(auto_panel, label="Pirate Weather (requires API key)")
-        pw_cb.SetValue(state.get("auto_use_pirateweather", True))
-        auto_sizer.Add(pw_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        auto_sizer.Add(
+            wx.StaticText(auto_panel, label="International automatic sources:"),
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            10,
+        )
+        intl_openmeteo_cb = wx.CheckBox(auto_panel, label="Open-Meteo")
+        intl_openmeteo_cb.SetValue("openmeteo" in intl_sources)
+        auto_sizer.Add(intl_openmeteo_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
+        intl_vc_cb = wx.CheckBox(auto_panel, label="Visual Crossing (requires API key)")
+        intl_vc_cb.SetValue("visualcrossing" in intl_sources)
+        auto_sizer.Add(intl_vc_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
+        intl_pw_cb = wx.CheckBox(auto_panel, label="Pirate Weather (requires API key)")
+        intl_pw_cb.SetValue("pirateweather" in intl_sources)
+        auto_sizer.Add(intl_pw_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
 
         auto_panel.SetSizer(auto_sizer)
         notebook.AddPage(auto_panel, "Auto Mode")
@@ -648,12 +676,30 @@ class SettingsDialogSimple(wx.Dialog):
         try:
             if dialog.ShowModal() != wx.ID_OK:
                 return None
+            auto_sources_us = [
+                source
+                for source, enabled in [
+                    ("nws", us_nws_cb.GetValue()),
+                    ("openmeteo", us_openmeteo_cb.GetValue()),
+                    ("visualcrossing", us_vc_cb.GetValue()),
+                    ("pirateweather", us_pw_cb.GetValue()),
+                ]
+                if enabled
+            ] or ["openmeteo"]
+            auto_sources_international = [
+                source
+                for source, enabled in [
+                    ("openmeteo", intl_openmeteo_cb.GetValue()),
+                    ("pirateweather", intl_pw_cb.GetValue()),
+                    ("visualcrossing", intl_vc_cb.GetValue()),
+                ]
+                if enabled
+            ] or ["openmeteo"]
+
             return {
                 "auto_mode_api_budget": auto_budget_ctrl.GetSelection(),
-                "auto_use_nws": nws_cb.GetValue(),
-                "auto_use_openmeteo": openmeteo_cb.GetValue(),
-                "auto_use_visualcrossing": vc_cb.GetValue(),
-                "auto_use_pirateweather": pw_cb.GetValue(),
+                "auto_sources_us": auto_sources_us,
+                "auto_sources_international": auto_sources_international,
                 "station_selection_strategy": strategy_ctrl.GetSelection(),
             }
         finally:

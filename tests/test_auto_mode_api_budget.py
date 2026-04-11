@@ -118,14 +118,20 @@ def _stub_enrichments(client: WeatherClient) -> None:
 
 def test_auto_mode_api_budget_defaults_and_round_trips() -> None:
     settings = AppSettings()
-    assert settings.auto_mode_api_budget == "economy"
+    assert settings.auto_mode_api_budget == "max_coverage"
 
     restored = AppSettings.from_dict(settings.to_dict())
-    assert restored.auto_mode_api_budget == "economy"
+    assert restored.auto_mode_api_budget == "max_coverage"
+
+    restored = AppSettings.from_dict({})
+    assert restored.auto_mode_api_budget == "max_coverage"
 
     restored.auto_mode_api_budget = "nope"
     assert restored.validate_on_access("auto_mode_api_budget") is True
-    assert restored.auto_mode_api_budget == "economy"
+    assert restored.auto_mode_api_budget == "max_coverage"
+
+    restored = AppSettings.from_dict({"auto_mode_api_budget": "nope"})
+    assert restored.auto_mode_api_budget == "max_coverage"
 
 
 def test_data_sources_tab_budget_load_save_round_trip() -> None:
@@ -146,9 +152,86 @@ def test_data_sources_tab_budget_load_save_round_trip() -> None:
 
     assert dialog._source_settings_states["auto_mode_api_budget"] == 1
     assert saved["auto_mode_api_budget"] == "balanced"
-    assert saved["auto_sources_us"] == ["nws", "openmeteo", "pirateweather"]
+    assert saved["auto_sources_us"] == ["nws", "openmeteo"]
     assert saved["auto_sources_international"] == ["openmeteo", "pirateweather"]
     assert "Automatic mode budget: Balanced." in tab._get_source_settings_summary_text()
+
+
+def test_data_sources_tab_preserves_exact_regional_auto_source_split() -> None:
+    dialog = _FakeDialog()
+    tab = DataSourcesTab(dialog)
+    settings = AppSettings(
+        auto_sources_us=["nws", "openmeteo", "visualcrossing"],
+        auto_sources_international=["openmeteo", "pirateweather"],
+        source_priority_us=["nws", "openmeteo", "visualcrossing"],
+        source_priority_international=["openmeteo", "pirateweather"],
+    )
+
+    tab.load(settings)
+    saved = tab.save()
+
+    assert dialog._source_settings_states["auto_sources_us"] == [
+        "nws",
+        "openmeteo",
+        "visualcrossing",
+    ]
+    assert dialog._source_settings_states["auto_sources_international"] == [
+        "openmeteo",
+        "pirateweather",
+    ]
+    assert saved["auto_sources_us"] == ["nws", "openmeteo", "visualcrossing"]
+    assert saved["auto_sources_international"] == ["openmeteo", "pirateweather"]
+    assert saved["source_priority_us"] == ["nws", "openmeteo", "visualcrossing"]
+    assert saved["source_priority_international"] == ["openmeteo", "pirateweather"]
+
+
+@pytest.mark.asyncio
+async def test_default_auto_mode_max_coverage_fetches_all_enabled_sources(
+    us_location: Location,
+) -> None:
+    client = WeatherClient(
+        data_source="auto",
+        settings=AppSettings(),
+        visual_crossing_api_key="test-key",
+        pirate_weather_api_key="test-key",
+    )
+    _stub_enrichments(client)
+    client._fetch_nws_data = AsyncMock(
+        return_value=(_current(), _forecast("NWS"), None, None, WeatherAlerts(alerts=[]), _hourly())
+    )
+    client._fetch_openmeteo_data = AsyncMock(return_value=(_current(), _forecast("OM"), _hourly()))
+
+    vc_client = MagicMock()
+    vc_client.get_current_conditions = AsyncMock(return_value=_current())
+    vc_client.get_forecast = AsyncMock(return_value=_forecast("VC"))
+    vc_client.get_hourly_forecast = AsyncMock(return_value=_hourly())
+    vc_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+    client._visual_crossing_client = vc_client
+
+    pw_client = MagicMock()
+    pw_client.get_current_conditions = AsyncMock(return_value=_current())
+    pw_client.get_forecast = AsyncMock(return_value=_forecast("PW"))
+    pw_client.get_hourly_forecast = AsyncMock(return_value=_hourly())
+    pw_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+    client._pirate_weather_client = pw_client
+    client._pirate_weather_client_for_location = MagicMock(return_value=pw_client)
+
+    calls: list[list[str]] = []
+
+    async def _recording_fetch_all(self, location, **kwargs):
+        calls.append(
+            [name.removeprefix("fetch_") for name, coro in kwargs.items() if coro is not None]
+        )
+        return await _execute_fetch_all(self, location, **kwargs)
+
+    with patch.object(ParallelFetchCoordinator, "fetch_all", new=_recording_fetch_all):
+        result = await client._fetch_smart_auto_source(us_location)
+
+    assert calls == [["nws", "openmeteo", "visualcrossing", "pirateweather"]]
+    assert result.source_attribution is not None
+    assert {"nws", "openmeteo", "visualcrossing", "pirateweather"}.issubset(
+        result.source_attribution.contributing_sources
+    )
 
 
 @pytest.mark.asyncio
@@ -254,6 +337,92 @@ async def test_balanced_us_can_use_one_non_openmeteo_secondary_when_needed(
     vc_client.get_current_conditions.assert_awaited_once()
     assert result.source_attribution is not None
     assert "visualcrossing" in result.source_attribution.contributing_sources
+
+
+@pytest.mark.asyncio
+async def test_balanced_us_uses_user_configured_secondary_order(us_location: Location) -> None:
+    settings = AppSettings(
+        auto_mode_api_budget="balanced",
+        auto_sources_us=["nws", "pirateweather", "visualcrossing"],
+    )
+    client = WeatherClient(data_source="auto", settings=settings, pirate_weather_api_key="test-key")
+    _stub_enrichments(client)
+    client._fetch_nws_data = AsyncMock(
+        return_value=(None, _forecast("NWS"), None, None, WeatherAlerts(alerts=[]), None)
+    )
+
+    pw_client = MagicMock()
+    pw_client.get_current_conditions = AsyncMock(return_value=_current())
+    pw_client.get_forecast = AsyncMock(return_value=_forecast("PW"))
+    pw_client.get_hourly_forecast = AsyncMock(return_value=_hourly())
+    pw_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+    client._pirate_weather_client = pw_client
+    client._pirate_weather_client_for_location = MagicMock(return_value=pw_client)
+
+    vc_client = MagicMock()
+    vc_client.get_current_conditions = AsyncMock(return_value=_current())
+    vc_client.get_forecast = AsyncMock(return_value=_forecast("VC"))
+    vc_client.get_hourly_forecast = AsyncMock(return_value=_hourly())
+    vc_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+    client._visual_crossing_client = vc_client
+
+    calls: list[list[str]] = []
+
+    async def _recording_fetch_all(self, location, **kwargs):
+        calls.append(
+            [name.removeprefix("fetch_") for name, coro in kwargs.items() if coro is not None]
+        )
+        return await _execute_fetch_all(self, location, **kwargs)
+
+    with patch.object(ParallelFetchCoordinator, "fetch_all", new=_recording_fetch_all):
+        await client._fetch_smart_auto_source(us_location)
+
+    assert calls == [["nws"], ["pirateweather"]]
+    pw_client.get_current_conditions.assert_awaited_once()
+    vc_client.get_current_conditions.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_balanced_international_uses_configured_primary_order(
+    intl_location: Location,
+) -> None:
+    settings = AppSettings(
+        auto_mode_api_budget="balanced",
+        auto_sources_international=["visualcrossing", "pirateweather"],
+    )
+    client = WeatherClient(
+        data_source="auto", settings=settings, visual_crossing_api_key="test-key"
+    )
+    _stub_enrichments(client)
+
+    vc_client = MagicMock()
+    vc_client.get_current_conditions = AsyncMock(return_value=_current())
+    vc_client.get_forecast = AsyncMock(return_value=_forecast("VC"))
+    vc_client.get_hourly_forecast = AsyncMock(return_value=_hourly())
+    vc_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+    client._visual_crossing_client = vc_client
+
+    pw_client = MagicMock()
+    pw_client.get_current_conditions = AsyncMock(return_value=_current())
+    pw_client.get_forecast = AsyncMock(return_value=_forecast("PW"))
+    pw_client.get_hourly_forecast = AsyncMock(return_value=_hourly())
+    pw_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+    client._pirate_weather_client = pw_client
+
+    calls: list[list[str]] = []
+
+    async def _recording_fetch_all(self, location, **kwargs):
+        calls.append(
+            [name.removeprefix("fetch_") for name, coro in kwargs.items() if coro is not None]
+        )
+        return await _execute_fetch_all(self, location, **kwargs)
+
+    with patch.object(ParallelFetchCoordinator, "fetch_all", new=_recording_fetch_all):
+        await client._fetch_smart_auto_source(intl_location)
+
+    assert calls == [["visualcrossing"]]
+    vc_client.get_current_conditions.assert_awaited_once()
+    pw_client.get_current_conditions.assert_not_called()
 
 
 @pytest.mark.asyncio

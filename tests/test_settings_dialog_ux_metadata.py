@@ -45,16 +45,16 @@ def test_audio_event_sound_summary_mentions_sound_choices_clearly():
 
 def test_source_settings_summary_uses_plain_language():
     state = {
-        "auto_use_nws": True,
-        "auto_use_openmeteo": True,
-        "auto_use_visualcrossing": False,
-        "auto_use_pirateweather": True,
+        "auto_mode_api_budget": 2,
+        "auto_sources_us": ["nws", "openmeteo", "pirateweather"],
+        "auto_sources_international": ["openmeteo", "pirateweather"],
         "station_selection_strategy": 2,
     }
 
     assert DataSourcesTab.build_source_settings_summary_text(state) == (
-        "Automatic mode budget: Economy. "
-        "Allowed automatic sources: NWS, Open-Meteo, Pirate Weather. "
+        "Automatic mode budget: Max coverage. "
+        "US automatic sources: NWS, Open-Meteo, Pirate Weather. "
+        "International automatic sources: Open-Meteo, Pirate Weather. "
         "NWS station strategy: Major airport preferred."
     )
 

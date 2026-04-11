@@ -835,8 +835,8 @@ class WeatherClient:
 
     def _get_auto_mode_api_budget(self) -> str:
         """Return the validated automatic-mode API budget setting."""
-        budget = getattr(self.settings, "auto_mode_api_budget", "economy")
-        return budget if budget in {"economy", "balanced", "max_coverage"} else "economy"
+        budget = getattr(self.settings, "auto_mode_api_budget", "max_coverage")
+        return budget if budget in {"economy", "balanced", "max_coverage"} else "max_coverage"
 
     @staticmethod
     def _source_has_core_section(
@@ -855,14 +855,18 @@ class WeatherClient:
         )
 
     @staticmethod
-    def _auto_primary_source(
-        preferred_order: list[str], active_sources: Sequence[str]
-    ) -> str | None:
-        """Pick the first enabled primary source from a preferred order."""
-        for source in preferred_order:
-            if source in active_sources:
-                return source
-        return None
+    def _configured_sources_in_fetch_order(
+        active_sources: Sequence[str],
+        fetchers: dict[str, object],
+        fetched_sources: set[str] | None = None,
+    ) -> list[str]:
+        """Return configured sources that are currently fetchable, preserving user order."""
+        already_fetched = fetched_sources or set()
+        return [
+            source
+            for source in active_sources
+            if source in fetchers and source not in already_fetched
+        ]
 
     async def _fetch_auto_mode_sources(
         self,
@@ -973,12 +977,8 @@ class WeatherClient:
                 location, coordinator, fetchers, active_sources
             )
         else:
-            preferred_order = (
-                ["nws", "openmeteo", "visualcrossing", "pirateweather"]
-                if is_us
-                else ["openmeteo", "pirateweather", "visualcrossing"]
-            )
-            primary_source = self._auto_primary_source(preferred_order, active_sources)
+            configured_sources = self._configured_sources_in_fetch_order(active_sources, fetchers)
+            primary_source = configured_sources[0] if configured_sources else None
             primary_sources = (
                 [primary_source] if primary_source and primary_source in fetchers else []
             )
@@ -1005,19 +1005,25 @@ class WeatherClient:
             )
             needs_intl_core_fallback = not is_us and not core_complete
 
+            remaining_sources = self._configured_sources_in_fetch_order(
+                active_sources, fetchers, fetched_sources
+            )
+
+            def _pick_secondary_candidate(predicate) -> list[str]:
+                for source in remaining_sources:
+                    if predicate(source):
+                        return [source]
+                return []
+
             secondary_sources: list[str] = []
-            if needs_us_openmeteo:
-                secondary_sources = ["openmeteo"]
-            elif needs_intl_alert_source or needs_intl_core_fallback:
-                if "pirateweather" in fetchers and "pirateweather" not in fetched_sources:
-                    secondary_sources = ["pirateweather"]
-                elif "visualcrossing" in fetchers and "visualcrossing" not in fetched_sources:
-                    secondary_sources = ["visualcrossing"]
-            elif auto_budget == "balanced" and is_us and not core_complete:
-                if "visualcrossing" in fetchers and "visualcrossing" not in fetched_sources:
-                    secondary_sources = ["visualcrossing"]
-                elif "pirateweather" in fetchers and "pirateweather" not in fetched_sources:
-                    secondary_sources = ["pirateweather"]
+            if needs_us_openmeteo or (auto_budget == "balanced" and is_us and not core_complete):
+                secondary_sources = _pick_secondary_candidate(lambda _source: True)
+            elif needs_intl_alert_source:
+                secondary_sources = _pick_secondary_candidate(
+                    lambda source: source in {"pirateweather", "visualcrossing"}
+                )
+            elif needs_intl_core_fallback:
+                secondary_sources = _pick_secondary_candidate(lambda _source: True)
 
             if secondary_sources:
                 source_results.extend(
