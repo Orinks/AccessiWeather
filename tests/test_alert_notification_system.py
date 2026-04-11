@@ -8,14 +8,19 @@ are processed simultaneously.
 
 from __future__ import annotations
 
+import asyncio
+import shutil
+import threading
 from datetime import UTC, datetime, timedelta
-from unittest.mock import MagicMock
+from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from accessiweather.alert_manager import AlertManager
 from accessiweather.alert_notification_system import AlertNotificationSystem
-from accessiweather.models import WeatherAlert, WeatherAlerts
+from accessiweather.models import AppSettings, WeatherAlert, WeatherAlerts
+from accessiweather.notifications import toast_notifier
 
 
 class TestAlertNotificationBatchSound:
@@ -501,3 +506,172 @@ class TestNotifyLifecycleChanges:
 
         assert result == 2
         assert mock_notifier.send_notification.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_update_settings_refreshes_alert_manager_runtime_filters():
+    """Runtime settings refresh should re-enable alert delivery without restart."""
+    disabled_root = Path(".pytest_alert_runtime_disabled")
+    enabled_root = Path(".pytest_alert_runtime_enabled")
+    shutil.rmtree(disabled_root, ignore_errors=True)
+    shutil.rmtree(enabled_root, ignore_errors=True)
+    disabled_root.mkdir(exist_ok=True)
+    enabled_root.mkdir(exist_ok=True)
+
+    try:
+        initial_settings = AppSettings(alert_notifications_enabled=False)
+        enabled_settings = AppSettings(alert_notifications_enabled=True)
+
+        alert = WeatherAlert(
+            id="runtime-refresh-alert",
+            title="Severe Thunderstorm Warning",
+            description="Severe thunderstorms expected.",
+            severity="Severe",
+            urgency="Immediate",
+            certainty="Observed",
+            event="Severe Thunderstorm Warning",
+            headline="Warning in effect",
+            expires=datetime.now(UTC) + timedelta(hours=1),
+        )
+        alerts = WeatherAlerts(alerts=[alert])
+
+        stale_manager = AlertManager(str(disabled_root), initial_settings.to_alert_settings())
+        stale_system = AlertNotificationSystem(
+            alert_manager=stale_manager,
+            notifier=MagicMock(send_notification=MagicMock(return_value=True)),
+            settings=initial_settings,
+        )
+        stale_system.settings = enabled_settings
+
+        assert await stale_system.process_and_notify(alerts) == 0
+
+        refreshed_manager = AlertManager(str(enabled_root), initial_settings.to_alert_settings())
+        refreshed_notifier = MagicMock()
+        refreshed_notifier.send_notification = MagicMock(return_value=True)
+        refreshed_system = AlertNotificationSystem(
+            alert_manager=refreshed_manager,
+            notifier=refreshed_notifier,
+            settings=initial_settings,
+        )
+        refreshed_system.settings = enabled_settings
+        refreshed_system.update_settings(enabled_settings.to_alert_settings())
+
+        assert await refreshed_system.process_and_notify(alerts) == 1
+        refreshed_notifier.send_notification.assert_called_once()
+    finally:
+        shutil.rmtree(disabled_root, ignore_errors=True)
+        shutil.rmtree(enabled_root, ignore_errors=True)
+
+
+def test_process_and_notify_reaches_winrt_with_escaped_alert_activation():
+    """Alert notifications should reach WinRT with XML-safe alert-details activation."""
+
+    class _FakeToast:
+        def __init__(self, app_id=None, sound=None, **_kw):
+            self.app_id = app_id
+            self.sound = sound
+            self.elements = []
+            self.arguments = None
+            self.activation_type = None
+
+        def to_xml_string(self):
+            launch_attr = f' launch="{self.arguments}"' if self.arguments else ""
+            activation_attr = (
+                f' activationType="{self.activation_type}"' if self.activation_type else ""
+            )
+            return f"<toast{activation_attr}{launch_attr}><visual></visual></toast>"
+
+        @staticmethod
+        def register_app_id(handle, **_kw):
+            return handle
+
+        @staticmethod
+        def is_registered_app_id(_handle):
+            return True
+
+    class _FakeText:
+        def __init__(self, content):
+            self.content = content
+
+    runtime_root = Path(".pytest_alert_winrt")
+    shutil.rmtree(runtime_root, ignore_errors=True)
+    runtime_root.mkdir(exist_ok=True)
+
+    try:
+        settings = AppSettings(alert_notifications_enabled=True)
+        alert_manager = AlertManager(str(runtime_root), settings.to_alert_settings())
+        alert = WeatherAlert(
+            id="winrt-alert",
+            title="Special Weather Statement",
+            description="Localized gusty winds & reduced visibility.",
+            severity="Moderate",
+            urgency="Expected",
+            certainty="Likely",
+            event="Special Weather Statement",
+            headline="Localized gusty winds & reduced visibility expected.",
+            expires=datetime.now(UTC) + timedelta(hours=1),
+        )
+        weather_alerts = WeatherAlerts(alerts=[alert])
+
+        mock_xml_doc = MagicMock()
+        mock_notification = MagicMock()
+        mock_notifier_mgr = MagicMock()
+
+        with (
+            patch.object(toast_notifier, "TOASTED_AVAILABLE", True),
+            patch.object(toast_notifier, "WINRT_AVAILABLE", True),
+            patch.object(toast_notifier, "_Toast", _FakeToast),
+            patch.object(toast_notifier, "_Text", _FakeText),
+            patch.object(toast_notifier, "_WinRT_XmlDocument", return_value=mock_xml_doc),
+            patch.object(
+                toast_notifier, "_WinRT_ToastNotification", return_value=mock_notification
+            ),
+            patch.object(toast_notifier, "_WinRT_ToastNotificationManager", mock_notifier_mgr),
+            patch.object(
+                toast_notifier.ToastedWindowsNotifier, "_ensure_worker", return_value=True
+            ),
+        ):
+            notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=False)
+            notifier._worker_loop = MagicMock()
+            notifier._worker_loop.is_running.return_value = True
+            notifier._worker_thread = MagicMock()
+            notifier._worker_thread.is_alive.return_value = True
+            notification_system = AlertNotificationSystem(
+                alert_manager=alert_manager,
+                notifier=notifier,
+                settings=settings,
+            )
+
+            try:
+
+                def _run_in_thread(coro, _loop):
+                    holder: dict[str, object] = {}
+
+                    def _runner():
+                        holder["result"] = asyncio.run(coro)
+
+                    thread = threading.Thread(target=_runner, daemon=True)
+                    thread.start()
+                    thread.join(timeout=5)
+                    assert not thread.is_alive()
+                    return MagicMock(result=lambda: holder.get("result"))
+
+                with patch.object(
+                    toast_notifier.asyncio,
+                    "run_coroutine_threadsafe",
+                    _run_in_thread,
+                ):
+                    result = asyncio.run(notification_system.process_and_notify(weather_alerts))
+
+                assert result == 1
+                mock_notifier_mgr.create_toast_notifier.assert_called_once()
+                xml_payload = mock_xml_doc.load_xml.call_args.args[0]
+                assert 'activationType="protocol"' in xml_payload
+                assert "kind=alert_details&amp;alert_id=" in xml_payload
+            finally:
+                if notifier._worker_loop and notifier._worker_loop.is_running():
+                    notifier._worker_loop.call_soon_threadsafe(notifier._worker_loop.stop)
+                if notifier._worker_thread:
+                    notifier._worker_thread.join(timeout=2)
+    finally:
+        shutil.rmtree(runtime_root, ignore_errors=True)

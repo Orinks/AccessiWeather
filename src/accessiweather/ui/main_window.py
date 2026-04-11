@@ -1203,6 +1203,19 @@ class MainWindow(SizedFrame):
                 and weather_data.alerts.has_alerts()
                 and self.app.alert_notification_system
             ):
+                active_alerts = weather_data.alerts.get_active_alerts()
+                logger.info(
+                    "[notify-ui] full refresh scheduling alert processing for %d active alert(s): %s",
+                    len(active_alerts),
+                    [
+                        {
+                            "id": alert.get_unique_id(),
+                            "event": alert.event,
+                            "severity": alert.severity,
+                        }
+                        for alert in active_alerts
+                    ],
+                )
                 self.app.run_async(
                     self.app.alert_notification_system.process_and_notify(weather_data.alerts)
                 )

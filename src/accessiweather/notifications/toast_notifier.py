@@ -123,6 +123,11 @@ def _uses_protocol_activation(activation_arguments: str | None) -> bool:
     )
 
 
+def _escape_xml_attribute(value: str) -> str:
+    """Escape a string for safe use inside XML attributes."""
+    return _xml_escape(value, {'"': "&quot;", "'": "&apos;"})
+
+
 def _apply_protocol_activation_to_xml(xml_payload: str, activation_arguments: str | None) -> str:
     """Force protocol activation on the toast root element for stub-CLSID mode."""
     if not _uses_protocol_activation(activation_arguments):
@@ -290,9 +295,10 @@ class ToastedWindowsNotifier:
         """Attach launch arguments to the toast when the backend supports it."""
         if not activation_arguments:
             return
+        escaped_arguments = _escape_xml_attribute(activation_arguments)
         for attr in ("arguments", "launch"):
             with contextlib.suppress(Exception):
-                setattr(toast, attr, activation_arguments)
+                setattr(toast, attr, escaped_arguments)
         if _uses_protocol_activation(activation_arguments):
             for attr in ("activation_type", "activationType"):
                 with contextlib.suppress(Exception):
