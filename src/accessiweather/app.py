@@ -44,6 +44,20 @@ if not logging.getLogger().handlers:
 logger = logging.getLogger(__name__)
 
 
+def show_alert_dialog(parent, alert) -> None:
+    """Lazy wrapper for the single-alert details dialog."""
+    from .ui.dialogs import show_alert_dialog as _show_alert_dialog
+
+    _show_alert_dialog(parent, alert)
+
+
+def show_alerts_summary_dialog(parent, alerts) -> None:
+    """Lazy wrapper for the combined multi-alert dialog."""
+    from .ui.dialogs import show_alerts_summary_dialog as _show_alerts_summary_dialog
+
+    _show_alerts_summary_dialog(parent, alerts)
+
+
 class AccessiWeatherApp(wx.App):
     """AccessiWeather application using wxPython."""
 
@@ -250,6 +264,23 @@ class AccessiWeatherApp(wx.App):
         """Route any activation request passed directly to this process."""
         if self._activation_request is not None:
             wx.CallAfter(self._handle_notification_activation_request, self._activation_request)
+
+    def _queue_immediate_alert_popup(self, alerts) -> None:
+        """Queue an in-app alert popup onto the UI thread."""
+        if not alerts:
+            return
+        wx.CallAfter(self._show_immediate_alert_popup, list(alerts))
+
+    def _show_immediate_alert_popup(self, alerts) -> None:
+        """Show the opted-in in-app alert popup without restoring the main window."""
+        if self.main_window is None or not alerts:
+            return
+
+        if len(alerts) == 1:
+            show_alert_dialog(self.main_window, alerts[0])
+            return
+
+        show_alerts_summary_dialog(self.main_window, alerts)
 
     def _wire_notifier_activation_callback(self) -> None:
         """Connect the notifier's in-process activation callback to the UI thread."""
@@ -843,7 +874,17 @@ class AccessiWeatherApp(wx.App):
     def run_async(self, coro) -> None:
         """Run a coroutine in the background async loop."""
         if self._async_loop:
-            asyncio.run_coroutine_threadsafe(coro, self._async_loop)
+            future = asyncio.run_coroutine_threadsafe(coro, self._async_loop)
+            logger.debug("[async] scheduled coroutine: %r", coro)
+
+            def _log_future_result(done_future) -> None:
+                try:
+                    result = done_future.result()
+                    logger.debug("[async] coroutine completed: %r -> %r", coro, result)
+                except Exception as exc:
+                    logger.error("[async] coroutine failed: %r (%s)", coro, exc, exc_info=True)
+
+            future.add_done_callback(_log_future_result)
 
     def call_after_async(self, callback, *args) -> None:
         """Call a function on the main thread after async operation."""
@@ -1295,7 +1336,20 @@ class AccessiWeatherApp(wx.App):
                 )
 
             if self.alert_notification_system:
+                logger.debug(
+                    "[notify] refresh_runtime_settings: applying alert settings "
+                    "(app_enabled=%s, sound_enabled=%s, threshold_flags={extreme:%s,severe:%s,"
+                    "moderate:%s,minor:%s,unknown:%s})",
+                    getattr(settings, "alert_notifications_enabled", None),
+                    getattr(settings, "sound_enabled", None),
+                    getattr(settings, "alert_notify_extreme", None),
+                    getattr(settings, "alert_notify_severe", None),
+                    getattr(settings, "alert_notify_moderate", None),
+                    getattr(settings, "alert_notify_minor", None),
+                    getattr(settings, "alert_notify_unknown", None),
+                )
                 self.alert_notification_system.settings = settings
+                self.alert_notification_system.update_settings(settings.to_alert_settings())
 
             # Update taskbar icon updater settings
             if self.taskbar_icon_updater:

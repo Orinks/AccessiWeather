@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import webbrowser
+from contextlib import suppress
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -99,12 +100,23 @@ class AlertAdvancedSettingsDialog(wx.Dialog):
 class SettingsDialogSimple(wx.Dialog):
     """Comprehensive settings dialog — thin coordinator over per-tab modules."""
 
+    _TAB_DEFINITIONS = [
+        ("general", "General"),
+        ("display", "Display"),
+        ("notifications", "Alerts"),
+        ("audio", "Audio"),
+        ("data_sources", "Data Sources"),
+        ("ai", "AI"),
+        ("updates", "Updates"),
+        ("advanced", "Advanced"),
+    ]
+
     def __init__(self, parent, app: AccessiWeatherApp):
         """Initialize the settings dialog."""
         super().__init__(
             parent,
             title="Settings",
-            size=(600, 550),
+            size=(760, 640),
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self.app = app
@@ -117,6 +129,11 @@ class SettingsDialogSimple(wx.Dialog):
         self._create_ui()
         self._load_settings()
         self._setup_accessibility()
+
+    @classmethod
+    def get_tab_definitions(cls) -> list[tuple[str, str]]:
+        """Return notebook tab keys and visible labels in display order."""
+        return list(cls._TAB_DEFINITIONS)
 
     # ------------------------------------------------------------------
     # Delegation helpers for backward compatibility
@@ -140,6 +157,98 @@ class SettingsDialogSimple(wx.Dialog):
     # UI creation
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _wrap_static_text(control: wx.Window, width: int = 620) -> wx.Window:
+        """Wrap static text where supported to keep copy readable."""
+        if hasattr(control, "Wrap"):
+            with suppress(Exception):
+                control.Wrap(width)
+        return control
+
+    def add_help_text(
+        self,
+        parent: wx.Window,
+        parent_sizer: wx.Sizer,
+        text: str,
+        *,
+        left: int = 10,
+        bottom: int = 8,
+    ) -> wx.StaticText:
+        """Add wrapped helper text to a sizer."""
+        control = wx.StaticText(parent, label=text)
+        self._wrap_static_text(control)
+        parent_sizer.Add(control, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, left)
+        return control
+
+    def add_labeled_row(
+        self,
+        parent: wx.Window,
+        parent_sizer: wx.Sizer,
+        label: str,
+        control: wx.Window,
+        *,
+        expand_control: bool = False,
+        bottom: int = 8,
+    ) -> wx.BoxSizer:
+        """Add a consistent label/control row to a sizer."""
+        row = wx.BoxSizer(wx.HORIZONTAL)
+        row.Add(
+            wx.StaticText(parent, label=label),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        row.Add(control, 1 if expand_control else 0, wx.EXPAND if expand_control else 0)
+        parent_sizer.Add(row, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, bottom)
+        return row
+
+    def add_labeled_control_row(
+        self,
+        parent: wx.Window,
+        parent_sizer: wx.Sizer,
+        label: str,
+        control_factory,
+        *,
+        expand_control: bool = False,
+        bottom: int = 8,
+    ) -> wx.Window:
+        """Create the visible label before the control for wx/NVDA association stability."""
+        row = wx.BoxSizer(wx.HORIZONTAL)
+        row.Add(
+            wx.StaticText(parent, label=label),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        control = control_factory(parent)
+        row.Add(control, 1 if expand_control else 0, wx.EXPAND if expand_control else 0)
+        parent_sizer.Add(row, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, bottom)
+        return control
+
+    def create_section(
+        self,
+        parent: wx.Window,
+        parent_sizer: wx.Sizer,
+        title: str,
+        description: str | None = None,
+    ) -> wx.BoxSizer:
+        """
+        Create a titled settings section.
+
+        We intentionally avoid StaticBoxSizer here because screen readers can
+        announce the group label as part of the first interactive control in the
+        section. The description parameter is accepted for call-site readability,
+        but we do not auto-render it above the first interactive control.
+        """
+        del description
+        heading = wx.StaticText(parent, label=title)
+        self._wrap_static_text(heading)
+        parent_sizer.Add(heading, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.EXPAND, 5)
+
+        section = wx.BoxSizer(wx.VERTICAL)
+        parent_sizer.Add(section, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+        return section
+
     def _create_ui(self):
         """Create the dialog UI using per-tab modules."""
         from .settings_tabs import (
@@ -154,32 +263,54 @@ class SettingsDialogSimple(wx.Dialog):
         )
 
         main_sizer = wx.BoxSizer(wx.VERTICAL)
+        intro = wx.StaticText(
+            self,
+            label=(
+                "Review preferences by category. Changes are saved when you choose Save Settings."
+            ),
+        )
+        self._wrap_static_text(intro)
+        main_sizer.Add(intro, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.EXPAND, 10)
+        sub_intro = wx.StaticText(
+            self,
+            label=(
+                "Everyday preferences appear first. Maintenance, backup, and reset "
+                "tools are grouped on the Advanced tab."
+            ),
+        )
+        self._wrap_static_text(sub_intro)
+        main_sizer.Add(sub_intro, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.EXPAND, 10)
         self.notebook = wx.Notebook(self)
+        tab_classes = {
+            "general": GeneralTab,
+            "display": DisplayTab,
+            "notifications": NotificationsTab,
+            "audio": AudioTab,
+            "data_sources": DataSourcesTab,
+            "ai": AITab,
+            "updates": UpdatesTab,
+            "advanced": AdvancedTab,
+        }
 
-        self._tab_objects = [
-            GeneralTab(self),
-            DisplayTab(self),
-            DataSourcesTab(self),
-            NotificationsTab(self),
-            AudioTab(self),
-            UpdatesTab(self),
-            AITab(self),
-            AdvancedTab(self),
-        ]
+        self._tab_objects = []
+        self._tab_objects_by_key = {}
+        for tab_key, page_label in self.get_tab_definitions():
+            tab = tab_classes[tab_key](self)
+            self._tab_objects.append(tab)
+            self._tab_objects_by_key[tab_key] = tab
+            tab.create(page_label=page_label)
+
         # Keep named references for methods that need specific tabs
-        self._audio_tab = self._tab_objects[4]
-        self._display_tab = self._tab_objects[1]
-        self._data_sources_tab = self._tab_objects[2]
-
-        for tab in self._tab_objects:
-            tab.create()
+        self._audio_tab = self._tab_objects_by_key["audio"]
+        self._display_tab = self._tab_objects_by_key["display"]
+        self._data_sources_tab = self._tab_objects_by_key["data_sources"]
 
         main_sizer.Add(self.notebook, 1, wx.EXPAND | wx.ALL, 10)
 
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
         button_sizer.AddStretchSpacer()
 
-        ok_btn = wx.Button(self, wx.ID_OK, "OK")
+        ok_btn = wx.Button(self, wx.ID_OK, "Save Settings")
         ok_btn.Bind(wx.EVT_BUTTON, self._on_ok)
         cancel_btn = wx.Button(self, wx.ID_CANCEL, "Cancel")
 
@@ -188,6 +319,10 @@ class SettingsDialogSimple(wx.Dialog):
         main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         self.SetSizer(main_sizer)
+        self.SetMinSize((700, 580))
+        self.SetAffirmativeId(wx.ID_OK)
+        self.SetEscapeId(wx.ID_CANCEL)
+        ok_btn.SetDefault()
 
     # ------------------------------------------------------------------
     # Load / Save / Accessibility (delegate to tab objects)
@@ -333,9 +468,11 @@ class SettingsDialogSimple(wx.Dialog):
         scroll_sizer = wx.BoxSizer(wx.VERTICAL)
 
         for section_title, description, event_keys in self._get_event_sound_sections():
-            section = wx.StaticBoxSizer(wx.VERTICAL, scroll, section_title)
+            section = wx.BoxSizer(wx.VERTICAL)
+            heading = wx.StaticText(scroll, label=section_title)
+            self._wrap_static_text(heading, width=380)
             section.Add(
-                wx.StaticText(scroll, label=description),
+                heading,
                 0,
                 wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
                 5,
@@ -345,6 +482,14 @@ class SettingsDialogSimple(wx.Dialog):
                 checkbox.SetValue(state_map.get(event_key, True))
                 dialog_controls[event_key] = checkbox
                 section.Add(checkbox, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+            description_text = wx.StaticText(scroll, label=description)
+            self._wrap_static_text(description_text, width=380)
+            section.Add(
+                description_text,
+                0,
+                wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+                5,
+            )
             scroll_sizer.Add(section, 0, wx.ALL | wx.EXPAND, 5)
 
         scroll.SetSizer(scroll_sizer)
@@ -411,23 +556,23 @@ class SettingsDialogSimple(wx.Dialog):
             10,
         )
 
-        cc_sizer.Add(
-            wx.StaticText(cc_panel, label="NWS station selection strategy:"),
-            0,
-            wx.LEFT | wx.RIGHT,
-            10,
-        )
-        strategy_ctrl = wx.Choice(
+        strategy_ctrl = self.add_labeled_control_row(
             cc_panel,
-            choices=[
-                "Hybrid default (recommended: fresh + major station with distance guardrail)",
-                "Nearest station (pure distance)",
-                "Major airport preferred (within radius, else nearest)",
-                "Freshest observation (among nearest stations)",
-            ],
+            cc_sizer,
+            "NWS station selection strategy:",
+            lambda parent: wx.Choice(
+                parent,
+                choices=[
+                    "Hybrid default (recommended: fresh + major station with distance guardrail)",
+                    "Nearest station (pure distance)",
+                    "Major airport preferred (within radius, else nearest)",
+                    "Freshest observation (among nearest stations)",
+                ],
+            ),
+            expand_control=True,
+            bottom=10,
         )
         strategy_ctrl.SetSelection(state.get("station_selection_strategy", 0))
-        cc_sizer.Add(strategy_ctrl, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 10)
 
         cc_panel.SetSizer(cc_sizer)
         notebook.AddPage(cc_panel, "Current Conditions")
@@ -441,9 +586,9 @@ class SettingsDialogSimple(wx.Dialog):
             wx.StaticText(
                 auto_panel,
                 label=(
-                    "Select which weather sources are used when Automatic mode is active. "
-                    "Unchecking a source prevents it from being fetched entirely. "
-                    "NWS is only available for US locations."
+                    "Choose how aggressively Automatic mode should spend API calls. "
+                    "Max coverage keeps the historical fusion-first behavior. Economy and Balanced are reduced-call opt-in modes. "
+                    "Set US and international source lists separately so each region keeps its own exact ordering."
                 ),
             ),
             0,
@@ -451,21 +596,66 @@ class SettingsDialogSimple(wx.Dialog):
             10,
         )
 
-        nws_cb = wx.CheckBox(auto_panel, label="National Weather Service (US locations only)")
-        nws_cb.SetValue(state.get("auto_use_nws", True))
-        auto_sizer.Add(nws_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        auto_budget_ctrl = self.add_labeled_control_row(
+            auto_panel,
+            auto_sizer,
+            "Automatic mode API budget:",
+            lambda parent: wx.Choice(
+                parent,
+                choices=[
+                    "Economy (use the fewest API calls that still cover the basics)",
+                    "Balanced (allow one useful fallback when Automatic mode needs it)",
+                    "Max coverage (fan out to every enabled source)",
+                ],
+            ),
+            expand_control=True,
+            bottom=10,
+        )
+        auto_budget_ctrl.SetSelection(state.get("auto_mode_api_budget", 0))
 
-        openmeteo_cb = wx.CheckBox(auto_panel, label="Open-Meteo")
-        openmeteo_cb.SetValue(state.get("auto_use_openmeteo", True))
-        auto_sizer.Add(openmeteo_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        us_sources = list(
+            state.get("auto_sources_us", ["nws", "openmeteo", "visualcrossing", "pirateweather"])
+        )
+        intl_sources = list(
+            state.get(
+                "auto_sources_international", ["openmeteo", "pirateweather", "visualcrossing"]
+            )
+        )
 
-        vc_cb = wx.CheckBox(auto_panel, label="Visual Crossing (requires API key)")
-        vc_cb.SetValue(state.get("auto_use_visualcrossing", True))
-        auto_sizer.Add(vc_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        auto_sizer.Add(
+            wx.StaticText(auto_panel, label="US automatic sources:"),
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            10,
+        )
+        us_nws_cb = wx.CheckBox(auto_panel, label="National Weather Service")
+        us_nws_cb.SetValue("nws" in us_sources)
+        auto_sizer.Add(us_nws_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
+        us_openmeteo_cb = wx.CheckBox(auto_panel, label="Open-Meteo")
+        us_openmeteo_cb.SetValue("openmeteo" in us_sources)
+        auto_sizer.Add(us_openmeteo_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
+        us_vc_cb = wx.CheckBox(auto_panel, label="Visual Crossing (requires API key)")
+        us_vc_cb.SetValue("visualcrossing" in us_sources)
+        auto_sizer.Add(us_vc_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
+        us_pw_cb = wx.CheckBox(auto_panel, label="Pirate Weather (requires API key)")
+        us_pw_cb.SetValue("pirateweather" in us_sources)
+        auto_sizer.Add(us_pw_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
 
-        pw_cb = wx.CheckBox(auto_panel, label="Pirate Weather (requires API key)")
-        pw_cb.SetValue(state.get("auto_use_pirateweather", True))
-        auto_sizer.Add(pw_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        auto_sizer.Add(
+            wx.StaticText(auto_panel, label="International automatic sources:"),
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            10,
+        )
+        intl_openmeteo_cb = wx.CheckBox(auto_panel, label="Open-Meteo")
+        intl_openmeteo_cb.SetValue("openmeteo" in intl_sources)
+        auto_sizer.Add(intl_openmeteo_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
+        intl_vc_cb = wx.CheckBox(auto_panel, label="Visual Crossing (requires API key)")
+        intl_vc_cb.SetValue("visualcrossing" in intl_sources)
+        auto_sizer.Add(intl_vc_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
+        intl_pw_cb = wx.CheckBox(auto_panel, label="Pirate Weather (requires API key)")
+        intl_pw_cb.SetValue("pirateweather" in intl_sources)
+        auto_sizer.Add(intl_pw_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
 
         auto_panel.SetSizer(auto_sizer)
         notebook.AddPage(auto_panel, "Auto Mode")
@@ -486,11 +676,30 @@ class SettingsDialogSimple(wx.Dialog):
         try:
             if dialog.ShowModal() != wx.ID_OK:
                 return None
+            auto_sources_us = [
+                source
+                for source, enabled in [
+                    ("nws", us_nws_cb.GetValue()),
+                    ("openmeteo", us_openmeteo_cb.GetValue()),
+                    ("visualcrossing", us_vc_cb.GetValue()),
+                    ("pirateweather", us_pw_cb.GetValue()),
+                ]
+                if enabled
+            ] or ["openmeteo"]
+            auto_sources_international = [
+                source
+                for source, enabled in [
+                    ("openmeteo", intl_openmeteo_cb.GetValue()),
+                    ("pirateweather", intl_pw_cb.GetValue()),
+                    ("visualcrossing", intl_vc_cb.GetValue()),
+                ]
+                if enabled
+            ] or ["openmeteo"]
+
             return {
-                "auto_use_nws": nws_cb.GetValue(),
-                "auto_use_openmeteo": openmeteo_cb.GetValue(),
-                "auto_use_visualcrossing": vc_cb.GetValue(),
-                "auto_use_pirateweather": pw_cb.GetValue(),
+                "auto_mode_api_budget": auto_budget_ctrl.GetSelection(),
+                "auto_sources_us": auto_sources_us,
+                "auto_sources_international": auto_sources_international,
                 "station_selection_strategy": strategy_ctrl.GetSelection(),
             }
         finally:

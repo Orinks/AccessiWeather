@@ -85,6 +85,19 @@ def on_notification_event_data_received(window: MainWindow, weather_data) -> Non
             and weather_data.alerts.has_alerts()
             and window.app.alert_notification_system
         ):
+            active_alerts = weather_data.alerts.get_active_alerts()
+            logger.info(
+                "[notify-ui] lightweight poll scheduling alert processing for %d active alert(s): %s",
+                len(active_alerts),
+                [
+                    {
+                        "id": alert.get_unique_id(),
+                        "event": alert.event,
+                        "severity": alert.severity,
+                    }
+                    for alert in active_alerts
+                ],
+            )
             window.app.run_async(
                 window.app.alert_notification_system.process_and_notify(weather_data.alerts)
             )
@@ -94,6 +107,15 @@ def on_notification_event_data_received(window: MainWindow, weather_data) -> Non
             and weather_data.alert_lifecycle_diff is not None
             and weather_data.alert_lifecycle_diff.has_changes
         ):
+            diff = weather_data.alert_lifecycle_diff
+            logger.info(
+                "[notify-ui] lightweight poll scheduling lifecycle notifications: "
+                "updated=%d escalated=%d extended=%d cancelled=%d",
+                len(diff.updated_alerts),
+                len(diff.escalated_alerts),
+                len(diff.extended_alerts),
+                len(diff.cancelled_alerts),
+            )
             window.app.run_async(
                 window.app.alert_notification_system.notify_lifecycle_changes(
                     weather_data.alert_lifecycle_diff

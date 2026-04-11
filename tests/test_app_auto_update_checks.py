@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 import types
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import wx
 
@@ -18,6 +18,62 @@ class _ImmediateThread:
 
     def start(self):
         self._target()
+
+
+def test_run_async_schedules_coroutine_when_loop_exists():
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    loop = object()
+    coro = object()
+    app._async_loop = loop
+
+    future = MagicMock()
+    future.add_done_callback.side_effect = lambda callback: callback(future)
+    future.result.return_value = "done"
+
+    with patch(
+        "accessiweather.app.asyncio.run_coroutine_threadsafe", return_value=future
+    ) as mock_run:
+        app.run_async(coro)
+
+    mock_run.assert_called_once_with(coro, loop)
+    future.add_done_callback.assert_called_once()
+    future.result.assert_called_once_with()
+
+
+def test_run_async_logs_future_exceptions():
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    loop = object()
+    coro = object()
+    app._async_loop = loop
+
+    future = MagicMock()
+    future.add_done_callback.side_effect = lambda callback: callback(future)
+    future.result.side_effect = RuntimeError("boom")
+
+    with patch("accessiweather.app.asyncio.run_coroutine_threadsafe", return_value=future):
+        app.run_async(coro)
+
+    future.add_done_callback.assert_called_once()
+    future.result.assert_called_once_with()
+
+
+def test_call_after_async_uses_wx_call_after():
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    callback = MagicMock()
+
+    with patch("accessiweather.app.wx.CallAfter") as mock_call_after:
+        app.call_after_async(callback, "arg", 123)
+
+    mock_call_after.assert_called_once_with(callback, "arg", 123)
+
+
+def test_initialize_components_delegates_to_initialization_module():
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+
+    with patch("accessiweather.app_initialization.initialize_components") as mock_initialize:
+        app._initialize_components()
+
+    mock_initialize.assert_called_once_with(app)
 
 
 def test_start_auto_update_checks_uses_configured_interval(monkeypatch):
@@ -125,6 +181,7 @@ def test_request_exit_stops_timers_when_present():
 
 def test_refresh_runtime_settings_restarts_auto_update_checks():
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    alert_settings = object()
     settings = SimpleNamespace(
         data_source="auto",
         enable_alerts=True,
@@ -135,6 +192,7 @@ def test_refresh_runtime_settings_restarts_auto_update_checks():
         taskbar_icon_text_format="{temp} {condition}",
         temperature_unit="both",
         verbosity_level="standard",
+        to_alert_settings=MagicMock(return_value=alert_settings),
     )
     app.config_manager = MagicMock()
     app.config_manager.get_settings.return_value = settings
@@ -142,13 +200,16 @@ def test_refresh_runtime_settings_restarts_auto_update_checks():
     app.presenter = None
     app._notifier = None
     app._force_wizard = False
-    app.alert_notification_system = None
+    app.alert_notification_system = MagicMock()
     app.taskbar_icon_updater = None
     app._start_auto_update_checks = MagicMock()
+    app._start_background_updates = MagicMock()
     app._force_wizard = False
 
     app.refresh_runtime_settings()
 
+    settings.to_alert_settings.assert_called_once_with()
+    app.alert_notification_system.update_settings.assert_called_once_with(alert_settings)
     app._start_auto_update_checks.assert_called_once()
 
 

@@ -359,6 +359,139 @@ class TestDiscussionLoading:
 
 
 # =============================================================================
+# Dialog Visibility State Tests
+# =============================================================================
+
+
+class _VisibleControl:
+    def __init__(self):
+        self.visible = True
+        self.enabled = True
+        self.value = ""
+
+    def Show(self):
+        self.visible = True
+
+    def Hide(self):
+        self.visible = False
+
+    def IsShown(self):
+        return self.visible
+
+    def Enable(self):
+        self.enabled = True
+
+    def Disable(self):
+        self.enabled = False
+
+    def SetValue(self, value):
+        self.value = value
+
+
+class _FakeSizer:
+    def __init__(self):
+        self.layout_calls = 0
+
+    def Layout(self):
+        self.layout_calls += 1
+
+
+def _build_dialog_state():
+    dialog = SimpleNamespace()
+    dialog.explanation_header = _VisibleControl()
+    dialog.explanation_display = _VisibleControl()
+    dialog.model_info_label = _VisibleControl()
+    dialog.model_info = _VisibleControl()
+    dialog.explain_button = _VisibleControl()
+    dialog.regenerate_button = _VisibleControl()
+    dialog.discussion_display = _VisibleControl()
+    dialog._sizer = _FakeSizer()
+    dialog.GetSizer = lambda: dialog._sizer
+    dialog._set_status = MagicMock()
+    return dialog
+
+
+class TestDiscussionDialogVisibilityStates:
+    def test_setup_initial_state_hides_ai_fields(self):
+        """Test initial dialog state hides AI content until requested."""
+        from accessiweather.ui.dialogs import discussion_dialog
+
+        dialog = _build_dialog_state()
+        dialog.explain_button.Disable()
+
+        discussion_dialog.DiscussionDialog._setup_initial_state(dialog)
+
+        assert dialog.explanation_header.IsShown() is False
+        assert dialog.explanation_display.IsShown() is False
+        assert dialog.model_info_label.IsShown() is False
+        assert dialog.model_info.IsShown() is False
+        assert dialog.regenerate_button.IsShown() is False
+        assert dialog.explain_button.IsShown() is True
+
+    def test_on_explain_reveals_summary_area_with_loading_text(self):
+        """Test explanation start reveals summary area and loading state."""
+        from accessiweather.ui.dialogs import discussion_dialog
+
+        dialog = _build_dialog_state()
+        dialog._current_discussion = "Forecast text"
+        dialog._is_explaining = False
+        dialog.app = SimpleNamespace(run_async=MagicMock())
+        dialog._do_explain = MagicMock(return_value="task")
+
+        discussion_dialog.DiscussionDialog._on_explain(dialog, None)
+
+        assert dialog.explanation_header.IsShown() is True
+        assert dialog.explanation_display.IsShown() is True
+        assert dialog.explanation_display.value == "Generating plain language summary..."
+        assert dialog.model_info_label.IsShown() is False
+        assert dialog.model_info.IsShown() is False
+        assert dialog.regenerate_button.IsShown() is False
+        assert dialog.explain_button.IsShown() is True
+        assert dialog.explain_button.enabled is False
+
+    def test_on_explain_complete_shows_summary_model_info_and_regenerate(self):
+        """Test successful explanation shows summary, model info, and regenerate."""
+        from accessiweather.ui.dialogs import discussion_dialog
+
+        dialog = _build_dialog_state()
+        dialog._is_explaining = True
+
+        discussion_dialog.DiscussionDialog._on_explain_complete(
+            dialog,
+            "Plain explanation",
+            "openrouter/auto",
+            123,
+            0.0,
+            False,
+        )
+
+        assert dialog.explanation_header.IsShown() is True
+        assert dialog.explanation_display.IsShown() is True
+        assert dialog.explanation_display.value == "Plain explanation"
+        assert dialog.model_info_label.IsShown() is True
+        assert dialog.model_info.IsShown() is True
+        assert dialog.regenerate_button.IsShown() is True
+        assert dialog.explain_button.IsShown() is False
+
+    def test_on_explain_error_shows_error_text_and_regenerate_only(self):
+        """Test failed explanation keeps summary visible and offers retry."""
+        from accessiweather.ui.dialogs import discussion_dialog
+
+        dialog = _build_dialog_state()
+        dialog._is_explaining = True
+
+        discussion_dialog.DiscussionDialog._on_explain_error(dialog, "boom")
+
+        assert dialog.explanation_header.IsShown() is True
+        assert dialog.explanation_display.IsShown() is True
+        assert "Failed to generate explanation: boom" in dialog.explanation_display.value
+        assert dialog.model_info_label.IsShown() is False
+        assert dialog.model_info.IsShown() is False
+        assert dialog.regenerate_button.IsShown() is True
+        assert dialog.explain_button.IsShown() is False
+
+
+# =============================================================================
 # Model Configuration Tests
 # =============================================================================
 

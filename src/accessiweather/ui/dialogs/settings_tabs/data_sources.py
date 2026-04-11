@@ -10,12 +10,29 @@ logger = logging.getLogger(__name__)
 
 _SOURCE_VALUES = ["auto", "nws", "openmeteo", "visualcrossing", "pirateweather"]
 _SOURCE_MAP = {"auto": 0, "nws": 1, "openmeteo": 2, "visualcrossing": 3, "pirateweather": 4}
+_AUTO_MODE_BUDGET_VALUES = ["economy", "balanced", "max_coverage"]
+_AUTO_MODE_BUDGET_LABELS = ["Economy", "Balanced", "Max coverage"]
+_DEFAULT_AUTO_SOURCES_US = ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+_DEFAULT_AUTO_SOURCES_INTERNATIONAL = ["openmeteo", "pirateweather", "visualcrossing"]
+_DEFAULT_BUDGET_INDEX = _AUTO_MODE_BUDGET_VALUES.index("max_coverage")
 _STATION_STRATEGY_VALUES = [
     "hybrid_default",
     "nearest",
     "major_airport_preferred",
     "freshest_observation",
 ]
+_STATION_STRATEGY_LABELS = [
+    "Hybrid default",
+    "Nearest station",
+    "Major airport preferred",
+    "Freshest observation",
+]
+_SOURCE_LABELS = {
+    "nws": "NWS",
+    "openmeteo": "Open-Meteo",
+    "visualcrossing": "Visual Crossing",
+    "pirateweather": "Pirate Weather",
+}
 
 
 class DataSourcesTab:
@@ -29,121 +46,203 @@ class DataSourcesTab:
     def _build_default_source_settings_states() -> dict:
         """Return default source settings state."""
         return {
-            "auto_use_nws": True,
-            "auto_use_openmeteo": True,
-            "auto_use_visualcrossing": True,
-            "auto_use_pirateweather": True,
+            "auto_mode_api_budget": _DEFAULT_BUDGET_INDEX,
+            "auto_sources_us": list(_DEFAULT_AUTO_SOURCES_US),
+            "auto_sources_international": list(_DEFAULT_AUTO_SOURCES_INTERNATIONAL),
             "station_selection_strategy": 0,
         }
 
-    def create(self):
+    @staticmethod
+    def _get_state_sources(state: dict, region: str) -> list[str]:
+        """Return the normalized configured source order for a region."""
+        key = "auto_sources_us" if region == "us" else "auto_sources_international"
+        default_sources = (
+            _DEFAULT_AUTO_SOURCES_US if region == "us" else _DEFAULT_AUTO_SOURCES_INTERNATIONAL
+        )
+        saved_sources = state.get(key, default_sources)
+        if not isinstance(saved_sources, list):
+            return list(default_sources)
+        valid_sources = set(_SOURCE_LABELS)
+        normalized = [source for source in saved_sources if source in valid_sources]
+        return normalized or list(default_sources)
+
+    @staticmethod
+    def build_source_settings_summary_text(state: dict) -> str:
+        """Build plain-language summary text shown on the data sources tab."""
+        budget_idx = state.get("auto_mode_api_budget", _DEFAULT_BUDGET_INDEX)
+        if 0 <= budget_idx < len(_AUTO_MODE_BUDGET_LABELS):
+            budget_text = _AUTO_MODE_BUDGET_LABELS[budget_idx]
+        else:
+            budget_text = _AUTO_MODE_BUDGET_LABELS[_DEFAULT_BUDGET_INDEX]
+
+        strat_idx = state.get("station_selection_strategy", 0)
+        if 0 <= strat_idx < len(_STATION_STRATEGY_LABELS):
+            strat_text = _STATION_STRATEGY_LABELS[strat_idx]
+        else:
+            strat_text = _STATION_STRATEGY_LABELS[0]
+
+        us_enabled = DataSourcesTab._get_state_sources(state, "us")
+        intl_enabled = DataSourcesTab._get_state_sources(state, "international")
+        us_text = ", ".join(_SOURCE_LABELS[source] for source in us_enabled)
+        intl_text = ", ".join(_SOURCE_LABELS[source] for source in intl_enabled)
+        return (
+            f"Automatic mode budget: {budget_text}. "
+            f"US automatic sources: {us_text}. "
+            f"International automatic sources: {intl_text}. "
+            f"NWS station strategy: {strat_text}."
+        )
+
+    def create(self, page_label: str = "Data Sources"):
         """Build the Data Sources tab panel and add it to the notebook."""
         panel = wx.ScrolledWindow(self.dialog.notebook)
         panel.SetScrollRate(0, 20)
         sizer = wx.BoxSizer(wx.VERTICAL)
         controls = self.dialog._controls
 
-        # Data source selection
-        row1 = wx.BoxSizer(wx.HORIZONTAL)
-        row1.Add(
-            wx.StaticText(panel, label="Weather Data Source:"),
-            0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
-            10,
-        )
-        controls["data_source"] = wx.Choice(
+        self.dialog.add_help_text(
             panel,
-            choices=[
-                "Automatic (merges all available sources)",
-                "National Weather Service (US only, forecast + alerts)",
-                "Open-Meteo (Global forecast, no alerts, no API key)",
-                "Visual Crossing (Global forecast, US/Canada/Europe alerts, API key)",
-                "Pirate Weather (Global forecast + worldwide alerts, API key)",
-            ],
+            sizer,
+            "Choose where weather data comes from and manage provider-specific API keys.",
+            left=5,
         )
-        row1.Add(controls["data_source"], 0)
+
+        source_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Choose a weather source",
+            "Automatic mode combines available providers. Single-source options keep behavior predictable when you prefer one provider.",
+        )
+        controls["data_source"] = self.dialog.add_labeled_control_row(
+            panel,
+            source_section,
+            "Weather source:",
+            lambda parent: wx.Choice(
+                parent,
+                choices=[
+                    "Automatic (combine all available sources)",
+                    "National Weather Service (US only, forecast and alerts)",
+                    "Open-Meteo (global forecast, no alerts, no API key)",
+                    "Visual Crossing (global forecast, regional alerts, API key)",
+                    "Pirate Weather (global forecast and alerts, API key)",
+                ],
+            ),
+        )
         controls["data_source"].Bind(wx.EVT_CHOICE, self.dialog._on_data_source_changed)
-        sizer.Add(row1, 0, wx.ALL, 5)
 
-        # Visual Crossing Configuration
-        self.dialog._vc_config_sizer = wx.BoxSizer(wx.VERTICAL)
-        self.dialog._vc_config_sizer.Add(
-            wx.StaticText(panel, label="Visual Crossing API Configuration:"),
-            0,
-            wx.ALL,
-            5,
+        auto_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Automatic mode",
+            "Choose how aggressively Automatic mode uses APIs, then fine-tune which sources it may use and how NWS picks a station for current conditions.",
         )
-
-        row_key = wx.BoxSizer(wx.HORIZONTAL)
-        row_key.Add(
-            wx.StaticText(panel, label="Visual Crossing API Key:"),
-            0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
-            10,
-        )
-        controls["vc_key"] = wx.TextCtrl(panel, style=wx.TE_PASSWORD, size=(250, -1))
-        row_key.Add(controls["vc_key"], 1)
-        self.dialog._vc_config_sizer.Add(row_key, 0, wx.LEFT | wx.EXPAND, 10)
-
-        btn_row = wx.BoxSizer(wx.HORIZONTAL)
-        get_key_btn = wx.Button(panel, label="Get Free API Key")
-        get_key_btn.Bind(wx.EVT_BUTTON, self.dialog._on_get_vc_api_key)
-        btn_row.Add(get_key_btn, 0, wx.RIGHT, 10)
-        validate_btn = wx.Button(panel, label="Validate API Key")
-        validate_btn.Bind(wx.EVT_BUTTON, self.dialog._on_validate_vc_api_key)
-        btn_row.Add(validate_btn, 0)
-        self.dialog._vc_config_sizer.Add(btn_row, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
-        sizer.Add(self.dialog._vc_config_sizer, 0, wx.EXPAND)
-
-        # Pirate Weather Configuration
-        self.dialog._pw_config_sizer = wx.BoxSizer(wx.VERTICAL)
-        self.dialog._pw_config_sizer.Add(
-            wx.StaticText(panel, label="Pirate Weather API Configuration:"),
-            0,
-            wx.ALL,
-            5,
-        )
-
-        row_pw_key = wx.BoxSizer(wx.HORIZONTAL)
-        row_pw_key.Add(
-            wx.StaticText(panel, label="Pirate Weather API Key:"),
-            0,
-            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
-            10,
-        )
-        controls["pw_key"] = wx.TextCtrl(panel, style=wx.TE_PASSWORD, size=(250, -1))
-        row_pw_key.Add(controls["pw_key"], 1)
-        self.dialog._pw_config_sizer.Add(row_pw_key, 0, wx.LEFT | wx.EXPAND, 10)
-
-        btn_row_pw = wx.BoxSizer(wx.HORIZONTAL)
-        get_pw_key_btn = wx.Button(panel, label="Get Free API Key")
-        get_pw_key_btn.Bind(wx.EVT_BUTTON, self.dialog._on_get_pw_api_key)
-        btn_row_pw.Add(get_pw_key_btn, 0, wx.RIGHT, 10)
-        validate_pw_btn = wx.Button(panel, label="Validate API Key")
-        validate_pw_btn.Bind(wx.EVT_BUTTON, self.dialog._on_validate_pw_api_key)
-        btn_row_pw.Add(validate_pw_btn, 0)
-        self.dialog._pw_config_sizer.Add(btn_row_pw, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
-        sizer.Add(self.dialog._pw_config_sizer, 0, wx.EXPAND)
-
-        # Source Settings summary + button
-        sizer.Add(wx.StaticText(panel, label="Source Settings:"), 0, wx.ALL, 5)
         controls["source_settings_summary"] = wx.TextCtrl(
             panel,
             value=self._get_source_settings_summary_text(),
-            size=(-1, 44),
-            style=wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_NO_VSCROLL,
+            size=(-1, 52),
+            style=wx.TE_MULTILINE | wx.TE_NO_VSCROLL | wx.TE_READONLY,
         )
-        sizer.Add(controls["source_settings_summary"], 0, wx.LEFT | wx.BOTTOM | wx.EXPAND, 5)
+        auto_section.Add(
+            controls["source_settings_summary"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
         controls["configure_source_settings"] = wx.Button(
-            panel, label="Configure Source Settings..."
+            panel,
+            label="Configure automatic mode budget and sources...",
         )
         controls["configure_source_settings"].Bind(
-            wx.EVT_BUTTON, self.dialog._on_configure_source_settings
+            wx.EVT_BUTTON,
+            self.dialog._on_configure_source_settings,
         )
-        sizer.Add(controls["configure_source_settings"], 0, wx.LEFT | wx.BOTTOM, 5)
+        auto_section.Add(
+            controls["configure_source_settings"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            10,
+        )
+
+        keys_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Provider API keys",
+            "Only Visual Crossing and Pirate Weather need keys. Stored keys stay in secure storage unless you explicitly export them.",
+        )
+
+        self.dialog._vc_config_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.dialog._vc_config_sizer.Add(
+            wx.StaticText(panel, label="Visual Crossing"),
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
+        controls["vc_key"] = self.dialog.add_labeled_control_row(
+            panel,
+            self.dialog._vc_config_sizer,
+            "Visual Crossing API key:",
+            lambda parent: wx.TextCtrl(parent, style=wx.TE_PASSWORD, size=(280, -1)),
+            expand_control=True,
+        )
+        vc_button_row = wx.BoxSizer(wx.HORIZONTAL)
+        get_key_btn = wx.Button(panel, label="Get Visual Crossing key")
+        get_key_btn.Bind(wx.EVT_BUTTON, self.dialog._on_get_vc_api_key)
+        vc_button_row.Add(get_key_btn, 0, wx.RIGHT, 10)
+        validate_btn = wx.Button(panel, label="Validate Visual Crossing key")
+        validate_btn.Bind(wx.EVT_BUTTON, self.dialog._on_validate_vc_api_key)
+        vc_button_row.Add(validate_btn, 0)
+        self.dialog._vc_config_sizer.Add(
+            vc_button_row,
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            10,
+        )
+        self.dialog.add_help_text(
+            panel,
+            self.dialog._vc_config_sizer,
+            "Use this provider for global forecasts and regional alerts where available.",
+            left=10,
+            bottom=10,
+        )
+        keys_section.Add(self.dialog._vc_config_sizer, 0, wx.EXPAND | wx.BOTTOM, 8)
+
+        self.dialog._pw_config_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.dialog._pw_config_sizer.Add(
+            wx.StaticText(panel, label="Pirate Weather"),
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
+        controls["pw_key"] = self.dialog.add_labeled_control_row(
+            panel,
+            self.dialog._pw_config_sizer,
+            "Pirate Weather API key:",
+            lambda parent: wx.TextCtrl(parent, style=wx.TE_PASSWORD, size=(280, -1)),
+            expand_control=True,
+        )
+        pw_button_row = wx.BoxSizer(wx.HORIZONTAL)
+        get_pw_key_btn = wx.Button(panel, label="Get Pirate Weather key")
+        get_pw_key_btn.Bind(wx.EVT_BUTTON, self.dialog._on_get_pw_api_key)
+        pw_button_row.Add(get_pw_key_btn, 0, wx.RIGHT, 10)
+        validate_pw_btn = wx.Button(panel, label="Validate Pirate Weather key")
+        validate_pw_btn.Bind(wx.EVT_BUTTON, self.dialog._on_validate_pw_api_key)
+        pw_button_row.Add(validate_pw_btn, 0)
+        self.dialog._pw_config_sizer.Add(
+            pw_button_row,
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            10,
+        )
+        self.dialog.add_help_text(
+            panel,
+            self.dialog._pw_config_sizer,
+            "Use this provider for global forecasts and broader alert coverage.",
+            left=10,
+            bottom=10,
+        )
+        keys_section.Add(self.dialog._pw_config_sizer, 0, wx.EXPAND)
 
         panel.SetSizer(sizer)
-        self.dialog.notebook.AddPage(panel, "Data Sources")
+        self.dialog.notebook.AddPage(panel, page_label)
         return panel
 
     def _get_source_settings_summary_text(self) -> str:
@@ -152,28 +251,7 @@ class DataSourcesTab:
             getattr(self.dialog, "_source_settings_states", None)
             or self._build_default_source_settings_states()
         )
-        strategy_labels = [
-            "Hybrid default",
-            "Nearest station",
-            "Major airport preferred",
-            "Freshest observation",
-        ]
-        strat_idx = state.get("station_selection_strategy", 0)
-        strat_text = (
-            strategy_labels[strat_idx]
-            if 0 <= strat_idx < len(strategy_labels)
-            else strategy_labels[0]
-        )
-        sources = ["NWS", "Open-Meteo", "Visual Crossing", "Pirate Weather"]
-        keys = [
-            "auto_use_nws",
-            "auto_use_openmeteo",
-            "auto_use_visualcrossing",
-            "auto_use_pirateweather",
-        ]
-        enabled = [s for s, k in zip(sources, keys, strict=True) if state.get(k, True)]
-        enabled_text = ", ".join(enabled) if enabled else "None"
-        return f"Auto sources: {enabled_text} | Station: {strat_text}"
+        return self.build_source_settings_summary_text(state)
 
     def refresh_source_settings_summary(self) -> None:
         """Refresh the source settings summary control."""
@@ -194,7 +272,7 @@ class DataSourcesTab:
         self.dialog._vc_key_cleared = False
         if hasattr(wx, "EVT_TEXT"):
 
-            def _on_vc_key_text(e, _dlg=self.dialog):
+            def _on_vc_key_text(_event, _dlg=self.dialog):
                 _dlg._vc_key_cleared = True
                 _dlg._update_auto_source_key_state()
 
@@ -206,39 +284,32 @@ class DataSourcesTab:
         self.dialog._pw_key_cleared = False
         if hasattr(wx, "EVT_TEXT"):
 
-            def _on_pw_key_text(e, _dlg=self.dialog):
+            def _on_pw_key_text(_event, _dlg=self.dialog):
                 _dlg._pw_key_cleared = True
                 _dlg._update_auto_source_key_state()
 
             controls["pw_key"].Bind(wx.EVT_TEXT, _on_pw_key_text)
 
-        # Source settings sub-dialog state
         saved_strategy = getattr(settings, "station_selection_strategy", "hybrid_default")
         strat_idx = (
             _STATION_STRATEGY_VALUES.index(saved_strategy)
             if saved_strategy in _STATION_STRATEGY_VALUES
             else 0
         )
-        saved_us = list(
-            getattr(
-                settings,
-                "source_priority_us",
-                ["nws", "openmeteo", "visualcrossing", "pirateweather"],
-            )
+        saved_budget = getattr(settings, "auto_mode_api_budget", "max_coverage")
+        budget_idx = (
+            _AUTO_MODE_BUDGET_VALUES.index(saved_budget)
+            if saved_budget in _AUTO_MODE_BUDGET_VALUES
+            else _DEFAULT_BUDGET_INDEX
         )
+        saved_us = list(getattr(settings, "auto_sources_us", _DEFAULT_AUTO_SOURCES_US))
         saved_intl = list(
-            getattr(
-                settings,
-                "source_priority_international",
-                ["openmeteo", "pirateweather", "visualcrossing"],
-            )
+            getattr(settings, "auto_sources_international", _DEFAULT_AUTO_SOURCES_INTERNATIONAL)
         )
-        all_sources = set(saved_us) | set(saved_intl)
         self.dialog._source_settings_states = {
-            "auto_use_nws": "nws" in all_sources,
-            "auto_use_openmeteo": "openmeteo" in all_sources,
-            "auto_use_visualcrossing": "visualcrossing" in all_sources,
-            "auto_use_pirateweather": "pirateweather" in all_sources,
+            "auto_mode_api_budget": budget_idx,
+            "auto_sources_us": saved_us or list(_DEFAULT_AUTO_SOURCES_US),
+            "auto_sources_international": saved_intl or list(_DEFAULT_AUTO_SOURCES_INTERNATIONAL),
             "station_selection_strategy": strat_idx,
         }
         self.refresh_source_settings_summary()
@@ -249,31 +320,15 @@ class DataSourcesTab:
         controls = self.dialog._controls
         state = getattr(self.dialog, "_source_settings_states", None) or {}
 
-        def _src_enabled(source_key: str, flag_key: str) -> bool:
-            return state.get(flag_key, True)
-
-        source_priority_us = [
-            s
-            for s, k in [
-                ("nws", "auto_use_nws"),
-                ("openmeteo", "auto_use_openmeteo"),
-                ("visualcrossing", "auto_use_visualcrossing"),
-                ("pirateweather", "auto_use_pirateweather"),
-            ]
-            if _src_enabled(s, k)
-        ]
-        source_priority_intl = [
-            s
-            for s, k in [
-                ("openmeteo", "auto_use_openmeteo"),
-                ("visualcrossing", "auto_use_visualcrossing"),
-                ("pirateweather", "auto_use_pirateweather"),
-            ]
-            if _src_enabled(s, k)
-        ]
+        source_priority_us = self._get_state_sources(state, "us")
+        source_priority_intl = self._get_state_sources(state, "international")
 
         strat_idx = max(0, state.get("station_selection_strategy", 0))
         station_strategy = _STATION_STRATEGY_VALUES[strat_idx]
+        budget_idx = max(0, state.get("auto_mode_api_budget", _DEFAULT_BUDGET_INDEX))
+        auto_mode_api_budget = _AUTO_MODE_BUDGET_VALUES[
+            min(budget_idx, len(_AUTO_MODE_BUDGET_VALUES) - 1)
+        ]
 
         return {
             "data_source": _SOURCE_VALUES[controls["data_source"].GetSelection()],
@@ -281,6 +336,7 @@ class DataSourcesTab:
             "pirate_weather_api_key": controls["pw_key"].GetValue(),
             "source_priority_us": source_priority_us,
             "source_priority_international": source_priority_intl,
+            "auto_mode_api_budget": auto_mode_api_budget,
             "auto_sources_us": source_priority_us or ["openmeteo"],
             "auto_sources_international": source_priority_intl or ["openmeteo"],
             "openmeteo_weather_model": "best_match",
@@ -291,11 +347,11 @@ class DataSourcesTab:
         """Set accessibility names for Data Sources tab controls."""
         controls = self.dialog._controls
         names = {
-            "data_source": "Weather Data Source",
-            "vc_key": "Visual Crossing API Key",
-            "pw_key": "Pirate Weather API Key",
-            "source_settings_summary": "Source settings summary",
-            "configure_source_settings": "Configure source settings",
+            "data_source": "Weather source",
+            "vc_key": "Visual Crossing API key",
+            "pw_key": "Pirate Weather API key",
+            "source_settings_summary": "Automatic mode source summary",
+            "configure_source_settings": "Configure automatic mode budget and sources",
         }
         for key, name in names.items():
             controls[key].SetName(name)

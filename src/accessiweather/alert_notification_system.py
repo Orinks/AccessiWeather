@@ -8,6 +8,7 @@ with proper cooldown and filtering capabilities.
 
 import asyncio
 import logging
+from collections.abc import Callable
 
 from .alert_lifecycle import AlertLifecycleDiff
 from .alert_manager import AlertManager, AlertSettings
@@ -27,6 +28,25 @@ from .notification_activation import NotificationActivationRequest, serialize_ac
 from .notifications.toast_notifier import SafeDesktopNotifier
 
 logger = logging.getLogger(__name__)
+
+
+def _app_settings_debug_summary(settings: AppSettings | None) -> dict[str, object]:
+    """Return a compact app-settings snapshot for debug logging."""
+    if settings is None:
+        return {"present": False}
+    return {
+        "present": True,
+        "alert_notifications_enabled": getattr(settings, "alert_notifications_enabled", None),
+        "sound_enabled": getattr(settings, "sound_enabled", None),
+        "alert_global_cooldown_minutes": getattr(settings, "alert_global_cooldown_minutes", None),
+        "alert_per_alert_cooldown_minutes": getattr(
+            settings, "alert_per_alert_cooldown_minutes", None
+        ),
+        "alert_freshness_window_minutes": getattr(settings, "alert_freshness_window_minutes", None),
+        "alert_max_notifications_per_hour": getattr(
+            settings, "alert_max_notifications_per_hour", None
+        ),
+    }
 
 
 def format_accessible_message(
@@ -134,11 +154,13 @@ class AlertNotificationSystem:
         alert_manager: AlertManager,
         notifier: SafeDesktopNotifier | None = None,
         settings: AppSettings | None = None,
+        on_alerts_popup: Callable[[list[WeatherAlert]], None] | None = None,
     ):
         """Initialize the instance."""
         self.alert_manager = alert_manager
         self.notifier = notifier or SafeDesktopNotifier()
         self.settings = settings
+        self.on_alerts_popup = on_alerts_popup
 
         logger.info("AlertNotificationSystem initialized")
 
@@ -156,12 +178,37 @@ class AlertNotificationSystem:
         """
         try:
             alert_count = len(alerts.alerts) if alerts else 0
-            logger.debug(f"[notify] process_and_notify: {alert_count} alert(s) received")
+            active_alerts = alerts.get_active_alerts() if alerts and alerts.has_alerts() else []
+            logger.debug(
+                "[notify] process_and_notify: alerts=%d app_settings=%s manager_settings=%s",
+                alert_count,
+                _app_settings_debug_summary(self.settings),
+                self.alert_manager._settings_debug_summary(),
+            )
+            if active_alerts:
+                logger.info(
+                    "[notify] process_and_notify received %d active alert(s): %s",
+                    len(active_alerts),
+                    [
+                        {
+                            "id": alert.get_unique_id(),
+                            "event": alert.event,
+                            "severity": alert.severity,
+                        }
+                        for alert in active_alerts
+                    ],
+                )
 
             # Use AlertManager to determine which alerts need notifications
             notifications_to_send = self.alert_manager.process_alerts(alerts)
 
             if not notifications_to_send:
+                logger.info(
+                    "[notify] AlertManager queued 0 notifications for active alerts; "
+                    "manager_settings=%s tracked_alerts=%d",
+                    self.alert_manager._settings_debug_summary(),
+                    len(self.alert_manager.alert_states),
+                )
                 logger.debug(
                     f"[notify] AlertManager returned 0 notifications to send "
                     f"(all {alert_count} alert(s) already seen / in cooldown)"
@@ -181,6 +228,8 @@ class AlertNotificationSystem:
                 ),
                 reverse=True,
             )
+
+            self._trigger_immediate_alert_popup_if_enabled(sorted_notifications)
 
             # Send notifications - only play sound for the first (most severe) one
             notifications_sent = 0
@@ -206,6 +255,25 @@ class AlertNotificationSystem:
         except Exception as e:
             logger.error(f"Error processing alert notifications: {e}")
             return 0
+
+    def _trigger_immediate_alert_popup_if_enabled(
+        self,
+        sorted_notifications: list[tuple[WeatherAlert, str]],
+    ) -> None:
+        """Open in-app alert popups for the current eligible batch when opted in."""
+        if not getattr(self.settings, "immediate_alert_details_popups", False):
+            return
+        if not callable(self.on_alerts_popup):
+            return
+
+        popup_alerts = [alert for alert, _reason in sorted_notifications]
+        if not popup_alerts:
+            return
+
+        try:
+            self.on_alerts_popup(popup_alerts)
+        except Exception as exc:
+            logger.error("Failed to trigger immediate alert popup: %s", exc)
 
     async def _send_alert_notification(
         self, alert: WeatherAlert, reason: str, play_sound: bool = True
@@ -253,6 +321,15 @@ class AlertNotificationSystem:
 
             # Send the notification, providing candidate-based sound selection
             logger.debug(f"[notify] Calling notifier.send_notification for: {title!r}")
+            logger.info(
+                "[notify] Sending alert notification: alert_id=%r reason=%s play_sound=%s "
+                "title=%r activation=%r",
+                alert.get_unique_id(),
+                reason,
+                play_sound,
+                title,
+                "alert_details",
+            )
             success = self.notifier.send_notification(
                 title=title,
                 message=message,
@@ -398,6 +475,19 @@ class AlertNotificationSystem:
         settings: AlertSettings,
     ):
         """Update alert notification settings."""
+        logger.debug(
+            "[notify] update_settings: app_settings=%s incoming_manager_settings=%s",
+            _app_settings_debug_summary(self.settings),
+            {
+                "notifications_enabled": settings.notifications_enabled,
+                "sound_enabled": settings.sound_enabled,
+                "min_severity_priority": settings.min_severity_priority,
+                "global_cooldown_minutes": settings.global_cooldown,
+                "per_alert_cooldown_minutes": settings.per_alert_cooldown,
+                "freshness_window_minutes": settings.freshness_window_minutes,
+                "max_notifications_per_hour": settings.max_notifications_per_hour,
+            },
+        )
         self.alert_manager.update_settings(settings)
         logger.info("Alert notification settings updated")
 

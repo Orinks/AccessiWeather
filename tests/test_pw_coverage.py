@@ -12,6 +12,7 @@ Covers lines missed in:
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -96,6 +97,90 @@ class TestPirateWeatherHttpErrors:
 
         assert "Unexpected error" in str(exc_info.value)
 
+    @pytest.mark.asyncio
+    async def test_concurrent_views_share_single_http_fetch(self, client, location):
+        """Concurrent current/forecast/hourly/alert reads should reuse one raw payload fetch."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {
+            "currently": {"temperature": 72.0, "humidity": 0.5},
+            "hourly": {"data": []},
+            "daily": {"data": []},
+            "alerts": [],
+            "offset": 0,
+        }
+
+        with patch("httpx.AsyncClient") as mock_cls:
+            mock_http = AsyncMock()
+            mock_cls.return_value.__aenter__.return_value = mock_http
+            mock_http.get.return_value = mock_resp
+
+            await asyncio.gather(
+                client.get_current_conditions(location),
+                client.get_forecast(location),
+                client.get_hourly_forecast(location),
+                client.get_alerts(location),
+            )
+
+        assert mock_http.get.await_count == 1
+
+    @pytest.mark.asyncio
+    async def test_http_429_enters_short_cooldown(self, client, location):
+        """A 429 should prevent an immediate retry from issuing another HTTP request."""
+        mock_resp = MagicMock()
+        mock_resp.status_code = 429
+
+        with patch("httpx.AsyncClient") as mock_cls:
+            mock_http = AsyncMock()
+            mock_cls.return_value.__aenter__.return_value = mock_http
+            mock_http.get.return_value = mock_resp
+
+            with pytest.raises(PirateWeatherApiError) as exc_info:
+                await client.get_forecast_data(location)
+            assert exc_info.value.status_code == 429
+
+            with pytest.raises(PirateWeatherApiError) as exc_info:
+                await client.get_forecast_data(location)
+
+        assert exc_info.value.status_code == 429
+        assert mock_http.get.await_count == 1
+
+    @pytest.mark.asyncio
+    async def test_cancelling_one_waiter_does_not_cancel_shared_fetch(self, client, location):
+        """Cancelling one waiter should not abort the shared in-flight fetch for others."""
+        started = asyncio.Event()
+        release = asyncio.Event()
+        payload = {
+            "currently": {"temperature": 72.0, "humidity": 0.5},
+            "hourly": {"data": []},
+            "daily": {"data": []},
+            "alerts": [],
+            "offset": 0,
+        }
+
+        async def fake_request(_location):
+            started.set()
+            await release.wait()
+            return payload
+
+        with patch.object(client, "_request_forecast_data", AsyncMock(side_effect=fake_request)):
+            first_waiter = asyncio.create_task(client.get_forecast_data(location))
+            await started.wait()
+            second_waiter = asyncio.create_task(client.get_forecast_data(location))
+            await asyncio.sleep(0)
+
+            first_waiter.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await first_waiter
+
+            third_waiter = asyncio.create_task(client.get_forecast_data(location))
+            await asyncio.sleep(0)
+
+            release.set()
+            assert await second_waiter == payload
+            assert await third_waiter == payload
+            client._request_forecast_data.assert_awaited_once_with(location)
+
 
 # ---------------------------------------------------------------------------
 # pirate_weather_client.py – None return paths
@@ -103,6 +188,13 @@ class TestPirateWeatherHttpErrors:
 
 
 class TestNoneDataPaths:
+    @pytest.mark.asyncio
+    async def test_get_minutely_forecast_none_when_data_none(self, client, location):
+        """Minutely helper should mirror the shared raw-payload fetch path."""
+        with patch.object(client, "get_forecast_data", return_value=None):
+            result = await client.get_minutely_forecast(location)
+        assert result is None
+
     @pytest.mark.asyncio
     async def test_get_current_conditions_none_when_data_none(self, client, location):
         """Line 151: returns None when get_forecast_data returns None."""
