@@ -833,29 +833,71 @@ class WeatherClient:
 
         return weather_data
 
+    def _get_auto_mode_api_budget(self) -> str:
+        """Return the validated automatic-mode API budget setting."""
+        budget = getattr(self.settings, "auto_mode_api_budget", "max_coverage")
+        return budget if budget in {"economy", "balanced", "max_coverage"} else "max_coverage"
+
+    @staticmethod
+    def _source_has_core_section(
+        section: CurrentConditions | Forecast | HourlyForecast | None,
+    ) -> bool:
+        """Return True when a current/forecast/hourly section is present and populated."""
+        return bool(section is not None and section.has_data())
+
+    def _source_has_complete_core_data(self, source_data: SourceData | None) -> bool:
+        """Return True when a single-source result includes current, forecast, and hourly data."""
+        if source_data is None:
+            return False
+        return all(
+            self._source_has_core_section(section)
+            for section in (source_data.current, source_data.forecast, source_data.hourly_forecast)
+        )
+
+    @staticmethod
+    def _configured_sources_in_fetch_order(
+        active_sources: Sequence[str],
+        fetchers: dict[str, object],
+        fetched_sources: set[str] | None = None,
+    ) -> list[str]:
+        """Return configured sources that are currently fetchable, preserving user order."""
+        already_fetched = fetched_sources or set()
+        return [
+            source
+            for source in active_sources
+            if source in fetchers and source not in already_fetched
+        ]
+
+    async def _fetch_auto_mode_sources(
+        self,
+        location: Location,
+        coordinator: ParallelFetchCoordinator,
+        fetchers: dict[str, object],
+        requested_sources: Sequence[str],
+    ) -> list[SourceData]:
+        """Fetch a selected subset of automatic-mode sources."""
+        sources_to_fetch = [source for source in requested_sources if source in fetchers]
+        if not sources_to_fetch:
+            return []
+
+        return await coordinator.fetch_all(
+            location=location,
+            fetch_nws=fetchers["nws"]() if "nws" in sources_to_fetch else None,
+            fetch_openmeteo=fetchers["openmeteo"]() if "openmeteo" in sources_to_fetch else None,
+            fetch_visualcrossing=(
+                fetchers["visualcrossing"]() if "visualcrossing" in sources_to_fetch else None
+            ),
+            fetch_pirateweather=(
+                fetchers["pirateweather"]() if "pirateweather" in sources_to_fetch else None
+            ),
+        )
+
     async def _fetch_smart_auto_source(
         self, location: Location, skip_notifications: bool = False
     ) -> WeatherData:
-        """
-        Fetch weather data from all sources in parallel and merge results.
+        """Fetch weather data using staged automatic-source decisions."""
+        logger.info("Using smart auto source for %s", location.name)
 
-        This implements the smart auto source feature that:
-        1. Fetches from all available sources concurrently
-        2. Merges data using configurable priorities
-        3. Deduplicates alerts from multiple sources
-        4. Tracks source attribution for transparency
-
-        Args:
-            location: The location to fetch weather for
-            skip_notifications: If True, skip triggering alert notifications
-
-        Returns:
-            Merged WeatherData from all successful sources
-
-        """
-        logger.info(f"Using smart auto source for {location.name}")
-
-        # Get user-configured auto mode source lists
         auto_sources_us = getattr(
             self.settings,
             "auto_sources_us",
@@ -867,37 +909,34 @@ class WeatherClient:
             ["openmeteo", "pirateweather", "visualcrossing"],
         )
 
-        # Initialize components with user's source priority settings
         config = SourcePriorityConfig(
-            us_default=auto_sources_us, international_default=auto_sources_international
+            us_default=auto_sources_us,
+            international_default=auto_sources_international,
         )
+        auto_budget = self._get_auto_mode_api_budget()
         parallel_timeout = getattr(self.settings, "parallel_fetch_timeout", 5.0)
         coordinator = ParallelFetchCoordinator(timeout=parallel_timeout)
         fusion_engine = DataFusionEngine(config)
         alert_aggregator = AlertAggregator()
 
-        # Prepare fetch coroutines for available sources
         is_us = self._is_us_location(location)
-        active_sources = auto_sources_us if is_us else auto_sources_international
+        active_sources = list(auto_sources_us if is_us else auto_sources_international)
 
-        # Always fetch from Open-Meteo (works globally)
         async def fetch_openmeteo():
             current, forecast, hourly = await self._fetch_openmeteo_data(location)
             return (current, forecast, hourly)
 
-        # Fetch from NWS for US locations
         async def fetch_nws():
             (
                 current,
                 forecast,
-                discussion,
-                discussion_time,
+                _discussion,
+                _discussion_time,
                 alerts,
                 hourly,
             ) = await self._fetch_nws_data(location)
             return (current, forecast, hourly, alerts)
 
-        # Fetch from Visual Crossing if configured
         async def fetch_vc():
             if not self.visual_crossing_client:
                 return (None, None, None, None)
@@ -910,7 +949,6 @@ class WeatherClient:
             alerts = await self.visual_crossing_client.get_alerts(location)
             return (current, forecast, hourly, alerts)
 
-        # Fetch from Pirate Weather if configured
         async def fetch_pw():
             pirate_weather_client = self._pirate_weather_client_for_location(location)
             if not pirate_weather_client:
@@ -924,63 +962,108 @@ class WeatherClient:
             alerts = await pirate_weather_client.get_alerts(location)
             return (current, forecast, hourly, alerts)
 
-        # Fetch from all sources in parallel, respecting user's auto source selection
-        source_results = await coordinator.fetch_all(
-            location=location,
-            fetch_nws=fetch_nws() if (is_us and "nws" in active_sources) else None,
-            fetch_openmeteo=fetch_openmeteo() if "openmeteo" in active_sources else None,
-            fetch_visualcrossing=(
-                fetch_vc()
-                if (self.visual_crossing_client and "visualcrossing" in active_sources)
-                else None
-            ),
-            fetch_pirateweather=(
-                fetch_pw()
-                if (self.pirate_weather_api_key and "pirateweather" in active_sources)
-                else None
-            ),
-        )
+        fetchers: dict[str, object] = {}
+        if "openmeteo" in active_sources:
+            fetchers["openmeteo"] = fetch_openmeteo
+        if is_us and "nws" in active_sources:
+            fetchers["nws"] = fetch_nws
+        if self.visual_crossing_client and "visualcrossing" in active_sources:
+            fetchers["visualcrossing"] = fetch_vc
+        if self._pirate_weather_client_for_location(location) and "pirateweather" in active_sources:
+            fetchers["pirateweather"] = fetch_pw
 
-        # Check if all sources failed
+        if auto_budget == "max_coverage":
+            source_results = await self._fetch_auto_mode_sources(
+                location, coordinator, fetchers, active_sources
+            )
+        else:
+            configured_sources = self._configured_sources_in_fetch_order(active_sources, fetchers)
+            primary_source = configured_sources[0] if configured_sources else None
+            primary_sources = (
+                [primary_source] if primary_source and primary_source in fetchers else []
+            )
+            source_results = await self._fetch_auto_mode_sources(
+                location, coordinator, fetchers, primary_sources
+            )
+
+            fetched_sources = {source.source for source in source_results}
+            primary_result = source_results[0] if source_results else None
+            core_complete = self._source_has_complete_core_data(primary_result)
+            needs_us_openmeteo = (
+                is_us
+                and "openmeteo" in fetchers
+                and "openmeteo" not in fetched_sources
+                and (
+                    self._should_use_openmeteo_for_extended_forecast(location, source="auto")
+                    or not core_complete
+                )
+            )
+            needs_intl_alert_source = (
+                not is_us
+                and primary_source == "openmeteo"
+                and not ({"pirateweather", "visualcrossing"} & fetched_sources)
+            )
+            needs_intl_core_fallback = not is_us and not core_complete
+
+            remaining_sources = self._configured_sources_in_fetch_order(
+                active_sources, fetchers, fetched_sources
+            )
+
+            def _pick_secondary_candidate(predicate) -> list[str]:
+                for source in remaining_sources:
+                    if predicate(source):
+                        return [source]
+                return []
+
+            secondary_sources: list[str] = []
+            if needs_us_openmeteo or (auto_budget == "balanced" and is_us and not core_complete):
+                secondary_sources = _pick_secondary_candidate(lambda _source: True)
+            elif needs_intl_alert_source:
+                secondary_sources = _pick_secondary_candidate(
+                    lambda source: source in {"pirateweather", "visualcrossing"}
+                )
+            elif needs_intl_core_fallback:
+                secondary_sources = _pick_secondary_candidate(lambda _source: True)
+
+            if secondary_sources:
+                source_results.extend(
+                    await self._fetch_auto_mode_sources(
+                        location, coordinator, fetchers, secondary_sources
+                    )
+                )
+
         successful_sources = [s for s in source_results if s.success]
         if not successful_sources:
-            logger.warning(f"All sources failed for {location.name}, checking cache")
+            logger.warning("All sources failed for %s, checking cache", location.name)
             return self._handle_all_sources_failed(location, source_results)
 
-        # Merge current conditions
         merged_current, current_attribution = fusion_engine.merge_current_conditions(
             source_results, location
         )
-
-        # Merge forecasts
         requested_days = getattr(self.settings, "forecast_duration_days", 7)
         merged_forecast, forecast_attribution = fusion_engine.merge_forecasts(
             source_results, location, requested_days=requested_days
         )
-
-        # Merge hourly forecasts
         merged_hourly, hourly_attribution = fusion_engine.merge_hourly_forecasts(
             source_results, location
         )
 
+        _want_start = getattr(self.settings, "notify_minutely_precipitation_start", False)
+        _want_stop = getattr(self.settings, "notify_minutely_precipitation_stop", False)
+        _pw_fetched = any(source.source == "pirateweather" for source in source_results)
         merged_minutely = None
-        if self.pirate_weather_api_key:
+        if self.pirate_weather_api_key and (_pw_fetched or _want_start or _want_stop):
             merged_minutely = await self._get_pirate_weather_minutely(location)
 
-        # Check if we got any actual data
         has_any_data = (
-            (merged_current is not None and merged_current.has_data())
-            or (merged_forecast is not None and merged_forecast.has_data())
-            or (merged_hourly is not None and merged_hourly.has_data())
+            self._source_has_core_section(merged_current)
+            or self._source_has_core_section(merged_forecast)
+            or self._source_has_core_section(merged_hourly)
         )
-
         if not has_any_data:
-            # All sources returned empty data, treat as failure
-            logger.warning(f"All sources returned empty data for {location.name}")
+            logger.warning("All sources returned empty data for %s", location.name)
             return self._handle_all_sources_failed(location, source_results)
 
-        # Aggregate alerts - for US locations, use only NWS (authoritative source)
-        # Visual Crossing mirrors NWS alerts but lacks severity/urgency metadata
         nws_alerts = None
         vc_alerts_data = None
         pw_alerts_data = None
@@ -992,22 +1075,27 @@ class WeatherClient:
             elif source.source == "pirateweather" and source.alerts:
                 pw_alerts_data = source.alerts
 
-        # For US locations, skip VC/PW alerts to avoid duplicates with missing metadata
-        if is_us:
+        if is_us and nws_alerts is not None:
             merged_alerts = alert_aggregator.aggregate_alerts(nws_alerts, None)
         else:
-            # Use whichever non-NWS source has alerts (PW preferred over VC when both present)
             non_nws_alerts = pw_alerts_data or vc_alerts_data
             merged_alerts = alert_aggregator.aggregate_alerts(nws_alerts, non_nws_alerts)
 
-        # Compute alert lifecycle diff (compare against previous fetch for this location)
         _loc_key = self._location_key(location)
         _prev_alerts = self._previous_alerts.get(_loc_key)
-        _cancel_refs = await self._fetch_nws_cancel_references()
+        _cancel_refs = (
+            await self._fetch_nws_cancel_references() if nws_alerts is not None else set()
+        )
         _alert_diff = diff_alerts(_prev_alerts, merged_alerts, confirmed_cancel_ids=_cancel_refs)
         self._previous_alerts[_loc_key] = merged_alerts
 
-        # Build source attribution
+        failed_sources = {source.source for source in source_results if not source.success}
+        contributing_sources = (
+            current_attribution.contributing_sources
+            | set(forecast_attribution.values())
+            | set(hourly_attribution.values())
+            | {source.source for source in source_results if source.alerts is not None}
+        )
         attribution = SourceAttribution(
             field_sources={
                 **current_attribution.field_sources,
@@ -1015,15 +1103,10 @@ class WeatherClient:
                 **hourly_attribution,
             },
             conflicts=current_attribution.conflicts,
-            contributing_sources=(
-                current_attribution.contributing_sources
-                | set(forecast_attribution.values())
-                | set(hourly_attribution.values())
-            ),
-            failed_sources=current_attribution.failed_sources,
+            contributing_sources=contributing_sources,
+            failed_sources=current_attribution.failed_sources | failed_sources,
         )
 
-        # Track incomplete sections
         incomplete_sections: set[str] = set()
         if merged_current is None:
             incomplete_sections.add("current")
@@ -1032,18 +1115,19 @@ class WeatherClient:
         if merged_hourly is None:
             incomplete_sections.add("hourly_forecast")
 
-        # Set appropriate discussion message based on location
-        if is_us:
+        if is_us and any(source.source == "nws" for source in source_results):
             discussion = "Forecast discussion available from NWS for US locations."
-            discussion_issuance_time = None  # Will be populated by enrichment
+            discussion_issuance_time = None
+        elif is_us:
+            discussion = (
+                "Forecast discussion is unavailable because Automatic mode did not use NWS."
+            )
+            discussion_issuance_time = None
         else:
             discussion = "Forecast discussion not available from Open-Meteo."
             discussion_issuance_time = None
 
-        # Compute cross-source forecast confidence
         confidence = calculate_forecast_confidence(source_results)
-
-        # Create the merged WeatherData
         weather_data = WeatherData(
             location=location,
             current=merged_current,
@@ -1059,20 +1143,19 @@ class WeatherClient:
         )
         weather_data.alert_lifecycle_diff = _alert_diff
 
-        # Run enrichment tasks
         if weather_data.has_any_data():
             enrichment_tasks = self._launch_enrichment_tasks(
                 weather_data, location, skip_notifications
             )
             await self._await_enrichments(enrichment_tasks, weather_data)
 
-        # Cache the result
         if weather_data.has_any_data() and self.offline_cache:
             self._persist_weather_data(location, weather_data)
 
         logger.info(
-            f"Smart auto source completed for {location.name}: "
-            f"{len(successful_sources)} sources succeeded"
+            "Smart auto source completed for %s: %d sources succeeded",
+            location.name,
+            len(successful_sources),
         )
         return weather_data
 

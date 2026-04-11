@@ -92,6 +92,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "source_priority_international",
     "auto_sources_us",
     "auto_sources_international",
+    "auto_mode_api_budget",
     "openmeteo_weather_model",
     "station_selection_strategy",
     "show_impact_summaries",
@@ -208,6 +209,7 @@ class AppSettings:
     # Parallel fetch timeout for smart auto mode (seconds)
     parallel_fetch_timeout: float = 5.0
     # Auto mode source selection — which sources participate in auto mode
+    auto_mode_api_budget: str = "max_coverage"
     auto_sources_us: list[str] = field(
         default_factory=lambda: ["nws", "openmeteo", "visualcrossing", "pirateweather"]
     )
@@ -368,6 +370,11 @@ class AppSettings:
             if value not in valid_strategies:
                 setattr(self, setting_name, "hybrid_default")
 
+        elif setting_name == "auto_mode_api_budget":
+            valid_budgets = {"economy", "balanced", "max_coverage"}
+            if value not in valid_budgets:
+                setattr(self, setting_name, "max_coverage")
+
         elif setting_name in {
             "source_priority_us",
             "source_priority_international",
@@ -465,6 +472,7 @@ class AppSettings:
             "taskbar_icon_text_format": self.taskbar_icon_text_format,
             "source_priority_us": self.source_priority_us,
             "source_priority_international": self.source_priority_international,
+            "auto_mode_api_budget": self.auto_mode_api_budget,
             "auto_sources_us": self.auto_sources_us,
             "auto_sources_international": self.auto_sources_international,
             "openmeteo_weather_model": self.openmeteo_weather_model,
@@ -489,7 +497,7 @@ class AppSettings:
     @classmethod
     def from_dict(cls, data: dict) -> AppSettings:
         """Create from dictionary."""
-        return cls(
+        settings = cls(
             temperature_unit=data.get("temperature_unit", "both"),
             update_interval_minutes=data.get("update_interval_minutes", 10),
             enable_alerts=cls._as_bool(data.get("enable_alerts"), True),
@@ -560,6 +568,7 @@ class AppSettings:
             source_priority_international=data.get(
                 "source_priority_international", ["openmeteo", "pirateweather", "visualcrossing"]
             ),
+            auto_mode_api_budget=data.get("auto_mode_api_budget", "max_coverage"),
             auto_sources_us=data.get(
                 "auto_sources_us", ["nws", "openmeteo", "visualcrossing", "pirateweather"]
             ),
@@ -598,6 +607,8 @@ class AppSettings:
             round_values=cls._as_bool(data.get("round_values"), False),
             show_impact_summaries=cls._as_bool(data.get("show_impact_summaries"), False),
         )
+        settings.validate_on_access("auto_mode_api_budget")
+        return settings
 
     def to_alert_settings(self):
         """Convert to AlertSettings for the alert management system."""
