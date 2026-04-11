@@ -586,15 +586,32 @@ class SettingsDialogSimple(wx.Dialog):
             wx.StaticText(
                 auto_panel,
                 label=(
-                    "Select which weather sources are used when Automatic mode is active. "
-                    "Unchecking a source prevents it from being fetched entirely. "
-                    "NWS is only available for US locations."
+                    "Choose how aggressively Automatic mode should spend API calls. "
+                    "Then select which weather sources it is allowed to use when extra coverage is needed. "
+                    "Unchecking a source prevents it from being fetched entirely. NWS is only available for US locations."
                 ),
             ),
             0,
             wx.ALL | wx.EXPAND,
             10,
         )
+
+        auto_budget_ctrl = self.add_labeled_control_row(
+            auto_panel,
+            auto_sizer,
+            "Automatic mode API budget:",
+            lambda parent: wx.Choice(
+                parent,
+                choices=[
+                    "Economy (use the fewest API calls that still cover the basics)",
+                    "Balanced (allow one useful fallback when Automatic mode needs it)",
+                    "Max coverage (fan out to every enabled source)",
+                ],
+            ),
+            expand_control=True,
+            bottom=10,
+        )
+        auto_budget_ctrl.SetSelection(state.get("auto_mode_api_budget", 0))
 
         nws_cb = wx.CheckBox(auto_panel, label="National Weather Service (US locations only)")
         nws_cb.SetValue(state.get("auto_use_nws", True))
@@ -632,6 +649,7 @@ class SettingsDialogSimple(wx.Dialog):
             if dialog.ShowModal() != wx.ID_OK:
                 return None
             return {
+                "auto_mode_api_budget": auto_budget_ctrl.GetSelection(),
                 "auto_use_nws": nws_cb.GetValue(),
                 "auto_use_openmeteo": openmeteo_cb.GetValue(),
                 "auto_use_visualcrossing": vc_cb.GetValue(),

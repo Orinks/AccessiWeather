@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 _SOURCE_VALUES = ["auto", "nws", "openmeteo", "visualcrossing", "pirateweather"]
 _SOURCE_MAP = {"auto": 0, "nws": 1, "openmeteo": 2, "visualcrossing": 3, "pirateweather": 4}
+_AUTO_MODE_BUDGET_VALUES = ["economy", "balanced", "max_coverage"]
+_AUTO_MODE_BUDGET_LABELS = ["Economy", "Balanced", "Max coverage"]
 _STATION_STRATEGY_VALUES = [
     "hybrid_default",
     "nearest",
@@ -35,6 +37,7 @@ class DataSourcesTab:
     def _build_default_source_settings_states() -> dict:
         """Return default source settings state."""
         return {
+            "auto_mode_api_budget": 0,
             "auto_use_nws": True,
             "auto_use_openmeteo": True,
             "auto_use_visualcrossing": True,
@@ -45,6 +48,12 @@ class DataSourcesTab:
     @staticmethod
     def build_source_settings_summary_text(state: dict) -> str:
         """Build plain-language summary text shown on the data sources tab."""
+        budget_idx = state.get("auto_mode_api_budget", 0)
+        if 0 <= budget_idx < len(_AUTO_MODE_BUDGET_LABELS):
+            budget_text = _AUTO_MODE_BUDGET_LABELS[budget_idx]
+        else:
+            budget_text = _AUTO_MODE_BUDGET_LABELS[0]
+
         strat_idx = state.get("station_selection_strategy", 0)
         if 0 <= strat_idx < len(_STATION_STRATEGY_LABELS):
             strat_text = _STATION_STRATEGY_LABELS[strat_idx]
@@ -60,7 +69,11 @@ class DataSourcesTab:
         ]
         enabled = [s for s, k in zip(sources, keys, strict=True) if state.get(k, True)]
         enabled_text = ", ".join(enabled) if enabled else "Open-Meteo only"
-        return f"Automatic mode uses: {enabled_text}. NWS station strategy: {strat_text}."
+        return (
+            f"Automatic mode budget: {budget_text}. "
+            f"Allowed automatic sources: {enabled_text}. "
+            f"NWS station strategy: {strat_text}."
+        )
 
     def create(self, page_label: str = "Data Sources"):
         """Build the Data Sources tab panel and add it to the notebook."""
@@ -103,7 +116,7 @@ class DataSourcesTab:
             panel,
             sizer,
             "Automatic mode",
-            "Fine-tune which sources Automatic mode can use and how NWS picks a station for current conditions.",
+            "Choose how aggressively Automatic mode uses APIs, then fine-tune which sources it may use and how NWS picks a station for current conditions.",
         )
         controls["source_settings_summary"] = wx.TextCtrl(
             panel,
@@ -119,7 +132,7 @@ class DataSourcesTab:
         )
         controls["configure_source_settings"] = wx.Button(
             panel,
-            label="Choose automatic mode sources...",
+            label="Configure automatic mode budget and sources...",
         )
         controls["configure_source_settings"].Bind(
             wx.EVT_BUTTON,
@@ -266,6 +279,12 @@ class DataSourcesTab:
             if saved_strategy in _STATION_STRATEGY_VALUES
             else 0
         )
+        saved_budget = getattr(settings, "auto_mode_api_budget", "economy")
+        budget_idx = (
+            _AUTO_MODE_BUDGET_VALUES.index(saved_budget)
+            if saved_budget in _AUTO_MODE_BUDGET_VALUES
+            else 0
+        )
         saved_us = list(
             getattr(
                 settings,
@@ -282,6 +301,7 @@ class DataSourcesTab:
         )
         all_sources = set(saved_us) | set(saved_intl)
         self.dialog._source_settings_states = {
+            "auto_mode_api_budget": budget_idx,
             "auto_use_nws": "nws" in all_sources,
             "auto_use_openmeteo": "openmeteo" in all_sources,
             "auto_use_visualcrossing": "visualcrossing" in all_sources,
@@ -321,6 +341,10 @@ class DataSourcesTab:
 
         strat_idx = max(0, state.get("station_selection_strategy", 0))
         station_strategy = _STATION_STRATEGY_VALUES[strat_idx]
+        budget_idx = max(0, state.get("auto_mode_api_budget", 0))
+        auto_mode_api_budget = _AUTO_MODE_BUDGET_VALUES[
+            min(budget_idx, len(_AUTO_MODE_BUDGET_VALUES) - 1)
+        ]
 
         return {
             "data_source": _SOURCE_VALUES[controls["data_source"].GetSelection()],
@@ -328,6 +352,7 @@ class DataSourcesTab:
             "pirate_weather_api_key": controls["pw_key"].GetValue(),
             "source_priority_us": source_priority_us,
             "source_priority_international": source_priority_intl,
+            "auto_mode_api_budget": auto_mode_api_budget,
             "auto_sources_us": source_priority_us or ["openmeteo"],
             "auto_sources_international": source_priority_intl or ["openmeteo"],
             "openmeteo_weather_model": "best_match",
@@ -342,7 +367,7 @@ class DataSourcesTab:
             "vc_key": "Visual Crossing API key",
             "pw_key": "Pirate Weather API key",
             "source_settings_summary": "Automatic mode source summary",
-            "configure_source_settings": "Choose automatic mode sources",
+            "configure_source_settings": "Configure automatic mode budget and sources",
         }
         for key, name in names.items():
             controls[key].SetName(name)

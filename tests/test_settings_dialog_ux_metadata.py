@@ -53,7 +53,8 @@ def test_source_settings_summary_uses_plain_language():
     }
 
     assert DataSourcesTab.build_source_settings_summary_text(state) == (
-        "Automatic mode uses: NWS, Open-Meteo, Pirate Weather. "
+        "Automatic mode budget: Economy. "
+        "Allowed automatic sources: NWS, Open-Meteo, Pirate Weather. "
         "NWS station strategy: Major airport preferred."
     )
 

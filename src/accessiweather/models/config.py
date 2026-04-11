@@ -92,6 +92,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "source_priority_international",
     "auto_sources_us",
     "auto_sources_international",
+    "auto_mode_api_budget",
     "openmeteo_weather_model",
     "station_selection_strategy",
     "show_impact_summaries",
@@ -208,6 +209,7 @@ class AppSettings:
     # Parallel fetch timeout for smart auto mode (seconds)
     parallel_fetch_timeout: float = 5.0
     # Auto mode source selection — which sources participate in auto mode
+    auto_mode_api_budget: str = "economy"
     auto_sources_us: list[str] = field(
         default_factory=lambda: ["nws", "openmeteo", "visualcrossing", "pirateweather"]
     )
@@ -368,6 +370,11 @@ class AppSettings:
             if value not in valid_strategies:
                 setattr(self, setting_name, "hybrid_default")
 
+        elif setting_name == "auto_mode_api_budget":
+            valid_budgets = {"economy", "balanced", "max_coverage"}
+            if value not in valid_budgets:
+                setattr(self, setting_name, "economy")
+
         elif setting_name in {
             "source_priority_us",
             "source_priority_international",
@@ -465,6 +472,7 @@ class AppSettings:
             "taskbar_icon_text_format": self.taskbar_icon_text_format,
             "source_priority_us": self.source_priority_us,
             "source_priority_international": self.source_priority_international,
+            "auto_mode_api_budget": self.auto_mode_api_budget,
             "auto_sources_us": self.auto_sources_us,
             "auto_sources_international": self.auto_sources_international,
             "openmeteo_weather_model": self.openmeteo_weather_model,
@@ -560,6 +568,7 @@ class AppSettings:
             source_priority_international=data.get(
                 "source_priority_international", ["openmeteo", "pirateweather", "visualcrossing"]
             ),
+            auto_mode_api_budget=data.get("auto_mode_api_budget", "economy"),
             auto_sources_us=data.get(
                 "auto_sources_us", ["nws", "openmeteo", "visualcrossing", "pirateweather"]
             ),
