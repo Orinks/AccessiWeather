@@ -486,7 +486,7 @@ The Settings dialog is organized in this order:
 
 1. General
 2. Display
-3. Notifications
+3. Alerts
 4. Audio
 5. Data Sources
 6. AI
@@ -574,9 +574,9 @@ You can choose:
 
 Use these controls to make the forecast shorter or more detailed.
 
-### Notifications
+### Alerts
 
-Use the Notifications tab to control alerts, event notifications, and rate limiting.
+Use the Alerts tab to control alert handling, event notifications, and rate limiting.
 
 #### Alert delivery
 
@@ -827,7 +827,7 @@ What to try:
 1. Check whether the location is in the US or outside it.
 2. For US locations, remember that NWS is the authoritative alert source in Automatic mode.
 3. For international locations, add a Pirate Weather key if you want broader alert coverage.
-4. Review Alert Area and severity settings in Settings > Notifications.
+4. Review Alert Area and severity settings in Settings > Alerts.
 5. Make sure alert monitoring and alert notifications are enabled.
 
 ### Problem: Forecast discussion is unavailable
