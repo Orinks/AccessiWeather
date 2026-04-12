@@ -1309,6 +1309,7 @@ class MainWindow(SizedFrame):
     def get_visible_top_level_sections(self) -> list[tuple[str, wx.Window]]:
         """Return the canonical visible top-level weather sections in focus order."""
         sections: list[tuple[str, wx.Window]] = [
+            ("Location", self.location_dropdown),
             ("Current conditions", self.current_conditions),
             ("Hourly / near-term", self.hourly_forecast_display),
             ("Daily forecast", self.daily_forecast_display),
@@ -1320,12 +1321,11 @@ class MainWindow(SizedFrame):
 
     def focus_section_by_number(self, number: int) -> None:
         """Focus a canonical top-level section by its 1-based shortcut number."""
-        if number == 5:
-            self.focus_event_center()
+        if number == 5 and not getattr(self, "_event_center_visible", True):
             return
 
         sections = self.get_visible_top_level_sections()
-        index = number - 1
+        index = len(sections) - 1 if number == 5 else number
         if 0 <= index < len(sections):
             _label, widget = sections[index]
             widget.SetFocus()
