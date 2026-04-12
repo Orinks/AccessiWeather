@@ -10,7 +10,7 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-WEATHERINDEX_API_URL = "https://api.wxindex.org/api/stations/{call_sign}"
+WEATHERINDEX_API_URL = "https://api.wxindex.org/v1/stations/{call_sign}"
 DEFAULT_CACHE_TTL = 1800
 DEFAULT_TIMEOUT = 10
 

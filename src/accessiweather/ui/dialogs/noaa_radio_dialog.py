@@ -8,7 +8,13 @@ from typing import TYPE_CHECKING
 
 import wx
 
-from accessiweather.noaa_radio import Station, StationDatabase, StreamURLProvider
+from accessiweather.noaa_radio import (
+    Station,
+    StationAvailabilityCache,
+    StationAvailabilityService,
+    StationDatabase,
+    StreamURLProvider,
+)
 from accessiweather.noaa_radio.player import RadioPlayer
 from accessiweather.noaa_radio.preferences import RadioPreferences
 from accessiweather.noaa_radio.weatherindex_client import WeatherIndexClient
@@ -18,6 +24,7 @@ if TYPE_CHECKING:
     pass
 
 logger = logging.getLogger(__name__)
+SUPPRESSION_TTL_SECONDS = 1800
 
 # Module-level cache for clients to leverage HTTP caching across dialog opens
 _wxradio_client: WxRadioClient | None = None
@@ -101,7 +108,17 @@ class NOAARadioDialog(wx.Dialog):
             if app is not None
             else None
         )
+        availability_path = (
+            getattr(getattr(app, "runtime_paths", None), "noaa_radio_availability_file", None)
+            if app is not None
+            else None
+        )
         self._prefs = RadioPreferences(path=prefs_path)
+        self._availability_cache = StationAvailabilityCache(path=availability_path)
+        self._station_availability = StationAvailabilityService(
+            weatherindex_client=weatherindex,
+            availability_cache=self._availability_cache,
+        )
         self._current_urls: list[str] = []
         self._current_url_index: int = 0
         self._playing_station: Station | None = None
@@ -126,6 +143,21 @@ class NOAARadioDialog(wx.Dialog):
         self._station_choice.Bind(wx.EVT_CHOICE, self._on_station_changed)
         self._station_choice.Bind(wx.EVT_CHAR_HOOK, self._on_choice_key)
         sizer.Add(self._station_choice, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
+
+        self._show_unavailable_checkbox = wx.CheckBox(
+            panel,
+            label="Show unavailable stations",
+        )
+        self._show_unavailable_checkbox.Bind(
+            wx.EVT_CHECKBOX,
+            self._on_show_unavailable_changed,
+        )
+        sizer.Add(
+            self._show_unavailable_checkbox,
+            0,
+            wx.LEFT | wx.RIGHT | wx.TOP,
+            10,
+        )
 
         # Button row
         btn_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -178,21 +210,28 @@ class NOAARadioDialog(wx.Dialog):
         # Show loading state immediately
         self._station_choice.Set(["Loading stations..."])
         self._set_status("Finding nearest stations...")
+        show_unavailable = self._show_unavailable_enabled()
 
         # Run station loading in background thread
-        thread = threading.Thread(target=self._load_stations_worker, daemon=True)
+        thread = threading.Thread(
+            target=self._load_stations_worker,
+            args=(show_unavailable,),
+            daemon=True,
+        )
         thread.start()
 
-    def _load_stations_worker(self) -> None:
+    def _load_stations_worker(self, show_unavailable: bool = False) -> None:
         """Worker method that loads stations in background thread."""
         try:
             db = StationDatabase()
             results = db.find_nearest(self._lat, self._lon, limit=25)
-            # Show all nearby stations immediately - stream availability is checked on play
-            # This makes UI instant instead of waiting for HTTP requests to complete
-            stations = [r.station for r in results][:10]
-
-            choices = [f"{s.call_sign} - {s.name} ({s.frequency} MHz)" for s in stations]
+            nearby = [r.station for r in results][:10]
+            entries = self._station_availability.build_entries(
+                nearby,
+                show_unavailable=show_unavailable,
+            )
+            stations = [entry.station for entry in entries]
+            choices = [entry.label for entry in entries]
 
             # Update UI on main thread
             wx.CallAfter(self._on_stations_loaded, stations, choices)
@@ -226,10 +265,18 @@ class NOAARadioDialog(wx.Dialog):
         # Check if dialog was closed while background thread was running
         if self._station_choice is None:
             return
+        previous_station = self._get_selected_station()
+        previous_call_sign = previous_station.call_sign if previous_station is not None else None
         self._stations = stations
         self._station_choice.Set(choices)
         if choices:
-            self._station_choice.SetSelection(0)
+            selection = 0
+            if previous_call_sign is not None:
+                for index, station in enumerate(stations):
+                    if station.call_sign == previous_call_sign:
+                        selection = index
+                        break
+            self._station_choice.SetSelection(selection)
             self._set_status("Ready")
         else:
             self._set_status("No stations with streams available")
@@ -300,6 +347,7 @@ class NOAARadioDialog(wx.Dialog):
         self._set_status(f"Connecting to {call_sign} (stream {idx + 1} of {total})...")
         url = self._current_urls[idx]
         if self._player.play(url):
+            self._clear_station_suppression()
             self._health_timer.Start(5000)
             self._next_stream_btn.Enable(total > 1)
             self._prefer_btn.Enable(True)
@@ -308,10 +356,12 @@ class NOAARadioDialog(wx.Dialog):
             self._current_url_index = (idx + 1) % total
             if self._current_url_index == 0:
                 # Wrapped around, all streams failed
+                self._mark_current_station_unavailable()
                 self._set_status(f"All streams failed for {call_sign}")
                 return
             self._try_play_current(call_sign)
         else:
+            self._mark_current_station_unavailable()
             self._set_status(f"Stream failed for {call_sign}")
 
     def _on_stop(self, _event: wx.CommandEvent) -> None:
@@ -327,7 +377,8 @@ class NOAARadioDialog(wx.Dialog):
 
     def _on_playing(self) -> None:
         """Handle playback started event."""
-        station = self._get_selected_station()
+        station = self._playing_station or self._get_selected_station()
+        self._clear_station_suppression(station)
         name = station.call_sign if station else "Unknown"
         total = len(self._current_urls)
         idx = self._current_url_index + 1
@@ -417,6 +468,10 @@ class NOAARadioDialog(wx.Dialog):
         """Update the status text."""
         self._status_text.SetLabel(text)
 
+    def _on_show_unavailable_changed(self, _event: wx.CommandEvent) -> None:
+        """Reload stations when the unavailable-station filter changes."""
+        self._load_stations_async()
+
     def _on_station_changed(self, event: wx.CommandEvent) -> None:
         """Update button label when the user picks a different station."""
         self._update_play_btn_label()
@@ -462,3 +517,26 @@ class NOAARadioDialog(wx.Dialog):
         self._health_timer.Stop()
         self._player.stop()
         self.Destroy()
+
+    def _show_unavailable_enabled(self) -> bool:
+        """Return the current state of the unavailable-station filter."""
+        checkbox = getattr(self, "_show_unavailable_checkbox", None)
+        return bool(checkbox.GetValue()) if checkbox is not None else False
+
+    def _mark_current_station_unavailable(self, reason: str = "all_streams_failed") -> None:
+        """Suppress the current station after all playback options fail."""
+        station = self._playing_station or self._get_selected_station()
+        if station is None:
+            return
+        self._availability_cache.suppress(
+            station.call_sign,
+            ttl_seconds=SUPPRESSION_TTL_SECONDS,
+            reason=reason,
+        )
+
+    def _clear_station_suppression(self, station: Station | None = None) -> None:
+        """Remove temporary suppression for a station after successful playback."""
+        current_station = station or self._playing_station or self._get_selected_station()
+        if current_station is None:
+            return
+        self._availability_cache.clear(current_station.call_sign)

@@ -156,6 +156,10 @@ class RuntimeStoragePaths:
         return self.config_root / "noaa_radio_prefs.json"
 
     @property
+    def noaa_radio_availability_file(self) -> Path:
+        return self.config_root / "noaa_radio_availability.json"
+
+    @property
     def lock_file(self) -> Path:
         return self.state_dir / "accessiweather.lock"
 
