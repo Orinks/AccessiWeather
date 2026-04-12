@@ -102,6 +102,20 @@ def _local_date(dt: datetime) -> date:
     return dt.date()
 
 
+def _format_confidence_level(confidence: ForecastConfidence) -> str:
+    """Return the user-facing confidence level label."""
+    if confidence.level.value == "Medium":
+        return "Moderate"
+    return confidence.level.value
+
+
+def _format_confidence_line(confidence: ForecastConfidence) -> str:
+    """Build a concise user-facing confidence explanation line."""
+    level_str = _format_confidence_level(confidence)
+    rationale = confidence.rationale.rstrip(".")
+    return f"Forecast confidence: {level_str}. {rationale}."
+
+
 def _select_periods_by_day_window(forecast: Forecast, configured_days: int) -> list[ForecastPeriod]:
     """Select periods within a strict calendar-day window when timestamps are available."""
     periods = forecast.periods or []
@@ -138,6 +152,7 @@ def build_forecast(
     settings: AppSettings | None = None,
     *,
     confidence: ForecastConfidence | None = None,
+    mobility_briefing: str | None = None,
 ) -> ForecastPresentation:
     """Create a structured forecast including optional hourly highlights."""
     title = f"Forecast for {location.name}"
@@ -312,8 +327,8 @@ def build_forecast(
     # Append cross-source confidence summary when available
     confidence_label: str | None = None
     if confidence is not None:
-        level_str = confidence.level.value  # 'High', 'Medium', 'Low'
-        daily_lines.append(f"Forecast confidence: {level_str}. {confidence.rationale}.")
+        level_str = _format_confidence_level(confidence)
+        daily_lines.append(_format_confidence_line(confidence))
         confidence_label = f"Confidence: {level_str}"
 
     daily_section_text = "\n".join(daily_lines).rstrip()
@@ -322,6 +337,16 @@ def build_forecast(
         hours=hourly_hours,
         summary_line=hourly_summary_line,
     )
+    if mobility_briefing:
+        mobility_line = f"Mobility briefing: {mobility_briefing}"
+        if hourly_section_text:
+            hourly_section_text = hourly_section_text.replace(
+                "Hourly forecast:\n",
+                f"Hourly forecast:\n{mobility_line}\n",
+                1,
+            )
+        else:
+            hourly_section_text = f"Hourly forecast:\n{mobility_line}"
     fallback_sections = [daily_section_text]
     if hourly_section_text:
         fallback_sections.append(hourly_section_text)
@@ -345,6 +370,7 @@ def build_forecast(
         fallback_text=fallback_text,
         daily_section_text=daily_section_text,
         hourly_section_text=hourly_section_text,
+        mobility_briefing=mobility_briefing,
         confidence_label=confidence_label,
         summary=summary_line,
         impact_summary=forecast_impact,

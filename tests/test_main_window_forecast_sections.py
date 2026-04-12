@@ -36,6 +36,7 @@ def _make_window():
     win.hourly_forecast_display = MagicMock()
     win.refresh_button = MagicMock()
     win.set_status = MagicMock()
+    win.append_event_center_entry = MagicMock()
     win._update_alerts = MagicMock()
     win._process_notification_events = MagicMock()
     win._alert_lifecycle_labels = {}
@@ -53,6 +54,28 @@ def test_on_weather_data_received_sets_daily_and_hourly_forecast_sections():
 
     win.daily_forecast_display.SetValue.assert_called_once_with("Daily section")
     win.hourly_forecast_display.SetValue.assert_called_once_with("Hourly section")
+
+
+def test_on_weather_data_received_logs_mobility_briefing_to_event_center():
+    win = _make_window()
+    win.app.presenter.present.return_value.forecast = ForecastPresentation(
+        title="Forecast",
+        fallback_text="Combined forecast",
+        daily_section_text="Daily section",
+        hourly_section_text="Hourly section",
+        mobility_briefing="Dry for 30 minutes, then rain likely.",
+    )
+
+    weather_data = MagicMock()
+    weather_data.alerts = None
+    weather_data.alert_lifecycle_diff = None
+
+    win._on_weather_data_received(weather_data)
+
+    win.append_event_center_entry.assert_called_once_with(
+        "Dry for 30 minutes, then rain likely.",
+        category="Briefing",
+    )
 
 
 def test_set_forecast_sections_updates_both_controls():

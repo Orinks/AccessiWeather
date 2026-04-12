@@ -150,6 +150,44 @@ def test_build_forecast_formats_generated_time_in_location_timezone():
     assert f"Forecast generated: {expected_generated}" in result.daily_section_text
 
 
+def test_build_forecast_includes_mobility_briefing_at_top_of_hourly_section():
+    forecast = Forecast(
+        periods=[
+            ForecastPeriod(
+                name="Today",
+                temperature=70.0,
+                temperature_low=54.0,
+                temperature_unit="F",
+                short_forecast="Sunny",
+            )
+        ]
+    )
+    hourly = HourlyForecast(
+        periods=[
+            HourlyForecastPeriod(
+                start_time=datetime(2026, 3, 19, 12, tzinfo=UTC),
+                temperature=72.0,
+                temperature_unit="F",
+                short_forecast="Sunny",
+            )
+        ]
+    )
+
+    result = build_forecast(
+        forecast,
+        hourly,
+        Location(name="Testville", latitude=40.0, longitude=-75.0),
+        TemperatureUnit.FAHRENHEIT,
+        settings=AppSettings(hourly_forecast_hours=1),
+        mobility_briefing="Dry for 30 minutes, then rain likely.",
+    )
+
+    assert result.mobility_briefing == "Dry for 30 minutes, then rain likely."
+    assert result.hourly_section_text.startswith(
+        "Hourly forecast:\nMobility briefing: Dry for 30 minutes, then rain likely."
+    )
+
+
 def test_build_forecast_normalizes_hourly_timezone_label_from_offset_to_location_name():
     london_tz = ZoneInfo("Europe/London")
     forecast = Forecast(

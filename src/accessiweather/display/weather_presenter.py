@@ -30,6 +30,7 @@ from ..models import (
     WeatherAlerts,
     WeatherData,
 )
+from ..services.mobility_briefing import build_mobility_briefing
 from ..units import resolve_display_unit_system, resolve_temperature_unit_preference
 from ..utils import TemperatureUnit, decode_taf_text
 from .presentation.environmental import AirQualityPresentation, build_air_quality_panel
@@ -107,6 +108,7 @@ class ForecastPresentation:
     fallback_text: str = ""
     daily_section_text: str = ""
     hourly_section_text: str = ""
+    mobility_briefing: str | None = None
     confidence_label: str | None = None
     summary: str | None = None
     impact_summary: ImpactSummary | None = None
@@ -237,6 +239,7 @@ class WeatherPresenter:
                 weather_data.location,
                 unit_pref,
                 confidence=weather_data.forecast_confidence,
+                mobility_briefing=build_mobility_briefing(weather_data),
             )
             if weather_data.forecast
             else None
@@ -312,12 +315,18 @@ class WeatherPresenter:
         location: Location,
         hourly_forecast: HourlyForecast | None = None,
         confidence: ForecastConfidence | None = None,
+        mobility_briefing: str | None = None,
     ) -> ForecastPresentation | None:
         if not forecast or not forecast.has_data():
             return None
         unit_pref, _unit_system = self._resolve_unit_preferences(location)
         return self._build_forecast(
-            forecast, hourly_forecast, location, unit_pref, confidence=confidence
+            forecast,
+            hourly_forecast,
+            location,
+            unit_pref,
+            confidence=confidence,
+            mobility_briefing=mobility_briefing,
         )
 
     def present_alerts(
@@ -369,6 +378,7 @@ class WeatherPresenter:
         location: Location,
         unit_pref: TemperatureUnit,
         confidence: ForecastConfidence | None = None,
+        mobility_briefing: str | None = None,
     ) -> ForecastPresentation:
         return build_forecast(
             forecast,
@@ -377,6 +387,7 @@ class WeatherPresenter:
             unit_pref,
             settings=self.settings,
             confidence=confidence,
+            mobility_briefing=mobility_briefing,
         )
 
     def _build_alerts(

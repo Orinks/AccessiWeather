@@ -913,9 +913,15 @@ class AccessiWeatherApp(wx.App):
             (wx.ACCEL_CTRL, ord("L"), self._on_add_location_shortcut),
             (wx.ACCEL_CTRL, ord("D"), self._on_remove_location_shortcut),
             (wx.ACCEL_CTRL, ord("H"), self._on_history_shortcut),
+            (wx.ACCEL_CTRL, ord("1"), self._on_focus_current_conditions_shortcut),
+            (wx.ACCEL_CTRL, ord("2"), self._on_focus_hourly_shortcut),
+            (wx.ACCEL_CTRL, ord("3"), self._on_focus_daily_shortcut),
+            (wx.ACCEL_CTRL, ord("4"), self._on_focus_alerts_shortcut),
+            (wx.ACCEL_CTRL, ord("5"), self._on_focus_event_center_shortcut),
             (wx.ACCEL_CTRL, ord("S"), self._on_settings_shortcut),
             (wx.ACCEL_CTRL, ord("Q"), self._on_exit_shortcut),
             (wx.ACCEL_NORMAL, wx.WXK_F5, self._on_refresh_shortcut),
+            (wx.ACCEL_NORMAL, getattr(wx, "WXK_F6", wx.WXK_F5), self._on_cycle_sections_shortcut),
         ]
 
         # Create accelerator table
@@ -950,6 +956,36 @@ class AccessiWeatherApp(wx.App):
         """Handle Ctrl+H shortcut."""
         if self.main_window:
             self.main_window.on_view_history()
+
+    def _focus_section_shortcut(self, number: int) -> None:
+        """Delegate a numbered section-focus shortcut to the main window."""
+        if self.main_window:
+            self.main_window.focus_section_by_number(number)
+
+    def _on_focus_current_conditions_shortcut(self, event) -> None:
+        """Handle Ctrl+1 shortcut."""
+        self._focus_section_shortcut(1)
+
+    def _on_focus_hourly_shortcut(self, event) -> None:
+        """Handle Ctrl+2 shortcut."""
+        self._focus_section_shortcut(2)
+
+    def _on_focus_daily_shortcut(self, event) -> None:
+        """Handle Ctrl+3 shortcut."""
+        self._focus_section_shortcut(3)
+
+    def _on_focus_alerts_shortcut(self, event) -> None:
+        """Handle Ctrl+4 shortcut."""
+        self._focus_section_shortcut(4)
+
+    def _on_focus_event_center_shortcut(self, event) -> None:
+        """Handle Ctrl+5 shortcut."""
+        self._focus_section_shortcut(5)
+
+    def _on_cycle_sections_shortcut(self, event) -> None:
+        """Handle F6 shortcut."""
+        if self.main_window and hasattr(self.main_window, "cycle_section_focus"):
+            self.main_window.cycle_section_focus()
 
     def _on_settings_shortcut(self, event) -> None:
         """Handle Ctrl+S shortcut."""

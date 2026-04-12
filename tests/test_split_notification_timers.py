@@ -368,6 +368,7 @@ class TestNotificationEventHelpers:
         win.app.config_manager.config_dir = Path("/tmp/runtime-config")
         win._notification_event_manager = None
         win._fallback_notifier = None
+        win.append_event_center_entry = MagicMock()
         return win
 
     def test_get_notification_event_manager_caches_instance(self):
@@ -403,6 +404,8 @@ class TestNotificationEventHelpers:
         settings = MagicMock()
         settings.notify_discussion_update = True
         settings.notify_severe_risk_change = False
+        settings.notify_minutely_precipitation_start = False
+        settings.notify_minutely_precipitation_stop = False
         settings.sound_enabled = True
         win.app.config_manager.get_settings.return_value = settings
         location = MagicMock()
@@ -438,6 +441,44 @@ class TestNotificationEventHelpers:
             sound_event="discussion_update",
             play_sound=True,
             activation_arguments="accessiweather-toast:kind=discussion",
+        )
+        win.append_event_center_entry.assert_called_once_with(
+            "Summary",
+            category="Updated discussion",
+        )
+
+    def test_process_notification_events_logs_reviewable_text_when_notifier_returns_false(self):
+        win = self._make_window()
+        settings = MagicMock()
+        settings.notify_discussion_update = True
+        settings.notify_severe_risk_change = False
+        settings.notify_minutely_precipitation_start = False
+        settings.notify_minutely_precipitation_stop = False
+        settings.sound_enabled = True
+        win.app.config_manager.get_settings.return_value = settings
+        location = MagicMock()
+        location.name = "PHI"
+        win.app.config_manager.get_current_location.return_value = location
+        win.app.notifier = MagicMock()
+
+        event = MagicMock()
+        event.event_type = "discussion_update"
+        event.title = "Updated discussion"
+        event.message = "Summary"
+        event.sound_event = "discussion_update"
+        weather_data = MagicMock()
+
+        with patch(
+            "accessiweather.ui.main_window_notification_events.NotificationEventManager"
+        ) as manager_cls:
+            manager_cls.return_value.check_for_events.return_value = [event]
+            win.app.notifier.send_notification.return_value = False
+
+            win._process_notification_events(weather_data)
+
+        win.append_event_center_entry.assert_called_once_with(
+            "Summary",
+            category="Updated discussion",
         )
 
 
