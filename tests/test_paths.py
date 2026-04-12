@@ -200,6 +200,11 @@ class TestPortableDetection:
 class TestRuntimeStorageResolution:
     """Test canonical runtime storage resolution."""
 
+    def test_runtime_paths_expose_noaa_radio_availability_file(self, tmp_path):
+        runtime = RuntimeStoragePaths(config_root=tmp_path)
+
+        assert runtime.noaa_radio_availability_file == tmp_path / "noaa_radio_availability.json"
+
     def test_default_layout_uses_app_config_root(self, tmp_path):
         paths = Paths()
         paths._base_path = tmp_path

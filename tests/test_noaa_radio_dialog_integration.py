@@ -52,11 +52,13 @@ def _create_wx_mock():
         "ALIGN_RIGHT",
         "OK",
         "ICON_ERROR",
+        "ICON_INFORMATION",
         "SL_HORIZONTAL",
         "ID_CLOSE",
     ]:
         setattr(wx_mock, attr, 0)
     wx_mock.NOT_FOUND = -1
+    wx_mock.EVT_CHECKBOX = MagicMock()
     wx_mock.Window = _FakeWxWindow
     wx_mock.Dialog = _FakeWxDialog
 
@@ -68,6 +70,10 @@ def _create_wx_mock():
     slider_inst.GetValue.return_value = 100
     wx_mock.Slider.return_value = slider_inst
 
+    checkbox_inst = MagicMock()
+    checkbox_inst.GetValue.return_value = False
+    wx_mock.CheckBox.return_value = checkbox_inst
+
     return wx_mock
 
 
@@ -75,6 +81,8 @@ def _create_wx_mock():
 def noaa_dialog_module():
     """Import noaa_radio_dialog with wx fully mocked."""
     wx_mock = _create_wx_mock()
+    bs4_mock = MagicMock()
+    bs4_mock.BeautifulSoup = MagicMock()
 
     wx_modules_to_mock = {
         "wx": wx_mock,
@@ -84,6 +92,7 @@ def noaa_dialog_module():
         "wx.adv": MagicMock(),
         "wx.html": MagicMock(),
         "wx.html2": MagicMock(),
+        "bs4": bs4_mock,
     }
 
     saved = {}
@@ -132,11 +141,16 @@ def _make_dialog(module):
     dlg._status_text = MagicMock()
     dlg._health_timer = MagicMock()
     dlg._prefs = MagicMock()
+    dlg._availability_cache = MagicMock()
+    dlg._station_availability = MagicMock()
     dlg._current_urls = ["http://example.com/stream1", "http://example.com/stream2"]
     dlg._current_url_index = 0
     dlg._next_stream_btn = MagicMock()
     dlg._prefer_btn = MagicMock()
+    dlg._show_unavailable_checkbox = MagicMock()
+    dlg._show_unavailable_checkbox.GetValue.return_value = False
     dlg._auto_advance_stream = True
+    dlg._playing_station = None
     return dlg
 
 
@@ -249,11 +263,14 @@ class TestDialogCleanup:
 class TestLoadStations:
     """Test station loading on dialog init."""
 
-    def test_load_stations_populates_choice(self, noaa_dialog_module):
-        """Test _load_stations_worker populates the station choice control."""
+    def test_load_stations_uses_availability_service_entries(self, noaa_dialog_module):
+        """Test _load_stations_worker uses filtered availability entries."""
         dlg = _make_dialog(noaa_dialog_module)
         dlg._station_choice = MagicMock()
-        dlg._url_provider.get_stream_urls.side_effect = [["https://stream.example.com/1"], []]
+        entry = MagicMock()
+        entry.station = Station("TEST1", 162.55, "Test City 1", 40.0, -74.0, "NY")
+        entry.label = "TEST1 - Test City 1 (162.55 MHz)"
+        dlg._station_availability.build_entries.return_value = [entry]
 
         test_stations = [
             Station("TEST1", 162.55, "Test City 1", 40.0, -74.0, "NY"),
@@ -267,32 +284,11 @@ class TestLoadStations:
             mock_db_cls.return_value.find_nearest.return_value = results
             dlg._load_stations_worker()
 
-        # Verify database was called
         mock_db_cls.return_value.find_nearest.assert_called_once()
-
-    def test_load_stations_includes_weatherindex_only_station(self, noaa_dialog_module):
-        """Stations are included when any stream source resolves a feed."""
-        dlg = _make_dialog(noaa_dialog_module)
-        dlg._station_choice = MagicMock()
-        dlg._url_provider.get_stream_urls.side_effect = [
-            ["https://weatherindex.example.com/live"],
-            [],
-        ]
-
-        test_stations = [
-            Station("TEST1", 162.55, "Test City 1", 40.0, -74.0, "NY"),
-            Station("TEST2", 162.40, "Test City 2", 41.0, -75.0, "PA"),
-        ]
-        results = [
-            StationResult(station=s, distance_km=10.0 * i) for i, s in enumerate(test_stations)
-        ]
-
-        with patch("accessiweather.ui.dialogs.noaa_radio_dialog.StationDatabase") as mock_db_cls:
-            mock_db_cls.return_value.find_nearest.return_value = results
-            dlg._load_stations_worker()
-
-        # Verify database was called
-        mock_db_cls.return_value.find_nearest.assert_called_once()
+        dlg._station_availability.build_entries.assert_called_once_with(
+            test_stations,
+            show_unavailable=False,
+        )
 
     def test_load_stations_error_sets_status(self, noaa_dialog_module):
         """Test _load_stations_worker handles database errors gracefully."""
@@ -306,6 +302,51 @@ class TestLoadStations:
 
         # Worker calls wx.CallAfter for error, verify database was called
         mock_db_cls.return_value.find_nearest.assert_called_once()
+
+    def test_load_stations_can_include_suppressed_entries_when_requested(self, noaa_dialog_module):
+        dlg = _make_dialog(noaa_dialog_module)
+        dlg._show_unavailable_checkbox.GetValue.return_value = True
+        entry = MagicMock()
+        entry.station = Station("TEST1", 162.55, "Test City 1", 40.0, -74.0, "NY")
+        entry.label = "TEST1 - Test City 1 (162.55 MHz) - temporarily unavailable"
+        dlg._station_availability.build_entries.return_value = [entry]
+        results = [StationResult(station=entry.station, distance_km=0.0)]
+
+        with patch("accessiweather.ui.dialogs.noaa_radio_dialog.StationDatabase") as mock_db_cls:
+            mock_db_cls.return_value.find_nearest.return_value = results
+            dlg._load_stations_worker(show_unavailable=True)
+
+        dlg._station_availability.build_entries.assert_called_once_with(
+            [entry.station],
+            show_unavailable=True,
+        )
+
+
+class TestSuppressionIntegration:
+    """Test suppression feedback in the dialog flow."""
+
+    def test_playback_success_clears_station_suppression(self, noaa_dialog_module):
+        dlg = _make_dialog(noaa_dialog_module)
+        dlg._url_provider.get_stream_urls.return_value = ["https://example.com/stream"]
+        dlg._prefs.reorder_urls.return_value = ["https://example.com/stream"]
+
+        dlg._on_play(MagicMock())
+
+        dlg._availability_cache.clear.assert_called_with("KEC49")
+
+    def test_all_stream_failure_suppresses_station(self, noaa_dialog_module):
+        dlg = _make_dialog(noaa_dialog_module)
+        dlg._current_urls = ["https://example.com/1", "https://example.com/2"]
+        dlg._player.play.return_value = False
+        dlg._playing_station = dlg._stations[0]
+
+        dlg._try_play_current("KEC49")
+
+        dlg._availability_cache.suppress.assert_called_once_with(
+            "KEC49",
+            ttl_seconds=1800,
+            reason="all_streams_failed",
+        )
 
 
 class TestErrorStates:

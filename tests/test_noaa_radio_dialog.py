@@ -47,11 +47,13 @@ def _create_wx_mock():
         "ALIGN_RIGHT",
         "OK",
         "ICON_ERROR",
+        "ICON_INFORMATION",
         "SL_HORIZONTAL",
         "ID_CLOSE",
     ]:
         setattr(wx_mock, attr, 0)
     wx_mock.NOT_FOUND = -1
+    wx_mock.EVT_CHECKBOX = MagicMock()
 
     # Use real classes for inheritance
     wx_mock.Window = _FakeWxWindow
@@ -67,6 +69,10 @@ def _create_wx_mock():
     slider_inst.GetValue.return_value = 100
     wx_mock.Slider.return_value = slider_inst
 
+    checkbox_inst = MagicMock()
+    checkbox_inst.GetValue.return_value = False
+    wx_mock.CheckBox.return_value = checkbox_inst
+
     return wx_mock
 
 
@@ -74,6 +80,8 @@ def _create_wx_mock():
 def noaa_dialog_module():
     """Import noaa_radio_dialog with wx fully mocked in sys.modules."""
     wx_mock = _create_wx_mock()
+    bs4_mock = MagicMock()
+    bs4_mock.BeautifulSoup = MagicMock()
 
     # Save and replace all wx-related modules
     wx_lib_mock = MagicMock()
@@ -85,6 +93,7 @@ def noaa_dialog_module():
         "wx.adv": MagicMock(),
         "wx.html": MagicMock(),
         "wx.html2": MagicMock(),
+        "bs4": bs4_mock,
     }
 
     saved = {}
@@ -146,10 +155,14 @@ def _make_dialog_instance(module):
     dlg._status_text = MagicMock()
     dlg._health_timer = MagicMock()
     dlg._prefs = MagicMock()
+    dlg._availability_cache = MagicMock()
+    dlg._station_availability = MagicMock()
     dlg._current_urls = ["http://example.com/stream1", "http://example.com/stream2"]
     dlg._current_url_index = 0
     dlg._next_stream_btn = MagicMock()
     dlg._prefer_btn = MagicMock()
+    dlg._show_unavailable_checkbox = MagicMock()
+    dlg._show_unavailable_checkbox.GetValue.return_value = False
     dlg._auto_advance_stream = True
     dlg._playing_station = None
     return dlg
@@ -192,6 +205,32 @@ class TestNOAARadioDialogModule:
             noaa_dialog_module.NOAARadioDialog(MagicMock(), 40.7, -74.0)
 
         mock_prefs.assert_called_once_with(path=fake_app.runtime_paths.noaa_radio_preferences_file)
+
+    def test_dialog_uses_app_runtime_availability_path(self, noaa_dialog_module):
+        fake_app = MagicMock()
+        fake_app.runtime_paths.noaa_radio_preferences_file = Path(
+            "/tmp/config/noaa_radio_prefs.json"
+        )
+        fake_app.runtime_paths.noaa_radio_availability_file = Path(
+            "/tmp/config/noaa_radio_availability.json"
+        )
+
+        with (
+            patch.object(noaa_dialog_module.wx, "GetApp", return_value=fake_app),
+            patch.object(noaa_dialog_module, "RadioPlayer"),
+            patch.object(noaa_dialog_module, "StreamURLProvider"),
+            patch.object(
+                noaa_dialog_module, "_get_clients", return_value=(MagicMock(), MagicMock())
+            ),
+            patch.object(noaa_dialog_module, "RadioPreferences"),
+            patch.object(noaa_dialog_module, "StationAvailabilityCache") as mock_cache,
+            patch.object(noaa_dialog_module, "StationAvailabilityService"),
+            patch.object(noaa_dialog_module.NOAARadioDialog, "_init_ui"),
+            patch.object(noaa_dialog_module.NOAARadioDialog, "_load_stations_async"),
+        ):
+            noaa_dialog_module.NOAARadioDialog(MagicMock(), 40.7, -74.0)
+
+        mock_cache.assert_called_once_with(path=fake_app.runtime_paths.noaa_radio_availability_file)
 
 
 class TestGetSelectedStation:
@@ -281,6 +320,14 @@ class TestCallbacks:
         dlg._play_stop_btn.SetLabel.assert_called_with("Stop")
         assert "KEC49" in dlg._status_text.SetLabel.call_args[0][0]
 
+    def test_on_playing_clears_station_suppression(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._playing_station = dlg._stations[0]
+
+        dlg._on_playing()
+
+        dlg._availability_cache.clear.assert_called_once_with("KEC49")
+
     def test_on_stopped_updates_ui(self, noaa_dialog_module):
         """Test stopped callback updates buttons and status."""
         dlg = _make_dialog_instance(noaa_dialog_module)
@@ -333,6 +380,58 @@ class TestSetStatus:
         dlg = _make_dialog_instance(noaa_dialog_module)
         dlg._set_status("Testing")
         dlg._status_text.SetLabel.assert_called_with("Testing")
+
+
+class TestUnavailableStations:
+    """Tests for unavailable-station UI behavior."""
+
+    def test_show_unavailable_checkbox_is_created(self, noaa_dialog_module):
+        dlg = object.__new__(noaa_dialog_module.NOAARadioDialog)
+        dlg.Bind = MagicMock()
+        dlg._on_health_check = MagicMock()
+        dlg._on_station_changed = MagicMock()
+        dlg._on_choice_key = MagicMock()
+        dlg._on_play_stop = MagicMock()
+        dlg._on_next_stream = MagicMock()
+        dlg._on_set_preferred = MagicMock()
+        dlg._on_volume_change = MagicMock()
+        dlg._on_close = MagicMock()
+        dlg._on_show_unavailable_changed = MagicMock()
+
+        noaa_dialog_module.NOAARadioDialog._init_ui(dlg)
+
+        noaa_dialog_module.wx.CheckBox.assert_called_once()
+        assert (
+            noaa_dialog_module.wx.CheckBox.call_args.kwargs["label"] == "Show unavailable stations"
+        )
+
+    def test_show_unavailable_toggle_refreshes_station_list(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._load_stations_async = MagicMock()
+
+        dlg._on_show_unavailable_changed(MagicMock())
+
+        dlg._load_stations_async.assert_called_once()
+
+    def test_on_stations_loaded_sets_no_available_status_when_empty(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+
+        dlg._on_stations_loaded([], [])
+
+        dlg._status_text.SetLabel.assert_called_with("No stations with streams available")
+
+    def test_suppressed_station_label_is_preserved_in_loaded_choices(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        station = Station("WXK27", 162.4, "Austin", 0.0, 0.0, "TX")
+
+        dlg._on_stations_loaded(
+            [station],
+            ["WXK27 - Austin (162.4 MHz) - temporarily unavailable"],
+        )
+
+        dlg._station_choice.Set.assert_called_with(
+            ["WXK27 - Austin (162.4 MHz) - temporarily unavailable"]
+        )
 
 
 class TestPlayStopSwitch:
@@ -449,3 +548,32 @@ class TestChoiceKeyHandler:
         key_event.GetKeyCode.return_value = wx.WXK_TAB
         dlg._on_choice_key(key_event)
         key_event.Skip.assert_called_once()
+
+
+class TestSuppressionFeedback:
+    """Tests for playback-driven suppression updates."""
+
+    def test_try_play_current_suppresses_station_after_all_streams_fail(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._current_urls = ["https://example.com/1", "https://example.com/2"]
+        dlg._player.play.return_value = False
+        dlg._playing_station = dlg._stations[0]
+
+        dlg._try_play_current("KEC49")
+
+        dlg._availability_cache.suppress.assert_called_once_with(
+            "KEC49",
+            ttl_seconds=1800,
+            reason="all_streams_failed",
+        )
+
+    def test_try_play_current_does_not_suppress_when_fallback_succeeds(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._current_urls = ["https://example.com/1", "https://example.com/2"]
+        dlg._player.play.side_effect = [False, True]
+        dlg._playing_station = dlg._stations[0]
+
+        dlg._try_play_current("KEC49")
+
+        dlg._availability_cache.suppress.assert_not_called()
+        dlg._availability_cache.clear.assert_called_with("KEC49")
