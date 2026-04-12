@@ -23,6 +23,13 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _log_reviewable_event_text(window: MainWindow, title: str, message: str) -> None:
+    """Append reviewable user-facing event text to the Event Center when available."""
+    log_method = getattr(window, "append_event_center_entry", None)
+    if callable(log_method) and message:
+        log_method(message, category=title)
+
+
 def refresh_notification_events_async(window: MainWindow) -> None:
     """Run a lightweight event check without refreshing the full weather UI."""
     if window.app.is_updating:
@@ -187,6 +194,7 @@ def process_notification_events(window: MainWindow, weather_data) -> None:
 
         for event in events:
             try:
+                _log_reviewable_event_text(window, event.title, event.message)
                 logger.debug(
                     "[events] Sending %s notification: title=%r, sound_event=%r, play_sound=%s",
                     event.event_type,

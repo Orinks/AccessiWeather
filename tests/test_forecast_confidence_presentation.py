@@ -124,13 +124,13 @@ class TestBuildForecastHighConfidence:
 
 
 class TestBuildForecastMediumConfidence:
-    def test_confidence_label_is_confidence_medium(self):
+    def test_confidence_label_is_confidence_moderate(self):
         result = call_build(confidence=medium_confidence())
-        assert result.confidence_label == "Confidence: Medium"
+        assert result.confidence_label == "Confidence: Moderate"
 
-    def test_fallback_text_contains_forecast_confidence_medium(self):
+    def test_fallback_text_contains_forecast_confidence_moderate(self):
         result = call_build(confidence=medium_confidence())
-        assert "Forecast confidence: Medium" in result.fallback_text
+        assert "Forecast confidence: Moderate" in result.fallback_text
 
     def test_fallback_text_contains_single_source_rationale(self):
         result = call_build(confidence=medium_confidence())

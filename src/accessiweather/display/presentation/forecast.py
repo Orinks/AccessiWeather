@@ -102,6 +102,20 @@ def _local_date(dt: datetime) -> date:
     return dt.date()
 
 
+def _format_confidence_level(confidence: ForecastConfidence) -> str:
+    """Return the user-facing confidence level label."""
+    if confidence.level.value == "Medium":
+        return "Moderate"
+    return confidence.level.value
+
+
+def _format_confidence_line(confidence: ForecastConfidence) -> str:
+    """Build a concise user-facing confidence explanation line."""
+    level_str = _format_confidence_level(confidence)
+    rationale = confidence.rationale.rstrip(".")
+    return f"Forecast confidence: {level_str}. {rationale}."
+
+
 def _select_periods_by_day_window(forecast: Forecast, configured_days: int) -> list[ForecastPeriod]:
     """Select periods within a strict calendar-day window when timestamps are available."""
     periods = forecast.periods or []
@@ -313,8 +327,8 @@ def build_forecast(
     # Append cross-source confidence summary when available
     confidence_label: str | None = None
     if confidence is not None:
-        level_str = confidence.level.value  # 'High', 'Medium', 'Low'
-        daily_lines.append(f"Forecast confidence: {level_str}. {confidence.rationale}.")
+        level_str = _format_confidence_level(confidence)
+        daily_lines.append(_format_confidence_line(confidence))
         confidence_label = f"Confidence: {level_str}"
 
     daily_section_text = "\n".join(daily_lines).rstrip()
