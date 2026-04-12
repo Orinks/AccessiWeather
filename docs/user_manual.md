@@ -6,10 +6,12 @@ AccessiWeather is an accessible desktop weather application for Windows, macOS, 
 
 Instead of mixing everything into one long report, AccessiWeather separates weather into practical sections:
 
+- Location selector
 - Current Conditions
+- Hourly Forecast / near-term
 - Daily Forecast
-- Hourly Forecast
 - Weather Alerts
+- Event Center
 
 The app can also provide forecast discussions, air quality details, UV details, aviation weather, NOAA Weather Radio access, AI weather explanations, Weather Assistant chat, and optional notification sounds.
 
@@ -195,13 +197,39 @@ The main window is designed for quick keyboard and screen-reader use.
 
 The button row provides common actions without requiring the menu bar:
 
-- Add
-- Remove
-- Refresh
-- Explain
-- Discussion
+- Add Location
+- Remove Location
+- Refresh Weather
+- Explain Weather
+- Forecast Discussion
 - Settings
 - View Alert Details
+
+### Top-level navigation
+
+AccessiWeather supports two top-level navigation patterns in the main window:
+
+- F6 cycles through the visible top-level sections in order
+- Ctrl+1 through Ctrl+5 jump directly to the main forecast sections
+
+The current top-level order is:
+
+1. Location selector
+2. Current Conditions
+3. Hourly Forecast / near-term
+4. Daily Forecast
+5. Weather Alerts
+6. Event Center
+
+The direct-jump shortcuts map like this:
+
+- Ctrl+1: Current Conditions
+- Ctrl+2: Hourly Forecast / near-term
+- Ctrl+3: Daily Forecast
+- Ctrl+4: Weather Alerts
+- Ctrl+5: Event Center
+
+If the Event Center is hidden from the View menu, F6 skips it and Ctrl+5 does nothing until you show it again.
 
 ### Location selector
 
@@ -245,6 +273,24 @@ This is helpful if you need a quick answer before stepping outside and do not wa
 
 Leave this alone if you are planning for tomorrow or the weekend. In that case, the forecast sections are usually more useful.
 
+### Hourly Forecast / near-term
+
+This section shows the short-range hourly forecast. You can choose how many hours appear in Settings > Display.
+
+When AccessiWeather has enough useful near-term data, this section can begin with a one-sentence mobility briefing for roughly the next 90 minutes. The mobility briefing does not replace the hourly outlook summary. It appears above the hourly outlook when available.
+
+Use this when:
+
+- you need timing, not just a general day summary
+- you are deciding when to leave, when to return home, or when to fit in a trip outside
+- you want to know whether the coldest, windiest, wettest, or iciest part of the day lines up with your plans
+
+Hourly Forecast is usually the better choice for questions like "Will the rain start before my bus trip?" "Will the temperature still be above freezing at 7 PM?" or "Does the wind ease later tonight?"
+
+This is helpful if one part of the day is much different from another. It gives the timing that Daily Forecast intentionally smooths out.
+
+Leave this alone if you only need the big picture for the next several days. In that case, Daily Forecast is faster to read.
+
 ### Daily Forecast
 
 This section shows the multi-day forecast. The number of days depends on your Display settings and on what the source can provide.
@@ -259,23 +305,35 @@ Daily Forecast is usually the better choice for questions like "Which day looks 
 
 This is helpful if you do not want to read 24 or more hourly entries. It summarizes the larger pattern.
 
-Leave this alone if the exact timing matters, such as whether rain begins before 3 PM or whether winds ease after sunset. For those questions, use Hourly Forecast.
+Leave this alone if the exact timing matters, such as whether rain begins before 3 PM or whether winds ease after sunset. For those questions, use Hourly Forecast / near-term.
 
-### Hourly Forecast
+### Event Center
 
-This section shows the short-range hourly forecast. You can choose how many hours appear in Settings > Display.
+The Event Center is a reviewable text history of user-facing weather events and summaries.
 
-Use this when:
+On the current release, it is intended for:
 
-- you need timing, not just a general day summary
-- you are deciding when to leave, when to return home, or when to fit in a trip outside
-- you want to know whether the coldest, windiest, wettest, or iciest part of the day lines up with your plans
+- spoken or surfaced briefings
+- reviewable notification/event text
 
-Hourly Forecast is usually the better choice for questions like "Will the rain start before my bus trip?" "Will the temperature still be above freezing at 7 PM?" or "Does the wind ease later tonight?"
+Entries are appended as plain timestamped lines. Examples include:
 
-This is helpful if one part of the day is much different from another. It gives the timing that Daily Forecast intentionally smooths out.
+- brief mobility summaries
+- discussion-update summaries
+- other user-facing event text that AccessiWeather surfaces for review
 
-Leave this alone if you only need the big picture for the next several days. In that case, Daily Forecast is faster to read.
+The Event Center is part of the main window, not a separate dialog. It is visible by default and can be shown or hidden from View > Event Center.
+
+When it is visible:
+
+- F6 includes it in top-level cycling
+- Ctrl+5 jumps to it
+
+When it is hidden:
+
+- F6 skips it
+- Ctrl+5 does nothing
+- re-enable it from View > Event Center when you want it back
 
 ### Weather Alerts
 

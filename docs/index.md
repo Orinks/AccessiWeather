@@ -79,6 +79,7 @@
 
 #### Core Features
 - [ACCESSIBILITY.md](ACCESSIBILITY.md) - Accessibility features, guidelines, and screen reader support
+- [main-window-navigation.md](main-window-navigation.md) - Canonical main-window section order, F6 cycle, Ctrl+1..Ctrl+5 jumps, and Event Center behavior
 - [SOUND_PACK_SYSTEM.md](SOUND_PACK_SYSTEM.md) - Sound pack system architecture
 - [SOUND_PACKS.md](SOUND_PACKS.md) - Sound pack creation and usage guide
 - [weather_history_feature.md](weather_history_feature.md) - Historical weather tracking

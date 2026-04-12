@@ -26,6 +26,15 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+QUICK_ACTION_LABELS = {
+    "add": "&Add Location",
+    "remove": "&Remove Location",
+    "refresh": "&Refresh Weather",
+    "explain": "&Explain Weather",
+    "discussion": "Forecast &Discussion",
+    "settings": "&Settings",
+}
+
 # Sentinel string used for the "All Locations" summary entry in the dropdown.
 ALL_LOCATIONS_SENTINEL = "All Locations"
 
@@ -164,12 +173,12 @@ class MainWindow(SizedFrame):
         button_panel.SetSizerType("horizontal")
         button_panel.SetSizerProps(expand=True)
 
-        self.add_button = wx.Button(button_panel, label="&Add")
-        self.remove_button = wx.Button(button_panel, label="Re&move")
-        self.refresh_button = wx.Button(button_panel, label="&Refresh")
-        self.explain_button = wx.Button(button_panel, label="&Explain")
-        self.discussion_button = wx.Button(button_panel, label="&Discussion")
-        self.settings_button = wx.Button(button_panel, label="&Settings")
+        self.add_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["add"])
+        self.remove_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["remove"])
+        self.refresh_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["refresh"])
+        self.explain_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["explain"])
+        self.discussion_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["discussion"])
+        self.settings_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["settings"])
 
         # Status bar — two fields: [0] main status, [1] stale/cached warning
         self.CreateStatusBar(2)
