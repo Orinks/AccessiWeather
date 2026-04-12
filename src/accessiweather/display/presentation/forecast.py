@@ -138,6 +138,7 @@ def build_forecast(
     settings: AppSettings | None = None,
     *,
     confidence: ForecastConfidence | None = None,
+    mobility_briefing: str | None = None,
 ) -> ForecastPresentation:
     """Create a structured forecast including optional hourly highlights."""
     title = f"Forecast for {location.name}"
@@ -322,6 +323,16 @@ def build_forecast(
         hours=hourly_hours,
         summary_line=hourly_summary_line,
     )
+    if mobility_briefing:
+        mobility_line = f"Mobility briefing: {mobility_briefing}"
+        if hourly_section_text:
+            hourly_section_text = hourly_section_text.replace(
+                "Hourly forecast:\n",
+                f"Hourly forecast:\n{mobility_line}\n",
+                1,
+            )
+        else:
+            hourly_section_text = f"Hourly forecast:\n{mobility_line}"
     fallback_sections = [daily_section_text]
     if hourly_section_text:
         fallback_sections.append(hourly_section_text)
@@ -345,6 +356,7 @@ def build_forecast(
         fallback_text=fallback_text,
         daily_section_text=daily_section_text,
         hourly_section_text=hourly_section_text,
+        mobility_briefing=mobility_briefing,
         confidence_label=confidence_label,
         summary=summary_line,
         impact_summary=forecast_impact,

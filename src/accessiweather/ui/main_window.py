@@ -8,6 +8,7 @@ widgets for optimal screen reader compatibility.
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import wx
@@ -116,6 +117,14 @@ class MainWindow(SizedFrame):
         self.current_conditions.SetSizerProps(expand=True, proportion=1)
 
         # Forecast section
+        self._hourly_forecast_label = wx.StaticText(panel, label="Hourly Forecast:")
+        self.hourly_forecast_display = wx.TextCtrl(
+            panel,
+            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
+            name="Hourly weather forecast",
+        )
+        self.hourly_forecast_display.SetSizerProps(expand=True, proportion=1)
+
         self._daily_forecast_label = wx.StaticText(panel, label="Daily Forecast:")
         self.daily_forecast_display = wx.TextCtrl(
             panel,
@@ -124,14 +133,6 @@ class MainWindow(SizedFrame):
         )
         self.daily_forecast_display.SetSizerProps(expand=True, proportion=1)
         self.forecast_display = self.daily_forecast_display
-
-        self._hourly_forecast_label = wx.StaticText(panel, label="Hourly Forecast:")
-        self.hourly_forecast_display = wx.TextCtrl(
-            panel,
-            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
-            name="Hourly weather forecast",
-        )
-        self.hourly_forecast_display.SetSizerProps(expand=True, proportion=1)
 
         # Weather alerts section
         alerts_panel = SizedPanel(panel)
@@ -147,6 +148,16 @@ class MainWindow(SizedFrame):
 
         self.view_alert_button = wx.Button(alerts_panel, label="View Alert Details")
         self.view_alert_button.Disable()  # Disabled until alerts are available
+
+        # Event Center section
+        self._event_center_visible = True
+        self._event_center_label = wx.StaticText(panel, label="Event Center:")
+        self.event_center_display = wx.TextCtrl(
+            panel,
+            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
+            name="Event center",
+        )
+        self.event_center_display.SetSizerProps(expand=True, proportion=1)
 
         # Control buttons
         button_panel = SizedPanel(panel)
@@ -278,6 +289,13 @@ class MainWindow(SizedFrame):
         history_item = view_menu.Append(
             self._history_id, "Weather &History\tCtrl+H", "View weather history"
         )
+        self._toggle_event_center_id = wx.NewIdRef()
+        toggle_event_center_item = view_menu.AppendCheckItem(
+            self._toggle_event_center_id,
+            "Event &Center",
+            "Show or hide the Event Center",
+        )
+        toggle_event_center_item.Check(True)
         discussion_item = view_menu.Append(
             wx.ID_ANY, "Forecast &Discussion...", "View NWS Area Forecast Discussion"
         )
@@ -358,6 +376,9 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_MENU, lambda e: self.on_refresh(), refresh_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_explain_weather(), explain_item)
         self.Bind(wx.EVT_MENU, lambda e: self.on_view_history(), history_item)
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.toggle_event_center(), id=self._toggle_event_center_id
+        )
         self.Bind(wx.EVT_MENU, lambda e: self._on_discussion(), discussion_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_aviation(), aviation_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_air_quality(), air_quality_item)
@@ -1181,6 +1202,11 @@ class MainWindow(SizedFrame):
                     presentation.forecast.hourly_section_text or "No hourly forecast available."
                 )
                 self._set_forecast_sections(daily_text, hourly_text)
+                if presentation.forecast.mobility_briefing:
+                    self.append_event_center_entry(
+                        presentation.forecast.mobility_briefing,
+                        category="Briefing",
+                    )
             else:
                 self._set_forecast_sections(
                     "No daily forecast available.", "No hourly forecast available."
@@ -1253,6 +1279,70 @@ class MainWindow(SizedFrame):
         """Update the daily and hourly forecast controls together."""
         self.daily_forecast_display.SetValue(daily_text)
         self.hourly_forecast_display.SetValue(hourly_text)
+
+    def append_event_center_entry(self, text: str, *, category: str | None = None) -> None:
+        """Append a timestamped reviewable line to the Event Center."""
+        if not text:
+            return
+        timestamp = datetime.now().strftime("%I:%M %p").lstrip("0")
+        prefix = f"{category}: " if category else ""
+        entry = f"[{timestamp}] {prefix}{text}\n"
+        self.event_center_display.AppendText(entry)
+
+    def toggle_event_center(self) -> None:
+        """Show or hide the Event Center section."""
+        visible = not getattr(self, "_event_center_visible", True)
+        self._event_center_visible = visible
+        self._event_center_label.Show(visible)
+        self.event_center_display.Show(visible)
+        self.Layout()
+
+    def focus_event_center(self) -> None:
+        """Reveal and focus the Event Center section."""
+        if not getattr(self, "_event_center_visible", True):
+            self._event_center_visible = True
+            self._event_center_label.Show(True)
+            self.event_center_display.Show(True)
+            self.Layout()
+        self.event_center_display.SetFocus()
+
+    def get_visible_top_level_sections(self) -> list[tuple[str, wx.Window]]:
+        """Return the canonical visible top-level weather sections in focus order."""
+        sections: list[tuple[str, wx.Window]] = [
+            ("Current conditions", self.current_conditions),
+            ("Hourly / near-term", self.hourly_forecast_display),
+            ("Daily forecast", self.daily_forecast_display),
+            ("Alerts", self.alerts_list),
+        ]
+        if getattr(self, "_event_center_visible", True):
+            sections.append(("Event Center", self.event_center_display))
+        return sections
+
+    def focus_section_by_number(self, number: int) -> None:
+        """Focus a canonical top-level section by its 1-based shortcut number."""
+        if number == 5:
+            self.focus_event_center()
+            return
+
+        sections = self.get_visible_top_level_sections()
+        index = number - 1
+        if 0 <= index < len(sections):
+            _label, widget = sections[index]
+            widget.SetFocus()
+
+    def cycle_section_focus(self) -> None:
+        """Move focus to the next visible top-level section, wrapping at the end."""
+        sections = self.get_visible_top_level_sections()
+        if not sections:
+            return
+
+        next_index = getattr(self, "_section_focus_index", -1) + 1
+        if next_index >= len(sections):
+            next_index = 0
+
+        self._section_focus_index = next_index
+        _label, widget = sections[next_index]
+        widget.SetFocus()
 
     def _set_forecast_sections_visible(self, visible: bool) -> None:
         """Show or hide the daily/hourly forecast labels and controls."""
