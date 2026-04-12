@@ -24,7 +24,7 @@ from dateutil.parser import isoparse  # type: ignore # requires python-dateutil
 
 from accessiweather.paths import resolve_default_config_root
 
-from .toast_notifier import SafeToastNotifier
+from .toast_notifier import SafeDesktopNotifier
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ class WeatherNotifier:
             enable_persistence: Whether to enable persistent storage of alert state (default: True)
 
         """
-        self.toaster = SafeToastNotifier()
+        self.notifier = SafeDesktopNotifier(app_name="AccessiWeather")
         self.active_alerts: dict[str, dict[str, Any]] = {}
         self.enable_persistence = enable_persistence
 
@@ -96,11 +96,10 @@ class WeatherNotifier:
                 message = f"{alert_count} active weather {plural} in your area"
 
             # Show notification
-            self.toaster.show_toast(
+            self.notifier.send_notification(
                 title=title,
-                msg=message,
+                message=message,
                 timeout=10,
-                app_name="AccessiWeather",
             )
 
             logger.info(f"Displayed summary notification: {message}")
@@ -125,13 +124,10 @@ class WeatherNotifier:
             message = alert.get("headline", "Weather alert in your area")
 
             # Show notification
-            self.toaster.show_toast(
+            self.notifier.send_notification(
                 title=title,
-                # 'msg' parameter is mapped to 'message' in SafeToastNotifier
-                msg=message,
-                # 'timeout' instead of 'duration'
+                message=message,
                 timeout=10,
-                app_name="AccessiWeather",
             )
 
             if is_update:
