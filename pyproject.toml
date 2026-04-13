@@ -48,7 +48,7 @@ dev = [
     "pytest-recording>=0.13.0",
     "pytest-rerunfailures>=12.0",
     "hypothesis>=6.0.0",
-    "vcrpy>=6.0.0",
+    "vcrpy>=8.1.1",
     "ruff>=0.9.0",
     "mypy>=1.0.0",
     "pyright",
