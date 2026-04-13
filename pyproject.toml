@@ -15,7 +15,7 @@ dependencies = [
     "wxPython>=4.2.5",
     "gui_builder @ git+https://github.com/accessibleapps/gui_builder.git",
     "sound_lib @ git+https://github.com/accessibleapps/sound_lib.git",
-    "platform-utils>=1.6.0",  # sound_lib dep; >=1.6 needed for Python 3.12+ (no imp module)
+    "platform-utils>=1.6.2",  # sound_lib dep; >=1.6 needed for Python 3.12+ (no imp module)
     "desktop-notifier",
     "toasted; sys_platform == 'win32'",
     "python-dateutil",
