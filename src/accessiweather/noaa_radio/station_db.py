@@ -253,11 +253,13 @@ class StationDatabase:
         state_upper = state.upper()
         return [s for s in self._stations if s.state.upper() == state_upper]
 
-    def find_nearest(self, lat: float, lon: float, limit: int = 5) -> list[StationResult]:
-        """Return the *limit* nearest stations sorted by distance ascending."""
+    def find_nearest(self, lat: float, lon: float, limit: int | None = 5) -> list[StationResult]:
+        """Return the nearest stations sorted by distance ascending."""
         results = [
             StationResult(station=s, distance_km=_haversine(lat, lon, s.lat, s.lon))
             for s in self._stations
         ]
         results.sort(key=lambda r: r.distance_km)
+        if limit is None:
+            return results
         return results[:limit]
