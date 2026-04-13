@@ -9,8 +9,12 @@ import pytest
 
 from accessiweather.models import AppSettings, CurrentConditions, WeatherData
 from accessiweather.notifications.minutely_precipitation import (
+    INTENSITY_THRESHOLD_HEAVY,
+    INTENSITY_THRESHOLD_LIGHT,
+    INTENSITY_THRESHOLD_MODERATE,
     build_minutely_transition_signature,
     detect_minutely_precipitation_transition,
+    is_wet,
     parse_pirate_weather_minutely_block,
 )
 from accessiweather.notifications.notification_event_manager import (
@@ -598,6 +602,133 @@ class TestNotificationEventManager:
 
         assert events == []
         assert manager.state.last_minutely_transition_signature == "stopping:2:rain"
+
+    # ------------------------------------------------------------------
+    # is_wet threshold tests
+    # ------------------------------------------------------------------
+
+    def test_is_wet_default_threshold_zero(self):
+        """Default threshold (0.0) treats any positive intensity as wet."""
+        from datetime import UTC, datetime
+
+        from accessiweather.models import MinutelyPrecipitationPoint
+
+        dry = MinutelyPrecipitationPoint(time=datetime.now(UTC), precipitation_intensity=0.0)
+        trace = MinutelyPrecipitationPoint(time=datetime.now(UTC), precipitation_intensity=0.005)
+        assert not is_wet(dry)
+        assert is_wet(trace)
+
+    def test_is_wet_light_threshold_filters_trace(self):
+        """INTENSITY_THRESHOLD_LIGHT should suppress trace/noise readings."""
+        from datetime import UTC, datetime
+
+        from accessiweather.models import MinutelyPrecipitationPoint
+
+        trace = MinutelyPrecipitationPoint(time=datetime.now(UTC), precipitation_intensity=0.005)
+        light = MinutelyPrecipitationPoint(time=datetime.now(UTC), precipitation_intensity=0.02)
+        assert not is_wet(trace, threshold=INTENSITY_THRESHOLD_LIGHT)
+        assert is_wet(light, threshold=INTENSITY_THRESHOLD_LIGHT)
+
+    def test_is_wet_moderate_threshold(self):
+        """INTENSITY_THRESHOLD_MODERATE should filter light rain."""
+        from datetime import UTC, datetime
+
+        from accessiweather.models import MinutelyPrecipitationPoint
+
+        light_rain = MinutelyPrecipitationPoint(
+            time=datetime.now(UTC), precipitation_intensity=0.05
+        )
+        moderate_rain = MinutelyPrecipitationPoint(
+            time=datetime.now(UTC), precipitation_intensity=0.2
+        )
+        assert not is_wet(light_rain, threshold=INTENSITY_THRESHOLD_MODERATE)
+        assert is_wet(moderate_rain, threshold=INTENSITY_THRESHOLD_MODERATE)
+
+    def test_is_wet_heavy_threshold(self):
+        """INTENSITY_THRESHOLD_HEAVY should only flag heavy rain."""
+        from datetime import UTC, datetime
+
+        from accessiweather.models import MinutelyPrecipitationPoint
+
+        moderate = MinutelyPrecipitationPoint(time=datetime.now(UTC), precipitation_intensity=0.5)
+        heavy = MinutelyPrecipitationPoint(time=datetime.now(UTC), precipitation_intensity=1.5)
+        assert not is_wet(moderate, threshold=INTENSITY_THRESHOLD_HEAVY)
+        assert is_wet(heavy, threshold=INTENSITY_THRESHOLD_HEAVY)
+
+    def test_detect_transition_with_moderate_threshold_ignores_light_rain(self):
+        """With moderate threshold, light rain should not trigger a wet transition."""
+        forecast = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0},
+                    {"time": 1768917660, "precipIntensity": 0.05, "precipType": "rain"},
+                    {"time": 1768917720, "precipIntensity": 0.05, "precipType": "rain"},
+                ]
+            }
+        )
+        # Light rain (0.05) is below moderate threshold (0.1) — no transition
+        transition = detect_minutely_precipitation_transition(
+            forecast, threshold=INTENSITY_THRESHOLD_MODERATE
+        )
+        assert transition is None
+
+    def test_detect_transition_with_moderate_threshold_fires_for_moderate_rain(self):
+        """With moderate threshold, moderate+ rain should trigger a wet transition."""
+        forecast = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0},
+                    {"time": 1768917660, "precipIntensity": 0.2, "precipType": "rain"},
+                ]
+            }
+        )
+        transition = detect_minutely_precipitation_transition(
+            forecast, threshold=INTENSITY_THRESHOLD_MODERATE
+        )
+        assert transition is not None
+        assert transition.transition_type == "starting"
+
+    def test_notification_manager_respects_sensitivity_setting(self, manager):
+        """Precipitation sensitivity setting should filter out sub-threshold rain."""
+        settings = AppSettings(
+            notify_discussion_update=False,
+            notify_severe_risk_change=False,
+            notify_minutely_precipitation_start=True,
+            notify_minutely_precipitation_stop=True,
+            precipitation_sensitivity="moderate",
+        )
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.discussion = None
+        weather_data.discussion_issuance_time = None
+        weather_data.current = None
+
+        # Light rain only (0.05 mm/h) — below moderate threshold (0.1 mm/h)
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0},
+                    {"time": 1768917660, "precipIntensity": 0.05, "precipType": "rain"},
+                    {"time": 1768917720, "precipIntensity": 0.05, "precipType": "rain"},
+                ]
+            }
+        )
+
+        # First call stores state
+        manager.check_for_events(weather_data, settings, "Test City")
+
+        # Update to light rain start — should not trigger with moderate sensitivity
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0},
+                    {"time": 1768917660, "precipIntensity": 0},
+                    {"time": 1768917720, "precipIntensity": 0.05, "precipType": "rain"},
+                ]
+            }
+        )
+        events = manager.check_for_events(weather_data, settings, "Test City")
+        # Signature changed but no transition detected above threshold
+        assert all(e.event_type != "minutely_precipitation_start" for e in events)
 
     def test_reset_state(self, manager):
         """Test state reset."""
