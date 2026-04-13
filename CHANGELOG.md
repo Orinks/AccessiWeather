@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- **NOAA radio station count chooser** — the NOAA Weather Radio dialog now lets you pick how many nearby stations to load (10, 25, 50, 100, or All) without digging through the main Settings window
+
+### Fixed
+- **NOAA radio station count now sticks** — your nearby-station limit is saved with NOAA radio preferences and reused the next time you open the dialog, while preferred stream choices keep working as before
+
 ## [0.4.5] - 2026-03-26
 
 ### Added

@@ -16,7 +16,7 @@ from accessiweather.noaa_radio import (
     StreamURLProvider,
 )
 from accessiweather.noaa_radio.player import RadioPlayer
-from accessiweather.noaa_radio.preferences import RadioPreferences
+from accessiweather.noaa_radio.preferences import DEFAULT_STATION_LIMIT, RadioPreferences
 from accessiweather.noaa_radio.weatherindex_client import WeatherIndexClient
 from accessiweather.noaa_radio.wxradio_client import WxRadioClient
 
@@ -25,6 +25,8 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 SUPPRESSION_TTL_SECONDS = 1800
+STATION_LIMIT_PRESETS: tuple[int | None, ...] = (10, 25, 50, 100, None)
+STATION_LIMIT_LABELS: tuple[str, ...] = ("10", "25", "50", "100", "All")
 
 # Module-level cache for clients to leverage HTTP caching across dialog opens
 _wxradio_client: WxRadioClient | None = None
@@ -144,6 +146,16 @@ class NOAARadioDialog(wx.Dialog):
         self._station_choice.Bind(wx.EVT_CHAR_HOOK, self._on_choice_key)
         sizer.Add(self._station_choice, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
+        station_limit_label = wx.StaticText(panel, label="Nearby station count:")
+        sizer.Add(station_limit_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
+
+        self._station_limit_choice = wx.Choice(panel, choices=list(STATION_LIMIT_LABELS))
+        self._station_limit_choice.SetSelection(
+            self._get_station_limit_choice_index(self._prefs.get_station_limit())
+        )
+        self._station_limit_choice.Bind(wx.EVT_CHOICE, self._on_station_limit_changed)
+        sizer.Add(self._station_limit_choice, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
+
         self._show_unavailable_checkbox = wx.CheckBox(
             panel,
             label="Show unavailable stations",
@@ -211,21 +223,26 @@ class NOAARadioDialog(wx.Dialog):
         self._station_choice.Set(["Loading stations..."])
         self._set_status("Finding nearest stations...")
         show_unavailable = self._show_unavailable_enabled()
+        station_limit = self._get_selected_station_limit()
 
         # Run station loading in background thread
         thread = threading.Thread(
             target=self._load_stations_worker,
-            args=(show_unavailable,),
+            args=(show_unavailable, station_limit),
             daemon=True,
         )
         thread.start()
 
-    def _load_stations_worker(self, show_unavailable: bool = False) -> None:
+    def _load_stations_worker(
+        self,
+        show_unavailable: bool = False,
+        station_limit: int | None = DEFAULT_STATION_LIMIT,
+    ) -> None:
         """Worker method that loads stations in background thread."""
         try:
             db = StationDatabase()
-            results = db.find_nearest(self._lat, self._lon, limit=25)
-            nearby = [r.station for r in results][:10]
+            results = db.find_nearest(self._lat, self._lon, limit=station_limit)
+            nearby = [r.station for r in results]
             entries = self._station_availability.build_entries(
                 nearby,
                 show_unavailable=show_unavailable,
@@ -472,6 +489,12 @@ class NOAARadioDialog(wx.Dialog):
         """Reload stations when the unavailable-station filter changes."""
         self._load_stations_async()
 
+    def _on_station_limit_changed(self, event: wx.CommandEvent) -> None:
+        """Persist and apply a new nearby-station limit."""
+        self._prefs.set_station_limit(self._get_selected_station_limit())
+        self._load_stations_async()
+        event.Skip()
+
     def _on_station_changed(self, event: wx.CommandEvent) -> None:
         """Update button label when the user picks a different station."""
         self._update_play_btn_label()
@@ -522,6 +545,24 @@ class NOAARadioDialog(wx.Dialog):
         """Return the current state of the unavailable-station filter."""
         checkbox = getattr(self, "_show_unavailable_checkbox", None)
         return bool(checkbox.GetValue()) if checkbox is not None else False
+
+    def _get_selected_station_limit(self) -> int | None:
+        """Return the chosen nearby-station limit, or None for all stations."""
+        choice = getattr(self, "_station_limit_choice", None)
+        if choice is None:
+            return self._prefs.get_station_limit()
+
+        selection = choice.GetSelection()
+        if selection == wx.NOT_FOUND or selection >= len(STATION_LIMIT_PRESETS):
+            return self._prefs.get_station_limit()
+        return STATION_LIMIT_PRESETS[selection]
+
+    def _get_station_limit_choice_index(self, limit: int | None) -> int:
+        """Return the choice index matching the saved nearby-station limit."""
+        try:
+            return STATION_LIMIT_PRESETS.index(limit)
+        except ValueError:
+            return STATION_LIMIT_PRESETS.index(DEFAULT_STATION_LIMIT)
 
     def _mark_current_station_unavailable(self, reason: str = "all_streams_failed") -> None:
         """Suppress the current station after all playback options fail."""

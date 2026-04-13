@@ -149,6 +149,8 @@ def _make_dialog_instance(module):
     dlg._url_provider = MagicMock()
     dlg._station_choice = MagicMock()
     dlg._station_choice.GetSelection.return_value = 0
+    dlg._station_limit_choice = MagicMock()
+    dlg._station_limit_choice.GetSelection.return_value = 0
     dlg._play_stop_btn = MagicMock()
     dlg._volume_slider = MagicMock()
     dlg._volume_slider.GetValue.return_value = 100
@@ -397,6 +399,8 @@ class TestUnavailableStations:
         dlg._on_volume_change = MagicMock()
         dlg._on_close = MagicMock()
         dlg._on_show_unavailable_changed = MagicMock()
+        dlg._prefs = MagicMock()
+        dlg._prefs.get_station_limit.return_value = 10
 
         noaa_dialog_module.NOAARadioDialog._init_ui(dlg)
 
@@ -405,6 +409,28 @@ class TestUnavailableStations:
             noaa_dialog_module.wx.CheckBox.call_args.kwargs["label"] == "Show unavailable stations"
         )
 
+    def test_station_limit_choice_is_created(self, noaa_dialog_module):
+        dlg = object.__new__(noaa_dialog_module.NOAARadioDialog)
+        dlg.Bind = MagicMock()
+        dlg._on_health_check = MagicMock()
+        dlg._on_station_changed = MagicMock()
+        dlg._on_choice_key = MagicMock()
+        dlg._on_play_stop = MagicMock()
+        dlg._on_next_stream = MagicMock()
+        dlg._on_set_preferred = MagicMock()
+        dlg._on_volume_change = MagicMock()
+        dlg._on_close = MagicMock()
+        dlg._on_show_unavailable_changed = MagicMock()
+        dlg._on_station_limit_changed = MagicMock()
+        dlg._prefs = MagicMock()
+        dlg._prefs.get_station_limit.return_value = 25
+
+        noaa_dialog_module.NOAARadioDialog._init_ui(dlg)
+
+        assert noaa_dialog_module.wx.Choice.call_count == 2
+        station_limit_choice = noaa_dialog_module.wx.Choice.call_args_list[1]
+        assert station_limit_choice.kwargs["choices"] == ["10", "25", "50", "100", "All"]
+
     def test_show_unavailable_toggle_refreshes_station_list(self, noaa_dialog_module):
         dlg = _make_dialog_instance(noaa_dialog_module)
         dlg._load_stations_async = MagicMock()
@@ -412,6 +438,18 @@ class TestUnavailableStations:
         dlg._on_show_unavailable_changed(MagicMock())
 
         dlg._load_stations_async.assert_called_once()
+
+    def test_station_limit_toggle_persists_and_refreshes_station_list(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._station_limit_choice.GetSelection.return_value = 2
+        dlg._load_stations_async = MagicMock()
+        event = MagicMock()
+
+        dlg._on_station_limit_changed(event)
+
+        dlg._prefs.set_station_limit.assert_called_once_with(50)
+        dlg._load_stations_async.assert_called_once()
+        event.Skip.assert_called_once()
 
     def test_on_stations_loaded_sets_no_available_status_when_empty(self, noaa_dialog_module):
         dlg = _make_dialog_instance(noaa_dialog_module)

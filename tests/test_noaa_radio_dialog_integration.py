@@ -135,6 +135,8 @@ def _make_dialog(module):
     dlg._url_provider = MagicMock()
     dlg._station_choice = MagicMock()
     dlg._station_choice.GetSelection.return_value = 0
+    dlg._station_limit_choice = MagicMock()
+    dlg._station_limit_choice.GetSelection.return_value = 0
     dlg._play_stop_btn = MagicMock()
     dlg._volume_slider = MagicMock()
     dlg._volume_slider.GetValue.return_value = 100
@@ -284,11 +286,41 @@ class TestLoadStations:
             mock_db_cls.return_value.find_nearest.return_value = results
             dlg._load_stations_worker()
 
-        mock_db_cls.return_value.find_nearest.assert_called_once()
+        mock_db_cls.return_value.find_nearest.assert_called_once_with(40.7, -74.0, limit=10)
         dlg._station_availability.build_entries.assert_called_once_with(
             test_stations,
             show_unavailable=False,
         )
+
+    def test_load_stations_uses_selected_station_limit(self, noaa_dialog_module):
+        dlg = _make_dialog(noaa_dialog_module)
+        dlg._station_choice = MagicMock()
+        entry = MagicMock()
+        entry.station = Station("TEST1", 162.55, "Test City 1", 40.0, -74.0, "NY")
+        entry.label = "TEST1 - Test City 1 (162.55 MHz)"
+        dlg._station_availability.build_entries.return_value = [entry]
+        results = [StationResult(station=entry.station, distance_km=0.0)]
+
+        with patch("accessiweather.ui.dialogs.noaa_radio_dialog.StationDatabase") as mock_db_cls:
+            mock_db_cls.return_value.find_nearest.return_value = results
+            dlg._load_stations_worker(station_limit=100)
+
+        mock_db_cls.return_value.find_nearest.assert_called_once_with(40.7, -74.0, limit=100)
+
+    def test_load_stations_all_uses_unbounded_lookup(self, noaa_dialog_module):
+        dlg = _make_dialog(noaa_dialog_module)
+        dlg._station_choice = MagicMock()
+        entry = MagicMock()
+        entry.station = Station("TEST1", 162.55, "Test City 1", 40.0, -74.0, "NY")
+        entry.label = "TEST1 - Test City 1 (162.55 MHz)"
+        dlg._station_availability.build_entries.return_value = [entry]
+        results = [StationResult(station=entry.station, distance_km=0.0)]
+
+        with patch("accessiweather.ui.dialogs.noaa_radio_dialog.StationDatabase") as mock_db_cls:
+            mock_db_cls.return_value.find_nearest.return_value = results
+            dlg._load_stations_worker(station_limit=None)
+
+        mock_db_cls.return_value.find_nearest.assert_called_once_with(40.7, -74.0, limit=None)
 
     def test_load_stations_error_sets_status(self, noaa_dialog_module):
         """Test _load_stations_worker handles database errors gracefully."""

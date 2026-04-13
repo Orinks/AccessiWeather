@@ -1,10 +1,11 @@
 """Tests for NOAA Weather Radio modules."""
 
+import json
 from unittest.mock import MagicMock, patch
 
 from accessiweather.noaa_radio import Station, StationDatabase, StreamURLProvider
 from accessiweather.noaa_radio.player import RadioPlayer
-from accessiweather.noaa_radio.preferences import RadioPreferences
+from accessiweather.noaa_radio.preferences import DEFAULT_STATION_LIMIT, RadioPreferences
 
 # ---------------------------------------------------------------------------
 # Station / StationDatabase tests
@@ -36,6 +37,17 @@ class TestStationDatabase:
         db = StationDatabase()
         results = db.find_nearest(40.0, -74.0, limit=3)
         assert len(results) == 3
+
+    def test_find_nearest_all_returns_every_station(self):
+        stations = [
+            Station("A", 162.4, "One", 40.0, -74.0, "NY"),
+            Station("B", 162.4, "Two", 41.0, -75.0, "PA"),
+        ]
+        db = StationDatabase(stations)
+
+        results = db.find_nearest(40.0, -74.0, limit=None)
+
+        assert [result.station.call_sign for result in results] == ["A", "B"]
 
     def test_get_stations_by_state(self):
         stations = [
@@ -211,6 +223,38 @@ class TestRadioPreferences:
         prefs = RadioPreferences(config_dir=tmp_path)
         prefs.set_preferred_url("test1", "http://stream.com")
         assert prefs.get_preferred_url("TEST1") == "http://stream.com"
+
+    def test_station_limit_defaults_to_ten(self, tmp_path):
+        prefs = RadioPreferences(config_dir=tmp_path)
+
+        assert prefs.get_station_limit() == DEFAULT_STATION_LIMIT
+
+    def test_station_limit_persists_across_reload(self, tmp_path):
+        prefs = RadioPreferences(config_dir=tmp_path)
+        prefs.set_preferred_url("TEST1", "http://stream.com")
+        prefs.set_station_limit(50)
+
+        reloaded = RadioPreferences(config_dir=tmp_path)
+
+        assert reloaded.get_preferred_url("TEST1") == "http://stream.com"
+        assert reloaded.get_station_limit() == 50
+
+    def test_station_limit_all_persists_as_none(self, tmp_path):
+        prefs = RadioPreferences(config_dir=tmp_path)
+        prefs.set_station_limit(None)
+
+        reloaded = RadioPreferences(config_dir=tmp_path)
+
+        assert reloaded.get_station_limit() is None
+
+    def test_legacy_preferences_default_station_limit_to_ten(self, tmp_path):
+        prefs_file = tmp_path / "noaa_radio_prefs.json"
+        prefs_file.write_text(json.dumps({"WXJ76": "http://stream.com"}), encoding="utf-8")
+
+        prefs = RadioPreferences(config_dir=tmp_path)
+
+        assert prefs.get_preferred_url("WXJ76") == "http://stream.com"
+        assert prefs.get_station_limit() == DEFAULT_STATION_LIMIT
 
 
 class TestRadioPreferencesEdgeCases:
