@@ -298,6 +298,12 @@ class MainWindow(SizedFrame):
         history_item = view_menu.Append(
             self._history_id, "Weather &History\tCtrl+H", "View weather history"
         )
+        self._precipitation_timeline_id = wx.NewIdRef()
+        self._precipitation_timeline_item = view_menu.Append(
+            self._precipitation_timeline_id,
+            "Precipitation &Timeline...",
+            "View Pirate Weather minute-by-minute precipitation guidance",
+        )
         self._toggle_event_center_id = wx.NewIdRef()
         toggle_event_center_item = view_menu.AppendCheckItem(
             self._toggle_event_center_id,
@@ -386,6 +392,11 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_MENU, lambda e: self._on_explain_weather(), explain_item)
         self.Bind(wx.EVT_MENU, lambda e: self.on_view_history(), history_item)
         self.Bind(
+            wx.EVT_MENU,
+            lambda e: self._on_precipitation_timeline(),
+            id=self._precipitation_timeline_id,
+        )
+        self.Bind(
             wx.EVT_MENU, lambda e: self.toggle_event_center(), id=self._toggle_event_center_id
         )
         self.Bind(wx.EVT_MENU, lambda e: self._on_discussion(), discussion_item)
@@ -419,6 +430,7 @@ class MainWindow(SizedFrame):
             )
         self.Bind(wx.EVT_MENU, lambda e: self._on_report_issue(), report_issue_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_about(), about_item)
+        MainWindow._update_precipitation_timeline_menu_state(self)
 
     def _on_location_changed(self, event) -> None:
         """Handle location selection change with debounce for rapid switching."""
@@ -433,6 +445,7 @@ class MainWindow(SizedFrame):
         # --- All Locations special case ---
         if selected == ALL_LOCATIONS_SENTINEL:
             self._all_locations_active = True
+            MainWindow._update_precipitation_timeline_menu_state(self)
             # Increment generation to invalidate any in-flight fetches for the previous location
             self._fetch_generation += 1
             # Use CallAfter so the summary renders after any already-queued wx.CallAfter
@@ -556,6 +569,12 @@ class MainWindow(SizedFrame):
         from .dialogs import show_weather_history_dialog
 
         show_weather_history_dialog(self, self.app)
+
+    def _on_precipitation_timeline(self) -> None:
+        """View Pirate Weather minutely precipitation guidance."""
+        from .dialogs import show_precipitation_timeline_dialog
+
+        show_precipitation_timeline_dialog(self, self.app)
 
     def _on_explain_weather(self) -> None:
         """Get AI explanation of current weather."""
@@ -1178,6 +1197,7 @@ class MainWindow(SizedFrame):
             return
         try:
             self.app.current_weather_data = weather_data
+            MainWindow._update_precipitation_timeline_menu_state(self, weather_data)
 
             # Use presenter to create formatted presentation
             presentation = self.app.presenter.present(weather_data)
@@ -1487,6 +1507,7 @@ class MainWindow(SizedFrame):
             self._set_forecast_sections("", "")
             self.alerts_list.Clear()
             self.view_alert_button.Disable()
+            MainWindow._update_precipitation_timeline_menu_state(self)
             return
 
         lines: list[str] = ["All Locations Summary", ""]
@@ -1557,6 +1578,7 @@ class MainWindow(SizedFrame):
         self.app.update_tray_tooltip(tray_data, tray_loc_name)
 
         self.stale_warning_label.SetLabel("")
+        MainWindow._update_precipitation_timeline_menu_state(self)
 
         # Ensure the refresh button stays enabled in this view.
         self.app.is_updating = False
@@ -1667,6 +1689,29 @@ class MainWindow(SizedFrame):
         logger.info(f"Status: {message}")
         if message:
             self._announcer.announce(message)
+
+    def _update_precipitation_timeline_menu_state(self, weather_data=None) -> None:
+        """Enable the precipitation timeline menu item when minutely data is available."""
+        menu_item = getattr(self, "_precipitation_timeline_item", None)
+        if menu_item is None:
+            return
+
+        is_enabled = False
+        if not getattr(self, "_all_locations_active", False):
+            data = (
+                weather_data
+                if weather_data is not None
+                else getattr(self.app, "current_weather_data", None)
+            )
+            forecast = getattr(data, "minutely_precipitation", None)
+            if forecast is not None:
+                has_data = getattr(forecast, "has_data", None)
+                if callable(has_data):
+                    is_enabled = bool(has_data())
+                else:
+                    is_enabled = bool(getattr(forecast, "points", None))
+
+        menu_item.Enable(is_enabled)
 
     def _get_notification_event_manager(self):
         """Get or create the notification event manager for AFD/severe risk notifications."""
