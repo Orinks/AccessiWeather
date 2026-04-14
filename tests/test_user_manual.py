@@ -82,7 +82,9 @@ def test_get_bundled_user_manual_path_uses_meipass_when_frozen(monkeypatch, tmp_
 
     monkeypatch.setattr(user_manual.sys, "frozen", True, raising=False)
     monkeypatch.setattr(user_manual.sys, "_MEIPASS", str(tmp_path), raising=False)
-    monkeypatch.setattr(user_manual.sys, "executable", str(tmp_path / "AccessiWeather.exe"), raising=False)
+    monkeypatch.setattr(
+        user_manual.sys, "executable", str(tmp_path / "AccessiWeather.exe"), raising=False
+    )
 
     assert user_manual.get_bundled_user_manual_path() == bundled_manual
 
