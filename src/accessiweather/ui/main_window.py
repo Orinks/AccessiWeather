@@ -17,6 +17,7 @@ from wx.lib.sized_controls import SizedFrame, SizedPanel
 from ..display.presentation.formatters import get_temperature_precision
 from ..screen_reader import ScreenReaderAnnouncer
 from ..units import resolve_temperature_unit_preference
+from ..user_manual import open_user_manual
 from ..utils.temperature_utils import format_temperature
 from . import main_window_notification_events
 
@@ -29,7 +30,7 @@ logger = logging.getLogger(__name__)
 QUICK_ACTION_LABELS = {
     "add": "&Add Location",
     "remove": "&Remove Location",
-    "refresh": "&Refresh Weather",
+    "refresh": "Re&fresh Weather",
     "explain": "&Explain Weather",
     "discussion": "Forecast &Discussion",
     "settings": "&Settings",
@@ -287,7 +288,7 @@ class MainWindow(SizedFrame):
 
         # View menu
         view_menu = wx.Menu()
-        refresh_item = view_menu.Append(wx.ID_REFRESH, "&Refresh\tF5", "Refresh weather data")
+        refresh_item = view_menu.Append(wx.ID_REFRESH, "Re&fresh\tF5", "Refresh weather data")
         view_menu.AppendSeparator()
         self._explain_id = wx.NewIdRef()
         explain_item = view_menu.Append(
@@ -328,7 +329,7 @@ class MainWindow(SizedFrame):
         view_menu.AppendSeparator()
         self._weather_chat_id = wx.NewIdRef()
         weather_chat_item = view_menu.Append(
-            self._weather_chat_id, "Weather &Assistant...\tCtrl+T", "Chat with AI weather assistant"
+            self._weather_chat_id, "Weather Assistan&t...\tCtrl+T", "Chat with AI weather assistant"
         )
         menu_bar.Append(view_menu, "&View")
 
@@ -346,6 +347,11 @@ class MainWindow(SizedFrame):
             wx.ID_ANY,
             f"Check for &Updates ({channel.title()})...",
             "Check for application updates",
+        )
+        user_manual_item = help_menu.Append(
+            wx.ID_ANY,
+            "User &Manual",
+            "Open the AccessiWeather user manual",
         )
         self._debug_menu_items: dict[str, wx.MenuItem] = {}
         if getattr(self.app, "debug_mode", False):
@@ -407,6 +413,7 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_MENU, lambda e: self._on_weather_chat(), weather_chat_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_soundpack_manager(), soundpack_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_check_updates(), self._check_updates_item)
+        self.Bind(wx.EVT_MENU, lambda e: self._on_open_user_manual(), user_manual_item)
         if self._debug_menu_items:
             self.Bind(
                 wx.EVT_MENU,
@@ -881,6 +888,17 @@ class MainWindow(SizedFrame):
         dialog = ReportIssueDialog(self)
         dialog.ShowModal()
         dialog.Destroy()
+
+    def _on_open_user_manual(self) -> None:
+        """Open the bundled user manual or fall back to the online manual."""
+        if open_user_manual():
+            return
+
+        wx.MessageBox(
+            "AccessiWeather could not open the user manual.",
+            "User Manual Unavailable",
+            wx.OK | wx.ICON_ERROR,
+        )
 
     def _on_about(self) -> None:
         """Show about dialog."""
