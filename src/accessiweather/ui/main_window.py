@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 QUICK_ACTION_LABELS = {
     "add": "&Add Location",
     "remove": "&Remove Location",
-    "refresh": "&Refresh Weather",
+    "refresh": "Re&fresh Weather",
     "explain": "&Explain Weather",
     "discussion": "Forecast &Discussion",
     "settings": "&Settings",
@@ -288,7 +288,7 @@ class MainWindow(SizedFrame):
 
         # View menu
         view_menu = wx.Menu()
-        refresh_item = view_menu.Append(wx.ID_REFRESH, "&Refresh\tF5", "Refresh weather data")
+        refresh_item = view_menu.Append(wx.ID_REFRESH, "Re&fresh\tF5", "Refresh weather data")
         view_menu.AppendSeparator()
         self._explain_id = wx.NewIdRef()
         explain_item = view_menu.Append(
@@ -329,7 +329,7 @@ class MainWindow(SizedFrame):
         view_menu.AppendSeparator()
         self._weather_chat_id = wx.NewIdRef()
         weather_chat_item = view_menu.Append(
-            self._weather_chat_id, "Weather &Assistant...\tCtrl+T", "Chat with AI weather assistant"
+            self._weather_chat_id, "Weather Assistan&t...\tCtrl+T", "Chat with AI weather assistant"
         )
         menu_bar.Append(view_menu, "&View")
 

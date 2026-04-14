@@ -72,5 +72,5 @@ class TestNoaaRadioMenuItemSource:
     def test_menu_item_before_weather_assistant(self, source):
         """Test that NOAA Radio item appears before Weather Assistant."""
         noaa_pos = source.index("NOAA Weather &Radio")
-        chat_pos = source.index("Weather &Assistant")
+        chat_pos = source.index("Weather Assistan&t")
         assert noaa_pos < chat_pos
