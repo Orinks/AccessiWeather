@@ -17,6 +17,7 @@ from wx.lib.sized_controls import SizedFrame, SizedPanel
 from ..display.presentation.formatters import get_temperature_precision
 from ..screen_reader import ScreenReaderAnnouncer
 from ..units import resolve_temperature_unit_preference
+from ..user_manual import open_user_manual
 from ..utils.temperature_utils import format_temperature
 from . import main_window_notification_events
 
@@ -347,6 +348,11 @@ class MainWindow(SizedFrame):
             f"Check for &Updates ({channel.title()})...",
             "Check for application updates",
         )
+        user_manual_item = help_menu.Append(
+            wx.ID_ANY,
+            "User &Manual",
+            "Open the AccessiWeather user manual",
+        )
         self._debug_menu_items: dict[str, wx.MenuItem] = {}
         if getattr(self.app, "debug_mode", False):
             debug_menu = wx.Menu()
@@ -407,6 +413,7 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_MENU, lambda e: self._on_weather_chat(), weather_chat_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_soundpack_manager(), soundpack_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_check_updates(), self._check_updates_item)
+        self.Bind(wx.EVT_MENU, lambda e: self._on_open_user_manual(), user_manual_item)
         if self._debug_menu_items:
             self.Bind(
                 wx.EVT_MENU,
@@ -881,6 +888,17 @@ class MainWindow(SizedFrame):
         dialog = ReportIssueDialog(self)
         dialog.ShowModal()
         dialog.Destroy()
+
+    def _on_open_user_manual(self) -> None:
+        """Open the bundled user manual or fall back to the online manual."""
+        if open_user_manual():
+            return
+
+        wx.MessageBox(
+            "AccessiWeather could not open the user manual.",
+            "User Manual Unavailable",
+            wx.OK | wx.ICON_ERROR,
+        )
 
     def _on_about(self) -> None:
         """Show about dialog."""
