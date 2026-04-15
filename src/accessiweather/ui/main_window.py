@@ -269,10 +269,26 @@ class MainWindow(SizedFrame):
             if current and current.name in all_names:
                 idx = all_names.index(current.name)
                 self.location_dropdown.SetSelection(idx)
+                self._update_title_for_location(current.name)
             else:
                 self.location_dropdown.SetSelection(0)
+                self._update_title_for_location(ALL_LOCATIONS_SENTINEL)
         except Exception as e:
             logger.error(f"Failed to populate locations: {e}")
+
+    def _update_title_for_location(self, location_name: str | None) -> None:
+        """
+        Set the window title to include the active location.
+
+        The title is used by the taskbar, screen readers on window focus,
+        and Alt+Tab, so surfacing the active location there gives users
+        orientation without needing to read the location dropdown.
+        """
+        base = "AccessiWeather"
+        if location_name and location_name != ALL_LOCATIONS_SENTINEL:
+            self.SetTitle(f"{base} \u2014 {location_name}")
+        else:
+            self.SetTitle(base)
 
     def _create_menu_bar(self) -> None:
         """Create the application menu bar."""
@@ -465,6 +481,7 @@ class MainWindow(SizedFrame):
         # --- All Locations special case ---
         if selected == ALL_LOCATIONS_SENTINEL:
             self._all_locations_active = True
+            self._update_title_for_location(ALL_LOCATIONS_SENTINEL)
             MainWindow._update_precipitation_timeline_menu_state(self)
             # Increment generation to invalidate any in-flight fetches for the previous location
             self._fetch_generation += 1
@@ -480,6 +497,7 @@ class MainWindow(SizedFrame):
         self._all_locations_alerts_data = []
         self._last_single_location_name = selected
         self._set_forecast_sections_visible(True)
+        self._update_title_for_location(selected)
 
         self._set_current_location(selected)
 
