@@ -31,7 +31,7 @@ QUICK_ACTION_LABELS = {
     "add": "&Add Location",
     "remove": "&Remove Location",
     "refresh": "Re&fresh Weather",
-    "explain": "&Explain Weather",
+    "explain": "Explain &Conditions",
     "discussion": "Forecast &Discussion",
     "settings": "&Settings",
 }
