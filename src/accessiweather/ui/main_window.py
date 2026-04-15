@@ -31,7 +31,7 @@ QUICK_ACTION_LABELS = {
     "add": "&Add Location",
     "remove": "&Remove Location",
     "refresh": "Re&fresh Weather",
-    "explain": "&Explain Weather",
+    "explain": "Explain &Conditions",
     "discussion": "Forecast &Discussion",
     "settings": "&Settings",
 }
@@ -94,8 +94,13 @@ class MainWindow(SizedFrame):
         self._bind_events()
         self._setup_escape_accelerator()
 
-        # Set initial window size
-        self.SetSize((800, 600))
+        # Set initial window size.  The main window stacks five multi-line text
+        # sections (current conditions, hourly, daily, alerts, event center) plus
+        # the location row and button row; 600px of height caused every section
+        # to clip its content.  Minimum size keeps the layout usable if the
+        # window is resized down.
+        self.SetSize((900, 820))
+        self.SetMinSize((800, 700))
 
         # Populate initial data
         self._populate_locations()
@@ -116,6 +121,13 @@ class MainWindow(SizedFrame):
             name="Location selection",
         )
         self.location_dropdown.SetSizerProps(expand=True, proportion=1)
+
+        # Add / Remove live with the dropdown they operate on, not at the
+        # bottom with the global quick actions.  This groups related
+        # controls spatially and lets the bottom button row breathe
+        # (Refresh / Explain / Discussion / Settings).
+        self.add_button = wx.Button(location_panel, label=QUICK_ACTION_LABELS["add"])
+        self.remove_button = wx.Button(location_panel, label=QUICK_ACTION_LABELS["remove"])
 
         # Current conditions section
         wx.StaticText(panel, label="Current Conditions:")
@@ -159,14 +171,22 @@ class MainWindow(SizedFrame):
         self.view_alert_button = wx.Button(alerts_panel, label="View Alert Details")
         self.view_alert_button.Disable()  # Disabled until alerts are available
 
-        # Event Center section
+        # Event Center section — displayed as "Recent Events" so users
+        # immediately understand it's a reviewable log of recent notifications
+        # and app events, not a live feed.
         self._event_center_visible = True
-        self._event_center_label = wx.StaticText(panel, label="Event Center:")
+        self._event_center_label = wx.StaticText(panel, label="Recent Events:")
+        self._event_center_tooltip_text = (
+            "Reviewable log of recent weather notifications, AFD updates, "
+            "forecast briefings, and other in-app events."
+        )
+        self._event_center_label.SetToolTip(self._event_center_tooltip_text)
         self.event_center_display = wx.TextCtrl(
             panel,
             style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
-            name="Event center",
+            name="Recent events",
         )
+        self.event_center_display.SetToolTip(self._event_center_tooltip_text)
         self.event_center_display.SetSizerProps(expand=True, proportion=1)
 
         # Control buttons
@@ -174,8 +194,6 @@ class MainWindow(SizedFrame):
         button_panel.SetSizerType("horizontal")
         button_panel.SetSizerProps(expand=True)
 
-        self.add_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["add"])
-        self.remove_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["remove"])
         self.refresh_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["refresh"])
         self.explain_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["explain"])
         self.discussion_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["discussion"])
@@ -256,10 +274,26 @@ class MainWindow(SizedFrame):
             if current and current.name in all_names:
                 idx = all_names.index(current.name)
                 self.location_dropdown.SetSelection(idx)
+                self._update_title_for_location(current.name)
             else:
                 self.location_dropdown.SetSelection(0)
+                self._update_title_for_location(ALL_LOCATIONS_SENTINEL)
         except Exception as e:
             logger.error(f"Failed to populate locations: {e}")
+
+    def _update_title_for_location(self, location_name: str | None) -> None:
+        """
+        Set the window title to include the active location.
+
+        The title is used by the taskbar, screen readers on window focus,
+        and Alt+Tab, so surfacing the active location there gives users
+        orientation without needing to read the location dropdown.
+        """
+        base = "AccessiWeather"
+        if location_name and location_name != ALL_LOCATIONS_SENTINEL:
+            self.SetTitle(f"{base} \u2014 {location_name}")
+        else:
+            self.SetTitle(base)
 
     def _create_menu_bar(self) -> None:
         """Create the application menu bar."""
@@ -452,6 +486,7 @@ class MainWindow(SizedFrame):
         # --- All Locations special case ---
         if selected == ALL_LOCATIONS_SENTINEL:
             self._all_locations_active = True
+            self._update_title_for_location(ALL_LOCATIONS_SENTINEL)
             MainWindow._update_precipitation_timeline_menu_state(self)
             # Increment generation to invalidate any in-flight fetches for the previous location
             self._fetch_generation += 1
@@ -467,6 +502,7 @@ class MainWindow(SizedFrame):
         self._all_locations_alerts_data = []
         self._last_single_location_name = selected
         self._set_forecast_sections_visible(True)
+        self._update_title_for_location(selected)
 
         self._set_current_location(selected)
 
@@ -1302,6 +1338,11 @@ class MainWindow(SizedFrame):
             # Process notification events (AFD updates, severe risk changes)
             self._process_notification_events(weather_data)
 
+            # Surface the refresh time in the status bar so users have a
+            # passive indicator of data freshness without needing to re-read
+            # any panels.  Silent (no screen-reader announcement).
+            self._set_last_updated_status()
+
             # Play data_updated sound on successful weather data refresh
             try:
                 settings = self.app.config_manager.get_settings()
@@ -1707,6 +1748,19 @@ class MainWindow(SizedFrame):
         logger.info(f"Status: {message}")
         if message:
             self._announcer.announce(message)
+
+    def _set_last_updated_status(self, when: datetime | None = None) -> None:
+        """
+        Write 'Last updated HH:MM' to the main status field silently.
+
+        Unlike set_status(), this does not invoke the screen-reader
+        announcer — refresh success is already conveyed by the
+        data_updated sound and a re-announcement on every refresh would
+        be noisy.  The timestamp is formatted in the user's local time
+        using 12-hour format to match Event Center entries.
+        """
+        stamp = (when or datetime.now()).strftime("%I:%M %p").lstrip("0")
+        self.GetStatusBar().SetStatusText(f"Last updated {stamp}", 0)
 
     def _update_precipitation_timeline_menu_state(self, weather_data=None) -> None:
         """Enable the precipitation timeline menu item when minutely data is available."""
