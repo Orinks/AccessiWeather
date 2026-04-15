@@ -56,6 +56,7 @@ def _make_window():
     win._fetch_all_locations_data = MagicMock(return_value=MagicMock())
     win._fetch_weather_data = MagicMock(return_value=MagicMock())
     win._set_current_location = MagicMock()
+    win._update_title_for_location = MagicMock()
 
     # Delegate the real implementations we want to test.
     win.set_status = MainWindow.set_status.__get__(win, MainWindow)
