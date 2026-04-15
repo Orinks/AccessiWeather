@@ -122,6 +122,13 @@ class MainWindow(SizedFrame):
         )
         self.location_dropdown.SetSizerProps(expand=True, proportion=1)
 
+        # Add / Remove live with the dropdown they operate on, not at the
+        # bottom with the global quick actions.  This groups related
+        # controls spatially and lets the bottom button row breathe
+        # (Refresh / Explain / Discussion / Settings).
+        self.add_button = wx.Button(location_panel, label=QUICK_ACTION_LABELS["add"])
+        self.remove_button = wx.Button(location_panel, label=QUICK_ACTION_LABELS["remove"])
+
         # Current conditions section
         wx.StaticText(panel, label="Current Conditions:")
         self.current_conditions = wx.TextCtrl(
@@ -187,8 +194,6 @@ class MainWindow(SizedFrame):
         button_panel.SetSizerType("horizontal")
         button_panel.SetSizerProps(expand=True)
 
-        self.add_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["add"])
-        self.remove_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["remove"])
         self.refresh_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["refresh"])
         self.explain_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["explain"])
         self.discussion_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["discussion"])
