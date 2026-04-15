@@ -1333,6 +1333,11 @@ class MainWindow(SizedFrame):
             # Process notification events (AFD updates, severe risk changes)
             self._process_notification_events(weather_data)
 
+            # Surface the refresh time in the status bar so users have a
+            # passive indicator of data freshness without needing to re-read
+            # any panels.  Silent (no screen-reader announcement).
+            self._set_last_updated_status()
+
             # Play data_updated sound on successful weather data refresh
             try:
                 settings = self.app.config_manager.get_settings()
@@ -1738,6 +1743,19 @@ class MainWindow(SizedFrame):
         logger.info(f"Status: {message}")
         if message:
             self._announcer.announce(message)
+
+    def _set_last_updated_status(self, when: datetime | None = None) -> None:
+        """
+        Write 'Last updated HH:MM' to the main status field silently.
+
+        Unlike set_status(), this does not invoke the screen-reader
+        announcer — refresh success is already conveyed by the
+        data_updated sound and a re-announcement on every refresh would
+        be noisy.  The timestamp is formatted in the user's local time
+        using 12-hour format to match Event Center entries.
+        """
+        stamp = (when or datetime.now()).strftime("%I:%M %p").lstrip("0")
+        self.GetStatusBar().SetStatusText(f"Last updated {stamp}", 0)
 
     def _update_precipitation_timeline_menu_state(self, weather_data=None) -> None:
         """Enable the precipitation timeline menu item when minutely data is available."""
