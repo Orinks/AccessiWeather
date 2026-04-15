@@ -164,14 +164,22 @@ class MainWindow(SizedFrame):
         self.view_alert_button = wx.Button(alerts_panel, label="View Alert Details")
         self.view_alert_button.Disable()  # Disabled until alerts are available
 
-        # Event Center section
+        # Event Center section — displayed as "Recent Events" so users
+        # immediately understand it's a reviewable log of recent notifications
+        # and app events, not a live feed.
         self._event_center_visible = True
-        self._event_center_label = wx.StaticText(panel, label="Event Center:")
+        self._event_center_label = wx.StaticText(panel, label="Recent Events:")
+        self._event_center_tooltip_text = (
+            "Reviewable log of recent weather notifications, AFD updates, "
+            "forecast briefings, and other in-app events."
+        )
+        self._event_center_label.SetToolTip(self._event_center_tooltip_text)
         self.event_center_display = wx.TextCtrl(
             panel,
             style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
-            name="Event center",
+            name="Recent events",
         )
+        self.event_center_display.SetToolTip(self._event_center_tooltip_text)
         self.event_center_display.SetSizerProps(expand=True, proportion=1)
 
         # Control buttons
