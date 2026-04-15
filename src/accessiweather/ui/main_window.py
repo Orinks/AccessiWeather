@@ -94,8 +94,13 @@ class MainWindow(SizedFrame):
         self._bind_events()
         self._setup_escape_accelerator()
 
-        # Set initial window size
-        self.SetSize((800, 600))
+        # Set initial window size.  The main window stacks five multi-line text
+        # sections (current conditions, hourly, daily, alerts, event center) plus
+        # the location row and button row; 600px of height caused every section
+        # to clip its content.  Minimum size keeps the layout usable if the
+        # window is resized down.
+        self.SetSize((900, 820))
+        self.SetMinSize((800, 700))
 
         # Populate initial data
         self._populate_locations()
