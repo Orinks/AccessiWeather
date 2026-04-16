@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import contextlib
 import logging
+import time
 from typing import TYPE_CHECKING
 
 import wx
@@ -17,6 +18,11 @@ if TYPE_CHECKING:
     from .app import AccessiWeatherApp
 
 logger = logging.getLogger(__name__)
+
+# How often the scheduler wakes to check if an update check is due.
+# Short enough that a 24h check fires within ~15 minutes of being due even after
+# laptop sleep/wake; long enough to avoid overhead.
+AUTO_UPDATE_POLL_INTERVAL_MS = 15 * 60 * 1000
 
 
 def stop_auto_update_checks(app: AccessiWeatherApp) -> None:
@@ -38,7 +44,7 @@ def stop_auto_update_checks(app: AccessiWeatherApp) -> None:
 
 
 def start_auto_update_checks(app: AccessiWeatherApp) -> None:
-    """Start periodic automatic update checks based on user settings."""
+    """Start a short-interval scheduler that runs an update check when due."""
     try:
         settings = app.config_manager.get_settings()
         auto_enabled = bool(getattr(settings, "auto_update_enabled", True))
@@ -47,28 +53,58 @@ def start_auto_update_checks(app: AccessiWeatherApp) -> None:
         stop_auto_update_checks(app)
 
         if not auto_enabled:
-            logger.debug("Automatic update checks disabled")
+            logger.info("Auto-update scheduler: disabled via settings")
             return
 
         interval_hours = max(1, int(getattr(settings, "update_check_interval_hours", 24)))
-        interval_ms = interval_hours * 60 * 60 * 1000
+        app._auto_update_interval_seconds = interval_hours * 3600
+
+        # Seed the "last check" timestamp so the first periodic tick isn't
+        # immediately treated as overdue. The startup update check runs
+        # separately via _check_for_updates_after_startup_guidance().
+        if getattr(app, "_last_update_check_at", None) is None:
+            app._last_update_check_at = time.monotonic()
 
         timer = wx.Timer(app)
         app.Bind(wx.EVT_TIMER, app._on_auto_update_check_timer, timer)
-        timer.Start(interval_ms)
+        timer.Start(AUTO_UPDATE_POLL_INTERVAL_MS)
         app._auto_update_check_timer = timer
 
         logger.info(
-            "Automatic update checks scheduled every %s hour(s)",
+            "Auto-update scheduler: checks every %sh (polled every %dmin, "
+            "resilient to system sleep/wake)",
             interval_hours,
+            AUTO_UPDATE_POLL_INTERVAL_MS // 60000,
         )
     except Exception as e:
         logger.warning(f"Failed to start automatic update checks: {e}")
 
 
 def on_auto_update_check_timer(app: AccessiWeatherApp, event) -> None:
-    """Run an automatic update check on timer ticks."""
-    app._check_for_updates_on_startup()
+    """Poll handler: run an update check if the configured interval has elapsed."""
+    try:
+        interval_seconds = int(getattr(app, "_auto_update_interval_seconds", 24 * 3600))
+        last = getattr(app, "_last_update_check_at", None)
+        now = time.monotonic()
+
+        elapsed = float("inf") if last is None else now - last
+
+        if elapsed < interval_seconds:
+            logger.debug(
+                "Auto-update tick: %ds elapsed of %ds — not due",
+                int(elapsed),
+                interval_seconds,
+            )
+            return
+
+        logger.info(
+            "Auto-update tick: %s elapsed (threshold %ds) — running check",
+            f"{int(elapsed)}s" if elapsed != float("inf") else "no prior check",
+            interval_seconds,
+        )
+        app._check_for_updates_on_startup()
+    except Exception as e:
+        logger.warning(f"Auto-update tick failed: {e}")
 
 
 def stop_background_updates(app: AccessiWeatherApp) -> None:
