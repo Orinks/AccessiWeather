@@ -17,7 +17,7 @@ Use `executePwsh` for quick commands that should complete:
 - File operations, package installs
 
 Use `controlPwshProcess` ONLY for long-running/background processes:
-- `briefcase dev`, `npm run dev`, `yarn start`
+- `uv run accessiweather`, `npm run dev`, `yarn start`
 - Build watchers, dev servers
 - Any command that runs indefinitely
 

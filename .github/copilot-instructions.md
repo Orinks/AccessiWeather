@@ -1,7 +1,7 @@
 # AccessiWeather AI Coding Agent Instructions
 
 ## Project Overview
-AccessiWeather is a cross-platform, accessible desktop weather application built with BeeWare/Toga (v0.9+) framework and Briefcase for packaging. The app targets Python 3.10+ (3.12 recommended) and prioritizes screen reader accessibility, multi-source weather data, and a simple architecture.
+AccessiWeather is a cross-platform, accessible desktop weather application built with wxPython, packaged for Windows via PyInstaller + Inno Setup. The app targets Python 3.11+ and prioritizes screen reader accessibility, multi-source weather data, and a simple architecture.
 
 ## Core Architecture
 
@@ -52,10 +52,10 @@ AccessiWeather is a cross-platform, accessible desktop weather application built
 
 ### Local Development
 ```bash
-# Run app in development mode (hot reload)
-briefcase dev
+# Run app locally
+uv run accessiweather
 
-# Run tests (uses pytest with Toga dummy backend)
+# Run tests
 pytest -v -p pytest_asyncio
 
 # Auto-fix linting issues and format code (run BEFORE committing)
@@ -76,16 +76,13 @@ pyright
 - Type checks with pyright (excludes tests/)
 - **Important**: Pre-commit will auto-stage formatted files
 
-### Build & Package
+### Build & Package (Windows)
 ```bash
-# Create platform-specific app bundle
-briefcase create
+# Build Windows installer (PyInstaller + Inno Setup)
+python installer/build.py
 
-# Build installer (MSI on Windows, DMG on macOS, AppImage on Linux)
-briefcase build
-
-# Package for distribution
-briefcase package
+# Dev build (skip Inno Setup step)
+python installer/build.py --dev
 ```
 
 ### Testing Conventions
@@ -112,8 +109,8 @@ briefcase package
   - Async/Toga rules: make long-running code `async`, `await` calls, and use `app.add_background_task()` or `asyncio.create_task()` for background work. Do not use `asyncio.run()` in Toga UI code.
 
   **Testing & local dev commands**
-  - Run app (dev): `briefcase dev`
-  - Tests: `pytest -v -p pytest_asyncio` (use `TOGA_BACKEND=toga_dummy` for unit tests)
+  - Run app (dev): `uv run accessiweather`
+  - Tests: `pytest -v -p pytest_asyncio`
   - Lint & format: `ruff check --fix . && ruff format .` (pre-commit auto-stages changes)
   - Type check (optional): `pyright`
 
