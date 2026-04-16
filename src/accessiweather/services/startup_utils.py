@@ -171,10 +171,55 @@ class StartupManager:
     def _is_windows_startup_enabled(self) -> bool:
         try:
             shortcut_path = self._get_windows_startup_shortcut()
-            return shortcut_path.exists()
+            if not shortcut_path.exists():
+                return False
+
+            actual = self._read_windows_shortcut(shortcut_path)
+            if actual is None:
+                return False
+            actual_target, actual_args = actual
+
+            expected_target, expected_args_list = self._get_launch_command()
+            expected_args = (
+                subprocess.list2cmdline(expected_args_list) if expected_args_list else ""
+            )
+
+            return (
+                os.path.normcase(os.path.normpath(actual_target))
+                == os.path.normcase(os.path.normpath(str(expected_target)))
+                and actual_args.strip() == expected_args.strip()
+            )
         except (PermissionError, FileNotFoundError, OSError) as exc:
             logger.error("Failed checking Windows startup status: %s", exc)
             return False
+
+    def _read_windows_shortcut(self, shortcut_path: Path) -> tuple[str, str] | None:
+        """Return ``(target_path, arguments)`` of a ``.lnk`` file or None on failure."""
+        shortcut_str = self._escape_powershell_single_quotes(str(shortcut_path))
+        script = (
+            "$shell = New-Object -COMObject WScript.Shell;"
+            f"$shortcut = $shell.CreateShortcut('{shortcut_str}');"
+            "Write-Output $shortcut.TargetPath;"
+            "Write-Output $shortcut.Arguments;"
+        )
+        commands = [
+            ["powershell.exe", "-NoProfile", "-Command", script],
+            ["pwsh", "-NoProfile", "-Command", script],
+        ]
+        for command in commands:
+            try:
+                result = subprocess.run(command, check=True, capture_output=True)
+            except FileNotFoundError:
+                continue
+            except subprocess.CalledProcessError as exc:
+                stderr = exc.stderr.decode("utf-8", errors="ignore") if exc.stderr else ""
+                logger.warning("Failed reading shortcut via PowerShell: %s", stderr)
+                return None
+            output = result.stdout.decode("utf-8", errors="ignore").splitlines()
+            target = output[0].strip() if output else ""
+            args = output[1].strip() if len(output) > 1 else ""
+            return target, args
+        return None
 
     def _escape_powershell_single_quotes(self, value: str) -> str:
         return value.replace("'", "''")
