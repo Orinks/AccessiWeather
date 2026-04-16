@@ -536,6 +536,13 @@ class WeatherClient:
                         location
                     )
 
+            # In auto mode the full refresh stores AlertAggregator.aggregate_alerts(...)
+            # output in _previous_alerts. The lightweight poll must produce the same
+            # canonical shape or the two paths will alternate and diff_alerts will fire
+            # phantom "new"/"updated" notifications every refresh cycle.
+            if self.data_source == "auto" and weather_data.alerts is not None:
+                weather_data.alerts = AlertAggregator().aggregate_alerts(weather_data.alerts, None)
+
             loc_key = self._location_key(location)
             previous_alerts = self._previous_alerts.get(loc_key)
             if self.data_source in ("auto", "nws"):
