@@ -365,6 +365,10 @@ class SettingsDialogSimple(wx.Dialog):
             success = self.config_manager.update_settings(**settings_dict)
             if success:
                 logger.info("Settings saved successfully")
+                if "startup_enabled" in settings_dict:
+                    self.config_manager.apply_startup_setting(
+                        desired=bool(settings_dict["startup_enabled"])
+                    )
                 if hasattr(self, "app") and self._is_runtime_portable_mode():
                     self._maybe_update_portable_bundle_after_save(settings_dict)
             return success

@@ -35,6 +35,12 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     app.update_service = None
     wx.CallLater(100, _initialize_update_service_deferred, app)
 
+    # Reconcile the OS startup entry with the stored setting. This self-heals
+    # the state where startup_enabled=True was persisted but no shortcut was
+    # ever created (happens on upgrade from a version where the checkbox
+    # didn't wire through to the OS).
+    wx.CallLater(150, _apply_startup_setting_deferred, app)
+
     # Initialize weather client with lazy imports
     data_source = config.settings.data_source if config.settings else "auto"
     # Note: visual_crossing_api_key, pirate_weather_api_key and avwx_api_key are
@@ -120,6 +126,16 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     # The tray_icon attribute is set there via _initialize_tray_icon()
 
     logger.info("Application components initialized")
+
+
+def _apply_startup_setting_deferred(app: AccessiWeatherApp) -> None:
+    """Reconcile OS startup entry with the stored setting on app launch."""
+    try:
+        if app.config_manager is None:
+            return
+        app.config_manager.apply_startup_setting()
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.warning("Failed to reconcile OS startup setting: %s", exc)
 
 
 def _initialize_update_service_deferred(app: AccessiWeatherApp) -> None:

@@ -11,7 +11,7 @@ You are responsible for the entire lifecycle of a task: understanding requiremen
 
 ```bash
 # Development
-briefcase dev                          # Run app with hot reload
+uv run accessiweather                  # Run the app locally
 pytest                                 # Run all tests (parallel by default)
 pytest -n 0                            # Run tests serial (disable parallel)
 pytest tests/test_file.py::test_func   # Run single test
@@ -26,11 +26,9 @@ pytest -m "not integration"            # Skip slow integration tests
 ruff check --fix . && ruff format .   # Lint + format code (line length: 100)
 pyright                               # Type checking (excludes tests/)
 
-# Build & Package
-briefcase create                      # Create platform-specific skeleton
-briefcase build                       # Build app bundle
-briefcase package                     # Generate installers (MSI/DMG/AppImage)
-python installer/build.py --dev      # Run in development mode
+# Build & Package (Windows)
+python installer/build.py             # Build Windows installer via PyInstaller + Inno Setup
+python installer/build.py --dev       # Dev build (skip Inno Setup step)
 
 # Git (Windows)
 # Use --no-pager BEFORE the subcommand to prevent hanging on Windows
@@ -52,7 +50,7 @@ git --no-pager show HEAD              # Show last commit
 | Language | Python 3.10+ |
 | GUI Framework | Toga (BeeWare) |
 | HTTP Client | httpx (async) |
-| Build Tool | Briefcase |
+| Build Tool | PyInstaller + Inno Setup |
 | Testing | pytest, pytest-asyncio, hypothesis |
 | Linting | Ruff (format + lint) |
 | Type Checking | Pyright |
@@ -254,8 +252,8 @@ def test_weather_fetch(mock_simple_weather_apis):
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | `ci.yml` | Push to main/dev, PRs | Linting, tests on Ubuntu/Windows/macOS |
-| `briefcase-build.yml` | After CI passes on dev | Build MSI/DMG installers |
-| `briefcase-release.yml` | Tags (v*.*.*) | Create GitHub releases |
+| `build.yml` | Nightly + manual | Build Windows installer via PyInstaller + Inno Setup |
+| `push-releases.yml` | Release published | Update WordPress release page |
 | `integration-tests.yml` | Nightly | Record VCR cassettes |
 | `update-pages.yml` | After builds | Update GitHub Pages downloads |
 
