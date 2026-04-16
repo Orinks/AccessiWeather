@@ -3,9 +3,9 @@ Ensure the Advanced tab 'startup' checkbox actually toggles the OS startup entry
 
 Bug: toggling "Launch automatically at startup" only wrote startup_enabled to
 JSON — the Windows Startup folder shortcut / macOS LaunchAgent / Linux .desktop
-was never created or removed. These tests pin the fix: _save_settings must call
-config_manager.enable_startup() / disable_startup() when the checkbox state
-diverges from the actual OS-level state.
+was never created or removed. These tests pin the fix: _save_settings must
+delegate to config_manager.apply_startup_setting() so the OS entry is
+reconciled whenever startup_enabled is in the saved settings.
 """
 
 from __future__ import annotations
@@ -48,18 +48,12 @@ class _Controls(dict):
         return value
 
 
-def _make_dialog(
-    *,
-    startup_checkbox: bool,
-    os_startup_enabled: bool,
-) -> SettingsDialogSimple:
+def _make_dialog(*, startup_checkbox: bool) -> SettingsDialogSimple:
     dialog = SettingsDialogSimple.__new__(SettingsDialogSimple)
     dialog._controls = _Controls()
     dialog.config_manager = MagicMock()
     dialog.config_manager.update_settings.return_value = True
-    dialog.config_manager.is_startup_enabled.return_value = os_startup_enabled
-    dialog.config_manager.enable_startup.return_value = (True, "ok")
-    dialog.config_manager.disable_startup.return_value = (True, "ok")
+    dialog.config_manager.apply_startup_setting.return_value = True
 
     advanced = AdvancedTab(dialog)
     dialog._tab_objects = [advanced]
@@ -69,51 +63,31 @@ def _make_dialog(
     return dialog
 
 
-def test_save_enables_os_startup_when_box_checked_and_os_disabled():
-    dialog = _make_dialog(startup_checkbox=True, os_startup_enabled=False)
+def test_save_delegates_startup_toggle_to_config_manager_when_checked():
+    dialog = _make_dialog(startup_checkbox=True)
 
     assert dialog._save_settings() is True
 
-    dialog.config_manager.enable_startup.assert_called_once()
-    dialog.config_manager.disable_startup.assert_not_called()
+    dialog.config_manager.apply_startup_setting.assert_called_once_with(desired=True)
 
 
-def test_save_disables_os_startup_when_box_unchecked_and_os_enabled():
-    dialog = _make_dialog(startup_checkbox=False, os_startup_enabled=True)
-
-    assert dialog._save_settings() is True
-
-    dialog.config_manager.disable_startup.assert_called_once()
-    dialog.config_manager.enable_startup.assert_not_called()
-
-
-def test_save_noop_when_checkbox_matches_os_state_enabled():
-    dialog = _make_dialog(startup_checkbox=True, os_startup_enabled=True)
+def test_save_delegates_startup_toggle_to_config_manager_when_unchecked():
+    dialog = _make_dialog(startup_checkbox=False)
 
     assert dialog._save_settings() is True
 
-    dialog.config_manager.enable_startup.assert_not_called()
-    dialog.config_manager.disable_startup.assert_not_called()
+    dialog.config_manager.apply_startup_setting.assert_called_once_with(desired=False)
 
 
-def test_save_noop_when_checkbox_matches_os_state_disabled():
-    dialog = _make_dialog(startup_checkbox=False, os_startup_enabled=False)
-
-    assert dialog._save_settings() is True
-
-    dialog.config_manager.enable_startup.assert_not_called()
-    dialog.config_manager.disable_startup.assert_not_called()
-
-
-def test_save_still_succeeds_when_os_toggle_reports_failure():
+def test_save_still_succeeds_when_apply_startup_setting_fails():
     """
-    A failed OS toggle is logged but does not cause _save_settings to fail.
+    A failing OS toggle is logged but does not fail _save_settings.
 
-    Other settings still persisted correctly via update_settings; we don't want
-    a startup-folder permission error to lose the user's other edits.
+    Other settings still persisted via update_settings; we don't want a
+    startup-folder permission error to lose the user's other edits.
     """
-    dialog = _make_dialog(startup_checkbox=True, os_startup_enabled=False)
-    dialog.config_manager.enable_startup.return_value = (False, "permission denied")
+    dialog = _make_dialog(startup_checkbox=True)
+    dialog.config_manager.apply_startup_setting.return_value = False
 
     assert dialog._save_settings() is True
-    dialog.config_manager.enable_startup.assert_called_once()
+    dialog.config_manager.apply_startup_setting.assert_called_once_with(desired=True)

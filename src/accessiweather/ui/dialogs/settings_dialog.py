@@ -366,7 +366,9 @@ class SettingsDialogSimple(wx.Dialog):
             if success:
                 logger.info("Settings saved successfully")
                 if "startup_enabled" in settings_dict:
-                    self._sync_os_startup(bool(settings_dict["startup_enabled"]))
+                    self.config_manager.apply_startup_setting(
+                        desired=bool(settings_dict["startup_enabled"])
+                    )
                 if hasattr(self, "app") and self._is_runtime_portable_mode():
                     self._maybe_update_portable_bundle_after_save(settings_dict)
             return success
@@ -374,29 +376,6 @@ class SettingsDialogSimple(wx.Dialog):
         except Exception as e:
             logger.error(f"Failed to save settings: {e}")
             return False
-
-    def _sync_os_startup(self, desired_enabled: bool) -> None:
-        """
-        Create or remove the OS auto-start entry to match the checkbox state.
-
-        Writing the setting to JSON is not enough — the Windows Startup shortcut /
-        macOS LaunchAgent / Linux .desktop entry must also be created or removed,
-        otherwise the app won't actually launch at login.
-        """
-        try:
-            currently_enabled = self.config_manager.is_startup_enabled()
-        except Exception:
-            logger.exception("Failed to check OS startup state")
-            return
-
-        if desired_enabled and not currently_enabled:
-            ok, message = self.config_manager.enable_startup()
-            if not ok:
-                logger.warning("Failed to enable OS startup: %s", message)
-        elif not desired_enabled and currently_enabled:
-            ok, message = self.config_manager.disable_startup()
-            if not ok:
-                logger.warning("Failed to disable OS startup: %s", message)
 
     def _setup_accessibility(self):
         """Set up accessibility labels for controls."""
