@@ -235,6 +235,15 @@ class AlertDialog(wx.Dialog):
 
         return "\n\n".join(blocks)
 
+    @staticmethod
+    def _copy_payload(alert, settings) -> str:
+        """
+        Text placed on the clipboard when the Copy button is pressed.
+
+        Identical in both display styles (separate and combined).
+        """
+        return AlertDialog._build_combined_text(alert, settings)
+
     def _build_info_text(self) -> str:
         """
         Build the alert info text with severity, urgency, and certainty.
