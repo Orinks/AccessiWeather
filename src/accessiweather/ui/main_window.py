@@ -20,6 +20,7 @@ from ..units import resolve_temperature_unit_preference
 from ..user_manual import open_user_manual
 from ..utils.temperature_utils import format_temperature
 from . import main_window_notification_events
+from .dialogs.location_dialog import show_edit_location_dialog
 
 if TYPE_CHECKING:
     from ..app import AccessiWeatherApp
@@ -29,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 QUICK_ACTION_LABELS = {
     "add": "&Add Location",
+    "edit": "&Edit Location",
     "remove": "&Remove Location",
     "refresh": "Re&fresh Weather",
     "explain": "Explain &Conditions",
@@ -188,6 +190,7 @@ class MainWindow(SizedFrame):
         button_panel.SetSizerProps(expand=True)
 
         self.add_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["add"])
+        self.edit_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["edit"])
         self.remove_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["remove"])
         self.refresh_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["refresh"])
         self.explain_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["explain"])
@@ -211,6 +214,7 @@ class MainWindow(SizedFrame):
 
         # Buttons
         self.add_button.Bind(wx.EVT_BUTTON, lambda e: self.on_add_location())
+        self.edit_button.Bind(wx.EVT_BUTTON, lambda e: self.on_edit_location())
         self.remove_button.Bind(wx.EVT_BUTTON, lambda e: self.on_remove_location())
         self.refresh_button.Bind(wx.EVT_BUTTON, lambda e: self.on_refresh())
         self.explain_button.Bind(wx.EVT_BUTTON, lambda e: self._on_explain_weather())
@@ -308,6 +312,12 @@ class MainWindow(SizedFrame):
         self._add_location_id = wx.NewIdRef()
         add_item = location_menu.Append(
             self._add_location_id, "&Add Location\tCtrl+L", "Add a new location"
+        )
+        self._edit_location_id = wx.NewIdRef()
+        edit_item = location_menu.Append(
+            self._edit_location_id,
+            "&Edit Location...",
+            "Edit the selected location (e.g. enable Marine Mode)",
         )
         self._remove_location_id = wx.NewIdRef()
         remove_item = location_menu.Append(
@@ -422,6 +432,7 @@ class MainWindow(SizedFrame):
         self.Bind(wx.EVT_MENU, lambda e: self.on_settings(), settings_item)
         self.Bind(wx.EVT_MENU, lambda e: self.app.request_exit(), exit_item)
         self.Bind(wx.EVT_MENU, lambda e: self.on_add_location(), add_item)
+        self.Bind(wx.EVT_MENU, lambda e: self.on_edit_location(), edit_item)
         self.Bind(wx.EVT_MENU, lambda e: self.on_remove_location(), remove_item)
         self.Bind(wx.EVT_MENU, lambda e: self.on_refresh(), refresh_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_explain_weather(), explain_item)
@@ -544,6 +555,31 @@ class MainWindow(SizedFrame):
                     self.location_dropdown.SetSelection(idx)
                     self._set_current_location(new_name)
             self.refresh_weather_async()
+
+    def on_edit_location(self) -> None:
+        """Handle edit location button click — currently edits marine_mode."""
+        selected = self.location_dropdown.GetStringSelection()
+        if not selected or selected == ALL_LOCATIONS_SENTINEL:
+            wx.MessageBox(
+                "Please select a specific location to edit.",
+                "No Location Selected",
+                wx.OK | wx.ICON_WARNING,
+            )
+            return
+
+        location = next(
+            (loc for loc in self.app.config_manager.get_all_locations() if loc.name == selected),
+            None,
+        )
+        if location is None:
+            return
+
+        new_marine_mode = show_edit_location_dialog(self, self.app, location)
+        if new_marine_mode is None:
+            return
+
+        self.app.config_manager.update_location_marine_mode(selected, new_marine_mode)
+        self.refresh_weather_async(force_refresh=True)
 
     def on_remove_location(self) -> None:
         """Handle remove location button click."""
@@ -1273,9 +1309,11 @@ class MainWindow(SizedFrame):
 
             # Update forecast
             if presentation.forecast:
-                daily_text = (
-                    presentation.forecast.daily_section_text or "No daily forecast available."
-                )
+                daily_sections = [presentation.forecast.daily_section_text]
+                if presentation.forecast.marine_section_text:
+                    daily_sections.append(presentation.forecast.marine_section_text)
+                daily_text = "\n\n".join(section for section in daily_sections if section).rstrip()
+                daily_text = daily_text or "No daily forecast available."
                 hourly_text = (
                     presentation.forecast.hourly_section_text or "No hourly forecast available."
                 )

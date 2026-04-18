@@ -32,6 +32,7 @@ class TestAlertsListActivation:
         win.Bind = MagicMock()
         win.location_dropdown = MagicMock()
         win.add_button = MagicMock()
+        win.edit_button = MagicMock()
         win.remove_button = MagicMock()
         win.refresh_button = MagicMock()
         win.explain_button = MagicMock()

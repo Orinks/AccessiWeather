@@ -30,6 +30,7 @@ class LocationOperations:
         latitude: float,
         longitude: float,
         country_code: str | None = None,
+        marine_mode: bool = False,
     ) -> bool:
         """Add a new location if it doesn't already exist."""
         config = self._manager.get_config()
@@ -44,6 +45,7 @@ class LocationOperations:
             latitude=latitude,
             longitude=longitude,
             country_code=country_code,
+            marine_mode=marine_mode,
         )
         config.locations.append(new_location)
 
@@ -53,6 +55,19 @@ class LocationOperations:
 
         self.logger.info(f"Added location: {name} ({latitude}, {longitude})")
         return self._manager.save_config()
+
+    def update_location_marine_mode(self, name: str, marine_mode: bool) -> bool:
+        """Update marine_mode on an existing location and persist it."""
+        config = self._manager.get_config()
+
+        for location in config.locations:
+            if location.name == name:
+                location.marine_mode = marine_mode
+                self.logger.info(f"Set marine_mode={marine_mode} on location: {name}")
+                return self._manager.save_config()
+
+        self.logger.warning(f"Location {name} not found")
+        return False
 
     def remove_location(self, name: str) -> bool:
         """Remove a location by name."""

@@ -7,7 +7,7 @@ import inspect
 import logging
 import os
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 
 import httpx
 
@@ -52,6 +52,10 @@ from .weather_client_fusion import DataFusionEngine
 from .weather_client_parallel import ParallelFetchCoordinator
 
 logger = logging.getLogger(__name__)
+
+MINUTELY_FAST_POLL_INTERVAL = timedelta(minutes=5)
+MINUTELY_ADAPTIVE_PRECIP_PROBABILITY_THRESHOLD = 30
+MINUTELY_ADAPTIVE_LOOKAHEAD_HOURS = 6
 
 
 class WeatherClient:
@@ -118,6 +122,8 @@ class WeatherClient:
 
         # Cache of previous alerts per location key (for lifecycle diff)
         self._previous_alerts: dict[str, WeatherAlerts] = {}
+        self._latest_weather_by_location: dict[str, WeatherData] = {}
+        self._last_minutely_poll_by_location: dict[str, datetime] = {}
 
     @property
     def visual_crossing_api_key(self) -> str:
@@ -189,6 +195,60 @@ class WeatherClient:
     def _location_key(self, location: Location) -> str:
         """Generate a unique key for a location to track in-flight requests."""
         return f"{location.name}:{location.latitude:.4f},{location.longitude:.4f}"
+
+    def _utcnow(self) -> datetime:
+        """Return the current UTC time for poll-throttling decisions."""
+        return datetime.now(UTC)
+
+    def _remember_weather_data(self, weather_data: WeatherData) -> None:
+        """Store the latest full-weather snapshot for adaptive polling decisions."""
+        self._latest_weather_by_location[self._location_key(weather_data.location)] = weather_data
+
+    def _get_latest_weather_data(self, location: Location) -> WeatherData | None:
+        """Return the freshest known weather data for a location."""
+        latest = self._latest_weather_by_location.get(self._location_key(location))
+        if latest is not None:
+            return latest
+        return self.get_cached_weather(location)
+
+    def _should_use_fast_minutely_poll(self, location: Location) -> bool:
+        """Return True when the next few forecast hours suggest likely precipitation."""
+        weather_data = self._get_latest_weather_data(location)
+        hourly = weather_data.hourly_forecast if weather_data else None
+        if not hourly or not hourly.has_data():
+            return False
+
+        now = self._utcnow()
+        lookahead_deadline = now + timedelta(hours=MINUTELY_ADAPTIVE_LOOKAHEAD_HOURS)
+        for period in hourly.get_next_hours(MINUTELY_ADAPTIVE_LOOKAHEAD_HOURS):
+            probability = getattr(period, "precipitation_probability", None)
+            start_time = getattr(period, "start_time", None)
+            if probability is None or probability < MINUTELY_ADAPTIVE_PRECIP_PROBABILITY_THRESHOLD:
+                continue
+            if start_time is None:
+                return True
+            aware_start = (
+                start_time.replace(tzinfo=UTC)
+                if start_time.tzinfo is None
+                else start_time.astimezone(UTC)
+            )
+            if aware_start <= lookahead_deadline:
+                return True
+        return False
+
+    def _should_fetch_minutely_precipitation(self, location: Location) -> bool:
+        """Throttle Pirate Weather minutely polling based on forecast precipitation risk."""
+        normal_interval = timedelta(
+            minutes=max(1, int(getattr(self.settings, "update_interval_minutes", 10)))
+        )
+        target_interval = normal_interval
+        if self._should_use_fast_minutely_poll(location):
+            target_interval = min(normal_interval, MINUTELY_FAST_POLL_INTERVAL)
+
+        last_poll = self._last_minutely_poll_by_location.get(self._location_key(location))
+        if last_poll is None:
+            return True
+        return self._utcnow() - last_poll >= target_interval
 
     async def _fetch_nws_cancel_references(self) -> set[str]:
         """Fetch recent NWS cancel references for verifying genuine cancellations."""
@@ -531,9 +591,14 @@ class WeatherClient:
             ):
                 _want_start = getattr(self.settings, "notify_minutely_precipitation_start", False)
                 _want_stop = getattr(self.settings, "notify_minutely_precipitation_stop", False)
-                if _want_start or _want_stop:
+                if (_want_start or _want_stop) and self._should_fetch_minutely_precipitation(
+                    location
+                ):
                     weather_data.minutely_precipitation = await self._get_pirate_weather_minutely(
                         location
+                    )
+                    self._last_minutely_poll_by_location[self._location_key(location)] = (
+                        self._utcnow()
                     )
 
             # In auto mode the full refresh stores AlertAggregator.aggregate_alerts(...)
@@ -836,8 +901,10 @@ class WeatherClient:
             cached = self.offline_cache.load(location)
             if cached:
                 logger.info(f"Using cached weather data for {location.name}")
+                self._remember_weather_data(cached)
                 return cached
 
+        self._remember_weather_data(weather_data)
         return weather_data
 
     def _get_auto_mode_api_budget(self) -> str:
@@ -1189,6 +1256,7 @@ class WeatherClient:
                 cached.stale = True
                 cached.stale_reason = "All weather sources failed"
                 logger.info(f"Returning stale cached data for {location.name}")
+                self._remember_weather_data(cached)
                 return cached
 
         # No cache available, return empty data with attribution
@@ -1265,6 +1333,9 @@ class WeatherClient:
         )
         tasks["aviation"] = asyncio.create_task(
             enrichment.enrich_with_aviation_data(self, weather_data, location)
+        )
+        tasks["marine"] = asyncio.create_task(
+            enrichment.enrich_with_marine_data(self, weather_data, location)
         )
 
         return tasks
@@ -1593,6 +1664,7 @@ class WeatherClient:
             logger.debug("Failed to fetch history from Visual Crossing: %s", exc)
 
     def _persist_weather_data(self, location: Location, weather_data: WeatherData) -> None:
+        self._remember_weather_data(weather_data)
         if not self.offline_cache:
             return
         if not weather_data.has_any_data():

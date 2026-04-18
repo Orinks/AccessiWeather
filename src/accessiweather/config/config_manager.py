@@ -280,10 +280,25 @@ class ConfigManager:
         return self._settings.update_settings(**kwargs)
 
     def add_location(
-        self, name: str, latitude: float, longitude: float, country_code: str | None = None
+        self,
+        name: str,
+        latitude: float,
+        longitude: float,
+        country_code: str | None = None,
+        marine_mode: bool = False,
     ) -> bool:
         """Add a new location."""
-        return self._locations.add_location(name, latitude, longitude, country_code)
+        return self._locations.add_location(
+            name,
+            latitude,
+            longitude,
+            country_code,
+            marine_mode=marine_mode,
+        )
+
+    def update_location_marine_mode(self, name: str, marine_mode: bool) -> bool:
+        """Update marine_mode on an existing location."""
+        return self._locations.update_location_marine_mode(name, marine_mode)
 
     def remove_location(self, name: str) -> bool:
         """Remove a location."""

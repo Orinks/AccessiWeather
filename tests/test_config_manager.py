@@ -83,6 +83,29 @@ class TestConfigManager:
         assert len(non_nationwide) == 1
         assert non_nationwide[0].name == "New York"
 
+    def test_add_location_persists_marine_mode_roundtrip(self, manager):
+        """Marine mode should save and reload with locations."""
+        result = manager.add_location(
+            name="Annapolis",
+            latitude=38.9784,
+            longitude=-76.4922,
+            country_code="US",
+            marine_mode=True,
+        )
+        assert result is True
+
+        manager.set_current_location("Annapolis")
+        manager.save_config()
+
+        manager2 = ConfigManager(manager.app, config_dir=manager.config_dir)
+        loaded = manager2.load_config()
+
+        saved_location = next(loc for loc in loaded.locations if loc.name == "Annapolis")
+        assert saved_location.marine_mode is True
+        assert loaded.current_location is not None
+        assert loaded.current_location.name == "Annapolis"
+        assert loaded.current_location.marine_mode is True
+
     def test_add_duplicate_location_fails(self, manager):
         """Test that adding duplicate location fails."""
         manager.add_location("Test", 40.0, -74.0)
@@ -131,6 +154,26 @@ class TestConfigManager:
         assert manager.has_locations() is False
         manager.add_location("Test", 40.0, -74.0)
         assert manager.has_locations() is True
+
+    def test_update_location_marine_mode_toggles_flag(self, manager):
+        """update_location_marine_mode flips marine_mode and persists it."""
+        manager.add_location("Annapolis", 38.9784, -76.4922)
+
+        result = manager.update_location_marine_mode("Annapolis", True)
+        assert result is True
+
+        stored = next(loc for loc in manager.get_all_locations() if loc.name == "Annapolis")
+        assert stored.marine_mode is True
+
+        # Persists across a fresh manager instance.
+        manager2 = ConfigManager(manager.app, config_dir=manager.config_dir)
+        manager2.load_config()
+        reloaded = next(loc for loc in manager2.get_all_locations() if loc.name == "Annapolis")
+        assert reloaded.marine_mode is True
+
+    def test_update_location_marine_mode_nonexistent_returns_false(self, manager):
+        """Updating marine_mode on an unknown location returns False."""
+        assert manager.update_location_marine_mode("Nowhere", True) is False
 
     def test_update_settings(self, manager):
         """Test updating settings."""
