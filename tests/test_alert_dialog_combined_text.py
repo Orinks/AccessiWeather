@@ -92,3 +92,32 @@ class TestBuildCombinedText:
         alert = _alert()
         text = AlertDialog._build_combined_text(alert, _settings())
         assert text.startswith("Weather Alert")
+
+    def test_empty_string_description_and_instruction_omitted(self) -> None:
+        alert = _alert(headline="H", description="", instruction="")
+        text = AlertDialog._build_combined_text(alert, _settings())
+        assert text == "H"
+
+    def test_exact_output_for_full_alert(self) -> None:
+        alert = _alert(
+            headline="Frost Advisory",
+            description="Frost overnight.",
+            instruction="Cover plants.",
+            sent=datetime(2026, 4, 18, 14, 0),
+            expires=datetime(2026, 4, 18, 22, 0),
+        )
+        settings = _settings(date_format="iso", time_format_12hour=False)
+        expected = (
+            "Frost Advisory\n\n"
+            "Frost overnight.\n\n"
+            "Cover plants.\n\n"
+            "Issued: 2026-04-18 14:00\n"
+            "Expires: 2026-04-18 22:00"
+        )
+        assert AlertDialog._build_combined_text(alert, settings) == expected
+
+    def test_settings_none_uses_default_formats(self) -> None:
+        alert = _alert(headline="H", sent=datetime(2026, 4, 18, 14, 5))
+        text = AlertDialog._build_combined_text(alert, None)
+        # Default settings: date_format="iso", time_format_12hour=True -> "Issued: 2026-04-18 2:05 PM"
+        assert "Issued: 2026-04-18 2:05 PM" in text

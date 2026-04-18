@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 
 import wx
 
+from ...display.presentation.formatters import format_datetime
+
 if TYPE_CHECKING:
     pass
 
@@ -170,8 +172,6 @@ class AlertDialog(wx.Dialog):
     @staticmethod
     def _build_combined_text(alert, settings) -> str:
         """Assemble the combined-view text block. Pure function; settings is AppSettings-like."""
-        from ...display.presentation.formatters import format_datetime
-
         date_style = getattr(settings, "date_format", "iso")
         time_12h = getattr(settings, "time_format_12hour", True)
 
