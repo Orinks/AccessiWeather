@@ -275,7 +275,7 @@ class AccessiWeatherApp(wx.App):
 
     def _show_immediate_alert_popup(self, alerts) -> None:
         """Show the opted-in in-app alert popup without restoring the main window."""
-        if self.main_window is None or not alerts:
+        if self.main_window is None or self.config_manager is None or not alerts:
             return
 
         if len(alerts) == 1:

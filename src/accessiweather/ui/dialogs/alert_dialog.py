@@ -73,6 +73,7 @@ class AlertDialog(wx.Dialog):
         main_sizer = wx.BoxSizer(wx.VERTICAL)
         self._create_separate_ui(panel, main_sizer)
         panel.SetSizer(main_sizer)
+        self._focus_target.SetFocus()
 
     def _create_separate_ui(self, panel, main_sizer):
         """Build the classic separate-field UI into the provided panel/sizer."""
@@ -145,7 +146,7 @@ class AlertDialog(wx.Dialog):
         main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 15)
 
         # Set initial focus to subject field
-        self.subject_ctrl.SetFocus()
+        self._focus_target = self.subject_ctrl
 
     def _build_subject_text(self) -> str:
         """

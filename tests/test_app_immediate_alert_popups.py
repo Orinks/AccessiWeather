@@ -97,6 +97,7 @@ def test_show_immediate_alert_popup_uses_existing_single_alert_dialog() -> None:
 def test_show_immediate_alert_popup_uses_combined_dialog_for_multiple_alerts() -> None:
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app.main_window = MagicMock()
+    app.config_manager = MagicMock()
     app.tray_icon = SimpleNamespace(show_main_window=MagicMock())
     alerts = [_AlertStub("alpha"), _AlertStub("beta")]
 
@@ -113,6 +114,7 @@ def test_show_immediate_alert_popup_uses_combined_dialog_for_multiple_alerts() -
 def test_show_immediate_alert_popup_does_not_restore_main_window() -> None:
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app.main_window = MagicMock()
+    app.config_manager = MagicMock()
     app.tray_icon = SimpleNamespace(show_main_window=MagicMock())
     alerts = [_AlertStub("alpha"), _AlertStub("beta")]
 
@@ -138,6 +140,7 @@ def test_show_immediate_alert_popup_ignores_missing_window_or_empty_alerts(
 ) -> None:
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app.main_window = main_window
+    app.config_manager = MagicMock()
 
     with (
         patch("accessiweather.app.show_alert_dialog") as mock_show_alert_dialog,
