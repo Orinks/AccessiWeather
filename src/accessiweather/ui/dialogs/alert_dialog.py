@@ -101,12 +101,7 @@ class AlertDialog(wx.Dialog):
         )
         main_sizer.Add(self.combined_ctrl, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
 
-        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        button_sizer.AddStretchSpacer()
-        close_btn = wx.Button(panel, wx.ID_CLOSE, "Close")
-        close_btn.Bind(wx.EVT_BUTTON, self._on_close)
-        button_sizer.Add(close_btn, 0)
-        main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 15)
+        self._add_action_buttons(panel, main_sizer)
 
         self._focus_target = self.combined_ctrl
 
@@ -170,18 +165,26 @@ class AlertDialog(wx.Dialog):
             )
             main_sizer.Add(self.instr_ctrl, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
 
-        # Close button
+        self._add_action_buttons(panel, main_sizer)
+
+        # Set initial focus to subject field
+        self._focus_target = self.subject_ctrl
+
+    def _add_action_buttons(self, panel, main_sizer):
+        """
+        Add the right-aligned Close button to the provided sizer.
+
+        Shared by both display modes. The button row is constructed once here
+        so that future additions (e.g. a Copy button) only need one change site.
+        """
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
         button_sizer.AddStretchSpacer()
 
-        close_btn = wx.Button(panel, wx.ID_CLOSE, "Close")
+        close_btn = wx.Button(panel, wx.ID_CLOSE, "&Close")
         close_btn.Bind(wx.EVT_BUTTON, self._on_close)
         button_sizer.Add(close_btn, 0)
 
         main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 15)
-
-        # Set initial focus to subject field
-        self._focus_target = self.subject_ctrl
 
     def _build_subject_text(self) -> str:
         """
