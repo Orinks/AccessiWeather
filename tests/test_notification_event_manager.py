@@ -744,6 +744,150 @@ class TestNotificationEventManager:
         assert manager.state.last_minutely_transition_signature is None
 
 
+class TestMinutelyPrecipitationLikelihoodNotification:
+    """Tests for precipitation likelihood notification integration."""
+
+    @pytest.fixture
+    def manager(self):
+        return NotificationEventManager(state_file=None)
+
+    @pytest.fixture
+    def settings_with_likelihood(self):
+        settings = AppSettings()
+        settings.notify_discussion_update = False
+        settings.notify_severe_risk_change = False
+        settings.notify_minutely_precipitation_start = False
+        settings.notify_minutely_precipitation_stop = False
+        settings.notify_precipitation_likelihood = True
+        settings.precipitation_likelihood_threshold = 0.5
+        return settings
+
+    def test_first_check_stores_state_no_notification(self, manager, settings_with_likelihood):
+        """First likelihood check should store state but not notify."""
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.discussion = None
+        weather_data.discussion_issuance_time = None
+        weather_data.current = None
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0, "precipProbability": 0},
+                    {
+                        "time": 1768917660,
+                        "precipIntensity": 0,
+                        "precipProbability": 0.7,
+                        "precipType": "rain",
+                    },
+                ]
+            }
+        )
+        events = manager.check_for_events(weather_data, settings_with_likelihood, "Test City")
+        assert events == []
+        assert manager.state.last_minutely_likelihood_signature is not None
+
+    def test_same_signature_no_notification(self, manager, settings_with_likelihood):
+        """Same likelihood signature should not re-notify."""
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.discussion = None
+        weather_data.discussion_issuance_time = None
+        weather_data.current = None
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0, "precipProbability": 0},
+                    {
+                        "time": 1768917660,
+                        "precipIntensity": 0,
+                        "precipProbability": 0.7,
+                        "precipType": "rain",
+                    },
+                ]
+            }
+        )
+        manager.check_for_events(weather_data, settings_with_likelihood, "Test City")
+        events = manager.check_for_events(weather_data, settings_with_likelihood, "Test City")
+        assert events == []
+
+    def test_band_change_triggers_notification(self, manager, settings_with_likelihood):
+        """A change in probability band should trigger a notification."""
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.discussion = None
+        weather_data.discussion_issuance_time = None
+        weather_data.current = None
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0, "precipProbability": 0},
+                    {
+                        "time": 1768917660,
+                        "precipIntensity": 0,
+                        "precipProbability": 0.6,
+                        "precipType": "rain",
+                    },
+                ]
+            }
+        )
+        # First check — stores state
+        manager.check_for_events(weather_data, settings_with_likelihood, "Test City")
+
+        # Change to a higher band
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0, "precipProbability": 0},
+                    {
+                        "time": 1768917660,
+                        "precipIntensity": 0,
+                        "precipProbability": 0.95,
+                        "precipType": "rain",
+                    },
+                ]
+            }
+        )
+        events = manager.check_for_events(weather_data, settings_with_likelihood, "Test City")
+        assert len(events) == 1
+        assert events[0].event_type == "minutely_precipitation_likelihood"
+        assert "95% chance" in events[0].title
+        assert "Test City" in events[0].message
+
+    def test_disabled_setting_no_notification(self, manager):
+        """Disabled likelihood setting should not produce notifications."""
+        settings = AppSettings()
+        settings.notify_discussion_update = False
+        settings.notify_severe_risk_change = False
+        settings.notify_minutely_precipitation_start = False
+        settings.notify_minutely_precipitation_stop = False
+        settings.notify_precipitation_likelihood = False
+
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.discussion = None
+        weather_data.discussion_issuance_time = None
+        weather_data.current = None
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0, "precipProbability": 0},
+                    {
+                        "time": 1768917660,
+                        "precipIntensity": 0,
+                        "precipProbability": 0.9,
+                        "precipType": "rain",
+                    },
+                ]
+            }
+        )
+        manager.check_for_events(weather_data, settings, "Test City")
+        events = manager.check_for_events(weather_data, settings, "Test City")
+        assert events == []
+
+    def test_likelihood_signature_round_trip(self):
+        """Test likelihood signature serialization in NotificationState."""
+        state = NotificationState(last_minutely_likelihood_signature="likelihood:70-90%:rain")
+        data = state.to_dict()
+        restored = NotificationState.from_dict(data)
+        assert restored.last_minutely_likelihood_signature == "likelihood:70-90%:rain"
+
+
 class TestNotificationEvent:
     """Tests for NotificationEvent dataclass."""
 
