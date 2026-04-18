@@ -18,6 +18,18 @@ _TIME_MODE_VALUES = ["local", "utc", "both"]
 _TIME_MODE_MAP = {"local": 0, "utc": 1, "both": 2}
 _VERBOSITY_VALUES = ["minimal", "standard", "detailed"]
 _VERBOSITY_MAP = {"minimal": 0, "standard": 1, "detailed": 2}
+_ALERT_DISPLAY_MAP = {"separate": 0, "combined": 1}
+_ALERT_DISPLAY_VALUES = ["separate", "combined"]
+_ALERT_DISPLAY_CHOICES = ["Separate fields (default)", "Single combined view"]
+
+_DATE_FORMAT_MAP = {"iso": 0, "us_short": 1, "us_long": 2, "eu": 3}
+_DATE_FORMAT_VALUES = ["iso", "us_short", "us_long", "eu"]
+_DATE_FORMAT_CHOICES = [
+    "ISO (2026-04-18)",
+    "US short (04/18/2026)",
+    "US long (April 18, 2026)",
+    "EU (18/04/2026)",
+]
 
 
 class DisplayTab:
@@ -187,6 +199,12 @@ class DisplayTab:
             wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
             10,
         )
+        controls["date_format"] = self.dialog.add_labeled_control_row(
+            panel,
+            time_section,
+            "Date format:",
+            lambda parent: wx.Choice(parent, choices=_DATE_FORMAT_CHOICES),
+        )
 
         priority_section = self.dialog.create_section(
             panel,
@@ -216,6 +234,19 @@ class DisplayTab:
             0,
             wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
             10,
+        )
+
+        alert_display_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Alert display",
+            "Choose how weather alerts are shown when you open one.",
+        )
+        controls["alert_display_style"] = self.dialog.add_labeled_control_row(
+            panel,
+            alert_display_section,
+            "Alert display style:",
+            lambda parent: wx.Choice(parent, choices=_ALERT_DISPLAY_CHOICES),
         )
 
         panel.SetSizer(sizer)
@@ -255,12 +286,18 @@ class DisplayTab:
         controls["time_format_12hour"].SetValue(getattr(settings, "time_format_12hour", True))
         controls["show_timezone_suffix"].SetValue(getattr(settings, "show_timezone_suffix", False))
 
+        date_format = getattr(settings, "date_format", "iso")
+        controls["date_format"].SetSelection(_DATE_FORMAT_MAP.get(date_format, 0))
+
         verbosity = getattr(settings, "verbosity_level", "standard")
         controls["verbosity_level"].SetSelection(_VERBOSITY_MAP.get(verbosity, 1))
 
         controls["severe_weather_override"].SetValue(
             getattr(settings, "severe_weather_override", True)
         )
+
+        alert_display = getattr(settings, "alert_display_style", "separate")
+        controls["alert_display_style"].SetSelection(_ALERT_DISPLAY_MAP.get(alert_display, 0))
 
     def save(self) -> dict:
         """Return Display tab settings as a dict."""
@@ -283,8 +320,12 @@ class DisplayTab:
             "time_display_mode": _TIME_MODE_VALUES[controls["time_display_mode"].GetSelection()],
             "time_format_12hour": controls["time_format_12hour"].GetValue(),
             "show_timezone_suffix": controls["show_timezone_suffix"].GetValue(),
+            "date_format": _DATE_FORMAT_VALUES[controls["date_format"].GetSelection()],
             "verbosity_level": _VERBOSITY_VALUES[controls["verbosity_level"].GetSelection()],
             "severe_weather_override": controls["severe_weather_override"].GetValue(),
+            "alert_display_style": _ALERT_DISPLAY_VALUES[
+                controls["alert_display_style"].GetSelection()
+            ],
         }
 
     def get_selected_temperature_unit(self) -> str:
@@ -311,8 +352,10 @@ class DisplayTab:
             "time_display_mode": "Time display mode",
             "time_format_12hour": "Use 12-hour time format",
             "show_timezone_suffix": "Show timezone abbreviations",
+            "date_format": "Date format",
             "verbosity_level": "Verbosity level",
             "severe_weather_override": "Automatically prioritize severe weather details",
+            "alert_display_style": "Alert display style",
         }
         for key, name in names.items():
             controls[key].SetName(name)

@@ -17,6 +17,33 @@ from ...utils import (
     format_wind_speed,
 )
 
+_DATE_FORMATS = {
+    "iso": "%Y-%m-%d",
+    "us_short": "%m/%d/%Y",
+    "us_long": "%B %d, %Y",
+    "eu": "%d/%m/%Y",
+}
+
+
+def format_date(dt: datetime | None, style: str) -> str:
+    """Format a date using a preset style key; unknown keys fall back to ISO."""
+    if dt is None:
+        return ""
+    fmt = _DATE_FORMATS.get(style, _DATE_FORMATS["iso"])
+    return dt.strftime(fmt)
+
+
+def format_datetime(dt: datetime | None, date_style: str, time_12hour: bool) -> str:
+    """Format a full datetime as "<date> <time>"; 12h output strips leading zero."""
+    if dt is None:
+        return ""
+    date_part = format_date(dt, date_style)
+    time_fmt = "%I:%M %p" if time_12hour else "%H:%M"
+    time_part = dt.strftime(time_fmt)
+    if time_12hour:
+        time_part = time_part.lstrip("0")
+    return f"{date_part} {time_part}"
+
 
 def format_temperature_pair(
     temp_f: float | None,

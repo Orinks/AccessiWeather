@@ -1555,7 +1555,7 @@ class MainWindow(SizedFrame):
                 _loc_name, alert = data[alert_index]
                 from .dialogs import show_alert_dialog
 
-                show_alert_dialog(self, alert)
+                show_alert_dialog(self, alert, self.app.config_manager.get_settings())
             return
 
         if not self.app.current_weather_data or not self.app.current_weather_data.alerts:
@@ -1567,7 +1567,7 @@ class MainWindow(SizedFrame):
             alert = active[alert_index]
             from .dialogs import show_alert_dialog
 
-            show_alert_dialog(self, alert)
+            show_alert_dialog(self, alert, self.app.config_manager.get_settings())
 
     def _show_all_locations_summary(self) -> None:
         """

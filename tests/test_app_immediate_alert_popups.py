@@ -37,7 +37,7 @@ def test_show_alert_dialog_lazy_wrapper_forwards_to_dialog_module() -> None:
     with patch.dict(sys.modules, {"accessiweather.ui.dialogs": dialogs_module}):
         show_alert_dialog(parent, alert)
 
-    mock_show_single.assert_called_once_with(parent, alert)
+    mock_show_single.assert_called_once_with(parent, alert, None)
 
 
 def test_show_alerts_summary_dialog_lazy_wrapper_forwards_to_dialog_module() -> None:
@@ -78,6 +78,7 @@ def test_queue_immediate_alert_popup_skips_empty_alert_list() -> None:
 def test_show_immediate_alert_popup_uses_existing_single_alert_dialog() -> None:
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app.main_window = MagicMock()
+    app.config_manager = MagicMock()
     app.tray_icon = SimpleNamespace(show_main_window=MagicMock())
     alert = _AlertStub("alpha")
 
@@ -87,13 +88,16 @@ def test_show_immediate_alert_popup_uses_existing_single_alert_dialog() -> None:
     ):
         app._show_immediate_alert_popup([alert])
 
-    mock_show_alert_dialog.assert_called_once_with(app.main_window, alert)
+    mock_show_alert_dialog.assert_called_once_with(
+        app.main_window, alert, app.config_manager.get_settings.return_value
+    )
     mock_show_summary_dialog.assert_not_called()
 
 
 def test_show_immediate_alert_popup_uses_combined_dialog_for_multiple_alerts() -> None:
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app.main_window = MagicMock()
+    app.config_manager = MagicMock()
     app.tray_icon = SimpleNamespace(show_main_window=MagicMock())
     alerts = [_AlertStub("alpha"), _AlertStub("beta")]
 
@@ -110,6 +114,7 @@ def test_show_immediate_alert_popup_uses_combined_dialog_for_multiple_alerts() -
 def test_show_immediate_alert_popup_does_not_restore_main_window() -> None:
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app.main_window = MagicMock()
+    app.config_manager = MagicMock()
     app.tray_icon = SimpleNamespace(show_main_window=MagicMock())
     alerts = [_AlertStub("alpha"), _AlertStub("beta")]
 
@@ -135,6 +140,7 @@ def test_show_immediate_alert_popup_ignores_missing_window_or_empty_alerts(
 ) -> None:
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app.main_window = main_window
+    app.config_manager = MagicMock()
 
     with (
         patch("accessiweather.app.show_alert_dialog") as mock_show_alert_dialog,

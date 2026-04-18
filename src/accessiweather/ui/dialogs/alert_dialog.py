@@ -7,25 +7,28 @@ from typing import TYPE_CHECKING
 
 import wx
 
+from ...display.presentation.formatters import format_datetime
+
 if TYPE_CHECKING:
     pass
 
 logger = logging.getLogger(__name__)
 
 
-def show_alert_dialog(parent, alert) -> None:
+def show_alert_dialog(parent, alert, settings=None) -> None:
     """
     Show the alert details dialog.
 
     Args:
         parent: Parent window
         alert: Weather alert object
+        settings: Optional application settings (for combined-mode dispatch)
 
     """
     try:
         parent_ctrl = parent
 
-        dlg = AlertDialog(parent_ctrl, alert)
+        dlg = AlertDialog(parent_ctrl, alert, settings)
         dlg.ShowModal()
         dlg.Destroy()
 
@@ -41,13 +44,14 @@ def show_alert_dialog(parent, alert) -> None:
 class AlertDialog(wx.Dialog):
     """Dialog for displaying weather alert details."""
 
-    def __init__(self, parent, alert):
+    def __init__(self, parent, alert, settings=None):
         """
         Initialize the alert dialog.
 
         Args:
             parent: Parent window
             alert: Weather alert object
+            settings: Optional application settings (for combined-mode dispatch)
 
         """
         event = getattr(alert, "event", "Weather Alert")
@@ -59,16 +63,55 @@ class AlertDialog(wx.Dialog):
         )
 
         self.alert = alert
+        self.settings = settings
 
         self._create_ui()
         self._setup_accessibility()
         self.Bind(wx.EVT_CHAR_HOOK, self._on_key)
 
     def _create_ui(self):
-        """Create the dialog UI with accessible text controls."""
+        """Create the dialog UI, dispatching to separate or combined mode."""
         panel = wx.Panel(self)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
+        style = (
+            getattr(self.settings, "alert_display_style", "separate")
+            if self.settings is not None
+            else "separate"
+        )
+        if style == "combined":
+            self._create_combined_ui(panel, main_sizer)
+        else:
+            self._create_separate_ui(panel, main_sizer)
+
+        panel.SetSizer(main_sizer)
+        self._focus_target.SetFocus()
+
+    def _create_combined_ui(self, panel, main_sizer):
+        """Create a single TextCtrl containing the full alert, with a Close button."""
+        label = wx.StaticText(panel, label="Alert:")
+        label.SetFont(label.GetFont().Bold())
+        main_sizer.Add(label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 15)
+
+        text = self._build_combined_text(self.alert, self.settings)
+        self.combined_ctrl = wx.TextCtrl(
+            panel,
+            value=text,
+            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
+        )
+        main_sizer.Add(self.combined_ctrl, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
+
+        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        button_sizer.AddStretchSpacer()
+        close_btn = wx.Button(panel, wx.ID_CLOSE, "Close")
+        close_btn.Bind(wx.EVT_BUTTON, self._on_close)
+        button_sizer.Add(close_btn, 0)
+        main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 15)
+
+        self._focus_target = self.combined_ctrl
+
+    def _create_separate_ui(self, panel, main_sizer):
+        """Build the classic separate-field UI into the provided panel/sizer."""
         # Subject field (headline + times) - gets initial focus
         subject_text = self._build_subject_text()
         subject_label = wx.StaticText(panel, label="Subject:")
@@ -137,10 +180,8 @@ class AlertDialog(wx.Dialog):
 
         main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 15)
 
-        panel.SetSizer(main_sizer)
-
         # Set initial focus to subject field
-        self.subject_ctrl.SetFocus()
+        self._focus_target = self.subject_ctrl
 
     def _build_subject_text(self) -> str:
         """
@@ -160,6 +201,39 @@ class AlertDialog(wx.Dialog):
         if event:
             return event
         return "Weather Alert"
+
+    @staticmethod
+    def _build_combined_text(alert, settings) -> str:
+        """Assemble the combined-view text block. Pure function; settings is AppSettings-like."""
+        date_style = getattr(settings, "date_format", "iso")
+        time_12h = getattr(settings, "time_format_12hour", True)
+
+        blocks: list[str] = []
+
+        headline = (
+            getattr(alert, "headline", None) or getattr(alert, "event", None) or "Weather Alert"
+        )
+        blocks.append(headline)
+
+        description = getattr(alert, "description", None)
+        if description:
+            blocks.append(description)
+
+        instruction = getattr(alert, "instruction", None)
+        if instruction:
+            blocks.append(instruction)
+
+        times: list[str] = []
+        sent = getattr(alert, "sent", None)
+        if sent is not None:
+            times.append(f"Issued: {format_datetime(sent, date_style, time_12h)}")
+        expires = getattr(alert, "expires", None)
+        if expires is not None:
+            times.append(f"Expires: {format_datetime(expires, date_style, time_12h)}")
+        if times:
+            blocks.append("\n".join(times))
+
+        return "\n\n".join(blocks)
 
     def _build_info_text(self) -> str:
         """
@@ -184,7 +258,8 @@ class AlertDialog(wx.Dialog):
 
     def _setup_accessibility(self):
         """Set up accessibility labels for screen readers."""
-        self.subject_ctrl.SetName("Subject with alert headline")
+        if hasattr(self, "subject_ctrl"):
+            self.subject_ctrl.SetName("Subject with alert headline")
 
         if hasattr(self, "info_ctrl"):
             self.info_ctrl.SetName("Alert information with severity, urgency, and certainty")
@@ -194,6 +269,9 @@ class AlertDialog(wx.Dialog):
 
         if hasattr(self, "instr_ctrl"):
             self.instr_ctrl.SetName("Instructions")
+
+        if hasattr(self, "combined_ctrl"):
+            self.combined_ctrl.SetName("Full alert text")
 
     def _on_key(self, event):
         """Handle key press - close dialog on Escape."""
