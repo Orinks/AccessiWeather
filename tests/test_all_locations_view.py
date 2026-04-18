@@ -416,6 +416,72 @@ class TestRemoveLocationGuard:
 
 
 # ---------------------------------------------------------------------------
+# on_edit_location — per-location marine-mode toggle
+# ---------------------------------------------------------------------------
+
+
+class TestEditLocation:
+    def test_edit_location_blocks_all_locations_sentinel(self):
+        import accessiweather.ui.main_window as mw_module
+        from accessiweather.ui.main_window import ALL_LOCATIONS_SENTINEL, MainWindow
+
+        win = _make_window()
+        win.location_dropdown.GetStringSelection.return_value = ALL_LOCATIONS_SENTINEL
+
+        mock_wx = MagicMock()
+        with patch.object(mw_module, "wx", mock_wx):
+            MainWindow.on_edit_location(win)
+            mock_wx.MessageBox.assert_called_once()
+            win.app.config_manager.update_location_marine_mode.assert_not_called()
+
+    def test_edit_location_empty_selection_blocked(self):
+        import accessiweather.ui.main_window as mw_module
+        from accessiweather.ui.main_window import MainWindow
+
+        win = _make_window()
+        win.location_dropdown.GetStringSelection.return_value = ""
+
+        mock_wx = MagicMock()
+        with patch.object(mw_module, "wx", mock_wx):
+            MainWindow.on_edit_location(win)
+            mock_wx.MessageBox.assert_called_once()
+            win.app.config_manager.update_location_marine_mode.assert_not_called()
+
+    def test_edit_location_applies_marine_mode_from_dialog(self):
+        import accessiweather.ui.main_window as mw_module
+        from accessiweather.ui.main_window import MainWindow
+
+        win = _make_window()
+        win.location_dropdown.GetStringSelection.return_value = "Annapolis"
+        annapolis = _make_location("Annapolis")
+        annapolis.marine_mode = False
+        win.app.config_manager.get_all_locations.return_value = [annapolis]
+
+        with patch.object(mw_module, "show_edit_location_dialog", return_value=True) as mock_dialog:
+            MainWindow.on_edit_location(win)
+
+        mock_dialog.assert_called_once()
+        win.app.config_manager.update_location_marine_mode.assert_called_once_with(
+            "Annapolis", True
+        )
+
+    def test_edit_location_does_nothing_on_cancel(self):
+        import accessiweather.ui.main_window as mw_module
+        from accessiweather.ui.main_window import MainWindow
+
+        win = _make_window()
+        win.location_dropdown.GetStringSelection.return_value = "Annapolis"
+        annapolis = _make_location("Annapolis")
+        annapolis.marine_mode = False
+        win.app.config_manager.get_all_locations.return_value = [annapolis]
+
+        with patch.object(mw_module, "show_edit_location_dialog", return_value=None):
+            MainWindow.on_edit_location(win)
+
+        win.app.config_manager.update_location_marine_mode.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
 # refresh_weather_async — All Locations mode
 # ---------------------------------------------------------------------------
 

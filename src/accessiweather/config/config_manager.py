@@ -296,6 +296,10 @@ class ConfigManager:
             marine_mode=marine_mode,
         )
 
+    def update_location_marine_mode(self, name: str, marine_mode: bool) -> bool:
+        """Update marine_mode on an existing location."""
+        return self._locations.update_location_marine_mode(name, marine_mode)
+
     def remove_location(self, name: str) -> bool:
         """Remove a location."""
         return self._locations.remove_location(name)

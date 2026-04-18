@@ -155,6 +155,26 @@ class TestConfigManager:
         manager.add_location("Test", 40.0, -74.0)
         assert manager.has_locations() is True
 
+    def test_update_location_marine_mode_toggles_flag(self, manager):
+        """update_location_marine_mode flips marine_mode and persists it."""
+        manager.add_location("Annapolis", 38.9784, -76.4922)
+
+        result = manager.update_location_marine_mode("Annapolis", True)
+        assert result is True
+
+        stored = next(loc for loc in manager.get_all_locations() if loc.name == "Annapolis")
+        assert stored.marine_mode is True
+
+        # Persists across a fresh manager instance.
+        manager2 = ConfigManager(manager.app, config_dir=manager.config_dir)
+        manager2.load_config()
+        reloaded = next(loc for loc in manager2.get_all_locations() if loc.name == "Annapolis")
+        assert reloaded.marine_mode is True
+
+    def test_update_location_marine_mode_nonexistent_returns_false(self, manager):
+        """Updating marine_mode on an unknown location returns False."""
+        assert manager.update_location_marine_mode("Nowhere", True) is False
+
     def test_update_settings(self, manager):
         """Test updating settings."""
         manager.load_config()

@@ -49,6 +49,81 @@ def show_add_location_dialog(parent, app: AccessiWeatherApp) -> str | None:
         return None
 
 
+def show_edit_location_dialog(parent, app: AccessiWeatherApp, location) -> bool | None:
+    """
+    Show a small edit dialog for an existing location.
+
+    Currently edits the per-location ``marine_mode`` flag only. Returns the new
+    value on OK, or ``None`` if the user cancelled.
+    """
+    try:
+        dlg = EditLocationDialog(parent, location)
+        result = dlg.ShowModal()
+
+        if result == wx.ID_OK:
+            new_value = dlg.get_marine_mode()
+            dlg.Destroy()
+            return new_value
+
+        dlg.Destroy()
+        return None
+
+    except Exception as e:
+        logger.error(f"Failed to show edit location dialog: {e}")
+        wx.MessageBox(
+            f"Failed to open edit location dialog: {e}",
+            "Error",
+            wx.OK | wx.ICON_ERROR,
+        )
+        return None
+
+
+class EditLocationDialog(wx.Dialog):
+    """Small dialog for editing an existing location's marine-mode flag."""
+
+    def __init__(self, parent, location):
+        """Initialize with the location being edited."""
+        super().__init__(
+            parent,
+            title=f"Edit Location: {location.name}",
+            size=(420, 200),
+            style=wx.DEFAULT_DIALOG_STYLE,
+        )
+        self._location = location
+
+        panel = wx.Panel(self)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        name_label = wx.StaticText(panel, label=f"Location: {location.name}")
+        sizer.Add(name_label, 0, wx.ALL, 10)
+
+        self.marine_checkbox = wx.CheckBox(
+            panel,
+            label="Enable Marine Mode for this location (coastal essentials only)",
+        )
+        self.marine_checkbox.SetValue(bool(getattr(location, "marine_mode", False)))
+        self.marine_checkbox.SetToolTip(
+            "Adds nearby NWS marine zone summary, wind and wave highlights, and marine advisories."
+        )
+        self.marine_checkbox.SetName("Enable Marine Mode for this location")
+        sizer.Add(self.marine_checkbox, 0, wx.ALL | wx.EXPAND, 10)
+
+        button_sizer = wx.StdDialogButtonSizer()
+        ok_button = wx.Button(panel, wx.ID_OK, "&Save")
+        cancel_button = wx.Button(panel, wx.ID_CANCEL, "Cancel")
+        button_sizer.AddButton(ok_button)
+        button_sizer.AddButton(cancel_button)
+        button_sizer.Realize()
+        sizer.Add(button_sizer, 0, wx.ALL | wx.ALIGN_RIGHT, 10)
+
+        panel.SetSizer(sizer)
+        ok_button.SetDefault()
+
+    def get_marine_mode(self) -> bool:
+        """Return the marine_mode value chosen in the dialog."""
+        return self.marine_checkbox.GetValue()
+
+
 class AddLocationDialog(wx.Dialog):
     """Dialog for adding a new location with search functionality."""
 
