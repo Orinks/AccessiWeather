@@ -167,6 +167,41 @@ class AlertDialog(wx.Dialog):
             return event
         return "Weather Alert"
 
+    @staticmethod
+    def _build_combined_text(alert, settings) -> str:
+        """Assemble the combined-view text block. Pure function; settings is AppSettings-like."""
+        from ...display.presentation.formatters import format_datetime
+
+        date_style = getattr(settings, "date_format", "iso")
+        time_12h = getattr(settings, "time_format_12hour", True)
+
+        blocks: list[str] = []
+
+        headline = (
+            getattr(alert, "headline", None) or getattr(alert, "event", None) or "Weather Alert"
+        )
+        blocks.append(headline)
+
+        description = getattr(alert, "description", None)
+        if description:
+            blocks.append(description)
+
+        instruction = getattr(alert, "instruction", None)
+        if instruction:
+            blocks.append(instruction)
+
+        times: list[str] = []
+        sent = getattr(alert, "sent", None)
+        if sent is not None:
+            times.append(f"Issued: {format_datetime(sent, date_style, time_12h)}")
+        expires = getattr(alert, "expires", None)
+        if expires is not None:
+            times.append(f"Expires: {format_datetime(expires, date_style, time_12h)}")
+        if times:
+            blocks.append("\n".join(times))
+
+        return "\n\n".join(blocks)
+
     def _build_info_text(self) -> str:
         """
         Build the alert info text with severity, urgency, and certainty.
