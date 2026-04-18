@@ -133,6 +133,23 @@ article:last-child {
     color: #888;
     font-style: italic;
 }
+.marine-section {
+    margin-bottom: 16px;
+    padding: 8px;
+    background-color: #f3f8ff;
+    border-radius: 4px;
+    border: 1px solid #d7e7ff;
+}
+.marine-section ul {
+    margin: 6px 0 0 18px;
+    padding: 0;
+}
+.marine-section li {
+    margin-bottom: 4px;
+}
+.marine-period {
+    margin-top: 8px;
+}
 """
 
 
@@ -261,6 +278,54 @@ def generate_forecast_html(presentation: ForecastPresentation | None) -> str:
 </div>
 </section>"""
 
+    # Build marine section if available
+    marine_html = ""
+    if presentation.marine_section_text:
+        marine_summary_html = ""
+        if presentation.marine_summary:
+            marine_summary_html = (
+                f'<p class="description">{_escape_html(presentation.marine_summary)}</p>'
+            )
+
+        marine_highlights_html = ""
+        if presentation.marine_highlights:
+            marine_items = "".join(
+                f"<li>{_escape_html(highlight)}</li>"
+                for highlight in presentation.marine_highlights
+            )
+            marine_highlights_html = f"""
+<h3>Marine Highlights</h3>
+<ul>
+{marine_items}
+</ul>"""
+
+        period_lines = [
+            line.strip()
+            for line in presentation.marine_section_text.splitlines()
+            if line.strip()
+            and ":" in line
+            and not line.startswith(
+                (
+                    "Marine conditions",
+                    "Marine zone:",
+                    "Summary:",
+                    "Wind and wave highlights:",
+                    "•",
+                )
+            )
+        ]
+        marine_periods_html = "".join(
+            f'<p class="marine-period">{_escape_html(line)}</p>' for line in period_lines
+        )
+
+        marine_html = f"""
+<section class="marine-section" aria-label="Marine forecast">
+<h2>Marine Forecast</h2>
+{marine_summary_html}
+{marine_highlights_html}
+{marine_periods_html}
+</section>"""
+
     # Build forecast periods
     periods_html = ""
     if presentation.periods:
@@ -295,6 +360,7 @@ def generate_forecast_html(presentation: ForecastPresentation | None) -> str:
 <section role="region" aria-label="{title}">
 <h1>{title}</h1>
 {hourly_html}
+{marine_html}
 {periods_html}
 {generated_html}
 </section>

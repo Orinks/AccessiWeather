@@ -26,6 +26,7 @@ from ..models import (
     Forecast,
     HourlyForecast,
     Location,
+    MarineForecast,
     TrendInsight,
     WeatherAlerts,
     WeatherData,
@@ -109,6 +110,9 @@ class ForecastPresentation:
     daily_section_text: str = ""
     hourly_section_text: str = ""
     mobility_briefing: str | None = None
+    marine_section_text: str = ""
+    marine_summary: str | None = None
+    marine_highlights: list[str] = field(default_factory=list)
     confidence_label: str | None = None
     summary: str | None = None
     impact_summary: ImpactSummary | None = None
@@ -238,6 +242,7 @@ class WeatherPresenter:
                 weather_data.hourly_forecast,
                 weather_data.location,
                 unit_pref,
+                marine=weather_data.marine,
                 confidence=weather_data.forecast_confidence,
                 mobility_briefing=build_mobility_briefing(weather_data),
             )
@@ -314,6 +319,7 @@ class WeatherPresenter:
         forecast: Forecast | None,
         location: Location,
         hourly_forecast: HourlyForecast | None = None,
+        marine: MarineForecast | None = None,
         confidence: ForecastConfidence | None = None,
         mobility_briefing: str | None = None,
     ) -> ForecastPresentation | None:
@@ -327,6 +333,7 @@ class WeatherPresenter:
             unit_pref,
             confidence=confidence,
             mobility_briefing=mobility_briefing,
+            marine=marine,
         )
 
     def present_alerts(
@@ -377,6 +384,7 @@ class WeatherPresenter:
         hourly_forecast: HourlyForecast | None,
         location: Location,
         unit_pref: TemperatureUnit,
+        marine: MarineForecast | None = None,
         confidence: ForecastConfidence | None = None,
         mobility_briefing: str | None = None,
     ) -> ForecastPresentation:
@@ -386,6 +394,7 @@ class WeatherPresenter:
             location,
             unit_pref,
             settings=self.settings,
+            marine=marine,
             confidence=confidence,
             mobility_briefing=mobility_briefing,
         )

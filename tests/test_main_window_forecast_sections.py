@@ -87,3 +87,23 @@ def test_set_forecast_sections_updates_both_controls():
 
     win.daily_forecast_display.SetValue.assert_called_with("Daily text")
     win.hourly_forecast_display.SetValue.assert_called_with("Hourly text")
+
+
+def test_on_weather_data_received_appends_marine_to_daily_forecast_section():
+    win = _make_window()
+    win.app.presenter.present.return_value.forecast = ForecastPresentation(
+        title="Forecast",
+        fallback_text="Combined forecast",
+        daily_section_text="Daily section",
+        marine_section_text="Marine section",
+        hourly_section_text="Hourly section",
+    )
+
+    weather_data = MagicMock()
+    weather_data.alerts = None
+    weather_data.alert_lifecycle_diff = None
+
+    win._on_weather_data_received(weather_data)
+
+    win.daily_forecast_display.SetValue.assert_called_once_with("Daily section\n\nMarine section")
+    win.hourly_forecast_display.SetValue.assert_called_once_with("Hourly section")
