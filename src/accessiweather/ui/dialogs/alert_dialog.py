@@ -317,10 +317,13 @@ class AlertDialog(wx.Dialog):
         """Temporarily replace a button label for `ms` milliseconds."""
         btn.SetLabel(temp_label)
         btn.GetParent().Layout()
-        wx.CallLater(ms, self._revert_button_label, btn, revert)
+        if getattr(self, "_flash_timer", None) is not None:
+            self._flash_timer.Stop()
+        self._flash_timer = wx.CallLater(ms, self._revert_button_label, btn, revert)
 
     def _revert_button_label(self, btn, revert):
         """Restore a button's original label. Guards against post-destroy firings."""
+        # wxPython: a Destroy()ed widget's Python wrapper becomes falsy via __bool__.
         if btn:
             btn.SetLabel(revert)
             btn.GetParent().Layout()
