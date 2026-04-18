@@ -366,7 +366,9 @@ class TestShowAlertDetailsAllLocations:
 
         with patch("accessiweather.ui.dialogs.show_alert_dialog") as mock_dialog:
             MainWindow._show_alert_details(win, 0)
-            mock_dialog.assert_called_once_with(win, alert)
+            mock_dialog.assert_called_once_with(
+                win, alert, win.app.config_manager.get_settings.return_value
+            )
 
     def test_out_of_range_index_does_nothing(self):
         """An out-of-range alert index in All Locations mode silently returns."""

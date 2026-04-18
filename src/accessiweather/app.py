@@ -44,11 +44,11 @@ if not logging.getLogger().handlers:
 logger = logging.getLogger(__name__)
 
 
-def show_alert_dialog(parent, alert) -> None:
+def show_alert_dialog(parent, alert, settings=None) -> None:
     """Lazy wrapper for the single-alert details dialog."""
     from .ui.dialogs import show_alert_dialog as _show_alert_dialog
 
-    _show_alert_dialog(parent, alert)
+    _show_alert_dialog(parent, alert, settings)
 
 
 def show_alerts_summary_dialog(parent, alerts) -> None:
@@ -279,7 +279,7 @@ class AccessiWeatherApp(wx.App):
             return
 
         if len(alerts) == 1:
-            show_alert_dialog(self.main_window, alerts[0])
+            show_alert_dialog(self.main_window, alerts[0], self.config_manager.get_settings())
             return
 
         show_alerts_summary_dialog(self.main_window, alerts)

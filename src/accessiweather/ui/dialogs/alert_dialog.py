@@ -13,19 +13,20 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def show_alert_dialog(parent, alert) -> None:
+def show_alert_dialog(parent, alert, settings=None) -> None:
     """
     Show the alert details dialog.
 
     Args:
         parent: Parent window
         alert: Weather alert object
+        settings: Optional application settings (for combined-mode dispatch)
 
     """
     try:
         parent_ctrl = parent
 
-        dlg = AlertDialog(parent_ctrl, alert)
+        dlg = AlertDialog(parent_ctrl, alert, settings)
         dlg.ShowModal()
         dlg.Destroy()
 
@@ -41,13 +42,14 @@ def show_alert_dialog(parent, alert) -> None:
 class AlertDialog(wx.Dialog):
     """Dialog for displaying weather alert details."""
 
-    def __init__(self, parent, alert):
+    def __init__(self, parent, alert, settings=None):
         """
         Initialize the alert dialog.
 
         Args:
             parent: Parent window
             alert: Weather alert object
+            settings: Optional application settings (for combined-mode dispatch)
 
         """
         event = getattr(alert, "event", "Weather Alert")
@@ -59,16 +61,21 @@ class AlertDialog(wx.Dialog):
         )
 
         self.alert = alert
+        self.settings = settings
 
         self._create_ui()
         self._setup_accessibility()
         self.Bind(wx.EVT_CHAR_HOOK, self._on_key)
 
     def _create_ui(self):
-        """Create the dialog UI with accessible text controls."""
+        """Create the dialog UI, dispatching to separate or combined mode."""
         panel = wx.Panel(self)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
+        self._create_separate_ui(panel, main_sizer)
+        panel.SetSizer(main_sizer)
 
+    def _create_separate_ui(self, panel, main_sizer):
+        """Build the classic separate-field UI into the provided panel/sizer."""
         # Subject field (headline + times) - gets initial focus
         subject_text = self._build_subject_text()
         subject_label = wx.StaticText(panel, label="Subject:")
@@ -136,8 +143,6 @@ class AlertDialog(wx.Dialog):
         button_sizer.Add(close_btn, 0)
 
         main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 15)
-
-        panel.SetSizer(main_sizer)
 
         # Set initial focus to subject field
         self.subject_ctrl.SetFocus()
