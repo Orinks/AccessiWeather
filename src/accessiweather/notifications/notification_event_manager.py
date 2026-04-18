@@ -386,7 +386,7 @@ class NotificationEventManager:
             if minutely_event:
                 events.append(minutely_event)
 
-        if getattr(settings, "notify_precipitation_likelihood", True):
+        if getattr(settings, "notify_precipitation_likelihood", False):
             likelihood_event = self._check_minutely_precipitation_likelihood(
                 weather_data.minutely_precipitation,
                 settings,

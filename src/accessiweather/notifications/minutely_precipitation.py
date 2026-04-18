@@ -28,6 +28,7 @@ def _probability_band(prob: float) -> str:
         return "70-90%"
     return "50-70%"
 
+
 # Intensity thresholds (mm/h) for wet detection.
 # Pirate Weather light rain is typically 0.01–0.1 mm/h; moderate 0.1–1.0 mm/h.
 INTENSITY_THRESHOLD_LIGHT = 0.01

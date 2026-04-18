@@ -130,7 +130,7 @@ class AppSettings:
     notify_minutely_precipitation_stop: bool = True
     # Minimum intensity level required to count as precipitation ("light", "moderate", "heavy")
     precipitation_sensitivity: str = "light"
-    notify_precipitation_likelihood: bool = True
+    notify_precipitation_likelihood: bool = False
     precipitation_likelihood_threshold: float = 0.5
     github_backend_url: str = ""
     github_app_id: str = ""
@@ -539,7 +539,7 @@ class AppSettings:
             ),
             precipitation_sensitivity=data.get("precipitation_sensitivity", "light"),
             notify_precipitation_likelihood=cls._as_bool(
-                data.get("notify_precipitation_likelihood"), True
+                data.get("notify_precipitation_likelihood"), False
             ),
             precipitation_likelihood_threshold=float(
                 data.get("precipitation_likelihood_threshold", 0.5)

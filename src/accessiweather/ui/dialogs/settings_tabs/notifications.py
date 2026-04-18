@@ -270,7 +270,7 @@ class NotificationsTab:
         sensitivity = getattr(settings, "precipitation_sensitivity", "light")
         controls["precipitation_sensitivity"].SetSelection(_SENSITIVITY_MAP.get(sensitivity, 0))
         controls["notify_precipitation_likelihood"].SetValue(
-            getattr(settings, "notify_precipitation_likelihood", True)
+            getattr(settings, "notify_precipitation_likelihood", False)
         )
         threshold_val = getattr(settings, "precipitation_likelihood_threshold", 0.5)
         controls["precipitation_likelihood_threshold"].SetSelection(
