@@ -14,9 +14,17 @@ from accessiweather.ui.dialogs.alert_dialog import AlertDialog
 
 @pytest.fixture(scope="module")
 def wx_app():
-    app = wx.App()
+    app = wx.GetApp() or wx.App()
     yield app
-    app.Destroy()
+
+
+@pytest.fixture
+def hidden_parent(wx_app):
+    """Hidden wx.Frame used as parent so test dialogs never appear on screen."""
+    frame = wx.Frame(None)
+    frame.Hide()
+    yield frame
+    frame.Destroy()
 
 
 def _alert():
@@ -37,35 +45,35 @@ def _alert():
 
 
 class TestDispatch:
-    def test_separate_mode_creates_subject_ctrl(self, wx_app):
+    def test_separate_mode_creates_subject_ctrl(self, hidden_parent):
         settings = AppSettings(alert_display_style="separate")
-        dlg = AlertDialog(None, _alert(), settings)
+        dlg = AlertDialog(hidden_parent, _alert(), settings)
         try:
             assert hasattr(dlg, "subject_ctrl")
             assert not hasattr(dlg, "combined_ctrl")
         finally:
             dlg.Destroy()
 
-    def test_combined_mode_creates_combined_ctrl(self, wx_app):
+    def test_combined_mode_creates_combined_ctrl(self, hidden_parent):
         settings = AppSettings(alert_display_style="combined")
-        dlg = AlertDialog(None, _alert(), settings)
+        dlg = AlertDialog(hidden_parent, _alert(), settings)
         try:
             assert hasattr(dlg, "combined_ctrl")
             assert not hasattr(dlg, "subject_ctrl")
         finally:
             dlg.Destroy()
 
-    def test_none_settings_defaults_to_separate(self, wx_app):
-        dlg = AlertDialog(None, _alert(), None)
+    def test_none_settings_defaults_to_separate(self, hidden_parent):
+        dlg = AlertDialog(hidden_parent, _alert(), None)
         try:
             assert hasattr(dlg, "subject_ctrl")
             assert not hasattr(dlg, "combined_ctrl")
         finally:
             dlg.Destroy()
 
-    def test_combined_mode_textctrl_contains_headline(self, wx_app):
+    def test_combined_mode_textctrl_contains_headline(self, hidden_parent):
         settings = AppSettings(alert_display_style="combined")
-        dlg = AlertDialog(None, _alert(), settings)
+        dlg = AlertDialog(hidden_parent, _alert(), settings)
         try:
             assert "H" in dlg.combined_ctrl.GetValue()
             assert "Issued:" in dlg.combined_ctrl.GetValue()
