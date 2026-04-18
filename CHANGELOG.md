@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - **NOAA radio station count now sticks** — your nearby-station limit is saved with NOAA radio preferences and reused the next time you open the dialog, while preferred stream choices keep working as before
 - **Automatic update checks now fire on long-running sessions** — the 24-hour update check used a single long wxTimer that could silently skip its tick after the computer slept or hibernated, so users who left the app open had to check manually. The scheduler now polls every 15 minutes and uses wall-clock elapsed time, so checks run on schedule even across sleep/wake cycles
+- **Adaptive Pirate Weather minutely polling** — minutely precipitation checks now stay on your normal refresh cadence when the next few hours look dry, then speed up automatically when the hourly forecast suggests rain is likely soon (#565)
 
 ## [0.4.5] - 2026-03-26
 
