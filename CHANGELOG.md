@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Edit Location** — a new "Edit Location" button and menu item in the Location menu let you toggle Marine Mode on existing locations without having to remove and re-add them
 - **NOAA radio station count chooser** — the NOAA Weather Radio dialog now lets you pick how many nearby stations to load (10, 25, 50, 100, or All) without digging through the main Settings window
 - **Precipitation timeline dialog** — View > Precipitation Timeline now opens a dedicated Pirate Weather minutely precipitation timeline with a quick summary and minute-by-minute plain-text breakdown
 
