@@ -88,6 +88,8 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "time_display_mode",
     "time_format_12hour",
     "show_timezone_suffix",
+    "alert_display_style",
+    "date_format",
     "taskbar_icon_text_enabled",
     "taskbar_icon_dynamic_enabled",
     "taskbar_icon_text_format",
@@ -168,6 +170,10 @@ class AppSettings:
     time_display_mode: str = "local"
     time_format_12hour: bool = True
     show_timezone_suffix: bool = False
+    # Alert dialog display style
+    alert_display_style: str = "separate"  # "separate" | "combined"
+    # Date format preset for rendered dates
+    date_format: str = "iso"  # "iso" | "us_short" | "us_long" | "eu"
     # Taskbar icon text options
     taskbar_icon_text_enabled: bool = False
     taskbar_icon_dynamic_enabled: bool = True
@@ -387,6 +393,16 @@ class AppSettings:
             if value not in valid_budgets:
                 setattr(self, setting_name, "max_coverage")
 
+        elif setting_name == "alert_display_style":
+            valid_styles = {"separate", "combined"}
+            if value not in valid_styles:
+                setattr(self, setting_name, "separate")
+
+        elif setting_name == "date_format":
+            valid_formats = {"iso", "us_short", "us_long", "eu"}
+            if value not in valid_formats:
+                setattr(self, setting_name, "iso")
+
         elif setting_name in {
             "source_priority_us",
             "source_priority_international",
@@ -482,6 +498,8 @@ class AppSettings:
             "time_display_mode": self.time_display_mode,
             "time_format_12hour": self.time_format_12hour,
             "show_timezone_suffix": self.show_timezone_suffix,
+            "alert_display_style": self.alert_display_style,
+            "date_format": self.date_format,
             "taskbar_icon_text_enabled": self.taskbar_icon_text_enabled,
             "taskbar_icon_dynamic_enabled": self.taskbar_icon_dynamic_enabled,
             "taskbar_icon_text_format": self.taskbar_icon_text_format,
@@ -579,6 +597,8 @@ class AppSettings:
             time_display_mode=data.get("time_display_mode", "local"),
             time_format_12hour=cls._as_bool(data.get("time_format_12hour"), True),
             show_timezone_suffix=cls._as_bool(data.get("show_timezone_suffix"), False),
+            alert_display_style=data.get("alert_display_style", "separate"),
+            date_format=data.get("date_format", "iso"),
             taskbar_icon_text_enabled=cls._as_bool(data.get("taskbar_icon_text_enabled"), False),
             taskbar_icon_dynamic_enabled=cls._as_bool(
                 data.get("taskbar_icon_dynamic_enabled"), True
@@ -630,6 +650,8 @@ class AppSettings:
             show_impact_summaries=cls._as_bool(data.get("show_impact_summaries"), False),
         )
         settings.validate_on_access("auto_mode_api_budget")
+        settings.validate_on_access("alert_display_style")
+        settings.validate_on_access("date_format")
         return settings
 
     def to_alert_settings(self):
