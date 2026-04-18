@@ -33,3 +33,19 @@ class TestRoundTrip:
     def test_from_dict_falls_back_on_bogus_date_format(self) -> None:
         settings = AppSettings.from_dict({"date_format": "not-a-format"})
         assert settings.date_format == "iso"
+
+    def test_from_dict_empty_dict_uses_defaults(self) -> None:
+        settings = AppSettings.from_dict({})
+        assert settings.alert_display_style == "separate"
+        assert settings.date_format == "iso"
+
+    def test_from_dict_non_string_values_fall_back(self) -> None:
+        settings = AppSettings.from_dict({"alert_display_style": None, "date_format": 42})
+        assert settings.alert_display_style == "separate"
+        assert settings.date_format == "iso"
+
+    def test_full_round_trip_preserves_combined_and_us_long(self) -> None:
+        original = AppSettings(alert_display_style="combined", date_format="us_long")
+        restored = AppSettings.from_dict(original.to_dict())
+        assert restored.alert_display_style == "combined"
+        assert restored.date_format == "us_long"
