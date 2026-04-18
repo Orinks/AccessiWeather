@@ -140,6 +140,8 @@ class AccessiWeatherApp(wx.App):
         # Background update
         self._update_timer: wx.Timer | None = None
         self._auto_update_check_timer: wx.Timer | None = None
+        self._auto_update_interval_seconds: int = 24 * 3600
+        self._last_update_check_at: float | None = None
         self._activation_handoff_timer: wx.Timer | None = None
         self._startup_update_check_deferred: bool = False
         self.is_updating: bool = False
@@ -1076,6 +1078,14 @@ class AccessiWeatherApp(wx.App):
 
             channel = getattr(settings, "update_channel", "stable")
 
+            # Mark that a check was initiated now so the periodic scheduler
+            # doesn't also fire during/right after this one. Use wall-clock-
+            # inclusive monotonic time so sleep/wake cycles are accounted for.
+            import time as _time
+
+            self._last_update_check_at = _time.monotonic()
+            logger.info("Auto-update check starting (channel=%s)", channel)
+
             def do_check():
                 import asyncio
 
@@ -1134,7 +1144,7 @@ class AccessiWeatherApp(wx.App):
 
                         wx.CallAfter(show_update_notification)
                     else:
-                        logger.debug("No updates available")
+                        logger.info("Auto-update check: no updates available")
 
                 except Exception as e:
                     logger.warning(f"Startup update check failed: {e}")

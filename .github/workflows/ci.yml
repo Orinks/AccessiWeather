@@ -51,17 +51,18 @@ jobs:
           freeglut3-dev xvfb
         version: 1.0
 
-    - name: Ruff format check
+    - name: Ruff (format check + lint)
       if: matrix.primary
-      uses: astral-sh/ruff-action@v3
-      with:
-        args: format --check
-
-    - name: Ruff lint
-      if: matrix.primary
-      uses: astral-sh/ruff-action@v3
-      with:
-        args: check
+      # Collapsed from two astral-sh/ruff-action invocations into one
+      # inline step.  Each action invocation carried ~5s of composite-
+      # action boot overhead; running both commands in a single step
+      # against a pip-installed ruff (tiny wheel, cached by
+      # setup-python's pip cache) saves ~10s per CI run while keeping
+      # the same fail-before-install-deps ordering.
+      run: |
+        pip install --quiet 'ruff>=0.9.0'
+        ruff format --check .
+        ruff check .
 
     - name: Install dependencies
       run: |

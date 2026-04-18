@@ -259,6 +259,7 @@ class TestMainWindowLocationSwitchAlertCheck:
         win._all_locations_alerts_data = []
         win._set_current_location = MagicMock()
         win._set_forecast_sections_visible = MagicMock()
+        win._update_title_for_location = MagicMock()
         win._on_weather_data_received = MagicMock()
         win.refresh_notification_events_async = MagicMock()
         win.Bind = MagicMock()

@@ -21,56 +21,12 @@ This manual explains how to install the app, add locations, read the weather, ch
 
 ### Downloading a build
 
-Prebuilt downloads are available from:
-
-- https://orinks.net/accessiweather
-- https://github.com/Orinks/AccessiWeather/releases
+Prebuilt downloads are available from the [AccessiWeather page](https://orinks.net/accessiweather) and the [GitHub releases page](https://github.com/Orinks/AccessiWeather/releases).
 
 Typical download options are:
 
-- Windows: MSI installer or portable ZIP
+- Windows: setup installer or portable ZIP
 - macOS: DMG
-- Linux: run from source
-
-### Running from source
-
-Using uv:
-
-```bash
-git clone https://github.com/Orinks/AccessiWeather.git
-cd AccessiWeather
-uv sync
-uv run accessiweather
-```
-
-Using a virtual environment:
-
-```bash
-git clone https://github.com/Orinks/AccessiWeather.git
-cd AccessiWeather
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
-accessiweather
-```
-
-### Portable mode
-
-Portable mode keeps AccessiWeather's configuration next to the app instead of storing it in your normal user profile.
-
-Use portable mode when:
-
-- you want to carry the app on removable storage
-- you want the app and its settings to travel together
-- you do not want this installation to use your usual per-user config location
-
-Start portable mode with:
-
-```bash
-accessiweather --portable
-```
-
-In portable mode, encrypted API key bundles are used instead of normal keyring storage.
 
 ## 3. First-time setup
 
@@ -82,17 +38,10 @@ The wizard walks you through these steps:
 2. Enter an OpenRouter API key if you want AI features.
 3. Enter a Visual Crossing API key if you want that provider.
 4. Enter a Pirate Weather API key if you want that provider.
-5. In portable mode, choose a passphrase to save entered keys into an encrypted portable bundle.
 
 At the end, AccessiWeather shows a readiness summary.
 
-You can safely skip any optional key step. The app works without paid services, and you can add keys later in Settings.
-
-To run the onboarding wizard again manually, start the app with:
-
-```bash
-accessiweather --wizard
-```
+You can safely skip any optional key step. The app works without paid services, and you can add keys later in Settings. When a provider needs a key, AccessiWeather includes a button that takes you to the place to get one.
 
 ### Recommended first setup
 
@@ -1005,6 +954,7 @@ This tab is completely optional. If you do not want AI features, you can ignore 
 Controls include:
 
 - OpenRouter API key
+- a button to get a key
 - Validate OpenRouter key
 
 OpenRouter is worth adding only if you want AI help with understanding the weather.
@@ -1086,18 +1036,16 @@ Tools include:
 
 This is the place to move settings between machines and to transfer API keys securely.
 
-Use this when setting up a second computer or when moving between a normal install and portable mode.
+Use this when setting up a second computer or when you want to move your settings securely.
 
 #### Folders and files
 
 Tools include:
 
 - Open current config folder
-- Open installed config folder (source)
 - Open sound packs folder
-- Copy installed config to portable, when running in portable mode
 
-Use these tools when you need to inspect, back up, or migrate AccessiWeather files.
+Use these tools when you need to inspect or back up AccessiWeather files.
 
 Leave this alone unless you are troubleshooting or intentionally managing files yourself.
 
@@ -1112,7 +1060,7 @@ Reset settings to defaults is useful when you want to keep your saved locations 
 
 Reset all app data is a major cleanup action. Use it only when normal troubleshooting has not solved the problem.
 
-If you use Aviation Weather often, remember that the optional AVWX key is managed in the Aviation Weather workflow, not as part of the normal no-key setup. It is only worth adding if you want better decoded international aviation weather.
+If you use Aviation Weather often, the optional AVWX key is only worth adding if you want better decoded international aviation weather. AccessiWeather includes a button that takes you to the place to get that key.
 
 ## 9. Keyboard shortcuts
 
@@ -1208,20 +1156,6 @@ What to try:
 3. Confirm you copied the correct provider's key.
 4. Wait a few minutes and validate again if the key was just created.
 
-### Problem: Portable mode behavior is confusing
-
-What it usually means:
-
-- portable mode stores configuration differently from a standard install
-- keys are expected to live in the encrypted bundle, not your normal keyring
-
-What to try:
-
-1. Confirm you actually started the app with --portable.
-2. Use Settings > Advanced to export or import encrypted API keys.
-3. If needed, use Copy installed config to portable while running in portable mode.
-4. Remember that blank or skipped bundle setup means keys may not persist.
-
 ### Problem: Update checks are not happening when expected
 
 What it usually means:
@@ -1282,7 +1216,7 @@ Use this when:
 
 This is helpful if you want screen-reader-friendly decoded aviation text instead of trying to interpret compact raw aviation codes on your own.
 
-An optional AVWX key can improve international aviation support. Leave it alone if you only check US aviation weather occasionally. It is mainly worth adding if international airport weather is important to you.
+An optional AVWX key can improve international aviation support. Leave it alone if you only check US aviation weather occasionally. It is mainly worth adding if international airport weather is important to you, and AccessiWeather includes a button that takes you to the place to get that key.
 
 ### NOAA Weather Radio
 
@@ -1306,7 +1240,6 @@ Use it when you want follow-up questions, practical advice, or a longer conversa
 
 If you need help, updates, or downloads, use these resources:
 
-- Project website: https://orinks.net/accessiweather
-- GitHub issues: https://github.com/Orinks/AccessiWeather/issues
-- GitHub discussions: https://github.com/Orinks/AccessiWeather/discussions
-- GitHub releases: https://github.com/Orinks/AccessiWeather/releases
+- Project website: [AccessiWeather on orinks.net](https://orinks.net/accessiweather)
+- Report a bug: [Orinks/AccessiWeather issues](https://github.com/Orinks/AccessiWeather/issues)
+- Download releases directly: [Orinks/AccessiWeather releases](https://github.com/Orinks/AccessiWeather/releases)

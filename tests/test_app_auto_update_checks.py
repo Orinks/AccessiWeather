@@ -77,6 +77,8 @@ def test_initialize_components_delegates_to_initialization_module():
 
 
 def test_start_auto_update_checks_uses_configured_interval(monkeypatch):
+    from accessiweather.app_timer_manager import AUTO_UPDATE_POLL_INTERVAL_MS
+
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app.config_manager = MagicMock()
     app.config_manager.get_settings.return_value = SimpleNamespace(
@@ -84,6 +86,7 @@ def test_start_auto_update_checks_uses_configured_interval(monkeypatch):
         update_check_interval_hours=6,
     )
     app._auto_update_check_timer = None
+    app._last_update_check_at = None
     app._force_wizard = False
     app.Bind = MagicMock()
     app.Unbind = MagicMock()
@@ -96,8 +99,11 @@ def test_start_auto_update_checks_uses_configured_interval(monkeypatch):
 
     timer_factory.assert_called_once_with(app)
     app.Bind.assert_called_once_with(wx.EVT_TIMER, app._on_auto_update_check_timer, timer)
-    timer.Start.assert_called_once_with(6 * 60 * 60 * 1000)
+    # Poll interval is short (15 min); "6 hours" is the due threshold.
+    timer.Start.assert_called_once_with(AUTO_UPDATE_POLL_INTERVAL_MS)
+    assert app._auto_update_interval_seconds == 6 * 3600
     assert app._auto_update_check_timer is timer
+    assert app._last_update_check_at is not None  # seeded
 
 
 def test_start_auto_update_checks_replaces_existing_timer_and_honors_disabled():
@@ -121,6 +127,8 @@ def test_start_auto_update_checks_replaces_existing_timer_and_honors_disabled():
 
 
 def test_start_auto_update_checks_reconfigures_existing_enabled_timer(monkeypatch):
+    from accessiweather.app_timer_manager import AUTO_UPDATE_POLL_INTERVAL_MS
+
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app.config_manager = MagicMock()
     app.config_manager.get_settings.return_value = SimpleNamespace(
@@ -134,6 +142,7 @@ def test_start_auto_update_checks_reconfigures_existing_enabled_timer(monkeypatc
     monkeypatch.setattr(wx, "Timer", timer_factory)
 
     app._auto_update_check_timer = old_timer
+    app._last_update_check_at = None
     app._force_wizard = False
     app.Bind = MagicMock()
     app.Unbind = MagicMock()
@@ -143,13 +152,43 @@ def test_start_auto_update_checks_reconfigures_existing_enabled_timer(monkeypatc
     old_timer.Stop.assert_called_once()
     app.Unbind.assert_called_once_with(wx.EVT_TIMER, source=old_timer)
     app.Bind.assert_called_once_with(wx.EVT_TIMER, app._on_auto_update_check_timer, new_timer)
-    new_timer.Start.assert_called_once_with(12 * 60 * 60 * 1000)
+    new_timer.Start.assert_called_once_with(AUTO_UPDATE_POLL_INTERVAL_MS)
+    assert app._auto_update_interval_seconds == 12 * 3600
     assert app._auto_update_check_timer is new_timer
 
 
-def test_on_auto_update_check_timer_invokes_update_check():
+def test_on_auto_update_check_timer_skips_when_not_due():
+    import time as _time
+
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._check_for_updates_on_startup = MagicMock()
+    app._auto_update_interval_seconds = 24 * 3600
+    app._last_update_check_at = _time.monotonic()  # just checked
+
+    app._on_auto_update_check_timer(event=MagicMock())
+
+    app._check_for_updates_on_startup.assert_not_called()
+
+
+def test_on_auto_update_check_timer_runs_when_due():
+    import time as _time
+
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._check_for_updates_on_startup = MagicMock()
+    app._auto_update_interval_seconds = 24 * 3600
+    # Pretend last check was 25 hours ago.
+    app._last_update_check_at = _time.monotonic() - (25 * 3600)
+
+    app._on_auto_update_check_timer(event=MagicMock())
+
+    app._check_for_updates_on_startup.assert_called_once()
+
+
+def test_on_auto_update_check_timer_runs_when_never_checked():
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._check_for_updates_on_startup = MagicMock()
+    app._auto_update_interval_seconds = 24 * 3600
+    app._last_update_check_at = None
 
     app._on_auto_update_check_timer(event=MagicMock())
 

@@ -43,6 +43,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "notify_severe_risk_change",
     "notify_minutely_precipitation_start",
     "notify_minutely_precipitation_stop",
+    "precipitation_sensitivity",
     # GitHub settings
     "github_backend_url",
     "github_app_id",
@@ -125,6 +126,8 @@ class AppSettings:
     notify_severe_risk_change: bool = False
     notify_minutely_precipitation_start: bool = True
     notify_minutely_precipitation_stop: bool = True
+    # Minimum intensity level required to count as precipitation ("light", "moderate", "heavy")
+    precipitation_sensitivity: str = "light"
     github_backend_url: str = ""
     github_app_id: str = ""
     github_app_private_key: str = ""
@@ -338,6 +341,11 @@ class AppSettings:
             if not isinstance(value, int) or value < 1:
                 setattr(self, setting_name, 180)
 
+        elif setting_name == "precipitation_sensitivity":
+            valid_levels = {"light", "moderate", "heavy"}
+            if value not in valid_levels:
+                setattr(self, setting_name, "light")
+
         elif setting_name == "alert_radius_type":
             valid_types = {"county", "point", "zone", "state"}
             if value not in valid_types:
@@ -434,6 +442,7 @@ class AppSettings:
             "notify_severe_risk_change": self.notify_severe_risk_change,
             "notify_minutely_precipitation_start": self.notify_minutely_precipitation_start,
             "notify_minutely_precipitation_stop": self.notify_minutely_precipitation_stop,
+            "precipitation_sensitivity": self.precipitation_sensitivity,
             "github_backend_url": self.github_backend_url,
             "alert_radius_type": self.alert_radius_type,
             "alert_notifications_enabled": self.alert_notifications_enabled,
@@ -522,6 +531,7 @@ class AppSettings:
             notify_minutely_precipitation_stop=cls._as_bool(
                 data.get("notify_minutely_precipitation_stop"), True
             ),
+            precipitation_sensitivity=data.get("precipitation_sensitivity", "light"),
             github_backend_url=data.get("github_backend_url", ""),
             alert_radius_type=data.get("alert_radius_type", "county"),
             alert_notifications_enabled=cls._as_bool(data.get("alert_notifications_enabled"), True),

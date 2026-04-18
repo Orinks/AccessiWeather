@@ -60,6 +60,7 @@ class TestMainWindowDataUpdatedSound:
         win._set_forecast_sections = MagicMock()
         win._update_alerts = MagicMock()
         win._process_notification_events = MagicMock()
+        win._set_last_updated_status = MagicMock()
         win._alert_lifecycle_labels = {}
         # Stub presenter so the method doesn't blow up on presentation logic
         presentation = MagicMock()
@@ -194,6 +195,7 @@ class TestMainWindowFetchErrorSound:
         win._set_forecast_sections = MagicMock()
         win._update_alerts = MagicMock()
         win._process_notification_events = MagicMock()
+        win._set_last_updated_status = MagicMock()
         win._alert_lifecycle_labels = {}
         presentation = MagicMock()
         presentation.current_conditions = MagicMock()

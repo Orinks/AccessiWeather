@@ -11,6 +11,19 @@ from ..models import MinutelyPrecipitationForecast, MinutelyPrecipitationPoint
 
 NO_TRANSITION_SIGNATURE = "__none__"
 
+# Intensity thresholds (mm/h) for wet detection.
+# Pirate Weather light rain is typically 0.01–0.1 mm/h; moderate 0.1–1.0 mm/h.
+INTENSITY_THRESHOLD_LIGHT = 0.01
+INTENSITY_THRESHOLD_MODERATE = 0.1
+INTENSITY_THRESHOLD_HEAVY = 1.0
+
+# Map setting values to thresholds
+SENSITIVITY_THRESHOLDS: dict[str, float] = {
+    "light": INTENSITY_THRESHOLD_LIGHT,
+    "moderate": INTENSITY_THRESHOLD_MODERATE,
+    "heavy": INTENSITY_THRESHOLD_HEAVY,
+}
+
 
 @dataclass(frozen=True)
 class MinutelyPrecipitationTransition:
@@ -86,25 +99,40 @@ def parse_pirate_weather_minutely_block(
 
 def detect_minutely_precipitation_transition(
     forecast: MinutelyPrecipitationForecast | None,
+    threshold: float = 0.0,
 ) -> MinutelyPrecipitationTransition | None:
-    """Detect the first dry/wet transition in the next hour of minutely data."""
+    """
+    Detect the first dry/wet transition in the next hour of minutely data.
+
+    Args:
+        forecast: Minutely precipitation forecast to analyse.
+        threshold: Minimum precipitation intensity (mm/h) to count as wet.
+            Defaults to ``0.0`` (any non-zero intensity).  Use one of the
+            ``INTENSITY_THRESHOLD_*`` constants or ``SENSITIVITY_THRESHOLDS``
+            to select a named sensitivity level.
+
+    """
     if forecast is None or not forecast.points:
         return None
 
-    baseline_is_wet = is_wet(forecast.points[0])
+    baseline_is_wet = is_wet(forecast.points[0], threshold=threshold)
     for idx, point in enumerate(forecast.points[1:], start=1):
-        if is_wet(point) == baseline_is_wet:
+        if is_wet(point, threshold=threshold) == baseline_is_wet:
             continue
         if baseline_is_wet:
             return MinutelyPrecipitationTransition(
                 transition_type="stopping",
                 minutes_until=idx,
-                precipitation_type=_first_precipitation_type(forecast.points[:idx]),
+                precipitation_type=_first_precipitation_type(
+                    forecast.points[:idx], threshold=threshold
+                ),
             )
         return MinutelyPrecipitationTransition(
             transition_type="starting",
             minutes_until=idx,
-            precipitation_type=_first_precipitation_type(forecast.points[idx:]),
+            precipitation_type=_first_precipitation_type(
+                forecast.points[idx:], threshold=threshold
+            ),
         )
 
     return None
@@ -112,17 +140,23 @@ def detect_minutely_precipitation_transition(
 
 def build_minutely_transition_signature(
     forecast: MinutelyPrecipitationForecast | None,
+    threshold: float = 0.0,
 ) -> str | None:
     """
     Return a stable signature for the current minutely transition state.
 
     ``None`` means the forecast was unavailable. ``NO_TRANSITION_SIGNATURE`` means
     the forecast was available but no dry/wet transition was detected.
+
+    Args:
+        forecast: Minutely precipitation forecast to analyse.
+        threshold: Minimum precipitation intensity (mm/h) to count as wet.
+
     """
     if forecast is None or not forecast.points:
         return None
 
-    transition = detect_minutely_precipitation_transition(forecast)
+    transition = detect_minutely_precipitation_transition(forecast, threshold=threshold)
     if transition is None:
         return NO_TRANSITION_SIGNATURE
 
@@ -130,10 +164,21 @@ def build_minutely_transition_signature(
     return f"{transition.transition_type}:{transition.minutes_until}:{precip_type}"
 
 
-def is_wet(point: MinutelyPrecipitationPoint) -> bool:
-    """Return True when a minutely point indicates precipitation."""
+def is_wet(point: MinutelyPrecipitationPoint, threshold: float = 0.0) -> bool:
+    """
+    Return True when a minutely point indicates precipitation.
+
+    Args:
+        point: A single minutely data point.
+        threshold: Minimum precipitation intensity (mm/h) required to be
+            considered wet.  Defaults to ``0.0`` (any non-zero intensity).
+            Pass one of the ``INTENSITY_THRESHOLD_*`` constants to filter out
+            noise — e.g. ``INTENSITY_THRESHOLD_LIGHT`` (0.01 mm/h) ignores
+            trace/sensor-noise readings while still catching light rain.
+
+    """
     if point.precipitation_intensity is not None:
-        return point.precipitation_intensity > 0
+        return point.precipitation_intensity > threshold
     if point.precipitation_probability is not None:
         return point.precipitation_probability > 0
     return False
@@ -169,8 +214,10 @@ def _normalize_precipitation_type(value: Any) -> str | None:
     return normalized or None
 
 
-def _first_precipitation_type(points: list[MinutelyPrecipitationPoint]) -> str | None:
+def _first_precipitation_type(
+    points: list[MinutelyPrecipitationPoint], threshold: float = 0.0
+) -> str | None:
     for point in points:
-        if is_wet(point) and point.precipitation_type:
+        if is_wet(point, threshold=threshold) and point.precipitation_type:
             return point.precipitation_type
     return None

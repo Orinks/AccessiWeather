@@ -5,8 +5,13 @@ def test_quick_action_labels_match_visible_ui_copy():
     assert QUICK_ACTION_LABELS == {
         "add": "&Add Location",
         "remove": "&Remove Location",
-        "refresh": "&Refresh Weather",
-        "explain": "&Explain Weather",
+        "refresh": "Re&fresh Weather",
+        "explain": "Explain &Conditions",
         "discussion": "Forecast &Discussion",
         "settings": "&Settings",
     }
+
+
+def test_quick_action_labels_use_unique_access_keys():
+    access_keys = [label[label.index("&") + 1].lower() for label in QUICK_ACTION_LABELS.values()]
+    assert len(access_keys) == len(set(access_keys))
