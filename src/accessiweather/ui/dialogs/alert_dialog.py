@@ -73,9 +73,42 @@ class AlertDialog(wx.Dialog):
         """Create the dialog UI, dispatching to separate or combined mode."""
         panel = wx.Panel(self)
         main_sizer = wx.BoxSizer(wx.VERTICAL)
-        self._create_separate_ui(panel, main_sizer)
+
+        style = (
+            getattr(self.settings, "alert_display_style", "separate")
+            if self.settings is not None
+            else "separate"
+        )
+        if style == "combined":
+            self._create_combined_ui(panel, main_sizer)
+        else:
+            self._create_separate_ui(panel, main_sizer)
+
         panel.SetSizer(main_sizer)
         self._focus_target.SetFocus()
+
+    def _create_combined_ui(self, panel, main_sizer):
+        """Create a single TextCtrl containing the full alert, with a Close button."""
+        label = wx.StaticText(panel, label="Alert:")
+        label.SetFont(label.GetFont().Bold())
+        main_sizer.Add(label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 15)
+
+        text = self._build_combined_text(self.alert, self.settings)
+        self.combined_ctrl = wx.TextCtrl(
+            panel,
+            value=text,
+            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
+        )
+        main_sizer.Add(self.combined_ctrl, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
+
+        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        button_sizer.AddStretchSpacer()
+        close_btn = wx.Button(panel, wx.ID_CLOSE, "Close")
+        close_btn.Bind(wx.EVT_BUTTON, self._on_close)
+        button_sizer.Add(close_btn, 0)
+        main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 15)
+
+        self._focus_target = self.combined_ctrl
 
     def _create_separate_ui(self, panel, main_sizer):
         """Build the classic separate-field UI into the provided panel/sizer."""
@@ -225,7 +258,8 @@ class AlertDialog(wx.Dialog):
 
     def _setup_accessibility(self):
         """Set up accessibility labels for screen readers."""
-        self.subject_ctrl.SetName("Subject with alert headline")
+        if hasattr(self, "subject_ctrl"):
+            self.subject_ctrl.SetName("Subject with alert headline")
 
         if hasattr(self, "info_ctrl"):
             self.info_ctrl.SetName("Alert information with severity, urgency, and certainty")
@@ -235,6 +269,9 @@ class AlertDialog(wx.Dialog):
 
         if hasattr(self, "instr_ctrl"):
             self.instr_ctrl.SetName("Instructions")
+
+        if hasattr(self, "combined_ctrl"):
+            self.combined_ctrl.SetName("Full alert text")
 
     def _on_key(self, event):
         """Handle key press - close dialog on Escape."""
