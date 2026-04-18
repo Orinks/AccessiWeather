@@ -66,3 +66,11 @@ class TestFormatDatetime:
 
     def test_none_returns_empty_string(self) -> None:
         assert format_datetime(None, "iso", True) == ""
+
+    def test_morning_24hour_keeps_leading_zero(self) -> None:
+        morning = datetime(2026, 4, 18, 9, 7)
+        assert format_datetime(morning, "iso", False) == "2026-04-18 09:07"
+
+    def test_midnight_24hour_not_corrupted(self) -> None:
+        midnight = datetime(2026, 4, 18, 0, 0)
+        assert format_datetime(midnight, "iso", False) == "2026-04-18 00:00"

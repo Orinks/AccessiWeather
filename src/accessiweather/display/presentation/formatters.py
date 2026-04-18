@@ -39,7 +39,9 @@ def format_datetime(dt: datetime | None, date_style: str, time_12hour: bool) -> 
         return ""
     date_part = format_date(dt, date_style)
     time_fmt = "%I:%M %p" if time_12hour else "%H:%M"
-    time_part = dt.strftime(time_fmt).lstrip("0")
+    time_part = dt.strftime(time_fmt)
+    if time_12hour:
+        time_part = time_part.lstrip("0")
     return f"{date_part} {time_part}"
 
 
