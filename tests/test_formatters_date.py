@@ -74,3 +74,21 @@ class TestFormatDatetime:
     def test_midnight_24hour_not_corrupted(self) -> None:
         midnight = datetime(2026, 4, 18, 0, 0)
         assert format_datetime(midnight, "iso", False) == "2026-04-18 00:00"
+
+    def test_midnight_12hour(self) -> None:
+        midnight = datetime(2026, 4, 18, 0, 0)
+        assert format_datetime(midnight, "iso", True) == "2026-04-18 12:00 AM"
+
+    def test_noon_12hour(self) -> None:
+        noon = datetime(2026, 4, 18, 12, 0)
+        assert format_datetime(noon, "iso", True) == "2026-04-18 12:00 PM"
+
+    def test_double_digit_hour_12hour(self) -> None:
+        ten_am = datetime(2026, 4, 18, 10, 5)
+        assert format_datetime(ten_am, "iso", True) == "2026-04-18 10:05 AM"
+
+    def test_tz_aware_datetime_formats_without_tz_info(self) -> None:
+        from datetime import timezone
+
+        aware = datetime(2026, 4, 18, 14, 5, tzinfo=timezone.utc)
+        assert format_datetime(aware, "iso", False) == "2026-04-18 14:05"
