@@ -172,13 +172,17 @@ class AlertDialog(wx.Dialog):
 
     def _add_action_buttons(self, panel, main_sizer):
         """
-        Add the right-aligned Close button to the provided sizer.
+        Add the right-aligned Copy + Close button row.
 
-        Shared by both display modes. The button row is constructed once here
-        so that future additions (e.g. a Copy button) only need one change site.
+        Shared by both display modes.
         """
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
         button_sizer.AddStretchSpacer()
+
+        self.copy_btn = wx.Button(panel, wx.ID_COPY, "Cop&y to clipboard")
+        self.copy_btn.SetName("Copy alert text to clipboard")
+        self.copy_btn.Bind(wx.EVT_BUTTON, self._on_copy)
+        button_sizer.Add(self.copy_btn, 0, wx.RIGHT, 10)
 
         close_btn = wx.Button(panel, wx.ID_CLOSE, "&Close")
         close_btn.Bind(wx.EVT_BUTTON, self._on_close)
@@ -295,3 +299,28 @@ class AlertDialog(wx.Dialog):
     def _on_close(self, event):
         """Handle close button press."""
         self.EndModal(wx.ID_CLOSE)
+
+    def _on_copy(self, event):
+        """Copy the alert text to the system clipboard with visible feedback."""
+        text = self._copy_payload(self.alert, self.settings)
+        if not wx.TheClipboard.Open():
+            logger.warning("Alert copy: could not open clipboard")
+            self._flash_button(self.copy_btn, "Copy failed", "Cop&y to clipboard")
+            return
+        try:
+            wx.TheClipboard.SetData(wx.TextDataObject(text))
+        finally:
+            wx.TheClipboard.Close()
+        self._flash_button(self.copy_btn, "Copied!", "Cop&y to clipboard")
+
+    def _flash_button(self, btn, temp_label, revert, ms=2000):
+        """Temporarily replace a button label for `ms` milliseconds."""
+        btn.SetLabel(temp_label)
+        btn.GetParent().Layout()
+        wx.CallLater(ms, self._revert_button_label, btn, revert)
+
+    def _revert_button_label(self, btn, revert):
+        """Restore a button's original label. Guards against post-destroy firings."""
+        if btn:
+            btn.SetLabel(revert)
+            btn.GetParent().Layout()
