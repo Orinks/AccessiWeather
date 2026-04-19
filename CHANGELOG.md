@@ -5,9 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- You can now grab the whole alert — headline, details, instructions, timestamps — in one click with the new **Copy to clipboard** button in the alert dialog. Works the same whether you use separate fields or the combined view.
 - **Edit Location** — a new "Edit Location" button and menu item in the Location menu let you toggle Marine Mode on existing locations without having to remove and re-add them
 - **NOAA radio station count chooser** — the NOAA Weather Radio dialog now lets you pick how many nearby stations to load (10, 25, 50, 100, or All) without digging through the main Settings window
 - **Precipitation timeline dialog** — View > Precipitation Timeline now opens a dedicated Pirate Weather minutely precipitation timeline with a quick summary and minute-by-minute plain-text breakdown
+- **Single combined alert view** — pick "Single combined view" in Settings > Display > Alert display to read the whole alert (headline, description, instruction, Issued, and Expires) in one scrollable edit box with a Close button. The original separate-fields layout is still the default
+- **Configurable date format** — choose how dates are shown: ISO (2026-04-18), US short (04/18/2026), US long (April 18, 2026), or EU (18/04/2026). Applies to timestamps in the new combined alert view for now
 
 ### Fixed
 - **NOAA radio station count now sticks** — your nearby-station limit is saved with NOAA radio preferences and reused the next time you open the dialog, while preferred stream choices keep working as before
