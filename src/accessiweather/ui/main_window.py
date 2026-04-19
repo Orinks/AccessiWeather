@@ -124,6 +124,20 @@ class MainWindow(SizedFrame):
         )
         self.location_dropdown.SetSizerProps(expand=True, proportion=1)
 
+        # Optional: place Add/Edit/Remove on the location row instead of the
+        # bottom button panel.  Grouped spatially with the dropdown they act on,
+        # at the cost of inserting buttons between the dropdown and the forecast
+        # content in the tab order.
+        location_buttons_on_top = getattr(
+            self.app.config_manager.get_settings(),
+            "location_buttons_on_top",
+            False,
+        )
+        if location_buttons_on_top:
+            self.add_button = wx.Button(location_panel, label=QUICK_ACTION_LABELS["add"])
+            self.edit_button = wx.Button(location_panel, label=QUICK_ACTION_LABELS["edit"])
+            self.remove_button = wx.Button(location_panel, label=QUICK_ACTION_LABELS["remove"])
+
         # Current conditions section
         wx.StaticText(panel, label="Current Conditions:")
         self.current_conditions = wx.TextCtrl(
@@ -189,9 +203,10 @@ class MainWindow(SizedFrame):
         button_panel.SetSizerType("horizontal")
         button_panel.SetSizerProps(expand=True)
 
-        self.add_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["add"])
-        self.edit_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["edit"])
-        self.remove_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["remove"])
+        if not location_buttons_on_top:
+            self.add_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["add"])
+            self.edit_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["edit"])
+            self.remove_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["remove"])
         self.refresh_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["refresh"])
         self.explain_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["explain"])
         self.discussion_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["discussion"])

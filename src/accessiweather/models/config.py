@@ -172,6 +172,9 @@ class AppSettings:
     show_timezone_suffix: bool = False
     # Alert dialog display style
     alert_display_style: str = "separate"  # "separate" | "combined"
+    # Place Add/Edit/Remove Location buttons on the location row instead of the
+    # bottom button panel.  Takes effect on app restart.
+    location_buttons_on_top: bool = False
     # Date format preset for rendered dates
     date_format: str = "iso"  # "iso" | "us_short" | "us_long" | "eu"
     # Taskbar icon text options
