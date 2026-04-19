@@ -502,6 +502,7 @@ class AppSettings:
             "time_format_12hour": self.time_format_12hour,
             "show_timezone_suffix": self.show_timezone_suffix,
             "alert_display_style": self.alert_display_style,
+            "location_buttons_on_top": self.location_buttons_on_top,
             "date_format": self.date_format,
             "taskbar_icon_text_enabled": self.taskbar_icon_text_enabled,
             "taskbar_icon_dynamic_enabled": self.taskbar_icon_dynamic_enabled,
@@ -601,6 +602,7 @@ class AppSettings:
             time_format_12hour=cls._as_bool(data.get("time_format_12hour"), True),
             show_timezone_suffix=cls._as_bool(data.get("show_timezone_suffix"), False),
             alert_display_style=data.get("alert_display_style", "separate"),
+            location_buttons_on_top=cls._as_bool(data.get("location_buttons_on_top"), False),
             date_format=data.get("date_format", "iso"),
             taskbar_icon_text_enabled=cls._as_bool(data.get("taskbar_icon_text_enabled"), False),
             taskbar_icon_dynamic_enabled=cls._as_bool(
