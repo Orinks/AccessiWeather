@@ -101,12 +101,7 @@ class AlertDialog(wx.Dialog):
         )
         main_sizer.Add(self.combined_ctrl, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
 
-        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        button_sizer.AddStretchSpacer()
-        close_btn = wx.Button(panel, wx.ID_CLOSE, "Close")
-        close_btn.Bind(wx.EVT_BUTTON, self._on_close)
-        button_sizer.Add(close_btn, 0)
-        main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 15)
+        self._add_action_buttons(panel, main_sizer)
 
         self._focus_target = self.combined_ctrl
 
@@ -170,18 +165,30 @@ class AlertDialog(wx.Dialog):
             )
             main_sizer.Add(self.instr_ctrl, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 15)
 
-        # Close button
+        self._add_action_buttons(panel, main_sizer)
+
+        # Set initial focus to subject field
+        self._focus_target = self.subject_ctrl
+
+    def _add_action_buttons(self, panel, main_sizer):
+        """
+        Add the right-aligned Copy + Close button row.
+
+        Shared by both display modes.
+        """
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
         button_sizer.AddStretchSpacer()
 
-        close_btn = wx.Button(panel, wx.ID_CLOSE, "Close")
+        self.copy_btn = wx.Button(panel, wx.ID_COPY, "Cop&y to clipboard")
+        self.copy_btn.SetName("Copy alert text to clipboard")
+        self.copy_btn.Bind(wx.EVT_BUTTON, self._on_copy)
+        button_sizer.Add(self.copy_btn, 0, wx.RIGHT, 10)
+
+        close_btn = wx.Button(panel, wx.ID_CLOSE, "&Close")
         close_btn.Bind(wx.EVT_BUTTON, self._on_close)
         button_sizer.Add(close_btn, 0)
 
         main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 15)
-
-        # Set initial focus to subject field
-        self._focus_target = self.subject_ctrl
 
     def _build_subject_text(self) -> str:
         """
@@ -235,6 +242,15 @@ class AlertDialog(wx.Dialog):
 
         return "\n\n".join(blocks)
 
+    @staticmethod
+    def _copy_payload(alert, settings) -> str:
+        """
+        Text placed on the clipboard when the Copy button is pressed.
+
+        Identical in both display styles (separate and combined).
+        """
+        return AlertDialog._build_combined_text(alert, settings)
+
     def _build_info_text(self) -> str:
         """
         Build the alert info text with severity, urgency, and certainty.
@@ -283,3 +299,31 @@ class AlertDialog(wx.Dialog):
     def _on_close(self, event):
         """Handle close button press."""
         self.EndModal(wx.ID_CLOSE)
+
+    def _on_copy(self, event):
+        """Copy the alert text to the system clipboard with visible feedback."""
+        text = self._copy_payload(self.alert, self.settings)
+        if not wx.TheClipboard.Open():
+            logger.warning("Alert copy: could not open clipboard")
+            self._flash_button(self.copy_btn, "Copy failed", "Cop&y to clipboard")
+            return
+        try:
+            wx.TheClipboard.SetData(wx.TextDataObject(text))
+        finally:
+            wx.TheClipboard.Close()
+        self._flash_button(self.copy_btn, "Copied!", "Cop&y to clipboard")
+
+    def _flash_button(self, btn, temp_label, revert, ms=2000):
+        """Temporarily replace a button label for `ms` milliseconds."""
+        btn.SetLabel(temp_label)
+        btn.GetParent().Layout()
+        if getattr(self, "_flash_timer", None) is not None:
+            self._flash_timer.Stop()
+        self._flash_timer = wx.CallLater(ms, self._revert_button_label, btn, revert)
+
+    def _revert_button_label(self, btn, revert):
+        """Restore a button's original label. Guards against post-destroy firings."""
+        # wxPython: a Destroy()ed widget's Python wrapper becomes falsy via __bool__.
+        if btn:
+            btn.SetLabel(revert)
+            btn.GetParent().Layout()
