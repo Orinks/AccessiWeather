@@ -959,23 +959,35 @@ async def get_nws_alerts(
 
         # Build params based on alert_radius_type
         if alert_radius_type == "county":
-            # Get county zone from point data
-            point_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
-            if client is not None:
-                point_response = await _client_get(client, point_url, headers=headers)
+            # Prefer the stored county_zone_id (populated by zone enrichment and
+            # kept fresh by drift correction). This skips a redundant /points
+            # round-trip on each refresh. Fall back to /points resolution when
+            # the stored field is absent.
+            if location.county_zone_id:
+                params = {"zone": location.county_zone_id, "status": "actual"}
             else:
-                async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
-                    point_response = await new_client.get(point_url, headers=headers)
-            point_response.raise_for_status()
-            point_data = point_response.json()
+                # Get county zone from point data
+                point_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+                if client is not None:
+                    point_response = await _client_get(client, point_url, headers=headers)
+                else:
+                    async with httpx.AsyncClient(
+                        timeout=timeout, follow_redirects=True
+                    ) as new_client:
+                        point_response = await new_client.get(point_url, headers=headers)
+                point_response.raise_for_status()
+                point_data = point_response.json()
 
-            county_url = point_data.get("properties", {}).get("county")
-            if county_url and "/county/" in county_url:
-                zone_id = county_url.split("/county/")[1]
-                params = {"zone": zone_id, "status": "actual"}
-            else:
-                logger.warning("Could not determine county zone, falling back to point query")
-                params = {"point": f"{location.latitude},{location.longitude}", "status": "actual"}
+                county_url = point_data.get("properties", {}).get("county")
+                if county_url and "/county/" in county_url:
+                    zone_id = county_url.split("/county/")[1]
+                    params = {"zone": zone_id, "status": "actual"}
+                else:
+                    logger.warning("Could not determine county zone, falling back to point query")
+                    params = {
+                        "point": f"{location.latitude},{location.longitude}",
+                        "status": "actual",
+                    }
 
         elif alert_radius_type == "state":
             # Get state from location - need to fetch point data first
@@ -1001,32 +1013,44 @@ async def get_nws_alerts(
                 params = {"point": f"{location.latitude},{location.longitude}", "status": "actual"}
 
         elif alert_radius_type == "zone":
-            # Get zone from point data
-            point_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
-            if client is not None:
-                point_response = await _client_get(client, point_url, headers=headers)
+            # Prefer the stored forecast_zone_id (populated by zone enrichment
+            # and kept fresh by drift correction). This skips a redundant
+            # /points round-trip on each refresh. Fall back to /points
+            # resolution when the stored field is absent.
+            if location.forecast_zone_id:
+                params = {"zone": location.forecast_zone_id, "status": "actual"}
             else:
-                async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
-                    point_response = await new_client.get(point_url, headers=headers)
-            point_response.raise_for_status()
-            point_data = point_response.json()
+                # Get zone from point data
+                point_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+                if client is not None:
+                    point_response = await _client_get(client, point_url, headers=headers)
+                else:
+                    async with httpx.AsyncClient(
+                        timeout=timeout, follow_redirects=True
+                    ) as new_client:
+                        point_response = await new_client.get(point_url, headers=headers)
+                point_response.raise_for_status()
+                point_data = point_response.json()
 
-            # Try to get zone ID (prefer county, then forecast zone)
-            zone_id = None
-            county_url = point_data.get("properties", {}).get("county")
-            if county_url and "/county/" in county_url:
-                zone_id = county_url.split("/county/")[1]
-            if not zone_id:
-                forecast_zone_url = point_data.get("properties", {}).get("forecastZone")
-                if forecast_zone_url and "/forecast/" in forecast_zone_url:
-                    zone_id = forecast_zone_url.split("/forecast/")[1]
+                # Try to get zone ID (prefer county, then forecast zone)
+                zone_id = None
+                county_url = point_data.get("properties", {}).get("county")
+                if county_url and "/county/" in county_url:
+                    zone_id = county_url.split("/county/")[1]
+                if not zone_id:
+                    forecast_zone_url = point_data.get("properties", {}).get("forecastZone")
+                    if forecast_zone_url and "/forecast/" in forecast_zone_url:
+                        zone_id = forecast_zone_url.split("/forecast/")[1]
 
-            if zone_id:
-                params = {"zone": zone_id, "status": "actual"}
-            else:
-                # Fall back to point query if zone not found
-                logger.warning("Could not determine zone, falling back to point query")
-                params = {"point": f"{location.latitude},{location.longitude}", "status": "actual"}
+                if zone_id:
+                    params = {"zone": zone_id, "status": "actual"}
+                else:
+                    # Fall back to point query if zone not found
+                    logger.warning("Could not determine zone, falling back to point query")
+                    params = {
+                        "point": f"{location.latitude},{location.longitude}",
+                        "status": "actual",
+                    }
 
         else:  # "point" (default) - most precise
             params = {
