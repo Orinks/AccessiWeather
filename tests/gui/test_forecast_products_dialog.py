@@ -16,6 +16,18 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+# This file's fixtures monkey-patch wx.Panel.__init__ and wx.Dialog.__init__
+# to neutralize real-widget construction so we can pass MagicMock parents.
+# That's safe when the wx module is the in-repo stub (no real C-extension),
+# but destructive when real wxPython is installed — the patches leak across
+# test files and break later alert-dialog tests that need a real Panel init.
+# Skip the whole module when real wx is detected (CI under xvfb).
+pytestmark = pytest.mark.skipif(
+    hasattr(sys.modules.get("wx"), "_core"),
+    reason="Real wxPython detected; this test module patches wx globals and "
+    "is only safe against the stub wx in tests/conftest.py.",
+)
+
 # ---------------------------------------------------------------------------
 # Stub augmentation (see test_forecast_product_panel.py for shape).
 # ---------------------------------------------------------------------------
