@@ -98,8 +98,9 @@ class ForecastProductsDialog(wx.Dialog):
         # Close button row.
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.close_button = wx.Button(self, wx.ID_CLOSE, label="&Close")
-        button_sizer.Add(self.close_button, 0, wx.ALIGN_RIGHT)
-        main_sizer.Add(button_sizer, 0, wx.ALL | wx.ALIGN_RIGHT, 8)
+        button_sizer.AddStretchSpacer()
+        button_sizer.Add(self.close_button, 0)
+        main_sizer.Add(button_sizer, 0, wx.ALL | wx.EXPAND, 8)
 
         self.SetSizer(main_sizer)
 
