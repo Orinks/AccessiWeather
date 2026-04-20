@@ -31,13 +31,27 @@ from .minutely_precipitation import (
 )
 
 if TYPE_CHECKING:
-    from ..models import AppSettings, CurrentConditions, Location, TextProduct, WeatherData
+    from collections.abc import Sequence
+
+    from ..models import (
+        AppSettings,
+        CurrentConditions,
+        Location,
+        TextProduct,
+        WeatherAlert,
+        WeatherData,
+    )
 
 
 # Rate-limit window for per-(product, location) notifications. The HWO check
 # suppresses re-dispatch within this window while still advancing stored state
 # so we don't re-trigger on the next cycle forever.
 _HWO_RATE_LIMIT_WINDOW = timedelta(minutes=30)
+# SPS (Special Weather Statement) reuses the same 30-minute sliding window,
+# keyed independently on ``self._last_product_notified_at``.
+_SPS_RATE_LIMIT_WINDOW = timedelta(minutes=30)
+# Windows toast bodies clip around 200 chars — be safely under that.
+_SPS_MAX_BODY_CHARS = 160
 # Summaries shorter than this (after stripping) fall back to the generic body.
 _HWO_SUMMARY_MIN_CHARS = 20
 
@@ -661,6 +675,253 @@ class NotificationEventManager:
         )
         logger.debug(
             "[events] HWO dispatch (default no-op): location=%s product=%s title=%r",
+            location.name,
+            product.product_id,
+            event.title,
+        )
+
+    # ------------------------------------------------------------------
+    # Unit 11 — Special Weather Statement (SPS) informational notifications
+    # ------------------------------------------------------------------
+
+    def _check_sps_new(
+        self,
+        location: Location,
+        sps_products: Sequence[TextProduct] | None,
+        cached_alerts: Sequence[WeatherAlert] | None,
+        settings: AppSettings,
+    ) -> None:
+        """
+        Dispatch notifications for informational SPS products only.
+
+        NWS issues two populations of Special Weather Statements:
+
+        - **Case A — event-style.** Hail, dense fog, strong-thunderstorm
+          statements that also appear on ``/alerts/active``. The existing alert
+          pipeline already surfaces them; notifying again here would
+          double-notify. We detect these via headline/first-description
+          substring matching against the SPS product text.
+        - **Case B — informational.** Fire-weather, pollen, coordination
+          statements that appear on ``/products/types/SPS`` but never on
+          ``/alerts/active``. These are invisible to users today; we notify on
+          them.
+
+        The heuristic is intentionally conservative: when a Case A match is not
+        obvious we favor notifying (honoring the plan's "if in doubt, show the
+        informational SPS the user would otherwise miss" principle).
+
+        Behavior summary:
+          1. Cold start — first ever fetch for this manager records all IDs
+             silently. Detected by ``not last_sps_product_ids`` and the bucket
+             not yet present in ``_sps_cold_started``.
+          2. Expiration — IDs in stored state but absent from the fetch are
+             silently removed.
+          3. For each NEW ID (not yet in state), classify Case A vs Case B;
+             add to state unconditionally; dispatch only for Case B, subject
+             to the setting toggle and the 30-min rate-limit bucket.
+          4. ``None`` or empty product list after cold-start just expires
+             stored IDs.
+        """
+        products = list(sps_products or [])
+        alerts = list(cached_alerts or [])
+
+        # Cold-start: first call ever for this (manager, location) pair.
+        if not hasattr(self, "_sps_cold_started"):
+            self._sps_cold_started: set[str] = set()  # type: ignore[attr-defined]
+
+        bucket_key = ("SPS", location.name)
+        is_cold_start = (
+            location.name not in self._sps_cold_started and not self.state.last_sps_product_ids
+        )
+
+        current_ids = {p.product_id for p in products}
+
+        if is_cold_start:
+            if current_ids:
+                self.state.last_sps_product_ids |= current_ids
+                self._save_state()
+            self._sps_cold_started.add(location.name)
+            logger.debug(
+                "_check_sps_new: cold-start baseline for %s (%d ids) — no dispatch",
+                location.name,
+                len(current_ids),
+            )
+            return
+
+        # Expire any stored IDs that are no longer present.
+        stale = self.state.last_sps_product_ids - current_ids
+        if stale:
+            self.state.last_sps_product_ids -= stale
+            self._save_state()
+            logger.debug("_check_sps_new: expired %d SPS id(s) for %s", len(stale), location.name)
+
+        # Evaluate only genuinely new product IDs.
+        new_products = [p for p in products if p.product_id not in self.state.last_sps_product_ids]
+        if not new_products:
+            return
+
+        # Build a normalized lookup of active SPS alert headlines/first-lines
+        # once for O(n + m) matching rather than O(n * m) per product.
+        alert_signatures = self._sps_alert_signatures(alerts)
+        enabled = getattr(settings, "notify_sps_issued", True)
+
+        dispatched_this_call = False
+        for product in new_products:
+            # Always add to seen state first — Case A or rate-limited products
+            # must never re-evaluate next cycle.
+            self.state.last_sps_product_ids.add(product.product_id)
+
+            if self._sps_is_case_a(product, alert_signatures):
+                logger.debug(
+                    "_check_sps_new: Case A (event-style) suppressed — product=%s",
+                    product.product_id,
+                )
+                continue
+
+            # Case B — informational.
+            if not enabled:
+                logger.debug(
+                    "_check_sps_new: notify_sps_issued disabled — suppressing %s",
+                    product.product_id,
+                )
+                continue
+
+            now = datetime.now(timezone.utc)
+            last_sent = self._last_product_notified_at.get(bucket_key)
+            if last_sent is not None and now - last_sent < _SPS_RATE_LIMIT_WINDOW:
+                logger.debug(
+                    "_check_sps_new: rate-limited for %s (last=%s) — state updated, no dispatch",
+                    location.name,
+                    last_sent,
+                )
+                continue
+            if dispatched_this_call:
+                # Stamp once per call so repeated Case B products in the same
+                # fetch still fall under the rate limit — matches HWO shape.
+                logger.debug(
+                    "_check_sps_new: additional Case B in same fetch rate-limited — %s",
+                    product.product_id,
+                )
+                continue
+
+            self._last_product_notified_at[bucket_key] = now
+            dispatched_this_call = True
+            message = self._format_sps_body(product)
+            logger.info(
+                "SPS informational dispatch for %s (%s): %s",
+                location.name,
+                product.cwa_office,
+                product.product_id,
+            )
+            self._dispatch_sps_notification(
+                location=location,
+                product=product,
+                message=message,
+            )
+
+        self._save_state()
+
+    @staticmethod
+    def _normalize_for_match(text: str | None) -> str:
+        """Return a casefolded, whitespace-collapsed version of ``text`` for matching."""
+        if not text:
+            return ""
+        return " ".join(text.split()).casefold()
+
+    @classmethod
+    def _sps_alert_signatures(cls, alerts: Sequence[WeatherAlert]) -> list[str]:
+        """
+        Collect normalized signatures for active SPS alerts.
+
+        Only alerts whose ``event`` is ``"Special Weather Statement"``
+        (case-insensitive) are considered. For each, we take the ``headline``
+        plus the first non-empty line of ``description``; both are normalized
+        via :meth:`_normalize_for_match`. Empty signatures are dropped.
+        """
+        signatures: list[str] = []
+        for alert in alerts:
+            event = (alert.event or "").strip().casefold()
+            if event != "special weather statement":
+                continue
+            for candidate in (alert.headline, cls._first_nonempty_line(alert.description)):
+                sig = cls._normalize_for_match(candidate)
+                if sig:
+                    signatures.append(sig)
+        return signatures
+
+    @classmethod
+    def _sps_is_case_a(cls, product: TextProduct, alert_signatures: Sequence[str]) -> bool:
+        """
+        Return True when ``product`` looks like the event-style SPS an alert covers.
+
+        Matching rule: any active SPS alert's normalized headline or first
+        description line appears as a substring of the product's normalized
+        text (headline + product_text), OR vice versa. The bidirectional check
+        covers the rare case where an alert description runs longer than the
+        product blurb, even though the common shape is alert-headline ⊆
+        product-text.
+        """
+        if not alert_signatures:
+            return False
+        product_haystack_parts = [product.headline or "", product.product_text or ""]
+        product_norm = cls._normalize_for_match(" ".join(product_haystack_parts))
+        if not product_norm:
+            return False
+        return any(sig in product_norm or product_norm in sig for sig in alert_signatures)
+
+    @classmethod
+    def _format_sps_body(cls, product: TextProduct) -> str:
+        """Build the toast body — headline + CWA office, with text fallback."""
+        headline = (product.headline or "").strip()
+        if headline:
+            body = f"{headline} \u2014 {product.cwa_office}"
+            return cls._truncate(body, _SPS_MAX_BODY_CHARS)
+        fallback = cls._first_nonempty_line(product.product_text) or ""
+        return cls._truncate(fallback.strip(), _SPS_MAX_BODY_CHARS)
+
+    @staticmethod
+    def _first_nonempty_line(text: str | None) -> str | None:
+        """Return the first non-empty, non-whitespace line of ``text``."""
+        if not text:
+            return None
+        for raw in text.splitlines():
+            line = raw.strip()
+            if line:
+                return line
+        return None
+
+    @staticmethod
+    def _truncate(text: str, limit: int) -> str:
+        """Truncate ``text`` to ``limit`` chars, appending an ellipsis if cut."""
+        if len(text) <= limit:
+            return text
+        if limit <= 3:
+            return text[:limit]
+        return text[: limit - 3] + "..."
+
+    def _dispatch_sps_notification(
+        self,
+        *,
+        location: Location,
+        product: TextProduct,
+        message: str,
+    ) -> None:
+        """
+        Emit the SPS notification event.
+
+        Default is a no-op logger call mirroring
+        :meth:`_dispatch_hwo_notification`; the UI layer monkey-patches it to
+        fire a real desktop notification. Tests capture dispatches by
+        replacing this method.
+        """
+        event = NotificationEvent(
+            event_type="sps_issued",
+            title="Special Weather Statement",
+            message=message,
+            sound_event="notify",
+        )
+        logger.debug(
+            "[events] SPS dispatch (default no-op): location=%s product=%s title=%r",
             location.name,
             product.product_id,
             event.title,
