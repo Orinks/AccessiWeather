@@ -42,6 +42,7 @@ class ForecastProductsDialog(wx.Dialog):
         location: Location,
         forecast_product_service: ForecastProductService,
         ai_explainer: AIExplainer | None,
+        app: object | None = None,
     ) -> None:
         """
         Build the dialog and its three panels.
@@ -52,6 +53,8 @@ class ForecastProductsDialog(wx.Dialog):
                 tabs; a null ``cwa_office`` is handled by the panel).
             forecast_product_service: Service used to fetch+cache each product.
             ai_explainer: Optional AI explainer wired through to each panel.
+            app: Optional AccessiWeather app instance. Passed to each panel
+                so async loaders can dispatch via ``app.run_async``.
 
         """
         super().__init__(
@@ -62,6 +65,7 @@ class ForecastProductsDialog(wx.Dialog):
         self._location = location
         self._service = forecast_product_service
         self._ai_explainer = ai_explainer
+        self._app = app
 
         self._create_widgets()
         self._bind_events()
@@ -91,6 +95,7 @@ class ForecastProductsDialog(wx.Dialog):
                 ai_explainer=self._ai_explainer,
                 cwa_office=cwa_office,
                 location_name=location_name,
+                app=self._app,
             )
             self.notebook.AddPage(panel, tab_label)
             self.panels.append(panel)
@@ -168,11 +173,14 @@ def show_forecast_products_dialog(
     location: Location,
     forecast_product_service: ForecastProductService,
     ai_explainer: AIExplainer | None,
+    app: object | None = None,
 ) -> None:
     """Show the Forecast Products dialog modally and destroy on close."""
     try:
         parent_ctrl = getattr(parent, "control", parent)
-        dlg = ForecastProductsDialog(parent_ctrl, location, forecast_product_service, ai_explainer)
+        dlg = ForecastProductsDialog(
+            parent_ctrl, location, forecast_product_service, ai_explainer, app=app
+        )
         dlg.ShowModal()
         dlg.Destroy()
     except Exception as exc:  # noqa: BLE001

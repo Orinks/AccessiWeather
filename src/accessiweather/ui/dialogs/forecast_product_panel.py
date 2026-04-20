@@ -62,6 +62,7 @@ class ForecastProductPanel(wx.Panel):
         ai_explainer: AIExplainer | None,
         cwa_office: str | None,
         location_name: str,
+        app: object | None = None,
     ) -> None:
         """
         Build the panel widgets.
@@ -77,6 +78,9 @@ class ForecastProductPanel(wx.Panel):
                 panel shows a fallback message covering all three product
                 types.
             location_name: Human-readable location name (used for AI prompts).
+            app: Optional AccessiWeather app instance. When provided, async
+                loaders dispatch via ``app.run_async`` (the background asyncio
+                loop). Falls back to ``asyncio.ensure_future`` when absent.
 
         """
         super().__init__(parent)
@@ -85,6 +89,7 @@ class ForecastProductPanel(wx.Panel):
         self._ai_explainer = ai_explainer
         self._cwa_office = cwa_office
         self._location_name = location_name
+        self._app = app
 
         # State
         self._current_text: str | None = None
@@ -232,14 +237,31 @@ class ForecastProductPanel(wx.Panel):
         self._schedule_load(self._product_loader())
 
     def _schedule_load(self, coro) -> None:
-        """Dispatch a loader coroutine. Separated for test override."""
+        """
+        Dispatch a loader coroutine. Separated for test override.
+
+        Uses the app's run_async (background asyncio loop) when available —
+        that's the only dispatch path that actually runs in production,
+        because the wx main thread has no running asyncio loop of its own.
+        """
+        runner = getattr(self._app, "run_async", None) if self._app is not None else None
+        if runner is not None:
+            runner(self._run_loader(coro))
+            return
+
         import asyncio
 
         try:
             asyncio.ensure_future(self._run_loader(coro))
         except RuntimeError:
-            # No running loop (rare in tests) — swallow; tests drive load paths directly.
-            logger.debug("No running event loop for ForecastProductPanel loader")
+            # No running loop — coroutine never runs. Surface as a load error
+            # rather than leaving the panel stuck in Loading...
+            logger.warning("No running event loop for ForecastProductPanel loader")
+            wx.CallAfter(
+                self._on_load_error,
+                RuntimeError("No running event loop; cannot load product"),
+            )
+            coro.close()
 
     async def _run_loader(self, coro) -> None:
         """Await the loader coroutine and marshal result/error to main thread."""
@@ -387,14 +409,19 @@ class ForecastProductPanel(wx.Panel):
 
     def _schedule_explain(self, text: str) -> None:
         """Dispatch the AI explain coroutine. Separated for test override."""
-        import asyncio
-
         if self._ai_explainer is None:
             return
+        runner = getattr(self._app, "run_async", None) if self._app is not None else None
+        if runner is not None:
+            runner(self._run_explain(text))
+            return
+
+        import asyncio
+
         try:
             asyncio.ensure_future(self._run_explain(text))
         except RuntimeError:
-            logger.debug("No running event loop for ForecastProductPanel explain")
+            logger.warning("No running event loop for ForecastProductPanel explain")
 
     async def _run_explain(self, text: str) -> None:
         """Invoke ``AIExplainer.explain_text_product`` for this tab's product."""

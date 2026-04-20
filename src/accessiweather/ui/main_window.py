@@ -712,7 +712,7 @@ class MainWindow(SizedFrame):
 
         service = self._get_forecast_product_service()
         ai_explainer = getattr(self.app, "ai_explainer", None)
-        show_forecast_products_dialog(self, current, service, ai_explainer)
+        show_forecast_products_dialog(self, current, service, ai_explainer, app=self.app)
 
     def _safe_update_forecast_products_button_state(self) -> None:
         """
