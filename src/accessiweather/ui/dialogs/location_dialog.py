@@ -78,6 +78,30 @@ def show_edit_location_dialog(parent, app: AccessiWeatherApp, location) -> bool 
         return None
 
 
+_ZONE_NOT_RESOLVED_MSG = "Not yet resolved - will populate after next weather refresh"
+
+
+def _edit_location_is_us(location) -> bool:
+    """
+    Determine whether a location should display NWS zone information.
+
+    Uses the country_code fast path first, then falls back to coordinate bounds
+    consistent with ``accessiweather.display.presentation.forecast._is_us_location``.
+    """
+    country_code = getattr(location, "country_code", None)
+    if country_code:
+        return str(country_code).upper() == "US"
+
+    lat = getattr(location, "latitude", None)
+    lon = getattr(location, "longitude", None)
+    if lat is None or lon is None:
+        return False
+    in_continental_bounds = 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0
+    in_alaska_bounds = 51.0 <= lat <= 71.5 and -172.0 <= lon <= -130.0
+    in_hawaii_bounds = 18.0 <= lat <= 23.0 and -161.0 <= lon <= -154.0
+    return in_continental_bounds or in_alaska_bounds or in_hawaii_bounds
+
+
 class EditLocationDialog(wx.Dialog):
     """Small dialog for editing an existing location's marine-mode flag."""
 
@@ -86,7 +110,6 @@ class EditLocationDialog(wx.Dialog):
         super().__init__(
             parent,
             title=f"Edit Location: {location.name}",
-            size=(420, 200),
             style=wx.DEFAULT_DIALOG_STYLE,
         )
         self._location = location
@@ -108,6 +131,29 @@ class EditLocationDialog(wx.Dialog):
         self.marine_checkbox.SetName("Enable Marine Mode for this location")
         sizer.Add(self.marine_checkbox, 0, wx.ALL | wx.EXPAND, 10)
 
+        # NWS Zone Information section (US locations only, snapshot at open).
+        self._zone_info_box = wx.StaticBox(panel, label="NWS Zone Information")
+        zone_sizer = wx.StaticBoxSizer(self._zone_info_box, wx.VERTICAL)
+
+        zone_parent = self._zone_info_box
+        zone_id = getattr(location, "forecast_zone_id", None)
+        office = getattr(location, "cwa_office", None)
+
+        forecast_zone_text = (
+            f"Forecast Zone: {zone_id}" if zone_id else f"Forecast Zone: {_ZONE_NOT_RESOLVED_MSG}"
+        )
+        office_text = f"NWS Office: {office}" if office else f"NWS Office: {_ZONE_NOT_RESOLVED_MSG}"
+
+        self._forecast_zone_label = wx.StaticText(zone_parent, label=forecast_zone_text)
+        self._cwa_office_label = wx.StaticText(zone_parent, label=office_text)
+        zone_sizer.Add(self._forecast_zone_label, 0, wx.ALL, 5)
+        zone_sizer.Add(self._cwa_office_label, 0, wx.ALL, 5)
+        sizer.Add(zone_sizer, 0, wx.ALL | wx.EXPAND, 10)
+
+        if not _edit_location_is_us(location):
+            # Hide the entire box for non-US locations (no "N/A" fallback).
+            self._zone_info_box.Show(False)
+
         button_sizer = wx.StdDialogButtonSizer()
         ok_button = wx.Button(panel, wx.ID_OK, "&Save")
         cancel_button = wx.Button(panel, wx.ID_CANCEL, "Cancel")
@@ -118,6 +164,10 @@ class EditLocationDialog(wx.Dialog):
 
         panel.SetSizer(sizer)
         ok_button.SetDefault()
+
+        # Fit to content, but keep a baseline minimum width.
+        self.SetMinSize(wx.Size(420, -1))
+        self.Fit()
 
     def get_marine_mode(self) -> bool:
         """Return the marine_mode value chosen in the dialog."""

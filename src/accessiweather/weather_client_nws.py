@@ -21,6 +21,10 @@ from .models import (
     WeatherAlert,
     WeatherAlerts,
 )
+from .services.zone_enrichment_service import (
+    _extract_zone_fields,
+    diff_zone_fields,
+)
 from .utils.retry_utils import (
     RETRYABLE_EXCEPTIONS,
     async_retry_with_backoff,
@@ -32,7 +36,88 @@ from .weather_client_parsers import (
     convert_wind_speed_to_mph_and_kph,
 )
 
+# wxPython is an optional runtime dep. Import lazily via a module-level handle
+# so tests (and headless CI) can patch or stub it without importing the full
+# wx package. When wx is unavailable, CallAfter becomes a best-effort direct
+# call — acceptable since the drift hook is a no-op under those conditions
+# (no sink is registered in non-GUI test contexts).
+try:
+    import wx  # type: ignore[import-untyped]
+except ImportError:  # pragma: no cover - handled at runtime
+    wx = None  # type: ignore[assignment]
+
+# Registered drift-correction sink. Wired up by app initialization to point at
+# the application's ``LocationOperations`` instance. Unit tests register their
+# own sink directly. The hook is a silent no-op until a sink is installed.
+_ZONE_DRIFT_SINK: Any = None
+
 logger = logging.getLogger(__name__)
+
+
+def set_zone_drift_sink(sink: Any) -> None:
+    """
+    Register (or clear) the object used to persist drift-corrected zone fields.
+
+    The ``sink`` must expose an ``update_zone_metadata(location_name, fields)``
+    callable — typically a :class:`accessiweather.config.locations.LocationOperations`
+    instance. Pass ``None`` to clear.
+
+    This is intentionally a module-global registration: weather-client HTTP
+    helpers are shared across the app and cannot easily thread an extra
+    dependency through every signature. Wiring is performed once during app
+    startup; tests install/clear the sink as needed.
+    """
+    global _ZONE_DRIFT_SINK
+    _ZONE_DRIFT_SINK = sink
+
+
+def _apply_zone_drift_correction(location: Location, point_data: dict[str, Any] | None) -> None:
+    """
+    Diff fresh ``/points`` properties against ``location`` and persist drift.
+
+    Called from the weather-refresh thread after each successful ``/points``
+    fetch. Never raises: a drift bug must never cascade into breaking the
+    weather refresh flow.
+
+    Persistence is funneled through ``wx.CallAfter`` so that the main thread
+    performs the actual config write — ``ConfigManager.save_config`` has no
+    in-process lock, and main-thread bounce is the smallest correct fix.
+    """
+    sink = _ZONE_DRIFT_SINK
+    if sink is None:
+        return
+    try:
+        if not isinstance(point_data, dict):
+            return
+        properties = point_data.get("properties")
+        if not isinstance(properties, dict):
+            return
+
+        fresh_fields = _extract_zone_fields(properties)
+        changes = diff_zone_fields(location, fresh_fields)
+        if not changes:
+            return
+
+        persist = getattr(sink, "update_zone_metadata", None)
+        if persist is None:
+            return
+
+        call_after = getattr(wx, "CallAfter", None) if wx is not None else None
+        if call_after is None:
+            # No wx event loop available — skip silently rather than writing
+            # from a background thread unprotected.
+            logger.debug("Zone drift: wx.CallAfter unavailable, skipping persist")
+            return
+
+        call_after(persist, location.name, changes)
+        logger.debug(
+            "Zone drift: scheduled update for %s: %s",
+            location.name,
+            sorted(changes.keys()),
+        )
+    except Exception as exc:  # noqa: BLE001 - must never break refresh
+        logger.debug("Zone drift correction raised (suppressed): %s", exc)
+
 
 MAX_STATION_OBSERVATION_ATTEMPTS = 10
 MAX_OBSERVATION_AGE = timedelta(hours=2)
@@ -338,6 +423,9 @@ async def get_nws_all_data_parallel(
         response = await _client_get(client, grid_url, headers=headers)
         response.raise_for_status()
         grid_data = response.json()
+
+        # Opportunistic zone-metadata drift correction. Never raises.
+        _apply_zone_drift_correction(location, grid_data)
 
         # Now fetch all other data in parallel, reusing grid_data
         current_task = asyncio.create_task(
@@ -871,23 +959,35 @@ async def get_nws_alerts(
 
         # Build params based on alert_radius_type
         if alert_radius_type == "county":
-            # Get county zone from point data
-            point_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
-            if client is not None:
-                point_response = await _client_get(client, point_url, headers=headers)
+            # Prefer the stored county_zone_id (populated by zone enrichment and
+            # kept fresh by drift correction). This skips a redundant /points
+            # round-trip on each refresh. Fall back to /points resolution when
+            # the stored field is absent.
+            if location.county_zone_id:
+                params = {"zone": location.county_zone_id, "status": "actual"}
             else:
-                async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
-                    point_response = await new_client.get(point_url, headers=headers)
-            point_response.raise_for_status()
-            point_data = point_response.json()
+                # Get county zone from point data
+                point_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+                if client is not None:
+                    point_response = await _client_get(client, point_url, headers=headers)
+                else:
+                    async with httpx.AsyncClient(
+                        timeout=timeout, follow_redirects=True
+                    ) as new_client:
+                        point_response = await new_client.get(point_url, headers=headers)
+                point_response.raise_for_status()
+                point_data = point_response.json()
 
-            county_url = point_data.get("properties", {}).get("county")
-            if county_url and "/county/" in county_url:
-                zone_id = county_url.split("/county/")[1]
-                params = {"zone": zone_id, "status": "actual"}
-            else:
-                logger.warning("Could not determine county zone, falling back to point query")
-                params = {"point": f"{location.latitude},{location.longitude}", "status": "actual"}
+                county_url = point_data.get("properties", {}).get("county")
+                if county_url and "/county/" in county_url:
+                    zone_id = county_url.split("/county/")[1]
+                    params = {"zone": zone_id, "status": "actual"}
+                else:
+                    logger.warning("Could not determine county zone, falling back to point query")
+                    params = {
+                        "point": f"{location.latitude},{location.longitude}",
+                        "status": "actual",
+                    }
 
         elif alert_radius_type == "state":
             # Get state from location - need to fetch point data first
@@ -913,32 +1013,44 @@ async def get_nws_alerts(
                 params = {"point": f"{location.latitude},{location.longitude}", "status": "actual"}
 
         elif alert_radius_type == "zone":
-            # Get zone from point data
-            point_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
-            if client is not None:
-                point_response = await _client_get(client, point_url, headers=headers)
+            # Prefer the stored forecast_zone_id (populated by zone enrichment
+            # and kept fresh by drift correction). This skips a redundant
+            # /points round-trip on each refresh. Fall back to /points
+            # resolution when the stored field is absent.
+            if location.forecast_zone_id:
+                params = {"zone": location.forecast_zone_id, "status": "actual"}
             else:
-                async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
-                    point_response = await new_client.get(point_url, headers=headers)
-            point_response.raise_for_status()
-            point_data = point_response.json()
+                # Get zone from point data
+                point_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+                if client is not None:
+                    point_response = await _client_get(client, point_url, headers=headers)
+                else:
+                    async with httpx.AsyncClient(
+                        timeout=timeout, follow_redirects=True
+                    ) as new_client:
+                        point_response = await new_client.get(point_url, headers=headers)
+                point_response.raise_for_status()
+                point_data = point_response.json()
 
-            # Try to get zone ID (prefer county, then forecast zone)
-            zone_id = None
-            county_url = point_data.get("properties", {}).get("county")
-            if county_url and "/county/" in county_url:
-                zone_id = county_url.split("/county/")[1]
-            if not zone_id:
-                forecast_zone_url = point_data.get("properties", {}).get("forecastZone")
-                if forecast_zone_url and "/forecast/" in forecast_zone_url:
-                    zone_id = forecast_zone_url.split("/forecast/")[1]
+                # Try to get zone ID (prefer county, then forecast zone)
+                zone_id = None
+                county_url = point_data.get("properties", {}).get("county")
+                if county_url and "/county/" in county_url:
+                    zone_id = county_url.split("/county/")[1]
+                if not zone_id:
+                    forecast_zone_url = point_data.get("properties", {}).get("forecastZone")
+                    if forecast_zone_url and "/forecast/" in forecast_zone_url:
+                        zone_id = forecast_zone_url.split("/forecast/")[1]
 
-            if zone_id:
-                params = {"zone": zone_id, "status": "actual"}
-            else:
-                # Fall back to point query if zone not found
-                logger.warning("Could not determine zone, falling back to point query")
-                params = {"point": f"{location.latitude},{location.longitude}", "status": "actual"}
+                if zone_id:
+                    params = {"zone": zone_id, "status": "actual"}
+                else:
+                    # Fall back to point query if zone not found
+                    logger.warning("Could not determine zone, falling back to point query")
+                    params = {
+                        "point": f"{location.latitude},{location.longitude}",
+                        "status": "actual",
+                    }
 
         else:  # "point" (default) - most precise
             params = {

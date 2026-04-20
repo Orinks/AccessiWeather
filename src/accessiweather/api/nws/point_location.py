@@ -97,6 +97,9 @@ class NwsPointLocation:
                     "fireWeatherZone": properties.get("fireWeatherZone"),
                     "timeZone": properties.get("timeZone"),
                     "radarStation": properties.get("radarStation"),
+                    "cwa": properties.get("cwa"),
+                    "forecastZone": properties.get("forecastZone"),
+                    "gridId": properties.get("gridId"),
                 }
             }
         else:
@@ -116,6 +119,9 @@ class NwsPointLocation:
                         "fire_weather_zone",
                         "time_zone",
                         "radar_station",
+                        "cwa",
+                        "forecast_zone",
+                        "grid_id",
                     ]:
                         if hasattr(properties_obj, attr):
                             properties[attr] = getattr(properties_obj, attr)
@@ -135,6 +141,10 @@ class NwsPointLocation:
                         "timeZone": properties.get("timeZone") or properties.get("time_zone"),
                         "radarStation": properties.get("radarStation")
                         or properties.get("radar_station"),
+                        "cwa": properties.get("cwa"),
+                        "forecastZone": properties.get("forecastZone")
+                        or properties.get("forecast_zone"),
+                        "gridId": properties.get("gridId") or properties.get("grid_id"),
                     }
                 }
             else:
