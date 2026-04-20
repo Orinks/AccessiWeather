@@ -2,8 +2,10 @@
 Forecast Products dialog — tabbed host for AFD, HWO, and SPS panels.
 
 A ``wx.Notebook`` with three :class:`ForecastProductPanel` pages. Focus lands
-on the AFD TextCtrl when the dialog opens, and moves to the target tab's
-TextCtrl on page change so screen readers re-announce the content.
+on the AFD TextCtrl when the dialog opens so the user sees content immediately.
+Tab switches deliberately do NOT grab focus — the notebook tab strip stays
+the active focus level until the user Tabs into content, matching the
+accessible notebook contract.
 """
 
 from __future__ import annotations
@@ -105,8 +107,15 @@ class ForecastProductsDialog(wx.Dialog):
         self.SetSizer(main_sizer)
 
     def _bind_events(self) -> None:
-        """Bind notebook/page-change, close, and ESC events."""
-        self.notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self._on_page_changed)
+        """
+        Bind close and ESC events.
+
+        We intentionally do NOT grab focus on page-change. Auto-moving focus
+        into the content every time the user arrow-keys through tabs forces
+        screen readers to re-read the full product text and breaks the
+        standard "tab strip is a focus level, content is the next focus
+        level" contract. The user moves into content themselves with Tab.
+        """
         self.close_button.Bind(wx.EVT_BUTTON, self._on_close)
         self.Bind(wx.EVT_CHAR_HOOK, self._on_key)
 
@@ -140,17 +149,6 @@ class ForecastProductsDialog(wx.Dialog):
                 self.panels[idx].product_textctrl.SetFocus()
             except Exception:  # noqa: BLE001
                 logger.debug("Unable to move focus to product TextCtrl", exc_info=True)
-
-    def _on_page_changed(self, event) -> None:
-        """Move focus to the newly-selected tab's TextCtrl."""
-        try:
-            idx = event.GetSelection()
-        except Exception:  # noqa: BLE001
-            idx = self.notebook.GetSelection() if hasattr(self, "notebook") else 0
-        if 0 <= idx < len(self.panels):
-            panel = self.panels[idx]
-            wx.CallAfter(panel.product_textctrl.SetFocus)
-        event.Skip()
 
     def _on_key(self, event) -> None:
         """ESC closes the dialog."""

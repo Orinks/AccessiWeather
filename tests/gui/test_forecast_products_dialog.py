@@ -267,8 +267,17 @@ class TestForecastProductsDialog:
         finally:
             loop.close()
 
-    def test_page_changed_moves_focus(self, notebook_factory, panel_factory, sample_us_location):
-        """EVT_NOTEBOOK_PAGE_CHANGED schedules focus on the target TextCtrl."""
+    def test_page_change_does_not_steal_focus(
+        self, notebook_factory, panel_factory, sample_us_location
+    ):
+        """
+        Tab switching must NOT auto-grab focus into the content.
+
+        Accessibility contract: the notebook tab strip is one focus level,
+        the selected tab's content is the next. Auto-focusing the TextCtrl
+        on every arrow-through-tabs forces the screen reader to re-read
+        the full product text. The user moves into content with Tab.
+        """
         service = MagicMock()
         dlg = ForecastProductsDialog(
             parent=MagicMock(),
@@ -276,15 +285,8 @@ class TestForecastProductsDialog:
             forecast_product_service=service,
             ai_explainer=None,
         )
-        evt = MagicMock()
-        evt.GetSelection.return_value = 1  # switch to HWO tab
-
-        with patch.object(_wx, "CallAfter") as call_after:
-            dlg._on_page_changed(evt)
-
-        # HWO panel's TextCtrl should be the focus target.
-        hwo_panel = dlg.panels[1]
-        call_after.assert_any_call(hwo_panel.product_textctrl.SetFocus)
+        # _on_page_changed was removed — the handler must no longer exist.
+        assert not hasattr(dlg, "_on_page_changed")
 
 
 # ---------------------------------------------------------------------------
