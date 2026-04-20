@@ -115,15 +115,21 @@ class ForecastProductPanel(wx.Panel):
         self.header_label = wx.StaticText(self, label=full_name)
         main_sizer.Add(self.header_label, 0, wx.ALL | wx.EXPAND, 8)
 
-        # SPS multi-product chooser (hidden by default; revealed when >1 SPS).
-        self.sps_choice_label = wx.StaticText(self, label="Active Special Weather Statements:")
-        main_sizer.Add(self.sps_choice_label, 0, wx.LEFT | wx.RIGHT, 8)
-        self.sps_choice = wx.Choice(self)
-        main_sizer.Add(self.sps_choice, 0, wx.ALL | wx.EXPAND, 8)
-        # Always hide initially — shown only when we have >1 SPS.
-        self._sps_choice_sizer_index = 2  # position in main_sizer for Show()
-        main_sizer.Show(self.sps_choice_label, False)
-        main_sizer.Show(self.sps_choice, False)
+        # SPS multi-product chooser — ONLY created on the SPS tab. Creating it
+        # on AFD/HWO and hiding it via Show(False) still leaks the label to
+        # screen readers, which was reported as misleading. AFD and HWO never
+        # have multiple concurrent products, so the chooser is SPS-only by
+        # design.
+        self.sps_choice_label: wx.StaticText | None = None
+        self.sps_choice: wx.Choice | None = None
+        if self.product_type == "SPS":
+            self.sps_choice_label = wx.StaticText(self, label="Active Special Weather Statements:")
+            main_sizer.Add(self.sps_choice_label, 0, wx.LEFT | wx.RIGHT, 8)
+            self.sps_choice = wx.Choice(self)
+            main_sizer.Add(self.sps_choice, 0, wx.ALL | wx.EXPAND, 8)
+            # Hidden until we actually have >1 SPS to switch between.
+            main_sizer.Show(self.sps_choice_label, False)
+            main_sizer.Show(self.sps_choice, False)
 
         # Raw product text — the primary content surface.
         self.product_textctrl = wx.TextCtrl(
@@ -172,7 +178,8 @@ class ForecastProductPanel(wx.Panel):
         self.explain_button.Bind(wx.EVT_BUTTON, self._on_explain)
         self.regenerate_button.Bind(wx.EVT_BUTTON, self._on_regenerate)
         self.retry_button.Bind(wx.EVT_BUTTON, self._on_retry)
-        self.sps_choice.Bind(wx.EVT_CHOICE, self._on_sps_choice_changed)
+        if self.sps_choice is not None:
+            self.sps_choice.Bind(wx.EVT_CHOICE, self._on_sps_choice_changed)
 
     # ------------------------------------------------------------------
     # Layout helpers (mirror DiscussionDialog's AI visibility design)
@@ -203,8 +210,12 @@ class ForecastProductPanel(wx.Panel):
         self._layout()
 
     def _show_sps_chooser(self, visible: bool) -> None:
-        self._main_sizer.Show(self.sps_choice_label, visible)
-        self._main_sizer.Show(self.sps_choice, visible)
+        label = self.sps_choice_label
+        choice = self.sps_choice
+        if label is None or choice is None:
+            return
+        self._main_sizer.Show(label, visible)
+        self._main_sizer.Show(choice, visible)
         self._layout()
 
     def _show_retry(self, visible: bool) -> None:
@@ -331,12 +342,15 @@ class ForecastProductPanel(wx.Panel):
     def _render_sps_products(self, products: list[TextProduct]) -> None:
         """Render one or more SPS products with the multi-choice picker."""
         self._sps_products = products
+        choice = self.sps_choice
+        if choice is None:  # non-SPS panels shouldn't reach this path
+            return
         entries = [_format_sps_choice_entry(p) for p in products]
         # Repopulate the choice widget. MagicMock in tests tolerates both.
-        self.sps_choice.Clear()
+        choice.Clear()
         for entry in entries:
-            self.sps_choice.Append(entry)
-        self.sps_choice.SetSelection(0)
+            choice.Append(entry)
+        choice.SetSelection(0)
         self._show_sps_chooser(len(products) > 1)
         self._render_single_product(products[0])
         # _render_single_product hides the chooser — re-show if multi.
@@ -345,7 +359,10 @@ class ForecastProductPanel(wx.Panel):
     def _on_sps_choice_changed(self, event) -> None:
         """Swap the TextCtrl content when the user picks a different SPS."""
         del event
-        idx = self.sps_choice.GetSelection()
+        choice = self.sps_choice
+        if choice is None:
+            return
+        idx = choice.GetSelection()
         if idx < 0 or idx >= len(self._sps_products):
             return
         product = self._sps_products[idx]
