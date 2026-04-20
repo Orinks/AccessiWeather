@@ -15,6 +15,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+# This file's fixtures monkey-patch wx.Dialog.__init__. Safe against the
+# in-repo stub (no C-extension), destructive against real wxPython where the
+# patches can leak across test files. Skip when real wx is detected.
+pytestmark = pytest.mark.skipif(
+    hasattr(sys.modules.get("wx"), "_core"),
+    reason="Real wxPython detected; this test module patches wx globals and "
+    "is only safe against the stub wx in tests/conftest.py.",
+)
+
 # ---------------------------------------------------------------------------
 # Extend the wx stub with the constants/classes EditLocationDialog needs.
 # ---------------------------------------------------------------------------

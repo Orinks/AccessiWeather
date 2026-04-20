@@ -40,6 +40,8 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "show_nationwide_location",
     # Event notifications
     "notify_discussion_update",
+    "notify_hwo_update",
+    "notify_sps_issued",
     "notify_severe_risk_change",
     "notify_minutely_precipitation_start",
     "notify_minutely_precipitation_stop",
@@ -127,6 +129,8 @@ class AppSettings:
     show_nationwide_location: bool = True
     # Event-based notifications
     notify_discussion_update: bool = True
+    notify_hwo_update: bool = True
+    notify_sps_issued: bool = True
     notify_severe_risk_change: bool = False
     notify_minutely_precipitation_start: bool = True
     notify_minutely_precipitation_stop: bool = True
@@ -462,6 +466,8 @@ class AppSettings:
             "muted_sound_events": self.muted_sound_events,
             "show_nationwide_location": self.show_nationwide_location,
             "notify_discussion_update": self.notify_discussion_update,
+            "notify_hwo_update": self.notify_hwo_update,
+            "notify_sps_issued": self.notify_sps_issued,
             "notify_severe_risk_change": self.notify_severe_risk_change,
             "notify_minutely_precipitation_start": self.notify_minutely_precipitation_start,
             "notify_minutely_precipitation_stop": self.notify_minutely_precipitation_stop,
@@ -552,6 +558,8 @@ class AppSettings:
             muted_sound_events=data.get("muted_sound_events", list(DEFAULT_MUTED_SOUND_EVENTS)),
             show_nationwide_location=cls._as_bool(data.get("show_nationwide_location"), True),
             notify_discussion_update=cls._as_bool(data.get("notify_discussion_update"), True),
+            notify_hwo_update=cls._as_bool(data.get("notify_hwo_update"), True),
+            notify_sps_issued=cls._as_bool(data.get("notify_sps_issued"), True),
             notify_severe_risk_change=cls._as_bool(data.get("notify_severe_risk_change"), False),
             notify_minutely_precipitation_start=cls._as_bool(
                 data.get("notify_minutely_precipitation_start"), True

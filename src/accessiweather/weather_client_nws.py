@@ -7,7 +7,7 @@ import inspect
 import logging
 import re
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, Literal
 
 import httpx
 
@@ -18,6 +18,7 @@ from .models import (
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    TextProduct,
     WeatherAlert,
     WeatherAlerts,
 )
@@ -854,6 +855,170 @@ async def get_nws_discussion_only(
         return None, None
 
 
+class TextProductFetchError(Exception):
+    """
+    Network, timeout, or non-200 response from the NWS /products endpoint.
+
+    Distinct from the "empty @graph" case, which returns ``None`` (AFD/HWO) or
+    ``[]`` (SPS) rather than raising.
+    """
+
+
+async def _fetch_text_product_by_id(
+    client: httpx.AsyncClient,
+    nws_base_url: str,
+    headers: dict[str, str],
+    product_type: Literal["AFD", "HWO", "SPS"],
+    cwa_office: str,
+    entry: dict[str, Any],
+) -> TextProduct | None:
+    """
+    Fetch a single /products/{id} and return a TextProduct.
+
+    Returns None for individual product fetches whose id is missing or whose
+    response is missing productText — these are treated as best-effort skips
+    rather than hard errors.
+    """
+    product_id = entry.get("id")
+    if not product_id:
+        logger.warning("No product ID in %s @graph entry for office %s", product_type, cwa_office)
+        return None
+
+    issuance_time = _parse_iso_datetime(entry.get("issuanceTime"))
+
+    product_url = f"{nws_base_url}/products/{product_id}"
+    response = await _client_get(client, product_url, headers=headers)
+    if response.status_code != 200:
+        logger.warning(
+            "Failed to get %s product text (%s): HTTP %s",
+            product_type,
+            product_id,
+            response.status_code,
+        )
+        raise TextProductFetchError(
+            f"HTTP {response.status_code} fetching {product_type} product {product_id}"
+        )
+
+    product_data = response.json()
+    product_text = product_data.get("productText")
+    if not product_text:
+        logger.warning("No productText in %s product %s", product_type, product_id)
+        return None
+
+    # Prefer product-level issuanceTime over @graph metadata when present.
+    body_issuance = _parse_iso_datetime(product_data.get("issuanceTime"))
+    if body_issuance is not None:
+        issuance_time = body_issuance
+
+    headline = product_data.get("headline") or entry.get("headline")
+    if headline is not None and not isinstance(headline, str):
+        headline = str(headline)
+
+    return TextProduct(
+        product_type=product_type,
+        product_id=str(product_id),
+        cwa_office=cwa_office,
+        issuance_time=issuance_time,
+        product_text=product_text,
+        headline=headline,
+    )
+
+
+async def get_nws_text_product(
+    product_type: Literal["AFD", "HWO", "SPS"],
+    cwa_office: str | None,
+    *,
+    nws_base_url: str = "https://api.weather.gov",
+    client: httpx.AsyncClient | None = None,
+    timeout: float = 10.0,
+    user_agent: str = "AccessiWeather (github.com/orinks/accessiweather)",
+) -> TextProduct | list[TextProduct] | None:
+    """
+    Fetch an NWS text product (AFD / HWO / SPS) for a CWA office.
+
+    Endpoint: ``/products/types/{product_type}/locations/{cwa_office}`` returns
+    an ``@graph`` of product stubs; each is fetched individually via
+    ``/products/{id}`` to get ``productText`` and metadata.
+
+    Return convention:
+        - ``cwa_office`` falsy -> ``None`` (no HTTP call).
+        - AFD or HWO, empty ``@graph`` -> ``None``.
+        - AFD or HWO, products present -> single ``TextProduct`` (newest @graph entry).
+        - SPS -> ``list[TextProduct]`` (possibly empty), sorted newest-first.
+
+    Raises:
+        TextProductFetchError on network failure, timeout, or non-200 response
+        from the NWS /products endpoints. Empty @graph is NOT an error.
+
+    """
+    if not cwa_office:
+        return None
+
+    headers = {"User-Agent": user_agent}
+    products_url = f"{nws_base_url}/products/types/{product_type}/locations/{cwa_office}"
+
+    async def _run(http_client: httpx.AsyncClient) -> TextProduct | list[TextProduct] | None:
+        try:
+            listing_response = await _client_get(http_client, products_url, headers=headers)
+        except (httpx.TimeoutException, httpx.TransportError, httpx.RequestError) as exc:
+            raise TextProductFetchError(
+                f"Request failed fetching {product_type} listing for {cwa_office}: {exc}"
+            ) from exc
+
+        if listing_response.status_code != 200:
+            raise TextProductFetchError(
+                f"HTTP {listing_response.status_code} fetching {product_type} "
+                f"listing for {cwa_office}"
+            )
+
+        graph = listing_response.json().get("@graph") or []
+
+        if product_type == "SPS":
+            products: list[TextProduct] = []
+            try:
+                for entry in graph:
+                    if not isinstance(entry, dict):
+                        continue
+                    tp = await _fetch_text_product_by_id(
+                        http_client, nws_base_url, headers, product_type, cwa_office, entry
+                    )
+                    if tp is not None:
+                        products.append(tp)
+            except (httpx.TimeoutException, httpx.TransportError, httpx.RequestError) as exc:
+                raise TextProductFetchError(
+                    f"Request failed fetching SPS product for {cwa_office}: {exc}"
+                ) from exc
+
+            products.sort(
+                key=lambda p: p.issuance_time or datetime.min.replace(tzinfo=UTC),
+                reverse=True,
+            )
+            return products
+
+        # AFD or HWO: newest @graph entry only, or None if empty.
+        if not graph:
+            return None
+
+        latest = graph[0]
+        if not isinstance(latest, dict):
+            return None
+
+        try:
+            return await _fetch_text_product_by_id(
+                http_client, nws_base_url, headers, product_type, cwa_office, latest
+            )
+        except (httpx.TimeoutException, httpx.TransportError, httpx.RequestError) as exc:
+            raise TextProductFetchError(
+                f"Request failed fetching {product_type} product for {cwa_office}: {exc}"
+            ) from exc
+
+    if client is not None:
+        return await _run(client)
+
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+        return await _run(new_client)
+
+
 async def get_nws_discussion(
     client: httpx.AsyncClient,
     headers: dict[str, str],
@@ -862,6 +1027,10 @@ async def get_nws_discussion(
 ) -> tuple[str, datetime | None]:
     """
     Fetch the NWS Area Forecast Discussion (AFD) for the given grid data.
+
+    Thin backward-compat wrapper around :func:`get_nws_text_product` for the AFD
+    product type. Preserves the pre-existing ``(discussion_text, issuance_time)``
+    tuple contract so existing internal callers continue to work unchanged.
 
     Returns:
         Tuple of (discussion_text, issuance_time). The issuance_time is parsed from
@@ -883,49 +1052,28 @@ async def get_nws_discussion(
         office_id = parts[-3]
         logger.info(f"Fetching AFD for office: {office_id}")
 
-        products_url = f"{nws_base_url}/products/types/AFD/locations/{office_id}"
-        response = await _client_get(client, products_url, headers=headers)
+        # Preserve existing User-Agent behavior by reusing caller-supplied headers.
+        user_agent = headers.get("User-Agent", "AccessiWeather")
 
-        if response.status_code != 200:
-            logger.warning(f"Failed to get AFD products: HTTP {response.status_code}")
+        try:
+            product = await get_nws_text_product(
+                "AFD",
+                office_id,
+                nws_base_url=nws_base_url,
+                client=client,
+                user_agent=user_agent,
+            )
+        except TextProductFetchError as exc:
+            logger.warning("Failed to fetch AFD via text-product path: %s", exc)
             return "Forecast discussion not available.", None
 
-        products_data = response.json()
-
-        if not products_data.get("@graph"):
+        if product is None:
             logger.warning(f"No AFD products found for office {office_id}")
             return "Forecast discussion not available for this location.", None
 
-        latest_product = products_data["@graph"][0]
-        latest_product_id = latest_product.get("id")
-        if not latest_product_id:
-            logger.warning("No product ID found in latest AFD product")
-            return "Forecast discussion not available.", None
-
-        # Extract issuanceTime from the product metadata
-        issuance_time: datetime | None = None
-        issuance_time_str = latest_product.get("issuanceTime")
-        if issuance_time_str:
-            issuance_time = _parse_iso_datetime(issuance_time_str)
-            if issuance_time:
-                logger.debug(f"AFD issuance time: {issuance_time}")
-
-        product_url = f"{nws_base_url}/products/{latest_product_id}"
-        response = await _client_get(client, product_url, headers=headers)
-
-        if response.status_code != 200:
-            logger.warning(f"Failed to get AFD product text: HTTP {response.status_code}")
-            return "Forecast discussion not available.", None
-
-        product_data = response.json()
-        product_text = product_data.get("productText")
-
-        if not product_text:
-            logger.warning("No product text found in AFD product")
-            return "Forecast discussion not available.", None
-
+        assert isinstance(product, TextProduct)  # AFD path never returns a list
         logger.info(f"Successfully fetched AFD for office {office_id}")
-        return product_text, issuance_time
+        return product.product_text, product.issuance_time
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS discussion: {exc}")

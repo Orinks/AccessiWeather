@@ -12,11 +12,12 @@ enabled in Settings > Notifications.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import re
-from dataclasses import dataclass
-from datetime import datetime
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -30,7 +31,29 @@ from .minutely_precipitation import (
 )
 
 if TYPE_CHECKING:
-    from ..models import AppSettings, CurrentConditions, WeatherData
+    from collections.abc import Sequence
+
+    from ..models import (
+        AppSettings,
+        CurrentConditions,
+        Location,
+        TextProduct,
+        WeatherAlert,
+        WeatherData,
+    )
+
+
+# Rate-limit window for per-(product, location) notifications. The HWO check
+# suppresses re-dispatch within this window while still advancing stored state
+# so we don't re-trigger on the next cycle forever.
+_HWO_RATE_LIMIT_WINDOW = timedelta(minutes=30)
+# SPS (Special Weather Statement) reuses the same 30-minute sliding window,
+# keyed independently on ``self._last_product_notified_at``.
+_SPS_RATE_LIMIT_WINDOW = timedelta(minutes=30)
+# Windows toast bodies clip around 200 chars — be safely under that.
+_SPS_MAX_BODY_CHARS = 160
+# Summaries shorter than this (after stripping) fall back to the generic body.
+_HWO_SUMMARY_MIN_CHARS = 20
 
 logger = logging.getLogger(__name__)
 
@@ -189,6 +212,13 @@ class NotificationState:
     last_minutely_transition_signature: str | None = None
     last_minutely_likelihood_signature: str | None = None
     last_check_time: datetime | None = None
+    # HWO (Hazardous Weather Outlook) tracking — Unit 10 populates these.
+    last_hwo_issuance_time: datetime | None = None
+    last_hwo_text: str | None = None
+    last_hwo_summary_signature: str | None = None
+    # SPS (Special Weather Statement) tracking — Unit 11 populates these.
+    # Stored as a set for O(1) dedupe; round-trips through JSON as sorted list.
+    last_sps_product_ids: set[str] = field(default_factory=set)
 
     def to_dict(self) -> dict:
         """Convert to dictionary for persistence."""
@@ -203,6 +233,13 @@ class NotificationState:
             "last_minutely_transition_signature": self.last_minutely_transition_signature,
             "last_minutely_likelihood_signature": self.last_minutely_likelihood_signature,
             "last_check_time": self.last_check_time.isoformat() if self.last_check_time else None,
+            "last_hwo_issuance_time": (
+                self.last_hwo_issuance_time.isoformat() if self.last_hwo_issuance_time else None
+            ),
+            "last_hwo_text": self.last_hwo_text,
+            "last_hwo_summary_signature": self.last_hwo_summary_signature,
+            # Sort for deterministic output (JSON diffs, snapshot tests).
+            "last_sps_product_ids": sorted(self.last_sps_product_ids),
         }
 
     @classmethod
@@ -210,6 +247,8 @@ class NotificationState:
         """Create from dictionary."""
         last_check = data.get("last_check_time")
         last_issuance = data.get("last_discussion_issuance_time")
+        last_hwo_issuance = data.get("last_hwo_issuance_time")
+        sps_ids = data.get("last_sps_product_ids") or []
         return cls(
             last_discussion_issuance_time=(
                 datetime.fromisoformat(last_issuance) if last_issuance else None
@@ -219,6 +258,12 @@ class NotificationState:
             last_minutely_transition_signature=data.get("last_minutely_transition_signature"),
             last_minutely_likelihood_signature=data.get("last_minutely_likelihood_signature"),
             last_check_time=datetime.fromisoformat(last_check) if last_check else None,
+            last_hwo_issuance_time=(
+                datetime.fromisoformat(last_hwo_issuance) if last_hwo_issuance else None
+            ),
+            last_hwo_text=data.get("last_hwo_text"),
+            last_hwo_summary_signature=data.get("last_hwo_summary_signature"),
+            last_sps_product_ids=set(sps_ids),
         )
 
 
@@ -250,6 +295,10 @@ class NotificationEventManager:
         self.state_file = state_file
         self.runtime_state_manager = runtime_state_manager
         self.state = NotificationState()
+        # Ephemeral per-(product, location) rate-limit bookkeeping. Intentionally
+        # in-memory only — see Unit 10 plan: we want cold-starts to re-evaluate
+        # against stored content, not silently gag notifications across restarts.
+        self._last_product_notified_at: dict[tuple[str, str], datetime] = {}
         self._load_state()
         logger.info("NotificationEventManager initialized")
 
@@ -300,6 +349,8 @@ class NotificationEventManager:
         discussion = section.get("discussion", {})
         severe_risk = section.get("severe_risk", {})
         minutely_precipitation = section.get("minutely_precipitation", {})
+        hwo = section.get("hwo", {})
+        sps = section.get("sps", {})
         return {
             "last_discussion_issuance_time": discussion.get("last_issuance_time"),
             "last_discussion_text": discussion.get("last_text"),
@@ -313,12 +364,17 @@ class NotificationEventManager:
             "last_check_time": discussion.get("last_check_time")
             or severe_risk.get("last_check_time")
             or minutely_precipitation.get("last_check_time"),
+            "last_hwo_issuance_time": hwo.get("last_issuance_time"),
+            "last_hwo_text": hwo.get("last_text"),
+            "last_hwo_summary_signature": hwo.get("last_summary_signature"),
+            "last_sps_product_ids": list(sps.get("last_product_ids") or []),
         }
 
     @staticmethod
     def _legacy_shape_to_runtime_section(data: dict) -> dict:
         """Convert legacy notification-state payloads to the unified section shape."""
         last_check_time = data.get("last_check_time")
+        sps_ids = data.get("last_sps_product_ids") or []
         return {
             "discussion": {
                 "last_issuance_time": data.get("last_discussion_issuance_time"),
@@ -332,6 +388,18 @@ class NotificationEventManager:
             "minutely_precipitation": {
                 "last_transition_signature": data.get("last_minutely_transition_signature"),
                 "last_likelihood_signature": data.get("last_minutely_likelihood_signature"),
+                "last_check_time": last_check_time,
+            },
+            "hwo": {
+                "last_issuance_time": data.get("last_hwo_issuance_time"),
+                "last_text": data.get("last_hwo_text"),
+                "last_summary_signature": data.get("last_hwo_summary_signature"),
+                "last_check_time": last_check_time,
+            },
+            "sps": {
+                # Sorted so round-trips are stable; NotificationState's
+                # ``set`` field re-materializes order-independence.
+                "last_product_ids": sorted(sps_ids),
                 "last_check_time": last_check_time,
             },
         }
@@ -478,6 +546,386 @@ class NotificationEventManager:
             issuance_time,
         )
         return None
+
+    def _check_hwo_update(
+        self,
+        location: Location,
+        hwo_product: TextProduct | None,
+        settings: AppSettings,
+    ) -> None:
+        """
+        Inspect a freshly-fetched HWO product and notify on material updates.
+
+        Unit 10 — Hazardous Weather Outlook change detection. The event loop
+        feeds us the pre-warmed HWO for ``location``; we:
+
+        1. Seed baseline state on the first fetch (no notification).
+        2. Compare ``issuance_time`` + content-signature against stored values;
+           short-circuit when both are unchanged.
+        3. On change, persist the new baseline, then — subject to the
+           ``notify_hwo_update`` setting (default True when absent) and a
+           sliding 30-minute rate-limit bucket keyed by ``("HWO", location)`` —
+           dispatch a desktop notification.
+
+        ``None`` products and locations without a ``cwa_office`` are no-ops.
+        """
+        if hwo_product is None:
+            return
+        if not getattr(location, "cwa_office", None):
+            return
+
+        new_issuance = hwo_product.issuance_time
+        new_text = hwo_product.product_text or ""
+        signature = self._hash_product_text(new_text)
+
+        stored_issuance = self.state.last_hwo_issuance_time
+        stored_signature = self.state.last_hwo_summary_signature
+        stored_text = self.state.last_hwo_text
+
+        # Cold-start: no stored baseline → record silently, never dispatch.
+        if stored_issuance is None and stored_signature is None:
+            self.state.last_hwo_issuance_time = new_issuance
+            self.state.last_hwo_text = new_text
+            self.state.last_hwo_summary_signature = signature
+            self._save_state()
+            logger.debug(
+                "_check_hwo_update: first-run baseline for %s (%s) — no notification",
+                location.name,
+                location.cwa_office,
+            )
+            return
+
+        # Unchanged → true no-op: no state churn, no dispatch.
+        if stored_issuance == new_issuance and stored_signature == signature:
+            return
+
+        # Changed: persist new baseline before deciding whether to notify so we
+        # never re-fire against the old state if dispatch is suppressed below.
+        self.state.last_hwo_issuance_time = new_issuance
+        self.state.last_hwo_text = new_text
+        self.state.last_hwo_summary_signature = signature
+        self._save_state()
+
+        if not getattr(settings, "notify_hwo_update", True):
+            logger.debug(
+                "_check_hwo_update: notify_hwo_update disabled — suppressing dispatch for %s",
+                location.name,
+            )
+            return
+
+        bucket = ("HWO", location.name)
+        now = datetime.now(timezone.utc)
+        last_sent = self._last_product_notified_at.get(bucket)
+        if last_sent is not None and now - last_sent < _HWO_RATE_LIMIT_WINDOW:
+            logger.debug(
+                "_check_hwo_update: rate-limited for %s (last=%s) — state updated, no dispatch",
+                location.name,
+                last_sent,
+            )
+            return
+        self._last_product_notified_at[bucket] = now
+
+        message = self._format_hwo_body(stored_text, hwo_product)
+        logger.info(
+            "HWO updated for %s (%s): %s -> %s",
+            location.name,
+            location.cwa_office,
+            stored_issuance,
+            new_issuance,
+        )
+        self._dispatch_hwo_notification(
+            location=location,
+            product=hwo_product,
+            message=message,
+        )
+
+    @staticmethod
+    def _hash_product_text(text: str) -> str:
+        """Return a stable signature for an HWO product text."""
+        normalized = (text or "").strip()
+        return hashlib.sha256(normalized.encode("utf-8", errors="replace")).hexdigest()
+
+    @staticmethod
+    def _format_hwo_body(stored_text: str | None, new_product: TextProduct) -> str:
+        """Produce the notification body — prefer summarizer output, fall back to generic."""
+        summary = summarize_discussion_change(stored_text, new_product.product_text)
+        if summary and len(summary.strip()) > _HWO_SUMMARY_MIN_CHARS:
+            return summary.strip()
+        return f"Hazardous Weather Outlook updated for {new_product.cwa_office} — tap to view."
+
+    def _dispatch_hwo_notification(
+        self,
+        *,
+        location: Location,
+        product: TextProduct,
+        message: str,
+    ) -> None:
+        """
+        Emit the HWO notification event.
+
+        The default implementation builds a :class:`NotificationEvent` and logs
+        it; the UI-layer caller is responsible for wiring it into the actual
+        notifier. Tests monkey-patch this method to capture dispatches.
+        """
+        event = NotificationEvent(
+            event_type="hwo_update",
+            title="Hazardous Weather Outlook Updated",
+            message=message,
+            sound_event="notify",
+        )
+        logger.debug(
+            "[events] HWO dispatch (default no-op): location=%s product=%s title=%r",
+            location.name,
+            product.product_id,
+            event.title,
+        )
+
+    # ------------------------------------------------------------------
+    # Unit 11 — Special Weather Statement (SPS) informational notifications
+    # ------------------------------------------------------------------
+
+    def _check_sps_new(
+        self,
+        location: Location,
+        sps_products: Sequence[TextProduct] | None,
+        cached_alerts: Sequence[WeatherAlert] | None,
+        settings: AppSettings,
+    ) -> None:
+        """
+        Dispatch notifications for informational SPS products only.
+
+        NWS issues two populations of Special Weather Statements:
+
+        - **Case A — event-style.** Hail, dense fog, strong-thunderstorm
+          statements that also appear on ``/alerts/active``. The existing alert
+          pipeline already surfaces them; notifying again here would
+          double-notify. We detect these via headline/first-description
+          substring matching against the SPS product text.
+        - **Case B — informational.** Fire-weather, pollen, coordination
+          statements that appear on ``/products/types/SPS`` but never on
+          ``/alerts/active``. These are invisible to users today; we notify on
+          them.
+
+        The heuristic is intentionally conservative: when a Case A match is not
+        obvious we favor notifying (honoring the plan's "if in doubt, show the
+        informational SPS the user would otherwise miss" principle).
+
+        Behavior summary:
+          1. Cold start — first ever fetch for this manager records all IDs
+             silently. Detected by ``not last_sps_product_ids`` and the bucket
+             not yet present in ``_sps_cold_started``.
+          2. Expiration — IDs in stored state but absent from the fetch are
+             silently removed.
+          3. For each NEW ID (not yet in state), classify Case A vs Case B;
+             add to state unconditionally; dispatch only for Case B, subject
+             to the setting toggle and the 30-min rate-limit bucket.
+          4. ``None`` or empty product list after cold-start just expires
+             stored IDs.
+        """
+        products = list(sps_products or [])
+        alerts = list(cached_alerts or [])
+
+        # Cold-start: first call ever for this (manager, location) pair.
+        if not hasattr(self, "_sps_cold_started"):
+            self._sps_cold_started: set[str] = set()  # type: ignore[attr-defined]
+
+        bucket_key = ("SPS", location.name)
+        is_cold_start = (
+            location.name not in self._sps_cold_started and not self.state.last_sps_product_ids
+        )
+
+        current_ids = {p.product_id for p in products}
+
+        if is_cold_start:
+            if current_ids:
+                self.state.last_sps_product_ids |= current_ids
+                self._save_state()
+            self._sps_cold_started.add(location.name)
+            logger.debug(
+                "_check_sps_new: cold-start baseline for %s (%d ids) — no dispatch",
+                location.name,
+                len(current_ids),
+            )
+            return
+
+        # Expire any stored IDs that are no longer present.
+        stale = self.state.last_sps_product_ids - current_ids
+        if stale:
+            self.state.last_sps_product_ids -= stale
+            self._save_state()
+            logger.debug("_check_sps_new: expired %d SPS id(s) for %s", len(stale), location.name)
+
+        # Evaluate only genuinely new product IDs.
+        new_products = [p for p in products if p.product_id not in self.state.last_sps_product_ids]
+        if not new_products:
+            return
+
+        # Build a normalized lookup of active SPS alert headlines/first-lines
+        # once for O(n + m) matching rather than O(n * m) per product.
+        alert_signatures = self._sps_alert_signatures(alerts)
+        enabled = getattr(settings, "notify_sps_issued", True)
+
+        dispatched_this_call = False
+        for product in new_products:
+            # Always add to seen state first — Case A or rate-limited products
+            # must never re-evaluate next cycle.
+            self.state.last_sps_product_ids.add(product.product_id)
+
+            if self._sps_is_case_a(product, alert_signatures):
+                logger.debug(
+                    "_check_sps_new: Case A (event-style) suppressed — product=%s",
+                    product.product_id,
+                )
+                continue
+
+            # Case B — informational.
+            if not enabled:
+                logger.debug(
+                    "_check_sps_new: notify_sps_issued disabled — suppressing %s",
+                    product.product_id,
+                )
+                continue
+
+            now = datetime.now(timezone.utc)
+            last_sent = self._last_product_notified_at.get(bucket_key)
+            if last_sent is not None and now - last_sent < _SPS_RATE_LIMIT_WINDOW:
+                logger.debug(
+                    "_check_sps_new: rate-limited for %s (last=%s) — state updated, no dispatch",
+                    location.name,
+                    last_sent,
+                )
+                continue
+            if dispatched_this_call:
+                # Stamp once per call so repeated Case B products in the same
+                # fetch still fall under the rate limit — matches HWO shape.
+                logger.debug(
+                    "_check_sps_new: additional Case B in same fetch rate-limited — %s",
+                    product.product_id,
+                )
+                continue
+
+            self._last_product_notified_at[bucket_key] = now
+            dispatched_this_call = True
+            message = self._format_sps_body(product)
+            logger.info(
+                "SPS informational dispatch for %s (%s): %s",
+                location.name,
+                product.cwa_office,
+                product.product_id,
+            )
+            self._dispatch_sps_notification(
+                location=location,
+                product=product,
+                message=message,
+            )
+
+        self._save_state()
+
+    @staticmethod
+    def _normalize_for_match(text: str | None) -> str:
+        """Return a casefolded, whitespace-collapsed version of ``text`` for matching."""
+        if not text:
+            return ""
+        return " ".join(text.split()).casefold()
+
+    @classmethod
+    def _sps_alert_signatures(cls, alerts: Sequence[WeatherAlert]) -> list[str]:
+        """
+        Collect normalized signatures for active SPS alerts.
+
+        Only alerts whose ``event`` is ``"Special Weather Statement"``
+        (case-insensitive) are considered. For each, we take the ``headline``
+        plus the first non-empty line of ``description``; both are normalized
+        via :meth:`_normalize_for_match`. Empty signatures are dropped.
+        """
+        signatures: list[str] = []
+        for alert in alerts:
+            event = (alert.event or "").strip().casefold()
+            if event != "special weather statement":
+                continue
+            for candidate in (alert.headline, cls._first_nonempty_line(alert.description)):
+                sig = cls._normalize_for_match(candidate)
+                if sig:
+                    signatures.append(sig)
+        return signatures
+
+    @classmethod
+    def _sps_is_case_a(cls, product: TextProduct, alert_signatures: Sequence[str]) -> bool:
+        """
+        Return True when ``product`` looks like the event-style SPS an alert covers.
+
+        Matching rule: any active SPS alert's normalized headline or first
+        description line appears as a substring of the product's normalized
+        text (headline + product_text), OR vice versa. The bidirectional check
+        covers the rare case where an alert description runs longer than the
+        product blurb, even though the common shape is alert-headline ⊆
+        product-text.
+        """
+        if not alert_signatures:
+            return False
+        product_haystack_parts = [product.headline or "", product.product_text or ""]
+        product_norm = cls._normalize_for_match(" ".join(product_haystack_parts))
+        if not product_norm:
+            return False
+        return any(sig in product_norm or product_norm in sig for sig in alert_signatures)
+
+    @classmethod
+    def _format_sps_body(cls, product: TextProduct) -> str:
+        """Build the toast body — headline + CWA office, with text fallback."""
+        headline = (product.headline or "").strip()
+        if headline:
+            body = f"{headline} \u2014 {product.cwa_office}"
+            return cls._truncate(body, _SPS_MAX_BODY_CHARS)
+        fallback = cls._first_nonempty_line(product.product_text) or ""
+        return cls._truncate(fallback.strip(), _SPS_MAX_BODY_CHARS)
+
+    @staticmethod
+    def _first_nonempty_line(text: str | None) -> str | None:
+        """Return the first non-empty, non-whitespace line of ``text``."""
+        if not text:
+            return None
+        for raw in text.splitlines():
+            line = raw.strip()
+            if line:
+                return line
+        return None
+
+    @staticmethod
+    def _truncate(text: str, limit: int) -> str:
+        """Truncate ``text`` to ``limit`` chars, appending an ellipsis if cut."""
+        if len(text) <= limit:
+            return text
+        if limit <= 3:
+            return text[:limit]
+        return text[: limit - 3] + "..."
+
+    def _dispatch_sps_notification(
+        self,
+        *,
+        location: Location,
+        product: TextProduct,
+        message: str,
+    ) -> None:
+        """
+        Emit the SPS notification event.
+
+        Default is a no-op logger call mirroring
+        :meth:`_dispatch_hwo_notification`; the UI layer monkey-patches it to
+        fire a real desktop notification. Tests capture dispatches by
+        replacing this method.
+        """
+        event = NotificationEvent(
+            event_type="sps_issued",
+            title="Special Weather Statement",
+            message=message,
+            sound_event="notify",
+        )
+        logger.debug(
+            "[events] SPS dispatch (default no-op): location=%s product=%s title=%r",
+            location.name,
+            product.product_id,
+            event.title,
+        )
 
     def _check_severe_risk_change(
         self, current: CurrentConditions, location_name: str

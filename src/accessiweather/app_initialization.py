@@ -31,6 +31,14 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     app.runtime_state_manager = RuntimeStateManager(app.runtime_paths.config_root)
     config = app.config_manager.load_config()
 
+    # Wire the zone-drift sink so /points responses on refresh can lazily
+    # backfill/update the zone fields on saved Locations. Without this the
+    # hook in weather_client_nws is a silent no-op — legacy saved locations
+    # never populate cwa_office and Forecast Products can't fetch anything.
+    from .weather_client_nws import set_zone_drift_sink
+
+    set_zone_drift_sink(app.config_manager._locations)
+
     # Defer update service initialization to background (using wx.CallLater)
     app.update_service = None
     wx.CallLater(100, _initialize_update_service_deferred, app)

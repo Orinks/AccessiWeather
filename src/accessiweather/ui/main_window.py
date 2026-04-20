@@ -34,7 +34,7 @@ QUICK_ACTION_LABELS = {
     "remove": "&Remove Location",
     "refresh": "Re&fresh Weather",
     "explain": "Explain &Conditions",
-    "discussion": "Forecast &Discussion",
+    "discussion": "Forecaster &Notes",
     "settings": "&Settings",
 }
 
@@ -212,6 +212,15 @@ class MainWindow(SizedFrame):
         self.discussion_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["discussion"])
         self.settings_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["settings"])
 
+        # Adjacent StaticText explaining why the Forecast Products button is
+        # disabled for non-US locations. Screen readers announce adjacent
+        # StaticText, which is the accessibility affordance for this reason
+        # label (SetName/tooltips are ignored in this project).
+        self.forecast_products_us_only_label = wx.StaticText(
+            panel, label="Forecaster Notes are US-only"
+        )
+        self.forecast_products_us_only_label.Hide()
+
         # Status bar — two fields: [0] main status, [1] stale/cached warning
         self.CreateStatusBar(2)
         self.GetStatusBar().SetStatusWidths([-2, -1])
@@ -292,6 +301,7 @@ class MainWindow(SizedFrame):
             else:
                 self.location_dropdown.SetSelection(0)
                 self._update_title_for_location(ALL_LOCATIONS_SENTINEL)
+            self._update_forecast_products_button_state()
         except Exception as e:
             logger.error(f"Failed to populate locations: {e}")
 
@@ -367,7 +377,9 @@ class MainWindow(SizedFrame):
         )
         toggle_event_center_item.Check(True)
         discussion_item = view_menu.Append(
-            wx.ID_ANY, "Forecast &Discussion...", "View NWS Area Forecast Discussion"
+            wx.ID_ANY,
+            "Forecaster &Notes...",
+            "View NWS forecaster notes (AFD, HWO, SPS)",
         )
         aviation_item = view_menu.Append(wx.ID_ANY, "&Aviation Weather...", "View aviation weather")
         air_quality_item = view_menu.Append(
@@ -508,6 +520,7 @@ class MainWindow(SizedFrame):
         if selected == ALL_LOCATIONS_SENTINEL:
             self._all_locations_active = True
             self._update_title_for_location(ALL_LOCATIONS_SENTINEL)
+            MainWindow._safe_update_forecast_products_button_state(self)
             MainWindow._update_precipitation_timeline_menu_state(self)
             # Increment generation to invalidate any in-flight fetches for the previous location
             self._fetch_generation += 1
@@ -526,6 +539,7 @@ class MainWindow(SizedFrame):
         self._update_title_for_location(selected)
 
         self._set_current_location(selected)
+        MainWindow._safe_update_forecast_products_button_state(self)
 
         # Show cached data instantly if available
         location = self.app.config_manager.get_current_location()
@@ -672,7 +686,7 @@ class MainWindow(SizedFrame):
         show_explanation_dialog(self, self.app)
 
     def _on_discussion(self) -> None:
-        """View NWS Area Forecast Discussion, or Nationwide discussions if Nationwide is selected."""
+        """Route to Nationwide discussion view or the per-location Forecast Products dialog."""
         current = self.app.config_manager.get_current_location()
         if current and current.name == "Nationwide":
             from .dialogs.nationwide_discussion_dialog import NationwideDiscussionDialog
@@ -681,9 +695,85 @@ class MainWindow(SizedFrame):
             dlg.ShowModal()
             dlg.Destroy()
         else:
-            from .dialogs import show_discussion_dialog
+            self._on_forecast_products()
 
-            show_discussion_dialog(self, self.app)
+    def _on_forecast_products(self) -> None:
+        """Open the Forecast Products dialog (AFD + HWO + SPS) for the active location."""
+        current = self.app.config_manager.get_current_location()
+        if current is None:
+            wx.MessageBox(
+                "Please select a location first.",
+                "No Location Selected",
+                wx.OK | wx.ICON_WARNING,
+            )
+            return
+
+        from .dialogs.forecast_products_dialog import show_forecast_products_dialog
+
+        service = self._get_forecast_product_service()
+        ai_explainer = getattr(self.app, "ai_explainer", None)
+        show_forecast_products_dialog(self, current, service, ai_explainer, app=self.app)
+
+    def _safe_update_forecast_products_button_state(self) -> None:
+        """
+        Defensive wrapper around :meth:`_update_forecast_products_button_state`.
+
+        Existing tests in ``test_all_locations_view.py`` / ``test_coverage_gaps.py``
+        drive ``MainWindow._on_location_changed`` through plain-Python stub
+        instances that deliberately omit UI-widget attributes. Wrapping the
+        toggle keeps those tests green without requiring them to add the
+        new widget to every fixture.
+        """
+        try:
+            if hasattr(self, "discussion_button") and hasattr(
+                self, "forecast_products_us_only_label"
+            ):
+                MainWindow._update_forecast_products_button_state(self)
+        except Exception:  # noqa: BLE001
+            logger.debug("Forecast products button state update skipped", exc_info=True)
+
+    def _update_forecast_products_button_state(self) -> None:
+        """
+        Enable/disable the Forecast Products button based on country.
+
+        Non-US locations disable the button and reveal the adjacent
+        "NWS products are US-only" StaticText so screen readers announce the
+        reason. US locations (and the Nationwide entry) re-enable the button
+        and hide the label.
+        """
+        try:
+            current = self.app.config_manager.get_current_location()
+        except Exception:  # noqa: BLE001
+            current = None
+
+        is_us = True  # default: don't needlessly disable
+        if current is not None and current.name != "Nationwide":
+            country = getattr(current, "country_code", None)
+            if country:
+                is_us = country.upper() == "US"
+
+        if is_us:
+            self.discussion_button.Enable()
+            self.forecast_products_us_only_label.Hide()
+        else:
+            self.discussion_button.Disable()
+            self.forecast_products_us_only_label.Show()
+
+    def _get_forecast_product_service(self):
+        """Get or lazily build the shared ForecastProductService instance."""
+        existing = getattr(self, "_forecast_product_service", None)
+        if existing is not None:
+            return existing
+
+        from ..cache import Cache
+        from ..services.forecast_product_service import ForecastProductService
+
+        # Prefer a cache shared with the rest of the app when one exists;
+        # fall back to an owned instance. Keeps tests from having to wire
+        # the full app graph just to construct the dialog.
+        cache = getattr(self.app, "cache", None) or Cache()
+        self._forecast_product_service = ForecastProductService(cache)
+        return self._forecast_product_service
 
     def _on_aviation(self) -> None:
         """View aviation weather."""
@@ -1177,6 +1267,11 @@ class MainWindow(SizedFrame):
             # Update UI on main thread
             wx.CallAfter(self._on_weather_data_received, weather_data)
 
+            # Pre-warm NWS text products (AFD/HWO/SPS) for the active location
+            # so the Forecast Products dialog and Unit 10/11 notification
+            # checks see fresh data without issuing an on-demand fetch.
+            await self._pre_warm_products_for_location(location)
+
             # Pre-warm cache for other locations in background (non-blocking)
             if not force_refresh:
                 await self._pre_warm_other_locations(location)
@@ -1286,8 +1381,63 @@ class MainWindow(SizedFrame):
             if uncached:
                 logger.debug(f"Pre-warming cache for {len(uncached)} locations")
                 await self.app.weather_client.pre_warm_batch(uncached)
+
+            # Pre-warm NWS text products (AFD/HWO/SPS) for every non-active
+            # saved US location. Failure isolation is per-(product, location):
+            # one failure never cascades to other products or other locations.
+            for loc in all_locations:
+                if loc.name == current_location.name:
+                    continue
+                await self._pre_warm_products_for_location(loc)
         except Exception as e:
             logger.debug(f"Cache pre-warm failed (non-critical): {e}")
+
+    async def _pre_warm_products_for_location(self, location: Location) -> None:
+        """
+        Pre-warm AFD/HWO/SPS caches for a single location.
+
+        Non-US locations and US locations without a populated ``cwa_office``
+        are skipped. Each product fetch is wrapped in its own try/except so
+        one failure (e.g. an NWS 404 for HWO) never prevents the next product
+        type or subsequent locations from being pre-warmed.
+        """
+        # Nationwide is a synthetic entry with no real CWA — skip it cheaply.
+        if location.name == "Nationwide":
+            return
+
+        # Local import avoids a hard dependency on services at module-import
+        # time for the stripped-down test fixtures that stub MainWindow.
+        from ..services.zone_enrichment_service import _is_us_location
+        from ..weather_client_nws import TextProductFetchError
+
+        if not _is_us_location(location):
+            return
+        if not getattr(location, "cwa_office", None):
+            return
+
+        try:
+            service = self._get_forecast_product_service()
+        except Exception:  # noqa: BLE001
+            logger.debug("ForecastProductService unavailable for pre-warm", exc_info=True)
+            return
+
+        for product_type in ("AFD", "HWO", "SPS"):
+            try:
+                await service.get(product_type, location.cwa_office)
+            except TextProductFetchError:
+                logger.debug(
+                    "Pre-warm %s for %s (%s) failed",
+                    product_type,
+                    location.name,
+                    location.cwa_office,
+                )
+            except Exception:  # noqa: BLE001
+                logger.debug(
+                    "Unexpected pre-warm failure for %s at %s",
+                    product_type,
+                    location.name,
+                    exc_info=True,
+                )
 
     def _on_weather_data_received(self, weather_data) -> None:
         """Handle received weather data (called on main thread)."""

@@ -6,6 +6,7 @@ from .alerts_summary_dialog import show_alerts_summary_dialog
 from .aviation_dialog import show_aviation_dialog
 from .discussion_dialog import show_discussion_dialog
 from .explanation_dialog import show_explanation_dialog
+from .forecast_products_dialog import show_forecast_products_dialog
 from .location_dialog import show_add_location_dialog, show_edit_location_dialog
 from .nationwide_discussion_dialog import show_nationwide_discussion_dialog
 from .noaa_radio_dialog import NOAARadioDialog, show_noaa_radio_dialog
@@ -26,6 +27,7 @@ __all__ = [
     "show_aviation_dialog",
     "show_discussion_dialog",
     "show_explanation_dialog",
+    "show_forecast_products_dialog",
     "show_nationwide_discussion_dialog",
     "show_settings_dialog",
     "show_soundpack_manager_dialog",
@@ -45,6 +47,7 @@ _LAZY_IMPORTS = {
     "show_aviation_dialog": ".aviation_dialog",
     "show_discussion_dialog": ".discussion_dialog",
     "show_explanation_dialog": ".explanation_dialog",
+    "show_forecast_products_dialog": ".forecast_products_dialog",
     "show_add_location_dialog": ".location_dialog",
     "show_edit_location_dialog": ".location_dialog",
     "show_nationwide_discussion_dialog": ".nationwide_discussion_dialog",

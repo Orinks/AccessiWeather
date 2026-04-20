@@ -64,8 +64,13 @@ class TestDiscussionRouting:
             mock_dlg_instance.ShowModal.assert_called_once()
             mock_dlg_instance.Destroy.assert_called_once()
 
-    def test_regular_location_opens_regular_dialog(self, main_window_deps):
-        """When current location is not Nationwide, show_discussion_dialog should be called."""
+    def test_regular_location_opens_forecast_products_dialog(self, main_window_deps):
+        """
+        When current location is not Nationwide, _on_forecast_products should run.
+
+        Unit 8 rerouted this branch from the old single-AFD DiscussionDialog to
+        the new tabbed ForecastProductsDialog (AFD + HWO + SPS).
+        """
         from accessiweather.ui.main_window import MainWindow
 
         main_window_deps.config_manager.get_current_location.return_value = FakeLocation(
@@ -75,13 +80,18 @@ class TestDiscussionRouting:
         with patch.object(MainWindow, "__init__", lambda self, *a, **kw: None):
             win = MainWindow.__new__(MainWindow)
             win.app = main_window_deps
+            win._on_forecast_products = MagicMock()
 
-        with patch("accessiweather.ui.dialogs.show_discussion_dialog") as mock_show:
-            win._on_discussion()
-            mock_show.assert_called_once_with(win, main_window_deps)
+        win._on_discussion()
+        win._on_forecast_products.assert_called_once()
 
-    def test_none_location_opens_regular_dialog(self, main_window_deps):
-        """When current location is None, show_discussion_dialog should be called."""
+    def test_none_location_opens_forecast_products_dialog(self, main_window_deps):
+        """
+        When current location is None, _on_forecast_products should still run.
+
+        ``_on_forecast_products`` itself handles the None-location case by
+        showing a "No Location Selected" message box.
+        """
         from accessiweather.ui.main_window import MainWindow
 
         main_window_deps.config_manager.get_current_location.return_value = None
@@ -89,7 +99,7 @@ class TestDiscussionRouting:
         with patch.object(MainWindow, "__init__", lambda self, *a, **kw: None):
             win = MainWindow.__new__(MainWindow)
             win.app = main_window_deps
+            win._on_forecast_products = MagicMock()
 
-        with patch("accessiweather.ui.dialogs.show_discussion_dialog") as mock_show:
-            win._on_discussion()
-            mock_show.assert_called_once_with(win, main_window_deps)
+        win._on_discussion()
+        win._on_forecast_products.assert_called_once()
