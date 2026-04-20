@@ -65,7 +65,75 @@ def get_notification_event_manager(window: MainWindow):
         window._notification_event_manager = NotificationEventManager(
             runtime_state_manager=RuntimeStateManager(config_root)
         )
+        # Unit 10: wire the HWO dispatch so it actually reaches the notifier.
+        _install_hwo_dispatcher(window, window._notification_event_manager)
     return window._notification_event_manager
+
+
+def _install_hwo_dispatcher(window: MainWindow, manager: NotificationEventManager) -> None:
+    """Override the manager's HWO dispatch to fire a real desktop notification."""
+
+    def _dispatch(*, location, product, message) -> None:
+        del location  # location name is already embedded in ``message``
+        try:
+            settings = window.app.config_manager.get_settings()
+        except Exception:  # noqa: BLE001
+            settings = None
+
+        notifier = getattr(window.app, "notifier", None) or get_fallback_notifier(window)
+        title = "Hazardous Weather Outlook Updated"
+        try:
+            _log_reviewable_event_text(window, title, message)
+            notifier.send_notification(
+                title=title,
+                message=message,
+                timeout=10,
+                sound_event="notify",
+                play_sound=bool(getattr(settings, "sound_enabled", False)),
+                activation_arguments=serialize_activation_request(
+                    NotificationActivationRequest(kind="generic_fallback")
+                ),
+            )
+            logger.info("[events] Sent hwo_update notification for %s", product.cwa_office)
+        except Exception as e:  # noqa: BLE001
+            logger.warning("[events] Failed to send HWO notification: %s", e)
+
+    manager._dispatch_hwo_notification = _dispatch  # type: ignore[method-assign]
+
+
+def _check_hwo_from_cache(
+    window: MainWindow,
+    manager: NotificationEventManager,
+    location,
+    settings,
+) -> None:
+    """Feed a cache-warm HWO product (if any) to the manager's HWO update check."""
+    try:
+        cwa = getattr(location, "cwa_office", None)
+        if not cwa:
+            return
+        service = getattr(window, "_forecast_product_service", None)
+        if service is None:
+            getter = getattr(window, "_get_forecast_product_service", None)
+            if getter is None:
+                return
+            service = getter()
+        cache = getattr(service, "_cache", None)
+        if cache is None:
+            return
+        key = f"nws_text_product:HWO:{cwa}"
+        if not cache.has_key(key):
+            return
+        product = cache.get(key)
+        # Registry contract: AFD/HWO are singletons → unwrap list-of-one
+        # defensively; drop anything else.
+        if isinstance(product, list):
+            product = product[0] if product else None
+        if product is None:
+            return
+        manager._check_hwo_update(location, product, settings)
+    except Exception as e:  # noqa: BLE001
+        logger.debug("[events] HWO check skipped: %s", e)
 
 
 def get_fallback_notifier(window: MainWindow):
@@ -155,14 +223,16 @@ def process_notification_events(window: MainWindow, weather_data) -> None:
             and not settings.notify_severe_risk_change
             and not settings.notify_minutely_precipitation_start
             and not settings.notify_minutely_precipitation_stop
+            and not getattr(settings, "notify_hwo_update", True)
         ):
             logger.debug(
                 "[events] _process_notification_events: discussion=%s severe_risk=%s "
-                "minutely_start=%s minutely_stop=%s disabled -- skipping",
+                "minutely_start=%s minutely_stop=%s hwo=%s disabled -- skipping",
                 settings.notify_discussion_update,
                 settings.notify_severe_risk_change,
                 settings.notify_minutely_precipitation_start,
                 settings.notify_minutely_precipitation_stop,
+                getattr(settings, "notify_hwo_update", True),
             )
             return
 
@@ -185,6 +255,12 @@ def process_notification_events(window: MainWindow, weather_data) -> None:
 
         event_manager = get_notification_event_manager(window)
         events = event_manager.check_for_events(weather_data, settings, location.name)
+
+        # Unit 10 — Hazardous Weather Outlook change detection. Pre-warm in
+        # _pre_warm_products_for_location already populated the shared cache,
+        # so a cache-hit lookup here is sync and cheap. A miss (e.g. non-US
+        # location or failed pre-warm) silently no-ops.
+        _check_hwo_from_cache(window, event_manager, location, settings)
 
         logger.debug(
             "[events] check_for_events returned %d event(s) for location %r",

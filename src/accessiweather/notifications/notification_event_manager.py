@@ -12,11 +12,12 @@ enabled in Settings > Notifications.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import re
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -30,7 +31,15 @@ from .minutely_precipitation import (
 )
 
 if TYPE_CHECKING:
-    from ..models import AppSettings, CurrentConditions, WeatherData
+    from ..models import AppSettings, CurrentConditions, Location, TextProduct, WeatherData
+
+
+# Rate-limit window for per-(product, location) notifications. The HWO check
+# suppresses re-dispatch within this window while still advancing stored state
+# so we don't re-trigger on the next cycle forever.
+_HWO_RATE_LIMIT_WINDOW = timedelta(minutes=30)
+# Summaries shorter than this (after stripping) fall back to the generic body.
+_HWO_SUMMARY_MIN_CHARS = 20
 
 logger = logging.getLogger(__name__)
 
@@ -272,6 +281,10 @@ class NotificationEventManager:
         self.state_file = state_file
         self.runtime_state_manager = runtime_state_manager
         self.state = NotificationState()
+        # Ephemeral per-(product, location) rate-limit bookkeeping. Intentionally
+        # in-memory only — see Unit 10 plan: we want cold-starts to re-evaluate
+        # against stored content, not silently gag notifications across restarts.
+        self._last_product_notified_at: dict[tuple[str, str], datetime] = {}
         self._load_state()
         logger.info("NotificationEventManager initialized")
 
@@ -519,6 +532,139 @@ class NotificationEventManager:
             issuance_time,
         )
         return None
+
+    def _check_hwo_update(
+        self,
+        location: Location,
+        hwo_product: TextProduct | None,
+        settings: AppSettings,
+    ) -> None:
+        """
+        Inspect a freshly-fetched HWO product and notify on material updates.
+
+        Unit 10 — Hazardous Weather Outlook change detection. The event loop
+        feeds us the pre-warmed HWO for ``location``; we:
+
+        1. Seed baseline state on the first fetch (no notification).
+        2. Compare ``issuance_time`` + content-signature against stored values;
+           short-circuit when both are unchanged.
+        3. On change, persist the new baseline, then — subject to the
+           ``notify_hwo_update`` setting (default True when absent) and a
+           sliding 30-minute rate-limit bucket keyed by ``("HWO", location)`` —
+           dispatch a desktop notification.
+
+        ``None`` products and locations without a ``cwa_office`` are no-ops.
+        """
+        if hwo_product is None:
+            return
+        if not getattr(location, "cwa_office", None):
+            return
+
+        new_issuance = hwo_product.issuance_time
+        new_text = hwo_product.product_text or ""
+        signature = self._hash_product_text(new_text)
+
+        stored_issuance = self.state.last_hwo_issuance_time
+        stored_signature = self.state.last_hwo_summary_signature
+        stored_text = self.state.last_hwo_text
+
+        # Cold-start: no stored baseline → record silently, never dispatch.
+        if stored_issuance is None and stored_signature is None:
+            self.state.last_hwo_issuance_time = new_issuance
+            self.state.last_hwo_text = new_text
+            self.state.last_hwo_summary_signature = signature
+            self._save_state()
+            logger.debug(
+                "_check_hwo_update: first-run baseline for %s (%s) — no notification",
+                location.name,
+                location.cwa_office,
+            )
+            return
+
+        # Unchanged → true no-op: no state churn, no dispatch.
+        if stored_issuance == new_issuance and stored_signature == signature:
+            return
+
+        # Changed: persist new baseline before deciding whether to notify so we
+        # never re-fire against the old state if dispatch is suppressed below.
+        self.state.last_hwo_issuance_time = new_issuance
+        self.state.last_hwo_text = new_text
+        self.state.last_hwo_summary_signature = signature
+        self._save_state()
+
+        if not getattr(settings, "notify_hwo_update", True):
+            logger.debug(
+                "_check_hwo_update: notify_hwo_update disabled — suppressing dispatch for %s",
+                location.name,
+            )
+            return
+
+        bucket = ("HWO", location.name)
+        now = datetime.now(timezone.utc)
+        last_sent = self._last_product_notified_at.get(bucket)
+        if last_sent is not None and now - last_sent < _HWO_RATE_LIMIT_WINDOW:
+            logger.debug(
+                "_check_hwo_update: rate-limited for %s (last=%s) — state updated, no dispatch",
+                location.name,
+                last_sent,
+            )
+            return
+        self._last_product_notified_at[bucket] = now
+
+        message = self._format_hwo_body(stored_text, hwo_product)
+        logger.info(
+            "HWO updated for %s (%s): %s -> %s",
+            location.name,
+            location.cwa_office,
+            stored_issuance,
+            new_issuance,
+        )
+        self._dispatch_hwo_notification(
+            location=location,
+            product=hwo_product,
+            message=message,
+        )
+
+    @staticmethod
+    def _hash_product_text(text: str) -> str:
+        """Return a stable signature for an HWO product text."""
+        normalized = (text or "").strip()
+        return hashlib.sha256(normalized.encode("utf-8", errors="replace")).hexdigest()
+
+    @staticmethod
+    def _format_hwo_body(stored_text: str | None, new_product: TextProduct) -> str:
+        """Produce the notification body — prefer summarizer output, fall back to generic."""
+        summary = summarize_discussion_change(stored_text, new_product.product_text)
+        if summary and len(summary.strip()) > _HWO_SUMMARY_MIN_CHARS:
+            return summary.strip()
+        return f"Hazardous Weather Outlook updated for {new_product.cwa_office} — tap to view."
+
+    def _dispatch_hwo_notification(
+        self,
+        *,
+        location: Location,
+        product: TextProduct,
+        message: str,
+    ) -> None:
+        """
+        Emit the HWO notification event.
+
+        The default implementation builds a :class:`NotificationEvent` and logs
+        it; the UI-layer caller is responsible for wiring it into the actual
+        notifier. Tests monkey-patch this method to capture dispatches.
+        """
+        event = NotificationEvent(
+            event_type="hwo_update",
+            title="Hazardous Weather Outlook Updated",
+            message=message,
+            sound_event="notify",
+        )
+        logger.debug(
+            "[events] HWO dispatch (default no-op): location=%s product=%s title=%r",
+            location.name,
+            product.product_id,
+            event.title,
+        )
 
     def _check_severe_risk_change(
         self, current: CurrentConditions, location_name: str
