@@ -21,6 +21,10 @@ from .models import (
     WeatherAlert,
     WeatherAlerts,
 )
+from .services.zone_enrichment_service import (
+    _extract_zone_fields,
+    diff_zone_fields,
+)
 from .utils.retry_utils import (
     RETRYABLE_EXCEPTIONS,
     async_retry_with_backoff,
@@ -32,7 +36,88 @@ from .weather_client_parsers import (
     convert_wind_speed_to_mph_and_kph,
 )
 
+# wxPython is an optional runtime dep. Import lazily via a module-level handle
+# so tests (and headless CI) can patch or stub it without importing the full
+# wx package. When wx is unavailable, CallAfter becomes a best-effort direct
+# call — acceptable since the drift hook is a no-op under those conditions
+# (no sink is registered in non-GUI test contexts).
+try:
+    import wx  # type: ignore[import-untyped]
+except ImportError:  # pragma: no cover - handled at runtime
+    wx = None  # type: ignore[assignment]
+
+# Registered drift-correction sink. Wired up by app initialization to point at
+# the application's ``LocationOperations`` instance. Unit tests register their
+# own sink directly. The hook is a silent no-op until a sink is installed.
+_ZONE_DRIFT_SINK: Any = None
+
 logger = logging.getLogger(__name__)
+
+
+def set_zone_drift_sink(sink: Any) -> None:
+    """
+    Register (or clear) the object used to persist drift-corrected zone fields.
+
+    The ``sink`` must expose an ``update_zone_metadata(location_name, fields)``
+    callable — typically a :class:`accessiweather.config.locations.LocationOperations`
+    instance. Pass ``None`` to clear.
+
+    This is intentionally a module-global registration: weather-client HTTP
+    helpers are shared across the app and cannot easily thread an extra
+    dependency through every signature. Wiring is performed once during app
+    startup; tests install/clear the sink as needed.
+    """
+    global _ZONE_DRIFT_SINK
+    _ZONE_DRIFT_SINK = sink
+
+
+def _apply_zone_drift_correction(location: Location, point_data: dict[str, Any] | None) -> None:
+    """
+    Diff fresh ``/points`` properties against ``location`` and persist drift.
+
+    Called from the weather-refresh thread after each successful ``/points``
+    fetch. Never raises: a drift bug must never cascade into breaking the
+    weather refresh flow.
+
+    Persistence is funneled through ``wx.CallAfter`` so that the main thread
+    performs the actual config write — ``ConfigManager.save_config`` has no
+    in-process lock, and main-thread bounce is the smallest correct fix.
+    """
+    sink = _ZONE_DRIFT_SINK
+    if sink is None:
+        return
+    try:
+        if not isinstance(point_data, dict):
+            return
+        properties = point_data.get("properties")
+        if not isinstance(properties, dict):
+            return
+
+        fresh_fields = _extract_zone_fields(properties)
+        changes = diff_zone_fields(location, fresh_fields)
+        if not changes:
+            return
+
+        persist = getattr(sink, "update_zone_metadata", None)
+        if persist is None:
+            return
+
+        call_after = getattr(wx, "CallAfter", None) if wx is not None else None
+        if call_after is None:
+            # No wx event loop available — skip silently rather than writing
+            # from a background thread unprotected.
+            logger.debug("Zone drift: wx.CallAfter unavailable, skipping persist")
+            return
+
+        call_after(persist, location.name, changes)
+        logger.debug(
+            "Zone drift: scheduled update for %s: %s",
+            location.name,
+            sorted(changes.keys()),
+        )
+    except Exception as exc:  # noqa: BLE001 - must never break refresh
+        logger.debug("Zone drift correction raised (suppressed): %s", exc)
+
 
 MAX_STATION_OBSERVATION_ATTEMPTS = 10
 MAX_OBSERVATION_AGE = timedelta(hours=2)
@@ -338,6 +423,9 @@ async def get_nws_all_data_parallel(
         response = await _client_get(client, grid_url, headers=headers)
         response.raise_for_status()
         grid_data = response.json()
+
+        # Opportunistic zone-metadata drift correction. Never raises.
+        _apply_zone_drift_correction(location, grid_data)
 
         # Now fetch all other data in parallel, reusing grid_data
         current_task = asyncio.create_task(

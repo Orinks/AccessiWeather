@@ -130,6 +130,54 @@ class LocationOperations:
             self._zone_enrichment_service = ZoneEnrichmentService()
         return self._zone_enrichment_service
 
+    def update_zone_metadata(self, location_name: str, fields: dict[str, str]) -> bool:
+        """
+        Apply zone-metadata updates to an existing location and persist.
+
+        Used by the refresh-time drift-correction hook in
+        :mod:`accessiweather.weather_client_nws`. Designed to be called on the
+        main thread via ``wx.CallAfter`` so it can safely invoke
+        :meth:`ConfigManager.save_config` (which currently lacks an in-process
+        lock).
+
+        Args:
+            location_name: The ``name`` of the location to update.
+            fields: Mapping of field name to new value. Only zone-metadata
+                fields should be passed — the caller (the drift diff) is
+                responsible for ensuring this.
+
+        Returns:
+            ``True`` if the location was found and updates were applied and
+            persisted. ``False`` if no location matched, or if ``fields`` is
+            empty.
+
+        """
+        if not fields:
+            return False
+
+        from dataclasses import replace
+
+        config = self._manager.get_config()
+
+        for index, location in enumerate(config.locations):
+            if location.name == location_name:
+                updated = replace(location, **fields)
+                config.locations[index] = updated
+                # Keep current_location pointer coherent if it references this
+                # same location by name.
+                current = config.current_location
+                if current is not None and current.name == location_name:
+                    config.current_location = updated
+                self.logger.info(
+                    "Updated zone metadata on %s: %s",
+                    location_name,
+                    sorted(fields.keys()),
+                )
+                return self._manager.save_config()
+
+        self.logger.debug("update_zone_metadata: location %s not found (skipped)", location_name)
+        return False
+
     def update_location_marine_mode(self, name: str, marine_mode: bool) -> bool:
         """Update marine_mode on an existing location and persist it."""
         config = self._manager.get_config()

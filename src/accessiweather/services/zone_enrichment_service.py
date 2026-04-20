@@ -13,6 +13,7 @@ returns the original ``Location`` unchanged, and no exception propagates.
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
@@ -62,6 +63,44 @@ def _last_path_segment(url: str | None) -> str | None:
         return None
     segment = trimmed.rsplit("/", 1)[-1]
     return segment or None
+
+
+_ZONE_FIELD_NAMES: tuple[str, ...] = (
+    "timezone",
+    "cwa_office",
+    "forecast_zone_id",
+    "county_zone_id",
+    "fire_zone_id",
+    "radar_station",
+)
+
+
+def diff_zone_fields(stored: Location, fresh: Mapping[str, str | None]) -> dict[str, str]:
+    """
+    Return the subset of zone fields that should be written to ``stored``.
+
+    Rules (mirrors plan A-R4):
+      * Stored null + fresh non-null -> populate.
+      * Stored non-null + fresh non-null and differ -> overwrite.
+      * Fresh null/missing -> no update (NEVER overwrite populated with null).
+      * Equal values are omitted from the result.
+
+    Returns:
+        Dict mapping field name -> new value, containing only fields that
+        should be updated. Empty dict when no change is warranted.
+
+    """
+    changes: dict[str, str] = {}
+    for field_name in _ZONE_FIELD_NAMES:
+        fresh_value = fresh.get(field_name)
+        if fresh_value is None:
+            # Never overwrite a populated stored value with a null fresh value.
+            continue
+        stored_value = getattr(stored, field_name, None)
+        if stored_value == fresh_value:
+            continue
+        changes[field_name] = fresh_value
+    return changes
 
 
 def _extract_zone_fields(properties: dict) -> dict[str, str | None]:
