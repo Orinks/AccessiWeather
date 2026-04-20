@@ -34,7 +34,7 @@ QUICK_ACTION_LABELS = {
     "remove": "&Remove Location",
     "refresh": "Re&fresh Weather",
     "explain": "Explain &Conditions",
-    "discussion": "Forecast &Products",
+    "discussion": "Forecaster &Notes",
     "settings": "&Settings",
 }
 
@@ -217,7 +217,7 @@ class MainWindow(SizedFrame):
         # StaticText, which is the accessibility affordance for this reason
         # label (SetName/tooltips are ignored in this project).
         self.forecast_products_us_only_label = wx.StaticText(
-            panel, label="NWS products are US-only"
+            panel, label="Forecaster Notes are US-only"
         )
         self.forecast_products_us_only_label.Hide()
 
@@ -378,8 +378,8 @@ class MainWindow(SizedFrame):
         toggle_event_center_item.Check(True)
         discussion_item = view_menu.Append(
             wx.ID_ANY,
-            "Forecast &Products...",
-            "View NWS Forecast Products (AFD, HWO, SPS)",
+            "Forecaster &Notes...",
+            "View NWS forecaster notes (AFD, HWO, SPS)",
         )
         aviation_item = view_menu.Append(wx.ID_ANY, "&Aviation Weather...", "View aviation weather")
         air_quality_item = view_menu.Append(

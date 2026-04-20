@@ -59,7 +59,7 @@ class ForecastProductsDialog(wx.Dialog):
         """
         super().__init__(
             parent,
-            title="Forecast Products",
+            title="Forecaster Notes",
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self._location = location
@@ -175,7 +175,7 @@ def show_forecast_products_dialog(
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to show forecast products dialog: {exc}")
         wx.MessageBox(
-            f"Failed to open Forecast Products: {exc}",
+            f"Failed to open Forecaster Notes: {exc}",
             "Error",
             wx.OK | wx.ICON_ERROR,
         )

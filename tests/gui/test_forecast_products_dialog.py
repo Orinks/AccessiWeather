@@ -296,7 +296,7 @@ class TestMainWindowWiring:
     def test_quick_action_label_renamed(self):
         from accessiweather.ui.main_window import QUICK_ACTION_LABELS
 
-        assert QUICK_ACTION_LABELS["discussion"] == "Forecast &Products"
+        assert QUICK_ACTION_LABELS["discussion"] == "Forecaster &Notes"
 
     def test_nationwide_branch_still_routes_to_nationwide_dialog(self):
         """Nationwide selection opens NationwideDiscussionDialog, not the new one."""
