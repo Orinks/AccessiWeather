@@ -31,9 +31,9 @@ class ForecastProductsDialog(wx.Dialog):
     """Tabbed dialog showing NWS AFD, HWO, and SPS for a US location."""
 
     _TABS: tuple[tuple[str, str], ...] = (
-        ("AFD", "AFD"),
-        ("HWO", "HWO"),
-        ("SPS", "SPS"),
+        ("AFD", "Area Forecast Discussion"),
+        ("HWO", "Hazardous Weather Outlook"),
+        ("SPS", "Special Weather Statement"),
     )
 
     def __init__(
@@ -73,8 +73,11 @@ class ForecastProductsDialog(wx.Dialog):
         self.SetSize(wx.Size(700, 600))
         self.CenterOnParent()
 
-        # Focus the AFD tab's TextCtrl once the dialog has laid out.
-        wx.CallAfter(self._focus_active_tab)
+        # Land focus on the notebook's tab strip so the user hears which tab
+        # is selected and can arrow through the others. Landing inside the
+        # content forces screen readers to read the whole product text
+        # before the user has indicated they want it.
+        wx.CallAfter(self.notebook.SetFocus)
 
     def _create_widgets(self) -> None:
         """Construct the notebook with three product panels."""
@@ -139,22 +142,8 @@ class ForecastProductsDialog(wx.Dialog):
         return _loader
 
     # ------------------------------------------------------------------
-    # Focus + key events
+    # Key events
     # ------------------------------------------------------------------
-    def _focus_active_tab(self) -> None:
-        """Move focus to the currently-active tab's product TextCtrl."""
-        try:
-            idx = self.notebook.GetSelection()
-        except Exception:  # noqa: BLE001
-            idx = 0
-        if idx is None or idx < 0:
-            idx = 0
-        if 0 <= idx < len(self.panels):
-            try:
-                self.panels[idx].product_textctrl.SetFocus()
-            except Exception:  # noqa: BLE001
-                logger.debug("Unable to move focus to product TextCtrl", exc_info=True)
-
     def _on_key(self, event) -> None:
         """ESC closes the dialog."""
         if event.GetKeyCode() == wx.WXK_ESCAPE:

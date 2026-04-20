@@ -116,7 +116,7 @@ class ForecastProductPanel(wx.Panel):
         main_sizer.Add(self.header_label, 0, wx.ALL | wx.EXPAND, 8)
 
         # SPS multi-product chooser (hidden by default; revealed when >1 SPS).
-        self.sps_choice_label = wx.StaticText(self, label="Active Statements:")
+        self.sps_choice_label = wx.StaticText(self, label="Active Special Weather Statements:")
         main_sizer.Add(self.sps_choice_label, 0, wx.LEFT | wx.RIGHT, 8)
         self.sps_choice = wx.Choice(self)
         main_sizer.Add(self.sps_choice, 0, wx.ALL | wx.EXPAND, 8)
