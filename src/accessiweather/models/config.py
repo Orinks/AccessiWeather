@@ -708,6 +708,12 @@ class AppConfig:
                     "longitude": loc.longitude,
                     **({"country_code": loc.country_code} if loc.country_code else {}),
                     **({"marine_mode": True} if loc.marine_mode else {}),
+                    **({"timezone": loc.timezone} if loc.timezone else {}),
+                    **({"forecast_zone_id": loc.forecast_zone_id} if loc.forecast_zone_id else {}),
+                    **({"cwa_office": loc.cwa_office} if loc.cwa_office else {}),
+                    **({"county_zone_id": loc.county_zone_id} if loc.county_zone_id else {}),
+                    **({"fire_zone_id": loc.fire_zone_id} if loc.fire_zone_id else {}),
+                    **({"radar_station": loc.radar_station} if loc.radar_station else {}),
                 }
                 for loc in self.locations
             ],
@@ -721,6 +727,36 @@ class AppConfig:
                     else {}
                 ),
                 **({"marine_mode": True} if self.current_location.marine_mode else {}),
+                **(
+                    {"timezone": self.current_location.timezone}
+                    if self.current_location.timezone
+                    else {}
+                ),
+                **(
+                    {"forecast_zone_id": self.current_location.forecast_zone_id}
+                    if self.current_location.forecast_zone_id
+                    else {}
+                ),
+                **(
+                    {"cwa_office": self.current_location.cwa_office}
+                    if self.current_location.cwa_office
+                    else {}
+                ),
+                **(
+                    {"county_zone_id": self.current_location.county_zone_id}
+                    if self.current_location.county_zone_id
+                    else {}
+                ),
+                **(
+                    {"fire_zone_id": self.current_location.fire_zone_id}
+                    if self.current_location.fire_zone_id
+                    else {}
+                ),
+                **(
+                    {"radar_station": self.current_location.radar_station}
+                    if self.current_location.radar_station
+                    else {}
+                ),
             }
             if self.current_location
             else None,
@@ -738,8 +774,14 @@ class AppConfig:
                     name=loc_data["name"],
                     latitude=loc_data["latitude"],
                     longitude=loc_data["longitude"],
+                    timezone=loc_data.get("timezone"),
                     country_code=loc_data.get("country_code"),
                     marine_mode=bool(loc_data.get("marine_mode", False)),
+                    forecast_zone_id=loc_data.get("forecast_zone_id"),
+                    cwa_office=loc_data.get("cwa_office"),
+                    county_zone_id=loc_data.get("county_zone_id"),
+                    fire_zone_id=loc_data.get("fire_zone_id"),
+                    radar_station=loc_data.get("radar_station"),
                 )
             )
 
@@ -750,8 +792,14 @@ class AppConfig:
                 name=loc_data["name"],
                 latitude=loc_data["latitude"],
                 longitude=loc_data["longitude"],
+                timezone=loc_data.get("timezone"),
                 country_code=loc_data.get("country_code"),
                 marine_mode=bool(loc_data.get("marine_mode", False)),
+                forecast_zone_id=loc_data.get("forecast_zone_id"),
+                cwa_office=loc_data.get("cwa_office"),
+                county_zone_id=loc_data.get("county_zone_id"),
+                fire_zone_id=loc_data.get("fire_zone_id"),
+                radar_station=loc_data.get("radar_station"),
             )
 
         return cls(

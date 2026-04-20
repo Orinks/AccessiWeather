@@ -131,6 +131,12 @@ class Location:
     timezone: str | None = None
     country_code: str | None = None
     marine_mode: bool = False
+    # NWS zone metadata (populated for US locations on save/refresh)
+    forecast_zone_id: str | None = None
+    cwa_office: str | None = None
+    county_zone_id: str | None = None
+    fire_zone_id: str | None = None
+    radar_station: str | None = None
 
     def __str__(self) -> str:
         return self.name
