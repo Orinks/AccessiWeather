@@ -388,11 +388,33 @@ class ForecastProductPanel(wx.Panel):
         self._current_text = None
 
     def _update_explain_button_state(self) -> None:
-        """Enable Explain only when AI + loaded text are available."""
-        if self._ai_explainer is not None and self._current_text:
+        """
+        Enable Explain only when we have loaded text + an OpenRouter key.
+
+        The explainer itself is built on-demand at click time (mirrors
+        ``DiscussionDialog._do_explain``). An injected ``self._ai_explainer``
+        takes priority when set, which is how tests inject mocks.
+        """
+        if not self._current_text:
+            self.explain_button.Disable()
+            return
+        if self._ai_explainer is not None:
+            self.explain_button.Enable()
+            return
+        if self._has_openrouter_key():
             self.explain_button.Enable()
         else:
             self.explain_button.Disable()
+
+    @staticmethod
+    def _has_openrouter_key() -> bool:
+        """Return True when the OpenRouter API key is available in SecureStorage."""
+        try:
+            from ...config.secure_storage import SecureStorage
+
+            return bool(SecureStorage.get_password("openrouter_api_key"))
+        except Exception:  # noqa: BLE001
+            return False
 
     # ------------------------------------------------------------------
     # Event handlers
@@ -405,7 +427,7 @@ class ForecastProductPanel(wx.Panel):
     def _on_explain(self, event) -> None:
         """Plain Language Summary button click."""
         del event
-        if not self._current_text or self._is_explaining or self._ai_explainer is None:
+        if not self._current_text or self._is_explaining:
             return
         self._is_explaining = True
         self._show_ai_summary_section()
@@ -426,8 +448,6 @@ class ForecastProductPanel(wx.Panel):
 
     def _schedule_explain(self, text: str) -> None:
         """Dispatch the AI explain coroutine. Separated for test override."""
-        if self._ai_explainer is None:
-            return
         runner = getattr(self._app, "run_async", None) if self._app is not None else None
         if runner is not None:
             runner(self._run_explain(text))
@@ -440,12 +460,65 @@ class ForecastProductPanel(wx.Panel):
         except RuntimeError:
             logger.warning("No running event loop for ForecastProductPanel explain")
 
+    def _build_explainer(self):
+        """
+        Build (or return the injected) AIExplainer for this click.
+
+        Mirrors ``DiscussionDialog._do_explain``: reads the API key from
+        SecureStorage and model + custom-prompt settings from AppConfig.
+        Returns ``None`` when no API key is available, which surfaces as a
+        user-facing error via the existing ``_on_explain_error`` path.
+        """
+        if self._ai_explainer is not None:
+            return self._ai_explainer
+
+        try:
+            from ...ai_explainer import DEFAULT_FREE_MODEL, AIExplainer
+            from ...config.secure_storage import SecureStorage
+
+            api_key = SecureStorage.get_password("openrouter_api_key")
+            if not api_key:
+                return None
+
+            settings = None
+            if self._app is not None:
+                cfg_manager = getattr(self._app, "config_manager", None)
+                if cfg_manager is not None:
+                    settings = cfg_manager.get_settings()
+
+            model_pref = getattr(settings, "ai_model_preference", None) if settings else None
+            if model_pref == "auto":
+                model = "openrouter/auto"
+            elif model_pref:
+                model = model_pref
+            else:
+                model = DEFAULT_FREE_MODEL
+
+            return AIExplainer(
+                api_key=api_key,
+                model=model,
+                custom_system_prompt=getattr(settings, "custom_system_prompt", None)
+                if settings
+                else None,
+                custom_instructions=getattr(settings, "custom_instructions", None)
+                if settings
+                else None,
+            )
+        except Exception:  # noqa: BLE001
+            logger.warning("Failed to build AIExplainer", exc_info=True)
+            return None
+
     async def _run_explain(self, text: str) -> None:
         """Invoke ``AIExplainer.explain_text_product`` for this tab's product."""
         try:
-            assert self._ai_explainer is not None
-            # product_type is narrowed by construction — cast for pyright.
-            result = await self._ai_explainer.explain_text_product(
+            explainer = self._build_explainer()
+            if explainer is None:
+                wx.CallAfter(
+                    self._on_explain_error,
+                    "OpenRouter API key not configured. Set it in Settings > AI.",
+                )
+                return
+            result = await explainer.explain_text_product(
                 text,
                 cast(ProductType, self.product_type),
                 self._location_name,
