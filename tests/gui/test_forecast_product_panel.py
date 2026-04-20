@@ -307,7 +307,7 @@ class TestForecastProductPanelRendering:
     def test_sps_empty_renders_no_statements_copy(self, captured_sizer):
         panel = _build_panel("SPS", loader_result=None)
         panel.product_textctrl.SetValue.assert_any_call(
-            "No Special Weather Statements currently active for RAH."
+            "No recent Special Weather Statements for RAH."
         )
 
     def test_afd_rare_empty_returns_afd_copy(self, captured_sizer):

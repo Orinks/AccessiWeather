@@ -43,7 +43,7 @@ _PRODUCT_FULL_NAMES: dict[str, str] = {
 _EMPTY_COPY: dict[str, str] = {
     "AFD": "Area Forecast Discussion not currently available for {cwa_office}.",
     "HWO": "Hazardous Weather Outlook not currently available for {cwa_office}.",
-    "SPS": "No Special Weather Statements currently active for {cwa_office}.",
+    "SPS": "No recent Special Weather Statements for {cwa_office}.",
 }
 
 _NO_CWA_COPY = "NWS text products will populate after the next weather refresh."
@@ -123,7 +123,7 @@ class ForecastProductPanel(wx.Panel):
         self.sps_choice_label: wx.StaticText | None = None
         self.sps_choice: wx.Choice | None = None
         if self.product_type == "SPS":
-            self.sps_choice_label = wx.StaticText(self, label="Active Special Weather Statements:")
+            self.sps_choice_label = wx.StaticText(self, label="Recent Special Weather Statements:")
             main_sizer.Add(self.sps_choice_label, 0, wx.LEFT | wx.RIGHT, 8)
             self.sps_choice = wx.Choice(self)
             main_sizer.Add(self.sps_choice, 0, wx.ALL | wx.EXPAND, 8)
