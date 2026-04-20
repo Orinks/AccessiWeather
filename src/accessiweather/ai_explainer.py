@@ -908,10 +908,7 @@ class AIExplainer:
 
         # System prompt: custom overrides the default (preserves existing
         # explain_afd semantics — replace, not append).
-        if self.custom_system_prompt:
-            system_prompt = self.custom_system_prompt
-        else:
-            system_prompt = _SYSTEM_PROMPTS[product_type]
+        system_prompt = self.custom_system_prompt or _SYSTEM_PROMPTS[product_type]
 
         # User prompt: product-type-aware lead-in + raw product + style hint.
         intro_template = self._PRODUCT_USER_INTRO[product_type]
