@@ -154,6 +154,21 @@ class ForecastProductPanel(wx.Panel):
         main_sizer.Show(self.ai_summary_header, False)
         main_sizer.Show(self.ai_summary_display, False)
 
+        # Model information (shown alongside the AI summary). Mirrors
+        # DiscussionDialog's Model / Tokens / Cost / Cached block so users
+        # see the same provenance info they already expect from AFD.
+        self.model_info_label = wx.StaticText(self, label="Model Information:")
+        main_sizer.Add(self.model_info_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 8)
+        self.model_info = wx.TextCtrl(
+            self,
+            value="",
+            style=wx.TE_MULTILINE | wx.TE_READONLY,
+            size=wx.Size(-1, 80),
+        )
+        main_sizer.Add(self.model_info, 0, wx.LEFT | wx.RIGHT | wx.EXPAND, 8)
+        main_sizer.Show(self.model_info_label, False)
+        main_sizer.Show(self.model_info, False)
+
         # Buttons row
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.explain_button = wx.Button(self, label="Plain Language Summary")
@@ -197,7 +212,18 @@ class ForecastProductPanel(wx.Panel):
     def _hide_ai_summary_section(self) -> None:
         self._main_sizer.Show(self.ai_summary_header, False)
         self._main_sizer.Show(self.ai_summary_display, False)
+        self._hide_model_info()
         self._layout()
+
+    def _show_model_info(self) -> None:
+        self._main_sizer.Show(self.model_info_label, True)
+        self._main_sizer.Show(self.model_info, True)
+        self._layout()
+
+    def _hide_model_info(self) -> None:
+        self.model_info.SetValue("")
+        self._main_sizer.Show(self.model_info_label, False)
+        self._main_sizer.Show(self.model_info, False)
 
     def _set_post_explain_buttons(self, has_attempted: bool) -> None:
         """Explain and Regenerate are mutually exclusive."""
@@ -431,6 +457,7 @@ class ForecastProductPanel(wx.Panel):
             return
         self._is_explaining = True
         self._show_ai_summary_section()
+        self._hide_model_info()
         self._set_post_explain_buttons(has_attempted=False)
         self.explain_button.Disable()
         self.ai_summary_display.SetValue("Generating plain language summary...")
@@ -523,16 +550,36 @@ class ForecastProductPanel(wx.Panel):
                 cast(ProductType, self.product_type),
                 self._location_name,
             )
-            wx.CallAfter(self._on_explain_complete, result.text)
+            wx.CallAfter(
+                self._on_explain_complete,
+                result.text,
+                getattr(result, "model_used", ""),
+                getattr(result, "token_count", 0),
+                getattr(result, "estimated_cost", 0.0),
+                getattr(result, "cached", False),
+            )
         except Exception as exc:  # noqa: BLE001
             wx.CallAfter(self._on_explain_error, str(exc))
 
-    def _on_explain_complete(self, summary: str) -> None:
-        """Fill in the AI summary TextCtrl on success."""
+    def _on_explain_complete(
+        self,
+        summary: str,
+        model_used: str = "",
+        token_count: int = 0,
+        estimated_cost: float = 0.0,
+        cached: bool = False,
+    ) -> None:
+        """Fill in the AI summary TextCtrl + Model Information on success."""
         self._is_explaining = False
         self._show_ai_summary_section()
         self._set_post_explain_buttons(has_attempted=True)
         self.ai_summary_display.SetValue(summary)
+        cost_text = "No cost" if estimated_cost == 0 else f"~${estimated_cost:.6f}"
+        info = f"Model: {model_used}\nTokens: {token_count}\nCost: {cost_text}"
+        if cached:
+            info += "\nCached: Yes"
+        self.model_info.SetValue(info)
+        self._show_model_info()
 
     def _on_explain_error(self, message: str) -> None:
         """Populate the AI summary TextCtrl with an error message."""
