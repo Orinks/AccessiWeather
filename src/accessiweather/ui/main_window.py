@@ -1267,6 +1267,11 @@ class MainWindow(SizedFrame):
             # Update UI on main thread
             wx.CallAfter(self._on_weather_data_received, weather_data)
 
+            # Pre-warm NWS text products (AFD/HWO/SPS) for the active location
+            # so the Forecast Products dialog and Unit 10/11 notification
+            # checks see fresh data without issuing an on-demand fetch.
+            await self._pre_warm_products_for_location(location)
+
             # Pre-warm cache for other locations in background (non-blocking)
             if not force_refresh:
                 await self._pre_warm_other_locations(location)
@@ -1376,8 +1381,63 @@ class MainWindow(SizedFrame):
             if uncached:
                 logger.debug(f"Pre-warming cache for {len(uncached)} locations")
                 await self.app.weather_client.pre_warm_batch(uncached)
+
+            # Pre-warm NWS text products (AFD/HWO/SPS) for every non-active
+            # saved US location. Failure isolation is per-(product, location):
+            # one failure never cascades to other products or other locations.
+            for loc in all_locations:
+                if loc.name == current_location.name:
+                    continue
+                await self._pre_warm_products_for_location(loc)
         except Exception as e:
             logger.debug(f"Cache pre-warm failed (non-critical): {e}")
+
+    async def _pre_warm_products_for_location(self, location: Location) -> None:
+        """
+        Pre-warm AFD/HWO/SPS caches for a single location.
+
+        Non-US locations and US locations without a populated ``cwa_office``
+        are skipped. Each product fetch is wrapped in its own try/except so
+        one failure (e.g. an NWS 404 for HWO) never prevents the next product
+        type or subsequent locations from being pre-warmed.
+        """
+        # Nationwide is a synthetic entry with no real CWA — skip it cheaply.
+        if location.name == "Nationwide":
+            return
+
+        # Local import avoids a hard dependency on services at module-import
+        # time for the stripped-down test fixtures that stub MainWindow.
+        from ..services.zone_enrichment_service import _is_us_location
+        from ..weather_client_nws import TextProductFetchError
+
+        if not _is_us_location(location):
+            return
+        if not getattr(location, "cwa_office", None):
+            return
+
+        try:
+            service = self._get_forecast_product_service()
+        except Exception:  # noqa: BLE001
+            logger.debug("ForecastProductService unavailable for pre-warm", exc_info=True)
+            return
+
+        for product_type in ("AFD", "HWO", "SPS"):
+            try:
+                await service.get(product_type, location.cwa_office)
+            except TextProductFetchError:
+                logger.debug(
+                    "Pre-warm %s for %s (%s) failed",
+                    product_type,
+                    location.name,
+                    location.cwa_office,
+                )
+            except Exception:  # noqa: BLE001
+                logger.debug(
+                    "Unexpected pre-warm failure for %s at %s",
+                    product_type,
+                    location.name,
+                    exc_info=True,
+                )
 
     def _on_weather_data_received(self, weather_data) -> None:
         """Handle received weather data (called on main thread)."""

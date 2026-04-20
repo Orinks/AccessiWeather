@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -189,6 +189,13 @@ class NotificationState:
     last_minutely_transition_signature: str | None = None
     last_minutely_likelihood_signature: str | None = None
     last_check_time: datetime | None = None
+    # HWO (Hazardous Weather Outlook) tracking — Unit 10 populates these.
+    last_hwo_issuance_time: datetime | None = None
+    last_hwo_text: str | None = None
+    last_hwo_summary_signature: str | None = None
+    # SPS (Special Weather Statement) tracking — Unit 11 populates these.
+    # Stored as a set for O(1) dedupe; round-trips through JSON as sorted list.
+    last_sps_product_ids: set[str] = field(default_factory=set)
 
     def to_dict(self) -> dict:
         """Convert to dictionary for persistence."""
@@ -203,6 +210,13 @@ class NotificationState:
             "last_minutely_transition_signature": self.last_minutely_transition_signature,
             "last_minutely_likelihood_signature": self.last_minutely_likelihood_signature,
             "last_check_time": self.last_check_time.isoformat() if self.last_check_time else None,
+            "last_hwo_issuance_time": (
+                self.last_hwo_issuance_time.isoformat() if self.last_hwo_issuance_time else None
+            ),
+            "last_hwo_text": self.last_hwo_text,
+            "last_hwo_summary_signature": self.last_hwo_summary_signature,
+            # Sort for deterministic output (JSON diffs, snapshot tests).
+            "last_sps_product_ids": sorted(self.last_sps_product_ids),
         }
 
     @classmethod
@@ -210,6 +224,8 @@ class NotificationState:
         """Create from dictionary."""
         last_check = data.get("last_check_time")
         last_issuance = data.get("last_discussion_issuance_time")
+        last_hwo_issuance = data.get("last_hwo_issuance_time")
+        sps_ids = data.get("last_sps_product_ids") or []
         return cls(
             last_discussion_issuance_time=(
                 datetime.fromisoformat(last_issuance) if last_issuance else None
@@ -219,6 +235,12 @@ class NotificationState:
             last_minutely_transition_signature=data.get("last_minutely_transition_signature"),
             last_minutely_likelihood_signature=data.get("last_minutely_likelihood_signature"),
             last_check_time=datetime.fromisoformat(last_check) if last_check else None,
+            last_hwo_issuance_time=(
+                datetime.fromisoformat(last_hwo_issuance) if last_hwo_issuance else None
+            ),
+            last_hwo_text=data.get("last_hwo_text"),
+            last_hwo_summary_signature=data.get("last_hwo_summary_signature"),
+            last_sps_product_ids=set(sps_ids),
         )
 
 
@@ -300,6 +322,8 @@ class NotificationEventManager:
         discussion = section.get("discussion", {})
         severe_risk = section.get("severe_risk", {})
         minutely_precipitation = section.get("minutely_precipitation", {})
+        hwo = section.get("hwo", {})
+        sps = section.get("sps", {})
         return {
             "last_discussion_issuance_time": discussion.get("last_issuance_time"),
             "last_discussion_text": discussion.get("last_text"),
@@ -313,12 +337,17 @@ class NotificationEventManager:
             "last_check_time": discussion.get("last_check_time")
             or severe_risk.get("last_check_time")
             or minutely_precipitation.get("last_check_time"),
+            "last_hwo_issuance_time": hwo.get("last_issuance_time"),
+            "last_hwo_text": hwo.get("last_text"),
+            "last_hwo_summary_signature": hwo.get("last_summary_signature"),
+            "last_sps_product_ids": list(sps.get("last_product_ids") or []),
         }
 
     @staticmethod
     def _legacy_shape_to_runtime_section(data: dict) -> dict:
         """Convert legacy notification-state payloads to the unified section shape."""
         last_check_time = data.get("last_check_time")
+        sps_ids = data.get("last_sps_product_ids") or []
         return {
             "discussion": {
                 "last_issuance_time": data.get("last_discussion_issuance_time"),
@@ -332,6 +361,18 @@ class NotificationEventManager:
             "minutely_precipitation": {
                 "last_transition_signature": data.get("last_minutely_transition_signature"),
                 "last_likelihood_signature": data.get("last_minutely_likelihood_signature"),
+                "last_check_time": last_check_time,
+            },
+            "hwo": {
+                "last_issuance_time": data.get("last_hwo_issuance_time"),
+                "last_text": data.get("last_hwo_text"),
+                "last_summary_signature": data.get("last_hwo_summary_signature"),
+                "last_check_time": last_check_time,
+            },
+            "sps": {
+                # Sorted so round-trips are stable; NotificationState's
+                # ``set`` field re-materializes order-independence.
+                "last_product_ids": sorted(sps_ids),
                 "last_check_time": last_check_time,
             },
         }
