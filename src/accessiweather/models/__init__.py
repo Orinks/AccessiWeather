@@ -13,6 +13,9 @@ from .config import AppConfig, AppSettings
 
 # Error models
 from .errors import ApiError
+
+# Text product models (NWS AFD / HWO / SPS)
+from .text_product import TextProduct
 from .weather import (
     AviationData,
     CurrentConditions,
@@ -60,4 +63,5 @@ __all__ = [
     "SourceData",
     "SourceAttribution",
     "DataConflict",
+    "TextProduct",
 ]

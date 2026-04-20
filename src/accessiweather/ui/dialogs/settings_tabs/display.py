@@ -249,6 +249,27 @@ class DisplayTab:
             lambda parent: wx.Choice(parent, choices=_ALERT_DISPLAY_CHOICES),
         )
 
+        layout_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Main window layout",
+            "Adjust where the main window places location-management buttons. "
+            "Changes take effect after you restart AccessiWeather.",
+        )
+        controls["location_buttons_on_top"] = wx.CheckBox(
+            panel,
+            label=(
+                "Show Add, Edit, and Remove Location buttons next to the "
+                "location dropdown (restart required)"
+            ),
+        )
+        layout_section.Add(
+            controls["location_buttons_on_top"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
+
         panel.SetSizer(sizer)
         self.dialog.notebook.AddPage(panel, page_label)
         return panel
@@ -299,6 +320,10 @@ class DisplayTab:
         alert_display = getattr(settings, "alert_display_style", "separate")
         controls["alert_display_style"].SetSelection(_ALERT_DISPLAY_MAP.get(alert_display, 0))
 
+        controls["location_buttons_on_top"].SetValue(
+            getattr(settings, "location_buttons_on_top", False)
+        )
+
     def save(self) -> dict:
         """Return Display tab settings as a dict."""
         controls = self.dialog._controls
@@ -326,6 +351,7 @@ class DisplayTab:
             "alert_display_style": _ALERT_DISPLAY_VALUES[
                 controls["alert_display_style"].GetSelection()
             ],
+            "location_buttons_on_top": controls["location_buttons_on_top"].GetValue(),
         }
 
     def get_selected_temperature_unit(self) -> str:
@@ -356,6 +382,10 @@ class DisplayTab:
             "verbosity_level": "Verbosity level",
             "severe_weather_override": "Automatically prioritize severe weather details",
             "alert_display_style": "Alert display style",
+            "location_buttons_on_top": (
+                "Show Add, Edit, and Remove Location buttons next to the "
+                "location dropdown (restart required)"
+            ),
         }
         for key, name in names.items():
             controls[key].SetName(name)

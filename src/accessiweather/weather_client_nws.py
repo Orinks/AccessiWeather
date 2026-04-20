@@ -7,7 +7,7 @@ import inspect
 import logging
 import re
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, Literal
 
 import httpx
 
@@ -18,8 +18,13 @@ from .models import (
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    TextProduct,
     WeatherAlert,
     WeatherAlerts,
+)
+from .services.zone_enrichment_service import (
+    _extract_zone_fields,
+    diff_zone_fields,
 )
 from .utils.retry_utils import (
     RETRYABLE_EXCEPTIONS,
@@ -32,7 +37,88 @@ from .weather_client_parsers import (
     convert_wind_speed_to_mph_and_kph,
 )
 
+# wxPython is an optional runtime dep. Import lazily via a module-level handle
+# so tests (and headless CI) can patch or stub it without importing the full
+# wx package. When wx is unavailable, CallAfter becomes a best-effort direct
+# call — acceptable since the drift hook is a no-op under those conditions
+# (no sink is registered in non-GUI test contexts).
+try:
+    import wx  # type: ignore[import-untyped]
+except ImportError:  # pragma: no cover - handled at runtime
+    wx = None  # type: ignore[assignment]
+
+# Registered drift-correction sink. Wired up by app initialization to point at
+# the application's ``LocationOperations`` instance. Unit tests register their
+# own sink directly. The hook is a silent no-op until a sink is installed.
+_ZONE_DRIFT_SINK: Any = None
+
 logger = logging.getLogger(__name__)
+
+
+def set_zone_drift_sink(sink: Any) -> None:
+    """
+    Register (or clear) the object used to persist drift-corrected zone fields.
+
+    The ``sink`` must expose an ``update_zone_metadata(location_name, fields)``
+    callable — typically a :class:`accessiweather.config.locations.LocationOperations`
+    instance. Pass ``None`` to clear.
+
+    This is intentionally a module-global registration: weather-client HTTP
+    helpers are shared across the app and cannot easily thread an extra
+    dependency through every signature. Wiring is performed once during app
+    startup; tests install/clear the sink as needed.
+    """
+    global _ZONE_DRIFT_SINK
+    _ZONE_DRIFT_SINK = sink
+
+
+def _apply_zone_drift_correction(location: Location, point_data: dict[str, Any] | None) -> None:
+    """
+    Diff fresh ``/points`` properties against ``location`` and persist drift.
+
+    Called from the weather-refresh thread after each successful ``/points``
+    fetch. Never raises: a drift bug must never cascade into breaking the
+    weather refresh flow.
+
+    Persistence is funneled through ``wx.CallAfter`` so that the main thread
+    performs the actual config write — ``ConfigManager.save_config`` has no
+    in-process lock, and main-thread bounce is the smallest correct fix.
+    """
+    sink = _ZONE_DRIFT_SINK
+    if sink is None:
+        return
+    try:
+        if not isinstance(point_data, dict):
+            return
+        properties = point_data.get("properties")
+        if not isinstance(properties, dict):
+            return
+
+        fresh_fields = _extract_zone_fields(properties)
+        changes = diff_zone_fields(location, fresh_fields)
+        if not changes:
+            return
+
+        persist = getattr(sink, "update_zone_metadata", None)
+        if persist is None:
+            return
+
+        call_after = getattr(wx, "CallAfter", None) if wx is not None else None
+        if call_after is None:
+            # No wx event loop available — skip silently rather than writing
+            # from a background thread unprotected.
+            logger.debug("Zone drift: wx.CallAfter unavailable, skipping persist")
+            return
+
+        call_after(persist, location.name, changes)
+        logger.debug(
+            "Zone drift: scheduled update for %s: %s",
+            location.name,
+            sorted(changes.keys()),
+        )
+    except Exception as exc:  # noqa: BLE001 - must never break refresh
+        logger.debug("Zone drift correction raised (suppressed): %s", exc)
+
 
 MAX_STATION_OBSERVATION_ATTEMPTS = 10
 MAX_OBSERVATION_AGE = timedelta(hours=2)
@@ -338,6 +424,9 @@ async def get_nws_all_data_parallel(
         response = await _client_get(client, grid_url, headers=headers)
         response.raise_for_status()
         grid_data = response.json()
+
+        # Opportunistic zone-metadata drift correction. Never raises.
+        _apply_zone_drift_correction(location, grid_data)
 
         # Now fetch all other data in parallel, reusing grid_data
         current_task = asyncio.create_task(
@@ -766,6 +855,170 @@ async def get_nws_discussion_only(
         return None, None
 
 
+class TextProductFetchError(Exception):
+    """
+    Network, timeout, or non-200 response from the NWS /products endpoint.
+
+    Distinct from the "empty @graph" case, which returns ``None`` (AFD/HWO) or
+    ``[]`` (SPS) rather than raising.
+    """
+
+
+async def _fetch_text_product_by_id(
+    client: httpx.AsyncClient,
+    nws_base_url: str,
+    headers: dict[str, str],
+    product_type: Literal["AFD", "HWO", "SPS"],
+    cwa_office: str,
+    entry: dict[str, Any],
+) -> TextProduct | None:
+    """
+    Fetch a single /products/{id} and return a TextProduct.
+
+    Returns None for individual product fetches whose id is missing or whose
+    response is missing productText — these are treated as best-effort skips
+    rather than hard errors.
+    """
+    product_id = entry.get("id")
+    if not product_id:
+        logger.warning("No product ID in %s @graph entry for office %s", product_type, cwa_office)
+        return None
+
+    issuance_time = _parse_iso_datetime(entry.get("issuanceTime"))
+
+    product_url = f"{nws_base_url}/products/{product_id}"
+    response = await _client_get(client, product_url, headers=headers)
+    if response.status_code != 200:
+        logger.warning(
+            "Failed to get %s product text (%s): HTTP %s",
+            product_type,
+            product_id,
+            response.status_code,
+        )
+        raise TextProductFetchError(
+            f"HTTP {response.status_code} fetching {product_type} product {product_id}"
+        )
+
+    product_data = response.json()
+    product_text = product_data.get("productText")
+    if not product_text:
+        logger.warning("No productText in %s product %s", product_type, product_id)
+        return None
+
+    # Prefer product-level issuanceTime over @graph metadata when present.
+    body_issuance = _parse_iso_datetime(product_data.get("issuanceTime"))
+    if body_issuance is not None:
+        issuance_time = body_issuance
+
+    headline = product_data.get("headline") or entry.get("headline")
+    if headline is not None and not isinstance(headline, str):
+        headline = str(headline)
+
+    return TextProduct(
+        product_type=product_type,
+        product_id=str(product_id),
+        cwa_office=cwa_office,
+        issuance_time=issuance_time,
+        product_text=product_text,
+        headline=headline,
+    )
+
+
+async def get_nws_text_product(
+    product_type: Literal["AFD", "HWO", "SPS"],
+    cwa_office: str | None,
+    *,
+    nws_base_url: str = "https://api.weather.gov",
+    client: httpx.AsyncClient | None = None,
+    timeout: float = 10.0,
+    user_agent: str = "AccessiWeather (github.com/orinks/accessiweather)",
+) -> TextProduct | list[TextProduct] | None:
+    """
+    Fetch an NWS text product (AFD / HWO / SPS) for a CWA office.
+
+    Endpoint: ``/products/types/{product_type}/locations/{cwa_office}`` returns
+    an ``@graph`` of product stubs; each is fetched individually via
+    ``/products/{id}`` to get ``productText`` and metadata.
+
+    Return convention:
+        - ``cwa_office`` falsy -> ``None`` (no HTTP call).
+        - AFD or HWO, empty ``@graph`` -> ``None``.
+        - AFD or HWO, products present -> single ``TextProduct`` (newest @graph entry).
+        - SPS -> ``list[TextProduct]`` (possibly empty), sorted newest-first.
+
+    Raises:
+        TextProductFetchError on network failure, timeout, or non-200 response
+        from the NWS /products endpoints. Empty @graph is NOT an error.
+
+    """
+    if not cwa_office:
+        return None
+
+    headers = {"User-Agent": user_agent}
+    products_url = f"{nws_base_url}/products/types/{product_type}/locations/{cwa_office}"
+
+    async def _run(http_client: httpx.AsyncClient) -> TextProduct | list[TextProduct] | None:
+        try:
+            listing_response = await _client_get(http_client, products_url, headers=headers)
+        except (httpx.TimeoutException, httpx.TransportError, httpx.RequestError) as exc:
+            raise TextProductFetchError(
+                f"Request failed fetching {product_type} listing for {cwa_office}: {exc}"
+            ) from exc
+
+        if listing_response.status_code != 200:
+            raise TextProductFetchError(
+                f"HTTP {listing_response.status_code} fetching {product_type} "
+                f"listing for {cwa_office}"
+            )
+
+        graph = listing_response.json().get("@graph") or []
+
+        if product_type == "SPS":
+            products: list[TextProduct] = []
+            try:
+                for entry in graph:
+                    if not isinstance(entry, dict):
+                        continue
+                    tp = await _fetch_text_product_by_id(
+                        http_client, nws_base_url, headers, product_type, cwa_office, entry
+                    )
+                    if tp is not None:
+                        products.append(tp)
+            except (httpx.TimeoutException, httpx.TransportError, httpx.RequestError) as exc:
+                raise TextProductFetchError(
+                    f"Request failed fetching SPS product for {cwa_office}: {exc}"
+                ) from exc
+
+            products.sort(
+                key=lambda p: p.issuance_time or datetime.min.replace(tzinfo=UTC),
+                reverse=True,
+            )
+            return products
+
+        # AFD or HWO: newest @graph entry only, or None if empty.
+        if not graph:
+            return None
+
+        latest = graph[0]
+        if not isinstance(latest, dict):
+            return None
+
+        try:
+            return await _fetch_text_product_by_id(
+                http_client, nws_base_url, headers, product_type, cwa_office, latest
+            )
+        except (httpx.TimeoutException, httpx.TransportError, httpx.RequestError) as exc:
+            raise TextProductFetchError(
+                f"Request failed fetching {product_type} product for {cwa_office}: {exc}"
+            ) from exc
+
+    if client is not None:
+        return await _run(client)
+
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+        return await _run(new_client)
+
+
 async def get_nws_discussion(
     client: httpx.AsyncClient,
     headers: dict[str, str],
@@ -774,6 +1027,10 @@ async def get_nws_discussion(
 ) -> tuple[str, datetime | None]:
     """
     Fetch the NWS Area Forecast Discussion (AFD) for the given grid data.
+
+    Thin backward-compat wrapper around :func:`get_nws_text_product` for the AFD
+    product type. Preserves the pre-existing ``(discussion_text, issuance_time)``
+    tuple contract so existing internal callers continue to work unchanged.
 
     Returns:
         Tuple of (discussion_text, issuance_time). The issuance_time is parsed from
@@ -795,49 +1052,28 @@ async def get_nws_discussion(
         office_id = parts[-3]
         logger.info(f"Fetching AFD for office: {office_id}")
 
-        products_url = f"{nws_base_url}/products/types/AFD/locations/{office_id}"
-        response = await _client_get(client, products_url, headers=headers)
+        # Preserve existing User-Agent behavior by reusing caller-supplied headers.
+        user_agent = headers.get("User-Agent", "AccessiWeather")
 
-        if response.status_code != 200:
-            logger.warning(f"Failed to get AFD products: HTTP {response.status_code}")
+        try:
+            product = await get_nws_text_product(
+                "AFD",
+                office_id,
+                nws_base_url=nws_base_url,
+                client=client,
+                user_agent=user_agent,
+            )
+        except TextProductFetchError as exc:
+            logger.warning("Failed to fetch AFD via text-product path: %s", exc)
             return "Forecast discussion not available.", None
 
-        products_data = response.json()
-
-        if not products_data.get("@graph"):
+        if product is None:
             logger.warning(f"No AFD products found for office {office_id}")
             return "Forecast discussion not available for this location.", None
 
-        latest_product = products_data["@graph"][0]
-        latest_product_id = latest_product.get("id")
-        if not latest_product_id:
-            logger.warning("No product ID found in latest AFD product")
-            return "Forecast discussion not available.", None
-
-        # Extract issuanceTime from the product metadata
-        issuance_time: datetime | None = None
-        issuance_time_str = latest_product.get("issuanceTime")
-        if issuance_time_str:
-            issuance_time = _parse_iso_datetime(issuance_time_str)
-            if issuance_time:
-                logger.debug(f"AFD issuance time: {issuance_time}")
-
-        product_url = f"{nws_base_url}/products/{latest_product_id}"
-        response = await _client_get(client, product_url, headers=headers)
-
-        if response.status_code != 200:
-            logger.warning(f"Failed to get AFD product text: HTTP {response.status_code}")
-            return "Forecast discussion not available.", None
-
-        product_data = response.json()
-        product_text = product_data.get("productText")
-
-        if not product_text:
-            logger.warning("No product text found in AFD product")
-            return "Forecast discussion not available.", None
-
+        assert isinstance(product, TextProduct)  # AFD path never returns a list
         logger.info(f"Successfully fetched AFD for office {office_id}")
-        return product_text, issuance_time
+        return product.product_text, product.issuance_time
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS discussion: {exc}")
@@ -871,23 +1107,35 @@ async def get_nws_alerts(
 
         # Build params based on alert_radius_type
         if alert_radius_type == "county":
-            # Get county zone from point data
-            point_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
-            if client is not None:
-                point_response = await _client_get(client, point_url, headers=headers)
+            # Prefer the stored county_zone_id (populated by zone enrichment and
+            # kept fresh by drift correction). This skips a redundant /points
+            # round-trip on each refresh. Fall back to /points resolution when
+            # the stored field is absent.
+            if location.county_zone_id:
+                params = {"zone": location.county_zone_id, "status": "actual"}
             else:
-                async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
-                    point_response = await new_client.get(point_url, headers=headers)
-            point_response.raise_for_status()
-            point_data = point_response.json()
+                # Get county zone from point data
+                point_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+                if client is not None:
+                    point_response = await _client_get(client, point_url, headers=headers)
+                else:
+                    async with httpx.AsyncClient(
+                        timeout=timeout, follow_redirects=True
+                    ) as new_client:
+                        point_response = await new_client.get(point_url, headers=headers)
+                point_response.raise_for_status()
+                point_data = point_response.json()
 
-            county_url = point_data.get("properties", {}).get("county")
-            if county_url and "/county/" in county_url:
-                zone_id = county_url.split("/county/")[1]
-                params = {"zone": zone_id, "status": "actual"}
-            else:
-                logger.warning("Could not determine county zone, falling back to point query")
-                params = {"point": f"{location.latitude},{location.longitude}", "status": "actual"}
+                county_url = point_data.get("properties", {}).get("county")
+                if county_url and "/county/" in county_url:
+                    zone_id = county_url.split("/county/")[1]
+                    params = {"zone": zone_id, "status": "actual"}
+                else:
+                    logger.warning("Could not determine county zone, falling back to point query")
+                    params = {
+                        "point": f"{location.latitude},{location.longitude}",
+                        "status": "actual",
+                    }
 
         elif alert_radius_type == "state":
             # Get state from location - need to fetch point data first
@@ -913,32 +1161,44 @@ async def get_nws_alerts(
                 params = {"point": f"{location.latitude},{location.longitude}", "status": "actual"}
 
         elif alert_radius_type == "zone":
-            # Get zone from point data
-            point_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
-            if client is not None:
-                point_response = await _client_get(client, point_url, headers=headers)
+            # Prefer the stored forecast_zone_id (populated by zone enrichment
+            # and kept fresh by drift correction). This skips a redundant
+            # /points round-trip on each refresh. Fall back to /points
+            # resolution when the stored field is absent.
+            if location.forecast_zone_id:
+                params = {"zone": location.forecast_zone_id, "status": "actual"}
             else:
-                async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
-                    point_response = await new_client.get(point_url, headers=headers)
-            point_response.raise_for_status()
-            point_data = point_response.json()
+                # Get zone from point data
+                point_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
+                if client is not None:
+                    point_response = await _client_get(client, point_url, headers=headers)
+                else:
+                    async with httpx.AsyncClient(
+                        timeout=timeout, follow_redirects=True
+                    ) as new_client:
+                        point_response = await new_client.get(point_url, headers=headers)
+                point_response.raise_for_status()
+                point_data = point_response.json()
 
-            # Try to get zone ID (prefer county, then forecast zone)
-            zone_id = None
-            county_url = point_data.get("properties", {}).get("county")
-            if county_url and "/county/" in county_url:
-                zone_id = county_url.split("/county/")[1]
-            if not zone_id:
-                forecast_zone_url = point_data.get("properties", {}).get("forecastZone")
-                if forecast_zone_url and "/forecast/" in forecast_zone_url:
-                    zone_id = forecast_zone_url.split("/forecast/")[1]
+                # Try to get zone ID (prefer county, then forecast zone)
+                zone_id = None
+                county_url = point_data.get("properties", {}).get("county")
+                if county_url and "/county/" in county_url:
+                    zone_id = county_url.split("/county/")[1]
+                if not zone_id:
+                    forecast_zone_url = point_data.get("properties", {}).get("forecastZone")
+                    if forecast_zone_url and "/forecast/" in forecast_zone_url:
+                        zone_id = forecast_zone_url.split("/forecast/")[1]
 
-            if zone_id:
-                params = {"zone": zone_id, "status": "actual"}
-            else:
-                # Fall back to point query if zone not found
-                logger.warning("Could not determine zone, falling back to point query")
-                params = {"point": f"{location.latitude},{location.longitude}", "status": "actual"}
+                if zone_id:
+                    params = {"zone": zone_id, "status": "actual"}
+                else:
+                    # Fall back to point query if zone not found
+                    logger.warning("Could not determine zone, falling back to point query")
+                    params = {
+                        "point": f"{location.latitude},{location.longitude}",
+                        "status": "actual",
+                    }
 
         else:  # "point" (default) - most precise
             params = {

@@ -40,6 +40,8 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "show_nationwide_location",
     # Event notifications
     "notify_discussion_update",
+    "notify_hwo_update",
+    "notify_sps_issued",
     "notify_severe_risk_change",
     "notify_minutely_precipitation_start",
     "notify_minutely_precipitation_stop",
@@ -127,6 +129,8 @@ class AppSettings:
     show_nationwide_location: bool = True
     # Event-based notifications
     notify_discussion_update: bool = True
+    notify_hwo_update: bool = True
+    notify_sps_issued: bool = True
     notify_severe_risk_change: bool = False
     notify_minutely_precipitation_start: bool = True
     notify_minutely_precipitation_stop: bool = True
@@ -172,6 +176,9 @@ class AppSettings:
     show_timezone_suffix: bool = False
     # Alert dialog display style
     alert_display_style: str = "separate"  # "separate" | "combined"
+    # Place Add/Edit/Remove Location buttons on the location row instead of the
+    # bottom button panel.  Takes effect on app restart.
+    location_buttons_on_top: bool = False
     # Date format preset for rendered dates
     date_format: str = "iso"  # "iso" | "us_short" | "us_long" | "eu"
     # Taskbar icon text options
@@ -459,6 +466,8 @@ class AppSettings:
             "muted_sound_events": self.muted_sound_events,
             "show_nationwide_location": self.show_nationwide_location,
             "notify_discussion_update": self.notify_discussion_update,
+            "notify_hwo_update": self.notify_hwo_update,
+            "notify_sps_issued": self.notify_sps_issued,
             "notify_severe_risk_change": self.notify_severe_risk_change,
             "notify_minutely_precipitation_start": self.notify_minutely_precipitation_start,
             "notify_minutely_precipitation_stop": self.notify_minutely_precipitation_stop,
@@ -499,6 +508,7 @@ class AppSettings:
             "time_format_12hour": self.time_format_12hour,
             "show_timezone_suffix": self.show_timezone_suffix,
             "alert_display_style": self.alert_display_style,
+            "location_buttons_on_top": self.location_buttons_on_top,
             "date_format": self.date_format,
             "taskbar_icon_text_enabled": self.taskbar_icon_text_enabled,
             "taskbar_icon_dynamic_enabled": self.taskbar_icon_dynamic_enabled,
@@ -548,6 +558,8 @@ class AppSettings:
             muted_sound_events=data.get("muted_sound_events", list(DEFAULT_MUTED_SOUND_EVENTS)),
             show_nationwide_location=cls._as_bool(data.get("show_nationwide_location"), True),
             notify_discussion_update=cls._as_bool(data.get("notify_discussion_update"), True),
+            notify_hwo_update=cls._as_bool(data.get("notify_hwo_update"), True),
+            notify_sps_issued=cls._as_bool(data.get("notify_sps_issued"), True),
             notify_severe_risk_change=cls._as_bool(data.get("notify_severe_risk_change"), False),
             notify_minutely_precipitation_start=cls._as_bool(
                 data.get("notify_minutely_precipitation_start"), True
@@ -598,6 +610,7 @@ class AppSettings:
             time_format_12hour=cls._as_bool(data.get("time_format_12hour"), True),
             show_timezone_suffix=cls._as_bool(data.get("show_timezone_suffix"), False),
             alert_display_style=data.get("alert_display_style", "separate"),
+            location_buttons_on_top=cls._as_bool(data.get("location_buttons_on_top"), False),
             date_format=data.get("date_format", "iso"),
             taskbar_icon_text_enabled=cls._as_bool(data.get("taskbar_icon_text_enabled"), False),
             taskbar_icon_dynamic_enabled=cls._as_bool(
@@ -703,6 +716,12 @@ class AppConfig:
                     "longitude": loc.longitude,
                     **({"country_code": loc.country_code} if loc.country_code else {}),
                     **({"marine_mode": True} if loc.marine_mode else {}),
+                    **({"timezone": loc.timezone} if loc.timezone else {}),
+                    **({"forecast_zone_id": loc.forecast_zone_id} if loc.forecast_zone_id else {}),
+                    **({"cwa_office": loc.cwa_office} if loc.cwa_office else {}),
+                    **({"county_zone_id": loc.county_zone_id} if loc.county_zone_id else {}),
+                    **({"fire_zone_id": loc.fire_zone_id} if loc.fire_zone_id else {}),
+                    **({"radar_station": loc.radar_station} if loc.radar_station else {}),
                 }
                 for loc in self.locations
             ],
@@ -716,6 +735,36 @@ class AppConfig:
                     else {}
                 ),
                 **({"marine_mode": True} if self.current_location.marine_mode else {}),
+                **(
+                    {"timezone": self.current_location.timezone}
+                    if self.current_location.timezone
+                    else {}
+                ),
+                **(
+                    {"forecast_zone_id": self.current_location.forecast_zone_id}
+                    if self.current_location.forecast_zone_id
+                    else {}
+                ),
+                **(
+                    {"cwa_office": self.current_location.cwa_office}
+                    if self.current_location.cwa_office
+                    else {}
+                ),
+                **(
+                    {"county_zone_id": self.current_location.county_zone_id}
+                    if self.current_location.county_zone_id
+                    else {}
+                ),
+                **(
+                    {"fire_zone_id": self.current_location.fire_zone_id}
+                    if self.current_location.fire_zone_id
+                    else {}
+                ),
+                **(
+                    {"radar_station": self.current_location.radar_station}
+                    if self.current_location.radar_station
+                    else {}
+                ),
             }
             if self.current_location
             else None,
@@ -733,8 +782,14 @@ class AppConfig:
                     name=loc_data["name"],
                     latitude=loc_data["latitude"],
                     longitude=loc_data["longitude"],
+                    timezone=loc_data.get("timezone"),
                     country_code=loc_data.get("country_code"),
                     marine_mode=bool(loc_data.get("marine_mode", False)),
+                    forecast_zone_id=loc_data.get("forecast_zone_id"),
+                    cwa_office=loc_data.get("cwa_office"),
+                    county_zone_id=loc_data.get("county_zone_id"),
+                    fire_zone_id=loc_data.get("fire_zone_id"),
+                    radar_station=loc_data.get("radar_station"),
                 )
             )
 
@@ -745,8 +800,14 @@ class AppConfig:
                 name=loc_data["name"],
                 latitude=loc_data["latitude"],
                 longitude=loc_data["longitude"],
+                timezone=loc_data.get("timezone"),
                 country_code=loc_data.get("country_code"),
                 marine_mode=bool(loc_data.get("marine_mode", False)),
+                forecast_zone_id=loc_data.get("forecast_zone_id"),
+                cwa_office=loc_data.get("cwa_office"),
+                county_zone_id=loc_data.get("county_zone_id"),
+                fire_zone_id=loc_data.get("fire_zone_id"),
+                radar_station=loc_data.get("radar_station"),
             )
 
         return cls(

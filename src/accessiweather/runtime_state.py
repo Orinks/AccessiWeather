@@ -29,6 +29,20 @@ _DEFAULT_RUNTIME_STATE: dict[str, Any] = {
             "last_value": None,
             "last_check_time": None,
         },
+        # Hazardous Weather Outlook (HWO) baselines — populated by Unit 10.
+        # Additive; mirrors the ``discussion`` sub-section.
+        "hwo": {
+            "last_issuance_time": None,
+            "last_text": None,
+            "last_summary_signature": None,
+            "last_check_time": None,
+        },
+        # Special Weather Statement (SPS) baselines — populated by Unit 11.
+        # Stores the set of product IDs already announced, as a sorted list.
+        "sps": {
+            "last_product_ids": [],
+            "last_check_time": None,
+        },
     },
     "meta": {
         "migrated_from": [],

@@ -420,7 +420,7 @@ def _deserialize_hourly(data: dict | None) -> HourlyForecast | None:
 
 
 def _serialize_alert(alert: WeatherAlert) -> dict:
-    return {
+    payload: dict = {
         "title": alert.title,
         "description": alert.description,
         "severity": alert.severity,
@@ -435,6 +435,11 @@ def _serialize_alert(alert: WeatherAlert) -> dict:
         "id": alert.id,
         "source": alert.source,
     }
+    # Only include ``affected_zones`` when populated — legacy cache entries
+    # never carried the key and we keep the shape stable for the common case.
+    if alert.affected_zones:
+        payload["affected_zones"] = list(alert.affected_zones)
+    return payload
 
 
 def _deserialize_alert(data: dict) -> WeatherAlert:
@@ -452,6 +457,7 @@ def _deserialize_alert(data: dict) -> WeatherAlert:
         areas=list(data.get("areas", [])),
         id=data.get("id"),
         source=data.get("source"),
+        affected_zones=list(data.get("affected_zones", [])),
     )
 
 

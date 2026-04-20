@@ -1,0 +1,100 @@
+"""
+Forecast product service — caches NWS text products (AFD / HWO / SPS).
+
+Wraps :func:`accessiweather.weather_client_nws.get_nws_text_product` with a
+per-key TTL cache driven by :class:`accessiweather.cache.Cache`. TTLs differ by
+product type:
+
+- AFD: 3600 s  (discussions update every ~6 h)
+- HWO: 7200 s  (hazardous-weather outlooks update once daily)
+- SPS:  900 s  (special statements are time-sensitive)
+
+Failed fetches (:class:`TextProductFetchError`) are NOT cached — the caller
+sees the exception and the next call retries.
+"""
+
+from __future__ import annotations
+
+import logging
+from collections.abc import Awaitable, Callable
+from typing import Any, Literal
+
+from ..cache import Cache
+from ..models import TextProduct
+from ..weather_client_nws import TextProductFetchError, get_nws_text_product
+
+logger = logging.getLogger(__name__)
+
+ProductType = Literal["AFD", "HWO", "SPS"]
+
+# Per-type cache TTLs in seconds. Keyed by product_type; see module docstring
+# for rationale.
+_PRODUCT_TTLS: dict[str, int] = {
+    "AFD": 3600,
+    "HWO": 7200,
+    "SPS": 900,
+}
+
+FetcherResult = TextProduct | list[TextProduct] | None
+Fetcher = Callable[..., Awaitable[FetcherResult]]
+
+
+class ForecastProductService:
+    """Cache-fronted service for NWS text products."""
+
+    _TTLS = _PRODUCT_TTLS
+
+    def __init__(
+        self,
+        cache: Cache,
+        *,
+        fetcher: Fetcher | None = None,
+    ) -> None:
+        """
+        Initialize the service.
+
+        Args:
+            cache: Shared ``Cache`` instance. The service stores entries keyed by
+                ``nws_text_product:{product_type}:{cwa_office}``.
+            fetcher: Optional async callable with the same signature as
+                :func:`get_nws_text_product`. Defaults to the real module-level
+                function. Injected primarily for unit tests.
+
+        """
+        self._cache = cache
+        self._fetcher: Fetcher = fetcher or get_nws_text_product
+
+    @staticmethod
+    def _cache_key(product_type: str, cwa_office: str) -> str:
+        return f"nws_text_product:{product_type}:{cwa_office}"
+
+    async def get(
+        self,
+        product_type: ProductType,
+        cwa_office: str,
+        **fetcher_kwargs: Any,
+    ) -> FetcherResult:
+        """
+        Return a cached or freshly-fetched text product.
+
+        On cache hit the stored value is returned directly. On miss the fetcher
+        is invoked and the result is cached with the per-type TTL before being
+        returned. :class:`TextProductFetchError` from the fetcher propagates
+        unchanged and is NOT cached.
+        """
+        key = self._cache_key(product_type, cwa_office)
+
+        # has_key() distinguishes "cached value that happens to be None/[]"
+        # from "cache miss". Call it first, then fetch the value.
+        if self._cache.has_key(key):
+            return self._cache.get(key)
+
+        try:
+            result = await self._fetcher(product_type, cwa_office, **fetcher_kwargs)
+        except TextProductFetchError:
+            # Do not cache failures — let the next call retry.
+            raise
+
+        ttl = self._TTLS.get(product_type, self._cache.default_ttl)
+        self._cache.set(key, result, ttl=ttl)
+        return result
