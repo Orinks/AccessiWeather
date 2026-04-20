@@ -7,15 +7,20 @@ using OpenRouter's unified API gateway for AI models.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import re
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from .cache import Cache
+
+# Product-type literal used by explain_text_product. Keep in sync with
+# _SYSTEM_PROMPTS keys.
+TextProductType = Literal["AFD", "HWO", "SPS"]
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +99,72 @@ def get_available_free_models(exclude_model: str | None = None) -> list[str]:
         logger.warning(f"Failed to fetch free models from OpenRouter: {e}, using static fallbacks")
         models = [m for m in STATIC_FALLBACK_MODELS if m != exclude_model]
         return models[:3]
+
+
+# System prompts for generic NWS text-product explanations (AFD / HWO / SPS).
+#
+# IMPORTANT: The AFD prompt below is the historical explain_afd system prompt,
+# preserved byte-for-byte. User-customized prompt overrides in the wild are
+# calibrated against this exact wording. Do not reformat or rephrase without
+# treating it as a behavior change.
+_SYSTEM_PROMPTS: dict[str, str] = {
+    "AFD": (
+        "You are a helpful weather assistant that explains National Weather Service "
+        "Area Forecast Discussions (AFDs) in plain, accessible language. AFDs contain "
+        "technical meteorological terminology that most people don't understand. "
+        "Your job is to translate this into clear, everyday language that anyone can "
+        "understand. Focus on:\n"
+        "- What weather to expect and when\n"
+        "- Any significant weather events or changes\n"
+        "- How confident forecasters are in their predictions\n"
+        "- What this means for daily activities\n\n"
+        "Avoid using technical jargon. If you must use a technical term, explain it.\n\n"
+        "IMPORTANT: Do NOT start with a preamble like 'Here is a summary...' or "
+        "'This forecast discussion explains...'. Do NOT repeat the location name. "
+        "Jump straight into explaining the weather. The user already knows what they asked for.\n\n"
+        "IMPORTANT: Respond in plain text only. Do NOT use markdown formatting such as "
+        "bold (**text**), italic (*text*), headers (#), bullet points, or any other "
+        "markdown syntax. Use simple paragraph text that can be read directly."
+    ),
+    "HWO": (
+        "You are a helpful weather assistant that explains National Weather Service "
+        "Hazardous Weather Outlooks (HWOs) in plain, accessible language. An HWO "
+        "describes the 7-day hazard horizon and probabilistic outlook for severe "
+        "weather, flooding, winter weather, marine hazards, and other significant "
+        "events. Your job is to translate it into clear, everyday language that "
+        "anyone can understand. Focus on:\n"
+        "- Which hazards are on the horizon and when they may arrive\n"
+        "- How likely or confident the outlook is (e.g., slight, moderate, high chance)\n"
+        "- What areas or activities are most affected\n"
+        "- What this means for daily plans over the coming week\n\n"
+        "Avoid using technical jargon. If you must use a technical term, explain it.\n\n"
+        "IMPORTANT: Do NOT start with a preamble like 'Here is a summary...' or "
+        "'This outlook explains...'. Do NOT repeat the location name. Jump straight "
+        "into explaining the hazards. The user already knows what they asked for.\n\n"
+        "IMPORTANT: Respond in plain text only. Do NOT use markdown formatting such as "
+        "bold (**text**), italic (*text*), headers (#), bullet points, or any other "
+        "markdown syntax. Use simple paragraph text that can be read directly."
+    ),
+    "SPS": (
+        "You are a helpful weather assistant that explains National Weather Service "
+        "Special Weather Statements (SPSs) in plain, accessible language. An SPS is "
+        "a short advisory about significant but sub-warning weather — strong "
+        "thunderstorms, dense fog, brief heavy rain, localized wind — that people "
+        "should know about but that doesn't rise to a formal warning. Your job is "
+        "to summarize it in clear, everyday language. Focus on:\n"
+        "- What the advisory is about and how long it lasts\n"
+        "- Who and where it affects\n"
+        "- What people in the affected area should do\n"
+        "- How serious the threat is compared to a warning\n\n"
+        "Avoid using technical jargon. If you must use a technical term, explain it.\n\n"
+        "IMPORTANT: Do NOT start with a preamble like 'Here is a summary...' or "
+        "'This statement explains...'. Do NOT repeat the location name. Jump "
+        "straight into explaining the advisory. The user already knows what they asked for.\n\n"
+        "IMPORTANT: Respond in plain text only. Do NOT use markdown formatting such as "
+        "bold (**text**), italic (*text*), headers (#), bullet points, or any other "
+        "markdown syntax. Use simple paragraph text that can be read directly."
+    ),
+}
 
 
 class AIExplainerError(Exception):
@@ -743,67 +814,114 @@ class AIExplainer:
 
         return result
 
-    async def explain_afd(
+    # Product-type-specific phrasing for the user-message lead-in. The AFD
+    # phrasing is preserved byte-for-byte from the historical explain_afd
+    # implementation to keep downstream prompt templates stable.
+    _PRODUCT_USER_INTRO: dict[str, str] = {
+        "AFD": "Please explain this Area Forecast Discussion for {location} in plain language:",
+        "HWO": "Please explain this Hazardous Weather Outlook for {location} in plain language:",
+        "SPS": "Please explain this Special Weather Statement for {location} in plain language:",
+    }
+
+    # Product-wide style instructions appended to the user prompt. Shared
+    # across AFD/HWO/SPS so customization lives in one place.
+    _PRODUCT_STYLE_INSTRUCTIONS: dict[ExplanationStyle, str] = {
+        ExplanationStyle.BRIEF: "Provide a 2-3 sentence summary of the key points.",
+        ExplanationStyle.STANDARD: "Provide a clear 1-2 paragraph summary.",
+        ExplanationStyle.DETAILED: (
+            "Provide a comprehensive summary covering all major points "
+            "from the discussion, organized by topic."
+        ),
+    }
+
+    def _text_product_cache_key(
         self,
-        afd_text: str,
+        product_type: str,
         location_name: str,
+        product_text: str,
+        style: ExplanationStyle,
+    ) -> str:
+        """
+        Compute the cache key for explain_text_product results.
+
+        Key shape: ``ai_text_product:<TYPE>:<location>:<sha256>:<style>``.
+        Hashing the product text keeps the key bounded and deterministic for
+        long AFDs/HWOs/SPSs.
+        """
+        text_hash = hashlib.sha256(product_text.encode("utf-8")).hexdigest()
+        return f"ai_text_product:{product_type}:{location_name}:{text_hash}:{style.value}"
+
+    async def explain_text_product(
+        self,
+        product_text: str,
+        product_type: TextProductType,
+        location_name: str,
+        *,
         style: ExplanationStyle = ExplanationStyle.DETAILED,
         preserve_markdown: bool = False,
     ) -> ExplanationResult:
         """
-        Generate plain language explanation of an Area Forecast Discussion.
+        Generate a plain-language explanation of an NWS text product.
+
+        Supports AFD (Area Forecast Discussion), HWO (Hazardous Weather
+        Outlook), and SPS (Special Weather Statement). The system prompt is
+        selected per product type from :data:`_SYSTEM_PROMPTS`. A per-product
+        result cache (300 s TTL) avoids re-invoking the LLM for identical
+        inputs. LLM errors propagate and are not cached — a retry will
+        re-hit the model.
 
         Args:
-            afd_text: The raw AFD text from NWS
-            location_name: Human-readable location name
-            style: Explanation style (brief, standard, detailed)
-            preserve_markdown: Whether to preserve markdown in output (default: False)
+            product_text: Raw product text as issued by NWS.
+            product_type: One of ``"AFD"``, ``"HWO"``, ``"SPS"``.
+            location_name: Human-readable location the product covers.
+            style: Explanation style (brief, standard, detailed).
+            preserve_markdown: Keep markdown in the response when True.
 
         Returns:
-            ExplanationResult with text, model used, and metadata
+            :class:`ExplanationResult`. ``cached=True`` if served from the
+            per-product cache.
 
         """
         import asyncio
 
-        # Build AFD-specific prompts - use custom system prompt if configured
+        if product_type not in _SYSTEM_PROMPTS:
+            raise ValueError(
+                f"Unknown product_type {product_type!r}; expected one of {sorted(_SYSTEM_PROMPTS)}"
+            )
+
+        # Cache lookup (custom prompts + instructions are applied per-instance
+        # and already reflected in the request; keying off product_type /
+        # location / text / style is sufficient for a single explainer).
+        cache_key = self._text_product_cache_key(product_type, location_name, product_text, style)
+        if self.cache is not None:
+            cached = self.cache.get(cache_key)
+            if cached:
+                logger.debug(f"Cache hit for text product explanation: {cache_key}")
+                return ExplanationResult(
+                    text=cached["text"],
+                    model_used=cached["model_used"],
+                    token_count=cached["token_count"],
+                    estimated_cost=cached["estimated_cost"],
+                    cached=True,
+                    timestamp=datetime.fromisoformat(cached["timestamp"]),
+                )
+
+        # System prompt: custom overrides the default (preserves existing
+        # explain_afd semantics — replace, not append).
         if self.custom_system_prompt:
             system_prompt = self.custom_system_prompt
         else:
-            system_prompt = (
-                "You are a helpful weather assistant that explains National Weather Service "
-                "Area Forecast Discussions (AFDs) in plain, accessible language. AFDs contain "
-                "technical meteorological terminology that most people don't understand. "
-                "Your job is to translate this into clear, everyday language that anyone can "
-                "understand. Focus on:\n"
-                "- What weather to expect and when\n"
-                "- Any significant weather events or changes\n"
-                "- How confident forecasters are in their predictions\n"
-                "- What this means for daily activities\n\n"
-                "Avoid using technical jargon. If you must use a technical term, explain it.\n\n"
-                "IMPORTANT: Do NOT start with a preamble like 'Here is a summary...' or "
-                "'This forecast discussion explains...'. Do NOT repeat the location name. "
-                "Jump straight into explaining the weather. The user already knows what they asked for.\n\n"
-                "IMPORTANT: Respond in plain text only. Do NOT use markdown formatting such as "
-                "bold (**text**), italic (*text*), headers (#), bullet points, or any other "
-                "markdown syntax. Use simple paragraph text that can be read directly."
-            )
+            system_prompt = _SYSTEM_PROMPTS[product_type]
 
-        style_instructions = {
-            ExplanationStyle.BRIEF: "Provide a 2-3 sentence summary of the key points.",
-            ExplanationStyle.STANDARD: "Provide a clear 1-2 paragraph summary.",
-            ExplanationStyle.DETAILED: (
-                "Provide a comprehensive summary covering all major points "
-                "from the discussion, organized by topic."
-            ),
-        }
-
-        user_prompt = (
-            f"Please explain this Area Forecast Discussion for {location_name} "
-            f"in plain language:\n\n{afd_text}\n\n"
-            f"{style_instructions.get(style, style_instructions[ExplanationStyle.DETAILED])}"
+        # User prompt: product-type-aware lead-in + raw product + style hint.
+        intro_template = self._PRODUCT_USER_INTRO[product_type]
+        intro = intro_template.format(location=location_name)
+        style_instruction = self._PRODUCT_STYLE_INSTRUCTIONS.get(
+            style, self._PRODUCT_STYLE_INSTRUCTIONS[ExplanationStyle.DETAILED]
         )
+        user_prompt = f"{intro}\n\n{product_text}\n\n{style_instruction}"
 
-        # Add custom instructions if configured
+        # Custom per-user instructions apply identically to all product types.
         if self.custom_instructions and self.custom_instructions.strip():
             user_prompt += f"\n\nAdditional Instructions: {self.custom_instructions}"
 
@@ -811,19 +929,15 @@ class AIExplainer:
         primary_model = self.get_effective_model()
         models_to_try = [primary_model]
 
-        # Add default model as fallback if using a custom model
-        # This provides auto-recovery when a user's configured model is removed
         if primary_model != DEFAULT_FREE_MODEL:
             models_to_try.append(DEFAULT_FREE_MODEL)
 
-        # Add additional fallbacks for free models (dynamically fetched)
         if ":free" in primary_model or primary_model in (DEFAULT_FREE_MODEL, DEFAULT_FREE_ROUTER):
             fallback_models = get_available_free_models(exclude_model=primary_model)
             for fallback in fallback_models:
                 if fallback not in models_to_try:
                     models_to_try.append(fallback)
 
-        # Try each model until we get a non-empty response
         response = None
         last_error = None
         for model in models_to_try:
@@ -833,30 +947,30 @@ class AIExplainer:
                     self._call_openrouter, system_prompt, user_prompt, model_override
                 )
 
-                # Check if we got actual content (minimum 20 chars for meaningful response)
                 content = response["content"]
                 if content and len(content.strip()) >= 20:
-                    logger.info(f"Got valid AFD response from model: {model}")
+                    logger.info(f"Got valid {product_type} response from model: {model}")
                     break
 
                 logger.warning(
-                    f"Model {model} returned insufficient AFD response "
+                    f"Model {model} returned insufficient {product_type} response "
                     f"(len={len(content) if content else 0}), trying fallback..."
                 )
                 response = None
 
             except Exception as e:
                 last_error = e
-                logger.warning(f"Model {model} failed for AFD: {e}, trying fallback...")
+                logger.warning(f"Model {model} failed for {product_type}: {e}, trying fallback...")
                 continue
 
         if response is None:
             if last_error:
-                logger.error(f"All models failed for AFD. Last error: {last_error}", exc_info=True)
-                # Convert common errors to specific exceptions
+                logger.error(
+                    f"All models failed for {product_type}. Last error: {last_error}",
+                    exc_info=True,
+                )
                 error_message = str(last_error).lower()
 
-                # API key errors (check FIRST to avoid matching "connection" in suggestion text)
                 if "api key" in error_message or "api_key" in error_message:
                     raise InvalidAPIKeyError(
                         "OpenRouter API key is required.\n\n"
@@ -864,7 +978,6 @@ class AIExplainer:
                         "Get a free key at: openrouter.ai/keys"
                     ) from last_error
 
-                # Model not found
                 if (
                     "404" in error_message
                     or "not found" in error_message
@@ -877,7 +990,6 @@ class AIExplainer:
                         "Please go to Settings → AI Explanations and select a different model."
                     ) from last_error
 
-                # Rate limiting
                 if (
                     "429" in error_message
                     or "rate limit" in error_message
@@ -892,7 +1004,6 @@ class AIExplainer:
                         "• Switch to a paid model in Settings"
                     ) from last_error
 
-                # Timeout errors - check before generic network errors
                 if "timed out" in error_message or "timeout" in error_message:
                     raise RequestTimeoutError(
                         "Request timed out.\n\n"
@@ -900,7 +1011,6 @@ class AIExplainer:
                         "This usually means the servers are busy. Please try again."
                     ) from last_error
 
-                # Network errors (check for specific codes/phrases, not just "connection")
                 if (
                     "502" in error_message
                     or "503" in error_message
@@ -916,14 +1026,13 @@ class AIExplainer:
                 # Re-raise the original error
                 raise last_error
 
-            # No error but empty responses
             raise EmptyResponseError(
                 "All AI models returned empty responses.\n\n"
                 "This can happen when models are overloaded.\n"
                 "Please try again in a few minutes."
             )
 
-        # Process response - strip markdown formatting for plain text display
+        # Success: format + build result
         raw_content = response["content"]
         text = self._format_response(raw_content, preserve_markdown)
         token_count = response["total_tokens"]
@@ -931,13 +1040,49 @@ class AIExplainer:
         estimated_cost = self._estimate_cost(model_used, token_count)
         self._session_token_count += token_count
 
-        return ExplanationResult(
+        result = ExplanationResult(
             text=text,
             model_used=model_used,
             token_count=token_count,
             estimated_cost=estimated_cost,
             cached=False,
             timestamp=datetime.now(),
+        )
+
+        # Cache only successful results — failures must not be memoized.
+        if self.cache is not None:
+            cache_data = {
+                "text": result.text,
+                "model_used": result.model_used,
+                "token_count": result.token_count,
+                "estimated_cost": result.estimated_cost,
+                "timestamp": result.timestamp.isoformat(),
+            }
+            self.cache.set(cache_key, cache_data, ttl=300)
+            logger.debug(f"Cached text product explanation: {cache_key}")
+
+        return result
+
+    async def explain_afd(
+        self,
+        afd_text: str,
+        location_name: str,
+        style: ExplanationStyle = ExplanationStyle.DETAILED,
+        preserve_markdown: bool = False,
+    ) -> ExplanationResult:
+        """
+        Generate a plain-language explanation of an Area Forecast Discussion.
+
+        Thin wrapper around :meth:`explain_text_product` with
+        ``product_type="AFD"``. Kept as a public method to preserve the
+        existing call-site signature.
+        """
+        return await self.explain_text_product(
+            afd_text,
+            "AFD",
+            location_name,
+            style=style,
+            preserve_markdown=preserve_markdown,
         )
 
     def _call_openrouter(
