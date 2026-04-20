@@ -111,14 +111,47 @@ class NotificationsTab:
             panel,
             sizer,
             "Extra weather event notifications",
-            "These are optional updates beyond standard alerts and are off unless you turn them on.",
+            "Updates beyond standard alerts. Hazardous Weather Outlook and "
+            "informational Special Weather Statement updates are on by default "
+            "because they deliver information not in the alerts feed. Others "
+            "are off unless you turn them on.",
         )
+        event_intro = wx.StaticText(
+            panel,
+            label=(
+                "Updates beyond standard alerts. Hazardous Weather Outlook and "
+                "informational Special Weather Statement updates are on by default "
+                "because they deliver information not in the alerts feed. Others "
+                "are off unless you turn them on."
+            ),
+        )
+        event_section.Add(event_intro, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 10)
         controls["notify_discussion_update"] = wx.CheckBox(
             panel,
             label="Notify when the Area Forecast Discussion changes (NWS US only)",
         )
         event_section.Add(
             controls["notify_discussion_update"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
+        controls["notify_hwo_update"] = wx.CheckBox(
+            panel,
+            label="Notify on Hazardous Weather Outlook updates",
+        )
+        event_section.Add(
+            controls["notify_hwo_update"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
+        controls["notify_sps_issued"] = wx.CheckBox(
+            panel,
+            label="Notify on Special Weather Statement (informational)",
+        )
+        event_section.Add(
+            controls["notify_sps_issued"],
             0,
             wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
             10,
@@ -258,6 +291,8 @@ class NotificationsTab:
         controls["notify_discussion_update"].SetValue(
             getattr(settings, "notify_discussion_update", True)
         )
+        controls["notify_hwo_update"].SetValue(getattr(settings, "notify_hwo_update", True))
+        controls["notify_sps_issued"].SetValue(getattr(settings, "notify_sps_issued", True))
         controls["notify_severe_risk_change"].SetValue(
             getattr(settings, "notify_severe_risk_change", False)
         )
@@ -295,6 +330,8 @@ class NotificationsTab:
             "alert_freshness_window_minutes": controls["freshness_window"].GetValue(),
             "alert_max_notifications_per_hour": controls["max_notifications"].GetValue(),
             "notify_discussion_update": controls["notify_discussion_update"].GetValue(),
+            "notify_hwo_update": controls["notify_hwo_update"].GetValue(),
+            "notify_sps_issued": controls["notify_sps_issued"].GetValue(),
             "notify_severe_risk_change": controls["notify_severe_risk_change"].GetValue(),
             "notify_minutely_precipitation_start": controls[
                 "notify_minutely_precipitation_start"
@@ -327,6 +364,8 @@ class NotificationsTab:
             "notify_unknown": "Uncategorized alerts",
             "immediate_alert_details_popups": "Open alert details immediately while AccessiWeather is running",
             "notify_discussion_update": "Notify when the Area Forecast Discussion changes",
+            "notify_hwo_update": "Notify on Hazardous Weather Outlook updates",
+            "notify_sps_issued": "Notify on Special Weather Statement (informational)",
             "notify_severe_risk_change": "Notify when severe weather risk changes",
             "notify_minutely_precipitation_start": "Notify when precipitation is expected to start soon",
             "notify_minutely_precipitation_stop": "Notify when precipitation is expected to stop soon",
