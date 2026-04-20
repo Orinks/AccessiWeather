@@ -8,7 +8,7 @@ def test_quick_action_labels_match_visible_ui_copy():
         "remove": "&Remove Location",
         "refresh": "Re&fresh Weather",
         "explain": "Explain &Conditions",
-        "discussion": "Forecast &Discussion",
+        "discussion": "Forecast &Products",
         "settings": "&Settings",
     }
 
