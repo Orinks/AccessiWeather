@@ -432,8 +432,8 @@ def _isolate_keyring_from_real_backend():
 
     fake_store: dict[tuple[str, str], str] = {}
     fake_keyring = MagicMock()
-    fake_keyring.set_password.side_effect = (
-        lambda service, username, password: fake_store.__setitem__((service, username), password)
+    fake_keyring.set_password.side_effect = lambda service, username, password: (
+        fake_store.__setitem__((service, username), password)
     )
     fake_keyring.get_password.side_effect = lambda service, username: fake_store.get(
         (service, username)
