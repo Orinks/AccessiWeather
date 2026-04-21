@@ -411,3 +411,43 @@ def _mock_keyring_available():
     ss._keyring_available = True
     yield
     ss._keyring_available = original
+
+
+# ---------------------------------------------------------------------------
+# Keyring isolation: prevent tests from ever touching the real system keyring.
+# Tests that need to assert on set/get/delete should patch `_get_keyring` or
+# `SecureStorage.*_password` explicitly — those explicit patches shadow this
+# autouse one. Without this safety net, a single missing @patch (see the
+# 2026-04-20 "secret_key" pirate_weather_api_key pollution incident) leaks
+# literal test values into the developer's system keyring across installs.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def _isolate_keyring_from_real_backend():
+    """Route all SecureStorage calls through an in-memory fake keyring."""
+    from unittest.mock import MagicMock
+
+    import accessiweather.config.secure_storage as ss
+
+    fake_store: dict[tuple[str, str], str] = {}
+    fake_keyring = MagicMock()
+    fake_keyring.set_password.side_effect = lambda service, username, password: (
+        fake_store.__setitem__((service, username), password)
+    )
+    fake_keyring.get_password.side_effect = lambda service, username: fake_store.get(
+        (service, username)
+    )
+    fake_keyring.delete_password.side_effect = lambda service, username: fake_store.pop(
+        (service, username), None
+    )
+
+    original_module = ss._keyring_module
+    original_checked = ss._keyring_checked
+    ss._keyring_module = fake_keyring
+    ss._keyring_checked = True
+    try:
+        yield fake_keyring
+    finally:
+        ss._keyring_module = original_module
+        ss._keyring_checked = original_checked
