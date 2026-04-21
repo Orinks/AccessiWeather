@@ -374,8 +374,11 @@ class TestUpdateSettings:
 
         assert result is False
 
-    def test_redacted_logging(self, operations, mock_manager):
+    @patch("accessiweather.config.settings.SecureStorage.set_password")
+    def test_redacted_logging(self, mock_set_password, operations, mock_manager):
         """Test that sensitive values are redacted in logs."""
+        mock_set_password.return_value = True
+
         operations.update_settings(pirate_weather_api_key="secret_key")
 
         logger = mock_manager._get_logger.return_value
