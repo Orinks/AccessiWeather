@@ -213,6 +213,26 @@ class TestParseCurrentConditions:
         assert result.sunrise_time is not None
         assert result.sunset_time is not None
 
+    def test_current_sunrise_uses_response_timezone_name(self, client, sample_forecast_payload):
+        """IANA timezone from PW should override the fixed offset fallback."""
+        payload = dict(sample_forecast_payload)
+        payload["timezone"] = "Europe/London"
+        payload["offset"] = 0
+        payload["daily"] = {
+            "data": [
+                {
+                    **sample_forecast_payload["daily"]["data"][0],
+                    "sunriseTime": int(datetime(2025, 7, 1, 4, 0, tzinfo=UTC).timestamp()),
+                }
+            ]
+        }
+
+        result = client._parse_current_conditions(payload)
+
+        assert result.sunrise_time is not None
+        assert getattr(result.sunrise_time.tzinfo, "key", None) == "Europe/London"
+        assert result.sunrise_time.utcoffset() == timedelta(hours=1)
+
     def test_missing_currently_block(self, client):
         data = {"offset": 0, "daily": {"data": []}}
         result = client._parse_current_conditions(data)
@@ -448,6 +468,21 @@ class TestParseHourlyForecast:
         result = client._parse_hourly_forecast(sample_forecast_payload)
         assert result.periods[0].start_time.tzinfo is not None
 
+    def test_hourly_start_time_uses_response_timezone_name(self, client, sample_forecast_payload):
+        """Hourly epoch timestamps should be localized with PW's timezone name."""
+        payload = dict(sample_forecast_payload)
+        payload["timezone"] = "Europe/London"
+        payload["offset"] = 0
+        hour = dict(sample_forecast_payload["hourly"]["data"][0])
+        hour["time"] = int(datetime(2025, 7, 1, 12, 0, tzinfo=UTC).timestamp())
+        payload["hourly"] = {"data": [hour]}
+
+        result = client._parse_hourly_forecast(payload)
+
+        start_time = result.periods[0].start_time
+        assert getattr(start_time.tzinfo, "key", None) == "Europe/London"
+        assert start_time.utcoffset() == timedelta(hours=1)
+
     def test_pressure_conversion(self, client, sample_forecast_payload):
         result = client._parse_hourly_forecast(sample_forecast_payload)
         period = result.periods[0]
@@ -549,6 +584,22 @@ class TestParseAlerts:
         assert alert.onset is not None
         assert alert.expires is not None
         assert alert.expires > alert.onset
+
+    def test_alert_times_use_response_timezone_name(self, client, sample_payload_with_alerts):
+        """Alert epoch timestamps should use PW's IANA timezone when present."""
+        payload = dict(sample_payload_with_alerts)
+        payload["timezone"] = "Europe/London"
+        payload["offset"] = 0
+        alert = dict(sample_payload_with_alerts["alerts"][0])
+        alert["time"] = int(datetime(2025, 7, 1, 12, 0, tzinfo=UTC).timestamp())
+        alert["expires"] = int(datetime(2025, 7, 1, 13, 0, tzinfo=UTC).timestamp())
+        payload["alerts"] = [alert]
+
+        result = client._parse_alerts(payload)
+
+        assert result.alerts[0].onset is not None
+        assert getattr(result.alerts[0].onset.tzinfo, "key", None) == "Europe/London"
+        assert result.alerts[0].onset.utcoffset() == timedelta(hours=1)
 
     def test_lower_severity_regional_alerts_are_suppressed(
         self, client, sample_payload_with_alerts

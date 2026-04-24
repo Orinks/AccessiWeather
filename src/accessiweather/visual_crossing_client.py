@@ -420,8 +420,8 @@ class VisualCrossingClient:
         """Parse Visual Crossing current conditions data."""
         current = data.get("currentConditions", {})
 
-        # Get timezone offset from API response for creating timezone-aware datetimes
-        # Visual Crossing returns tzoffset as hours (e.g., -5.0 for EST)
+        # Get timezone offset from API response for creating timezone-aware datetimes.
+        # Visual Crossing returns tzoffset as hours (e.g., -5.0 for EST).
         tz_offset_hours = data.get("tzoffset", 0)
         location_tz = timezone(timedelta(hours=tz_offset_hours))
 
@@ -461,21 +461,30 @@ class VisualCrossingClient:
         days = data.get("days", [])
         if days:
             day_data = days[0]
-            # Get the date for combining with time strings
+            # Prefer provider-supplied epoch fields. They already encode the
+            # instant, avoiding local date/time reconstruction around DST.
             date_str = day_data.get("datetime", "")
+            sunrise_time = self._parse_vc_epoch(day_data.get("sunriseEpoch"), location_tz)
+            sunset_time = self._parse_vc_epoch(day_data.get("sunsetEpoch"), location_tz)
+            moonrise_time = self._parse_vc_epoch(day_data.get("moonriseEpoch"), location_tz)
+            moonset_time = self._parse_vc_epoch(day_data.get("moonsetEpoch"), location_tz)
 
-            # Parse sun/moon times from string format (already in local time)
-            # Visual Crossing returns times like "07:08:45" in the location's timezone
-            sunrise_time = self._parse_vc_time_string(
-                date_str, day_data.get("sunrise"), location_tz
-            )
-            sunset_time = self._parse_vc_time_string(date_str, day_data.get("sunset"), location_tz)
-            moonrise_time = self._parse_vc_time_string(
-                date_str, day_data.get("moonrise"), location_tz
-            )
-            moonset_time = self._parse_vc_time_string(
-                date_str, day_data.get("moonset"), location_tz
-            )
+            if sunrise_time is None:
+                sunrise_time = self._parse_vc_time_string(
+                    date_str, day_data.get("sunrise"), location_tz
+                )
+            if sunset_time is None:
+                sunset_time = self._parse_vc_time_string(
+                    date_str, day_data.get("sunset"), location_tz
+                )
+            if moonrise_time is None:
+                moonrise_time = self._parse_vc_time_string(
+                    date_str, day_data.get("moonrise"), location_tz
+                )
+            if moonset_time is None:
+                moonset_time = self._parse_vc_time_string(
+                    date_str, day_data.get("moonset"), location_tz
+                )
 
             moon_phase = describe_moon_phase(day_data.get("moonphase"))
 
@@ -869,4 +878,15 @@ class VisualCrossingClient:
             return dt.replace(tzinfo=tz)
         except (ValueError, TypeError) as e:
             logger.debug(f"Failed to parse VC time '{date_str}T{time_str}': {e}")
+            return None
+
+    def _parse_vc_epoch(self, epoch_value: object, tz: timezone) -> datetime | None:
+        """Parse a Visual Crossing epoch timestamp into the response timezone."""
+        if epoch_value is None:
+            return None
+
+        try:
+            return datetime.fromtimestamp(float(epoch_value), tz=tz)
+        except (OSError, OverflowError, TypeError, ValueError) as e:
+            logger.debug("Failed to parse VC epoch %r: %s", epoch_value, e)
             return None

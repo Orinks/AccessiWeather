@@ -118,6 +118,41 @@ class TestVisualCrossingParsers:
         assert current.wind_gust_mph == 22.0
         assert current.precipitation_in == 0.1
 
+    def test_parse_current_conditions_prefers_epoch_sun_moon_times(self, client):
+        """Sun/moon fields should use VC epoch values when available."""
+        data = {
+            "tzoffset": -5,
+            "currentConditions": {"temp": 72.0, "conditions": "Clear"},
+            "days": [
+                {
+                    "datetime": "2024-01-01",
+                    "sunrise": "07:00:00",
+                    "sunset": "17:30:00",
+                    "moonrise": "21:00:00",
+                    "moonset": "09:00:00",
+                    "sunriseEpoch": 1704111000,
+                    "sunsetEpoch": 1704148200,
+                    "moonriseEpoch": 1704160800,
+                    "moonsetEpoch": 1704117600,
+                }
+            ],
+        }
+
+        current = client._parse_current_conditions(data)
+
+        assert current.sunrise_time == datetime.fromtimestamp(
+            1704111000, tz=timezone(timedelta(hours=-5))
+        )
+        assert current.sunset_time == datetime.fromtimestamp(
+            1704148200, tz=timezone(timedelta(hours=-5))
+        )
+        assert current.moonrise_time == datetime.fromtimestamp(
+            1704160800, tz=timezone(timedelta(hours=-5))
+        )
+        assert current.moonset_time == datetime.fromtimestamp(
+            1704117600, tz=timezone(timedelta(hours=-5))
+        )
+
     def test_parse_forecast(self, client):
         """Test parsing forecast."""
         data = {
