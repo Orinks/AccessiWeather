@@ -435,35 +435,6 @@ class ConfigManager:
             logger.error(f"Error checking startup status: {e}")
             return False
 
-    def apply_startup_setting(self, desired: bool | None = None) -> bool:
-        """
-        Reconcile the OS startup entry with the startup_enabled setting.
-
-        If ``desired`` is None, read it from the stored settings; callers that
-        have just collected a checkbox value can pass it explicitly to avoid
-        relying on update_settings having already persisted.
-
-        Returns True if the OS state matches ``desired`` after the call (either
-        it already matched, or the toggle succeeded). Returns False if a toggle
-        was attempted and failed.
-        """
-        try:
-            if desired is None:
-                desired = bool(self.get_settings().startup_enabled)
-            currently_enabled = self.is_startup_enabled()
-            if desired == currently_enabled:
-                return True
-            if desired:
-                success, message = self.enable_startup()
-            else:
-                success, message = self.disable_startup()
-            if not success:
-                logger.warning("Failed to apply startup setting: %s", message)
-            return success
-        except Exception as exc:
-            logger.error("Error applying startup setting: %s", exc)
-            return False
-
     def sync_startup_setting(self) -> bool:
         """
         Synchronize the startup_enabled setting with actual startup state.

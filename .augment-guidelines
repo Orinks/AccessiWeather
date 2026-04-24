@@ -48,3 +48,15 @@
    - Install Toga in a virtual environment to avoid dependency conflicts.
    - Document platform-specific dependencies (e.g., `libcairo2-dev` on Linux for GTK).
    - Avoid global Toga installations outside virtual environments.
+
+# Briefcase guidelines
+
+1. **Align with Briefcase’s Project Structure**
+   - Use the standard project structure created by `briefcase new`.
+   - Keep platform-specific code in `src/accessiweather/platform/`.
+   - Avoid platform-specific code in `src/accessiweather/`.
+
+2. **Use Briefcase for Building and Distributing**
+   - Build your app for all platforms using `briefcase build`.
+3. **use briefcase for running the whole test suite**
+Use `briefcase dev --test` to run the test suite.
