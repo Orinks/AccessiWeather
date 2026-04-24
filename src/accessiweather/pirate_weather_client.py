@@ -412,8 +412,7 @@ class PirateWeatherClient:
         daily_data = data.get("daily", {}).get("data", [])
         if daily_data:
             today = daily_data[0]
-            tz_offset = data.get("offset", 0)
-            location_tz = timezone(timedelta(hours=tz_offset))
+            location_tz = _resolve_response_timezone(data)
             sr = today.get("sunriseTime")
             ss = today.get("sunsetTime")
             if sr:
@@ -555,8 +554,7 @@ class PirateWeatherClient:
     def _parse_hourly_forecast(self, data: dict) -> HourlyForecast:
         """Parse Pirate Weather ``hourly`` block into an HourlyForecast."""
         hourly_items = data.get("hourly", {}).get("data", [])
-        tz_offset = data.get("offset", 0)
-        location_tz = timezone(timedelta(hours=tz_offset))
+        location_tz = _resolve_response_timezone(data)
         using_us = self.units == "us"
 
         periods: list[HourlyForecastPeriod] = []
@@ -692,8 +690,7 @@ class PirateWeatherClient:
         raw_alerts = data.get("alerts", [])
         alerts: list[WeatherAlert] = []
 
-        tz_offset = data.get("offset", 0)
-        location_tz = timezone(timedelta(hours=tz_offset))
+        location_tz = _resolve_response_timezone(data)
 
         for _i, alert_data in enumerate(raw_alerts):
             title = alert_data.get("title") or "Weather Alert"
