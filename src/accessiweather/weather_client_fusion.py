@@ -598,7 +598,7 @@ class DataFusionEngine:
                 if source.current:
                     val = self._get_field_value(source.current, temp_field)
                     # Only include numeric values (skip mocks and other non-numeric types)
-                    if val is not None and isinstance(val, (int, float)):
+                    if val is not None and isinstance(val, int | float):
                         values[source.source] = val
 
             if len(values) < 2:

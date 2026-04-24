@@ -19,7 +19,7 @@ Covers ``NotificationEventManager._check_sps_new``:
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 import pytest
@@ -28,8 +28,6 @@ from accessiweather.models import AppSettings, Location, TextProduct, WeatherAle
 from accessiweather.notifications.notification_event_manager import (
     NotificationEventManager,
 )
-
-UTC = timezone.utc
 
 
 def _location(name: str = "Test City", cwa: str | None = "PHI") -> Location:

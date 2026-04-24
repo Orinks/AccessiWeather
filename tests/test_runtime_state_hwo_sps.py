@@ -17,7 +17,7 @@ payloads, and round-trip stability for the new HWO/SPS fields.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from accessiweather.notifications.notification_event_manager import (
     NotificationEventManager,
@@ -137,7 +137,7 @@ def test_notification_state_hwo_sps_round_trip_through_converters() -> None:
     NotificationState -> legacy dict -> runtime section -> legacy dict
     -> NotificationState should be an identity for HWO/SPS data.
     """
-    issuance = datetime(2026, 4, 20, 15, 0, 0, tzinfo=timezone.utc)
+    issuance = datetime(2026, 4, 20, 15, 0, 0, tzinfo=UTC)
     original = NotificationState(
         last_hwo_issuance_time=issuance,
         last_hwo_text="HWO body",
@@ -163,7 +163,7 @@ def test_manager_persists_hwo_sps_through_runtime_state(tmp_path) -> None:
     runtime_manager = RuntimeStateManager(tmp_path / "config")
     manager = NotificationEventManager(runtime_state_manager=runtime_manager)
 
-    manager.state.last_hwo_issuance_time = datetime(2026, 4, 20, 16, 0, 0, tzinfo=timezone.utc)
+    manager.state.last_hwo_issuance_time = datetime(2026, 4, 20, 16, 0, 0, tzinfo=UTC)
     manager.state.last_hwo_text = "outlook body"
     manager.state.last_hwo_summary_signature = "sig-persist"
     manager.state.last_sps_product_ids = {"sps-p-1", "sps-p-2"}

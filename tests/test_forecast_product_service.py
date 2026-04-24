@@ -10,7 +10,7 @@ Covers:
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 import pytest
@@ -26,7 +26,7 @@ def _afd(office: str = "PHI", product_id: str = "afd-1") -> TextProduct:
         product_type="AFD",
         product_id=product_id,
         cwa_office=office,
-        issuance_time=datetime(2026, 4, 16, 14, 32, 0, tzinfo=timezone.utc),
+        issuance_time=datetime(2026, 4, 16, 14, 32, 0, tzinfo=UTC),
         product_text="AFD TEXT",
         headline=None,
     )
@@ -37,7 +37,7 @@ def _sps(office: str = "PHI", product_id: str = "sps-1") -> TextProduct:
         product_type="SPS",
         product_id=product_id,
         cwa_office=office,
-        issuance_time=datetime(2026, 4, 16, 14, 32, 0, tzinfo=timezone.utc),
+        issuance_time=datetime(2026, 4, 16, 14, 32, 0, tzinfo=UTC),
         product_text="SPS TEXT",
         headline="Special Weather Statement",
     )
@@ -113,7 +113,7 @@ class TestForecastProductServiceCacheKeys:
                 product_type=product_type,
                 product_id=f"{product_type}-1",
                 cwa_office=office,
-                issuance_time=datetime(2026, 4, 16, 14, 32, 0, tzinfo=timezone.utc),
+                issuance_time=datetime(2026, 4, 16, 14, 32, 0, tzinfo=UTC),
                 product_text=f"{product_type} TEXT",
                 headline=None,
             )

@@ -171,7 +171,7 @@ class ParallelFetchCoordinator:
         """
         try:
             return await asyncio.wait_for(coro, timeout=self.timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning(f"Source {source_name} timed out after {self.timeout}s")
             return None
         except Exception as e:

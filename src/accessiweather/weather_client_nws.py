@@ -239,7 +239,7 @@ def _extract_scalar(value: Any) -> Any:
 def _extract_float(value: Any) -> float | None:
     """Extract a float from an NWS response value."""
     scalar = _extract_scalar(value)
-    if isinstance(scalar, (int, float)):
+    if isinstance(scalar, int | float):
         return float(scalar)
     if isinstance(scalar, str):
         try:
@@ -293,7 +293,7 @@ def _format_wind_speed(value: Any) -> str | None:
     scalar = _extract_scalar(value)
     if scalar is None:
         return None
-    if isinstance(scalar, (int, float)):
+    if isinstance(scalar, int | float):
         return f"{scalar}"
     return str(scalar)
 

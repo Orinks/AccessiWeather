@@ -383,6 +383,12 @@ def test_ensure_windows_toast_identity_verification_success_writes_stamp(monkeyp
     monkeypatch.setattr(
         "accessiweather.windows_toast_identity.set_windows_app_user_model_id", MagicMock()
     )
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity._register_protocol_activation_handler",
+        MagicMock(return_value=True),
+    )
+    monkeypatch.setattr("accessiweather.windows_toast_identity._ole32", None)
+    monkeypatch.setattr("accessiweather.windows_toast_identity._shell32", None)
 
     written: list[dict] = []
     monkeypatch.setattr(
@@ -433,6 +439,12 @@ def test_ensure_windows_toast_identity_verification_failure_writes_failed_stamp(
     monkeypatch.setattr(
         "accessiweather.windows_toast_identity.set_windows_app_user_model_id", MagicMock()
     )
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity._register_protocol_activation_handler",
+        MagicMock(return_value=True),
+    )
+    monkeypatch.setattr("accessiweather.windows_toast_identity._ole32", None)
+    monkeypatch.setattr("accessiweather.windows_toast_identity._shell32", None)
 
     written: list[dict] = []
     monkeypatch.setattr(
@@ -550,6 +562,12 @@ def test_ensure_windows_toast_identity_runs_repair_only_once_per_startup(monkeyp
     monkeypatch.setattr(
         "accessiweather.windows_toast_identity.set_windows_app_user_model_id", MagicMock()
     )
+    monkeypatch.setattr(
+        "accessiweather.windows_toast_identity._register_protocol_activation_handler",
+        MagicMock(return_value=True),
+    )
+    monkeypatch.setattr("accessiweather.windows_toast_identity._ole32", None)
+    monkeypatch.setattr("accessiweather.windows_toast_identity._shell32", None)
     monkeypatch.setattr(
         "accessiweather.windows_toast_identity._TOAST_IDENTITY_ENSURED_THIS_STARTUP", False
     )

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import UTC
 from typing import Any
 
 import httpx
@@ -264,11 +265,11 @@ def _format_avwx_time(time_data: Any) -> str | None:
         dt_str: str | None = time_data.get("dt")
         if dt_str:
             try:
-                from datetime import datetime, timezone
+                from datetime import datetime
 
                 dt_str = dt_str.replace("Z", "+00:00")
                 dt = datetime.fromisoformat(dt_str)
-                utc_dt = dt.astimezone(timezone.utc)
+                utc_dt = dt.astimezone(UTC)
                 day = utc_dt.day
                 suffix = (
                     "th"

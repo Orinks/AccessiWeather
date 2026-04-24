@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 
 from accessiweather.display.presentation.current_conditions import (
     _build_astronomical_metrics,
@@ -324,7 +324,7 @@ class TestBuildBasicMetrics:
 
 class TestBuildAstronomicalMetrics:
     def test_with_times(self):
-        dt = datetime(2026, 2, 7, 12, 0, tzinfo=timezone.utc)
+        dt = datetime(2026, 2, 7, 12, 0, tzinfo=UTC)
         current = CurrentConditions(
             sunrise_time=dt,
             sunset_time=dt,
@@ -570,7 +570,7 @@ class TestComputePressureTrend:
 
     def test_with_pressure_data_in(self):
         current = CurrentConditions(pressure_in=30.0)
-        dt = datetime(2026, 2, 7, 12, 0, tzinfo=timezone.utc)
+        dt = datetime(2026, 2, 7, 12, 0, tzinfo=UTC)
         periods = [
             HourlyForecastPeriod(start_time=dt, pressure_in=30.0),
             HourlyForecastPeriod(start_time=dt, pressure_in=30.05),
@@ -583,7 +583,7 @@ class TestComputePressureTrend:
 
     def test_with_pressure_data_mb(self):
         current = CurrentConditions(pressure_mb=1013.0)
-        dt = datetime(2026, 2, 7, 12, 0, tzinfo=timezone.utc)
+        dt = datetime(2026, 2, 7, 12, 0, tzinfo=UTC)
         periods = [
             HourlyForecastPeriod(start_time=dt, pressure_mb=1013.0),
             HourlyForecastPeriod(start_time=dt, pressure_mb=1011.0),
@@ -595,7 +595,7 @@ class TestComputePressureTrend:
 
     def test_no_pressure_in_periods(self):
         current = CurrentConditions(pressure_in=30.0)
-        dt = datetime(2026, 2, 7, 12, 0, tzinfo=timezone.utc)
+        dt = datetime(2026, 2, 7, 12, 0, tzinfo=UTC)
         periods = [HourlyForecastPeriod(start_time=dt)]
         hourly = HourlyForecast(periods=periods)
         result = compute_pressure_trend_from_hourly(current, hourly)
@@ -724,8 +724,6 @@ class TestBuildCurrentConditions:
         fallback_text must use each metric's real label — not hard-code "Temperature:"
         for metrics[0].
         """
-        from datetime import timezone
-
         current = CurrentConditions(
             temperature_f=40.5,
             temperature_c=4.7,
@@ -744,7 +742,7 @@ class TestBuildCurrentConditions:
             certainty="Likely",
             event="Dense Fog Advisory",
             id="fog-test-001",
-            expires=datetime(2099, 1, 1, tzinfo=timezone.utc),
+            expires=datetime(2099, 1, 1, tzinfo=UTC),
         )
         alerts = WeatherAlerts(alerts=[fog_alert])
 

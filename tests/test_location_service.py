@@ -86,8 +86,8 @@ class TestLocationService:
         result = svc.get_nationwide_location()
         assert len(result) == 3
         assert isinstance(result[0], str)
-        assert isinstance(result[1], (int, float))
-        assert isinstance(result[2], (int, float))
+        assert isinstance(result[1], int | float)
+        assert isinstance(result[2], int | float)
 
     def test_is_nationwide_location(self):
         svc, mgr = _make_service()

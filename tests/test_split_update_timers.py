@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -94,12 +94,12 @@ def test_discussion_update_message_includes_change_summary():
     weather_data = WeatherData(location=SimpleNamespace(name="Test Location"))
     weather_data.current = None
     weather_data.discussion = "Old headline\nOld details"
-    weather_data.discussion_issuance_time = datetime(2026, 3, 9, 20, 0, tzinfo=timezone.utc)
+    weather_data.discussion_issuance_time = datetime(2026, 3, 9, 20, 0, tzinfo=UTC)
 
     assert manager.check_for_events(weather_data, settings, "Test Location") == []
 
     weather_data.discussion = "New headline\nOld details"
-    weather_data.discussion_issuance_time = datetime(2026, 3, 9, 20, 5, tzinfo=timezone.utc)
+    weather_data.discussion_issuance_time = datetime(2026, 3, 9, 20, 5, tzinfo=UTC)
     events = manager.check_for_events(weather_data, settings, "Test Location")
 
     assert len(events) == 1

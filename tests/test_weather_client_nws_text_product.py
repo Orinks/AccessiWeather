@@ -9,7 +9,7 @@ Covers:
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import httpx
@@ -91,7 +91,7 @@ class TestGetNwsTextProductAFD:
         assert result.product_id == "afd-001"
         assert result.cwa_office == OFFICE
         assert "AREA FORECAST DISCUSSION" in result.product_text
-        assert result.issuance_time == datetime(2026, 4, 16, 14, 32, 0, tzinfo=timezone.utc)
+        assert result.issuance_time == datetime(2026, 4, 16, 14, 32, 0, tzinfo=UTC)
 
     @pytest.mark.asyncio
     async def test_afd_empty_graph_returns_none(self):
@@ -290,7 +290,7 @@ class TestGetNwsDiscussionBackwardCompat:
         text, issuance_time = await get_nws_discussion(client, headers, grid_data, NWS_BASE)
 
         assert text == "WRAPPER TEST DISCUSSION TEXT"
-        assert issuance_time == datetime(2026, 4, 16, 14, 32, 0, tzinfo=timezone.utc)
+        assert issuance_time == datetime(2026, 4, 16, 14, 32, 0, tzinfo=UTC)
 
     @pytest.mark.asyncio
     async def test_get_nws_discussion_empty_graph_returns_fallback_string(self):

@@ -13,7 +13,7 @@ Unit 9 adds four new fields to the dataclass — see
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from accessiweather.notifications.notification_event_manager import NotificationState
 
@@ -29,7 +29,7 @@ def test_default_state_has_hwo_sps_defaults() -> None:
 
 def test_to_dict_includes_hwo_sps_fields() -> None:
     """``to_dict`` emits all four new fields with stable keys."""
-    issuance = datetime(2026, 4, 20, 9, 0, 0, tzinfo=timezone.utc)
+    issuance = datetime(2026, 4, 20, 9, 0, 0, tzinfo=UTC)
     state = NotificationState(
         last_hwo_issuance_time=issuance,
         last_hwo_text="HWO body text",
@@ -48,7 +48,7 @@ def test_to_dict_includes_hwo_sps_fields() -> None:
 
 def test_full_round_trip_preserves_hwo_sps_fields() -> None:
     """Populated HWO/SPS fields round-trip through dict form unchanged."""
-    issuance = datetime(2026, 4, 20, 12, 30, 0, tzinfo=timezone.utc)
+    issuance = datetime(2026, 4, 20, 12, 30, 0, tzinfo=UTC)
     original = NotificationState(
         last_hwo_issuance_time=issuance,
         last_hwo_text="HWO text",

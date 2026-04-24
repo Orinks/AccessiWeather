@@ -517,9 +517,9 @@ def generate_build_metadata(args: argparse.Namespace) -> None:
     if build_meta_script.exists():
         tag = args.tag
         if not tag and args.nightly:
-            from datetime import datetime, timezone
+            from datetime import UTC, datetime
 
-            tag = f"nightly-{datetime.now(timezone.utc).strftime('%Y%m%d')}"
+            tag = f"nightly-{datetime.now(UTC).strftime('%Y%m%d')}"
 
         cmd = [sys.executable, str(build_meta_script)]
         if tag:
@@ -537,9 +537,9 @@ def generate_build_metadata(args: argparse.Namespace) -> None:
         if build_info_script.exists():
             tag = args.tag
             if not tag and args.nightly:
-                from datetime import datetime, timezone
+                from datetime import UTC, datetime
 
-                tag = f"nightly-{datetime.now(timezone.utc).strftime('%Y%m%d')}"
+                tag = f"nightly-{datetime.now(UTC).strftime('%Y%m%d')}"
             cmd = [sys.executable, str(build_info_script)]
             if tag:
                 cmd.append(tag)
