@@ -73,7 +73,7 @@ def _extract_strings(value: Any) -> list[str]:
     if isinstance(value, str):
         normalized = value.strip().upper()
         return [normalized] if normalized else []
-    if isinstance(value, (list, tuple, set)):
+    if isinstance(value, list | tuple | set):
         strings: list[str] = []
         for item in value:
             strings.extend(_extract_strings(item))

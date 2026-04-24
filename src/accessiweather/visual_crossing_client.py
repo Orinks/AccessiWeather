@@ -6,7 +6,7 @@ implementing methods to fetch current conditions, forecast, and hourly data.
 """
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 
 import httpx
 
@@ -130,7 +130,7 @@ class VisualCrossingClient:
                 url = f"{self.base_url}/{location.latitude},{location.longitude}"
             else:
                 end_date = (
-                    datetime.now(timezone.utc).date() + timedelta(days=forecast_days - 1)
+                    datetime.now(UTC).date() + timedelta(days=forecast_days - 1)
                 ).isoformat()
                 url = f"{self.base_url}/{location.latitude},{location.longitude}/today/{end_date}"
             params = {

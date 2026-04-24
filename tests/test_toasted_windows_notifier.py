@@ -109,9 +109,12 @@ class TestToastedWindowsNotifierInit:
             notifier = toast_notifier.ToastedWindowsNotifier(
                 app_name="AccessiWeather", sound_enabled=True, soundpack="custom"
             )
-            assert notifier.app_name == "AccessiWeather"
-            assert notifier.sound_enabled is True
-            assert notifier.soundpack == "custom"
+            try:
+                assert notifier.app_name == "AccessiWeather"
+                assert notifier.sound_enabled is True
+                assert notifier.soundpack == "custom"
+            finally:
+                notifier.close()
 
     def test_default_soundpack(self):
         """Default soundpack is 'default'."""
@@ -169,10 +172,13 @@ class TestToastedWindowsNotifierSend:
         """send_notification catches and logs exceptions."""
         with patch.object(toast_notifier, "TOASTED_AVAILABLE", True):
             notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=False)
-            notifier._send_in_worker = MagicMock(side_effect=RuntimeError("boom"))
+            try:
+                notifier._send_in_worker = MagicMock(side_effect=RuntimeError("boom"))
 
-            result = notifier.send_notification("Title", "Body")
-            assert result is False
+                result = notifier.send_notification("Title", "Body")
+                assert result is False
+            finally:
+                notifier.close()
 
 
 class TestToastedWindowsNotifierWorker:
@@ -200,14 +206,11 @@ class TestToastedWindowsNotifierWorker:
             patch.object(toast_notifier, "_Text", _FakeText),
         ):
             notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=False)
-            result = notifier._send_in_worker("Test Title", "Test Body")
-            assert result is True
-
-            # Clean up the worker thread
-            if notifier._worker_loop and notifier._worker_loop.is_running():
-                notifier._worker_loop.call_soon_threadsafe(notifier._worker_loop.stop)
-            if notifier._worker_thread:
-                notifier._worker_thread.join(timeout=2)
+            try:
+                result = notifier._send_in_worker("Test Title", "Test Body")
+                assert result is True
+            finally:
+                notifier.close()
 
     def test_set_activation_arguments_sets_launch_context(self):
         """Toast launch arguments are attached so Action Center clicks relaunch with context."""
@@ -244,17 +247,14 @@ class TestToastedWindowsNotifierWorker:
             patch.object(toast_notifier, "_Text", _FakeText),
         ):
             notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=False)
-            notifier._send_in_worker("T", "M")
+            try:
+                notifier._send_in_worker("T", "M")
 
-            from accessiweather.constants import WINDOWS_APP_USER_MODEL_ID
+                from accessiweather.constants import WINDOWS_APP_USER_MODEL_ID
 
-            assert _FakeToast._registered.get(WINDOWS_APP_USER_MODEL_ID) is True
-
-            # Clean up
-            if notifier._worker_loop and notifier._worker_loop.is_running():
-                notifier._worker_loop.call_soon_threadsafe(notifier._worker_loop.stop)
-            if notifier._worker_thread:
-                notifier._worker_thread.join(timeout=2)
+                assert _FakeToast._registered.get(WINDOWS_APP_USER_MODEL_ID) is True
+            finally:
+                notifier.close()
 
     def test_send_in_worker_stores_task_reference(self):
         """Task references are kept alive to prevent GC cancellation."""
@@ -320,30 +320,28 @@ class TestToastedActivationCallback:
 
         with (
             patch.object(toast_notifier, "TOASTED_AVAILABLE", True),
+            patch.object(toast_notifier, "WINRT_AVAILABLE", False),
             patch.object(toast_notifier, "_Toast", _FakeToastWithCallback),
             patch.object(toast_notifier, "_Text", _FakeText),
         ):
             notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=False)
-            callback = MagicMock()
-            notifier.on_activation = callback
+            try:
+                callback = MagicMock()
+                notifier.on_activation = callback
 
-            notifier._send_in_worker(
-                "Title",
-                "Body",
-                activation_arguments="accessiweather-toast:kind=discussion",
-            )
-            # Give worker loop time to process
-            time.sleep(0.3)
+                notifier._send_in_worker(
+                    "Title",
+                    "Body",
+                    activation_arguments="accessiweather-toast:kind=discussion",
+                )
+                # Give worker loop time to process
+                time.sleep(0.3)
 
-            callback.assert_called_once()
-            result = callback.call_args[0][0]
-            assert result.arguments == "accessiweather-toast:kind=discussion"
-
-            # Clean up
-            if notifier._worker_loop and notifier._worker_loop.is_running():
-                notifier._worker_loop.call_soon_threadsafe(notifier._worker_loop.stop)
-            if notifier._worker_thread:
-                notifier._worker_thread.join(timeout=2)
+                callback.assert_called_once()
+                result = callback.call_args[0][0]
+                assert result.arguments == "accessiweather-toast:kind=discussion"
+            finally:
+                notifier.close()
 
     def test_on_activation_defaults_to_none(self):
         """on_activation callback defaults to None."""

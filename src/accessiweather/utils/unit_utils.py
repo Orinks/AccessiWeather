@@ -58,6 +58,8 @@ def format_wind_speed(
         wind_speed_mph = wind_speed_kph * 0.621371
     elif wind_speed_mph is not None and wind_speed_kph is None:
         wind_speed_kph = wind_speed_mph * 1.60934
+    assert wind_speed_mph is not None
+    assert wind_speed_kph is not None
 
     normalized_system = _normalize_unit_system(unit_system)
     if normalized_system == DisplayUnitSystem.US:
@@ -288,7 +290,7 @@ def format_combined_wind(
         speed_str = f"{int(round(speed_val))} {speed_unit}"
 
         # Handle direction
-        if isinstance(wind_direction, (int, float)):
+        if isinstance(wind_direction, int | float):
             direction = convert_wind_direction_to_cardinal(wind_direction)
         else:
             direction = str(wind_direction) if wind_direction else ""

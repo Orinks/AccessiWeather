@@ -12,9 +12,8 @@ Usage:
 """
 
 import sys
-from pathlib import Path
-
 import tomllib
+from pathlib import Path
 
 
 def main() -> int:

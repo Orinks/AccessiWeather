@@ -6,16 +6,8 @@ into the internal data format expected by WeatherService and UI components.
 """
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
-
-# For Python 3.10 compatibility
-try:
-    from datetime import UTC
-except ImportError:
-    from datetime import timezone
-
-    UTC = timezone.utc
 
 from .models import HourlyUVIndex
 from .openmeteo_client import OpenMeteoApiClient

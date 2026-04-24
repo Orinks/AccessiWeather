@@ -17,7 +17,7 @@ import json
 import logging
 import re
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -614,7 +614,7 @@ class NotificationEventManager:
             return
 
         bucket = ("HWO", location.name)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         last_sent = self._last_product_notified_at.get(bucket)
         if last_sent is not None and now - last_sent < _HWO_RATE_LIMIT_WINDOW:
             logger.debug(
@@ -786,7 +786,7 @@ class NotificationEventManager:
                 )
                 continue
 
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             last_sent = self._last_product_notified_at.get(bucket_key)
             if last_sent is not None and now - last_sent < _SPS_RATE_LIMIT_WINDOW:
                 logger.debug(

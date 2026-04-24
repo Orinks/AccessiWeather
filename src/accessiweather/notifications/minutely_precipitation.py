@@ -111,7 +111,7 @@ def parse_pirate_weather_minutely_block(
         if not isinstance(raw_point, Mapping):
             continue
         raw_time = raw_point.get("time")
-        if not isinstance(raw_time, (int, float)):
+        if not isinstance(raw_time, int | float):
             continue
         points.append(
             MinutelyPrecipitationPoint(
@@ -299,7 +299,7 @@ def precipitation_type_label(precipitation_type: str | None) -> str:
 
 
 def _coerce_float(value: Any) -> float | None:
-    if isinstance(value, (int, float)):
+    if isinstance(value, int | float):
         return float(value)
     return None
 

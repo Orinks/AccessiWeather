@@ -81,7 +81,7 @@ def format_wind(
 
     direction = None
     if current.wind_direction is not None:
-        if isinstance(current.wind_direction, (int, float)):
+        if isinstance(current.wind_direction, int | float):
             direction = convert_wind_direction_to_cardinal(current.wind_direction)
         else:
             direction = str(current.wind_direction)

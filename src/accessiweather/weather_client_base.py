@@ -552,8 +552,15 @@ class WeatherClient:
                 # silently suppress AFD update notifications.
                 discussion_task = asyncio.create_task(self._get_nws_discussion_only(location))
                 alerts_task = asyncio.create_task(self._get_nws_alerts(location))
-                discussion, discussion_issuance_time = await discussion_task
-                alerts = await alerts_task
+                discussion_result, alerts_result = await asyncio.gather(
+                    discussion_task, alerts_task, return_exceptions=True
+                )
+                if isinstance(discussion_result, Exception):
+                    raise discussion_result
+                if isinstance(alerts_result, Exception):
+                    raise alerts_result
+                discussion, discussion_issuance_time = discussion_result
+                alerts = alerts_result
                 logger.debug(
                     "get_notification_event_data: discussion=%s issuance=%s alerts=%s",
                     "ok" if discussion else "None",
@@ -568,15 +575,29 @@ class WeatherClient:
                     self.visual_crossing_client.get_current_conditions(location)
                 )
                 alerts_task = asyncio.create_task(self.visual_crossing_client.get_alerts(location))
-                weather_data.current = await current_task
-                weather_data.alerts = await alerts_task or WeatherAlerts(alerts=[])
+                current_result, alerts_result = await asyncio.gather(
+                    current_task, alerts_task, return_exceptions=True
+                )
+                if isinstance(current_result, Exception):
+                    raise current_result
+                if isinstance(alerts_result, Exception):
+                    raise alerts_result
+                weather_data.current = current_result
+                weather_data.alerts = alerts_result or WeatherAlerts(alerts=[])
             elif self.data_source in ("auto", "pirateweather") and self.pirate_weather_client:
                 current_task = asyncio.create_task(
                     self.pirate_weather_client.get_current_conditions(location)
                 )
                 alerts_task = asyncio.create_task(self.pirate_weather_client.get_alerts(location))
-                weather_data.current = await current_task
-                weather_data.alerts = await alerts_task or WeatherAlerts(alerts=[])
+                current_result, alerts_result = await asyncio.gather(
+                    current_task, alerts_task, return_exceptions=True
+                )
+                if isinstance(current_result, Exception):
+                    raise current_result
+                if isinstance(alerts_result, Exception):
+                    raise alerts_result
+                weather_data.current = current_result
+                weather_data.alerts = alerts_result or WeatherAlerts(alerts=[])
             else:
                 # openmeteo provides no alerts; also handles misconfigured clients
                 weather_data.alerts = WeatherAlerts(alerts=[])

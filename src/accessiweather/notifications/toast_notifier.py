@@ -288,6 +288,40 @@ class ToastedWindowsNotifier:
             logger.error("Toasted worker thread failed: %s", e)
             self._worker_loop = None
             self._worker_ready.set()  # unblock waiters
+        finally:
+            loop = self._worker_loop
+            if loop is not None and not loop.is_closed():
+                loop.close()
+
+    def close(self, timeout: float = 2.0) -> None:
+        """Stop the worker loop and release pending notification tasks."""
+        timer = getattr(self, "_watchdog_timer", None)
+        if timer is not None:
+            timer.cancel()
+
+        loop = self._worker_loop
+        if loop is not None and loop.is_running():
+            if self._pending_tasks:
+
+                async def _cancel_pending_tasks() -> None:
+                    tasks = list(self._pending_tasks)
+                    for task in tasks:
+                        if not task.done():
+                            task.cancel()
+                    if tasks:
+                        await asyncio.gather(*tasks, return_exceptions=True)
+
+                future = asyncio.run_coroutine_threadsafe(_cancel_pending_tasks(), loop)
+                with contextlib.suppress(Exception):
+                    future.result(timeout=timeout)
+            loop.call_soon_threadsafe(loop.stop)
+
+        thread = self._worker_thread
+        if thread is not None and thread.is_alive():
+            thread.join(timeout=timeout)
+        self._worker_thread = None
+        self._worker_loop = None
+        self._pending_tasks.clear()
 
     # -- sending ------------------------------------------------------------
 
@@ -650,6 +684,27 @@ class _DesktopNotifierBackend:
             self._worker_loop = None
             self._worker_notifier = None
             self._worker_ready.set()  # unblock waiters
+        finally:
+            loop = self._worker_loop
+            if loop is not None and not loop.is_closed():
+                loop.close()
+
+    def close(self, timeout: float = 2.0) -> None:
+        """Stop the worker loop and watchdog timer."""
+        timer = getattr(self, "_watchdog_timer", None)
+        if timer is not None:
+            timer.cancel()
+
+        loop = self._worker_loop
+        if loop is not None and loop.is_running():
+            loop.call_soon_threadsafe(loop.stop)
+
+        thread = self._worker_thread
+        if thread is not None and thread.is_alive():
+            thread.join(timeout=timeout)
+        self._worker_thread = None
+        self._worker_loop = None
+        self._worker_notifier = None
 
     def _send_in_worker(self, title: str, message: str, timeout: int = 10) -> bool:
         """Send a notification via the persistent worker thread."""

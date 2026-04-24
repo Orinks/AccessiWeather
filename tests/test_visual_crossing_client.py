@@ -509,7 +509,7 @@ class TestVisualCrossingApiCalls:
             await client.get_forecast(location, days=30)
 
             called_url = mock_client.get.call_args.args[0]
-            expected_end = (datetime.now(timezone.utc).date() + timedelta(days=14)).isoformat()
+            expected_end = (datetime.now(UTC).date() + timedelta(days=14)).isoformat()
             assert called_url.endswith(f"/today/{expected_end}")
 
     @pytest.mark.asyncio

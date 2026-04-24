@@ -82,7 +82,7 @@ class OpenRouterModelsClient:
         """Parse pricing value which can be string or number."""
         if value is None:
             return 0.0
-        if isinstance(value, (int, float)):
+        if isinstance(value, int | float):
             return float(value)
         if isinstance(value, str):
             try:

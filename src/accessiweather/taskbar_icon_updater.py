@@ -319,7 +319,7 @@ class TaskbarIconUpdater:
         """Format wind direction as a cardinal string when possible."""
         if direction is None:
             return PLACEHOLDER_NA
-        if isinstance(direction, (int, float)):
+        if isinstance(direction, int | float):
             return convert_wind_direction_to_cardinal(float(direction))
         return str(direction)
 
