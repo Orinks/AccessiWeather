@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 import pytest
 from hypothesis import (
@@ -88,7 +88,5 @@ class TestFormatDatetime:
         assert format_datetime(ten_am, "iso", True) == "2026-04-18 10:05 AM"
 
     def test_tz_aware_datetime_formats_without_tz_info(self) -> None:
-        from datetime import timezone
-
-        aware = datetime(2026, 4, 18, 14, 5, tzinfo=timezone.utc)
+        aware = datetime(2026, 4, 18, 14, 5, tzinfo=UTC)
         assert format_datetime(aware, "iso", False) == "2026-04-18 14:05"

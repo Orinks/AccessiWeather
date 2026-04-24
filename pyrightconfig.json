@@ -1,10 +1,9 @@
 {
-  "$schema": "https://raw.githubusercontent.com/microsoft/pyright/main/packages/pyright/schema/pyrightconfig.schema.json",
   "venvPath": ".",
   "venv": ".venv",
   "pythonVersion": "3.12",
   "include": [
-    "src/accessiweather/models.py",
+    "src/accessiweather/models",
     "src/accessiweather/utils"
   ],
   "exclude": [

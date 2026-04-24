@@ -1,7 +1,7 @@
 """Tests for NHC tropical outlook scraping in NationalDiscussionService."""
 
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
 # Mock wx modules before any accessiweather imports
@@ -168,7 +168,7 @@ class TestIsHurricaneSeason:
     def test_hurricane_season_months(self, month):
         """Test that June-November returns True."""
         with patch("accessiweather.services.national_discussion_service.datetime") as mock_dt:
-            mock_dt.now.return_value = datetime(2026, month, 15, tzinfo=timezone.utc)
+            mock_dt.now.return_value = datetime(2026, month, 15, tzinfo=UTC)
             mock_dt.side_effect = lambda *a, **kw: datetime(*a, **kw)
             assert NationalDiscussionService.is_hurricane_season() is True
 
@@ -176,7 +176,7 @@ class TestIsHurricaneSeason:
     def test_non_hurricane_season_months(self, month):
         """Test that Jan-May and December returns False."""
         with patch("accessiweather.services.national_discussion_service.datetime") as mock_dt:
-            mock_dt.now.return_value = datetime(2026, month, 15, tzinfo=timezone.utc)
+            mock_dt.now.return_value = datetime(2026, month, 15, tzinfo=UTC)
             mock_dt.side_effect = lambda *a, **kw: datetime(*a, **kw)
             assert NationalDiscussionService.is_hurricane_season() is False
 

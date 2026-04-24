@@ -692,7 +692,7 @@ def format_current_weather(data: dict[str, Any], display_name: str = "") -> str:
     # Fallback: if no known fields matched, dump scalar values
     if len(lines) == 1:
         for key, value in data.items():
-            if isinstance(value, (str, int, float)) and key not in ("lat", "lon"):
+            if isinstance(value, str | int | float) and key not in ("lat", "lon"):
                 lines.append(f"{key}: {value}")
 
     return "\n".join(lines)

@@ -75,9 +75,8 @@ def _get_version() -> str:
 
     # 3. Try reading pyproject.toml (works in dev environment)
     try:
-        from pathlib import Path
-
         import tomllib
+        from pathlib import Path
 
         root = Path(__file__).resolve().parents[2]
         py = root / "pyproject.toml"

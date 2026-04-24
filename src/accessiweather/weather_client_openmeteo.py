@@ -243,7 +243,7 @@ async def get_openmeteo_current_conditions(
             data = response.json()
 
             current = parse_openmeteo_current_conditions(data)
-            if isinstance(current.wind_direction, (int, float)):
+            if isinstance(current.wind_direction, int | float):
                 current.wind_direction = degrees_to_cardinal(current.wind_direction)
             return current
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
@@ -252,7 +252,7 @@ async def get_openmeteo_current_conditions(
             data = response.json()
 
             current = parse_openmeteo_current_conditions(data)
-            if isinstance(current.wind_direction, (int, float)):
+            if isinstance(current.wind_direction, int | float):
                 current.wind_direction = degrees_to_cardinal(current.wind_direction)
             return current
 

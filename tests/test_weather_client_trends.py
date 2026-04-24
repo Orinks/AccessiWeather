@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from accessiweather.models.weather import (
     CurrentConditions,
@@ -143,7 +143,7 @@ class TestNormalizeDatetime:
         assert result.tzinfo is None
 
     def test_aware_datetime(self):
-        dt = datetime(2025, 1, 1, 12, 0, tzinfo=timezone.utc)
+        dt = datetime(2025, 1, 1, 12, 0, tzinfo=UTC)
         result = normalize_datetime(dt)
         assert result is not None
         assert result.tzinfo is None

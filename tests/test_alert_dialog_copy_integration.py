@@ -26,6 +26,31 @@ def hidden_parent(wx_app):
     frame.Destroy()
 
 
+@pytest.fixture
+def fake_clipboard(monkeypatch):
+    clipboard = SimpleNamespace(text="")
+
+    def set_data(data):
+        clipboard.text = data.GetText()
+        return True
+
+    def get_data(data):
+        data.SetText(clipboard.text)
+        return True
+
+    monkeypatch.setattr(
+        wx,
+        "TheClipboard",
+        SimpleNamespace(
+            Open=lambda: True,
+            Close=lambda: None,
+            SetData=set_data,
+            GetData=get_data,
+        ),
+    )
+    return clipboard
+
+
 def _alert():
     return SimpleNamespace(
         title="t",
@@ -73,17 +98,18 @@ class TestCopyButton:
         finally:
             dlg.Destroy()
 
-    def test_copy_writes_combined_text_to_clipboard(self, hidden_parent):
+    def test_copy_writes_combined_text_to_clipboard(self, hidden_parent, fake_clipboard):
         settings = AppSettings(alert_display_style="separate")
         alert = _alert()
         dlg = AlertDialog(hidden_parent, alert, settings)
         try:
             dlg._on_copy(None)
             assert _read_clipboard_text() == AlertDialog._copy_payload(alert, settings)
+            assert fake_clipboard.text == AlertDialog._copy_payload(alert, settings)
         finally:
             dlg.Destroy()
 
-    def test_copy_flashes_copied_label(self, hidden_parent):
+    def test_copy_flashes_copied_label(self, hidden_parent, fake_clipboard):
         settings = AppSettings(alert_display_style="combined")
         dlg = AlertDialog(hidden_parent, _alert(), settings)
         try:

@@ -8,16 +8,8 @@ with deduplication, persistence, and change detection.
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
-
-# For Python 3.10 compatibility
-try:
-    from datetime import UTC
-except ImportError:
-    from datetime import timezone
-
-    UTC = timezone.utc
 from typing import Any
 
 from dateutil.parser import isoparse  # type: ignore # requires python-dateutil

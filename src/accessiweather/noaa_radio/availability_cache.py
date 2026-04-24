@@ -88,7 +88,7 @@ class StationAvailabilityCache:
                 continue
             expires_at = record.get("expires_at")
             reason = record.get("reason")
-            if not isinstance(expires_at, (int, float)) or not isinstance(reason, str):
+            if not isinstance(expires_at, int | float) or not isinstance(reason, str):
                 continue
             normalized = self._normalize(call_sign)
             if normalized:

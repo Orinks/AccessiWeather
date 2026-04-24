@@ -9,7 +9,7 @@ Covers:
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
@@ -158,7 +158,7 @@ class TestGetNwsForecastAndDiscussionIsolation:
         assert issuance_time is not None, (
             "issuance_time must not be None even when forecast fetch fails"
         )
-        assert issuance_time == datetime(2026, 1, 20, 19, 1, 0, tzinfo=timezone.utc)
+        assert issuance_time == datetime(2026, 1, 20, 19, 1, 0, tzinfo=UTC)
 
     @pytest.mark.asyncio
     async def test_forecast_and_discussion_both_succeed(self):
@@ -227,7 +227,7 @@ class TestGetNwsDiscussionOnly:
 
         assert discussion is not None
         assert "AFD" in discussion
-        assert issuance_time == datetime(2026, 1, 20, 19, 1, 0, tzinfo=timezone.utc)
+        assert issuance_time == datetime(2026, 1, 20, 19, 1, 0, tzinfo=UTC)
 
     @pytest.mark.asyncio
     async def test_no_forecast_call_is_made(self):
@@ -294,7 +294,7 @@ class TestGetNotificationEventDataDiscussionPath:
     @pytest.mark.asyncio
     async def test_discussion_issuance_time_populated(self, client, us_location):
         """get_notification_event_data populates discussion_issuance_time for US locations."""
-        issuance = datetime(2026, 1, 20, 19, 1, 0, tzinfo=timezone.utc)
+        issuance = datetime(2026, 1, 20, 19, 1, 0, tzinfo=UTC)
 
         client._get_nws_discussion_only = AsyncMock(return_value=("AFD text", issuance))
         client._get_nws_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
@@ -310,7 +310,7 @@ class TestGetNotificationEventDataDiscussionPath:
         self, client, us_location
     ):
         """Notification path calls _get_nws_discussion_only, not _get_nws_forecast_and_discussion."""
-        issuance = datetime(2026, 1, 20, 19, 1, 0, tzinfo=timezone.utc)
+        issuance = datetime(2026, 1, 20, 19, 1, 0, tzinfo=UTC)
 
         client._get_nws_discussion_only = AsyncMock(return_value=("AFD text", issuance))
         client._get_nws_forecast_and_discussion = AsyncMock(
@@ -377,7 +377,7 @@ class TestGetNwsForecastAndDiscussionNoClientBranch:
 
         assert forecast is not None
         assert discussion is not None
-        assert issuance_time == datetime(2026, 1, 20, 19, 1, 0, tzinfo=timezone.utc)
+        assert issuance_time == datetime(2026, 1, 20, 19, 1, 0, tzinfo=UTC)
 
     @pytest.mark.asyncio
     async def test_forecast_failure_no_client(self):
@@ -431,7 +431,7 @@ class TestGetNwsDiscussionOnlyNoClientBranch:
             )
 
         assert discussion is not None
-        assert issuance_time == datetime(2026, 1, 20, 19, 1, 0, tzinfo=timezone.utc)
+        assert issuance_time == datetime(2026, 1, 20, 19, 1, 0, tzinfo=UTC)
 
     @pytest.mark.asyncio
     async def test_retryable_error_raises_no_client(self):
@@ -461,7 +461,7 @@ class TestWeatherClientGetNwsDiscussionOnlyDelegation:
     @pytest.mark.asyncio
     async def test_delegates_to_nws_client_module(self):
         """_get_nws_discussion_only calls nws_client.get_nws_discussion_only."""
-        issuance = datetime(2026, 1, 20, 19, 1, 0, tzinfo=timezone.utc)
+        issuance = datetime(2026, 1, 20, 19, 1, 0, tzinfo=UTC)
 
         weather_client = WeatherClient()
         with patch(

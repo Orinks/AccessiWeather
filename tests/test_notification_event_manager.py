@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
 import pytest
@@ -38,7 +38,7 @@ class TestNotificationState:
 
     def test_to_dict(self):
         """Test state serialization."""
-        issuance_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
+        issuance_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=UTC)
         state = NotificationState(
             last_discussion_issuance_time=issuance_time,
             last_severe_risk=50,
@@ -148,9 +148,7 @@ class TestNotificationEventManager:
         """Test that first discussion doesn't trigger notification."""
         weather_data = MagicMock(spec=WeatherData)
         weather_data.discussion = "First discussion text"
-        weather_data.discussion_issuance_time = datetime(
-            2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc
-        )
+        weather_data.discussion_issuance_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=UTC)
         weather_data.current = None
         weather_data.minutely_precipitation = None
 
@@ -166,7 +164,7 @@ class TestNotificationEventManager:
         weather_data.minutely_precipitation = None
 
         # First discussion with issuance time
-        first_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
+        first_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=UTC)
         weather_data.discussion_issuance_time = first_time
         events1 = manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
         assert len(events1) == 0
@@ -202,7 +200,7 @@ class TestNotificationEventManager:
         weather_data.discussion = "Old discussion"
         weather_data.minutely_precipitation = None
 
-        first_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
+        first_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=UTC)
         weather_data.discussion_issuance_time = first_time
         manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
 
@@ -228,7 +226,7 @@ class TestNotificationEventManager:
         weather_data.discussion = "Discussion text without an issued header"
         weather_data.minutely_precipitation = None
 
-        first_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
+        first_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=UTC)
         weather_data.discussion_issuance_time = first_time
         manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
 
@@ -242,9 +240,7 @@ class TestNotificationEventManager:
         """Test that notifications are not sent when disabled."""
         weather_data = MagicMock(spec=WeatherData)
         weather_data.discussion = "First discussion"
-        weather_data.discussion_issuance_time = datetime(
-            2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc
-        )
+        weather_data.discussion_issuance_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=UTC)
         weather_data.current = None
         weather_data.minutely_precipitation = None
 
@@ -252,9 +248,7 @@ class TestNotificationEventManager:
         manager.check_for_events(weather_data, settings_none_enabled, "Test Location")
 
         # Update discussion with newer issuance time
-        weather_data.discussion_issuance_time = datetime(
-            2026, 1, 20, 17, 35, 0, tzinfo=timezone.utc
-        )
+        weather_data.discussion_issuance_time = datetime(2026, 1, 20, 17, 35, 0, tzinfo=UTC)
         events = manager.check_for_events(weather_data, settings_none_enabled, "Test Location")
 
         # Should not notify because setting is disabled
@@ -341,7 +335,7 @@ class TestNotificationEventManager:
 
         # Create manager and set some state
         manager1 = NotificationEventManager(state_file=state_file)
-        issuance_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
+        issuance_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=UTC)
         manager1.state.last_discussion_issuance_time = issuance_time
         manager1.state.last_severe_risk = 42
         manager1._save_state()
@@ -354,7 +348,7 @@ class TestNotificationEventManager:
     def test_loaded_discussion_state_preserves_first_run_no_spam(self, tmp_path):
         """Persisted discussion state should suppress same-issuance notifications after restart."""
         state_file = tmp_path / "notification_event_state.json"
-        issuance_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
+        issuance_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=UTC)
         manager1 = NotificationEventManager(state_file=state_file)
         manager1.state.last_discussion_issuance_time = issuance_time
         manager1.state.last_discussion_text = "Old discussion text"
@@ -375,7 +369,7 @@ class TestNotificationEventManager:
     def test_unified_runtime_state_preserves_first_run_no_spam(self, tmp_path):
         """Persisted unified discussion state should suppress same-issuance notifications."""
         runtime_state = RuntimeStateManager(tmp_path / "config")
-        issuance_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc)
+        issuance_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=UTC)
         runtime_state.save_section(
             "notification_events",
             {
@@ -732,9 +726,7 @@ class TestNotificationEventManager:
 
     def test_reset_state(self, manager):
         """Test state reset."""
-        manager.state.last_discussion_issuance_time = datetime(
-            2026, 1, 20, 14, 35, 0, tzinfo=timezone.utc
-        )
+        manager.state.last_discussion_issuance_time = datetime(2026, 1, 20, 14, 35, 0, tzinfo=UTC)
         manager.state.last_severe_risk = 75
 
         manager.reset_state()

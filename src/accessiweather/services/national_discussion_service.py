@@ -7,7 +7,7 @@ Provide functionality to fetch national weather discussions from the NWS API
 
 import logging
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -461,7 +461,7 @@ class NationalDiscussionService:
             True if current month is June through November, False otherwise.
 
         """
-        return datetime.now(timezone.utc).month in (6, 7, 8, 9, 10, 11)
+        return datetime.now(UTC).month in (6, 7, 8, 9, 10, 11)
 
     def fetch_nhc_discussions(self) -> dict[str, dict[str, str]]:
         """
