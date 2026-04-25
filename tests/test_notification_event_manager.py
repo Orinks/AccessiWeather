@@ -479,6 +479,29 @@ class TestNotificationEventManager:
         assert len(forecast.points) == 2
         assert forecast.points[1].precipitation_type == "rain"
 
+    def test_parse_pirate_weather_minutely_block_normalizes_us_intensity(self):
+        """US Pirate Weather minutely intensity should be converted from in/hr to mm/hr."""
+        forecast = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {
+                        "time": 1768917600,
+                        "precipIntensity": 0.1,
+                        "precipIntensityError": 0.01,
+                        "precipType": "rain",
+                    }
+                ]
+            },
+            units="us",
+        )
+
+        assert forecast is not None
+        point = forecast.points[0]
+        assert point.precipitation_intensity == pytest.approx(2.54)
+        assert point.precipitation_intensity_unit == "mm/hr"
+        assert point.precipitation_intensity_error == pytest.approx(0.254)
+        assert point.precipitation_intensity_error_unit == "mm/hr"
+
     def test_detect_minutely_precipitation_start_transition(self):
         """Dry-to-wet transitions should use the first wet minute and precip type."""
         forecast = parse_pirate_weather_minutely_block(
@@ -648,6 +671,26 @@ class TestNotificationEventManager:
         heavy = MinutelyPrecipitationPoint(time=datetime.now(UTC), precipitation_intensity=1.5)
         assert not is_wet(moderate, threshold=INTENSITY_THRESHOLD_HEAVY)
         assert is_wet(heavy, threshold=INTENSITY_THRESHOLD_HEAVY)
+
+    def test_is_wet_uses_precipitation_intensity_error_as_lower_bound(self):
+        """Uncertain marginal precipitation should not trip wet detection."""
+        from datetime import UTC, datetime
+
+        from accessiweather.models import MinutelyPrecipitationPoint
+
+        marginal = MinutelyPrecipitationPoint(
+            time=datetime.now(UTC),
+            precipitation_intensity=0.03,
+            precipitation_intensity_error=0.025,
+        )
+        confident = MinutelyPrecipitationPoint(
+            time=datetime.now(UTC),
+            precipitation_intensity=0.08,
+            precipitation_intensity_error=0.02,
+        )
+
+        assert not is_wet(marginal, threshold=INTENSITY_THRESHOLD_LIGHT)
+        assert is_wet(confident, threshold=INTENSITY_THRESHOLD_LIGHT)
 
     def test_detect_transition_with_moderate_threshold_ignores_light_rain(self):
         """With moderate threshold, light rain should not trigger a wet transition."""

@@ -50,7 +50,25 @@ def test_build_precipitation_timeline_text_returns_plain_text_timeline():
     assert "Now" in text
     assert "+01m" in text
     assert "3:04 PM" in text
-    assert "Rain | 60% chance | 0.120 in/hr" in text
+    assert "Rain | 60% chance | 0.120 mm/hr" in text
+
+
+def test_build_precipitation_timeline_text_includes_intensity_error():
+    start = datetime(2026, 1, 1, 15, 4, tzinfo=UTC)
+    forecast = MinutelyPrecipitationForecast(
+        points=[
+            MinutelyPrecipitationPoint(
+                time=start,
+                precipitation_intensity=0.12,
+                precipitation_intensity_error=0.03,
+                precipitation_type="rain",
+            )
+        ]
+    )
+
+    text = build_precipitation_timeline_text(forecast)
+
+    assert "0.120 mm/hr (+/- 0.030 mm/hr)" in text
 
 
 def test_show_precipitation_timeline_dialog_warns_when_minutely_data_missing():

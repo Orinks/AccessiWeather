@@ -54,6 +54,7 @@ from .weather_client_parallel import ParallelFetchCoordinator
 logger = logging.getLogger(__name__)
 
 MINUTELY_FAST_POLL_INTERVAL = timedelta(minutes=5)
+MINUTELY_RECOMMENDED_MIN_POLL_INTERVAL = timedelta(minutes=15)
 MINUTELY_ADAPTIVE_PRECIP_PROBABILITY_THRESHOLD = 30
 MINUTELY_ADAPTIVE_LOOKAHEAD_HOURS = 6
 
@@ -241,8 +242,9 @@ class WeatherClient:
         normal_interval = timedelta(
             minutes=max(1, int(getattr(self.settings, "update_interval_minutes", 10)))
         )
-        target_interval = normal_interval
-        if self._should_use_fast_minutely_poll(location):
+        fast_polling = bool(getattr(self.settings, "minutely_precipitation_fast_polling", False))
+        target_interval = max(normal_interval, MINUTELY_RECOMMENDED_MIN_POLL_INTERVAL)
+        if fast_polling and self._should_use_fast_minutely_poll(location):
             target_interval = min(normal_interval, MINUTELY_FAST_POLL_INTERVAL)
 
         last_poll = self._last_minutely_poll_by_location.get(self._location_key(location))
@@ -612,8 +614,9 @@ class WeatherClient:
             ):
                 _want_start = getattr(self.settings, "notify_minutely_precipitation_start", False)
                 _want_stop = getattr(self.settings, "notify_minutely_precipitation_stop", False)
-                if (_want_start or _want_stop) and self._should_fetch_minutely_precipitation(
-                    location
+                _want_likelihood = getattr(self.settings, "notify_precipitation_likelihood", False)
+                if (_want_start or _want_stop or _want_likelihood) and (
+                    self._should_fetch_minutely_precipitation(location)
                 ):
                     weather_data.minutely_precipitation = await self._get_pirate_weather_minutely(
                         location
@@ -663,7 +666,10 @@ class WeatherClient:
                 if inspect.isawaitable(result):
                     result = await result
                 if isinstance(result, dict):
-                    return parse_pirate_weather_minutely_block(result)
+                    units = getattr(client, "units", "si")
+                    if not isinstance(units, str):
+                        units = "si"
+                    return parse_pirate_weather_minutely_block(result, units=units)
             except TypeError:
                 logger.debug(
                     "Pirate Weather client method %s has an unsupported signature", method_name
@@ -1145,9 +1151,12 @@ class WeatherClient:
 
         _want_start = getattr(self.settings, "notify_minutely_precipitation_start", False)
         _want_stop = getattr(self.settings, "notify_minutely_precipitation_stop", False)
+        _want_likelihood = getattr(self.settings, "notify_precipitation_likelihood", False)
         _pw_fetched = any(source.source == "pirateweather" for source in source_results)
         merged_minutely = None
-        if self.pirate_weather_api_key and (_pw_fetched or _want_start or _want_stop):
+        if self.pirate_weather_api_key and (
+            _pw_fetched or _want_start or _want_stop or _want_likelihood
+        ):
             merged_minutely = await self._get_pirate_weather_minutely(location)
 
         has_any_data = (
