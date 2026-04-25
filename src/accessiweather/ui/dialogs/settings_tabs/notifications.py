@@ -187,6 +187,17 @@ class NotificationsTab:
             10,
         )
 
+        controls["minutely_precipitation_fast_polling"] = wx.CheckBox(
+            panel,
+            label="Check Pirate Weather precipitation more often when rain is likely",
+        )
+        event_section.Add(
+            controls["minutely_precipitation_fast_polling"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
+
         row_sensitivity = wx.BoxSizer(wx.HORIZONTAL)
         row_sensitivity.Add(
             wx.StaticText(panel, label="Notify for:"),
@@ -197,9 +208,9 @@ class NotificationsTab:
         controls["precipitation_sensitivity"] = wx.Choice(
             panel,
             choices=[
-                "Light rain and above (default, \u22650.01\u00a0mm/h)",
-                "Moderate rain and above (\u22650.1\u00a0mm/h)",
-                "Heavy rain only (\u22651.0\u00a0mm/h)",
+                "Light rain and above (default, \u22650.01\u00a0mm/hr)",
+                "Moderate rain and above (\u22650.1\u00a0mm/hr)",
+                "Heavy rain only (\u22651.0\u00a0mm/hr)",
             ],
         )
         row_sensitivity.Add(controls["precipitation_sensitivity"], 0)
@@ -302,6 +313,9 @@ class NotificationsTab:
         controls["notify_minutely_precipitation_stop"].SetValue(
             getattr(settings, "notify_minutely_precipitation_stop", False)
         )
+        controls["minutely_precipitation_fast_polling"].SetValue(
+            getattr(settings, "minutely_precipitation_fast_polling", False)
+        )
         sensitivity = getattr(settings, "precipitation_sensitivity", "light")
         controls["precipitation_sensitivity"].SetSelection(_SENSITIVITY_MAP.get(sensitivity, 0))
         controls["notify_precipitation_likelihood"].SetValue(
@@ -339,6 +353,9 @@ class NotificationsTab:
             "notify_minutely_precipitation_stop": controls[
                 "notify_minutely_precipitation_stop"
             ].GetValue(),
+            "minutely_precipitation_fast_polling": controls[
+                "minutely_precipitation_fast_polling"
+            ].GetValue(),
             "precipitation_sensitivity": _SENSITIVITY_VALUES[
                 controls["precipitation_sensitivity"].GetSelection()
             ],
@@ -369,6 +386,7 @@ class NotificationsTab:
             "notify_severe_risk_change": "Notify when severe weather risk changes",
             "notify_minutely_precipitation_start": "Notify when precipitation is expected to start soon",
             "notify_minutely_precipitation_stop": "Notify when precipitation is expected to stop soon",
+            "minutely_precipitation_fast_polling": "Check Pirate Weather precipitation more often when rain is likely",
             "precipitation_sensitivity": "Notify for: precipitation sensitivity level",
             "notify_precipitation_likelihood": "Notify when precipitation is likely (probability-based)",
             "precipitation_likelihood_threshold": "Precipitation likelihood threshold",

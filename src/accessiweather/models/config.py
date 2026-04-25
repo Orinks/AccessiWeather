@@ -45,6 +45,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "notify_severe_risk_change",
     "notify_minutely_precipitation_start",
     "notify_minutely_precipitation_stop",
+    "minutely_precipitation_fast_polling",
     "precipitation_sensitivity",
     "notify_precipitation_likelihood",
     "precipitation_likelihood_threshold",
@@ -134,6 +135,7 @@ class AppSettings:
     notify_severe_risk_change: bool = False
     notify_minutely_precipitation_start: bool = True
     notify_minutely_precipitation_stop: bool = True
+    minutely_precipitation_fast_polling: bool = False
     # Minimum intensity level required to count as precipitation ("light", "moderate", "heavy")
     precipitation_sensitivity: str = "light"
     notify_precipitation_likelihood: bool = False
@@ -471,6 +473,7 @@ class AppSettings:
             "notify_severe_risk_change": self.notify_severe_risk_change,
             "notify_minutely_precipitation_start": self.notify_minutely_precipitation_start,
             "notify_minutely_precipitation_stop": self.notify_minutely_precipitation_stop,
+            "minutely_precipitation_fast_polling": self.minutely_precipitation_fast_polling,
             "precipitation_sensitivity": self.precipitation_sensitivity,
             "notify_precipitation_likelihood": self.notify_precipitation_likelihood,
             "precipitation_likelihood_threshold": self.precipitation_likelihood_threshold,
@@ -566,6 +569,9 @@ class AppSettings:
             ),
             notify_minutely_precipitation_stop=cls._as_bool(
                 data.get("notify_minutely_precipitation_stop"), True
+            ),
+            minutely_precipitation_fast_polling=cls._as_bool(
+                data.get("minutely_precipitation_fast_polling"), False
             ),
             precipitation_sensitivity=data.get("precipitation_sensitivity", "light"),
             notify_precipitation_likelihood=cls._as_bool(

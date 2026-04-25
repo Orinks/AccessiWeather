@@ -409,12 +409,14 @@ class TestAppSettings:
         settings = AppSettings(
             notify_minutely_precipitation_start=True,
             notify_minutely_precipitation_stop=False,
+            minutely_precipitation_fast_polling=True,
         )
 
         restored = AppSettings.from_dict(settings.to_dict())
 
         assert restored.notify_minutely_precipitation_start is True
         assert restored.notify_minutely_precipitation_stop is False
+        assert restored.minutely_precipitation_fast_polling is True
 
     def test_immediate_alert_popup_setting_round_trip(self):
         """Immediate alert popup opt-in should serialize and load cleanly."""
