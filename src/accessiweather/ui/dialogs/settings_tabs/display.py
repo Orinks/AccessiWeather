@@ -125,6 +125,22 @@ class DisplayTab:
             8,
         )
 
+        pressure_outlook_row = wx.BoxSizer(wx.HORIZONTAL)
+        pressure_outlook_row.Add(
+            wx.StaticText(panel, label="Pressure outlook range (hours):"),
+            0,
+            wx.ALIGN_CENTER_VERTICAL | wx.RIGHT,
+            10,
+        )
+        controls["trend_hours"] = wx.SpinCtrl(panel, min=1, max=168, initial=24)
+        pressure_outlook_row.Add(controls["trend_hours"], 0)
+        forecast_section.Add(
+            pressure_outlook_row,
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            8,
+        )
+
         details_section = self.dialog.create_section(
             panel,
             sizer,
@@ -295,6 +311,7 @@ class DisplayTab:
             _FORECAST_DURATION_MAP.get(forecast_duration_days, 2)
         )
         controls["hourly_forecast_hours"].SetValue(getattr(settings, "hourly_forecast_hours", 6))
+        controls["trend_hours"].SetValue(getattr(settings, "trend_hours", 24))
 
         forecast_time_reference = getattr(settings, "forecast_time_reference", "location")
         controls["forecast_time_reference"].SetSelection(
@@ -339,6 +356,7 @@ class DisplayTab:
                 controls["forecast_duration_days"].GetSelection()
             ],
             "hourly_forecast_hours": controls["hourly_forecast_hours"].GetValue(),
+            "trend_hours": controls["trend_hours"].GetValue(),
             "forecast_time_reference": _FORECAST_TIME_REF_VALUES[
                 controls["forecast_time_reference"].GetSelection()
             ],
@@ -374,6 +392,7 @@ class DisplayTab:
             "round_values": "Show values as whole numbers when possible",
             "forecast_duration_days": "Daily forecast range",
             "hourly_forecast_hours": "Hourly forecast range in hours",
+            "trend_hours": "Pressure outlook range in hours",
             "forecast_time_reference": "Forecast time reference",
             "time_display_mode": "Time display mode",
             "time_format_12hour": "Use 12-hour time format",

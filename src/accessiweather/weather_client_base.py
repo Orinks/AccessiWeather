@@ -378,6 +378,7 @@ class WeatherClient:
             # Use retry wrapper for the parallel fetch
             try:
                 forecast_days = self._get_forecast_days_for_source(location, source="openmeteo")
+                requested_hours = self._get_hourly_hours_for_pressure_outlook()
                 return await retry_with_backoff(
                     openmeteo_client.get_openmeteo_all_data_parallel,
                     location,
@@ -385,6 +386,8 @@ class WeatherClient:
                     self.timeout,
                     client,
                     forecast_days,
+                    "best_match",
+                    requested_hours,
                     max_retries=1,
                     initial_delay=1.0,
                 )
@@ -1612,8 +1615,18 @@ class WeatherClient:
     async def _get_openmeteo_hourly_forecast(self, location: Location) -> HourlyForecast | None:
         """Delegate to the Open-Meteo client module."""
         return await openmeteo_client.get_openmeteo_hourly_forecast(
-            location, self.openmeteo_base_url, self.timeout, self._get_http_client()
+            location,
+            self.openmeteo_base_url,
+            self.timeout,
+            self._get_http_client(),
+            hours=self._get_hourly_hours_for_pressure_outlook(),
         )
+
+    def _get_hourly_hours_for_pressure_outlook(self) -> int:
+        """Return enough hourly data for display and pressure trend windows."""
+        hourly_hours = int(getattr(self.settings, "hourly_forecast_hours", 6) or 6)
+        trend_hours = int(getattr(self.settings, "trend_hours", 24) or 24)
+        return max(1, min(max(hourly_hours, trend_hours), 384))
 
     async def _augment_current_with_openmeteo(
         self,

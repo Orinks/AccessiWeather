@@ -166,6 +166,7 @@ async def get_openmeteo_all_data_parallel(
     client: httpx.AsyncClient,
     forecast_days: int = 7,
     model: str = "best_match",
+    hourly_hours: int = 48,
 ) -> tuple[CurrentConditions | None, Forecast | None, HourlyForecast | None]:
     """
     Fetch all Open-Meteo data in parallel.
@@ -188,7 +189,14 @@ async def get_openmeteo_all_data_parallel(
             )
         )
         hourly_task = asyncio.create_task(
-            get_openmeteo_hourly_forecast(location, openmeteo_base_url, timeout, client, model)
+            get_openmeteo_hourly_forecast(
+                location,
+                openmeteo_base_url,
+                timeout,
+                client,
+                model,
+                hours=hourly_hours,
+            )
         )
 
         # Gather all results
@@ -320,6 +328,7 @@ async def get_openmeteo_hourly_forecast(
     timeout: float,
     client: httpx.AsyncClient | None = None,
     model: str = "best_match",
+    hours: int = 48,
 ) -> HourlyForecast | None:
     """Fetch hourly forecast from the Open-Meteo API."""
     try:
@@ -337,7 +346,7 @@ async def get_openmeteo_hourly_forecast(
             "wind_speed_unit": "mph",
             "precipitation_unit": "inch",
             "timezone": "auto",
-            "forecast_days": 2,
+            "forecast_hours": min(max(hours, 1), 384),
         }
 
         # Add model parameter if not using default
