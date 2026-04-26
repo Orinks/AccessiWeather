@@ -1,6 +1,11 @@
-"""Tests for NWS high/low temperature pairing in parse_nws_forecast."""
+"""Tests for NWS high/low temperature pairing and hourly pressure parsing."""
 
-from accessiweather.weather_client_nws import parse_nws_forecast
+from accessiweather.weather_client_nws import (
+    apply_nws_gridpoint_pressure,
+    parse_nws_forecast,
+    parse_nws_gridpoint_pressure,
+    parse_nws_hourly_forecast,
+)
 
 
 def _make_period(name, temp, unit="F", is_daytime=True):
@@ -100,3 +105,68 @@ class TestNwsHighLowPairing:
         forecast = parse_nws_forecast(data)
         assert forecast.periods[0].temperature_low is None
         assert forecast.periods[1].temperature_low is None
+
+
+def _hourly_payload(start_time: str = "2026-04-26T10:00:00-04:00"):
+    return {
+        "properties": {
+            "periods": [
+                {
+                    "startTime": start_time,
+                    "endTime": "2026-04-26T11:00:00-04:00",
+                    "temperature": 60,
+                    "temperatureUnit": "F",
+                    "shortForecast": "Cloudy",
+                    "windSpeed": "5 mph",
+                    "windDirection": "N",
+                }
+            ]
+        }
+    }
+
+
+class TestNwsHourlyPressure:
+    def test_gridpoint_pressure_applies_to_hourly_periods(self):
+        hourly = parse_nws_hourly_forecast(_hourly_payload())
+        pressure = parse_nws_gridpoint_pressure(
+            {
+                "properties": {
+                    "pressure": {
+                        "uom": "wmoUnit:Pa",
+                        "values": [
+                            {
+                                "validTime": "2026-04-26T10:00:00-04:00/PT1H",
+                                "value": 101325,
+                            }
+                        ],
+                    }
+                }
+            }
+        )
+
+        result = apply_nws_gridpoint_pressure(hourly, pressure)
+
+        assert result.periods[0].pressure_mb == 1013.25
+        assert result.periods[0].pressure_in is not None
+
+    def test_gridpoint_pressure_ignores_far_valid_times(self):
+        hourly = parse_nws_hourly_forecast(_hourly_payload())
+        pressure = parse_nws_gridpoint_pressure(
+            {
+                "properties": {
+                    "pressure": {
+                        "values": [
+                            {
+                                "validTime": "2026-04-26T15:00:00-04:00/PT1H",
+                                "value": 101325,
+                            }
+                        ]
+                    }
+                }
+            }
+        )
+
+        result = apply_nws_gridpoint_pressure(hourly, pressure)
+
+        assert result.periods[0].pressure_mb is None
+        assert result.periods[0].pressure_in is None

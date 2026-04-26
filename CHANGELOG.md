@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - **Faster Pirate Weather rain checks are opt-in** — a new notification setting lets you check minutely precipitation more often when rain is likely, while the default cadence stays closer to Pirate Weather's recommended update window
 - **Single combined alert view** — pick "Single combined view" in Settings > Display > Alert display to read the whole alert (headline, description, instruction, Issued, and Expires) in one scrollable edit box with a Close button. The original separate-fields layout is still the default
 - **Configurable date format** — choose how dates are shown: ISO (2026-04-18), US short (04/18/2026), US long (April 18, 2026), or EU (18/04/2026). Applies to timestamps in the new combined alert view for now
+- **Pressure outlook for fishing and planning** — pressure trends now say when a barometric pressure drop or rise is predicted, and Settings > Display lets you choose the pressure outlook range from 1 hour to 7 days
 
 ### Fixed
 - **Pirate Weather minutely precipitation units** — rain-start notifications now evaluate Pirate Weather minutely intensity in consistent mm/hr units, and the timeline shows the unit plus uncertainty when Pirate Weather provides it

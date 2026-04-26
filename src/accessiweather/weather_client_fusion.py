@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 from dataclasses import fields, replace
+from datetime import UTC, datetime
 from typing import Any
 
 from accessiweather.config.source_priority import SourcePriorityConfig
@@ -786,6 +787,21 @@ class DataFusionEngine:
         if hourly_forecast and hourly_forecast.summary is None and pirate_summary:
             hourly_forecast = replace(hourly_forecast, summary=pirate_summary)
 
+        pressure_source = self._select_hourly_pressure_source(valid_sources, selected_source)
+        if (
+            hourly_forecast
+            and pressure_source
+            and pressure_source.hourly_forecast
+            and pressure_source.source != source_name
+        ):
+            overlaid_hourly = self._overlay_hourly_pressure(
+                hourly_forecast,
+                pressure_source.hourly_forecast,
+            )
+            if overlaid_hourly is not hourly_forecast:
+                hourly_forecast = overlaid_hourly
+                field_sources["hourly_pressure_source"] = pressure_source.source
+
         # Track attribution
         field_sources["hourly_source"] = source_name
         if pirate_summary and hourly_forecast and hourly_forecast.summary == pirate_summary:
@@ -793,3 +809,104 @@ class DataFusionEngine:
         logger.debug(f"Using {source_name} for hourly forecast (location: {location.name})")
 
         return hourly_forecast, field_sources
+
+    def _select_hourly_pressure_source(
+        self,
+        valid_sources: list[SourceData],
+        selected_source: SourceData,
+    ) -> SourceData | None:
+        """Return the selected hourly source or best alternate source with pressure data."""
+        if self._hourly_has_pressure(selected_source.hourly_forecast):
+            return selected_source
+
+        pressure_priority = ["openmeteo", "visualcrossing", "pirateweather"]
+        pressure_sources = [
+            s for s in valid_sources if self._hourly_has_pressure(s.hourly_forecast)
+        ]
+        if not pressure_sources:
+            return None
+
+        pressure_sources.sort(
+            key=lambda source: self._source_priority_index(source.source, pressure_priority)
+        )
+        return pressure_sources[0]
+
+    def _hourly_has_pressure(self, hourly: HourlyForecast | None) -> bool:
+        """Return True when any hourly period includes pressure."""
+        if hourly is None:
+            return False
+        return any(p.pressure_in is not None or p.pressure_mb is not None for p in hourly.periods)
+
+    def _overlay_hourly_pressure(
+        self,
+        display_hourly: HourlyForecast,
+        pressure_hourly: HourlyForecast,
+    ) -> HourlyForecast:
+        """Copy pressure-only fields from a pressure-capable hourly source by nearest time."""
+        pressure_periods = [
+            period
+            for period in pressure_hourly.periods
+            if period.pressure_in is not None or period.pressure_mb is not None
+        ]
+        if not pressure_periods:
+            return display_hourly
+
+        overlaid_periods = []
+        changed = False
+        for display_period in display_hourly.periods:
+            if display_period.pressure_in is not None or display_period.pressure_mb is not None:
+                overlaid_periods.append(display_period)
+                continue
+
+            pressure_period = self._nearest_hourly_pressure_period(
+                display_period.start_time,
+                pressure_periods,
+            )
+            if pressure_period is None:
+                overlaid_periods.append(display_period)
+                continue
+
+            overlaid_periods.append(
+                replace(
+                    display_period,
+                    pressure_in=pressure_period.pressure_in,
+                    pressure_mb=pressure_period.pressure_mb,
+                )
+            )
+            changed = True
+
+        if not changed:
+            return display_hourly
+        return replace(display_hourly, periods=overlaid_periods)
+
+    def _nearest_hourly_pressure_period(
+        self,
+        target: datetime,
+        pressure_periods: list,
+    ):
+        """Find a pressure period close enough to the target display hour."""
+        target_ts = self._datetime_timestamp(target)
+        if target_ts is None:
+            return None
+
+        closest = None
+        best_delta = None
+        for period in pressure_periods:
+            period_ts = self._datetime_timestamp(period.start_time)
+            if period_ts is None:
+                continue
+            delta = abs(period_ts - target_ts)
+            if best_delta is None or delta < best_delta:
+                closest = period
+                best_delta = delta
+
+        if best_delta is None or best_delta > 90 * 60:
+            return None
+        return closest
+
+    def _datetime_timestamp(self, value: datetime | None) -> float | None:
+        """Normalize aware and naive datetimes to comparable timestamps."""
+        if value is None:
+            return None
+        value = value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
+        return value.timestamp()

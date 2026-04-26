@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
+from accessiweather.models import AppSettings
 from accessiweather.models.weather import (
     CurrentConditions,
     Forecast,
@@ -14,6 +15,7 @@ from accessiweather.models.weather import (
     TrendInsight,
     WeatherData,
 )
+from accessiweather.weather_client_base import WeatherClient
 from accessiweather.weather_client_trends import (
     apply_trend_insights,
     compute_daily_trend,
@@ -21,6 +23,7 @@ from accessiweather.weather_client_trends import (
     compute_temperature_trend,
     normalize_datetime,
     period_for_hours_ahead,
+    pressure_trend_summary,
     trend_descriptor,
 )
 
@@ -300,6 +303,32 @@ class TestComputePressureTrend:
         result = compute_pressure_trend(wd, 6)
         assert result is not None
         assert result.direction == "falling"
+        assert result.summary is not None
+        assert "drop predicted" in result.summary
+
+    def test_does_not_report_pressure_outlook_when_requested_window_exceeds_data(self):
+        periods = _make_hourly_periods(
+            hours=24,
+            pressure_mb=1013.0,
+            pressure_change_mb=-4.0,
+        )
+        wd = _make_weather_data(
+            temp_f=70.0,
+            pressure_mb=1013.0,
+            hourly_periods=periods,
+        )
+
+        assert compute_pressure_trend(wd, 168) is None
+
+
+class TestPressureTrendSummary:
+    def test_falling_pressure_uses_drop_language(self):
+        result = pressure_trend_summary("falling", -0.08, "inHg", 24)
+        assert result == "Pressure drop predicted: -0.08 inHg over next 24h"
+
+    def test_rising_pressure_uses_rise_language(self):
+        result = pressure_trend_summary("rising", 2.25, "mb", 48)
+        assert result == "Pressure rise predicted: +2.25 mb over next 48h"
 
 
 # --- compute_daily_trend ---
@@ -467,3 +496,17 @@ class TestApplyTrendInsights:
         wd = WeatherData(location=_make_location(), current=None)
         apply_trend_insights(wd, trend_insights_enabled=True, trend_hours=6)
         assert wd.trend_insights == []
+
+
+class TestPressureOutlookHourlyWindow:
+    def test_openmeteo_hourly_request_covers_pressure_outlook_window(self):
+        settings = AppSettings(hourly_forecast_hours=6, trend_hours=72)
+        client = WeatherClient(settings=settings)
+
+        assert client._get_hourly_hours_for_pressure_outlook() == 72
+
+    def test_openmeteo_hourly_request_covers_display_window_when_larger(self):
+        settings = AppSettings(hourly_forecast_hours=96, trend_hours=24)
+        client = WeatherClient(settings=settings)
+
+        assert client._get_hourly_hours_for_pressure_outlook() == 96

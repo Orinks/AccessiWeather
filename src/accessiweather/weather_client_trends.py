@@ -34,6 +34,10 @@ def apply_trend_insights(
         pressure_insight = compute_pressure_trend(weather_data, trend_hours)
         if pressure_insight:
             insights.append(pressure_insight)
+        else:
+            pressure_unavailable = compute_pressure_outlook_unavailable(weather_data, trend_hours)
+            if pressure_unavailable:
+                insights.append(pressure_unavailable)
 
     daily_insight = compute_daily_trend(weather_data)
     if daily_insight:
@@ -98,7 +102,11 @@ def compute_pressure_trend(
 
     base_mb = current.pressure_mb
     base_in = current.pressure_in
-    target_period = period_for_hours_ahead(hourly, trend_hours)
+    target_period = period_for_hours_ahead(
+        hourly,
+        trend_hours,
+        max_delta_hours=_pressure_target_tolerance_hours(trend_hours),
+    )
     if not target_period:
         logger.debug("No target period available for pressure trend calculation")
         return None
@@ -122,7 +130,7 @@ def compute_pressure_trend(
         minor=0.5 if unit == "mb" else 0.02,
         strong=1.5 if unit == "mb" else 0.05,
     )
-    summary = f"Pressure {direction} {change:+.2f}{unit} over {trend_hours}h"
+    summary = pressure_trend_summary(direction, change, unit, trend_hours)
     return TrendInsight(
         metric="pressure",
         direction=direction,
@@ -132,6 +140,87 @@ def compute_pressure_trend(
         summary=summary,
         sparkline=sparkline,
     )
+
+
+def compute_pressure_outlook_unavailable(
+    weather_data: WeatherData,
+    trend_hours: int,
+) -> TrendInsight | None:
+    """Explain why a pressure outlook cannot be calculated for the selected data."""
+    current = weather_data.current
+    if current is None or not current.has_data():
+        return None
+
+    if current.pressure_mb is None and current.pressure_in is None:
+        summary = "Pressure outlook unavailable: current pressure data is missing."
+        return _pressure_unavailable_insight(summary, trend_hours)
+
+    hourly = weather_data.hourly_forecast
+    if hourly is None or not hourly.has_data():
+        summary = "Pressure outlook unavailable: hourly forecast data is missing."
+        return _pressure_unavailable_insight(summary, trend_hours)
+
+    hourly_source = None
+    if weather_data.source_attribution is not None:
+        hourly_source = weather_data.source_attribution.field_sources.get("hourly_source")
+
+    if not any(p.pressure_mb is not None or p.pressure_in is not None for p in hourly.periods):
+        source_label = _format_source_name(hourly_source)
+        summary = (
+            f"Pressure outlook unavailable: {source_label} hourly forecast "
+            "does not include pressure data."
+            if source_label
+            else "Pressure outlook unavailable: hourly forecast does not include pressure data."
+        )
+        return _pressure_unavailable_insight(summary, trend_hours)
+
+    summary = (
+        "Pressure outlook unavailable: not enough hourly pressure data "
+        f"for the next {trend_hours}h."
+    )
+    return _pressure_unavailable_insight(summary, trend_hours)
+
+
+def _pressure_unavailable_insight(summary: str, trend_hours: int) -> TrendInsight:
+    """Create a pressure insight that explains an unavailable outlook."""
+    return TrendInsight(
+        metric="pressure",
+        direction="unavailable",
+        change=None,
+        unit=None,
+        timeframe_hours=trend_hours,
+        summary=summary,
+        sparkline=None,
+    )
+
+
+def _format_source_name(source: str | None) -> str | None:
+    """Return a user-facing source name for short pressure availability messages."""
+    if not source:
+        return None
+    source_names = {
+        "nws": "NWS",
+        "openmeteo": "Open-Meteo",
+        "visualcrossing": "Visual Crossing",
+        "pirateweather": "Pirate Weather",
+    }
+    return source_names.get(source, source)
+
+
+def _pressure_target_tolerance_hours(trend_hours: int) -> float:
+    """Return the acceptable distance from the requested pressure outlook target."""
+    return max(3.0, min(12.0, trend_hours * 0.25))
+
+
+def pressure_trend_summary(direction: str, change: float, unit: str, trend_hours: int) -> str:
+    """Build the user-facing pressure outlook summary."""
+    if direction == "falling":
+        action = "drop predicted"
+    elif direction == "rising":
+        action = "rise predicted"
+    else:
+        action = "steady"
+    return f"Pressure {action}: {change:+.2f} {unit} over next {trend_hours}h"
 
 
 def trend_descriptor(change: float, *, minor: float, strong: float) -> tuple[str, str]:
@@ -150,6 +239,8 @@ def trend_descriptor(change: float, *, minor: float, strong: float) -> tuple[str
 def period_for_hours_ahead(
     periods: Sequence[HourlyForecastPeriod],
     hours_ahead: int,
+    *,
+    max_delta_hours: float | None = None,
 ) -> HourlyForecastPeriod | None:
     """Return the forecast period closest to the target number of hours ahead."""
     if not periods:
@@ -161,7 +252,7 @@ def period_for_hours_ahead(
     target = target + timedelta(hours=hours_ahead)
 
     closest = None
-    best_delta = None
+    best_delta: float | None = None
     for period in periods:
         start = normalize_datetime(period.start_time)
         if start is None:
@@ -174,6 +265,12 @@ def period_for_hours_ahead(
         if best_delta is None or delta < best_delta:
             closest = period
             best_delta = delta
+    if (
+        max_delta_hours is not None
+        and best_delta is not None
+        and best_delta > max_delta_hours * 3600
+    ):
+        return None
     return closest
 
 
