@@ -461,7 +461,7 @@ cat build/accessiweather/{platform}/app/logs/*.log
 
 ### Pre-Release
 
-- [ ] All tests passing (`pytest -n auto`)
+- [ ] All tests passing (`pytest`)
 - [ ] Code formatted (`ruff format .`)
 - [ ] Linting clean (`ruff check .`)
 - [ ] Version updated in `pyproject.toml`

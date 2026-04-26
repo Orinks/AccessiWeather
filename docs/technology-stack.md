@@ -215,7 +215,7 @@ See [ACCESSIBILITY.md](ACCESSIBILITY.md) for complete guidelines.
 
 ### Testing Performance
 - Parallel test execution with `pytest-xdist`
-- Test suite runs ~4x faster with `-n auto` flag
+- Test suite uses a conservative default pytest-xdist worker cap for local stability
 
 ---
 

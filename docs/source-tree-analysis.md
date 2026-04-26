@@ -365,7 +365,7 @@ tests/
 
 **Test Execution:**
 - **Serial:** `pytest -v`
-- **Parallel:** `pytest -n auto` (~4x faster)
+- **Parallel:** `pytest` (stable default worker cap)
 - **Last Failed:** `pytest --lf --ff`
 - **Unit Only:** `pytest -m "unit"`
 
