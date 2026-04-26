@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
+from accessiweather import weather_client_base
 from accessiweather.models import AppSettings
 from accessiweather.models.weather import (
     CurrentConditions,
@@ -12,6 +15,7 @@ from accessiweather.models.weather import (
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    SourceAttribution,
     TrendInsight,
     WeatherData,
 )
@@ -19,6 +23,7 @@ from accessiweather.weather_client_base import WeatherClient
 from accessiweather.weather_client_trends import (
     apply_trend_insights,
     compute_daily_trend,
+    compute_pressure_outlook_unavailable,
     compute_pressure_trend,
     compute_temperature_trend,
     normalize_datetime,
@@ -320,8 +325,83 @@ class TestComputePressureTrend:
 
         assert compute_pressure_trend(wd, 168) is None
 
+    def test_unavailable_when_current_pressure_missing(self):
+        periods = _make_hourly_periods(
+            hours=12,
+            pressure_mb=1013.0,
+            pressure_change_mb=1.0,
+        )
+        wd = _make_weather_data(temp_f=70.0, hourly_periods=periods)
+
+        result = compute_pressure_outlook_unavailable(wd, 24)
+
+        assert result is not None
+        assert result.direction == "unavailable"
+        assert result.summary == "Pressure outlook unavailable: current pressure data is missing."
+
+    def test_unavailable_when_hourly_forecast_missing(self):
+        wd = _make_weather_data(temp_f=70.0, pressure_mb=1013.0)
+
+        result = compute_pressure_outlook_unavailable(wd, 24)
+
+        assert result is not None
+        assert result.summary == "Pressure outlook unavailable: hourly forecast data is missing."
+
+    def test_unavailable_names_hourly_source_without_pressure_data(self):
+        wd = _make_weather_data(
+            temp_f=70.0,
+            pressure_mb=1013.0,
+            hourly_periods=_make_hourly_periods(hours=12),
+        )
+        wd.source_attribution = SourceAttribution(field_sources={"hourly_source": "nws"})
+
+        result = compute_pressure_outlook_unavailable(wd, 24)
+
+        assert result is not None
+        assert result.summary == (
+            "Pressure outlook unavailable: NWS hourly forecast does not include pressure data."
+        )
+
+    def test_unavailable_uses_unknown_source_name_as_label(self):
+        wd = _make_weather_data(
+            temp_f=70.0,
+            pressure_mb=1013.0,
+            hourly_periods=_make_hourly_periods(hours=12),
+        )
+        wd.source_attribution = SourceAttribution(field_sources={"hourly_source": "custom"})
+
+        result = compute_pressure_outlook_unavailable(wd, 24)
+
+        assert result is not None
+        assert result.summary == (
+            "Pressure outlook unavailable: custom hourly forecast does not include pressure data."
+        )
+
+    def test_unavailable_when_pressure_data_is_shorter_than_requested_window(self):
+        periods = _make_hourly_periods(
+            hours=12,
+            pressure_mb=1013.0,
+            pressure_change_mb=-1.0,
+        )
+        wd = _make_weather_data(
+            temp_f=70.0,
+            pressure_mb=1013.0,
+            hourly_periods=periods,
+        )
+
+        result = compute_pressure_outlook_unavailable(wd, 48)
+
+        assert result is not None
+        assert result.summary == (
+            "Pressure outlook unavailable: not enough hourly pressure data for the next 48h."
+        )
+
 
 class TestPressureTrendSummary:
+    def test_steady_pressure_uses_steady_language(self):
+        result = pressure_trend_summary("steady", 0.0, "mb", 24)
+        assert result == "Pressure steady: +0.00 mb over next 24h"
+
     def test_falling_pressure_uses_drop_language(self):
         result = pressure_trend_summary("falling", -0.08, "inHg", 24)
         assert result == "Pressure drop predicted: -0.08 inHg over next 24h"
@@ -510,3 +590,33 @@ class TestPressureOutlookHourlyWindow:
         client = WeatherClient(settings=settings)
 
         assert client._get_hourly_hours_for_pressure_outlook() == 96
+
+    @pytest.mark.asyncio
+    async def test_openmeteo_parallel_fetch_receives_pressure_outlook_window(self, monkeypatch):
+        monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+        settings = AppSettings(hourly_forecast_hours=6, trend_hours=72)
+        client = WeatherClient(settings=settings)
+        client._test_mode = False
+        captured = {}
+
+        async def fake_parallel_fetch(
+            location,
+            base_url,
+            timeout,
+            http_client,
+            forecast_days,
+            model,
+            requested_hours,
+        ):
+            captured["requested_hours"] = requested_hours
+            return CurrentConditions(), Forecast(periods=[]), HourlyForecast(periods=[])
+
+        monkeypatch.setattr(
+            weather_client_base.openmeteo_client,
+            "get_openmeteo_all_data_parallel",
+            fake_parallel_fetch,
+        )
+
+        await client._fetch_openmeteo_data(_make_location())
+
+        assert captured["requested_hours"] == 72
