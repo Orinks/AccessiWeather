@@ -285,7 +285,12 @@ def _build_trend_metrics(
 
             if trend.sparkline:
                 summary = f"{summary} {trend.sparkline}".strip()
-            metrics.append(Metric(f"{trend.metric.replace('_', ' ').title()} trend", summary))
+            label = (
+                "Pressure outlook"
+                if is_pressure
+                else f"{trend.metric.replace('_', ' ').title()} trend"
+            )
+            metrics.append(Metric(label, summary))
             if is_pressure:
                 pressure_trend_present = True
 

@@ -528,6 +528,23 @@ class TestBuildTrendMetrics:
         metrics = _build_trend_metrics(trends, current, None, show_pressure_trend=False)
         assert len(metrics) == 0
 
+    def test_pressure_trend_label_reads_as_outlook(self):
+        trends = [
+            TrendInsight(
+                metric="pressure",
+                direction="falling",
+                summary="Pressure drop predicted: -0.08 inHg over next 24h",
+            ),
+        ]
+        metrics = _build_trend_metrics(
+            trends,
+            CurrentConditions(),
+            None,
+            show_pressure_trend=True,
+        )
+        assert metrics[0].label == "Pressure outlook"
+        assert "drop predicted" in metrics[0].value
+
     def test_no_trends(self):
         metrics = _build_trend_metrics(None, CurrentConditions(), None, show_pressure_trend=True)
         assert len(metrics) == 0

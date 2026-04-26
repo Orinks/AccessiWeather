@@ -131,8 +131,8 @@ class PrecipitationTimelineDialog(wx.Dialog):
         description = wx.StaticText(
             panel,
             label=(
-                "Pirate Weather minutely guidance for the next hour. "
-                "Summary first, followed by a plain-text timeline."
+                "Pirate Weather short-range precipitation guidance for the next hour. "
+                "Minute rows are model-interpolated guidance."
             ),
         )
         description.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
@@ -210,7 +210,13 @@ def _format_point_conditions(point: MinutelyPrecipitationPoint) -> str:
 
     intensity = getattr(point, "precipitation_intensity", None)
     if intensity is not None and intensity > 0:
-        details.append(f"{intensity:.3f} in/hr")
+        unit = getattr(point, "precipitation_intensity_unit", "mm/hr")
+        intensity_text = f"{intensity:.3f} {unit}"
+        intensity_error = getattr(point, "precipitation_intensity_error", None)
+        if intensity_error is not None and intensity_error > 0:
+            error_unit = getattr(point, "precipitation_intensity_error_unit", unit)
+            intensity_text = f"{intensity_text} (+/- {intensity_error:.3f} {error_unit})"
+        details.append(intensity_text)
 
     return " | ".join(details)
 

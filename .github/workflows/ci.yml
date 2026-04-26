@@ -119,12 +119,12 @@ jobs:
       run: |
         if [ "${{ matrix.primary }}" = "true" ]; then
           mkdir -p reports
-          xvfb-run -a pytest tests/ -n auto -v --tb=short -m "not integration" \
+          xvfb-run -a pytest tests/ -n 8 -v --tb=short -m "not integration" \
             --cov=src/accessiweather \
             --cov-report=xml:reports/coverage.xml \
             --cov-report=term-missing
         else
-          xvfb-run -a pytest tests/ -n auto -v --tb=short -m "not integration"
+          xvfb-run -a pytest tests/ -n 8 -v --tb=short -m "not integration"
         fi
 
     - name: Install diff-cover

@@ -432,6 +432,9 @@ class MinutelyPrecipitationPoint:
     precipitation_intensity: float | None = None
     precipitation_probability: float | None = None
     precipitation_type: str | None = None
+    precipitation_intensity_unit: str = "mm/hr"
+    precipitation_intensity_error: float | None = None
+    precipitation_intensity_error_unit: str = "mm/hr"
 
 
 @dataclass

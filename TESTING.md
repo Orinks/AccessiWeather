@@ -42,8 +42,11 @@ LIVE_WEATHER_TESTS=1 pytest tests/integration/ -v
 # Run a specific provider's tests
 pytest tests/integration/test_nws_integration.py
 
-# Run all tests in parallel (faster)
-pytest -n auto
+# Run all tests with the stable parallel default
+pytest
+
+# Run all tests with an explicit worker count
+pytest -n 8
 
 # Run tests matching a pattern
 pytest -k "test_name" -v

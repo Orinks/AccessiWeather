@@ -400,6 +400,7 @@ class TestNotificationEventHelpers:
         settings.notify_severe_risk_change = False
         settings.notify_minutely_precipitation_start = False
         settings.notify_minutely_precipitation_stop = False
+        settings.notify_precipitation_likelihood = False
         settings.notify_hwo_update = False
         settings.notify_sps_issued = False
         win.app.config_manager.get_settings.return_value = settings
@@ -615,7 +616,6 @@ class TestGetNotificationEventData:
         client._utcnow = MagicMock(
             side_effect=[
                 now,
-                now,
                 now + timedelta(minutes=1),
                 now + timedelta(minutes=31),
                 now + timedelta(minutes=31),
@@ -636,6 +636,7 @@ class TestGetNotificationEventData:
         settings.update_interval_minutes = 30
         settings.notify_minutely_precipitation_start = True
         settings.notify_minutely_precipitation_stop = True
+        settings.minutely_precipitation_fast_polling = True
         client.data_source = "pirateweather"
         client.pirate_weather_client = MagicMock()
         client.pirate_weather_client.get_current_conditions = AsyncMock(return_value=MagicMock())
@@ -660,8 +661,41 @@ class TestGetNotificationEventData:
                 now,
                 now,
                 now + timedelta(minutes=4),
+                now + timedelta(minutes=4),
                 now + timedelta(minutes=6),
                 now + timedelta(minutes=6),
+                now + timedelta(minutes=6),
+            ]
+        )
+
+        await client.get_notification_event_data(intl_location)
+        await client.get_notification_event_data(intl_location)
+        await client.get_notification_event_data(intl_location)
+
+        assert client._get_pirate_weather_minutely.await_count == 2
+
+    @pytest.mark.asyncio
+    async def test_minutely_precipitation_fetch_defaults_to_recommended_floor(
+        self, client, intl_location
+    ):
+        settings = client.settings
+        settings.update_interval_minutes = 10
+        settings.notify_minutely_precipitation_start = True
+        settings.notify_minutely_precipitation_stop = True
+        settings.minutely_precipitation_fast_polling = False
+        client.data_source = "pirateweather"
+        client.pirate_weather_client = MagicMock()
+        client.pirate_weather_client.get_current_conditions = AsyncMock(return_value=MagicMock())
+        client.pirate_weather_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+        client._get_pirate_weather_minutely = AsyncMock(return_value=MagicMock())
+
+        now = datetime(2026, 4, 7, 12, 0, tzinfo=UTC)
+        client._utcnow = MagicMock(
+            side_effect=[
+                now,
+                now + timedelta(minutes=11),
+                now + timedelta(minutes=16),
+                now + timedelta(minutes=16),
             ]
         )
 

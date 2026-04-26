@@ -44,7 +44,7 @@ For the same validation CI enforces on pull requests, run:
 ```bash
 ruff format --check .
 ruff check .
-ACCESSIWEATHER_TEST_MODE=1 HYPOTHESIS_PROFILE=ci pytest tests/ -n auto -v --tb=short -m "not integration"
+ACCESSIWEATHER_TEST_MODE=1 HYPOTHESIS_PROFILE=ci pytest tests/ -n 8 -v --tb=short -m "not integration"
 ```
 
 ## Accessibility Requirements

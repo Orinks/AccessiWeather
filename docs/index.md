@@ -239,8 +239,8 @@ Cache Check
 ### Test Commands
 
 ```bash
-# Run all tests (parallel)
-pytest -n auto
+# Run all tests with the stable parallel default
+pytest
 
 # Run unit tests only
 pytest -m "unit" -v

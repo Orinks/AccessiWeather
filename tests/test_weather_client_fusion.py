@@ -671,9 +671,16 @@ class TestMergeForecasts:
 
 
 class TestMergeHourlyForecasts:
-    def _make_hourly(self):
+    def _make_hourly(self, *, start_time=None, pressure_mb=None, pressure_in=None):
         return HourlyForecast(
-            periods=[HourlyForecastPeriod(start_time=datetime.now(UTC), temperature=65.0)]
+            periods=[
+                HourlyForecastPeriod(
+                    start_time=start_time or datetime.now(UTC),
+                    temperature=65.0,
+                    pressure_mb=pressure_mb,
+                    pressure_in=pressure_in,
+                )
+            ]
         )
 
     def test_no_sources(self, engine, us_location):
@@ -743,6 +750,81 @@ class TestMergeHourlyForecasts:
         assert result.summary == "Light rain developing overnight."
         assert field_sources["hourly_source"] == "openmeteo"
         assert field_sources["hourly_summary"] == "pirateweather"
+
+    def test_selected_hourly_source_keeps_own_pressure(self, engine, us_location):
+        nws_hourly = self._make_hourly(pressure_mb=1012.0)
+        om_hourly = self._make_hourly(pressure_mb=1008.0)
+        sources = [
+            _make_source("openmeteo", hourly=om_hourly),
+            _make_source("nws", hourly=nws_hourly),
+        ]
+
+        result, field_sources = engine.merge_hourly_forecasts(sources, us_location)
+
+        assert result is not None
+        assert result.periods[0].pressure_mb == 1012.0
+        assert field_sources["hourly_source"] == "nws"
+        assert "hourly_pressure_source" not in field_sources
+
+    def test_overlays_pressure_from_alternate_hourly_source(self, engine, us_location):
+        now = datetime(2026, 4, 26, 10, tzinfo=UTC)
+        nws_hourly = self._make_hourly(start_time=now)
+        om_hourly = self._make_hourly(
+            start_time=now + timedelta(minutes=30),
+            pressure_mb=1007.5,
+            pressure_in=29.75,
+        )
+        sources = [
+            _make_source("openmeteo", hourly=om_hourly),
+            _make_source("nws", hourly=nws_hourly),
+        ]
+
+        result, field_sources = engine.merge_hourly_forecasts(sources, us_location)
+
+        assert result is not None
+        assert result is not nws_hourly
+        assert result.periods[0].temperature == 65.0
+        assert result.periods[0].pressure_mb == 1007.5
+        assert result.periods[0].pressure_in == 29.75
+        assert field_sources["hourly_source"] == "nws"
+        assert field_sources["hourly_pressure_source"] == "openmeteo"
+
+    def test_overlay_pressure_returns_original_when_source_has_no_pressure(self, engine):
+        display_hourly = self._make_hourly()
+        pressure_hourly = self._make_hourly()
+
+        result = engine._overlay_hourly_pressure(display_hourly, pressure_hourly)
+
+        assert result is display_hourly
+
+    def test_overlay_pressure_skips_existing_unmatched_and_invalid_times(self, engine):
+        now = datetime(2026, 4, 26, 10, tzinfo=UTC)
+        existing = HourlyForecastPeriod(
+            start_time=now,
+            temperature=65.0,
+            pressure_mb=1010.0,
+        )
+        unmatched = HourlyForecastPeriod(
+            start_time=now + timedelta(hours=4),
+            temperature=66.0,
+        )
+        invalid_time = HourlyForecastPeriod(
+            start_time=None,
+            temperature=67.0,
+        )
+        display_hourly = HourlyForecast(periods=[existing, unmatched, invalid_time])
+        pressure_hourly = HourlyForecast(
+            periods=[
+                HourlyForecastPeriod(start_time=None, pressure_mb=1009.0),
+                HourlyForecastPeriod(start_time=now, pressure_mb=1008.0),
+            ]
+        )
+
+        result = engine._overlay_hourly_pressure(display_hourly, pressure_hourly)
+
+        assert result is display_hourly
+        assert engine._hourly_has_pressure(None) is False
+        assert engine._nearest_hourly_pressure_period(None, pressure_hourly.periods) is None
 
 
 # --- DataFusionEngine init ---

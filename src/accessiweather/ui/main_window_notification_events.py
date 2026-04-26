@@ -319,16 +319,18 @@ def process_notification_events(window: MainWindow, weather_data) -> None:
             and not settings.notify_severe_risk_change
             and not settings.notify_minutely_precipitation_start
             and not settings.notify_minutely_precipitation_stop
+            and not getattr(settings, "notify_precipitation_likelihood", False)
             and not getattr(settings, "notify_hwo_update", True)
             and not getattr(settings, "notify_sps_issued", True)
         ):
             logger.debug(
                 "[events] _process_notification_events: discussion=%s severe_risk=%s "
-                "minutely_start=%s minutely_stop=%s hwo=%s sps=%s disabled -- skipping",
+                "minutely_start=%s minutely_stop=%s likelihood=%s hwo=%s sps=%s disabled -- skipping",
                 settings.notify_discussion_update,
                 settings.notify_severe_risk_change,
                 settings.notify_minutely_precipitation_start,
                 settings.notify_minutely_precipitation_stop,
+                getattr(settings, "notify_precipitation_likelihood", False),
                 getattr(settings, "notify_hwo_update", True),
                 getattr(settings, "notify_sps_issued", True),
             )

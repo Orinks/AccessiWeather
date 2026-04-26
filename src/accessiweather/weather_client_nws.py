@@ -6,6 +6,7 @@ import asyncio
 import inspect
 import logging
 import re
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 
@@ -1306,7 +1307,13 @@ async def get_nws_hourly_forecast(
             response.raise_for_status()
             hourly_data = response.json()
 
-            return parse_nws_hourly_forecast(hourly_data, location)
+            hourly = parse_nws_hourly_forecast(hourly_data, location)
+            pressure_data = await _fetch_nws_gridpoint_pressure(
+                grid_data,
+                client,
+                headers,
+            )
+            return apply_nws_gridpoint_pressure(hourly, pressure_data)
         grid_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
 
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
@@ -1323,13 +1330,40 @@ async def get_nws_hourly_forecast(
             response.raise_for_status()
             hourly_data = response.json()
 
-            return parse_nws_hourly_forecast(hourly_data, location)
+            hourly = parse_nws_hourly_forecast(hourly_data, location)
+            pressure_data = await _fetch_nws_gridpoint_pressure(
+                grid_data,
+                new_client,
+                headers,
+            )
+            return apply_nws_gridpoint_pressure(hourly, pressure_data)
 
     except Exception as exc:  # noqa: BLE001
         logger.error(f"Failed to get NWS hourly forecast: {exc}")
         if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
             raise
         return None
+
+
+async def _fetch_nws_gridpoint_pressure(
+    point_data: dict[str, Any],
+    client: httpx.AsyncClient,
+    headers: dict[str, str],
+) -> dict[datetime, tuple[float | None, float | None]]:
+    """Fetch and parse the NWS gridpoint pressure layer for hourly pressure outlooks."""
+    gridpoint_url = point_data.get("properties", {}).get("forecastGridData")
+    if not gridpoint_url:
+        return {}
+
+    try:
+        response = await _client_get(client, gridpoint_url, headers=headers)
+        response.raise_for_status()
+        return parse_nws_gridpoint_pressure(response.json())
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("NWS gridpoint pressure fetch failed: %s", exc)
+        if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
+            raise
+        return {}
 
 
 @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=20.0)
@@ -1842,3 +1876,99 @@ def parse_nws_hourly_forecast(data: dict, location: Location | None = None) -> H
         periods.append(period)
 
     return HourlyForecast(periods=periods, generated_at=datetime.now())
+
+
+def parse_nws_gridpoint_pressure(data: dict) -> dict[datetime, tuple[float | None, float | None]]:
+    """Parse NWS gridpoint pressure values keyed by valid-time start."""
+    pressure = data.get("properties", {}).get("pressure", {})
+    values = pressure.get("values", []) if isinstance(pressure, dict) else []
+    pressure_by_time: dict[datetime, tuple[float | None, float | None]] = {}
+
+    for item in values:
+        if not isinstance(item, dict):
+            continue
+        start_time = _parse_valid_time_start(item.get("validTime"))
+        pressure_pa = item.get("value")
+        if start_time is None or pressure_pa is None:
+            continue
+        pressure_by_time[start_time] = (
+            convert_pa_to_inches(pressure_pa),
+            convert_pa_to_mb(pressure_pa),
+        )
+
+    return pressure_by_time
+
+
+def apply_nws_gridpoint_pressure(
+    hourly: HourlyForecast,
+    pressure_by_time: dict[datetime, tuple[float | None, float | None]],
+) -> HourlyForecast:
+    """Populate NWS hourly periods with pressure from the gridpoint pressure layer."""
+    if not pressure_by_time:
+        return hourly
+
+    updated_periods: list[HourlyForecastPeriod] = []
+    changed = False
+    for period in hourly.periods:
+        if period.pressure_in is not None or period.pressure_mb is not None:
+            updated_periods.append(period)
+            continue
+
+        pressure_pair = _nearest_pressure_pair(period.start_time, pressure_by_time)
+        if pressure_pair is None:
+            updated_periods.append(period)
+            continue
+
+        updated_periods.append(
+            replace(
+                period,
+                pressure_in=pressure_pair[0],
+                pressure_mb=pressure_pair[1],
+            )
+        )
+        changed = True
+
+    if not changed:
+        return hourly
+    return HourlyForecast(
+        periods=updated_periods,
+        generated_at=hourly.generated_at,
+        summary=hourly.summary,
+    )
+
+
+def _nearest_pressure_pair(
+    start_time: datetime,
+    pressure_by_time: dict[datetime, tuple[float | None, float | None]],
+) -> tuple[float | None, float | None] | None:
+    """Return pressure from the closest gridpoint valid time within 90 minutes."""
+    target_ts = _timestamp_utc(start_time)
+    best_pair = None
+    best_delta = None
+    for valid_time, pressure_pair in pressure_by_time.items():
+        delta = abs(_timestamp_utc(valid_time) - target_ts)
+        if best_delta is None or delta < best_delta:
+            best_delta = delta
+            best_pair = pressure_pair
+
+    if best_delta is None or best_delta > 90 * 60:
+        return None
+    return best_pair
+
+
+def _parse_valid_time_start(valid_time: str | None) -> datetime | None:
+    """Parse the start timestamp from an NWS ISO interval validTime value."""
+    if not valid_time:
+        return None
+    start = valid_time.split("/", 1)[0]
+    try:
+        return datetime.fromisoformat(start.replace("Z", "+00:00"))
+    except ValueError:
+        logger.debug("Failed to parse NWS gridpoint validTime: %s", valid_time)
+        return None
+
+
+def _timestamp_utc(value: datetime) -> float:
+    """Normalize aware and naive datetimes to UTC timestamps."""
+    value = value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
+    return value.timestamp()

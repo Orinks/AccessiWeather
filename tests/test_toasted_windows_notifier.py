@@ -287,16 +287,7 @@ class TestToastedWindowsNotifierWorker:
             notifier._ensure_worker = MagicMock(return_value=True)
 
             def _run_immediately(coro, _loop):
-                class _CompletedTask:
-                    def add_done_callback(self, callback):
-                        callback(self)
-
-                def _create_task(task_coro):
-                    task_coro.close()
-                    return _CompletedTask()
-
-                with patch.object(toast_notifier.asyncio, "create_task", _create_task):
-                    asyncio.run(coro)
+                asyncio.run(coro)
                 return MagicMock()
 
             with patch.object(toast_notifier.asyncio, "run_coroutine_threadsafe", _run_immediately):
@@ -370,16 +361,7 @@ class TestToastedActivationCallback:
             notifier._ensure_worker = MagicMock(return_value=True)
 
             def _run_immediately(coro, _loop):
-                class _CompletedTask:
-                    def add_done_callback(self, callback):
-                        callback(self)
-
-                def _create_task(task_coro):
-                    task_coro.close()
-                    return _CompletedTask()
-
-                with patch.object(toast_notifier.asyncio, "create_task", _create_task):
-                    asyncio.run(coro)
+                asyncio.run(coro)
                 return MagicMock()
 
             with patch.object(toast_notifier.asyncio, "run_coroutine_threadsafe", _run_immediately):

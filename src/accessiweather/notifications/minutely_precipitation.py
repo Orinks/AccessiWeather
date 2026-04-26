@@ -29,8 +29,10 @@ def _probability_band(prob: float) -> str:
     return "50-70%"
 
 
-# Intensity thresholds (mm/h) for wet detection.
-# Pirate Weather light rain is typically 0.01–0.1 mm/h; moderate 0.1–1.0 mm/h.
+# Intensity thresholds (mm/hr) for wet detection.  Pirate Weather can return
+# minutely precipitation intensity as in/hr for ``units=us``; the parser
+# normalizes all minutely intensities to mm/hr before these thresholds are used.
+# Pirate Weather light rain is typically 0.01-0.1 mm/hr; moderate 0.1-1.0 mm/hr.
 INTENSITY_THRESHOLD_LIGHT = 0.01
 INTENSITY_THRESHOLD_MODERATE = 0.1
 INTENSITY_THRESHOLD_HEAVY = 1.0
@@ -88,12 +90,16 @@ class MinutelyPrecipitationLikelihood:
 
 def parse_pirate_weather_minutely_block(
     payload: Mapping[str, Any] | None,
+    *,
+    units: str = "si",
 ) -> MinutelyPrecipitationForecast | None:
     """
     Parse a Pirate Weather minutely block or full response.
 
     Accepts either the full API response containing a ``minutely`` object or the
-    ``minutely`` object itself.
+    ``minutely`` object itself.  Pirate Weather returns ``precipIntensity`` in
+    in/hr for ``units=us`` and mm/hr for other unit groups, so values are stored
+    in the model as canonical mm/hr.
     """
     if not payload:
         return None
@@ -113,12 +119,19 @@ def parse_pirate_weather_minutely_block(
         raw_time = raw_point.get("time")
         if not isinstance(raw_time, int | float):
             continue
+        intensity = _coerce_float(raw_point.get("precipIntensity"))
+        intensity_error = _coerce_float(raw_point.get("precipIntensityError"))
         points.append(
             MinutelyPrecipitationPoint(
                 time=datetime.fromtimestamp(raw_time, tz=UTC),
-                precipitation_intensity=_coerce_float(raw_point.get("precipIntensity")),
+                precipitation_intensity=_normalize_intensity_to_mm_per_hour(intensity, units),
                 precipitation_probability=_coerce_float(raw_point.get("precipProbability")),
                 precipitation_type=_normalize_precipitation_type(raw_point.get("precipType")),
+                precipitation_intensity_unit="mm/hr",
+                precipitation_intensity_error=_normalize_intensity_to_mm_per_hour(
+                    intensity_error, units
+                ),
+                precipitation_intensity_error_unit="mm/hr",
             )
         )
 
@@ -275,7 +288,11 @@ def is_wet(point: MinutelyPrecipitationPoint, threshold: float = 0.0) -> bool:
 
     """
     if point.precipitation_intensity is not None:
-        return point.precipitation_intensity > threshold
+        intensity = point.precipitation_intensity
+        error = getattr(point, "precipitation_intensity_error", None)
+        if error is not None and error > 0:
+            return (intensity - error) > threshold
+        return intensity > threshold
     if point.precipitation_probability is not None:
         return point.precipitation_probability > 0
     return False
@@ -302,6 +319,12 @@ def _coerce_float(value: Any) -> float | None:
     if isinstance(value, int | float):
         return float(value)
     return None
+
+
+def _normalize_intensity_to_mm_per_hour(value: float | None, units: str) -> float | None:
+    if value is None:
+        return None
+    return value * 25.4 if units == "us" else value
 
 
 def _normalize_precipitation_type(value: Any) -> str | None:

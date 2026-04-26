@@ -536,8 +536,8 @@ api_key = keyring.get_password("accessiweather", "visual_crossing_api_key")
 **Dialog Creation:** Dialogs created when needed, not at app init
 
 ### 5. Test Parallelization
-**Tool:** `pytest-xdist` with `-n auto` flag
-**Result:** ~4x faster test suite execution
+**Tool:** `pytest-xdist` with a conservative default worker cap
+**Result:** Faster test suite execution without overwhelming local Windows runs
 
 ---
 
