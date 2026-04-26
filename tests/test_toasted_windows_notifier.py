@@ -296,6 +296,39 @@ class TestToastedWindowsNotifierWorker:
             # At least one task should have been added (even if already completed)
             assert len(tracking.ever_added) >= 1
 
+    def test_close_drains_submitted_worker_future_before_stopping_loop(self):
+        """Submitted coroutines are allowed to run before the worker loop stops."""
+        with patch.object(toast_notifier, "TOASTED_AVAILABLE", False):
+            notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=False)
+
+        class _SubmittedFuture:
+            def __init__(self):
+                self.result_called = False
+                self.cancelled = False
+
+            def done(self):
+                return self.result_called
+
+            def result(self, timeout=None):
+                self.result_called = True
+                return True
+
+            def cancel(self):
+                self.cancelled = True
+
+        future = _SubmittedFuture()
+        notifier._submitted_futures.add(future)  # type: ignore[arg-type]
+        notifier._worker_loop = MagicMock()
+        notifier._worker_loop.is_running.return_value = True
+        notifier._worker_thread = MagicMock()
+        notifier._worker_thread.is_alive.return_value = False
+
+        notifier.close()
+
+        assert future.result_called is True
+        assert future.cancelled is False
+        assert not notifier._submitted_futures
+
 
 # ---------------------------------------------------------------------------
 # Activation callback tests
@@ -396,9 +429,17 @@ class TestPlatformSelection:
     def test_safe_desktop_notifier_is_correct_type(self):
         """SafeDesktopNotifier is one of the two backend classes."""
         assert toast_notifier.SafeDesktopNotifier in (
+            toast_notifier._TestModeNotifier,
             toast_notifier.ToastedWindowsNotifier,
             toast_notifier._DesktopNotifierBackend,
         )
+
+    def test_safe_desktop_notifier_uses_noop_backend_in_test_mode(self):
+        """Full-suite tests should never construct the real OS toast backend."""
+        assert toast_notifier.SafeDesktopNotifier is toast_notifier._TestModeNotifier
+        notifier = toast_notifier.SafeDesktopNotifier(sound_enabled=True)
+
+        assert notifier.send_notification("Title", "Body", play_sound=True) is True
 
     def test_notifier_available_flag(self):
         """NOTIFIER_AVAILABLE reflects at least one backend being usable."""

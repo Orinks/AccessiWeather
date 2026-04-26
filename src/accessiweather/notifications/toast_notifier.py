@@ -14,10 +14,12 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import os
 import sys
 import threading
 import xml.etree.ElementTree as ET
 from collections.abc import Callable
+from concurrent.futures import Future
 from typing import Any
 from xml.sax.saxutils import escape as _xml_escape
 
@@ -85,6 +87,11 @@ except ImportError as e:
 
 # At least one notification backend is usable
 NOTIFIER_AVAILABLE = TOASTED_AVAILABLE or DESKTOP_NOTIFIER_AVAILABLE
+
+
+def _notifications_suppressed_for_tests() -> bool:
+    """Return True when tests should never reach OS notification backends."""
+    return os.environ.get("ACCESSIWEATHER_TEST_MODE") == "1" or "pytest" in sys.modules
 
 
 def _log_packaging_notifier_diagnostics() -> None:
@@ -189,6 +196,7 @@ class ToastedWindowsNotifier:
         self._lock = threading.Lock()
         self._app_id_registered = False
         self._pending_tasks: set[asyncio.Task] = set()
+        self._submitted_futures: set[Future[bool]] = set()
         # Callback invoked (from worker thread) when user clicks a toast.
         # Signature: on_activation(result) where result.arguments contains
         # the serialized activation request string.
@@ -301,6 +309,16 @@ class ToastedWindowsNotifier:
 
         loop = self._worker_loop
         if loop is not None and loop.is_running():
+            if self._submitted_futures and threading.current_thread() is not self._worker_thread:
+                futures = list(self._submitted_futures)
+                for future in futures:
+                    if future.done():
+                        continue
+                    with contextlib.suppress(Exception):
+                        future.result(timeout=timeout)
+                    if not future.done():
+                        future.cancel()
+
             if self._pending_tasks:
 
                 async def _cancel_pending_tasks() -> None:
@@ -321,6 +339,7 @@ class ToastedWindowsNotifier:
             thread.join(timeout=timeout)
         self._worker_thread = None
         self._worker_loop = None
+        self._submitted_futures.clear()
         self._pending_tasks.clear()
 
     # -- sending ------------------------------------------------------------
@@ -398,7 +417,9 @@ class ToastedWindowsNotifier:
 
         # Fire and forget — don't block waiting for WinRT confirmation
         logger.debug("[toasted] Submitting toast to worker loop (fire-and-forget): title=%r", title)
-        asyncio.run_coroutine_threadsafe(_show_toast(), loop)
+        future = asyncio.run_coroutine_threadsafe(_show_toast(), loop)
+        self._submitted_futures.add(future)
+        future.add_done_callback(self._submitted_futures.discard)
         return True
 
     def _show_toast_direct(self, toast, activation_arguments: str | None) -> bool:
@@ -824,7 +845,48 @@ class _DesktopNotifierBackend:
 # Platform selection: export SafeDesktopNotifier as the right backend
 # ---------------------------------------------------------------------------
 
-if sys.platform == "win32" and TOASTED_AVAILABLE:
+
+class _TestModeNotifier:
+    """No-op notifier used during automated tests to avoid real OS UI."""
+
+    def __init__(
+        self,
+        app_name: str = "AccessiWeather",
+        sound_enabled: bool = True,
+        soundpack: str | None = None,
+        muted_sound_events: list[str] | None = None,
+    ):
+        self.app_name = app_name
+        self.sound_enabled = bool(sound_enabled)
+        self.soundpack = soundpack or "default"
+        initial_muted_events = (
+            DEFAULT_MUTED_SOUND_EVENTS if muted_sound_events is None else muted_sound_events
+        )
+        self.muted_sound_events = normalize_muted_sound_events(initial_muted_events)
+
+    def close(self, timeout: float = 2.0) -> None:
+        """Match real notifier cleanup API."""
+
+    def send_notification(
+        self,
+        title: str,
+        message: str,
+        timeout: int = 10,
+        *,
+        sound_event: str | None = None,
+        sound_candidates: list[str] | None = None,
+        play_sound: bool = True,
+        activation_arguments: str | None = None,
+    ) -> bool:
+        """Log notification intent without showing a toast or playing sound."""
+        logger.info("Test-mode notification suppressed: %s - %s", title, message)
+        return True
+
+
+if _notifications_suppressed_for_tests():
+    SafeDesktopNotifier = _TestModeNotifier
+    logger.info("Using test-mode no-op backend for notifications")
+elif sys.platform == "win32" and TOASTED_AVAILABLE:
     SafeDesktopNotifier = ToastedWindowsNotifier
     logger.info("Using toasted backend for Windows notifications")
 else:
