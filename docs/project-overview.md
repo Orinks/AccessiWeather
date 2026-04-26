@@ -356,7 +356,7 @@ See [deployment-guide.md](deployment-guide.md) for complete pipeline docs.
 - **Coverage:** >70% target
 - **Backend:** `toga_dummy` (no real UI)
 - **Speed:** Fast (~1-2 minutes for full suite)
-- **Execution:** `pytest -n auto` (parallel)
+- **Execution:** `pytest` (parallel, stable default)
 
 ### Integration Tests
 - **Marker:** `@pytest.mark.integration`

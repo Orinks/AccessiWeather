@@ -135,8 +135,11 @@ git push origin feature/my-feature
 # Run all tests (serial)
 pytest -v
 
-# Run all tests (parallel - ~4x faster)
-pytest -n auto
+# Run all tests with the stable parallel default
+pytest
+
+# Run all tests with an explicit worker count
+pytest -n 8
 
 # Run specific test file
 pytest tests/test_weather_client.py -v
@@ -551,7 +554,7 @@ git push origin v0.4.3
 ### Development Performance
 
 - Use `briefcase dev` for fast iteration (no full build)
-- Run tests in parallel: `pytest -n auto`
+- Run tests with the stable parallel default: `pytest`
 - Use `--lf --ff` flags for faster test feedback
 - Cache API responses during development
 
@@ -658,7 +661,7 @@ python -c "import keyring; print(keyring.get_password('accessiweather', 'visual_
 ## Next Steps
 
 1. **Read architecture docs** to understand system design
-2. **Run tests** to verify setup: `pytest -n auto`
+2. **Run tests** to verify setup: `pytest`
 3. **Make a small change** to get familiar with workflow
 4. **Check existing issues** on GitHub for contribution ideas
 5. **Join community** via BeeWare Discord for questions
