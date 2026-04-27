@@ -7,6 +7,15 @@ on:
         description: "Optional build tag, e.g. nightly-20260427"
         required: false
         type: string
+      platform:
+        description: "Platform to build"
+        required: true
+        default: macos
+        type: choice
+        options:
+          - macos
+          - windows
+          - all
 
 permissions:
   contents: read
@@ -17,6 +26,7 @@ env:
 jobs:
   build-windows:
     name: Windows
+    if: ${{ inputs.platform == 'windows' || inputs.platform == 'all' }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6
@@ -48,6 +58,7 @@ jobs:
 
   build-macos:
     name: macOS
+    if: ${{ inputs.platform == 'macos' || inputs.platform == 'all' }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v6
