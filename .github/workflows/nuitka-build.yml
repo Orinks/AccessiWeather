@@ -44,6 +44,7 @@ jobs:
           restore-keys: |
             nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-
             nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-
+          save-always: true
 
       - name: Install dependencies
         run: |
@@ -88,6 +89,7 @@ jobs:
           restore-keys: |
             nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-
             nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-
+          save-always: true
 
       - name: Install ccache
         run: brew install ccache

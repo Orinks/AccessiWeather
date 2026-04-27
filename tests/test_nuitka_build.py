@@ -69,6 +69,7 @@ def test_experimental_nuitka_workflow_uses_binary_wxpython_install() -> None:
     assert "workflow_dispatch:" in workflow
     assert "NUITKA_CACHE_DIR:" in workflow
     assert "actions/cache@v4" in workflow
+    assert "save-always: true" in workflow
     assert "brew install ccache" in workflow
     assert "--only-binary wxPython" in workflow
     assert "build/nuitka/compilation-report.xml" in workflow
@@ -94,8 +95,25 @@ def test_stage_nuitka_distribution_copies_output_to_dist_shape(tmp_path, monkeyp
     assert (staged / "wx").is_dir()
 
 
+def test_stage_nuitka_distribution_copies_macos_app_to_dist_shape(tmp_path, monkeypatch) -> None:
+    build_dir = tmp_path / "build" / "nuitka"
+    nuitka_app = build_dir / "__main__.app"
+    executable = nuitka_app / "Contents" / "MacOS" / "AccessiWeather"
+    executable.parent.mkdir(parents=True)
+    executable.write_bytes(b"fake-app")
+
+    dist_dir = tmp_path / "dist"
+    monkeypatch.setattr(build_nuitka, "BUILD_DIR", build_dir)
+    monkeypatch.setattr(build_nuitka, "DIST_DIR", dist_dir)
+
+    staged = build_nuitka.stage_nuitka_distribution()
+
+    assert staged == dist_dir / "AccessiWeather.app"
+    assert (staged / "Contents" / "MacOS" / "AccessiWeather").read_bytes() == b"fake-app"
+
+
 def test_stage_nuitka_distribution_fails_when_output_missing(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(build_nuitka, "BUILD_DIR", tmp_path / "build" / "nuitka")
 
-    with pytest.raises(FileNotFoundError, match="Nuitka standalone output"):
+    with pytest.raises(FileNotFoundError, match="Nuitka standalone/app output"):
         build_nuitka.stage_nuitka_distribution()

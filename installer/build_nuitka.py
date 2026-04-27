@@ -46,20 +46,25 @@ def write_inno_version_file() -> Path:
     return version_file
 
 
-def _find_nuitka_dist_dir() -> Path:
-    """Find the standalone folder produced by Nuitka."""
+def _find_nuitka_output_dir() -> tuple[Path, str]:
+    """Find the folder produced by Nuitka and return its packaging kind."""
     candidates = sorted(BUILD_DIR.glob("*.dist"))
     for candidate in candidates:
         if (candidate / f"{APP_NAME}.exe").exists() or (candidate / APP_NAME).exists():
-            return candidate
+            return candidate, "dist"
 
-    raise FileNotFoundError(f"Nuitka standalone output was not found under {BUILD_DIR}")
+    app_candidates = sorted(BUILD_DIR.glob("*.app"))
+    for candidate in app_candidates:
+        if (candidate / "Contents" / "MacOS" / APP_NAME).exists():
+            return candidate, "app"
+
+    raise FileNotFoundError(f"Nuitka standalone/app output was not found under {BUILD_DIR}")
 
 
 def stage_nuitka_distribution() -> Path:
     """Copy Nuitka standalone output into the layout expected by Inno and ZIP code."""
-    source_dir = _find_nuitka_dist_dir()
-    target_dir = DIST_DIR / "AccessiWeather_dir"
+    source_dir, output_kind = _find_nuitka_output_dir()
+    target_dir = DIST_DIR / ("AccessiWeather.app" if output_kind == "app" else "AccessiWeather_dir")
     if target_dir.exists():
         shutil.rmtree(target_dir)
     DIST_DIR.mkdir(parents=True, exist_ok=True)
