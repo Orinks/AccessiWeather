@@ -48,7 +48,7 @@ def test_macos_nuitka_command_uses_app_mode() -> None:
     )
 
     assert "--mode=app" in command
-    assert "--macos-create-app-bundle" in command
+    assert "--macos-create-app-bundle" not in command
     assert "--macos-app-name=AccessiWeather" in command
 
 

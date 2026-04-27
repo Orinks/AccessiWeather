@@ -142,7 +142,6 @@ def build_nuitka_command(
         icon = RESOURCES_DIR / "app.icns"
         command.extend(
             [
-                "--macos-create-app-bundle",
                 f"--macos-app-name={APP_NAME}",
                 f"--macos-app-icon={_repo_path(icon)}",
             ]
