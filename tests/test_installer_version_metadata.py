@@ -13,12 +13,10 @@ def test_inno_installer_has_no_stale_version_fallback():
     assert 'ReadIni("..\\dist\\version.txt"' in script
 
 
-def test_build_workflow_writes_installer_version_file_before_compiling():
+def test_build_workflow_uses_nuitka_builder_for_windows_installer_metadata():
     workflow = (ROOT / ".github" / "workflows" / "build.yml").read_text()
-    create_installer_step = workflow.index("- name: Create installer")
-    write_version = workflow.index(
-        "echo value=${{ needs.prepare.outputs.version }}", create_installer_step
-    )
-    compile_installer = workflow.index("ISCC.exe", create_installer_step)
 
-    assert write_version < compile_installer
+    assert "choco install innosetup" in workflow
+    assert "python installer/build_nuitka.py" in workflow
+    assert "dist/AccessiWeather_Setup_*.exe" in workflow
+    assert "echo value=${{ needs.prepare.outputs.version }}" not in workflow

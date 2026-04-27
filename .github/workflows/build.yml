@@ -22,6 +22,7 @@ concurrency:
 
 env:
   PYTHON_VERSION: "3.12"
+  NUITKA_CACHE_DIR: ${{ github.workspace }}/.nuitka-cache
 
 jobs:
   prepare:
@@ -100,27 +101,27 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
 
+      - uses: actions/cache/restore@v4
+        with:
+          path: .nuitka-cache
+          key: nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-${{ github.run_id }}
+          restore-keys: |
+            nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-
+            nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-
+
       - name: Install dependencies
         run: |
-          pip install -e .[dev] pyinstaller pillow
+          pip install --only-binary wxPython wxPython
+          pip install -e .[build]
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
 
       - name: Build
         run: |
           python scripts/generate_build_meta.py ${{ needs.prepare.outputs.is_nightly == 'true' && needs.prepare.outputs.tag || '' }}
           python installer/create_icons.py
-          python -m PyInstaller --clean --noconfirm installer/accessiweather.spec
-
-      - name: Create installer
-        shell: cmd
-        run: |
-          echo [version]> dist\version.txt
-          echo value=${{ needs.prepare.outputs.version }}>> dist\version.txt
-          choco install innosetup -y --no-progress
-          "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe" installer\accessiweather.iss
-
-      - name: Create portable ZIP
-        run: |
-          python installer/build.py --portable-zip-only
+          python installer/build_nuitka.py --tag "${{ needs.prepare.outputs.is_nightly == 'true' && needs.prepare.outputs.tag || '' }}"
 
       - uses: actions/upload-artifact@v7
         with:
@@ -128,6 +129,12 @@ jobs:
           path: |
             dist/AccessiWeather_Setup_*.exe
             dist/AccessiWeather_Portable_*.zip
+
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .nuitka-cache
+          key: nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-${{ github.run_id }}
 
   build-macos:
     name: macOS
