@@ -20,3 +20,14 @@ def test_build_workflow_uses_nuitka_builder_for_windows_installer_metadata():
     assert "python installer/build_nuitka.py" in workflow
     assert "dist/AccessiWeather_Setup_*.exe" in workflow
     assert "echo value=${{ needs.prepare.outputs.version }}" not in workflow
+
+
+def test_build_workflow_uses_nuitka_for_macos_artifacts():
+    workflow = (ROOT / ".github" / "workflows" / "build.yml").read_text()
+
+    assert "NUITKA_CACHE_DIR:" in workflow
+    assert "brew install ccache" in workflow
+    assert "pip install --only-binary wxPython wxPython" in workflow
+    assert "python installer/build_nuitka.py" in workflow
+    assert "dist/AccessiWeather_macOS_*.zip" in workflow
+    assert 'zip -r "AccessiWeather_v${VERSION}_macOS.zip"' not in workflow
