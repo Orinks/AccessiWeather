@@ -71,7 +71,9 @@ def test_experimental_nuitka_workflow_uses_binary_wxpython_install() -> None:
     assert "actions/cache/restore@v4" in workflow
     assert "actions/cache/save@v4" in workflow
     assert "brew install ccache" in workflow
+    assert "choco install innosetup" in workflow
     assert "--only-binary wxPython" in workflow
+    assert "dist/AccessiWeather_Setup_*.exe" in workflow
     assert "build/nuitka/compilation-report.xml" in workflow
     assert "python installer/build_nuitka.py" in workflow
     assert "scripts/generate_build_meta.py" in workflow
@@ -117,3 +119,25 @@ def test_stage_nuitka_distribution_fails_when_output_missing(tmp_path, monkeypat
 
     with pytest.raises(FileNotFoundError, match="Nuitka standalone/app output"):
         build_nuitka.stage_nuitka_distribution()
+
+
+def test_create_windows_installer_delegates_to_shared_installer_builder(
+    tmp_path, monkeypatch
+) -> None:
+    from installer import build
+
+    called = False
+    original_dist_dir = build.DIST_DIR
+
+    def fake_create_windows_installer() -> bool:
+        nonlocal called
+        called = True
+        assert tmp_path == build.DIST_DIR
+        return True
+
+    monkeypatch.setattr(build_nuitka, "DIST_DIR", tmp_path)
+    monkeypatch.setattr(build, "create_windows_installer", fake_create_windows_installer)
+
+    assert build_nuitka.create_windows_installer() is True
+    assert called is True
+    assert original_dist_dir == build.DIST_DIR

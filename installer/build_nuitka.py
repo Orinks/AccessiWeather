@@ -87,6 +87,21 @@ def create_portable_zip() -> bool:
         build.DIST_DIR = original_dist_dir
 
 
+def create_windows_installer() -> bool:
+    """Create the Windows Inno Setup installer from the staged Nuitka folder."""
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+
+    from installer import build
+
+    original_dist_dir = build.DIST_DIR
+    try:
+        build.DIST_DIR = DIST_DIR
+        return build.create_windows_installer()
+    finally:
+        build.DIST_DIR = original_dist_dir
+
+
 def build_nuitka_command(
     *,
     output_dir: Path,
@@ -186,6 +201,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Build AccessiWeather with Nuitka.")
     parser.add_argument("--tag", default=None, help="Build tag, e.g. nightly-20260427.")
     parser.add_argument("--skip-compile", action="store_true", help="Only write version metadata.")
+    parser.add_argument(
+        "--skip-installer",
+        action="store_true",
+        help="Skip creating the Windows Inno Setup installer.",
+    )
     args = parser.parse_args()
 
     print(f"AccessiWeather Nuitka build, version {get_version()}")
@@ -198,6 +218,12 @@ def main() -> int:
     run_command(build_nuitka_command(output_dir=BUILD_DIR, build_tag=args.tag))
     stage_nuitka_distribution()
     if not create_portable_zip():
+        return 1
+    if (
+        platform.system() == "Windows"
+        and not args.skip_installer
+        and not create_windows_installer()
+    ):
         return 1
     return 0
 

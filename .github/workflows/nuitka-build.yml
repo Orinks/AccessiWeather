@@ -50,6 +50,9 @@ jobs:
           pip install --only-binary wxPython wxPython
           pip install -e .[build]
 
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
       - name: Build with Nuitka
         run: |
           python scripts/generate_build_meta.py ${{ inputs.build_tag }}
@@ -63,6 +66,7 @@ jobs:
           if-no-files-found: ignore
           path: |
             dist/AccessiWeather_dir/**
+            dist/AccessiWeather_Setup_*.exe
             dist/AccessiWeather_Portable_*.zip
             build/nuitka/compilation-report.xml
             nuitka-crash-report.xml
