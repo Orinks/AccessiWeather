@@ -22,6 +22,7 @@ permissions:
 
 env:
   PYTHON_VERSION: "3.12"
+  NUITKA_CACHE_DIR: ${{ github.workspace }}/.nuitka-cache
 
 jobs:
   build-windows:
@@ -36,6 +37,14 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
 
+      - uses: actions/cache@v4
+        with:
+          path: .nuitka-cache
+          key: nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-${{ github.run_id }}
+          restore-keys: |
+            nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-
+            nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-
+
       - name: Install dependencies
         run: |
           pip install --only-binary wxPython wxPython
@@ -48,11 +57,15 @@ jobs:
           python installer/build_nuitka.py --tag "${{ inputs.build_tag }}"
 
       - uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: nuitka-windows
+          if-no-files-found: ignore
           path: |
             dist/AccessiWeather_dir/**
             dist/AccessiWeather_Portable_*.zip
+            build/nuitka/compilation-report.xml
+            nuitka-crash-report.xml
             build/nuitka/**/*.exe
             dist/version.txt
 
@@ -68,6 +81,17 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
 
+      - uses: actions/cache@v4
+        with:
+          path: .nuitka-cache
+          key: nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-${{ github.run_id }}
+          restore-keys: |
+            nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-
+            nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-
+
+      - name: Install ccache
+        run: brew install ccache
+
       - name: Install dependencies
         run: |
           pip install --only-binary wxPython wxPython
@@ -80,9 +104,13 @@ jobs:
           python installer/build_nuitka.py --tag "${{ inputs.build_tag }}"
 
       - uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: nuitka-macos
+          if-no-files-found: ignore
           path: |
             dist/AccessiWeather_macOS_*.zip
+            build/nuitka/compilation-report.xml
+            nuitka-crash-report.xml
             build/nuitka/**/*.app/**
             dist/version.txt

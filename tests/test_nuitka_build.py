@@ -31,6 +31,7 @@ def test_windows_nuitka_command_uses_standalone_dir_and_pyproject_version() -> N
     assert "--mode=standalone" in command
     assert "--windows-console-mode=disable" in command
     assert "--output-filename=AccessiWeather" in command
+    assert "--report=dist/compilation-report.xml" in command
     assert "--product-version=0.6.1.0" in command
     assert "--file-version=0.6.1.0" in command
     assert "--include-data-dir=src/accessiweather/resources=accessiweather/resources" in command
@@ -66,7 +67,11 @@ def test_experimental_nuitka_workflow_uses_binary_wxpython_install() -> None:
     )
 
     assert "workflow_dispatch:" in workflow
+    assert "NUITKA_CACHE_DIR:" in workflow
+    assert "actions/cache@v4" in workflow
+    assert "brew install ccache" in workflow
     assert "--only-binary wxPython" in workflow
+    assert "build/nuitka/compilation-report.xml" in workflow
     assert "python installer/build_nuitka.py" in workflow
     assert "scripts/generate_build_meta.py" in workflow
 

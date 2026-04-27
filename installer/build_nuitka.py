@@ -111,6 +111,7 @@ def build_nuitka_command(
         "--include-package-data=playsound3",
         f"--output-dir={output_dir.as_posix()}",
         f"--output-filename={APP_NAME}",
+        f"--report={(output_dir / 'compilation-report.xml').as_posix()}",
         f"--product-name={APP_NAME}",
         f"--file-description={APP_NAME}",
         f"--product-version={numeric_version}",
