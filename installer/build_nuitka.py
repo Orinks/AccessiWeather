@@ -109,7 +109,6 @@ def build_nuitka_command(
         "--include-package-data=tzdata",
         "--include-package-data=toasted",
         "--include-package-data=playsound3",
-        f"--include-data-dir={_repo_path(RESOURCES_DIR)}=accessiweather/resources",
         f"--output-dir={output_dir.as_posix()}",
         f"--output-filename={APP_NAME}",
         f"--product-name={APP_NAME}",
@@ -123,6 +122,12 @@ def build_nuitka_command(
         command.insert(
             -1,
             f"--include-data-dir={_repo_path(SOUNDPACKS_DIR / 'default')}=soundpacks/default",
+        )
+
+    if system != "Darwin":
+        command.insert(
+            -1,
+            f"--include-data-dir={_repo_path(RESOURCES_DIR)}=accessiweather/resources",
         )
 
     if build_tag:

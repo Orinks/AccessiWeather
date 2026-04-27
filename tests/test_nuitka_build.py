@@ -33,6 +33,7 @@ def test_windows_nuitka_command_uses_standalone_dir_and_pyproject_version() -> N
     assert "--output-filename=AccessiWeather" in command
     assert "--product-version=0.6.1.0" in command
     assert "--file-version=0.6.1.0" in command
+    assert "--include-data-dir=src/accessiweather/resources=accessiweather/resources" in command
     assert "--include-data-dir=soundpacks/default=soundpacks/default" in command
     assert "--include-package-data=tzdata" in command
     assert "--include-package=accessiweather" in command
@@ -50,6 +51,7 @@ def test_macos_nuitka_command_uses_app_mode() -> None:
     assert "--mode=app" in command
     assert "--macos-create-app-bundle" not in command
     assert "--macos-app-name=AccessiWeather" in command
+    assert "--include-data-dir=src/accessiweather/resources=accessiweather/resources" not in command
 
 
 def test_nuitka_is_available_as_build_extra() -> None:
