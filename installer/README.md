@@ -1,18 +1,18 @@
 # AccessiWeather Build System
 
-This directory contains the build system for creating AccessiWeather installers using PyInstaller.
+This directory contains the build system for creating AccessiWeather installers using Nuitka.
 
 ## Quick Start
 
 ```bash
 # Install build dependencies
-pip install pyinstaller pillow
+pip install nuitka pillow
 
 # Generate icons (optional - will be auto-generated if missing)
 python installer/create_icons.py
 
-# Full build (app + installer + portable ZIP)
-python installer/build.py
+# Full Nuitka build (app + installer/portable ZIP where supported)
+python installer/build_nuitka.py
 
 # Build app only (no installer)
 python installer/build.py --skip-installer
@@ -22,9 +22,10 @@ python installer/build.py --skip-installer
 
 | Script | Purpose |
 |--------|--------|
-| `build.py` | Main build script - handles everything |
+| `build_nuitka.py` | Production build script used by CI |
+| `build.py` | Legacy PyInstaller build script and shared packaging helpers |
 | `create_icons.py` | Generates weather-themed app icons |
-| `accessiweather.spec` | PyInstaller configuration |
+| `accessiweather.spec` | Legacy PyInstaller configuration |
 | `accessiweather.iss` | Inno Setup script (Windows installer) |
 
 ## Build Outputs
@@ -34,17 +35,17 @@ All outputs are placed in the `dist/` directory:
 ### Windows
 - `AccessiWeather_Setup_vX.X.X.exe` - Inno Setup installer (MSI alternative)
 - `AccessiWeather_Portable_vX.X.X.zip` - Portable version (no install needed)
-- `AccessiWeather.exe` - Single-file executable
+- `AccessiWeather_dir/` - Staged application directory
 
 ### macOS
-- `AccessiWeather_vX.X.X.dmg` - macOS disk image
+- `AccessiWeather_macOS_vX.X.X.zip` - macOS app ZIP
 - `AccessiWeather.app` - Application bundle
 
 ## Requirements
 
 ### All Platforms
 - Python 3.10+
-- PyInstaller (`pip install pyinstaller`)
+- Nuitka (`pip install nuitka`)
 - Pillow for icon generation (`pip install pillow`)
 
 ### Windows (for installer)
@@ -57,14 +58,14 @@ All outputs are placed in the `dist/` directory:
 ## Build Options
 
 ```bash
-# Show all options
-python installer/build.py --help
+# Show all Nuitka build options
+python installer/build_nuitka.py --help
 
 # Generate icons only
 python installer/build.py --icons-only
 
-# Build without creating installer
-python installer/build.py --skip-installer
+# Build without creating the Windows installer
+python installer/build_nuitka.py --skip-installer
 
 # Build without generating icons (use existing)
 python installer/build.py --skip-icons
@@ -109,11 +110,11 @@ To modify installer behavior, edit `accessiweather.iss`.
 
 ## Troubleshooting
 
-### PyInstaller Issues
+### Nuitka Issues
 
-1. **Missing modules**: Add to `hiddenimports` in `accessiweather.spec`
-2. **Large file size**: Add unused packages to `excludes`
-3. **Runtime errors**: Check `--debug` build output
+1. **Missing modules**: Add targeted Nuitka include options in `build_nuitka.py`
+2. **Large file size**: Check `build/nuitka/compilation-report.xml`
+3. **Runtime errors**: Rebuild with Nuitka report output and inspect included modules
 
 ### Icon Generation
 
@@ -127,7 +128,7 @@ To modify installer behavior, edit `accessiweather.iss`.
 
 ## CI/CD
 
-The GitHub Actions workflow `.github/workflows/pyinstaller-build.yml` automates:
+The GitHub Actions workflow `.github/workflows/build.yml` automates:
 
 1. Building on Windows and macOS
 2. Creating installers (Inno Setup / DMG)
@@ -140,9 +141,10 @@ The GitHub Actions workflow `.github/workflows/pyinstaller-build.yml` automates:
 ```
 installer/
 ├── README.md              # This file
-├── build.py               # Main build script
+├── build_nuitka.py        # Production Nuitka build script
+├── build.py               # Legacy build script and shared packaging helpers
 ├── create_icons.py        # Icon generator
-├── accessiweather.spec    # PyInstaller spec
+├── accessiweather.spec    # Legacy PyInstaller spec
 ├── accessiweather.iss     # Inno Setup script
 ├── app.ico                # Generated Windows icon
 ```
