@@ -55,6 +55,7 @@ dev = [
 ]
 build = [
     "pyinstaller>=6.0.0",
+    "nuitka>=4.0.8",
     "pillow>=10.0.0",
 ]
 [project.scripts]
