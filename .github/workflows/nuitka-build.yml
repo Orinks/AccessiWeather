@@ -37,14 +37,13 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
 
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         with:
           path: .nuitka-cache
           key: nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-${{ github.run_id }}
           restore-keys: |
             nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-
             nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-
-          save-always: true
 
       - name: Install dependencies
         run: |
@@ -70,6 +69,12 @@ jobs:
             build/nuitka/**/*.exe
             dist/version.txt
 
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .nuitka-cache
+          key: nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-${{ github.run_id }}
+
   build-macos:
     name: macOS
     if: ${{ inputs.platform == 'macos' || inputs.platform == 'all' }}
@@ -82,14 +87,13 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
 
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         with:
           path: .nuitka-cache
           key: nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-${{ github.run_id }}
           restore-keys: |
             nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-
             nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-
-          save-always: true
 
       - name: Install ccache
         run: brew install ccache
@@ -116,3 +120,9 @@ jobs:
             nuitka-crash-report.xml
             build/nuitka/**/*.app/**
             dist/version.txt
+
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .nuitka-cache
+          key: nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-${{ github.run_id }}

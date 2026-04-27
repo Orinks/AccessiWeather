@@ -68,8 +68,8 @@ def test_experimental_nuitka_workflow_uses_binary_wxpython_install() -> None:
 
     assert "workflow_dispatch:" in workflow
     assert "NUITKA_CACHE_DIR:" in workflow
-    assert "actions/cache@v4" in workflow
-    assert "save-always: true" in workflow
+    assert "actions/cache/restore@v4" in workflow
+    assert "actions/cache/save@v4" in workflow
     assert "brew install ccache" in workflow
     assert "--only-binary wxPython" in workflow
     assert "build/nuitka/compilation-report.xml" in workflow
