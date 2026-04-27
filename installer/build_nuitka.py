@@ -132,17 +132,21 @@ def build_nuitka_command(
 
     if system == "Windows":
         icon = RESOURCES_DIR / "app.ico"
-        command.extend([
-            "--windows-console-mode=disable",
-            f"--windows-icon-from-ico={_repo_path(icon)}",
-        ])
+        command.extend(
+            [
+                "--windows-console-mode=disable",
+                f"--windows-icon-from-ico={_repo_path(icon)}",
+            ]
+        )
     elif system == "Darwin":
         icon = RESOURCES_DIR / "app.icns"
-        command.extend([
-            "--macos-create-app-bundle",
-            f"--macos-app-name={APP_NAME}",
-            f"--macos-app-icon={_repo_path(icon)}",
-        ])
+        command.extend(
+            [
+                "--macos-create-app-bundle",
+                f"--macos-app-name={APP_NAME}",
+                f"--macos-app-icon={_repo_path(icon)}",
+            ]
+        )
 
     return command
 
