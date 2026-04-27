@@ -22,7 +22,7 @@ def service(tmp_path):
 
 @pytest.mark.asyncio
 async def test_check_uses_build_tag_when_present(service):
-    """When _build_info.BUILD_TAG is set, it should be used as current_version."""
+    """When _build_meta.BUILD_TAG is set, it should be used as current_version."""
     nightly_release = {
         "tag_name": "nightly-20260210",
         "prerelease": True,
@@ -38,8 +38,8 @@ async def test_check_uses_build_tag_when_present(service):
     }
 
     with mock.patch.object(service, "_get_releases", return_value=[nightly_release]):
-        build_info_mod = mock.MagicMock(BUILD_TAG="nightly-20260209")
-        with mock.patch.dict("sys.modules", {"accessiweather._build_info": build_info_mod}):
+        build_meta_mod = mock.MagicMock(BUILD_TAG="nightly-20260209")
+        with mock.patch.dict("sys.modules", {"accessiweather._build_meta": build_meta_mod}):
             service.settings.channel = "dev"
             result = await service.check_for_updates()
             # Should find nightly-20260210 as newer than nightly-20260209
@@ -65,8 +65,8 @@ async def test_check_no_update_when_build_tag_matches(service):
     }
 
     with mock.patch.object(service, "_get_releases", return_value=[nightly_release]):
-        build_info_mod = mock.MagicMock(BUILD_TAG="nightly-20260209")
-        with mock.patch.dict("sys.modules", {"accessiweather._build_info": build_info_mod}):
+        build_meta_mod = mock.MagicMock(BUILD_TAG="nightly-20260209")
+        with mock.patch.dict("sys.modules", {"accessiweather._build_meta": build_meta_mod}):
             service.settings.channel = "dev"
             result = await service.check_for_updates()
             # Same nightly date, no update
@@ -74,8 +74,40 @@ async def test_check_no_update_when_build_tag_matches(service):
 
 
 @pytest.mark.asyncio
+async def test_check_uses_legacy_build_info_when_build_meta_missing(service):
+    """Older builds with only _build_info.BUILD_TAG still compare nightly dates."""
+    nightly_release = {
+        "tag_name": "nightly-20260210",
+        "prerelease": True,
+        "body": "",
+        "published_at": "2026-02-10T00:00:00Z",
+        "assets": [
+            {
+                "name": "test.zip",
+                "browser_download_url": "https://example.com/test.zip",
+                "size": 100,
+            }
+        ],
+    }
+
+    with mock.patch.object(service, "_get_releases", return_value=[nightly_release]):
+        build_info_mod = mock.MagicMock(BUILD_TAG="nightly-20260209")
+        with mock.patch.dict(
+            "sys.modules",
+            {
+                "accessiweather._build_meta": None,
+                "accessiweather._build_info": build_info_mod,
+            },
+        ):
+            service.settings.channel = "dev"
+            result = await service.check_for_updates()
+            assert result is not None
+            assert result.version == "nightly-20260210"
+
+
+@pytest.mark.asyncio
 async def test_check_falls_back_to_version_when_no_build_tag(service):
-    """When _build_info doesn't exist, should fall back to __version__."""
+    """When build metadata doesn't exist, should fall back to __version__."""
     stable_release = {
         "tag_name": "v99.0.0",
         "prerelease": False,
@@ -92,8 +124,11 @@ async def test_check_falls_back_to_version_when_no_build_tag(service):
 
     with (
         mock.patch.object(service, "_get_releases", return_value=[stable_release]),
-        # Make _build_info import fail
-        mock.patch.dict("sys.modules", {"accessiweather._build_info": None}),
+        # Make build metadata imports fail.
+        mock.patch.dict(
+            "sys.modules",
+            {"accessiweather._build_meta": None, "accessiweather._build_info": None},
+        ),
     ):
         service.settings.channel = "stable"
         result = await service.check_for_updates()
