@@ -6,6 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -61,3 +63,17 @@ print(json.dumps({
     )
 
     assert result == {"has_app": False, "version_type": "str"}
+
+
+def test_legacy_top_level_export_getattr_loads_lazily() -> None:
+    import accessiweather
+    from accessiweather.utils import TemperatureUnit
+
+    assert accessiweather.TemperatureUnit is TemperatureUnit
+
+
+def test_unknown_top_level_export_raises_attribute_error() -> None:
+    import accessiweather
+
+    with pytest.raises(AttributeError):
+        accessiweather.__getattr__("missing_export")
