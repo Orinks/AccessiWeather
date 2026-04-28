@@ -12,6 +12,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from .runtime_env import is_compiled_runtime
+
 
 def is_forced_portable_mode() -> bool:
     """Return True when portable mode is forced via environment override."""
@@ -27,7 +29,7 @@ def detect_portable_mode() -> bool:
     if is_forced_portable_mode():
         return True
 
-    if not getattr(sys, "frozen", False):
+    if not is_compiled_runtime():
         return False
 
     exe_dir = Path(sys.executable).parent
@@ -65,7 +67,7 @@ class Paths:
 
         # Portable mode override for frozen builds:
         # if explicit marker exists (or forced), keep all app data beside the exe.
-        if getattr(sys, "frozen", False) and detect_portable_mode():
+        if is_compiled_runtime() and detect_portable_mode():
             self._base_path = Path(sys.executable).parent
             return self._base_path
 
@@ -92,7 +94,7 @@ class Paths:
     @property
     def app(self) -> Path:
         """The path to the application installation directory."""
-        if getattr(sys, "frozen", False):
+        if is_compiled_runtime():
             # Running as compiled executable
             return Path(sys.executable).parent
         # Running as script
@@ -183,7 +185,7 @@ def resolve_runtime_storage(
         )
 
     if portable_mode:
-        app_dir = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path.cwd()
+        app_dir = Path(sys.executable).parent if is_compiled_runtime() else Path.cwd()
         return RuntimeStoragePaths(config_root=app_dir / "config", portable_mode=True)
 
     return RuntimeStoragePaths(config_root=Path(app_paths.config))

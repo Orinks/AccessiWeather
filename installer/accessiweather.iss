@@ -3,17 +3,24 @@
 ;
 ; Requirements:
 ;   - Inno Setup 6.0 or later (https://jrsoftware.org/isinfo.php)
-;   - PyInstaller build output in dist/AccessiWeather_dir/
+;   - Nuitka build output in dist/AccessiWeather_dir/
 ;
 ; Build:
 ;   iscc installer/accessiweather.iss
 
 #define MyAppName "AccessiWeather"
-; Version is read from dist/version.txt (written by CI from pyproject.toml)
-; Falls back to hardcoded default for local builds
-#define MyAppVersion "0.4.4"
-#ifexist "..\dist\version.txt"
-  #define MyAppVersion ReadIni("..\dist\version.txt", "version", "value", "0.4.4")
+; Version is read from dist/version.txt (written by CI/build.py from pyproject.toml)
+; Fail the build if it is missing so installers never ship with stale metadata.
+#ifndef MyAppVersion
+  #ifexist "..\dist\version.txt"
+    #define MyAppVersion ReadIni("..\dist\version.txt", "version", "value", "")
+  #else
+    #ifexist "dist\version.txt"
+      #define MyAppVersion ReadIni("dist\version.txt", "version", "value", "")
+    #else
+      #error Missing dist/version.txt; run installer/build.py or write the CI version file before compiling the installer.
+    #endif
+  #endif
 #endif
 #define MyAppPublisher "Orinks"
 #define MyAppURL "https://github.com/Orinks/AccessiWeather"
@@ -78,7 +85,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-; Main application files from PyInstaller directory output
+; Main application files from Nuitka directory output
 Source: "..\dist\AccessiWeather_dir\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; Fallback: if single-file exe exists, use that

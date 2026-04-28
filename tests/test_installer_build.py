@@ -44,7 +44,7 @@ def test_create_portable_zip_from_single_exe_includes_default_soundpack(
 def test_create_portable_zip_from_dir_distribution_uses_staged_bundled_soundpack(
     tmp_path, monkeypatch
 ) -> None:
-    """Portable ZIPs should reuse the sound pack already staged by PyInstaller."""
+    """Portable ZIPs should reuse the sound pack already staged by the app builder."""
     dist_dir = tmp_path / "dist"
     source_dir = dist_dir / "AccessiWeather_dir"
     bundled_default = source_dir / "soundpacks" / "default"

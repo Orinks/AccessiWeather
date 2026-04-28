@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Nightly builds now report the dev package version consistently instead of using stale generated build metadata.
+
 ## [0.6.0] - 2026-04-24
 
 ### Added

@@ -153,9 +153,12 @@ class GitHubUpdateService:
             # current version so the updater correctly compares nightly dates
             # instead of comparing against the pyproject.toml semver.
             try:
-                from ..._build_info import BUILD_TAG
+                from ..._build_meta import BUILD_TAG
             except Exception:  # noqa: BLE001
-                BUILD_TAG = None
+                try:
+                    from ..._build_info import BUILD_TAG
+                except Exception:  # noqa: BLE001
+                    BUILD_TAG = None
 
             if BUILD_TAG:
                 current_version = BUILD_TAG

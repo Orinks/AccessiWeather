@@ -15,6 +15,7 @@ from accessiweather.paths import (
     resolve_default_runtime_storage,
     resolve_runtime_storage,
 )
+from accessiweather.runtime_env import is_compiled_runtime
 
 
 class TestPathsInit:
@@ -173,6 +174,29 @@ class TestPortableDetection:
     def test_force_portable_env_var(self):
         with patch.dict(os.environ, {"ACCESSIWEATHER_FORCE_PORTABLE": "1"}):
             assert detect_portable_mode() is True
+
+    def test_nuitka_compiled_runtime_detects_portable_marker(self, tmp_path):
+        exe_path = str(tmp_path / "app.exe")
+        (tmp_path / ".portable").write_text("1")
+        main_module = sys.modules["__main__"]
+        original_compiled = getattr(main_module, "__compiled__", None)
+
+        try:
+            if hasattr(main_module, "__compiled__"):
+                delattr(main_module, "__compiled__")
+            main_module.__compiled__ = True
+            with (
+                patch.object(sys, "frozen", False, create=True),
+                patch.object(sys, "executable", exe_path),
+                patch.dict(os.environ, {"ACCESSIWEATHER_FORCE_PORTABLE": ""}, clear=False),
+            ):
+                assert is_compiled_runtime() is True
+                assert detect_portable_mode() is True
+        finally:
+            if original_compiled is None:
+                delattr(main_module, "__compiled__")
+            else:
+                main_module.__compiled__ = original_compiled
 
     def test_frozen_portable_marker_file_is_portable(self, tmp_path):
         exe_path = str(tmp_path / "app.exe")

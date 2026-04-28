@@ -96,6 +96,22 @@ class TestNwsHighLowPairing:
             == "Sunny, with a high near 34. Northwest wind 10 mph."
         )
 
+    def test_probability_of_precipitation_preserved(self):
+        """NWS probabilityOfPrecipitation.value is mapped to the forecast period."""
+        data = _wrap(
+            [
+                {
+                    **_make_period("Today", 34, is_daytime=True),
+                    "probabilityOfPrecipitation": {
+                        "unitCode": "wmoUnit:percent",
+                        "value": 52,
+                    },
+                }
+            ]
+        )
+        forecast = parse_nws_forecast(data)
+        assert forecast.periods[0].precipitation_probability == 52
+
     def test_empty_periods(self):
         forecast = parse_nws_forecast({"properties": {"periods": []}})
         assert len(forecast.periods) == 0
@@ -125,6 +141,10 @@ def _hourly_payload(start_time: str = "2026-04-26T10:00:00-04:00"):
                     "shortForecast": "Cloudy",
                     "windSpeed": "5 mph",
                     "windDirection": "N",
+                    "probabilityOfPrecipitation": {
+                        "unitCode": "wmoUnit:percent",
+                        "value": 14,
+                    },
                 }
             ]
         }
@@ -132,6 +152,11 @@ def _hourly_payload(start_time: str = "2026-04-26T10:00:00-04:00"):
 
 
 class TestNwsHourlyPressure:
+    def test_probability_of_precipitation_preserved(self):
+        """NWS hourly probabilityOfPrecipitation.value is mapped to the hourly period."""
+        hourly = parse_nws_hourly_forecast(_hourly_payload())
+        assert hourly.periods[0].precipitation_probability == 14
+
     @pytest.mark.asyncio
     async def test_get_nws_hourly_forecast_applies_gridpoint_pressure(self):
         location = Location(name="Test", latitude=40.0, longitude=-74.0)
