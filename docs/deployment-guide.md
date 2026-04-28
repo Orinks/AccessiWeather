@@ -369,8 +369,7 @@ git push origin v0.4.3
 #### 7. Update Website
 
 ```bash
-# update-wordpress.yml updates the existing WordPress page on release publish
-# update-pages.yml still refreshes the GitHub Pages mirror
+# update-pages.yml refreshes the GitHub Pages mirror after release publication
 ```
 
 ---
