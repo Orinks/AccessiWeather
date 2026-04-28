@@ -58,6 +58,23 @@ class TestSystemTrayIconPaths:
         assert len(paths) >= 2
         assert all(isinstance(p, Path) for p in paths)
 
+    def test_get_icon_paths_uses_executable_parent_when_nuitka_compiled(
+        self, monkeypatch, tmp_path
+    ):
+        """Nuitka builds should look for tray icons beside the executable."""
+        from accessiweather.ui import system_tray
+
+        tray = system_tray.SystemTrayIcon.__new__(system_tray.SystemTrayIcon)
+        exe_path = tmp_path / "AccessiWeather.exe"
+
+        monkeypatch.setattr(system_tray, "is_compiled_runtime", lambda: True)
+        monkeypatch.setattr(system_tray.sys, "executable", str(exe_path))
+
+        assert tray._get_icon_paths() == [
+            tmp_path / "app.ico",
+            tmp_path / "resources" / "app.ico",
+        ]
+
 
 class TestShowMainWindow:
     """Tests for show_main_window functionality."""

@@ -90,6 +90,14 @@ def test_resolve_notification_launch_command_prefers_frozen_executable(monkeypat
     assert _resolve_notification_launch_command() == [str(exe_path.resolve())]
 
 
+def test_resolve_notification_launch_command_prefers_nuitka_executable(monkeypatch, tmp_path):
+    exe_path = tmp_path / "AccessiWeather.exe"
+    monkeypatch.setattr("accessiweather.windows_toast_identity.is_compiled_runtime", lambda: True)
+    monkeypatch.setattr("accessiweather.windows_toast_identity.sys.executable", str(exe_path))
+
+    assert _resolve_notification_launch_command() == [str(exe_path.resolve())]
+
+
 def test_resolve_notification_launch_command_prefers_module_launch(monkeypatch, tmp_path):
     monkeypatch.delattr(sys, "frozen", raising=False)
     monkeypatch.setattr(

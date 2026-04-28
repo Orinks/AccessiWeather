@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any
 
 from .constants import WINDOWS_APP_USER_MODEL_ID
+from .runtime_env import is_compiled_runtime
 
 logger = logging.getLogger(__name__)
 
@@ -192,7 +193,7 @@ def set_windows_app_user_model_id(app_id: str = WINDOWS_APP_USER_MODEL_ID) -> No
 
 def _resolve_notification_launch_command() -> list[str]:
     """Return the command used to relaunch the current app for protocol activation."""
-    if getattr(sys, "frozen", False):
+    if is_compiled_runtime():
         return [str(Path(sys.executable).resolve())]
 
     executable = (

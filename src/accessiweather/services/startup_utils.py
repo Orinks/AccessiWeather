@@ -12,6 +12,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from ..runtime_env import is_compiled_runtime
 from .platform_detector import PlatformDetector
 
 logger = logging.getLogger(__name__)
@@ -81,7 +82,7 @@ class StartupManager:
         candidate = platform_info.app_directory.name
         if candidate:
             return candidate
-        if getattr(sys, "frozen", False):
+        if is_compiled_runtime():
             executable = self._get_app_executable()
             return executable.stem or "AccessiWeather"
         if sys.argv and sys.argv[0]:
@@ -92,7 +93,7 @@ class StartupManager:
         return executable.stem or "AccessiWeather"
 
     def _get_app_executable(self) -> Path:
-        if getattr(sys, "frozen", False):
+        if is_compiled_runtime():
             return Path(sys.executable).resolve()
         if sys.executable:
             return Path(sys.executable).resolve()
@@ -101,7 +102,7 @@ class StartupManager:
         return Path.cwd()
 
     def _get_launch_command(self) -> tuple[Path, list[str]]:
-        if getattr(sys, "frozen", False):
+        if is_compiled_runtime():
             executable = self._get_app_executable()
             return executable, []
 
@@ -282,7 +283,7 @@ class StartupManager:
         try:
             plist_path = self._get_macos_plist_path()
             executable, args = self._get_launch_command()
-            if not getattr(sys, "frozen", False) and sys.argv and sys.argv[0]:
+            if not is_compiled_runtime() and sys.argv and sys.argv[0]:
                 working_directory = str(Path(sys.argv[0]).resolve().parent)
             else:
                 working_directory = str(self._get_app_executable().parent)

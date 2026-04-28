@@ -6,6 +6,7 @@ from collections.abc import Collection
 from pathlib import Path
 from typing import Any
 
+from ..runtime_env import is_compiled_runtime
 from ..sound_events import normalize_muted_sound_events
 from ..soundpack_paths import get_soundpacks_dir
 
@@ -51,10 +52,10 @@ def _log_packaging_sound_diagnostics() -> None:
     """Emit debug-only sound dependency/path diagnostics for packaged troubleshooting."""
     logger.debug(
         "[packaging-diag] sound deps: sound_lib_available=%s playsound_available=%s "
-        "frozen=%s meipass=%s soundpacks_dir=%s exists=%s",
+        "compiled=%s meipass=%s soundpacks_dir=%s exists=%s",
         SOUND_LIB_AVAILABLE,
         PLAYSOUND_AVAILABLE,
-        getattr(sys, "frozen", False),
+        is_compiled_runtime(),
         getattr(sys, "_MEIPASS", None),
         SOUNDPACKS_DIR,
         SOUNDPACKS_DIR.exists(),

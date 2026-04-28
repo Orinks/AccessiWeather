@@ -16,6 +16,8 @@ from typing import TYPE_CHECKING
 import wx
 import wx.adv
 
+from ..runtime_env import is_compiled_runtime
+
 if TYPE_CHECKING:
     from ..app import AccessiWeatherApp
 
@@ -103,7 +105,7 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
         paths = []
 
         # Get the app resource directory
-        if getattr(sys, "frozen", False):
+        if is_compiled_runtime():
             # Running as compiled executable
             base_path = Path(sys.executable).parent
             paths.append(base_path / "app.ico")

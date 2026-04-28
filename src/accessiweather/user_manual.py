@@ -7,6 +7,8 @@ import sys
 import webbrowser
 from pathlib import Path
 
+from .runtime_env import is_compiled_runtime
+
 logger = logging.getLogger(__name__)
 
 ONLINE_USER_MANUAL_URL = "https://github.com/Orinks/AccessiWeather/blob/main/docs/user_manual.md"
@@ -21,7 +23,7 @@ def _find_project_root(start: Path) -> Path | None:
 
 def get_bundled_user_manual_path() -> Path | None:
     """Return the bundled/local user manual path when available."""
-    if getattr(sys, "frozen", False):
+    if is_compiled_runtime():
         exe_dir = Path(sys.executable).resolve().parent
         meipass_dir = Path(getattr(sys, "_MEIPASS", exe_dir))
         candidates = [

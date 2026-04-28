@@ -38,8 +38,8 @@ def get_soundpacks_dir() -> Path:
         base_path = exe_dir / "data" if is_portable else meipass_dir
         result = base_path / "soundpacks"
         logger.debug(
-            "[packaging-diag] soundpacks_dir resolved (frozen=%s, portable=%s, meipass=%s, executable=%s): %s exists=%s",
-            getattr(sys, "frozen", False),
+            "[packaging-diag] soundpacks_dir resolved (compiled=%s, portable=%s, meipass=%s, executable=%s): %s exists=%s",
+            is_compiled_runtime(),
             is_portable,
             getattr(sys, "_MEIPASS", None),
             getattr(sys, "executable", None),
