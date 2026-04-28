@@ -369,6 +369,7 @@ def create_portable_zip() -> bool:
 
     # Ensure portable marker directory for Windows portable artifacts.
     if IS_WINDOWS:
+        (source_dir / ".portable").write_text("1\n", encoding="utf-8")
         (source_dir / "config").mkdir(exist_ok=True)
         try:
             _stage_default_soundpack_for_portable(source_dir)

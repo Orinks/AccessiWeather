@@ -308,3 +308,31 @@ class TestRuntimeStorageResolution:
         ):
             result = p._get_base_path()
         assert result == tmp_path
+
+    def test_frozen_with_installer_uninstaller_ignores_legacy_config_marker(self, tmp_path):
+        exe = tmp_path / "AccessiWeather.exe"
+        exe.write_text("x")
+        (tmp_path / "config").mkdir()
+        (tmp_path / "unins000.exe").write_text("x")
+
+        with (
+            patch.object(sys, "frozen", True, create=True),
+            patch.object(sys, "executable", str(exe)),
+            patch.dict("os.environ", {"LOCALAPPDATA": str(tmp_path / "local")}, clear=True),
+            patch.object(sys, "platform", "win32"),
+        ):
+            assert detect_portable_mode() is False
+
+    def test_frozen_with_portable_marker_wins_over_installer_artifacts(self, tmp_path):
+        exe = tmp_path / "AccessiWeather.exe"
+        exe.write_text("x")
+        (tmp_path / ".portable").write_text("1")
+        (tmp_path / "unins000.exe").write_text("x")
+
+        with (
+            patch.object(sys, "frozen", True, create=True),
+            patch.object(sys, "executable", str(exe)),
+            patch.dict("os.environ", {}, clear=True),
+            patch.object(sys, "platform", "win32"),
+        ):
+            assert detect_portable_mode() is True

@@ -37,6 +37,7 @@ def test_create_portable_zip_from_single_exe_includes_default_soundpack(
         names = set(archive.namelist())
 
     assert "AccessiWeather_portable/AccessiWeather.exe" in names
+    assert "AccessiWeather_portable/.portable" in names
     assert "AccessiWeather_portable/data/soundpacks/default/pack.json" in names
     assert "AccessiWeather_portable/data/soundpacks/default/startup.wav" in names
 
@@ -69,6 +70,7 @@ def test_create_portable_zip_from_dir_distribution_uses_staged_bundled_soundpack
 
     assert "AccessiWeather_dir/data/soundpacks/default/pack.json" in names
     assert "AccessiWeather_dir/data/soundpacks/default/startup.wav" in names
+    assert "AccessiWeather_dir/.portable" in names
 
 
 def test_create_portable_zip_fails_when_default_soundpack_manifest_missing(
