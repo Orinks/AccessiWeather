@@ -218,13 +218,13 @@ def main() -> int:
     ensure_nuitka_available()
     run_command(build_nuitka_command(output_dir=BUILD_DIR, build_tag=args.tag))
     stage_nuitka_distribution()
-    if not create_portable_zip():
-        return 1
     if (
         platform.system() == "Windows"
         and not args.skip_installer
         and not create_windows_installer()
     ):
+        return 1
+    if not create_portable_zip():
         return 1
     return 0
 

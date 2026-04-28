@@ -33,7 +33,16 @@ def detect_portable_mode() -> bool:
         return False
 
     exe_dir = Path(sys.executable).parent
-    return (exe_dir / ".portable").exists() or (exe_dir / "config").is_dir()
+    if (exe_dir / ".portable").exists():
+        return True
+
+    # Legacy portable zips used an exe-adjacent config directory as the only
+    # marker. Installed builds also have Inno uninstall files, so treat those
+    # as installed even if a broken build left config beside the executable.
+    if any(exe_dir.glob("unins*.exe")) or any(exe_dir.glob("unins*.dat")):
+        return False
+
+    return (exe_dir / "config").is_dir()
 
 
 class Paths:

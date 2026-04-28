@@ -75,8 +75,8 @@ def test_production_build_workflow_uses_nuitka() -> None:
     )
 
     assert "NUITKA_CACHE_DIR:" in workflow
-    assert "actions/cache/restore@v4" in workflow
-    assert "actions/cache/save@v4" in workflow
+    assert "actions/cache/restore@v5" in workflow
+    assert "actions/cache/save@v5" in workflow
     assert "brew install ccache" in workflow
     assert "choco install innosetup" in workflow
     assert "--only-binary wxPython" in workflow
@@ -169,3 +169,28 @@ def test_create_windows_installer_delegates_to_shared_installer_builder(
     assert build_nuitka.create_windows_installer() is True
     assert called is True
     assert original_dist_dir == build.DIST_DIR
+
+
+def test_nuitka_windows_main_builds_installer_before_portable_zip(monkeypatch) -> None:
+    calls: list[str] = []
+
+    monkeypatch.setattr(build_nuitka, "write_inno_version_file", lambda: Path("version.txt"))
+    monkeypatch.setattr(build_nuitka, "ensure_nuitka_available", lambda: None)
+    monkeypatch.setattr(build_nuitka, "build_nuitka_command", lambda **_: ["nuitka"])
+    monkeypatch.setattr(build_nuitka, "run_command", lambda _command: calls.append("compile"))
+    monkeypatch.setattr(build_nuitka, "stage_nuitka_distribution", lambda: calls.append("stage"))
+    monkeypatch.setattr(build_nuitka.platform, "system", lambda: "Windows")
+    monkeypatch.setattr(
+        build_nuitka,
+        "create_windows_installer",
+        lambda: calls.append("installer") or True,
+    )
+    monkeypatch.setattr(
+        build_nuitka,
+        "create_portable_zip",
+        lambda: calls.append("portable") or True,
+    )
+    monkeypatch.setattr(build_nuitka.sys, "argv", ["build_nuitka.py"])
+
+    assert build_nuitka.main() == 0
+    assert calls == ["compile", "stage", "installer", "portable"]
