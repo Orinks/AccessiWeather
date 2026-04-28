@@ -5,9 +5,14 @@ import os
 import sys
 from pathlib import Path
 
+import pytest
+
 
 def load_module():
     script_path = Path(__file__).resolve().parents[1] / ".github" / "scripts" / "push_releases.py"
+    if not script_path.exists():
+        pytest.skip("WordPress release push script is not present in this checkout")
+
     spec = importlib.util.spec_from_file_location("push_releases", script_path)
     module = importlib.util.module_from_spec(spec)
 
