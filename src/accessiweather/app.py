@@ -22,6 +22,7 @@ from . import app_timer_manager
 from .models import WeatherData
 from .notification_activation import NotificationActivationRequest
 from .paths import Paths, RuntimeStoragePaths, detect_portable_mode, resolve_runtime_storage
+from .runtime_env import is_compiled_runtime
 from .single_instance import SingleInstanceManager
 
 if TYPE_CHECKING:
@@ -1066,8 +1067,8 @@ class AccessiWeatherApp(wx.App):
     def _check_for_updates_on_startup(self) -> None:
         """Check for updates on startup if enabled in settings."""
         try:
-            # Skip update checks when running from source (not a frozen PyInstaller build)
-            if not getattr(sys, "frozen", False):
+            # Skip update checks when running from source.
+            if not is_compiled_runtime():
                 logger.debug("Running from source, skipping update check")
                 return
 

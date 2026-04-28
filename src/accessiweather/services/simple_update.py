@@ -19,6 +19,7 @@ from typing import Any
 import httpx
 from packaging.version import InvalidVersion, Version
 
+from ..runtime_env import is_compiled_runtime
 from .update_service.settings import DEFAULT_OWNER, DEFAULT_REPO
 
 # Type alias for progress callbacks: (bytes_downloaded, total_bytes) -> None
@@ -48,7 +49,7 @@ def is_installed_version() -> bool:
         True if exe is in Program Files, False otherwise (portable or dev).
 
     """
-    if not getattr(sys, "frozen", False):
+    if not is_compiled_runtime():
         return False
     exe_path = sys.executable
     program_files = os.environ.get("PROGRAMFILES", r"C:\Program Files")

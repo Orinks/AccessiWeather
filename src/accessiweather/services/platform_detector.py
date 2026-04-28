@@ -11,6 +11,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from ..runtime_env import is_compiled_runtime
+
 logger = logging.getLogger(__name__)
 
 
@@ -104,7 +106,7 @@ class PlatformDetector:
 
     def _get_app_directory(self) -> Path:
         """Get the directory where the application is running from."""
-        if getattr(sys, "frozen", False):
+        if is_compiled_runtime():
             # Running as a packaged executable
             if hasattr(sys, "_MEIPASS"):
                 # PyInstaller

@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING
 
 import wx
 
+from ...runtime_env import is_compiled_runtime
+
 if TYPE_CHECKING:
     from ...app import AccessiWeatherApp
 
@@ -997,9 +999,7 @@ class SettingsDialogSimple(wx.Dialog):
 
     def _on_check_updates(self, event):
         """Check for updates using the UpdateService."""
-        import sys
-
-        if not getattr(sys, "frozen", False):
+        if not is_compiled_runtime():
             wx.MessageBox(
                 "Update checking is only available in installed builds.\n"
                 "You're running from source — use git pull to update.",

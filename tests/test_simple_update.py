@@ -164,6 +164,25 @@ def test_is_installed_version_true_in_program_files():
         assert is_installed_version() is True
 
 
+def test_is_installed_version_true_in_nuitka_program_files():
+    main_module = sys.modules["__main__"]
+    original_compiled = getattr(main_module, "__compiled__", None)
+
+    try:
+        main_module.__compiled__ = True
+        with (
+            mock.patch.object(sys, "frozen", False, create=True),
+            mock.patch.object(sys, "executable", r"C:\Program Files\App\app.exe"),
+            mock.patch.dict("os.environ", {"PROGRAMFILES": r"C:\Program Files"}),
+        ):
+            assert is_installed_version() is True
+    finally:
+        if original_compiled is None:
+            delattr(main_module, "__compiled__")
+        else:
+            main_module.__compiled__ = original_compiled
+
+
 def test_is_installed_version_false_for_portable():
     with (
         mock.patch.object(sys, "frozen", True, create=True),

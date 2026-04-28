@@ -15,6 +15,7 @@ import wx
 from wx.lib.sized_controls import SizedFrame, SizedPanel
 
 from ..display.presentation.formatters import get_temperature_precision
+from ..runtime_env import is_compiled_runtime
 from ..screen_reader import ScreenReaderAnnouncer
 from ..units import resolve_temperature_unit_preference
 from ..user_manual import open_user_manual
@@ -831,12 +832,11 @@ class MainWindow(SizedFrame):
     def _on_check_updates(self) -> None:
         """Check for updates from the Help menu."""
         import asyncio
-        import sys
 
         from ..services.simple_update import UpdateService, parse_nightly_date
 
         # Skip update checks when running from source
-        if not getattr(sys, "frozen", False):
+        if not is_compiled_runtime():
             wx.MessageBox(
                 "Update checking is only available in installed builds.\n"
                 "You're running from source — use git pull to update.",
