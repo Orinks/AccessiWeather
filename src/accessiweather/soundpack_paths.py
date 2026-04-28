@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from .paths import detect_portable_mode
+from .runtime_env import is_compiled_runtime
 
 logger = logging.getLogger(__name__)
 
@@ -22,19 +23,18 @@ def get_soundpacks_dir() -> Path:
     """
     Return the base soundpacks directory for dev or packaged builds.
 
-    In frozen builds, portable mode uses the exe directory so users can add
+    In packaged builds, portable mode uses the exe directory so users can add
     their own packs alongside the executable. Installed/onefile builds fall
     back to the PyInstaller extraction dir (sys._MEIPASS).
     """
-    if getattr(sys, "frozen", False):
+    if is_compiled_runtime():
         exe_dir = Path(sys.executable).parent
         meipass_dir = Path(sys._MEIPASS) if hasattr(sys, "_MEIPASS") else exe_dir
 
-        # Portable: soundpacks live next to the exe so users can manage them.
         is_portable = detect_portable_mode()
 
         # Portable: soundpacks live in data/soundpacks/ (app data, not user config).
-        # Installed/onefile: use _MEIPASS where packs are extracted by PyInstaller.
+        # Installed/onefile: use _MEIPASS when present, otherwise the exe directory.
         base_path = exe_dir / "data" if is_portable else meipass_dir
         result = base_path / "soundpacks"
         logger.debug(
