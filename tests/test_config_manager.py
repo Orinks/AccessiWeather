@@ -6,6 +6,7 @@ Tests configuration loading, saving, and location management.
 
 from __future__ import annotations
 
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -41,6 +42,19 @@ class TestConfigManager:
         config_dir = tmp_path / "new_config"
         ConfigManager(mock_app, config_dir=config_dir)
         assert config_dir.exists()
+
+    def test_portable_mode_uses_current_directory_in_source_runtime(
+        self, mock_app, tmp_path, monkeypatch
+    ):
+        """Portable source-runtime config is stored under the current directory."""
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(
+            "accessiweather.config.config_manager.is_compiled_runtime", lambda: False
+        )
+
+        manager = ConfigManager(mock_app, portable_mode=True)
+
+        assert manager.config_dir == Path.cwd() / "config"
 
     def test_load_creates_default_config(self, manager):
         """Test that loading creates default config when none exists."""

@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import TYPE_CHECKING
 
-from .models import Location
 from .utils.temperature_utils import TemperatureUnit
+
+if TYPE_CHECKING:
+    from .models import Location
 
 
 class DisplayUnitSystem(str, Enum):

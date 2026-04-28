@@ -48,12 +48,16 @@ def write_inno_version_file() -> Path:
 
 def _find_nuitka_output_dir() -> tuple[Path, str]:
     """Find the folder produced by Nuitka and return its packaging kind."""
-    candidates = sorted(BUILD_DIR.glob("*.dist"))
+    candidates = sorted(
+        BUILD_DIR.glob("*.dist"), key=lambda path: path.stat().st_mtime, reverse=True
+    )
     for candidate in candidates:
         if (candidate / f"{APP_NAME}.exe").exists() or (candidate / APP_NAME).exists():
             return candidate, "dist"
 
-    app_candidates = sorted(BUILD_DIR.glob("*.app"))
+    app_candidates = sorted(
+        BUILD_DIR.glob("*.app"), key=lambda path: path.stat().st_mtime, reverse=True
+    )
     for candidate in app_candidates:
         if (candidate / "Contents" / "MacOS" / APP_NAME).exists():
             return candidate, "app"
@@ -120,12 +124,9 @@ def build_nuitka_command(
         "nuitka",
         mode,
         "--assume-yes-for-downloads",
-        "--deployment",
-        "--enable-plugin=anti-bloat",
         "--noinclude-pytest-mode=nofollow",
-        "--noinclude-unittest-mode=nofollow",
-        "--include-package=accessiweather",
         "--include-package-data=desktop_notifier",
+        "--include-package-data=prism:_native/*",
         "--include-package-data=tzdata",
         "--include-package-data=toasted",
         "--include-package-data=playsound3",
@@ -136,7 +137,7 @@ def build_nuitka_command(
         f"--file-description={APP_NAME}",
         f"--product-version={numeric_version}",
         f"--file-version={numeric_version}",
-        _repo_path(SRC_DIR / "accessiweather" / "__main__.py"),
+        _repo_path(ROOT / "installer" / "nuitka_entry.py"),
     ]
 
     if (SOUNDPACKS_DIR / "default").exists():
