@@ -11,11 +11,6 @@ from datetime import UTC, datetime, timedelta
 
 import httpx
 
-try:  # pragma: no cover - standard library availability guard
-    from unittest.mock import Mock
-except ImportError:  # pragma: no cover
-    Mock = None
-
 from . import (
     weather_client_enrichment as enrichment,
     weather_client_nws as nws_client,
@@ -57,6 +52,15 @@ MINUTELY_FAST_POLL_INTERVAL = timedelta(minutes=5)
 MINUTELY_RECOMMENDED_MIN_POLL_INTERVAL = timedelta(minutes=15)
 MINUTELY_ADAPTIVE_PRECIP_PROBABILITY_THRESHOLD = 30
 MINUTELY_ADAPTIVE_LOOKAHEAD_HOURS = 6
+
+
+def _is_unittest_mock(value: object) -> bool:
+    """Return whether value is a unittest mock without importing unittest at app startup."""
+    try:
+        from unittest.mock import Mock
+    except ImportError:  # pragma: no cover - standard library availability guard
+        return False
+    return isinstance(value, Mock)
 
 
 class WeatherClient:
@@ -277,7 +281,7 @@ class WeatherClient:
             )
             # Use explicit test mode flag instead of brittle isinstance check
             # The _test_mode flag is set in __init__ based on PYTEST_CURRENT_TEST env var
-            if self._test_mode and Mock is not None and isinstance(client, Mock):
+            if self._test_mode and _is_unittest_mock(client):
                 enter = getattr(client, "__aenter__", None)
                 if enter is not None:
                     entered = getattr(enter, "return_value", None)
@@ -296,7 +300,7 @@ class WeatherClient:
                 continue
 
             # Use explicit test mode flag instead of brittle isinstance check
-            if self._test_mode and Mock is not None and isinstance(current, Mock):
+            if self._test_mode and _is_unittest_mock(current):
                 return True
 
             current_callable = getattr(current, "__func__", current)

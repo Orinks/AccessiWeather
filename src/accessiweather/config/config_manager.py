@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from accessiweather.app import AccessiWeatherApp
 
 from ..paths import RuntimeStoragePaths
+from ..runtime_env import is_compiled_runtime
 from .file_permissions import set_secure_file_permissions
 from .github_config import GitHubConfigOperations
 from .import_export import ImportExportOperations
@@ -62,7 +63,7 @@ class ConfigManager:
             self.config_dir = Path(config_dir)
         elif portable_mode:
             # Portable mode: use directory alongside the executable/app
-            app_dir = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path.cwd()
+            app_dir = Path(sys.executable).parent if is_compiled_runtime() else Path.cwd()
             self.config_dir = app_dir / "config"
         else:
             # Default: use app's standard config path

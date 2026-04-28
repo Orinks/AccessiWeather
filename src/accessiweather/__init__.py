@@ -1,71 +1,26 @@
-"""
-Simple AccessiWeather package.
+"""AccessiWeather package metadata and lazy top-level compatibility exports."""
 
-This package provides a simplified, async-first implementation of AccessiWeather
-using BeeWare/Toga best practices, replacing the complex service layer architecture
-with straightforward, direct API calls and simple data models.
-"""
+from __future__ import annotations
 
-try:
-    from .app import AccessiWeatherApp, main
-except (ImportError, ModuleNotFoundError):
-    # wx may not be available in test/headless environments
-    AccessiWeatherApp = None  # type: ignore[assignment, misc]
-    main = None  # type: ignore[assignment]
-from .config import ConfigManager
-from .display import WeatherPresenter
-from .formatters import WeatherFormatter
-from .location_manager import LocationManager
-from .models import (
-    AppConfig,
-    AppSettings,
-    CurrentConditions,
-    EnvironmentalConditions,
-    Forecast,
-    ForecastPeriod,
-    HourlyForecast,
-    HourlyForecastPeriod,
-    Location,
-    TrendInsight,
-    WeatherAlert,
-    WeatherAlerts,
-    WeatherData,
-)
-from .utils import (
-    TemperatureUnit,
-    convert_wind_direction_to_cardinal,
-    format_pressure,
-    format_temperature,
-    format_wind_speed,
-)
-from .weather_client import WeatherClient
-from .weather_history import (
-    HistoricalWeatherData,
-    WeatherComparison,
-    WeatherHistoryService,
-)
+from typing import Any
 
 
-# Package version: try _version.py (generated for builds), then metadata, then pyproject.toml
 def _get_version() -> str:
     """Get version from available sources."""
-    # 1. Try generated _build_meta.py (works in PyInstaller builds)
     try:
-        from ._build_meta import __version__ as v  # pragma: no cover — build only
+        from ._build_meta import __version__ as version
 
-        return v  # pragma: no cover
+        return version
     except ImportError:
         pass
 
-    # 1b. Legacy: try _version.py for backwards compatibility
     try:
-        from ._version import __version__ as v
+        from ._version import __version__ as version
 
-        return v
+        return version
     except ImportError:
         pass
 
-    # 2. Try importlib.metadata (works when pip-installed)
     try:
         from importlib.metadata import PackageNotFoundError, version
 
@@ -73,19 +28,17 @@ def _get_version() -> str:
     except (ImportError, PackageNotFoundError):
         pass
 
-    # 3. Try reading pyproject.toml (works in dev environment)
     try:
         import tomllib
         from pathlib import Path
 
-        root = Path(__file__).resolve().parents[2]
-        py = root / "pyproject.toml"
-        if py.exists():
-            with py.open("rb") as f:
+        pyproject = Path(__file__).resolve().parents[2] / "pyproject.toml"
+        if pyproject.exists():
+            with pyproject.open("rb") as f:
                 data = tomllib.load(f)
-            v = data.get("project", {}).get("version")
-            if v:
-                return v
+            project_version = data.get("project", {}).get("version")
+            if project_version:
+                return project_version
     except Exception:
         pass
 
@@ -95,38 +48,56 @@ def _get_version() -> str:
 __version__ = _get_version()
 
 
-__all__ = [
-    # Main app
-    "AccessiWeatherApp",
-    "main",
-    # Core components
-    "ConfigManager",
-    "WeatherClient",
-    "LocationManager",
-    "WeatherFormatter",
-    "WeatherPresenter",
-    # Data models
-    "Location",
+_LAZY_EXPORTS: dict[str, tuple[str, str]] = {
+    "AccessiWeatherApp": ("accessiweather.app", "AccessiWeatherApp"),
+    "main": ("accessiweather.app", "main"),
+    "ConfigManager": ("accessiweather.config", "ConfigManager"),
+    "WeatherClient": ("accessiweather.weather_client", "WeatherClient"),
+    "LocationManager": ("accessiweather.location_manager", "LocationManager"),
+    "WeatherFormatter": ("accessiweather.formatters", "WeatherFormatter"),
+    "WeatherPresenter": ("accessiweather.display", "WeatherPresenter"),
+    "TemperatureUnit": ("accessiweather.utils", "TemperatureUnit"),
+    "format_temperature": ("accessiweather.utils", "format_temperature"),
+    "format_wind_speed": ("accessiweather.utils", "format_wind_speed"),
+    "format_pressure": ("accessiweather.utils", "format_pressure"),
+    "convert_wind_direction_to_cardinal": (
+        "accessiweather.utils",
+        "convert_wind_direction_to_cardinal",
+    ),
+    "HistoricalWeatherData": ("accessiweather.weather_history", "HistoricalWeatherData"),
+    "WeatherHistoryService": ("accessiweather.weather_history", "WeatherHistoryService"),
+    "WeatherComparison": ("accessiweather.weather_history", "WeatherComparison"),
+}
+
+for _model_name in (
+    "AppConfig",
+    "AppSettings",
     "CurrentConditions",
-    "ForecastPeriod",
-    "Forecast",
-    "HourlyForecastPeriod",
-    "HourlyForecast",
     "EnvironmentalConditions",
+    "Forecast",
+    "ForecastPeriod",
+    "HourlyForecast",
+    "HourlyForecastPeriod",
+    "Location",
     "TrendInsight",
     "WeatherAlert",
     "WeatherAlerts",
     "WeatherData",
-    "AppSettings",
-    "AppConfig",
-    # Weather History
-    "HistoricalWeatherData",
-    "WeatherHistoryService",
-    "WeatherComparison",
-    # Utilities
-    "TemperatureUnit",
-    "format_temperature",
-    "format_wind_speed",
-    "format_pressure",
-    "convert_wind_direction_to_cardinal",
-]
+):
+    _LAZY_EXPORTS[_model_name] = ("accessiweather.models", _model_name)
+
+
+def __getattr__(name: str) -> Any:
+    """Load legacy top-level exports only when explicitly requested."""
+    if name not in _LAZY_EXPORTS:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+    import importlib
+
+    module_name, attr_name = _LAZY_EXPORTS[name]
+    value = getattr(importlib.import_module(module_name), attr_name)
+    globals()[name] = value
+    return value
+
+
+__all__ = ["__version__", *_LAZY_EXPORTS]
