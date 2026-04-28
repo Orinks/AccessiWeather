@@ -1708,6 +1708,7 @@ def parse_nws_forecast(data: dict) -> Forecast:
             icon=period_data.get("icon"),
             start_time=start_time,
             end_time=end_time,
+            precipitation_probability=_extract_float(period_data.get("probabilityOfPrecipitation")),
         )
         periods.append(period)
 
@@ -1872,6 +1873,7 @@ def parse_nws_hourly_forecast(data: dict, location: Location | None = None) -> H
             wind_speed=_format_wind_speed(period_data.get("windSpeed")),
             wind_direction=wind_direction,
             icon=period_data.get("icon"),
+            precipitation_probability=_extract_float(period_data.get("probabilityOfPrecipitation")),
         )
         periods.append(period)
 
