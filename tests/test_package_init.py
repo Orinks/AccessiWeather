@@ -1,26 +1,63 @@
 from __future__ import annotations
 
-import importlib
+import json
+import os
+import subprocess
 import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _run_import_probe(code: str) -> dict[str, object]:
+    env = os.environ.copy()
+    pythonpath = str(ROOT / "src")
+    if env.get("PYTHONPATH"):
+        pythonpath = f"{pythonpath}{os.pathsep}{env['PYTHONPATH']}"
+    env["PYTHONPATH"] = pythonpath
+
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=ROOT,
+        env=env,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return json.loads(result.stdout)
 
 
 def test_submodule_import_does_not_eagerly_import_app() -> None:
-    for module_name in list(sys.modules):
-        if module_name == "accessiweather" or module_name.startswith("accessiweather."):
-            sys.modules.pop(module_name)
+    result = _run_import_probe(
+        """
+import importlib
+import json
+import sys
 
-    runtime_env = importlib.import_module("accessiweather.runtime_env")
+runtime_env = importlib.import_module("accessiweather.runtime_env")
+print(json.dumps({
+    "compiled": runtime_env.is_compiled_runtime(),
+    "has_app": "accessiweather.app" in sys.modules,
+}))
+"""
+    )
 
-    assert runtime_env.is_compiled_runtime() is False
-    assert "accessiweather.app" not in sys.modules
+    assert result == {"compiled": False, "has_app": False}
 
 
 def test_legacy_top_level_exports_are_lazy() -> None:
-    for module_name in list(sys.modules):
-        if module_name == "accessiweather" or module_name.startswith("accessiweather."):
-            sys.modules.pop(module_name)
+    result = _run_import_probe(
+        """
+import importlib
+import json
+import sys
 
-    package = importlib.import_module("accessiweather")
+package = importlib.import_module("accessiweather")
+print(json.dumps({
+    "has_app": "accessiweather.app" in sys.modules,
+    "version_type": type(package.__version__).__name__,
+}))
+"""
+    )
 
-    assert "accessiweather.app" not in sys.modules
-    assert isinstance(package.__version__, str)
+    assert result == {"has_app": False, "version_type": "str"}
