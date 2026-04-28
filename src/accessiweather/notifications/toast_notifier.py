@@ -24,6 +24,7 @@ from typing import Any
 from xml.sax.saxutils import escape as _xml_escape
 
 from ..constants import WINDOWS_APP_USER_MODEL_ID
+from ..runtime_env import is_compiled_runtime
 from ..sound_events import DEFAULT_MUTED_SOUND_EVENTS
 from ..windows_toast_identity import WINDOWS_TOAST_PROTOCOL_SCHEME
 from .sound_player import (
@@ -98,10 +99,10 @@ def _log_packaging_notifier_diagnostics() -> None:
     """Emit debug-only notifier dependency diagnostics for packaged troubleshooting."""
     logger.debug(
         "[packaging-diag] notifier deps: toasted_available=%s desktop_notifier_available=%s "
-        "frozen=%s meipass=%s executable=%s",
+        "compiled=%s meipass=%s executable=%s",
         TOASTED_AVAILABLE,
         DESKTOP_NOTIFIER_AVAILABLE,
-        getattr(sys, "frozen", False),
+        is_compiled_runtime(),
         getattr(sys, "_MEIPASS", None),
         getattr(sys, "executable", None),
     )

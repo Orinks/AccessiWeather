@@ -89,6 +89,22 @@ def test_get_bundled_user_manual_path_uses_meipass_when_frozen(monkeypatch, tmp_
     assert user_manual.get_bundled_user_manual_path() == bundled_manual
 
 
+def test_get_bundled_user_manual_path_uses_exe_dir_when_nuitka_compiled(monkeypatch, tmp_path):
+    bundled_manual = tmp_path / "accessiweather" / "docs" / "user_manual.md"
+    bundled_manual.parent.mkdir(parents=True)
+    bundled_manual.write_text("manual", encoding="utf-8")
+
+    from accessiweather import user_manual
+
+    monkeypatch.setattr(user_manual, "is_compiled_runtime", lambda: True)
+    monkeypatch.delattr(user_manual.sys, "_MEIPASS", raising=False)
+    monkeypatch.setattr(
+        user_manual.sys, "executable", str(tmp_path / "AccessiWeather.exe"), raising=False
+    )
+
+    assert user_manual.get_bundled_user_manual_path() == bundled_manual
+
+
 def test_open_user_manual_opens_local_file_before_web_fallback(monkeypatch, tmp_path):
     manual_path = tmp_path / "user_manual.md"
     manual_path.write_text("manual", encoding="utf-8")

@@ -1316,10 +1316,9 @@ class AccessiWeatherApp(wx.App):
 
                 sound_pack = getattr(settings, "sound_pack", "default")
                 muted_events = getattr(settings, "muted_sound_events", ["data_updated"])
-                frozen = bool(getattr(sys, "frozen", False))
                 logger.debug(
-                    "[packaging-diag] exit sound: frozen=%s sound_pack=%s sound_lib=%s playsound3=%s",
-                    frozen,
+                    "[packaging-diag] exit sound: compiled=%s sound_pack=%s sound_lib=%s playsound3=%s",
+                    is_compiled_runtime(),
                     sound_pack,
                     SOUND_LIB_AVAILABLE,
                     PLAYSOUND_AVAILABLE,
