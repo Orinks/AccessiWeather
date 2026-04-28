@@ -47,20 +47,6 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 
 ---
 
-### 4. Update WordPress release page (`update-wordpress.yml`)
-**Purpose**: Update the existing WordPress release page to link directly to the latest public GitHub release assets
-**Triggers**:
-- When a GitHub release is published
-- Manual dispatch
-
-**What it does**:
-- Fetches the latest public stable GitHub release
-- Picks the primary release asset for the main download button
-- Computes GitHub asset download counts
-- Updates only the managed section of the existing WordPress page via the standard REST API
-
----
-
 ## Release Workflows
 
 ## Workflow Dependencies
@@ -71,8 +57,6 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 
 `update-pages.yml` handles GitHub Pages publication.
 
-`update-wordpress.yml` handles the external WordPress sync after a published release.
-
 ---
 
 ## Quick Reference
@@ -82,7 +66,6 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 | Test code changes | `ci.yml` | Automatic on PR/push |
 | Build installers / nightlies | `build.yml` | Nightly, tags, or manual |
 | Update GitHub Pages mirror | `update-pages.yml` | Automatic after build or manual |
-| Update WordPress release page | `update-wordpress.yml` | Automatic on release publish or manual |
 
 ---
 
@@ -92,7 +75,7 @@ As a solo maintainer, you typically only need to:
 
 1. **Open a PR to `dev`**: `ci.yml` validates formatting, lint, tests, and diff coverage
 2. **Merge changes to `dev`**: Nightly `build.yml` creates user-facing artifacts when there were user-facing commits
-3. **Publish a stable release tag**: `build.yml` creates the release assets, then Pages/WordPress update flows can run
+3. **Publish a stable release tag**: `build.yml` creates the release assets, then the Pages update flow can run
 
 Everything else stays out of the PR path.
 
