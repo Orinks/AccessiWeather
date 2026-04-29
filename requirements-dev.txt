@@ -11,7 +11,7 @@ pytest-recording>=0.13.0
 pytest-timeout>=2.3.0
 hypothesis>=6.0.0
 vcrpy>=6.0.0
-requests-mock>=1.10.0
+requests-mock>=1.12.1
 diff-cover>=9.0.0
 
 # Type stubs
