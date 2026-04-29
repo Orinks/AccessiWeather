@@ -251,7 +251,7 @@ class PlatformDetector:
 
         artifacts = {
             "windows": {
-                "installer": f"AccessiWeather_Setup_v{version}.msi",
+                "installer": f"AccessiWeather_Setup_v{version}.exe",
                 "portable": f"AccessiWeather_Portable_v{version}.zip",
             },
             "macos": {
