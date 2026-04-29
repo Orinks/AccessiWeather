@@ -92,7 +92,7 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     app._notifier = SafeDesktopNotifier(
         sound_enabled=bool(getattr(config.settings, "sound_enabled", True)),
         soundpack=getattr(config.settings, "sound_pack", "default"),
-        muted_sound_events=getattr(config.settings, "muted_sound_events", ["data_updated"]),
+        muted_sound_events=getattr(config.settings, "muted_sound_events", []),
     )
 
     # Initialize AI explanation cache (lazy import)

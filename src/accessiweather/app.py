@@ -1287,7 +1287,7 @@ class AccessiWeatherApp(wx.App):
                 from .notifications.sound_player import play_startup_sound
 
                 sound_pack = getattr(settings, "sound_pack", "default")
-                muted_events = getattr(settings, "muted_sound_events", ["data_updated"])
+                muted_events = getattr(settings, "muted_sound_events", [])
                 play_startup_sound(sound_pack, muted_events=muted_events)
         except Exception as e:
             logger.debug(f"Could not play startup sound: {e}")
@@ -1315,7 +1315,7 @@ class AccessiWeatherApp(wx.App):
                 )
 
                 sound_pack = getattr(settings, "sound_pack", "default")
-                muted_events = getattr(settings, "muted_sound_events", ["data_updated"])
+                muted_events = getattr(settings, "muted_sound_events", [])
                 logger.debug(
                     "[packaging-diag] exit sound: compiled=%s sound_pack=%s sound_lib=%s playsound3=%s",
                     is_compiled_runtime(),
@@ -1378,7 +1378,7 @@ class AccessiWeatherApp(wx.App):
                 self._notifier.sound_enabled = bool(getattr(settings, "sound_enabled", True))
                 self._notifier.soundpack = getattr(settings, "sound_pack", "default")
                 self._notifier.muted_sound_events = list(
-                    getattr(settings, "muted_sound_events", ["data_updated"])
+                    getattr(settings, "muted_sound_events", [])
                 )
 
             if self.alert_notification_system:

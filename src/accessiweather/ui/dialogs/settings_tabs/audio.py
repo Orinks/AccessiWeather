@@ -190,7 +190,7 @@ class AudioTab:
         except (ValueError, AttributeError):
             controls["sound_pack"].SetSelection(0)
 
-        self.set_event_sound_states(getattr(settings, "muted_sound_events", ["data_updated"]))
+        self.set_event_sound_states(getattr(settings, "muted_sound_events", []))
 
     def save(self) -> dict:
         """Return Audio tab settings as a dict."""

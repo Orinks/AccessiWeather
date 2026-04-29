@@ -940,7 +940,7 @@ class MainWindow(SizedFrame):
             app_name="AccessiWeather",
             sound_enabled=bool(getattr(settings, "sound_enabled", True)),
             soundpack=getattr(settings, "sound_pack", "default"),
-            muted_sound_events=getattr(settings, "muted_sound_events", ["data_updated"]),
+            muted_sound_events=getattr(settings, "muted_sound_events", []),
         )
         from ..notification_activation import (
             NotificationActivationRequest,
@@ -1541,17 +1541,17 @@ class MainWindow(SizedFrame):
             # any panels.  Silent (no screen-reader announcement).
             self._set_last_updated_status()
 
-            # Play data_updated sound on successful weather data refresh
+            # Play the weather-updated sound on successful refresh.
             try:
                 settings = self.app.config_manager.get_settings()
                 if getattr(settings, "sound_enabled", True):
                     from accessiweather.notifications.sound_player import play_data_updated_sound
 
                     sound_pack = getattr(settings, "sound_pack", "default")
-                    muted_events = getattr(settings, "muted_sound_events", ["data_updated"])
+                    muted_events = getattr(settings, "muted_sound_events", [])
                     play_data_updated_sound(sound_pack, muted_events=muted_events)
             except Exception as sound_exc:
-                logger.debug(f"Failed to play data_updated sound: {sound_exc}")
+                logger.debug(f"Failed to play weather-updated sound: {sound_exc}")
 
         except Exception as e:
             logger.error(f"Failed to update weather display: {e}")
@@ -1658,7 +1658,7 @@ class MainWindow(SizedFrame):
                 from accessiweather.notifications.sound_player import play_fetch_error_sound
 
                 sound_pack = getattr(settings, "sound_pack", "default")
-                muted_events = getattr(settings, "muted_sound_events", ["data_updated"])
+                muted_events = getattr(settings, "muted_sound_events", [])
                 play_fetch_error_sound(sound_pack, muted_events=muted_events)
         except Exception as sound_exc:
             logger.debug(f"Failed to play fetch_error sound: {sound_exc}")
