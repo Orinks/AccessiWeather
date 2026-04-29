@@ -28,6 +28,7 @@ jobs:
   prepare:
     name: Prepare
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       should_build: ${{ steps.check.outputs.should_build }}
       version: ${{ steps.check.outputs.version }}
@@ -96,6 +97,7 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.should_build == 'true'
     runs-on: windows-latest
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v6
         with:
@@ -124,6 +126,7 @@ jobs:
         run: choco install innosetup -y --no-progress
 
       - name: Build
+        timeout-minutes: 90
         run: |
           python scripts/generate_build_meta.py ${{ needs.prepare.outputs.is_nightly == 'true' && needs.prepare.outputs.tag || '' }}
           python installer/create_icons.py
@@ -147,6 +150,7 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.should_build == 'true'
     runs-on: macos-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
         with:
@@ -175,6 +179,7 @@ jobs:
           pip install -e .[build]
 
       - name: Build
+        timeout-minutes: 30
         run: |
           python scripts/generate_build_meta.py ${{ needs.prepare.outputs.is_nightly == 'true' && needs.prepare.outputs.tag || '' }}
           python installer/create_icons.py
@@ -196,6 +201,7 @@ jobs:
     needs: [prepare, build-windows, build-macos]
     if: always() && needs.prepare.outputs.should_build == 'true' && (needs.build-windows.result == 'success' || needs.build-macos.result == 'success')
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
         with:
