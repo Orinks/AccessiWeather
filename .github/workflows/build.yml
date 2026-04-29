@@ -97,7 +97,7 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.should_build == 'true'
     runs-on: windows-latest
-    timeout-minutes: 120
+    timeout-minutes: 210
     steps:
       - uses: actions/checkout@v6
         with:
@@ -126,7 +126,7 @@ jobs:
         run: choco install innosetup -y --no-progress
 
       - name: Build
-        timeout-minutes: 90
+        timeout-minutes: 180
         run: |
           python scripts/generate_build_meta.py ${{ needs.prepare.outputs.is_nightly == 'true' && needs.prepare.outputs.tag || '' }}
           python installer/create_icons.py
