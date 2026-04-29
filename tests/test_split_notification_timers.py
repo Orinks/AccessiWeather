@@ -101,6 +101,67 @@ class TestSummarizeDiscussionChange:
         assert "Flash flood watch in effect" in result
         assert "Short term text" not in result
 
+    def test_key_messages_stop_at_next_dot_section(self):
+        """KEY MESSAGES must not absorb UPDATE/SHORT TERM text before &&."""
+        afd = (
+            ".KEY MESSAGES...\n"
+            "- Heavy rain expected Tuesday.\n"
+            "- Flash flood watch in effect.\n"
+            ".UPDATE...\n"
+            "Only aviation wording changed.\n"
+            ".SHORT TERM...\n"
+            "Short term text.\n"
+            "&&\n"
+        )
+        result = summarize_discussion_change(None, afd)
+        assert result is not None
+        assert "Heavy rain expected Tuesday" in result
+        assert "Flash flood watch in effect" in result
+        assert "Only aviation wording changed" not in result
+        assert "Short term text" not in result
+
+    def test_key_messages_diff_prefers_new_messages_when_changed(self):
+        """When KEY MESSAGES change, the toast summary should use the current messages."""
+        previous = (
+            ".KEY MESSAGES...\n"
+            "1. Rain arrives later today.\n"
+            "2. Saturday storm potential remains.\n"
+            "&&\n"
+        )
+        current = (
+            ".KEY MESSAGES...\n"
+            "1. Rain arrives late this afternoon.\n"
+            "2. Saturday storm potential remains.\n"
+            "&&\n"
+        )
+        result = summarize_discussion_change(previous, current)
+        assert result is not None
+        assert "late this afternoon" in result
+        assert "later today" not in result
+
+    def test_no_changes_section_defers_to_changed_key_messages(self):
+        """A no-change marker should not hide materially changed KEY MESSAGES."""
+        previous = (
+            ".WHAT HAS CHANGED...\n"
+            "Rainfall totals have lowered a bit.\n"
+            "&&\n"
+            ".KEY MESSAGES...\n"
+            "1. Rain arrives later today.\n"
+            "&&\n"
+        )
+        current = (
+            ".WHAT HAS CHANGED...\n"
+            "No changes.\n"
+            "&&\n"
+            ".KEY MESSAGES...\n"
+            "1. Rain arrives late this afternoon.\n"
+            "&&\n"
+        )
+        result = summarize_discussion_change(previous, current)
+        assert result is not None
+        assert "late this afternoon" in result
+        assert "No changes" not in result
+
     def test_first_new_line_fallback_when_no_special_sections(self):
         """Path 3: falls back to first new line when no special sections exist."""
         previous = "line one\nline two\n"

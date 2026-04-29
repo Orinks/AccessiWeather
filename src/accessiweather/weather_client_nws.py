@@ -996,11 +996,19 @@ async def get_nws_text_product(
             )
             return products
 
-        # AFD or HWO: newest @graph entry only, or None if empty.
+        # AFD or HWO: newest @graph entry only, or None if empty. The API is
+        # usually newest-first, but live listings can contain out-of-order
+        # entries, so select by issuanceTime defensively.
         if not graph:
             return None
 
-        latest = graph[0]
+        latest = max(
+            (entry for entry in graph if isinstance(entry, dict)),
+            key=lambda entry: (
+                _parse_iso_datetime(entry.get("issuanceTime")) or datetime.min.replace(tzinfo=UTC)
+            ),
+            default=None,
+        )
         if not isinstance(latest, dict):
             return None
 

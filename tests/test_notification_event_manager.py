@@ -210,14 +210,53 @@ class TestNotificationEventManager:
             "National Weather Service New York NY\n"
             "935 AM EST Tue Jan 20 2026\n\n"
             ".WHAT HAS CHANGED...\n"
-            "No significant changes made to forecast."
+            "Rain arrives earlier than previously forecast."
         )
         weather_data.discussion_issuance_time = first_time + timedelta(hours=1)
         events = manager.check_for_events(weather_data, settings_with_discussion, "Test Location")
 
         assert len(events) == 1
         assert "9:35 AM EST" in events[0].message
-        assert "No significant changes made to forecast." in events[0].message
+        assert "Rain arrives earlier than previously forecast." in events[0].message
+
+    def test_discussion_update_with_no_changes_updates_state_without_notification(
+        self, manager, settings_with_discussion
+    ):
+        """AFD products that explicitly say no changes should not notify users."""
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.current = None
+        weather_data.discussion = (
+            "\n000\nFXUS61 KPHI 290645\nAFDPHI\n\n"
+            "Area Forecast Discussion\n"
+            "National Weather Service Mount Holly NJ\n"
+            "245 AM EDT Wed Apr 29 2026\n\n"
+            ".WHAT HAS CHANGED...\n"
+            "Rainfall totals have lowered a bit.\n\n"
+            "&&\n"
+        )
+        weather_data.minutely_precipitation = None
+
+        first_time = datetime(2026, 4, 29, 6, 45, 0, tzinfo=UTC)
+        weather_data.discussion_issuance_time = first_time
+        manager.check_for_events(weather_data, settings_with_discussion, "Lumberton")
+
+        weather_data.discussion = (
+            "\n000\nFXUS61 KPHI 291732\nAFDPHI\n\n"
+            "Area Forecast Discussion\n"
+            "National Weather Service Mount Holly NJ\n"
+            "132 PM EDT Wed Apr 29 2026\n\n"
+            ".WHAT HAS CHANGED...\n"
+            "No changes.\n\n"
+            "&&\n"
+        )
+        newer_time = datetime(2026, 4, 29, 17, 32, 0, tzinfo=UTC)
+        weather_data.discussion_issuance_time = newer_time
+
+        events = manager.check_for_events(weather_data, settings_with_discussion, "Lumberton")
+
+        assert events == []
+        assert manager.state.last_discussion_issuance_time == newer_time
+        assert manager.state.last_discussion_text == weather_data.discussion
 
     def test_discussion_update_falls_back_to_metadata_time(self, manager, settings_with_discussion):
         """Use the metadata timestamp when the AFD text has no parseable issued line."""
