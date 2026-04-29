@@ -20,10 +20,14 @@ from accessiweather.models import (
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    TextProduct,
     WeatherAlerts,
     WeatherData,
 )
 from accessiweather.notifications.notification_event_manager import summarize_discussion_change
+from accessiweather.ui.main_window_notification_events import (
+    _filter_sps_products_for_location,
+)
 
 # ---------------------------------------------------------------------------
 # summarize_discussion_change (notification_event_manager.py lines 54, 64)
@@ -551,6 +555,69 @@ class TestNotificationEventHelpers:
             "Summary",
             category="Updated discussion",
         )
+
+
+class TestSpsProductLocationFiltering:
+    """SPS product notifications must honor the user's saved NWS zones."""
+
+    def _product(self, product_text: str, product_id: str = "SPS-FWD") -> TextProduct:
+        return TextProduct(
+            product_type="SPS",
+            product_id=product_id,
+            cwa_office="FWD",
+            issuance_time=datetime(2026, 4, 29, 18, 10, tzinfo=UTC),
+            product_text=product_text,
+            headline="Special Weather Statement",
+        )
+
+    def test_drops_office_sps_for_other_forecast_zones(self):
+        location = Location(
+            name="Copperas Cove",
+            latitude=31.1241,
+            longitude=-97.9031,
+            country_code="US",
+            cwa_office="FWD",
+            forecast_zone_id="TXZ157",
+            county_zone_id="TXC099",
+            fire_zone_id="TXZ157",
+        )
+        dallas_sps = self._product(
+            "\n"
+            "TXZ118-119-291900-\n"
+            "Tarrant TX-Dallas TX-\n"
+            "110 PM CDT Wed Apr 29 2026\n"
+            "...A strong thunderstorm will impact portions of southeastern Tarrant\n"
+            "and Dallas Counties through 200 PM CDT...\n",
+            product_id="SPS-DALLAS",
+        )
+
+        result = _filter_sps_products_for_location([dallas_sps], location)
+
+        assert result == []
+
+    def test_keeps_sps_for_location_forecast_zone(self):
+        location = Location(
+            name="Copperas Cove",
+            latitude=31.1241,
+            longitude=-97.9031,
+            country_code="US",
+            cwa_office="FWD",
+            forecast_zone_id="TXZ157",
+            county_zone_id="TXC099",
+            fire_zone_id="TXZ157",
+        )
+        local_sps = self._product(
+            "\n"
+            "TXZ157-291900-\n"
+            "Coryell TX-\n"
+            "110 PM CDT Wed Apr 29 2026\n"
+            "...A strong thunderstorm will impact portions of Coryell County...\n",
+            product_id="SPS-CORYELL",
+        )
+
+        result = _filter_sps_products_for_location([local_sps], location)
+
+        assert result == [local_sps]
 
 
 # ---------------------------------------------------------------------------

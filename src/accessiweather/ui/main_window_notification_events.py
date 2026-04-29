@@ -8,6 +8,7 @@ This keeps lightweight polling and event notification logic out of
 from __future__ import annotations
 
 import logging
+import re
 from typing import TYPE_CHECKING
 
 import wx
@@ -21,6 +22,10 @@ if TYPE_CHECKING:
     from .main_window import MainWindow
 
 logger = logging.getLogger(__name__)
+
+_UGC_LINE_RE = re.compile(
+    r"^\s*([A-Z]{2}[CZ])(\d{3}(?:[->]\d{3})?(?:-\d{3}(?:[->]\d{3})?)*)-\d{6}-?\s*$"
+)
 
 
 def _log_reviewable_event_text(window: MainWindow, title: str, message: str) -> None:
@@ -202,10 +207,76 @@ def _check_sps_from_cache(
         else:
             products = [raw]
 
+        products = _filter_sps_products_for_location(products, location)
         active_alerts = _active_alerts_for_current_location(window)
         manager._check_sps_new(location, products, active_alerts, settings)
     except Exception as e:  # noqa: BLE001
         logger.debug("[events] SPS check skipped: %s", e)
+
+
+def _filter_sps_products_for_location(products: list, location) -> list:
+    """
+    Keep only SPS products whose UGC zones include the saved location zones.
+
+    ``/products/types/SPS/locations/{CWA}`` is an office-wide feed. Unlike the
+    active-alert point/county endpoints, it can include statements for any zone
+    in the forecast office. Filter by the product UGC line before running the
+    SPS notification heuristic so county/zone alert settings do not receive
+    other-county office products.
+    """
+    location_zone_ids = _location_zone_ids(location)
+    if not location_zone_ids:
+        return products
+
+    filtered = []
+    for product in products:
+        product_zone_ids = _sps_product_zone_ids(getattr(product, "product_text", None))
+        if not product_zone_ids or product_zone_ids & location_zone_ids:
+            filtered.append(product)
+    return filtered
+
+
+def _location_zone_ids(location) -> set[str]:
+    """Return normalized NWS zone IDs available on a saved location."""
+    zone_ids: set[str] = set()
+    for attr in ("forecast_zone_id", "fire_zone_id", "county_zone_id"):
+        zone_id = _zone_id_tail(getattr(location, attr, None))
+        if zone_id:
+            zone_ids.add(zone_id)
+    return zone_ids
+
+
+def _zone_id_tail(value: str | None) -> str | None:
+    """Normalize a full NWS zone URL or bare zone code to its uppercase ID."""
+    if not value:
+        return None
+    return str(value).rstrip("/").rsplit("/", 1)[-1].upper()
+
+
+def _sps_product_zone_ids(product_text: str | None) -> set[str]:
+    """Extract UGC zone codes such as ``TXZ118`` or ``TXZ105>107`` from SPS text."""
+    if not product_text:
+        return set()
+
+    zone_ids: set[str] = set()
+    for raw_line in product_text.splitlines()[:20]:
+        match = _UGC_LINE_RE.match(raw_line)
+        if not match:
+            continue
+        prefix, encoded_zones = match.groups()
+        for token in encoded_zones.split("-"):
+            if not token:
+                continue
+            if ">" in token:
+                start_text, end_text = token.split(">", 1)
+                start = int(start_text)
+                end = int(end_text)
+                step = 1 if end >= start else -1
+                for value in range(start, end + step, step):
+                    zone_ids.add(f"{prefix}{value:03d}")
+            else:
+                zone_ids.add(f"{prefix}{int(token):03d}")
+    return zone_ids
 
 
 def _active_alerts_for_current_location(window: MainWindow) -> list:
