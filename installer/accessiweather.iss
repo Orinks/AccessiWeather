@@ -52,7 +52,7 @@ SetupIconFile=app.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 
 ; Compression
-Compression=lzma2/ultra64
+Compression=lzma2/normal
 SolidCompression=yes
 LZMAUseSeparateProcess=yes
 LZMANumBlockThreads=4
