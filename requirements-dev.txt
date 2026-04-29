@@ -15,7 +15,7 @@ requests-mock>=1.10.0
 diff-cover>=9.0.0
 
 # Type stubs
-types-requests>=2.31.0
+types-requests>=2.33.0.20260408
 
 # Dev tools
 pre-commit>=3.0.0
