@@ -23,22 +23,9 @@ def _make_dialog(
     original_or="",
 ):
     """Create a minimal SettingsDialogSimple stand-in with the guard logic."""
-    import importlib.util
-    from pathlib import Path
+    from accessiweather.ui.dialogs import settings_dialog
 
-    module_path = (
-        Path(__file__).resolve().parents[1]
-        / "src"
-        / "accessiweather"
-        / "ui"
-        / "dialogs"
-        / "settings_dialog.py"
-    )
-    spec = importlib.util.spec_from_file_location("sdmod", module_path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-
-    dlg = mod.SettingsDialogSimple.__new__(mod.SettingsDialogSimple)
+    dlg = settings_dialog.SettingsDialogSimple.__new__(settings_dialog.SettingsDialogSimple)
     dlg._original_vc_key = original_vc
     dlg._original_pirate_weather_key = original_pirate
     dlg._original_openrouter_key = original_or

@@ -1,25 +1,14 @@
 from __future__ import annotations
 
-import importlib.util
 import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
 
 def _load_settings_dialog_module():
-    module_path = (
-        Path(__file__).resolve().parents[1]
-        / "src"
-        / "accessiweather"
-        / "ui"
-        / "dialogs"
-        / "settings_dialog.py"
-    )
-    spec = importlib.util.spec_from_file_location("test_settings_dialog_copy_module", module_path)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    from accessiweather.ui.dialogs import settings_dialog
+
+    return settings_dialog
 
 
 module = _load_settings_dialog_module()
