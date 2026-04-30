@@ -133,6 +133,10 @@ class TestIconToCondition:
         assert _icon_to_condition("rain") == "Rain"
         assert _icon_to_condition("partly-cloudy-night") == "Partly Cloudy"
 
+    def test_v2_precipitation_icons(self):
+        assert _icon_to_condition("ice") == "Freezing Rain"
+        assert _icon_to_condition("mixed") == "Wintry Mix"
+
     def test_unknown_icon_title_cases(self):
         result = _icon_to_condition("sleet-hail")
         assert result == "Sleet Hail"
@@ -212,6 +216,20 @@ class TestParseCurrentConditions:
         # daily block has sunriseTime / sunsetTime
         assert result.sunrise_time is not None
         assert result.sunset_time is not None
+
+    def test_v2_precipitation_type_populated(self, client, sample_forecast_payload):
+        payload = dict(sample_forecast_payload)
+        payload["currently"] = {
+            **sample_forecast_payload["currently"],
+            "summary": None,
+            "icon": "ice",
+            "precipType": "ice",
+        }
+
+        result = client._parse_current_conditions(payload)
+
+        assert result.condition == "Freezing Rain"
+        assert result.precipitation_type == ["ice"]
 
     def test_current_sunrise_uses_response_timezone_name(self, client, sample_forecast_payload):
         """IANA timezone from PW should override the fixed offset fallback."""
@@ -357,6 +375,21 @@ class TestParseForecast:
         assert result.summary == "Possible drizzle on Thursday."
         assert result.periods == []
 
+    def test_v2_daily_precipitation_type_populated(self, client, sample_forecast_payload):
+        day = {
+            **sample_forecast_payload["daily"]["data"][0],
+            "summary": None,
+            "icon": "mixed",
+            "precipType": "mixed",
+        }
+        payload = dict(sample_forecast_payload)
+        payload["daily"] = {"data": [day]}
+
+        result = client._parse_forecast(payload)
+
+        assert result.periods[0].short_forecast == "Wintry Mix"
+        assert result.periods[0].precipitation_type == ["mixed"]
+
     def test_uses_timezone_name_to_normalize_london_dst_daily_dates(self, client):
         """Europe/London daily periods should normalize to consecutive local noon dates."""
         start_dates = [
@@ -494,6 +527,21 @@ class TestParseHourlyForecast:
         payload["hourly"] = {"data": []}
         result = client._parse_hourly_forecast(payload)
         assert result.periods == []
+
+    def test_v2_hourly_precipitation_type_populated(self, client, sample_forecast_payload):
+        hour = {
+            **sample_forecast_payload["hourly"]["data"][0],
+            "summary": None,
+            "icon": "ice",
+            "precipType": "ice",
+        }
+        payload = dict(sample_forecast_payload)
+        payload["hourly"] = {"data": [hour]}
+
+        result = client._parse_hourly_forecast(payload)
+
+        assert result.periods[0].short_forecast == "Freezing Rain"
+        assert result.periods[0].precipitation_type == ["ice"]
 
     # ------------------------------------------------------------------
     # Regression tests – wind_speed_mph unit normalisation (bug fix)
@@ -654,6 +702,22 @@ class TestParseAlerts:
 
 
 class TestPirateWeatherHttpLayer:
+    @pytest.mark.asyncio
+    async def test_forecast_request_uses_api_version_2(self, client, sample_forecast_payload):
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = sample_forecast_payload
+
+        with patch("httpx.AsyncClient") as mock_client_class:
+            mock_http = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_http
+            mock_http.get.return_value = mock_resp
+
+            await client.get_forecast_data(Location("NYC", 40.7128, -74.006))
+
+        request_params = mock_http.get.call_args.kwargs["params"]
+        assert request_params["version"] == "2"
+
     @pytest.mark.asyncio
     async def test_get_current_conditions_success(self, client, sample_forecast_payload):
         mock_resp = MagicMock()

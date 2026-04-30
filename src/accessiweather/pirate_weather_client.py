@@ -44,6 +44,7 @@ from .weather_client_parsers import convert_f_to_c, degrees_to_cardinal
 logger = logging.getLogger(__name__)
 
 _BASE_URL = "https://api.pirateweather.net/forecast"
+_PIRATE_WEATHER_API_VERSION = "2"
 _PW_MIN_INCLUDED_SEVERITIES = frozenset({"Severe", "Extreme"})
 
 
@@ -72,6 +73,17 @@ _ICON_TO_CONDITION: dict[str, str] = {
     "thunderstorm": "Thunderstorm",
     "hail": "Hail",
     "tornado": "Tornado",
+    "ice": "Freezing Rain",
+    "mixed": "Wintry Mix",
+}
+
+_PRECIP_TYPE_TO_CONDITION: dict[str, str] = {
+    "rain": "Rain",
+    "snow": "Snow",
+    "sleet": "Sleet",
+    "hail": "Hail",
+    "ice": "Freezing Rain",
+    "mixed": "Wintry Mix",
 }
 
 
@@ -80,6 +92,49 @@ def _icon_to_condition(icon: str | None) -> str | None:
     if not icon:
         return None
     return _ICON_TO_CONDITION.get(icon, icon.replace("-", " ").title())
+
+
+def _normalize_precipitation_type(precip_type: object) -> list[str] | None:
+    """Normalize Pirate Weather precipType values for model fields."""
+    if isinstance(precip_type, str):
+        raw_types = [precip_type]
+    elif isinstance(precip_type, list | tuple | set):
+        raw_types = [str(value) for value in precip_type]
+    else:
+        return None
+
+    normalized: list[str] = []
+    for raw_type in raw_types:
+        name = raw_type.strip().lower()
+        if not name or name in {"none", "null"} or name in normalized:
+            continue
+        normalized.append(name)
+
+    return normalized or None
+
+
+def _precip_type_to_condition(precip_type: object) -> str | None:
+    """Return a plain-English condition from Pirate Weather precipType."""
+    normalized = _normalize_precipitation_type(precip_type)
+    if not normalized:
+        return None
+
+    return ", ".join(
+        _PRECIP_TYPE_TO_CONDITION.get(name, name.replace("-", " ").title()) for name in normalized
+    )
+
+
+def _data_point_condition(data_point: dict[str, object]) -> str | None:
+    """Resolve the best display condition for a Pirate Weather data point."""
+    summary = data_point.get("summary")
+    if isinstance(summary, str) and summary.strip():
+        return summary
+
+    icon = data_point.get("icon")
+    if isinstance(icon, str):
+        return _icon_to_condition(icon)
+
+    return _precip_type_to_condition(data_point.get("precipType"))
 
 
 def _build_alert_id(alert_data: dict[str, object]) -> str:
@@ -211,6 +266,7 @@ class PirateWeatherClient:
         params = {
             "units": self.units,
             "extend": "hourly",
+            "version": _PIRATE_WEATHER_API_VERSION,
         }
         try:
             async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
@@ -420,7 +476,8 @@ class PirateWeatherClient:
             if ss:
                 sunset_time = datetime.fromtimestamp(ss, tz=location_tz)
 
-        condition_str = current.get("summary") or _icon_to_condition(current.get("icon"))
+        condition_str = _data_point_condition(current)
+        precipitation_type = _normalize_precipitation_type(current.get("precipType"))
 
         return CurrentConditions(
             temperature_f=temp_f,
@@ -444,6 +501,7 @@ class PirateWeatherClient:
             wind_gust_kph=wind_gust_kph,
             precipitation_in=precip_in,
             precipitation_mm=precip_mm,
+            precipitation_type=precipitation_type,
             sunrise_time=sunrise_time,
             sunset_time=sunset_time,
         )
@@ -519,7 +577,8 @@ class PirateWeatherClient:
 
             uv_index = day.get("uvIndex")
 
-            condition = day.get("summary") or _icon_to_condition(day.get("icon"))
+            condition = _data_point_condition(day)
+            precipitation_type = _normalize_precipitation_type(day.get("precipType"))
 
             period = ForecastPeriod(
                 name=name,
@@ -535,6 +594,7 @@ class PirateWeatherClient:
                 cloud_cover=cloud_cover,
                 wind_gust=wind_gust_str,
                 precipitation_amount=precip_amount,
+                precipitation_type=precipitation_type,
                 start_time=start_time,
             )
             periods.append(period)
@@ -652,7 +712,8 @@ class PirateWeatherClient:
                 feels_like_c = float(apparent) if apparent is not None else None
                 feels_like_f = (feels_like_c * 9 / 5 + 32) if feels_like_c is not None else None
 
-            condition = hour.get("summary") or _icon_to_condition(hour.get("icon"))
+            condition = _data_point_condition(hour)
+            precipitation_type = _normalize_precipitation_type(hour.get("precipType"))
 
             period = HourlyForecastPeriod(
                 start_time=start_time,
@@ -672,6 +733,7 @@ class PirateWeatherClient:
                 cloud_cover=cloud_cover,
                 wind_gust_mph=wind_gust_mph,
                 precipitation_amount=precip_amount,
+                precipitation_type=precipitation_type,
                 feels_like=feels_like_f,
                 visibility_miles=visibility_miles,
                 visibility_km=visibility_km,
