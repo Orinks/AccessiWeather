@@ -49,6 +49,7 @@ _EMPTY_COPY: dict[str, str] = {
 _NO_CWA_COPY = "NWS text products will populate after the next weather refresh."
 
 ProductLoader = Callable[[], Awaitable["TextProduct | list[TextProduct] | None"]]
+AvailabilityCallback = Callable[["ForecastProductPanel", bool], None]
 
 
 class ForecastProductPanel(wx.Panel):
@@ -63,6 +64,7 @@ class ForecastProductPanel(wx.Panel):
         cwa_office: str | None,
         location_name: str,
         app: object | None = None,
+        availability_callback: AvailabilityCallback | None = None,
     ) -> None:
         """
         Build the panel widgets.
@@ -81,6 +83,10 @@ class ForecastProductPanel(wx.Panel):
             app: Optional AccessiWeather app instance. When provided, async
                 loaders dispatch via ``app.run_async`` (the background asyncio
                 loop). Falls back to ``asyncio.ensure_future`` when absent.
+            availability_callback: Optional callback invoked after load
+                completes. ``False`` means the product fetch succeeded but
+                returned no products; errors are reported as available so the
+                dialog keeps the retry surface visible.
 
         """
         super().__init__(parent)
@@ -90,6 +96,7 @@ class ForecastProductPanel(wx.Panel):
         self._cwa_office = cwa_office
         self._location_name = location_name
         self._app = app
+        self._availability_callback = availability_callback
 
         # State
         self._current_text: str | None = None
@@ -340,12 +347,14 @@ class ForecastProductPanel(wx.Panel):
 
         if not products:
             self._render_empty_state()
+            self._notify_availability(False)
             return
 
         if self.product_type == "SPS":
             self._render_sps_products(products)
         else:
             self._render_single_product(products[0])
+        self._notify_availability(True)
 
     def _render_empty_state(self) -> None:
         """Render the 'no product available' state."""
@@ -412,6 +421,13 @@ class ForecastProductPanel(wx.Panel):
         self.explain_button.Disable()
         self._show_retry(True)
         self._current_text = None
+        self._notify_availability(True)
+
+    def _notify_availability(self, has_product: bool) -> None:
+        """Tell the parent dialog whether this product has confirmed content."""
+        if self._availability_callback is None:
+            return
+        self._availability_callback(self, has_product)
 
     def _update_explain_button_state(self) -> None:
         """

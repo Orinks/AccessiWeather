@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class ForecastProductsDialog(wx.Dialog):
-    """Tabbed dialog showing NWS AFD, HWO, and SPS for a US location."""
+    """Tabbed dialog showing available NWS AFD, HWO, and SPS products."""
 
     _TABS: tuple[tuple[str, str], ...] = (
         ("AFD", "Area Forecast Discussion"),
@@ -99,6 +99,7 @@ class ForecastProductsDialog(wx.Dialog):
                 cwa_office=cwa_office,
                 location_name=location_name,
                 app=self._app,
+                availability_callback=self._on_panel_availability_resolved,
             )
             self.notebook.AddPage(panel, tab_label)
             self.panels.append(panel)
@@ -140,6 +141,42 @@ class ForecastProductsDialog(wx.Dialog):
             return await self._service.get(product_type, cwa_office)
 
         return _loader
+
+    def _on_panel_availability_resolved(
+        self,
+        panel: ForecastProductPanel,
+        has_product: bool,
+    ) -> None:
+        """
+        Remove optional tabs whose product lookup completed with no content.
+
+        AFD stays visible even when empty because it is the primary forecaster
+        notes product and gives users a stable place to retry/read status.
+        HWO and SPS are supplemental; when NWS confirms there is no product for
+        the office, hiding those tabs avoids advertising unavailable content.
+        Fetch errors report ``has_product=True`` so the tab remains available
+        with its retry button.
+        """
+        if has_product or getattr(panel, "product_type", None) == "AFD":
+            return
+
+        try:
+            index = self.panels.index(panel)
+        except ValueError:
+            return
+
+        if len(self.panels) <= 1:
+            return
+
+        deleted = self.notebook.DeletePage(index)
+        if deleted is False:
+            logger.debug(
+                "Notebook refused to remove empty %s page",
+                getattr(panel, "product_type", "unknown"),
+            )
+            return
+
+        del self.panels[index]
 
     # ------------------------------------------------------------------
     # Key events

@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- Forecaster Notes now hides Hazardous Weather Outlook and Special Weather Statement tabs when NWS confirms there is no matching product for the selected office.
 - Nightly builds now report the dev package version consistently instead of using stale generated build metadata.
 
 ## [0.6.0] - 2026-04-24
