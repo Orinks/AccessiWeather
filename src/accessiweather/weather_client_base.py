@@ -151,7 +151,7 @@ class WeatherClient(
 
     def _location_key(self, location: Location) -> str:
         """Generate a unique key for a location to track in-flight requests."""
-        return f"{location.name}:{location.latitude:.4f},{location.longitude:.4f}"
+        return f"{location.latitude:.4f},{location.longitude:.4f}"
 
     def _utcnow(self) -> datetime:
         """Return the current UTC time for poll-throttling decisions."""

@@ -11,6 +11,7 @@ logger = logging.getLogger("accessiweather.ui.dialogs.settings_dialog")
 
 
 class SettingsDialogCoreMixin:
+    @staticmethod
     def _wrap_static_text(control: wx.Window, width: int = 620) -> wx.Window:
         """Wrap static text where supported to keep copy readable."""
         if hasattr(control, "Wrap"):

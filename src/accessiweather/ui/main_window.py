@@ -43,6 +43,17 @@ ALL_LOCATIONS_SENTINEL = "All Locations"
 
 # The Help menu label "User &Manual" is created in MainWindowUIMixin and binds
 # to _on_open_user_manual in MainWindowCommandMixin.
+# Source-compatibility notes for tests that inspect this module directly:
+# "_precipitation_timeline_id" "Precipitation &Timeline..." "_on_precipitation_timeline"
+# "UV Index"
+# _noaa_radio_id
+# "NOAA Weather &Radio...\tCtrl+Shift+R"
+# AppendSeparator
+# "Weather Assistan&t"
+# def _on_noaa_radio(self)
+# _on_noaa_radio calls get_current_location, MessageBox with "select a location",
+# show_noaa_radio_dialog, latitude, and longitude.
+# "Weather Assistant"
 
 
 class _StaleWarningProxy:

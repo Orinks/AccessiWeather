@@ -23,7 +23,7 @@ from .weather_client_nws_aviation import (
     get_nws_sigmets,
     get_nws_tafs,
 )
-from .weather_client_nws_common import _client_get, logger
+from .weather_client_nws_common import _client_get, _extract_wind_speed_mph, logger
 from .weather_client_nws_current import (
     get_nws_current_conditions,
     get_nws_primary_station_info,
