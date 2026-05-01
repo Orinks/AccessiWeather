@@ -17,8 +17,8 @@ from accessiweather.noaa_radio import (
 )
 from accessiweather.noaa_radio.player import RadioPlayer
 from accessiweather.noaa_radio.preferences import DEFAULT_STATION_LIMIT, RadioPreferences
-from accessiweather.noaa_radio.weatherindex_client import WeatherIndexClient
-from accessiweather.noaa_radio.wxradio_client import WxRadioClient
+
+from .noaa_radio_clients import get_clients as _get_clients
 
 if TYPE_CHECKING:
     pass
@@ -27,24 +27,6 @@ logger = logging.getLogger(__name__)
 SUPPRESSION_TTL_SECONDS = 1800
 STATION_LIMIT_PRESETS: tuple[int | None, ...] = (10, 25, 50, 100, None)
 STATION_LIMIT_LABELS: tuple[str, ...] = ("10", "25", "50", "100", "All")
-
-# Module-level cache for clients to leverage HTTP caching across dialog opens
-_wxradio_client: WxRadioClient | None = None
-_weatherindex_client: WeatherIndexClient | None = None
-_client_lock = threading.Lock()
-
-
-def _get_clients() -> tuple[WxRadioClient, WeatherIndexClient]:
-    """Get or create cached client instances (thread-safe)."""
-    global _wxradio_client, _weatherindex_client
-    with _client_lock:
-        if _wxradio_client is None:
-            _wxradio_client = WxRadioClient()
-            logger.debug("Created cached WxRadioClient instance")
-        if _weatherindex_client is None:
-            _weatherindex_client = WeatherIndexClient()
-            logger.debug("Created cached WeatherIndexClient instance")
-        return _wxradio_client, _weatherindex_client
 
 
 def show_noaa_radio_dialog(parent: wx.Window, lat: float, lon: float) -> NOAARadioDialog:
