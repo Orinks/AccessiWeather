@@ -8,11 +8,16 @@ from __future__ import annotations
 
 import logging
 import threading
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING
-from zoneinfo import ZoneInfo
 
 import wx
+
+from .explanation_generation import (
+    add_location_time_context,
+    build_current_weather_payload,
+    resolve_ai_model,
+    resolve_explanation_style,
+)
 
 if TYPE_CHECKING:
     from ...ai_explainer import ExplanationResult
@@ -153,16 +158,11 @@ class ExplanationDialog(wx.Dialog):
                 import asyncio
 
                 settings = self.app.config_manager.get_settings()
-                if settings.ai_model_preference == "auto":
-                    model = "openrouter/auto"
-                else:
-                    model = settings.ai_model_preference
-
-                from ...ai_explainer import AIExplainer, ExplanationStyle
+                from ...ai_explainer import AIExplainer
 
                 explainer = AIExplainer(
                     api_key=settings.openrouter_api_key or None,
-                    model=model,
+                    model=resolve_ai_model(settings),
                     cache=getattr(self.app, "ai_explanation_cache", None),
                     custom_system_prompt=getattr(settings, "custom_system_prompt", None),
                     custom_instructions=getattr(settings, "custom_instructions", None),
@@ -174,26 +174,7 @@ class ExplanationDialog(wx.Dialog):
                     wx.CallAfter(self._on_regenerate_error, "No weather data available.")
                     return
 
-                current = weather_data.current
-                weather_dict = {
-                    "temperature": current.temperature_f,
-                    "temperature_unit": "F",
-                    "conditions": current.condition,
-                    "humidity": current.humidity,
-                    "wind_speed": current.wind_speed_mph,
-                    "wind_direction": current.wind_direction,
-                    "visibility": current.visibility_miles,
-                    "pressure": current.pressure_in,
-                    "alerts": [],
-                    "forecast_periods": [],
-                }
-
-                style_map = {
-                    "brief": ExplanationStyle.BRIEF,
-                    "standard": ExplanationStyle.STANDARD,
-                    "detailed": ExplanationStyle.DETAILED,
-                }
-                style = style_map.get(settings.ai_explanation_style, ExplanationStyle.STANDARD)
+                weather_dict = build_current_weather_payload(weather_data)
 
                 loop = asyncio.new_event_loop()
                 try:
@@ -201,7 +182,7 @@ class ExplanationDialog(wx.Dialog):
                         explainer.explain_weather(
                             weather_dict,
                             location.name if location else self.location,
-                            style=style,
+                            style=resolve_explanation_style(settings),
                             preserve_markdown=False,
                         )
                     )
@@ -386,95 +367,25 @@ def show_explanation_dialog(
         try:
             import asyncio
 
-            from ...ai_explainer import AIExplainer, AIExplainerError, ExplanationStyle
+            from ...ai_explainer import AIExplainer, AIExplainerError
 
             # Get AI settings
             settings = app.config_manager.get_settings()
 
-            # Determine model based on settings
-            if settings.ai_model_preference == "auto":
-                model = "openrouter/auto"
-            else:
-                model = settings.ai_model_preference
-
             # Create explainer with custom prompts from settings
             explainer = AIExplainer(
                 api_key=settings.openrouter_api_key or None,
-                model=model,
+                model=resolve_ai_model(settings),
                 cache=getattr(app, "ai_explanation_cache", None),
                 custom_system_prompt=getattr(settings, "custom_system_prompt", None),
                 custom_instructions=getattr(settings, "custom_instructions", None),
             )
 
             # Build weather data dict from current conditions
-            current = weather_data.current
-            weather_dict = {
-                "temperature": current.temperature_f,
-                "temperature_unit": "F",
-                "conditions": current.condition,
-                "humidity": current.humidity,
-                "wind_speed": current.wind_speed_mph,
-                "wind_direction": current.wind_direction,
-                "visibility": current.visibility_miles,
-                "pressure": current.pressure_in,
-                "alerts": [],
-                "forecast_periods": [],
-            }
+            weather_dict = build_current_weather_payload(weather_data)
 
             # Add local time info for the location
-            now_utc = datetime.now(UTC)
-            weather_dict["utc_time"] = now_utc.strftime("%Y-%m-%d %H:%M UTC")
-
-            # Try to get local time at the weather location
-            location_tz = getattr(location, "timezone", None)
-            if location_tz:
-                try:
-                    local_tz = ZoneInfo(location_tz)
-                    local_time = now_utc.astimezone(local_tz)
-                    weather_dict["local_time"] = local_time.strftime("%Y-%m-%d %H:%M")
-                    weather_dict["timezone"] = location_tz
-                    hour = local_time.hour
-                    if 5 <= hour < 12:
-                        weather_dict["time_of_day"] = "morning"
-                    elif 12 <= hour < 17:
-                        weather_dict["time_of_day"] = "afternoon"
-                    elif 17 <= hour < 21:
-                        weather_dict["time_of_day"] = "evening"
-                    else:
-                        weather_dict["time_of_day"] = "night"
-                except Exception as e:
-                    logger.debug(f"Could not determine local time for {location_tz}: {e}")
-
-            # Add alerts if present
-            if weather_data.alerts and weather_data.alerts.alerts:
-                weather_dict["alerts"] = [
-                    {"title": alert.title, "severity": alert.severity}
-                    for alert in weather_data.alerts.alerts
-                ]
-
-            # Add forecast periods if available
-            if weather_data.forecast and weather_data.forecast.periods:
-                forecast_periods = []
-                for period in weather_data.forecast.periods[:6]:
-                    forecast_periods.append(
-                        {
-                            "name": period.name,
-                            "temperature": period.temperature,
-                            "temperature_unit": period.temperature_unit,
-                            "short_forecast": period.short_forecast,
-                            "wind_speed": period.wind_speed,
-                            "wind_direction": period.wind_direction,
-                        }
-                    )
-                weather_dict["forecast_periods"] = forecast_periods
-
-            # Determine explanation style
-            style_map = {
-                "brief": ExplanationStyle.BRIEF,
-                "standard": ExplanationStyle.STANDARD,
-                "detailed": ExplanationStyle.DETAILED,
-            }
-            style = style_map.get(settings.ai_explanation_style, ExplanationStyle.STANDARD)
+            add_location_time_context(weather_dict, location)
 
             # Run async explanation
             loop = asyncio.new_event_loop()
@@ -483,7 +394,7 @@ def show_explanation_dialog(
                     explainer.explain_weather(
                         weather_dict,
                         location.name,
-                        style=style,
+                        style=resolve_explanation_style(settings),
                         preserve_markdown=False,
                     )
                 )
