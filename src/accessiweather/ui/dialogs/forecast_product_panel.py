@@ -35,6 +35,7 @@ from .forecast_product_formatting import (
     format_issuance as _format_issuance,
     format_sps_choice_entry as _format_sps_choice_entry,
 )
+from .forecast_product_widgets import create_product_panel_widgets
 
 if TYPE_CHECKING:
     from ...ai_explainer import AIExplainer
@@ -112,84 +113,7 @@ class ForecastProductPanel(wx.Panel):
     # ------------------------------------------------------------------
     def _create_widgets(self) -> None:
         """Construct the per-tab widget tree."""
-        main_sizer = wx.BoxSizer(wx.VERTICAL)
-
-        full_name = _PRODUCT_FULL_NAMES[self.product_type]
-        self.header_label = wx.StaticText(self, label=full_name)
-        main_sizer.Add(self.header_label, 0, wx.ALL | wx.EXPAND, 8)
-
-        # SPS multi-product chooser — ONLY created on the SPS tab. Creating it
-        # on AFD/HWO and hiding it via Show(False) still leaks the label to
-        # screen readers, which was reported as misleading. AFD and HWO never
-        # have multiple concurrent products, so the chooser is SPS-only by
-        # design.
-        self.sps_choice_label: wx.StaticText | None = None
-        self.sps_choice: wx.Choice | None = None
-        if self.product_type == "SPS":
-            self.sps_choice_label = wx.StaticText(self, label="Recent Special Weather Statements:")
-            main_sizer.Add(self.sps_choice_label, 0, wx.LEFT | wx.RIGHT, 8)
-            self.sps_choice = wx.Choice(self)
-            main_sizer.Add(self.sps_choice, 0, wx.ALL | wx.EXPAND, 8)
-            # Hidden until we actually have >1 SPS to switch between.
-            main_sizer.Show(self.sps_choice_label, False)
-            main_sizer.Show(self.sps_choice, False)
-
-        # Raw product text — the primary content surface.
-        self.product_textctrl = wx.TextCtrl(
-            self,
-            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL,
-            value="Loading...",
-        )
-        main_sizer.Add(self.product_textctrl, 1, wx.ALL | wx.EXPAND, 8)
-
-        # Issuance StaticText — adjacent StaticText is what screen readers pick up.
-        self.issuance_label = wx.StaticText(self, label="")
-        main_sizer.Add(self.issuance_label, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
-
-        # AI summary header + display — hidden until user clicks "Plain Language Summary".
-        self.ai_summary_header = wx.StaticText(self, label="Plain Language Summary:")
-        main_sizer.Add(self.ai_summary_header, 0, wx.LEFT | wx.RIGHT, 8)
-        self.ai_summary_display = wx.TextCtrl(
-            self,
-            style=wx.TE_MULTILINE | wx.TE_READONLY,
-        )
-        main_sizer.Add(self.ai_summary_display, 0, wx.ALL | wx.EXPAND, 8)
-        main_sizer.Show(self.ai_summary_header, False)
-        main_sizer.Show(self.ai_summary_display, False)
-
-        # Model information (shown alongside the AI summary). Mirrors
-        # DiscussionDialog's Model / Tokens / Cost / Cached block so users
-        # see the same provenance info they already expect from AFD.
-        self.model_info_label = wx.StaticText(self, label="Model Information:")
-        main_sizer.Add(self.model_info_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 8)
-        self.model_info = wx.TextCtrl(
-            self,
-            value="",
-            style=wx.TE_MULTILINE | wx.TE_READONLY,
-            size=wx.Size(-1, 80),
-        )
-        main_sizer.Add(self.model_info, 0, wx.LEFT | wx.RIGHT | wx.EXPAND, 8)
-        main_sizer.Show(self.model_info_label, False)
-        main_sizer.Show(self.model_info, False)
-
-        # Buttons row
-        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.explain_button = wx.Button(self, label="Plain Language Summary")
-        self.regenerate_button = wx.Button(self, label="Regenerate Summary")
-        self.retry_button = wx.Button(self, label="Try again")
-        button_sizer.Add(self.explain_button, 0, wx.RIGHT, 5)
-        button_sizer.Add(self.regenerate_button, 0, wx.RIGHT, 5)
-        button_sizer.Add(self.retry_button, 0)
-        main_sizer.Add(button_sizer, 0, wx.ALL, 8)
-
-        # Regenerate + retry hidden initially.
-        self.regenerate_button.Hide()
-        self.retry_button.Hide()
-        # Explain button disabled until we have loaded text + explainer is available.
-        self.explain_button.Disable()
-
-        self.SetSizer(main_sizer)
-        self._main_sizer = main_sizer
+        create_product_panel_widgets(self)
 
     def _bind_events(self) -> None:
         """Wire up button and SPS-choice events."""
