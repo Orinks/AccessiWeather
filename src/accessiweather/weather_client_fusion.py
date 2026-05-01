@@ -183,9 +183,9 @@ class DataFusionEngine:
         # Check for temperature conflicts
         self._check_temperature_conflicts(valid_sources, merged_values, attribution, is_us)
 
-        # For US locations, only trust NWS for snow depth. Both Open-Meteo (ERA5/GFS)
-        # and Visual Crossing likely source snowpack from SNODAS or similar gridded
-        # analysis products rather than direct station observations — can be badly wrong.
+        # For US locations, only trust NWS for snow depth. Open-Meteo (ERA5/GFS)
+        # likely sources snowpack from model or gridded analysis data rather than
+        # direct station observations, which can be badly wrong.
         if is_us:
             snow_source = attribution.field_sources.get("snow_depth_in")
             if snow_source and snow_source != "nws":
@@ -650,7 +650,7 @@ class DataFusionEngine:
         source to avoid duplicate periods with different naming conventions:
         - US locations: Prefer NWS (most accurate for US)
         - International: Use Open-Meteo
-        - Visual Crossing: Used when explicitly selected or as fallback
+        - Pirate Weather: Used as a fallback when primary forecasts are unavailable
 
         Args:
             sources: List of source data containers
@@ -672,15 +672,15 @@ class DataFusionEngine:
 
         # Select single source based on location (no merging to avoid duplicates)
         # US: prefer NWS for 7-day, Open-Meteo for extended ranges; PW as fallback
-        # International: prefer Open-Meteo > Pirate Weather > Visual Crossing
+        # International: prefer Open-Meteo > Pirate Weather
         if is_us:
             preferred_order = (
-                ["openmeteo", "nws", "visualcrossing", "pirateweather"]
+                ["openmeteo", "nws", "pirateweather"]
                 if requested_days > 7
-                else ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+                else ["nws", "openmeteo", "pirateweather"]
             )
         else:
-            preferred_order = ["openmeteo", "pirateweather", "visualcrossing"]
+            preferred_order = ["openmeteo", "pirateweather"]
 
         # Find the first available source in preferred order
         selected_source = None
@@ -751,12 +751,12 @@ class DataFusionEngine:
             return None, field_sources
 
         # Select single source based on location (no merging for hourly data)
-        # US: prefer NWS > Open-Meteo > Visual Crossing > Pirate Weather
-        # International: prefer Open-Meteo > Pirate Weather > Visual Crossing
+        # US: prefer NWS > Open-Meteo > Pirate Weather
+        # International: prefer Open-Meteo > Pirate Weather
         if is_us:
-            preferred_order = ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+            preferred_order = ["nws", "openmeteo", "pirateweather"]
         else:
-            preferred_order = ["openmeteo", "pirateweather", "visualcrossing"]
+            preferred_order = ["openmeteo", "pirateweather"]
 
         # Find the first available source in preferred order
         selected_source = None
@@ -819,7 +819,7 @@ class DataFusionEngine:
         if self._hourly_has_pressure(selected_source.hourly_forecast):
             return selected_source
 
-        pressure_priority = ["openmeteo", "visualcrossing", "pirateweather"]
+        pressure_priority = ["openmeteo", "pirateweather"]
         pressure_sources = [
             s for s in valid_sources if self._hourly_has_pressure(s.hourly_forecast)
         ]

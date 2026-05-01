@@ -451,55 +451,6 @@ async def enrich_with_aviation_data(
         logger.debug("Failed to fetch aviation data: %s", exc)
 
 
-async def enrich_with_visual_crossing_alerts(
-    client: WeatherClient,
-    weather_data: WeatherData,
-    location: Location,
-    skip_notifications: bool = False,
-) -> None:
-    """
-    Enrich weather data with alerts from Visual Crossing if available.
-
-    For US locations, this is skipped since NWS is the authoritative source
-    and Visual Crossing just mirrors the same alerts without severity metadata.
-
-    Args:
-        client: The weather client instance
-        weather_data: The weather data to enrich
-        location: The location for alerts
-        skip_notifications: If True, skip triggering alert notifications (used for pre-warming)
-
-    """
-    if not client.visual_crossing_client:
-        return
-
-    # Skip VC alerts for US locations - NWS is authoritative and VC lacks metadata
-    if client._is_us_location(location):
-        logger.debug("Skipping Visual Crossing alerts for US location %s", location.name)
-        return
-
-    try:
-        logger.debug("Fetching alerts from Visual Crossing for %s", location.name)
-        vc_alerts_data = await client.visual_crossing_client.get_alerts(location)
-
-        if vc_alerts_data and vc_alerts_data.has_alerts():
-            logger.info("Adding %d alerts from Visual Crossing", len(vc_alerts_data.alerts))
-
-            existing = weather_data.alerts.alerts if weather_data.alerts else []
-            combined: dict[str, WeatherAlert] = {alert.get_unique_id(): alert for alert in existing}
-
-            for alert in vc_alerts_data.alerts:
-                combined.setdefault(alert.get_unique_id(), alert)
-
-            weather_data.alerts = WeatherAlerts(alerts=list(combined.values()))
-
-            # Only process for notifications if not skipped (e.g., for pre-warming)
-            if not skip_notifications:
-                await client._process_visual_crossing_alerts(vc_alerts_data, location)
-    except Exception as exc:  # noqa: BLE001
-        logger.debug("Failed to fetch alerts from Visual Crossing: %s", exc)
-
-
 async def enrich_with_sunrise_sunset(
     client: WeatherClient, weather_data: WeatherData, location: Location
 ) -> None:
@@ -555,14 +506,6 @@ async def populate_environmental_metrics(
 
     weather_data.environmental = environmental
 
-    # Fallback: populate AQ from Visual Crossing if Open-Meteo didn't provide it
-    if environmental.air_quality_index is None and client.visual_crossing_client:
-        try:
-            vc_aq = await client.visual_crossing_client.get_air_quality(location)
-            client.environmental_client.populate_from_visual_crossing(vc_aq, environmental)
-        except Exception as exc:  # noqa: BLE001
-            logger.debug("VC air quality fallback failed: %s", exc)
-
     # Copy UV index from current conditions to environmental conditions
     if weather_data.current and weather_data.current.uv_index is not None:
         weather_data.environmental.uv_index = weather_data.current.uv_index
@@ -572,34 +515,3 @@ async def populate_environmental_metrics(
             weather_data.current.uv_index,
             weather_data.environmental.uv_category,
         )
-
-
-async def enrich_with_visual_crossing_moon_data(
-    client: WeatherClient, weather_data: WeatherData, location: Location
-) -> None:
-    """Enrich weather data with moon phase info from Visual Crossing if configured."""
-    if not client.visual_crossing_client:
-        return
-
-    # Skip if we already have moon phase data
-    if weather_data.current and weather_data.current.moon_phase:
-        return
-
-    try:
-        logger.debug("Fetching moon data from Visual Crossing for %s", location.name)
-        vc_current = await client.visual_crossing_client.get_current_conditions(location)
-
-        if vc_current and weather_data.current:
-            # Update moon fields if present in VC response
-            if vc_current.moon_phase:
-                weather_data.current.moon_phase = vc_current.moon_phase
-                logger.info("Updated moon phase from Visual Crossing: %s", vc_current.moon_phase)
-
-            if vc_current.moonrise_time:
-                weather_data.current.moonrise_time = vc_current.moonrise_time
-
-            if vc_current.moonset_time:
-                weather_data.current.moonset_time = vc_current.moonset_time
-
-    except Exception as exc:  # noqa: BLE001
-        logger.debug("Failed to fetch moon data from Visual Crossing: %s", exc)

@@ -77,15 +77,10 @@ class TestValidateAndFixConfig:
 
     def test_valid_data_sources_unchanged(self, mock_manager, operations):
         """Test that valid data sources are not changed."""
-        valid_sources = ["auto", "nws", "openmeteo", "visualcrossing", "pirateweather"]
+        valid_sources = ["auto", "nws", "openmeteo", "pirateweather"]
 
         for source in valid_sources:
             mock_manager._config.settings.data_source = source
-            # visualcrossing requires an API key to stay valid at load time
-            if source == "visualcrossing":
-                mock_manager._config.settings.visual_crossing_api_key = "test_key"
-            else:
-                mock_manager._config.settings.visual_crossing_api_key = ""
             mock_manager._config.settings.pirate_weather_api_key = ""
             mock_manager.save_config.reset_mock()
 
@@ -106,25 +101,14 @@ class TestValidateAndFixConfig:
         assert mock_manager._config.settings.data_source == "pirateweather"
         mock_manager.save_config.assert_not_called()
 
-    def test_visualcrossing_without_api_key_switches_to_auto(self, mock_manager, operations):
-        """Test that visualcrossing without API key switches to auto."""
+    def test_visualcrossing_source_switches_to_auto(self, mock_manager, operations):
+        """Test that legacy visualcrossing source switches to auto."""
         mock_manager._config.settings.data_source = "visualcrossing"
-        mock_manager._config.settings.visual_crossing_api_key = ""
 
         operations._validate_and_fix_config()
 
         assert mock_manager._config.settings.data_source == "auto"
         mock_manager.save_config.assert_called_once()
-
-    def test_visualcrossing_with_api_key_unchanged(self, mock_manager, operations):
-        """Test that visualcrossing with API key is unchanged."""
-        mock_manager._config.settings.data_source = "visualcrossing"
-        mock_manager._config.settings.visual_crossing_api_key = "test_key"
-
-        operations._validate_and_fix_config()
-
-        assert mock_manager._config.settings.data_source == "visualcrossing"
-        mock_manager.save_config.assert_not_called()
 
 
 class TestValidateNonCritical:

@@ -2,7 +2,7 @@
 Notifications package for AccessiWeather.
 
 This package provides notification functionality including:
-- Alert-based notifications (weather alerts from NWS, Visual Crossing)
+- Alert-based notifications (weather alerts from NWS and Pirate Weather)
 - Event-based notifications (AFD updates, severe risk level changes)
 - Sound playback for notifications
 - Desktop toast notifications

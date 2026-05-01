@@ -640,7 +640,7 @@ class TestGetNotificationEventData:
     def client(self):
         from accessiweather.weather_client import WeatherClient
 
-        return WeatherClient(visual_crossing_api_key="test-key")
+        return WeatherClient(pirate_weather_api_key="test-key")
 
     @pytest.mark.asyncio
     async def test_us_location_fetches_nws_data(self, client, us_location):
@@ -670,13 +670,13 @@ class TestGetNotificationEventData:
         assert len(result.alerts.alerts) == 0
 
     @pytest.mark.asyncio
-    async def test_intl_location_with_vc_client(self, client, intl_location):
-        vc_client = MagicMock()
+    async def test_intl_location_with_pirate_weather_client(self, client, intl_location):
+        pw_client = MagicMock()
         current = MagicMock()
         alerts = WeatherAlerts(alerts=[])
-        vc_client.get_current_conditions = AsyncMock(return_value=current)
-        vc_client.get_alerts = AsyncMock(return_value=alerts)
-        client._visual_crossing_client = vc_client
+        pw_client.get_current_conditions = AsyncMock(return_value=current)
+        pw_client.get_alerts = AsyncMock(return_value=alerts)
+        client._pirate_weather_client_for_location = MagicMock(return_value=pw_client)
 
         result = await client.get_notification_event_data(intl_location)
 
@@ -684,10 +684,10 @@ class TestGetNotificationEventData:
         assert result.alerts == alerts
 
     @pytest.mark.asyncio
-    async def test_intl_location_without_vc_client(self, intl_location):
+    async def test_intl_location_without_pirate_weather_client(self, intl_location):
         from accessiweather.weather_client import WeatherClient
 
-        client = WeatherClient()  # No VC API key
+        client = WeatherClient()  # No Pirate Weather API key
 
         result = await client.get_notification_event_data(intl_location)
 
@@ -723,9 +723,10 @@ class TestGetNotificationEventData:
         settings.notify_minutely_precipitation_start = True
         settings.notify_minutely_precipitation_stop = True
         client.data_source = "pirateweather"
-        client.pirate_weather_client = MagicMock()
-        client.pirate_weather_client.get_current_conditions = AsyncMock(return_value=MagicMock())
-        client.pirate_weather_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+        pw_client = MagicMock()
+        pw_client.get_current_conditions = AsyncMock(return_value=MagicMock())
+        pw_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+        client._pirate_weather_client_for_location = MagicMock(return_value=pw_client)
         client._get_pirate_weather_minutely = AsyncMock(return_value=MagicMock())
 
         now = datetime(2026, 4, 7, 12, 0, tzinfo=UTC)
@@ -766,9 +767,10 @@ class TestGetNotificationEventData:
         settings.notify_minutely_precipitation_stop = True
         settings.minutely_precipitation_fast_polling = True
         client.data_source = "pirateweather"
-        client.pirate_weather_client = MagicMock()
-        client.pirate_weather_client.get_current_conditions = AsyncMock(return_value=MagicMock())
-        client.pirate_weather_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+        pw_client = MagicMock()
+        pw_client.get_current_conditions = AsyncMock(return_value=MagicMock())
+        pw_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+        client._pirate_weather_client_for_location = MagicMock(return_value=pw_client)
         client._get_pirate_weather_minutely = AsyncMock(return_value=MagicMock())
 
         now = datetime(2026, 4, 7, 12, 0, tzinfo=UTC)
@@ -812,9 +814,10 @@ class TestGetNotificationEventData:
         settings.notify_minutely_precipitation_stop = True
         settings.minutely_precipitation_fast_polling = False
         client.data_source = "pirateweather"
-        client.pirate_weather_client = MagicMock()
-        client.pirate_weather_client.get_current_conditions = AsyncMock(return_value=MagicMock())
-        client.pirate_weather_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+        pw_client = MagicMock()
+        pw_client.get_current_conditions = AsyncMock(return_value=MagicMock())
+        pw_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+        client._pirate_weather_client_for_location = MagicMock(return_value=pw_client)
         client._get_pirate_weather_minutely = AsyncMock(return_value=MagicMock())
 
         now = datetime(2026, 4, 7, 12, 0, tzinfo=UTC)

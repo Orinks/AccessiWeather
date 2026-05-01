@@ -10,7 +10,7 @@
 
 AccessiWeather is an **accessible desktop weather application** built with Python and the BeeWare/Toga framework. It delivers comprehensive weather forecasts, alerts, and environmental data with **full screen reader support** and keyboard navigation, making weather information accessible to everyone.
 
-**Key Differentiator:** Multi-source weather data fusion (NWS + Open-Meteo + Visual Crossing) provides reliable coverage and graceful fallback when services are unavailable.
+**Key Differentiator:** Multi-source weather data fusion (NWS + Open-Meteo + Pirate Weather) provides reliable coverage and graceful fallback when services are unavailable.
 
 ---
 
@@ -32,7 +32,7 @@ AccessiWeather is an **accessible desktop weather application** built with Pytho
 ## Core Features
 
 ### 🌦️ Weather Data
-- **Multi-source integration:** NWS (US), Open-Meteo (global), Visual Crossing (enhanced)
+- **Multi-source integration:** NWS (US), Open-Meteo (global), Pirate Weather (optional global alerts and minutely precipitation)
 - **Current conditions:** Temperature, humidity, wind, pressure
 - **7-day forecast:** Daily and hourly forecasts
 - **Hourly forecasts:** Detailed hour-by-hour predictions
@@ -81,7 +81,7 @@ AccessiWeather is an **accessible desktop weather application** built with Pytho
 ### Weather APIs
 - **National Weather Service (NWS)** - US weather data (no API key)
 - **Open-Meteo** - Global weather fallback (no API key)
-- **Visual Crossing** - Enhanced alerts and history (API key required, optional)
+- **Pirate Weather** - Global alerts, minutely precipitation, summaries, and moon phase (API key required, optional)
 
 ### Development Tools
 - **pytest** - Testing framework with async support
@@ -110,7 +110,7 @@ User Request → WeatherClient → Check Cache
                     ↓
           ┌─────────┴─────────┬─────────────┐
           ▼                   ▼             ▼
-    NWS API (US)      Open-Meteo      Visual Crossing
+    NWS API (US)      Open-Meteo      Pirate Weather
                            ↓
                     Data Merge & Cache
                            ↓
@@ -305,7 +305,7 @@ See [development-guide.md](development-guide.md) for complete setup.
 - **Use Case:** International locations, NWS fallback
 - **Data:** Forecasts, historical data, air quality
 
-**Visual Crossing** (Optional)
+**Pirate Weather** (Optional)
 - **Coverage:** Global
 - **API Key:** Required (user-provided)
 - **Use Case:** Enhanced alert descriptions, historical trends
@@ -315,7 +315,7 @@ See [development-guide.md](development-guide.md) for complete setup.
 1. Detect location type (US vs international)
 2. Use NWS for US locations (most accurate)
 3. Fall back to Open-Meteo on NWS failure or international
-4. Enrich with Visual Crossing if API key available
+4. Add Pirate Weather data if an API key is available
 5. Merge data intelligently, preferring most reliable source per field
 
 ---
@@ -520,7 +520,7 @@ See [ACCESSIBILITY.md](ACCESSIBILITY.md) for complete guidelines.
 ## Acknowledgments
 
 - **BeeWare Project:** For Toga framework and Briefcase packaging
-- **Weather Services:** NWS, Open-Meteo, Visual Crossing for data
+- **Weather Services:** NWS, Open-Meteo, Pirate Weather for data
 - **Community:** Contributors and users who provide feedback
 - **Open Source:** All the libraries that make this possible
 

@@ -15,10 +15,8 @@ from __future__ import annotations
 
 
 def _make_dialog(
-    vc_key="",
     pirate_key="",
     openrouter_key="",
-    original_vc="",
     original_pirate="",
     original_or="",
 ):
@@ -26,12 +24,10 @@ def _make_dialog(
     from accessiweather.ui.dialogs import settings_dialog
 
     dlg = settings_dialog.SettingsDialogSimple.__new__(settings_dialog.SettingsDialogSimple)
-    dlg._original_vc_key = original_vc
     dlg._original_pirate_weather_key = original_pirate
     dlg._original_openrouter_key = original_or
 
     settings_dict = {
-        "visual_crossing_api_key": vc_key,
         "pirate_weather_api_key": pirate_key,
         "openrouter_api_key": openrouter_key,
         "update_interval_minutes": 30,
@@ -40,7 +36,6 @@ def _make_dialog(
     # Run just the guard block
 
     for key, orig_attr in (
-        ("visual_crossing_api_key", "_original_vc_key"),
         ("pirate_weather_api_key", "_original_pirate_weather_key"),
         ("openrouter_api_key", "_original_openrouter_key"),
     ):
@@ -53,19 +48,19 @@ def _make_dialog(
 class TestApiKeyGuard:
     def test_empty_field_with_original_key_is_dropped(self):
         """Empty field + original non-empty → key removed from settings_dict."""
-        result = _make_dialog(vc_key="", original_vc="my-real-key")
-        assert "visual_crossing_api_key" not in result
+        result = _make_dialog(pirate_key="", original_pirate="my-real-key")
+        assert "pirate_weather_api_key" not in result
 
     def test_empty_field_with_no_original_passes_through(self):
         """Empty field + no original key → passes through (user never set one)."""
-        result = _make_dialog(vc_key="", original_vc="")
-        assert "visual_crossing_api_key" in result
-        assert result["visual_crossing_api_key"] == ""
+        result = _make_dialog(pirate_key="", original_pirate="")
+        assert "pirate_weather_api_key" in result
+        assert result["pirate_weather_api_key"] == ""
 
     def test_non_empty_field_always_passes_through(self):
         """Non-empty field → always saved regardless of original."""
-        result = _make_dialog(vc_key="new-key", original_vc="old-key")
-        assert result["visual_crossing_api_key"] == "new-key"
+        result = _make_dialog(pirate_key="new-key", original_pirate="old-key")
+        assert result["pirate_weather_api_key"] == "new-key"
 
     def test_openrouter_key_guard(self):
         """Same guard applies to openrouter key."""
@@ -80,13 +75,10 @@ class TestApiKeyGuard:
     def test_both_keys_guarded_independently(self):
         """Each key is guarded independently."""
         result = _make_dialog(
-            vc_key="",
             pirate_key="still-set-pw",
             openrouter_key="still-set",
-            original_vc="was-set",
             original_pirate="still-set-pw",
             original_or="still-set",
         )
-        assert "visual_crossing_api_key" not in result
         assert result["pirate_weather_api_key"] == "still-set-pw"
         assert result["openrouter_api_key"] == "still-set"

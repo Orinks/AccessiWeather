@@ -111,7 +111,7 @@ class SourceAttribution:
 class SourceData:
     """Container for data from a single source."""
 
-    source: str  # "nws", "openmeteo", "visualcrossing"
+    source: str  # "nws", "openmeteo", "pirateweather"
     current: CurrentConditions | None = None
     forecast: Forecast | None = None
     hourly_forecast: HourlyForecast | None = None

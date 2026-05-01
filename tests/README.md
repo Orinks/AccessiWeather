@@ -31,7 +31,7 @@ pytest -n 0
 | `test_weather_client.py` | Weather data orchestration |
 | `test_geocoding.py` | Address geocoding and validation |
 | `test_openmeteo_client.py` | Open-Meteo API client |
-| `test_visual_crossing_client.py` | Visual Crossing API client |
+| `test_pirate_weather_client.py` | Pirate Weather API client |
 | `test_models.py` | Data models |
 | `test_parsers.py` | Data parsing utilities |
 | `test_utils.py` | Utility functions |

@@ -217,6 +217,21 @@ class TestParseCurrentConditions:
         assert result.sunrise_time is not None
         assert result.sunset_time is not None
 
+    def test_moon_phase_populated_from_daily_block(self, client, sample_forecast_payload):
+        payload = dict(sample_forecast_payload)
+        payload["daily"] = {
+            "data": [
+                {
+                    **sample_forecast_payload["daily"]["data"][0],
+                    "moonPhase": 0.5,
+                }
+            ]
+        }
+
+        result = client._parse_current_conditions(payload)
+
+        assert result.moon_phase == "Full Moon"
+
     def test_v2_precipitation_type_populated(self, client, sample_forecast_payload):
         payload = dict(sample_forecast_payload)
         payload["currently"] = {

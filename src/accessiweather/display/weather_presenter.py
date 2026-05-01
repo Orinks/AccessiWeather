@@ -647,7 +647,6 @@ class WeatherPresenter:
         source_names = {
             "nws": "National Weather Service",
             "openmeteo": "Open-Meteo",
-            "visualcrossing": "Visual Crossing",
             "pirateweather": "Pirate Weather",
         }
 

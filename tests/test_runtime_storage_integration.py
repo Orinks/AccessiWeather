@@ -11,7 +11,6 @@ def test_initialize_components_uses_runtime_cache_dir(tmp_path):
     runtime_paths = RuntimeStoragePaths(config_root=tmp_path / "config")
     settings = SimpleNamespace(
         data_source="auto",
-        visual_crossing_api_key="",
         pirate_weather_api_key="",
         avwx_api_key="",
         to_alert_settings=lambda: object(),

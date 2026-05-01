@@ -39,7 +39,7 @@ from .models import (
 )
 from .utils.retry_utils import async_retry_with_backoff
 from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
-from .weather_client_parsers import convert_f_to_c, degrees_to_cardinal
+from .weather_client_parsers import convert_f_to_c, degrees_to_cardinal, describe_moon_phase
 
 logger = logging.getLogger(__name__)
 
@@ -465,6 +465,7 @@ class PirateWeatherClient:
         # Sunrise/sunset come from the first daily entry
         sunrise_time = None
         sunset_time = None
+        moon_phase = None
         daily_data = data.get("daily", {}).get("data", [])
         if daily_data:
             today = daily_data[0]
@@ -475,6 +476,7 @@ class PirateWeatherClient:
                 sunrise_time = datetime.fromtimestamp(sr, tz=location_tz)
             if ss:
                 sunset_time = datetime.fromtimestamp(ss, tz=location_tz)
+            moon_phase = describe_moon_phase(today.get("moonPhase"))
 
         condition_str = _data_point_condition(current)
         precipitation_type = _normalize_precipitation_type(current.get("precipType"))
@@ -504,6 +506,7 @@ class PirateWeatherClient:
             precipitation_type=precipitation_type,
             sunrise_time=sunrise_time,
             sunset_time=sunset_time,
+            moon_phase=moon_phase,
         )
 
     def _parse_forecast(self, data: dict, days: int | None = None) -> Forecast | None:
