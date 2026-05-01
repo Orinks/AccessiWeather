@@ -57,18 +57,7 @@ class TaskbarIconUpdater:
         verbosity_level: str = "standard",
         round_values: bool = False,
     ):
-        """
-        Initialize the TaskbarIconUpdater.
-
-        Args:
-            text_enabled: Whether taskbar icon text updates are enabled
-            dynamic_enabled: Whether dynamic format selection is enabled
-            format_string: The format string to use for the tooltip
-            temperature_unit: Temperature unit preference (fahrenheit, celsius, both)
-            verbosity_level: Information verbosity level (minimal, standard, detailed)
-            round_values: Whether to round numeric values to whole numbers
-
-        """
+        """Initialize the taskbar icon updater settings."""
         self.text_enabled = text_enabled
         self.dynamic_enabled = dynamic_enabled
         self.format_string = format_string
@@ -87,18 +76,7 @@ class TaskbarIconUpdater:
         verbosity_level: str | None = None,
         round_values: bool | None = None,
     ) -> None:
-        """
-        Update taskbar icon settings.
-
-        Args:
-            text_enabled: Whether taskbar icon text updates are enabled
-            dynamic_enabled: Whether dynamic format selection is enabled
-            format_string: The format string to use for the tooltip
-            temperature_unit: Temperature unit preference
-            verbosity_level: Information verbosity level (minimal, standard, detailed)
-            round_values: Whether to round numeric values to whole numbers
-
-        """
+        """Update taskbar icon settings."""
         if text_enabled is not None:
             self.text_enabled = text_enabled
         if dynamic_enabled is not None:
@@ -117,22 +95,7 @@ class TaskbarIconUpdater:
         weather_data: WeatherData | None,
         location_name: str | None = None,
     ) -> str:
-        """
-        Format the tooltip text based on weather data and settings.
-
-        The output varies based on verbosity_level:
-        - minimal: Location + temperature only
-        - standard: Location + temperature + condition (default behavior)
-        - detailed: Location + temperature + condition + feels like + humidity + wind
-
-        Args:
-            weather_data: Current weather data, or None if unavailable
-            location_name: Name of the current location
-
-        Returns:
-            Formatted tooltip text, or default text if formatting fails
-
-        """
+        """Format the tooltip text based on weather data and settings."""
         if not self.text_enabled:
             return DEFAULT_TOOLTIP_TEXT
 
@@ -197,19 +160,7 @@ class TaskbarIconUpdater:
         *,
         weather_data: WeatherData | Any | None = None,
     ) -> dict[str, str]:
-        """
-        Extract weather variables from current conditions for substitution.
-
-        Args:
-            current: Current conditions object
-            location_name: Name of the current location
-            weather_data: Optional weather payload used for forecast-derived placeholders
-                like high and low.
-
-        Returns:
-            Dictionary of variable names to string values
-
-        """
+        """Extract weather variables from current conditions for substitution."""
         data: dict[str, str] = {}
 
         data["location"] = location_name or PLACEHOLDER_NA
@@ -500,22 +451,7 @@ class TaskbarIconUpdater:
         return SimpleNamespace(current_conditions=current, forecast=forecast, alerts=None)
 
     def _format_with_fallback(self, format_string: str, data: dict[str, str]) -> str:
-        """
-        Format the string with fallback for invalid format strings.
-
-        Unknown placeholders (e.g. ``{foo}``) are left as literal text in the
-        output — they do NOT trigger a full format-string fallback.  Only
-        genuinely malformed input (unbalanced braces) causes a fallback to
-        ``DEFAULT_TOOLTIP_TEXT``.
-
-        Args:
-            format_string: The format string to use
-            data: Dictionary of variable values
-
-        Returns:
-            Formatted string, or default if format is genuinely invalid
-
-        """
+        """Format the string, falling back only for genuinely invalid input."""
         # Detect unbalanced braces before handing off to the parser.
         # Unknown placeholder names are handled safely by FormatStringParser.format_string
         # which leaves them as literal "{key}" text, so we no longer reject them here.
@@ -536,16 +472,7 @@ class TaskbarIconUpdater:
         return result or DEFAULT_TOOLTIP_TEXT
 
     def _truncate_tooltip(self, text: str) -> str:
-        """
-        Truncate tooltip text to platform-dependent limits.
-
-        Args:
-            text: The tooltip text to truncate
-
-        Returns:
-            Truncated text with ellipsis if needed
-
-        """
+        """Truncate tooltip text to platform-dependent limits."""
         if not text:
             return DEFAULT_TOOLTIP_TEXT
 
@@ -555,24 +482,9 @@ class TaskbarIconUpdater:
         return text[: TOOLTIP_MAX_LENGTH - 3] + "..."
 
     def validate_format_string(self, format_string: str) -> tuple[bool, str | None]:
-        """
-        Validate a format string.
-
-        Args:
-            format_string: The format string to validate
-
-        Returns:
-            Tuple of (is_valid, error_message)
-
-        """
+        """Validate a format string."""
         return self.parser.validate_format_string(format_string)
 
     def get_available_variables(self) -> dict[str, str]:
-        """
-        Get all available variables for format strings.
-
-        Returns:
-            Dictionary of variable names to descriptions
-
-        """
+        """Get all available variables for format strings."""
         return self.parser.SUPPORTED_PLACEHOLDERS.copy()
