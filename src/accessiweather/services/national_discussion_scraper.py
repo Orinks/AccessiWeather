@@ -12,7 +12,11 @@ import time
 from typing import Any
 
 import httpx
-from bs4 import BeautifulSoup
+
+from accessiweather.services.national_discussion_scraper_parsing import (
+    extract_cpc_outlook_text,
+    extract_discussion_text,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -136,92 +140,8 @@ class NationalDiscussionScraper:
             return {"success": False, "error": f"Request error: {e}", "error_type": "request"}
 
     def _extract_discussion_text(self, html_content: str, source: str) -> dict[str, Any]:
-        """
-        Extract discussion text from HTML content with robust parsing.
-
-        Args:
-        ----
-            html_content: HTML content to parse
-            source: Source identifier ('wpc' or 'spc')
-
-        Returns:
-        -------
-            Dictionary with extracted text or error information
-
-        """
-        try:
-            soup = BeautifulSoup(html_content, "html.parser")
-
-            # Try multiple selectors to find the discussion text
-            discussion_element = None
-
-            # First try the standard pre tag
-            discussion_element = soup.find("pre")
-
-            # If that fails, try other common containers
-            if not discussion_element:
-                # Try div with class containing 'discussion'
-                discussion_element = soup.find(
-                    "div", class_=lambda c: c and "discussion" in c.lower()
-                )
-
-            if not discussion_element:
-                # Try div with id containing 'discussion'
-                discussion_element = soup.find("div", id=lambda i: i and "discussion" in i.lower())
-
-            if not discussion_element:
-                # Try paragraphs with specific text patterns
-                if source == "wpc":
-                    # Look for paragraphs containing WPC-specific text
-                    for p in soup.find_all("p"):
-                        if p.text and any(
-                            phrase in p.text
-                            for phrase in [
-                                "Short-Range Forecast Discussion",
-                                "Weather Prediction Center",
-                            ]
-                        ):
-                            discussion_element = p
-                            break
-                elif source == "spc":
-                    # Look for paragraphs containing SPC-specific text
-                    for p in soup.find_all("p"):
-                        if p.text and any(
-                            phrase in p.text
-                            for phrase in ["Convective Outlook", "Storm Prediction Center"]
-                        ):
-                            discussion_element = p
-                            break
-
-            if not discussion_element:
-                logger.error(f"Could not find {source.upper()} discussion text using any selector")
-                return {"success": False, "error": f"{source.upper()} discussion unavailable"}
-
-            # Get text without strip=True to preserve internal whitespace and newlines
-            full_text = discussion_element.get_text()
-            if not full_text:
-                logger.error(f"Empty {source.upper()} discussion text")
-                return {"success": False, "error": f"Empty {source.upper()} discussion"}
-
-            # Only strip leading/trailing whitespace from the whole block
-            full_text = full_text.strip()
-
-            # For SPC, extract the discussion section after "...SUMMARY..."
-            if source == "spc" and "...SUMMARY..." in full_text:
-                try:
-                    full_text = full_text.split("...SUMMARY...", 1)[1].strip()
-                except Exception as e:
-                    logger.warning(f"Error extracting SPC summary section: {e}")
-                    # Continue with the full text if extraction fails
-
-            return {"success": True, "full_text": full_text}
-
-        except Exception as e:
-            logger.error(f"Error parsing {source.upper()} discussion HTML: {str(e)}")
-            return {
-                "success": False,
-                "error": f"Error parsing {source.upper()} discussion: {str(e)}",
-            }
+        """Extract discussion text from HTML content with robust parsing."""
+        return extract_discussion_text(html_content, source)
 
     def fetch_wpc_discussion(self) -> dict[str, str]:
         """
@@ -397,64 +317,8 @@ class NationalDiscussionScraper:
         return f"CPC {label} Outlook is currently unavailable."
 
     def _extract_cpc_outlook_text(self, html_content: str, label: str) -> str | None:
-        """
-        Extract outlook text from a CPC outlook HTML page.
-
-        CPC outlook pages typically contain the discussion text in a <pre> tag
-        or within the main content area.
-
-        Args:
-        ----
-            html_content: Raw HTML content
-            label: Human-readable label for logging
-
-        Returns:
-        -------
-            Extracted text, or None if extraction failed.
-
-        """
-        try:
-            soup = BeautifulSoup(html_content, "html.parser")
-
-            # CPC outlook pages typically have the discussion in a <pre> tag
-            pre = soup.find("pre")
-            if pre:
-                text = pre.get_text().strip()
-                if text:
-                    return text
-
-            # Fallback: look for div with class 'contentArea' or similar
-            for selector in [
-                {"class_": "contentArea"},
-                {"class_": "mainContent"},
-                {"id": "content"},
-            ]:
-                div = soup.find("div", **selector)
-                if div:
-                    text = div.get_text().strip()
-                    if text:
-                        return text
-
-            # Last resort: try to find any substantial text block
-            body = soup.find("body")
-            if body:
-                # Look for the longest text block
-                texts = [
-                    p.get_text().strip()
-                    for p in body.find_all(["p", "div"])
-                    if p.get_text().strip()
-                ]
-                if texts:
-                    longest = max(texts, key=len)
-                    if len(longest) > 100:
-                        return longest
-
-            logger.error(f"Could not extract CPC {label} outlook text")
-            return None
-
-        except Exception as e:
-            logger.error(f"Error parsing CPC {label} outlook HTML: {e}")
-            return None
+        """Extract outlook text from a CPC outlook HTML page."""
+        return extract_cpc_outlook_text(html_content, label)
 
     def fetch_all_discussions(self) -> dict[str, dict[str, str]]:
         """
