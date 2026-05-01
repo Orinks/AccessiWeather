@@ -214,8 +214,6 @@ def test_data_sources_tab_provider_groups_avoid_static_box_sizers(monkeypatch):
         _wrap_static_text=MagicMock(),
         _on_data_source_changed=MagicMock(),
         _on_configure_source_settings=MagicMock(),
-        _on_get_vc_api_key=MagicMock(),
-        _on_validate_vc_api_key=MagicMock(),
         _on_get_pw_api_key=MagicMock(),
         _on_validate_pw_api_key=MagicMock(),
     )

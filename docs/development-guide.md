@@ -653,7 +653,7 @@ mv ~/.config/accessiweather/accessiweather.json ~/.config/accessiweather/accessi
 **API key issues:**
 ```bash
 # Check keyring
-python -c "import keyring; print(keyring.get_password('accessiweather', 'visual_crossing_api_key'))"
+python -c "import keyring; print(keyring.get_password('accessiweather', 'pirate_weather_api_key'))"
 ```
 
 ---

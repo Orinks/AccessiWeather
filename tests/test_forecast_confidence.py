@@ -30,7 +30,7 @@ def make_failed_source(source: str = "openmeteo") -> SourceData:
     return SourceData(source=source, forecast=None, success=False)
 
 
-def make_empty_forecast_source(source: str = "visualcrossing") -> SourceData:
+def make_empty_forecast_source(source: str = "pirateweather") -> SourceData:
     return SourceData(source=source, forecast=Forecast(periods=[]), success=True)
 
 

@@ -45,9 +45,8 @@ def initialize_components(app: AccessiWeatherApp) -> None:
 
     # Initialize weather client with lazy imports
     data_source = config.settings.data_source if config.settings else "auto"
-    # Note: visual_crossing_api_key, pirate_weather_api_key and avwx_api_key are
-    # LazySecureStorage objects that defer keyring access until first use.
-    lazy_api_key = config.settings.visual_crossing_api_key if config.settings else ""
+    # Note: pirate_weather_api_key and avwx_api_key are LazySecureStorage objects
+    # that defer keyring access until first use.
     lazy_pw_api_key = config.settings.pirate_weather_api_key if config.settings else ""
     lazy_avwx_key = config.settings.avwx_api_key if config.settings else ""
     # Lazy import WeatherDataCache
@@ -67,7 +66,6 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     app.weather_client = WeatherClient(
         user_agent="AccessiWeather/2.0",
         data_source=data_source,
-        visual_crossing_api_key=lazy_api_key,
         pirate_weather_api_key=lazy_pw_api_key,
         avwx_api_key=lazy_avwx_key,
         settings=config.settings,
@@ -92,7 +90,7 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     app._notifier = SafeDesktopNotifier(
         sound_enabled=bool(getattr(config.settings, "sound_enabled", True)),
         soundpack=getattr(config.settings, "sound_pack", "default"),
-        muted_sound_events=getattr(config.settings, "muted_sound_events", ["data_updated"]),
+        muted_sound_events=getattr(config.settings, "muted_sound_events", []),
     )
 
     # Initialize AI explanation cache (lazy import)

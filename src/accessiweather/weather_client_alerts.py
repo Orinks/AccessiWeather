@@ -14,7 +14,7 @@ class AlertAggregator:
     """
     Aggregates and deduplicates alerts from multiple sources.
 
-    Collects alerts from NWS and Visual Crossing (Open-Meteo does not provide alerts),
+    Collects alerts from NWS and Pirate Weather (Open-Meteo does not provide alerts),
     deduplicates based on event type, area, and time window, and preserves the most
     detailed description when merging duplicates.
     """
@@ -33,17 +33,17 @@ class AlertAggregator:
     def aggregate_alerts(
         self,
         nws_alerts: WeatherAlerts | None,
-        vc_alerts: WeatherAlerts | None,
+        secondary_alerts: WeatherAlerts | None,
     ) -> WeatherAlerts:
         """
-        Combine alerts from NWS and Visual Crossing.
+        Combine alerts from NWS and a secondary provider.
 
         Deduplicates based on event type, area, and time window.
         Preserves most detailed description when merging duplicates.
 
         Args:
             nws_alerts: Alerts from NWS (may be None)
-            vc_alerts: Alerts from Visual Crossing (may be None)
+            secondary_alerts: Alerts from Pirate Weather or another provider (may be None)
 
         Returns:
             Merged WeatherAlerts with duplicates removed
@@ -59,12 +59,12 @@ class AlertAggregator:
                     alert.source = "nws"
                 all_alerts.append(alert)
 
-        # Collect alerts from Visual Crossing
-        if vc_alerts and vc_alerts.alerts:
-            for alert in vc_alerts.alerts:
+        # Collect alerts from the secondary source
+        if secondary_alerts and secondary_alerts.alerts:
+            for alert in secondary_alerts.alerts:
                 # Ensure source is set
                 if not alert.source:
-                    alert.source = "visualcrossing"
+                    alert.source = "pirateweather"
                 all_alerts.append(alert)
 
         if not all_alerts:
@@ -195,8 +195,7 @@ class AlertAggregator:
         Merge duplicate alerts, keeping most detailed info.
 
         NWS alerts are preferred as the base because they provide better metadata
-        (severity, urgency, certainty) compared to Visual Crossing which often
-        returns "Unknown" for these fields.
+        (severity, urgency, certainty) than most global providers.
 
         Args:
             alerts: List of duplicate alerts to merge

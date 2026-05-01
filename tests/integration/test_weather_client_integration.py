@@ -2,7 +2,7 @@
 Integration tests for the main WeatherClient.
 
 These tests verify the orchestration layer that coordinates
-multiple API sources (NWS, OpenMeteo, Visual Crossing).
+multiple API sources (NWS, Open-Meteo, Pirate Weather).
 
 Tests verify:
 - Data source selection (auto mode)

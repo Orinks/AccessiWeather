@@ -24,12 +24,11 @@ For setup instructions, everyday workflows, settings, troubleshooting, and weath
 
 ## Weather Sources
 
-AccessiWeather supports four providers:
+AccessiWeather supports three providers:
 
 - National Weather Service (NWS): best for US forecasts, US alerts, and forecast discussions
 - Open-Meteo: global no-key forecast coverage
-- Pirate Weather: optional key, global alerts, minutely precipitation, and summary-style forecasts
-- Visual Crossing: optional key, global forecast enrichment and weather history support
+- Pirate Weather: optional key, global alerts, minutely precipitation, moon phase, and summary-style forecasts
 
 ### Automatic mode
 
@@ -40,7 +39,7 @@ Automatic is the default source mode.
 - US and international automatic source lists are configured separately.
 - Automatic mode follows your saved source ordering.
 - US alerts use NWS as the authoritative source when available.
-- International alerts prefer Pirate Weather, then Visual Crossing.
+- International alerts use Pirate Weather when it is available.
 
 For the full explanation of source behavior, see the [User Manual](docs/user_manual.md#6-weather-sources-and-automatic-mode).
 
@@ -50,8 +49,6 @@ AccessiWeather works without paid services, but some features need optional keys
 
 - Pirate Weather: global alerts, minutely precipitation, Dark Sky-style summaries
   - https://pirate-weather.apiable.io/
-- Visual Crossing: weather history and additional global coverage
-  - https://www.visualcrossing.com/weather-api
 - OpenRouter: Explain Weather and Weather Assistant
   - https://openrouter.ai/keys
 - AVWX: optional extra support for international aviation weather

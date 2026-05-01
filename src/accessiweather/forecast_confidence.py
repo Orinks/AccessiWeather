@@ -28,7 +28,7 @@ _PRECIP_MED = 25.0  # % — precip spread for MEDIUM
 _SOURCE_DISPLAY_NAMES: dict[str, str] = {
     "nws": "NWS",
     "openmeteo": "Open-Meteo",
-    "visualcrossing": "Visual Crossing",
+    "pirateweather": "Pirate Weather",
 }
 
 

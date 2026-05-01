@@ -62,7 +62,6 @@ RECORD_MODE = os.environ.get("VCR_RECORD_MODE", "none")
 LIVE_TESTS = os.environ.get("LIVE_TESTS", "false").lower() == "true"
 
 # API keys from environment (for live tests or recording new cassettes)
-VISUAL_CROSSING_API_KEY = os.environ.get("VISUAL_CROSSING_API_KEY", "test-api-key")
 PIRATE_WEATHER_API_KEY = os.environ.get("PIRATE_WEATHER_API_KEY", "test-api-key")
 
 
@@ -165,22 +164,9 @@ def norway_location() -> Location:
 
 
 @pytest.fixture
-def visual_crossing_api_key() -> str:
-    """Return the Visual Crossing API key."""
-    return VISUAL_CROSSING_API_KEY
-
-
-@pytest.fixture
 def pirate_weather_api_key() -> str:
     """Return the Pirate Weather API key."""
     return PIRATE_WEATHER_API_KEY
-
-
-@pytest.fixture
-def skip_if_no_api_key():
-    """Skip test if no Visual Crossing API key is configured."""
-    if VISUAL_CROSSING_API_KEY == "test-api-key" and RECORD_MODE == "all":
-        pytest.skip("Visual Crossing API key required for recording")
 
 
 @pytest.fixture

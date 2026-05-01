@@ -20,10 +20,14 @@ from accessiweather.models import (
     HourlyForecast,
     HourlyForecastPeriod,
     Location,
+    TextProduct,
     WeatherAlerts,
     WeatherData,
 )
 from accessiweather.notifications.notification_event_manager import summarize_discussion_change
+from accessiweather.ui.main_window_notification_events import (
+    _filter_sps_products_for_location,
+)
 
 # ---------------------------------------------------------------------------
 # summarize_discussion_change (notification_event_manager.py lines 54, 64)
@@ -100,6 +104,67 @@ class TestSummarizeDiscussionChange:
         assert "Heavy rain expected Tuesday" in result
         assert "Flash flood watch in effect" in result
         assert "Short term text" not in result
+
+    def test_key_messages_stop_at_next_dot_section(self):
+        """KEY MESSAGES must not absorb UPDATE/SHORT TERM text before &&."""
+        afd = (
+            ".KEY MESSAGES...\n"
+            "- Heavy rain expected Tuesday.\n"
+            "- Flash flood watch in effect.\n"
+            ".UPDATE...\n"
+            "Only aviation wording changed.\n"
+            ".SHORT TERM...\n"
+            "Short term text.\n"
+            "&&\n"
+        )
+        result = summarize_discussion_change(None, afd)
+        assert result is not None
+        assert "Heavy rain expected Tuesday" in result
+        assert "Flash flood watch in effect" in result
+        assert "Only aviation wording changed" not in result
+        assert "Short term text" not in result
+
+    def test_key_messages_diff_prefers_new_messages_when_changed(self):
+        """When KEY MESSAGES change, the toast summary should use the current messages."""
+        previous = (
+            ".KEY MESSAGES...\n"
+            "1. Rain arrives later today.\n"
+            "2. Saturday storm potential remains.\n"
+            "&&\n"
+        )
+        current = (
+            ".KEY MESSAGES...\n"
+            "1. Rain arrives late this afternoon.\n"
+            "2. Saturday storm potential remains.\n"
+            "&&\n"
+        )
+        result = summarize_discussion_change(previous, current)
+        assert result is not None
+        assert "late this afternoon" in result
+        assert "later today" not in result
+
+    def test_no_changes_section_defers_to_changed_key_messages(self):
+        """A no-change marker should not hide materially changed KEY MESSAGES."""
+        previous = (
+            ".WHAT HAS CHANGED...\n"
+            "Rainfall totals have lowered a bit.\n"
+            "&&\n"
+            ".KEY MESSAGES...\n"
+            "1. Rain arrives later today.\n"
+            "&&\n"
+        )
+        current = (
+            ".WHAT HAS CHANGED...\n"
+            "No changes.\n"
+            "&&\n"
+            ".KEY MESSAGES...\n"
+            "1. Rain arrives late this afternoon.\n"
+            "&&\n"
+        )
+        result = summarize_discussion_change(previous, current)
+        assert result is not None
+        assert "late this afternoon" in result
+        assert "No changes" not in result
 
     def test_first_new_line_fallback_when_no_special_sections(self):
         """Path 3: falls back to first new line when no special sections exist."""
@@ -492,6 +557,69 @@ class TestNotificationEventHelpers:
         )
 
 
+class TestSpsProductLocationFiltering:
+    """SPS product notifications must honor the user's saved NWS zones."""
+
+    def _product(self, product_text: str, product_id: str = "SPS-FWD") -> TextProduct:
+        return TextProduct(
+            product_type="SPS",
+            product_id=product_id,
+            cwa_office="FWD",
+            issuance_time=datetime(2026, 4, 29, 18, 10, tzinfo=UTC),
+            product_text=product_text,
+            headline="Special Weather Statement",
+        )
+
+    def test_drops_office_sps_for_other_forecast_zones(self):
+        location = Location(
+            name="Copperas Cove",
+            latitude=31.1241,
+            longitude=-97.9031,
+            country_code="US",
+            cwa_office="FWD",
+            forecast_zone_id="TXZ157",
+            county_zone_id="TXC099",
+            fire_zone_id="TXZ157",
+        )
+        dallas_sps = self._product(
+            "\n"
+            "TXZ118-119-291900-\n"
+            "Tarrant TX-Dallas TX-\n"
+            "110 PM CDT Wed Apr 29 2026\n"
+            "...A strong thunderstorm will impact portions of southeastern Tarrant\n"
+            "and Dallas Counties through 200 PM CDT...\n",
+            product_id="SPS-DALLAS",
+        )
+
+        result = _filter_sps_products_for_location([dallas_sps], location)
+
+        assert result == []
+
+    def test_keeps_sps_for_location_forecast_zone(self):
+        location = Location(
+            name="Copperas Cove",
+            latitude=31.1241,
+            longitude=-97.9031,
+            country_code="US",
+            cwa_office="FWD",
+            forecast_zone_id="TXZ157",
+            county_zone_id="TXC099",
+            fire_zone_id="TXZ157",
+        )
+        local_sps = self._product(
+            "\n"
+            "TXZ157-291900-\n"
+            "Coryell TX-\n"
+            "110 PM CDT Wed Apr 29 2026\n"
+            "...A strong thunderstorm will impact portions of Coryell County...\n",
+            product_id="SPS-CORYELL",
+        )
+
+        result = _filter_sps_products_for_location([local_sps], location)
+
+        assert result == [local_sps]
+
+
 # ---------------------------------------------------------------------------
 # weather_client_base.py: get_notification_event_data (lines 383-416)
 # ---------------------------------------------------------------------------
@@ -512,7 +640,7 @@ class TestGetNotificationEventData:
     def client(self):
         from accessiweather.weather_client import WeatherClient
 
-        return WeatherClient(visual_crossing_api_key="test-key")
+        return WeatherClient(pirate_weather_api_key="test-key")
 
     @pytest.mark.asyncio
     async def test_us_location_fetches_nws_data(self, client, us_location):
@@ -542,13 +670,13 @@ class TestGetNotificationEventData:
         assert len(result.alerts.alerts) == 0
 
     @pytest.mark.asyncio
-    async def test_intl_location_with_vc_client(self, client, intl_location):
-        vc_client = MagicMock()
+    async def test_intl_location_with_pirate_weather_client(self, client, intl_location):
+        pw_client = MagicMock()
         current = MagicMock()
         alerts = WeatherAlerts(alerts=[])
-        vc_client.get_current_conditions = AsyncMock(return_value=current)
-        vc_client.get_alerts = AsyncMock(return_value=alerts)
-        client._visual_crossing_client = vc_client
+        pw_client.get_current_conditions = AsyncMock(return_value=current)
+        pw_client.get_alerts = AsyncMock(return_value=alerts)
+        client._pirate_weather_client_for_location = MagicMock(return_value=pw_client)
 
         result = await client.get_notification_event_data(intl_location)
 
@@ -556,10 +684,10 @@ class TestGetNotificationEventData:
         assert result.alerts == alerts
 
     @pytest.mark.asyncio
-    async def test_intl_location_without_vc_client(self, intl_location):
+    async def test_intl_location_without_pirate_weather_client(self, intl_location):
         from accessiweather.weather_client import WeatherClient
 
-        client = WeatherClient()  # No VC API key
+        client = WeatherClient()  # No Pirate Weather API key
 
         result = await client.get_notification_event_data(intl_location)
 
@@ -595,9 +723,10 @@ class TestGetNotificationEventData:
         settings.notify_minutely_precipitation_start = True
         settings.notify_minutely_precipitation_stop = True
         client.data_source = "pirateweather"
-        client.pirate_weather_client = MagicMock()
-        client.pirate_weather_client.get_current_conditions = AsyncMock(return_value=MagicMock())
-        client.pirate_weather_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+        pw_client = MagicMock()
+        pw_client.get_current_conditions = AsyncMock(return_value=MagicMock())
+        pw_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+        client._pirate_weather_client_for_location = MagicMock(return_value=pw_client)
         client._get_pirate_weather_minutely = AsyncMock(return_value=MagicMock())
 
         now = datetime(2026, 4, 7, 12, 0, tzinfo=UTC)
@@ -638,9 +767,10 @@ class TestGetNotificationEventData:
         settings.notify_minutely_precipitation_stop = True
         settings.minutely_precipitation_fast_polling = True
         client.data_source = "pirateweather"
-        client.pirate_weather_client = MagicMock()
-        client.pirate_weather_client.get_current_conditions = AsyncMock(return_value=MagicMock())
-        client.pirate_weather_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+        pw_client = MagicMock()
+        pw_client.get_current_conditions = AsyncMock(return_value=MagicMock())
+        pw_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+        client._pirate_weather_client_for_location = MagicMock(return_value=pw_client)
         client._get_pirate_weather_minutely = AsyncMock(return_value=MagicMock())
 
         now = datetime(2026, 4, 7, 12, 0, tzinfo=UTC)
@@ -684,9 +814,10 @@ class TestGetNotificationEventData:
         settings.notify_minutely_precipitation_stop = True
         settings.minutely_precipitation_fast_polling = False
         client.data_source = "pirateweather"
-        client.pirate_weather_client = MagicMock()
-        client.pirate_weather_client.get_current_conditions = AsyncMock(return_value=MagicMock())
-        client.pirate_weather_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+        pw_client = MagicMock()
+        pw_client.get_current_conditions = AsyncMock(return_value=MagicMock())
+        pw_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+        client._pirate_weather_client_for_location = MagicMock(return_value=pw_client)
         client._get_pirate_weather_minutely = AsyncMock(return_value=MagicMock())
 
         now = datetime(2026, 4, 7, 12, 0, tzinfo=UTC)

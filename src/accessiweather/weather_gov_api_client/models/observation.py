@@ -1,3 +1,4 @@
+# ruff: noqa: UP007, SIM108, RET504
 import datetime
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, TypeVar, Union, cast
@@ -20,71 +21,7 @@ T = TypeVar("T", bound="Observation")
 
 @_attrs_define
 class Observation:
-    """
-    Attributes:
-        context (Union['JsonLdContextType1', Unset, list[Any]]):
-        geometry (Union[None, Unset, str]): A geometry represented in Well-Known Text (WKT) format.
-        id (Union[Unset, str]):
-        type_ (Union[Unset, ObservationType]):
-        elevation (Union[Unset, QuantitativeValue]): A structured value representing a measurement and its unit of
-            measure. This object is a slighly modified version of the schema.org definition at
-            https://schema.org/QuantitativeValue
-        station (Union[Unset, str]):
-        timestamp (Union[Unset, datetime.datetime]):
-        raw_message (Union[Unset, str]):
-        text_description (Union[Unset, str]):
-        icon (Union[None, Unset, str]):
-        present_weather (Union[Unset, list['MetarPhenomenon']]):
-        temperature (Union[Unset, QuantitativeValue]): A structured value representing a measurement and its unit of
-            measure. This object is a slighly modified version of the schema.org definition at
-            https://schema.org/QuantitativeValue
-        dewpoint (Union[Unset, QuantitativeValue]): A structured value representing a measurement and its unit of
-            measure. This object is a slighly modified version of the schema.org definition at
-            https://schema.org/QuantitativeValue
-        wind_direction (Union[Unset, QuantitativeValue]): A structured value representing a measurement and its unit of
-            measure. This object is a slighly modified version of the schema.org definition at
-            https://schema.org/QuantitativeValue
-        wind_speed (Union[Unset, QuantitativeValue]): A structured value representing a measurement and its unit of
-            measure. This object is a slighly modified version of the schema.org definition at
-            https://schema.org/QuantitativeValue
-        wind_gust (Union[Unset, QuantitativeValue]): A structured value representing a measurement and its unit of
-            measure. This object is a slighly modified version of the schema.org definition at
-            https://schema.org/QuantitativeValue
-        barometric_pressure (Union[Unset, QuantitativeValue]): A structured value representing a measurement and its
-            unit of measure. This object is a slighly modified version of the schema.org definition at
-            https://schema.org/QuantitativeValue
-        sea_level_pressure (Union[Unset, QuantitativeValue]): A structured value representing a measurement and its unit
-            of measure. This object is a slighly modified version of the schema.org definition at
-            https://schema.org/QuantitativeValue
-        visibility (Union[Unset, QuantitativeValue]): A structured value representing a measurement and its unit of
-            measure. This object is a slighly modified version of the schema.org definition at
-            https://schema.org/QuantitativeValue
-        max_temperature_last_24_hours (Union[Unset, QuantitativeValue]): A structured value representing a measurement
-            and its unit of measure. This object is a slighly modified version of the schema.org definition at
-            https://schema.org/QuantitativeValue
-        min_temperature_last_24_hours (Union[Unset, QuantitativeValue]): A structured value representing a measurement
-            and its unit of measure. This object is a slighly modified version of the schema.org definition at
-            https://schema.org/QuantitativeValue
-        precipitation_last_hour (Union[Unset, QuantitativeValue]): A structured value representing a measurement and its
-            unit of measure. This object is a slighly modified version of the schema.org definition at
-            https://schema.org/QuantitativeValue
-        precipitation_last_3_hours (Union[Unset, QuantitativeValue]): A structured value representing a measurement and
-            its unit of measure. This object is a slighly modified version of the schema.org definition at
-            https://schema.org/QuantitativeValue
-        precipitation_last_6_hours (Union[Unset, QuantitativeValue]): A structured value representing a measurement and
-            its unit of measure. This object is a slighly modified version of the schema.org definition at
-            https://schema.org/QuantitativeValue
-        relative_humidity (Union[Unset, QuantitativeValue]): A structured value representing a measurement and its unit
-            of measure. This object is a slighly modified version of the schema.org definition at
-            https://schema.org/QuantitativeValue
-        wind_chill (Union[Unset, QuantitativeValue]): A structured value representing a measurement and its unit of
-            measure. This object is a slighly modified version of the schema.org definition at
-            https://schema.org/QuantitativeValue
-        heat_index (Union[Unset, QuantitativeValue]): A structured value representing a measurement and its unit of
-            measure. This object is a slighly modified version of the schema.org definition at
-            https://schema.org/QuantitativeValue
-        cloud_layers (Union[None, Unset, list['ObservationCloudLayersType0Item']]):
-    """
+    """Weather.gov observation model."""
 
     context: Union["JsonLdContextType1", Unset, list[Any]] = UNSET
     geometry: Union[None, Unset, str] = UNSET

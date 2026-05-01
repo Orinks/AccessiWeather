@@ -201,7 +201,6 @@ def _format_source_name(source: str | None) -> str | None:
     source_names = {
         "nws": "NWS",
         "openmeteo": "Open-Meteo",
-        "visualcrossing": "Visual Crossing",
         "pirateweather": "Pirate Weather",
     }
     return source_names.get(source, source)

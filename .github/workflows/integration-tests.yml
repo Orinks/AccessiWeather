@@ -79,7 +79,6 @@ jobs:
             --record-mode=none
         env:
           LIVE_WEATHER_TESTS: "1"
-          VISUAL_CROSSING_API_KEY: ${{ secrets.VISUAL_CROSSING_API_KEY }}
         timeout-minutes: 15
 
       - name: Run integration tests (update cassettes)
@@ -91,7 +90,6 @@ jobs:
             --record-mode=all
         env:
           LIVE_WEATHER_TESTS: "1"
-          VISUAL_CROSSING_API_KEY: ${{ secrets.VISUAL_CROSSING_API_KEY }}
         timeout-minutes: 15
 
       - name: Commit and push new cassettes (if any)

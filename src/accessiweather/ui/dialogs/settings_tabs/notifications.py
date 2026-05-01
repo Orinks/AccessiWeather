@@ -158,7 +158,7 @@ class NotificationsTab:
         )
         controls["notify_severe_risk_change"] = wx.CheckBox(
             panel,
-            label="Notify when severe weather risk changes (Visual Crossing)",
+            label="Notify when severe weather risk changes",
         )
         event_section.Add(
             controls["notify_severe_risk_change"],

@@ -505,9 +505,6 @@ class TestParallelFetchPirateWeather:
         async def fake_om():
             return (mock_data, mock_data, mock_data)
 
-        async def fake_vc():
-            return (mock_data, mock_data, mock_data, None)
-
         async def fake_pw():
             return (mock_data, mock_data, mock_data, None)
 
@@ -515,12 +512,11 @@ class TestParallelFetchPirateWeather:
             location,
             fetch_nws=fake_nws(),
             fetch_openmeteo=fake_om(),
-            fetch_visualcrossing=fake_vc(),
             fetch_pirateweather=fake_pw(),
         )
-        assert len(results) == 4
+        assert len(results) == 3
         sources = {r.source for r in results}
-        assert sources == {"nws", "openmeteo", "visualcrossing", "pirateweather"}
+        assert sources == {"nws", "openmeteo", "pirateweather"}
         assert all(r.success for r in results)
 
 
@@ -572,7 +568,6 @@ class TestSourcePriorityValidation:
         assert settings.source_priority_us == [
             "nws",
             "openmeteo",
-            "visualcrossing",
             "pirateweather",
         ]
 
@@ -586,7 +581,6 @@ class TestSourcePriorityValidation:
         assert settings.source_priority_international == [
             "openmeteo",
             "pirateweather",
-            "visualcrossing",
         ]
 
     def test_source_priority_us_all_invalid_resets_to_default(self):
@@ -630,13 +624,12 @@ class TestGetNotificationEventDataPirateWeatherBranch:
     @pytest.mark.asyncio
     async def test_pirate_weather_used_when_pirateweather_source(self, intl_location):
         """PW client used for notification data when data_source='pirateweather'."""
-        wc = WeatherClient(data_source="pirateweather")
+        wc = WeatherClient(data_source="pirateweather", pirate_weather_api_key="test-key")
 
         mock_pw = MagicMock()
         mock_pw.get_current_conditions = AsyncMock(return_value=MagicMock())
         mock_pw.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
-        wc._pirate_weather_client = mock_pw
-        wc._visual_crossing_client = None
+        wc._pirate_weather_client_for_location = MagicMock(return_value=mock_pw)
 
         with patch.object(wc, "_is_us_location", return_value=False):
             result = await wc.get_notification_event_data(intl_location)
@@ -654,7 +647,6 @@ class TestGetNotificationEventDataPirateWeatherBranch:
         mock_pw.get_current_conditions = AsyncMock(return_value=MagicMock())
         mock_pw.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
         wc._pirate_weather_client = mock_pw
-        wc._visual_crossing_client = None
 
         with patch.object(wc, "_is_us_location", return_value=False):
             result = await wc.get_notification_event_data(intl_location)

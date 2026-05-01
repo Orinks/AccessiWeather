@@ -1,5 +1,5 @@
 """
-Tests for main window sound playback on data_updated and fetch_error events.
+Tests for main window sound playback on refresh success and fetch_error events.
 
 Covers lines in _on_weather_data_received and _on_weather_error that call
 play_data_updated_sound and play_fetch_error_sound when sound_enabled=True,
@@ -13,8 +13,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
-class TestMainWindowDataUpdatedSound:
-    """Tests for data_updated sound playback in _on_weather_data_received."""
+class TestMainWindowRefreshSuccessSound:
+    """Tests for weather-updated sound playback in _on_weather_data_received."""
 
     @pytest.fixture
     def mock_app(self):
@@ -72,7 +72,7 @@ class TestMainWindowDataUpdatedSound:
         app.presenter.present.return_value = presentation
         return win
 
-    def test_data_updated_sound_called_when_sound_enabled(self, mock_app):
+    def test_weather_updated_sound_called_when_sound_enabled(self, mock_app):
         """play_data_updated_sound is called when sound_enabled=True."""
         win = self._make_window(mock_app)
         weather_data = MagicMock()
@@ -85,7 +85,7 @@ class TestMainWindowDataUpdatedSound:
 
         mock_play.assert_called_once_with("default", muted_events=[])
 
-    def test_data_updated_sound_not_called_when_sound_disabled(self, mock_app_sound_disabled):
+    def test_weather_updated_sound_not_called_when_sound_disabled(self, mock_app_sound_disabled):
         """play_data_updated_sound is NOT called when sound_enabled=False."""
         win = self._make_window(mock_app_sound_disabled)
         weather_data = MagicMock()
@@ -98,8 +98,8 @@ class TestMainWindowDataUpdatedSound:
 
         mock_play.assert_not_called()
 
-    def test_data_updated_sound_not_called_when_event_muted(self, mock_app):
-        """play_data_updated_sound is skipped when the event is muted."""
+    def test_weather_updated_sound_called_with_muted_events(self, mock_app):
+        """play_data_updated_sound receives muted event overrides."""
         mock_app.config_manager.get_settings.return_value.muted_sound_events = ["data_updated"]
         win = self._make_window(mock_app)
         weather_data = MagicMock()
@@ -178,7 +178,7 @@ class TestMainWindowFetchErrorSound:
 
         mock_play.assert_called_once_with("default", muted_events=["data_updated"])
 
-    def test_data_updated_sound_exception_is_swallowed(self, mock_app):
+    def test_weather_updated_sound_exception_is_swallowed(self, mock_app):
         """Exceptions from play_data_updated_sound must not propagate."""
         from accessiweather.ui.main_window import MainWindow
 

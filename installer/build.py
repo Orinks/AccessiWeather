@@ -337,14 +337,16 @@ def create_portable_zip() -> bool:
 
     if IS_WINDOWS:
         # Look for directory distribution first, then single exe
-        source_dir = DIST_DIR / "AccessiWeather_dir"
-        if not source_dir.exists():
+        app_source_dir = DIST_DIR / "AccessiWeather_dir"
+        source_dir = DIST_DIR / "AccessiWeather"
+        if source_dir.exists():
+            shutil.rmtree(source_dir)
+        if app_source_dir.exists():
+            shutil.copytree(app_source_dir, source_dir)
+        else:
             # Single exe - create a directory for it
             exe_path = DIST_DIR / "AccessiWeather.exe"
             if exe_path.exists():
-                source_dir = DIST_DIR / "AccessiWeather_portable"
-                if source_dir.exists():
-                    shutil.rmtree(source_dir)
                 source_dir.mkdir(exist_ok=True)
                 shutil.copy2(exe_path, source_dir / "AccessiWeather.exe")
             else:

@@ -109,7 +109,7 @@ class TestConfidencePipelineCalculation:
         sources = [
             make_source(71.0, source="nws"),
             make_source(72.0, source="openmeteo"),
-            make_source(73.0, source="visualcrossing"),
+            make_source(73.0, source="pirateweather"),
         ]
         result = calculate_forecast_confidence(sources)
         assert result.sources_compared == 3

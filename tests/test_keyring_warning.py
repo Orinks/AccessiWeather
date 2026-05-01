@@ -241,7 +241,7 @@ class TestWizardKeyringWarning:
         ):
             app._maybe_show_first_start_onboarding()
 
-        assert len(prompt_calls) == 3
+        assert len(prompt_calls) == 2
 
 
 # ---------------------------------------------------------------------------

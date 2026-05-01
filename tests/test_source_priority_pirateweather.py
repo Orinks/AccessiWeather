@@ -1,4 +1,4 @@
-"""Tests verifying pirateweather is wired into source priority defaults."""
+"""Tests verifying the three-source weather model defaults."""
 
 from __future__ import annotations
 
@@ -76,7 +76,7 @@ class TestSourcePriorityConfigDefaults:
 
     def test_us_default_order(self):
         config = SourcePriorityConfig()
-        assert config.us_default == ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+        assert config.us_default == ["nws", "openmeteo", "pirateweather"]
 
     def test_international_default_includes_pirateweather(self):
         config = SourcePriorityConfig()
@@ -84,11 +84,7 @@ class TestSourcePriorityConfigDefaults:
 
     def test_international_default_order(self):
         config = SourcePriorityConfig()
-        # PW before VC for international (WMO global alerts)
-        assert config.international_default == ["openmeteo", "pirateweather", "visualcrossing"]
-        pw_idx = config.international_default.index("pirateweather")
-        vc_idx = config.international_default.index("visualcrossing")
-        assert pw_idx < vc_idx
+        assert config.international_default == ["openmeteo", "pirateweather"]
 
     def test_from_dict_us_default_fallback_includes_pirateweather(self):
         config = SourcePriorityConfig.from_dict({})
@@ -99,7 +95,7 @@ class TestSourcePriorityConfigDefaults:
         assert "pirateweather" in config.international_default
 
     def test_from_dict_preserves_explicit_list(self):
-        custom_us = ["pirateweather", "nws", "openmeteo", "visualcrossing"]
+        custom_us = ["pirateweather", "nws", "openmeteo"]
         config = SourcePriorityConfig.from_dict({"us_default": custom_us})
         assert config.us_default == custom_us
 
@@ -131,7 +127,6 @@ class TestAppSettingsSourcePriorityDefaults:
         assert settings.source_priority_us == [
             "nws",
             "openmeteo",
-            "visualcrossing",
             "pirateweather",
         ]
 
@@ -144,7 +139,6 @@ class TestAppSettingsSourcePriorityDefaults:
         assert settings.source_priority_international == [
             "openmeteo",
             "pirateweather",
-            "visualcrossing",
         ]
 
     def test_from_dict_us_fallback_includes_pirateweather(self):
@@ -156,10 +150,25 @@ class TestAppSettingsSourcePriorityDefaults:
         assert "pirateweather" in settings.source_priority_international
 
     def test_from_dict_explicit_list_preserved(self):
-        custom = ["pirateweather", "openmeteo", "visualcrossing"]
+        custom = ["pirateweather", "openmeteo"]
         data = {"source_priority_international": custom}
         settings = AppSettings.from_dict(data)
         assert settings.source_priority_international == custom
+
+    def test_from_dict_filters_legacy_visual_crossing_sources(self):
+        settings = AppSettings.from_dict(
+            {
+                "source_priority_us": ["nws", "visualcrossing", "pirateweather"],
+                "source_priority_international": ["visualcrossing", "openmeteo"],
+                "auto_sources_us": ["visualcrossing", "openmeteo"],
+                "auto_sources_international": ["visualcrossing"],
+            }
+        )
+
+        assert settings.source_priority_us == ["nws", "pirateweather"]
+        assert settings.source_priority_international == ["openmeteo"]
+        assert settings.auto_sources_us == ["openmeteo"]
+        assert settings.auto_sources_international == ["openmeteo", "pirateweather"]
 
 
 # ---------------------------------------------------------------------------
@@ -169,7 +178,7 @@ class TestAppSettingsSourcePriorityDefaults:
 
 class TestFusionEnginePirateWeatherOrder:
     def test_merge_forecasts_us_falls_back_to_pirateweather(self):
-        """When NWS, OM, and VC are absent, PW forecast is selected for US."""
+        """When NWS and OM are absent, PW forecast is selected for US."""
         pw_forecast = _make_forecast("PW Day 1")
         sources = [_make_source("pirateweather", forecast=pw_forecast)]
         engine = DataFusionEngine()
@@ -177,14 +186,10 @@ class TestFusionEnginePirateWeatherOrder:
         assert result is pw_forecast
         assert attribution.get("forecast_source") == "pirateweather"
 
-    def test_merge_forecasts_intl_prefers_pw_over_vc(self):
-        """For international, PW should be selected over VC when OM is absent."""
-        vc_forecast = _make_forecast("VC Day 1")
+    def test_merge_forecasts_intl_uses_pw_when_openmeteo_absent(self):
+        """For international, PW should be selected when OM is absent."""
         pw_forecast = _make_forecast("PW Day 1")
-        sources = [
-            _make_source("visualcrossing", forecast=vc_forecast),
-            _make_source("pirateweather", forecast=pw_forecast),
-        ]
+        sources = [_make_source("pirateweather", forecast=pw_forecast)]
         engine = DataFusionEngine()
         result, attribution = engine.merge_forecasts(sources, INTL_LOCATION)
         assert result is pw_forecast
@@ -204,7 +209,7 @@ class TestFusionEnginePirateWeatherOrder:
         assert attribution.get("forecast_source") == "openmeteo"
 
     def test_merge_hourly_us_falls_back_to_pirateweather(self):
-        """When NWS, OM, and VC are absent, PW hourly is selected for US."""
+        """When NWS and OM are absent, PW hourly is selected for US."""
         pw_hourly = _make_hourly()
         sources = [_make_source("pirateweather", hourly=pw_hourly)]
         engine = DataFusionEngine()
@@ -212,14 +217,10 @@ class TestFusionEnginePirateWeatherOrder:
         assert result is pw_hourly
         assert attribution.get("hourly_source") == "pirateweather"
 
-    def test_merge_hourly_intl_prefers_pw_over_vc(self):
-        """For international, PW hourly should be selected over VC when OM is absent."""
-        vc_hourly = _make_hourly()
+    def test_merge_hourly_intl_uses_pw_when_openmeteo_absent(self):
+        """For international, PW hourly should be selected when OM is absent."""
         pw_hourly = _make_hourly()
-        sources = [
-            _make_source("visualcrossing", hourly=vc_hourly),
-            _make_source("pirateweather", hourly=pw_hourly),
-        ]
+        sources = [_make_source("pirateweather", hourly=pw_hourly)]
         engine = DataFusionEngine()
         result, attribution = engine.merge_hourly_forecasts(sources, INTL_LOCATION)
         assert result is pw_hourly

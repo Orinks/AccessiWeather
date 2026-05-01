@@ -4,28 +4,49 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable
-from dataclasses import fields, replace
-from datetime import UTC, datetime
+from dataclasses import fields
+from datetime import datetime
 from typing import Any
 
 from accessiweather.config.source_priority import SourcePriorityConfig
 from accessiweather.models.weather import (
     CurrentConditions,
-    DataConflict,
     Forecast,
     HourlyForecast,
     Location,
     SourceAttribution,
     SourceData,
 )
+from accessiweather.weather_client_fusion_forecasts import (
+    datetime_timestamp,
+    hourly_has_pressure,
+    merge_forecasts as select_forecast,
+    merge_hourly_forecasts as select_hourly_forecast,
+    nearest_hourly_pressure_period,
+    overlay_hourly_pressure,
+    select_hourly_pressure_source,
+)
+from accessiweather.weather_client_fusion_values import (
+    build_dewpoint_values,
+    build_feels_like_values,
+    build_freezing_level_values,
+    build_heat_index_values,
+    build_precipitation_values,
+    build_pressure_values,
+    build_snow_depth_values,
+    build_speed_pair,
+    build_speed_values,
+    build_temperature_values,
+    build_value_pair,
+    build_wind_chill_values,
+    build_wind_gust_values,
+    check_temperature_conflicts,
+    discard_gust_if_below_wind_speed,
+)
 
 logger = logging.getLogger(__name__)
 
 KM_PER_MILE = 1.609344
-MB_PER_INHG = 33.8639
-MM_PER_INCH = 25.4
-CM_PER_INCH = 2.54
-METERS_PER_FOOT = 0.3048
 
 
 class DataFusionEngine:
@@ -183,9 +204,9 @@ class DataFusionEngine:
         # Check for temperature conflicts
         self._check_temperature_conflicts(valid_sources, merged_values, attribution, is_us)
 
-        # For US locations, only trust NWS for snow depth. Both Open-Meteo (ERA5/GFS)
-        # and Visual Crossing likely source snowpack from SNODAS or similar gridded
-        # analysis products rather than direct station observations — can be badly wrong.
+        # For US locations, only trust NWS for snow depth. Open-Meteo (ERA5/GFS)
+        # likely sources snowpack from model or gridded analysis data rather than
+        # direct station observations, which can be badly wrong.
         if is_us:
             snow_source = attribution.field_sources.get("snow_depth_in")
             if snow_source and snow_source != "nws":
@@ -410,77 +431,39 @@ class DataFusionEngine:
 
     def _build_temperature_values(self, current: CurrentConditions) -> dict[str, float | None]:
         """Build aligned temperature values from a single source."""
-        pair = self._build_value_pair(current.temperature_f, current.temperature_c, "temperature")
-        temperature_f = pair["temperature_f"]
-        temperature_c = pair["temperature_c"]
-        temperature = current.temperature
-        if temperature is None:
-            temperature = temperature_f if temperature_f is not None else temperature_c
-        return {
-            "temperature": temperature,
-            "temperature_f": temperature_f,
-            "temperature_c": temperature_c,
-        }
+        return build_temperature_values(current)
 
     def _build_dewpoint_values(self, current: CurrentConditions) -> dict[str, float | None]:
         """Build aligned dewpoint values from a single source."""
-        return self._build_value_pair(current.dewpoint_f, current.dewpoint_c, "dewpoint")
+        return build_dewpoint_values(current)
 
     def _build_feels_like_values(self, current: CurrentConditions) -> dict[str, float | None]:
         """Build aligned feels-like values from a single source."""
-        return self._build_value_pair(current.feels_like_f, current.feels_like_c, "feels_like")
+        return build_feels_like_values(current)
 
     def _build_wind_chill_values(self, current: CurrentConditions) -> dict[str, float | None]:
         """Build aligned wind chill values from a single source."""
-        return self._build_value_pair(current.wind_chill_f, current.wind_chill_c, "wind_chill")
+        return build_wind_chill_values(current)
 
     def _build_heat_index_values(self, current: CurrentConditions) -> dict[str, float | None]:
         """Build aligned heat index values from a single source."""
-        return self._build_value_pair(current.heat_index_f, current.heat_index_c, "heat_index")
+        return build_heat_index_values(current)
 
     def _build_speed_values(self, current: CurrentConditions) -> dict[str, float | None]:
         """Build aligned wind speed values from a single source."""
-        pair = self._build_speed_pair(current.wind_speed_mph, current.wind_speed_kph, "wind_speed")
-        speed_mph = pair["wind_speed_mph"]
-        speed_kph = pair["wind_speed_kph"]
-        speed = current.wind_speed
-        if speed is None:
-            speed = speed_mph if speed_mph is not None else speed_kph
-        return {
-            "wind_speed": speed,
-            "wind_speed_mph": speed_mph,
-            "wind_speed_kph": speed_kph,
-        }
+        return build_speed_values(current)
 
     def _discard_gust_if_below_wind_speed(
         self,
         merged_values: dict[str, Any],
         attribution: SourceAttribution,
     ) -> None:
-        """
-        Drop wind gust when it is physically impossible (gust < sustained speed).
-
-        This can happen when wind_speed and wind_gust are selected from different
-        sources during cross-source fusion, leaving the two values in inconsistent
-        states.  Dropping the gust is safer than displaying an impossible reading.
-        """
-        speed_mph: float | None = merged_values.get("wind_speed_mph")
-        gust_mph: float | None = merged_values.get("wind_gust_mph")
-        if speed_mph is not None and gust_mph is not None and gust_mph < speed_mph:
-            logger.debug(
-                "Discarding wind gust (%.1f mph) that is lower than wind speed (%.1f mph) "
-                "— likely a cross-source unit mismatch",
-                gust_mph,
-                speed_mph,
-            )
-            merged_values.pop("wind_gust_mph", None)
-            merged_values.pop("wind_gust_kph", None)
-            attribution.field_sources.pop("wind_gust_mph", None)
-            attribution.field_sources.pop("wind_gust_kph", None)
+        """Drop wind gust when it is physically impossible."""
+        discard_gust_if_below_wind_speed(merged_values, attribution)
 
     def _build_wind_gust_values(self, current: CurrentConditions) -> dict[str, float | None]:
         """Build aligned wind gust values from a single source."""
-        return self._build_speed_pair(current.wind_gust_mph, current.wind_gust_kph, "wind_gust")
+        return build_wind_gust_values(current)
 
     def _build_value_pair(
         self,
@@ -489,14 +472,7 @@ class DataFusionEngine:
         base_name: str,
     ) -> dict[str, float | None]:
         """Build aligned Fahrenheit/Celsius-style value pairs from a single source."""
-        if value_a is None and value_b is not None:
-            value_a = (value_b * 9 / 5) + 32
-        if value_b is None and value_a is not None:
-            value_b = (value_a - 32) * 5 / 9
-        return {
-            f"{base_name}_f": value_a,
-            f"{base_name}_c": value_b,
-        }
+        return build_value_pair(value_a, value_b, base_name)
 
     def _build_speed_pair(
         self,
@@ -505,73 +481,23 @@ class DataFusionEngine:
         base_name: str,
     ) -> dict[str, float | None]:
         """Build aligned mph/kph value pairs from a single source."""
-        if value_mph is None and value_kph is not None:
-            value_mph = value_kph / KM_PER_MILE
-        if value_kph is None and value_mph is not None:
-            value_kph = value_mph * KM_PER_MILE
-
-        return {
-            f"{base_name}_mph": value_mph,
-            f"{base_name}_kph": value_kph,
-        }
+        return build_speed_pair(value_mph, value_kph, base_name)
 
     def _build_pressure_values(self, current: CurrentConditions) -> dict[str, float | None]:
         """Build aligned pressure values from a single source."""
-        pressure_in = current.pressure_in
-        pressure_mb = current.pressure_mb
-        if pressure_in is None and pressure_mb is not None:
-            pressure_in = pressure_mb / MB_PER_INHG
-        if pressure_mb is None and pressure_in is not None:
-            pressure_mb = pressure_in * MB_PER_INHG
-
-        pressure = current.pressure
-        if pressure is None:
-            pressure = pressure_in if pressure_in is not None else pressure_mb
-
-        return {
-            "pressure": pressure,
-            "pressure_in": pressure_in,
-            "pressure_mb": pressure_mb,
-        }
+        return build_pressure_values(current)
 
     def _build_precipitation_values(self, current: CurrentConditions) -> dict[str, float | None]:
         """Build aligned precipitation totals from a single source."""
-        precipitation_in = current.precipitation_in
-        precipitation_mm = current.precipitation_mm
-        if precipitation_in is None and precipitation_mm is not None:
-            precipitation_in = precipitation_mm / MM_PER_INCH
-        if precipitation_mm is None and precipitation_in is not None:
-            precipitation_mm = precipitation_in * MM_PER_INCH
-        return {
-            "precipitation_in": precipitation_in,
-            "precipitation_mm": precipitation_mm,
-        }
+        return build_precipitation_values(current)
 
     def _build_snow_depth_values(self, current: CurrentConditions) -> dict[str, float | None]:
         """Build aligned snow depth values from a single source."""
-        snow_depth_in = current.snow_depth_in
-        snow_depth_cm = current.snow_depth_cm
-        if snow_depth_in is None and snow_depth_cm is not None:
-            snow_depth_in = snow_depth_cm / CM_PER_INCH
-        if snow_depth_cm is None and snow_depth_in is not None:
-            snow_depth_cm = snow_depth_in * CM_PER_INCH
-        return {
-            "snow_depth_in": snow_depth_in,
-            "snow_depth_cm": snow_depth_cm,
-        }
+        return build_snow_depth_values(current)
 
     def _build_freezing_level_values(self, current: CurrentConditions) -> dict[str, float | None]:
         """Build aligned freezing level values from a single source."""
-        freezing_level_ft = current.freezing_level_ft
-        freezing_level_m = current.freezing_level_m
-        if freezing_level_ft is None and freezing_level_m is not None:
-            freezing_level_ft = freezing_level_m / METERS_PER_FOOT
-        if freezing_level_m is None and freezing_level_ft is not None:
-            freezing_level_m = freezing_level_ft * METERS_PER_FOOT
-        return {
-            "freezing_level_ft": freezing_level_ft,
-            "freezing_level_m": freezing_level_m,
-        }
+        return build_freezing_level_values(current)
 
     def _check_temperature_conflicts(
         self,
@@ -580,62 +506,8 @@ class DataFusionEngine:
         attribution: SourceAttribution,
         is_us: bool,
     ) -> None:
-        """
-        Check for temperature conflicts and log them.
-
-        Args:
-            sources: List of valid source data
-            merged_values: The merged values dict (may be modified)
-            attribution: Attribution to record conflicts
-            is_us: Whether location is in US
-
-        """
-        temp_fields = ["temperature", "temperature_f", "temperature_c"]
-        threshold = self.config.temperature_conflict_threshold
-
-        for temp_field in temp_fields:
-            values: dict[str, float] = {}
-            for source in sources:
-                if source.current:
-                    val = self._get_field_value(source.current, temp_field)
-                    # Only include numeric values (skip mocks and other non-numeric types)
-                    if val is not None and isinstance(val, int | float):
-                        values[source.source] = val
-
-            if len(values) < 2:
-                continue
-
-            # Check for conflicts
-            val_list = list(values.values())
-            max_diff = max(val_list) - min(val_list)
-
-            if max_diff > threshold:
-                # Get highest priority source for this field
-                priority = self.config.get_priority(temp_field, is_us)
-                selected_source = None
-                selected_value = None
-
-                for src_name in priority:
-                    if src_name in values:
-                        selected_source = src_name
-                        selected_value = values[src_name]
-                        break
-
-                if selected_source:
-                    conflict = DataConflict(
-                        field_name=temp_field,
-                        values=values,
-                        selected_source=selected_source,
-                        selected_value=selected_value,
-                    )
-                    attribution.conflicts.append(conflict)
-                    merged_values[temp_field] = selected_value
-                    attribution.field_sources[temp_field] = selected_source
-
-                    logger.debug(
-                        f"Temperature conflict for {temp_field}: {values}, "
-                        f"selected {selected_source}={selected_value}"
-                    )
+        """Check for temperature conflicts and log them."""
+        check_temperature_conflicts(self, sources, merged_values, attribution, is_us)
 
     def merge_forecasts(
         self,
@@ -643,172 +515,16 @@ class DataFusionEngine:
         location: Location,
         requested_days: int = 7,
     ) -> tuple[Forecast | None, dict[str, str]]:
-        """
-        Select forecast from a single source based on location.
-
-        Unlike merging multiple sources, forecasts are selected from a single preferred
-        source to avoid duplicate periods with different naming conventions:
-        - US locations: Prefer NWS (most accurate for US)
-        - International: Use Open-Meteo
-        - Visual Crossing: Used when explicitly selected or as fallback
-
-        Args:
-            sources: List of source data containers
-            location: The location for source selection
-            requested_days: User-configured forecast day target
-
-        Returns:
-            Tuple of Forecast from single source and source attribution
-
-        """
-        is_us = self._is_us_location(location)
-        field_sources: dict[str, str] = {}
-
-        # Filter to successful sources with forecasts
-        valid_sources = [s for s in sources if s.success and s.forecast is not None]
-
-        if not valid_sources:
-            return None, field_sources
-
-        # Select single source based on location (no merging to avoid duplicates)
-        # US: prefer NWS for 7-day, Open-Meteo for extended ranges; PW as fallback
-        # International: prefer Open-Meteo > Pirate Weather > Visual Crossing
-        if is_us:
-            preferred_order = (
-                ["openmeteo", "nws", "visualcrossing", "pirateweather"]
-                if requested_days > 7
-                else ["nws", "openmeteo", "visualcrossing", "pirateweather"]
-            )
-        else:
-            preferred_order = ["openmeteo", "pirateweather", "visualcrossing"]
-
-        # Find the first available source in preferred order
-        selected_source = None
-        for source_name in preferred_order:
-            for source in valid_sources:
-                if source.source == source_name:
-                    selected_source = source
-                    break
-            if selected_source:
-                break
-
-        # Fallback to first available if none matched preferred order
-        if not selected_source:
-            selected_source = valid_sources[0]
-
-        # Use the selected source's forecast directly, while preserving Pirate Weather's
-        # block summary when another source wins the main forecast selection.
-        forecast = selected_source.forecast
-        source_name = selected_source.source
-        pirate_weather_source = next(
-            (s for s in valid_sources if s.source == "pirateweather"), None
-        )
-        pirate_summary = (
-            pirate_weather_source.forecast.summary
-            if pirate_weather_source and pirate_weather_source.forecast
-            else None
-        )
-        if forecast and forecast.summary is None and pirate_summary:
-            forecast = replace(forecast, summary=pirate_summary)
-
-        # Track attribution
-        field_sources["forecast_source"] = source_name
-        if pirate_summary and forecast and forecast.summary == pirate_summary:
-            field_sources["forecast_summary"] = "pirateweather"
-        logger.debug(f"Using {source_name} for forecast (location: {location.name})")
-
-        return forecast, field_sources
+        """Select forecast from a single source based on location."""
+        return select_forecast(self, sources, location, requested_days=requested_days)
 
     def merge_hourly_forecasts(
         self,
         sources: list[SourceData],
         location: Location,
     ) -> tuple[HourlyForecast | None, dict[str, str]]:
-        """
-        Select hourly forecast from a single source based on location.
-
-        Unlike other data types, hourly forecasts are NOT merged from multiple sources
-        because different sources use different timezone representations that cause
-        display issues when combined. Instead, we select the best single source:
-        - US locations: Prefer NWS (most accurate for US)
-        - International: Use Open-Meteo
-
-        Args:
-            sources: List of source data containers
-            location: The location for source selection
-
-        Returns:
-            Tuple of HourlyForecast from single source and source attribution
-
-        """
-        is_us = self._is_us_location(location)
-        field_sources: dict[str, str] = {}
-
-        # Filter to successful sources with hourly forecasts
-        valid_sources = [s for s in sources if s.success and s.hourly_forecast is not None]
-
-        if not valid_sources:
-            return None, field_sources
-
-        # Select single source based on location (no merging for hourly data)
-        # US: prefer NWS > Open-Meteo > Visual Crossing > Pirate Weather
-        # International: prefer Open-Meteo > Pirate Weather > Visual Crossing
-        if is_us:
-            preferred_order = ["nws", "openmeteo", "visualcrossing", "pirateweather"]
-        else:
-            preferred_order = ["openmeteo", "pirateweather", "visualcrossing"]
-
-        # Find the first available source in preferred order
-        selected_source = None
-        for source_name in preferred_order:
-            for source in valid_sources:
-                if source.source == source_name:
-                    selected_source = source
-                    break
-            if selected_source:
-                break
-
-        # Fallback to first available if none matched preferred order
-        if not selected_source:
-            selected_source = valid_sources[0]
-
-        # Use the selected source's hourly forecast directly, while preserving Pirate Weather's
-        # block summary when another source wins the hourly selection.
-        hourly_forecast = selected_source.hourly_forecast
-        source_name = selected_source.source
-        pirate_weather_source = next(
-            (s for s in valid_sources if s.source == "pirateweather"), None
-        )
-        pirate_summary = (
-            pirate_weather_source.hourly_forecast.summary
-            if pirate_weather_source and pirate_weather_source.hourly_forecast
-            else None
-        )
-        if hourly_forecast and hourly_forecast.summary is None and pirate_summary:
-            hourly_forecast = replace(hourly_forecast, summary=pirate_summary)
-
-        pressure_source = self._select_hourly_pressure_source(valid_sources, selected_source)
-        if (
-            hourly_forecast
-            and pressure_source
-            and pressure_source.hourly_forecast
-            and pressure_source.source != source_name
-        ):
-            overlaid_hourly = self._overlay_hourly_pressure(
-                hourly_forecast,
-                pressure_source.hourly_forecast,
-            )
-            if overlaid_hourly is not hourly_forecast:
-                hourly_forecast = overlaid_hourly
-                field_sources["hourly_pressure_source"] = pressure_source.source
-
-        # Track attribution
-        field_sources["hourly_source"] = source_name
-        if pirate_summary and hourly_forecast and hourly_forecast.summary == pirate_summary:
-            field_sources["hourly_summary"] = "pirateweather"
-        logger.debug(f"Using {source_name} for hourly forecast (location: {location.name})")
-
-        return hourly_forecast, field_sources
+        """Select hourly forecast from a single source based on location."""
+        return select_hourly_forecast(self, sources, location)
 
     def _select_hourly_pressure_source(
         self,
@@ -816,26 +532,11 @@ class DataFusionEngine:
         selected_source: SourceData,
     ) -> SourceData | None:
         """Return the selected hourly source or best alternate source with pressure data."""
-        if self._hourly_has_pressure(selected_source.hourly_forecast):
-            return selected_source
-
-        pressure_priority = ["openmeteo", "visualcrossing", "pirateweather"]
-        pressure_sources = [
-            s for s in valid_sources if self._hourly_has_pressure(s.hourly_forecast)
-        ]
-        if not pressure_sources:
-            return None
-
-        pressure_sources.sort(
-            key=lambda source: self._source_priority_index(source.source, pressure_priority)
-        )
-        return pressure_sources[0]
+        return select_hourly_pressure_source(self, valid_sources, selected_source)
 
     def _hourly_has_pressure(self, hourly: HourlyForecast | None) -> bool:
         """Return True when any hourly period includes pressure."""
-        if hourly is None:
-            return False
-        return any(p.pressure_in is not None or p.pressure_mb is not None for p in hourly.periods)
+        return hourly_has_pressure(hourly)
 
     def _overlay_hourly_pressure(
         self,
@@ -843,41 +544,7 @@ class DataFusionEngine:
         pressure_hourly: HourlyForecast,
     ) -> HourlyForecast:
         """Copy pressure-only fields from a pressure-capable hourly source by nearest time."""
-        pressure_periods = [
-            period
-            for period in pressure_hourly.periods
-            if period.pressure_in is not None or period.pressure_mb is not None
-        ]
-        if not pressure_periods:
-            return display_hourly
-
-        overlaid_periods = []
-        changed = False
-        for display_period in display_hourly.periods:
-            if display_period.pressure_in is not None or display_period.pressure_mb is not None:
-                overlaid_periods.append(display_period)
-                continue
-
-            pressure_period = self._nearest_hourly_pressure_period(
-                display_period.start_time,
-                pressure_periods,
-            )
-            if pressure_period is None:
-                overlaid_periods.append(display_period)
-                continue
-
-            overlaid_periods.append(
-                replace(
-                    display_period,
-                    pressure_in=pressure_period.pressure_in,
-                    pressure_mb=pressure_period.pressure_mb,
-                )
-            )
-            changed = True
-
-        if not changed:
-            return display_hourly
-        return replace(display_hourly, periods=overlaid_periods)
+        return overlay_hourly_pressure(display_hourly, pressure_hourly)
 
     def _nearest_hourly_pressure_period(
         self,
@@ -885,28 +552,8 @@ class DataFusionEngine:
         pressure_periods: list,
     ):
         """Find a pressure period close enough to the target display hour."""
-        target_ts = self._datetime_timestamp(target)
-        if target_ts is None:
-            return None
-
-        closest = None
-        best_delta = None
-        for period in pressure_periods:
-            period_ts = self._datetime_timestamp(period.start_time)
-            if period_ts is None:
-                continue
-            delta = abs(period_ts - target_ts)
-            if best_delta is None or delta < best_delta:
-                closest = period
-                best_delta = delta
-
-        if best_delta is None or best_delta > 90 * 60:
-            return None
-        return closest
+        return nearest_hourly_pressure_period(target, pressure_periods)
 
     def _datetime_timestamp(self, value: datetime | None) -> float | None:
         """Normalize aware and naive datetimes to comparable timestamps."""
-        if value is None:
-            return None
-        value = value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
-        return value.timestamp()
+        return datetime_timestamp(value)

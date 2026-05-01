@@ -61,17 +61,6 @@ class ParallelFetchCoordinator:
             Any, Any, tuple[CurrentConditions | None, Forecast | None, HourlyForecast | None]
         ]
         | None = None,
-        fetch_visualcrossing: Coroutine[
-            Any,
-            Any,
-            tuple[
-                CurrentConditions | None,
-                Forecast | None,
-                HourlyForecast | None,
-                WeatherAlerts | None,
-            ],
-        ]
-        | None = None,
         fetch_pirateweather: Coroutine[
             Any,
             Any,
@@ -91,7 +80,6 @@ class ParallelFetchCoordinator:
             location: The location to fetch weather for
             fetch_nws: Coroutine to fetch NWS data (optional)
             fetch_openmeteo: Coroutine to fetch Open-Meteo data (optional)
-            fetch_visualcrossing: Coroutine to fetch Visual Crossing data (optional)
             fetch_pirateweather: Coroutine to fetch Pirate Weather data (optional)
 
         Returns:
@@ -109,12 +97,6 @@ class ParallelFetchCoordinator:
         if fetch_openmeteo is not None:
             task = asyncio.create_task(self._fetch_with_timeout(fetch_openmeteo, "openmeteo"))
             tasks.append(("openmeteo", task))
-
-        if fetch_visualcrossing is not None:
-            task = asyncio.create_task(
-                self._fetch_with_timeout(fetch_visualcrossing, "visualcrossing")
-            )
-            tasks.append(("visualcrossing", task))
 
         if fetch_pirateweather is not None:
             task = asyncio.create_task(

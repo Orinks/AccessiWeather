@@ -12,138 +12,22 @@ from collections.abc import Callable
 
 from .alert_lifecycle import AlertLifecycleDiff
 from .alert_manager import AlertManager, AlertSettings
+from .alert_notification_formatting import (
+    app_settings_debug_summary as _app_settings_debug_summary,
+    format_accessible_message as format_accessible_message,
+)
+from .alert_notification_preferences import (
+    AlertNotificationPreferences as AlertNotificationPreferences,
+)
 from .constants import (
-    MAX_DISPLAYED_AREAS,
-    MAX_NOTIFICATION_DESCRIPTION_LENGTH,
-    SEVERITY_PRIORITY_EXTREME,
     SEVERITY_PRIORITY_MAP,
-    SEVERITY_PRIORITY_MINOR,
-    SEVERITY_PRIORITY_MODERATE,
-    SEVERITY_PRIORITY_SEVERE,
     SEVERITY_PRIORITY_UNKNOWN,
 )
-from .display.presentation.formatters import format_display_datetime
 from .models import AppSettings, WeatherAlert, WeatherAlerts
 from .notification_activation import NotificationActivationRequest, serialize_activation_request
 from .notifications.toast_notifier import SafeDesktopNotifier
 
 logger = logging.getLogger(__name__)
-
-
-def _app_settings_debug_summary(settings: AppSettings | None) -> dict[str, object]:
-    """Return a compact app-settings snapshot for debug logging."""
-    if settings is None:
-        return {"present": False}
-    return {
-        "present": True,
-        "alert_notifications_enabled": getattr(settings, "alert_notifications_enabled", None),
-        "sound_enabled": getattr(settings, "sound_enabled", None),
-        "alert_global_cooldown_minutes": getattr(settings, "alert_global_cooldown_minutes", None),
-        "alert_per_alert_cooldown_minutes": getattr(
-            settings, "alert_per_alert_cooldown_minutes", None
-        ),
-        "alert_freshness_window_minutes": getattr(settings, "alert_freshness_window_minutes", None),
-        "alert_max_notifications_per_hour": getattr(
-            settings, "alert_max_notifications_per_hour", None
-        ),
-    }
-
-
-def format_accessible_message(
-    alert: WeatherAlert,
-    reason: str,
-    include_areas: bool = True,
-    include_expiration: bool = True,
-    settings: AppSettings | None = None,
-) -> tuple[str, str]:
-    """
-    Format alert information for screen reader accessibility.
-
-    Creates structured, concise messages that work well with assistive technology.
-    Information is ordered by importance: severity/urgency, event type, headline,
-    then supporting details.
-
-    Args:
-    ----
-        alert: The weather alert to format
-        reason: The reason for notification (new_alert, escalation, content_changed, reminder)
-        include_areas: Whether to include affected areas in message
-        include_expiration: Whether to include expiration time in message
-        settings: Application settings for formatting preferences
-
-    Returns:
-    -------
-        Tuple of (title, message) formatted for accessibility
-
-    """
-    # Format title with severity context
-    severity = (alert.severity or "Unknown").upper()
-    event = alert.event or "Weather Alert"
-
-    if reason == "escalation":
-        title = f"ESCALATED {severity}: {event}"
-    elif reason == "content_changed":
-        title = f"UPDATED {severity}: {event}"
-    elif reason == "reminder":
-        title = f"ACTIVE {severity}: {event}"
-    else:  # new_alert
-        title = f"{severity} ALERT: {event}"
-
-    # Start message with urgency if available and critical
-    message_parts = []
-
-    urgency = (alert.urgency or "").lower()
-    if urgency in ("immediate", "expected"):
-        message_parts.append(f"{urgency.title()} action may be required.")
-
-    # Add headline (primary content)
-    headline = alert.headline or alert.title
-    if headline:
-        message_parts.append(headline)
-    else:
-        logger.warning(f"Alert {alert.get_unique_id()} missing headline")
-        message_parts.append(f"A {severity.lower()} weather alert has been issued.")
-
-    # Add truncated description if available
-    if alert.description:
-        desc = alert.description[:MAX_NOTIFICATION_DESCRIPTION_LENGTH]
-        if len(alert.description) > MAX_NOTIFICATION_DESCRIPTION_LENGTH:
-            desc += "..."
-        message_parts.append(desc)
-
-    # Add affected areas if requested and available
-    if include_areas and alert.areas:
-        location_parts = alert.areas[:MAX_DISPLAYED_AREAS]
-        location_text = ", ".join(location_parts)
-        if len(alert.areas) > MAX_DISPLAYED_AREAS:
-            location_text += f" and {len(alert.areas) - MAX_DISPLAYED_AREAS} more"
-        message_parts.append(f"Areas: {location_text}")
-
-    # Add expiration if requested and available
-    if include_expiration and alert.expires:
-        # Extract time preferences
-        if settings:
-            time_display_mode = getattr(settings, "time_display_mode", "local")
-            time_format_12hour = getattr(settings, "time_format_12hour", True)
-            show_timezone_suffix = getattr(settings, "show_timezone_suffix", False)
-        else:
-            time_display_mode = "local"
-            time_format_12hour = True
-            show_timezone_suffix = False
-
-        expires_str = format_display_datetime(
-            alert.expires,
-            time_display_mode=time_display_mode,
-            use_12hour=time_format_12hour,
-            show_timezone=show_timezone_suffix,
-            date_format="%b %d",
-        )
-        message_parts.append(f"Expires: {expires_str}")
-
-    # Join all parts with double newlines for screen reader pause
-    message = "\n\n".join(message_parts)
-
-    return title, message
 
 
 class AlertNotificationSystem:
@@ -543,117 +427,3 @@ class AlertNotificationSystem:
         except Exception as e:
             logger.error(f"Error sending test notification: {e}")
             return False
-
-
-class AlertNotificationPreferences:
-    """User preferences for alert notifications."""
-
-    def __init__(self):
-        """Initialize the instance."""
-        # Severity preferences
-        self.notify_extreme = True
-        self.notify_severe = True
-        self.notify_moderate = True
-        self.notify_minor = False
-        self.notify_unknown = False
-
-        # Category preferences (event types to ignore)
-        self.ignored_categories = set()
-
-        # Timing preferences
-        self.global_cooldown_minutes = 5
-        self.per_alert_cooldown_minutes = 60
-        self.escalation_cooldown_minutes = 15
-        self.max_notifications_per_hour = 10
-
-        # General preferences
-        self.notifications_enabled = True
-        self.sound_enabled = True
-        self.show_expiration_time = True
-        self.show_affected_areas = True
-        self.notification_timeout_seconds = 15
-
-    def to_alert_settings(self) -> AlertSettings:
-        """Convert to AlertSettings object for AlertManager."""
-        settings = AlertSettings()
-
-        # Map severity preferences to minimum priority
-        if self.notify_unknown:
-            settings.min_severity_priority = 1
-        elif self.notify_minor:
-            settings.min_severity_priority = 2
-        elif self.notify_moderate:
-            settings.min_severity_priority = 3
-        elif self.notify_severe:
-            settings.min_severity_priority = 4
-        elif self.notify_extreme:
-            settings.min_severity_priority = 5
-        else:
-            settings.min_severity_priority = 6  # Effectively disable notifications
-
-        # Copy other settings
-        settings.ignored_categories = self.ignored_categories.copy()
-        settings.global_cooldown = self.global_cooldown_minutes
-        settings.per_alert_cooldown = self.per_alert_cooldown_minutes
-        settings.escalation_cooldown = self.escalation_cooldown_minutes
-        settings.max_notifications_per_hour = self.max_notifications_per_hour
-        settings.notifications_enabled = self.notifications_enabled
-        settings.sound_enabled = self.sound_enabled
-
-        return settings
-
-    def from_alert_settings(self, settings: AlertSettings):
-        """Update preferences from AlertSettings object."""
-        # Map minimum priority back to individual severity flags
-        self.notify_extreme = settings.min_severity_priority <= SEVERITY_PRIORITY_EXTREME
-        self.notify_severe = settings.min_severity_priority <= SEVERITY_PRIORITY_SEVERE
-        self.notify_moderate = settings.min_severity_priority <= SEVERITY_PRIORITY_MODERATE
-        self.notify_minor = settings.min_severity_priority <= SEVERITY_PRIORITY_MINOR
-        self.notify_unknown = settings.min_severity_priority <= SEVERITY_PRIORITY_UNKNOWN
-
-        # Copy other settings
-        self.ignored_categories = settings.ignored_categories.copy()
-        self.global_cooldown_minutes = settings.global_cooldown
-        self.per_alert_cooldown_minutes = settings.per_alert_cooldown
-        self.escalation_cooldown_minutes = settings.escalation_cooldown
-        self.max_notifications_per_hour = settings.max_notifications_per_hour
-        self.notifications_enabled = settings.notifications_enabled
-        self.sound_enabled = settings.sound_enabled
-
-    def to_dict(self) -> dict:
-        """Convert to dictionary for serialization."""
-        return {
-            "notify_extreme": self.notify_extreme,
-            "notify_severe": self.notify_severe,
-            "notify_moderate": self.notify_moderate,
-            "notify_minor": self.notify_minor,
-            "notify_unknown": self.notify_unknown,
-            "ignored_categories": list(self.ignored_categories),
-            "global_cooldown_minutes": self.global_cooldown_minutes,
-            "per_alert_cooldown_minutes": self.per_alert_cooldown_minutes,
-            "escalation_cooldown_minutes": self.escalation_cooldown_minutes,
-            "max_notifications_per_hour": self.max_notifications_per_hour,
-            "notifications_enabled": self.notifications_enabled,
-            "sound_enabled": self.sound_enabled,
-            "show_expiration_time": self.show_expiration_time,
-            "show_affected_areas": self.show_affected_areas,
-            "notification_timeout_seconds": self.notification_timeout_seconds,
-        }
-
-    def from_dict(self, data: dict):
-        """Load from dictionary."""
-        self.notify_extreme = data.get("notify_extreme", True)
-        self.notify_severe = data.get("notify_severe", True)
-        self.notify_moderate = data.get("notify_moderate", True)
-        self.notify_minor = data.get("notify_minor", False)
-        self.notify_unknown = data.get("notify_unknown", False)
-        self.ignored_categories = set(data.get("ignored_categories", []))
-        self.global_cooldown_minutes = data.get("global_cooldown_minutes", 5)
-        self.per_alert_cooldown_minutes = data.get("per_alert_cooldown_minutes", 60)
-        self.escalation_cooldown_minutes = data.get("escalation_cooldown_minutes", 15)
-        self.max_notifications_per_hour = data.get("max_notifications_per_hour", 10)
-        self.notifications_enabled = data.get("notifications_enabled", True)
-        self.sound_enabled = data.get("sound_enabled", True)
-        self.show_expiration_time = data.get("show_expiration_time", True)
-        self.show_affected_areas = data.get("show_affected_areas", True)
-        self.notification_timeout_seconds = data.get("notification_timeout_seconds", 15)

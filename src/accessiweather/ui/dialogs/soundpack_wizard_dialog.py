@@ -7,45 +7,16 @@ import json
 import logging
 import shutil
 import tempfile
-from dataclasses import dataclass, field
 from pathlib import Path
 
 import wx
 
-try:
-    import wx.lib.scrolledpanel as scrolled
-except ModuleNotFoundError:
-    _SCROLLED_BASE = wx.Panel if hasattr(wx, "Panel") else object
-
-    class _FallbackScrolledPanel(_SCROLLED_BASE):
-        """Fallback when wx.lib.scrolledpanel is unavailable."""
-
-        def __init__(self, *args, **kwargs) -> None:
-            super().__init__(*args, **kwargs)
-
-        def SetupScrolling(self) -> None:  # noqa: N802
-            if hasattr(self, "SetScrollRate"):
-                self.SetScrollRate(10, 10)
-
-    class _FallbackScrolledModule:
-        ScrolledPanel = _FallbackScrolledPanel
-
-    scrolled = _FallbackScrolledModule()
-
 from .soundpack_manager_dialog import FRIENDLY_ALERT_CATEGORIES
+from .soundpack_wizard_scrolled import scrolled
+from .soundpack_wizard_shell import create_wizard_shell
+from .soundpack_wizard_state import WizardState
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class WizardState:
-    """State container for the wizard."""
-
-    pack_name: str = ""
-    author: str = ""
-    description: str = ""
-    selected_alert_keys: list[str] = field(default_factory=list)
-    sound_mappings: dict[str, str] = field(default_factory=dict)
 
 
 class SoundPackWizardDialog(wx.Dialog):
@@ -76,42 +47,7 @@ class SoundPackWizardDialog(wx.Dialog):
 
     def _create_ui(self) -> None:
         """Create the wizard UI."""
-        self.panel = wx.Panel(self)
-        main_sizer = wx.BoxSizer(wx.VERTICAL)
-
-        # Header
-        self.header_label = wx.StaticText(self.panel, label="")
-        header_font = self.header_label.GetFont()
-        header_font.SetPointSize(12)
-        header_font.SetWeight(wx.FONTWEIGHT_BOLD)
-        self.header_label.SetFont(header_font)
-        main_sizer.Add(self.header_label, 0, wx.ALL, 10)
-
-        # Content area (will be replaced for each step)
-        self.content_panel = wx.Panel(self.panel)
-        self.content_sizer = wx.BoxSizer(wx.VERTICAL)
-        self.content_panel.SetSizer(self.content_sizer)
-        main_sizer.Add(self.content_panel, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
-
-        # Navigation buttons
-        nav_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        nav_sizer.AddStretchSpacer()
-
-        self.prev_btn = wx.Button(self.panel, label="< Previous")
-        self.prev_btn.Bind(wx.EVT_BUTTON, self._go_previous)
-        nav_sizer.Add(self.prev_btn, 0, wx.RIGHT, 5)
-
-        self.next_btn = wx.Button(self.panel, label="Next >")
-        self.next_btn.Bind(wx.EVT_BUTTON, self._go_next)
-        nav_sizer.Add(self.next_btn, 0, wx.RIGHT, 5)
-
-        self.cancel_btn = wx.Button(self.panel, wx.ID_CANCEL, label="Cancel")
-        self.cancel_btn.Bind(wx.EVT_BUTTON, self._on_close)
-        nav_sizer.Add(self.cancel_btn, 0)
-
-        main_sizer.Add(nav_sizer, 0, wx.EXPAND | wx.ALL, 10)
-
-        self.panel.SetSizer(main_sizer)
+        create_wizard_shell(self)
 
     def _render_step(self) -> None:
         """Render the current step."""

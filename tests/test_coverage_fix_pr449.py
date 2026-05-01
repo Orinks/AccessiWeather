@@ -109,8 +109,8 @@ def test_parse_nws_alerts_extracts_references():
 
 # ---------------------------------------------------------------------------
 # 4. weather_client_base.py lines 912-924: _launch_enrichment_tasks auto-mode
-#    These lines are inside `if self.data_source == "auto":` and create tasks
-#    for sunrise_sunset, nws_discussion, vc_alerts, vc_moon_data, and marine.
+#    These lines are inside `if self.data_source == "auto":` and create smart tasks
+#    for sunrise_sunset and nws_discussion, plus the shared enrichment tasks.
 # ---------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_launch_enrichment_tasks_auto_mode_creates_smart_tasks():
@@ -131,8 +131,6 @@ async def test_launch_enrichment_tasks_auto_mode_creates_smart_tasks():
     with (
         patch.object(enrichment, "enrich_with_sunrise_sunset", side_effect=_noop),
         patch.object(enrichment, "enrich_with_nws_discussion", side_effect=_noop),
-        patch.object(enrichment, "enrich_with_visual_crossing_alerts", side_effect=_noop),
-        patch.object(enrichment, "enrich_with_visual_crossing_moon_data", side_effect=_noop),
         patch.object(enrichment, "populate_environmental_metrics", side_effect=_noop),
         patch.object(enrichment, "enrich_with_aviation_data", side_effect=_noop),
         patch.object(enrichment, "enrich_with_marine_data", side_effect=_noop),
@@ -145,8 +143,6 @@ async def test_launch_enrichment_tasks_auto_mode_creates_smart_tasks():
 
     assert "sunrise_sunset" in tasks
     assert "nws_discussion" in tasks
-    assert "vc_alerts" in tasks
-    assert "vc_moon_data" in tasks
     assert "environmental" in tasks
     assert "aviation" in tasks
     assert "marine" in tasks
@@ -180,8 +176,6 @@ async def test_launch_enrichment_tasks_non_auto_skips_smart_tasks():
 
     assert "sunrise_sunset" not in tasks
     assert "nws_discussion" not in tasks
-    assert "vc_alerts" not in tasks
-    assert "vc_moon_data" not in tasks
     assert "environmental" in tasks
     assert "aviation" in tasks
     assert "marine" in tasks

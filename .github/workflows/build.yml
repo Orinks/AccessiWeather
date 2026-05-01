@@ -14,7 +14,6 @@ on:
 
 permissions:
   contents: write
-  actions: write
 
 concurrency:
   group: build-${{ github.ref }}
@@ -37,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ startsWith(github.ref, 'refs/tags/') && github.ref || 'dev' }}
+          ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
           fetch-depth: 0
 
       - name: Check build conditions
@@ -101,7 +100,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.is_nightly == 'true' && 'dev' || github.ref }}
+          ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
           fetch-depth: 0
 
       - uses: actions/setup-python@v6
@@ -164,7 +163,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.is_nightly == 'true' && 'dev' || github.ref }}
+          ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
           fetch-depth: 0
 
       - uses: actions/setup-python@v6
@@ -225,7 +224,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ needs.prepare.outputs.is_nightly == 'true' && 'dev' || github.ref }}
+          ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
           fetch-depth: 0
 
       - uses: actions/download-artifact@v8
@@ -335,9 +334,3 @@ jobs:
                 --title "AccessiWeather v${VERSION}"
             fi
           fi
-
-      - name: Trigger pages update
-        if: ${{ inputs.dry_run != true }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh workflow run update-pages.yml || true

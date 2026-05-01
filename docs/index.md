@@ -34,7 +34,7 @@
 |-------|-------------|
 | **UI** | Toga, desktop-notifier, ARIA accessibility |
 | **Business Logic** | Python, asyncio, background tasks |
-| **Data Sources** | NWS API, Open-Meteo, Visual Crossing |
+| **Data Sources** | NWS API, Open-Meteo, Pirate Weather |
 | **Caching** | 5-minute TTL, stale-while-revalidate |
 | **Storage** | JSON config, system keyring (API keys) |
 | **Testing** | pytest, pytest-asyncio, hypothesis |
@@ -44,7 +44,7 @@
 **Multi-Source Data Fusion** with intelligent fallback:
 - Primary: NWS (US locations, most accurate)
 - Fallback: Open-Meteo (global coverage)
-- Enrichment: Visual Crossing (optional, enhanced data)
+- Optional provider: Pirate Weather (alerts, minutely precipitation, moon phase)
 
 ---
 
@@ -184,7 +184,7 @@
 
 **Layer 3: Data Integration**
 - Location: [`api/`](../src/accessiweather/api/), `weather_client.py`
-- Technologies: httpx, NWS API, Open-Meteo, Visual Crossing
+- Technologies: httpx, NWS API, Open-Meteo, Pirate Weather
 - Key Files: `weather_client.py`, `api/nws/`, `api/openmeteo_wrapper.py`
 - Docs: [Architecture](architecture.md) - Data Integration Layer
 
@@ -214,7 +214,7 @@ Cache Check
          ↓
      ┌───┴────────────┬────────────┐
      ▼                ▼            ▼
-  NWS API      Open-Meteo    Visual Crossing
+  NWS API      Open-Meteo    Pirate Weather
      └────────────┬───────────────┘
                   ▼
             Data Merge
@@ -334,7 +334,7 @@ briefcase package
 ### Weather APIs
 - **NWS API:** https://www.weather.gov/documentation/services-web-api
 - **Open-Meteo:** https://open-meteo.com/en/docs
-- **Visual Crossing:** https://www.visualcrossing.com/resources/documentation/weather-api/
+- **Pirate Weather:** https://pirateweather.net/
 
 ---
 
