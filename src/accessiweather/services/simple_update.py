@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import logging
 import os
 import platform
@@ -19,6 +18,12 @@ import httpx
 from packaging.version import InvalidVersion, Version
 
 from ..runtime_env import is_compiled_runtime
+from .update_integrity import (
+    ChecksumVerificationError as ChecksumVerificationError,
+    find_checksum_asset as find_checksum_asset,
+    parse_checksum_file as parse_checksum_file,
+    verify_file_checksum as verify_file_checksum,
+)
 from .update_restart import (
     RestartPlan as RestartPlan,
     build_macos_update_script,
@@ -163,133 +168,6 @@ def select_latest_release(
         return item.get("published_at") or item.get("created_at") or ""
 
     return max(filtered, key=sort_key, default=None)
-
-
-def find_checksum_asset(
-    release: dict[str, Any],
-    artifact_name: str,
-) -> dict[str, Any] | None:
-    """
-    Find a checksum asset (.sha256, .sha512) matching the given artifact.
-
-    Looks for files named like ``<artifact_name>.sha256`` or a generic
-    ``checksums.sha256`` / ``SHA256SUMS`` file that may contain the hash.
-
-    Args:
-        release: GitHub release dict containing ``assets``.
-        artifact_name: Name of the primary artifact to find a checksum for.
-
-    Returns:
-        The matching checksum asset dict, or None if not found.
-
-    """
-    assets = release.get("assets", [])
-    lower_artifact = artifact_name.lower()
-
-    # Priority 1: exact match like "artifact.zip.sha256"
-    for ext in (".sha256", ".sha512"):
-        for asset in assets:
-            name = asset.get("name", "").lower()
-            if name == lower_artifact + ext:
-                return asset
-
-    # Priority 2: generic checksum files
-    generic_names = (
-        "checksums.sha256",
-        "sha256sums",
-        "checksums.sha512",
-        "sha512sums",
-        "checksums.txt",
-    )
-    for asset in assets:
-        name = asset.get("name", "").lower()
-        if name in generic_names:
-            return asset
-
-    return None
-
-
-def parse_checksum_file(content: str, artifact_name: str) -> tuple[str, str] | None:
-    """
-    Parse a checksum file and extract the hash for the given artifact.
-
-    Supports two formats:
-    - Single hash only: ``<hex_hash>``
-    - BSD/GNU style: ``<hex_hash>  <filename>`` or ``<hex_hash> *<filename>``
-
-    Args:
-        content: Text content of the checksum file.
-        artifact_name: Artifact filename to match.
-
-    Returns:
-        Tuple of (algorithm, hex_hash) or None if not found.
-
-    """
-    lines = content.strip().splitlines()
-    lower_artifact = artifact_name.lower()
-
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        parts = line.split(None, 1)
-        hex_hash = parts[0]
-
-        # Determine algorithm from hash length
-        hash_len = len(hex_hash)
-        if hash_len == 64:
-            algo = "sha256"
-        elif hash_len == 128:
-            algo = "sha512"
-        elif hash_len == 32:
-            algo = "md5"
-        else:
-            continue
-
-        # Single-line file (just the hash)
-        if len(parts) == 1 and len(lines) == 1:
-            return algo, hex_hash.lower()
-
-        # Multi-entry: match filename
-        if len(parts) == 2:
-            filename = parts[1].lstrip("*").strip()
-            if filename.lower() == lower_artifact:
-                return algo, hex_hash.lower()
-
-    return None
-
-
-def verify_file_checksum(file_path: Path, algorithm: str, expected_hash: str) -> bool:
-    """
-    Verify a file's checksum against an expected hash.
-
-    Args:
-        file_path: Path to the file to verify.
-        algorithm: Hash algorithm name (sha256, sha512, md5).
-        expected_hash: Expected hex digest.
-
-    Returns:
-        True if the file hash matches.
-
-    Raises:
-        ValueError: If the algorithm is unsupported.
-
-    """
-    try:
-        h = hashlib.new(algorithm)
-    except ValueError as err:
-        raise ValueError(f"Unsupported hash algorithm: {algorithm}") from err
-
-    with file_path.open("rb") as f:
-        for chunk in iter(lambda: f.read(65536), b""):
-            h.update(chunk)
-
-    actual = h.hexdigest().lower()
-    return actual == expected_hash.lower()
-
-
-class ChecksumVerificationError(Exception):
-    """Raised when a downloaded artifact fails checksum verification."""
 
 
 def select_asset(
