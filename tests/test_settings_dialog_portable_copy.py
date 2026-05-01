@@ -672,7 +672,6 @@ def test_maybe_update_portable_bundle_uses_export_encrypted_api_keys(tmp_path, m
 
     dialog._maybe_update_portable_bundle_after_save(
         {
-            "visual_crossing_api_key": "FAKE_VC_KEY_123",
             "pirate_weather_api_key": "FAKE_PW_KEY_123",
             "other_setting": "ignored",
         }

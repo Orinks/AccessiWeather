@@ -105,6 +105,32 @@ class TestGetNwsTextProductAFD:
 
         assert result is None
 
+    @pytest.mark.asyncio
+    async def test_afd_uses_newest_issuance_time_when_listing_is_unsorted(self):
+        """NWS product listings are not guaranteed to be perfectly sorted."""
+        graph = {
+            "@graph": [
+                {"id": "afd-old", "issuanceTime": "2026-04-16T06:45:00+00:00"},
+                {"id": "afd-new", "issuanceTime": "2026-04-16T17:32:00+00:00"},
+            ]
+        }
+        client = _client_for(
+            {
+                f"{NWS_BASE}/products/types/AFD/locations/{OFFICE}": _resp(graph),
+                f"{NWS_BASE}/products/afd-new": _resp(
+                    {
+                        "productText": "NEW AREA FORECAST DISCUSSION",
+                        "issuanceTime": "2026-04-16T17:32:00+00:00",
+                    }
+                ),
+            }
+        )
+
+        result = await get_nws_text_product("AFD", OFFICE, nws_base_url=NWS_BASE, client=client)
+
+        assert isinstance(result, TextProduct)
+        assert result.product_id == "afd-new"
+
 
 # ---------------------------------------------------------------------------
 # HWO happy path

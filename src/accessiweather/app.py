@@ -568,7 +568,7 @@ class AccessiWeatherApp(wx.App):
         dialog = wx.MessageDialog(
             self.main_window,
             "This portable copy has no API keys yet.\n\n"
-            "Visual Crossing and Pirate Weather provider keys can be entered in Settings > Data Sources. "
+            "Pirate Weather provider keys can be entered in Settings > Data Sources. "
             "OpenRouter AI keys can be entered in Settings > AI.\n\n"
             "You can also create an encrypted key bundle to carry your keys with the portable install.",
             "Portable setup hint",
@@ -663,7 +663,6 @@ class AccessiWeatherApp(wx.App):
             "Setup summary:",
             f"- Location configured: {self._onboarding_status_text(bool(config.locations))}",
             f"- OpenRouter key set: {self._onboarding_status_text(self._has_saved_api_key('openrouter_api_key'))}",
-            f"- Visual Crossing weather provider key set: {self._onboarding_status_text(self._has_saved_api_key('visual_crossing_api_key'))}",
             f"- Pirate Weather provider key set: {self._onboarding_status_text(self._has_saved_api_key('pirate_weather_api_key'))}",
             *(
                 [
@@ -689,7 +688,7 @@ class AccessiWeatherApp(wx.App):
             self._run_deferred_startup_update_check()
             return
 
-        total_steps = 5 if self._portable_mode else 4
+        total_steps = 4 if self._portable_mode else 3
 
         step1 = wx.MessageDialog(
             self.main_window,
@@ -721,7 +720,7 @@ class AccessiWeatherApp(wx.App):
             _warn_dlg.ShowModal()
             _warn_dlg.Destroy()
 
-        # Collect keys entered in steps 2/3 — in portable mode we write directly to
+        # Collect keys entered in later steps — in portable mode we write directly to
         # the bundle rather than going through keyring (which isn't used in portable).
         _wizard_keys: dict[str, str] = {}
 
@@ -738,22 +737,9 @@ class AccessiWeatherApp(wx.App):
             else:
                 _wizard_keys["openrouter_api_key"] = openrouter_key
 
-        visual_crossing_key = self._prompt_optional_secret_with_link(
-            "Visual Crossing weather provider key (optional)",
-            f"Step 3 of {total_steps}: Enter your Visual Crossing weather provider key now, or leave blank to skip.",
-            "https://www.visualcrossing.com/sign-up",
-            "Get Visual Crossing weather provider key",
-        )
-        if visual_crossing_key is not None and visual_crossing_key:
-            if not self._portable_mode:
-                self.config_manager.update_settings(visual_crossing_api_key=visual_crossing_key)
-                self._maybe_offer_test_key_now("Visual Crossing weather provider key")
-            else:
-                _wizard_keys["visual_crossing_api_key"] = visual_crossing_key
-
         pirate_weather_key = self._prompt_optional_secret_with_link(
             "Pirate Weather provider key (optional)",
-            f"Step 4 of {total_steps}: Enter your Pirate Weather provider key now, or leave blank to skip.",
+            f"Step 3 of {total_steps}: Enter your Pirate Weather provider key now, or leave blank to skip.",
             "https://pirateweather.net/",
             "Get Pirate Weather provider key",
         )
@@ -767,7 +753,7 @@ class AccessiWeatherApp(wx.App):
         if self._portable_mode and _wizard_keys:
             # Keys were entered — prompt for passphrase and write bundle directly.
             passphrase = self._prompt_optional_secret(
-                "Step 5 of 5: Secure your API keys",
+                f"Step {total_steps} of {total_steps}: Secure your API keys",
                 "Enter a passphrase to encrypt your API keys into a portable bundle.\n"
                 "This bundle travels with the app so your keys work on any machine.\n\n"
                 "Leave blank to skip (keys will not be saved).",
@@ -1287,7 +1273,7 @@ class AccessiWeatherApp(wx.App):
                 from .notifications.sound_player import play_startup_sound
 
                 sound_pack = getattr(settings, "sound_pack", "default")
-                muted_events = getattr(settings, "muted_sound_events", ["data_updated"])
+                muted_events = getattr(settings, "muted_sound_events", [])
                 play_startup_sound(sound_pack, muted_events=muted_events)
         except Exception as e:
             logger.debug(f"Could not play startup sound: {e}")
@@ -1315,7 +1301,7 @@ class AccessiWeatherApp(wx.App):
                 )
 
                 sound_pack = getattr(settings, "sound_pack", "default")
-                muted_events = getattr(settings, "muted_sound_events", ["data_updated"])
+                muted_events = getattr(settings, "muted_sound_events", [])
                 logger.debug(
                     "[packaging-diag] exit sound: compiled=%s sound_pack=%s sound_lib=%s playsound3=%s",
                     is_compiled_runtime(),
@@ -1359,10 +1345,6 @@ class AccessiWeatherApp(wx.App):
                 self.weather_client.data_source = settings.data_source
                 self.weather_client.alerts_enabled = bool(settings.enable_alerts)
                 # Reset cached API clients so new keys take effect immediately
-                self.weather_client._visual_crossing_api_key = getattr(  # pragma: no cover
-                    settings, "visual_crossing_api_key", ""
-                )
-                self.weather_client._visual_crossing_client = None  # pragma: no cover
                 self.weather_client._pirate_weather_api_key = getattr(  # pragma: no cover
                     settings, "pirate_weather_api_key", ""
                 )
@@ -1378,7 +1360,7 @@ class AccessiWeatherApp(wx.App):
                 self._notifier.sound_enabled = bool(getattr(settings, "sound_enabled", True))
                 self._notifier.soundpack = getattr(settings, "sound_pack", "default")
                 self._notifier.muted_sound_events = list(
-                    getattr(settings, "muted_sound_events", ["data_updated"])
+                    getattr(settings, "muted_sound_events", [])
                 )
 
             if self.alert_notification_system:

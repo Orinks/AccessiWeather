@@ -16,12 +16,8 @@ class SourcePriorityConfig:
     """
 
     # Default priorities by location type
-    us_default: list[str] = field(
-        default_factory=lambda: ["nws", "openmeteo", "visualcrossing", "pirateweather"]
-    )
-    international_default: list[str] = field(
-        default_factory=lambda: ["openmeteo", "pirateweather", "visualcrossing"]
-    )
+    us_default: list[str] = field(default_factory=lambda: ["nws", "openmeteo", "pirateweather"])
+    international_default: list[str] = field(default_factory=lambda: ["openmeteo", "pirateweather"])
 
     # Per-field overrides (field_name -> priority list)
     field_priorities: dict[str, list[str]] = field(default_factory=dict)
@@ -94,12 +90,8 @@ class SourcePriorityConfig:
 
         """
         return cls(
-            us_default=data.get(
-                "us_default", ["nws", "openmeteo", "visualcrossing", "pirateweather"]
-            ),
-            international_default=data.get(
-                "international_default", ["openmeteo", "pirateweather", "visualcrossing"]
-            ),
+            us_default=data.get("us_default", ["nws", "openmeteo", "pirateweather"]),
+            international_default=data.get("international_default", ["openmeteo", "pirateweather"]),
             field_priorities=data.get("field_priorities", {}),
             temperature_conflict_threshold=data.get("temperature_conflict_threshold", 5.0),
         )

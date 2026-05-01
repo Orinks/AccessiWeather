@@ -141,7 +141,7 @@ class TestToastedWindowsNotifierSend:
         ):
             notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=True)
             notifier.send_notification("Title", "Body", play_sound=True)
-            mock_sound.assert_called_once_with("alert", "default", muted_events=["data_updated"])
+            mock_sound.assert_called_once_with("alert", "default", muted_events=[])
 
     def test_send_skips_sound_when_play_sound_false(self):
         """When play_sound=False, no sound is played."""
@@ -165,7 +165,7 @@ class TestToastedWindowsNotifierSend:
                 ["alert", "notify"],
                 "default",
                 logical_event="alert",
-                muted_events=["data_updated"],
+                muted_events=[],
             )
 
     def test_send_catches_exceptions(self):

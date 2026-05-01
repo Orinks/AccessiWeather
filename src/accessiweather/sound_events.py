@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Collection
 from itertools import chain
 
-DEFAULT_MUTED_SOUND_EVENTS: tuple[str, ...] = ("data_updated",)
+DEFAULT_MUTED_SOUND_EVENTS: tuple[str, ...] = ()
 
 SOUND_EVENT_SECTIONS: tuple[tuple[str, str, tuple[tuple[str, str], ...]], ...] = (
     (

@@ -59,7 +59,6 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "custom_instructions",
     # API key settings (loaded lazily via keyring)
     "pirate_weather_api_key",
-    "visual_crossing_api_key",
     # Display preferences
     "round_values",
     "enable_alerts",

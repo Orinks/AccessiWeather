@@ -59,8 +59,7 @@ def _normalize_severity(sev: str | None) -> str | None:
     s = sev.strip().lower()
     if s in KNOWN_SEVERITY_KEYS:
         return s
-    # Visual Crossing aliases are already mapped earlier in visual_crossing_client,
-    # but accept a few extras just in case.
+    # Accept common provider aliases in addition to the canonical severity keys.
     alias = {
         "high": "severe",
         "medium": "moderate",

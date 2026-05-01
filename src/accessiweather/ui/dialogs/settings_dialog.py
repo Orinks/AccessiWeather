@@ -349,7 +349,6 @@ class SettingsDialogSimple(wx.Dialog):
             # API key guard: if a key field is blank but the original was non-empty,
             # only drop it if the user explicitly cleared the field.
             for key, orig_attr, cleared_attr in (
-                ("visual_crossing_api_key", "_original_vc_key", "_vc_key_cleared"),
                 ("pirate_weather_api_key", "_original_pw_key", "_pw_key_cleared"),
                 ("openrouter_api_key", "_original_openrouter_key", "_openrouter_key_cleared"),
             ):
@@ -615,14 +614,8 @@ class SettingsDialogSimple(wx.Dialog):
         )
         auto_budget_ctrl.SetSelection(state.get("auto_mode_api_budget", 0))
 
-        us_sources = list(
-            state.get("auto_sources_us", ["nws", "openmeteo", "visualcrossing", "pirateweather"])
-        )
-        intl_sources = list(
-            state.get(
-                "auto_sources_international", ["openmeteo", "pirateweather", "visualcrossing"]
-            )
-        )
+        us_sources = list(state.get("auto_sources_us", ["nws", "openmeteo", "pirateweather"]))
+        intl_sources = list(state.get("auto_sources_international", ["openmeteo", "pirateweather"]))
 
         auto_sizer.Add(
             wx.StaticText(auto_panel, label="US automatic sources:"),
@@ -636,9 +629,6 @@ class SettingsDialogSimple(wx.Dialog):
         us_openmeteo_cb = wx.CheckBox(auto_panel, label="Open-Meteo")
         us_openmeteo_cb.SetValue("openmeteo" in us_sources)
         auto_sizer.Add(us_openmeteo_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
-        us_vc_cb = wx.CheckBox(auto_panel, label="Visual Crossing (requires API key)")
-        us_vc_cb.SetValue("visualcrossing" in us_sources)
-        auto_sizer.Add(us_vc_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
         us_pw_cb = wx.CheckBox(auto_panel, label="Pirate Weather (requires API key)")
         us_pw_cb.SetValue("pirateweather" in us_sources)
         auto_sizer.Add(us_pw_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
@@ -652,9 +642,6 @@ class SettingsDialogSimple(wx.Dialog):
         intl_openmeteo_cb = wx.CheckBox(auto_panel, label="Open-Meteo")
         intl_openmeteo_cb.SetValue("openmeteo" in intl_sources)
         auto_sizer.Add(intl_openmeteo_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
-        intl_vc_cb = wx.CheckBox(auto_panel, label="Visual Crossing (requires API key)")
-        intl_vc_cb.SetValue("visualcrossing" in intl_sources)
-        auto_sizer.Add(intl_vc_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
         intl_pw_cb = wx.CheckBox(auto_panel, label="Pirate Weather (requires API key)")
         intl_pw_cb.SetValue("pirateweather" in intl_sources)
         auto_sizer.Add(intl_pw_cb, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 20)
@@ -683,7 +670,6 @@ class SettingsDialogSimple(wx.Dialog):
                 for source, enabled in [
                     ("nws", us_nws_cb.GetValue()),
                     ("openmeteo", us_openmeteo_cb.GetValue()),
-                    ("visualcrossing", us_vc_cb.GetValue()),
                     ("pirateweather", us_pw_cb.GetValue()),
                 ]
                 if enabled
@@ -693,7 +679,6 @@ class SettingsDialogSimple(wx.Dialog):
                 for source, enabled in [
                     ("openmeteo", intl_openmeteo_cb.GetValue()),
                     ("pirateweather", intl_pw_cb.GetValue()),
-                    ("visualcrossing", intl_vc_cb.GetValue()),
                 ]
                 if enabled
             ] or ["openmeteo"]
@@ -738,9 +723,7 @@ class SettingsDialogSimple(wx.Dialog):
     def _update_api_key_visibility(self):
         """Show/hide API key sections based on selected data source."""
         selection = self._controls["data_source"].GetSelection()
-        show_vc = selection in (0, 3)
-        show_pw = selection in (0, 4)
-        self._vc_config_sizer.ShowItems(show_vc)
+        show_pw = selection in (0, 3)
         self._pw_config_sizer.ShowItems(show_pw)
         self._update_auto_source_key_state()
         parent = self._controls["data_source"].GetParent()
@@ -754,10 +737,6 @@ class SettingsDialogSimple(wx.Dialog):
     def _on_get_pw_api_key(self, event):
         """Open Pirate Weather signup page."""
         webbrowser.open("https://pirate-weather.apiable.io/signup")
-
-    def _on_get_vc_api_key(self, event):
-        """Open Visual Crossing signup page."""
-        webbrowser.open("https://www.visualcrossing.com/sign-up")
 
     def _on_validate_pw_api_key(self, event):
         """Validate Pirate Weather API key."""
@@ -807,64 +786,6 @@ class SettingsDialogSimple(wx.Dialog):
                     "Validation Failed",
                     wx.OK | wx.ICON_ERROR,
                 )
-        finally:
-            wx.EndBusyCursor()
-
-    def _on_validate_vc_api_key(self, event):
-        """Validate Visual Crossing API key."""
-        key = self._controls["vc_key"].GetValue()
-        if not key:
-            wx.MessageBox("Please enter an API key first.", "Validation", wx.OK | wx.ICON_WARNING)
-            return
-
-        wx.BeginBusyCursor()
-        try:
-            import asyncio
-
-            from ...models import Location
-            from ...visual_crossing_client import VisualCrossingApiError, VisualCrossingClient
-
-            test_location = Location(name="Test", latitude=40.7128, longitude=-74.0060)
-            client = VisualCrossingClient(api_key=key)
-
-            async def test_key():
-                try:
-                    await client.get_current_conditions(test_location)
-                    return True, None
-                except VisualCrossingApiError as e:
-                    if e.status_code == 401:
-                        return False, "Invalid API key"
-                    if e.status_code == 429:
-                        return False, "Rate limit exceeded - but key appears valid"
-                    return False, str(e.message)
-                except Exception as e:
-                    return False, str(e)
-
-            loop = asyncio.new_event_loop()
-            try:
-                valid, error = loop.run_until_complete(test_key())
-            finally:
-                loop.close()
-
-            if valid:
-                wx.MessageBox(
-                    "API key is valid!",
-                    "Validation Successful",
-                    wx.OK | wx.ICON_INFORMATION,
-                )
-            else:
-                wx.MessageBox(
-                    f"API key validation failed: {error}",
-                    "Validation Failed",
-                    wx.OK | wx.ICON_ERROR,
-                )
-        except Exception as e:
-            logger.error(f"Error validating Visual Crossing API key: {e}")
-            wx.MessageBox(
-                f"Error during validation: {e}",
-                "Validation Error",
-                wx.OK | wx.ICON_ERROR,
-            )
         finally:
             wx.EndBusyCursor()
 
@@ -1302,7 +1223,6 @@ class SettingsDialogSimple(wx.Dialog):
     # ------------------------------------------------------------------
 
     _PORTABLE_KEY_SETTINGS = (
-        "visual_crossing_api_key",
         "pirate_weather_api_key",
         "openrouter_api_key",
         "avwx_api_key",

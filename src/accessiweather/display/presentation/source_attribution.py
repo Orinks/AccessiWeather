@@ -34,7 +34,6 @@ def build_source_attribution(weather_data: WeatherData) -> SourceAttributionPres
     source_names = {
         "nws": "National Weather Service",
         "openmeteo": "Open-Meteo",
-        "visualcrossing": "Visual Crossing",
         "pirateweather": "Pirate Weather",
     }
 

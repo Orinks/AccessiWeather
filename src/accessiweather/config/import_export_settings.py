@@ -87,7 +87,7 @@ class SettingsImportExportMixin:
 
     def _normalize_imported_settings(self, settings_data: dict) -> None:
         """Normalize imported settings before deserialization."""
-        valid_sources = ["auto", "nws", "openmeteo", "visualcrossing"]
+        valid_sources = ["auto", "nws", "openmeteo", "pirateweather"]
         data_source = settings_data.get("data_source")
         if data_source is not None and data_source not in valid_sources:
             self.logger.warning(

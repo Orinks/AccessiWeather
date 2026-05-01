@@ -145,6 +145,28 @@ def _extract_section(text: str, start_marker: str, end_markers: tuple[str, ...])
     return content if content else None
 
 
+def _normalize_discussion_summary(text: str | None) -> str:
+    """Normalize extracted AFD summary text for comparison."""
+    if not text:
+        return ""
+    return " ".join(text.split()).casefold().strip(" .")
+
+
+def _is_no_change_summary(text: str | None) -> bool:
+    """Return True when a WHAT HAS CHANGED section explicitly says nothing changed."""
+    normalized = _normalize_discussion_summary(text)
+    if not normalized:
+        return False
+    return normalized in {
+        "no change",
+        "no changes",
+        "no significant change",
+        "no significant changes",
+        "no significant changes made to forecast",
+        "no significant changes made to the forecast",
+    }
+
+
 def summarize_discussion_change(previous_text: str | None, current_text: str | None) -> str | None:
     """
     Return a short human-friendly summary of what changed in the discussion text.
@@ -159,23 +181,38 @@ def summarize_discussion_change(previous_text: str | None, current_text: str | N
     if not current_text:
         return None
 
-    # 1. Try .WHAT HAS CHANGED... section
-    section = _extract_section(
+    # 1. Try .WHAT HAS CHANGED... section. If it explicitly says there were no
+    # changes, keep looking for changed key messages before giving up.
+    what_changed_section = _extract_section(
         current_text,
         start_marker=".WHAT HAS CHANGED",
         end_markers=(".", "&&"),
     )
-    if section:
-        return section[:300]
+    current_declares_no_changes = _is_no_change_summary(what_changed_section)
+    if what_changed_section and not current_declares_no_changes:
+        return what_changed_section[:300]
 
     # 2. Try .KEY MESSAGES... section
     section = _extract_section(
         current_text,
         start_marker=".KEY MESSAGES",
-        end_markers=("&&",),
+        end_markers=(".", "&&"),
     )
     if section:
-        return section[:300]
+        previous_section = _extract_section(
+            previous_text or "",
+            start_marker=".KEY MESSAGES",
+            end_markers=(".", "&&"),
+        )
+        if not previous_section or _normalize_discussion_summary(
+            section
+        ) != _normalize_discussion_summary(previous_section):
+            return section[:300]
+        if current_declares_no_changes:
+            return None
+
+    if current_declares_no_changes:
+        return None
 
     # 3. Fall back to first new line not present in previous text
     previous_lines = {
@@ -273,7 +310,7 @@ class NotificationEventManager:
 
     Tracks changes in:
     - Area Forecast Discussion (AFD) updates using NWS API issuanceTime
-    - Severe weather risk levels (from Visual Crossing)
+    - Severe weather risk levels
     - Minutely precipitation start/stop transitions (from Pirate Weather)
 
     All notifications are opt-in (disabled by default).
@@ -521,6 +558,20 @@ class NotificationEventManager:
             )
             self.state.last_discussion_issuance_time = issuance_time
             self.state.last_discussion_text = discussion_text
+
+            if change_summary is None and _is_no_change_summary(
+                _extract_section(
+                    discussion_text or "",
+                    start_marker=".WHAT HAS CHANGED",
+                    end_markers=(".", "&&"),
+                )
+            ):
+                logger.info(
+                    "Discussion issuance advanced for %s, but AFD says no changes; "
+                    "state updated without notification",
+                    location_name,
+                )
+                return None
 
             issued_label = _extract_discussion_issued_time_label(discussion_text)
             if not issued_label:
@@ -933,7 +984,7 @@ class NotificationEventManager:
         """
         Check if the severe weather risk level has changed significantly.
 
-        Visual Crossing severerisk scale (aligned with UI display):
+        Severe weather risk scale (aligned with UI display):
         - 0-19: Minimal risk
         - 20-39: Low risk
         - 40-59: Moderate risk

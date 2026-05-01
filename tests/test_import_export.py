@@ -533,6 +533,32 @@ class TestImportSettings:
         # Should still succeed, with data_source corrected to "auto"
         assert result is True
 
+    def test_import_settings_pirateweather_data_source_is_valid(
+        self, operations, mock_manager, tmp_path
+    ):
+        """Pirate Weather remains a supported single-source import value."""
+        import_file = tmp_path / "import.json"
+        import_data = {"settings": {"data_source": "pirateweather"}}
+        import_file.write_text(json.dumps(import_data))
+
+        result = operations.import_settings(import_file)
+
+        assert result is True
+        assert mock_manager.get_config.return_value.settings.data_source == "pirateweather"
+
+    def test_import_settings_visual_crossing_data_source_resets_to_auto(
+        self, operations, mock_manager, tmp_path
+    ):
+        """Legacy Visual Crossing settings should import safely as auto mode."""
+        import_file = tmp_path / "import.json"
+        import_data = {"settings": {"data_source": "visualcrossing"}}
+        import_file.write_text(json.dumps(import_data))
+
+        result = operations.import_settings(import_file)
+
+        assert result is True
+        assert mock_manager.get_config.return_value.settings.data_source == "auto"
+
     def test_import_settings_appsettings_validation_error(self, operations, tmp_path):
         """Test import with AppSettings validation error."""
         import_file = tmp_path / "import.json"

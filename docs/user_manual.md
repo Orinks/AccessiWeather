@@ -36,8 +36,7 @@ The wizard walks you through these steps:
 
 1. Add your first location, or skip it for now.
 2. Enter an OpenRouter API key if you want AI features.
-3. Enter a Visual Crossing API key if you want that provider.
-4. Enter a Pirate Weather API key if you want that provider.
+3. Enter a Pirate Weather API key if you want that provider.
 
 At the end, AccessiWeather shows a readiness summary.
 
@@ -359,19 +358,6 @@ Important limits:
 - alerts may be broader than local US NWS targeting
 - minutely precipitation is only available where Pirate Weather provides it
 
-#### Visual Crossing
-
-Best for:
-
-- global forecast enrichment with an API key
-- weather history support
-- some alert coverage outside the US
-
-Important limits:
-
-- requires an API key
-- not the authoritative US alert source in AccessiWeather
-
 ### What Automatic mode means now
 
 Automatic mode is the default weather-source choice.
@@ -444,8 +430,8 @@ Automatic mode uses separate saved source lists for US and international locatio
 
 Default order:
 
-- US: NWS, Open-Meteo, Visual Crossing, Pirate Weather
-- International: Open-Meteo, Pirate Weather, Visual Crossing
+- US: NWS, Open-Meteo, Pirate Weather
+- International: Open-Meteo, Pirate Weather
 
 You can change these lists in Settings > Data Sources > Configure automatic mode budget and sources.
 
@@ -462,7 +448,7 @@ For US locations, NWS alerts are authoritative when NWS is available.
 That means:
 
 - AccessiWeather uses NWS alerts as the official alert feed in Automatic mode
-- Pirate Weather and Visual Crossing alerts are not used as equal co-authorities for US alerts
+- Pirate Weather alerts are not used as an equal co-authority for US alerts
 - the Alert Area setting applies to NWS-style US alert targeting
 
 #### International locations
@@ -471,7 +457,6 @@ For international locations:
 
 - NWS alerts do not apply
 - Pirate Weather alerts are preferred when available
-- Visual Crossing is used as the fallback alert source when Pirate Weather is unavailable
 
 ### Forecast discussion behavior in Automatic mode
 
@@ -482,7 +467,7 @@ That means:
 - US users can open discussions when NWS is part of the active path
 - Nationwide can open national discussion products
 - if Automatic mode does not use NWS for the current weather path, forecast discussion may be unavailable
-- Open-Meteo, Pirate Weather, and Visual Crossing do not provide forecast discussions in AccessiWeather
+- Open-Meteo and Pirate Weather do not provide forecast discussions in AccessiWeather
 
 Use this when you want the forecaster's reasoning rather than only the final forecast numbers. This is especially useful when thunderstorm timing is uncertain, when a snow or ice changeover is possible, or when you want to know how confident the local office is.
 
@@ -569,15 +554,12 @@ Leave this alone if you are new to the app and want the broadest awareness first
 In addition to standard alerts, AccessiWeather can notify you about:
 
 - Area Forecast Discussion updates for NWS US locations
-- severe weather risk changes from Visual Crossing
 - minutely precipitation start soon from Pirate Weather
 - minutely precipitation stop soon from Pirate Weather
 
 These are optional and should be turned on only if you want those extra updates.
 
 Use discussion update notifications when you follow developing weather closely and want to know when local forecaster reasoning changes.
-
-Use severe risk change notifications when convective or severe-weather setup matters to your plans and you want early awareness, not just formal warnings.
 
 Use minutely precipitation notifications when short outdoor trips matter and a few minutes of notice would help.
 
@@ -630,9 +612,8 @@ The usual progression is:
 
 1. Start with the no-key default experience.
 2. Add Pirate Weather if you want worldwide alerts in many regions or minutely precipitation timing.
-3. Add Visual Crossing if you want another global provider for enrichment, history support, or extra international coverage.
-4. Add OpenRouter if you want AI explanations and Weather Assistant.
-5. Add an AVWX key only if you use Aviation Weather and want better international aviation decoding.
+3. Add OpenRouter if you want AI explanations and Weather Assistant.
+4. Add an AVWX key only if you use Aviation Weather and want better international aviation decoding.
 
 ### General
 
@@ -876,7 +857,6 @@ Choices are:
 - Automatic
 - National Weather Service
 - Open-Meteo
-- Visual Crossing
 - Pirate Weather
 
 Choose Automatic when you want merged results and source fallbacks. This is the best default for most people.
@@ -926,7 +906,6 @@ Start here with no keys unless you already know you need more. AccessiWeather wo
 
 The Data Sources tab includes API key fields and validation actions for:
 
-- Visual Crossing
 - Pirate Weather
 
 Each provider includes:
@@ -935,11 +914,9 @@ Each provider includes:
 - a button to get a key
 - a button to validate the key
 
-Pirate Weather is usually the first optional key worth adding. Use it when you want worldwide alert coverage in many regions, minutely precipitation timing, or Dark Sky-style summary text. This can be worth it if short-term rain timing matters to you or if you need alerts outside the US.
+Pirate Weather is the optional weather-provider key worth adding. Use it when you want worldwide alert coverage in many regions, minutely precipitation timing, moon phase, or Dark Sky-style summary text. This can be worth it if short-term rain timing matters to you or if you need alerts outside the US.
 
-Visual Crossing is usually the next optional key to consider. Use it when you want another global provider for enrichment, weather history support, or extra international fallback coverage. This can be worth it if you travel, compare providers, or want Automatic mode to have another source to draw from.
-
-Leave both fields blank if the default no-key setup already covers your needs. Many users never need either key.
+Leave the field blank if the default no-key setup already covers your needs. Many users never need a provider key.
 
 Stored keys remain in secure storage unless you explicitly export them.
 
@@ -1092,7 +1069,7 @@ What to try:
 1. Press F5 to refresh.
 2. Switch the weather source to Automatic.
 3. Confirm the location is valid and still selected.
-4. If using Visual Crossing or Pirate Weather directly, validate the API key in Settings > Data Sources.
+4. If using Pirate Weather directly, validate the API key in Settings > Data Sources.
 5. Try another saved location to see whether the issue is location-specific.
 
 ### Problem: Alerts are missing or seem different between sources

@@ -66,7 +66,6 @@ def _make_dialog_for_settings(settings: SimpleNamespace) -> SettingsDialogSimple
     dialog._controls = _Controls()
     dialog._sound_pack_ids = ["default"]
     dialog._selected_specific_model = None
-    dialog._vc_config_sizer = _DummySizer()
     dialog._pw_config_sizer = _DummySizer()
     dialog._source_settings_states = SettingsDialogSimple._build_default_source_settings_states()
     dialog._auto_sources_sizer = _DummySizer()

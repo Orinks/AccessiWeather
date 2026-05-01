@@ -20,7 +20,6 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     minimize_on_startup: bool = False
     startup_enabled: bool = False
     data_source: str = "auto"
-    visual_crossing_api_key: str = ""
     pirate_weather_api_key: str = ""
     auto_update_enabled: bool = True
     update_channel: str = "stable"
@@ -91,10 +90,10 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     taskbar_icon_text_format: str = "{temp} {condition}"
     # Source priority settings for smart auto mode
     source_priority_us: list[str] = field(
-        default_factory=lambda: ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+        default_factory=lambda: ["nws", "openmeteo", "pirateweather"]
     )
     source_priority_international: list[str] = field(
-        default_factory=lambda: ["openmeteo", "pirateweather", "visualcrossing"]
+        default_factory=lambda: ["openmeteo", "pirateweather"]
     )
     # Open-Meteo weather model selection
     openmeteo_weather_model: str = "best_match"
@@ -135,8 +134,8 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     # Auto mode source selection — which sources participate in auto mode
     auto_mode_api_budget: str = "max_coverage"
     auto_sources_us: list[str] = field(
-        default_factory=lambda: ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+        default_factory=lambda: ["nws", "openmeteo", "pirateweather"]
     )
     auto_sources_international: list[str] = field(
-        default_factory=lambda: ["openmeteo", "pirateweather", "visualcrossing"]
+        default_factory=lambda: ["openmeteo", "pirateweather"]
     )

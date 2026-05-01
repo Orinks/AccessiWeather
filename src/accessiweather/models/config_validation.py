@@ -195,9 +195,9 @@ class AppSettingsValidationMixin:
             "auto_sources_international",
         }:
             # Ensure valid list of source names
-            valid_sources = {"nws", "openmeteo", "visualcrossing", "pirateweather"}
-            us_default = ["nws", "openmeteo", "visualcrossing", "pirateweather"]
-            intl_default = ["openmeteo", "pirateweather", "visualcrossing"]
+            valid_sources = {"nws", "openmeteo", "pirateweather"}
+            us_default = ["nws", "openmeteo", "pirateweather"]
+            intl_default = ["openmeteo", "pirateweather"]
             is_us_setting = setting_name in {"source_priority_us", "auto_sources_us"}
             if not isinstance(value, list):
                 setattr(settings, setting_name, us_default if is_us_setting else intl_default)

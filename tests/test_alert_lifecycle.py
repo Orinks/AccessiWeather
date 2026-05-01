@@ -391,14 +391,14 @@ class TestComputeLifecycleLabels:
             message_type=message_type,
         )
 
-    def _make_vc_alert(self, alert_id: str = "vc-1") -> WeatherAlert:
+    def _make_openmeteo_alert(self, alert_id: str = "om-1") -> WeatherAlert:
         return WeatherAlert(
-            title="VC Alert",
-            description="A VC description.",
+            title="Open-Meteo Alert",
+            description="An Open-Meteo description.",
             severity="Moderate",
             urgency="Expected",
             id=alert_id,
-            source="VisualCrossing",
+            source="Open-Meteo",
         )
 
     def test_empty_list_returns_empty_dict(self):
@@ -430,9 +430,9 @@ class TestComputeLifecycleLabels:
         labels = compute_lifecycle_labels([alert])
         assert labels == {}
 
-    def test_vc_alert_gets_no_label(self):
-        """VisualCrossing alerts have no messageType equivalent."""
-        alert = self._make_vc_alert(alert_id="vc-1")
+    def test_non_nws_alert_gets_no_label(self):
+        """Open-Meteo alerts have no NWS messageType equivalent."""
+        alert = self._make_openmeteo_alert(alert_id="om-1")
         labels = compute_lifecycle_labels([alert])
         assert labels == {}
 
@@ -441,7 +441,7 @@ class TestComputeLifecycleLabels:
             self._make_nws_alert(alert_id="nws-a", message_type="Alert"),
             self._make_nws_alert(alert_id="nws-u", message_type="Update"),
             self._make_nws_alert(alert_id="nws-c", message_type="Cancel"),
-            self._make_vc_alert(alert_id="vc-1"),
+            self._make_openmeteo_alert(alert_id="om-1"),
         ]
         labels = compute_lifecycle_labels(alerts)
         assert labels == {
@@ -449,7 +449,7 @@ class TestComputeLifecycleLabels:
             "nws-u": "Updated",
         }
         assert "nws-c" not in labels
-        assert "vc-1" not in labels
+        assert "om-1" not in labels
 
 
 # ---------------------------------------------------------------------------
@@ -572,14 +572,14 @@ class TestCancellationVerification:
         diff = diff_alerts(prev_snap, curr_snap, confirmed_cancel_ids=None)
         assert len(diff.cancelled_alerts) == 0
 
-    def test_vc_alert_cancel_fires_without_confirmation(self):
-        """VisualCrossing alerts: disappear = cancelled regardless of confirmed_cancel_ids."""
-        vc = WeatherAlert(title="VC", description="d", id="VC-1", source="VisualCrossing")
-        prev_snap = alerts(vc)
+    def test_openmeteo_alert_cancel_fires_without_confirmation(self):
+        """Open-Meteo alerts: disappear = cancelled regardless of confirmed_cancel_ids."""
+        om = WeatherAlert(title="OM", description="d", id="OM-1", source="Open-Meteo")
+        prev_snap = alerts(om)
         curr_snap = alerts()
         diff = diff_alerts(prev_snap, curr_snap, confirmed_cancel_ids=None)
         assert len(diff.cancelled_alerts) == 1
-        assert diff.cancelled_alerts[0].alert_id == "VC-1"
+        assert diff.cancelled_alerts[0].alert_id == "OM-1"
 
     def test_pirate_weather_alert_cancel_is_suppressed_without_confirmation(self):
         """Pirate Weather / WMO disappearance should not emit a cancellation by default."""
