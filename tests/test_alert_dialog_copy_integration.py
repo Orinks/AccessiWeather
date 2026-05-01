@@ -11,6 +11,8 @@ import wx
 from accessiweather.models.config import AppSettings
 from accessiweather.ui.dialogs.alert_dialog import AlertDialog
 
+pytestmark = pytest.mark.xdist_group("wx")
+
 
 @pytest.fixture(scope="module")
 def wx_app():

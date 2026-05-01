@@ -20,10 +20,22 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Awaitable, Callable
-from datetime import datetime
 from typing import TYPE_CHECKING, Literal, cast
 
 import wx
+
+from .forecast_product_ai import (
+    build_explainer,
+    has_openrouter_key,
+)
+from .forecast_product_formatting import (
+    EMPTY_COPY as _EMPTY_COPY,
+    NO_CWA_COPY as _NO_CWA_COPY,
+    PRODUCT_FULL_NAMES as _PRODUCT_FULL_NAMES,
+    format_issuance as _format_issuance,
+    format_sps_choice_entry as _format_sps_choice_entry,
+)
+from .forecast_product_widgets import create_product_panel_widgets
 
 if TYPE_CHECKING:
     from ...ai_explainer import AIExplainer
@@ -32,21 +44,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 ProductType = Literal["AFD", "HWO", "SPS"]
-
-_PRODUCT_FULL_NAMES: dict[str, str] = {
-    "AFD": "Area Forecast Discussion",
-    "HWO": "Hazardous Weather Outlook",
-    "SPS": "Special Weather Statement",
-}
-
-# Empty-state copy per product type.
-_EMPTY_COPY: dict[str, str] = {
-    "AFD": "Area Forecast Discussion not currently available for {cwa_office}.",
-    "HWO": "Hazardous Weather Outlook not currently available for {cwa_office}.",
-    "SPS": "No recent Special Weather Statements for {cwa_office}.",
-}
-
-_NO_CWA_COPY = "NWS text products will populate after the next weather refresh."
 
 ProductLoader = Callable[[], Awaitable["TextProduct | list[TextProduct] | None"]]
 AvailabilityCallback = Callable[["ForecastProductPanel", bool], None]
@@ -116,84 +113,7 @@ class ForecastProductPanel(wx.Panel):
     # ------------------------------------------------------------------
     def _create_widgets(self) -> None:
         """Construct the per-tab widget tree."""
-        main_sizer = wx.BoxSizer(wx.VERTICAL)
-
-        full_name = _PRODUCT_FULL_NAMES[self.product_type]
-        self.header_label = wx.StaticText(self, label=full_name)
-        main_sizer.Add(self.header_label, 0, wx.ALL | wx.EXPAND, 8)
-
-        # SPS multi-product chooser — ONLY created on the SPS tab. Creating it
-        # on AFD/HWO and hiding it via Show(False) still leaks the label to
-        # screen readers, which was reported as misleading. AFD and HWO never
-        # have multiple concurrent products, so the chooser is SPS-only by
-        # design.
-        self.sps_choice_label: wx.StaticText | None = None
-        self.sps_choice: wx.Choice | None = None
-        if self.product_type == "SPS":
-            self.sps_choice_label = wx.StaticText(self, label="Recent Special Weather Statements:")
-            main_sizer.Add(self.sps_choice_label, 0, wx.LEFT | wx.RIGHT, 8)
-            self.sps_choice = wx.Choice(self)
-            main_sizer.Add(self.sps_choice, 0, wx.ALL | wx.EXPAND, 8)
-            # Hidden until we actually have >1 SPS to switch between.
-            main_sizer.Show(self.sps_choice_label, False)
-            main_sizer.Show(self.sps_choice, False)
-
-        # Raw product text — the primary content surface.
-        self.product_textctrl = wx.TextCtrl(
-            self,
-            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL,
-            value="Loading...",
-        )
-        main_sizer.Add(self.product_textctrl, 1, wx.ALL | wx.EXPAND, 8)
-
-        # Issuance StaticText — adjacent StaticText is what screen readers pick up.
-        self.issuance_label = wx.StaticText(self, label="")
-        main_sizer.Add(self.issuance_label, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
-
-        # AI summary header + display — hidden until user clicks "Plain Language Summary".
-        self.ai_summary_header = wx.StaticText(self, label="Plain Language Summary:")
-        main_sizer.Add(self.ai_summary_header, 0, wx.LEFT | wx.RIGHT, 8)
-        self.ai_summary_display = wx.TextCtrl(
-            self,
-            style=wx.TE_MULTILINE | wx.TE_READONLY,
-        )
-        main_sizer.Add(self.ai_summary_display, 0, wx.ALL | wx.EXPAND, 8)
-        main_sizer.Show(self.ai_summary_header, False)
-        main_sizer.Show(self.ai_summary_display, False)
-
-        # Model information (shown alongside the AI summary). Mirrors
-        # DiscussionDialog's Model / Tokens / Cost / Cached block so users
-        # see the same provenance info they already expect from AFD.
-        self.model_info_label = wx.StaticText(self, label="Model Information:")
-        main_sizer.Add(self.model_info_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 8)
-        self.model_info = wx.TextCtrl(
-            self,
-            value="",
-            style=wx.TE_MULTILINE | wx.TE_READONLY,
-            size=wx.Size(-1, 80),
-        )
-        main_sizer.Add(self.model_info, 0, wx.LEFT | wx.RIGHT | wx.EXPAND, 8)
-        main_sizer.Show(self.model_info_label, False)
-        main_sizer.Show(self.model_info, False)
-
-        # Buttons row
-        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.explain_button = wx.Button(self, label="Plain Language Summary")
-        self.regenerate_button = wx.Button(self, label="Regenerate Summary")
-        self.retry_button = wx.Button(self, label="Try again")
-        button_sizer.Add(self.explain_button, 0, wx.RIGHT, 5)
-        button_sizer.Add(self.regenerate_button, 0, wx.RIGHT, 5)
-        button_sizer.Add(self.retry_button, 0)
-        main_sizer.Add(button_sizer, 0, wx.ALL, 8)
-
-        # Regenerate + retry hidden initially.
-        self.regenerate_button.Hide()
-        self.retry_button.Hide()
-        # Explain button disabled until we have loaded text + explainer is available.
-        self.explain_button.Disable()
-
-        self.SetSizer(main_sizer)
-        self._main_sizer = main_sizer
+        create_product_panel_widgets(self)
 
     def _bind_events(self) -> None:
         """Wire up button and SPS-choice events."""
@@ -451,12 +371,7 @@ class ForecastProductPanel(wx.Panel):
     @staticmethod
     def _has_openrouter_key() -> bool:
         """Return True when the OpenRouter API key is available in SecureStorage."""
-        try:
-            from ...config.secure_storage import SecureStorage
-
-            return bool(SecureStorage.get_password("openrouter_api_key"))
-        except Exception:  # noqa: BLE001
-            return False
+        return has_openrouter_key()
 
     # ------------------------------------------------------------------
     # Event handlers
@@ -512,44 +427,7 @@ class ForecastProductPanel(wx.Panel):
         Returns ``None`` when no API key is available, which surfaces as a
         user-facing error via the existing ``_on_explain_error`` path.
         """
-        if self._ai_explainer is not None:
-            return self._ai_explainer
-
-        try:
-            from ...ai_explainer import DEFAULT_FREE_MODEL, AIExplainer
-            from ...config.secure_storage import SecureStorage
-
-            api_key = SecureStorage.get_password("openrouter_api_key")
-            if not api_key:
-                return None
-
-            settings = None
-            if self._app is not None:
-                cfg_manager = getattr(self._app, "config_manager", None)
-                if cfg_manager is not None:
-                    settings = cfg_manager.get_settings()
-
-            model_pref = getattr(settings, "ai_model_preference", None) if settings else None
-            if model_pref == "auto":
-                model = "openrouter/auto"
-            elif model_pref:
-                model = model_pref
-            else:
-                model = DEFAULT_FREE_MODEL
-
-            return AIExplainer(
-                api_key=api_key,
-                model=model,
-                custom_system_prompt=getattr(settings, "custom_system_prompt", None)
-                if settings
-                else None,
-                custom_instructions=getattr(settings, "custom_instructions", None)
-                if settings
-                else None,
-            )
-        except Exception:  # noqa: BLE001
-            logger.warning("Failed to build AIExplainer", exc_info=True)
-            return None
+        return build_explainer(self._ai_explainer, self._app)
 
     async def _run_explain(self, text: str) -> None:
         """Invoke ``AIExplainer.explain_text_product`` for this tab's product."""
@@ -605,40 +483,3 @@ class ForecastProductPanel(wx.Panel):
         self.ai_summary_display.SetValue(
             f"Failed to generate summary: {message}\n\nCheck your OpenRouter API key in Settings."
         )
-
-
-# ----------------------------------------------------------------------
-# Formatting helpers
-# ----------------------------------------------------------------------
-def _format_issuance(issuance_time: datetime | None) -> str:
-    """Return the "Issued: ..." line in the user's OS local timezone."""
-    if issuance_time is None:
-        return "Issued: unknown"
-    try:
-        local = issuance_time.astimezone()
-    except (ValueError, OSError):
-        local = issuance_time
-    return f"Issued: {local.strftime('%Y-%m-%d %H:%M %Z').strip()}"
-
-
-def _format_sps_choice_entry(product: TextProduct) -> str:
-    """Build a wx.Choice entry for an SPS product."""
-    if product.issuance_time is not None:
-        try:
-            local = product.issuance_time.astimezone()
-        except (ValueError, OSError):
-            local = product.issuance_time
-        when = local.strftime("%Y-%m-%d %H:%M")
-    else:
-        when = "unknown"
-    headline = product.headline
-    if not headline:
-        # Fall back to the first non-empty line of the product text.
-        for line in (product.product_text or "").splitlines():
-            stripped = line.strip()
-            if stripped:
-                headline = stripped
-                break
-    if not headline:
-        headline = "Special Weather Statement"
-    return f"Issued {when} \u2014 {headline}"

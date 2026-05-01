@@ -398,13 +398,13 @@ def _read_system_prompt() -> str:
     Read SYSTEM_PROMPT from the source file without importing the module.
 
     The dialog module imports wx and prism which are unavailable on Linux CI,
-    so we parse the constant directly from the source.
+    so we parse the prompt module directly from the source.
     """
     import ast
     from pathlib import Path
 
     src = Path(__file__).resolve().parent.parent / (
-        "src/accessiweather/ui/dialogs/weather_assistant_dialog.py"
+        "src/accessiweather/ui/dialogs/weather_assistant_prompt.py"
     )
     tree = ast.parse(src.read_text())
     for node in ast.iter_child_nodes(tree):

@@ -11,7 +11,20 @@ from datetime import UTC, datetime
 from typing import Any
 
 import httpx
-from bs4 import BeautifulSoup
+
+from accessiweather.services.national_discussion_classification import (
+    classify_pmd_discussion,
+    classify_swo_outlook,
+)
+from accessiweather.services.national_discussion_http import (
+    make_html_request,
+    make_json_request,
+    rate_limit,
+)
+from accessiweather.services.national_discussion_parsing import (
+    extract_cpc_outlook_text,
+    extract_nhc_outlook_text,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -44,13 +57,7 @@ DEFAULT_CACHE_TTL = 3600
 
 
 class NationalDiscussionService:
-    """
-    Service for fetching national weather discussions via the NWS API and web scraping.
-
-    Fetch WPC discussions (PMD), SPC convective outlooks (SWO), QPF discussions,
-    NHC tropical weather outlooks, and CPC extended outlooks. Include rate limiting,
-    retry logic, and caching.
-    """
+    """Fetch national weather discussions via the NWS API and web scraping."""
 
     def __init__(
         self,
@@ -60,17 +67,7 @@ class NationalDiscussionService:
         timeout: int = 10,
         cache_ttl: int = DEFAULT_CACHE_TTL,
     ):
-        """
-        Initialize the service.
-
-        Args:
-            request_delay: Minimum delay between requests in seconds.
-            max_retries: Maximum number of retry attempts for failed requests.
-            retry_backoff: Multiplier for increasing delay between retries.
-            timeout: Request timeout in seconds.
-            cache_ttl: Cache time-to-live in seconds (default 3600 = 1 hour).
-
-        """
+        """Initialize the service with request, retry, timeout, and cache settings."""
         self.request_delay = request_delay
         self.max_retries = max_retries
         self.retry_backoff = retry_backoff
@@ -85,94 +82,29 @@ class NationalDiscussionService:
 
     def _rate_limit(self) -> None:
         """Enforce rate limiting between requests."""
-        now = time.time()
-        wait = self.request_delay - (now - self._last_request_time)
-        if wait > 0:
-            logger.debug(f"Rate limiting: sleeping {wait:.2f}s")
-            time.sleep(wait)
-        self._last_request_time = time.time()
+        rate_limit(self, time_module=time, logger=logger)
 
     def _make_request(self, url: str) -> dict[str, Any]:
-        """
-        Make an HTTP GET request expecting JSON with retry logic.
-
-        Args:
-            url: The URL to request.
-
-        Returns:
-            Dict with 'success' bool and either 'data' (parsed JSON) or 'error' string.
-
-        """
-        last_error = ""
-        for attempt in range(self.max_retries + 1):
-            self._rate_limit()
-            try:
-                logger.debug(f"Requesting {url} (attempt {attempt + 1})")
-                with httpx.Client() as client:
-                    response = client.get(url, headers=self.headers, timeout=self.timeout)
-                    response.raise_for_status()
-                return {"success": True, "data": response.json()}
-            except httpx.TimeoutException:
-                last_error = "Request timed out"
-            except httpx.ConnectError:
-                last_error = "Connection error"
-            except httpx.HTTPStatusError as e:
-                last_error = f"HTTP error: {e.response.status_code}"
-            except httpx.RequestError as e:
-                last_error = f"Request error: {e}"
-            except Exception as e:
-                last_error = f"Unexpected error: {e}"
-
-            if attempt < self.max_retries:
-                delay = self.request_delay * (self.retry_backoff**attempt)
-                logger.info(f"Retrying in {delay:.1f}s after: {last_error}")
-                time.sleep(delay)
-
-        logger.error(f"All attempts failed for {url}: {last_error}")
-        return {"success": False, "error": last_error}
+        """Make an HTTP GET request expecting JSON with retry logic."""
+        return make_json_request(
+            self,
+            url,
+            httpx_module=httpx,
+            client_factory=httpx.Client,
+            time_module=time,
+            logger=logger,
+        )
 
     def _make_html_request(self, url: str) -> dict[str, Any]:
-        """
-        Make an HTTP GET request expecting HTML with retry logic.
-
-        Args:
-            url: The URL to request.
-
-        Returns:
-            Dict with 'success' bool and either 'html' or 'error' string.
-
-        """
-        last_error = ""
-        for attempt in range(self.max_retries + 1):
-            self._rate_limit()
-            try:
-                logger.debug(f"Requesting HTML {url} (attempt {attempt + 1})")
-                with httpx.Client() as client:
-                    response = client.get(
-                        url,
-                        headers={"User-Agent": "AccessiWeather/1.0 (AccessiWeather)"},
-                        timeout=self.timeout,
-                    )
-                    response.raise_for_status()
-                return {"success": True, "html": response.text}
-            except httpx.TimeoutException:
-                last_error = "Request timed out"
-            except httpx.ConnectError:
-                last_error = "Connection error"
-            except httpx.HTTPStatusError as e:
-                last_error = f"HTTP error: {e.response.status_code}"
-            except httpx.RequestError as e:
-                last_error = f"Request error: {e}"
-            except Exception as e:
-                last_error = f"Unexpected error: {e}"
-
-            if attempt < self.max_retries:
-                delay = self.request_delay * (self.retry_backoff**attempt)
-                logger.info(f"Retrying in {delay:.1f}s after: {last_error}")
-                time.sleep(delay)
-
-        logger.error(f"All attempts failed for {url}: {last_error}")
-        return {"success": False, "error": last_error}
+        """Make an HTTP GET request expecting HTML with retry logic."""
+        return make_html_request(
+            self,
+            url,
+            httpx_module=httpx,
+            client_factory=httpx.Client,
+            time_module=time,
+            logger=logger,
+        )
 
     def _fetch_latest_product(self, product_type: str) -> dict[str, Any]:
         """
@@ -236,23 +168,7 @@ class NationalDiscussionService:
             Classification key or None if not a target discussion.
 
         """
-        text_upper = text.upper() if text else ""
-        # WMO header codes (most reliable)
-        if "PMDSPD" in text_upper:
-            return "short_range"
-        if "PMDEPD" in text_upper:
-            return "medium_range"
-        if "PMDET" in text_upper:
-            return "extended"
-        # Fallback to keyword matching
-        text_lower = text.lower() if text else ""
-        if "short range" in text_lower:
-            return "short_range"
-        if "medium range" in text_lower or "3-7 day" in text_lower:
-            return "medium_range"
-        if "extended" in text_lower and ("8-10" in text_lower or "day 8" in text_lower):
-            return "extended"
-        return None
+        return classify_pmd_discussion(text)
 
     def _classify_swo_outlook(self, text: str) -> str | None:
         """
@@ -267,23 +183,7 @@ class NationalDiscussionService:
             Classification key or None if not a target outlook.
 
         """
-        text_upper = text.upper() if text else ""
-        # WMO header codes
-        if "SWODY1" in text_upper:
-            return "day1"
-        if "SWODY2" in text_upper:
-            return "day2"
-        if "SWODY3" in text_upper:
-            return "day3"
-        # Fallback to keyword matching
-        text_lower = text.lower() if text else ""
-        if "day 1" in text_lower:
-            return "day1"
-        if "day 2" in text_lower:
-            return "day2"
-        if "day 3" in text_lower:
-            return "day3"
-        return None
+        return classify_swo_outlook(text)
 
     def fetch_wpc_discussions(self) -> dict[str, dict[str, str]]:
         """
@@ -433,24 +333,7 @@ class NationalDiscussionService:
             Extracted outlook text or error message.
 
         """
-        try:
-            soup = BeautifulSoup(html, "html.parser")
-
-            pre = soup.find("pre")
-            if pre:
-                return pre.get_text().strip()
-
-            div = soup.find("div", id=lambda i: i and "outlook" in i.lower())
-            if div:
-                return div.get_text().strip()
-
-            el = soup.find(class_=lambda c: c and "outlook" in str(c).lower())
-            if el:
-                return el.get_text().strip()
-
-            return "Unable to parse NHC outlook text from page"
-        except Exception as e:
-            return f"Error parsing NHC outlook: {e}"
+        return extract_nhc_outlook_text(html)
 
     @staticmethod
     def is_hurricane_season() -> bool:
@@ -518,43 +401,7 @@ class NationalDiscussionService:
             Extracted text, or None if extraction failed.
 
         """
-        try:
-            soup = BeautifulSoup(html, "html.parser")
-
-            pre = soup.find("pre")
-            if pre:
-                text = pre.get_text().strip()
-                if text:
-                    return text
-
-            for selector in [
-                {"class_": "contentArea"},
-                {"class_": "mainContent"},
-                {"id": "content"},
-            ]:
-                div = soup.find("div", **selector)
-                if div:
-                    text = div.get_text().strip()
-                    if text:
-                        return text
-
-            body = soup.find("body")
-            if body:
-                texts = [
-                    p.get_text().strip()
-                    for p in body.find_all(["p", "div"])
-                    if p.get_text().strip()
-                ]
-                if texts:
-                    longest = max(texts, key=len)
-                    if len(longest) > 100:
-                        return longest
-
-            logger.error(f"Could not extract CPC {label} outlook text")
-            return None
-        except Exception as e:
-            logger.error(f"Error parsing CPC {label} outlook HTML: {e}")
-            return None
+        return extract_cpc_outlook_text(html, label)
 
     def fetch_cpc_discussions(self) -> dict[str, dict[str, str]]:
         """
