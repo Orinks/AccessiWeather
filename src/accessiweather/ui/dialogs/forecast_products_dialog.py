@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Literal, cast
 
 import wx
 
+from .advanced_text_product_dialog import show_advanced_text_product_dialog
 from .forecast_product_panel import ForecastProductPanel
 
 ProductType = Literal["AFD", "HWO", "SPS"]
@@ -100,6 +101,7 @@ class ForecastProductsDialog(wx.Dialog):
                 location_name=location_name,
                 app=self._app,
                 availability_callback=self._on_panel_availability_resolved,
+                advanced_lookup_opener=self._make_advanced_lookup_opener(typed_product_type),
             )
             self.notebook.AddPage(panel, tab_label)
             self.panels.append(panel)
@@ -141,6 +143,20 @@ class ForecastProductsDialog(wx.Dialog):
             return await self._service.get(product_type, cwa_office)
 
         return _loader
+
+    def _make_advanced_lookup_opener(self, product_type: ProductType):
+        """Bind an advanced lookup opener for ``product_type``."""
+
+        def _open() -> None:
+            show_advanced_text_product_dialog(
+                self,
+                self._location,
+                self._service,
+                initial_product_type=product_type,
+                app=self._app,
+            )
+
+        return _open
 
     def _on_panel_availability_resolved(
         self,

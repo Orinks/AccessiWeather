@@ -17,11 +17,17 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Awaitable, Callable
+from datetime import datetime
 from typing import Any, Literal
 
 from ..cache import Cache
+from ..iem_client import fetch_iem_afos_text, fetch_iem_spc_mcds, fetch_iem_spc_outlook
 from ..models import TextProduct
-from ..weather_client_nws import TextProductFetchError, get_nws_text_product
+from ..weather_client_nws import (
+    TextProductFetchError,
+    get_nws_text_product,
+    get_nws_text_product_history,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +43,7 @@ _PRODUCT_TTLS: dict[str, int] = {
 
 FetcherResult = TextProduct | list[TextProduct] | None
 Fetcher = Callable[..., Awaitable[FetcherResult]]
+HistoryFetcher = Callable[..., Awaitable[list[TextProduct]]]
 
 
 class ForecastProductService:
@@ -49,6 +56,7 @@ class ForecastProductService:
         cache: Cache,
         *,
         fetcher: Fetcher | None = None,
+        history_fetcher: HistoryFetcher | None = None,
     ) -> None:
         """
         Initialize the service.
@@ -59,14 +67,29 @@ class ForecastProductService:
             fetcher: Optional async callable with the same signature as
                 :func:`get_nws_text_product`. Defaults to the real module-level
                 function. Injected primarily for unit tests.
+            history_fetcher: Optional async callable with the same signature as
+                :func:`get_nws_text_product_history`.
 
         """
         self._cache = cache
         self._fetcher: Fetcher = fetcher or get_nws_text_product
+        self._history_fetcher: HistoryFetcher = history_fetcher or get_nws_text_product_history
 
     @staticmethod
     def _cache_key(product_type: str, cwa_office: str) -> str:
         return f"nws_text_product:{product_type}:{cwa_office}"
+
+    @staticmethod
+    def _history_cache_key(
+        product_type: str,
+        cwa_office: str,
+        limit: int,
+        start: datetime | None,
+        end: datetime | None,
+    ) -> str:
+        start_key = start.isoformat() if start is not None else ""
+        end_key = end.isoformat() if end is not None else ""
+        return f"nws_text_product_history:{product_type}:{cwa_office}:{limit}:{start_key}:{end_key}"
 
     async def get(
         self,
@@ -98,3 +121,60 @@ class ForecastProductService:
         ttl = self._TTLS.get(product_type, self._cache.default_ttl)
         self._cache.set(key, result, ttl=ttl)
         return result
+
+    async def get_history(
+        self,
+        product_type: str,
+        cwa_office: str,
+        *,
+        limit: int = 10,
+        start: datetime | None = None,
+        end: datetime | None = None,
+        **fetcher_kwargs: Any,
+    ) -> list[TextProduct]:
+        """
+        Return cached or freshly-fetched NWS text-product history.
+
+        History uses a separate cache namespace from the current-product path so
+        current AFD/HWO/SPS fetches never collide with historical listings.
+        """
+        key = self._history_cache_key(product_type, cwa_office, limit, start, end)
+
+        if self._cache.has_key(key):
+            cached = self._cache.get(key)
+            if isinstance(cached, list):
+                return cached
+
+        history_kwargs: dict[str, Any] = {"limit": limit, **fetcher_kwargs}
+        if start is not None:
+            history_kwargs["start"] = start
+        if end is not None:
+            history_kwargs["end"] = end
+
+        try:
+            result = await self._history_fetcher(product_type, cwa_office, **history_kwargs)
+        except TextProductFetchError:
+            raise
+
+        ttl = self._TTLS.get(product_type, self._cache.default_ttl)
+        self._cache.set(key, result, ttl=ttl)
+        return result
+
+    async def get_iem_afos(self, product_id: str, **kwargs: Any) -> TextProduct:
+        """Fetch raw IEM AFOS text for advanced product lookup."""
+        return await fetch_iem_afos_text(product_id, **kwargs)
+
+    async def get_iem_spc_outlook(
+        self,
+        latitude: float,
+        longitude: float,
+        *,
+        day: int = 1,
+        current: bool = True,
+    ) -> TextProduct:
+        """Fetch a structured IEM SPC convective outlook summary."""
+        return await fetch_iem_spc_outlook(latitude, longitude, day=day, current=current)
+
+    async def get_iem_spc_mcds(self, latitude: float, longitude: float) -> TextProduct:
+        """Fetch structured IEM SPC mesoscale discussion summaries."""
+        return await fetch_iem_spc_mcds(latitude, longitude)

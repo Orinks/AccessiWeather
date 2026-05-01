@@ -163,3 +163,29 @@ class TestForecastProductServiceErrorPropagation:
             await service.get("AFD", "PHI")
 
         assert fetcher.call_count == 2
+
+
+class TestForecastProductServiceHistory:
+    @pytest.mark.asyncio
+    async def test_history_uses_separate_cache_key(self):
+        cache = Cache()
+        fetcher = AsyncMock(return_value=_afd(product_id="current"))
+        history_fetcher = AsyncMock(return_value=[_afd(product_id="old")])
+        service = ForecastProductService(
+            cache,
+            fetcher=fetcher,
+            history_fetcher=history_fetcher,
+        )
+
+        current = await service.get("AFD", "PHI")
+        history = await service.get_history("AFD", "PHI", limit=10)
+
+        assert isinstance(current, TextProduct)
+        assert current.product_id == "current"
+        assert [p.product_id for p in history] == ["old"]
+        fetcher.assert_called_once()
+        history_fetcher.assert_called_once_with("AFD", "PHI", limit=10)
+
+        cached_history = await service.get_history("AFD", "PHI", limit=10)
+        assert cached_history is history
+        history_fetcher.assert_called_once()

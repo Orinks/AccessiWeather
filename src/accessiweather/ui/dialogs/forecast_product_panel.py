@@ -47,6 +47,7 @@ ProductType = Literal["AFD", "HWO", "SPS"]
 
 ProductLoader = Callable[[], Awaitable["TextProduct | list[TextProduct] | None"]]
 AvailabilityCallback = Callable[["ForecastProductPanel", bool], None]
+AdvancedLookupOpener = Callable[[], None]
 
 
 class ForecastProductPanel(wx.Panel):
@@ -62,6 +63,7 @@ class ForecastProductPanel(wx.Panel):
         location_name: str,
         app: object | None = None,
         availability_callback: AvailabilityCallback | None = None,
+        advanced_lookup_opener: AdvancedLookupOpener | None = None,
     ) -> None:
         """
         Build the panel widgets.
@@ -84,6 +86,8 @@ class ForecastProductPanel(wx.Panel):
                 completes. ``False`` means the product fetch succeeded but
                 returned no products; errors are reported as available so the
                 dialog keeps the retry surface visible.
+            advanced_lookup_opener: Optional callback for opening the advanced
+                text-product lookup dialog with this tab's product prefilled.
 
         """
         super().__init__(parent)
@@ -94,6 +98,7 @@ class ForecastProductPanel(wx.Panel):
         self._location_name = location_name
         self._app = app
         self._availability_callback = availability_callback
+        self._advanced_lookup_opener = advanced_lookup_opener
 
         # State
         self._current_text: str | None = None
@@ -120,6 +125,7 @@ class ForecastProductPanel(wx.Panel):
         self.explain_button.Bind(wx.EVT_BUTTON, self._on_explain)
         self.regenerate_button.Bind(wx.EVT_BUTTON, self._on_regenerate)
         self.retry_button.Bind(wx.EVT_BUTTON, self._on_retry)
+        self.advanced_lookup_button.Bind(wx.EVT_BUTTON, self._on_advanced_lookup)
         if self.sps_choice is not None:
             self.sps_choice.Bind(wx.EVT_CHOICE, self._on_sps_choice_changed)
 
@@ -380,6 +386,12 @@ class ForecastProductPanel(wx.Panel):
         """Retry button click — re-invoke the loader."""
         del event
         self._trigger_load()
+
+    def _on_advanced_lookup(self, event) -> None:
+        """Open the advanced lookup dialog for this tab's product type."""
+        del event
+        if self._advanced_lookup_opener is not None:
+            self._advanced_lookup_opener()
 
     def _on_explain(self, event) -> None:
         """Plain Language Summary button click."""

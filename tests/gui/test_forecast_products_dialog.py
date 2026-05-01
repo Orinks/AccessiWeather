@@ -279,6 +279,36 @@ class TestForecastProductsDialog:
         finally:
             loop.close()
 
+    def test_dialog_passes_advanced_lookup_opener_to_panels(
+        self, notebook_factory, panel_factory, sample_us_location
+    ):
+        service = MagicMock(name="ForecastProductService")
+
+        dlg = ForecastProductsDialog(
+            parent=MagicMock(),
+            location=sample_us_location,
+            forecast_product_service=service,
+            ai_explainer=None,
+        )
+
+        openers = [entry["advanced_lookup_opener"] for entry in panel_factory]
+        assert len(openers) == 3
+        for opener in openers:
+            assert callable(opener)
+
+        with patch(
+            "accessiweather.ui.dialogs.forecast_products_dialog.show_advanced_text_product_dialog"
+        ) as show_dialog:
+            openers[0]()
+
+        show_dialog.assert_called_once_with(
+            dlg,
+            sample_us_location,
+            service,
+            initial_product_type="AFD",
+            app=None,
+        )
+
     def test_page_change_does_not_steal_focus(
         self, notebook_factory, panel_factory, sample_us_location
     ):

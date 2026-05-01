@@ -1,0 +1,243 @@
+"""IEM-backed NWS text product helpers."""
+
+from __future__ import annotations
+
+import inspect
+import logging
+from datetime import UTC, datetime
+from typing import Any, Literal
+
+import httpx
+
+from .models import TextProduct
+
+logger = logging.getLogger(__name__)
+
+DEFAULT_IEM_BASE_URL = "https://mesonet.agron.iastate.edu"
+DEFAULT_USER_AGENT = "AccessiWeather (github.com/orinks/accessiweather)"
+
+
+class IemProductFetchError(Exception):
+    """IEM request failed or returned an unusable response."""
+
+
+async def _client_get(
+    client: httpx.AsyncClient,
+    url: str,
+    *,
+    params: dict[str, Any] | None = None,
+    headers: dict[str, str] | None = None,
+) -> httpx.Response:
+    """Call AsyncClient.get while allowing synchronous mocks in tests."""
+    response = client.get(url, params=params, headers=headers)
+    if inspect.isawaitable(response):
+        return await response
+    return response
+
+
+def _format_iem_datetime(value: datetime) -> str:
+    return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
+
+
+def _parse_datetime(value: Any) -> datetime | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    text = value.strip()
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=UTC)
+    return parsed
+
+
+async def fetch_iem_afos_text(
+    pil: str,
+    *,
+    client: httpx.AsyncClient | None = None,
+    iem_base_url: str = DEFAULT_IEM_BASE_URL,
+    timeout: float = 10.0,
+    user_agent: str = DEFAULT_USER_AGENT,
+    limit: int = 1,
+    start: datetime | None = None,
+    end: datetime | None = None,
+    order: Literal["asc", "desc"] = "desc",
+    center: str | None = None,
+    wmo_id: str | None = None,
+    matches: str | None = None,
+) -> TextProduct:
+    """Fetch raw NWS text from IEM AFOS retrieve by AWIPS/PIL."""
+    product_id = pil.strip().upper()
+    if not product_id:
+        raise IemProductFetchError("A product ID is required.")
+
+    params: dict[str, Any] = {
+        "pil": product_id,
+        "fmt": "text",
+        "limit": max(1, int(limit)),
+        "order": order,
+    }
+    if start is not None:
+        params["sdate"] = _format_iem_datetime(start)
+    if end is not None:
+        params["edate"] = _format_iem_datetime(end)
+    if center:
+        params["center"] = center.strip().upper()
+    if wmo_id:
+        params["ttaaii"] = wmo_id.strip().upper()
+    if matches:
+        params["matches"] = matches.strip()
+
+    url = f"{iem_base_url}/cgi-bin/afos/retrieve.py"
+    headers = {"User-Agent": user_agent}
+
+    async def _run(http_client: httpx.AsyncClient) -> TextProduct:
+        try:
+            response = await _client_get(http_client, url, params=params, headers=headers)
+        except (httpx.TimeoutException, httpx.TransportError, httpx.RequestError) as exc:
+            raise IemProductFetchError(f"IEM AFOS request failed for {product_id}: {exc}") from exc
+        if response.status_code != 200:
+            raise IemProductFetchError(
+                f"IEM AFOS returned HTTP {response.status_code} for {product_id}"
+            )
+        text = response.text.strip()
+        if not text:
+            raise IemProductFetchError(f"IEM AFOS returned no text for {product_id}")
+        return TextProduct(
+            product_type=product_id,
+            product_id=product_id,
+            cwa_office=(center or "IEM").strip().upper(),
+            issuance_time=None,
+            product_text=text,
+            headline=f"IEM AFOS {product_id}",
+        )
+
+    if client is not None:
+        return await _run(client)
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+        return await _run(new_client)
+
+
+def _spc_summary_lines(title: str, payload: Any, *, item_keys: tuple[str, ...]) -> list[str]:
+    lines = [title, ""]
+    if not isinstance(payload, dict):
+        return [title, "", "No structured data returned."]
+
+    generated = payload.get("generated_at") or payload.get("generated")
+    if generated:
+        lines.extend([f"Generated: {generated}", ""])
+
+    items: list[Any] = []
+    for key in item_keys:
+        value = payload.get(key)
+        if isinstance(value, list):
+            items = value
+            break
+    if not items:
+        lines.append("No matching products were returned.")
+        return lines
+
+    for index, item in enumerate(items, start=1):
+        if not isinstance(item, dict):
+            continue
+        lines.append(f"Product {index}:")
+        for label, key in (
+            ("Number", "mdnum"),
+            ("Category", "category"),
+            ("Threshold", "threshold"),
+            ("Valid", "valid"),
+            ("Issued", "product_issue"),
+            ("Concerning", "concerning"),
+            ("Watch probability", "watch_prob"),
+        ):
+            value = item.get(key)
+            if value not in (None, ""):
+                lines.append(f"{label}: {value}")
+        lines.append("")
+    return lines
+
+
+async def fetch_iem_spc_outlook(
+    latitude: float,
+    longitude: float,
+    *,
+    day: int = 1,
+    current: bool = True,
+    client: httpx.AsyncClient | None = None,
+    iem_base_url: str = DEFAULT_IEM_BASE_URL,
+    timeout: float = 10.0,
+    user_agent: str = DEFAULT_USER_AGENT,
+) -> TextProduct:
+    """Fetch and summarize the structured IEM SPC convective outlook response."""
+    day = min(8, max(1, int(day)))
+    params = {
+        "lat": latitude,
+        "lon": longitude,
+        "day": day,
+        "fmt": "json",
+        "current": 1 if current else 0,
+    }
+    url = f"{iem_base_url}/json/spcoutlook.py"
+    headers = {"User-Agent": user_agent}
+
+    async def _run(http_client: httpx.AsyncClient) -> TextProduct:
+        response = await _client_get(http_client, url, params=params, headers=headers)
+        if response.status_code != 200:
+            raise IemProductFetchError(f"IEM SPC outlook returned HTTP {response.status_code}")
+        data = response.json()
+        title = f"SPC Day {day} Convective Outlook"
+        issued = data.get("generated_at") if isinstance(data, dict) else None
+        return TextProduct(
+            product_type="SPC_OUTLOOK",
+            product_id=f"SPC_OUTLOOK_DAY{day}",
+            cwa_office="SPC",
+            issuance_time=_parse_datetime(issued),
+            product_text="\n".join(
+                _spc_summary_lines(title, data, item_keys=("outlooks", "features"))
+            ),
+            headline=title,
+        )
+
+    if client is not None:
+        return await _run(client)
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+        return await _run(new_client)
+
+
+async def fetch_iem_spc_mcds(
+    latitude: float,
+    longitude: float,
+    *,
+    client: httpx.AsyncClient | None = None,
+    iem_base_url: str = DEFAULT_IEM_BASE_URL,
+    timeout: float = 10.0,
+    user_agent: str = DEFAULT_USER_AGENT,
+) -> TextProduct:
+    """Fetch and summarize IEM SPC mesoscale discussions near a point."""
+    params = {"lat": latitude, "lon": longitude, "fmt": "json"}
+    url = f"{iem_base_url}/json/spcmcd.py"
+    headers = {"User-Agent": user_agent}
+
+    async def _run(http_client: httpx.AsyncClient) -> TextProduct:
+        response = await _client_get(http_client, url, params=params, headers=headers)
+        if response.status_code != 200:
+            raise IemProductFetchError(f"IEM SPC MCD returned HTTP {response.status_code}")
+        title = "SPC Mesoscale Discussions"
+        return TextProduct(
+            product_type="SPC_MCD",
+            product_id="SPC_MCD",
+            cwa_office="SPC",
+            issuance_time=None,
+            product_text="\n".join(
+                _spc_summary_lines(title, response.json(), item_keys=("mcds", "features"))
+            ),
+            headline=title,
+        )
+
+    if client is not None:
+        return await _run(client)
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+        return await _run(new_client)
