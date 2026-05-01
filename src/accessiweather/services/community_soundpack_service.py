@@ -23,7 +23,6 @@ import shutil
 import tempfile
 import zipfile
 from collections.abc import Callable
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -32,32 +31,9 @@ import httpx
 from accessiweather.constants import COMMUNITY_REPO_NAME, COMMUNITY_REPO_OWNER
 
 from ..utils.retry_utils import async_retry_with_backoff, is_retryable_http_error
+from .community_soundpack_models import CommunityPack as CommunityPack
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(order=True)
-class CommunityPack:
-    """Metadata describing a community sound pack."""
-
-    name: str
-    author: str
-    description: str
-    version: str
-    download_url: str
-    file_size: int | None
-    repository_url: str
-    release_tag: str
-    # Optional/extra
-    download_count: int | None = None
-    created_date: str | None = None  # ISO 8601 string
-    preview_image_url: str | None = None
-    repo_path: str | None = None
-    tree_sha: str | None = None
-    ref: str | None = "main"
-
-    def __str__(self) -> str:
-        return f"{self.name} {self.version} by {self.author}"
 
 
 class CommunitySoundPackService:
