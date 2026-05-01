@@ -20,10 +20,21 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Awaitable, Callable
-from datetime import datetime
 from typing import TYPE_CHECKING, Literal, cast
 
 import wx
+
+from .forecast_product_ai import (
+    build_explainer,
+    has_openrouter_key,
+)
+from .forecast_product_formatting import (
+    EMPTY_COPY as _EMPTY_COPY,
+    NO_CWA_COPY as _NO_CWA_COPY,
+    PRODUCT_FULL_NAMES as _PRODUCT_FULL_NAMES,
+    format_issuance as _format_issuance,
+    format_sps_choice_entry as _format_sps_choice_entry,
+)
 
 if TYPE_CHECKING:
     from ...ai_explainer import AIExplainer
@@ -32,21 +43,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 ProductType = Literal["AFD", "HWO", "SPS"]
-
-_PRODUCT_FULL_NAMES: dict[str, str] = {
-    "AFD": "Area Forecast Discussion",
-    "HWO": "Hazardous Weather Outlook",
-    "SPS": "Special Weather Statement",
-}
-
-# Empty-state copy per product type.
-_EMPTY_COPY: dict[str, str] = {
-    "AFD": "Area Forecast Discussion not currently available for {cwa_office}.",
-    "HWO": "Hazardous Weather Outlook not currently available for {cwa_office}.",
-    "SPS": "No recent Special Weather Statements for {cwa_office}.",
-}
-
-_NO_CWA_COPY = "NWS text products will populate after the next weather refresh."
 
 ProductLoader = Callable[[], Awaitable["TextProduct | list[TextProduct] | None"]]
 AvailabilityCallback = Callable[["ForecastProductPanel", bool], None]
@@ -451,12 +447,7 @@ class ForecastProductPanel(wx.Panel):
     @staticmethod
     def _has_openrouter_key() -> bool:
         """Return True when the OpenRouter API key is available in SecureStorage."""
-        try:
-            from ...config.secure_storage import SecureStorage
-
-            return bool(SecureStorage.get_password("openrouter_api_key"))
-        except Exception:  # noqa: BLE001
-            return False
+        return has_openrouter_key()
 
     # ------------------------------------------------------------------
     # Event handlers
@@ -512,44 +503,7 @@ class ForecastProductPanel(wx.Panel):
         Returns ``None`` when no API key is available, which surfaces as a
         user-facing error via the existing ``_on_explain_error`` path.
         """
-        if self._ai_explainer is not None:
-            return self._ai_explainer
-
-        try:
-            from ...ai_explainer import DEFAULT_FREE_MODEL, AIExplainer
-            from ...config.secure_storage import SecureStorage
-
-            api_key = SecureStorage.get_password("openrouter_api_key")
-            if not api_key:
-                return None
-
-            settings = None
-            if self._app is not None:
-                cfg_manager = getattr(self._app, "config_manager", None)
-                if cfg_manager is not None:
-                    settings = cfg_manager.get_settings()
-
-            model_pref = getattr(settings, "ai_model_preference", None) if settings else None
-            if model_pref == "auto":
-                model = "openrouter/auto"
-            elif model_pref:
-                model = model_pref
-            else:
-                model = DEFAULT_FREE_MODEL
-
-            return AIExplainer(
-                api_key=api_key,
-                model=model,
-                custom_system_prompt=getattr(settings, "custom_system_prompt", None)
-                if settings
-                else None,
-                custom_instructions=getattr(settings, "custom_instructions", None)
-                if settings
-                else None,
-            )
-        except Exception:  # noqa: BLE001
-            logger.warning("Failed to build AIExplainer", exc_info=True)
-            return None
+        return build_explainer(self._ai_explainer, self._app)
 
     async def _run_explain(self, text: str) -> None:
         """Invoke ``AIExplainer.explain_text_product`` for this tab's product."""
@@ -605,40 +559,3 @@ class ForecastProductPanel(wx.Panel):
         self.ai_summary_display.SetValue(
             f"Failed to generate summary: {message}\n\nCheck your OpenRouter API key in Settings."
         )
-
-
-# ----------------------------------------------------------------------
-# Formatting helpers
-# ----------------------------------------------------------------------
-def _format_issuance(issuance_time: datetime | None) -> str:
-    """Return the "Issued: ..." line in the user's OS local timezone."""
-    if issuance_time is None:
-        return "Issued: unknown"
-    try:
-        local = issuance_time.astimezone()
-    except (ValueError, OSError):
-        local = issuance_time
-    return f"Issued: {local.strftime('%Y-%m-%d %H:%M %Z').strip()}"
-
-
-def _format_sps_choice_entry(product: TextProduct) -> str:
-    """Build a wx.Choice entry for an SPS product."""
-    if product.issuance_time is not None:
-        try:
-            local = product.issuance_time.astimezone()
-        except (ValueError, OSError):
-            local = product.issuance_time
-        when = local.strftime("%Y-%m-%d %H:%M")
-    else:
-        when = "unknown"
-    headline = product.headline
-    if not headline:
-        # Fall back to the first non-empty line of the product text.
-        for line in (product.product_text or "").splitlines():
-            stripped = line.strip()
-            if stripped:
-                headline = stripped
-                break
-    if not headline:
-        headline = "Special Weather Statement"
-    return f"Issued {when} \u2014 {headline}"
