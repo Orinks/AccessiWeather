@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...models import AppSettings, Location, WeatherAlert, WeatherAlerts
-from ..weather_presenter import AlertPresentation, AlertsPresentation
 from .formatters import format_display_datetime, truncate, wrap_text
+from .models import AlertPresentation, AlertsPresentation
 
 if TYPE_CHECKING:
     from accessiweather.alert_lifecycle import AlertLifecycleDiff

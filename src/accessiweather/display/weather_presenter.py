@@ -8,15 +8,13 @@ maintaining accessible fallback text for screen reader users.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from accessiweather.alert_lifecycle import AlertLifecycleDiff
 
     from ..forecast_confidence import ForecastConfidence
-    from ..impact_summary import ImpactSummary
 
 from ..models import (
     AppSettings,
@@ -33,166 +31,36 @@ from ..models import (
 )
 from ..services.mobility_briefing import build_mobility_briefing
 from ..units import resolve_display_unit_system, resolve_temperature_unit_preference
-from ..utils import TemperatureUnit, decode_taf_text
+from ..utils import TemperatureUnit
+from .presentation.aviation import build_aviation
 from .presentation.environmental import AirQualityPresentation, build_air_quality_panel
+from .presentation.models import (
+    AlertPresentation,
+    AlertsPresentation,
+    AviationPresentation,
+    CurrentConditionsPresentation,
+    ForecastPeriodPresentation,
+    ForecastPresentation,
+    HourlyPeriodPresentation,
+    Metric,
+    SourceAttributionPresentation,
+    WeatherPresentation,
+)
+from .presentation.source_attribution import build_source_attribution
 
-
-@dataclass(slots=True)
-class Metric:
-    """Key-value pair used for presenting weather measurements."""
-
-    label: str
-    value: str
-
-
-@dataclass(slots=True)
-class HourlyPeriodPresentation:
-    """Simplified hourly forecast period for structured display."""
-
-    time: str
-    temperature: str | None
-    conditions: str | None
-    wind: str | None
-    humidity: str | None = None
-    dewpoint: str | None = None
-    precipitation_probability: str | None = None
-    snowfall: str | None = None
-    uv_index: str | None = None
-    cloud_cover: str | None = None
-    wind_gust: str | None = None
-    precipitation_amount: str | None = None
-
-
-@dataclass(slots=True)
-class ForecastPeriodPresentation:
-    """Daily forecast period presentation."""
-
-    name: str
-    temperature: str | None
-    conditions: str | None
-    wind: str | None
-    details: str | None
-    precipitation_probability: str | None = None
-    snowfall: str | None = None
-    uv_index: str | None = None
-    cloud_cover: str | None = None
-    wind_gust: str | None = None
-    precipitation_amount: str | None = None
-
-
-@dataclass(slots=True)
-class CurrentConditionsPresentation:
-    """Structured view of the current conditions."""
-
-    title: str
-    description: str
-    metrics: list[Metric] = field(default_factory=list)
-    fallback_text: str = ""
-    trends: list[str] = field(default_factory=list)
-    impact_summary: ImpactSummary | None = None
-
-    @property
-    def trend_summary(self) -> list[str]:  # pragma: no cover - backward compatibility
-        """Alias for legacy callers expecting ``trend_summary``."""
-        return self.trends
-
-
-@dataclass(slots=True)
-class ForecastPresentation:
-    """Structured forecast view including hourly highlights."""
-
-    title: str
-    periods: list[ForecastPeriodPresentation] = field(default_factory=list)
-    hourly_periods: list[HourlyPeriodPresentation] = field(default_factory=list)
-    hourly_summary: str | None = None
-    generated_at: str | None = None
-    fallback_text: str = ""
-    daily_section_text: str = ""
-    hourly_section_text: str = ""
-    mobility_briefing: str | None = None
-    marine_section_text: str = ""
-    marine_summary: str | None = None
-    marine_highlights: list[str] = field(default_factory=list)
-    confidence_label: str | None = None
-    summary: str | None = None
-    impact_summary: ImpactSummary | None = None
-
-
-@dataclass(slots=True)
-class AviationPresentation:
-    """Structured aviation weather presentation."""
-
-    title: str
-    airport_name: str | None = None
-    station_id: str | None = None
-    taf_summary: str | None = None
-    raw_taf: str | None = None
-    sigmets: list[str] = field(default_factory=list)
-    cwas: list[str] = field(default_factory=list)
-    fallback_text: str = ""
-
-
-@dataclass(slots=True)
-class AlertPresentation:
-    """Structured weather alert presentation."""
-
-    title: str
-    severity: str | None = None
-    urgency: str | None = None
-    event: str | None = None
-    areas: list[str] = field(default_factory=list)
-    expires: str | None = None
-    description: str | None = None
-    instructions: str | None = None
-    fallback_text: str = ""
-
-
-@dataclass(slots=True)
-class AlertsPresentation:
-    """Collection of alert presentations with fallback text."""
-
-    title: str
-    alerts: list[AlertPresentation] = field(default_factory=list)
-    fallback_text: str = ""
-    change_summary: str | None = None
-
-
-@dataclass(slots=True)
-class SourceAttributionPresentation:
-    """Presentation of data source attribution for transparency."""
-
-    contributing_sources: list[str] = field(default_factory=list)
-    failed_sources: list[str] = field(default_factory=list)
-    incomplete_sections: list[str] = field(default_factory=list)
-    summary_text: str = ""
-    aria_label: str = ""
-
-
-@dataclass(slots=True)
-class WeatherPresentation:
-    """Top-level presentation for all weather content."""
-
-    location_name: str
-    summary_text: str
-    current_conditions: CurrentConditionsPresentation | None = None
-    forecast: ForecastPresentation | None = None
-    alerts: AlertsPresentation | None = None
-    air_quality: AirQualityPresentation | None = None
-    aviation: AviationPresentation | None = None
-    trend_summary: list[str] = field(default_factory=list)
-    status_messages: list[str] = field(default_factory=list)
-    source_attribution: SourceAttributionPresentation | None = None
-
-    @property
-    def current(self) -> CurrentConditionsPresentation | None:  # pragma: no cover - compat
-        """Backward-compatible alias for older presentation attribute name."""
-        return self.current_conditions
-
-    @current.setter
-    def current(
-        self, value: CurrentConditionsPresentation | None
-    ) -> None:  # pragma: no cover - compat
-        self.current_conditions = value
+__all__ = [
+    "AlertPresentation",
+    "AlertsPresentation",
+    "AviationPresentation",
+    "CurrentConditionsPresentation",
+    "ForecastPeriodPresentation",
+    "ForecastPresentation",
+    "HourlyPeriodPresentation",
+    "Metric",
+    "SourceAttributionPresentation",
+    "WeatherPresentation",
+    "WeatherPresenter",
+]
 
 
 class WeatherPresenter:
@@ -410,176 +278,11 @@ class WeatherPresenter:
     def _build_aviation(
         self, aviation: AviationData | None, location: Location
     ) -> AviationPresentation | None:
-        if aviation is None:
-            return None
-
-        has_advisories = bool(aviation.active_sigmets or aviation.active_cwas)
-        taf_available = bool(
-            (aviation.raw_taf and aviation.raw_taf.strip())
-            or (aviation.decoded_taf and aviation.decoded_taf.strip())
-        )
-        if not (taf_available or has_advisories):
-            return None
-
-        station_label = aviation.airport_name or aviation.station_id
-        header_location = (
-            f"{station_label} near {location.name}"
-            if station_label and station_label.lower() != location.name.lower()
-            else station_label or location.name
-        )
-        header = f"Aviation weather for {header_location}."
-
-        taf_summary = aviation.decoded_taf
-        if not taf_summary and aviation.raw_taf:
-            taf_summary = decode_taf_text(aviation.raw_taf)
-
-        sigmet_lines = [
-            summary
-            for summary in (self._summarize_sigmet(entry) for entry in aviation.active_sigmets[:5])
-            if summary
-        ]
-        cwa_lines = [
-            summary
-            for summary in (self._summarize_cwa(entry) for entry in aviation.active_cwas[:5])
-            if summary
-        ]
-
-        fallback_lines: list[str] = [header]
-        if taf_summary:
-            fallback_lines.append("Terminal Aerodrome Forecast:")
-            fallback_lines.append(taf_summary)
-            if aviation.raw_taf and aviation.raw_taf.strip():
-                fallback_lines.append("Raw TAF message:")
-                fallback_lines.append(aviation.raw_taf.strip())
-        elif aviation.raw_taf and aviation.raw_taf.strip():
-            fallback_lines.append("Raw Terminal Aerodrome Forecast:")
-            fallback_lines.append(aviation.raw_taf.strip())
-        else:
-            fallback_lines.append("No Terminal Aerodrome Forecast available.")
-
-        if sigmet_lines:
-            fallback_lines.append("SIGMET and AIRMET advisories:")
-            fallback_lines.extend(f"• {line}" for line in sigmet_lines)
-        if cwa_lines:
-            fallback_lines.append("Center Weather Advisories:")
-            fallback_lines.extend(f"• {line}" for line in cwa_lines)
-
-        return AviationPresentation(
-            title="Aviation Weather",
-            airport_name=aviation.airport_name,
-            station_id=aviation.station_id,
-            taf_summary=taf_summary,
-            raw_taf=aviation.raw_taf,
-            sigmets=sigmet_lines,
-            cwas=cwa_lines,
-            fallback_text="\n".join(fallback_lines),
-        )
+        return build_aviation(aviation, location, self._format_timestamp)
 
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
-
-    def _format_aviation_time(self, value: str | None) -> str | None:
-        if not value:
-            return None
-        try:
-            sanitized = value.replace("Z", "+00:00") if value.endswith("Z") else value
-            timestamp = datetime.fromisoformat(sanitized)
-        except ValueError:
-            return value
-        return self._format_timestamp(timestamp)
-
-    def _summarize_sigmet(self, data: Any) -> str | None:
-        if not isinstance(data, dict):
-            return None
-
-        name = (
-            data.get("name")
-            or data.get("event")
-            or data.get("hazard")
-            or data.get("phenomenon")
-            or "SIGMET"
-        )
-        severity = data.get("severity") or data.get("intensity")
-        area = data.get("fir") or data.get("area") or data.get("regions") or data.get("airspace")
-        if isinstance(area, list):
-            area = ", ".join(str(item) for item in area if item)
-
-        start = self._format_aviation_time(
-            data.get("startTime")
-            or data.get("beginTime")
-            or data.get("validTimeStart")
-            or data.get("issueTime")
-        )
-        end = self._format_aviation_time(
-            data.get("endTime")
-            or data.get("expires")
-            or data.get("validTimeEnd")
-            or data.get("validUntil")
-        )
-        description = data.get("description") or data.get("text") or data.get("summary")
-
-        summary_parts = [name]
-        if severity:
-            summary_parts.append(f"severity {severity}")
-        summary = " ".join(summary_parts)
-
-        detail_parts: list[str] = []
-        if area:
-            detail_parts.append(f"Area: {area}")
-        if start or end:
-            if start and end:
-                detail_parts.append(f"Valid {start} to {end}")
-            elif end:
-                detail_parts.append(f"Valid until {end}")
-            elif start:
-                detail_parts.append(f"Effective {start}")
-        if description:
-            detail_parts.append(description)
-
-        details = "; ".join(detail_parts)
-        return f"{summary}; {details}" if details else summary
-
-    def _summarize_cwa(self, data: Any) -> str | None:
-        if not isinstance(data, dict):
-            return None
-
-        name = (
-            data.get("event")
-            or data.get("phenomenon")
-            or data.get("hazard")
-            or data.get("productType")
-            or "Center Weather Advisory"
-        )
-        cwsu = data.get("cwsu") or data.get("issuingOffice")
-        area = data.get("area") or data.get("regions") or data.get("airspace") or cwsu
-        if isinstance(area, list):
-            area = ", ".join(str(item) for item in area if item)
-
-        start = self._format_aviation_time(data.get("startTime") or data.get("issueTime"))
-        end = self._format_aviation_time(data.get("endTime") or data.get("expires"))
-        description = data.get("description") or data.get("text") or data.get("summary")
-
-        summary_parts = [name]
-        if cwsu and cwsu not in summary_parts:
-            summary_parts.append(f"({cwsu})")
-        summary = " ".join(summary_parts)
-
-        detail_parts: list[str] = []
-        if area and area not in summary:
-            detail_parts.append(f"Area: {area}")
-        if start or end:
-            if start and end:
-                detail_parts.append(f"Valid {start} to {end}")
-            elif end:
-                detail_parts.append(f"Valid until {end}")
-            elif start:
-                detail_parts.append(f"Issued {start}")
-        if description:
-            detail_parts.append(description)
-
-        details = "; ".join(detail_parts)
-        return f"{summary}; {details}" if details else summary
 
     def _build_summary(self, weather_data: WeatherData, unit_pref: TemperatureUnit) -> str:
         if not weather_data.has_any_data():
@@ -638,111 +341,7 @@ class WeatherPresenter:
     def _build_source_attribution(
         self, weather_data: WeatherData
     ) -> SourceAttributionPresentation | None:
-        """Build source attribution presentation for transparency."""
-        attribution = weather_data.source_attribution
-        if not attribution:
-            return None
-
-        # Format source names for display
-        source_names = {
-            "nws": "National Weather Service",
-            "openmeteo": "Open-Meteo",
-            "visualcrossing": "Visual Crossing",
-            "pirateweather": "Pirate Weather",
-        }
-
-        contributing = [
-            source_names.get(s, s.title()) for s in sorted(attribution.contributing_sources)
-        ]
-        failed = [source_names.get(s, s.title()) for s in sorted(attribution.failed_sources)]
-        incomplete = list(weather_data.incomplete_sections)
-
-        # Build summary text
-        if contributing:
-            summary = f"Data from: {', '.join(contributing)}"
-            if failed:
-                summary += f". Unavailable: {', '.join(failed)}"
-        elif failed:
-            summary = f"Sources unavailable: {', '.join(failed)}"
-        else:
-            summary = ""
-
-        disagreement_note = self._build_source_disagreement_note(weather_data, source_names)
-        if disagreement_note:
-            summary = f"{summary}. {disagreement_note}" if summary else disagreement_note
-
-        # Build accessible aria label
-        aria_parts = []
-        if contributing:
-            aria_parts.append(f"Weather data provided by {', '.join(contributing)}")
-        if failed:
-            aria_parts.append(f"Data unavailable from {', '.join(failed)}")
-        if incomplete:
-            aria_parts.append(f"Missing sections: {', '.join(incomplete)}")
-        if disagreement_note:
-            aria_parts.append(disagreement_note)
-        aria_label = ". ".join(aria_parts) if aria_parts else "Weather data source information"
-
-        return SourceAttributionPresentation(
-            contributing_sources=contributing,
-            failed_sources=failed,
-            incomplete_sections=incomplete,
-            summary_text=summary,
-            aria_label=aria_label,
-        )
-
-    def _build_source_disagreement_note(
-        self, weather_data: WeatherData, source_names: dict[str, str]
-    ) -> str | None:
-        """Return a short note when obvious condition sources disagree."""
-        attribution = weather_data.source_attribution
-        if attribution is None or weather_data.current is None:
-            return None
-
-        current_text = _clean_condition_text(weather_data.current.condition)
-        current_state = _precipitation_state(current_text)
-        if current_text is None or current_state is None:
-            return None
-
-        hourly_period = (
-            weather_data.hourly_forecast.periods[0]
-            if weather_data.hourly_forecast and weather_data.hourly_forecast.periods
-            else None
-        )
-        hourly_text = _clean_condition_text(
-            getattr(hourly_period, "short_forecast", None) if hourly_period else None
-        )
-        hourly_state = _precipitation_state(hourly_text)
-
-        minutely = weather_data.minutely_precipitation
-        minutely_text = _clean_condition_text(getattr(minutely, "summary", None))
-        minutely_state = _minutely_precipitation_state(minutely)
-
-        parts: list[str] = []
-        field_sources = attribution.field_sources
-        current_source = _format_source_name(field_sources.get("condition"), source_names)
-        hourly_source = _format_source_name(field_sources.get("hourly_source"), source_names)
-        minutely_source = _format_source_name(
-            field_sources.get("minutely_precipitation") or field_sources.get("hourly_summary"),
-            source_names,
-        )
-
-        if hourly_text and hourly_state is not None and hourly_state != current_state:
-            parts.append(f"hourly forecast from {hourly_source} says {hourly_text}")
-
-        if minutely_text and minutely_state is not None and minutely_state != current_state:
-            parts.append(
-                f"minute-by-minute precipitation outlook from {minutely_source} says "
-                f"{minutely_text}"
-            )
-
-        if not parts:
-            return None
-
-        return (
-            f"Data note: current conditions from {current_source} report {current_text}; "
-            f"{'; '.join(parts)}."
-        )
+        return build_source_attribution(weather_data)
 
     def _resolve_unit_preferences(
         self, location: Location
@@ -764,72 +363,6 @@ class WeatherPresenter:
             use_12hour=use_12hour,
             show_timezone=show_timezone,
         )
-
-
-_WET_CONDITION_MARKERS = (
-    "thunderstorm",
-    "t-storm",
-    "rain",
-    "shower",
-    "drizzle",
-    "snow",
-    "sleet",
-    "hail",
-    "freezing rain",
-)
-_DRY_CONDITION_MARKERS = (
-    "clear",
-    "sunny",
-    "cloudy",
-    "overcast",
-    "fair",
-)
-
-
-def _clean_condition_text(value: str | None) -> str | None:
-    """Normalize condition text for display while preserving user-facing wording."""
-    if not isinstance(value, str):
-        return None
-    cleaned = value.strip()
-    return cleaned.rstrip(".") if cleaned else None
-
-
-def _precipitation_state(value: str | None) -> str | None:
-    """Classify obvious wet/dry condition wording; return None when ambiguous."""
-    if value is None:
-        return None
-    normalized = value.casefold()
-    if any(marker in normalized for marker in _WET_CONDITION_MARKERS):
-        return "wet"
-    if any(marker in normalized for marker in _DRY_CONDITION_MARKERS):
-        return "dry"
-    return None
-
-
-def _minutely_precipitation_state(minutely: object | None) -> str | None:
-    """Classify minutely precipitation data from explicit points or summary text."""
-    if minutely is None:
-        return None
-
-    points = getattr(minutely, "points", None)
-    if points:
-        for point in points:
-            intensity = getattr(point, "precipitation_intensity", None)
-            probability = getattr(point, "precipitation_probability", None)
-            if (isinstance(intensity, int | float) and intensity > 0) or (
-                isinstance(probability, int | float) and probability > 0
-            ):
-                return "wet"
-        return "dry"
-
-    return _precipitation_state(_clean_condition_text(getattr(minutely, "summary", None)))
-
-
-def _format_source_name(source: str | None, source_names: dict[str, str]) -> str:
-    """Return a readable source label, falling back to a generic label."""
-    if not source:
-        return "another source"
-    return source_names.get(source, source.title())
 
 
 from .presentation.alerts import build_alerts  # noqa: E402
