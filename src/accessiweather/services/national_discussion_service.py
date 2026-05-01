@@ -11,7 +11,11 @@ from datetime import UTC, datetime
 from typing import Any
 
 import httpx
-from bs4 import BeautifulSoup
+
+from accessiweather.services.national_discussion_parsing import (
+    extract_cpc_outlook_text,
+    extract_nhc_outlook_text,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -433,24 +437,7 @@ class NationalDiscussionService:
             Extracted outlook text or error message.
 
         """
-        try:
-            soup = BeautifulSoup(html, "html.parser")
-
-            pre = soup.find("pre")
-            if pre:
-                return pre.get_text().strip()
-
-            div = soup.find("div", id=lambda i: i and "outlook" in i.lower())
-            if div:
-                return div.get_text().strip()
-
-            el = soup.find(class_=lambda c: c and "outlook" in str(c).lower())
-            if el:
-                return el.get_text().strip()
-
-            return "Unable to parse NHC outlook text from page"
-        except Exception as e:
-            return f"Error parsing NHC outlook: {e}"
+        return extract_nhc_outlook_text(html)
 
     @staticmethod
     def is_hurricane_season() -> bool:
@@ -518,43 +505,7 @@ class NationalDiscussionService:
             Extracted text, or None if extraction failed.
 
         """
-        try:
-            soup = BeautifulSoup(html, "html.parser")
-
-            pre = soup.find("pre")
-            if pre:
-                text = pre.get_text().strip()
-                if text:
-                    return text
-
-            for selector in [
-                {"class_": "contentArea"},
-                {"class_": "mainContent"},
-                {"id": "content"},
-            ]:
-                div = soup.find("div", **selector)
-                if div:
-                    text = div.get_text().strip()
-                    if text:
-                        return text
-
-            body = soup.find("body")
-            if body:
-                texts = [
-                    p.get_text().strip()
-                    for p in body.find_all(["p", "div"])
-                    if p.get_text().strip()
-                ]
-                if texts:
-                    longest = max(texts, key=len)
-                    if len(longest) > 100:
-                        return longest
-
-            logger.error(f"Could not extract CPC {label} outlook text")
-            return None
-        except Exception as e:
-            logger.error(f"Error parsing CPC {label} outlook HTML: {e}")
-            return None
+        return extract_cpc_outlook_text(html, label)
 
     def fetch_cpc_discussions(self) -> dict[str, dict[str, str]]:
         """
