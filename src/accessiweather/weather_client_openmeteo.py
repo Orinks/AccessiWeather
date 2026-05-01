@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import logging
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -24,125 +24,29 @@ from .utils.retry_utils import (
     is_retryable_http_error,
 )
 from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
+from .weather_client_openmeteo_current import (
+    parse_iso_datetime as _parse_iso_datetime,
+    parse_openmeteo_current_conditions as parse_openmeteo_current_conditions,
+    pick_precipitation_type,
+    resolve_current_condition_description,
+)
 from .weather_client_parsers import (
-    convert_f_to_c,
-    convert_wind_speed_to_mph_and_kph,
     degrees_to_cardinal,
     format_date_name,
-    normalize_pressure,
-    normalize_temperature,
     weather_code_to_description,
 )
 
 logger = logging.getLogger(__name__)
 
-_SNOW_WEATHER_CODES = {71, 73, 75, 77, 85, 86}
-_RAIN_WEATHER_CODES = {51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82}
-_ACTIVE_PRECIP_EPSILON_IN = 0.001
-_NEAR_ZERO_SNOW_EPSILON_IN = 0.0005
-
 
 def _pick_precipitation_type(rain_in: float, snow_in: float) -> list[str] | None:
-    """Infer precipitation type from rain/snow rates with conservative thresholds."""
-    has_rain = rain_in > _ACTIVE_PRECIP_EPSILON_IN
-    has_snow = snow_in > _ACTIVE_PRECIP_EPSILON_IN
-    if has_rain and has_snow:
-        return ["rain", "snow"]
-    if has_rain:
-        return ["rain"]
-    if has_snow:
-        return ["snow"]
-    return None
+    """Compatibility wrapper for Open-Meteo precipitation-type inference."""
+    return pick_precipitation_type(rain_in, snow_in)
 
 
 def _resolve_current_condition_description(current: dict[str, Any]) -> str | None:
-    """Resolve current condition text using weather_code plus rain/snow rates."""
-    weather_code = current.get("weather_code")
-    base = weather_code_to_description(weather_code)
-
-    try:
-        code = int(weather_code) if weather_code is not None else None
-    except (TypeError, ValueError):
-        code = None
-
-    rain = float(current.get("rain") or 0.0) + float(current.get("showers") or 0.0)
-    snow = float(current.get("snowfall") or 0.0)
-
-    # If no active precip, trust weather code mapping directly.
-    if rain <= _ACTIVE_PRECIP_EPSILON_IN and snow <= _ACTIVE_PRECIP_EPSILON_IN:
-        return base
-
-    # Rain observed with near-zero snow should never present as snow.
-    if rain > _ACTIVE_PRECIP_EPSILON_IN and snow <= _NEAR_ZERO_SNOW_EPSILON_IN:
-        if code in _SNOW_WEATHER_CODES:
-            return "Light drizzle" if rain < 0.02 else "Slight rain"
-        return base
-
-    # Snow clearly dominates: keep mapped text (or normalize from rain code to mixed).
-    if snow > (rain * 1.5):
-        if code in _RAIN_WEATHER_CODES:
-            return "Mixed rain and snow"
-        return base
-
-    # Mixed or ambiguous precip should not collapse to pure snow/rain.
-    if rain > _ACTIVE_PRECIP_EPSILON_IN and snow > _ACTIVE_PRECIP_EPSILON_IN:
-        return "Mixed rain and snow"
-
-    return base
-
-
-def _parse_iso_datetime(
-    value: str | None, utc_offset_seconds: int | None = None
-) -> datetime | None:
-    """
-    Parse an ISO 8601 datetime string, converting to location's local timezone.
-
-    Open-Meteo returns ISO 8601 strings that may be timezone-aware or naive.
-    When using timezone="auto", Open-Meteo typically returns naive datetimes in the
-    location's local timezone, with utc_offset_seconds indicating the offset.
-
-    If the timestamp is UTC-aware (ends with Z or +00:00), we convert it to the
-    location's timezone using utc_offset_seconds.
-
-    Args:
-        value: ISO 8601 datetime string
-        utc_offset_seconds: UTC offset in seconds (e.g., -28800 for PST/UTC-8)
-
-    Returns:
-        Timezone-aware datetime object in the location's timezone, or None if parsing fails
-
-    """
-    if not value:
-        return None
-
-    candidates = [value]
-    if value.endswith("Z"):
-        candidates.append(value[:-1] + "+00:00")
-
-    for candidate in candidates:
-        try:
-            dt = datetime.fromisoformat(candidate)
-
-            # Build the target timezone from offset
-            local_tz = None
-            if utc_offset_seconds is not None:
-                local_tz = timezone(timedelta(seconds=utc_offset_seconds))
-
-            if dt.tzinfo is None:
-                # Naive datetime - assume it's already in local time, just label it
-                dt = dt.replace(tzinfo=local_tz) if local_tz else dt.replace(tzinfo=UTC)
-            elif local_tz and (
-                dt.tzinfo == UTC or (dt.utcoffset() and dt.utcoffset().total_seconds() == 0)
-            ):
-                # UTC-aware datetime - convert to local timezone
-                dt = dt.astimezone(local_tz)
-
-            return dt
-        except ValueError:
-            continue
-
-    logger.debug("Failed to parse ISO datetime value: %s", value)
-    return None
+    """Compatibility wrapper for Open-Meteo current condition text."""
+    return resolve_current_condition_description(current)
 
 
 async def _client_get(
@@ -370,151 +274,6 @@ async def get_openmeteo_hourly_forecast(
         if isinstance(exc, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(exc):
             raise
         return None
-
-
-def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
-    """Parse Open-Meteo current condition payload into a CurrentConditions model."""
-    current = data.get("current", {})
-    units = data.get("current_units", {})
-    daily = data.get("daily", {})
-    utc_offset_seconds = data.get("utc_offset_seconds")
-
-    temp_f, temp_c = normalize_temperature(
-        current.get("temperature_2m"), units.get("temperature_2m")
-    )
-
-    humidity = current.get("relative_humidity_2m")
-    humidity = round(humidity) if humidity is not None else None
-
-    dewpoint_f = None
-    dewpoint_c = None
-    if temp_f is not None and humidity is not None:
-        dewpoint_f = calculate_dewpoint(temp_f, humidity, unit=TemperatureUnit.FAHRENHEIT)
-        if dewpoint_f is not None:
-            dewpoint_c = convert_f_to_c(dewpoint_f)
-
-    wind_speed_mph, wind_speed_kph = convert_wind_speed_to_mph_and_kph(
-        current.get("wind_speed_10m"), units.get("wind_speed_10m")
-    )
-
-    pressure_in, pressure_mb = normalize_pressure(
-        current.get("pressure_msl"), units.get("pressure_msl")
-    )
-
-    feels_like_f, feels_like_c = normalize_temperature(
-        current.get("apparent_temperature"), units.get("apparent_temperature")
-    )
-
-    # Parse sunrise and sunset times from daily data (today's values)
-    sunrise_time = None
-    sunset_time = None
-    if daily:
-        sunrise_list = daily.get("sunrise", [])
-        sunset_list = daily.get("sunset", [])
-        if sunrise_list and len(sunrise_list) > 0:
-            sunrise_time = _parse_iso_datetime(sunrise_list[0], utc_offset_seconds)
-        if sunset_list and len(sunset_list) > 0:
-            sunset_time = _parse_iso_datetime(sunset_list[0], utc_offset_seconds)
-
-    # Use real-time uv_index from current block if available (accurate for time of day).
-    # Only fall back to daily uv_index_max if the current field is absent — the daily
-    # max is a daytime peak and will be wrong at night.
-    uv_index = None
-    raw_current_uv = current.get("uv_index")
-    if raw_current_uv is not None:
-        try:
-            uv_index = float(raw_current_uv)
-        except (TypeError, ValueError):
-            uv_index = None
-    elif daily:
-        uv_values = daily.get("uv_index_max") or []
-        if uv_values:
-            try:
-                uv_index = float(uv_values[0]) if uv_values[0] is not None else None
-            except (TypeError, ValueError):
-                uv_index = None
-
-    # Seasonal fields
-    snowfall_rate = current.get("snowfall")  # inches (due to precipitation_unit=inch)
-    snowfall_rate_in = snowfall_rate  # Already in inches
-
-    rain_rate_in = float(current.get("rain") or 0.0) + float(current.get("showers") or 0.0)
-    snow_rate_in = float(snowfall_rate or 0.0)
-    precipitation_type = _pick_precipitation_type(rain_rate_in, snow_rate_in)
-
-    # Snow depth unit depends on the API request units
-    # When using temperature_unit=fahrenheit, snow_depth is returned in feet
-    snow_depth_unit = units.get("snow_depth", "").lower()
-    snow_depth_value = current.get("snow_depth")
-
-    if snow_depth_value is not None:
-        if "ft" in snow_depth_unit or "feet" in snow_depth_unit:
-            # Convert feet to inches and cm
-            snow_depth_in = snow_depth_value * 12
-            snow_depth_cm = snow_depth_value * 30.48
-        elif "m" in snow_depth_unit and "mm" not in snow_depth_unit:
-            # Meters - convert to inches and cm
-            snow_depth_in = snow_depth_value * 39.3701
-            snow_depth_cm = snow_depth_value * 100
-        else:
-            # Unknown unit, assume meters as fallback
-            snow_depth_in = snow_depth_value * 39.3701
-            snow_depth_cm = snow_depth_value * 100
-    else:
-        snow_depth_in = None
-        snow_depth_cm = None
-
-    visibility_m = current.get("visibility")  # meters
-    # Open-Meteo provides model-derived visibility which can be unrealistically high.
-    # Standard surface observation cap is 10 statute miles (16,093 m). Cap at that.
-    _VISIBILITY_CAP_M = 16093.4  # 10 statute miles in meters
-    if visibility_m is not None:
-        visibility_m = min(visibility_m, _VISIBILITY_CAP_M)
-    visibility_miles = visibility_m / 1609.344 if visibility_m is not None else None
-    visibility_km = visibility_m / 1000 if visibility_m is not None else None
-
-    # Determine wind chill vs heat index from apparent temperature
-    wind_chill_f = None
-    wind_chill_c = None
-    heat_index_f = None
-    heat_index_c = None
-    if feels_like_f is not None and temp_f is not None:
-        if feels_like_f < temp_f:
-            wind_chill_f = feels_like_f
-            wind_chill_c = feels_like_c
-        elif feels_like_f > temp_f:
-            heat_index_f = feels_like_f
-            heat_index_c = feels_like_c
-
-    return CurrentConditions(
-        temperature_f=temp_f,
-        temperature_c=temp_c,
-        condition=_resolve_current_condition_description(current),
-        humidity=humidity,
-        dewpoint_f=dewpoint_f,
-        dewpoint_c=dewpoint_c,
-        wind_speed_mph=wind_speed_mph,
-        wind_speed_kph=wind_speed_kph,
-        wind_direction=current.get("wind_direction_10m"),
-        pressure_in=pressure_in,
-        pressure_mb=pressure_mb,
-        feels_like_f=feels_like_f,
-        feels_like_c=feels_like_c,
-        visibility_miles=visibility_miles,
-        visibility_km=visibility_km,
-        sunrise_time=sunrise_time,
-        sunset_time=sunset_time,
-        uv_index=uv_index,
-        # Seasonal fields
-        snowfall_rate_in=snowfall_rate_in,
-        snow_depth_in=snow_depth_in,
-        snow_depth_cm=snow_depth_cm,
-        wind_chill_f=wind_chill_f,
-        wind_chill_c=wind_chill_c,
-        heat_index_f=heat_index_f,
-        heat_index_c=heat_index_c,
-        precipitation_type=precipitation_type,
-    )
 
 
 def parse_openmeteo_forecast(data: dict) -> Forecast:
