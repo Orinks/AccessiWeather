@@ -1,4 +1,3 @@
-import json
 import logging
 import platform
 import sys
@@ -9,6 +8,14 @@ from typing import Any
 from ..runtime_env import is_compiled_runtime
 from ..sound_events import normalize_muted_sound_events
 from ..soundpack_paths import get_soundpacks_dir
+from .sound_pack_helpers import (
+    get_available_sound_packs as _get_available_sound_packs,
+    get_sound_entry as _get_pack_sound_entry,
+    get_sound_entry_for_candidates as _get_pack_sound_entry_for_candidates,
+    get_sound_pack_sounds as _get_pack_sounds,
+    parse_sound_entry,
+    validate_sound_pack as _validate_sound_pack,
+)
 
 # Try sound_lib first (supports stopping playback, cross-platform)
 SOUND_LIB_AVAILABLE = False
@@ -68,134 +75,29 @@ _log_packaging_sound_diagnostics()
 def _parse_sound_entry(
     entry: str | dict[str, Any], event: str, volumes: dict[str, float] | None = None
 ) -> tuple[str, float]:
-    """
-    Parse a sound entry from pack.json and return (filename, volume).
-
-    Supports three formats:
-    1. Inline dict: {"file": "alert.wav", "volume": 0.7}
-    2. String with separate volumes: "alert.wav" + volumes dict {"alert": 0.7}
-    3. Plain string: "alert.wav" (defaults to volume 1.0)
-
-    Args:
-        entry: The sound entry (string or dict with file/volume keys)
-        event: The event name (used for volumes dict lookup)
-        volumes: Optional dict mapping event names to volume levels
-
-    Returns:
-        Tuple of (filename, volume) where volume is clamped to 0.0-1.0
-
-    """
-    if isinstance(entry, dict):
-        # Inline format: {"file": "alert.wav", "volume": 0.7}
-        filename = entry.get("file", f"{event}.ogg")
-        volume = entry.get("volume", 1.0)
-    else:
-        # String format
-        filename = str(entry) if entry else f"{event}.ogg"
-        # Check for volume in separate volumes section
-        volume = 1.0
-        if volumes and event in volumes:
-            volume = volumes[event]
-
-    # Clamp volume to valid range
-    try:
-        volume = float(volume)
-        volume = max(0.0, min(1.0, volume))
-    except (TypeError, ValueError):
-        volume = 1.0
-
-    return filename, volume
+    """Parse a sound entry from pack.json and return (filename, volume)."""
+    return parse_sound_entry(entry, event, volumes)
 
 
 def get_sound_entry(event: str, pack_dir: str) -> tuple[Path | None, float]:
-    """
-    Resolve the sound file and volume for a given event and pack.
-
-    This function supports per-sound volume settings in pack.json:
-    - Inline format: {"sounds": {"alert": {"file": "alert.wav", "volume": 0.7}}}
-    - Separate volumes: {"sounds": {"alert": "alert.wav"}, "volumes": {"alert": 0.7}}
-    - Legacy format: {"sounds": {"alert": "alert.wav"}} (defaults to volume 1.0)
-
-    Args:
-        event: The sound event name (e.g., "alert", "critical_alert")
-        pack_dir: The sound pack directory name
-
-    Returns:
-        Tuple of (sound_file_path, volume) where volume is 0.0-1.0
-
-    """
-    pack_path = SOUNDPACKS_DIR / pack_dir
-    pack_json = pack_path / "pack.json"
-    if not pack_json.exists():
-        logger.warning(f"pack.json not found in {pack_path}, falling back to default.")
-        pack_path = SOUNDPACKS_DIR / DEFAULT_PACK
-        pack_json = pack_path / "pack.json"
-        if not pack_json.exists():
-            logger.error("Default sound pack is missing!")
-            return None, 1.0
-    try:
-        with open(pack_json, encoding="utf-8") as f:
-            meta: dict[str, Any] = json.load(f)
-        sounds = meta.get("sounds", {})
-        if not isinstance(sounds, dict):
-            sounds = {}
-        volumes = meta.get("volumes", {})
-        if not isinstance(volumes, dict):
-            volumes = {}
-
-        entry = sounds.get(event, f"{event}.ogg")
-        filename, volume = _parse_sound_entry(entry, event, volumes)
-
-        sound_file = pack_path / filename
-        if not sound_file.exists():
-            logger.warning(f"Sound file {sound_file} not found, falling back to default pack.")
-            if pack_dir != DEFAULT_PACK:
-                return get_sound_entry(event, DEFAULT_PACK)
-            return None, 1.0
-        return sound_file, volume
-    except Exception as e:
-        logger.error(f"Error reading sound pack: {e}")
-        # If we failed to read the current pack and it's not the default, try the default
-        if pack_dir != DEFAULT_PACK:
-            logger.info("Falling back to default sound pack due to error")
-            return get_sound_entry(event, DEFAULT_PACK)
-        return None, 1.0
+    """Resolve the sound file and volume for a given event and pack."""
+    return _get_pack_sound_entry(
+        event,
+        pack_dir,
+        soundpacks_dir=SOUNDPACKS_DIR,
+        default_pack=DEFAULT_PACK,
+        logger=logger,
+    )
 
 
 def get_sound_file(event: str, pack_dir: str) -> Path | None:
-    """
-    Resolve the sound file for a given event and pack.
-
-    This is a convenience wrapper around get_sound_entry that returns only the path.
-    Use get_sound_entry if you also need the volume setting.
-
-    Args:
-        event: The sound event name
-        pack_dir: The sound pack directory name
-
-    Returns:
-        Path to the sound file, or None if not found
-
-    """
+    """Resolve the sound file for a given event and pack."""
     sound_file, _ = get_sound_entry(event, pack_dir)
     return sound_file
 
 
 def _play_sound_file(sound_file: Path, block: bool = False, volume: float = 1.0) -> bool:
-    """
-    Play a sound file with optional volume control.
-
-    Uses sound_lib if available (supports volume), falls back to playsound3 (no volume).
-
-    Args:
-        sound_file: Path to the sound file
-        block: Whether to block until playback completes
-        volume: Volume level from 0.0 to 1.0 (only used with sound_lib)
-
-    Returns:
-        True if playback started successfully
-
-    """
+    """Play a sound file with optional volume control."""
     # Clamp volume to valid range
     volume = max(0.0, min(1.0, volume))
     if volume <= 0.0:
@@ -257,12 +159,7 @@ def play_sound_file(sound_file: Path) -> bool:
 
 
 def stop_all_sounds() -> None:
-    """
-    Stop all currently playing sounds.
-
-    Note: playsound3 doesn't support stopping sounds mid-playback.
-    Only streams created with sound_lib are stopped.
-    """
+    """Stop all currently playing sound_lib streams."""
     import contextlib
 
     for s in list(_active_streams):
@@ -272,12 +169,7 @@ def stop_all_sounds() -> None:
 
 
 class PreviewPlayer:
-    """
-    Sound preview player with stop support.
-
-    Uses sound_lib on Windows for stop functionality,
-    falls back to playsound3 (no stop support) on other platforms.
-    """
+    """Sound preview player with stop support."""
 
     def __init__(self):
         """Initialize the preview player."""
@@ -285,19 +177,7 @@ class PreviewPlayer:
         self._is_playing = False
 
     def play(self, sound_file: Path, volume: float = 1.0) -> bool:
-        """
-        Play a sound file for preview.
-
-        Stops any currently playing preview first.
-
-        Args:
-            sound_file: Path to the sound file.
-            volume: Volume level from 0.0 to 1.0 (default 1.0).
-
-        Returns:
-            True if playback started successfully.
-
-        """
+        """Play a sound file for preview."""
         # Stop any current playback first
         self.stop()
 
@@ -371,16 +251,7 @@ class PreviewPlayer:
         return self._is_playing
 
     def toggle(self, sound_file: Path) -> bool:
-        """
-        Toggle play/stop for a sound file.
-
-        Args:
-            sound_file: Path to the sound file.
-
-        Returns:
-            True if now playing, False if stopped.
-
-        """
+        """Toggle play/stop for a sound file."""
         if self.is_playing():
             self.stop()
             return False
@@ -415,17 +286,7 @@ def play_notification_sound(
     *,
     muted_events: Collection[str] | None = None,
 ) -> None:
-    """
-    Play a notification sound for the given event and pack.
-
-    This function respects per-sound volume settings from pack.json.
-
-    Args:
-        event: The sound event name (e.g., "alert", "critical_alert")
-        pack_dir: The sound pack directory name
-        muted_events: Optional user-level muted events that override the sound pack
-
-    """
+    """Play a notification sound for the given event and pack."""
     if is_sound_event_muted(event, muted_events):
         logger.debug(f"Skipping muted sound event: {event}")
         return
@@ -558,158 +419,29 @@ def play_fetch_error_sound(
 
 def get_available_sound_packs() -> dict[str, dict]:
     """Get all available sound packs with their metadata."""
-    sound_packs: dict[str, dict] = {}
-
-    if not SOUNDPACKS_DIR.exists():
-        return sound_packs
-
-    for pack_dir in SOUNDPACKS_DIR.iterdir():
-        if not pack_dir.is_dir():
-            continue
-
-        pack_json = pack_dir / "pack.json"
-        if not pack_json.exists():
-            continue
-
-        try:
-            with open(pack_json, encoding="utf-8") as f:
-                pack_data: dict[str, Any] = json.load(f)
-
-            pack_data["directory"] = pack_dir.name
-            pack_data["path"] = str(pack_dir)
-            sound_packs[pack_dir.name] = pack_data
-
-        except Exception as e:
-            logger.error(f"Failed to load sound pack {pack_dir.name}: {e}")
-
-    return sound_packs
+    return _get_available_sound_packs(soundpacks_dir=SOUNDPACKS_DIR, logger=logger)
 
 
 def get_sound_pack_sounds(pack_dir: str) -> dict[str, str]:
-    """
-    Get all sounds available in a sound pack.
-
-    Returns a dict mapping event names to filenames. For entries that use the
-    inline volume format, only the filename is returned.
-
-    Args:
-        pack_dir: The sound pack directory name
-
-    Returns:
-        Dict mapping event names to sound filenames
-
-    """
-    pack_path = SOUNDPACKS_DIR / pack_dir
-    pack_json = pack_path / "pack.json"
-
-    if not pack_json.exists():
-        return {}
-
-    try:
-        with open(pack_json, encoding="utf-8") as f:
-            pack_data: dict[str, Any] = json.load(f)
-        sounds = pack_data.get("sounds", {})
-        if not isinstance(sounds, dict):
-            return {}
-
-        # Normalize to just filenames (handle inline dict format)
-        result: dict[str, str] = {}
-        for event, entry in sounds.items():
-            if isinstance(entry, dict):
-                result[event] = entry.get("file", f"{event}.ogg")
-            else:
-                result[event] = str(entry)
-        return result
-    except Exception as e:
-        logger.error(f"Failed to read sound pack {pack_dir}: {e}")
-        return {}
+    """Get all sounds available in a sound pack."""
+    return _get_pack_sounds(pack_dir, soundpacks_dir=SOUNDPACKS_DIR, logger=logger)
 
 
 def get_sound_entry_for_candidates(
     candidates: list[str], pack_dir: str
 ) -> tuple[Path | None, float]:
-    """
-    Resolve a sound file and volume trying multiple candidate event keys, with fallbacks.
-
-    Tries the given pack first across all candidates, then falls back to the
-    default pack. If still nothing is found, falls back to the default 'alert'
-    event in the current pack (which itself may fall back to the default pack).
-
-    Args:
-        candidates: List of event names to try in order
-        pack_dir: The sound pack directory name
-
-    Returns:
-        Tuple of (sound_file_path, volume) where volume is 0.0-1.0
-
-    """
-    # Try in the requested pack
-    pack_path = SOUNDPACKS_DIR / pack_dir
-    pack_json = pack_path / "pack.json"
-
-    def _load_pack_data(_pack_json: Path) -> tuple[dict[str, Any], dict[str, float]]:
-        try:
-            with open(_pack_json, encoding="utf-8") as f:
-                meta: dict[str, Any] = json.load(f)
-            sounds = meta.get("sounds", {})
-            volumes = meta.get("volumes", {})
-            return (
-                sounds if isinstance(sounds, dict) else {},
-                volumes if isinstance(volumes, dict) else {},
-            )
-        except Exception:
-            return {}, {}
-
-    # Candidate search in requested pack
-    if pack_json.exists():
-        sounds, volumes = _load_pack_data(pack_json)
-        for event in candidates:
-            entry = sounds.get(event)
-            if entry is not None:
-                filename, volume = _parse_sound_entry(entry, event, volumes)
-            else:
-                filename = f"{event}.ogg"
-                volume = volumes.get(event, 1.0)
-            candidate_path = pack_path / filename
-            if candidate_path.exists():
-                return candidate_path, volume
-
-    # Fall back to default pack for candidates
-    default_pack_path = SOUNDPACKS_DIR / DEFAULT_PACK
-    default_pack_json = default_pack_path / "pack.json"
-    if default_pack_json.exists():
-        default_sounds, default_volumes = _load_pack_data(default_pack_json)
-        for event in candidates:
-            entry = default_sounds.get(event)
-            if entry is not None:
-                filename, volume = _parse_sound_entry(entry, event, default_volumes)
-            else:
-                filename = f"{event}.ogg"
-                volume = default_volumes.get(event, 1.0)
-            candidate_path = default_pack_path / filename
-            if candidate_path.exists():
-                return candidate_path, volume
-
-    # Final fallback: always use the default pack's 'alert'
-    return get_sound_entry(DEFAULT_EVENT, DEFAULT_PACK)
+    """Resolve a sound file and volume trying multiple candidate event keys."""
+    return _get_pack_sound_entry_for_candidates(
+        candidates,
+        pack_dir,
+        soundpacks_dir=SOUNDPACKS_DIR,
+        default_pack=DEFAULT_PACK,
+        default_event=DEFAULT_EVENT,
+    )
 
 
 def get_sound_file_for_candidates(candidates: list[str], pack_dir: str) -> Path | None:
-    """
-    Resolve a sound file trying multiple candidate event keys, with fallbacks.
-
-    This is a convenience wrapper around get_sound_entry_for_candidates that
-    returns only the path. Use get_sound_entry_for_candidates if you also need
-    the volume setting.
-
-    Args:
-        candidates: List of event names to try in order
-        pack_dir: The sound pack directory name
-
-    Returns:
-        Path to the sound file, or None if not found
-
-    """
+    """Resolve a sound file trying multiple candidate event keys."""
     sound_file, _ = get_sound_entry_for_candidates(candidates, pack_dir)
     return sound_file
 
@@ -721,18 +453,7 @@ def play_notification_sound_candidates(
     logical_event: str | None = None,
     muted_events: Collection[str] | None = None,
 ) -> None:
-    """
-    Play the first available sound from a list of candidate event keys.
-
-    This function respects per-sound volume settings from pack.json.
-
-    Args:
-        candidates: List of event names to try in order
-        pack_dir: The sound pack directory name
-        logical_event: Optional high-level event key used for mute checks before fallback
-        muted_events: Optional user-level muted events that override the sound pack
-
-    """
+    """Play the first available sound from a list of candidate event keys."""
     effective_event = logical_event or (candidates[0] if candidates else None)
     if effective_event and is_sound_event_muted(effective_event, muted_events):
         logger.debug(f"Skipping muted sound event: {effective_event}")
@@ -754,72 +475,5 @@ def play_notification_sound_candidates(
 
 
 def validate_sound_pack(pack_path: Path) -> tuple[bool, str]:
-    """
-    Validate a sound pack directory.
-
-    Supports both legacy format (sound entries as strings) and new format
-    (sound entries as dicts with file and optional volume keys).
-
-    Returns
-    -------
-        tuple: (is_valid, error_message)
-
-    """
-    if not pack_path.exists():
-        return False, "Sound pack directory does not exist"
-
-    if not pack_path.is_dir():
-        return False, "Sound pack path is not a directory"
-
-    pack_json = pack_path / "pack.json"
-    if not pack_json.exists():
-        return False, "Missing pack.json file"
-
-    try:
-        with open(pack_json, encoding="utf-8") as f:
-            pack_data = json.load(f)
-
-        # Check required fields
-        if "name" not in pack_data:
-            return False, "Missing 'name' field in pack.json"
-
-        if "sounds" not in pack_data:
-            return False, "Missing 'sounds' field in pack.json"
-
-        # Check if sound files exist
-        sounds = pack_data["sounds"]
-        missing_files = []
-
-        for sound_name, sound_entry in sounds.items():
-            # Handle both string and dict formats
-            if isinstance(sound_entry, dict):
-                sound_file = sound_entry.get("file", f"{sound_name}.ogg")
-            else:
-                sound_file = str(sound_entry)
-
-            sound_path = pack_path / sound_file
-            if not sound_path.exists():
-                missing_files.append(sound_file)
-
-        if missing_files:
-            return False, f"Missing sound files: {', '.join(missing_files)}"
-
-        # Validate volumes if present
-        volumes = pack_data.get("volumes", {})
-        if volumes and not isinstance(volumes, dict):
-            return False, "'volumes' field must be a dictionary"
-
-        for event, volume in volumes.items():
-            try:
-                vol = float(volume)
-                if vol < 0.0 or vol > 1.0:
-                    return False, f"Volume for '{event}' must be between 0.0 and 1.0"
-            except (TypeError, ValueError):
-                return False, f"Invalid volume value for '{event}': {volume}"
-
-        return True, "Sound pack is valid"
-
-    except json.JSONDecodeError as e:
-        return False, f"Invalid JSON in pack.json: {e}"
-    except Exception as e:
-        return False, f"Error validating sound pack: {e}"
+    """Validate a sound pack directory."""
+    return _validate_sound_pack(pack_path)
