@@ -17,6 +17,8 @@ import wx
 from ...ai_tools import WeatherToolExecutor, get_tools_for_message
 from ...screen_reader import ScreenReaderAnnouncer
 from .weather_assistant_context import build_weather_context as _build_weather_context
+from .weather_assistant_prompt import SYSTEM_PROMPT
+from .weather_assistant_widgets import create_weather_assistant_widgets
 
 if TYPE_CHECKING:
     from ...app import AccessiWeatherApp
@@ -25,40 +27,6 @@ logger = logging.getLogger(__name__)
 
 # Maximum conversation turns to keep in context
 MAX_CONTEXT_TURNS = 20
-
-SYSTEM_PROMPT = (
-    "You are Weather Assistant, a friendly and knowledgeable weather assistant built into "
-    "AccessiWeather. You help users understand weather conditions in plain, accessible "
-    "language optimized for screen reader users.\n\n"
-    "You have access to live weather tools that can fetch current conditions, forecasts, "
-    "and active alerts for any location. The available tools are:\n"
-    "- get_current_weather: Get current weather conditions for a location\n"
-    "- get_forecast: Get the weather forecast for a location\n"
-    "- get_hourly_forecast: Get hourly forecast (great for specific time questions)\n"
-    "- get_alerts: Get active weather alerts for a location\n"
-    "- search_location: Search for a location by name or ZIP code\n"
-    "- add_location: Save a location to the user's locations list\n"
-    "- list_locations: Show all saved locations\n"
-    "- query_open_meteo: Custom Open-Meteo API query for any weather variable "
-    "(soil temp, UV, cloud cover, dew point, snow depth, visibility, etc.)\n"
-    "- get_area_forecast_discussion: Local NWS forecaster's detailed discussion\n"
-    "- get_wpc_discussion: National WPC short range forecast discussion\n"
-    "- get_spc_outlook: Storm Prediction Center severe weather outlook\n\n"
-    "Use the provided tools to fetch weather data when users ask about specific locations "
-    "or conditions not in the current context. You can call multiple tools if needed to "
-    "give a complete answer. Use search_location when a place name is ambiguous. "
-    "When adding locations, first resolve coordinates with search_location, then use "
-    "add_location with the resolved name and coordinates.\n\n"
-    "Guidelines:\n"
-    "- Be conversational and helpful\n"
-    "- Explain weather in practical terms (what to wear, activity suitability, etc.)\n"
-    "- Avoid visual-only descriptions\n"
-    "- When referencing data, use the weather context provided\n"
-    "- Keep responses concise but thorough\n"
-    "- Respond in plain text only — no markdown formatting\n"
-    "- Do not repeat information the user can already see\n\n"
-    "IMPORTANT: Respond in plain text. No bold, italic, headers, or bullet markers."
-)
 
 
 class WeatherAssistantDialog(wx.Dialog):
@@ -70,15 +38,7 @@ class WeatherAssistantDialog(wx.Dialog):
         app: AccessiWeatherApp,
         title: str = "Weather Assistant",
     ):
-        """
-        Initialize the Weather Assistant dialog.
-
-        Args:
-            parent: Parent window
-            app: Application instance
-            title: Dialog title
-
-        """
+        """Initialize the Weather Assistant dialog."""
         super().__init__(
             parent,
             title=title,
@@ -99,60 +59,7 @@ class WeatherAssistantDialog(wx.Dialog):
 
     def _create_widgets(self) -> None:
         """Create all UI widgets."""
-        panel = wx.Panel(self)
-        main_sizer = wx.BoxSizer(wx.VERTICAL)
-
-        # Chat history label
-        history_label = wx.StaticText(panel, label="&Conversation:")
-        main_sizer.Add(history_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
-
-        # Chat history display (read-only)
-        self.history_display = wx.TextCtrl(
-            panel,
-            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_WORDWRAP | wx.TE_RICH2,
-            name="Conversation history",
-        )
-        main_sizer.Add(self.history_display, 1, wx.ALL | wx.EXPAND, 10)
-
-        # Status label
-        self.status_label = wx.StaticText(panel, label="")
-        main_sizer.Add(self.status_label, 0, wx.LEFT | wx.RIGHT | wx.EXPAND, 10)
-
-        # Input area
-        input_sizer = wx.BoxSizer(wx.HORIZONTAL)
-
-        input_label = wx.StaticText(panel, label="&Message:")
-        input_sizer.Add(input_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-
-        self.input_ctrl = wx.TextCtrl(
-            panel,
-            style=wx.TE_PROCESS_ENTER,
-            name="Type your message",
-        )
-        input_sizer.Add(self.input_ctrl, 1, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-
-        self.send_button = wx.Button(panel, label="&Send")
-        input_sizer.Add(self.send_button, 0, wx.ALIGN_CENTER_VERTICAL)
-
-        main_sizer.Add(input_sizer, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 10)
-
-        # Bottom buttons
-        button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.clear_button = wx.Button(panel, label="C&lear Chat")
-        button_sizer.Add(self.clear_button, 0, wx.RIGHT, 5)
-
-        self.copy_button = wx.Button(panel, label="Cop&y Chat")
-        button_sizer.Add(self.copy_button, 0, wx.RIGHT, 5)
-
-        button_sizer.AddStretchSpacer()
-
-        close_button = wx.Button(panel, wx.ID_CLOSE, label="&Close")
-        button_sizer.Add(close_button, 0)
-
-        main_sizer.Add(button_sizer, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 10)
-
-        panel.SetSizer(main_sizer)
+        create_weather_assistant_widgets(self)
 
     def _bind_events(self) -> None:
         """Bind event handlers."""
@@ -234,13 +141,7 @@ class WeatherAssistantDialog(wx.Dialog):
         self._generate_response()
 
     def _get_tool_executor(self) -> WeatherToolExecutor | None:
-        """
-        Create a WeatherToolExecutor from the app's services.
-
-        Returns:
-            A WeatherToolExecutor, or None if required services are unavailable.
-
-        """
+        """Create a WeatherToolExecutor from the app's services."""
         try:
             import asyncio
 
