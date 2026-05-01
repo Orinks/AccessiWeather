@@ -36,10 +36,22 @@ QUICK_ACTION_LABELS = {
 
 ALL_LOCATIONS_SENTINEL = "All Locations"
 
+
+class _StaleWarningProxy:
+    """Delegates SetLabel() calls to the second field of the wx.StatusBar."""
+
+    def __init__(self, window) -> None:
+        self._window = window
+
+    def SetLabel(self, text: str) -> None:
+        self._window.GetStatusBar().SetStatusText(text, 1)
+
+
 __all__ = [
     "ALL_LOCATIONS_SENTINEL",
     "QUICK_ACTION_LABELS",
     "SizedPanel",
+    "_StaleWarningProxy",
     "datetime",
     "format_temperature",
     "get_temperature_precision",
