@@ -305,19 +305,14 @@ class WeatherAssistantDialog(wx.Dialog):
 
             from ...api_client import NoaaApiClient
             from ...geocoding import GeocodingService
-            from ...models.location import Location
             from ...openmeteo_client import OpenMeteoApiClient
-            from ...visual_crossing_client import VisualCrossingClient
 
             class _CombinedWeatherClient:
-                """Bridges NWS, Open-Meteo, and Visual Crossing for tool executor."""
+                """Bridges NWS and Open-Meteo for tool executor."""
 
-                def __init__(self, vc_api_key: str = ""):
+                def __init__(self):
                     self.nws = NoaaApiClient()
                     self.openmeteo = OpenMeteoApiClient()
-                    self.vc: VisualCrossingClient | None = None
-                    if vc_api_key:
-                        self.vc = VisualCrossingClient(api_key=vc_api_key)
 
                 def _run_async(self, coro):
                     """Run an async coroutine from sync context."""
@@ -329,9 +324,6 @@ class WeatherAssistantDialog(wx.Dialog):
                         # We're in a thread; create a new loop
                         return asyncio.run(coro)
                     return asyncio.run(coro)
-
-                def _make_location(self, lat, lon):
-                    return Location(name="", latitude=lat, longitude=lon)
 
                 def get_current_conditions(self, lat, lon, **kw):
                     try:
@@ -360,24 +352,13 @@ class WeatherAssistantDialog(wx.Dialog):
                         return self.nws.get_alerts(lat, lon, **kw)
                     except Exception:
                         pass
-                    # Visual Crossing has global alerts
-                    if self.vc:
-                        try:
-                            loc = self._make_location(lat, lon)
-                            result = self._run_async(self.vc.get_alerts(loc))
-                            if result:
-                                return result.to_dict() if hasattr(result, "to_dict") else result
-                        except Exception:
-                            pass
                     return {"features": []}
 
                 def get_discussion(self, lat, lon, **kw):
                     return self.nws.get_discussion(lat, lon, **kw)
 
             config_manager = getattr(self.app, "config_manager", None)
-            settings = config_manager.get_settings() if config_manager else None
-            vc_key = settings.visual_crossing_api_key if settings else ""
-            weather_client = _CombinedWeatherClient(vc_api_key=vc_key)
+            weather_client = _CombinedWeatherClient()
             geocoding_service = GeocodingService()
             return WeatherToolExecutor(
                 weather_client, geocoding_service, config_manager=config_manager

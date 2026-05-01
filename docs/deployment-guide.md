@@ -194,7 +194,7 @@ matrix:
 ### 5. integration-tests.yml - API Integration Tests
 
 **Trigger:** Manual dispatch, schedule (optional)
-**Purpose:** Test real API integrations (NWS, Open-Meteo, Visual Crossing)
+**Purpose:** Test real API integrations (NWS, Open-Meteo, Pirate Weather)
 
 **Steps:**
 1. Checkout code

@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger("accessiweather.config")
 
 PORTABLE_API_SECRET_KEYS: Final[tuple[str, ...]] = (
-    "visual_crossing_api_key",
     "pirate_weather_api_key",
     "openrouter_api_key",
     "avwx_api_key",
@@ -505,7 +504,7 @@ class ImportExportOperations:
                 return False
 
             # SECURITY: Validate data_source enum if present (prevent invalid values)
-            valid_sources = ["auto", "nws", "openmeteo", "visualcrossing"]
+            valid_sources = ["auto", "nws", "openmeteo", "pirateweather"]
             data_source = settings_data.get("data_source")
             if data_source is not None and data_source not in valid_sources:
                 self.logger.warning(

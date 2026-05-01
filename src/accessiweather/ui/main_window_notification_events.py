@@ -377,7 +377,7 @@ def process_notification_events(window: MainWindow, weather_data) -> None:
 
     Checks for:
     - Area Forecast Discussion (AFD) updates (NWS US only)
-    - Severe weather risk level changes (Visual Crossing only)
+    - Severe weather risk level changes
     - Minutely precipitation start/stop transitions (Pirate Weather)
 
     Both are opt-in notifications (disabled by default).

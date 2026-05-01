@@ -17,7 +17,6 @@ from . import (
     weather_client_openmeteo as openmeteo_client,
     weather_client_parsers as parsers,
     weather_client_trends as trends,
-    weather_client_visualcrossing as vc_alerts,
 )
 from .alert_lifecycle import diff_alerts
 from .cache import WeatherDataCache
@@ -41,7 +40,6 @@ from .pirate_weather_client import PirateWeatherApiError, PirateWeatherClient
 from .services import EnvironmentalDataClient
 from .units import resolve_auto_unit_system
 from .utils.retry import APITimeoutError, retry_with_backoff
-from .visual_crossing_client import VisualCrossingApiError, VisualCrossingClient
 from .weather_client_alerts import AlertAggregator
 from .weather_client_fusion import DataFusionEngine
 from .weather_client_parallel import ParallelFetchCoordinator
@@ -70,7 +68,6 @@ class WeatherClient:
         self,
         user_agent: str = "AccessiWeather/1.0",
         data_source: str = "auto",
-        visual_crossing_api_key: str = "",
         pirate_weather_api_key: str = "",
         avwx_api_key: str = "",
         settings: AppSettings | None = None,
@@ -83,7 +80,7 @@ class WeatherClient:
         self.nws_base_url = "https://api.weather.gov"
         self.openmeteo_base_url = "https://api.open-meteo.com/v1"
         self.timeout = 10.0
-        self.data_source = data_source  # "auto", "nws", "openmeteo", "visualcrossing"
+        self.data_source = data_source  # "auto", "nws", "openmeteo", "pirateweather"
         self.settings = settings or AppSettings()
         self._test_mode = bool(os.environ.get("PYTEST_CURRENT_TEST"))
         self.alerts_enabled = bool(self.settings.enable_alerts)
@@ -100,11 +97,9 @@ class WeatherClient:
         self._cache_purge_pending = True
 
         # Store the API key reference for lazy client creation
-        # Note: visual_crossing_api_key / pirate_weather_api_key may be LazySecureStorage
-        # objects that defer keyring access until first use. We avoid checking truthiness
-        # here to prevent triggering the lazy load during initialization.
-        self._visual_crossing_api_key = visual_crossing_api_key
-        self._visual_crossing_client: VisualCrossingClient | None = None
+        # Note: pirate_weather_api_key may be a LazySecureStorage object that defers
+        # keyring access until first use. We avoid checking truthiness here to prevent
+        # triggering the lazy load during initialization.
         self._pirate_weather_api_key = pirate_weather_api_key
         self._pirate_weather_client: PirateWeatherClient | None = None
 
@@ -129,42 +124,6 @@ class WeatherClient:
         self._previous_alerts: dict[str, WeatherAlerts] = {}
         self._latest_weather_by_location: dict[str, WeatherData] = {}
         self._last_minutely_poll_by_location: dict[str, datetime] = {}
-
-    @property
-    def visual_crossing_api_key(self) -> str:
-        """
-        Get the Visual Crossing API key, resolving lazy accessor if needed.
-
-        The API key may be a LazySecureStorage object that defers keyring access.
-        This property resolves the value when accessed.
-        """
-        key = self._visual_crossing_api_key
-        if key is None or key == "":
-            return ""
-        # Handle LazySecureStorage by converting to string (triggers lazy load)
-        # Note: str() calls __str__ on LazySecureStorage which returns the value
-        return str(key)
-
-    @property
-    def visual_crossing_client(self) -> VisualCrossingClient | None:
-        """
-        Get the Visual Crossing client, creating it lazily on first access.
-
-        This defers keyring access for the API key until the client is actually needed,
-        improving startup performance.
-        """
-        if self._visual_crossing_client is None:
-            # Now we check the API key truthiness, which may trigger lazy keyring load
-            api_key = self.visual_crossing_api_key
-            if api_key:
-                self._visual_crossing_client = VisualCrossingClient(api_key, self.user_agent)
-                logger.debug("Visual Crossing client created lazily")
-        return self._visual_crossing_client
-
-    @visual_crossing_client.setter
-    def visual_crossing_client(self, value: VisualCrossingClient | None) -> None:
-        """Allow direct assignment for backward compatibility and testing."""
-        self._visual_crossing_client = value
 
     @property
     def pirate_weather_api_key(self) -> str:
@@ -472,27 +431,13 @@ class WeatherClient:
 
     async def pre_warm_batch(self, locations: list[Location]) -> int:
         """
-        Pre-warm forecast cache for multiple locations using a single batch API call.
-
-        Uses Visual Crossing batch endpoint when available, falls back to
-        individual pre_warm_cache calls otherwise.
+        Pre-warm forecast cache for multiple locations.
 
         Returns the number of locations successfully warmed.
         """
         if not locations:
             return 0
 
-        # Try batch via VC if client is configured
-        vc = self.visual_crossing_client
-        if vc and len(locations) > 1:
-            try:
-                batch_results = await vc.get_forecast_batch(locations)
-                if batch_results:
-                    logger.info("Batch pre-warm: got %d forecasts from VC", len(batch_results))
-            except Exception as exc:  # noqa: BLE001
-                logger.debug("Batch forecast failed, falling back to individual: %s", exc)
-
-        # Still do full individual pre-warm for each location (current, alerts, etc.)
         warmed = 0
         for loc in locations:
             if await self.pre_warm_cache(loc):
@@ -579,25 +524,13 @@ class WeatherClient:
                 weather_data.discussion = discussion
                 weather_data.discussion_issuance_time = discussion_issuance_time
                 weather_data.alerts = alerts or WeatherAlerts(alerts=[])
-            elif self.data_source in ("auto", "visualcrossing") and self.visual_crossing_client:
+            elif self.data_source in ("auto", "pirateweather") and (
+                pirate_weather_client := self._pirate_weather_client_for_location(location)
+            ):
                 current_task = asyncio.create_task(
-                    self.visual_crossing_client.get_current_conditions(location)
+                    pirate_weather_client.get_current_conditions(location)
                 )
-                alerts_task = asyncio.create_task(self.visual_crossing_client.get_alerts(location))
-                current_result, alerts_result = await asyncio.gather(
-                    current_task, alerts_task, return_exceptions=True
-                )
-                if isinstance(current_result, Exception):
-                    raise current_result
-                if isinstance(alerts_result, Exception):
-                    raise alerts_result
-                weather_data.current = current_result
-                weather_data.alerts = alerts_result or WeatherAlerts(alerts=[])
-            elif self.data_source in ("auto", "pirateweather") and self.pirate_weather_client:
-                current_task = asyncio.create_task(
-                    self.pirate_weather_client.get_current_conditions(location)
-                )
-                alerts_task = asyncio.create_task(self.pirate_weather_client.get_alerts(location))
+                alerts_task = asyncio.create_task(pirate_weather_client.get_alerts(location))
                 current_result, alerts_result = await asyncio.gather(
                     current_task, alerts_task, return_exceptions=True
                 )
@@ -735,7 +668,6 @@ class WeatherClient:
         api_name = {
             "nws": "NWS",
             "openmeteo": "Open-Meteo",
-            "visualcrossing": "Visual Crossing",
             "pirateweather": "Pirate Weather",
         }.get(api_choice, "NWS")
         logger.info(f"Using {api_name} API for {location.name} (data_source: {self.data_source})")
@@ -784,55 +716,6 @@ class WeatherClient:
 
             except PirateWeatherApiError as e:
                 logger.error(f"Pirate Weather API failed for {location.name}: {e}")
-                self._set_empty_weather_data(weather_data)
-
-        elif api_choice == "visualcrossing":
-            # Use Visual Crossing API
-            try:
-                if not self.visual_crossing_client:
-                    raise VisualCrossingApiError("Visual Crossing API key not configured")
-
-                # Parallelize API calls for better performance
-                current, forecast, hourly_forecast, alerts = await asyncio.gather(
-                    self.visual_crossing_client.get_current_conditions(location),
-                    self.visual_crossing_client.get_forecast(
-                        location,
-                        days=self._get_forecast_days_for_source(location, source="visualcrossing"),
-                    ),
-                    self.visual_crossing_client.get_hourly_forecast(location),
-                    self.visual_crossing_client.get_alerts(location),
-                )
-
-                weather_data.current = current
-                weather_data.forecast = forecast
-                weather_data.hourly_forecast = hourly_forecast
-                weather_data.discussion = "Forecast discussion not available from Visual Crossing."
-                weather_data.discussion_issuance_time = None
-                weather_data.alerts = alerts
-
-                # Compute alert lifecycle diff for VC single-source path
-                _vc_loc_key = self._location_key(location)
-                _vc_prev = self._previous_alerts.get(_vc_loc_key)
-                weather_data.alert_lifecycle_diff = diff_alerts(_vc_prev, alerts)
-                if alerts is not None:
-                    self._previous_alerts[_vc_loc_key] = alerts
-
-                # Set source attribution for single-source mode
-                weather_data.source_attribution = SourceAttribution(
-                    contributing_sources={"visualcrossing"},
-                )
-
-                # Process alerts for notifications if we have any (unless skipped for pre-warming)
-                if not skip_notifications and alerts and alerts.has_alerts():
-                    logger.info(
-                        f"Processing {len(alerts.alerts)} Visual Crossing alerts for notifications"
-                    )
-                    await self._process_visual_crossing_alerts(alerts, location)
-
-                logger.info(f"Successfully fetched Visual Crossing data for {location.name}")
-
-            except VisualCrossingApiError as e:
-                logger.error(f"Visual Crossing API failed for {location.name}: {e}")
                 self._set_empty_weather_data(weather_data)
 
         elif api_choice == "openmeteo":
@@ -992,9 +875,6 @@ class WeatherClient:
             location=location,
             fetch_nws=fetchers["nws"]() if "nws" in sources_to_fetch else None,
             fetch_openmeteo=fetchers["openmeteo"]() if "openmeteo" in sources_to_fetch else None,
-            fetch_visualcrossing=(
-                fetchers["visualcrossing"]() if "visualcrossing" in sources_to_fetch else None
-            ),
             fetch_pirateweather=(
                 fetchers["pirateweather"]() if "pirateweather" in sources_to_fetch else None
             ),
@@ -1009,12 +889,12 @@ class WeatherClient:
         auto_sources_us = getattr(
             self.settings,
             "auto_sources_us",
-            ["nws", "openmeteo", "visualcrossing", "pirateweather"],
+            ["nws", "openmeteo", "pirateweather"],
         )
         auto_sources_international = getattr(
             self.settings,
             "auto_sources_international",
-            ["openmeteo", "pirateweather", "visualcrossing"],
+            ["openmeteo", "pirateweather"],
         )
 
         config = SourcePriorityConfig(
@@ -1045,18 +925,6 @@ class WeatherClient:
             ) = await self._fetch_nws_data(location)
             return (current, forecast, hourly, alerts)
 
-        async def fetch_vc():
-            if not self.visual_crossing_client:
-                return (None, None, None, None)
-            current = await self.visual_crossing_client.get_current_conditions(location)
-            forecast = await self.visual_crossing_client.get_forecast(
-                location,
-                days=self._get_forecast_days_for_source(location, source="visualcrossing"),
-            )
-            hourly = await self.visual_crossing_client.get_hourly_forecast(location)
-            alerts = await self.visual_crossing_client.get_alerts(location)
-            return (current, forecast, hourly, alerts)
-
         async def fetch_pw():
             pirate_weather_client = self._pirate_weather_client_for_location(location)
             if not pirate_weather_client:
@@ -1075,8 +943,6 @@ class WeatherClient:
             fetchers["openmeteo"] = fetch_openmeteo
         if is_us and "nws" in active_sources:
             fetchers["nws"] = fetch_nws
-        if self.visual_crossing_client and "visualcrossing" in active_sources:
-            fetchers["visualcrossing"] = fetch_vc
         if self._pirate_weather_client_for_location(location) and "pirateweather" in active_sources:
             fetchers["pirateweather"] = fetch_pw
 
@@ -1109,7 +975,7 @@ class WeatherClient:
             needs_intl_alert_source = (
                 not is_us
                 and primary_source == "openmeteo"
-                and not ({"pirateweather", "visualcrossing"} & fetched_sources)
+                and "pirateweather" not in fetched_sources
             )
             needs_intl_core_fallback = not is_us and not core_complete
 
@@ -1128,7 +994,7 @@ class WeatherClient:
                 secondary_sources = _pick_secondary_candidate(lambda _source: True)
             elif needs_intl_alert_source:
                 secondary_sources = _pick_secondary_candidate(
-                    lambda source: source in {"pirateweather", "visualcrossing"}
+                    lambda source: source == "pirateweather"
                 )
             elif needs_intl_core_fallback:
                 secondary_sources = _pick_secondary_candidate(lambda _source: True)
@@ -1176,21 +1042,17 @@ class WeatherClient:
             return self._handle_all_sources_failed(location, source_results)
 
         nws_alerts = None
-        vc_alerts_data = None
         pw_alerts_data = None
         for source in source_results:
             if source.source == "nws" and source.alerts:
                 nws_alerts = source.alerts
-            elif source.source == "visualcrossing" and source.alerts:
-                vc_alerts_data = source.alerts
             elif source.source == "pirateweather" and source.alerts:
                 pw_alerts_data = source.alerts
 
         if is_us and nws_alerts is not None:
             merged_alerts = alert_aggregator.aggregate_alerts(nws_alerts, None)
         else:
-            non_nws_alerts = pw_alerts_data or vc_alerts_data
-            merged_alerts = alert_aggregator.aggregate_alerts(nws_alerts, non_nws_alerts)
+            merged_alerts = alert_aggregator.aggregate_alerts(nws_alerts, pw_alerts_data)
 
         _loc_key = self._location_key(location)
         _prev_alerts = self._previous_alerts.get(_loc_key)
@@ -1314,12 +1176,6 @@ class WeatherClient:
             stale_reason="All weather sources failed and no cached data available",
         )
 
-    async def _process_visual_crossing_alerts(
-        self, alerts: WeatherAlerts, location: Location
-    ) -> None:
-        """Delegate Visual Crossing alert processing to the dedicated module."""
-        await vc_alerts.process_visual_crossing_alerts(alerts, location)
-
     def _launch_enrichment_tasks(
         self, weather_data: WeatherData, location: Location, skip_notifications: bool = False
     ) -> dict[str, asyncio.Task]:
@@ -1349,19 +1205,6 @@ class WeatherClient:
             )
             tasks["nws_discussion"] = asyncio.create_task(
                 enrichment.enrich_with_nws_discussion(self, weather_data, location)
-            )
-            tasks["vc_alerts"] = asyncio.create_task(
-                enrichment.enrich_with_visual_crossing_alerts(
-                    self, weather_data, location, skip_notifications
-                )
-            )
-            tasks["vc_moon_data"] = asyncio.create_task(
-                enrichment.enrich_with_visual_crossing_moon_data(self, weather_data, location)
-            )
-
-        if self.trend_insights_enabled and not weather_data.daily_history:
-            tasks["vc_history"] = asyncio.create_task(
-                self._enrich_with_visual_crossing_history(weather_data, location)
             )
 
         # Post-processing enrichments (always run)
@@ -1409,7 +1252,7 @@ class WeatherClient:
     def _determine_api_choice(self, location: Location) -> str:
         """Determine which API to use for the given location."""
         # Validate data source
-        valid_sources = ["auto", "nws", "openmeteo", "visualcrossing", "pirateweather"]
+        valid_sources = ["auto", "nws", "openmeteo", "pirateweather"]
         if self.data_source not in valid_sources:
             logger.warning(f"Invalid data source '{self.data_source}', defaulting to 'auto'")
             self.data_source = "auto"
@@ -1430,14 +1273,6 @@ class WeatherClient:
                     )
                     return "nws" if self._is_us_location(location) else "openmeteo"
             return "pirateweather"
-        if self.data_source == "visualcrossing":
-            # Check if Visual Crossing client is available
-            if not self.visual_crossing_client:
-                logger.warning(
-                    "Visual Crossing selected but no API key provided, falling back to auto"
-                )
-                return "nws" if self._is_us_location(location) else "openmeteo"
-            return "visualcrossing"
         if self.data_source == "openmeteo":
             return "openmeteo"
         if self.data_source == "nws":
@@ -1610,7 +1445,6 @@ class WeatherClient:
 
         source_limits = {
             "openmeteo": 16,
-            "visualcrossing": 15,
             "pirateweather": 8,
             "nws": 7,
         }
@@ -1682,33 +1516,6 @@ class WeatherClient:
             include_cwas=include_cwas,
             cwsu_id=cwsu_id,
         )
-
-    async def _enrich_with_visual_crossing_history(
-        self, weather_data: WeatherData, location: Location
-    ) -> None:
-        """Enrich weather data with historical weather from Visual Crossing for trends."""
-        if not self.visual_crossing_client:
-            return
-
-        try:
-            # We want yesterday's data to compare
-            from datetime import timedelta
-
-            end_date = datetime.now() - timedelta(days=1)
-            start_date = end_date  # Just one day
-
-            logger.debug("Fetching historical data from Visual Crossing for %s", location.name)
-            history = await self.visual_crossing_client.get_history(location, start_date, end_date)
-
-            if history and history.periods:
-                weather_data.daily_history = history.periods
-                logger.info(
-                    "Updated weather history from Visual Crossing (fetched %d periods)",
-                    len(history.periods),
-                )
-
-        except Exception as exc:  # noqa: BLE001
-            logger.debug("Failed to fetch history from Visual Crossing: %s", exc)
 
     def _persist_weather_data(self, location: Location, weather_data: WeatherData) -> None:
         self._remember_weather_data(weather_data)

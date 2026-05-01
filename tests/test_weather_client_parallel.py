@@ -92,17 +92,17 @@ class TestParallelFetchCoordinator:
         assert all(r.success for r in results)
 
     @pytest.mark.asyncio
-    async def test_fetch_all_with_visualcrossing(
+    async def test_fetch_all_with_pirateweather(
         self, coordinator, location, mock_current, mock_forecast, mock_hourly
     ):
-        """Visual Crossing source works."""
+        """Pirate Weather source works."""
 
-        async def fake_vc():
+        async def fake_pw():
             return (mock_current, mock_forecast, mock_hourly, None)
 
-        results = await coordinator.fetch_all(location, fetch_visualcrossing=fake_vc())
+        results = await coordinator.fetch_all(location, fetch_pirateweather=fake_pw())
         assert len(results) == 1
-        assert results[0].source == "visualcrossing"
+        assert results[0].source == "pirateweather"
         assert results[0].success is True
 
     @pytest.mark.asyncio
@@ -168,18 +168,18 @@ class TestParallelFetchCoordinator:
         async def fake_om():
             return (mock_current, mock_forecast, mock_hourly)
 
-        async def fake_vc():
+        async def fake_pw():
             return (mock_current, mock_forecast, mock_hourly, None)
 
         results = await coordinator.fetch_all(
             location,
             fetch_nws=fake_nws(),
             fetch_openmeteo=fake_om(),
-            fetch_visualcrossing=fake_vc(),
+            fetch_pirateweather=fake_pw(),
         )
         assert len(results) == 3
         sources = {r.source for r in results}
-        assert sources == {"nws", "openmeteo", "visualcrossing"}
+        assert sources == {"nws", "openmeteo", "pirateweather"}
 
     @pytest.mark.asyncio
     async def test_create_source_data_short_tuple(self, coordinator):

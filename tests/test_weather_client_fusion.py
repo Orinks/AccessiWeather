@@ -127,9 +127,9 @@ class TestMergeCurrentConditions:
     def test_priority_order_international(self, engine, intl_location):
         """Open-Meteo preferred for international locations."""
         om_cc = CurrentConditions(condition="Rainy")
-        vc_cc = CurrentConditions(condition="Overcast")
+        pw_cc = CurrentConditions(condition="Overcast")
         sources = [
-            _make_source("visualcrossing", current=vc_cc),
+            _make_source("pirateweather", current=pw_cc),
             _make_source("openmeteo", current=om_cc),
         ]
         result, attr = engine.merge_current_conditions(sources, intl_location)
@@ -319,13 +319,13 @@ class TestMergeCurrentConditions:
         assert result.snow_depth_in is None
         assert result.snow_depth_cm is None
 
-    def test_us_strips_visualcrossing_snow_depth(self, engine, us_location):
-        """Visual Crossing snow depth is also stripped for US locations (likely SNODAS-derived)."""
+    def test_us_strips_pirateweather_snow_depth(self, engine, us_location):
+        """Pirate Weather snow depth is also stripped for US locations."""
         nws_cc = CurrentConditions(temperature_f=32.0, snow_depth_in=None, snow_depth_cm=None)
-        vc_cc = CurrentConditions(temperature_f=31.5, snow_depth_in=12.0, snow_depth_cm=30.5)
+        pw_cc = CurrentConditions(temperature_f=31.5, snow_depth_in=12.0, snow_depth_cm=30.5)
         sources = [
             _make_source("nws", current=nws_cc),
-            _make_source("visualcrossing", current=vc_cc),
+            _make_source("pirateweather", current=pw_cc),
         ]
         result, attr = engine.merge_current_conditions(sources, us_location)
         assert result is not None
@@ -576,9 +576,9 @@ class TestMergeForecasts:
 
     def test_intl_prefers_openmeteo(self, engine, intl_location):
         om_fc = self._make_forecast()
-        vc_fc = Forecast(periods=[ForecastPeriod(name="Tonight", temperature=50.0)])
+        pw_fc = Forecast(periods=[ForecastPeriod(name="Tonight", temperature=50.0)])
         sources = [
-            _make_source("visualcrossing", forecast=vc_fc),
+            _make_source("pirateweather", forecast=pw_fc),
             _make_source("openmeteo", forecast=om_fc),
         ]
         result, field_sources = engine.merge_forecasts(sources, intl_location)
@@ -706,11 +706,11 @@ class TestMergeHourlyForecasts:
 
     def test_intl_prefers_openmeteo(self, engine, intl_location):
         om_h = self._make_hourly()
-        vc_h = HourlyForecast(
+        pw_h = HourlyForecast(
             periods=[HourlyForecastPeriod(start_time=datetime.now(UTC), temperature=60.0)]
         )
         sources = [
-            _make_source("visualcrossing", hourly=vc_h),
+            _make_source("pirateweather", hourly=pw_h),
             _make_source("openmeteo", hourly=om_h),
         ]
         result, field_sources = engine.merge_hourly_forecasts(sources, intl_location)
@@ -851,10 +851,10 @@ class TestWindGustSanityCheck:
     def test_gust_higher_than_speed_is_kept(self, engine, intl_location):
         """Normal case: gust > speed → both are preserved."""
         pw_cc = CurrentConditions(wind_speed_mph=14.0, wind_speed_kph=22.5)
-        vc_cc = CurrentConditions(wind_gust_mph=20.0, wind_gust_kph=32.2)
+        om_cc = CurrentConditions(wind_gust_mph=20.0, wind_gust_kph=32.2)
         sources = [
             _make_source("pirateweather", current=pw_cc),
-            _make_source("visualcrossing", current=vc_cc),
+            _make_source("openmeteo", current=om_cc),
         ]
         result, attr = engine.merge_current_conditions(sources, intl_location)
         assert result is not None
@@ -864,22 +864,22 @@ class TestWindGustSanityCheck:
     def test_gust_equal_to_speed_is_kept(self, engine, intl_location):
         """Edge case: gust == speed is physically valid → keep it."""
         pw_cc = CurrentConditions(wind_speed_mph=14.0, wind_speed_kph=22.5)
-        vc_cc = CurrentConditions(wind_gust_mph=14.0, wind_gust_kph=22.5)
+        om_cc = CurrentConditions(wind_gust_mph=14.0, wind_gust_kph=22.5)
         sources = [
             _make_source("pirateweather", current=pw_cc),
-            _make_source("visualcrossing", current=vc_cc),
+            _make_source("openmeteo", current=om_cc),
         ]
         result, attr = engine.merge_current_conditions(sources, intl_location)
         assert result is not None
         assert result.wind_gust_mph == pytest.approx(14.0)
 
     def test_gust_lower_than_speed_is_discarded(self, engine, intl_location):
-        """Bug: cross-source gust (11 mph VC) < speed (14 mph PW) → gust dropped."""
+        """Bug: cross-source gust (11 mph Open-Meteo) < speed (14 mph PW) → gust dropped."""
         pw_cc = CurrentConditions(wind_speed_mph=14.0, wind_speed_kph=22.5)
-        vc_cc = CurrentConditions(wind_gust_mph=11.0, wind_gust_kph=17.7)
+        om_cc = CurrentConditions(wind_gust_mph=11.0, wind_gust_kph=17.7)
         sources = [
             _make_source("pirateweather", current=pw_cc),
-            _make_source("visualcrossing", current=vc_cc),
+            _make_source("openmeteo", current=om_cc),
         ]
         result, attr = engine.merge_current_conditions(sources, intl_location)
         assert result is not None
@@ -892,8 +892,8 @@ class TestWindGustSanityCheck:
 
     def test_gust_without_speed_is_kept(self, engine, intl_location):
         """If only gust is present (no speed), gust is kept unchanged."""
-        vc_cc = CurrentConditions(wind_gust_mph=20.0, wind_gust_kph=32.2)
-        sources = [_make_source("visualcrossing", current=vc_cc)]
+        pw_cc = CurrentConditions(wind_gust_mph=20.0, wind_gust_kph=32.2)
+        sources = [_make_source("pirateweather", current=pw_cc)]
         result, attr = engine.merge_current_conditions(sources, intl_location)
         assert result is not None
         assert result.wind_gust_mph == pytest.approx(20.0)

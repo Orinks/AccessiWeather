@@ -310,7 +310,7 @@ class NotificationEventManager:
 
     Tracks changes in:
     - Area Forecast Discussion (AFD) updates using NWS API issuanceTime
-    - Severe weather risk levels (from Visual Crossing)
+    - Severe weather risk levels
     - Minutely precipitation start/stop transitions (from Pirate Weather)
 
     All notifications are opt-in (disabled by default).
@@ -984,7 +984,7 @@ class NotificationEventManager:
         """
         Check if the severe weather risk level has changed significantly.
 
-        Visual Crossing severerisk scale (aligned with UI display):
+        Severe weather risk scale (aligned with UI display):
         - 0-19: Minimal risk
         - 20-39: Low risk
         - 40-59: Moderate risk

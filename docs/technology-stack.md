@@ -94,7 +94,7 @@ AccessiWeather is a cross-platform desktop weather application built with Python
    - Background task scheduling
 
 3. **Data Integration Layer** (`api/`, `api_client/`)
-   - Multi-source weather data (NWS, Open-Meteo, Visual Crossing)
+   - Multi-source weather data (NWS, Open-Meteo, Pirate Weather)
    - Data fusion and enrichment
    - Smart fallback strategies
 
@@ -145,7 +145,7 @@ AccessiWeather is a cross-platform desktop weather application built with Python
 - **Purpose:** International locations, NWS failures
 - **Data:** Forecasts, historical data
 
-### Enrichment: Visual Crossing
+### Optional Provider: Pirate Weather
 - **Coverage:** Global
 - **API Key:** Required (optional)
 - **Purpose:** Enhanced alerts, historical trends
@@ -279,4 +279,4 @@ See [ACCESSIBILITY.md](ACCESSIBILITY.md) for complete guidelines.
 - **Repository:** https://github.com/orinks/accessiweather
 - **Website:** https://accessiweather.orinks.net
 - **BeeWare/Toga:** https://beeware.org/
-- **Weather APIs:** weather.gov (NWS), open-meteo.com, visualcrossing.com
+- **Weather APIs:** weather.gov (NWS), open-meteo.com, pirateweather.net

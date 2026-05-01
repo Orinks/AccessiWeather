@@ -48,7 +48,7 @@ class SettingsOperations:
         config_changed = False
 
         # Critical validation: data_source affects weather client selection at startup
-        valid_sources = ["auto", "nws", "openmeteo", "visualcrossing", "pirateweather"]
+        valid_sources = ["auto", "nws", "openmeteo", "pirateweather"]
         if settings.data_source not in valid_sources:
             self.logger.warning(
                 f"Invalid data_source '{settings.data_source}', resetting to 'auto'"
@@ -56,15 +56,10 @@ class SettingsOperations:
             settings.data_source = "auto"
             config_changed = True
 
-        if settings.data_source == "visualcrossing" and not settings.visual_crossing_api_key:
-            self.logger.warning(
-                "Visual Crossing selected but no API key provided, switching to 'auto'"
-            )
+        if settings.data_source == "visualcrossing":
+            self.logger.warning("Visual Crossing is no longer supported, switching to 'auto'")
             settings.data_source = "auto"
             config_changed = True
-        # Note: We no longer clear the API key when data_source is not "visualcrossing"
-        # because "auto" mode uses Visual Crossing as one of its sources when an API key
-        # is configured. The API key should persist across data source changes.
 
         # Non-critical validation (github_app_*, etc.) is deferred to first access
         # via validate_non_critical() to speed up startup
@@ -179,16 +174,10 @@ class SettingsOperations:
         config = self._manager.get_config()
         # In portable mode, API keys live in the bundle — skip keyring writes for them.
         is_portable = getattr(self._manager.app, "_portable_mode", False)
-        portable_api_keys = {
-            "visual_crossing_api_key",
-            "pirate_weather_api_key",
-            "openrouter_api_key",
-            "avwx_api_key",
-        }
+        portable_api_keys = {"pirate_weather_api_key", "openrouter_api_key", "avwx_api_key"}
 
         # These keys should be stored in SecureStorage (non-portable, or non-API-key secrets)
         secure_keys = {
-            "visual_crossing_api_key",
             "pirate_weather_api_key",
             "openrouter_api_key",
             "avwx_api_key",
@@ -201,7 +190,6 @@ class SettingsOperations:
         # These keys should be redacted in logs
         redacted_keys = {
             "github_app_private_key",
-            "visual_crossing_api_key",
             "pirate_weather_api_key",
             "openrouter_api_key",
             "avwx_api_key",

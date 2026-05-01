@@ -57,29 +57,29 @@ class TestAggregateAlerts:
         assert len(result.alerts) == 1
         assert result.alerts[0].source == "nws"
 
-    def test_vc_only(self):
-        vc = WeatherAlerts(alerts=[_make_alert(source=None)])
-        result = self.agg.aggregate_alerts(None, vc)
+    def test_secondary_only(self):
+        secondary = WeatherAlerts(alerts=[_make_alert(source=None)])
+        result = self.agg.aggregate_alerts(None, secondary)
         assert len(result.alerts) == 1
-        assert result.alerts[0].source == "visualcrossing"
+        assert result.alerts[0].source == "pirateweather"
 
     def test_both_sources_no_duplicates(self):
         nws = WeatherAlerts(alerts=[_make_alert(event="Tornado Warning")])
-        vc = WeatherAlerts(alerts=[_make_alert(event="Flood Watch")])
-        result = self.agg.aggregate_alerts(nws, vc)
+        secondary = WeatherAlerts(alerts=[_make_alert(event="Flood Watch")])
+        result = self.agg.aggregate_alerts(nws, secondary)
         assert len(result.alerts) == 2
 
     def test_both_sources_with_duplicate(self):
         now = datetime.now(UTC)
         nws = WeatherAlerts(alerts=[_make_alert(onset=now, source="nws")])
-        vc = WeatherAlerts(alerts=[_make_alert(onset=now, source="visualcrossing")])
-        result = self.agg.aggregate_alerts(nws, vc)
+        secondary = WeatherAlerts(alerts=[_make_alert(onset=now, source="pirateweather")])
+        result = self.agg.aggregate_alerts(nws, secondary)
         assert len(result.alerts) == 1  # deduplicated
 
     def test_empty_alert_lists(self):
         nws = WeatherAlerts(alerts=[])
-        vc = WeatherAlerts(alerts=[])
-        result = self.agg.aggregate_alerts(nws, vc)
+        secondary = WeatherAlerts(alerts=[])
+        result = self.agg.aggregate_alerts(nws, secondary)
         assert result.alerts == []
 
     def test_source_preserved_if_already_set(self):
@@ -107,7 +107,9 @@ class TestDeduplicateAlerts:
         now = datetime.now(UTC)
         alerts = [
             _make_alert(onset=now, source="nws", description="short"),
-            _make_alert(onset=now, source="vc", description="a much longer description here"),
+            _make_alert(
+                onset=now, source="pirateweather", description="a much longer description here"
+            ),
         ]
         result = self.agg._deduplicate_alerts(alerts)
         assert len(result) == 1
@@ -202,59 +204,59 @@ class TestMergeDuplicateAlerts:
 
     def test_nws_preferred_as_base(self):
         nws = _make_alert(source="nws", severity="Severe")
-        vc = _make_alert(source="visualcrossing", severity="Unknown")
-        result = self.agg._merge_duplicate_alerts([vc, nws])
+        secondary = _make_alert(source="pirateweather", severity="Unknown")
+        result = self.agg._merge_duplicate_alerts([secondary, nws])
         # NWS should be base (sorted first)
         assert result.severity == "Severe"
 
     def test_longer_description_wins(self):
         nws = _make_alert(source="nws", description="short")
-        vc = _make_alert(
-            source="visualcrossing", description="a much longer and more detailed description"
+        secondary = _make_alert(
+            source="pirateweather", description="a much longer and more detailed description"
         )
-        result = self.agg._merge_duplicate_alerts([nws, vc])
+        result = self.agg._merge_duplicate_alerts([nws, secondary])
         assert result.description == "a much longer and more detailed description"
 
     def test_longer_headline_wins(self):
         nws = _make_alert(source="nws", headline="brief")
-        vc = _make_alert(source="visualcrossing", headline="a much longer headline text")
-        result = self.agg._merge_duplicate_alerts([nws, vc])
+        secondary = _make_alert(source="pirateweather", headline="a much longer headline text")
+        result = self.agg._merge_duplicate_alerts([nws, secondary])
         assert result.headline == "a much longer headline text"
 
     def test_longer_instruction_wins(self):
         nws = _make_alert(source="nws", instruction="go")
-        vc = _make_alert(
-            source="visualcrossing", instruction="take shelter immediately and seek cover"
+        secondary = _make_alert(
+            source="pirateweather", instruction="take shelter immediately and seek cover"
         )
-        result = self.agg._merge_duplicate_alerts([nws, vc])
+        result = self.agg._merge_duplicate_alerts([nws, secondary])
         assert result.instruction == "take shelter immediately and seek cover"
 
     def test_unknown_metadata_replaced(self):
         nws = _make_alert(source="nws", severity="Unknown", urgency="Unknown", certainty="Unknown")
-        vc = _make_alert(
-            source="visualcrossing", severity="Moderate", urgency="Future", certainty="Possible"
+        secondary = _make_alert(
+            source="pirateweather", severity="Moderate", urgency="Future", certainty="Possible"
         )
-        result = self.agg._merge_duplicate_alerts([nws, vc])
+        result = self.agg._merge_duplicate_alerts([nws, secondary])
         assert result.severity == "Moderate"
         assert result.urgency == "Future"
         assert result.certainty == "Possible"
 
     def test_source_merged(self):
         nws = _make_alert(source="nws")
-        vc = _make_alert(source="visualcrossing")
-        result = self.agg._merge_duplicate_alerts([nws, vc])
+        secondary = _make_alert(source="pirateweather")
+        result = self.agg._merge_duplicate_alerts([nws, secondary])
         assert "nws" in result.source
-        assert "visualcrossing" in result.source
+        assert "pirateweather" in result.source
 
     def test_areas_unioned(self):
         nws = _make_alert(source="nws", areas=["County A"])
-        vc = _make_alert(source="visualcrossing", areas=["County B"])
-        result = self.agg._merge_duplicate_alerts([nws, vc])
+        secondary = _make_alert(source="pirateweather", areas=["County B"])
+        result = self.agg._merge_duplicate_alerts([nws, secondary])
         assert set(result.areas) == {"County A", "County B"}
 
     def test_non_unknown_severity_kept(self):
-        # If base already has good severity, VC Unknown shouldn't replace it
+        # If base already has good severity, secondary Unknown shouldn't replace it
         nws = _make_alert(source="nws", severity="Extreme")
-        vc = _make_alert(source="visualcrossing", severity="Unknown")
-        result = self.agg._merge_duplicate_alerts([nws, vc])
+        secondary = _make_alert(source="pirateweather", severity="Unknown")
+        result = self.agg._merge_duplicate_alerts([nws, secondary])
         assert result.severity == "Extreme"

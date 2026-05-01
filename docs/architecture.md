@@ -13,7 +13,7 @@ AccessiWeather is a cross-platform desktop weather application built with Python
 **Key Characteristics:**
 - **Monolith structure** - Single cohesive codebase
 - **Event-driven UI** - Toga's native async event system
-- **Multi-source data fusion** - NWS + Open-Meteo + Visual Crossing
+- **Multi-source data fusion** - NWS + Open-Meteo + Pirate Weather
 - **Accessibility-first** - Full screen reader support with ARIA labels
 - **Cross-platform** - Windows, macOS, Linux via Briefcase packaging
 
@@ -54,7 +54,7 @@ AccessiWeather is a cross-platform desktop weather application built with Python
 **External Integrations:**
 - **National Weather Service API** (weather.gov) - US weather data, no API key
 - **Open-Meteo API** (open-meteo.com) - Global fallback, no API key
-- **Visual Crossing API** (visualcrossing.com) - Enhanced alerts, requires API key (optional)
+- **Pirate Weather API** (pirateweather.net) - Optional global alerts, minutely precipitation, and moon phase
 - **Geopy** - Geocoding via multiple providers (Nominatim, Google, etc.)
 - **OpenAI API** (optional) - AI-powered weather explanations
 
@@ -94,13 +94,13 @@ AccessiWeather is a cross-platform desktop weather application built with Python
 - `weather_client.py` - Multi-source orchestrator
 - `api/nws/` - National Weather Service integration
 - `api/openmeteo_wrapper.py` - Open-Meteo integration
-- `api/visualcrossing/` - Visual Crossing integration
+- `pirate_weather_client.py` - Pirate Weather integration
 - `api_client/base_wrapper.py` - HTTP client with retries
 
 **Data Fusion Strategy:**
 1. Try NWS first for US locations (most accurate)
 2. Fall back to Open-Meteo on failure or international
-3. Enrich with Visual Crossing if API key available
+3. Add Pirate Weather data if an API key is available
 4. Merge data intelligently, preferring most reliable source per field
 
 ### Layer 4: Caching Layer
@@ -163,7 +163,7 @@ AccessiWeather is a cross-platform desktop weather application built with Python
 1. Determine location type (US/international)
 2. US locations → NWS primary, Open-Meteo fallback
 3. International → Open-Meteo only
-4. All locations → Visual Crossing enrichment (if API key)
+4. All locations → Pirate Weather optional data (if API key)
 
 ### Alert Management System
 
@@ -255,7 +255,7 @@ Initialize weather clients
   ],
   "api_settings": {
     "cache_ttl_minutes": 5,
-    "enable_visual_crossing": false
+    "enable_pirate_weather": false
   }
 }
 ```
@@ -317,7 +317,7 @@ Check cache
              └─→ Use Open-Meteo
          │
          ▼
-     Enrich with Visual Crossing (if enabled)
+     Add Pirate Weather data (if enabled)
          │
          ▼
      Merge data
@@ -416,9 +416,9 @@ Validate settings (AppSettings model)
 - UV index
 - Hourly and daily forecasts
 
-### Visual Crossing Integration (Optional)
+### Pirate Weather Integration (Optional)
 
-**Base URL:** `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services`
+**Base URL:** `https://api.pirateweather.net/forecast`
 
 **Endpoints:**
 - `/timeline/{location}` - Historical and forecast data
@@ -504,10 +504,10 @@ Validate settings (AppSettings model)
 import keyring
 
 # Store API key
-keyring.set_password("accessiweather", "visual_crossing_api_key", api_key)
+keyring.set_password("accessiweather", "pirate_weather_api_key", api_key)
 
 # Retrieve API key
-api_key = keyring.get_password("accessiweather", "visual_crossing_api_key")
+api_key = keyring.get_password("accessiweather", "pirate_weather_api_key")
 ```
 
 ### Configuration File Security
@@ -613,7 +613,7 @@ tests/
 └── integration/
     ├── test_nws_integration.py
     ├── test_openmeteo_integration.py
-    └── test_visualcrossing_integration.py
+    └── test_pirate_weather_integration.py
 ```
 
 ### Key Test Fixtures
@@ -725,11 +725,11 @@ Briefcase supports iOS/Android; UI would need adaptation for mobile form factors
 - Fewer third-party widgets
 
 ### ADR-002: Why multi-source weather data?
-**Decision:** Integrate NWS + Open-Meteo + Visual Crossing
+**Decision:** Integrate NWS + Open-Meteo + Pirate Weather
 **Rationale:**
 - NWS most accurate for US but US-only
 - Open-Meteo provides global coverage and good fallback
-- Visual Crossing adds enhanced details for power users
+- Pirate Weather adds optional global alerts, minutely precipitation, summaries, and moon phase
 
 **Trade-offs:**
 - Increased complexity
@@ -769,5 +769,5 @@ Briefcase supports iOS/Android; UI would need adaptation for mobile form factors
 - **BeeWare/Toga Documentation:** https://toga.readthedocs.io/
 - **NWS API Documentation:** https://www.weather.gov/documentation/services-web-api
 - **Open-Meteo API Docs:** https://open-meteo.com/en/docs
-- **Visual Crossing API:** https://www.visualcrossing.com/resources/documentation/weather-api/
+- **Pirate Weather API:** https://pirateweather.net/
 - **Briefcase Packaging:** https://briefcase.readthedocs.io/

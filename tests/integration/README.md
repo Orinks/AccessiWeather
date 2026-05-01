@@ -49,8 +49,8 @@ Set `VCR_RECORD_MODE` environment variable:
 Some tests require API keys for recording:
 
 ```bash
-# Visual Crossing API (required for Visual Crossing tests)
-set VISUAL_CROSSING_API_KEY=your-api-key-here
+# Pirate Weather API (required for Pirate Weather tests)
+set PIRATE_WEATHER_API_KEY=your-api-key-here
 ```
 
 **Note**: API keys are automatically filtered from recorded cassettes.
@@ -61,7 +61,7 @@ set VISUAL_CROSSING_API_KEY=your-api-key-here
 tests/integration/cassettes/
 ├── geocoding/         # Geocoding API tests
 ├── openmeteo/         # OpenMeteo weather API tests
-├── visual_crossing/   # Visual Crossing API tests
+├── pirate_weather/    # Pirate Weather API tests
 └── weather_client/    # WeatherClient orchestration tests
 ```
 

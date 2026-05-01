@@ -46,12 +46,11 @@ class TestWeatherClientInit:
         assert client.data_source == "openmeteo"
         assert client.alerts_enabled is False
 
-    def test_visual_crossing_api_key_lazy(self):
-        """Test that VC API key is handled lazily."""
-        client = WeatherClient(visual_crossing_api_key="test-key")
-        assert client.visual_crossing_api_key == "test-key"
-        # Client should not be created until accessed
-        assert client._visual_crossing_client is None
+    def test_pirate_weather_api_key_lazy(self):
+        """Test that Pirate Weather API key is handled lazily."""
+        client = WeatherClient(pirate_weather_api_key="test-key")
+        assert client.pirate_weather_api_key == "test-key"
+        assert client._pirate_weather_client is None
 
 
 class TestWeatherClientDataSource:
@@ -367,7 +366,7 @@ class TestWeatherClientHelpers:
         )
 
         assert client._get_forecast_days_for_source(intl_location, "openmeteo") == 15
-        assert client._get_forecast_days_for_source(intl_location, "visualcrossing") == 15
+        assert client._get_forecast_days_for_source(intl_location, "pirateweather") == 8
 
     def test_forecast_days_uses_source_caps_for_us_locations(self):
         """US locations should use per-source caps (NWS 7, others their API caps)."""
@@ -376,7 +375,7 @@ class TestWeatherClientHelpers:
 
         assert client._get_forecast_days_for_source(us_location, "nws") == 7
         assert client._get_forecast_days_for_source(us_location, "openmeteo") == 15
-        assert client._get_forecast_days_for_source(us_location, "visualcrossing") == 15
+        assert client._get_forecast_days_for_source(us_location, "pirateweather") == 8
 
     def test_extended_forecast_openmeteo_only_in_auto_mode(self):
         """Open-Meteo extended forecast fallback only applies in auto mode, not explicit sources."""

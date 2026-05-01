@@ -64,7 +64,6 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "custom_instructions",
     # API key settings (loaded lazily via keyring)
     "pirate_weather_api_key",
-    "visual_crossing_api_key",
     # Display preferences
     "round_values",
     "enable_alerts",
@@ -118,7 +117,6 @@ class AppSettings:
     minimize_on_startup: bool = False
     startup_enabled: bool = False
     data_source: str = "auto"
-    visual_crossing_api_key: str = ""
     pirate_weather_api_key: str = ""
     auto_update_enabled: bool = True
     update_channel: str = "stable"
@@ -189,10 +187,10 @@ class AppSettings:
     taskbar_icon_text_format: str = "{temp} {condition}"
     # Source priority settings for smart auto mode
     source_priority_us: list[str] = field(
-        default_factory=lambda: ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+        default_factory=lambda: ["nws", "openmeteo", "pirateweather"]
     )
     source_priority_international: list[str] = field(
-        default_factory=lambda: ["openmeteo", "pirateweather", "visualcrossing"]
+        default_factory=lambda: ["openmeteo", "pirateweather"]
     )
     # Open-Meteo weather model selection
     openmeteo_weather_model: str = "best_match"
@@ -233,10 +231,10 @@ class AppSettings:
     # Auto mode source selection — which sources participate in auto mode
     auto_mode_api_budget: str = "max_coverage"
     auto_sources_us: list[str] = field(
-        default_factory=lambda: ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+        default_factory=lambda: ["nws", "openmeteo", "pirateweather"]
     )
     auto_sources_international: list[str] = field(
-        default_factory=lambda: ["openmeteo", "pirateweather", "visualcrossing"]
+        default_factory=lambda: ["openmeteo", "pirateweather"]
     )
 
     @staticmethod
@@ -419,9 +417,9 @@ class AppSettings:
             "auto_sources_international",
         }:
             # Ensure valid list of source names
-            valid_sources = {"nws", "openmeteo", "visualcrossing", "pirateweather"}
-            us_default = ["nws", "openmeteo", "visualcrossing", "pirateweather"]
-            intl_default = ["openmeteo", "pirateweather", "visualcrossing"]
+            valid_sources = {"nws", "openmeteo", "pirateweather"}
+            us_default = ["nws", "openmeteo", "pirateweather"]
+            intl_default = ["openmeteo", "pirateweather"]
             is_us_setting = setting_name in {"source_priority_us", "auto_sources_us"}
             if not isinstance(value, list):
                 setattr(self, setting_name, us_default if is_us_setting else intl_default)
@@ -551,7 +549,6 @@ class AppSettings:
             minimize_on_startup=cls._as_bool(data.get("minimize_on_startup"), False),
             startup_enabled=cls._as_bool(data.get("startup_enabled"), False),
             data_source=data.get("data_source", "auto"),
-            visual_crossing_api_key=data.get("visual_crossing_api_key", ""),
             pirate_weather_api_key=data.get("pirate_weather_api_key", ""),
             auto_update_enabled=cls._as_bool(data.get("auto_update_enabled"), True),
             update_channel=data.get("update_channel", "stable"),
@@ -624,17 +621,15 @@ class AppSettings:
             ),
             taskbar_icon_text_format=data.get("taskbar_icon_text_format", "{temp} {condition}"),
             source_priority_us=data.get(
-                "source_priority_us", ["nws", "openmeteo", "visualcrossing", "pirateweather"]
+                "source_priority_us", ["nws", "openmeteo", "pirateweather"]
             ),
             source_priority_international=data.get(
-                "source_priority_international", ["openmeteo", "pirateweather", "visualcrossing"]
+                "source_priority_international", ["openmeteo", "pirateweather"]
             ),
             auto_mode_api_budget=data.get("auto_mode_api_budget", "max_coverage"),
-            auto_sources_us=data.get(
-                "auto_sources_us", ["nws", "openmeteo", "visualcrossing", "pirateweather"]
-            ),
+            auto_sources_us=data.get("auto_sources_us", ["nws", "openmeteo", "pirateweather"]),
             auto_sources_international=data.get(
-                "auto_sources_international", ["openmeteo", "pirateweather", "visualcrossing"]
+                "auto_sources_international", ["openmeteo", "pirateweather"]
             ),
             openmeteo_weather_model=data.get("openmeteo_weather_model", "best_match"),
             station_selection_strategy=data.get("station_selection_strategy", "hybrid_default"),
@@ -671,6 +666,12 @@ class AppSettings:
         settings.validate_on_access("auto_mode_api_budget")
         settings.validate_on_access("alert_display_style")
         settings.validate_on_access("date_format")
+        settings.validate_on_access("source_priority_us")
+        settings.validate_on_access("source_priority_international")
+        settings.validate_on_access("auto_sources_us")
+        settings.validate_on_access("auto_sources_international")
+        if settings.data_source not in {"auto", "nws", "openmeteo", "pirateweather"}:
+            settings.data_source = "auto"
         return settings
 
     def to_alert_settings(self):

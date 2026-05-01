@@ -40,7 +40,7 @@ accessiweather/
 │   │   │   ├── forecasts.py   # Forecast data
 │   │   │   └── gridpoints.py  # Grid point resolution
 │   │   ├── openmeteo_wrapper.py # Open-Meteo integration
-│   │   └── visualcrossing/    # Visual Crossing API
+│   │   └── openmeteo_wrapper.py # Open-Meteo API wrapper
 │   │       ├── alerts.py      # Enhanced alerts
 │   │       └── historical.py  # Historical weather data
 │   │
@@ -171,7 +171,7 @@ accessiweather/
 **Data Sources:**
 1. **NWS** (`api/nws/`) - US weather via weather.gov
 2. **Open-Meteo** (`openmeteo_wrapper.py`) - Global fallback
-3. **Visual Crossing** (`visualcrossing/`) - Enhanced alerts
+3. **Pirate Weather** (`pirate_weather_client.py`) - Optional alerts, minutely precipitation, and moon phase
 
 **Integration Pattern:** Multi-source with smart fallback
 
@@ -240,7 +240,7 @@ WeatherClient (orchestrator)
 │   ├─→ Forecasts
 │   └─→ Historical data
 │
-└─→ Visual Crossing (enrichment)
+└─→ Pirate Weather (optional enrichment)
     ├─→ Enhanced alerts
     └─→ Weather history
 
@@ -343,7 +343,7 @@ Serve cached data immediately while fetching fresh data in background.
 Background tasks update weather data; UI updates via Toga's event system.
 
 ### 4. Strategy Pattern
-`WeatherClient` delegates to source-specific clients (NWS, Open-Meteo, Visual Crossing).
+`WeatherClient` delegates to source-specific clients (NWS, Open-Meteo, Pirate Weather).
 
 ### 5. Repository Pattern
 `LocationManager` abstracts location storage from business logic.
