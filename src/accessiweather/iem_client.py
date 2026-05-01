@@ -54,6 +54,11 @@ def _parse_datetime(value: Any) -> datetime | None:
     return parsed
 
 
+def _clean_iem_text(value: str) -> str:
+    """Remove non-printing transport markers while preserving product line breaks."""
+    return "".join(char for char in value if char in "\n\r\t" or ord(char) >= 32).strip()
+
+
 async def fetch_iem_afos_text(
     pil: str,
     *,
@@ -103,7 +108,7 @@ async def fetch_iem_afos_text(
             raise IemProductFetchError(
                 f"IEM AFOS returned HTTP {response.status_code} for {product_id}"
             )
-        text = response.text.strip()
+        text = _clean_iem_text(response.text)
         if not text:
             raise IemProductFetchError(f"IEM AFOS returned no text for {product_id}")
         return TextProduct(

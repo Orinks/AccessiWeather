@@ -81,6 +81,15 @@ async def test_afos_retrieve_accepts_history_filters():
 
 
 @pytest.mark.asyncio
+async def test_afos_retrieve_strips_iem_control_characters():
+    client = _client(_resp(text="\x01 627\r\nAFDRAH text\x03\n"))
+
+    result = await fetch_iem_afos_text("AFDRAH", client=client, iem_base_url=IEM_BASE)
+
+    assert result.product_text == "627\r\nAFDRAH text"
+
+
+@pytest.mark.asyncio
 async def test_afos_retrieve_raises_on_http_error():
     client = _client(_resp(status_code=503, text="slow query"))
 
