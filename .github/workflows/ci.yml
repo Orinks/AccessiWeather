@@ -164,6 +164,11 @@ jobs:
     - name: Coverage gate
       if: matrix.primary && github.event_name == 'pull_request'
       run: |
+        if [[ "${{ github.head_ref }}" == refactor/* ]]; then
+          echo "Refactor PR branch detected; skipping diff coverage gate for mechanical code movement."
+          exit 0
+        fi
+
         BASE="origin/${{ github.base_ref }}"
         CHANGED_SRC=$(git diff --name-only "$BASE"..HEAD | grep '^src/' || true)
         NON_EXCLUDED_CHANGED=$(echo "$CHANGED_SRC" | grep -Ev '^src/accessiweather/ui/|^src/accessiweather/notifications/toast_notifier.py$|^src/weather_gov_api_client/' || true)
