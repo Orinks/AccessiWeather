@@ -29,21 +29,14 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 **What it does**:
 - Builds Windows installer + portable ZIP and macOS DMG
 - Creates nightly or stable GitHub releases
-- Triggers GitHub Pages refresh after a successful release
 
 ---
 
-### 3. Update GitHub Pages (`update-pages.yml`)
-**Purpose**: Update the GitHub Pages mirror with latest build info
-**Triggers**:
-- Push to `main`
-- Manual dispatch
+### 3. Website Deployment
+**Purpose**: Handled by the separate Vercel deployment workflow
 
-**What it does**:
-- Fetches latest build information
-- Updates the GitHub Pages mirror with version info
-- Generates nightly.link URLs
-- Deploys to GitHub Pages
+The desktop build workflow does not trigger website publishing. It only creates GitHub
+release assets that the Vercel site can consume.
 
 ---
 
@@ -55,7 +48,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 
 `build.yml` handles nightly/tagged packaging and release publication.
 
-`update-pages.yml` handles GitHub Pages publication.
+Website deployment is intentionally separate and owned by the Vercel workflow.
 
 ---
 
@@ -65,7 +58,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 |------------|--------------|-----|
 | Test code changes | `ci.yml` | Automatic on PR/push |
 | Build installers / nightlies | `build.yml` | Nightly, tags, or manual |
-| Update GitHub Pages mirror | `update-pages.yml` | Automatic after build or manual |
+| Deploy website | Vercel workflow | Managed outside the desktop build workflow |
 
 ---
 
@@ -75,7 +68,7 @@ As a solo maintainer, you typically only need to:
 
 1. **Open a PR to `dev`**: `ci.yml` validates formatting, lint, tests, and diff coverage
 2. **Merge changes to `dev`**: Nightly `build.yml` creates user-facing artifacts when there were user-facing commits
-3. **Publish a stable release tag**: `build.yml` creates the release assets, then the Pages update flow can run
+3. **Publish a stable release tag**: `build.yml` creates the release assets; the Vercel workflow owns website deployment
 
 Everything else stays out of the PR path.
 

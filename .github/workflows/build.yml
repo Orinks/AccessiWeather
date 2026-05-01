@@ -14,7 +14,6 @@ on:
 
 permissions:
   contents: write
-  actions: write
 
 concurrency:
   group: build-${{ github.ref }}
@@ -335,9 +334,3 @@ jobs:
                 --title "AccessiWeather v${VERSION}"
             fi
           fi
-
-      - name: Trigger pages update
-        if: ${{ inputs.dry_run != true }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh workflow run update-pages.yml || true
