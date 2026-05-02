@@ -16,6 +16,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from accessiweather.cache import Cache
+from accessiweather.iem_client import IemProductFetchError
 from accessiweather.models import TextProduct
 from accessiweather.services.forecast_product_service import ForecastProductService
 from accessiweather.weather_client_nws import TextProductFetchError
@@ -209,6 +210,8 @@ class TestForecastProductServiceIemStructuredProducts:
             assert lat == 35.78
             assert lon == -78.64
             assert kwargs["valid_at"] is None
+            assert kwargs["max_items"] == 5
+            assert kwargs["timeout"] == 10.0
             return product
 
         async def fake_wpc_outlook(lat, lon, **kwargs):
@@ -216,12 +219,14 @@ class TestForecastProductServiceIemStructuredProducts:
             assert lon == -78.64
             assert kwargs["day"] == 2
             assert kwargs["limit"] == 3
+            assert kwargs["max_items"] == 5
+            assert kwargs["timeout"] == 10.0
             return product
 
         async def fake_wpc_mpds(lat, lon, **kwargs):
             assert lat == 35.78
             assert lon == -78.64
-            assert kwargs == {}
+            assert kwargs == {"max_items": 5, "timeout": 10.0}
             return product
 
         monkeypatch.setattr(
@@ -240,3 +245,71 @@ class TestForecastProductServiceIemStructuredProducts:
         assert await service.get_iem_spc_watches(35.78, -78.64) is product
         assert await service.get_iem_wpc_outlook(35.78, -78.64, day=2, limit=3) is product
         assert await service.get_iem_wpc_mpds(35.78, -78.64) is product
+
+    @pytest.mark.asyncio
+    async def test_iem_structured_wrappers_cache_results(self, monkeypatch):
+        cache = Cache(default_ttl=60)
+        service = ForecastProductService(cache)
+        product = TextProduct(
+            product_type="SPC_MCD",
+            product_id="structured",
+            cwa_office="SPC",
+            issuance_time=None,
+            product_text="structured text",
+            headline=None,
+        )
+        calls = 0
+
+        async def fake_spc_mcds(lat, lon, **kwargs):
+            nonlocal calls
+            calls += 1
+            return product
+
+        monkeypatch.setattr(
+            "accessiweather.services.forecast_product_service.fetch_iem_spc_mcds",
+            fake_spc_mcds,
+        )
+
+        assert await service.get_iem_spc_mcds(35.78, -78.64, max_items=3) is product
+        assert await service.get_iem_spc_mcds(35.78, -78.64, max_items=3) is product
+        assert calls == 1
+
+    @pytest.mark.asyncio
+    async def test_spc_outlook_falls_back_to_afos_day_one(self, monkeypatch):
+        cache = Cache(default_ttl=60)
+        service = ForecastProductService(cache)
+        fallback = TextProduct(
+            product_type="SWODY1",
+            product_id="SWODY1",
+            cwa_office="IEM",
+            issuance_time=None,
+            product_text="day one outlook text",
+            headline=None,
+        )
+
+        async def failing_spc_outlook(*_args, **_kwargs):
+            raise IemProductFetchError("slow")
+
+        async def fake_afos(product_id, **kwargs):
+            assert product_id == "SWODY1"
+            assert kwargs["timeout"] == 4.0
+            return fallback
+
+        monkeypatch.setattr(
+            "accessiweather.services.forecast_product_service.fetch_iem_spc_outlook",
+            failing_spc_outlook,
+        )
+        monkeypatch.setattr(
+            "accessiweather.services.forecast_product_service.fetch_iem_afos_text",
+            fake_afos,
+        )
+
+        result = await service.get_iem_spc_outlook(
+            35.78,
+            -78.64,
+            day=1,
+            current=True,
+            timeout=4.0,
+        )
+
+        assert result is fallback

@@ -130,7 +130,24 @@ async def fetch_iem_afos_text(
         return await _run(new_client)
 
 
-def _spc_summary_lines(title: str, payload: Any, *, item_keys: tuple[str, ...]) -> list[str]:
+def _limited_items(items: list[Any], max_items: int | None) -> tuple[list[Any], int]:
+    if max_items is None or max_items <= 0:
+        return items, 0
+    return items[:max_items], max(0, len(items) - max_items)
+
+
+def _append_omitted_count(lines: list[str], omitted: int) -> None:
+    if omitted > 0:
+        lines.append(f"{omitted} older matches omitted. Use Advanced Lookup for broader history.")
+
+
+def _spc_summary_lines(
+    title: str,
+    payload: Any,
+    *,
+    item_keys: tuple[str, ...],
+    max_items: int | None = None,
+) -> list[str]:
     lines = [title, ""]
     if not isinstance(payload, dict):
         return [title, "", "No structured data returned."]
@@ -149,7 +166,8 @@ def _spc_summary_lines(title: str, payload: Any, *, item_keys: tuple[str, ...]) 
         lines.append("No matching products were returned.")
         return lines
 
-    for index, item in enumerate(items, start=1):
+    visible_items, omitted = _limited_items(items, max_items)
+    for index, item in enumerate(visible_items, start=1):
         if not isinstance(item, dict):
             continue
         lines.append(f"Product {index}:")
@@ -166,6 +184,7 @@ def _spc_summary_lines(title: str, payload: Any, *, item_keys: tuple[str, ...]) 
             if value not in (None, ""):
                 lines.append(f"{label}: {value}")
         lines.append("")
+    _append_omitted_count(lines, omitted)
     return lines
 
 
@@ -175,6 +194,7 @@ async def fetch_iem_spc_outlook(
     *,
     day: int = 1,
     current: bool = True,
+    max_items: int | None = 5,
     client: httpx.AsyncClient | None = None,
     iem_base_url: str = DEFAULT_IEM_BASE_URL,
     timeout: float = 10.0,
@@ -193,7 +213,10 @@ async def fetch_iem_spc_outlook(
     headers = {"User-Agent": user_agent}
 
     async def _run(http_client: httpx.AsyncClient) -> TextProduct:
-        response = await _client_get(http_client, url, params=params, headers=headers)
+        try:
+            response = await _client_get(http_client, url, params=params, headers=headers)
+        except (httpx.TimeoutException, httpx.TransportError, httpx.RequestError) as exc:
+            raise IemProductFetchError(f"IEM SPC outlook request failed: {exc}") from exc
         if response.status_code != 200:
             raise IemProductFetchError(f"IEM SPC outlook returned HTTP {response.status_code}")
         data = response.json()
@@ -205,7 +228,12 @@ async def fetch_iem_spc_outlook(
             cwa_office="SPC",
             issuance_time=_parse_datetime(issued),
             product_text="\n".join(
-                _spc_summary_lines(title, data, item_keys=("outlooks", "features"))
+                _spc_summary_lines(
+                    title,
+                    data,
+                    item_keys=("outlooks", "features"),
+                    max_items=max_items,
+                )
             ),
             headline=title,
         )
@@ -220,6 +248,7 @@ async def fetch_iem_spc_mcds(
     latitude: float,
     longitude: float,
     *,
+    max_items: int | None = 5,
     client: httpx.AsyncClient | None = None,
     iem_base_url: str = DEFAULT_IEM_BASE_URL,
     timeout: float = 10.0,
@@ -231,9 +260,13 @@ async def fetch_iem_spc_mcds(
     headers = {"User-Agent": user_agent}
 
     async def _run(http_client: httpx.AsyncClient) -> TextProduct:
-        response = await _client_get(http_client, url, params=params, headers=headers)
+        try:
+            response = await _client_get(http_client, url, params=params, headers=headers)
+        except (httpx.TimeoutException, httpx.TransportError, httpx.RequestError) as exc:
+            raise IemProductFetchError(f"IEM SPC MCD request failed: {exc}") from exc
         if response.status_code != 200:
             raise IemProductFetchError(f"IEM SPC MCD returned HTTP {response.status_code}")
+        data = response.json()
         title = "SPC Mesoscale Discussions"
         return TextProduct(
             product_type="SPC_MCD",
@@ -241,7 +274,12 @@ async def fetch_iem_spc_mcds(
             cwa_office="SPC",
             issuance_time=None,
             product_text="\n".join(
-                _spc_summary_lines(title, response.json(), item_keys=("mcds", "features"))
+                _spc_summary_lines(
+                    title,
+                    data,
+                    item_keys=("mcds", "features"),
+                    max_items=max_items,
+                )
             ),
             headline=title,
         )
@@ -257,6 +295,7 @@ async def fetch_iem_spc_watches(
     longitude: float,
     *,
     valid_at: datetime | None = None,
+    max_items: int | None = 5,
     client: httpx.AsyncClient | None = None,
     iem_base_url: str = DEFAULT_IEM_BASE_URL,
     timeout: float = 10.0,
@@ -270,7 +309,10 @@ async def fetch_iem_spc_watches(
     headers = {"User-Agent": user_agent}
 
     async def _run(http_client: httpx.AsyncClient) -> TextProduct:
-        response = await _client_get(http_client, url, params=params, headers=headers)
+        try:
+            response = await _client_get(http_client, url, params=params, headers=headers)
+        except (httpx.TimeoutException, httpx.TransportError, httpx.RequestError) as exc:
+            raise IemProductFetchError(f"IEM SPC watches request failed: {exc}") from exc
         if response.status_code != 200:
             raise IemProductFetchError(f"IEM SPC watches returned HTTP {response.status_code}")
         title = "SPC Watches"
@@ -279,7 +321,9 @@ async def fetch_iem_spc_watches(
             product_id="SPC_WATCHES",
             cwa_office="SPC",
             issuance_time=None,
-            product_text="\n".join(_spc_watch_summary_lines(title, response.json())),
+            product_text="\n".join(
+                _spc_watch_summary_lines(title, response.json(), max_items=max_items)
+            ),
             headline=title,
         )
 
@@ -289,7 +333,12 @@ async def fetch_iem_spc_watches(
         return await _run(new_client)
 
 
-def _spc_watch_summary_lines(title: str, payload: Any) -> list[str]:
+def _spc_watch_summary_lines(
+    title: str,
+    payload: Any,
+    *,
+    max_items: int | None = None,
+) -> list[str]:
     lines = [title, ""]
     if not isinstance(payload, dict):
         return [title, "", "No structured data returned."]
@@ -298,7 +347,8 @@ def _spc_watch_summary_lines(title: str, payload: Any) -> list[str]:
     if not isinstance(features, list) or not features:
         return [title, "", "No matching watches were returned."]
 
-    for index, feature in enumerate(features, start=1):
+    visible_features, omitted = _limited_items(features, max_items)
+    for index, feature in enumerate(visible_features, start=1):
         props = feature.get("properties") if isinstance(feature, dict) else None
         if not isinstance(props, dict):
             continue
@@ -317,6 +367,7 @@ def _spc_watch_summary_lines(title: str, payload: Any) -> list[str]:
             if value not in (None, ""):
                 lines.append(f"{label}: {value}")
         lines.append("")
+    _append_omitted_count(lines, omitted)
     return lines
 
 
@@ -327,6 +378,7 @@ async def fetch_iem_wpc_outlook(
     day: int = 1,
     valid_at: datetime | None = None,
     limit: int = 1,
+    max_items: int | None = 5,
     client: httpx.AsyncClient | None = None,
     iem_base_url: str = DEFAULT_IEM_BASE_URL,
     timeout: float = 10.0,
@@ -347,7 +399,10 @@ async def fetch_iem_wpc_outlook(
     headers = {"User-Agent": user_agent}
 
     async def _run(http_client: httpx.AsyncClient) -> TextProduct:
-        response = await _client_get(http_client, url, params=params, headers=headers)
+        try:
+            response = await _client_get(http_client, url, params=params, headers=headers)
+        except (httpx.TimeoutException, httpx.TransportError, httpx.RequestError) as exc:
+            raise IemProductFetchError(f"IEM WPC outlook request failed: {exc}") from exc
         if response.status_code != 200:
             raise IemProductFetchError(f"IEM WPC outlook returned HTTP {response.status_code}")
         data = response.json()
@@ -358,7 +413,7 @@ async def fetch_iem_wpc_outlook(
             product_id=f"WPC_ERO_DAY{day}",
             cwa_office="WPC",
             issuance_time=_parse_datetime(issued),
-            product_text="\n".join(_wpc_outlook_summary_lines(title, data)),
+            product_text="\n".join(_wpc_outlook_summary_lines(title, data, max_items=max_items)),
             headline=title,
         )
 
@@ -368,7 +423,12 @@ async def fetch_iem_wpc_outlook(
         return await _run(new_client)
 
 
-def _wpc_outlook_summary_lines(title: str, payload: Any) -> list[str]:
+def _wpc_outlook_summary_lines(
+    title: str,
+    payload: Any,
+    *,
+    max_items: int | None = None,
+) -> list[str]:
     lines = [title, ""]
     if not isinstance(payload, dict):
         return [title, "", "No structured data returned."]
@@ -380,7 +440,8 @@ def _wpc_outlook_summary_lines(title: str, payload: Any) -> list[str]:
     if not isinstance(outlooks, list) or not outlooks:
         return [title, "", "No matching outlooks were returned."]
 
-    for index, outlook in enumerate(outlooks, start=1):
+    visible_outlooks, omitted = _limited_items(outlooks, max_items)
+    for index, outlook in enumerate(visible_outlooks, start=1):
         if not isinstance(outlook, dict):
             continue
         lines.append(f"Outlook {index}:")
@@ -396,6 +457,7 @@ def _wpc_outlook_summary_lines(title: str, payload: Any) -> list[str]:
             if value not in (None, ""):
                 lines.append(f"{label}: {value}")
         lines.append("")
+    _append_omitted_count(lines, omitted)
     return lines
 
 
@@ -403,6 +465,7 @@ async def fetch_iem_wpc_mpds(
     latitude: float,
     longitude: float,
     *,
+    max_items: int | None = 5,
     client: httpx.AsyncClient | None = None,
     iem_base_url: str = DEFAULT_IEM_BASE_URL,
     timeout: float = 10.0,
@@ -414,7 +477,10 @@ async def fetch_iem_wpc_mpds(
     headers = {"User-Agent": user_agent}
 
     async def _run(http_client: httpx.AsyncClient) -> TextProduct:
-        response = await _client_get(http_client, url, params=params, headers=headers)
+        try:
+            response = await _client_get(http_client, url, params=params, headers=headers)
+        except (httpx.TimeoutException, httpx.TransportError, httpx.RequestError) as exc:
+            raise IemProductFetchError(f"IEM WPC MPD request failed: {exc}") from exc
         if response.status_code != 200:
             raise IemProductFetchError(f"IEM WPC MPD returned HTTP {response.status_code}")
         title = "WPC Mesoscale Precipitation Discussions"
@@ -423,7 +489,9 @@ async def fetch_iem_wpc_mpds(
             product_id="WPC_MPD",
             cwa_office="WPC",
             issuance_time=None,
-            product_text="\n".join(_wpc_mpd_summary_lines(title, response.json())),
+            product_text="\n".join(
+                _wpc_mpd_summary_lines(title, response.json(), max_items=max_items)
+            ),
             headline=title,
         )
 
@@ -433,7 +501,12 @@ async def fetch_iem_wpc_mpds(
         return await _run(new_client)
 
 
-def _wpc_mpd_summary_lines(title: str, payload: Any) -> list[str]:
+def _wpc_mpd_summary_lines(
+    title: str,
+    payload: Any,
+    *,
+    max_items: int | None = None,
+) -> list[str]:
     lines = [title, ""]
     if not isinstance(payload, dict):
         return [title, "", "No structured data returned."]
@@ -442,7 +515,8 @@ def _wpc_mpd_summary_lines(title: str, payload: Any) -> list[str]:
     if not isinstance(mpds, list) or not mpds:
         return [title, "", "No matching discussions were returned."]
 
-    for index, mpd in enumerate(mpds, start=1):
+    visible_mpds, omitted = _limited_items(mpds, max_items)
+    for index, mpd in enumerate(visible_mpds, start=1):
         if not isinstance(mpd, dict):
             continue
         lines.append(f"Discussion {index}:")
@@ -458,4 +532,5 @@ def _wpc_mpd_summary_lines(title: str, payload: Any) -> list[str]:
             if value not in (None, ""):
                 lines.append(f"{label}: {value}")
         lines.append("")
+    _append_omitted_count(lines, omitted)
     return lines

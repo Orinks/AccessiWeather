@@ -166,6 +166,34 @@ async def test_spc_mcd_returns_accessible_summary():
 
 
 @pytest.mark.asyncio
+async def test_spc_mcd_summary_can_limit_items():
+    client = _client(
+        _resp(
+            {
+                "mcds": [
+                    {"mdnum": 1, "concerning": "first"},
+                    {"mdnum": 2, "concerning": "second"},
+                    {"mdnum": 3, "concerning": "third"},
+                ]
+            }
+        )
+    )
+
+    result = await fetch_iem_spc_mcds(
+        42.0,
+        -95.0,
+        client=client,
+        iem_base_url=IEM_BASE,
+        max_items=2,
+    )
+
+    assert "first" in result.product_text
+    assert "second" in result.product_text
+    assert "third" not in result.product_text
+    assert "1 older matches omitted" in result.product_text
+
+
+@pytest.mark.asyncio
 async def test_spc_watches_returns_accessible_summary():
     client = _client(
         _resp(
@@ -186,7 +214,13 @@ async def test_spc_watches_returns_accessible_summary():
         )
     )
 
-    result = await fetch_iem_spc_watches(38.0, -77.0, client=client, iem_base_url=IEM_BASE)
+    result = await fetch_iem_spc_watches(
+        38.0,
+        -77.0,
+        client=client,
+        iem_base_url=IEM_BASE,
+        max_items=3,
+    )
 
     assert result.product_id == "SPC_WATCHES"
     assert "SPC Watches" in result.product_text
@@ -254,7 +288,13 @@ async def test_wpc_mpd_returns_accessible_summary():
         )
     )
 
-    result = await fetch_iem_wpc_mpds(38.907, -77.037, client=client, iem_base_url=IEM_BASE)
+    result = await fetch_iem_wpc_mpds(
+        38.907,
+        -77.037,
+        client=client,
+        iem_base_url=IEM_BASE,
+        max_items=3,
+    )
 
     assert result.product_id == "WPC_MPD"
     assert "WPC Mesoscale Precipitation Discussions" in result.product_text

@@ -52,7 +52,7 @@ class ForecastProductsDialog(wx.Dialog):
         TextProductTab("CLI", "Daily Climate Report", "nws_history", requires_cwa=True),
         TextProductTab("SPC_OUTLOOK", "SPC Outlook", "spc_outlook"),
         TextProductTab("SPC_MCD", "SPC MCD", "spc_mcd"),
-        TextProductTab("SPC_WATCHES", "SPC Watches", "spc_watches"),
+        TextProductTab("SPC_WATCHES", "SPC Watches", "spc_watches_current"),
         TextProductTab("WPC_ERO", "WPC ERO", "wpc_ero"),
         TextProductTab("WPC_MPD", "WPC MPD", "wpc_mpd"),
     )
@@ -172,25 +172,40 @@ class ForecastProductsDialog(wx.Dialog):
             if latitude is None or longitude is None:
                 return None
             if tab.loader_kind == "spc_outlook":
-                return await self._service.get_iem_spc_outlook(
-                    latitude,
-                    longitude,
-                    day=1,
-                    current=True,
+                return await self._service.get_iem_afos(
+                    "SWODY1",
+                    timeout=4.0,
                 )
             if tab.loader_kind == "spc_mcd":
-                return await self._service.get_iem_spc_mcds(latitude, longitude)
-            if tab.loader_kind == "spc_watches":
-                return await self._service.get_iem_spc_watches(latitude, longitude)
+                return await self._service.get_iem_spc_mcds(
+                    latitude,
+                    longitude,
+                    max_items=3,
+                    timeout=4.0,
+                )
+            if tab.loader_kind == "spc_watches_current":
+                return await self._service.get_iem_spc_watches(
+                    latitude,
+                    longitude,
+                    max_items=3,
+                    timeout=4.0,
+                )
             if tab.loader_kind == "wpc_ero":
                 return await self._service.get_iem_wpc_outlook(
                     latitude,
                     longitude,
                     day=1,
                     limit=1,
+                    max_items=3,
+                    timeout=4.0,
                 )
             if tab.loader_kind == "wpc_mpd":
-                return await self._service.get_iem_wpc_mpds(latitude, longitude)
+                return await self._service.get_iem_wpc_mpds(
+                    latitude,
+                    longitude,
+                    max_items=3,
+                    timeout=4.0,
+                )
             return None
 
         return _loader

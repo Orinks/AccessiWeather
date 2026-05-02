@@ -330,10 +330,10 @@ class TestForecastProductsDialog:
 
         service = MagicMock(name="ForecastProductService")
 
-        async def _fake_spc_outlook(lat, lon, **kwargs):
-            return SimpleNamespace(product_type="SPC_OUTLOOK", lat=lat, lon=lon, kwargs=kwargs)
+        async def _fake_iem_afos(product_id, **kwargs):
+            return SimpleNamespace(product_type=product_id, kwargs=kwargs)
 
-        service.get_iem_spc_outlook.side_effect = _fake_spc_outlook
+        service.get_iem_afos.side_effect = _fake_iem_afos
 
         ForecastProductsDialog(
             parent=MagicMock(),
@@ -345,10 +345,8 @@ class TestForecastProductsDialog:
         spc_entry = next(entry for entry in panel_factory if entry["product_type"] == "SPC_OUTLOOK")
         result = asyncio.run(spc_entry["product_loader"]())
 
-        assert result.product_type == "SPC_OUTLOOK"
-        assert result.lat == 35.78
-        assert result.lon == -78.64
-        assert result.kwargs == {"day": 1, "current": True}
+        assert result.product_type == "SWODY1"
+        assert result.kwargs == {"timeout": 4.0}
 
     def test_dialog_passes_advanced_lookup_opener_to_panels(
         self, notebook_factory, panel_factory, sample_us_location

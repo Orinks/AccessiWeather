@@ -22,6 +22,7 @@ from typing import Any, Literal
 
 from ..cache import Cache
 from ..iem_client import (
+    IemProductFetchError,
     fetch_iem_afos_text,
     fetch_iem_spc_mcds,
     fetch_iem_spc_outlook,
@@ -97,6 +98,11 @@ class ForecastProductService:
         start_key = start.isoformat() if start is not None else ""
         end_key = end.isoformat() if end is not None else ""
         return f"nws_text_product_history:{product_type}:{cwa_office}:{limit}:{start_key}:{end_key}"
+
+    @staticmethod
+    def _iem_cache_key(product_type: str, *parts: object) -> str:
+        joined = ":".join(str(part) for part in parts)
+        return f"iem_text_product:{product_type}:{joined}"
 
     async def get(
         self,
@@ -178,13 +184,46 @@ class ForecastProductService:
         *,
         day: int = 1,
         current: bool = True,
+        max_items: int | None = 5,
+        timeout: float = 10.0,
     ) -> TextProduct:
         """Fetch a structured IEM SPC convective outlook summary."""
-        return await fetch_iem_spc_outlook(latitude, longitude, day=day, current=current)
+        key = self._iem_cache_key("SPC_OUTLOOK", latitude, longitude, day, current, max_items)
+        cached = self._cache.get(key)
+        if isinstance(cached, TextProduct):
+            return cached
+        try:
+            result = await fetch_iem_spc_outlook(
+                latitude,
+                longitude,
+                day=day,
+                current=current,
+                max_items=max_items,
+                timeout=timeout,
+            )
+        except IemProductFetchError:
+            if day != 1 or not current:
+                raise
+            result = await fetch_iem_afos_text("SWODY1", timeout=timeout)
+        self._cache.set(key, result, ttl=self._TTLS.get("SPS", 900))
+        return result
 
-    async def get_iem_spc_mcds(self, latitude: float, longitude: float) -> TextProduct:
+    async def get_iem_spc_mcds(
+        self,
+        latitude: float,
+        longitude: float,
+        *,
+        max_items: int | None = 5,
+        timeout: float = 10.0,
+    ) -> TextProduct:
         """Fetch structured IEM SPC mesoscale discussion summaries."""
-        return await fetch_iem_spc_mcds(latitude, longitude)
+        key = self._iem_cache_key("SPC_MCD", latitude, longitude, max_items)
+        cached = self._cache.get(key)
+        if isinstance(cached, TextProduct):
+            return cached
+        result = await fetch_iem_spc_mcds(latitude, longitude, max_items=max_items, timeout=timeout)
+        self._cache.set(key, result, ttl=self._TTLS.get("SPS", 900))
+        return result
 
     async def get_iem_spc_watches(
         self,
@@ -192,9 +231,24 @@ class ForecastProductService:
         longitude: float,
         *,
         valid_at: datetime | None = None,
+        max_items: int | None = 5,
+        timeout: float = 10.0,
     ) -> TextProduct:
         """Fetch structured IEM SPC watch summaries."""
-        return await fetch_iem_spc_watches(latitude, longitude, valid_at=valid_at)
+        valid_key = valid_at.isoformat() if valid_at is not None else "latest"
+        key = self._iem_cache_key("SPC_WATCHES", latitude, longitude, valid_key, max_items)
+        cached = self._cache.get(key)
+        if isinstance(cached, TextProduct):
+            return cached
+        result = await fetch_iem_spc_watches(
+            latitude,
+            longitude,
+            valid_at=valid_at,
+            max_items=max_items,
+            timeout=timeout,
+        )
+        self._cache.set(key, result, ttl=self._TTLS.get("SPS", 900))
+        return result
 
     async def get_iem_wpc_outlook(
         self,
@@ -204,16 +258,40 @@ class ForecastProductService:
         day: int = 1,
         valid_at: datetime | None = None,
         limit: int = 1,
+        max_items: int | None = 5,
+        timeout: float = 10.0,
     ) -> TextProduct:
         """Fetch a structured IEM WPC excessive rainfall outlook summary."""
-        return await fetch_iem_wpc_outlook(
+        valid_key = valid_at.isoformat() if valid_at is not None else "latest"
+        key = self._iem_cache_key("WPC_ERO", latitude, longitude, day, valid_key, limit, max_items)
+        cached = self._cache.get(key)
+        if isinstance(cached, TextProduct):
+            return cached
+        result = await fetch_iem_wpc_outlook(
             latitude,
             longitude,
             day=day,
             valid_at=valid_at,
             limit=limit,
+            max_items=max_items,
+            timeout=timeout,
         )
+        self._cache.set(key, result, ttl=self._TTLS.get("SPS", 900))
+        return result
 
-    async def get_iem_wpc_mpds(self, latitude: float, longitude: float) -> TextProduct:
+    async def get_iem_wpc_mpds(
+        self,
+        latitude: float,
+        longitude: float,
+        *,
+        max_items: int | None = 5,
+        timeout: float = 10.0,
+    ) -> TextProduct:
         """Fetch structured IEM WPC mesoscale precipitation discussion summaries."""
-        return await fetch_iem_wpc_mpds(latitude, longitude)
+        key = self._iem_cache_key("WPC_MPD", latitude, longitude, max_items)
+        cached = self._cache.get(key)
+        if isinstance(cached, TextProduct):
+            return cached
+        result = await fetch_iem_wpc_mpds(latitude, longitude, max_items=max_items, timeout=timeout)
+        self._cache.set(key, result, ttl=self._TTLS.get("SPS", 900))
+        return result
