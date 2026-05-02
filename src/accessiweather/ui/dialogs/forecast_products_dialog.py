@@ -50,11 +50,19 @@ class ForecastProductsDialog(wx.Dialog):
         TextProductTab("LSR", "Local Storm Report", "nws_history", requires_cwa=True),
         TextProductTab("PNS", "Public Information Statement", "nws_history", requires_cwa=True),
         TextProductTab("CLI", "Daily Climate Report", "nws_history", requires_cwa=True),
-        TextProductTab("SPC_OUTLOOK", "SPC Outlook", "spc_outlook"),
-        TextProductTab("SPC_MCD", "SPC MCD", "spc_mcd"),
-        TextProductTab("SPC_WATCHES", "SPC Watches", "spc_watches_current"),
-        TextProductTab("WPC_ERO", "WPC ERO", "wpc_ero"),
-        TextProductTab("WPC_MPD", "WPC MPD", "wpc_mpd"),
+        TextProductTab("SPC_OUTLOOK", "SPC Outlook (Storm Prediction Center)", "spc_outlook"),
+        TextProductTab("SPC_MCD", "SPC MCD (Mesoscale Discussion)", "spc_mcd"),
+        TextProductTab(
+            "SPC_WATCHES",
+            "SPC Watches (Storm Prediction Center)",
+            "spc_watches_current",
+        ),
+        TextProductTab("WPC_ERO", "WPC ERO (Excessive Rainfall Outlook)", "wpc_ero"),
+        TextProductTab(
+            "WPC_MPD",
+            "WPC MPD (Mesoscale Precipitation Discussion)",
+            "wpc_mpd",
+        ),
     )
 
     def __init__(

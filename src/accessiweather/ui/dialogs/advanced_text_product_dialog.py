@@ -35,26 +35,26 @@ _PRODUCT_PRESETS: dict[str, str] = {
     "Monthly Climate Report": "CF6",
     "Record Event Report": "RER",
     "Public Information Statement": "PNS",
-    "SPC Day 1 Outlook": "SPC Day 1 Outlook",
-    "SPC Day 2 Outlook": "SPC Day 2 Outlook",
-    "SPC Day 3 Outlook": "SPC Day 3 Outlook",
-    "SPC Day 4 Outlook": "SPC Day 4 Outlook",
-    "SPC Day 5 Outlook": "SPC Day 5 Outlook",
-    "SPC Day 6 Outlook": "SPC Day 6 Outlook",
-    "SPC Day 7 Outlook": "SPC Day 7 Outlook",
-    "SPC Day 8 Outlook": "SPC Day 8 Outlook",
-    "SPC Mesoscale Discussions near location": "SPC MCD",
-    "SPC Watches near location": "SPC Watches",
-    "WPC Day 1 Excessive Rainfall Outlook": "WPC Day 1 Excessive Rainfall Outlook",
-    "WPC Day 2 Excessive Rainfall Outlook": "WPC Day 2 Excessive Rainfall Outlook",
-    "WPC Day 3 Excessive Rainfall Outlook": "WPC Day 3 Excessive Rainfall Outlook",
-    "WPC Mesoscale Precipitation Discussions near location": "WPC MPD",
-    "WPC Short Range Discussion": "PMDSPD",
-    "WPC Extended Discussion": "PMDEPD",
-    "WPC Quantitative Precipitation Discussion": "QPFPFD",
-    "SPC Day 1 AFOS Outlook": "SWODY1",
-    "SPC Day 2 AFOS Outlook": "SWODY2",
-    "SPC Day 3 AFOS Outlook": "SWODY3",
+    "SPC Day 1 Outlook (Storm Prediction Center)": "SPC Day 1 Outlook",
+    "SPC Day 2 Outlook (Storm Prediction Center)": "SPC Day 2 Outlook",
+    "SPC Day 3 Outlook (Storm Prediction Center)": "SPC Day 3 Outlook",
+    "SPC Day 4 Outlook (Storm Prediction Center)": "SPC Day 4 Outlook",
+    "SPC Day 5 Outlook (Storm Prediction Center)": "SPC Day 5 Outlook",
+    "SPC Day 6 Outlook (Storm Prediction Center)": "SPC Day 6 Outlook",
+    "SPC Day 7 Outlook (Storm Prediction Center)": "SPC Day 7 Outlook",
+    "SPC Day 8 Outlook (Storm Prediction Center)": "SPC Day 8 Outlook",
+    "SPC MCD (Mesoscale Discussions) near location": "SPC MCD",
+    "SPC Watches (Storm Prediction Center) near location": "SPC Watches",
+    "WPC Day 1 ERO (Excessive Rainfall Outlook)": "WPC Day 1 Excessive Rainfall Outlook",
+    "WPC Day 2 ERO (Excessive Rainfall Outlook)": "WPC Day 2 Excessive Rainfall Outlook",
+    "WPC Day 3 ERO (Excessive Rainfall Outlook)": "WPC Day 3 Excessive Rainfall Outlook",
+    "WPC MPD (Mesoscale Precipitation Discussion) near location": "WPC MPD",
+    "WPC Short Range Discussion (Weather Prediction Center)": "PMDSPD",
+    "WPC Extended Discussion (Weather Prediction Center)": "PMDEPD",
+    "WPC Quantitative Precipitation Discussion (Weather Prediction Center)": "QPFPFD",
+    "SPC Day 1 AFOS Outlook (Storm Prediction Center)": "SWODY1",
+    "SPC Day 2 AFOS Outlook (Storm Prediction Center)": "SWODY2",
+    "SPC Day 3 AFOS Outlook (Storm Prediction Center)": "SWODY3",
 }
 _LEFT = getattr(wx, "LEFT", wx.ALL)
 _RIGHT = getattr(wx, "RIGHT", wx.ALL)
@@ -104,7 +104,9 @@ class AdvancedTextProductDialog(wx.Dialog):
         self.product_label = wx.StaticText(
             self,
             label=(
-                "Product ID or structured product (examples: AFD, HWO, SWODY1, SPC MCD, WPC MPD):"
+                "Product ID or structured product (examples: AFD, HWO, SWODY1, "
+                "SPC MCD (Mesoscale Discussion), "
+                "WPC MPD (Mesoscale Precipitation Discussion)):"
             ),
         )
         main_sizer.Add(self.product_label, 0, _LEFT | _RIGHT | _TOP | wx.EXPAND, 8)
@@ -293,7 +295,10 @@ class AdvancedTextProductDialog(wx.Dialog):
         lat = getattr(self._location, "latitude", None)
         lon = getattr(self._location, "longitude", None)
         if lat is None or lon is None:
-            return "SPC MCD lookup needs a location with latitude and longitude."
+            return (
+                "SPC MCD (Mesoscale Discussion) lookup needs a location with "
+                "latitude and longitude."
+            )
         product = await self._service.get_iem_spc_mcds(lat, lon)
         return self._format_products("IEM", product)
 
@@ -328,7 +333,10 @@ class AdvancedTextProductDialog(wx.Dialog):
         lat = getattr(self._location, "latitude", None)
         lon = getattr(self._location, "longitude", None)
         if lat is None or lon is None:
-            return "WPC MPD lookup needs a location with latitude and longitude."
+            return (
+                "WPC MPD (Mesoscale Precipitation Discussion) lookup needs a location "
+                "with latitude and longitude."
+            )
         product = await self._service.get_iem_wpc_mpds(lat, lon)
         return self._format_products("IEM", product)
 

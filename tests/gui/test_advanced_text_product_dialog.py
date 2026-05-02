@@ -171,7 +171,9 @@ def test_product_preset_updates_product_input():
         forecast_product_service=service,
         initial_product_type="AFD",
     )
-    dlg.product_preset_choice.GetStringSelection.return_value = "WPC MPD near location"
+    dlg.product_preset_choice.GetStringSelection.return_value = (
+        "WPC MPD (Mesoscale Precipitation Discussion) near location"
+    )
 
     dlg._on_product_preset(MagicMock())
 
