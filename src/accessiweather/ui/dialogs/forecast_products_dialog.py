@@ -11,14 +11,16 @@ accessible notebook contract.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Literal, cast
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import wx
 
 from .advanced_text_product_dialog import show_advanced_text_product_dialog
 from .forecast_product_panel import ForecastProductPanel
 
-ProductType = Literal["AFD", "HWO", "SPS"]
+ProductLoader = Callable[[], Awaitable[object]]
 
 if TYPE_CHECKING:
     from ...ai_explainer import AIExplainer
@@ -28,13 +30,31 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True)
+class TextProductTab:
+    """Configuration for a Forecaster Notes product tab."""
+
+    product_type: str
+    label: str
+    loader_kind: str
+    requires_cwa: bool = False
+
+
 class ForecastProductsDialog(wx.Dialog):
     """Tabbed dialog showing available NWS AFD, HWO, and SPS products."""
 
-    _TABS: tuple[tuple[str, str], ...] = (
-        ("AFD", "Area Forecast Discussion"),
-        ("HWO", "Hazardous Weather Outlook"),
-        ("SPS", "Special Weather Statement"),
+    _TABS: tuple[TextProductTab, ...] = (
+        TextProductTab("AFD", "Area Forecast Discussion", "current", requires_cwa=True),
+        TextProductTab("HWO", "Hazardous Weather Outlook", "current", requires_cwa=True),
+        TextProductTab("SPS", "Special Weather Statement", "current", requires_cwa=True),
+        TextProductTab("LSR", "Local Storm Report", "nws_history", requires_cwa=True),
+        TextProductTab("PNS", "Public Information Statement", "nws_history", requires_cwa=True),
+        TextProductTab("CLI", "Daily Climate Report", "nws_history", requires_cwa=True),
+        TextProductTab("SPC_OUTLOOK", "SPC Outlook", "spc_outlook"),
+        TextProductTab("SPC_MCD", "SPC MCD", "spc_mcd"),
+        TextProductTab("SPC_WATCHES", "SPC Watches", "spc_watches"),
+        TextProductTab("WPC_ERO", "WPC ERO", "wpc_ero"),
+        TextProductTab("WPC_MPD", "WPC MPD", "wpc_mpd"),
     )
 
     def __init__(
@@ -89,21 +109,23 @@ class ForecastProductsDialog(wx.Dialog):
         cwa_office = getattr(self._location, "cwa_office", None)
         location_name = getattr(self._location, "name", "")
 
-        for product_type, tab_label in self._TABS:
-            typed_product_type = cast("ProductType", product_type)
-            loader = self._make_loader(typed_product_type)
+        for tab in self._TABS:
+            is_first_tab = len(self.panels) == 0
+            loader = self._make_loader(tab)
+            panel_cwa = cwa_office if tab.requires_cwa else "IEM"
             panel = ForecastProductPanel(
                 parent=self.notebook,
-                product_type=typed_product_type,
+                product_type=tab.product_type,
                 product_loader=loader,
                 ai_explainer=self._ai_explainer,
-                cwa_office=cwa_office,
+                cwa_office=panel_cwa,
                 location_name=location_name,
                 app=self._app,
                 availability_callback=self._on_panel_availability_resolved,
-                advanced_lookup_opener=self._make_advanced_lookup_opener(typed_product_type),
+                advanced_lookup_opener=self._make_advanced_lookup_opener(tab.product_type),
+                autoload=is_first_tab,
             )
-            self.notebook.AddPage(panel, tab_label)
+            self.notebook.AddPage(panel, tab.label)
             self.panels.append(panel)
 
         main_sizer.Add(self.notebook, 1, wx.ALL | wx.EXPAND, 8)
@@ -128,23 +150,52 @@ class ForecastProductsDialog(wx.Dialog):
         level" contract. The user moves into content themselves with Tab.
         """
         self.close_button.Bind(wx.EVT_BUTTON, self._on_close)
+        self.notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self._on_page_changed)
         self.Bind(wx.EVT_CHAR_HOOK, self._on_key)
 
     # ------------------------------------------------------------------
     # Loader wiring
     # ------------------------------------------------------------------
-    def _make_loader(self, product_type: ProductType):
-        """Bind a zero-arg loader for ``product_type`` against the service."""
+    def _make_loader(self, tab: TextProductTab) -> ProductLoader:
+        """Bind a zero-arg loader for a configured product tab."""
         cwa_office = getattr(self._location, "cwa_office", None)
+        latitude = getattr(self._location, "latitude", None)
+        longitude = getattr(self._location, "longitude", None)
 
         async def _loader():
-            if cwa_office is None:
+            if tab.requires_cwa and cwa_office is None:
                 return None
-            return await self._service.get(product_type, cwa_office)
+            if tab.loader_kind == "current":
+                return await self._service.get(tab.product_type, cwa_office)
+            if tab.loader_kind == "nws_history":
+                return await self._service.get_history(tab.product_type, cwa_office, limit=1)
+            if latitude is None or longitude is None:
+                return None
+            if tab.loader_kind == "spc_outlook":
+                return await self._service.get_iem_spc_outlook(
+                    latitude,
+                    longitude,
+                    day=1,
+                    current=True,
+                )
+            if tab.loader_kind == "spc_mcd":
+                return await self._service.get_iem_spc_mcds(latitude, longitude)
+            if tab.loader_kind == "spc_watches":
+                return await self._service.get_iem_spc_watches(latitude, longitude)
+            if tab.loader_kind == "wpc_ero":
+                return await self._service.get_iem_wpc_outlook(
+                    latitude,
+                    longitude,
+                    day=1,
+                    limit=1,
+                )
+            if tab.loader_kind == "wpc_mpd":
+                return await self._service.get_iem_wpc_mpds(latitude, longitude)
+            return None
 
         return _loader
 
-    def _make_advanced_lookup_opener(self, product_type: ProductType):
+    def _make_advanced_lookup_opener(self, product_type: str):
         """Bind an advanced lookup opener for ``product_type``."""
 
         def _open() -> None:
@@ -197,6 +248,13 @@ class ForecastProductsDialog(wx.Dialog):
     # ------------------------------------------------------------------
     # Key events
     # ------------------------------------------------------------------
+    def _on_page_changed(self, event) -> None:
+        """Lazy-load supplemental tabs when the user selects them."""
+        selection = self.notebook.GetSelection()
+        if 0 <= selection < len(self.panels):
+            self.panels[selection].ensure_loaded()
+        event.Skip()
+
     def _on_key(self, event) -> None:
         """ESC closes the dialog."""
         if event.GetKeyCode() == wx.WXK_ESCAPE:

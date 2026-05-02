@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Awaitable, Callable
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, cast
 
 import wx
 
@@ -43,7 +43,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-ProductType = Literal["AFD", "HWO", "SPS"]
+ProductType = str
 
 ProductLoader = Callable[[], Awaitable["TextProduct | list[TextProduct] | None"]]
 AvailabilityCallback = Callable[["ForecastProductPanel", bool], None]
@@ -64,6 +64,7 @@ class ForecastProductPanel(wx.Panel):
         app: object | None = None,
         availability_callback: AvailabilityCallback | None = None,
         advanced_lookup_opener: AdvancedLookupOpener | None = None,
+        autoload: bool = True,
     ) -> None:
         """
         Build the panel widgets.
@@ -88,6 +89,9 @@ class ForecastProductPanel(wx.Panel):
                 dialog keeps the retry surface visible.
             advanced_lookup_opener: Optional callback for opening the advanced
                 text-product lookup dialog with this tab's product prefilled.
+            autoload: When true, load immediately after construction. When
+                false, the parent dialog calls ``ensure_loaded`` when the tab is
+                selected.
 
         """
         super().__init__(parent)
@@ -106,11 +110,19 @@ class ForecastProductPanel(wx.Panel):
         self._sps_products: list[TextProduct] = []
         self._is_loading = False
         self._is_explaining = False
+        self._load_started = False
 
         self._create_widgets()
         self._bind_events()
 
-        # Kick off initial load.
+        if autoload:
+            self.ensure_loaded()
+
+    def ensure_loaded(self) -> None:
+        """Load this panel once, on construction or first tab selection."""
+        if self._load_started:
+            return
+        self._load_started = True
         self._trigger_load()
 
     # ------------------------------------------------------------------
@@ -284,7 +296,10 @@ class ForecastProductPanel(wx.Panel):
 
     def _render_empty_state(self) -> None:
         """Render the 'no product available' state."""
-        template = _EMPTY_COPY[self.product_type]
+        template = _EMPTY_COPY.get(
+            self.product_type,
+            f"{self.product_type} not currently available for {{cwa_office}}.",
+        )
         self.product_textctrl.SetValue(template.format(cwa_office=self._cwa_office))
         self.issuance_label.SetLabel("")
         self._show_sps_chooser(False)

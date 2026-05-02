@@ -199,6 +199,7 @@ def panel_factory():
             self.kwargs = kwargs
             self.product_type = kwargs.get("product_type")
             self.product_textctrl = MagicMock(name="TextCtrl")
+            self.ensure_loaded = MagicMock(name=f"ensure_loaded_{self.product_type}")
             created.append({"product_type": self.product_type, "instance": self, **kwargs})
 
     # The dialog imports ForecastProductPanel directly from the module;
@@ -227,7 +228,9 @@ def sample_us_location():
 # Dialog-level tests
 # ---------------------------------------------------------------------------
 class TestForecastProductsDialog:
-    def test_dialog_builds_three_tabs(self, notebook_factory, panel_factory, sample_us_location):
+    def test_dialog_builds_location_relevant_text_product_tabs(
+        self, notebook_factory, panel_factory, sample_us_location
+    ):
         service = MagicMock(name="ForecastProductService")
         ai = MagicMock(name="AIExplainer")
 
@@ -238,16 +241,29 @@ class TestForecastProductsDialog:
             ai_explainer=ai,
         )
 
-        # Three panels, one per product type, in plan-specified order.
         types = [entry["product_type"] for entry in panel_factory]
-        assert types == ["AFD", "HWO", "SPS"]
-        assert len(dlg.panels) == 3
+        assert types == [
+            "AFD",
+            "HWO",
+            "SPS",
+            "LSR",
+            "PNS",
+            "CLI",
+            "SPC_OUTLOOK",
+            "SPC_MCD",
+            "SPC_WATCHES",
+            "WPC_ERO",
+            "WPC_MPD",
+        ]
+        assert len(dlg.panels) == 11
 
         # Each panel got wired to the same service + explainer.
         for entry in panel_factory:
             assert entry["ai_explainer"] is ai
             assert entry["cwa_office"] == "RAH"
             assert entry["location_name"] == "Raleigh, NC"
+        assert panel_factory[0]["autoload"] is True
+        assert all(entry["autoload"] is False for entry in panel_factory[1:])
 
     def test_loader_invokes_service_get(self, notebook_factory, panel_factory, sample_us_location):
         """Each panel's bound loader calls service.get(product_type, cwa_office)."""
@@ -267,7 +283,7 @@ class TestForecastProductsDialog:
             ai_explainer=None,
         )
 
-        loaders = [entry["product_loader"] for entry in panel_factory]
+        loaders = [entry["product_loader"] for entry in panel_factory[:3]]
         assert len(loaders) == 3
         # Each loader resolves to the correct product type.
         loop = asyncio.new_event_loop()
@@ -278,6 +294,61 @@ class TestForecastProductsDialog:
                 assert result.cwa == "RAH"
         finally:
             loop.close()
+
+    def test_loader_invokes_service_history_for_extra_local_products(
+        self, notebook_factory, panel_factory, sample_us_location
+    ):
+        """Extra local tabs use official NWS product history."""
+        import asyncio
+
+        service = MagicMock(name="ForecastProductService")
+
+        async def _fake_history(product_type, cwa_office, **kwargs):
+            return [SimpleNamespace(product_type=product_type, cwa=cwa_office, kwargs=kwargs)]
+
+        service.get_history.side_effect = _fake_history
+
+        ForecastProductsDialog(
+            parent=MagicMock(),
+            location=sample_us_location,
+            forecast_product_service=service,
+            ai_explainer=None,
+        )
+
+        lsr_entry = next(entry for entry in panel_factory if entry["product_type"] == "LSR")
+        result = asyncio.run(lsr_entry["product_loader"]())
+
+        assert result[0].product_type == "LSR"
+        assert result[0].cwa == "RAH"
+        assert result[0].kwargs == {"limit": 1}
+
+    def test_loader_invokes_iem_for_point_based_tabs(
+        self, notebook_factory, panel_factory, sample_us_location
+    ):
+        """Point-based national tabs use IEM structured service helpers."""
+        import asyncio
+
+        service = MagicMock(name="ForecastProductService")
+
+        async def _fake_spc_outlook(lat, lon, **kwargs):
+            return SimpleNamespace(product_type="SPC_OUTLOOK", lat=lat, lon=lon, kwargs=kwargs)
+
+        service.get_iem_spc_outlook.side_effect = _fake_spc_outlook
+
+        ForecastProductsDialog(
+            parent=MagicMock(),
+            location=sample_us_location,
+            forecast_product_service=service,
+            ai_explainer=None,
+        )
+
+        spc_entry = next(entry for entry in panel_factory if entry["product_type"] == "SPC_OUTLOOK")
+        result = asyncio.run(spc_entry["product_loader"]())
+
+        assert result.product_type == "SPC_OUTLOOK"
+        assert result.lat == 35.78
+        assert result.lon == -78.64
+        assert result.kwargs == {"day": 1, "current": True}
 
     def test_dialog_passes_advanced_lookup_opener_to_panels(
         self, notebook_factory, panel_factory, sample_us_location
@@ -292,7 +363,7 @@ class TestForecastProductsDialog:
         )
 
         openers = [entry["advanced_lookup_opener"] for entry in panel_factory]
-        assert len(openers) == 3
+        assert len(openers) == 11
         for opener in openers:
             assert callable(opener)
 
@@ -308,6 +379,24 @@ class TestForecastProductsDialog:
             initial_product_type="AFD",
             app=None,
         )
+
+    def test_page_change_lazy_loads_selected_tab(
+        self, notebook_factory, panel_factory, sample_us_location
+    ):
+        service = MagicMock(name="ForecastProductService")
+        dlg = ForecastProductsDialog(
+            parent=MagicMock(),
+            location=sample_us_location,
+            forecast_product_service=service,
+            ai_explainer=None,
+        )
+        notebook_factory["instance"].GetSelection.return_value = 4
+        event = MagicMock()
+
+        dlg._on_page_changed(event)
+
+        panel_factory[4]["instance"].ensure_loaded.assert_called_once()
+        event.Skip.assert_called_once()
 
     def test_page_change_does_not_steal_focus(
         self, notebook_factory, panel_factory, sample_us_location

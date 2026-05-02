@@ -13,7 +13,7 @@ def create_product_panel_widgets(panel: Any) -> None:
     """Construct and attach the widgets used by a ForecastProductPanel."""
     main_sizer = wx.BoxSizer(wx.VERTICAL)
 
-    full_name = PRODUCT_FULL_NAMES[panel.product_type]
+    full_name = PRODUCT_FULL_NAMES.get(panel.product_type, panel.product_type)
     panel.header_label = wx.StaticText(panel, label=full_name)
     main_sizer.Add(panel.header_label, 0, wx.ALL | wx.EXPAND, 8)
 
