@@ -59,6 +59,10 @@ def _clean_iem_text(value: str) -> str:
     return "".join(char for char in value if char in "\n\r\t" or ord(char) >= 32).strip()
 
 
+def _format_iem_compact_datetime(value: datetime) -> str:
+    return value.astimezone(UTC).strftime("%Y%m%d%H%M")
+
+
 async def fetch_iem_afos_text(
     pil: str,
     *,
@@ -246,3 +250,212 @@ async def fetch_iem_spc_mcds(
         return await _run(client)
     async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
         return await _run(new_client)
+
+
+async def fetch_iem_spc_watches(
+    latitude: float,
+    longitude: float,
+    *,
+    valid_at: datetime | None = None,
+    client: httpx.AsyncClient | None = None,
+    iem_base_url: str = DEFAULT_IEM_BASE_URL,
+    timeout: float = 10.0,
+    user_agent: str = DEFAULT_USER_AGENT,
+) -> TextProduct:
+    """Fetch and summarize IEM SPC watches for a point."""
+    params: dict[str, Any] = {"lat": latitude, "lon": longitude}
+    if valid_at is not None:
+        params["ts"] = _format_iem_compact_datetime(valid_at)
+    url = f"{iem_base_url}/json/spcwatch.py"
+    headers = {"User-Agent": user_agent}
+
+    async def _run(http_client: httpx.AsyncClient) -> TextProduct:
+        response = await _client_get(http_client, url, params=params, headers=headers)
+        if response.status_code != 200:
+            raise IemProductFetchError(f"IEM SPC watches returned HTTP {response.status_code}")
+        title = "SPC Watches"
+        return TextProduct(
+            product_type="SPC_WATCHES",
+            product_id="SPC_WATCHES",
+            cwa_office="SPC",
+            issuance_time=None,
+            product_text="\n".join(_spc_watch_summary_lines(title, response.json())),
+            headline=title,
+        )
+
+    if client is not None:
+        return await _run(client)
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+        return await _run(new_client)
+
+
+def _spc_watch_summary_lines(title: str, payload: Any) -> list[str]:
+    lines = [title, ""]
+    if not isinstance(payload, dict):
+        return [title, "", "No structured data returned."]
+
+    features = payload.get("features")
+    if not isinstance(features, list) or not features:
+        return [title, "", "No matching watches were returned."]
+
+    for index, feature in enumerate(features, start=1):
+        props = feature.get("properties") if isinstance(feature, dict) else None
+        if not isinstance(props, dict):
+            continue
+        lines.append(f"Watch {index}:")
+        for label, key in (
+            ("SEL", "sel"),
+            ("Type", "type"),
+            ("Number", "number"),
+            ("Issued", "issue"),
+            ("Expires", "expire"),
+            ("PDS", "is_pds"),
+            ("Max hail size", "max_hail_size"),
+            ("Max wind gust knots", "max_wind_gust_knots"),
+        ):
+            value = props.get(key)
+            if value not in (None, ""):
+                lines.append(f"{label}: {value}")
+        lines.append("")
+    return lines
+
+
+async def fetch_iem_wpc_outlook(
+    latitude: float,
+    longitude: float,
+    *,
+    day: int = 1,
+    valid_at: datetime | None = None,
+    limit: int = 1,
+    client: httpx.AsyncClient | None = None,
+    iem_base_url: str = DEFAULT_IEM_BASE_URL,
+    timeout: float = 10.0,
+    user_agent: str = DEFAULT_USER_AGENT,
+) -> TextProduct:
+    """Fetch and summarize IEM WPC excessive rainfall outlooks for a point."""
+    day = min(8, max(1, int(day)))
+    params: dict[str, Any] = {
+        "lat": latitude,
+        "lon": longitude,
+        "day": day,
+        "fmt": "json",
+        "last": max(1, int(limit)),
+    }
+    if valid_at is not None:
+        params["time"] = _format_iem_datetime(valid_at)
+    url = f"{iem_base_url}/json/wpcoutlook.py"
+    headers = {"User-Agent": user_agent}
+
+    async def _run(http_client: httpx.AsyncClient) -> TextProduct:
+        response = await _client_get(http_client, url, params=params, headers=headers)
+        if response.status_code != 200:
+            raise IemProductFetchError(f"IEM WPC outlook returned HTTP {response.status_code}")
+        data = response.json()
+        title = f"WPC Day {day} Excessive Rainfall Outlook"
+        issued = data.get("generated_at") if isinstance(data, dict) else None
+        return TextProduct(
+            product_type="WPC_ERO",
+            product_id=f"WPC_ERO_DAY{day}",
+            cwa_office="WPC",
+            issuance_time=_parse_datetime(issued),
+            product_text="\n".join(_wpc_outlook_summary_lines(title, data)),
+            headline=title,
+        )
+
+    if client is not None:
+        return await _run(client)
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+        return await _run(new_client)
+
+
+def _wpc_outlook_summary_lines(title: str, payload: Any) -> list[str]:
+    lines = [title, ""]
+    if not isinstance(payload, dict):
+        return [title, "", "No structured data returned."]
+    generated = payload.get("generated_at") or payload.get("generated")
+    if generated:
+        lines.extend([f"Generated: {generated}", ""])
+
+    outlooks = payload.get("outlooks")
+    if not isinstance(outlooks, list) or not outlooks:
+        return [title, "", "No matching outlooks were returned."]
+
+    for index, outlook in enumerate(outlooks, start=1):
+        if not isinstance(outlook, dict):
+            continue
+        lines.append(f"Outlook {index}:")
+        for label, key in (
+            ("Day", "day"),
+            ("Category", "category"),
+            ("Threshold", "threshold"),
+            ("Product issued", "utc_product_issue"),
+            ("Valid begins", "utc_issue"),
+            ("Valid expires", "utc_expire"),
+        ):
+            value = outlook.get(key)
+            if value not in (None, ""):
+                lines.append(f"{label}: {value}")
+        lines.append("")
+    return lines
+
+
+async def fetch_iem_wpc_mpds(
+    latitude: float,
+    longitude: float,
+    *,
+    client: httpx.AsyncClient | None = None,
+    iem_base_url: str = DEFAULT_IEM_BASE_URL,
+    timeout: float = 10.0,
+    user_agent: str = DEFAULT_USER_AGENT,
+) -> TextProduct:
+    """Fetch and summarize IEM WPC mesoscale precipitation discussions for a point."""
+    params = {"lat": latitude, "lon": longitude, "fmt": "json"}
+    url = f"{iem_base_url}/json/wpcmpd.py"
+    headers = {"User-Agent": user_agent}
+
+    async def _run(http_client: httpx.AsyncClient) -> TextProduct:
+        response = await _client_get(http_client, url, params=params, headers=headers)
+        if response.status_code != 200:
+            raise IemProductFetchError(f"IEM WPC MPD returned HTTP {response.status_code}")
+        title = "WPC Mesoscale Precipitation Discussions"
+        return TextProduct(
+            product_type="WPC_MPD",
+            product_id="WPC_MPD",
+            cwa_office="WPC",
+            issuance_time=None,
+            product_text="\n".join(_wpc_mpd_summary_lines(title, response.json())),
+            headline=title,
+        )
+
+    if client is not None:
+        return await _run(client)
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+        return await _run(new_client)
+
+
+def _wpc_mpd_summary_lines(title: str, payload: Any) -> list[str]:
+    lines = [title, ""]
+    if not isinstance(payload, dict):
+        return [title, "", "No structured data returned."]
+
+    mpds = payload.get("mpds")
+    if not isinstance(mpds, list) or not mpds:
+        return [title, "", "No matching discussions were returned."]
+
+    for index, mpd in enumerate(mpds, start=1):
+        if not isinstance(mpd, dict):
+            continue
+        lines.append(f"Discussion {index}:")
+        for label, key in (
+            ("Number", "product_num"),
+            ("Product ID", "product_id"),
+            ("Issued", "utc_issue"),
+            ("Expires", "utc_expire"),
+            ("Concerning", "concerning"),
+            ("Link", "product_href"),
+        ):
+            value = mpd.get(key)
+            if value not in (None, ""):
+                lines.append(f"{label}: {value}")
+        lines.append("")
+    return lines

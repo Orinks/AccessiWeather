@@ -11,6 +11,9 @@ from accessiweather.iem_client import (
     fetch_iem_afos_text,
     fetch_iem_spc_mcds,
     fetch_iem_spc_outlook,
+    fetch_iem_spc_watches,
+    fetch_iem_wpc_mpds,
+    fetch_iem_wpc_outlook,
 )
 
 IEM_BASE = "https://mesonet.example.test"
@@ -160,3 +163,100 @@ async def test_spc_mcd_returns_accessible_summary():
     assert "123" in result.product_text
     assert "Severe potential" in result.product_text
     assert "60" in result.product_text
+
+
+@pytest.mark.asyncio
+async def test_spc_watches_returns_accessible_summary():
+    client = _client(
+        _resp(
+            {
+                "features": [
+                    {
+                        "properties": {
+                            "sel": "SEL7",
+                            "type": "TOR",
+                            "number": 67,
+                            "issue": "2026-03-16T14:50:00Z",
+                            "expire": "2026-03-16T23:13:00Z",
+                            "is_pds": False,
+                        }
+                    }
+                ]
+            }
+        )
+    )
+
+    result = await fetch_iem_spc_watches(38.0, -77.0, client=client, iem_base_url=IEM_BASE)
+
+    assert result.product_id == "SPC_WATCHES"
+    assert "SPC Watches" in result.product_text
+    assert "SEL7" in result.product_text
+    assert "TOR" in result.product_text
+    client.get.assert_called_once()
+    assert client.get.call_args.kwargs["params"] == {"lat": 38.0, "lon": -77.0}
+
+
+@pytest.mark.asyncio
+async def test_wpc_outlook_returns_accessible_summary():
+    client = _client(
+        _resp(
+            {
+                "generated_at": "2026-05-01T12:00:00Z",
+                "outlooks": [
+                    {
+                        "day": 1,
+                        "utc_product_issue": "2026-03-16T07:22:00Z",
+                        "utc_issue": "2026-03-16T12:00:00Z",
+                        "utc_expire": "2026-03-17T12:00:00Z",
+                        "threshold": "MRGL",
+                        "category": "CATEGORICAL",
+                    }
+                ],
+            }
+        )
+    )
+
+    result = await fetch_iem_wpc_outlook(
+        38.907,
+        -77.037,
+        day=1,
+        client=client,
+        iem_base_url=IEM_BASE,
+    )
+
+    assert result.product_id == "WPC_ERO_DAY1"
+    assert "WPC Day 1 Excessive Rainfall Outlook" in result.product_text
+    assert "MRGL" in result.product_text
+    assert client.get.call_args.kwargs["params"] == {
+        "lat": 38.907,
+        "lon": -77.037,
+        "day": 1,
+        "fmt": "json",
+        "last": 1,
+    }
+
+
+@pytest.mark.asyncio
+async def test_wpc_mpd_returns_accessible_summary():
+    client = _client(
+        _resp(
+            {
+                "mpds": [
+                    {
+                        "product_num": 934,
+                        "product_id": "202508141928-KWNH-AWUS01-FFGMPD",
+                        "utc_issue": "2025-08-14T19:27:00Z",
+                        "utc_expire": "2025-08-14T22:27:00Z",
+                        "concerning": "HEAVY RAINFALL...FLASH FLOODING POSSIBLE",
+                    }
+                ]
+            }
+        )
+    )
+
+    result = await fetch_iem_wpc_mpds(38.907, -77.037, client=client, iem_base_url=IEM_BASE)
+
+    assert result.product_id == "WPC_MPD"
+    assert "WPC Mesoscale Precipitation Discussions" in result.product_text
+    assert "934" in result.product_text
+    assert "FLASH FLOODING POSSIBLE" in result.product_text

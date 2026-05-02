@@ -21,7 +21,14 @@ from datetime import datetime
 from typing import Any, Literal
 
 from ..cache import Cache
-from ..iem_client import fetch_iem_afos_text, fetch_iem_spc_mcds, fetch_iem_spc_outlook
+from ..iem_client import (
+    fetch_iem_afos_text,
+    fetch_iem_spc_mcds,
+    fetch_iem_spc_outlook,
+    fetch_iem_spc_watches,
+    fetch_iem_wpc_mpds,
+    fetch_iem_wpc_outlook,
+)
 from ..models import TextProduct
 from ..weather_client_nws import (
     TextProductFetchError,
@@ -178,3 +185,35 @@ class ForecastProductService:
     async def get_iem_spc_mcds(self, latitude: float, longitude: float) -> TextProduct:
         """Fetch structured IEM SPC mesoscale discussion summaries."""
         return await fetch_iem_spc_mcds(latitude, longitude)
+
+    async def get_iem_spc_watches(
+        self,
+        latitude: float,
+        longitude: float,
+        *,
+        valid_at: datetime | None = None,
+    ) -> TextProduct:
+        """Fetch structured IEM SPC watch summaries."""
+        return await fetch_iem_spc_watches(latitude, longitude, valid_at=valid_at)
+
+    async def get_iem_wpc_outlook(
+        self,
+        latitude: float,
+        longitude: float,
+        *,
+        day: int = 1,
+        valid_at: datetime | None = None,
+        limit: int = 1,
+    ) -> TextProduct:
+        """Fetch a structured IEM WPC excessive rainfall outlook summary."""
+        return await fetch_iem_wpc_outlook(
+            latitude,
+            longitude,
+            day=day,
+            valid_at=valid_at,
+            limit=limit,
+        )
+
+    async def get_iem_wpc_mpds(self, latitude: float, longitude: float) -> TextProduct:
+        """Fetch structured IEM WPC mesoscale precipitation discussion summaries."""
+        return await fetch_iem_wpc_mpds(latitude, longitude)

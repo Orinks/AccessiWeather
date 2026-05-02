@@ -189,3 +189,54 @@ class TestForecastProductServiceHistory:
         cached_history = await service.get_history("AFD", "PHI", limit=10)
         assert cached_history is history
         history_fetcher.assert_called_once()
+
+
+class TestForecastProductServiceIemStructuredProducts:
+    @pytest.mark.asyncio
+    async def test_iem_structured_wrappers_delegate(self, monkeypatch):
+        cache = Cache(default_ttl=60)
+        service = ForecastProductService(cache)
+        product = TextProduct(
+            product_type="SPC_WATCHES",
+            product_id="structured",
+            cwa_office="SPC",
+            issuance_time=None,
+            product_text="structured text",
+            headline=None,
+        )
+
+        async def fake_spc_watches(lat, lon, **kwargs):
+            assert lat == 35.78
+            assert lon == -78.64
+            assert kwargs["valid_at"] is None
+            return product
+
+        async def fake_wpc_outlook(lat, lon, **kwargs):
+            assert lat == 35.78
+            assert lon == -78.64
+            assert kwargs["day"] == 2
+            assert kwargs["limit"] == 3
+            return product
+
+        async def fake_wpc_mpds(lat, lon, **kwargs):
+            assert lat == 35.78
+            assert lon == -78.64
+            assert kwargs == {}
+            return product
+
+        monkeypatch.setattr(
+            "accessiweather.services.forecast_product_service.fetch_iem_spc_watches",
+            fake_spc_watches,
+        )
+        monkeypatch.setattr(
+            "accessiweather.services.forecast_product_service.fetch_iem_wpc_outlook",
+            fake_wpc_outlook,
+        )
+        monkeypatch.setattr(
+            "accessiweather.services.forecast_product_service.fetch_iem_wpc_mpds",
+            fake_wpc_mpds,
+        )
+
+        assert await service.get_iem_spc_watches(35.78, -78.64) is product
+        assert await service.get_iem_wpc_outlook(35.78, -78.64, day=2, limit=3) is product
+        assert await service.get_iem_wpc_mpds(35.78, -78.64) is product
