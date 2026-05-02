@@ -163,7 +163,7 @@ def _spc_summary_lines(
             items = value
             break
     if not items:
-        lines.append("No matching products were returned.")
+        lines.append("No matching point-based products were returned for this location.")
         return lines
 
     visible_items, omitted = _limited_items(items, max_items)

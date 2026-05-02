@@ -22,7 +22,6 @@ from typing import Any, Literal
 
 from ..cache import Cache
 from ..iem_client import (
-    IemProductFetchError,
     fetch_iem_afos_text,
     fetch_iem_spc_mcds,
     fetch_iem_spc_outlook,
@@ -192,19 +191,14 @@ class ForecastProductService:
         cached = self._cache.get(key)
         if isinstance(cached, TextProduct):
             return cached
-        try:
-            result = await fetch_iem_spc_outlook(
-                latitude,
-                longitude,
-                day=day,
-                current=current,
-                max_items=max_items,
-                timeout=timeout,
-            )
-        except IemProductFetchError:
-            if day != 1 or not current:
-                raise
-            result = await fetch_iem_afos_text("SWODY1", timeout=timeout)
+        result = await fetch_iem_spc_outlook(
+            latitude,
+            longitude,
+            day=day,
+            current=current,
+            max_items=max_items,
+            timeout=timeout,
+        )
         self._cache.set(key, result, ttl=self._TTLS.get("SPS", 900))
         return result
 

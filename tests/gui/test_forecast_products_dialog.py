@@ -325,15 +325,20 @@ class TestForecastProductsDialog:
     def test_loader_invokes_iem_for_point_based_tabs(
         self, notebook_factory, panel_factory, sample_us_location
     ):
-        """Point-based national tabs use IEM structured service helpers."""
+        """Point-based tabs use IEM structured service helpers."""
         import asyncio
 
         service = MagicMock(name="ForecastProductService")
 
-        async def _fake_iem_afos(product_id, **kwargs):
-            return SimpleNamespace(product_type=product_id, kwargs=kwargs)
+        async def _fake_spc_outlook(latitude, longitude, **kwargs):
+            return SimpleNamespace(
+                product_type="SPC_OUTLOOK",
+                latitude=latitude,
+                longitude=longitude,
+                kwargs=kwargs,
+            )
 
-        service.get_iem_afos.side_effect = _fake_iem_afos
+        service.get_iem_spc_outlook.side_effect = _fake_spc_outlook
 
         ForecastProductsDialog(
             parent=MagicMock(),
@@ -345,8 +350,11 @@ class TestForecastProductsDialog:
         spc_entry = next(entry for entry in panel_factory if entry["product_type"] == "SPC_OUTLOOK")
         result = asyncio.run(spc_entry["product_loader"]())
 
-        assert result.product_type == "SWODY1"
-        assert result.kwargs == {"timeout": 4.0}
+        assert result.product_type == "SPC_OUTLOOK"
+        assert result.latitude == 35.7796
+        assert result.longitude == -78.6382
+        assert result.kwargs == {"day": 1, "current": True, "max_items": 3, "timeout": 4.0}
+        service.get_iem_afos.assert_not_called()
 
     def test_dialog_passes_advanced_lookup_opener_to_panels(
         self, notebook_factory, panel_factory, sample_us_location

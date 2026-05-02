@@ -180,8 +180,12 @@ class ForecastProductsDialog(wx.Dialog):
             if latitude is None or longitude is None:
                 return None
             if tab.loader_kind == "spc_outlook":
-                return await self._service.get_iem_afos(
-                    "SWODY1",
+                return await self._service.get_iem_spc_outlook(
+                    latitude,
+                    longitude,
+                    day=1,
+                    current=True,
+                    max_items=3,
                     timeout=4.0,
                 )
             if tab.loader_kind == "spc_mcd":

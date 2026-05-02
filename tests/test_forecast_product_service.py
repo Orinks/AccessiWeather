@@ -275,25 +275,15 @@ class TestForecastProductServiceIemStructuredProducts:
         assert calls == 1
 
     @pytest.mark.asyncio
-    async def test_spc_outlook_falls_back_to_afos_day_one(self, monkeypatch):
+    async def test_spc_outlook_does_not_fall_back_to_national_afos(self, monkeypatch):
         cache = Cache(default_ttl=60)
         service = ForecastProductService(cache)
-        fallback = TextProduct(
-            product_type="SWODY1",
-            product_id="SWODY1",
-            cwa_office="IEM",
-            issuance_time=None,
-            product_text="day one outlook text",
-            headline=None,
-        )
 
         async def failing_spc_outlook(*_args, **_kwargs):
             raise IemProductFetchError("slow")
 
         async def fake_afos(product_id, **kwargs):
-            assert product_id == "SWODY1"
-            assert kwargs["timeout"] == 4.0
-            return fallback
+            raise AssertionError("SPC point outlooks must not fall back to national AFOS text")
 
         monkeypatch.setattr(
             "accessiweather.services.forecast_product_service.fetch_iem_spc_outlook",
@@ -304,12 +294,11 @@ class TestForecastProductServiceIemStructuredProducts:
             fake_afos,
         )
 
-        result = await service.get_iem_spc_outlook(
-            35.78,
-            -78.64,
-            day=1,
-            current=True,
-            timeout=4.0,
-        )
-
-        assert result is fallback
+        with pytest.raises(IemProductFetchError, match="slow"):
+            await service.get_iem_spc_outlook(
+                35.78,
+                -78.64,
+                day=1,
+                current=True,
+                timeout=4.0,
+            )
