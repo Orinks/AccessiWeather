@@ -12,12 +12,37 @@ PRODUCT_FULL_NAMES: dict[str, str] = {
     "AFD": "Area Forecast Discussion",
     "HWO": "Hazardous Weather Outlook",
     "SPS": "Special Weather Statement",
+    "LSR": "Local Storm Report",
+    "PNS": "Public Information Statement",
+    "CLI": "Daily Climate Report",
+    "SPC_OUTLOOK": "SPC Day 1 Convective Outlook (Storm Prediction Center)",
+    "SPC_MCD": "SPC Mesoscale Discussions (Storm Prediction Center)",
+    "SPC_WATCHES": "SPC Watches (Storm Prediction Center)",
+    "WPC_ERO": "WPC Day 1 Excessive Rainfall Outlook (Weather Prediction Center)",
+    "WPC_MPD": "WPC Mesoscale Precipitation Discussions (Weather Prediction Center)",
 }
 
 EMPTY_COPY: dict[str, str] = {
     "AFD": "Area Forecast Discussion not currently available for {cwa_office}.",
     "HWO": "Hazardous Weather Outlook not currently available for {cwa_office}.",
     "SPS": "No recent Special Weather Statements for {cwa_office}.",
+    "LSR": "No recent Local Storm Reports for {cwa_office}.",
+    "PNS": "No recent Public Information Statements for {cwa_office}.",
+    "CLI": "Daily Climate Report not currently available for {cwa_office}.",
+    "SPC_OUTLOOK": (
+        "No matching SPC (Storm Prediction Center) Day 1 Convective Outlook for this location."
+    ),
+    "SPC_MCD": (
+        "No matching SPC (Storm Prediction Center) Mesoscale Discussions for this location."
+    ),
+    "SPC_WATCHES": "No matching SPC (Storm Prediction Center) Watches for this location.",
+    "WPC_ERO": (
+        "No matching WPC (Weather Prediction Center) Excessive Rainfall Outlook for this location."
+    ),
+    "WPC_MPD": (
+        "No matching WPC (Weather Prediction Center) Mesoscale Precipitation Discussions "
+        "for this location."
+    ),
 }
 
 NO_CWA_COPY = "NWS text products will populate after the next weather refresh."

@@ -1,5 +1,6 @@
 import importlib as _importlib
 
+from .advanced_text_product_dialog import show_advanced_text_product_dialog
 from .air_quality_dialog import show_air_quality_dialog
 from .alert_dialog import show_alert_dialog
 from .alerts_summary_dialog import show_alerts_summary_dialog
@@ -21,6 +22,7 @@ from .weather_history_dialog import show_weather_history_dialog
 __all__ = [
     "show_add_location_dialog",
     "show_edit_location_dialog",
+    "show_advanced_text_product_dialog",
     "show_air_quality_dialog",
     "show_alert_dialog",
     "show_alerts_summary_dialog",
@@ -44,6 +46,7 @@ _LAZY_IMPORTS = {
     "show_air_quality_dialog": ".air_quality_dialog",
     "show_alert_dialog": ".alert_dialog",
     "show_alerts_summary_dialog": ".alerts_summary_dialog",
+    "show_advanced_text_product_dialog": ".advanced_text_product_dialog",
     "show_aviation_dialog": ".aviation_dialog",
     "show_discussion_dialog": ".discussion_dialog",
     "show_explanation_dialog": ".explanation_dialog",

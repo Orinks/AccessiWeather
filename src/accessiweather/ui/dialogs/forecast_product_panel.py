@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Awaitable, Callable
-from typing import TYPE_CHECKING, Literal, cast
+from typing import TYPE_CHECKING, cast
 
 import wx
 
@@ -43,10 +43,11 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-ProductType = Literal["AFD", "HWO", "SPS"]
+ProductType = str
 
 ProductLoader = Callable[[], Awaitable["TextProduct | list[TextProduct] | None"]]
 AvailabilityCallback = Callable[["ForecastProductPanel", bool], None]
+AdvancedLookupOpener = Callable[[], None]
 
 
 class ForecastProductPanel(wx.Panel):
@@ -62,6 +63,8 @@ class ForecastProductPanel(wx.Panel):
         location_name: str,
         app: object | None = None,
         availability_callback: AvailabilityCallback | None = None,
+        advanced_lookup_opener: AdvancedLookupOpener | None = None,
+        autoload: bool = True,
     ) -> None:
         """
         Build the panel widgets.
@@ -84,6 +87,11 @@ class ForecastProductPanel(wx.Panel):
                 completes. ``False`` means the product fetch succeeded but
                 returned no products; errors are reported as available so the
                 dialog keeps the retry surface visible.
+            advanced_lookup_opener: Optional callback for opening the advanced
+                text-product lookup dialog with this tab's product prefilled.
+            autoload: When true, load immediately after construction. When
+                false, the parent dialog calls ``ensure_loaded`` when the tab is
+                selected.
 
         """
         super().__init__(parent)
@@ -94,6 +102,7 @@ class ForecastProductPanel(wx.Panel):
         self._location_name = location_name
         self._app = app
         self._availability_callback = availability_callback
+        self._advanced_lookup_opener = advanced_lookup_opener
 
         # State
         self._current_text: str | None = None
@@ -101,11 +110,19 @@ class ForecastProductPanel(wx.Panel):
         self._sps_products: list[TextProduct] = []
         self._is_loading = False
         self._is_explaining = False
+        self._load_started = False
 
         self._create_widgets()
         self._bind_events()
 
-        # Kick off initial load.
+        if autoload:
+            self.ensure_loaded()
+
+    def ensure_loaded(self) -> None:
+        """Load this panel once, on construction or first tab selection."""
+        if self._load_started:
+            return
+        self._load_started = True
         self._trigger_load()
 
     # ------------------------------------------------------------------
@@ -120,6 +137,7 @@ class ForecastProductPanel(wx.Panel):
         self.explain_button.Bind(wx.EVT_BUTTON, self._on_explain)
         self.regenerate_button.Bind(wx.EVT_BUTTON, self._on_regenerate)
         self.retry_button.Bind(wx.EVT_BUTTON, self._on_retry)
+        self.advanced_lookup_button.Bind(wx.EVT_BUTTON, self._on_advanced_lookup)
         if self.sps_choice is not None:
             self.sps_choice.Bind(wx.EVT_CHOICE, self._on_sps_choice_changed)
 
@@ -278,7 +296,10 @@ class ForecastProductPanel(wx.Panel):
 
     def _render_empty_state(self) -> None:
         """Render the 'no product available' state."""
-        template = _EMPTY_COPY[self.product_type]
+        template = _EMPTY_COPY.get(
+            self.product_type,
+            f"{self.product_type} not currently available for {{cwa_office}}.",
+        )
         self.product_textctrl.SetValue(template.format(cwa_office=self._cwa_office))
         self.issuance_label.SetLabel("")
         self._show_sps_chooser(False)
@@ -380,6 +401,12 @@ class ForecastProductPanel(wx.Panel):
         """Retry button click — re-invoke the loader."""
         del event
         self._trigger_load()
+
+    def _on_advanced_lookup(self, event) -> None:
+        """Open the advanced lookup dialog for this tab's product type."""
+        del event
+        if self._advanced_lookup_opener is not None:
+            self._advanced_lookup_opener()
 
     def _on_explain(self, event) -> None:
         """Plain Language Summary button click."""

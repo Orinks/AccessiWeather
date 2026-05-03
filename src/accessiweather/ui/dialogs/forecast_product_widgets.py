@@ -13,7 +13,7 @@ def create_product_panel_widgets(panel: Any) -> None:
     """Construct and attach the widgets used by a ForecastProductPanel."""
     main_sizer = wx.BoxSizer(wx.VERTICAL)
 
-    full_name = PRODUCT_FULL_NAMES[panel.product_type]
+    full_name = PRODUCT_FULL_NAMES.get(panel.product_type, panel.product_type)
     panel.header_label = wx.StaticText(panel, label=full_name)
     main_sizer.Add(panel.header_label, 0, wx.ALL | wx.EXPAND, 8)
 
@@ -62,9 +62,11 @@ def create_product_panel_widgets(panel: Any) -> None:
     button_sizer = wx.BoxSizer(wx.HORIZONTAL)
     panel.explain_button = wx.Button(panel, label="Plain Language Summary")
     panel.regenerate_button = wx.Button(panel, label="Regenerate Summary")
+    panel.advanced_lookup_button = wx.Button(panel, label="Advanced Lookup")
     panel.retry_button = wx.Button(panel, label="Try again")
     button_sizer.Add(panel.explain_button, 0, wx.RIGHT, 5)
     button_sizer.Add(panel.regenerate_button, 0, wx.RIGHT, 5)
+    button_sizer.Add(panel.advanced_lookup_button, 0, wx.RIGHT, 5)
     button_sizer.Add(panel.retry_button, 0)
     main_sizer.Add(button_sizer, 0, wx.ALL, 8)
 

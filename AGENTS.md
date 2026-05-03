@@ -114,6 +114,7 @@ git --no-pager show HEAD              # Show last commit
 - **Pre-commit**: Auto-formats before commit
 - **Type Hints**: Modern syntax (`dict[str, Any]` not `Dict`)
 - **Forward Refs**: Use `from __future__ import annotations`
+- **File Size**: Code files must not exceed 1000 lines. Split large modules before adding more code.
 
 ### Import Organization
 
