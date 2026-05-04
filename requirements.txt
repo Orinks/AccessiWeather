@@ -8,7 +8,7 @@ playsound3
 
 # Core dependencies
 httpx>=0.20.0
-requests>=2.0
+requests>=2.33.1
 desktop-notifier
 python-dateutil
 beautifulsoup4>=4.0
