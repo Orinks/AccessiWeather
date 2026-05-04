@@ -183,11 +183,15 @@ class ForecastProductService:
         *,
         day: int = 1,
         current: bool = True,
+        valid_at: datetime | None = None,
         max_items: int | None = 5,
         timeout: float = 10.0,
     ) -> TextProduct:
         """Fetch a structured IEM SPC convective outlook summary."""
-        key = self._iem_cache_key("SPC_OUTLOOK", latitude, longitude, day, current, max_items)
+        valid_key = valid_at.isoformat() if valid_at is not None else ""
+        key = self._iem_cache_key(
+            "SPC_OUTLOOK", latitude, longitude, day, current, valid_key, max_items
+        )
         cached = self._cache.get(key)
         if isinstance(cached, TextProduct):
             return cached
@@ -196,6 +200,7 @@ class ForecastProductService:
             longitude,
             day=day,
             current=current,
+            valid_at=valid_at,
             max_items=max_items,
             timeout=timeout,
         )
@@ -207,15 +212,30 @@ class ForecastProductService:
         latitude: float,
         longitude: float,
         *,
+        active_only: bool = True,
+        start: datetime | None = None,
+        end: datetime | None = None,
         max_items: int | None = 5,
         timeout: float = 10.0,
     ) -> TextProduct:
         """Fetch structured IEM SPC mesoscale discussion summaries."""
-        key = self._iem_cache_key("SPC_MCD", latitude, longitude, max_items)
+        start_key = start.isoformat() if start is not None else ""
+        end_key = end.isoformat() if end is not None else ""
+        key = self._iem_cache_key(
+            "SPC_MCD", latitude, longitude, active_only, start_key, end_key, max_items
+        )
         cached = self._cache.get(key)
         if isinstance(cached, TextProduct):
             return cached
-        result = await fetch_iem_spc_mcds(latitude, longitude, max_items=max_items, timeout=timeout)
+        result = await fetch_iem_spc_mcds(
+            latitude,
+            longitude,
+            active_only=active_only,
+            start=start,
+            end=end,
+            max_items=max_items,
+            timeout=timeout,
+        )
         self._cache.set(key, result, ttl=self._TTLS.get("SPS", 900))
         return result
 
@@ -278,14 +298,29 @@ class ForecastProductService:
         latitude: float,
         longitude: float,
         *,
+        active_only: bool = True,
+        start: datetime | None = None,
+        end: datetime | None = None,
         max_items: int | None = 5,
         timeout: float = 10.0,
     ) -> TextProduct:
         """Fetch structured IEM WPC mesoscale precipitation discussion summaries."""
-        key = self._iem_cache_key("WPC_MPD", latitude, longitude, max_items)
+        start_key = start.isoformat() if start is not None else ""
+        end_key = end.isoformat() if end is not None else ""
+        key = self._iem_cache_key(
+            "WPC_MPD", latitude, longitude, active_only, start_key, end_key, max_items
+        )
         cached = self._cache.get(key)
         if isinstance(cached, TextProduct):
             return cached
-        result = await fetch_iem_wpc_mpds(latitude, longitude, max_items=max_items, timeout=timeout)
+        result = await fetch_iem_wpc_mpds(
+            latitude,
+            longitude,
+            active_only=active_only,
+            start=start,
+            end=end,
+            max_items=max_items,
+            timeout=timeout,
+        )
         self._cache.set(key, result, ttl=self._TTLS.get("SPS", 900))
         return result

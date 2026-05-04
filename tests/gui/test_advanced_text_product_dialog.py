@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -21,6 +22,7 @@ for _attr, _val in {
     "WXK_ESCAPE": 27,
     "ID_CLOSE": 5107,
     "ID_OK": 5100,
+    "CB_READONLY": 16,
 }.items():
     if not hasattr(_wx, _attr):
         setattr(_wx, _attr, _val)
@@ -34,7 +36,7 @@ def _neutralize_wx():
         return None
 
     _wx.Dialog.__init__ = _noop
-    for name in ("StaticText", "TextCtrl", "Button", "Choice", "CheckBox"):
+    for name in ("StaticText", "TextCtrl", "Button", "Choice", "ComboBox", "CheckBox"):
         saved[name] = getattr(_wx, name)
         setattr(
             _wx,
@@ -55,7 +57,7 @@ def _neutralize_wx():
     yield
 
     _wx.Dialog.__init__ = saved["Dialog.__init__"]
-    for name in ("StaticText", "TextCtrl", "Button", "Choice", "CheckBox"):
+    for name in ("StaticText", "TextCtrl", "Button", "Choice", "ComboBox", "CheckBox"):
         setattr(_wx, name, saved[name])
     _wx.CallAfter = saved["CallAfter"]
 
@@ -160,7 +162,38 @@ def test_lookup_can_fetch_spc_outlook_summary():
 
     dlg._run_lookup_sync()
 
-    service.get_iem_spc_outlook.assert_awaited_once_with(35.78, -78.64, day=1, current=True)
+    service.get_iem_spc_outlook.assert_awaited_once_with(
+        35.78,
+        -78.64,
+        day=1,
+        current=True,
+        valid_at=None,
+    )
+
+
+def test_lookup_can_fetch_spc_outlook_for_valid_time():
+    service = MagicMock()
+    service.get_iem_spc_outlook = AsyncMock(return_value=_product("SPC_OUTLOOK_DAY1"))
+
+    dlg = AdvancedTextProductDialog(
+        parent=MagicMock(),
+        location=_location(),
+        forecast_product_service=service,
+        initial_product_type="SPC Day 1 Outlook",
+    )
+    dlg.product_input.GetValue.return_value = "SPC Day 1 Outlook"
+    dlg.limit_input.GetValue.return_value = "1"
+    dlg.start_input.GetValue.return_value = "2026-03-06T20:00:00Z"
+    dlg.end_input.GetValue.return_value = ""
+    dlg.source_choice.GetStringSelection.return_value = "Prefer NWS when available"
+
+    dlg._run_lookup_sync()
+
+    service.get_iem_spc_outlook.assert_awaited_once()
+    assert service.get_iem_spc_outlook.await_args.kwargs["current"] is False
+    assert service.get_iem_spc_outlook.await_args.kwargs["valid_at"].isoformat() == (
+        "2026-03-06T20:00:00+00:00"
+    )
 
 
 def test_product_preset_updates_product_input():
@@ -223,7 +256,14 @@ def test_lookup_can_fetch_wpc_mpd_summary():
 
     dlg._run_lookup_sync()
 
-    service.get_iem_wpc_mpds.assert_awaited_once_with(35.78, -78.64)
+    service.get_iem_wpc_mpds.assert_awaited_once_with(
+        35.78,
+        -78.64,
+        active_only=False,
+        start=None,
+        end=None,
+        max_items=1,
+    )
 
 
 def test_lookup_can_fetch_spc_watch_summary():
@@ -248,3 +288,29 @@ def test_lookup_can_fetch_spc_watch_summary():
     assert service.get_iem_spc_watches.await_args.kwargs["valid_at"].isoformat() == (
         "2026-03-16T15:00:00+00:00"
     )
+
+
+def test_date_preset_populates_start_and_end_inputs(monkeypatch):
+    service = MagicMock()
+    dlg = AdvancedTextProductDialog(
+        parent=MagicMock(),
+        location=_location(),
+        forecast_product_service=service,
+        initial_product_type="AFD",
+    )
+    dlg.date_preset_choice.GetStringSelection.return_value = "Past 7 days"
+    monkeypatch.setattr(
+        AdvancedTextProductDialog,
+        "_date_range_for_preset",
+        staticmethod(
+            lambda _preset: (
+                datetime(2026, 4, 27, 12, 0, tzinfo=UTC),
+                datetime(2026, 5, 4, 12, 0, tzinfo=UTC),
+            )
+        ),
+    )
+
+    dlg._on_date_preset(MagicMock())
+
+    dlg.start_input.SetValue.assert_called_once_with("2026-04-27T12:00:00Z")
+    dlg.end_input.SetValue.assert_called_once_with("2026-05-04T12:00:00Z")

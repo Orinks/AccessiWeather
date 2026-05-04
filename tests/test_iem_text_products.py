@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 import httpx
 import pytest
 
+from accessiweather import iem_client
 from accessiweather.iem_client import (
     IemProductFetchError,
     fetch_iem_afos_text,
@@ -140,6 +141,86 @@ async def test_spc_outlook_returns_accessible_summary():
 
 
 @pytest.mark.asyncio
+async def test_spc_outlook_accepts_current_singular_outlook_shape():
+    client = _client(
+        _resp(
+            {
+                "generated_at": "2026-05-01T12:00:00Z",
+                "outlook": {
+                    "category": "MRGL",
+                    "threshold": "CATEGORICAL",
+                    "valid": "2026-05-01T13:00:00Z",
+                },
+            }
+        )
+    )
+
+    result = await fetch_iem_spc_outlook(
+        38.907,
+        -77.037,
+        day=1,
+        current=True,
+        client=client,
+        iem_base_url=IEM_BASE,
+    )
+
+    assert "MRGL" in result.product_text
+    assert "CATEGORICAL" in result.product_text
+
+
+@pytest.mark.asyncio
+async def test_spc_outlook_valid_time_query_uses_time_parameter():
+    valid_at = datetime(2026, 3, 6, 20, 0, tzinfo=UTC)
+    client = _client(
+        _resp(
+            {
+                "generated_at": "2026-03-06T20:00:00Z",
+                "outlook": {
+                    "category": "SLGT",
+                    "threshold": "CATEGORICAL",
+                    "valid": "2026-03-06T20:00:00Z",
+                },
+            }
+        )
+    )
+
+    await fetch_iem_spc_outlook(
+        38.907,
+        -77.037,
+        day=2,
+        current=False,
+        valid_at=valid_at,
+        client=client,
+        iem_base_url=IEM_BASE,
+    )
+
+    assert client.get.call_args.kwargs["params"] == {
+        "lat": 38.907,
+        "lon": -77.037,
+        "day": 2,
+        "fmt": "json",
+        "current": 0,
+        "time": "2026-03-06T20:00:00Z",
+    }
+
+
+@pytest.mark.asyncio
+async def test_spc_outlook_timeout_error_names_exception():
+    client = MagicMock(spec=httpx.AsyncClient)
+    client.get.side_effect = httpx.TimeoutException("")
+
+    with pytest.raises(IemProductFetchError, match="TimeoutException"):
+        await fetch_iem_spc_outlook(
+            38.907,
+            -77.037,
+            day=1,
+            current=True,
+            client=client,
+            iem_base_url=IEM_BASE,
+        )
+
+
+@pytest.mark.asyncio
 async def test_spc_mcd_returns_accessible_summary():
     client = _client(
         _resp(
@@ -194,7 +275,45 @@ async def test_spc_mcd_summary_can_limit_items():
 
 
 @pytest.mark.asyncio
+async def test_spc_mcd_advanced_lookup_can_filter_archive_window():
+    client = _client(
+        _resp(
+            {
+                "mcds": [
+                    {
+                        "mdnum": 1,
+                        "utc_issue": "2026-05-01T12:00:00Z",
+                        "utc_expire": "2026-05-01T14:00:00Z",
+                        "concerning": "inside",
+                    },
+                    {
+                        "mdnum": 2,
+                        "utc_issue": "2026-04-01T12:00:00Z",
+                        "utc_expire": "2026-04-01T14:00:00Z",
+                        "concerning": "outside",
+                    },
+                ]
+            }
+        )
+    )
+
+    result = await fetch_iem_spc_mcds(
+        42.0,
+        -95.0,
+        active_only=False,
+        start=datetime(2026, 5, 1, 0, 0, tzinfo=UTC),
+        end=datetime(2026, 5, 2, 0, 0, tzinfo=UTC),
+        client=client,
+        iem_base_url=IEM_BASE,
+    )
+
+    assert "inside" in result.product_text
+    assert "outside" not in result.product_text
+
+
+@pytest.mark.asyncio
 async def test_spc_watches_returns_accessible_summary():
+    valid_at = datetime(2026, 3, 16, 18, 0, tzinfo=UTC)
     client = _client(
         _resp(
             {
@@ -217,6 +336,7 @@ async def test_spc_watches_returns_accessible_summary():
     result = await fetch_iem_spc_watches(
         38.0,
         -77.0,
+        valid_at=valid_at,
         client=client,
         iem_base_url=IEM_BASE,
         max_items=3,
@@ -227,11 +347,56 @@ async def test_spc_watches_returns_accessible_summary():
     assert "SEL7" in result.product_text
     assert "TOR" in result.product_text
     client.get.assert_called_once()
-    assert client.get.call_args.kwargs["params"] == {"lat": 38.0, "lon": -77.0}
+    assert client.get.call_args.kwargs["params"] == {
+        "lat": 38.0,
+        "lon": -77.0,
+        "ts": "202603161800",
+    }
+
+
+@pytest.mark.asyncio
+async def test_spc_watches_filters_expired_matches():
+    valid_at = datetime(2026, 3, 16, 23, 30, tzinfo=UTC)
+    client = _client(
+        _resp(
+            {
+                "features": [
+                    {
+                        "properties": {
+                            "sel": "SEL7",
+                            "type": "TOR",
+                            "issue": "2026-03-16T14:50:00Z",
+                            "expire": "2026-03-16T23:13:00Z",
+                        }
+                    },
+                    {
+                        "properties": {
+                            "sel": "SEL8",
+                            "type": "SVR",
+                            "issue": "2026-03-16T23:00:00Z",
+                            "expire": "2026-03-17T04:00:00Z",
+                        }
+                    },
+                ]
+            }
+        )
+    )
+
+    result = await fetch_iem_spc_watches(
+        38.0,
+        -77.0,
+        valid_at=valid_at,
+        client=client,
+        iem_base_url=IEM_BASE,
+    )
+
+    assert "SEL7" not in result.product_text
+    assert "SEL8" in result.product_text
 
 
 @pytest.mark.asyncio
 async def test_wpc_outlook_returns_accessible_summary():
+    valid_at = datetime(2026, 3, 16, 18, 0, tzinfo=UTC)
     client = _client(
         _resp(
             {
@@ -254,6 +419,7 @@ async def test_wpc_outlook_returns_accessible_summary():
         38.907,
         -77.037,
         day=1,
+        valid_at=valid_at,
         client=client,
         iem_base_url=IEM_BASE,
     )
@@ -267,11 +433,55 @@ async def test_wpc_outlook_returns_accessible_summary():
         "day": 1,
         "fmt": "json",
         "last": 1,
+        "time": "2026-03-16T18:00:00Z",
+    }
+
+
+@pytest.mark.asyncio
+async def test_wpc_outlook_uses_current_keyword_for_active_lookup(monkeypatch):
+    monkeypatch.setattr(
+        iem_client,
+        "_now_utc",
+        lambda: datetime(2026, 5, 1, 18, 0, tzinfo=UTC),
+    )
+    client = _client(
+        _resp(
+            {
+                "generated_at": "2026-05-01T12:00:00Z",
+                "outlook": {
+                    "day": 1,
+                    "utc_product_issue": "2026-05-01T07:22:00Z",
+                    "utc_issue": "2026-05-01T12:00:00Z",
+                    "utc_expire": "2026-05-02T12:00:00Z",
+                    "threshold": "MRGL",
+                    "category": "CATEGORICAL",
+                },
+            }
+        )
+    )
+
+    result = await fetch_iem_wpc_outlook(
+        38.907,
+        -77.037,
+        day=1,
+        client=client,
+        iem_base_url=IEM_BASE,
+    )
+
+    assert "MRGL" in result.product_text
+    assert client.get.call_args.kwargs["params"] == {
+        "lat": 38.907,
+        "lon": -77.037,
+        "day": 1,
+        "fmt": "json",
+        "last": 1,
+        "time": "current",
     }
 
 
 @pytest.mark.asyncio
 async def test_wpc_mpd_returns_accessible_summary():
+    active_at = datetime(2025, 8, 14, 20, 0, tzinfo=UTC)
     client = _client(
         _resp(
             {
@@ -291,6 +501,7 @@ async def test_wpc_mpd_returns_accessible_summary():
     result = await fetch_iem_wpc_mpds(
         38.907,
         -77.037,
+        active_at=active_at,
         client=client,
         iem_base_url=IEM_BASE,
         max_items=3,
@@ -300,3 +511,31 @@ async def test_wpc_mpd_returns_accessible_summary():
     assert "WPC Mesoscale Precipitation Discussions" in result.product_text
     assert "934" in result.product_text
     assert "FLASH FLOODING POSSIBLE" in result.product_text
+
+
+@pytest.mark.asyncio
+async def test_wpc_mpd_filters_expired_discussions():
+    client = _client(
+        _resp(
+            {
+                "mpds": [
+                    {
+                        "product_num": 934,
+                        "utc_issue": "2025-08-14T19:27:00Z",
+                        "utc_expire": "2025-08-14T22:27:00Z",
+                    }
+                ]
+            }
+        )
+    )
+
+    result = await fetch_iem_wpc_mpds(
+        38.907,
+        -77.037,
+        active_at=datetime(2025, 8, 14, 23, 0, tzinfo=UTC),
+        client=client,
+        iem_base_url=IEM_BASE,
+    )
+
+    assert "934" not in result.product_text
+    assert "No active discussions were returned." in result.product_text
