@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
-from datetime import UTC, datetime, time
+from datetime import UTC, datetime, time, timedelta
 from typing import TYPE_CHECKING, Any
 
 import wx
@@ -20,6 +20,15 @@ _NWS_PRODUCT_TYPES = {"AFD", "HWO", "SPS", "CLI", "CF6", "RER", "LSR", "PNS"}
 _SOURCE_PREFER_NWS = "Prefer NWS when available"
 _SOURCE_IEM_ONLY = "IEM AFOS only"
 _SOURCE_NWS_ONLY = "NWS history only"
+_DATE_PRESETS = (
+    "Latest or current",
+    "Past 24 hours",
+    "Past 7 days",
+    "Past 30 days",
+    "Past 90 days",
+    "Past year",
+    "Custom dates below",
+)
 _SPC_OUTLOOK_RE = re.compile(r"(?:SPC\s*)?DAY\s*([1-8])\s*(?:CONVECTIVE\s*)?OUTLOOK", re.I)
 _WPC_OUTLOOK_RE = re.compile(
     r"(?:WPC\s*)?DAY\s*([1-8])\s*(?:EXCESSIVE\s*RAINFALL\s*)?OUTLOOK",
@@ -60,6 +69,8 @@ _LEFT = getattr(wx, "LEFT", wx.ALL)
 _RIGHT = getattr(wx, "RIGHT", wx.ALL)
 _TOP = getattr(wx, "TOP", wx.ALL)
 _EVT_CHOICE = getattr(wx, "EVT_CHOICE", wx.EVT_BUTTON)
+_COMBOBOX = getattr(wx, "ComboBox", wx.Choice)
+_CB_READONLY = getattr(wx, "CB_READONLY", 0)
 
 
 class AdvancedTextProductDialog(wx.Dialog):
@@ -127,9 +138,25 @@ class AdvancedTextProductDialog(wx.Dialog):
         self.limit_input = wx.TextCtrl(self, value="1")
         main_sizer.Add(self.limit_input, 0, wx.ALL | wx.EXPAND, 8)
 
+        self.date_preset_label = wx.StaticText(
+            self,
+            label="Date lookup preset:",
+        )
+        main_sizer.Add(self.date_preset_label, 0, _LEFT | _RIGHT | wx.EXPAND, 8)
+        self.date_preset_choice = _COMBOBOX(
+            self,
+            choices=list(_DATE_PRESETS),
+            style=_CB_READONLY,
+        )
+        self.date_preset_choice.SetSelection(0)
+        main_sizer.Add(self.date_preset_choice, 0, wx.ALL | wx.EXPAND, 8)
+
         self.start_label = wx.StaticText(
             self,
-            label="Start or valid time (optional, YYYY-MM-DD or ISO UTC):",
+            label=(
+                "Start or valid time in UTC (optional, YYYY-MM-DD or ISO timestamp). "
+                "For SPC/WPC outlooks and SPC watches, this is the valid time."
+            ),
         )
         main_sizer.Add(self.start_label, 0, _LEFT | _RIGHT | wx.EXPAND, 8)
         self.start_input = wx.TextCtrl(self, value="")
@@ -174,6 +201,7 @@ class AdvancedTextProductDialog(wx.Dialog):
     def _bind_events(self) -> None:
         """Bind buttons and Escape handling."""
         self.product_preset_choice.Bind(_EVT_CHOICE, self._on_product_preset)
+        self.date_preset_choice.Bind(_EVT_CHOICE, self._on_date_preset)
         self.lookup_button.Bind(wx.EVT_BUTTON, self._on_lookup)
         self.close_button.Bind(wx.EVT_BUTTON, self._on_close)
         self.Bind(wx.EVT_CHAR_HOOK, self._on_key)
@@ -236,16 +264,16 @@ class AdvancedTextProductDialog(wx.Dialog):
 
         spc_outlook_day = self._spc_outlook_day(product_id)
         if spc_outlook_day is not None:
-            return await self._lookup_spc_outlook(spc_outlook_day)
+            return await self._lookup_spc_outlook(spc_outlook_day, start)
         if product_id in {"SPC MCD", "MCD", "SPC MESOSCALE DISCUSSION"}:
-            return await self._lookup_spc_mcd()
+            return await self._lookup_spc_mcd(limit, start, end)
         if product_id in {"SPC WATCH", "SPC WATCHES", "WATCHES"}:
             return await self._lookup_spc_watches(start)
         wpc_outlook_day = self._wpc_outlook_day(product_id)
         if wpc_outlook_day is not None:
             return await self._lookup_wpc_outlook(wpc_outlook_day, start, limit)
         if product_id in {"WPC MPD", "MPD", "WPC MESOSCALE PRECIPITATION DISCUSSION"}:
-            return await self._lookup_wpc_mpd()
+            return await self._lookup_wpc_mpd(limit, start, end)
 
         if source != _SOURCE_IEM_ONLY and product_id in _NWS_PRODUCT_TYPES and location:
             products = await self._lookup_nws_history(product_id, location, limit, start, end)
@@ -283,15 +311,26 @@ class AdvancedTextProductDialog(wx.Dialog):
             return history
         return [history]
 
-    async def _lookup_spc_outlook(self, day: int) -> str:
+    async def _lookup_spc_outlook(self, day: int, valid_at: datetime | None) -> str:
         lat = getattr(self._location, "latitude", None)
         lon = getattr(self._location, "longitude", None)
         if lat is None or lon is None:
             return "SPC outlook lookup needs a location with latitude and longitude."
-        product = await self._service.get_iem_spc_outlook(lat, lon, day=day, current=True)
+        product = await self._service.get_iem_spc_outlook(
+            lat,
+            lon,
+            day=day,
+            current=valid_at is None,
+            valid_at=valid_at,
+        )
         return self._format_products("IEM", product)
 
-    async def _lookup_spc_mcd(self) -> str:
+    async def _lookup_spc_mcd(
+        self,
+        limit: int,
+        start: datetime | None,
+        end: datetime | None,
+    ) -> str:
         lat = getattr(self._location, "latitude", None)
         lon = getattr(self._location, "longitude", None)
         if lat is None or lon is None:
@@ -299,7 +338,14 @@ class AdvancedTextProductDialog(wx.Dialog):
                 "SPC MCD (Mesoscale Discussion) lookup needs a location with "
                 "latitude and longitude."
             )
-        product = await self._service.get_iem_spc_mcds(lat, lon)
+        product = await self._service.get_iem_spc_mcds(
+            lat,
+            lon,
+            active_only=False,
+            start=start,
+            end=end,
+            max_items=limit,
+        )
         return self._format_products("IEM", product)
 
     async def _lookup_spc_watches(self, valid_at: datetime | None) -> str:
@@ -329,7 +375,12 @@ class AdvancedTextProductDialog(wx.Dialog):
         )
         return self._format_products("IEM", product)
 
-    async def _lookup_wpc_mpd(self) -> str:
+    async def _lookup_wpc_mpd(
+        self,
+        limit: int,
+        start: datetime | None,
+        end: datetime | None,
+    ) -> str:
         lat = getattr(self._location, "latitude", None)
         lon = getattr(self._location, "longitude", None)
         if lat is None or lon is None:
@@ -337,7 +388,14 @@ class AdvancedTextProductDialog(wx.Dialog):
                 "WPC MPD (Mesoscale Precipitation Discussion) lookup needs a location "
                 "with latitude and longitude."
             )
-        product = await self._service.get_iem_wpc_mpds(lat, lon)
+        product = await self._service.get_iem_wpc_mpds(
+            lat,
+            lon,
+            active_only=False,
+            start=start,
+            end=end,
+            max_items=limit,
+        )
         return self._format_products("IEM", product)
 
     def _on_product_preset(self, event) -> None:
@@ -349,6 +407,14 @@ class AdvancedTextProductDialog(wx.Dialog):
             self.product_input.SetValue(product_id)
             if product_id not in _NWS_PRODUCT_TYPES:
                 self.source_choice.SetSelection(1)
+
+    def _on_date_preset(self, event) -> None:
+        """Apply a date preset to the start/end inputs."""
+        del event
+        preset = self.date_preset_choice.GetStringSelection()
+        start, end = self._date_range_for_preset(preset)
+        self.start_input.SetValue(self._format_form_datetime(start) if start is not None else "")
+        self.end_input.SetValue(self._format_form_datetime(end) if end is not None else "")
 
     @staticmethod
     def _parse_limit(value: str) -> int:
@@ -374,6 +440,27 @@ class AdvancedTextProductDialog(wx.Dialog):
         if parsed.tzinfo is None:
             return parsed.replace(tzinfo=UTC)
         return parsed
+
+    @staticmethod
+    def _date_range_for_preset(preset: str) -> tuple[datetime | None, datetime | None]:
+        if preset in {"", "Latest or current", "Custom dates below"}:
+            return None, None
+        now = datetime.now(UTC).replace(microsecond=0)
+        days_by_preset = {
+            "Past 24 hours": 1,
+            "Past 7 days": 7,
+            "Past 30 days": 30,
+            "Past 90 days": 90,
+            "Past year": 365,
+        }
+        days = days_by_preset.get(preset)
+        if days is None:
+            return None, None
+        return now - timedelta(days=days), now
+
+    @staticmethod
+    def _format_form_datetime(value: datetime) -> str:
+        return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
     @staticmethod
     def _spc_outlook_day(product_id: str) -> int | None:

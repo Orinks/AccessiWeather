@@ -226,7 +226,13 @@ class TestForecastProductServiceIemStructuredProducts:
         async def fake_wpc_mpds(lat, lon, **kwargs):
             assert lat == 35.78
             assert lon == -78.64
-            assert kwargs == {"max_items": 5, "timeout": 10.0}
+            assert kwargs == {
+                "active_only": True,
+                "start": None,
+                "end": None,
+                "max_items": 5,
+                "timeout": 10.0,
+            }
             return product
 
         monkeypatch.setattr(
