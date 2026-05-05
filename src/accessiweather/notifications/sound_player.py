@@ -1,5 +1,4 @@
 import logging
-import platform
 import sys
 from collections.abc import Collection
 from pathlib import Path
@@ -32,15 +31,6 @@ except ImportError:
 except Exception as e:
     logging.getLogger(__name__).debug(f"sound_lib initialization failed: {e}")
 
-# Fallback to playsound3
-try:
-    from playsound3 import playsound
-
-    PLAYSOUND_AVAILABLE = True
-except ImportError:
-    PLAYSOUND_AVAILABLE = False
-    playsound = None
-
 logger = logging.getLogger(__name__)
 
 SOUNDPACKS_DIR = get_soundpacks_dir()
@@ -58,10 +48,9 @@ def is_sound_event_muted(event: str, muted_events: Collection[str] | None = None
 def _log_packaging_sound_diagnostics() -> None:
     """Emit debug-only sound dependency/path diagnostics for packaged troubleshooting."""
     logger.debug(
-        "[packaging-diag] sound deps: sound_lib_available=%s playsound_available=%s "
-        "compiled=%s meipass=%s soundpacks_dir=%s exists=%s",
+        "[packaging-diag] sound deps: sound_lib_available=%s compiled=%s "
+        "meipass=%s soundpacks_dir=%s exists=%s",
         SOUND_LIB_AVAILABLE,
-        PLAYSOUND_AVAILABLE,
         is_compiled_runtime(),
         getattr(sys, "_MEIPASS", None),
         SOUNDPACKS_DIR,
@@ -128,29 +117,11 @@ def _play_sound_file(sound_file: Path, block: bool = False, volume: float = 1.0)
             logger.debug(f"Played sound using sound_lib at volume {volume}: {sound_file}")
             return True
         except Exception as e:
-            logger.debug(f"sound_lib playback failed, falling back to playsound3: {e}")
+            logger.warning(f"sound_lib playback failed: {e}")
+            return False
 
-    # Fall back to playsound3 (no volume control)
-    if not PLAYSOUND_AVAILABLE or playsound is None:
-        logger.warning("No audio backend available")
-        return False
-
-    try:
-        # Convert path for cross-platform compatibility
-        if platform.system() == "Windows":
-            sound_path = str(sound_file).replace("\\", "/")
-        else:
-            sound_path = str(sound_file)
-        if volume < 1.0:
-            logger.debug(
-                f"Volume adjustment requested ({volume}) but playsound3 doesn't support it"
-            )
-        playsound(sound_path, block=block)
-        logger.debug(f"Played sound using playsound3: {sound_file}")
-        return True
-    except Exception as e:
-        logger.warning(f"playsound3 failed: {e}")
-        return False
+    logger.warning("sound_lib audio backend unavailable")
+    return False
 
 
 def play_sound_file(sound_file: Path) -> bool:
@@ -190,9 +161,7 @@ class PreviewPlayer:
 
         if SOUND_LIB_AVAILABLE:
             return self._play_with_sound_lib(sound_file, volume)
-        if PLAYSOUND_AVAILABLE:
-            return self._play_with_playsound(sound_file)
-        logger.warning("No audio backend available")
+        logger.warning("sound_lib audio backend unavailable")
         return False
 
     def _play_with_sound_lib(self, sound_file: Path, volume: float = 1.0) -> bool:
@@ -209,22 +178,6 @@ class PreviewPlayer:
         except Exception as e:
             logger.warning(f"sound_lib playback failed: {e}")
             self._current_stream = None
-            self._is_playing = False
-            return False
-
-    def _play_with_playsound(self, sound_file: Path) -> bool:
-        """Play using playsound3 (no stop or volume support)."""
-        try:
-            if platform.system() == "Windows":
-                sound_path = str(sound_file).replace("\\", "/")
-            else:
-                sound_path = str(sound_file)
-            playsound(sound_path, block=False)
-            self._is_playing = True
-            logger.debug(f"Playing preview with playsound3: {sound_file}")
-            return True
-        except Exception as e:
-            logger.warning(f"playsound3 playback failed: {e}")
             self._is_playing = False
             return False
 
@@ -271,13 +224,9 @@ def get_preview_player() -> PreviewPlayer:
     return _preview_player
 
 
-def is_playsound_available() -> bool:
-    """Check if playsound3 is available."""
-    return PLAYSOUND_AVAILABLE
-
-
-# Backwards compatibility alias
-is_sound_lib_available = is_playsound_available
+def is_sound_lib_available() -> bool:
+    """Check if sound_lib is available."""
+    return SOUND_LIB_AVAILABLE
 
 
 def play_notification_sound(
@@ -327,13 +276,12 @@ def play_exit_sound(
 
         sound_file, volume = get_sound_entry("exit", pack_dir)
         logger.debug(
-            "[packaging-diag] exit sound async: pack=%s file=%s exists=%s volume=%s sound_lib=%s playsound3=%s",
+            "[packaging-diag] exit sound async: pack=%s file=%s exists=%s volume=%s sound_lib=%s",
             pack_dir,
             sound_file,
             bool(sound_file and sound_file.exists()),
             volume,
             SOUND_LIB_AVAILABLE,
-            PLAYSOUND_AVAILABLE,
         )
         if not sound_file:
             logger.warning("Exit sound file not found.")
@@ -355,13 +303,12 @@ def play_exit_sound_blocking(
 
         sound_file, volume = get_sound_entry("exit", pack_dir)
         logger.debug(
-            "[packaging-diag] exit sound blocking: pack=%s file=%s exists=%s volume=%s sound_lib=%s playsound3=%s",
+            "[packaging-diag] exit sound blocking: pack=%s file=%s exists=%s volume=%s sound_lib=%s",
             pack_dir,
             sound_file,
             bool(sound_file and sound_file.exists()),
             volume,
             SOUND_LIB_AVAILABLE,
-            PLAYSOUND_AVAILABLE,
         )
         if not sound_file:
             logger.warning("Exit sound file not found.")

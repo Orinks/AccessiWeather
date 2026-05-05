@@ -14,7 +14,7 @@ requires-python = ">=3.11"
 dependencies = [
     "wxPython>=4.2.5",
     "gui_builder @ git+https://github.com/accessibleapps/gui_builder.git",
-    "sound_lib @ git+https://github.com/accessibleapps/sound_lib.git",
+    "sound_lib @ git+https://github.com/samtupy/sound_lib_macos_fixes.git",
     "platform-utils>=1.6.0",  # sound_lib dep; >=1.6 needed for Python 3.12+ (no imp module)
     "desktop-notifier",
     "toasted; sys_platform == 'win32'",
@@ -25,7 +25,6 @@ dependencies = [
     "psutil",
     "keyring",
     "openai>=1.0.0",
-    "playsound3",
     "prismatoid>=0.7.0",
     "tzdata",
     "cryptography>=42.0.0",
