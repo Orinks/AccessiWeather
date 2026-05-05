@@ -324,7 +324,6 @@ class AppLifecycleMixin:
             settings = self.config_manager.get_settings()
             if getattr(settings, "sound_enabled", True):
                 from .notifications.sound_player import (
-                    PLAYSOUND_AVAILABLE,
                     SOUND_LIB_AVAILABLE,
                     play_exit_sound,
                 )
@@ -332,11 +331,10 @@ class AppLifecycleMixin:
                 sound_pack = getattr(settings, "sound_pack", "default")
                 muted_events = getattr(settings, "muted_sound_events", [])
                 logger.debug(
-                    "[packaging-diag] exit sound: compiled=%s sound_pack=%s sound_lib=%s playsound3=%s",
+                    "[packaging-diag] exit sound: compiled=%s sound_pack=%s sound_lib=%s",
                     is_compiled_runtime(),
                     sound_pack,
                     SOUND_LIB_AVAILABLE,
-                    PLAYSOUND_AVAILABLE,
                 )
 
                 play_exit_sound(sound_pack, muted_events=muted_events)
