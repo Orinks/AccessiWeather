@@ -92,3 +92,27 @@ def test_create_portable_zip_fails_when_default_soundpack_manifest_missing(
 
     assert build.create_portable_zip() is False
     assert not (dist_dir / "AccessiWeather_Portable_v9.9.9.zip").exists()
+
+
+def test_create_linux_zip_from_nuitka_distribution(tmp_path, monkeypatch) -> None:
+    """Linux Nuitka builds stage as dist/AccessiWeather and zip that directory."""
+    dist_dir = tmp_path / "dist"
+    source_dir = dist_dir / "AccessiWeather"
+    source_dir.mkdir(parents=True)
+    (source_dir / "AccessiWeather").write_bytes(b"fake-linux-exe")
+
+    monkeypatch.setattr(build, "IS_WINDOWS", False)
+    monkeypatch.setattr(build, "IS_MACOS", False)
+    monkeypatch.setattr(build, "IS_LINUX", True)
+    monkeypatch.setattr(build, "DIST_DIR", dist_dir)
+    monkeypatch.setattr(build, "get_version", lambda: "9.9.9")
+
+    assert build.create_portable_zip() is True
+
+    zip_path = dist_dir / "AccessiWeather_Linux_v9.9.9.zip"
+    assert zip_path.exists()
+
+    with zipfile.ZipFile(zip_path) as archive:
+        names = set(archive.namelist())
+
+    assert "AccessiWeather/AccessiWeather" in names

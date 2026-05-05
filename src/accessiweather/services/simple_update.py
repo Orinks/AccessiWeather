@@ -220,9 +220,10 @@ def select_asset(
                 if asset.get("name", "").lower().endswith(ext):
                     return asset
     else:
-        for ext in (".appimage", ".deb", ".rpm", ".tar.gz"):
+        for ext in (".appimage", ".deb", ".rpm", ".tar.gz", ".zip"):
             for asset in filtered:
-                if asset.get("name", "").lower().endswith(ext):
+                name = asset.get("name", "").lower()
+                if name.endswith(ext) and ("linux" in name or ext != ".zip"):
                     return asset
 
     return filtered[0] if filtered else (assets[0] if assets else None)

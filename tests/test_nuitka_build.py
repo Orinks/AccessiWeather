@@ -66,6 +66,19 @@ def test_macos_nuitka_command_uses_app_mode() -> None:
     assert "--include-data-dir=src/accessiweather/resources=accessiweather/resources" not in command
 
 
+def test_linux_nuitka_command_excludes_host_glib_stack() -> None:
+    command = build_nuitka.build_nuitka_command(
+        output_dir=Path("dist"),
+        build_tag=None,
+        assume_platform="Linux",
+    )
+
+    assert "--mode=standalone" in command
+    assert "--include-data-dir=src/accessiweather/resources=accessiweather/resources" in command
+    for pattern in build_nuitka.LINUX_SYSTEM_DLL_EXCLUDES:
+        assert f"--noinclude-dlls={pattern}" in command
+
+
 def test_nuitka_is_available_as_build_extra() -> None:
     pyproject = (build_nuitka.ROOT / "pyproject.toml").read_text(encoding="utf-8")
 
@@ -85,8 +98,11 @@ def test_production_build_workflow_uses_nuitka() -> None:
     assert "--only-binary wxPython" in workflow
     assert "dist/AccessiWeather_Setup_*.exe" in workflow
     assert "dist/AccessiWeather_macOS_*.zip" in workflow
+    assert "dist/AccessiWeather_Linux_*.zip" in workflow
     assert "python installer/build_nuitka.py" in workflow
     assert "scripts/generate_build_meta.py" in workflow
+    assert "Smoke test packaged app" in workflow
+    assert "GLib-GObject-CRITICAL" in workflow
 
 
 def test_stage_nuitka_distribution_copies_output_to_dist_shape(tmp_path, monkeypatch) -> None:
@@ -99,6 +115,7 @@ def test_stage_nuitka_distribution_copies_output_to_dist_shape(tmp_path, monkeyp
     dist_dir = tmp_path / "dist"
     monkeypatch.setattr(build_nuitka, "BUILD_DIR", build_dir)
     monkeypatch.setattr(build_nuitka, "DIST_DIR", dist_dir)
+    monkeypatch.setattr(build_nuitka.platform, "system", lambda: "Windows")
 
     staged = build_nuitka.stage_nuitka_distribution()
 
@@ -143,6 +160,25 @@ def test_stage_nuitka_distribution_copies_macos_app_to_dist_shape(tmp_path, monk
 
     assert staged == dist_dir / "AccessiWeather.app"
     assert (staged / "Contents" / "MacOS" / "AccessiWeather").read_bytes() == b"fake-app"
+
+
+def test_stage_nuitka_distribution_copies_linux_output_to_zip_source_shape(
+    tmp_path, monkeypatch
+) -> None:
+    build_dir = tmp_path / "build" / "nuitka"
+    nuitka_dist = build_dir / "__main__.dist"
+    nuitka_dist.mkdir(parents=True)
+    (nuitka_dist / "AccessiWeather").write_bytes(b"fake-linux-exe")
+
+    dist_dir = tmp_path / "dist"
+    monkeypatch.setattr(build_nuitka, "BUILD_DIR", build_dir)
+    monkeypatch.setattr(build_nuitka, "DIST_DIR", dist_dir)
+    monkeypatch.setattr(build_nuitka.platform, "system", lambda: "Linux")
+
+    staged = build_nuitka.stage_nuitka_distribution()
+
+    assert staged == dist_dir / "AccessiWeather"
+    assert (staged / "AccessiWeather").read_bytes() == b"fake-linux-exe"
 
 
 def test_stage_nuitka_distribution_fails_when_output_missing(tmp_path, monkeypatch) -> None:
