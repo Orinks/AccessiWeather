@@ -215,10 +215,103 @@ jobs:
           path: .nuitka-cache
           key: nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-${{ github.run_id }}
 
+  build-linux:
+    name: Linux
+    needs: prepare
+    if: needs.prepare.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cache/pip
+            ~/Library/Caches/pip
+            ~\AppData\Local\pip\Cache
+          key: pip-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            pip-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-
+            pip-${{ runner.os }}-
+
+      - uses: actions/cache/restore@v5
+        with:
+          path: .nuitka-cache
+          key: nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-${{ github.run_id }}
+          restore-keys: |
+            nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-
+            nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ccache \
+            libgtk-3-dev \
+            libnotify-dev \
+            libsdl2-dev \
+            libwebkit2gtk-4.1-dev \
+            freeglut3-dev \
+            xvfb
+
+      - name: Install dependencies
+        run: |
+          pip install \
+            -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-24.04 \
+            --only-binary wxPython \
+            wxPython
+          pip install -e .[build]
+
+      - name: Build
+        timeout-minutes: 55
+        run: |
+          python scripts/generate_build_meta.py ${{ needs.prepare.outputs.is_nightly == 'true' && needs.prepare.outputs.tag || '' }}
+          python installer/create_icons.py
+          python installer/build_nuitka.py --tag "${{ needs.prepare.outputs.is_nightly == 'true' && needs.prepare.outputs.tag || '' }}"
+
+      - name: Smoke test packaged app
+        env:
+          ACCESSIWEATHER_TEST_MODE: "1"
+          XDG_DATA_HOME: ${{ runner.temp }}/accessiweather-data
+          XDG_CONFIG_HOME: ${{ runner.temp }}/accessiweather-config
+        run: |
+          set +e
+          timeout 25s xvfb-run -a dist/AccessiWeather/AccessiWeather > linux-smoke.log 2>&1
+          status=$?
+          set -e
+          cat linux-smoke.log
+          if grep -E "cannot register existing type 'G(Task|AsyncResult|InputStream|Seekable|PollableInputStream)'|GLib-GObject-CRITICAL" linux-smoke.log; then
+            echo "Packaged Linux app hit the GLib/GIO duplicate type-registration crash."
+            exit 1
+          fi
+          if [ "$status" -ne 0 ] && [ "$status" -ne 124 ]; then
+            echo "Packaged Linux app exited unexpectedly with status $status."
+            exit "$status"
+          fi
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: linux
+          path: dist/AccessiWeather_Linux_*.zip
+
+      - uses: actions/cache/save@v5
+        if: always()
+        with:
+          path: .nuitka-cache
+          key: nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-${{ github.run_id }}
+
   release:
     name: Release
-    needs: [prepare, build-windows, build-macos]
-    if: always() && needs.prepare.outputs.should_build == 'true' && (needs.build-windows.result == 'success' || needs.build-macos.result == 'success')
+    needs: [prepare, build-windows, build-macos, build-linux]
+    if: always() && needs.prepare.outputs.should_build == 'true' && (needs.build-windows.result == 'success' || needs.build-macos.result == 'success' || needs.build-linux.result == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -253,12 +346,14 @@ jobs:
                 *Setup*.exe) mv "$f" "assets/AccessiWeather-nightly-${TIMESTAMP}-windows-setup.exe" ;;
                 *Portable*.zip) mv "$f" "assets/AccessiWeather-nightly-${TIMESTAMP}-windows-portable.zip" ;;
                 *macOS*.zip) mv "$f" "assets/AccessiWeather-nightly-${TIMESTAMP}-macOS.zip" ;;
+                *Linux*.zip) mv "$f" "assets/AccessiWeather-nightly-${TIMESTAMP}-linux.zip" ;;
               esac
             else
               case "$name" in
                 *Setup*.exe) mv "$f" "assets/AccessiWeather-${VERSION}-windows-setup.exe" ;;
                 *Portable*.zip) mv "$f" "assets/AccessiWeather-${VERSION}-windows-portable.zip" ;;
                 *macOS*.zip) mv "$f" "assets/AccessiWeather-${VERSION}-macOS.zip" ;;
+                *Linux*.zip) mv "$f" "assets/AccessiWeather-${VERSION}-linux.zip" ;;
               esac
             fi
           done

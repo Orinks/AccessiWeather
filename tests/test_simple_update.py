@@ -108,6 +108,20 @@ def test_select_asset_windows_portable():
     assert asset["name"].endswith(".zip")
 
 
+def test_select_asset_linux_prefers_linux_zip():
+    release = _release(
+        assets=[
+            {"name": "AccessiWeather-nightly-20260505-windows-portable.zip"},
+            {"name": "AccessiWeather-nightly-20260505-linux.zip"},
+            {"name": "checksums.txt"},
+        ]
+    )
+
+    asset = select_asset(release, portable=False, platform_system="Linux")
+
+    assert asset["name"] == "AccessiWeather-nightly-20260505-linux.zip"
+
+
 def test_build_portable_update_script_contains_extract_and_restart():
     script = build_portable_update_script(
         Path("C:/temp/update.zip"),

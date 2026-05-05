@@ -45,3 +45,14 @@ def test_build_workflow_uses_nuitka_for_macos_artifacts():
     assert "python installer/build_nuitka.py" in workflow
     assert "dist/AccessiWeather_macOS_*.zip" in workflow
     assert 'zip -r "AccessiWeather_v${VERSION}_macOS.zip"' not in workflow
+
+
+def test_build_workflow_uses_nuitka_for_linux_artifacts():
+    workflow = (ROOT / ".github" / "workflows" / "build.yml").read_text()
+
+    assert "build-linux:" in workflow
+    assert "libwebkit2gtk-4.1-dev" in workflow
+    assert "xvfb-run -a dist/AccessiWeather/AccessiWeather" in workflow
+    assert "dist/AccessiWeather_Linux_*.zip" in workflow
+    assert "AccessiWeather-nightly-${TIMESTAMP}-linux.zip" in workflow
+    assert "AccessiWeather-${VERSION}-linux.zip" in workflow

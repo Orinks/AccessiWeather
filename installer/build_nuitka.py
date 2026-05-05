@@ -18,6 +18,13 @@ BUILD_DIR = ROOT / "build" / "nuitka"
 RESOURCES_DIR = SRC_DIR / "accessiweather" / "resources"
 SOUNDPACKS_DIR = ROOT / "soundpacks"
 APP_NAME = "AccessiWeather"
+LINUX_SYSTEM_DLL_EXCLUDES = (
+    "libgio-2.0.so*",
+    "libglib-2.0.so*",
+    "libgmodule-2.0.so*",
+    "libgobject-2.0.so*",
+    "libgthread-2.0.so*",
+)
 
 
 def _repo_path(path: Path) -> str:
@@ -68,7 +75,13 @@ def _find_nuitka_output_dir() -> tuple[Path, str]:
 def stage_nuitka_distribution() -> Path:
     """Copy Nuitka standalone output into the layout expected by Inno and ZIP code."""
     source_dir, output_kind = _find_nuitka_output_dir()
-    target_dir = DIST_DIR / ("AccessiWeather.app" if output_kind == "app" else "AccessiWeather_dir")
+    if output_kind == "app":
+        target_name = "AccessiWeather.app"
+    elif platform.system() == "Linux":
+        target_name = "AccessiWeather"
+    else:
+        target_name = "AccessiWeather_dir"
+    target_dir = DIST_DIR / target_name
     if target_dir.exists():
         shutil.rmtree(target_dir)
     DIST_DIR.mkdir(parents=True, exist_ok=True)
@@ -173,6 +186,11 @@ def build_nuitka_command(
                 f"--macos-app-icon={_repo_path(icon)}",
             ]
         )
+    elif system == "Linux":
+        # GTK loads the host GLib/GIO stack. Shipping another copy can trigger
+        # duplicate GType registration crashes such as "cannot register existing
+        # type 'GTask'" when wx/GTK and other GLib consumers initialize.
+        command.extend(f"--noinclude-dlls={pattern}" for pattern in LINUX_SYSTEM_DLL_EXCLUDES)
 
     return command
 
