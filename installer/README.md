@@ -11,7 +11,7 @@ pip install nuitka pillow
 # Generate icons (optional - will be auto-generated if missing)
 python installer/create_icons.py
 
-# Full Nuitka build (app + installer/portable ZIP where supported)
+# Full Nuitka build (app + installer/portable archive where supported)
 python installer/build_nuitka.py
 
 # Build app only (no installer)
@@ -40,6 +40,10 @@ All outputs are placed in the `dist/` directory:
 ### macOS
 - `AccessiWeather_macOS_vX.X.X.zip` - macOS app ZIP
 - `AccessiWeather.app` - Application bundle
+
+### Linux
+- `AccessiWeather_Linux_vX.X.X.tar.gz` - Linux portable tarball
+- `AccessiWeather/` - Staged application directory
 
 ## Requirements
 
@@ -132,7 +136,7 @@ The GitHub Actions workflow `.github/workflows/build.yml` automates:
 
 1. Building on Windows and macOS
 2. Creating installers (Inno Setup / DMG)
-3. Creating portable ZIPs
+3. Creating portable archives
 4. Uploading artifacts
 5. Creating releases (on tags)
 

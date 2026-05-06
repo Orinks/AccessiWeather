@@ -132,7 +132,7 @@ def stage_nuitka_distribution() -> Path:
 
 
 def create_portable_zip() -> bool:
-    """Create a portable ZIP from the staged Nuitka standalone folder."""
+    """Create a portable archive from the staged Nuitka standalone folder."""
     if str(ROOT) not in sys.path:
         sys.path.insert(0, str(ROOT))
 

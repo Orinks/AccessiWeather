@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- Linux nightly and release downloads now ship as `.tar.gz` tarballs instead of ZIP files.
+
 ### Fixed
 - Pirate Weather now requests API v2 data and carries v2 precipitation types like freezing rain and wintry mix into current, daily, and hourly forecasts.
 - Forecaster Notes now hides Hazardous Weather Outlook and Special Weather Statement tabs when NWS confirms there is no matching product for the selected office.
