@@ -98,7 +98,7 @@ def test_production_build_workflow_uses_nuitka() -> None:
     assert "--only-binary wxPython" in workflow
     assert "dist/AccessiWeather_Setup_*.exe" in workflow
     assert "dist/AccessiWeather_macOS_*.zip" in workflow
-    assert "dist/AccessiWeather_Linux_*.zip" in workflow
+    assert "dist/AccessiWeather_Linux_*.tar.gz" in workflow
     assert "python installer/build_nuitka.py" in workflow
     assert "scripts/generate_build_meta.py" in workflow
     assert "Smoke test packaged app" in workflow
@@ -162,7 +162,7 @@ def test_stage_nuitka_distribution_copies_macos_app_to_dist_shape(tmp_path, monk
     assert (staged / "Contents" / "MacOS" / "AccessiWeather").read_bytes() == b"fake-app"
 
 
-def test_stage_nuitka_distribution_copies_linux_output_to_zip_source_shape(
+def test_stage_nuitka_distribution_copies_linux_output_to_archive_source_shape(
     tmp_path, monkeypatch
 ) -> None:
     build_dir = tmp_path / "build" / "nuitka"

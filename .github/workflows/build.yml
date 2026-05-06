@@ -300,7 +300,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: linux
-          path: dist/AccessiWeather_Linux_*.zip
+          path: dist/AccessiWeather_Linux_*.tar.gz
 
       - uses: actions/cache/save@v5
         if: always()
@@ -338,7 +338,7 @@ jobs:
           TIMESTAMP=$(date -u +%Y%m%d)
 
           # Rename assets based on release type
-          for f in dist/*.exe dist/*.zip; do
+          for f in dist/*.exe dist/*.zip dist/*.tar.gz; do
             [ -f "$f" ] || continue
             name=$(basename "$f")
             if [ "$IS_NIGHTLY" = "true" ]; then
@@ -346,14 +346,14 @@ jobs:
                 *Setup*.exe) mv "$f" "assets/AccessiWeather-nightly-${TIMESTAMP}-windows-setup.exe" ;;
                 *Portable*.zip) mv "$f" "assets/AccessiWeather-nightly-${TIMESTAMP}-windows-portable.zip" ;;
                 *macOS*.zip) mv "$f" "assets/AccessiWeather-nightly-${TIMESTAMP}-macOS.zip" ;;
-                *Linux*.zip) mv "$f" "assets/AccessiWeather-nightly-${TIMESTAMP}-linux.zip" ;;
+                *Linux*.tar.gz) mv "$f" "assets/AccessiWeather-nightly-${TIMESTAMP}-linux.tar.gz" ;;
               esac
             else
               case "$name" in
                 *Setup*.exe) mv "$f" "assets/AccessiWeather-${VERSION}-windows-setup.exe" ;;
                 *Portable*.zip) mv "$f" "assets/AccessiWeather-${VERSION}-windows-portable.zip" ;;
                 *macOS*.zip) mv "$f" "assets/AccessiWeather-${VERSION}-macOS.zip" ;;
-                *Linux*.zip) mv "$f" "assets/AccessiWeather-${VERSION}-linux.zip" ;;
+                *Linux*.tar.gz) mv "$f" "assets/AccessiWeather-${VERSION}-linux.tar.gz" ;;
               esac
             fi
           done

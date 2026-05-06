@@ -53,6 +53,6 @@ def test_build_workflow_uses_nuitka_for_linux_artifacts():
     assert "build-linux:" in workflow
     assert "libwebkit2gtk-4.1-dev" in workflow
     assert "xvfb-run -a dist/AccessiWeather/AccessiWeather" in workflow
-    assert "dist/AccessiWeather_Linux_*.zip" in workflow
-    assert "AccessiWeather-nightly-${TIMESTAMP}-linux.zip" in workflow
-    assert "AccessiWeather-${VERSION}-linux.zip" in workflow
+    assert "dist/AccessiWeather_Linux_*.tar.gz" in workflow
+    assert "AccessiWeather-nightly-${TIMESTAMP}-linux.tar.gz" in workflow
+    assert "AccessiWeather-${VERSION}-linux.tar.gz" in workflow
