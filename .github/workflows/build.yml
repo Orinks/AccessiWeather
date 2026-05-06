@@ -309,6 +309,20 @@ jobs:
             exit 1
           fi
 
+      - name: Verify Linux tarball includes sound_lib x64 libraries
+        run: |
+          tarball=$(find dist -maxdepth 1 -name 'AccessiWeather_Linux_*.tar.gz' -print -quit)
+          if [ -z "$tarball" ]; then
+            echo "Linux tarball was not created."
+            exit 1
+          fi
+          for lib in libbass.so libbassmix.so libbassopus.so libtags.so; do
+            if ! tar -tzf "$tarball" | grep -qx "AccessiWeather/sound_lib/lib/x64/$lib"; then
+              echo "Linux tarball is missing sound_lib/lib/x64/$lib."
+              exit 1
+            fi
+          done
+
       - uses: actions/upload-artifact@v7
         with:
           name: linux

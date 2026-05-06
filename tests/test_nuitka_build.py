@@ -114,6 +114,8 @@ def test_production_build_workflow_uses_nuitka() -> None:
     assert "scripts/generate_build_meta.py" in workflow
     assert "Smoke test packaged app" in workflow
     assert "Verify Linux tarball avoids bundled OpenSSL" in workflow
+    assert "Verify Linux tarball includes sound_lib x64 libraries" in workflow
+    assert "AccessiWeather/sound_lib/lib/x64/$lib" in workflow
     assert "lib(ssl|crypto)" in workflow
     assert "GLib-GObject-CRITICAL" in workflow
 
@@ -208,6 +210,25 @@ def test_stage_sound_lib_runtime_files_copies_native_libraries(tmp_path, monkeyp
     assert target == staged / "sound_lib" / "lib"
     assert (target / "bass.dll").read_bytes() == b"dll"
     assert (target / "notes.txt").read_text(encoding="utf-8") == "ignored but copied"
+    assert (target / "x64" / "bass.dll").read_bytes() == b"dll"
+    assert (target / "x64" / "notes.txt").read_text(encoding="utf-8") == "ignored but copied"
+
+
+def test_stage_sound_lib_runtime_files_preserves_existing_arch_layout(
+    tmp_path, monkeypatch
+) -> None:
+    source = tmp_path / "site-packages" / "sound_lib" / "lib"
+    arch_source = source / "x64"
+    arch_source.mkdir(parents=True)
+    (arch_source / "libbass.so").write_bytes(b"so")
+    staged = tmp_path / "dist" / "AccessiWeather"
+    staged.mkdir(parents=True)
+    monkeypatch.setattr(build_nuitka, "_sound_lib_lib_dir", lambda: source)
+
+    target = build_nuitka._stage_sound_lib_runtime_files(staged)
+
+    assert target == staged / "sound_lib" / "lib"
+    assert (target / "x64" / "libbass.so").read_bytes() == b"so"
 
 
 def test_stage_nuitka_distribution_fails_when_output_missing(tmp_path, monkeypatch) -> None:
