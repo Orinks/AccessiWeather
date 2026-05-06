@@ -6,7 +6,7 @@ This script handles the complete build process:
 - Generates app icons if needed
 - Builds the application with PyInstaller
 - Creates installers (Inno Setup on Windows, DMG on macOS)
-- Creates portable ZIP archives
+- Creates portable archives
 
 Usage:
     python installer/build.py                    # Full build for current platform
@@ -23,6 +23,7 @@ import platform
 import shutil
 import subprocess
 import sys
+import tarfile
 import zipfile
 from pathlib import Path
 
@@ -328,9 +329,9 @@ def create_macos_dmg() -> bool:
 
 
 def create_portable_zip() -> bool:
-    """Create a portable ZIP archive."""
+    """Create a portable archive."""
     print("\n" + "=" * 60)
-    print("Creating portable ZIP...")
+    print("Creating portable archive...")
     print("=" * 60 + "\n")
 
     version = get_version()
@@ -367,7 +368,7 @@ def create_portable_zip() -> bool:
             return False
         zip_name = f"AccessiWeather_Linux_v{version}"
 
-    zip_path = DIST_DIR / zip_name
+    archive_path = DIST_DIR / zip_name
 
     # Ensure portable marker directory for Windows portable artifacts.
     if IS_WINDOWS:
@@ -380,22 +381,28 @@ def create_portable_zip() -> bool:
             print(f"Error: {exc}")
             return False
 
-    # Remove existing zip
-    zip_file = Path(f"{zip_path}.zip")
-    if zip_file.exists():
-        zip_file.unlink()
+    if IS_LINUX:
+        archive_file = Path(f"{archive_path}.tar.gz")
+        if archive_file.exists():
+            archive_file.unlink()
 
-    # Create zip
-    shutil.make_archive(str(zip_path), "zip", source_dir.parent, source_dir.name)
+        with tarfile.open(archive_file, "w:gz") as archive:
+            archive.add(source_dir, arcname=source_dir.name)
+    else:
+        archive_file = Path(f"{archive_path}.zip")
+        if archive_file.exists():
+            archive_file.unlink()
+
+        shutil.make_archive(str(archive_path), "zip", source_dir.parent, source_dir.name)
 
     if IS_WINDOWS:
         try:
-            _assert_portable_zip_has_soundpack(zip_file)
+            _assert_portable_zip_has_soundpack(archive_file)
         except RuntimeError as exc:
             print(f"Error: {exc}")
             return False
 
-    print(f"\nOK: Portable ZIP created: {zip_file}")
+    print(f"\nOK: Portable archive created: {archive_file}")
     return True
 
 
@@ -583,12 +590,12 @@ def main() -> int:
     parser.add_argument(
         "--no-zip",
         action="store_true",
-        help="Skip portable ZIP creation",
+        help="Skip portable archive creation",
     )
     parser.add_argument(
         "--portable-zip-only",
         action="store_true",
-        help="Create and validate the portable ZIP from an existing dist/ build",
+        help="Create and validate the portable archive from an existing dist/ build",
     )
     parser.add_argument(
         "--nightly",
@@ -648,7 +655,7 @@ def main() -> int:
         elif IS_MACOS:
             create_macos_dmg()
 
-    # Create portable ZIP
+    # Create portable archive
     if not args.no_zip and not create_portable_zip():
         return 1
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import tarfile
 import zipfile
 
 from installer import build
@@ -94,8 +95,8 @@ def test_create_portable_zip_fails_when_default_soundpack_manifest_missing(
     assert not (dist_dir / "AccessiWeather_Portable_v9.9.9.zip").exists()
 
 
-def test_create_linux_zip_from_nuitka_distribution(tmp_path, monkeypatch) -> None:
-    """Linux Nuitka builds stage as dist/AccessiWeather and zip that directory."""
+def test_create_linux_tarball_from_nuitka_distribution(tmp_path, monkeypatch) -> None:
+    """Linux Nuitka builds stage as dist/AccessiWeather and archive that directory."""
     dist_dir = tmp_path / "dist"
     source_dir = dist_dir / "AccessiWeather"
     source_dir.mkdir(parents=True)
@@ -109,10 +110,11 @@ def test_create_linux_zip_from_nuitka_distribution(tmp_path, monkeypatch) -> Non
 
     assert build.create_portable_zip() is True
 
-    zip_path = dist_dir / "AccessiWeather_Linux_v9.9.9.zip"
-    assert zip_path.exists()
+    tarball_path = dist_dir / "AccessiWeather_Linux_v9.9.9.tar.gz"
+    assert tarball_path.exists()
+    assert not (dist_dir / "AccessiWeather_Linux_v9.9.9.zip").exists()
 
-    with zipfile.ZipFile(zip_path) as archive:
-        names = set(archive.namelist())
+    with tarfile.open(tarball_path, "r:gz") as archive:
+        names = set(archive.getnames())
 
     assert "AccessiWeather/AccessiWeather" in names

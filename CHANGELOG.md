@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 ### Added
 - **Advanced Forecaster Notes lookup** — Forecaster Notes now has an Advanced Lookup path for current and historical NWS text products, preferring official NWS product history when available and falling back to IEM AFOS/SPC data for national products like SWODY1 and SPC mesoscale discussions (#641).
 
+### Changed
+- Linux nightly and release downloads now ship as `.tar.gz` tarballs instead of ZIP files.
+
 ### Fixed
 - Forecaster Notes now starts with NWS discussion tabs only and adds IEM-backed tabs only when active SPC/WPC products apply to your selected location.
 - Pirate Weather now requests API v2 data and carries v2 precipitation types like freezing rain and wintry mix into current, daily, and hourly forecasts.

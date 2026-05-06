@@ -27,7 +27,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 - Manual dispatch (with optional version override)
 
 **What it does**:
-- Builds Windows installer + portable ZIP and macOS DMG
+- Builds Windows installer + portable ZIP, macOS ZIP, and Linux tarball
 - Creates nightly or stable GitHub releases
 
 ---
