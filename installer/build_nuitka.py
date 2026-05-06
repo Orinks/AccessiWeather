@@ -29,6 +29,7 @@ LINUX_SYSTEM_DLL_EXCLUDES = (
     "libssl.so*",
 )
 SOUND_LIB_NATIVE_EXTS = {".dll", ".dylib", ".so"}
+SOUND_LIB_ARCH_DIR = "x64"
 
 
 def _sound_lib_lib_dir() -> Path:
@@ -59,6 +60,7 @@ def _stage_sound_lib_runtime_files(staged_dir: Path) -> Path:
         shutil.rmtree(target_dir)
     target_dir.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(source_dir, target_dir)
+    _mirror_sound_lib_flat_files_to_arch_dir(target_dir)
 
     native_files = [
         path
@@ -68,6 +70,18 @@ def _stage_sound_lib_runtime_files(staged_dir: Path) -> Path:
     if not native_files:
         raise RuntimeError(f"No sound_lib native libraries were staged under {target_dir}")
     return target_dir
+
+
+def _mirror_sound_lib_flat_files_to_arch_dir(target_dir: Path) -> None:
+    """Support sound_lib loaders that still search sound_lib/lib/x64 in frozen apps."""
+    flat_files = [path for path in target_dir.iterdir() if path.is_file()]
+    if not flat_files:
+        return
+
+    arch_dir = target_dir / SOUND_LIB_ARCH_DIR
+    arch_dir.mkdir(exist_ok=True)
+    for path in flat_files:
+        shutil.copy2(path, arch_dir / path.name)
 
 
 def _repo_path(path: Path) -> str:

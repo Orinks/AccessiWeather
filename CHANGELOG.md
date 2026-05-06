@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - Linux nightly and release downloads now ship as `.tar.gz` tarballs instead of ZIP files.
 
 ### Fixed
+- Linux builds now stage `sound_lib`'s native audio libraries in the path expected by the packaged app.
 - Linux builds no longer bundle OpenSSL libraries that can conflict with the target system's `libcurl`.
 - Pirate Weather now requests API v2 data and carries v2 precipitation types like freezing rain and wintry mix into current, daily, and hourly forecasts.
 - Forecaster Notes now hides Hazardous Weather Outlook and Special Weather Statement tabs when NWS confirms there is no matching product for the selected office.
