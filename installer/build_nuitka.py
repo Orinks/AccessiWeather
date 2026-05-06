@@ -20,11 +20,13 @@ RESOURCES_DIR = SRC_DIR / "accessiweather" / "resources"
 SOUNDPACKS_DIR = ROOT / "soundpacks"
 APP_NAME = "AccessiWeather"
 LINUX_SYSTEM_DLL_EXCLUDES = (
+    "libcrypto.so*",
     "libgio-2.0.so*",
     "libglib-2.0.so*",
     "libgmodule-2.0.so*",
     "libgobject-2.0.so*",
     "libgthread-2.0.so*",
+    "libssl.so*",
 )
 SOUND_LIB_NATIVE_EXTS = {".dll", ".dylib", ".so"}
 

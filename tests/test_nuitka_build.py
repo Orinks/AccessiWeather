@@ -79,6 +79,17 @@ def test_linux_nuitka_command_excludes_host_glib_stack() -> None:
         assert f"--noinclude-dlls={pattern}" in command
 
 
+def test_linux_nuitka_command_excludes_openssl_libraries() -> None:
+    command = build_nuitka.build_nuitka_command(
+        output_dir=Path("dist"),
+        build_tag=None,
+        assume_platform="Linux",
+    )
+
+    assert "--noinclude-dlls=libssl.so*" in command
+    assert "--noinclude-dlls=libcrypto.so*" in command
+
+
 def test_nuitka_is_available_as_build_extra() -> None:
     pyproject = (build_nuitka.ROOT / "pyproject.toml").read_text(encoding="utf-8")
 
@@ -102,6 +113,8 @@ def test_production_build_workflow_uses_nuitka() -> None:
     assert "python installer/build_nuitka.py" in workflow
     assert "scripts/generate_build_meta.py" in workflow
     assert "Smoke test packaged app" in workflow
+    assert "Verify Linux tarball avoids bundled OpenSSL" in workflow
+    assert "lib(ssl|crypto)" in workflow
     assert "GLib-GObject-CRITICAL" in workflow
 
 

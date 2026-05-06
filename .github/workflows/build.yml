@@ -297,6 +297,18 @@ jobs:
             exit "$status"
           fi
 
+      - name: Verify Linux tarball avoids bundled OpenSSL
+        run: |
+          tarball=$(find dist -maxdepth 1 -name 'AccessiWeather_Linux_*.tar.gz' -print -quit)
+          if [ -z "$tarball" ]; then
+            echo "Linux tarball was not created."
+            exit 1
+          fi
+          if tar -tzf "$tarball" | grep -E '(^|/)lib(ssl|crypto)\.so'; then
+            echo "Linux tarball must not bundle OpenSSL libraries; use the target system OpenSSL instead."
+            exit 1
+          fi
+
       - uses: actions/upload-artifact@v7
         with:
           name: linux
