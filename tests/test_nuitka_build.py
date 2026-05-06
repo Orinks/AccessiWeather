@@ -181,6 +181,22 @@ def test_stage_nuitka_distribution_copies_linux_output_to_zip_source_shape(
     assert (staged / "AccessiWeather").read_bytes() == b"fake-linux-exe"
 
 
+def test_stage_sound_lib_runtime_files_copies_native_libraries(tmp_path, monkeypatch) -> None:
+    source = tmp_path / "site-packages" / "sound_lib" / "lib"
+    source.mkdir(parents=True)
+    (source / "bass.dll").write_bytes(b"dll")
+    (source / "notes.txt").write_text("ignored but copied", encoding="utf-8")
+    staged = tmp_path / "dist" / "AccessiWeather_dir"
+    staged.mkdir(parents=True)
+    monkeypatch.setattr(build_nuitka, "_sound_lib_lib_dir", lambda: source)
+
+    target = build_nuitka._stage_sound_lib_runtime_files(staged)
+
+    assert target == staged / "sound_lib" / "lib"
+    assert (target / "bass.dll").read_bytes() == b"dll"
+    assert (target / "notes.txt").read_text(encoding="utf-8") == "ignored but copied"
+
+
 def test_stage_nuitka_distribution_fails_when_output_missing(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(build_nuitka, "BUILD_DIR", tmp_path / "build" / "nuitka")
 

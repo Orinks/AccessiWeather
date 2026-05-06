@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import platform
 import shutil
 import subprocess
@@ -25,6 +26,46 @@ LINUX_SYSTEM_DLL_EXCLUDES = (
     "libgobject-2.0.so*",
     "libgthread-2.0.so*",
 )
+SOUND_LIB_NATIVE_EXTS = {".dll", ".dylib", ".so"}
+
+
+def _sound_lib_lib_dir() -> Path:
+    """Locate sound_lib's native BASS library directory in the build environment."""
+    spec = importlib.util.find_spec("sound_lib")
+    if not spec or not spec.submodule_search_locations:
+        raise RuntimeError("sound_lib is not installed; cannot build packaged audio support")
+
+    package_dir = Path(next(iter(spec.submodule_search_locations)))
+    lib_dir = package_dir / "lib"
+    if lib_dir.exists():
+        return lib_dir
+    raise RuntimeError(f"sound_lib native library directory was not found: {lib_dir}")
+
+
+def _sound_lib_target_dir(staged_dir: Path) -> Path:
+    """Return the frozen path where sound_lib looks for native libraries."""
+    if staged_dir.suffix == ".app":
+        return staged_dir / "Contents" / "Resources" / "sound_lib" / "lib"
+    return staged_dir / "sound_lib" / "lib"
+
+
+def _stage_sound_lib_runtime_files(staged_dir: Path) -> Path:
+    """Copy sound_lib native libraries into the frozen runtime data layout."""
+    source_dir = _sound_lib_lib_dir()
+    target_dir = _sound_lib_target_dir(staged_dir)
+    if target_dir.exists():
+        shutil.rmtree(target_dir)
+    target_dir.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(source_dir, target_dir)
+
+    native_files = [
+        path
+        for path in target_dir.rglob("*")
+        if path.is_file() and path.suffix.lower() in SOUND_LIB_NATIVE_EXTS
+    ]
+    if not native_files:
+        raise RuntimeError(f"No sound_lib native libraries were staged under {target_dir}")
+    return target_dir
 
 
 def _repo_path(path: Path) -> str:
@@ -86,6 +127,7 @@ def stage_nuitka_distribution() -> Path:
         shutil.rmtree(target_dir)
     DIST_DIR.mkdir(parents=True, exist_ok=True)
     shutil.copytree(source_dir, target_dir)
+    _stage_sound_lib_runtime_files(target_dir)
     return target_dir
 
 
