@@ -2,10 +2,8 @@
 Tests for :class:`ForecastProductsDialog` and main-window wiring.
 
 Covers Unit 8 of the Forecast Products PR 1 plan — dialog construction with
-three tabs, focus handling on tab switch, main-window routing (Nationwide
-still goes to NationwideDiscussionDialog, US locations go to the new
-dialog), QUICK_ACTION_LABELS rename, and the non-US adjacent-StaticText
-pattern.
+three tabs, focus handling on tab switch, main-window routing, QUICK_ACTION_LABELS
+rename, and the non-US adjacent-StaticText pattern.
 """
 
 from __future__ import annotations
@@ -497,12 +495,11 @@ class TestMainWindowWiring:
 
         assert QUICK_ACTION_LABELS["discussion"] == "Forecaster &Notes"
 
-    def test_nationwide_branch_still_routes_to_nationwide_dialog(self):
-        """Nationwide selection opens NationwideDiscussionDialog, not the new one."""
+    def test_stale_nationwide_branch_routes_to_forecast_products(self):
+        """A legacy Nationwide selection no longer opens a dedicated dialog."""
         from accessiweather.ui import main_window
 
         mw = MagicMock(spec=main_window.MainWindow)
-        mw._get_discussion_service = MagicMock(return_value=MagicMock())
         mw._on_forecast_products = MagicMock()
 
         current = Location(
@@ -514,19 +511,12 @@ class TestMainWindowWiring:
         mw.app = MagicMock()
         mw.app.config_manager.get_current_location.return_value = current
 
-        # Patch the nationwide dialog module to capture construction.
-        with patch(
-            "accessiweather.ui.dialogs.nationwide_discussion_dialog.NationwideDiscussionDialog"
-        ) as nat_dlg_cls:
-            nat_instance = MagicMock()
-            nat_dlg_cls.return_value = nat_instance
-            main_window.MainWindow._on_discussion(mw)
+        main_window.MainWindow._on_discussion(mw)
 
-        nat_dlg_cls.assert_called_once()
-        mw._on_forecast_products.assert_not_called()
+        mw._on_forecast_products.assert_called_once()
 
     def test_non_nationwide_routes_to_forecast_products(self):
-        """Any non-Nationwide location dispatches to _on_forecast_products."""
+        """Any saved location dispatches to _on_forecast_products."""
         from accessiweather.ui import main_window
 
         mw = MagicMock(spec=main_window.MainWindow)

@@ -11,7 +11,6 @@ from .utils.temperature_utils import TemperatureUnit
 UPDATE_INTERVAL_KEY = "update_interval_minutes"
 ALERT_RADIUS_KEY = "alert_radius_miles"
 PRECISE_LOCATION_ALERTS_KEY = "precise_location_alerts"
-SHOW_NATIONWIDE_KEY = "show_nationwide_location"
 AUTO_REFRESH_NATIONAL_KEY = "auto_refresh_national"
 
 # Advanced settings keys

@@ -607,31 +607,19 @@ class TestClassifySwoOutlook:
 class TestFetchWpcDiscussions:
     """Tests for fetch_wpc_discussions."""
 
-    def test_success_with_products(self, service):
-        products = [
-            {"id": "SR1"},
-            {"id": "MR1"},
-            {"id": "EX1"},
-        ]
-        # Text must contain WMO header codes for classification
+    def test_success_with_iem_products(self, service):
         text_map = {
-            "SR1": "PMDSPD\nShort Range Discussion text",
-            "MR1": "PMDEPD\nMedium Range Discussion text",
-            "EX1": "PMDET4\nExtended Discussion text",
+            "PMDSPD": "PMDSPD\nShort Range Discussion text",
+            "PMDEPD": "PMDEPD\nMedium Range Discussion text",
+            "PMDET4": "PMDET4\nExtended Discussion text",
         }
-        with (
-            patch.object(
-                service,
-                "_fetch_latest_product",
-                return_value={"success": True, "products": products},
-            ),
-            patch.object(
-                service,
-                "_fetch_product_text",
-                side_effect=lambda pid: {"success": True, "text": text_map.get(pid, "")},
-            ),
+        with patch.object(
+            service,
+            "_fetch_iem_text_product",
+            side_effect=lambda pil: {"success": True, "text": text_map[pil]},
         ):
             result = service.fetch_wpc_discussions()
+
         assert "Short Range" in result["short_range"]["text"]
         assert "Medium Range" in result["medium_range"]["text"]
         assert "Extended" in result["extended"]["text"]
@@ -639,115 +627,43 @@ class TestFetchWpcDiscussions:
     def test_fetch_failure(self, service):
         with patch.object(
             service,
-            "_fetch_latest_product",
+            "_fetch_iem_text_product",
             return_value={"success": False, "error": "timeout"},
         ):
             result = service.fetch_wpc_discussions()
         assert "Error" in result["short_range"]["text"]
 
-    def test_product_text_failure(self, service):
-        products = [
-            {"id": "SR1"},
-        ]
-        with (
-            patch.object(
-                service,
-                "_fetch_latest_product",
-                return_value={"success": True, "products": products},
-            ),
-            patch.object(
-                service,
-                "_fetch_product_text",
-                return_value={"success": False, "error": "empty"},
-            ),
-        ):
-            result = service.fetch_wpc_discussions()
-        # When text fetch fails, product is skipped; no classification happens
-        assert result["short_range"]["text"] == "Discussion not available"
-        assert result["medium_range"]["text"] == "Discussion not available"
-
-    def test_product_id_from_at_id(self, service):
-        """Product ID extracted from @id when id is missing."""
-        products = [
-            {
-                "issuingOffice": "WPC",
-                "name": "Short Range Discussion",
-                "id": "",
-                "@id": "https://api.weather.gov/products/SR1",
-            },
-        ]
-        with (
-            patch.object(
-                service,
-                "_fetch_latest_product",
-                return_value={"success": True, "products": products},
-            ),
-            patch.object(
-                service,
-                "_fetch_product_text",
-                return_value={"success": True, "text": "text"},
-            ) as mock_fetch,
-        ):
+    def test_fetches_configured_iem_pils(self, service):
+        with patch.object(
+            service,
+            "_fetch_iem_text_product",
+            return_value={"success": True, "text": "text"},
+        ) as mock_text:
             service.fetch_wpc_discussions()
-        mock_fetch.assert_called_with("SR1")
 
-    def test_breaks_after_all_fetched(self, service):
-        """Stops iterating after all 3 classifications found."""
-        products = [
-            {"id": "SR1"},
-            {"id": "MR1"},
-            {"id": "EX1"},
-            {"id": "SR2"},
+        assert [call.args[0] for call in mock_text.call_args_list] == [
+            "PMDSPD",
+            "PMDEPD",
+            "PMDET4",
         ]
-        text_map = {
-            "SR1": "PMDSPD\nShort range text",
-            "MR1": "PMDEPD\nMedium range text",
-            "EX1": "PMDET4\nExtended text",
-            "SR2": "PMDSPD\nDuplicate",
-        }
-        with (
-            patch.object(
-                service,
-                "_fetch_latest_product",
-                return_value={"success": True, "products": products},
-            ),
-            patch.object(
-                service,
-                "_fetch_product_text",
-                side_effect=lambda pid: {"success": True, "text": text_map.get(pid, "")},
-            ) as mock_text,
-        ):
-            service.fetch_wpc_discussions()
-        assert mock_text.call_count == 3
 
 
 class TestFetchSpcDiscussions:
     """Tests for fetch_spc_discussions."""
 
     def test_success(self, service):
-        products = [
-            {"id": "D1"},
-            {"id": "D2"},
-            {"id": "D3"},
-        ]
         text_map = {
-            "D1": "SWODY1\nDay 1 Outlook text",
-            "D2": "SWODY2\nDay 2 Outlook text",
-            "D3": "SWODY3\nDay 3 Outlook text",
+            "SWODY1": "SWODY1\nDay 1 Outlook text",
+            "SWODY2": "SWODY2\nDay 2 Outlook text",
+            "SWODY3": "SWODY3\nDay 3 Outlook text",
         }
-        with (
-            patch.object(
-                service,
-                "_fetch_latest_product",
-                return_value={"success": True, "products": products},
-            ),
-            patch.object(
-                service,
-                "_fetch_product_text",
-                side_effect=lambda pid: {"success": True, "text": text_map.get(pid, "")},
-            ),
+        with patch.object(
+            service,
+            "_fetch_iem_text_product",
+            side_effect=lambda pil: {"success": True, "text": text_map[pil]},
         ):
             result = service.fetch_spc_discussions()
+
         assert "Day 1" in result["day1"]["text"]
         assert "Day 2" in result["day2"]["text"]
         assert "Day 3" in result["day3"]["text"]
@@ -755,101 +671,36 @@ class TestFetchSpcDiscussions:
     def test_fetch_failure(self, service):
         with patch.object(
             service,
-            "_fetch_latest_product",
+            "_fetch_iem_text_product",
             return_value={"success": False, "error": "err"},
         ):
             result = service.fetch_spc_discussions()
         for key in ("day1", "day2", "day3"):
             assert "Error" in result[key]["text"]
 
-    def test_product_text_failure(self, service):
-        products = [
-            {"id": "D1"},
-        ]
-        with (
-            patch.object(
-                service,
-                "_fetch_latest_product",
-                return_value={"success": True, "products": products},
-            ),
-            patch.object(
-                service,
-                "_fetch_product_text",
-                return_value={"success": False, "error": "fail"},
-            ),
-        ):
-            result = service.fetch_spc_discussions()
-        assert result["day1"]["text"] == "Outlook not available"
-        assert result["day2"]["text"] == "Outlook not available"
-
-    def test_product_id_from_at_id(self, service):
-        products = [
-            {
-                "issuingOffice": "SPC",
-                "name": "Day 1 Convective Outlook",
-                "id": "",
-                "@id": "https://api.weather.gov/products/D1",
-            },
-        ]
-        with (
-            patch.object(
-                service,
-                "_fetch_latest_product",
-                return_value={"success": True, "products": products},
-            ),
-            patch.object(
-                service,
-                "_fetch_product_text",
-                return_value={"success": True, "text": "text"},
-            ) as mock_fetch,
-        ):
+    def test_fetches_configured_iem_pils(self, service):
+        with patch.object(
+            service,
+            "_fetch_iem_text_product",
+            return_value={"success": True, "text": "text"},
+        ) as mock_text:
             service.fetch_spc_discussions()
-        mock_fetch.assert_called_with("D1")
 
-    def test_breaks_after_all_fetched(self, service):
-        products = [
-            {"id": "D1"},
-            {"id": "D2"},
-            {"id": "D3"},
-            {"id": "D1b"},
+        assert [call.args[0] for call in mock_text.call_args_list] == [
+            "SWODY1",
+            "SWODY2",
+            "SWODY3",
         ]
-        text_map = {
-            "D1": "SWODY1\nDay 1 text",
-            "D2": "SWODY2\nDay 2 text",
-            "D3": "SWODY3\nDay 3 text",
-            "D1b": "SWODY1\nDuplicate",
-        }
-        with (
-            patch.object(
-                service,
-                "_fetch_latest_product",
-                return_value={"success": True, "products": products},
-            ),
-            patch.object(
-                service,
-                "_fetch_product_text",
-                side_effect=lambda pid: {"success": True, "text": text_map.get(pid, "")},
-            ) as mock_text,
-        ):
-            service.fetch_spc_discussions()
-        assert mock_text.call_count == 3
 
 
 class TestFetchQpfDiscussion:
     """Tests for fetch_qpf_discussion."""
 
     def test_success(self, service):
-        with (
-            patch.object(
-                service,
-                "_fetch_latest_product",
-                return_value={"success": True, "products": [{"id": "QPF1"}]},
-            ),
-            patch.object(
-                service,
-                "_fetch_product_text",
-                return_value={"success": True, "text": "QPF text"},
-            ),
+        with patch.object(
+            service,
+            "_fetch_iem_text_product",
+            return_value={"success": True, "text": "QPF text"},
         ):
             result = service.fetch_qpf_discussion()
         assert result["qpf"]["text"] == "QPF text"
@@ -857,55 +708,20 @@ class TestFetchQpfDiscussion:
     def test_fetch_failure(self, service):
         with patch.object(
             service,
-            "_fetch_latest_product",
+            "_fetch_iem_text_product",
             return_value={"success": False, "error": "err"},
         ):
             result = service.fetch_qpf_discussion()
         assert "Error" in result["qpf"]["text"]
 
-    def test_text_failure(self, service):
-        with (
-            patch.object(
-                service,
-                "_fetch_latest_product",
-                return_value={"success": True, "products": [{"id": "QPF1"}]},
-            ),
-            patch.object(
-                service,
-                "_fetch_product_text",
-                return_value={"success": False, "error": "fail"},
-            ),
-        ):
-            result = service.fetch_qpf_discussion()
-        assert "Error" in result["qpf"]["text"]
-
-    def test_empty_products(self, service):
+    def test_fetches_qpf_afos_pil(self, service):
         with patch.object(
             service,
-            "_fetch_latest_product",
-            return_value={"success": True, "products": []},
-        ):
-            result = service.fetch_qpf_discussion()
-        assert "not available" in result["qpf"]["text"]
-
-    def test_product_id_from_at_id(self, service):
-        with (
-            patch.object(
-                service,
-                "_fetch_latest_product",
-                return_value={
-                    "success": True,
-                    "products": [{"id": "", "@id": "https://api.weather.gov/products/QPF1"}],
-                },
-            ),
-            patch.object(
-                service,
-                "_fetch_product_text",
-                return_value={"success": True, "text": "text"},
-            ) as mock_fetch,
-        ):
+            "_fetch_iem_text_product",
+            return_value={"success": True, "text": "text"},
+        ) as mock_fetch:
             service.fetch_qpf_discussion()
-        mock_fetch.assert_called_with("QPF1")
+        mock_fetch.assert_called_once_with("QPFPFD")
 
 
 class TestExtractNhcOutlookText:
@@ -942,8 +758,8 @@ class TestFetchNhcDiscussions:
     def test_success(self, service):
         with patch.object(
             service,
-            "_make_html_request",
-            return_value={"success": True, "html": "<pre>Outlook text</pre>"},
+            "_fetch_iem_text_product",
+            return_value={"success": True, "text": "Outlook text"},
         ):
             result = service.fetch_nhc_discussions()
         assert result["atlantic_outlook"]["text"] == "Outlook text"
@@ -952,12 +768,22 @@ class TestFetchNhcDiscussions:
     def test_failure(self, service):
         with patch.object(
             service,
-            "_make_html_request",
+            "_fetch_iem_text_product",
             return_value={"success": False, "error": "timeout"},
         ):
             result = service.fetch_nhc_discussions()
         assert "Error" in result["atlantic_outlook"]["text"]
         assert "Error" in result["east_pacific_outlook"]["text"]
+
+    def test_fetches_tropical_outlook_afos_pils(self, service):
+        with patch.object(
+            service,
+            "_fetch_iem_text_product",
+            return_value={"success": True, "text": "text"},
+        ) as mock_fetch:
+            service.fetch_nhc_discussions()
+
+        assert [call.args[0] for call in mock_fetch.call_args_list] == ["TWOAT", "TWOEP"]
 
 
 class TestExtractCpcOutlookText:
@@ -1016,8 +842,8 @@ class TestFetchCpcDiscussions:
     def test_success(self, service):
         with patch.object(
             service,
-            "_make_html_request",
-            return_value={"success": True, "html": "<pre>CPC text</pre>"},
+            "_fetch_iem_text_product",
+            return_value={"success": True, "text": "CPC text"},
         ):
             result = service.fetch_cpc_discussions()
         assert result["outlook"]["text"] == "CPC text"
@@ -1025,27 +851,21 @@ class TestFetchCpcDiscussions:
     def test_failure(self, service):
         with patch.object(
             service,
-            "_make_html_request",
+            "_fetch_iem_text_product",
             return_value={"success": False, "error": "timeout"},
         ):
             result = service.fetch_cpc_discussions()
         assert "Error" in result["outlook"]["text"]
 
-    def test_extraction_returns_none(self, service):
-        with (
-            patch.object(
-                service,
-                "_make_html_request",
-                return_value={"success": True, "html": "<html></html>"},
-            ),
-            patch.object(
-                NationalDiscussionService,
-                "_extract_cpc_outlook_text",
-                return_value=None,
-            ),
-        ):
+    def test_fetches_cpc_afos_pil(self, service):
+        with patch.object(
+            service,
+            "_fetch_iem_text_product",
+            return_value={"success": True, "text": "text"},
+        ) as mock_fetch:
             result = service.fetch_cpc_discussions()
-        assert "unavailable" in result["outlook"]["text"].lower()
+        assert result["outlook"]["text"] == "text"
+        mock_fetch.assert_called_once_with("PMDMRD")
 
 
 class TestServicesInit:

@@ -51,7 +51,7 @@ async def fetch_notification_event_data(window: MainWindow) -> None:
     """Fetch only the lightweight data needed for notifications."""
     try:
         location = window.app.config_manager.get_current_location()
-        if not location or location.name == "Nationwide":
+        if not location:
             return
 
         weather_data = await window.app.weather_client.get_notification_event_data(location)

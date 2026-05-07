@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from .config_settings import AppSettings
 from .weather import Location
 
+_LEGACY_NATIONWIDE_LOCATION_NAME = "Nationwide"
+
 
 @dataclass
 class AppConfig:
@@ -35,6 +37,7 @@ class AppConfig:
                     **({"radar_station": loc.radar_station} if loc.radar_station else {}),
                 }
                 for loc in self.locations
+                if loc.name != _LEGACY_NATIONWIDE_LOCATION_NAME
             ],
             "current_location": {
                 "name": self.current_location.name,
@@ -78,6 +81,7 @@ class AppConfig:
                 ),
             }
             if self.current_location
+            and self.current_location.name != _LEGACY_NATIONWIDE_LOCATION_NAME
             else None,
         }
 
@@ -88,6 +92,8 @@ class AppConfig:
 
         locations = []
         for loc_data in data.get("locations", []):
+            if loc_data.get("name") == _LEGACY_NATIONWIDE_LOCATION_NAME:
+                continue
             locations.append(
                 Location(
                     name=loc_data["name"],
@@ -107,19 +113,20 @@ class AppConfig:
         current_location = None
         if data.get("current_location"):
             loc_data = data["current_location"]
-            current_location = Location(
-                name=loc_data["name"],
-                latitude=loc_data["latitude"],
-                longitude=loc_data["longitude"],
-                timezone=loc_data.get("timezone"),
-                country_code=loc_data.get("country_code"),
-                marine_mode=bool(loc_data.get("marine_mode", False)),
-                forecast_zone_id=loc_data.get("forecast_zone_id"),
-                cwa_office=loc_data.get("cwa_office"),
-                county_zone_id=loc_data.get("county_zone_id"),
-                fire_zone_id=loc_data.get("fire_zone_id"),
-                radar_station=loc_data.get("radar_station"),
-            )
+            if loc_data.get("name") != _LEGACY_NATIONWIDE_LOCATION_NAME:
+                current_location = Location(
+                    name=loc_data["name"],
+                    latitude=loc_data["latitude"],
+                    longitude=loc_data["longitude"],
+                    timezone=loc_data.get("timezone"),
+                    country_code=loc_data.get("country_code"),
+                    marine_mode=bool(loc_data.get("marine_mode", False)),
+                    forecast_zone_id=loc_data.get("forecast_zone_id"),
+                    cwa_office=loc_data.get("cwa_office"),
+                    county_zone_id=loc_data.get("county_zone_id"),
+                    fire_zone_id=loc_data.get("fire_zone_id"),
+                    radar_station=loc_data.get("radar_station"),
+                )
 
         return cls(
             settings=settings,

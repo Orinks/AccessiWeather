@@ -1,4 +1,4 @@
-"""Tests for NHC tropical outlook scraping in NationalDiscussionService."""
+"""Tests for NHC tropical outlook IEM retrieval in NationalDiscussionService."""
 
 import sys
 from datetime import UTC, datetime
@@ -69,16 +69,12 @@ class TestFetchNhcDiscussions:
     """Test fetch_nhc_discussions method."""
 
     def test_successful_fetch_both_outlooks(self, service):
-        """Test successful scraping of both Atlantic and East Pacific outlooks."""
-        mock_response = MagicMock()
-        mock_response.text = SAMPLE_NHC_HTML_PRE
-        mock_response.raise_for_status = MagicMock()
-
-        with patch("httpx.Client") as mock_client:
-            mock_client.return_value.__enter__ = MagicMock(return_value=mock_client)
-            mock_client.return_value.__exit__ = MagicMock(return_value=False)
-            mock_client.get = MagicMock(return_value=mock_response)
-
+        """Test successful IEM retrieval of both Atlantic and East Pacific outlooks."""
+        with patch.object(
+            service,
+            "_fetch_iem_text_product",
+            return_value={"success": True, "text": "Tropical Weather Outlook"},
+        ):
             result = service.fetch_nhc_discussions()
 
         assert "atlantic_outlook" in result
@@ -88,40 +84,43 @@ class TestFetchNhcDiscussions:
         assert result["east_pacific_outlook"]["title"] == "East Pacific Tropical Weather Outlook"
 
     def test_atlantic_fetch_error(self, service):
-        """Test error handling when Atlantic outlook fetch fails."""
-        with patch("httpx.Client") as mock_client:
-            mock_client.return_value.__enter__ = MagicMock(return_value=mock_client)
-            mock_client.return_value.__exit__ = MagicMock(return_value=False)
-            mock_client.get = MagicMock(side_effect=httpx.ConnectError("Connection refused"))
-
+        """Test error handling when IEM outlook fetch fails."""
+        with patch.object(
+            service,
+            "_fetch_iem_text_product",
+            return_value={"success": False, "error": "Connection refused"},
+        ):
             result = service.fetch_nhc_discussions()
 
-        assert "Error fetching Atlantic outlook" in result["atlantic_outlook"]["text"]
-        assert "Error fetching East Pacific outlook" in result["east_pacific_outlook"]["text"]
+        assert (
+            "Error fetching Atlantic Tropical Weather Outlook" in result["atlantic_outlook"]["text"]
+        )
+        assert (
+            "Error fetching East Pacific Tropical Weather Outlook"
+            in result["east_pacific_outlook"]["text"]
+        )
 
     def test_timeout_error(self, service):
         """Test timeout error handling."""
-        with patch("httpx.Client") as mock_client:
-            mock_client.return_value.__enter__ = MagicMock(return_value=mock_client)
-            mock_client.return_value.__exit__ = MagicMock(return_value=False)
-            mock_client.get = MagicMock(side_effect=httpx.TimeoutException("timeout"))
-
+        with patch.object(
+            service,
+            "_fetch_iem_text_product",
+            return_value={"success": False, "error": "Request timed out"},
+        ):
             result = service.fetch_nhc_discussions()
 
-        assert "Error fetching Atlantic outlook" in result["atlantic_outlook"]["text"]
+        assert (
+            "Error fetching Atlantic Tropical Weather Outlook" in result["atlantic_outlook"]["text"]
+        )
         assert "timed out" in result["atlantic_outlook"]["text"]
 
     def test_result_structure(self, service):
         """Test that result has correct keys and structure."""
-        mock_response = MagicMock()
-        mock_response.text = SAMPLE_NHC_HTML_PRE
-        mock_response.raise_for_status = MagicMock()
-
-        with patch("httpx.Client") as mock_client:
-            mock_client.return_value.__enter__ = MagicMock(return_value=mock_client)
-            mock_client.return_value.__exit__ = MagicMock(return_value=False)
-            mock_client.get = MagicMock(return_value=mock_response)
-
+        with patch.object(
+            service,
+            "_fetch_iem_text_product",
+            return_value={"success": True, "text": "Tropical Weather Outlook"},
+        ):
             result = service.fetch_nhc_discussions()
 
         for key in ("atlantic_outlook", "east_pacific_outlook"):

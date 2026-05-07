@@ -95,25 +95,6 @@ def test_pre_warm_skips_us_location_without_cwa_office():
     service.get.assert_not_awaited()
 
 
-def test_pre_warm_skips_nationwide_entry():
-    """The synthetic Nationwide entry is skipped even if it has coordinates."""
-    service = MagicMock()
-    service.get = AsyncMock(return_value=None)
-
-    nationwide = Location(
-        name="Nationwide",
-        latitude=39.8,
-        longitude=-98.6,
-        country_code="US",
-        cwa_office="XXX",
-    )
-
-    win = _make_window(service)
-    asyncio.run(win._pre_warm_products_for_location(nationwide))
-
-    service.get.assert_not_awaited()
-
-
 def test_pre_warm_fetch_error_isolated_to_single_product():
     """A ``TextProductFetchError`` on HWO doesn't block AFD or SPS."""
     service = MagicMock()

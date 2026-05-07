@@ -277,17 +277,6 @@ class TestFetchNotificationEventData:
         win.app.weather_client.get_notification_event_data.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_returns_early_for_nationwide(self):
-        win = self._make_window()
-        loc = MagicMock()
-        loc.name = "Nationwide"
-        win.app.config_manager.get_current_location.return_value = loc
-
-        await win._fetch_notification_event_data()
-
-        win.app.weather_client.get_notification_event_data.assert_not_called()
-
-    @pytest.mark.asyncio
     async def test_fetches_and_posts_result(self):
         win = self._make_window()
         loc = Location(name="NYC", latitude=40.71, longitude=-74.0)

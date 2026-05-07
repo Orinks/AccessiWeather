@@ -213,6 +213,33 @@ def test_product_preset_updates_product_input():
     dlg.product_input.SetValue.assert_called_once_with("WPC MPD")
 
 
+def test_national_product_presets_use_iem_afos():
+    service = MagicMock()
+    service.get_iem_afos = AsyncMock(return_value=_product("PMDMRD"))
+
+    dlg = AdvancedTextProductDialog(
+        parent=MagicMock(),
+        location=_location(),
+        forecast_product_service=service,
+        initial_product_type="AFD",
+    )
+    dlg.product_preset_choice.GetStringSelection.return_value = (
+        "CPC 6-10 and 8-14 Day Outlook (Climate Prediction Center)"
+    )
+    dlg._on_product_preset(MagicMock())
+
+    dlg.product_input.GetValue.return_value = "PMDMRD"
+    dlg.location_input.GetValue.return_value = ""
+    dlg.limit_input.GetValue.return_value = "1"
+    dlg.start_input.GetValue.return_value = ""
+    dlg.end_input.GetValue.return_value = ""
+    dlg.source_choice.GetStringSelection.return_value = "IEM AFOS only"
+    dlg._run_lookup_sync()
+
+    dlg.product_input.SetValue.assert_called_with("PMDMRD")
+    service.get_iem_afos.assert_awaited_once()
+
+
 def test_lookup_can_fetch_wpc_outlook_summary():
     service = MagicMock()
     service.get_iem_wpc_outlook = AsyncMock(return_value=_product("WPC_ERO_DAY1"))

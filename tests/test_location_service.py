@@ -80,22 +80,3 @@ class TestLocationService:
     def test_get_location_coordinates_not_found(self):
         svc, mgr = _make_service()
         assert svc.get_location_coordinates("Unknown") is None
-
-    def test_get_nationwide_location(self):
-        svc, mgr = _make_service()
-        result = svc.get_nationwide_location()
-        assert len(result) == 3
-        assert isinstance(result[0], str)
-        assert isinstance(result[1], int | float)
-        assert isinstance(result[2], int | float)
-
-    def test_is_nationwide_location(self):
-        svc, mgr = _make_service()
-        mgr.is_nationwide_location.return_value = True
-        assert svc.is_nationwide_location("Nationwide") is True
-        mgr.is_nationwide_location.assert_called_once_with("Nationwide")
-
-    def test_is_nationwide_location_false(self):
-        svc, mgr = _make_service()
-        mgr.is_nationwide_location.return_value = False
-        assert svc.is_nationwide_location("New York") is False

@@ -31,7 +31,6 @@ class AppSettingsSerializationMixin:
             "sound_enabled": settings.sound_enabled,
             "sound_pack": settings.sound_pack,
             "muted_sound_events": settings.muted_sound_events,
-            "show_nationwide_location": settings.show_nationwide_location,
             "notify_discussion_update": settings.notify_discussion_update,
             "notify_hwo_update": settings.notify_hwo_update,
             "notify_sps_issued": settings.notify_sps_issued,
@@ -124,9 +123,6 @@ class AppSettingsSerializationMixin:
             sound_enabled=settings_cls._as_bool(data.get("sound_enabled"), True),
             sound_pack=data.get("sound_pack", "default"),
             muted_sound_events=data.get("muted_sound_events", list(DEFAULT_MUTED_SOUND_EVENTS)),
-            show_nationwide_location=settings_cls._as_bool(
-                data.get("show_nationwide_location"), True
-            ),
             notify_discussion_update=settings_cls._as_bool(
                 data.get("notify_discussion_update"), True
             ),

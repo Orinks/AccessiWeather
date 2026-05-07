@@ -9,7 +9,6 @@ from .discussion_dialog import show_discussion_dialog
 from .explanation_dialog import show_explanation_dialog
 from .forecast_products_dialog import show_forecast_products_dialog
 from .location_dialog import show_add_location_dialog, show_edit_location_dialog
-from .nationwide_discussion_dialog import show_nationwide_discussion_dialog
 from .noaa_radio_dialog import NOAARadioDialog, show_noaa_radio_dialog
 from .precipitation_timeline_dialog import show_precipitation_timeline_dialog
 from .settings_dialog import show_settings_dialog
@@ -30,7 +29,6 @@ __all__ = [
     "show_discussion_dialog",
     "show_explanation_dialog",
     "show_forecast_products_dialog",
-    "show_nationwide_discussion_dialog",
     "show_settings_dialog",
     "show_soundpack_manager_dialog",
     "show_uv_index_dialog",
@@ -53,7 +51,6 @@ _LAZY_IMPORTS = {
     "show_forecast_products_dialog": ".forecast_products_dialog",
     "show_add_location_dialog": ".location_dialog",
     "show_edit_location_dialog": ".location_dialog",
-    "show_nationwide_discussion_dialog": ".nationwide_discussion_dialog",
     "NOAARadioDialog": ".noaa_radio_dialog",
     "show_noaa_radio_dialog": ".noaa_radio_dialog",
     "show_precipitation_timeline_dialog": ".precipitation_timeline_dialog",
