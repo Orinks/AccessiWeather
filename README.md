@@ -73,7 +73,9 @@ Packages currently include:
 
 ### Run from source
 
-Using uv:
+Python 3.11 or newer is required. The recommended source setup uses `uv`.
+
+Recommended, using `uv`:
 
 ```bash
 git clone https://github.com/Orinks/AccessiWeather.git
@@ -82,13 +84,29 @@ uv sync
 uv run accessiweather
 ```
 
-Using a virtual environment:
+Alternative, using a virtual environment:
 
 ```bash
 git clone https://github.com/Orinks/AccessiWeather.git
 cd AccessiWeather
 python -m venv .venv
+```
+
+Activate the environment:
+
+```powershell
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+```
+
+```bash
+# macOS/Linux
 source .venv/bin/activate
+```
+
+Then install and run:
+
+```bash
 pip install -e ".[dev]"
 accessiweather
 ```
@@ -98,6 +116,35 @@ Portable mode:
 ```bash
 accessiweather --portable
 ```
+
+### Build from source
+
+For release-style local builds, use the Nuitka build script. This is the path used by GitHub Actions.
+
+```bash
+uv sync --extra build
+uv run python installer/build_nuitka.py
+```
+
+Build outputs are written to `dist/`. Current outputs are:
+
+- Windows: installer `.exe` and portable `.zip`
+- macOS: app `.zip`
+- Linux: portable `.tar.gz`
+
+Platform notes:
+
+- Windows installer builds require Inno Setup 6.
+- macOS builds must be run on macOS.
+- Linux builds need the GTK/wxPython system packages for your distribution.
+
+For a simpler local PyInstaller build, `installer/build.py` is still available:
+
+```bash
+uv run python installer/build.py
+```
+
+More build options are documented in `installer/README.md`.
 
 ## Quick start
 

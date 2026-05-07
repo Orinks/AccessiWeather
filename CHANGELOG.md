@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
-- **Advanced Forecaster Notes lookup** — Forecaster Notes now has an Advanced Lookup path for current and historical NWS text products, preferring official NWS product history when available and falling back to IEM AFOS/SPC data for national products like SWODY1 and SPC mesoscale discussions (#641).
+- **National Products in Forecaster Notes** — Forecaster Notes now opens a dedicated National Products dialog for SPC, WPC, NHC, CPC, and other national NWS text products. The new view replaces the old Nationwide Discussions scraper with IEM AFOS plain-text products while keeping the existing Advanced Lookup path available for direct product searches (#641).
 
 ### Changed
 - Linux nightly and release downloads now ship as `.tar.gz` tarballs instead of ZIP files.
