@@ -225,6 +225,67 @@ async def fetch_iem_afos_text(
         return await _run(new_client)
 
 
+def fetch_iem_afos_text_sync(
+    pil: str,
+    *,
+    client: httpx.Client | None = None,
+    iem_base_url: str = DEFAULT_IEM_BASE_URL,
+    timeout: float = 10.0,
+    user_agent: str = DEFAULT_USER_AGENT,
+    limit: int = 1,
+    order: Literal["asc", "desc"] = "desc",
+    center: str | None = None,
+    wmo_id: str | None = None,
+    matches: str | None = None,
+) -> TextProduct:
+    """Fetch raw NWS text from IEM AFOS retrieve by AWIPS/PIL synchronously."""
+    product_id = pil.strip().upper()
+    if not product_id:
+        raise IemProductFetchError("A product ID is required.")
+
+    params: dict[str, Any] = {
+        "pil": product_id,
+        "fmt": "text",
+        "limit": max(1, int(limit)),
+        "order": order,
+    }
+    if center:
+        params["center"] = center.strip().upper()
+    if wmo_id:
+        params["ttaaii"] = wmo_id.strip().upper()
+    if matches:
+        params["matches"] = matches.strip()
+
+    url = f"{iem_base_url}/cgi-bin/afos/retrieve.py"
+    headers = {"User-Agent": user_agent}
+
+    def _run(http_client: httpx.Client) -> TextProduct:
+        try:
+            response = http_client.get(url, params=params, headers=headers)
+        except (httpx.TimeoutException, httpx.TransportError, httpx.RequestError) as exc:
+            raise IemProductFetchError(f"IEM AFOS request failed for {product_id}: {exc}") from exc
+        if response.status_code != 200:
+            raise IemProductFetchError(
+                f"IEM AFOS returned HTTP {response.status_code} for {product_id}"
+            )
+        text = _clean_iem_text(response.text)
+        if not text:
+            raise IemProductFetchError(f"IEM AFOS returned no text for {product_id}")
+        return TextProduct(
+            product_type=product_id,
+            product_id=product_id,
+            cwa_office=(center or "IEM").strip().upper(),
+            issuance_time=None,
+            product_text=text,
+            headline=f"IEM AFOS {product_id}",
+        )
+
+    if client is not None:
+        return _run(client)
+    with httpx.Client(timeout=timeout, follow_redirects=True) as new_client:
+        return _run(new_client)
+
+
 def _limited_items(items: list[Any], max_items: int | None) -> tuple[list[Any], int]:
     if max_items is None or max_items <= 0:
         return items, 0

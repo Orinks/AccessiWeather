@@ -20,16 +20,8 @@ class MainWindowCommandMixin:
         show_explanation_dialog(self, self.app)
 
     def _on_discussion(self) -> None:
-        """Route to Nationwide discussion view or the per-location Forecast Products dialog."""
-        current = self.app.config_manager.get_current_location()
-        if current and current.name == "Nationwide":
-            from .dialogs.nationwide_discussion_dialog import NationwideDiscussionDialog
-
-            dlg = NationwideDiscussionDialog(parent=self, service=self._get_discussion_service())
-            dlg.ShowModal()
-            dlg.Destroy()
-        else:
-            self._on_forecast_products()
+        """Open Forecaster Notes for the active location."""
+        self._on_forecast_products()
 
     def _on_forecast_products(self) -> None:
         """Open the Forecast Products dialog (AFD + HWO + SPS) for the active location."""
@@ -72,8 +64,7 @@ class MainWindowCommandMixin:
 
         Non-US locations disable the button and reveal the adjacent
         "NWS products are US-only" StaticText so screen readers announce the
-        reason. US locations (and the Nationwide entry) re-enable the button
-        and hide the label.
+        reason. US locations re-enable the button and hide the label.
         """
         try:
             current = self.app.config_manager.get_current_location()
@@ -81,7 +72,7 @@ class MainWindowCommandMixin:
             current = None
 
         is_us = True  # default: don't needlessly disable
-        if current is not None and current.name != "Nationwide":
+        if current is not None:
             country = getattr(current, "country_code", None)
             if country:
                 is_us = country.upper() == "US"

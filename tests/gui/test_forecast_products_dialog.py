@@ -2,10 +2,8 @@
 Tests for :class:`ForecastProductsDialog` and main-window wiring.
 
 Covers Unit 8 of the Forecast Products PR 1 plan — dialog construction with
-three tabs, focus handling on tab switch, main-window routing (Nationwide
-still goes to NationwideDiscussionDialog, US locations go to the new
-dialog), QUICK_ACTION_LABELS rename, and the non-US adjacent-StaticText
-pattern.
+three tabs, focus handling on tab switch, main-window routing, QUICK_ACTION_LABELS
+rename, and the non-US adjacent-StaticText pattern.
 """
 
 from __future__ import annotations
@@ -82,6 +80,9 @@ from accessiweather.iem_client import IemProductFetchError  # noqa: E402
 from accessiweather.models import Location, TextProduct  # noqa: E402
 from accessiweather.ui.dialogs.forecast_products_dialog import (  # noqa: E402
     ForecastProductsDialog,
+)
+from accessiweather.ui.dialogs.national_products_dialog import (  # noqa: E402
+    NationalProductsDialog,
 )
 
 
@@ -442,6 +443,79 @@ class TestForecastProductsDialog:
             app=None,
         )
 
+    def test_national_products_button_opens_dedicated_dialog(
+        self, notebook_factory, panel_factory, sample_us_location
+    ):
+        service = MagicMock(name="ForecastProductService")
+        ai = MagicMock(name="AIExplainer")
+
+        dlg = ForecastProductsDialog(
+            parent=MagicMock(),
+            location=sample_us_location,
+            forecast_product_service=service,
+            ai_explainer=ai,
+        )
+
+        with patch(
+            "accessiweather.ui.dialogs.forecast_products_dialog.show_national_products_dialog"
+        ) as show_dialog:
+            dlg._on_national_products(MagicMock())
+
+        show_dialog.assert_called_once_with(dlg, service, ai, app=None)
+
+    def test_national_products_dialog_builds_latest_product_tabs(
+        self, notebook_factory, panel_factory
+    ):
+        service = MagicMock(name="ForecastProductService")
+        ai = MagicMock(name="AIExplainer")
+
+        dlg = NationalProductsDialog(
+            parent=MagicMock(),
+            forecast_product_service=service,
+            ai_explainer=ai,
+        )
+
+        types = [entry["product_type"] for entry in panel_factory]
+        assert types == [
+            "PMDSPD",
+            "PMDEPD",
+            "PMDET4",
+            "QPFPFD",
+            "PMDMRD",
+            "TWOAT",
+            "TWOEP",
+            "SWODY1",
+            "SWODY2",
+            "SWODY3",
+        ]
+        assert len(dlg.panels) == 10
+        assert all(entry["cwa_office"] == "IEM" for entry in panel_factory)
+        assert all(entry["location_name"] == "National" for entry in panel_factory)
+        assert panel_factory[0]["autoload"] is True
+        assert all(entry["autoload"] is False for entry in panel_factory[1:])
+
+    def test_national_products_loader_invokes_iem_afos(self, notebook_factory, panel_factory):
+        """National product tabs fetch the latest AFOS text directly from IEM."""
+        import asyncio
+
+        service = MagicMock(name="ForecastProductService")
+
+        async def _fake_afos(product_id, **kwargs):
+            return SimpleNamespace(product_type=product_id, kwargs=kwargs)
+
+        service.get_iem_afos.side_effect = _fake_afos
+
+        dlg = NationalProductsDialog(
+            parent=MagicMock(),
+            forecast_product_service=service,
+            ai_explainer=None,
+        )
+
+        result = asyncio.run(dlg._make_loader("PMDMRD")())
+
+        assert result.product_type == "PMDMRD"
+        assert result.kwargs == {"timeout": 10.0}
+
     def test_page_change_lazy_loads_selected_tab(
         self, notebook_factory, panel_factory, sample_us_location
     ):
@@ -497,12 +571,11 @@ class TestMainWindowWiring:
 
         assert QUICK_ACTION_LABELS["discussion"] == "Forecaster &Notes"
 
-    def test_nationwide_branch_still_routes_to_nationwide_dialog(self):
-        """Nationwide selection opens NationwideDiscussionDialog, not the new one."""
+    def test_stale_nationwide_branch_routes_to_forecast_products(self):
+        """A legacy Nationwide selection no longer opens a dedicated dialog."""
         from accessiweather.ui import main_window
 
         mw = MagicMock(spec=main_window.MainWindow)
-        mw._get_discussion_service = MagicMock(return_value=MagicMock())
         mw._on_forecast_products = MagicMock()
 
         current = Location(
@@ -514,19 +587,12 @@ class TestMainWindowWiring:
         mw.app = MagicMock()
         mw.app.config_manager.get_current_location.return_value = current
 
-        # Patch the nationwide dialog module to capture construction.
-        with patch(
-            "accessiweather.ui.dialogs.nationwide_discussion_dialog.NationwideDiscussionDialog"
-        ) as nat_dlg_cls:
-            nat_instance = MagicMock()
-            nat_dlg_cls.return_value = nat_instance
-            main_window.MainWindow._on_discussion(mw)
+        main_window.MainWindow._on_discussion(mw)
 
-        nat_dlg_cls.assert_called_once()
-        mw._on_forecast_products.assert_not_called()
+        mw._on_forecast_products.assert_called_once()
 
     def test_non_nationwide_routes_to_forecast_products(self):
-        """Any non-Nationwide location dispatches to _on_forecast_products."""
+        """Any saved location dispatches to _on_forecast_products."""
         from accessiweather.ui import main_window
 
         mw = MagicMock(spec=main_window.MainWindow)

@@ -14,15 +14,15 @@ import asyncio
 import logging
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 import wx
 
 from ...iem_client import IemProductFetchError
+from ...models import TextProduct
 from .advanced_text_product_dialog import show_advanced_text_product_dialog
 from .forecast_product_panel import ForecastProductPanel
-
-ProductLoader = Callable[[], Awaitable[object]]
+from .national_products_dialog import show_national_products_dialog
 
 _ACTIVE_IEM_LOADER_KINDS = {
     "spc_outlook",
@@ -43,6 +43,9 @@ if TYPE_CHECKING:
     from ...services.forecast_product_service import ForecastProductService
 
 logger = logging.getLogger(__name__)
+
+ProductResult = TextProduct | list[TextProduct] | None
+ProductLoader = Callable[[], Awaitable[ProductResult]]
 
 
 @dataclass(frozen=True)
@@ -148,6 +151,8 @@ class ForecastProductsDialog(wx.Dialog):
 
         # Close button row.
         button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.national_products_button = wx.Button(self, label="&National Products")
+        button_sizer.Add(self.national_products_button, 0)
         self.close_button = wx.Button(self, wx.ID_CLOSE, label="&Close")
         button_sizer.AddStretchSpacer()
         button_sizer.Add(self.close_button, 0)
@@ -165,12 +170,15 @@ class ForecastProductsDialog(wx.Dialog):
         """Add a notebook page for a resolved tab."""
         cwa_office = getattr(self._location, "cwa_office", None)
         location_name = getattr(self._location, "name", "")
+        loader: ProductLoader
         if product_override is None:
             loader = self._make_loader(tab)
         else:
 
-            async def loader():
-                return product_override
+            async def _override_loader() -> ProductResult:
+                return cast(ProductResult, product_override)
+
+            loader = _override_loader
 
         panel_cwa = cwa_office if tab.requires_cwa else "IEM"
         panel = ForecastProductPanel(
@@ -200,6 +208,7 @@ class ForecastProductsDialog(wx.Dialog):
         level" contract. The user moves into content themselves with Tab.
         """
         self.close_button.Bind(wx.EVT_BUTTON, self._on_close)
+        self.national_products_button.Bind(wx.EVT_BUTTON, self._on_national_products)
         self.notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self._on_page_changed)
         self.Bind(wx.EVT_CHAR_HOOK, self._on_key)
 
@@ -221,9 +230,11 @@ class ForecastProductsDialog(wx.Dialog):
 
     async def _resolve_active_iem_tabs(self) -> None:
         """Resolve active IEM products without touching wx objects off-thread."""
-        resolved = await asyncio.gather(
-            *(self._resolve_active_iem_tab(tab) for tab in self._pending_iem_tabs),
-            return_exceptions=True,
+        resolved: list[object] = list(
+            await asyncio.gather(
+                *(self._resolve_active_iem_tab(tab) for tab in self._pending_iem_tabs),
+                return_exceptions=True,
+            )
         )
         wx.CallAfter(self._add_resolved_active_iem_tabs, resolved)
 
@@ -241,6 +252,8 @@ class ForecastProductsDialog(wx.Dialog):
                 logger.info("Optional active IEM tab check failed: %s", item)
                 continue
             if item is None:
+                continue
+            if not isinstance(item, tuple) or len(item) != 2:
                 continue
             tab, product = item
             self._add_tab_panel(tab, autoload=False, product_override=product)
@@ -289,9 +302,9 @@ class ForecastProductsDialog(wx.Dialog):
             if tab.requires_cwa and cwa_office is None:
                 return None
             if tab.loader_kind == "current":
-                return await self._service.get(tab.product_type, cwa_office)
+                return await self._service.get(cast(Any, tab.product_type), str(cwa_office))
             if tab.loader_kind == "nws_history":
-                return await self._service.get_history(tab.product_type, cwa_office, limit=1)
+                return await self._service.get_history(tab.product_type, str(cwa_office), limit=1)
             if latitude is None or longitude is None:
                 return None
             if tab.loader_kind == "spc_outlook":
@@ -418,6 +431,16 @@ class ForecastProductsDialog(wx.Dialog):
         """Close button handler."""
         del event
         self.EndModal(wx.ID_CLOSE)
+
+    def _on_national_products(self, event) -> None:
+        """Open the national text products dialog."""
+        del event
+        show_national_products_dialog(
+            self,
+            self._service,
+            self._ai_explainer,
+            app=self._app,
+        )
 
 
 def show_forecast_products_dialog(

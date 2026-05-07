@@ -10,6 +10,7 @@ from accessiweather import iem_client
 from accessiweather.iem_client import (
     IemProductFetchError,
     fetch_iem_afos_text,
+    fetch_iem_afos_text_sync,
     fetch_iem_spc_mcds,
     fetch_iem_spc_outlook,
     fetch_iem_spc_watches,
@@ -91,6 +92,21 @@ async def test_afos_retrieve_strips_iem_control_characters():
     result = await fetch_iem_afos_text("AFDRAH", client=client, iem_base_url=IEM_BASE)
 
     assert result.product_text == "627\r\nAFDRAH text"
+
+
+def test_afos_retrieve_sync_builds_plain_text_query():
+    client = MagicMock(spec=httpx.Client)
+    client.get.return_value = _resp(text="PMDSPD raw text")
+
+    result = fetch_iem_afos_text_sync("pmdspd", client=client, iem_base_url=IEM_BASE)
+
+    assert result.product_type == "PMDSPD"
+    assert result.product_text == "PMDSPD raw text"
+    client.get.assert_called_once_with(
+        f"{IEM_BASE}/cgi-bin/afos/retrieve.py",
+        params={"pil": "PMDSPD", "fmt": "text", "limit": 1, "order": "desc"},
+        headers={"User-Agent": "AccessiWeather (github.com/orinks/accessiweather)"},
+    )
 
 
 @pytest.mark.asyncio

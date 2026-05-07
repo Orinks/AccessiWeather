@@ -30,12 +30,8 @@ def main_window_deps():
 class TestDiscussionRouting:
     """Test that _on_discussion routes to the correct dialog."""
 
-    @patch("accessiweather.ui.main_window.NationwideDiscussionDialog", create=True)
-    @patch("accessiweather.ui.main_window.NationalDiscussionService", create=True)
-    def test_nationwide_opens_nationwide_dialog(
-        self, mock_service_cls, mock_dialog_cls, main_window_deps
-    ):
-        """When current location is Nationwide, NationwideDiscussionDialog should open."""
+    def test_stale_nationwide_location_opens_forecast_products_dialog(self, main_window_deps):
+        """Even a legacy Nationwide current location routes through Forecaster Notes."""
         from accessiweather.ui.main_window import MainWindow
 
         main_window_deps.config_manager.get_current_location.return_value = FakeLocation(
@@ -45,28 +41,14 @@ class TestDiscussionRouting:
         with patch.object(MainWindow, "__init__", lambda self, *a, **kw: None):
             win = MainWindow.__new__(MainWindow)
             win.app = main_window_deps
+            win._on_forecast_products = MagicMock()
 
-        with (
-            patch(
-                "accessiweather.ui.dialogs.nationwide_discussion_dialog.NationwideDiscussionDialog"
-            ) as mock_dlg_cls,
-            patch(
-                "accessiweather.services.national_discussion_service.NationalDiscussionService"
-            ) as mock_svc_cls,
-        ):
-            mock_dlg_instance = MagicMock()
-            mock_dlg_cls.return_value = mock_dlg_instance
-
-            win._on_discussion()
-
-            mock_svc_cls.assert_called_once()
-            mock_dlg_cls.assert_called_once()
-            mock_dlg_instance.ShowModal.assert_called_once()
-            mock_dlg_instance.Destroy.assert_called_once()
+        win._on_discussion()
+        win._on_forecast_products.assert_called_once()
 
     def test_regular_location_opens_forecast_products_dialog(self, main_window_deps):
         """
-        When current location is not Nationwide, _on_forecast_products should run.
+        When current location is set, _on_forecast_products should run.
 
         Unit 8 rerouted this branch from the old single-AFD DiscussionDialog to
         the new tabbed ForecastProductsDialog (AFD + HWO + SPS).

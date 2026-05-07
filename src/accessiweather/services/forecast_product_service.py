@@ -174,7 +174,14 @@ class ForecastProductService:
 
     async def get_iem_afos(self, product_id: str, **kwargs: Any) -> TextProduct:
         """Fetch raw IEM AFOS text for advanced product lookup."""
-        return await fetch_iem_afos_text(product_id, **kwargs)
+        product_key = product_id.strip().upper()
+        key = self._iem_cache_key("AFOS", product_key)
+        cached = self._cache.get(key)
+        if isinstance(cached, TextProduct):
+            return cached
+        result = await fetch_iem_afos_text(product_key, **kwargs)
+        self._cache.set(key, result, ttl=self._TTLS.get("AFD", 3600))
+        return result
 
     async def get_iem_spc_outlook(
         self,

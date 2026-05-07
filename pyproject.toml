@@ -19,7 +19,6 @@ dependencies = [
     "desktop-notifier",
     "toasted; sys_platform == 'win32'",
     "python-dateutil",
-    "beautifulsoup4",
     "httpx>=0.20.0",
     "attrs>=22.2.0",
     "psutil",
