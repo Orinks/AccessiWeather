@@ -194,6 +194,46 @@ class TestForecastProductServiceHistory:
 
 class TestForecastProductServiceIemStructuredProducts:
     @pytest.mark.asyncio
+    async def test_iem_afos_cache_key_includes_lookup_filters(self, monkeypatch):
+        cache = Cache(default_ttl=60)
+        service = ForecastProductService(cache)
+        calls: list[dict] = []
+
+        async def fake_afos(product_id, **kwargs):
+            calls.append({"product_id": product_id, **kwargs})
+            return TextProduct(
+                product_type=product_id,
+                product_id=product_id,
+                cwa_office=kwargs.get("center") or "IEM",
+                issuance_time=None,
+                product_text=f"text {len(calls)}",
+                headline=None,
+            )
+
+        monkeypatch.setattr(
+            "accessiweather.services.forecast_product_service.fetch_iem_afos_text",
+            fake_afos,
+        )
+
+        first = await service.get_iem_afos("AFDRAH", limit=1, order="desc")
+        cached = await service.get_iem_afos("AFDRAH", limit=1, order="desc")
+        filtered = await service.get_iem_afos(
+            "AFDRAH",
+            limit=1,
+            order="desc",
+            center="KRAH",
+            wmo_id="FXUS62",
+            aviation_afd=True,
+        )
+
+        assert cached is first
+        assert filtered is not first
+        assert len(calls) == 2
+        assert calls[1]["center"] == "KRAH"
+        assert calls[1]["wmo_id"] == "FXUS62"
+        assert calls[1]["aviation_afd"] is True
+
+    @pytest.mark.asyncio
     async def test_iem_structured_wrappers_delegate(self, monkeypatch):
         cache = Cache(default_ttl=60)
         service = ForecastProductService(cache)
