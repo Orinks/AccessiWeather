@@ -392,9 +392,11 @@ jobs:
           if [ "$IS_NIGHTLY" = "true" ]; then
             LAST_TAG=$(git tag --list "nightly-*" --sort=-version:refname | head -1)
             if [ -n "$LAST_TAG" ]; then
+              gh release view "$LAST_TAG" --json body -q .body > previous-notes.md || true
               python scripts/changelog_tools.py notes \
                 --kind nightly \
                 --previous-tag "$LAST_TAG" \
+                --exclude-notes previous-notes.md \
                 --output notes.md
             else
               python scripts/changelog_tools.py notes --kind nightly --output notes.md

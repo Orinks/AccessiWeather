@@ -93,7 +93,7 @@ def parse_sections(markdown: str) -> list[ChangelogSection]:
         current_entries = []
 
     for line in markdown.splitlines():
-        heading = re.match(r"^###\s+(.+?)\s*$", line)
+        heading = re.match(r"^#{2,3}\s+(.+?)\s*$", line)
         if heading:
             flush_section()
             current_title = heading.group(1)
@@ -128,6 +128,19 @@ def format_sections(sections: list[ChangelogSection]) -> str:
     return "\n\n".join(chunks).strip()
 
 
+def normalize_entry(entry: str) -> str:
+    entry = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", entry)
+    entry = re.sub(r"`([^`]+)`", r"\1", entry)
+    entry = re.sub(r"\*\*([^*]+)\*\*", r"\1", entry)
+    entry = re.sub(r"__([^_]+)__", r"\1", entry)
+    entry = re.sub(r"\*([^*]+)\*", r"\1", entry)
+    entry = re.sub(r"_([^_]+)_", r"\1", entry)
+    entry = re.sub(r"^[-*+]\s+", "", entry.strip())
+    entry = re.sub(r"\s+[-\u2013\u2014]\s+", " - ", entry)
+    entry = re.sub(r"\s+", " ", entry)
+    return entry.casefold().strip()
+
+
 def changelog_at(ref: str) -> str:
     try:
         return run_git(["show", f"{ref}:{CHANGELOG_PATH.as_posix()}"])
@@ -135,18 +148,27 @@ def changelog_at(ref: str) -> str:
         return ""
 
 
-def sections_added_since(base_ref: str, head_text: str) -> list[ChangelogSection]:
+def sections_added_since(
+    base_ref: str,
+    head_text: str,
+    extra_excluded_entries: set[str] | None = None,
+) -> list[ChangelogSection]:
     base_entries = {
-        entry
+        normalize_entry(entry)
         for section in parse_sections(
             extract_release_block(changelog_at(base_ref), r"^## \[?Unreleased\]?.*$")
         )
         for entry in section.entries
     }
+    if extra_excluded_entries:
+        base_entries.update(extra_excluded_entries)
+
     added_sections: list[ChangelogSection] = []
 
     for section in parse_sections(extract_release_block(head_text, r"^## \[?Unreleased\]?.*$")):
-        entries = tuple(entry for entry in section.entries if entry not in base_entries)
+        entries = tuple(
+            entry for entry in section.entries if normalize_entry(entry) not in base_entries
+        )
         if entries:
             added_sections.append(ChangelogSection(section.title, entries))
 
@@ -181,12 +203,21 @@ def check_command(args: argparse.Namespace) -> int:
 def notes_command(args: argparse.Namespace) -> int:
     changelog_text = CHANGELOG_PATH.read_text(encoding="utf-8")
     if args.kind == "nightly":
+        excluded_entries: set[str] = set()
+        if args.exclude_notes:
+            excluded_entries = {
+                normalize_entry(entry)
+                for section in parse_sections(Path(args.exclude_notes).read_text(encoding="utf-8"))
+                for entry in section.entries
+            }
         if not args.previous_tag:
             notes = format_sections(
                 parse_sections(extract_release_block(changelog_text, r"^## \[?Unreleased\]?.*$"))
             )
         else:
-            notes = format_sections(sections_added_since(args.previous_tag, changelog_text))
+            notes = format_sections(
+                sections_added_since(args.previous_tag, changelog_text, excluded_entries)
+            )
     else:
         version = args.version.removeprefix("v")
         block = extract_release_block(
@@ -215,6 +246,7 @@ def main() -> int:
     notes.add_argument("--kind", choices=("nightly", "stable"), required=True)
     notes.add_argument("--version", default="")
     notes.add_argument("--previous-tag", default="")
+    notes.add_argument("--exclude-notes", default="")
     notes.add_argument("--output", default="notes.md")
     notes.set_defaults(func=notes_command)
 

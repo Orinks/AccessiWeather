@@ -5,6 +5,7 @@ from scripts.changelog_tools import (
     extract_release_block,
     format_sections,
     is_user_facing_path,
+    normalize_entry,
     parse_sections,
 )
 
@@ -68,3 +69,16 @@ def test_user_facing_paths_match_release_build_surface() -> None:
     assert is_user_facing_path("accessiweather.spec")
     assert not is_user_facing_path(".github/workflows/ci.yml")
     assert not is_user_facing_path("tests/test_app.py")
+
+
+def test_normalize_entry_matches_curated_release_body_wording() -> None:
+    changelog_entry = (
+        "- **National Products in Forecaster Notes** — Forecaster Notes now opens a dedicated "
+        "National Products dialog."
+    )
+    release_body_entry = (
+        "- **National Products in Forecaster Notes** - Forecaster Notes now opens a dedicated "
+        "National Products dialog."
+    )
+
+    assert normalize_entry(changelog_entry) == normalize_entry(release_body_entry)
