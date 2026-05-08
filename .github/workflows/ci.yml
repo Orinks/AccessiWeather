@@ -36,7 +36,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v6
       with:
-        fetch-depth: ${{ matrix.primary && 0 || 1 }}
+        fetch-depth: 0
 
     - name: Set up Python
       uses: actions/setup-python@v6
@@ -97,6 +97,7 @@ jobs:
           echo "PR detected - checking changelog entries against $BASE"
         elif [ "${{ github.event_name }}" = "push" ] && [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
           BASE="${{ github.event.before }}"
+          git fetch --no-tags origin "$BASE" || true
           echo "Push detected - checking changelog entries against $BASE"
         else
           BASE="HEAD~1"
