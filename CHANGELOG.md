@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Linux nightly and release downloads now ship as `.tar.gz` tarballs instead of ZIP files.
 
 ### Fixed
+- The update dialog now shows release notes as screen-reader-friendly plain text instead of raw Markdown.
 - Linux builds now stage `sound_lib`'s native audio libraries in the path expected by the packaged app.
 - Linux builds no longer bundle OpenSSL libraries that can conflict with the target system's `libcurl`.
 - Forecaster Notes now starts with NWS discussion tabs only and adds IEM-backed tabs only when active SPC/WPC products apply to your selected location.

@@ -88,39 +88,29 @@ jobs:
         pip install -r requirements-dev.txt
         pip install -e .
 
-    - name: Check CHANGELOG reminder
-      if: matrix.primary && (github.ref == 'refs/heads/dev' || github.base_ref == 'dev')
+    - name: Check CHANGELOG entry
+      if: matrix.primary
       run: |
         if [ "${{ github.event_name }}" = "pull_request" ]; then
           BASE="origin/${{ github.base_ref }}"
           git fetch --no-tags --depth=1 origin "${{ github.base_ref }}:${BASE}" || true
-          echo "PR detected - comparing against $BASE"
+          echo "PR detected - checking changelog entries against $BASE"
+        elif [ "${{ github.event_name }}" = "push" ] && [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+          BASE="${{ github.event.before }}"
+          echo "Push detected - checking changelog entries against $BASE"
         else
-          LAST_NIGHTLY=$(git tag --list "nightly-*" --sort=-version:refname | head -n 1)
-          BASE="${LAST_NIGHTLY:-HEAD~1}"
-          echo "Push detected - comparing against $BASE"
+          BASE="HEAD~1"
+          echo "Manual run detected - checking changelog entries against $BASE"
         fi
 
-        if ! CHANGED_FILES=$(git diff --name-only "$BASE"..HEAD 2>/dev/null); then
-          echo "Could not determine changed files for CHANGELOG reminder. Skipping."
-          exit 0
-        fi
-
-        SRC_CHANGED=$(echo "$CHANGED_FILES" | grep -E "^src/" || true)
-        CHANGELOG_CHANGED=$(echo "$CHANGED_FILES" | grep -E "^CHANGELOG\.md$" || true)
-
-        if [ -n "$SRC_CHANGED" ] && [ -z "$CHANGELOG_CHANGED" ]; then
+        if ! python scripts/changelog_tools.py check --base "$BASE" --head HEAD; then
           {
-            echo "### CHANGELOG reminder"
+            echo "### CHANGELOG gate"
             echo
-            echo "Source files changed without a matching \`CHANGELOG.md\` update."
-            echo "Add the user-facing note under \`## Unreleased\` when the change should appear in nightly release notes."
+            echo "User-facing changes need a curated \`CHANGELOG.md\` entry under \`## [Unreleased]\`."
+            echo "This keeps nightly and stable release notes based on product wording instead of PR titles."
           } >> "$GITHUB_STEP_SUMMARY"
-          echo "::warning::Source files changed but CHANGELOG.md was not updated."
-        elif [ -n "$SRC_CHANGED" ]; then
-          echo "CHANGELOG.md updated alongside src/ changes."
-        else
-          echo "No src/ changes detected."
+          exit 1
         fi
 
     - name: Run tests (headless via xvfb)
@@ -163,8 +153,10 @@ jobs:
 
     - name: Coverage gate
       if: matrix.primary && github.event_name == 'pull_request'
+      env:
+        HEAD_REF: ${{ github.head_ref }}
       run: |
-        if [[ "${{ github.head_ref }}" == refactor/* ]]; then
+        if [[ "$HEAD_REF" == refactor/* ]]; then
           echo "Refactor PR branch detected; skipping diff coverage gate for mechanical code movement."
           exit 0
         fi
