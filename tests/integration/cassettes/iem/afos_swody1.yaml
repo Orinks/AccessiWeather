@@ -1,0 +1,126 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - mesonet.agron.iastate.edu
+    method: GET
+    uri: https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?fmt=text&limit=1&order=desc&pil=SWODY1
+  response:
+    body:
+      string: "\x01\n175 \nACUS01 KWNS 080036\nSWODY1\nSPC AC 080035\n\nDay 1 Convective
+        Outlook  \nNWS Storm Prediction Center Norman OK\n0735 PM CDT Thu May 07 2026\n\nValid
+        080100Z - 081200Z\n\n...NO SEVERE THUNDERSTORM AREAS FORECAST...\n\n...SUMMARY...\nSevere
+        storms are not expected through tonight.\n\n...MT/WY...\n\nForcing for ascent
+        attendant to a short-wave trough moving southeast\nthrough the region has
+        fostered widely scattered thunderstorms from\nportions of northwest MT into
+        central WY as of 00z. Moisture is\nlimited, but the presence of steep lapse
+        rates (ref. 00z RIW\nsounding) may be sufficient to support briefly strong
+        storms capable\nof gusty winds and/or small hail for the next couple of hours.\n\n...Carolinas...\n\nA
+        small cluster of showers and thunderstorms is ongoing across parts\nof southern
+        and central NC along a cold front settling south through\nthe area. Weakening,
+        low-level lapse rates and resultant instability\nshould limit any severe-weather
+        threat as the convection continues\neast tonight.\n\n...LA...\n\nA few thunderstorms
+        have recently developed in the vicinity of the\nsurface front in far southeast
+        LA amidst a moist low-level air mass.\nThe 00z LIX sounding located to the
+        immediate north of the front\nsampled MUCAPE of around 1500 J/kg for parcels
+        lifted from around 1\nKM. Moreover, deep-layer shear remains strong (effective
+        bulk shear\nof 60 kt), which would conditionally support some storm\norganization.
+        Current thinking is that nebulous forcing for ascent\nand poor low/mid-level
+        lapse rates will tend to limit updraft vigor\nin an otherwise seemingly favorable,
+        severe-storm environment. As\nsuch, no severe-weather probabilities will be
+        included for this\nforecast.\n\n...Southern AZ/NM into TX...\n\nIsolated thunderstorms
+        remain possible overnight from southern parts\nof AZ and NM into western and
+        southern TX, near and ahead of a\nmid-level low drifting east across Sonora
+        and Chihuahua, Mexico.\n\n..Mead.. 05/08/2026\n\n$$\n\n\x03\n"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Connection:
+      - Keep-Alive
+      Content-Type:
+      - text/plain; charset=UTF-8
+      Date:
+      - Fri, 08 May 2026 02:30:54 GMT
+      Keep-Alive:
+      - timeout=5, max=100
+      Server:
+      - Apache/2.4.62 (AlmaLinux) OpenSSL/3.5.1 mod_fcgid/2.3.9 mod_wsgi/5.0.2 Python/3.14
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      X-IEM-ServerID:
+      - iemvs37-dc.agron.iastate.edu
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - mesonet.agron.iastate.edu
+    method: GET
+    uri: https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?fmt=text&limit=1&order=desc&pil=SWODY1
+  response:
+    body:
+      string: "\x01\n175 \nACUS01 KWNS 080036\nSWODY1\nSPC AC 080035\n\nDay 1 Convective
+        Outlook  \nNWS Storm Prediction Center Norman OK\n0735 PM CDT Thu May 07 2026\n\nValid
+        080100Z - 081200Z\n\n...NO SEVERE THUNDERSTORM AREAS FORECAST...\n\n...SUMMARY...\nSevere
+        storms are not expected through tonight.\n\n...MT/WY...\n\nForcing for ascent
+        attendant to a short-wave trough moving southeast\nthrough the region has
+        fostered widely scattered thunderstorms from\nportions of northwest MT into
+        central WY as of 00z. Moisture is\nlimited, but the presence of steep lapse
+        rates (ref. 00z RIW\nsounding) may be sufficient to support briefly strong
+        storms capable\nof gusty winds and/or small hail for the next couple of hours.\n\n...Carolinas...\n\nA
+        small cluster of showers and thunderstorms is ongoing across parts\nof southern
+        and central NC along a cold front settling south through\nthe area. Weakening,
+        low-level lapse rates and resultant instability\nshould limit any severe-weather
+        threat as the convection continues\neast tonight.\n\n...LA...\n\nA few thunderstorms
+        have recently developed in the vicinity of the\nsurface front in far southeast
+        LA amidst a moist low-level air mass.\nThe 00z LIX sounding located to the
+        immediate north of the front\nsampled MUCAPE of around 1500 J/kg for parcels
+        lifted from around 1\nKM. Moreover, deep-layer shear remains strong (effective
+        bulk shear\nof 60 kt), which would conditionally support some storm\norganization.
+        Current thinking is that nebulous forcing for ascent\nand poor low/mid-level
+        lapse rates will tend to limit updraft vigor\nin an otherwise seemingly favorable,
+        severe-storm environment. As\nsuch, no severe-weather probabilities will be
+        included for this\nforecast.\n\n...Southern AZ/NM into TX...\n\nIsolated thunderstorms
+        remain possible overnight from southern parts\nof AZ and NM into western and
+        southern TX, near and ahead of a\nmid-level low drifting east across Sonora
+        and Chihuahua, Mexico.\n\n..Mead.. 05/08/2026\n\n$$\n\n\x03\n"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Connection:
+      - Keep-Alive
+      Content-Type:
+      - text/plain; charset=UTF-8
+      Date:
+      - Fri, 08 May 2026 02:31:32 GMT
+      Keep-Alive:
+      - timeout=5, max=100
+      Server:
+      - Apache/2.4.62 (AlmaLinux) OpenSSL/3.5.1 mod_fcgid/2.3.9 mod_wsgi/5.0.2 Python/3.14
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      X-IEM-ServerID:
+      - iemvs44-dc.agron.iastate.edu
+    status:
+      code: 200
+      message: OK
+version: 1

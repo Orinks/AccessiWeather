@@ -1,0 +1,42 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - mesonet.agron.iastate.edu
+    method: GET
+    uri: https://mesonet.agron.iastate.edu/json/spcoutlook.py?current=0&day=1&fmt=json&lat=35.7796&lon=-78.6382&time=2026-05-07T12%3A00%3A00Z
+  response:
+    body:
+      string: '{"query_params": {"time": "2026-05-07T12:00:00Z", "lon": -78.6382,
+        "lat": 35.7796, "cat": "CATEGORICAL", "day": 1}, "outlook": {"threshold":
+        "TSTM", "conditional": null, "utc_product_issue": "2026-05-07T05:32:00Z",
+        "utc_issue": "2026-05-07T12:00:00Z", "utc_expire": "2026-05-08T12:00:00Z"},
+        "generated_at": "2026-05-08T02:31:43Z"}'
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      Connection:
+      - Keep-Alive
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 08 May 2026 02:31:32 GMT
+      Keep-Alive:
+      - timeout=5, max=100
+      Server:
+      - Apache/2.4.62 (AlmaLinux) OpenSSL/3.5.1 mod_fcgid/2.3.9 mod_wsgi/5.0.2 Python/3.14
+      Transfer-Encoding:
+      - chunked
+      X-IEM-ServerID:
+      - iemvs42-dc.agron.iastate.edu
+    status:
+      code: 200
+      message: OK
+version: 1

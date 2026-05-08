@@ -23,14 +23,14 @@ Integration tests verify actual API behavior by recording HTTP interactions as "
 # Default: Run integration tests with recorded cassettes (fast)
 pytest tests/integration/ -v
 
-# Run all tests including live_only (requires network + API keys)
-pytest tests/integration/ -v -m "integration"
+# Run all integration tests except live_only tests
+pytest tests/integration/ -v -m "integration and not live_only"
 
-# Run only live_only tests (for recording/validation)
+# Run only live_only tests (requires network + any required API keys)
 pytest tests/integration/ -v -m "live_only"
 
-# Run with fresh API calls (re-records cassettes)
-set VCR_RECORD_MODE=all && pytest tests/integration/ -v
+# Run with fresh API calls (PowerShell; re-records cassettes)
+$env:VCR_RECORD_MODE = "all"; pytest tests/integration/ -v
 ```
 
 ## VCR Recording Modes
@@ -60,6 +60,8 @@ set PIRATE_WEATHER_API_KEY=your-api-key-here
 ```
 tests/integration/cassettes/
 ├── geocoding/         # Geocoding API tests
+├── iem/               # IEM NWS text product tests
+├── nws/               # National Weather Service API tests
 ├── openmeteo/         # OpenMeteo weather API tests
 ├── pirate_weather/    # Pirate Weather API tests
 └── weather_client/    # WeatherClient orchestration tests
