@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class GeneralTab:
-    """General settings tab: update interval, nationwide location, taskbar icon text."""
+    """General settings tab: update interval and taskbar icon text."""
 
     def __init__(self, dialog):
         """Store reference to the parent settings dialog."""
@@ -41,22 +41,6 @@ class GeneralTab:
             refresh_section,
             "Refresh weather every (minutes):",
             lambda parent: wx.SpinCtrl(parent, min=1, max=120, initial=10),
-        )
-
-        controls["show_nationwide"] = wx.CheckBox(
-            panel,
-            label="Show the Nationwide location when a supported data source is selected",
-        )
-        refresh_section.Add(
-            controls["show_nationwide"],
-            0,
-            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
-            10,
-        )
-        self.dialog.add_help_text(
-            panel,
-            refresh_section,
-            "Nationwide is available when your weather source is set to Automatic or NWS.",
         )
 
         tray_section = self.dialog.create_section(
@@ -127,16 +111,6 @@ class GeneralTab:
 
         controls["update_interval"].SetValue(getattr(settings, "update_interval_minutes", 10))
 
-        data_source = getattr(settings, "data_source", "auto")
-        if data_source not in ("auto", "nws"):
-            controls["show_nationwide"].SetValue(False)
-            controls["show_nationwide"].Enable(False)
-        else:
-            controls["show_nationwide"].SetValue(
-                getattr(settings, "show_nationwide_location", True)
-            )
-            controls["show_nationwide"].Enable(True)
-
         taskbar_text_enabled = getattr(settings, "taskbar_icon_text_enabled", False)
         controls["taskbar_icon_text_enabled"].SetValue(taskbar_text_enabled)
         controls["taskbar_icon_dynamic_enabled"].SetValue(
@@ -152,7 +126,6 @@ class GeneralTab:
         controls = self.dialog._controls
         return {
             "update_interval_minutes": controls["update_interval"].GetValue(),
-            "show_nationwide_location": controls["show_nationwide"].GetValue(),
             "taskbar_icon_text_enabled": controls["taskbar_icon_text_enabled"].GetValue(),
             "taskbar_icon_dynamic_enabled": controls["taskbar_icon_dynamic_enabled"].GetValue(),
             "taskbar_icon_text_format": controls["taskbar_icon_text_format"].GetValue(),
@@ -163,7 +136,6 @@ class GeneralTab:
         controls = self.dialog._controls
         names = {
             "update_interval": "Update interval in minutes",
-            "show_nationwide": "Show the Nationwide location when a supported data source is selected",
             "taskbar_icon_text_enabled": "Show weather text on the tray icon",
             "taskbar_icon_dynamic_enabled": "Update tray text as conditions change",
             "taskbar_icon_text_format": "Tray text format",

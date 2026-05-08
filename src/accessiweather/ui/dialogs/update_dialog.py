@@ -1,11 +1,45 @@
-"""
-Update available dialog for AccessiWeather.
+"""Update available dialog for AccessiWeather."""
 
-Shows the changelog for a new version and lets the user decide
-whether to download it.
-"""
+from __future__ import annotations
+
+import re
 
 import wx
+
+
+def format_release_notes_for_dialog(release_notes: str) -> str:
+    """Convert GitHub release Markdown into readable plain text."""
+    if not release_notes or not release_notes.strip():
+        return "No release notes available."
+
+    lines: list[str] = []
+    previous_blank = False
+
+    for raw_line in release_notes.splitlines():
+        line = raw_line.strip()
+
+        if not line:
+            if lines and not previous_blank:
+                lines.append("")
+                previous_blank = True
+            continue
+
+        line = re.sub(r"^#{1,6}\s+", "", line)
+        line = re.sub(r"^[-*+]\s+", "- ", line)
+        line = re.sub(r"^\d+\.\s+", "- ", line)
+        line = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", line)
+        line = re.sub(r"`([^`]+)`", r"\1", line)
+        line = re.sub(r"\*\*([^*]+)\*\*", r"\1", line)
+        line = re.sub(r"__([^_]+)__", r"\1", line)
+        line = re.sub(r"\*([^*]+)\*", r"\1", line)
+        line = re.sub(r"_([^_]+)_", r"\1", line)
+        line = re.sub(r"\s+", " ", line).strip()
+
+        if line:
+            lines.append(line)
+            previous_blank = False
+
+    return "\n".join(lines).strip() or "No release notes available."
 
 
 class UpdateAvailableDialog(wx.Dialog):
@@ -65,7 +99,7 @@ class UpdateAvailableDialog(wx.Dialog):
         sizer.Add(changelog_label, 0, wx.LEFT | wx.RIGHT, 10)
 
         # Changelog text (read-only, multi-line)
-        notes = release_notes.strip() if release_notes else "No release notes available."
+        notes = format_release_notes_for_dialog(release_notes)
         self.changelog_text = wx.TextCtrl(
             self,
             value=notes,

@@ -310,13 +310,13 @@ class WeatherToolExecutor:
     def _get_wpc_discussion(self, arguments: dict[str, Any]) -> str:
         """Get WPC Short Range Forecast Discussion."""
         try:
-            from accessiweather.services.national_discussion_scraper import (
-                NationalDiscussionScraper,
+            from accessiweather.services.national_discussion_service import (
+                NationalDiscussionService,
             )
 
-            scraper = NationalDiscussionScraper(request_delay=1.0, max_retries=2, timeout=15)
-            result = scraper.fetch_wpc_discussion()
-            text = result.get("full", "")
+            service = NationalDiscussionService(request_delay=1.0, max_retries=2, timeout=15)
+            result = service.fetch_wpc_discussions()
+            text = result.get("short_range", {}).get("text", "")
             if text:
                 if len(text) > 3000:
                     text = text[:3000] + "\n\n[Truncated — full discussion is longer]"
@@ -329,13 +329,13 @@ class WeatherToolExecutor:
     def _get_spc_outlook(self, arguments: dict[str, Any]) -> str:
         """Get SPC Day 1 Convective Outlook."""
         try:
-            from accessiweather.services.national_discussion_scraper import (
-                NationalDiscussionScraper,
+            from accessiweather.services.national_discussion_service import (
+                NationalDiscussionService,
             )
 
-            scraper = NationalDiscussionScraper(request_delay=1.0, max_retries=2, timeout=15)
-            result = scraper.fetch_spc_discussion()
-            text = result.get("full", "")
+            service = NationalDiscussionService(request_delay=1.0, max_retries=2, timeout=15)
+            result = service.fetch_spc_discussions()
+            text = result.get("day1", {}).get("text", "")
             if text:
                 if len(text) > 3000:
                     text = text[:3000] + "\n\n[Truncated — full discussion is longer]"

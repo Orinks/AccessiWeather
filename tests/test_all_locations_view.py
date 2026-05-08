@@ -213,21 +213,6 @@ class TestShowAllLocationsSummary:
         assert "80°F" in text
         assert "Sunny" in text
 
-    def test_nationwide_excluded_from_summary(self):
-        win = _make_window()
-        nationwide = _make_location("Nationwide", lat=39.8283, lon=-98.5795)
-        boston = _make_location("Boston")
-        win.app.config_manager.get_all_locations.return_value = [nationwide, boston]
-
-        wd_boston = _make_weather_data(boston, temp_f=55.0, condition="Cloudy")
-        win.app.weather_client.get_cached_weather.return_value = wd_boston
-
-        win._show_all_locations_summary()
-
-        text = win.current_conditions.SetValue.call_args[0][0]
-        assert "Nationwide" not in text
-        assert "Boston" in text
-
     def test_shows_placeholder_when_no_cached_data(self):
         win = _make_window()
         locs = [_make_location("Boston")]
@@ -706,25 +691,6 @@ class TestGetAllLocationsTrayData:
 
         assert data is wd_austin
         assert name == "Austin"
-
-    def test_nationwide_excluded(self):
-        win = _make_window()
-        nationwide = _make_location("Nationwide")
-        boston = _make_location("Boston")
-        win.app.config_manager.get_all_locations.return_value = [nationwide, boston]
-
-        wd_nationwide = _make_weather_data(nationwide, temp_f=70.0, alerts=[])
-        wd_boston = _make_weather_data(boston, temp_f=55.0, alerts=[])
-
-        def get_cached(loc):
-            return wd_nationwide if loc.name == "Nationwide" else wd_boston
-
-        win.app.weather_client.get_cached_weather.side_effect = get_cached
-
-        data, name = win._get_all_locations_tray_data()
-
-        assert name == "Boston"
-        assert data is wd_boston
 
     def test_tray_update_called_from_show_all_locations_summary(self):
         win = _make_window()

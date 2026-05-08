@@ -179,14 +179,10 @@ class MainWindowUIMixin:
         """
         Populate the location dropdown with saved locations.
 
-        "All Locations" is always the first entry.  Nationwide is not shown
-        while the All Locations view is active (it is excluded from the
-        per-location summary and does not make sense as a summary entry).
+        "All Locations" is always the first entry.
         """
         try:
             locations = self.app.config_manager.get_all_locations()
-            # Exclude Nationwide from the per-location summary list but keep it
-            # in the dropdown as its own selectable entry.
             location_names = [loc.name for loc in locations]
             all_names = [ALL_LOCATIONS_SENTINEL] + location_names
             self.location_dropdown.Clear()

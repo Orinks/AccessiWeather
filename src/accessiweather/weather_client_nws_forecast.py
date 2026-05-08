@@ -3,6 +3,9 @@
 
 from __future__ import annotations
 
+from typing import cast
+from urllib.parse import urlencode
+
 from .weather_client_nws_common import *  # noqa: F403
 from .weather_client_nws_parsers import parse_nws_forecast
 
@@ -180,7 +183,7 @@ async def _fetch_text_product_by_id(
     client: httpx.AsyncClient,
     nws_base_url: str,
     headers: dict[str, str],
-    product_type: Literal[AFD, HWO, SPS],
+    product_type: str,
     cwa_office: str,
     entry: dict[str, Any],
 ) -> TextProduct | None:
@@ -227,7 +230,7 @@ async def _fetch_text_product_by_id(
         headline = str(headline)
 
     return TextProduct(
-        product_type=product_type,
+        product_type=cast(Any, product_type),
         product_id=str(product_id),
         cwa_office=cwa_office,
         issuance_time=issuance_time,
@@ -331,6 +334,86 @@ async def get_nws_text_product(
             raise TextProductFetchError(
                 f"Request failed fetching {product_type} product for {cwa_office}: {exc}"
             ) from exc
+
+    if client is not None:
+        return await _run(client)
+
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+        return await _run(new_client)
+
+
+async def get_nws_text_product_history(
+    product_type: str,
+    cwa_office: str | None,
+    *,
+    nws_base_url: str = "https://api.weather.gov",
+    client: httpx.AsyncClient | None = None,
+    timeout: float = 10.0,
+    user_agent: str = "AccessiWeather (github.com/orinks/accessiweather)",
+    limit: int = 10,
+    start: datetime | None = None,
+    end: datetime | None = None,
+) -> list[TextProduct]:
+    """
+    Fetch NWS text-product history from the official ``/products`` endpoint.
+
+    Endpoint: ``/products?location={cwa_office}&type={product_type}&limit={limit}``
+    with optional ``start`` and ``end`` ISO timestamp filters. Listing entries are
+    fetched individually via ``/products/{id}`` so callers receive product bodies.
+
+    Returns a newest-first list. Empty listings are not errors.
+    """
+    if not cwa_office:
+        return []
+
+    headers = {"User-Agent": user_agent}
+    query: dict[str, str | int] = {
+        "location": cwa_office,
+        "type": product_type,
+        "limit": limit,
+    }
+    if start is not None:
+        query["start"] = start.isoformat()
+    if end is not None:
+        query["end"] = end.isoformat()
+
+    products_url = f"{nws_base_url}/products?{urlencode(query)}"
+
+    async def _run(http_client: httpx.AsyncClient) -> list[TextProduct]:
+        try:
+            listing_response = await _client_get(http_client, products_url, headers=headers)
+        except (httpx.TimeoutException, httpx.TransportError, httpx.RequestError) as exc:
+            raise TextProductFetchError(
+                f"Request failed fetching {product_type} history for {cwa_office}: {exc}"
+            ) from exc
+
+        if listing_response.status_code != 200:
+            raise TextProductFetchError(
+                f"HTTP {listing_response.status_code} fetching {product_type} "
+                f"history for {cwa_office}"
+            )
+
+        products: list[TextProduct] = []
+        graph = listing_response.json().get("@graph") or []
+        try:
+            for entry in graph:
+                if not isinstance(entry, dict):
+                    continue
+                product = await _fetch_text_product_by_id(
+                    http_client, nws_base_url, headers, product_type, cwa_office, entry
+                )
+                if product is not None:
+                    products.append(product)
+        except (httpx.TimeoutException, httpx.TransportError, httpx.RequestError) as exc:
+            raise TextProductFetchError(
+                f"Request failed fetching {product_type} history product for {cwa_office}: {exc}"
+            ) from exc
+
+        products.sort(
+            key=lambda p: p.issuance_time or datetime.min.replace(tzinfo=UTC),
+            reverse=True,
+        )
+        return products
 
     if client is not None:
         return await _run(client)

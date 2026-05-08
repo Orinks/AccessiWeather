@@ -2,15 +2,14 @@
 Tests for :class:`ForecastProductsDialog` and main-window wiring.
 
 Covers Unit 8 of the Forecast Products PR 1 plan — dialog construction with
-three tabs, focus handling on tab switch, main-window routing (Nationwide
-still goes to NationwideDiscussionDialog, US locations go to the new
-dialog), QUICK_ACTION_LABELS rename, and the non-US adjacent-StaticText
-pattern.
+three tabs, focus handling on tab switch, main-window routing, QUICK_ACTION_LABELS
+rename, and the non-US adjacent-StaticText pattern.
 """
 
 from __future__ import annotations
 
 import sys
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -77,9 +76,13 @@ for _meth in ("SetSizer", "GetSizer", "Bind", "Layout", "Show", "Hide"):
 # ---------------------------------------------------------------------------
 # Imports under test
 # ---------------------------------------------------------------------------
-from accessiweather.models import Location  # noqa: E402
+from accessiweather.iem_client import IemProductFetchError  # noqa: E402
+from accessiweather.models import Location, TextProduct  # noqa: E402
 from accessiweather.ui.dialogs.forecast_products_dialog import (  # noqa: E402
     ForecastProductsDialog,
+)
+from accessiweather.ui.dialogs.national_products_dialog import (  # noqa: E402
+    NationalProductsDialog,
 )
 
 
@@ -199,6 +202,7 @@ def panel_factory():
             self.kwargs = kwargs
             self.product_type = kwargs.get("product_type")
             self.product_textctrl = MagicMock(name="TextCtrl")
+            self.ensure_loaded = MagicMock(name=f"ensure_loaded_{self.product_type}")
             created.append({"product_type": self.product_type, "instance": self, **kwargs})
 
     # The dialog imports ForecastProductPanel directly from the module;
@@ -227,7 +231,41 @@ def sample_us_location():
 # Dialog-level tests
 # ---------------------------------------------------------------------------
 class TestForecastProductsDialog:
-    def test_dialog_builds_three_tabs(self, notebook_factory, panel_factory, sample_us_location):
+    def test_inactive_iem_summary_counts_as_unavailable_for_active_tabs(self):
+        product = TextProduct(
+            product_type="WPC_ERO",
+            product_id="WPC_ERO_DAY1",
+            cwa_office="WPC",
+            issuance_time=datetime(2026, 5, 1, 12, 0, tzinfo=UTC),
+            product_text=(
+                "WPC Day 1 Excessive Rainfall Outlook\n\n"
+                "Generated: 2026-05-01T12:00:00Z\n\n"
+                "No active outlooks were returned."
+            ),
+            headline="WPC Day 1 Excessive Rainfall Outlook",
+        )
+
+        result = ForecastProductsDialog._active_iem_tab_product_or_none(product)
+
+        assert result is None
+
+    def test_active_iem_summary_remains_available_for_active_tabs(self):
+        product = TextProduct(
+            product_type="SPC_WATCHES",
+            product_id="SPC_WATCHES",
+            cwa_office="SPC",
+            issuance_time=None,
+            product_text=("SPC Watches\n\nWatch 1:\nSEL: SEL8\nType: SVR\n"),
+            headline="SPC Watches",
+        )
+
+        result = ForecastProductsDialog._active_iem_tab_product_or_none(product)
+
+        assert result is product
+
+    def test_dialog_builds_location_relevant_text_product_tabs(
+        self, notebook_factory, panel_factory, sample_us_location
+    ):
         service = MagicMock(name="ForecastProductService")
         ai = MagicMock(name="AIExplainer")
 
@@ -238,7 +276,6 @@ class TestForecastProductsDialog:
             ai_explainer=ai,
         )
 
-        # Three panels, one per product type, in plan-specified order.
         types = [entry["product_type"] for entry in panel_factory]
         assert types == ["AFD", "HWO", "SPS"]
         assert len(dlg.panels) == 3
@@ -248,6 +285,8 @@ class TestForecastProductsDialog:
             assert entry["ai_explainer"] is ai
             assert entry["cwa_office"] == "RAH"
             assert entry["location_name"] == "Raleigh, NC"
+        assert panel_factory[0]["autoload"] is True
+        assert all(entry["autoload"] is False for entry in panel_factory[1:])
 
     def test_loader_invokes_service_get(self, notebook_factory, panel_factory, sample_us_location):
         """Each panel's bound loader calls service.get(product_type, cwa_office)."""
@@ -267,7 +306,7 @@ class TestForecastProductsDialog:
             ai_explainer=None,
         )
 
-        loaders = [entry["product_loader"] for entry in panel_factory]
+        loaders = [entry["product_loader"] for entry in panel_factory[:3]]
         assert len(loaders) == 3
         # Each loader resolves to the correct product type.
         loop = asyncio.new_event_loop()
@@ -278,6 +317,222 @@ class TestForecastProductsDialog:
                 assert result.cwa == "RAH"
         finally:
             loop.close()
+
+    def test_loader_invokes_iem_for_point_based_tabs(
+        self, notebook_factory, panel_factory, sample_us_location
+    ):
+        """Point-based tabs use IEM structured service helpers."""
+        import asyncio
+
+        service = MagicMock(name="ForecastProductService")
+
+        async def _fake_spc_outlook(latitude, longitude, **kwargs):
+            return SimpleNamespace(
+                product_type="SPC_OUTLOOK",
+                latitude=latitude,
+                longitude=longitude,
+                kwargs=kwargs,
+            )
+
+        service.get_iem_spc_outlook.side_effect = _fake_spc_outlook
+
+        dlg = ForecastProductsDialog(
+            parent=MagicMock(),
+            location=sample_us_location,
+            forecast_product_service=service,
+            ai_explainer=None,
+        )
+
+        spc_tab = next(
+            tab for tab in ForecastProductsDialog._TABS if tab.product_type == "SPC_OUTLOOK"
+        )
+        result = asyncio.run(dlg._make_loader(spc_tab)())
+
+        assert result.product_type == "SPC_OUTLOOK"
+        assert result.latitude == 35.7796
+        assert result.longitude == -78.6382
+        assert result.kwargs == {"day": 1, "current": True, "max_items": 3, "timeout": 10.0}
+        service.get_iem_afos.assert_not_called()
+
+    def test_point_based_loader_returns_none_for_inactive_iem_summary(
+        self, notebook_factory, panel_factory, sample_us_location
+    ):
+        """No-active IEM summaries disappear from the active tab strip."""
+        import asyncio
+
+        service = MagicMock(name="ForecastProductService")
+
+        async def _fake_wpc_outlook(latitude, longitude, **kwargs):
+            return TextProduct(
+                product_type="WPC_ERO",
+                product_id="WPC_ERO_DAY1",
+                cwa_office="WPC",
+                issuance_time=None,
+                product_text="WPC Day 1 Excessive Rainfall Outlook\n\nNo active outlooks were returned.",
+                headline="WPC Day 1 Excessive Rainfall Outlook",
+            )
+
+        service.get_iem_wpc_outlook.side_effect = _fake_wpc_outlook
+
+        dlg = ForecastProductsDialog(
+            parent=MagicMock(),
+            location=sample_us_location,
+            forecast_product_service=service,
+            ai_explainer=None,
+        )
+
+        wpc_tab = next(tab for tab in ForecastProductsDialog._TABS if tab.product_type == "WPC_ERO")
+        result = asyncio.run(dlg._make_loader(wpc_tab)())
+
+        assert result is None
+
+    def test_point_based_loader_returns_none_for_iem_fetch_error(
+        self, notebook_factory, panel_factory, sample_us_location
+    ):
+        """Optional active IEM tabs disappear when IEM is too slow or unavailable."""
+        import asyncio
+
+        service = MagicMock(name="ForecastProductService")
+
+        async def _fake_spc_outlook(latitude, longitude, **kwargs):
+            raise IemProductFetchError("IEM SPC outlook request failed: TimeoutException")
+
+        service.get_iem_spc_outlook.side_effect = _fake_spc_outlook
+
+        dlg = ForecastProductsDialog(
+            parent=MagicMock(),
+            location=sample_us_location,
+            forecast_product_service=service,
+            ai_explainer=None,
+        )
+
+        spc_tab = next(
+            tab for tab in ForecastProductsDialog._TABS if tab.product_type == "SPC_OUTLOOK"
+        )
+        result = asyncio.run(dlg._make_loader(spc_tab)())
+
+        assert result is None
+
+    def test_dialog_passes_advanced_lookup_opener_to_panels(
+        self, notebook_factory, panel_factory, sample_us_location
+    ):
+        service = MagicMock(name="ForecastProductService")
+
+        dlg = ForecastProductsDialog(
+            parent=MagicMock(),
+            location=sample_us_location,
+            forecast_product_service=service,
+            ai_explainer=None,
+        )
+
+        openers = [entry["advanced_lookup_opener"] for entry in panel_factory]
+        assert len(openers) == 3
+        for opener in openers:
+            assert callable(opener)
+
+        with patch(
+            "accessiweather.ui.dialogs.forecast_products_dialog.show_advanced_text_product_dialog"
+        ) as show_dialog:
+            openers[0]()
+
+        show_dialog.assert_called_once_with(
+            dlg,
+            sample_us_location,
+            service,
+            initial_product_type="AFD",
+            app=None,
+        )
+
+    def test_national_products_button_opens_dedicated_dialog(
+        self, notebook_factory, panel_factory, sample_us_location
+    ):
+        service = MagicMock(name="ForecastProductService")
+        ai = MagicMock(name="AIExplainer")
+
+        dlg = ForecastProductsDialog(
+            parent=MagicMock(),
+            location=sample_us_location,
+            forecast_product_service=service,
+            ai_explainer=ai,
+        )
+
+        with patch(
+            "accessiweather.ui.dialogs.forecast_products_dialog.show_national_products_dialog"
+        ) as show_dialog:
+            dlg._on_national_products(MagicMock())
+
+        show_dialog.assert_called_once_with(dlg, service, ai, app=None)
+
+    def test_national_products_dialog_builds_latest_product_tabs(
+        self, notebook_factory, panel_factory
+    ):
+        service = MagicMock(name="ForecastProductService")
+        ai = MagicMock(name="AIExplainer")
+
+        dlg = NationalProductsDialog(
+            parent=MagicMock(),
+            forecast_product_service=service,
+            ai_explainer=ai,
+        )
+
+        types = [entry["product_type"] for entry in panel_factory]
+        assert types == [
+            "PMDSPD",
+            "PMDEPD",
+            "PMDET4",
+            "QPFPFD",
+            "PMDMRD",
+            "TWOAT",
+            "TWOEP",
+            "SWODY1",
+            "SWODY2",
+            "SWODY3",
+        ]
+        assert len(dlg.panels) == 10
+        assert all(entry["cwa_office"] == "IEM" for entry in panel_factory)
+        assert all(entry["location_name"] == "National" for entry in panel_factory)
+        assert panel_factory[0]["autoload"] is True
+        assert all(entry["autoload"] is False for entry in panel_factory[1:])
+
+    def test_national_products_loader_invokes_iem_afos(self, notebook_factory, panel_factory):
+        """National product tabs fetch the latest AFOS text directly from IEM."""
+        import asyncio
+
+        service = MagicMock(name="ForecastProductService")
+
+        async def _fake_afos(product_id, **kwargs):
+            return SimpleNamespace(product_type=product_id, kwargs=kwargs)
+
+        service.get_iem_afos.side_effect = _fake_afos
+
+        dlg = NationalProductsDialog(
+            parent=MagicMock(),
+            forecast_product_service=service,
+            ai_explainer=None,
+        )
+
+        result = asyncio.run(dlg._make_loader("PMDMRD")())
+
+        assert result.product_type == "PMDMRD"
+        assert result.kwargs == {"timeout": 10.0}
+
+    def test_page_change_lazy_loads_selected_tab(
+        self, notebook_factory, panel_factory, sample_us_location
+    ):
+        service = MagicMock(name="ForecastProductService")
+        dlg = ForecastProductsDialog(
+            parent=MagicMock(),
+            location=sample_us_location,
+            forecast_product_service=service,
+            ai_explainer=None,
+        )
+        notebook_factory["instance"].GetSelection.return_value = 2
+        event = MagicMock()
+
+        dlg._on_page_changed(event)
+
+        panel_factory[2]["instance"].ensure_loaded.assert_called_once()
+        event.Skip.assert_called_once()
 
     def test_page_change_does_not_steal_focus(
         self, notebook_factory, panel_factory, sample_us_location
@@ -297,8 +552,14 @@ class TestForecastProductsDialog:
             forecast_product_service=service,
             ai_explainer=None,
         )
-        # _on_page_changed was removed — the handler must no longer exist.
-        assert not hasattr(dlg, "_on_page_changed")
+        notebook_factory["instance"].GetSelection.return_value = 1
+        event = MagicMock()
+
+        dlg._on_page_changed(event)
+
+        panel_factory[1]["instance"].ensure_loaded.assert_called_once()
+        panel_factory[1]["instance"].product_textctrl.SetFocus.assert_not_called()
+        event.Skip.assert_called_once()
 
 
 # ---------------------------------------------------------------------------
@@ -310,12 +571,11 @@ class TestMainWindowWiring:
 
         assert QUICK_ACTION_LABELS["discussion"] == "Forecaster &Notes"
 
-    def test_nationwide_branch_still_routes_to_nationwide_dialog(self):
-        """Nationwide selection opens NationwideDiscussionDialog, not the new one."""
+    def test_stale_nationwide_branch_routes_to_forecast_products(self):
+        """A legacy Nationwide selection no longer opens a dedicated dialog."""
         from accessiweather.ui import main_window
 
         mw = MagicMock(spec=main_window.MainWindow)
-        mw._get_discussion_service = MagicMock(return_value=MagicMock())
         mw._on_forecast_products = MagicMock()
 
         current = Location(
@@ -327,19 +587,12 @@ class TestMainWindowWiring:
         mw.app = MagicMock()
         mw.app.config_manager.get_current_location.return_value = current
 
-        # Patch the nationwide dialog module to capture construction.
-        with patch(
-            "accessiweather.ui.dialogs.nationwide_discussion_dialog.NationwideDiscussionDialog"
-        ) as nat_dlg_cls:
-            nat_instance = MagicMock()
-            nat_dlg_cls.return_value = nat_instance
-            main_window.MainWindow._on_discussion(mw)
+        main_window.MainWindow._on_discussion(mw)
 
-        nat_dlg_cls.assert_called_once()
-        mw._on_forecast_products.assert_not_called()
+        mw._on_forecast_products.assert_called_once()
 
     def test_non_nationwide_routes_to_forecast_products(self):
-        """Any non-Nationwide location dispatches to _on_forecast_products."""
+        """Any saved location dispatches to _on_forecast_products."""
         from accessiweather.ui import main_window
 
         mw = MagicMock(spec=main_window.MainWindow)

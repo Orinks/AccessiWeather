@@ -93,11 +93,6 @@ class WeatherService:
         return self.api_client_manager._get_data_source()
 
     @property
-    def national_scraper(self):
-        """Backward compatibility property for national_scraper."""
-        return self.national_forecast_handler.national_scraper
-
-    @property
     def national_data_cache(self):
         """Backward compatibility property for national_data_cache."""
         return self.national_forecast_handler.national_data_cache

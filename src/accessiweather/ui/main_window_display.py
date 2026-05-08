@@ -190,15 +190,9 @@ class MainWindowDisplayMixin:
         locations are collected and shown in the alerts list with the location
         name as a prefix so screen-reader users can identify the source.
 
-        Nationwide is excluded from the summary because it is a special
-        aggregate view of its own, not an individual saved location.
         """
         try:
-            all_locs = [
-                loc
-                for loc in self.app.config_manager.get_all_locations()
-                if loc.name != "Nationwide"
-            ]
+            all_locs = self.app.config_manager.get_all_locations()
         except Exception as e:
             logger.error(f"Failed to get locations for All Locations summary: {e}")
             all_locs = []
@@ -334,11 +328,7 @@ class MainWindowDisplayMixin:
         )
 
         try:
-            all_locs = [
-                loc
-                for loc in self.app.config_manager.get_all_locations()
-                if loc.name != "Nationwide"
-            ]
+            all_locs = self.app.config_manager.get_all_locations()
         except Exception:
             return None, None
 

@@ -6,8 +6,7 @@ separating business logic from UI concerns.
 """
 
 import logging
-
-from accessiweather.location import LocationManager
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +14,7 @@ logger = logging.getLogger(__name__)
 class LocationService:
     """Service for location-related operations."""
 
-    def __init__(self, location_manager: LocationManager):
+    def __init__(self, location_manager: Any):
         """
         Initialize the location service.
 
@@ -135,24 +134,3 @@ class LocationService:
             loc = locations[name]
             return (loc["lat"], loc["lon"])
         return None
-
-    def get_nationwide_location(self) -> tuple:
-        """Return the Nationwide location's name and coordinates."""
-        from accessiweather.location import NATIONWIDE_LAT, NATIONWIDE_LOCATION_NAME, NATIONWIDE_LON
-
-        return (NATIONWIDE_LOCATION_NAME, NATIONWIDE_LAT, NATIONWIDE_LON)
-
-    def is_nationwide_location(self, name: str) -> bool:
-        """
-        Check if a location is the Nationwide location.
-
-        Args:
-        ----
-            name: Name of the location to check.
-
-        Returns:
-        -------
-            True if the location is the Nationwide location, False otherwise.
-
-        """
-        return self.location_manager.is_nationwide_location(name)

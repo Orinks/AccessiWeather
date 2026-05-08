@@ -221,6 +221,7 @@ def _build_panel(
     cwa_office: str | None = "RAH",
     ai_explainer=None,
     location_name: str = "Raleigh, NC",
+    advanced_lookup_opener=None,
 ) -> ForecastProductPanel:
     """
     Construct a panel whose loader returns ``loader_result`` (or raises).
@@ -267,6 +268,7 @@ def _build_panel(
             ai_explainer=ai_explainer,
             cwa_office=cwa_office,
             location_name=location_name,
+            advanced_lookup_opener=advanced_lookup_opener,
         )
     finally:
         ForecastProductPanel._schedule_load = orig_schedule
@@ -313,6 +315,16 @@ class TestForecastProductPanelRendering:
             "Hazardous Weather Outlook not currently available for RAH."
         )
         panel.explain_button.Disable.assert_called()
+
+    def test_advanced_lookup_button_opens_subdialog(self, captured_sizer):
+        opener = MagicMock()
+        panel = _build_panel(
+            "AFD", loader_result=_make_product("AFD"), advanced_lookup_opener=opener
+        )
+
+        panel._on_advanced_lookup(MagicMock())
+
+        opener.assert_called_once()
 
     def test_sps_empty_renders_no_statements_copy(self, captured_sizer):
         panel = _build_panel("SPS", loader_result=None)

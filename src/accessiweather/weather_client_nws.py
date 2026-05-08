@@ -35,6 +35,7 @@ from .weather_client_nws_forecast import (
     get_nws_discussion_only,
     get_nws_forecast_and_discussion,
     get_nws_text_product,
+    get_nws_text_product_history,
 )
 from .weather_client_nws_hourly import _fetch_nws_gridpoint_pressure, get_nws_hourly_forecast
 from .weather_client_nws_parsers import (

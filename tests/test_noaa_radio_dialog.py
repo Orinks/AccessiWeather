@@ -80,8 +80,6 @@ def _create_wx_mock():
 def noaa_dialog_module():
     """Import noaa_radio_dialog with wx fully mocked in sys.modules."""
     wx_mock = _create_wx_mock()
-    bs4_mock = MagicMock()
-    bs4_mock.BeautifulSoup = MagicMock()
 
     # Save and replace all wx-related modules
     wx_lib_mock = MagicMock()
@@ -93,7 +91,6 @@ def noaa_dialog_module():
         "wx.adv": MagicMock(),
         "wx.html": MagicMock(),
         "wx.html2": MagicMock(),
-        "bs4": bs4_mock,
     }
 
     saved = {}

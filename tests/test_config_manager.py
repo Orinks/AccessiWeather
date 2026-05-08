@@ -74,16 +74,40 @@ class TestConfigManager:
         loaded = manager2.load_config()
         assert loaded.settings.update_interval_minutes == 30
 
-    def test_show_nationwide_location_persists_roundtrip(self, manager):
-        """show_nationwide_location should persist across save/load."""
+    def test_legacy_show_nationwide_location_is_ignored_on_load(self, manager):
+        """Legacy show_nationwide_location config no longer becomes a setting."""
+        manager.config_file.parent.mkdir(parents=True, exist_ok=True)
+        manager.config_file.write_text(
+            '{"settings": {"show_nationwide_location": true}, '
+            '"locations": [], "current_location": null}',
+            encoding="utf-8",
+        )
+
+        loaded = manager.load_config()
+
+        assert not hasattr(loaded.settings, "show_nationwide_location")
+
+    def test_legacy_nationwide_location_is_filtered_on_load(self, manager):
+        """A persisted Nationwide location should not count as a saved location."""
+        manager.config_file.parent.mkdir(parents=True, exist_ok=True)
+        manager.config_file.write_text(
+            '{"settings": {}, '
+            '"locations": [{"name": "Nationwide", "latitude": 39.8283, "longitude": -98.5795}], '
+            '"current_location": {"name": "Nationwide", "latitude": 39.8283, "longitude": -98.5795}}',
+            encoding="utf-8",
+        )
+
         config = manager.load_config()
-        config.settings.show_nationwide_location = False
         manager.save_config()
 
         manager2 = ConfigManager(manager.app, config_dir=manager.config_dir)
         loaded = manager2.load_config()
 
-        assert loaded.settings.show_nationwide_location is False
+        assert config.current_location is None
+        assert loaded.current_location is None
+        assert manager2.get_all_locations() == []
+        assert manager2.get_location_names() == []
+        assert manager2.has_locations() is False
 
     def test_add_location(self, manager):
         """Test adding a location."""
@@ -93,9 +117,8 @@ class TestConfigManager:
         assert result is True
 
         locations = manager.get_all_locations()
-        non_nationwide = [loc for loc in locations if loc.name != "Nationwide"]
-        assert len(non_nationwide) == 1
-        assert non_nationwide[0].name == "New York"
+        assert len(locations) == 1
+        assert locations[0].name == "New York"
 
     def test_add_location_persists_marine_mode_roundtrip(self, manager):
         """Marine mode should save and reload with locations."""
@@ -131,8 +154,7 @@ class TestConfigManager:
         manager.add_location("Test", 40.0, -74.0)
         result = manager.remove_location("Test")
         assert result is True
-        non_nationwide = [loc for loc in manager.get_all_locations() if loc.name != "Nationwide"]
-        assert len(non_nationwide) == 0
+        assert manager.get_all_locations() == []
 
     def test_remove_nonexistent_location_fails(self, manager):
         """Test that removing non-existent location fails."""

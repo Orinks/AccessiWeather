@@ -20,6 +20,7 @@ from accessiweather.weather_client_nws import (
     TextProductFetchError,
     get_nws_discussion,
     get_nws_text_product,
+    get_nws_text_product_history,
 )
 
 NWS_BASE = "https://api.weather.gov"
@@ -163,6 +164,67 @@ class TestGetNwsTextProductHWO:
         assert result.product_id == "hwo-001"
         assert result.cwa_office == OFFICE
         assert "HAZARDOUS WEATHER" in result.product_text
+
+
+class TestGetNwsTextProductHistory:
+    @pytest.mark.asyncio
+    async def test_afd_history_returns_all_products_newest_first(self):
+        graph = {
+            "@graph": [
+                {"id": "afd-old", "issuanceTime": "2026-04-16T06:45:00+00:00"},
+                {"id": "afd-new", "issuanceTime": "2026-04-16T17:32:00+00:00"},
+            ]
+        }
+        client = _client_for(
+            {
+                f"{NWS_BASE}/products?location={OFFICE}&type=AFD&limit=10": _resp(graph),
+                f"{NWS_BASE}/products/afd-old": _resp(
+                    {
+                        "productText": "OLD AREA FORECAST DISCUSSION",
+                        "issuanceTime": "2026-04-16T06:45:00+00:00",
+                    }
+                ),
+                f"{NWS_BASE}/products/afd-new": _resp(
+                    {
+                        "productText": "NEW AREA FORECAST DISCUSSION",
+                        "issuanceTime": "2026-04-16T17:32:00+00:00",
+                    }
+                ),
+            }
+        )
+
+        result = await get_nws_text_product_history(
+            "AFD",
+            OFFICE,
+            nws_base_url=NWS_BASE,
+            client=client,
+            limit=10,
+        )
+
+        assert [p.product_id for p in result] == ["afd-new", "afd-old"]
+
+    @pytest.mark.asyncio
+    async def test_history_adds_date_filters_when_supplied(self):
+        start = datetime(2026, 4, 1, 0, 0, tzinfo=UTC)
+        end = datetime(2026, 4, 2, 0, 0, tzinfo=UTC)
+        expected_listing = (
+            f"{NWS_BASE}/products?location={OFFICE}&type=CLI&limit=3"
+            "&start=2026-04-01T00%3A00%3A00%2B00%3A00"
+            "&end=2026-04-02T00%3A00%3A00%2B00%3A00"
+        )
+        client = _client_for({expected_listing: _resp({"@graph": []})})
+
+        result = await get_nws_text_product_history(
+            "CLI",
+            OFFICE,
+            nws_base_url=NWS_BASE,
+            client=client,
+            limit=3,
+            start=start,
+            end=end,
+        )
+
+        assert result == []
 
 
 # ---------------------------------------------------------------------------

@@ -66,17 +66,6 @@ class MainWindowRefreshMixin:
                 wx.CallAfter(self._on_weather_error, "No location selected")
                 return
 
-            # For Nationwide location, fetch discussion summaries instead of weather
-            if location.name == "Nationwide":
-                wx.CallAfter(
-                    self.current_conditions.SetValue,
-                    "Fetching nationwide weather discussions from NWS, SPC, NHC, and CPC...\n"
-                    "This may take a moment.",
-                )
-                wx.CallAfter(self._set_forecast_sections, "", "")
-                await self._fetch_nationwide_discussions(generation)
-                return
-
             # Fetch weather data - pass the Location object directly
             # force_refresh=True bypasses cache (used when switching locations)
             weather_data = await self.app.weather_client.get_weather_data(
@@ -107,77 +96,10 @@ class MainWindowRefreshMixin:
             logger.error(f"Failed to fetch weather data: {e}")
             wx.CallAfter(self._on_weather_error, str(e))
 
-    def _get_discussion_service(self):
-        """Get or create the shared NationalDiscussionService instance."""
-        if not hasattr(self, "_discussion_service") or self._discussion_service is None:
-            from ..services.national_discussion_service import NationalDiscussionService
-
-            self._discussion_service = NationalDiscussionService()
-        return self._discussion_service
-
-    async def _fetch_nationwide_discussions(self, generation: int) -> None:
-        """Fetch nationwide discussion summaries and display in weather fields."""
-        import asyncio
-
-        try:
-            service = self._get_discussion_service()
-            # Run synchronous fetch in thread to avoid blocking
-            discussions = await asyncio.to_thread(service.fetch_all_discussions)
-
-            if generation != self._fetch_generation:
-                return
-
-            # Build current conditions text (short range + SPC day 1)
-            current_parts = ["=== Nationwide Weather Summary ===\n"]
-            wpc = discussions.get("wpc", {})
-            if wpc.get("short_range", {}).get("text"):
-                current_parts.append(
-                    f"--- {wpc['short_range']['title']} ---\n{wpc['short_range']['text']}\n"
-                )
-            spc = discussions.get("spc", {})
-            if spc.get("day1", {}).get("text"):
-                current_parts.append(f"--- {spc['day1']['title']} ---\n{spc['day1']['text']}\n")
-            current_text = "\n".join(current_parts)
-
-            # Build forecast text (extended + CPC outlooks)
-            forecast_parts = ["=== Extended Outlook ===\n"]
-            if wpc.get("extended", {}).get("text"):
-                forecast_parts.append(
-                    f"--- {wpc['extended']['title']} ---\n{wpc['extended']['text']}\n"
-                )
-            cpc = discussions.get("cpc", {})
-            if cpc.get("outlook", {}).get("text"):
-                forecast_parts.append(
-                    f"--- {cpc['outlook']['title']} ---\n{cpc['outlook']['text']}\n"
-                )
-            forecast_text = "\n".join(forecast_parts)
-
-            wx.CallAfter(self._on_nationwide_data_received, current_text, forecast_text)
-
-        except Exception as e:
-            logger.error(f"Failed to fetch nationwide discussions: {e}")
-            wx.CallAfter(self._on_weather_error, str(e))
-
-    def _on_nationwide_data_received(self, current_text: str, forecast_text: str) -> None:
-        """Handle received nationwide discussion data (called on main thread)."""
-        try:
-            self.current_conditions.SetValue(current_text)
-            self._set_forecast_sections(forecast_text, "")
-            self.stale_warning_label.SetLabel("")
-        except Exception as e:
-            logger.error(f"Error updating nationwide display: {e}")
-        finally:
-            self.app.is_updating = False
-            self.refresh_button.Enable()
-
     async def _fetch_all_locations_data(self) -> None:
         """Fetch fresh weather data for all saved locations sequentially, then re-render summary."""
         try:
-            all_locations = [
-                loc
-                for loc in self.app.config_manager.get_all_locations()
-                if loc.name != "Nationwide"
-            ]
+            all_locations = self.app.config_manager.get_all_locations()
             if all_locations and self.app.weather_client:
                 await self.app.weather_client.pre_warm_batch(all_locations)
         except Exception as e:
@@ -228,10 +150,6 @@ class MainWindowRefreshMixin:
         one failure (e.g. an NWS 404 for HWO) never prevents the next product
         type or subsequent locations from being pre-warmed.
         """
-        # Nationwide is a synthetic entry with no real CWA — skip it cheaply.
-        if location.name == "Nationwide":
-            return
-
         # Local import avoids a hard dependency on services at module-import
         # time for the stripped-down test fixtures that stub self.
         from ..services.zone_enrichment_service import _is_us_location

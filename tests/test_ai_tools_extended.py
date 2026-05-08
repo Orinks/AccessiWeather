@@ -305,19 +305,23 @@ class TestWeatherToolExecutorExtended:
 
     def test_get_wpc_discussion(self, executor):
         with patch(
-            "accessiweather.services.national_discussion_scraper.NationalDiscussionScraper"
-        ) as MockScraper:
-            instance = MockScraper.return_value
-            instance.fetch_wpc_discussion.return_value = {"full": "WPC discussion text here."}
+            "accessiweather.services.national_discussion_service.NationalDiscussionService"
+        ) as MockService:
+            instance = MockService.return_value
+            instance.fetch_wpc_discussions.return_value = {
+                "short_range": {"text": "WPC discussion text here."}
+            }
             result = executor.execute("get_wpc_discussion", {})
         assert "WPC" in result
 
     def test_get_spc_outlook(self, executor):
         with patch(
-            "accessiweather.services.national_discussion_scraper.NationalDiscussionScraper"
-        ) as MockScraper:
-            instance = MockScraper.return_value
-            instance.fetch_spc_discussion.return_value = {"full": "SPC outlook text here."}
+            "accessiweather.services.national_discussion_service.NationalDiscussionService"
+        ) as MockService:
+            instance = MockService.return_value
+            instance.fetch_spc_discussions.return_value = {
+                "day1": {"text": "SPC outlook text here."}
+            }
             result = executor.execute("get_spc_outlook", {})
         assert "SPC" in result
 

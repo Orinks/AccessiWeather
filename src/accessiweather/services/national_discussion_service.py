@@ -1,8 +1,8 @@
 """
 National Discussion Service for AccessiWeather.
 
-Provide functionality to fetch national weather discussions from the NWS API
-(api.weather.gov/products/types/) and scrape NHC tropical outlooks and CPC outlooks.
+Provide functionality to fetch national weather discussions from IEM's
+plain-text NWS text product endpoint.
 """
 
 import logging
@@ -12,6 +12,7 @@ from typing import Any
 
 import httpx
 
+from accessiweather.iem_client import IemProductFetchError, fetch_iem_afos_text_sync
 from accessiweather.services.national_discussion_classification import (
     classify_pmd_discussion,
     classify_swo_outlook,
@@ -28,7 +29,7 @@ from accessiweather.services.national_discussion_parsing import (
 
 logger = logging.getLogger(__name__)
 
-# NWS API base URL
+# NWS API base URL retained for legacy helper compatibility.
 NWS_API_BASE = "https://api.weather.gov"
 
 # Required User-Agent header for NWS API
@@ -45,19 +46,35 @@ PRODUCT_TYPE_PMD = "PMD"  # Prognostic Meteorological Discussion (WPC)
 PRODUCT_TYPE_SWO = "SWO"  # Severe Weather Outlook (SPC)
 PRODUCT_TYPE_QPF = "QPF"  # Quantitative Precipitation Forecast
 
-# NHC tropical outlook URLs
-NHC_ATLANTIC_OUTLOOK_URL = "https://www.nhc.noaa.gov/gtwo.php?basin=atlc"
-NHC_EAST_PACIFIC_OUTLOOK_URL = "https://www.nhc.noaa.gov/gtwo.php?basin=epac"
-
-# CPC outlook URLs
-CPC_OUTLOOK_URL = "https://www.cpc.ncep.noaa.gov/products/predictions/610day/fxus06.html"
-
 # Default cache TTL (1 hour)
 DEFAULT_CACHE_TTL = 3600
 
+IEM_NATIONAL_PRODUCTS = {
+    "wpc": {
+        "short_range": ("PMDSPD", "Short Range Forecast (Days 1-3)"),
+        "medium_range": ("PMDEPD", "Medium Range Forecast (Days 3-7)"),
+        "extended": ("PMDET4", "Extended Forecast (Days 8-10)"),
+    },
+    "spc": {
+        "day1": ("SWODY1", "Day 1 Convective Outlook"),
+        "day2": ("SWODY2", "Day 2 Convective Outlook"),
+        "day3": ("SWODY3", "Day 3 Convective Outlook"),
+    },
+    "qpf": {
+        "qpf": ("QPFPFD", "Quantitative Precipitation Forecast Discussion"),
+    },
+    "nhc": {
+        "atlantic_outlook": ("TWOAT", "Atlantic Tropical Weather Outlook"),
+        "east_pacific_outlook": ("TWOEP", "East Pacific Tropical Weather Outlook"),
+    },
+    "cpc": {
+        "outlook": ("PMDMRD", "CPC 6-10 & 8-14 Day Outlook"),
+    },
+}
+
 
 class NationalDiscussionService:
-    """Fetch national weather discussions via the NWS API and web scraping."""
+    """Fetch national weather discussions via IEM AFOS plain-text products."""
 
     def __init__(
         self,
@@ -105,6 +122,33 @@ class NationalDiscussionService:
             time_module=time,
             logger=logger,
         )
+
+    def _fetch_iem_text_product(self, pil: str) -> dict[str, Any]:
+        """Fetch a plain-text national product from IEM's AFOS endpoint."""
+        self._rate_limit()
+        try:
+            product = fetch_iem_afos_text_sync(
+                pil, timeout=self.timeout, user_agent=HEADERS["User-Agent"]
+            )
+        except IemProductFetchError as exc:
+            return {"success": False, "error": str(exc)}
+        return {"success": True, "text": product.product_text}
+
+    def _fetch_iem_product_group(
+        self,
+        group: str,
+        unavailable_text: str,
+    ) -> dict[str, dict[str, str]]:
+        """Fetch a configured group of national AFOS products."""
+        result: dict[str, dict[str, str]] = {}
+        for key, (pil, title) in IEM_NATIONAL_PRODUCTS[group].items():
+            product_result = self._fetch_iem_text_product(pil)
+            if product_result["success"]:
+                text = product_result["text"]
+            else:
+                text = f"Error fetching {title}: {product_result['error']}"
+            result[key] = {"title": title, "text": text or unavailable_text}
+        return result
 
     def _fetch_latest_product(self, product_type: str) -> dict[str, Any]:
         """
@@ -194,46 +238,7 @@ class NationalDiscussionService:
             Each value is a dict with 'title' and 'text' keys.
 
         """
-        result: dict[str, dict[str, str]] = {
-            "short_range": {"title": "Short Range Forecast (Days 1-3)", "text": ""},
-            "medium_range": {"title": "Medium Range Forecast (Days 3-7)", "text": ""},
-            "extended": {"title": "Extended Forecast (Days 8-10)", "text": ""},
-        }
-
-        products_result = self._fetch_latest_product(PRODUCT_TYPE_PMD)
-        if not products_result["success"]:
-            error_msg = f"Error fetching WPC discussions: {products_result['error']}"
-            for key in result:
-                result[key]["text"] = error_msg
-            return result
-
-        products = products_result["products"]
-        fetched: set[str] = set()
-        for product in products:
-            product_id = product.get("id", "")
-            if not product_id:
-                at_id = product.get("@id", "")
-                if at_id:
-                    product_id = at_id.rsplit("/", 1)[-1]
-
-            # Fetch text first, then classify by content (API name is generic)
-            text_result = self._fetch_product_text(product_id)
-            if not text_result["success"]:
-                continue
-
-            classification = self._classify_pmd_discussion(text_result["text"])
-            if classification and classification not in fetched:
-                result[classification]["text"] = text_result["text"]
-                fetched.add(classification)
-
-            if len(fetched) == 3:
-                break
-
-        for key in result:
-            if not result[key]["text"]:
-                result[key]["text"] = "Discussion not available"
-
-        return result
+        return self._fetch_iem_product_group("wpc", "Discussion not available")
 
     def fetch_spc_discussions(self) -> dict[str, dict[str, str]]:
         """
@@ -244,46 +249,7 @@ class NationalDiscussionService:
             Each value is a dict with 'title' and 'text' keys.
 
         """
-        result: dict[str, dict[str, str]] = {
-            "day1": {"title": "Day 1 Convective Outlook", "text": ""},
-            "day2": {"title": "Day 2 Convective Outlook", "text": ""},
-            "day3": {"title": "Day 3 Convective Outlook", "text": ""},
-        }
-
-        products_result = self._fetch_latest_product(PRODUCT_TYPE_SWO)
-        if not products_result["success"]:
-            error_msg = f"Error fetching SPC discussions: {products_result['error']}"
-            for key in result:
-                result[key]["text"] = error_msg
-            return result
-
-        products = products_result["products"]
-        fetched: set[str] = set()
-        for product in products:
-            product_id = product.get("id", "")
-            if not product_id:
-                at_id = product.get("@id", "")
-                if at_id:
-                    product_id = at_id.rsplit("/", 1)[-1]
-
-            # Fetch text first, then classify by content
-            text_result = self._fetch_product_text(product_id)
-            if not text_result["success"]:
-                continue
-
-            classification = self._classify_swo_outlook(text_result["text"])
-            if classification and classification not in fetched:
-                result[classification]["text"] = text_result["text"]
-                fetched.add(classification)
-
-            if len(fetched) == 3:
-                break
-
-        for key in result:
-            if not result[key]["text"]:
-                result[key]["text"] = "Outlook not available"
-
-        return result
+        return self._fetch_iem_product_group("spc", "Outlook not available")
 
     def fetch_qpf_discussion(self) -> dict[str, dict[str, str]]:
         """
@@ -293,46 +259,11 @@ class NationalDiscussionService:
             Dict with key 'qpf'. Value is a dict with 'title' and 'text' keys.
 
         """
-        result: dict[str, dict[str, str]] = {
-            "qpf": {"title": "Quantitative Precipitation Forecast Discussion", "text": ""},
-        }
-
-        products_result = self._fetch_latest_product(PRODUCT_TYPE_QPF)
-        if not products_result["success"]:
-            result["qpf"]["text"] = f"Error fetching QPF discussion: {products_result['error']}"
-            return result
-
-        products = products_result["products"]
-        if products:
-            product = products[0]
-            product_id = product.get("id", "")
-            if not product_id:
-                at_id = product.get("@id", "")
-                if at_id:
-                    product_id = at_id.rsplit("/", 1)[-1]
-
-            text_result = self._fetch_product_text(product_id)
-            if text_result["success"]:
-                result["qpf"]["text"] = text_result["text"]
-            else:
-                result["qpf"]["text"] = f"Error: {text_result['error']}"
-        else:
-            result["qpf"]["text"] = "QPF discussion not available"
-
-        return result
+        return self._fetch_iem_product_group("qpf", "QPF discussion not available")
 
     @staticmethod
     def _extract_nhc_outlook_text(html: str) -> str:
-        """
-        Extract tropical weather outlook text from NHC HTML page.
-
-        Args:
-            html: Raw HTML from NHC outlook page.
-
-        Returns:
-            Extracted outlook text or error message.
-
-        """
+        """Extract tropical weather outlook text from legacy HTML fixtures."""
         return extract_nhc_outlook_text(html)
 
     @staticmethod
@@ -348,85 +279,33 @@ class NationalDiscussionService:
 
     def fetch_nhc_discussions(self) -> dict[str, dict[str, str]]:
         """
-        Fetch NHC tropical weather outlooks by scraping nhc.noaa.gov.
+        Fetch NHC tropical weather outlooks via IEM AFOS products.
 
         Returns:
             Dict with keys 'atlantic_outlook' and 'east_pacific_outlook'.
             Each value is a dict with 'title' and 'text' keys.
 
         """
-        result: dict[str, dict[str, str]] = {
-            "atlantic_outlook": {
-                "title": "Atlantic Tropical Weather Outlook",
-                "text": "",
-            },
-            "east_pacific_outlook": {
-                "title": "East Pacific Tropical Weather Outlook",
-                "text": "",
-            },
-        }
-
-        atlantic_result = self._make_html_request(NHC_ATLANTIC_OUTLOOK_URL)
-        if atlantic_result["success"]:
-            result["atlantic_outlook"]["text"] = self._extract_nhc_outlook_text(
-                atlantic_result["html"]
-            )
-        else:
-            result["atlantic_outlook"]["text"] = (
-                f"Error fetching Atlantic outlook: {atlantic_result['error']}"
-            )
-
-        epac_result = self._make_html_request(NHC_EAST_PACIFIC_OUTLOOK_URL)
-        if epac_result["success"]:
-            result["east_pacific_outlook"]["text"] = self._extract_nhc_outlook_text(
-                epac_result["html"]
-            )
-        else:
-            result["east_pacific_outlook"]["text"] = (
-                f"Error fetching East Pacific outlook: {epac_result['error']}"
-            )
-
-        return result
+        return self._fetch_iem_product_group("nhc", "Tropical outlook not available")
 
     @staticmethod
     def _extract_cpc_outlook_text(html: str, label: str) -> str | None:
-        """
-        Extract outlook text from a CPC outlook HTML page.
-
-        Args:
-            html: Raw HTML content.
-            label: Human-readable label for logging.
-
-        Returns:
-            Extracted text, or None if extraction failed.
-
-        """
+        """Extract CPC outlook text from legacy HTML fixtures."""
         return extract_cpc_outlook_text(html, label)
 
     def fetch_cpc_discussions(self) -> dict[str, dict[str, str]]:
         """
-        Fetch CPC 6-10 and 8-14 Day prognostic discussion via scraping.
+        Fetch CPC 6-10 and 8-14 Day prognostic discussion via IEM AFOS.
 
         Returns:
             Dict with key 'outlook'. Value is a dict with 'title' and 'text'.
             The single discussion document covers both 6-10 and 8-14 day periods.
 
         """
-        result: dict[str, dict[str, str]] = {
-            "outlook": {"title": "CPC 6-10 & 8-14 Day Outlook", "text": ""},
-        }
-
-        html_result = self._make_html_request(CPC_OUTLOOK_URL)
-        if html_result["success"]:
-            text = self._extract_cpc_outlook_text(html_result["html"], "6-10 & 8-14 Day")
-            if text:
-                result["outlook"]["text"] = text
-            else:
-                result["outlook"]["text"] = "CPC outlook discussion is currently unavailable."
-        else:
-            result["outlook"]["text"] = f"Error fetching CPC outlook: {html_result['error']}"
-
-        return result
+        return self._fetch_iem_product_group(
+            "cpc",
+            "CPC outlook discussion is currently unavailable.",
+        )
 
     def fetch_all_discussions(self, force_refresh: bool = False) -> dict[str, Any]:
         """

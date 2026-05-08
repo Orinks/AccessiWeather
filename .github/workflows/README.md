@@ -15,7 +15,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 - Runs Ruff format and lint checks on the primary Python lane
 - Executes the non-integration pytest suite on Python 3.12 and 3.13
 - Runs changed-line coverage gating for pull requests in the primary lane
-- Posts a non-blocking CHANGELOG reminder in the job summary when `src/` changes target `dev`
+- Fails when user-facing changes target `dev` without a curated `CHANGELOG.md` entry under `## [Unreleased]`
 
 ---
 
@@ -29,6 +29,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 **What it does**:
 - Builds Windows installer + portable ZIP, macOS ZIP, and Linux tarball
 - Creates nightly or stable GitHub releases
+- Builds release bodies from curated `CHANGELOG.md` entries instead of PR titles
 
 ---
 
@@ -66,9 +67,17 @@ Website deployment is intentionally separate and owned by the Vercel workflow.
 
 As a solo maintainer, you typically only need to:
 
-1. **Open a PR to `dev`**: `ci.yml` validates formatting, lint, tests, and diff coverage
+1. **Open a PR to `dev`**: `ci.yml` validates formatting, lint, tests, changelog entries, and diff coverage
 2. **Merge changes to `dev`**: Nightly `build.yml` creates user-facing artifacts when there were user-facing commits
 3. **Publish a stable release tag**: `build.yml` creates the release assets; the Vercel workflow owns website deployment
+
+Every user-facing PR needs a `CHANGELOG.md` bullet under `## [Unreleased]`. Direct pushes to
+`dev` or `main` are checked too, so user-facing commits without an associated PR still need a
+curated changelog entry.
+
+Nightly release notes include only newly added Unreleased entries since the previous nightly tag.
+Stable release notes use the matching version section, such as `## [0.6.1]`, and fall back to
+Unreleased only when a version section has not been cut yet.
 
 Everything else stays out of the PR path.
 
