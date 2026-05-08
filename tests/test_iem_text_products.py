@@ -86,6 +86,22 @@ async def test_afos_retrieve_accepts_history_filters():
 
 
 @pytest.mark.asyncio
+async def test_afos_retrieve_accepts_aviation_afd_flag():
+    client = _client(_resp(text="aviation section"))
+
+    result = await fetch_iem_afos_text(
+        "AFDDMX",
+        client=client,
+        iem_base_url=IEM_BASE,
+        aviation_afd=True,
+    )
+
+    assert result.product_text == "aviation section"
+    params = client.get.call_args.kwargs["params"]
+    assert params["aviation_afd"] == 1
+
+
+@pytest.mark.asyncio
 async def test_afos_retrieve_strips_iem_control_characters():
     client = _client(_resp(text="\x01 627\r\nAFDRAH text\x03\n"))
 

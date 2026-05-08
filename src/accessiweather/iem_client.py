@@ -172,6 +172,7 @@ async def fetch_iem_afos_text(
     center: str | None = None,
     wmo_id: str | None = None,
     matches: str | None = None,
+    aviation_afd: bool = False,
 ) -> TextProduct:
     """Fetch raw NWS text from IEM AFOS retrieve by AWIPS/PIL."""
     product_id = pil.strip().upper()
@@ -194,6 +195,8 @@ async def fetch_iem_afos_text(
         params["ttaaii"] = wmo_id.strip().upper()
     if matches:
         params["matches"] = matches.strip()
+    if aviation_afd:
+        params["aviation_afd"] = 1
 
     url = f"{iem_base_url}/cgi-bin/afos/retrieve.py"
     headers = {"User-Agent": user_agent}
@@ -237,6 +240,7 @@ def fetch_iem_afos_text_sync(
     center: str | None = None,
     wmo_id: str | None = None,
     matches: str | None = None,
+    aviation_afd: bool = False,
 ) -> TextProduct:
     """Fetch raw NWS text from IEM AFOS retrieve by AWIPS/PIL synchronously."""
     product_id = pil.strip().upper()
@@ -255,6 +259,8 @@ def fetch_iem_afos_text_sync(
         params["ttaaii"] = wmo_id.strip().upper()
     if matches:
         params["matches"] = matches.strip()
+    if aviation_afd:
+        params["aviation_afd"] = 1
 
     url = f"{iem_base_url}/cgi-bin/afos/retrieve.py"
     headers = {"User-Agent": user_agent}
