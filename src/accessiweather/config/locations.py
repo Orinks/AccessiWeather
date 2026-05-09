@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from math import isclose
 from typing import TYPE_CHECKING
 
 from ..models import Location
@@ -187,6 +188,60 @@ class LocationOperations:
                 location.marine_mode = marine_mode
                 self.logger.info(f"Set marine_mode={marine_mode} on location: {name}")
                 return self._manager.save_config()
+
+        self.logger.warning(f"Location {name} not found")
+        return False
+
+    def update_location_details(
+        self,
+        name: str,
+        *,
+        latitude: float,
+        longitude: float,
+        country_code: str | None,
+        marine_mode: bool,
+    ) -> bool:
+        """
+        Update editable details on an existing location and persist them.
+
+        The location name is intentionally stable. When coordinates change,
+        cached NWS metadata is cleared so the next refresh resolves zones for
+        the new point instead of reusing the old city/ZIP point.
+        """
+        config = self._manager.get_config()
+
+        for location in config.locations:
+            if location.name != name:
+                continue
+
+            coordinates_changed = not (
+                isclose(location.latitude, latitude, abs_tol=1e-6)
+                and isclose(location.longitude, longitude, abs_tol=1e-6)
+            )
+
+            location.latitude = latitude
+            location.longitude = longitude
+            location.country_code = country_code
+            location.marine_mode = marine_mode
+
+            if coordinates_changed:
+                location.timezone = None
+                location.forecast_zone_id = None
+                location.cwa_office = None
+                location.county_zone_id = None
+                location.fire_zone_id = None
+                location.radar_station = None
+
+            current = config.current_location
+            if current is not None and current.name == name:
+                config.current_location = location
+
+            self.logger.info(
+                "Updated location details for %s%s",
+                name,
+                " and cleared zone metadata" if coordinates_changed else "",
+            )
+            return self._manager.save_config()
 
         self.logger.warning(f"Location {name} not found")
         return False

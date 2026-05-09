@@ -91,7 +91,7 @@ class MainWindowLocationMixin:
             self.refresh_weather_async()
 
     def on_edit_location(self) -> None:
-        """Handle edit location button click — currently edits marine_mode."""
+        """Handle edit location button click."""
         selected = self.location_dropdown.GetStringSelection()
         if not selected or selected == ALL_LOCATIONS_SENTINEL:
             from . import main_window as base_module
@@ -112,11 +112,20 @@ class MainWindowLocationMixin:
 
         from . import main_window as base_module
 
-        new_marine_mode = base_module.show_edit_location_dialog(self, self.app, location)
-        if new_marine_mode is None:
+        edit_result = base_module.show_edit_location_dialog(self, self.app, location)
+        if edit_result is None:
             return
 
-        self.app.config_manager.update_location_marine_mode(selected, new_marine_mode)
+        if isinstance(edit_result, bool):
+            self.app.config_manager.update_location_marine_mode(selected, edit_result)
+        else:
+            self.app.config_manager.update_location_details(
+                selected,
+                latitude=edit_result.latitude,
+                longitude=edit_result.longitude,
+                country_code=edit_result.country_code,
+                marine_mode=edit_result.marine_mode,
+            )
         self.refresh_weather_async(force_refresh=True)
 
     def on_remove_location(self) -> None:

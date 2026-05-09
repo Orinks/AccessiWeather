@@ -3,14 +3,26 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import wx
 
 if TYPE_CHECKING:
     from ...app import AccessiWeatherApp
+    from ...models import Location
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class EditLocationResult:
+    """Editable values returned by the edit location dialog."""
+
+    latitude: float
+    longitude: float
+    country_code: str | None
+    marine_mode: bool
 
 
 def show_add_location_dialog(parent, app: AccessiWeatherApp) -> str | None:
@@ -49,19 +61,22 @@ def show_add_location_dialog(parent, app: AccessiWeatherApp) -> str | None:
         return None
 
 
-def show_edit_location_dialog(parent, app: AccessiWeatherApp, location) -> bool | None:
+def show_edit_location_dialog(
+    parent,
+    app: AccessiWeatherApp,
+    location,
+) -> EditLocationResult | None:
     """
     Show a small edit dialog for an existing location.
 
-    Currently edits the per-location ``marine_mode`` flag only. Returns the new
-    value on OK, or ``None`` if the user cancelled.
+    Returns the chosen editable values on OK, or ``None`` if the user cancelled.
     """
     try:
-        dlg = EditLocationDialog(parent, location)
+        dlg = EditLocationDialog(parent, app, location)
         result = dlg.ShowModal()
 
         if result == wx.ID_OK:
-            new_value = dlg.get_marine_mode()
+            new_value = dlg.get_result()
             dlg.Destroy()
             return new_value
 
@@ -103,22 +118,39 @@ def _edit_location_is_us(location) -> bool:
 
 
 class EditLocationDialog(wx.Dialog):
-    """Small dialog for editing an existing location's marine-mode flag."""
+    """Dialog for editing an existing location."""
 
-    def __init__(self, parent, location):
+    def __init__(self, parent, app: AccessiWeatherApp, location: Location):
         """Initialize with the location being edited."""
         super().__init__(
             parent,
             title=f"Edit Location: {location.name}",
-            style=wx.DEFAULT_DIALOG_STYLE,
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
+        self.app = app
         self._location = location
+        self._selected_location: Location | None = None
+        self._search_results: list[Location] = []
+        self._is_searching = False
+
+        from ...location_manager import LocationManager
+
+        self.location_manager = LocationManager()
 
         panel = wx.Panel(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         name_label = wx.StaticText(panel, label=f"Location: {location.name}")
         sizer.Add(name_label, 0, wx.ALL, 10)
+
+        self.current_coordinates_label = wx.StaticText(
+            panel,
+            label=(
+                "Current coordinates: "
+                f"{self.location_manager.format_coordinates(location.latitude, location.longitude)}"
+            ),
+        )
+        sizer.Add(self.current_coordinates_label, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         self.marine_checkbox = wx.CheckBox(
             panel,
@@ -130,6 +162,47 @@ class EditLocationDialog(wx.Dialog):
         )
         self.marine_checkbox.SetName("Enable Marine Mode for this location")
         sizer.Add(self.marine_checkbox, 0, wx.ALL | wx.EXPAND, 10)
+
+        address_box = wx.StaticBox(panel, label="Update Coordinates from Address")
+        address_sizer = wx.StaticBoxSizer(address_box, wx.VERTICAL)
+        address_parent = address_box
+
+        address_label = wx.StaticText(
+            address_parent,
+            label="Search for a US street address to update this saved location:",
+        )
+        address_sizer.Add(address_label, 0, wx.ALL, 5)
+
+        search_row = wx.BoxSizer(wx.HORIZONTAL)
+        self.address_input = wx.TextCtrl(address_parent, style=wx.TE_PROCESS_ENTER)
+        self.address_input.SetHint("Street address, city, state, and ZIP")
+        self.address_input.SetName("Address lookup for saved location coordinates")
+        self.address_input.Bind(wx.EVT_TEXT_ENTER, self._on_address_search)
+        search_row.Add(self.address_input, 1, wx.RIGHT, 8)
+
+        self.address_search_button = wx.Button(address_parent, label="Search")
+        self.address_search_button.Bind(wx.EVT_BUTTON, self._on_address_search)
+        search_row.Add(self.address_search_button, 0)
+        address_sizer.Add(search_row, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.address_results_list = wx.ListCtrl(
+            address_parent,
+            style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.BORDER_SUNKEN,
+            size=(-1, 110),
+        )
+        self.address_results_list.SetName("Address lookup results")
+        self.address_results_list.InsertColumn(0, "Matched Address", width=320)
+        self.address_results_list.InsertColumn(1, "Coordinates", width=180)
+        self.address_results_list.Bind(wx.EVT_LIST_ITEM_SELECTED, self._on_address_selected)
+        address_sizer.Add(self.address_results_list, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.coordinate_comparison_label = wx.StaticText(
+            address_parent,
+            label="No address selected. Existing coordinates will be kept.",
+        )
+        self.coordinate_comparison_label.SetName("Coordinate comparison")
+        address_sizer.Add(self.coordinate_comparison_label, 0, wx.ALL, 5)
+        sizer.Add(address_sizer, 0, wx.EXPAND | wx.ALL, 10)
 
         # NWS Zone Information section (US locations only, snapshot at open).
         self._zone_info_box = wx.StaticBox(panel, label="NWS Zone Information")
@@ -166,12 +239,112 @@ class EditLocationDialog(wx.Dialog):
         ok_button.SetDefault()
 
         # Fit to content, but keep a baseline minimum width.
-        self.SetMinSize(wx.Size(420, -1))
+        self.SetMinSize(wx.Size(640, -1))
         self.Fit()
 
-    def get_marine_mode(self) -> bool:
-        """Return the marine_mode value chosen in the dialog."""
-        return self.marine_checkbox.GetValue()
+    def _on_address_search(self, event) -> None:
+        """Handle address search button press."""
+        query = self.address_input.GetValue().strip()
+        if not query:
+            self._set_coordinate_comparison("Enter an address to search.", is_error=True)
+            return
+
+        if self._is_searching:
+            self._set_coordinate_comparison("Search already in progress.", is_error=True)
+            return
+
+        self._is_searching = True
+        self.address_search_button.Disable()
+        self._set_coordinate_comparison(f"Searching for '{query}'...")
+        self.address_results_list.DeleteAllItems()
+        self._search_results = []
+        self._selected_location = None
+
+        self.app.run_async(self._do_address_search(query))
+
+    async def _do_address_search(self, query: str) -> None:
+        """Perform the address lookup."""
+        try:
+            locations = await self.location_manager.search_locations(query, limit=5)
+            wx.CallAfter(self._on_address_search_complete, locations)
+        except Exception as e:
+            logger.error(f"Address lookup failed: {e}")
+            wx.CallAfter(self._on_address_search_error, str(e))
+
+    def _on_address_search_complete(self, locations: list[Location]) -> None:
+        """Handle address lookup completion."""
+        self._is_searching = False
+        self.address_search_button.Enable()
+
+        if not locations:
+            self._set_coordinate_comparison("No address matches found.", is_error=True)
+            return
+
+        self._search_results = locations
+        for location in locations:
+            coords = self.location_manager.format_coordinates(
+                location.latitude,
+                location.longitude,
+            )
+            index = self.address_results_list.InsertItem(
+                self.address_results_list.GetItemCount(),
+                location.name,
+            )
+            self.address_results_list.SetItem(index, 1, coords)
+
+        self._set_coordinate_comparison(
+            f"Found {len(locations)} matches. Select one to compare coordinates."
+        )
+
+    def _on_address_search_error(self, error: str) -> None:
+        """Handle address lookup failure."""
+        self._is_searching = False
+        self.address_search_button.Enable()
+        self._set_coordinate_comparison(f"Address search failed: {error}", is_error=True)
+
+    def _on_address_selected(self, event) -> None:
+        """Handle address result selection."""
+        index = event.GetIndex()
+        if not 0 <= index < len(self._search_results):
+            return
+
+        self._selected_location = self._search_results[index]
+        distance = self.location_manager.calculate_distance(
+            self._location,
+            self._selected_location,
+        )
+        current_coords = self.location_manager.format_coordinates(
+            self._location.latitude,
+            self._location.longitude,
+        )
+        new_coords = self.location_manager.format_coordinates(
+            self._selected_location.latitude,
+            self._selected_location.longitude,
+        )
+        self._set_coordinate_comparison(
+            f"Current: {current_coords}. New: {new_coords}. Difference: {distance:.2f} miles."
+        )
+
+    def _set_coordinate_comparison(self, message: str, is_error: bool = False) -> None:
+        """Update the coordinate comparison label."""
+        self.coordinate_comparison_label.SetLabel(message)
+        colour = wx.SystemSettings.GetColour(
+            wx.SYS_COLOUR_GRAYTEXT if is_error else wx.SYS_COLOUR_WINDOWTEXT
+        )
+        self.coordinate_comparison_label.SetForegroundColour(colour)
+        self.coordinate_comparison_label.Wrap(580)
+        self.Layout()
+        self.Fit()
+
+    def get_result(self) -> EditLocationResult:
+        """Return the editable values chosen in the dialog."""
+        selected = self._selected_location
+        return EditLocationResult(
+            latitude=selected.latitude if selected else self._location.latitude,
+            longitude=selected.longitude if selected else self._location.longitude,
+            country_code=(selected.country_code if selected else self._location.country_code),
+            marine_mode=self.marine_checkbox.GetValue(),
+        )
 
 
 class AddLocationDialog(wx.Dialog):
@@ -245,12 +418,15 @@ class AddLocationDialog(wx.Dialog):
 
         # Search section
         search_sizer = wx.BoxSizer(wx.VERTICAL)
-        search_label = wx.StaticText(panel, label="Search for Location (city/zipcode):")
+        search_label = wx.StaticText(
+            panel,
+            label="Search for Location (city, ZIP/postal code, or US address):",
+        )
         search_sizer.Add(search_label, 0, wx.BOTTOM, 5)
 
         search_row = wx.BoxSizer(wx.HORIZONTAL)
         self.search_input = wx.TextCtrl(panel, style=wx.TE_PROCESS_ENTER)
-        self.search_input.SetHint("City name or ZIP/postal code")
+        self.search_input.SetHint("City, ZIP/postal code, or US street address")
         self.search_input.Bind(wx.EVT_TEXT_ENTER, self._on_search)
         search_row.Add(self.search_input, 1, wx.RIGHT, 10)
 
@@ -260,7 +436,10 @@ class AddLocationDialog(wx.Dialog):
 
         search_sizer.Add(search_row, 0, wx.EXPAND)
 
-        search_help = wx.StaticText(panel, label="Examples: 'New York', '10001', 'London'")
+        search_help = wx.StaticText(
+            panel,
+            label="Examples: 'London', 'New York', '10001', or '123 Main St, Carrollton, TX'",
+        )
         search_help.SetForegroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT))
         search_sizer.Add(search_help, 0, wx.TOP, 5)
 

@@ -211,6 +211,76 @@ class TestConfigManager:
         """Updating marine_mode on an unknown location returns False."""
         assert manager.update_location_marine_mode("Nowhere", True) is False
 
+    def test_update_location_details_changes_coordinates_and_clears_zone_metadata(self, manager):
+        """Updating saved coordinates keeps the name and clears stale zone fields."""
+        manager.add_location("Lumberton", 39.965, -74.805, country_code="US")
+        location = manager.get_all_locations()[0]
+        location.timezone = "America/New_York"
+        location.forecast_zone_id = "NJZ020"
+        location.cwa_office = "PHI"
+        location.county_zone_id = "NJC005"
+        location.fire_zone_id = "NJZ020"
+        location.radar_station = "KDIX"
+        manager.save_config()
+
+        result = manager.update_location_details(
+            "Lumberton",
+            latitude=39.9571,
+            longitude=-74.8069,
+            country_code="US",
+            marine_mode=True,
+        )
+
+        assert result is True
+        updated = manager.get_all_locations()[0]
+        assert updated.name == "Lumberton"
+        assert updated.latitude == pytest.approx(39.9571)
+        assert updated.longitude == pytest.approx(-74.8069)
+        assert updated.country_code == "US"
+        assert updated.marine_mode is True
+        assert updated.timezone is None
+        assert updated.forecast_zone_id is None
+        assert updated.cwa_office is None
+        assert updated.county_zone_id is None
+        assert updated.fire_zone_id is None
+        assert updated.radar_station is None
+        assert manager.get_current_location() is not None
+        assert manager.get_current_location().latitude == pytest.approx(39.9571)
+
+    def test_update_location_details_keeps_zone_metadata_when_coordinates_match(self, manager):
+        """Updating only marine mode/country preserves resolved zone metadata."""
+        manager.add_location("Lumberton", 39.965, -74.805, country_code="US")
+        location = manager.get_all_locations()[0]
+        location.forecast_zone_id = "NJZ020"
+        location.county_zone_id = "NJC005"
+        manager.save_config()
+
+        result = manager.update_location_details(
+            "Lumberton",
+            latitude=39.965,
+            longitude=-74.805,
+            country_code="US",
+            marine_mode=True,
+        )
+
+        assert result is True
+        updated = manager.get_all_locations()[0]
+        assert updated.forecast_zone_id == "NJZ020"
+        assert updated.county_zone_id == "NJC005"
+
+    def test_update_location_details_nonexistent_returns_false(self, manager):
+        """Updating an unknown location returns False."""
+        assert (
+            manager.update_location_details(
+                "Nowhere",
+                latitude=1.0,
+                longitude=2.0,
+                country_code="US",
+                marine_mode=False,
+            )
+            is False
+        )
+
     def test_update_settings(self, manager):
         """Test updating settings."""
         manager.load_config()
