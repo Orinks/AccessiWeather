@@ -295,6 +295,24 @@ class ConfigManager:
         """Update marine_mode on an existing location."""
         return self._locations.update_location_marine_mode(name, marine_mode)
 
+    def update_location_details(
+        self,
+        name: str,
+        *,
+        latitude: float,
+        longitude: float,
+        country_code: str | None,
+        marine_mode: bool,
+    ) -> bool:
+        """Update editable details on an existing location."""
+        return self._locations.update_location_details(
+            name,
+            latitude=latitude,
+            longitude=longitude,
+            country_code=country_code,
+            marine_mode=marine_mode,
+        )
+
     def remove_location(self, name: str) -> bool:
         """Remove a location."""
         return self._locations.remove_location(name)

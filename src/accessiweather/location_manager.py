@@ -6,6 +6,7 @@ replacing the complex location service with direct operations.
 """
 
 import logging
+import re
 
 import httpx
 
@@ -23,22 +24,45 @@ logger = logging.getLogger(__name__)
 class LocationManager:
     """Simple location manager with geocoding support via Open-Meteo."""
 
+    STREET_ADDRESS_PATTERN = re.compile(
+        r"\b\d+\b.*\b("
+        r"aly|alley|ave|avenue|blvd|boulevard|cir|circle|ct|court|dr|drive|hwy|highway|"
+        r"ln|lane|pkwy|parkway|pl|place|rd|road|sq|square|st|street|ter|terrace|"
+        r"trail|trl|way"
+        r")\b",
+        re.IGNORECASE,
+    )
+    STARTS_WITH_NUMBER_PATTERN = re.compile(r"^\s*\d+\b")
+
     def __init__(self):
         """Initialize the instance."""
         self.timeout = 10.0
         self.geocoding_base_url = "https://geocoding-api.open-meteo.com/v1"
+        self.census_geocoding_base_url = "https://geocoding.geo.census.gov/geocoder"
 
     @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=15.0)
     async def search_locations(self, query: str, limit: int = 5) -> list[Location]:
         """Search for locations using Open-Meteo geocoding API."""
         logger.info(f"Searching for locations: {sanitize_log(query)}")
 
+        query = query.strip()
+
         # Open-Meteo requires at least 2 characters
-        if len(query.strip()) < 2:
+        if len(query) < 2:
             logger.info("Query too short for geocoding")
             return []
 
         try:
+            if self._looks_like_street_address(query):
+                address_locations = await self._search_us_street_address(query, limit=limit)
+                if address_locations:
+                    logger.info(
+                        "Found %s address locations for query: %s",
+                        len(address_locations),
+                        sanitize_log(query),
+                    )
+                    return address_locations
+
             url = f"{self.geocoding_base_url}/search"
             params = {
                 "name": query,
@@ -102,6 +126,68 @@ class LocationManager:
             if isinstance(e, RETRYABLE_EXCEPTIONS) or is_retryable_http_error(e):
                 raise
             return []
+
+    def _looks_like_street_address(self, query: str) -> bool:
+        """Return True when a query has enough street-address shape for Census geocoding."""
+        return bool(
+            self.STREET_ADDRESS_PATTERN.search(query)
+            or (self.STARTS_WITH_NUMBER_PATTERN.search(query) and "," in query)
+        )
+
+    async def _search_us_street_address(self, query: str, limit: int = 5) -> list[Location]:
+        """Search a US street address with the Census Geocoder."""
+        url = f"{self.census_geocoding_base_url}/locations/onelineaddress"
+        params = {
+            "address": query,
+            "benchmark": "Public_AR_Current",
+            "format": "json",
+        }
+
+        async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
+            response = await client.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+        matches = data.get("result", {}).get("addressMatches", [])
+        locations: list[Location] = []
+        seen: set[str] = set()
+
+        for match in matches:
+            location = self._parse_census_address_match(match)
+            if location is None:
+                continue
+
+            key = f"{location.name.casefold()}:{location.latitude:.6f}:{location.longitude:.6f}"
+            if key in seen:
+                continue
+
+            seen.add(key)
+            locations.append(location)
+            if len(locations) >= limit:
+                break
+
+        return locations
+
+    def _parse_census_address_match(self, data: dict) -> Location | None:
+        """Parse a Census Geocoder address match into a Location."""
+        try:
+            coordinates = data.get("coordinates", {})
+            latitude = float(coordinates["y"])
+            longitude = float(coordinates["x"])
+            matched_address = str(data.get("matchedAddress") or "").strip()
+            if not matched_address:
+                return None
+
+            return Location(
+                name=matched_address,
+                latitude=latitude,
+                longitude=longitude,
+                country_code="US",
+            )
+
+        except (KeyError, TypeError, ValueError) as e:
+            logger.warning("Skipping Census address match with invalid coordinates: %s", e)
+            return None
 
     def _parse_geocoding_result(self, data: dict) -> Location | None:
         """Parse Open-Meteo geocoding API result into Location object."""
