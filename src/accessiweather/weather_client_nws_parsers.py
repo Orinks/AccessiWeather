@@ -226,6 +226,11 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
             id=alert_id,
             source="NWS",
             message_type=props.get("messageType"),
+            affected_zones=[
+                zone.rsplit("/", 1)[-1]
+                for zone in props.get("affectedZones", [])
+                if isinstance(zone, str) and zone
+            ],
         )
         alerts.append(alert)
 

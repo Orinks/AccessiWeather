@@ -348,6 +348,30 @@ class TestWeatherClientGetNwsAlerts:
             call_kwargs = mock_nws.get_nws_alerts.call_args
             assert call_kwargs.kwargs.get("alert_radius_type") == "county"
 
+    @pytest.mark.asyncio
+    async def test_fetch_nws_data_parallel_passes_alert_radius_type(self):
+        """The optimized NWS refresh path must honor the configured alert area."""
+        from accessiweather.weather_client_base import WeatherClient
+
+        expected = (None, None, None, None, None, None)
+        settings = AppSettings(alert_radius_type="state")
+        client = WeatherClient(settings=settings)
+        client._test_mode = False
+        client._get_http_client = MagicMock(return_value=MagicMock())
+        location = MagicMock()
+
+        with patch(
+            "accessiweather.weather_client_base.nws_client.get_nws_all_data_parallel",
+            new_callable=AsyncMock,
+        ) as mock_parallel:
+            mock_parallel.return_value = expected
+
+            result = await client._fetch_nws_data(location)
+
+            assert result == expected
+            mock_parallel.assert_awaited_once()
+            assert mock_parallel.await_args.kwargs.get("alert_radius_type") == "state"
+
 
 # =============================================================================
 # 5. NWS county alert path and deduplication
