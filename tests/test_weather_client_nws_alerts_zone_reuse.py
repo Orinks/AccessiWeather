@@ -132,8 +132,10 @@ async def test_county_happy_path_uses_stored_zone(stored_location, empty_alerts_
 
 
 @pytest.mark.asyncio
-async def test_zone_happy_path_uses_stored_forecast_zone(stored_location, empty_alerts_payload):
-    """Zone radius + stored forecast_zone_id → zone param used, no /points call."""
+async def test_zone_happy_path_uses_stored_county_and_forecast_zones(
+    stored_location, empty_alerts_payload
+):
+    """Zone radius + stored zones → county and forecast zones are queried, no /points call."""
     alerts_response = _make_response(empty_alerts_payload)
 
     with patch("accessiweather.weather_client_nws.httpx.AsyncClient") as mock_client_class:
@@ -151,13 +153,171 @@ async def test_zone_happy_path_uses_stored_forecast_zone(stored_location, empty_
 
     assert result is not None
     counts = _count_calls(mock_client)
-    assert counts["points"] == 0, "Stored forecast_zone_id must skip /points"
+    assert counts["points"] == 0, "Stored zone IDs must skip /points"
+    assert counts["alerts"] == 2
+
+    alert_params = [
+        call.kwargs.get("params", {})
+        for call in mock_client.get.call_args_list
+        if _classify_call(call) == "alerts"
+    ]
+    assert alert_params == [
+        {"zone": "NYC061", "status": "actual"},
+        {"zone": "NYZ072", "status": "actual"},
+    ]
+
+
+@pytest.mark.asyncio
+async def test_zone_happy_path_deduplicates_county_and_forecast_alerts(stored_location):
+    """Zone radius should not show duplicate alerts returned by both zone endpoints."""
+    alert_feature = {
+        "id": "urn:test:duplicate-alert",
+        "properties": {
+            "headline": "Duplicate Alert",
+            "description": "Returned by both county and forecast zone endpoints.",
+            "event": "Test Warning",
+            "severity": "Severe",
+        },
+    }
+
+    with patch("accessiweather.weather_client_nws.httpx.AsyncClient") as mock_client_class:
+        mock_client = AsyncMock()
+        mock_client_class.return_value.__aenter__.return_value = mock_client
+        mock_client.get.side_effect = [
+            _make_response({"features": [alert_feature]}),
+            _make_response({"features": [alert_feature]}),
+        ]
+
+        result = await get_nws_alerts(
+            location=stored_location,
+            nws_base_url=BASE_URL,
+            user_agent=USER_AGENT,
+            timeout=10.0,
+            alert_radius_type="zone",
+        )
+
+    assert result is not None
+    assert len(result.alerts) == 1
+    assert result.alerts[0].id == "urn:test:duplicate-alert"
+
+
+@pytest.mark.asyncio
+async def test_zone_happy_path_keeps_good_zone_when_other_zone_fails(stored_location):
+    """A failed county/forecast zone request should not discard the other zone's alerts."""
+    alert_feature = {
+        "id": "urn:test:forecast-alert",
+        "properties": {
+            "headline": "Forecast Zone Alert",
+            "description": "Only one zone endpoint returned this alert.",
+            "event": "Test Warning",
+            "severity": "Severe",
+        },
+    }
+
+    with patch("accessiweather.weather_client_nws.httpx.AsyncClient") as mock_client_class:
+        mock_client = AsyncMock()
+        mock_client_class.return_value.__aenter__.return_value = mock_client
+        mock_client.get.side_effect = [
+            _make_response({}, status_code=404),
+            _make_response({"features": [alert_feature]}),
+        ]
+
+        result = await get_nws_alerts(
+            location=stored_location,
+            nws_base_url=BASE_URL,
+            user_agent=USER_AGENT,
+            timeout=10.0,
+            alert_radius_type="zone",
+        )
+
+    assert result is not None
+    assert len(result.alerts) == 1
+    assert result.alerts[0].id == "urn:test:forecast-alert"
+
+
+@pytest.mark.asyncio
+async def test_zone_fallback_resolves_county_and_forecast_zones(
+    unstored_location, empty_alerts_payload, points_payload
+):
+    """Zone radius + no stored zones resolves both zone IDs from /points."""
+    points_response = _make_response(points_payload)
+    alerts_response = _make_response(empty_alerts_payload)
+
+    with patch("accessiweather.weather_client_nws.httpx.AsyncClient") as mock_client_class:
+        mock_client = AsyncMock()
+        mock_client_class.return_value.__aenter__.return_value = mock_client
+
+        def _dispatch(url: str, *_args: object, **_kwargs: object):  # noqa: ARG001
+            del _args, _kwargs
+            if "/points/" in url:
+                return points_response
+            return alerts_response
+
+        mock_client.get.side_effect = _dispatch
+
+        result = await get_nws_alerts(
+            location=unstored_location,
+            nws_base_url=BASE_URL,
+            user_agent=USER_AGENT,
+            timeout=10.0,
+            alert_radius_type="zone",
+        )
+
+    assert result is not None
+    counts = _count_calls(mock_client)
+    assert counts["points"] == 1
+    assert counts["alerts"] == 2
+
+    alert_params = [
+        call.kwargs.get("params", {})
+        for call in mock_client.get.call_args_list
+        if _classify_call(call) == "alerts"
+    ]
+    assert alert_params == [
+        {"zone": "NYC061", "status": "actual"},
+        {"zone": "NYZ072", "status": "actual"},
+    ]
+
+
+@pytest.mark.asyncio
+async def test_zone_fallback_uses_point_query_when_points_has_no_zones(
+    unstored_location, empty_alerts_payload
+):
+    """Zone radius falls back to point alerts when /points has no zone URLs."""
+    points_response = _make_response({"properties": {}})
+    alerts_response = _make_response(empty_alerts_payload)
+
+    with patch("accessiweather.weather_client_nws.httpx.AsyncClient") as mock_client_class:
+        mock_client = AsyncMock()
+        mock_client_class.return_value.__aenter__.return_value = mock_client
+
+        def _dispatch(url: str, *_args: object, **_kwargs: object):  # noqa: ARG001
+            del _args, _kwargs
+            if "/points/" in url:
+                return points_response
+            return alerts_response
+
+        mock_client.get.side_effect = _dispatch
+
+        result = await get_nws_alerts(
+            location=unstored_location,
+            nws_base_url=BASE_URL,
+            user_agent=USER_AGENT,
+            timeout=10.0,
+            alert_radius_type="zone",
+        )
+
+    assert result is not None
+    counts = _count_calls(mock_client)
+    assert counts["points"] == 1
     assert counts["alerts"] == 1
 
     alert_call = next(c for c in mock_client.get.call_args_list if _classify_call(c) == "alerts")
     params = alert_call.kwargs.get("params", {})
-    assert params.get("zone") == "NYZ072"
-    assert params.get("status") == "actual"
+    assert params == {
+        "point": f"{unstored_location.latitude},{unstored_location.longitude}",
+        "status": "actual",
+    }
 
 
 @pytest.mark.asyncio

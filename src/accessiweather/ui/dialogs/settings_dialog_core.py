@@ -181,6 +181,8 @@ class SettingsDialogCoreMixin:
     def _load_settings(self):
         """Load current settings into UI controls."""
         try:
+            if hasattr(self.config_manager, "sync_startup_setting"):
+                self.config_manager.sync_startup_setting()
             settings = self.config_manager.get_settings()
             for tab in getattr(self, "_tab_objects", []):
                 tab.load(settings)
@@ -211,6 +213,10 @@ class SettingsDialogCoreMixin:
                         )
                         settings_dict.pop(key, None)
 
+            startup_result = self._apply_startup_enabled_setting(settings_dict)
+            if startup_result is False:
+                return False
+
             success = self.config_manager.update_settings(**settings_dict)
             if success:
                 logger.info("Settings saved successfully")
@@ -221,6 +227,42 @@ class SettingsDialogCoreMixin:
         except Exception as e:
             logger.error(f"Failed to save settings: {e}")
             return False
+
+    def _apply_startup_enabled_setting(self, settings_dict: dict) -> bool | None:
+        """
+        Apply the OS startup registration for the Advanced tab startup checkbox.
+
+        Returns False only when the requested startup state could not be applied.
+        None means the settings payload did not include startup_enabled.
+        """
+        if "startup_enabled" not in settings_dict:
+            return None
+
+        desired_enabled = bool(settings_dict["startup_enabled"])
+        current_enabled = False
+        if hasattr(self.config_manager, "is_startup_enabled"):
+            current_enabled = bool(self.config_manager.is_startup_enabled())
+
+        if desired_enabled == current_enabled:
+            return True
+
+        if desired_enabled:
+            success, message = self.config_manager.enable_startup()
+        else:
+            success, message = self.config_manager.disable_startup()
+
+        if success:
+            logger.info("Startup setting applied: %s", message)
+            return True
+
+        logger.error("Failed to apply startup setting: %s", message)
+        wx.MessageBox(
+            message,
+            "Startup Setting Failed",
+            wx.OK | wx.ICON_ERROR,
+        )
+        settings_dict["startup_enabled"] = current_enabled
+        return False
 
     def _setup_accessibility(self):
         """Set up accessibility labels for controls."""

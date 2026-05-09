@@ -331,3 +331,37 @@ class TestAlertManager:
 
         # Should be rate limited to 2
         assert len(notifications) <= 2
+
+    def test_unchanged_alert_does_not_consume_rate_limit_token(self, manager, sample_alert):
+        """Polling an already-seen alert must not starve later real notifications."""
+        alerts = WeatherAlerts(alerts=[sample_alert])
+        manager.process_alerts(alerts)
+        manager.last_global_notification = None
+        manager._rate_limit_tokens = 1.0
+
+        notifications = manager.process_alerts(alerts)
+
+        assert notifications == []
+        assert manager._rate_limit_tokens == 1.0
+
+    def test_unchanged_alert_does_not_starve_new_alert_in_same_batch(self, manager, sample_alert):
+        """An unchanged first alert should not spend the only token before a new alert."""
+        manager.process_alerts(WeatherAlerts(alerts=[sample_alert]))
+        manager.last_global_notification = None
+        manager._rate_limit_tokens = 1.0
+        new_alert = WeatherAlert(
+            id="NWS-ALERT-002",
+            title="Tornado Warning",
+            description="Tornado warning text.",
+            severity="Extreme",
+            urgency="Immediate",
+            certainty="Observed",
+            event="Tornado Warning",
+            expires=datetime.now(UTC) + timedelta(hours=1),
+        )
+
+        notifications = manager.process_alerts(WeatherAlerts(alerts=[sample_alert, new_alert]))
+
+        assert [(alert.id, reason) for alert, reason in notifications] == [
+            ("NWS-ALERT-002", "new_alert")
+        ]

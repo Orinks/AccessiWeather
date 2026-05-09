@@ -68,6 +68,7 @@ async def get_nws_all_data_parallel(
     user_agent: str,
     timeout: float,
     client: httpx.AsyncClient,
+    alert_radius_type: str = "county",
 ) -> tuple[
     CurrentConditions | None,
     Forecast | None,
@@ -105,7 +106,14 @@ async def get_nws_all_data_parallel(
             )
         )
         alerts_task = asyncio.create_task(
-            get_nws_alerts(location, nws_base_url, user_agent, timeout, client)
+            get_nws_alerts(
+                location,
+                nws_base_url,
+                user_agent,
+                timeout,
+                client,
+                alert_radius_type=alert_radius_type,
+            )
         )
         hourly_task = asyncio.create_task(
             get_nws_hourly_forecast(location, nws_base_url, user_agent, timeout, client, grid_data)

@@ -88,14 +88,16 @@ async def get_nws_alerts(
                 params = {"point": f"{location.latitude},{location.longitude}", "status": "actual"}
 
         elif alert_radius_type == "zone":
-            # Prefer the stored forecast_zone_id (populated by zone enrichment
-            # and kept fresh by drift correction). This skips a redundant
-            # /points round-trip on each refresh. Fall back to /points
-            # resolution when the stored field is absent.
-            if location.forecast_zone_id:
-                params = {"zone": location.forecast_zone_id, "status": "actual"}
-            else:
-                # Get zone from point data
+            # Query both county and forecast zones. Many alert products,
+            # including severe thunderstorm watches, are county-zone products
+            # even when the UI label says "zone".
+            zone_ids: list[str] = []
+            if location.county_zone_id:
+                zone_ids.append(location.county_zone_id)
+            if location.forecast_zone_id and location.forecast_zone_id not in zone_ids:
+                zone_ids.append(location.forecast_zone_id)
+
+            if not zone_ids:
                 point_url = f"{nws_base_url}/points/{location.latitude},{location.longitude}"
                 if client is not None:
                     point_response = await _client_get(client, point_url, headers=headers)
@@ -107,25 +109,39 @@ async def get_nws_alerts(
                 point_response.raise_for_status()
                 point_data = point_response.json()
 
-                # Try to get zone ID (prefer county, then forecast zone)
-                zone_id = None
                 county_url = point_data.get("properties", {}).get("county")
                 if county_url and "/county/" in county_url:
-                    zone_id = county_url.split("/county/")[1]
-                if not zone_id:
-                    forecast_zone_url = point_data.get("properties", {}).get("forecastZone")
-                    if forecast_zone_url and "/forecast/" in forecast_zone_url:
-                        zone_id = forecast_zone_url.split("/forecast/")[1]
+                    zone_ids.append(county_url.split("/county/")[1])
+                forecast_zone_url = point_data.get("properties", {}).get("forecastZone")
+                if forecast_zone_url and "/forecast/" in forecast_zone_url:
+                    forecast_zone_id = forecast_zone_url.split("/forecast/")[1]
+                    if forecast_zone_id not in zone_ids:
+                        zone_ids.append(forecast_zone_id)
 
-                if zone_id:
-                    params = {"zone": zone_id, "status": "actual"}
-                else:
-                    # Fall back to point query if zone not found
-                    logger.warning("Could not determine zone, falling back to point query")
-                    params = {
-                        "point": f"{location.latitude},{location.longitude}",
-                        "status": "actual",
-                    }
+            if zone_ids:
+                combined_features: list[dict] = []
+                async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+                    active_client = client or new_client
+                    for zone_id in zone_ids:
+                        try:
+                            response = await _client_get(
+                                active_client,
+                                alerts_url,
+                                headers=headers,
+                                params={"zone": zone_id, "status": "actual"},
+                            )
+                            response.raise_for_status()
+                            alerts_data = response.json()
+                            combined_features.extend(alerts_data.get("features", []))
+                        except Exception as exc:  # noqa: BLE001
+                            logger.warning("Failed getting alerts for zone %s: %s", zone_id, exc)
+                return parse_nws_alerts({"features": combined_features})
+
+            logger.warning("Could not determine zone, falling back to point query")
+            params = {
+                "point": f"{location.latitude},{location.longitude}",
+                "status": "actual",
+            }
 
         else:  # "point" (default) - most precise
             params = {

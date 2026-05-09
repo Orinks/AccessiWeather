@@ -294,6 +294,7 @@ class WeatherClient(
                     self.user_agent,
                     self.timeout,
                     client,
+                    alert_radius_type=getattr(self.settings, "alert_radius_type", "county"),
                     max_retries=1,
                     initial_delay=1.0,
                 )

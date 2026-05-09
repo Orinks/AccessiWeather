@@ -375,6 +375,30 @@ class TestGetNwsAlertsParameters:
             assert result.alerts[0].event == "Winter Storm Warning"
             assert "UPDATED" in result.alerts[0].headline
 
+    def test_parse_alerts_populates_affected_zones(self):
+        """NWS affectedZones should be preserved as compact zone IDs."""
+        data = {
+            "features": [
+                {
+                    "id": "urn:test:zones",
+                    "properties": {
+                        "headline": "Severe Thunderstorm Watch",
+                        "description": "Watch text.",
+                        "severity": "Severe",
+                        "event": "Severe Thunderstorm Watch",
+                        "affectedZones": [
+                            "https://api.weather.gov/zones/county/TXC121",
+                            "https://api.weather.gov/zones/forecast/TXZ119",
+                        ],
+                    },
+                }
+            ]
+        }
+
+        result = parse_nws_alerts(data)
+
+        assert result.alerts[0].affected_zones == ["TXC121", "TXZ119"]
+
 
 class TestAlertTimeParsing:
     """Tests for alert time field parsing."""

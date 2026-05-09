@@ -253,8 +253,8 @@ class AlertManager:
             )
         return is_fresh
 
-    def _should_notify_alert(self, alert: WeatherAlert) -> tuple[bool, str]:
-        """Determine if we should notify for this alert and why."""
+    def _passes_static_notification_filters(self, alert: WeatherAlert) -> tuple[bool, str]:
+        """Check filters that do not mutate rate-limit or cooldown state."""
         # Check if notifications are enabled
         if not self.settings.notifications_enabled:
             return False, "notifications_disabled"
@@ -271,6 +271,10 @@ class AlertManager:
         if alert.is_expired():
             return False, "alert_expired"
 
+        return True, "allowed"
+
+    def _can_notify_now(self) -> tuple[bool, str]:
+        """Check mutable notification gates only for alerts that will be sent."""
         # Check token bucket rate limit
         if not self._check_rate_limit():
             return False, "rate_limit_exceeded"
@@ -280,6 +284,13 @@ class AlertManager:
             return False, "global_cooldown_active"
 
         return True, "allowed"
+
+    def _should_notify_alert(self, alert: WeatherAlert) -> tuple[bool, str]:
+        """Determine if we should notify for this alert and why."""
+        passes_filters, reason = self._passes_static_notification_filters(alert)
+        if not passes_filters:
+            return False, reason
+        return self._can_notify_now()
 
     def process_alerts(self, alerts: WeatherAlerts) -> list[tuple[WeatherAlert, str]]:
         """
@@ -313,9 +324,8 @@ class AlertManager:
             # Extract alert sent/effective timestamp for freshness check
             alert_sent_time = alert.sent or alert.effective
 
-            # Check if we should notify for this alert
-            should_notify, reason = self._should_notify_alert(alert)
-            if not should_notify:
+            passes_filters, reason = self._passes_static_notification_filters(alert)
+            if not passes_filters:
                 logger.info(
                     "[alertmgr] Skipping alert %r: %s (severity=%s, threshold=%s, "
                     "notifications_enabled=%s, global_cooldown=%sm, available_tokens=%.2f)",
@@ -333,6 +343,18 @@ class AlertManager:
             existing_state = self.alert_states.get(alert_id)
 
             if existing_state is None:
+                can_notify, reason = self._can_notify_now()
+                if not can_notify:
+                    logger.info(
+                        "[alertmgr] Skipping new alert %r: %s "
+                        "(global_cooldown=%sm, available_tokens=%.2f)",
+                        alert_id,
+                        reason,
+                        self.settings.global_cooldown,
+                        self._rate_limit_tokens,
+                    )
+                    continue
+
                 # New alert - always notify
                 new_state = AlertState(
                     alert_id=alert_id,
@@ -346,6 +368,18 @@ class AlertManager:
                 logger.info(f"New alert detected: {alert_id}")
 
             elif existing_state.has_changed(content_hash):
+                can_notify, reason = self._can_notify_now()
+                if not can_notify:
+                    logger.info(
+                        "[alertmgr] Skipping changed alert %r: %s "
+                        "(global_cooldown=%sm, available_tokens=%.2f)",
+                        alert_id,
+                        reason,
+                        self.settings.global_cooldown,
+                        self._rate_limit_tokens,
+                    )
+                    continue
+
                 # Alert content changed - always notify
                 is_escalation = existing_state.is_escalated(severity_priority)
                 # Add new state to history
@@ -362,6 +396,18 @@ class AlertManager:
                 is_fresh = self._is_alert_fresh(alert_sent_time)
 
                 if is_fresh and existing_state.last_notified is None:
+                    can_notify, reason = self._can_notify_now()
+                    if not can_notify:
+                        logger.info(
+                            "[alertmgr] Skipping fresh alert %r: %s "
+                            "(global_cooldown=%sm, available_tokens=%.2f)",
+                            alert_id,
+                            reason,
+                            self.settings.global_cooldown,
+                            self._rate_limit_tokens,
+                        )
+                        continue
+
                     # Fresh alert that was never notified - notify once
                     notifications_to_send.append((alert, "fresh_alert"))
                     logger.info(f"Fresh alert detected (never notified): {alert_id}")

@@ -12,6 +12,10 @@ All notable changes to this project will be documented in this file.
 - Linux nightly and release downloads now ship as `.tar.gz` tarballs instead of ZIP files.
 
 ### Fixed
+- Alerts now honor your selected alert area during regular refreshes, including state and zone alert modes.
+- Zone alert mode now checks both county and forecast zones so county-based watches and warnings are less likely to be missed.
+- The "Launch automatically at startup" setting now updates the system startup entry instead of only saving the checkbox.
+- Repeated checks of unchanged alerts no longer use up notification rate-limit capacity before newer alerts are handled.
 - The update dialog now shows release notes as screen-reader-friendly plain text instead of raw Markdown.
 - Linux builds now stage `sound_lib`'s native audio libraries in the path expected by the packaged app.
 - Linux builds no longer bundle OpenSSL libraries that can conflict with the target system's `libcurl`.
