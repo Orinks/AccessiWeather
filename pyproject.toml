@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "accessiweather"
 version = "0.6.1.dev0"
-description = "AccessiWeather: An accessible weather application with NOAA and Open-Meteo support, built with wxPython for screen reader compatibility"
+description = "A free desktop weather app for casual check-ins and detailed forecasts, alerts, and weather data"
 authors = [
     { name = "Orinks" }
 ]
