@@ -17,6 +17,7 @@ dist/
 build/
 
 # Test / coverage
+*.log
 .coverage
 .coverage.*
 htmlcov/
