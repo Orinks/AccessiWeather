@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Open-Meteo forecasts now keep unit-aware wind, visibility, snow depth, pressure, and freezing-level details instead of misreading feet, meters, or kilometers in some payloads.
+- NWS and Pirate Weather data handling is more accurate: NWS alert lookups now avoid rejected radius parameters and stale cross-location alert caches, while Pirate Weather no longer treats precipitation rate as accumulated amount or reuses US units for international minutely precipitation checks.
 - Alerts now honor your selected alert area during regular refreshes, including state and zone alert modes.
 - Zone alert mode now checks both county and forecast zones so county-based watches and warnings are less likely to be missed.
 - The "Launch automatically at startup" setting now updates the system startup entry instead of only saving the checkbox.

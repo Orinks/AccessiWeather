@@ -203,10 +203,24 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
                 logger.warning(f"Failed to parse effective time: {props['effective']}")
 
         references = []
-        for ref in props.get("references", []):
+        raw_references = props.get("references") or []
+        if not isinstance(raw_references, list):
+            raw_references = []
+        for ref in raw_references:
+            if not isinstance(ref, dict):
+                continue
             ref_id = ref.get("identifier") or ref.get("@id") or ref.get("id")
             if ref_id:
                 references.append(ref_id)
+
+        area_desc = props.get("areaDesc")
+        areas = []
+        if isinstance(area_desc, str):
+            areas = [area.strip() for area in area_desc.split(";") if area.strip()]
+
+        affected_zones_raw = props.get("affectedZones") or []
+        if not isinstance(affected_zones_raw, list):
+            affected_zones_raw = []
 
         alert = WeatherAlert(
             title=props.get("headline", "Weather Alert"),
@@ -221,14 +235,14 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
             expires=expires,
             sent=sent,
             effective=effective,
-            areas=props.get("areaDesc", "").split("; ") if props.get("areaDesc") else [],
+            areas=areas,
             references=references,
             id=alert_id,
             source="NWS",
             message_type=props.get("messageType"),
             affected_zones=[
                 zone.rsplit("/", 1)[-1]
-                for zone in props.get("affectedZones", [])
+                for zone in affected_zones_raw
                 if isinstance(zone, str) and zone
             ],
         )
@@ -306,6 +320,7 @@ def parse_nws_hourly_forecast(data: dict, location: Location | None = None) -> H
             temperature_unit=str(temperature_unit),
             short_forecast=period_data.get("shortForecast"),
             wind_speed=_format_wind_speed(period_data.get("windSpeed")),
+            wind_speed_mph=_extract_wind_speed_mph(period_data.get("windSpeed")),
             wind_direction=wind_direction,
             icon=period_data.get("icon"),
             precipitation_probability=_extract_float(period_data.get("probabilityOfPrecipitation")),

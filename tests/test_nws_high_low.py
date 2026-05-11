@@ -152,6 +152,18 @@ def _hourly_payload(start_time: str = "2026-04-26T10:00:00-04:00"):
 
 
 class TestNwsHourlyPressure:
+    def test_hourly_wind_speed_mph_populated_from_string(self):
+        hourly = parse_nws_hourly_forecast(_hourly_payload())
+
+        assert hourly.periods[0].wind_speed_mph == 5.0
+
+    def test_hourly_wind_speed_mph_populated_from_range(self):
+        payload = _hourly_payload()
+        payload["properties"]["periods"][0]["windSpeed"] = "5 to 15 mph"
+        hourly = parse_nws_hourly_forecast(payload)
+
+        assert hourly.periods[0].wind_speed_mph == 15.0
+
     def test_probability_of_precipitation_preserved(self):
         """NWS hourly probabilityOfPrecipitation.value is mapped to the hourly period."""
         hourly = parse_nws_hourly_forecast(_hourly_payload())

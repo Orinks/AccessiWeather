@@ -9,6 +9,11 @@ import logging
 import traceback
 from typing import Any
 
+from accessiweather.nws_national_products import (
+    fetch_iem_national_product,
+    national_product_afos_id,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -66,10 +71,8 @@ class AlertsAndProductsMixin:
         ----
             lat: Latitude of the location
             lon: Longitude of the location
-            radius: Radius in miles to search for alerts
-                    (used if location type cannot be determined)
-            precise_location: Whether to get alerts for the precise location (county/zone)
-                             or for the entire state
+            radius: Deprecated compatibility argument; NWS point alert queries do not support it
+            precise_location: Whether to get alerts for the precise point or broader state mode
             force_refresh: If True, bypass cache and fetch fresh data
 
         Returns:
@@ -82,17 +85,18 @@ class AlertsAndProductsMixin:
             f"precise_location={precise_location}"
         )
 
-        # Identify the location type
+        if precise_location:
+            logger.info(f"Fetching point-based alerts for precise location: ({lat}, {lon})")
+            return self._make_request(
+                "alerts/active",
+                params={"point": f"{lat},{lon}"},
+                force_refresh=force_refresh,
+            )
+
+        # Identify the location type for broader state/zone fallback modes.
         location_type, location_id = self.identify_location_type(
             lat, lon, force_refresh=force_refresh
         )
-
-        if precise_location and location_type in ("county", "forecast", "fire") and location_id:
-            # Get alerts for the specific zone
-            logger.info(f"Fetching alerts for {location_type} zone: {location_id}")
-            return self._make_request(
-                "alerts/active", params={"zone": location_id}, force_refresh=force_refresh
-            )
         if location_type == "state" or not precise_location:
             # If we're not using precise location or we only have state info,
             # get alerts for the entire state
@@ -119,14 +123,13 @@ class AlertsAndProductsMixin:
                     "alerts/active", params={"area": state}, force_refresh=force_refresh
                 )
 
-        # If we couldn't determine location or state, fall back to point-radius search
+        # If we couldn't determine location or state, fall back to point alerts.
         logger.info(
-            "Using point-radius search for alerts since location could not "
-            f"be determined: ({lat}, {lon}) with radius {radius} miles"
+            f"Using point search for alerts since location could not be determined: ({lat}, {lon})"
         )
         return self._make_request(
             "alerts/active",
-            params={"point": f"{lat},{lon}", "radius": str(radius)},
+            params={"point": f"{lat},{lon}"},
             force_refresh=force_refresh,
         )
 
@@ -249,6 +252,13 @@ class AlertsAndProductsMixin:
 
         """
         try:
+            if national_product_afos_id(product_type, location) is not None:
+                return fetch_iem_national_product(
+                    product_type,
+                    location,
+                    user_agent=self.headers.get("User-Agent", "AccessiWeather/1.0"),
+                )
+
             endpoint = f"products/types/{product_type}/locations/{location}"
             logger.debug(
                 f"Requesting national product: type={product_type}, "

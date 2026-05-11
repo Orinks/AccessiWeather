@@ -96,14 +96,10 @@ def parse_current_conditions(client: Any, data: dict) -> CurrentConditions:
         wind_gust_mph = wind_gust_mps * 2.23694 if wind_gust_mps is not None else None
         wind_gust_kph = wind_gust_mps * 3.6 if wind_gust_mps is not None else None
 
-    # Precipitation intensity – PW "us" = in/hr, others = mm/hr
-    precip_intensity = current.get("precipIntensity")
-    if using_us:
-        precip_in = float(precip_intensity) if precip_intensity is not None else None
-        precip_mm = precip_in * 25.4 if precip_in is not None else None
-    else:
-        precip_mm = float(precip_intensity) if precip_intensity is not None else None
-        precip_in = precip_mm / 25.4 if precip_mm is not None else None
+    # Current-condition model fields represent accumulated amount. Pirate Weather's
+    # current precipIntensity is a rate, so leave amount fields blank.
+    precip_in = None
+    precip_mm = None
 
     cloud_cover_raw = current.get("cloudCover")
     cloud_cover = round(cloud_cover_raw * 100) if cloud_cover_raw is not None else None

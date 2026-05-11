@@ -5,6 +5,7 @@ This module handles geographic point data retrieval, transformation,
 and location type identification operations.
 """
 
+import json
 import logging
 from typing import Any, cast
 
@@ -55,8 +56,25 @@ class NwsPointLocation:
             self.wrapper._rate_limit()
             try:
                 point_str = f"{lat},{lon}"
-                response = self.wrapper.core_client.make_api_request(point.sync, point=point_str)
-                return self._transform_point_data(response)
+                response = point.sync_detailed(
+                    point=point_str,
+                    client=self.wrapper.core_client.client,
+                )
+                if response.parsed is not None:
+                    return self._transform_point_data(response.parsed)
+
+                status_code = int(response.status_code)
+                error_data = self._decode_problem_detail(response.content)
+                if 400 <= status_code < 500 and error_data is not None:
+                    return error_data
+
+                url = f"{self.wrapper.core_client.BASE_URL}/{endpoint}"
+                raise NoaaApiError(
+                    message=f"HTTP {status_code} error getting point data",
+                    error_type=NoaaApiError.HTTP_ERROR,
+                    url=url,
+                    status_code=status_code,
+                )
             except NoaaApiError:
                 raise
             except Exception as e:
@@ -70,6 +88,17 @@ class NwsPointLocation:
         return cast(
             dict[str, Any], self.wrapper._get_cached_or_fetch(cache_key, fetch_data, force_refresh)
         )
+
+    @staticmethod
+    def _decode_problem_detail(content: bytes | str) -> dict[str, Any] | None:
+        """Decode a weather.gov problem-detail response body."""
+        try:
+            if isinstance(content, bytes):
+                content = content.decode("utf-8")
+            decoded = json.loads(content)
+        except (UnicodeDecodeError, json.JSONDecodeError, TypeError):
+            return None
+        return decoded if isinstance(decoded, dict) else None
 
     def _transform_point_data(self, point_data: Any) -> dict[str, Any]:
         """
@@ -86,6 +115,8 @@ class NwsPointLocation:
         """
         # Extract and transform the data to match the format expected by the application
         if isinstance(point_data, dict):
+            if "properties" not in point_data and ("status" in point_data or "title" in point_data):
+                return point_data
             properties = point_data.get("properties", {})
             transformed = {
                 "properties": {
@@ -103,6 +134,11 @@ class NwsPointLocation:
                 }
             }
         else:
+            if hasattr(point_data, "to_dict") and not getattr(point_data, "properties", None):
+                point_dict = point_data.to_dict()
+                if "status" in point_dict or "title" in point_dict:
+                    return cast(dict[str, Any], point_dict)
+
             # Handle object with properties attribute
             properties_obj = getattr(point_data, "properties", None)
             if properties_obj:

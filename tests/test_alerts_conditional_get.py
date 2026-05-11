@@ -59,6 +59,13 @@ class TestConditionalGet:
         discussions._alert_etag = '"abc123"'
         discussions._alert_last_modified = "Wed, 11 Mar 2026 12:00:00 GMT"
         discussions._cached_alert_response = {"features": [{"id": "cached"}]}
+        discussions._alert_conditional_cache[
+            "https://api.weather.gov/alerts/active?point=40,-90"
+        ] = {
+            "etag": '"abc123"',
+            "last_modified": "Wed, 11 Mar 2026 12:00:00 GMT",
+            "response": {"features": [{"id": "cached"}]},
+        }
 
         resp = _mock_response(304)
         with patch("accessiweather.api.nws.alerts_discussions.httpx.Client") as mock_client_cls:
@@ -79,11 +86,46 @@ class TestConditionalGet:
             assert headers.get("If-None-Match") == '"abc123"'
             assert headers.get("If-Modified-Since") == "Wed, 11 Mar 2026 12:00:00 GMT"
 
+    def test_conditional_cache_is_keyed_by_alert_url(self, discussions):
+        """A 304 for one alert URL must not reuse another location's cached response."""
+        first_url = "https://api.weather.gov/alerts/active?point=40,-90"
+        second_url = "https://api.weather.gov/alerts/active?point=41,-91"
+        first_response = _mock_response(
+            200,
+            json_data={"features": [{"id": "first-location"}]},
+            headers={"ETag": '"first-etag"'},
+        )
+        second_response = _mock_response(304)
+
+        with patch("accessiweather.api.nws.alerts_discussions.httpx.Client") as mock_client_cls:
+            mock_client = MagicMock()
+            mock_client.get.side_effect = [first_response, second_response]
+            mock_client_cls.return_value.__enter__ = MagicMock(return_value=mock_client)
+            mock_client_cls.return_value.__exit__ = MagicMock(return_value=False)
+
+            assert discussions._fetch_alerts_conditional(first_url) == {
+                "features": [{"id": "first-location"}]
+            }
+            assert discussions._fetch_alerts_conditional(second_url) == {"features": []}
+
+        second_headers = mock_client.get.call_args_list[1].kwargs["headers"]
+        assert "If-None-Match" not in second_headers
+        assert discussions._alert_conditional_cache[first_url]["response"] == {
+            "features": [{"id": "first-location"}]
+        }
+
     def test_subsequent_request_sends_conditional_headers(self, discussions):
         # Pre-populate cached state
         discussions._alert_etag = '"etag-value"'
         discussions._alert_last_modified = "Mon, 09 Mar 2026 08:00:00 GMT"
         discussions._cached_alert_response = {"features": []}
+        discussions._alert_conditional_cache[
+            "https://api.weather.gov/alerts/active?point=40,-90"
+        ] = {
+            "etag": '"etag-value"',
+            "last_modified": "Mon, 09 Mar 2026 08:00:00 GMT",
+            "response": {"features": []},
+        }
 
         resp = _mock_response(
             200,
@@ -160,6 +202,7 @@ class TestConditionalGet:
         assert discussions._alert_etag is None
         assert discussions._alert_last_modified is None
         assert discussions._cached_alert_response is None
+        assert discussions._alert_conditional_cache == {}
 
 
 class TestHardcodedAlertPollInterval:
