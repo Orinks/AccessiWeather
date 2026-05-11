@@ -1,5 +1,7 @@
 """Tests for Open-Meteo parser behavior."""
 
+import pytest
+
 from accessiweather.weather_client_openmeteo import (
     _pick_precipitation_type,
     _resolve_current_condition_description,
@@ -22,6 +24,28 @@ def test_parse_openmeteo_forecast_sets_start_time_for_periods():
 
     assert len(forecast.periods) == 2
     assert all(p.start_time is not None for p in forecast.periods)
+
+
+def test_parse_openmeteo_forecast_carries_low_and_numeric_wind():
+    data = {
+        "daily": {
+            "time": ["2026-02-27"],
+            "temperature_2m_max": [50.0],
+            "temperature_2m_min": [38.0],
+            "weather_code": [3],
+            "wind_speed_10m_max": [16.0934],
+            "wind_direction_10m_dominant": [180],
+        },
+        "daily_units": {"wind_speed_10m_max": "km/h"},
+    }
+
+    forecast = parse_openmeteo_forecast(data)
+    period = forecast.periods[0]
+
+    assert period.temperature_low == 38.0
+    assert period.wind_speed_mph == pytest.approx(10.0, abs=0.01)
+    assert period.wind_speed == "10 mph"
+    assert period.wind_direction == "S"
 
 
 def test_current_drizzle_not_mapped_to_snow_when_snowfall_is_zero():
@@ -87,6 +111,41 @@ def test_current_mixed_precip_fields_return_mixed_condition():
 
     assert current.condition == "Mixed rain and snow"
     assert current.precipitation_type == ["rain", "snow"]
+
+
+def test_current_visibility_respects_openmeteo_unit_metadata():
+    data = {
+        "current": {
+            "temperature_2m": 41.0,
+            "relative_humidity_2m": 95,
+            "apparent_temperature": 39.0,
+            "weather_code": 3,
+            "wind_speed_10m": 8.0,
+            "wind_direction_10m": 180,
+            "pressure_msl": 1010,
+            "rain": 0.0,
+            "showers": 0.0,
+            "snowfall": 0.0,
+            "snow_depth": 0.5,
+            "visibility": 2640.0,
+        },
+        "current_units": {
+            "temperature_2m": "°F",
+            "apparent_temperature": "°F",
+            "wind_speed_10m": "mph",
+            "pressure_msl": "hPa",
+            "snow_depth": "ft",
+            "visibility": "ft",
+        },
+        "daily": {"sunrise": [], "sunset": [], "uv_index_max": []},
+    }
+
+    current = parse_openmeteo_current_conditions(data)
+
+    assert current.visibility_miles == pytest.approx(0.5)
+    assert current.visibility_km == pytest.approx(0.804672)
+    assert current.snow_depth_in == pytest.approx(6.0)
+    assert current.snow_depth_cm == pytest.approx(15.24)
 
 
 def test_pick_precipitation_type_handles_snow_only_and_none():
@@ -207,6 +266,45 @@ def test_parse_openmeteo_hourly_forecast_surfaces_humidity_and_dewpoint():
     assert period.humidity == 55
     assert period.dewpoint_f == 54.0
     assert period.dewpoint_c is not None
+
+
+def test_parse_openmeteo_hourly_forecast_respects_unit_metadata():
+    data = {
+        "utc_offset_seconds": 0,
+        "hourly": {
+            "time": ["2026-03-19T12:00"],
+            "temperature_2m": [72.0],
+            "relative_humidity_2m": [55],
+            "weather_code": [1],
+            "wind_speed_10m": [16.0934],
+            "wind_direction_10m": [180],
+            "pressure_msl": [1015.0],
+            "precipitation_probability": [20],
+            "snowfall": [0.0],
+            "uv_index": [4.0],
+            "snow_depth": [0.5],
+            "freezing_level_height": [6500.0],
+            "visibility": [52800.0],
+            "apparent_temperature": [72.0],
+        },
+        "hourly_units": {
+            "wind_speed_10m": "km/h",
+            "pressure_msl": "hPa",
+            "snow_depth": "ft",
+            "freezing_level_height": "ft",
+            "visibility": "ft",
+        },
+    }
+
+    hourly = parse_openmeteo_hourly_forecast(data)
+    period = hourly.periods[0]
+
+    assert period.wind_speed_mph == pytest.approx(10.0, abs=0.01)
+    assert period.wind_speed == "10 mph"
+    assert period.snow_depth == pytest.approx(6.0)
+    assert period.freezing_level_ft == pytest.approx(6500.0)
+    assert period.visibility_miles == pytest.approx(10.0)
+    assert period.visibility_km == pytest.approx(16.09344)
 
 
 def test_parse_openmeteo_hourly_forecast_calculates_dewpoint_when_missing():

@@ -192,6 +192,47 @@ class TestWeatherHistoryService:
         result = service.get_historical_weather(40.0, -74.0, date(2025, 1, 1))
         assert result is None
 
+    def test_get_historical_weather_missing_required_daily_value(self):
+        mock_client = MagicMock()
+        mock_client._make_request.return_value = {
+            "daily": {
+                "time": ["2025-01-01"],
+                "weather_code": [3],
+                "temperature_2m_max": [80.0],
+                "temperature_2m_min": [60.0],
+                "temperature_2m_mean": [70.0],
+                "wind_speed_10m_max": [],
+                "wind_direction_10m_dominant": [180],
+            }
+        }
+        service = WeatherHistoryService(openmeteo_client=mock_client)
+        result = service.get_historical_weather(40.0, -74.0, date(2025, 1, 1))
+        assert result is None
+
+    def test_get_historical_weather_preserves_zero_values(self):
+        mock_client = MagicMock()
+        mock_client._make_request.return_value = {
+            "daily": {
+                "time": ["2025-01-01"],
+                "weather_code": [0],
+                "temperature_2m_max": [0.0],
+                "temperature_2m_min": [0.0],
+                "temperature_2m_mean": [0.0],
+                "wind_speed_10m_max": [0.0],
+                "wind_direction_10m_dominant": [0],
+            }
+        }
+        mock_client.get_weather_description.return_value = "Clear"
+        service = WeatherHistoryService(openmeteo_client=mock_client)
+        result = service.get_historical_weather(40.0, -74.0, date(2025, 1, 1))
+
+        assert result is not None
+        assert result.temperature_max == 0.0
+        assert result.temperature_min == 0.0
+        assert result.temperature_mean == 0.0
+        assert result.wind_speed == 0.0
+        assert result.wind_direction == 0
+
     def test_get_historical_weather_exception(self):
         mock_client = MagicMock()
         mock_client._make_request.side_effect = Exception("Network error")

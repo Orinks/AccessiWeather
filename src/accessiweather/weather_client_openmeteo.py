@@ -30,9 +30,16 @@ from .weather_client_openmeteo_current import (
     pick_precipitation_type,
     resolve_current_condition_description,
 )
+from .weather_client_openmeteo_units import (
+    normalize_height_to_feet,
+    normalize_snow_depth_to_inches_and_cm,
+    normalize_visibility_to_miles_and_km,
+)
 from .weather_client_parsers import (
+    convert_wind_speed_to_mph_and_kph,
     degrees_to_cardinal,
     format_date_name,
+    normalize_pressure,
     weather_code_to_description,
 )
 
@@ -47,6 +54,13 @@ def _pick_precipitation_type(rain_in: float, snow_in: float) -> list[str] | None
 def _resolve_current_condition_description(current: dict[str, Any]) -> str | None:
     """Compatibility wrapper for Open-Meteo current condition text."""
     return resolve_current_condition_description(current)
+
+
+def _format_wind_speed_mph(value: float | None) -> str | None:
+    """Format a normalized wind speed for legacy text-only display paths."""
+    if value is None:
+        return None
+    return f"{value:.1f}".rstrip("0").rstrip(".") + " mph"
 
 
 async def _client_get(
@@ -279,12 +293,16 @@ async def get_openmeteo_hourly_forecast(
 def parse_openmeteo_forecast(data: dict) -> Forecast:
     """Parse Open-Meteo daily forecast payload into a Forecast model."""
     daily = data.get("daily", {})
+    daily_units = data.get("daily_units", {})
     utc_offset_seconds = data.get("utc_offset_seconds")
     periods = []
 
     dates = daily.get("time", [])
     max_temps = daily.get("temperature_2m_max", [])
+    min_temps = daily.get("temperature_2m_min", [])
     weather_codes = daily.get("weather_code", [])
+    wind_speeds = daily.get("wind_speed_10m_max", [])
+    wind_directions = daily.get("wind_direction_10m_dominant", [])
     precip_probs = daily.get("precipitation_probability_max", [])
     snowfall_sums = daily.get("snowfall_sum", [])
     uv_indices = daily.get("uv_index_max", [])
@@ -294,6 +312,13 @@ def parse_openmeteo_forecast(data: dict) -> Forecast:
             precip_prob = precip_probs[i] if i < len(precip_probs) else None
             snowfall = snowfall_sums[i] if i < len(snowfall_sums) else None
             uv_index = uv_indices[i] if i < len(uv_indices) else None
+            temp_low = min_temps[i] if i < len(min_temps) else None
+            wind_speed = wind_speeds[i] if i < len(wind_speeds) else None
+            wind_speed_mph, _wind_speed_kph = convert_wind_speed_to_mph_and_kph(
+                wind_speed,
+                daily_units.get("wind_speed_10m_max", "mph"),
+            )
+            wind_direction = wind_directions[i] if i < len(wind_directions) else None
             # Pass utc_offset_seconds so the noon timestamp is tagged with the
             # location's local timezone, not UTC.  Without this, for offsets ≥ 12 h
             # the UTC .date() can land on the wrong calendar day.
@@ -303,8 +328,12 @@ def parse_openmeteo_forecast(data: dict) -> Forecast:
             period = ForecastPeriod(
                 name=format_date_name(date, i),
                 temperature=max_temps[i],
+                temperature_low=temp_low,
                 temperature_unit="F",
                 short_forecast=weather_code_to_description(weather_codes[i]),
+                wind_speed=_format_wind_speed_mph(wind_speed_mph),
+                wind_speed_mph=wind_speed_mph,
+                wind_direction=degrees_to_cardinal(wind_direction),
                 start_time=start_time,
                 precipitation_probability=precip_prob,
                 snowfall=snowfall,
@@ -319,6 +348,7 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
     """Parse Open-Meteo hourly forecast payload into an HourlyForecast model."""
     periods: list[HourlyForecastPeriod] = []
     hourly = data.get("hourly", {})
+    hourly_units = data.get("hourly_units", {})
     utc_offset_seconds = data.get("utc_offset_seconds")
 
     times = hourly.get("time", [])
@@ -346,26 +376,38 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
         dewpoint = dew_points[i] if i < len(dew_points) else None
         weather_code = weather_codes[i] if i < len(weather_codes) else None
         wind_speed = wind_speeds[i] if i < len(wind_speeds) else None
+        wind_speed_mph, _wind_speed_kph = convert_wind_speed_to_mph_and_kph(
+            wind_speed,
+            hourly_units.get("wind_speed_10m", "mph"),
+        )
         wind_direction = wind_directions[i] if i < len(wind_directions) else None
-        pressure_mb = pressures[i] if i < len(pressures) else None
-        pressure_in = pressure_mb * 0.0295299830714 if pressure_mb is not None else None
+        pressure_raw = pressures[i] if i < len(pressures) else None
+        pressure_in, pressure_mb = normalize_pressure(
+            pressure_raw,
+            hourly_units.get("pressure_msl", "hPa"),
+        )
         precip_prob = precip_probs[i] if i < len(precip_probs) else None
         snowfall = snowfalls[i] if i < len(snowfalls) else None
         uv_index = uv_indices[i] if i < len(uv_indices) else None
 
         # Seasonal fields
-        # With precipitation_unit=inch, snow_depth is returned in feet
-        snow_depth_ft = snow_depths[i] if i < len(snow_depths) else None
-        snow_depth_in = snow_depth_ft * 12 if snow_depth_ft is not None else None
+        snow_depth_raw = snow_depths[i] if i < len(snow_depths) else None
+        snow_depth_in, _snow_depth_cm = normalize_snow_depth_to_inches_and_cm(
+            snow_depth_raw,
+            hourly_units.get("snow_depth"),
+        )
 
-        freezing_level_m = freezing_levels[i] if i < len(freezing_levels) else None
-        freezing_level_ft = freezing_level_m * 3.28084 if freezing_level_m is not None else None
+        freezing_level_raw = freezing_levels[i] if i < len(freezing_levels) else None
+        freezing_level_ft = normalize_height_to_feet(
+            freezing_level_raw,
+            hourly_units.get("freezing_level_height"),
+        )
 
-        visibility_m = visibilities[i] if i < len(visibilities) else None
-        # Cap at 10 statute miles — Open-Meteo model visibility is unreliable above this
-        if visibility_m is not None:
-            visibility_m = min(visibility_m, 16093.4)
-        visibility_miles = visibility_m / 1609.344 if visibility_m is not None else None
+        visibility_raw = visibilities[i] if i < len(visibilities) else None
+        visibility_miles, visibility_km = normalize_visibility_to_miles_and_km(
+            visibility_raw,
+            hourly_units.get("visibility"),
+        )
 
         apparent_temp = apparent_temps[i] if i < len(apparent_temps) else None
         dewpoint_f = dewpoint
@@ -392,7 +434,7 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
             temperature=temperature,
             temperature_unit="F",
             short_forecast=weather_code_to_description(weather_code),
-            wind_speed=f"{wind_speed} mph" if wind_speed is not None else None,
+            wind_speed=_format_wind_speed_mph(wind_speed_mph),
             wind_direction=degrees_to_cardinal(wind_direction),
             humidity=humidity,
             dewpoint_f=dewpoint_f,
@@ -402,10 +444,12 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
             precipitation_probability=precip_prob,
             snowfall=snowfall,
             uv_index=uv_index,
+            wind_speed_mph=wind_speed_mph,
             # Seasonal fields
             snow_depth=snow_depth_in,
             freezing_level_ft=freezing_level_ft,
             visibility_miles=visibility_miles,
+            visibility_km=visibility_km,
             feels_like=apparent_temp,
             wind_chill_f=wind_chill_f,
             heat_index_f=heat_index_f,

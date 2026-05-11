@@ -10,7 +10,8 @@ This module provides:
 Best Practices for API Integration Testing:
 1. Use VCR cassettes to record and replay HTTP interactions
 2. Filter sensitive data (API keys) from recorded cassettes
-3. Match requests by method, host, path (not query params which may contain API keys)
+3. Match Open-Meteo /forecast requests by query, because that endpoint switches
+   current/hourly/daily payload shape through query parameters
 4. Set record_mode="none" in CI to ensure tests only use recorded cassettes
 5. Use record_mode="new_episodes" when adding new tests
 6. Run live tests periodically to catch API changes
@@ -21,6 +22,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING
+from urllib.parse import parse_qsl, urlsplit
 
 import pytest
 
@@ -37,6 +39,9 @@ except ImportError:  # pragma: no cover - optional test dependency fallback
                 return func
 
             return decorator
+
+        def register_matcher(self, *_args, **_kwargs):
+            pass
 
     class _FallbackVcrModule:
         VCR = _FallbackVcrInstance
@@ -85,11 +90,42 @@ def _scrub_pw_key_from_uri(request):
     return request
 
 
+def _is_openmeteo_forecast(uri: str) -> bool:
+    parts = urlsplit(uri)
+    return parts.netloc.endswith("open-meteo.com") and parts.path.endswith("/v1/forecast")
+
+
+def _scrubbed_query_items(uri: str) -> list[tuple[str, str]]:
+    sensitive = {"key", "api_key", "apikey", "token"}
+    list_parameters = {"current", "daily", "hourly"}
+    items = []
+    for key, value in parse_qsl(urlsplit(uri).query, keep_blank_values=True):
+        normalized_key = key.lower()
+        if normalized_key in sensitive:
+            continue
+        if normalized_key in list_parameters:
+            items.extend((normalized_key, item) for item in value.split(",") if item)
+        else:
+            items.append((normalized_key, value))
+    return sorted(items)
+
+
+def _match_openmeteo_forecast_query(request_1, request_2):
+    """Require query equality for Open-Meteo forecast cassettes only."""
+    if not (_is_openmeteo_forecast(request_1.uri) or _is_openmeteo_forecast(request_2.uri)):
+        return
+
+    query_1 = _scrubbed_query_items(request_1.uri)
+    query_2 = _scrubbed_query_items(request_2.uri)
+    if query_1 != query_2:
+        raise AssertionError(f"{query_1} != {query_2}")
+
+
 integration_vcr = vcr.VCR(
     cassette_library_dir=str(CASSETTE_DIR),
     record_mode=RECORD_MODE,
-    # Match on method, scheme, host, port, path - NOT query params (API keys vary)
-    match_on=["method", "scheme", "host", "port", "path"],
+    # Query-sensitive Open-Meteo matching prevents hourly/daily/current payload mixups.
+    match_on=["method", "scheme", "host", "port", "path", "openmeteo_forecast_query"],
     # Filter sensitive data from recorded cassettes
     filter_query_parameters=["key", "api_key", "apikey", "token"],
     filter_headers=["authorization", "x-api-key", "api-key", "user-agent"],
@@ -97,6 +133,10 @@ integration_vcr = vcr.VCR(
     before_record_request=_scrub_pw_key_from_uri,
     # Decode compressed responses for readable cassettes
     decode_compressed_response=True,
+)
+integration_vcr.register_matcher(
+    "openmeteo_forecast_query",
+    _match_openmeteo_forecast_query,
 )
 
 

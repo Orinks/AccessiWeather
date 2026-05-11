@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 - Linux nightly and release downloads now ship as `.tar.gz` tarballs instead of ZIP files.
 
 ### Fixed
+- Open-Meteo forecasts now keep unit-aware wind, visibility, snow depth, pressure, and freezing-level details instead of misreading feet, meters, or kilometers in some payloads.
 - Alerts now honor your selected alert area during regular refreshes, including state and zone alert modes.
 - Zone alert mode now checks both county and forecast zones so county-based watches and warnings are less likely to be missed.
 - The "Launch automatically at startup" setting now updates the system startup entry instead of only saving the checkbox.
