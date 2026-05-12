@@ -59,6 +59,12 @@ def _clean_iem_text(value: str) -> str:
     return "".join(char for char in value if char in "\n\r\t" or ord(char) >= 32).strip()
 
 
+def _is_iem_error_text(value: str) -> bool:
+    """Return True when IEM reports a lookup error inside a 200 text response."""
+    first_line = next((line.strip() for line in value.splitlines() if line.strip()), "")
+    return first_line.upper().startswith("ERROR:")
+
+
 def _describe_request_error(exc: Exception) -> str:
     return str(exc) or exc.__class__.__name__
 
@@ -213,6 +219,8 @@ async def fetch_iem_afos_text(
         text = _clean_iem_text(response.text)
         if not text:
             raise IemProductFetchError(f"IEM AFOS returned no text for {product_id}")
+        if _is_iem_error_text(text):
+            raise IemProductFetchError(text.splitlines()[0])
         return TextProduct(
             product_type=product_id,
             product_id=product_id,
@@ -277,6 +285,8 @@ def fetch_iem_afos_text_sync(
         text = _clean_iem_text(response.text)
         if not text:
             raise IemProductFetchError(f"IEM AFOS returned no text for {product_id}")
+        if _is_iem_error_text(text):
+            raise IemProductFetchError(text.splitlines()[0])
         return TextProduct(
             product_type=product_id,
             product_id=product_id,

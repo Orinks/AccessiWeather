@@ -114,7 +114,7 @@ def test_parse_nws_alerts_extracts_references():
 # ---------------------------------------------------------------------------
 @pytest.mark.asyncio
 async def test_launch_enrichment_tasks_auto_mode_creates_smart_tasks():
-    """_launch_enrichment_tasks with data_source='auto' creates all smart enrichment tasks."""
+    """_launch_enrichment_tasks with auto mode creates missing smart enrichment tasks."""
     import asyncio
 
     import accessiweather.weather_client_enrichment as enrichment
@@ -146,6 +146,71 @@ async def test_launch_enrichment_tasks_auto_mode_creates_smart_tasks():
     assert "environmental" in tasks
     assert "aviation" in tasks
     assert "marine" in tasks
+
+
+@pytest.mark.asyncio
+async def test_launch_enrichment_tasks_auto_mode_reuses_existing_nws_discussion():
+    """Auto mode should not refetch NWS discussion when the main source fetch already has it."""
+    import asyncio
+
+    import accessiweather.weather_client_enrichment as enrichment
+    from accessiweather.models import Location, WeatherData
+    from accessiweather.weather_client import WeatherClient
+
+    client = WeatherClient(data_source="auto")
+    location = Location(name="NYC", latitude=40.7128, longitude=-74.0060)
+    weather_data = WeatherData(location=location, discussion="AFD text")
+
+    async def _noop(*args, **kwargs):
+        pass
+
+    with (
+        patch.object(enrichment, "enrich_with_sunrise_sunset", side_effect=_noop),
+        patch.object(enrichment, "enrich_with_nws_discussion", side_effect=_noop),
+        patch.object(enrichment, "populate_environmental_metrics", side_effect=_noop),
+        patch.object(enrichment, "enrich_with_aviation_data", side_effect=_noop),
+        patch.object(enrichment, "enrich_with_marine_data", side_effect=_noop),
+    ):
+        tasks = client._launch_enrichment_tasks(weather_data, location)
+        for t in tasks.values():
+            t.cancel()
+        await asyncio.gather(*tasks.values(), return_exceptions=True)
+
+    assert "sunrise_sunset" in tasks
+    assert "nws_discussion" not in tasks
+    assert "environmental" in tasks
+
+
+@pytest.mark.asyncio
+async def test_launch_enrichment_tasks_auto_mode_respects_disabled_nws_source():
+    """Auto mode should not make an NWS discussion call after NWS was intentionally skipped."""
+    import asyncio
+
+    import accessiweather.weather_client_enrichment as enrichment
+    from accessiweather.models import Location, WeatherData
+    from accessiweather.weather_client import WeatherClient
+    from accessiweather.weather_client_auto import AUTO_NO_NWS_DISCUSSION_TEXT
+
+    client = WeatherClient(data_source="auto")
+    location = Location(name="NYC", latitude=40.7128, longitude=-74.0060)
+    weather_data = WeatherData(location=location, discussion=AUTO_NO_NWS_DISCUSSION_TEXT)
+
+    async def _noop(*args, **kwargs):
+        pass
+
+    with (
+        patch.object(enrichment, "enrich_with_sunrise_sunset", side_effect=_noop),
+        patch.object(enrichment, "enrich_with_nws_discussion", side_effect=_noop),
+        patch.object(enrichment, "populate_environmental_metrics", side_effect=_noop),
+        patch.object(enrichment, "enrich_with_aviation_data", side_effect=_noop),
+        patch.object(enrichment, "enrich_with_marine_data", side_effect=_noop),
+    ):
+        tasks = client._launch_enrichment_tasks(weather_data, location)
+        for t in tasks.values():
+            t.cancel()
+        await asyncio.gather(*tasks.values(), return_exceptions=True)
+
+    assert "nws_discussion" not in tasks
 
 
 @pytest.mark.asyncio

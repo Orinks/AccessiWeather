@@ -849,6 +849,50 @@ class TestFetchPirateWeatherInAutoMode:
         assert result is not None
         assert result.minutely_precipitation is mock_minutely
 
+    @pytest.mark.asyncio
+    async def test_minutely_fetch_uses_location_specific_units(self, intl_location):
+        """International minutely polling should not reuse a default US-units client."""
+        wc = WeatherClient(data_source="pirateweather", pirate_weather_api_key="test-key")
+        default_us_client = MagicMock()
+        default_us_client.units = "us"
+        default_us_client.get_minutely_forecast = AsyncMock(
+            return_value={
+                "minutely": {
+                    "data": [
+                        {
+                            "time": 1700000000,
+                            "precipIntensity": 0.1,
+                            "precipProbability": 0.8,
+                        }
+                    ]
+                }
+            }
+        )
+        ca_client = MagicMock()
+        ca_client.units = "ca"
+        ca_client.get_minutely_forecast = AsyncMock(
+            return_value={
+                "minutely": {
+                    "data": [
+                        {
+                            "time": 1700000000,
+                            "precipIntensity": 0.1,
+                            "precipProbability": 0.8,
+                        }
+                    ]
+                }
+            }
+        )
+        wc._pirate_weather_client = default_us_client
+
+        with patch.object(wc, "_pirate_weather_client_for_location", return_value=ca_client):
+            result = await wc._get_pirate_weather_minutely(intl_location)
+
+        assert result is not None
+        assert result.points[0].precipitation_intensity == pytest.approx(0.1)
+        ca_client.get_minutely_forecast.assert_awaited_once_with(intl_location)
+        default_us_client.get_minutely_forecast.assert_not_called()
+
 
 # ---------------------------------------------------------------------------
 # display/presentation/forecast.py – summary field from Forecast

@@ -128,7 +128,7 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     # Impact summaries (Outdoor, Driving, Allergy) — opt-in, off by default
     show_impact_summaries: bool = False
     # Parallel fetch timeout for smart auto mode (seconds)
-    parallel_fetch_timeout: float = 5.0
+    parallel_fetch_timeout: float = 10.0
     # Auto mode source selection — which sources participate in auto mode
     auto_mode_api_budget: str = "max_coverage"
     auto_sources_us: list[str] = field(

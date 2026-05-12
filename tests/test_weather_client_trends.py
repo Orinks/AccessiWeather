@@ -311,6 +311,46 @@ class TestComputePressureTrend:
         assert result.summary is not None
         assert "drop predicted" in result.summary
 
+    def test_implausible_pressure_mismatch_returns_unavailable(self):
+        now = datetime.now()
+        periods = [
+            HourlyForecastPeriod(
+                start_time=now + timedelta(hours=24),
+                pressure_mb=983.1,
+                pressure_in=29.03,
+            )
+        ]
+        wd = _make_weather_data(
+            temp_f=75.0,
+            pressure_mb=1016.9,
+            pressure_in=30.03,
+            hourly_periods=periods,
+        )
+
+        result = compute_pressure_trend(wd, 24)
+
+        assert result is not None
+        assert result.direction == "unavailable"
+        assert result.summary == (
+            "Pressure outlook unavailable: pressure data uses mixed reference levels."
+        )
+
+    def test_large_but_plausible_24_hour_pressure_change_is_kept(self):
+        now = datetime.now()
+        periods = [HourlyForecastPeriod(start_time=now + timedelta(hours=24), pressure_mb=1002.4)]
+        wd = _make_weather_data(
+            temp_f=65.0,
+            pressure_mb=1013.0,
+            hourly_periods=periods,
+        )
+
+        result = compute_pressure_trend(wd, 24)
+
+        assert result is not None
+        assert result.direction == "falling"
+        assert result.summary is not None
+        assert "-10.60 mb" in result.summary
+
     def test_does_not_report_pressure_outlook_when_requested_window_exceeds_data(self):
         periods = _make_hourly_periods(
             hours=24,
@@ -400,7 +440,7 @@ class TestComputePressureTrend:
 class TestPressureTrendSummary:
     def test_steady_pressure_uses_steady_language(self):
         result = pressure_trend_summary("steady", 0.0, "mb", 24)
-        assert result == "Pressure steady: +0.00 mb over next 24h"
+        assert result == "Pressure steady over next 24h"
 
     def test_falling_pressure_uses_drop_language(self):
         result = pressure_trend_summary("falling", -0.08, "inHg", 24)

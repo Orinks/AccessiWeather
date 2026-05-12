@@ -212,6 +212,25 @@ class TestParseNwsAlerts:
         alerts = parse_nws_alerts(data)
         assert alerts.alerts[0].id == "at-id-based-id"
 
+    def test_area_desc_splits_semicolon_without_spaces(self):
+        """NWS areaDesc is semicolon-delimited; spaces are not guaranteed."""
+        data = {
+            "features": [
+                {
+                    "id": "area-test",
+                    "properties": {
+                        "headline": "Test Alert",
+                        "severity": "Moderate",
+                        "areaDesc": "County A;County B; County C ",
+                    },
+                }
+            ]
+        }
+
+        alerts = parse_nws_alerts(data)
+
+        assert alerts.alerts[0].areas == ["County A", "County B", "County C"]
+
 
 class TestGetNwsAlertsParameters:
     """

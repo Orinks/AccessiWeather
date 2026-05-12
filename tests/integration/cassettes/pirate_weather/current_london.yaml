@@ -11,7 +11,7 @@ interactions:
       Host:
       - api.pirateweather.net
     method: GET
-    uri: https://api.pirateweather.net/forecast/FILTERED_API_KEY/51.5074,-0.1278?extend=hourly&units=us
+    uri: https://api.pirateweather.net/forecast/FILTERED_API_KEY/51.5074,-0.1278?extend=hourly&units=us&version=2
   response:
     body:
       string: "{\"latitude\":51.5074,\"longitude\":-0.1278,\"timezone\":\"Europe/London\",\"offset\":0.0,\"elevation\":52,\"currently\":{\"time\":1773877680,\"summary\":\"Clear\",\"icon\":\"clear-night\",\"nearestStormDistance\":691.82,\"nearestStormBearing\":180,\"precipIntensity\":0.0,\"precipProbability\":0.0,\"precipIntensityError\":0.0,\"precipType\":\"none\",\"temperature\":45.54,\"apparentTemperature\":39.16,\"dewPoint\":36.86,\"humidity\":0.72,\"pressure\":1025.8,\"windSpeed\":5.97,\"windGust\":10.57,\"windBearing\":81,\"cloudCover\":0.01,\"uvIndex\":0.0,\"visibility\":9.56,\"ozone\":345.66},\"minutely\":{\"summary\":\"Clear

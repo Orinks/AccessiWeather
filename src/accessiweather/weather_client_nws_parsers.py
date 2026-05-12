@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from .weather_client_nws_common import *  # noqa: F403
+from .weather_client_parsers import normalize_pressure
 
 
 def parse_nws_current_conditions(
@@ -203,10 +204,24 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
                 logger.warning(f"Failed to parse effective time: {props['effective']}")
 
         references = []
-        for ref in props.get("references", []):
+        raw_references = props.get("references") or []
+        if not isinstance(raw_references, list):
+            raw_references = []
+        for ref in raw_references:
+            if not isinstance(ref, dict):
+                continue
             ref_id = ref.get("identifier") or ref.get("@id") or ref.get("id")
             if ref_id:
                 references.append(ref_id)
+
+        area_desc = props.get("areaDesc")
+        areas = []
+        if isinstance(area_desc, str):
+            areas = [area.strip() for area in area_desc.split(";") if area.strip()]
+
+        affected_zones_raw = props.get("affectedZones") or []
+        if not isinstance(affected_zones_raw, list):
+            affected_zones_raw = []
 
         alert = WeatherAlert(
             title=props.get("headline", "Weather Alert"),
@@ -221,14 +236,14 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
             expires=expires,
             sent=sent,
             effective=effective,
-            areas=props.get("areaDesc", "").split("; ") if props.get("areaDesc") else [],
+            areas=areas,
             references=references,
             id=alert_id,
             source="NWS",
             message_type=props.get("messageType"),
             affected_zones=[
                 zone.rsplit("/", 1)[-1]
-                for zone in props.get("affectedZones", [])
+                for zone in affected_zones_raw
                 if isinstance(zone, str) and zone
             ],
         )
@@ -306,6 +321,7 @@ def parse_nws_hourly_forecast(data: dict, location: Location | None = None) -> H
             temperature_unit=str(temperature_unit),
             short_forecast=period_data.get("shortForecast"),
             wind_speed=_format_wind_speed(period_data.get("windSpeed")),
+            wind_speed_mph=_extract_wind_speed_mph(period_data.get("windSpeed")),
             wind_direction=wind_direction,
             icon=period_data.get("icon"),
             precipitation_probability=_extract_float(period_data.get("probabilityOfPrecipitation")),
@@ -319,21 +335,46 @@ def parse_nws_gridpoint_pressure(data: dict) -> dict[datetime, tuple[float | Non
     """Parse NWS gridpoint pressure values keyed by valid-time start."""
     pressure = data.get("properties", {}).get("pressure", {})
     values = pressure.get("values", []) if isinstance(pressure, dict) else []
+    pressure_unit = None
+    if isinstance(pressure, dict):
+        pressure_unit = pressure.get("uom") or pressure.get("unitCode")
     pressure_by_time: dict[datetime, tuple[float | None, float | None]] = {}
 
     for item in values:
         if not isinstance(item, dict):
             continue
         start_time = _parse_valid_time_start(item.get("validTime"))
-        pressure_pa = item.get("value")
-        if start_time is None or pressure_pa is None:
+        pressure_value = _extract_float(item.get("value"))
+        if start_time is None or pressure_value is None:
             continue
-        pressure_by_time[start_time] = (
-            convert_pa_to_inches(pressure_pa),
-            convert_pa_to_mb(pressure_pa),
+        pressure_by_time[start_time] = _normalize_nws_gridpoint_pressure(
+            pressure_value,
+            item.get("uom") or item.get("unitCode") or pressure_unit,
         )
 
     return pressure_by_time
+
+
+def _normalize_nws_gridpoint_pressure(
+    value: float, unit_code: str | None
+) -> tuple[float | None, float | None]:
+    """
+    Normalize NWS gridpoint pressure values to inches and millibars.
+
+    Most NWS pressure values are pascals, but some gridpoint layers currently
+    return station-pressure-like values around 29-31 with no unit metadata. Treat
+    those as inches of mercury instead of displaying impossible sub-1 mb values.
+    """
+    if unit_code:
+        pressure_in, pressure_mb = normalize_pressure(value, str(unit_code))
+        if pressure_in is not None or pressure_mb is not None:
+            return pressure_in, pressure_mb
+
+    if 20 <= value <= 35:
+        return value, value * 33.8639
+    if 850 <= value <= 1100:
+        return value * 0.0295299830714, value
+    return convert_pa_to_inches(value), convert_pa_to_mb(value)
 
 
 def apply_nws_gridpoint_pressure(

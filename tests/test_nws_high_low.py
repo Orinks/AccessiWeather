@@ -152,6 +152,18 @@ def _hourly_payload(start_time: str = "2026-04-26T10:00:00-04:00"):
 
 
 class TestNwsHourlyPressure:
+    def test_hourly_wind_speed_mph_populated_from_string(self):
+        hourly = parse_nws_hourly_forecast(_hourly_payload())
+
+        assert hourly.periods[0].wind_speed_mph == 5.0
+
+    def test_hourly_wind_speed_mph_populated_from_range(self):
+        payload = _hourly_payload()
+        payload["properties"]["periods"][0]["windSpeed"] = "5 to 15 mph"
+        hourly = parse_nws_hourly_forecast(payload)
+
+        assert hourly.periods[0].wind_speed_mph == 15.0
+
     def test_probability_of_precipitation_preserved(self):
         """NWS hourly probabilityOfPrecipitation.value is mapped to the hourly period."""
         hourly = parse_nws_hourly_forecast(_hourly_payload())
@@ -243,6 +255,47 @@ class TestNwsHourlyPressure:
 
         assert result.periods[0].pressure_mb == 1013.25
         assert result.periods[0].pressure_in is not None
+
+    def test_gridpoint_pressure_normalizes_unlabelled_inches(self):
+        """Some NWS gridpoint pressure layers return inHg-like values without a unit."""
+        pressure = parse_nws_gridpoint_pressure(
+            {
+                "properties": {
+                    "pressure": {
+                        "values": [
+                            {
+                                "validTime": "2026-04-26T10:00:00-04:00/PT1H",
+                                "value": 29.03,
+                            }
+                        ],
+                    }
+                }
+            }
+        )
+
+        pressure_in, pressure_mb = next(iter(pressure.values()))
+        assert pressure_in == 29.03
+        assert pressure_mb == pytest.approx(983.0, abs=0.1)
+
+    def test_gridpoint_pressure_normalizes_unlabelled_hpa(self):
+        pressure = parse_nws_gridpoint_pressure(
+            {
+                "properties": {
+                    "pressure": {
+                        "values": [
+                            {
+                                "validTime": "2026-04-26T10:00:00-04:00/PT1H",
+                                "value": 1013.25,
+                            }
+                        ],
+                    }
+                }
+            }
+        )
+
+        pressure_in, pressure_mb = next(iter(pressure.values()))
+        assert pressure_in == pytest.approx(29.92, abs=0.01)
+        assert pressure_mb == 1013.25
 
     def test_gridpoint_pressure_ignores_far_valid_times(self):
         hourly = parse_nws_hourly_forecast(_hourly_payload())

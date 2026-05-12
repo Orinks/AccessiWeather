@@ -11,7 +11,7 @@ interactions:
       Host:
       - api.pirateweather.net
     method: GET
-    uri: https://api.pirateweather.net/forecast/FILTERED_API_KEY/69.6489,18.9551?extend=hourly&units=us
+    uri: https://api.pirateweather.net/forecast/FILTERED_API_KEY/69.6489,18.9551?extend=hourly&units=us&version=2
   response:
     body:
       string: "{\"latitude\":69.6489,\"longitude\":18.9551,\"timezone\":\"Europe/Oslo\",\"offset\":1.0,\"elevation\":43,\"currently\":{\"time\":1773877680,\"summary\":\"Drizzle

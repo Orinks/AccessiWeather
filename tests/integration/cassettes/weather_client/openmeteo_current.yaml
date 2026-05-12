@@ -92,4 +92,97 @@ interactions:
     status:
       code: 200
       message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - api.open-meteo.com
+    method: GET
+    uri: https://api.open-meteo.com/v1/forecast?daily=temperature_2m_max%2Ctemperature_2m_min%2Cweather_code%2Cwind_speed_10m_max%2Cwind_direction_10m_dominant%2Cprecipitation_probability_max%2Csnowfall_sum%2Cuv_index_max&forecast_days=7&latitude=51.5074&longitude=-0.1278&precipitation_unit=inch&temperature_unit=fahrenheit&timezone=auto&wind_speed_unit=mph
+  response:
+    body:
+      string: "{\"latitude\":51.51147,\"longitude\":-0.13078308,\"generationtime_ms\":0.4183053970336914,\"utc_offset_seconds\":3600,\"timezone\":\"Europe/London\",\"timezone_abbreviation\":\"GMT+1\",\"elevation\":16.0,\"daily_units\":{\"time\":\"iso8601\",\"temperature_2m_max\":\"\xB0F\",\"temperature_2m_min\":\"\xB0F\",\"weather_code\":\"wmo
+        code\",\"wind_speed_10m_max\":\"mp/h\",\"wind_direction_10m_dominant\":\"\xB0\",\"precipitation_probability_max\":\"%\",\"snowfall_sum\":\"inch\",\"uv_index_max\":\"\"},\"daily\":{\"time\":[\"2026-05-11\",\"2026-05-12\",\"2026-05-13\",\"2026-05-14\",\"2026-05-15\",\"2026-05-16\",\"2026-05-17\"],\"temperature_2m_max\":[53.4,61.9,55.2,56.5,52.0,56.6,59.5],\"temperature_2m_min\":[41.3,44.5,48.6,44.0,44.2,45.9,47.2],\"weather_code\":[51,3,63,51,51,51,51],\"wind_speed_10m_max\":[8.3,12.5,13.2,10.7,9.6,6.9,10.3],\"wind_direction_10m_dominant\":[357,288,279,313,335,294,245],\"precipitation_probability_max\":[57,12,90,78,25,10,29],\"snowfall_sum\":[0.000,0.000,0.000,0.000,0.000,0.000,0.000],\"uv_index_max\":[2.15,4.65,4.90,5.60,5.35,6.30,5.00]}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 11 May 2026 22:36:25 GMT
+      Transfer-Encoding:
+      - chunked
+      content-length:
+      - '982'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - api.open-meteo.com
+    method: GET
+    uri: https://api.open-meteo.com/v1/forecast?forecast_hours=24&hourly=temperature_2m%2Crelative_humidity_2m%2Cdew_point_2m%2Cweather_code%2Cwind_speed_10m%2Cwind_direction_10m%2Cpressure_msl%2Cprecipitation_probability%2Csnowfall%2Cuv_index%2Csnow_depth%2Cfreezing_level_height%2Cvisibility%2Capparent_temperature&latitude=51.5074&longitude=-0.1278&precipitation_unit=inch&temperature_unit=fahrenheit&timezone=auto&wind_speed_unit=mph
+  response:
+    body:
+      string: "{\"latitude\":51.51147,\"longitude\":-0.13078308,\"generationtime_ms\":1.1463165283203125,\"utc_offset_seconds\":3600,\"timezone\":\"Europe/London\",\"timezone_abbreviation\":\"GMT+1\",\"elevation\":16.0,\"hourly_units\":{\"time\":\"iso8601\",\"temperature_2m\":\"\xB0F\",\"relative_humidity_2m\":\"%\",\"dew_point_2m\":\"\xB0F\",\"weather_code\":\"wmo
+        code\",\"wind_speed_10m\":\"mp/h\",\"wind_direction_10m\":\"\xB0\",\"pressure_msl\":\"hPa\",\"precipitation_probability\":\"%\",\"snowfall\":\"inch\",\"uv_index\":\"\",\"snow_depth\":\"ft\",\"freezing_level_height\":\"ft\",\"visibility\":\"ft\",\"apparent_temperature\":\"\xB0F\"},\"hourly\":{\"time\":[\"2026-05-11T23:00\",\"2026-05-12T00:00\",\"2026-05-12T01:00\",\"2026-05-12T02:00\",\"2026-05-12T03:00\",\"2026-05-12T04:00\",\"2026-05-12T05:00\",\"2026-05-12T06:00\",\"2026-05-12T07:00\",\"2026-05-12T08:00\",\"2026-05-12T09:00\",\"2026-05-12T10:00\",\"2026-05-12T11:00\",\"2026-05-12T12:00\",\"2026-05-12T13:00\",\"2026-05-12T14:00\",\"2026-05-12T15:00\",\"2026-05-12T16:00\",\"2026-05-12T17:00\",\"2026-05-12T18:00\",\"2026-05-12T19:00\",\"2026-05-12T20:00\",\"2026-05-12T21:00\",\"2026-05-12T22:00\"],\"temperature_2m\":[47.5,46.6,46.7,46.6,46.7,45.7,45.1,44.5,45.1,47.1,49.8,53.6,56.0,58.4,60.1,61.3,61.9,61.1,60.4,58.6,58.8,58.1,56.5,54.0],\"relative_humidity_2m\":[53,57,57,57,56,60,61,62,58,56,54,50,36,37,39,38,39,46,48,49,42,37,40,45],\"dew_point_2m\":[31.2,32.1,32.2,32.1,31.9,32.6,32.5,32.3,31.2,32.2,33.8,35.4,29.4,32.3,35.0,35.5,36.6,40.1,40.6,39.5,35.8,31.9,32.4,33.2],\"weather_code\":[0,0,2,3,3,1,0,2,0,1,1,2,3,1,3,1,3,2,3,2,2,1,0,0],\"wind_speed_10m\":[5.8,3.4,3.4,1.8,3.4,2.5,4.0,4.9,4.0,4.9,6.3,7.8,8.3,7.6,8.5,8.9,9.8,11.9,11.0,12.5,10.3,9.4,8.5,8.5],\"wind_direction_10m\":[56,82,64,56,218,228,226,224,216,250,252,262,274,276,272,276,280,302,304,322,310,310,316,322],\"pressure_msl\":[1016.1,1016.3,1016.2,1016.3,1016.4,1016.5,1016.4,1016.5,1016.0,1016.0,1015.9,1015.4,1014.9,1014.2,1013.5,1012.9,1012.2,1012.1,1011.9,1012.0,1011.8,1011.8,1011.8,1011.8],\"precipitation_probability\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,2,4,7,11,12,9,4,0],\"snowfall\":[0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000],\"uv_index\":[0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.15,0.70,1.70,3.00,3.30,4.65,3.60,4.00,2.20,1.80,1.00,0.50,0.15,0.00,0.00,0.00],\"snow_depth\":[0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000,0.000],\"freezing_level_height\":[3576.115,3772.966,3904.199,3904.199,3871.391,3871.391,3937.008,3969.816,4002.625,4002.625,4068.241,4101.050,4396.326,4560.368,4888.452,5183.727,5380.578,5479.002,5249.344,5216.536,4921.260,4822.834,4724.410,4691.601],\"visibility\":[93700.789,91797.898,95931.758,88976.375,63648.293,51181.102,46784.777,43700.789,36876.641,40813.648,43307.086,55249.344,77690.289,83136.484,85826.773,91666.664,89501.312,91469.820,95538.055,105774.281,108661.422,107808.398,103805.773,113254.594],\"apparent_temperature\":[41.1,41.3,41.4,42.0,41.5,40.9,39.7,38.6,39.5,41.2,43.6,47.4,48.4,53.0,53.2,55.7,54.7,53.7,53.5,50.8,51.3,50.3,49.1,46.8]}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 11 May 2026 22:36:25 GMT
+      Transfer-Encoding:
+      - chunked
+      content-length:
+      - '3055'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - api.open-meteo.com
+    method: GET
+    uri: https://api.open-meteo.com/v1/forecast?current=temperature_2m%2Crelative_humidity_2m%2Capparent_temperature%2Cweather_code%2Cwind_speed_10m%2Cwind_direction_10m%2Cpressure_msl%2Cprecipitation%2Crain%2Cshowers%2Csnowfall%2Csnow_depth%2Cvisibility%2Cuv_index&daily=sunrise%2Csunset%2Cuv_index_max&forecast_days=1&latitude=51.5074&longitude=-0.1278&precipitation_unit=inch&temperature_unit=fahrenheit&timezone=auto&wind_speed_unit=mph
+  response:
+    body:
+      string: "{\"latitude\":51.51147,\"longitude\":-0.13078308,\"generationtime_ms\":0.23043155670166016,\"utc_offset_seconds\":3600,\"timezone\":\"Europe/London\",\"timezone_abbreviation\":\"GMT+1\",\"elevation\":16.0,\"current_units\":{\"time\":\"iso8601\",\"interval\":\"seconds\",\"temperature_2m\":\"\xB0F\",\"relative_humidity_2m\":\"%\",\"apparent_temperature\":\"\xB0F\",\"weather_code\":\"wmo
+        code\",\"wind_speed_10m\":\"mp/h\",\"wind_direction_10m\":\"\xB0\",\"pressure_msl\":\"hPa\",\"precipitation\":\"inch\",\"rain\":\"inch\",\"showers\":\"inch\",\"snowfall\":\"inch\",\"snow_depth\":\"ft\",\"visibility\":\"ft\",\"uv_index\":\"\"},\"current\":{\"time\":\"2026-05-11T23:30\",\"interval\":900,\"temperature_2m\":46.9,\"relative_humidity_2m\":55,\"apparent_temperature\":41.1,\"weather_code\":0,\"wind_speed_10m\":4.5,\"wind_direction_10m\":69,\"pressure_msl\":1016.2,\"precipitation\":0.000,\"rain\":0.000,\"showers\":0.000,\"snowfall\":0.000,\"snow_depth\":0.000,\"visibility\":92782.156,\"uv_index\":0.00},\"daily_units\":{\"time\":\"iso8601\",\"sunrise\":\"iso8601\",\"sunset\":\"iso8601\",\"uv_index_max\":\"\"},\"daily\":{\"time\":[\"2026-05-11\"],\"sunrise\":[\"2026-05-11T05:14\"],\"sunset\":[\"2026-05-11T20:39\"],\"uv_index_max\":[2.15]}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 11 May 2026 22:36:25 GMT
+      Transfer-Encoding:
+      - chunked
+      content-length:
+      - '1085'
+    status:
+      code: 200
+      message: OK
 version: 1

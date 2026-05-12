@@ -74,7 +74,7 @@ class WeatherClientNotificationMixin:
             # This avoids an extra API call every 60s for users who don't use it.
             if (
                 self.data_source in ("auto", "pirateweather")
-                and self.pirate_weather_client
+                and self._pirate_weather_client_for_location(location)
                 and self.settings
             ):
                 _want_start = getattr(self.settings, "notify_minutely_precipitation_start", False)
@@ -118,7 +118,7 @@ class WeatherClientNotificationMixin:
         self, location: Location
     ) -> MinutelyPrecipitationForecast | None:
         """Fetch Pirate Weather minutely precipitation when a client is configured."""
-        client = getattr(self, "pirate_weather_client", None)
+        client = self._pirate_weather_client_for_location(location)
         if client is None:
             return None
 

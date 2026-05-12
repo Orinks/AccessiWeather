@@ -34,6 +34,8 @@ class SourceData:
     forecast: Forecast | None = None
     hourly_forecast: HourlyForecast | None = None
     alerts: WeatherAlerts | None = None
+    discussion: str | None = None
+    discussion_issuance_time: datetime | None = None
     fetch_time: datetime = field(default_factory=lambda: datetime.now(UTC))
     success: bool = True
     error: str | None = None

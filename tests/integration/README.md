@@ -72,7 +72,7 @@ tests/integration/cassettes/
 1. **Record cassettes in isolation**: Run one test at a time when recording
 2. **Review cassettes before committing**: Ensure no sensitive data leaked
 3. **Use meaningful cassette names**: Match the test name for clarity
-4. **Don't match on query params**: API keys vary between environments
+4. **Match non-secret query params**: Query values often choose provider response shape; API keys are filtered before matching
 5. **Filter headers**: User-Agent and auth headers should be filtered
 6. **Keep cassettes small**: Request only data needed for assertions
 

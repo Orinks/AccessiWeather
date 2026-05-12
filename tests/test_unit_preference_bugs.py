@@ -23,6 +23,7 @@ from accessiweather.display.presentation.current_conditions import (
     format_trend_lines,
 )
 from accessiweather.display.presentation.forecast import build_hourly_summary
+from accessiweather.display.weather_presenter import WeatherPresenter
 from accessiweather.models import (
     AppSettings,
     CurrentConditions,
@@ -30,6 +31,7 @@ from accessiweather.models import (
     HourlyForecastPeriod,
     Location,
     TrendInsight,
+    WeatherData,
 )
 from accessiweather.pirate_weather_client import PirateWeatherClient
 from accessiweather.utils import TemperatureUnit
@@ -155,6 +157,27 @@ class TestTemperatureTrendUnitBug:
         assert len(lines) == 1
         assert "°C" in lines[0]
         assert "°F" not in lines[0]
+
+    def test_weather_presentation_summary_uses_resolved_unit_pref(self):
+        settings = _make_settings(temperature_unit="celsius", show_pressure_trend=False)
+        weather = WeatherData(
+            location=Location(
+                name="London",
+                latitude=51.5,
+                longitude=-0.1,
+                timezone="Europe/London",
+                country_code="GB",
+            ),
+            current=CurrentConditions(temperature_f=50.0, temperature_c=10.0, condition="Clear"),
+            trend_insights=[self._trend_f(9.0)],
+        )
+
+        presentation = WeatherPresenter(settings).present(weather)
+
+        assert "10°C" in presentation.summary_text
+        assert "Temperature rising +5.0°C over 24h" in presentation.summary_text
+        assert "°F" not in presentation.summary_text
+        assert presentation.trend_summary == ["Temperature rising +5.0°C over 24h"]
 
 
 @given(

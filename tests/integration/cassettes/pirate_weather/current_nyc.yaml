@@ -11,7 +11,7 @@ interactions:
       Host:
       - api.pirateweather.net
     method: GET
-    uri: https://api.pirateweather.net/forecast/FILTERED_API_KEY/40.7128,-74.006?extend=hourly&units=us
+    uri: https://api.pirateweather.net/forecast/FILTERED_API_KEY/40.7128,-74.006?extend=hourly&units=us&version=2
   response:
     body:
       string: "{\"latitude\":40.7128,\"longitude\":-74.006,\"timezone\":\"America/New_York\",\"offset\":-4.0,\"elevation\":62,\"currently\":{\"time\":1773877680,\"summary\":\"Clear\",\"icon\":\"clear-night\",\"nearestStormDistance\":356.19,\"nearestStormBearing\":35,\"precipIntensity\":0.0,\"precipProbability\":0.0,\"precipIntensityError\":0.0,\"precipType\":\"none\",\"temperature\":32.88,\"apparentTemperature\":21.34,\"dewPoint\":16.48,\"humidity\":0.5,\"pressure\":1028.29,\"windSpeed\":10.46,\"windGust\":13.69,\"windBearing\":141,\"cloudCover\":0.0,\"uvIndex\":0.06,\"visibility\":10.0,\"ozone\":401.24},\"minutely\":{\"summary\":\"Clear

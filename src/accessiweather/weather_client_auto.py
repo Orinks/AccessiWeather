@@ -29,6 +29,12 @@ from .weather_client_parallel import ParallelFetchCoordinator
 
 logger = logging.getLogger(__name__)
 
+AUTO_NWS_DISCUSSION_PLACEHOLDER = "Forecast discussion available from NWS for US locations."
+AUTO_NO_NWS_DISCUSSION_TEXT = (
+    "Forecast discussion is unavailable because Automatic mode did not use NWS."
+)
+AUTO_NON_NWS_DISCUSSION_TEXT = "Forecast discussion not available from Open-Meteo."
+
 
 class WeatherClientAutoMixin:
     def _get_auto_mode_api_budget(self) -> str:
@@ -87,6 +93,25 @@ class WeatherClientAutoMixin:
             ),
         )
 
+    @staticmethod
+    def _has_real_discussion(weather_data: WeatherData) -> bool:
+        """Return whether weather data already carries fetched forecast discussion text."""
+        discussion = weather_data.discussion
+        if not discussion:
+            return False
+        return discussion not in {
+            AUTO_NWS_DISCUSSION_PLACEHOLDER,
+            AUTO_NO_NWS_DISCUSSION_TEXT,
+            AUTO_NON_NWS_DISCUSSION_TEXT,
+        } and not discussion.startswith("Forecast discussion not available")
+
+    @staticmethod
+    def _should_enrich_nws_discussion(weather_data: WeatherData) -> bool:
+        """Return whether auto mode should make a follow-up NWS discussion request."""
+        if WeatherClientAutoMixin._has_real_discussion(weather_data):
+            return False
+        return weather_data.discussion != AUTO_NO_NWS_DISCUSSION_TEXT
+
     async def _fetch_smart_auto_source(
         self, location: Location, skip_notifications: bool = False
     ) -> WeatherData:
@@ -109,7 +134,7 @@ class WeatherClientAutoMixin:
             international_default=auto_sources_international,
         )
         auto_budget = self._get_auto_mode_api_budget()
-        parallel_timeout = getattr(self.settings, "parallel_fetch_timeout", 5.0)
+        parallel_timeout = getattr(self.settings, "parallel_fetch_timeout", self.timeout)
         coordinator = ParallelFetchCoordinator(timeout=parallel_timeout)
         fusion_engine = DataFusionEngine(config)
         alert_aggregator = AlertAggregator()
@@ -130,7 +155,7 @@ class WeatherClientAutoMixin:
                 alerts,
                 hourly,
             ) = await self._fetch_nws_data(location)
-            return (current, forecast, hourly, alerts)
+            return (current, forecast, hourly, alerts, _discussion, _discussion_time)
 
         async def fetch_pw():
             pirate_weather_client = self._pirate_weather_client_for_location(location)
@@ -170,13 +195,17 @@ class WeatherClientAutoMixin:
             fetched_sources = {source.source for source in source_results}
             primary_result = source_results[0] if source_results else None
             core_complete = self._source_has_complete_core_data(primary_result)
-            needs_us_openmeteo = (
+            needs_us_extended_openmeteo = (
                 is_us
                 and "openmeteo" in fetchers
                 and "openmeteo" not in fetched_sources
-                and (
-                    self._should_use_openmeteo_for_extended_forecast(location, source="auto")
-                    or not core_complete
+                and self._should_use_openmeteo_for_extended_forecast(location, source="auto")
+            )
+            needs_us_core_fallback = (
+                is_us
+                and not core_complete
+                and any(
+                    source in fetchers for source in active_sources if source not in fetched_sources
                 )
             )
             needs_intl_alert_source = (
@@ -197,7 +226,9 @@ class WeatherClientAutoMixin:
                 return []
 
             secondary_sources: list[str] = []
-            if needs_us_openmeteo or (auto_budget == "balanced" and is_us and not core_complete):
+            if needs_us_extended_openmeteo:
+                secondary_sources = _pick_secondary_candidate(lambda source: source == "openmeteo")
+            elif needs_us_core_fallback:
                 secondary_sources = _pick_secondary_candidate(lambda _source: True)
             elif needs_intl_alert_source:
                 secondary_sources = _pick_secondary_candidate(
@@ -295,16 +326,25 @@ class WeatherClientAutoMixin:
         if merged_hourly is None:
             incomplete_sections.add("hourly_forecast")
 
-        if is_us and any(source.source == "nws" for source in source_results):
-            discussion = "Forecast discussion available from NWS for US locations."
+        nws_discussion_source = next(
+            (
+                source
+                for source in source_results
+                if source.source == "nws" and source.success and source.discussion
+            ),
+            None,
+        )
+        if is_us and nws_discussion_source:
+            discussion = nws_discussion_source.discussion
+            discussion_issuance_time = nws_discussion_source.discussion_issuance_time
+        elif is_us and any(source.source == "nws" for source in source_results):
+            discussion = AUTO_NWS_DISCUSSION_PLACEHOLDER
             discussion_issuance_time = None
         elif is_us:
-            discussion = (
-                "Forecast discussion is unavailable because Automatic mode did not use NWS."
-            )
+            discussion = AUTO_NO_NWS_DISCUSSION_TEXT
             discussion_issuance_time = None
         else:
-            discussion = "Forecast discussion not available from Open-Meteo."
+            discussion = AUTO_NON_NWS_DISCUSSION_TEXT
             discussion_issuance_time = None
 
         confidence = calculate_forecast_confidence(source_results)
@@ -410,9 +450,10 @@ class WeatherClientAutoMixin:
             tasks["sunrise_sunset"] = asyncio.create_task(
                 enrichment.enrich_with_sunrise_sunset(self, weather_data, location)
             )
-            tasks["nws_discussion"] = asyncio.create_task(
-                enrichment.enrich_with_nws_discussion(self, weather_data, location)
-            )
+            if self._is_us_location(location) and self._should_enrich_nws_discussion(weather_data):
+                tasks["nws_discussion"] = asyncio.create_task(
+                    enrichment.enrich_with_nws_discussion(self, weather_data, location)
+                )
 
         # Post-processing enrichments (always run)
         tasks["environmental"] = asyncio.create_task(

@@ -31,6 +31,16 @@ class AppSettingsValidationMixin:
             return bool(value)
         return default
 
+    @staticmethod
+    def _as_float(value, default: float) -> float:
+        """Normalize numeric configuration values to float."""
+        if value is None:
+            return default
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return default
+
     def validate_on_access(self, setting_name: str) -> bool:
         """
         Validate a non-critical setting on first access.
@@ -120,6 +130,12 @@ class AppSettingsValidationMixin:
             # Ensure reasonable range for trend hours (1-168 hours = 1 week)
             if not isinstance(value, int) or value < 1 or value > 168:
                 setattr(settings, setting_name, 24)
+
+        elif setting_name == "parallel_fetch_timeout":
+            timeout = settings._as_float(value, 10.0)
+            if timeout < 1.0 or timeout > 60.0:
+                timeout = 10.0
+            setattr(settings, setting_name, timeout)
 
         elif setting_name == "ai_cache_ttl":
             # Ensure non-negative integer for cache TTL

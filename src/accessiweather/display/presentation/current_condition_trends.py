@@ -7,6 +7,9 @@ from collections.abc import Iterable
 from ...models import CurrentConditions, HourlyForecast, HourlyForecastPeriod, TrendInsight
 from ...utils import TemperatureUnit
 
+MAX_LEGACY_PRESSURE_TREND_IN = 0.30
+MAX_LEGACY_PRESSURE_TREND_MB = 10.0
+
 
 def _adapt_temperature_trend_summary(trend: TrendInsight, unit_pref: TemperatureUnit) -> str:
     """Return a temperature-trend summary adapted to the user's unit preference."""
@@ -132,10 +135,14 @@ def compute_pressure_trend_from_hourly(
 
     if base_in is not None and future_in is not None:
         change = future_in - base_in
+        if abs(change) > MAX_LEGACY_PRESSURE_TREND_IN:
+            return None
         descriptor = direction_descriptor(change, minor=0.02, strong=0.05)
         magnitude = f"{change:+.2f} inHg"
     elif base_mb is not None and future_mb is not None:
         change = future_mb - base_mb
+        if abs(change) > MAX_LEGACY_PRESSURE_TREND_MB:
+            return None
         descriptor = direction_descriptor(change, minor=0.5, strong=1.5)
         magnitude = f"{change:+.1f} mb"
 

@@ -246,6 +246,20 @@ class TestParseCurrentConditions:
         assert result.condition == "Freezing Rain"
         assert result.precipitation_type == ["ice"]
 
+    def test_current_precip_intensity_does_not_fill_amount_fields(
+        self, client, sample_forecast_payload
+    ):
+        payload = dict(sample_forecast_payload)
+        payload["currently"] = {
+            **sample_forecast_payload["currently"],
+            "precipIntensity": 0.25,
+        }
+
+        result = client._parse_current_conditions(payload)
+
+        assert result.precipitation_in is None
+        assert result.precipitation_mm is None
+
     def test_current_sunrise_uses_response_timezone_name(self, client, sample_forecast_payload):
         """IANA timezone from PW should override the fixed offset fallback."""
         payload = dict(sample_forecast_payload)
@@ -343,6 +357,73 @@ class TestParseForecast:
         result = si_client._parse_forecast(sample_forecast_payload)
         assert result.periods[0].wind_speed is not None
         assert "m/s" in result.periods[0].wind_speed
+
+    def test_non_us_daily_prefers_daytime_high_low(self, sample_forecast_payload):
+        """SI payloads still expose day/night high/low separately from max/min."""
+        si_client = PirateWeatherClient(api_key="key", units="si")
+        day = {
+            **sample_forecast_payload["daily"]["data"][0],
+            "temperatureHigh": 20.0,
+            "temperatureLow": 10.0,
+            "temperatureMax": 25.0,
+            "temperatureMin": 5.0,
+        }
+        payload = dict(sample_forecast_payload)
+        payload["daily"] = {"data": [day]}
+
+        result = si_client._parse_forecast(payload)
+
+        assert result.periods[0].temperature == 20.0
+        assert result.periods[0].temperature_low == 10.0
+
+    def test_daily_precipitation_uses_accumulation_before_intensity(
+        self, client, sample_forecast_payload
+    ):
+        day = {
+            **sample_forecast_payload["daily"]["data"][0],
+            "precipAccumulation": 0.5,
+            "precipIntensity": 0.01,
+            "snowAccumulation": 2.0,
+        }
+        payload = dict(sample_forecast_payload)
+        payload["daily"] = {"data": [day]}
+
+        result = client._parse_forecast(payload)
+
+        assert result.periods[0].precipitation_amount == 0.5
+        assert result.periods[0].snowfall == 2.0
+
+    def test_daily_accumulation_cm_converts_to_inches_for_si_units(self, sample_forecast_payload):
+        si_client = PirateWeatherClient(api_key="key", units="si")
+        day = {
+            **sample_forecast_payload["daily"]["data"][0],
+            "liquidAccumulation": 1.27,
+            "precipIntensity": 2.54,
+            "snowAccumulation": 2.54,
+        }
+        payload = dict(sample_forecast_payload)
+        payload["daily"] = {"data": [day]}
+
+        result = si_client._parse_forecast(payload)
+
+        assert result.periods[0].precipitation_amount == pytest.approx(0.5)
+        assert result.periods[0].snowfall == pytest.approx(1.0)
+
+    def test_daily_precipitation_ignores_intensity_without_accumulation(
+        self, client, sample_forecast_payload
+    ):
+        day = {
+            **sample_forecast_payload["daily"]["data"][0],
+            "precipIntensity": 0.25,
+        }
+        day.pop("precipAccumulation", None)
+        day.pop("liquidAccumulation", None)
+        payload = dict(sample_forecast_payload)
+        payload["daily"] = {"data": [day]}
+
+        result = client._parse_forecast(payload)
+
+        assert result.periods[0].precipitation_amount is None
 
     def test_daily_summary_parsed(self, client):
         """Summary field is populated from data['daily']['summary']."""
@@ -537,6 +618,39 @@ class TestParseHourlyForecast:
         assert period.pressure_in is not None
         assert abs(period.pressure_in - 1013.0 / 33.8639) < 0.01
 
+    def test_hourly_precipitation_uses_accumulation_before_intensity(
+        self, client, sample_forecast_payload
+    ):
+        hour = {
+            **sample_forecast_payload["hourly"]["data"][0],
+            "liquidAccumulation": 0.25,
+            "precipIntensity": 0.01,
+            "snowAccumulation": 1.5,
+        }
+        payload = dict(sample_forecast_payload)
+        payload["hourly"] = {"data": [hour]}
+
+        result = client._parse_hourly_forecast(payload)
+
+        assert result.periods[0].precipitation_amount == 0.25
+        assert result.periods[0].snowfall == 1.5
+
+    def test_hourly_precipitation_ignores_intensity_without_accumulation(
+        self, client, sample_forecast_payload
+    ):
+        hour = {
+            **sample_forecast_payload["hourly"]["data"][0],
+            "precipIntensity": 0.25,
+        }
+        hour.pop("precipAccumulation", None)
+        hour.pop("liquidAccumulation", None)
+        payload = dict(sample_forecast_payload)
+        payload["hourly"] = {"data": [hour]}
+
+        result = client._parse_hourly_forecast(payload)
+
+        assert result.periods[0].precipitation_amount is None
+
     def test_empty_hourly_block(self, client, sample_forecast_payload):
         payload = dict(sample_forecast_payload)
         payload["hourly"] = {"data": []}
@@ -647,6 +761,16 @@ class TestParseAlerts:
         assert alert.onset is not None
         assert alert.expires is not None
         assert alert.expires > alert.onset
+
+    def test_alert_expires_sentinel_returns_none(self, client, sample_payload_with_alerts):
+        payload = dict(sample_payload_with_alerts)
+        alert = dict(sample_payload_with_alerts["alerts"][0])
+        alert["expires"] = -999
+        payload["alerts"] = [alert]
+
+        result = client._parse_alerts(payload)
+
+        assert result.alerts[0].expires is None
 
     def test_alert_times_use_response_timezone_name(self, client, sample_payload_with_alerts):
         """Alert epoch timestamps should use PW's IANA timezone when present."""

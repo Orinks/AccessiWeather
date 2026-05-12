@@ -13,6 +13,10 @@ from typing import Any, cast
 import httpx
 
 from accessiweather.api_client import ApiClientError, NoaaApiError
+from accessiweather.nws_national_products import (
+    fetch_iem_national_product,
+    national_product_afos_id,
+)
 from accessiweather.weather_gov_api_client.api.default import alerts_active, alerts_active_zone
 
 logger = logging.getLogger(__name__)
@@ -35,12 +39,14 @@ class NwsAlertsDiscussions:
         self._alert_etag: str | None = None
         self._alert_last_modified: str | None = None
         self._cached_alert_response: dict[str, Any] | None = None
+        self._alert_conditional_cache: dict[str, dict[str, Any]] = {}
 
     def reset_conditional_cache(self) -> None:
         """Reset conditional GET cache state (e.g. when location changes)."""
         self._alert_etag = None
         self._alert_last_modified = None
         self._cached_alert_response = None
+        self._alert_conditional_cache.clear()
 
     def _fetch_alerts_conditional(self, url: str) -> dict[str, Any]:
         """
@@ -52,18 +58,22 @@ class NwsAlertsDiscussions:
         """
         self.wrapper._rate_limit()
 
+        cache_entry = self._alert_conditional_cache.get(url, {})
         headers = {"User-Agent": f"{self.wrapper.user_agent} ({self.wrapper.contact_info})"}
-        if self._alert_etag:
-            headers["If-None-Match"] = self._alert_etag
-        if self._alert_last_modified:
-            headers["If-Modified-Since"] = self._alert_last_modified
+        if cache_entry.get("etag"):
+            headers["If-None-Match"] = cache_entry["etag"]
+        if cache_entry.get("last_modified"):
+            headers["If-Modified-Since"] = cache_entry["last_modified"]
 
         with httpx.Client(timeout=httpx.Timeout(10.0), follow_redirects=True) as client:
             response = client.get(url, headers=headers)
 
-            if response.status_code == 304 and self._cached_alert_response is not None:
+            if response.status_code == 304 and cache_entry.get("response") is not None:
                 logger.debug("Alerts not modified (304), returning cached data")
-                return self._cached_alert_response
+                return cache_entry["response"]
+            if response.status_code == 304:
+                logger.debug("Alerts not modified (304), but no URL-specific cached data exists")
+                return {"features": []}
 
             response.raise_for_status()
 
@@ -77,6 +87,11 @@ class NwsAlertsDiscussions:
 
             data = response.json()
             self._cached_alert_response = data
+            self._alert_conditional_cache[url] = {
+                "etag": etag,
+                "last_modified": last_modified,
+                "response": data,
+            }
             return data
 
     def get_alerts(
@@ -197,18 +212,18 @@ class NwsAlertsDiscussions:
                     self.wrapper._get_cached_or_fetch(cache_key, fetch_data, force_refresh),
                 )
 
-            # If we couldn't determine location or state, fall back to point-radius search
+            # If we couldn't determine location or state, fall back to point alerts.
             if location_type is None or location_id is None:
                 logger.info(
-                    f"Using point-radius search for alerts since location could not be determined: ({lat}, {lon}) with radius {radius} miles"
+                    f"Using point search for alerts since location could not be determined: ({lat}, {lon})"
                 )
                 cache_key = self.wrapper._generate_cache_key(
-                    "alerts_point", {"lat": lat, "lon": lon, "radius": radius}
+                    "alerts_point", {"lat": lat, "lon": lon}
                 )
 
                 def fetch_data() -> dict[str, Any]:
                     try:
-                        url = f"{self.wrapper.core_client.BASE_URL}/alerts/active?point={lat},{lon}&radius={radius}"
+                        url = f"{self.wrapper.core_client.BASE_URL}/alerts/active?point={lat},{lon}"
                         response = self._fetch_alerts_conditional(url)
                         return self._transform_alerts_data(response)
                     except Exception as e:
@@ -343,6 +358,13 @@ class NwsAlertsDiscussions:
 
             def fetch_data() -> str | None:
                 self.wrapper._rate_limit()
+                if national_product_afos_id(product_type, location) is not None:
+                    user_agent = f"{self.wrapper.user_agent} ({self.wrapper.contact_info})"
+                    return fetch_iem_national_product(
+                        product_type,
+                        location,
+                        user_agent=user_agent,
+                    )
                 try:
                     products_url = f"{self.wrapper.core_client.BASE_URL}/products/types/{product_type}/locations/{location}"
                     products_response = self.wrapper._fetch_url(products_url)

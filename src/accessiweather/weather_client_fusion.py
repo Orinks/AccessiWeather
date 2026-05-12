@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Any
 
 from accessiweather.config.source_priority import SourcePriorityConfig
+from accessiweather.location_classification import is_us_location
 from accessiweather.models.weather import (
     CurrentConditions,
     Forecast,
@@ -47,6 +48,17 @@ from accessiweather.weather_client_fusion_values import (
 logger = logging.getLogger(__name__)
 
 KM_PER_MILE = 1.609344
+MISSING_CONDITION_TEXT = {
+    "",
+    "n/a",
+    "na",
+    "none",
+    "not available",
+    "null",
+    "unavailable",
+    "unknown",
+    "--",
+}
 
 
 class DataFusionEngine:
@@ -64,15 +76,23 @@ class DataFusionEngine:
 
     def _is_us_location(self, location: Location) -> bool:
         """Check if location is in the US."""
-        if location.country_code:
-            return location.country_code.upper() == "US"
-        # Rough bounding box for continental US
-        lat, lon = location.latitude, location.longitude
-        return 24.0 <= lat <= 50.0 and -125.0 <= lon <= -66.0
+        return is_us_location(location)
 
     def _get_field_value(self, obj: Any, field_name: str) -> Any:
         """Get a field value from an object, returning None if not present."""
         return getattr(obj, field_name, None)
+
+    def _field_value_is_present(self, field_name: str, value: Any) -> bool:
+        """Return whether a source value is useful enough to win fusion."""
+        if value is None:
+            return False
+        if isinstance(value, str):
+            normalized = value.strip()
+            if not normalized:
+                return False
+            if field_name == "condition" and normalized.casefold() in MISSING_CONDITION_TEXT:
+                return False
+        return True
 
     def _source_priority_index(
         self,
@@ -94,7 +114,10 @@ class DataFusionEngine:
         if source.current is None:
             return False
         return any(
-            self._get_field_value(source.current, field_name) is not None
+            self._field_value_is_present(
+                field_name,
+                self._get_field_value(source.current, field_name),
+            )
             for field_name in field_names
         )
 
@@ -194,7 +217,7 @@ class DataFusionEngine:
             # Find first non-None value
             for source in field_sources:
                 value = self._get_field_value(source.current, field_name)
-                if value is not None:
+                if self._field_value_is_present(field_name, value):
                     merged_values[field_name] = value
                     attribution.field_sources[field_name] = source.source
                     break

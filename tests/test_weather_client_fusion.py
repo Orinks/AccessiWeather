@@ -79,6 +79,10 @@ class TestIsUsLocation:
     def test_outside_us_bounding_box(self, engine, intl_location_no_country):
         assert engine._is_us_location(intl_location_no_country) is False
 
+    def test_western_canada_without_country_code_is_not_us(self, engine):
+        loc = Location(name="Victoria", latitude=48.4284, longitude=-123.3656)
+        assert engine._is_us_location(loc) is False
+
 
 # --- merge_current_conditions ---
 
@@ -148,6 +152,36 @@ class TestMergeCurrentConditions:
         assert result.temperature_f == 70.0  # from nws (higher priority)
         assert result.humidity == 55  # from openmeteo (nws was None)
         assert attr.field_sources["humidity"] == "openmeteo"
+
+    def test_empty_condition_falls_back_to_next_source(self, engine, us_location):
+        """Empty NWS condition text should not block lower-priority usable text."""
+        nws_cc = CurrentConditions(temperature_f=70.0, condition="")
+        om_cc = CurrentConditions(temperature_f=68.0, condition="Partly Cloudy")
+        sources = [
+            _make_source("nws", current=nws_cc),
+            _make_source("openmeteo", current=om_cc),
+        ]
+
+        result, attr = engine.merge_current_conditions(sources, us_location)
+
+        assert result is not None
+        assert result.condition == "Partly Cloudy"
+        assert attr.field_sources["condition"] == "openmeteo"
+
+    def test_unknown_condition_falls_back_to_next_source(self, engine, us_location):
+        """Placeholder condition text should not win automatic source fusion."""
+        nws_cc = CurrentConditions(temperature_f=70.0, condition="Unknown")
+        om_cc = CurrentConditions(temperature_f=68.0, condition="Clear")
+        sources = [
+            _make_source("nws", current=nws_cc),
+            _make_source("openmeteo", current=om_cc),
+        ]
+
+        result, attr = engine.merge_current_conditions(sources, us_location)
+
+        assert result is not None
+        assert result.condition == "Clear"
+        assert attr.field_sources["condition"] == "openmeteo"
 
     def test_failed_sources_tracked(self, engine, us_location):
         cc = CurrentConditions(temperature_f=70.0)
