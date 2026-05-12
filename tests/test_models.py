@@ -388,10 +388,10 @@ class TestAppSettings:
         assert settings.forecast_time_reference == "location"
 
     def test_default_muted_sound_events(self):
-        """Weather refresh sound is enabled by default."""
+        """Weather refresh sound is muted by default."""
         settings = AppSettings()
 
-        assert settings.muted_sound_events == []
+        assert settings.muted_sound_events == ["data_updated"]
 
     def test_custom_settings(self):
         """Test custom settings."""
