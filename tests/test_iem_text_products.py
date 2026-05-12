@@ -134,6 +134,22 @@ async def test_afos_retrieve_raises_on_http_error():
 
 
 @pytest.mark.asyncio
+async def test_afos_retrieve_raises_on_iem_error_text():
+    client = _client(_resp(text="ERROR: Could not Find: PMDSPD\n"))
+
+    with pytest.raises(IemProductFetchError, match="Could not Find"):
+        await fetch_iem_afos_text("PMDSPD", client=client, iem_base_url=IEM_BASE)
+
+
+def test_afos_retrieve_sync_raises_on_iem_error_text():
+    client = MagicMock(spec=httpx.Client)
+    client.get.return_value = _resp(text="ERROR: Could not Find: QPFPFD\n")
+
+    with pytest.raises(IemProductFetchError, match="Could not Find"):
+        fetch_iem_afos_text_sync("QPFPFD", client=client, iem_base_url=IEM_BASE)
+
+
+@pytest.mark.asyncio
 async def test_spc_outlook_returns_accessible_summary():
     client = _client(
         _resp(
