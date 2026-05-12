@@ -3,6 +3,47 @@
 from accessiweather.openmeteo_mapper import OpenMeteoMapper
 
 
+class TestOpenMeteoMapperCurrentFields:
+    def test_current_pressure_hpa_is_mapped_to_pascals(self):
+        mapped = OpenMeteoMapper().map_current_conditions(
+            {
+                "current": {
+                    "temperature_2m": 72.0,
+                    "relative_humidity_2m": 55,
+                    "apparent_temperature": 72.0,
+                    "wind_direction_10m": 180,
+                    "wind_speed_10m": 8.0,
+                    "pressure_msl": 1015.0,
+                    "weather_code": 1,
+                },
+                "current_units": {"temperature_2m": "°F", "pressure_msl": "hPa"},
+            }
+        )
+
+        pressure = mapped["properties"]["barometricPressure"]
+
+        assert pressure["value"] == 101500.0
+        assert pressure["unitCode"] == "wmoUnit:Pa"
+
+    def test_current_pressure_pascal_unit_is_not_scaled_twice(self):
+        mapped = OpenMeteoMapper().map_current_conditions(
+            {
+                "current": {
+                    "temperature_2m": 72.0,
+                    "relative_humidity_2m": 55,
+                    "apparent_temperature": 72.0,
+                    "wind_direction_10m": 180,
+                    "wind_speed_10m": 8.0,
+                    "pressure_msl": 101500.0,
+                    "weather_code": 1,
+                },
+                "current_units": {"temperature_2m": "°F", "pressure_msl": "Pa"},
+            }
+        )
+
+        assert mapped["properties"]["barometricPressure"]["value"] == 101500.0
+
+
 def _make_daily_payload(
     dates: list[str],
     highs: list[float | None],

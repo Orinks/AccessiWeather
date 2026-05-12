@@ -86,6 +86,11 @@ class TestWeatherClientDataSource:
         intl_loc = Location(name="Test", latitude=51.5, longitude=-0.1)
         assert client._is_us_location(intl_loc) is False
 
+    def test_is_us_location_rejects_western_canada_without_country_code(self, client):
+        """Legacy/manual Victoria coordinates should not be treated as NWS-capable."""
+        victoria = Location(name="Victoria", latitude=48.4284, longitude=-123.3656)
+        assert client._is_us_location(victoria) is False
+
     def test_determine_api_choice_auto_us(self, client, us_location):
         """Test auto mode selects NWS for US."""
         client.data_source = "auto"

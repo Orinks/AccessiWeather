@@ -30,7 +30,7 @@ class TestNwsPointData:
         """Test fetching point data for a US location."""
         from accessiweather.api.nws import NwsApiWrapper
 
-        wrapper = NwsApiWrapper()
+        wrapper = NwsApiWrapper(min_request_interval=0)
         data = wrapper.get_point_data(
             lat=us_location.latitude,
             lon=us_location.longitude,
@@ -51,7 +51,7 @@ class TestNwsPointData:
         """Test fetching point data for Alaska (edge case for NWS coverage)."""
         from accessiweather.api.nws import NwsApiWrapper
 
-        wrapper = NwsApiWrapper()
+        wrapper = NwsApiWrapper(min_request_interval=0)
         data = wrapper.get_point_data(
             lat=alaska_location.latitude,
             lon=alaska_location.longitude,
@@ -74,7 +74,7 @@ class TestNwsPointData:
         from accessiweather.api.nws import NwsApiWrapper
         from accessiweather.api_client import NoaaApiError
 
-        wrapper = NwsApiWrapper()
+        wrapper = NwsApiWrapper(min_request_interval=0)
 
         # NWS should return 404 for international locations
         # With VCR replay, may return error response instead of raising
@@ -90,7 +90,7 @@ class TestNwsPointData:
                 data.get("status") == 404
                 or data.get("title") == "Data Unavailable For Requested Point"
             )
-        except (NoaaApiError, Exception):
+        except NoaaApiError:
             # Exception is also acceptable (live API behavior)
             pass
 
@@ -104,7 +104,7 @@ class TestNwsCurrentConditions:
         """Test fetching current conditions for a US location."""
         from accessiweather.api.nws import NwsApiWrapper
 
-        wrapper = NwsApiWrapper()
+        wrapper = NwsApiWrapper(min_request_interval=0)
         data = wrapper.get_current_conditions(
             lat=us_location.latitude,
             lon=us_location.longitude,
@@ -120,7 +120,7 @@ class TestNwsCurrentConditions:
         """Test fetching current conditions for Alaska."""
         from accessiweather.api.nws import NwsApiWrapper
 
-        wrapper = NwsApiWrapper()
+        wrapper = NwsApiWrapper(min_request_interval=0)
         data = wrapper.get_current_conditions(
             lat=alaska_location.latitude,
             lon=alaska_location.longitude,
@@ -138,7 +138,7 @@ class TestNwsForecast:
         """Test fetching forecast for a US location."""
         from accessiweather.api.nws import NwsApiWrapper
 
-        wrapper = NwsApiWrapper()
+        wrapper = NwsApiWrapper(min_request_interval=0)
         data = wrapper.get_forecast(
             lat=us_location.latitude,
             lon=us_location.longitude,
@@ -164,7 +164,7 @@ class TestNwsForecast:
         """Test fetching forecast for Alaska."""
         from accessiweather.api.nws import NwsApiWrapper
 
-        wrapper = NwsApiWrapper()
+        wrapper = NwsApiWrapper(min_request_interval=0)
         data = wrapper.get_forecast(
             lat=alaska_location.latitude,
             lon=alaska_location.longitude,
@@ -184,7 +184,7 @@ class TestNwsHourlyForecast:
         """Test fetching hourly forecast for a US location."""
         from accessiweather.api.nws import NwsApiWrapper
 
-        wrapper = NwsApiWrapper()
+        wrapper = NwsApiWrapper(min_request_interval=0)
         data = wrapper.get_hourly_forecast(
             lat=us_location.latitude,
             lon=us_location.longitude,
@@ -214,7 +214,7 @@ class TestNwsStations:
         """Test fetching observation stations for a US location."""
         from accessiweather.api.nws import NwsApiWrapper
 
-        wrapper = NwsApiWrapper()
+        wrapper = NwsApiWrapper(min_request_interval=0)
         data = wrapper.get_stations(
             lat=us_location.latitude,
             lon=us_location.longitude,
@@ -240,7 +240,7 @@ class TestNwsAlerts:
         """Test fetching alerts for a US location."""
         from accessiweather.api.nws import NwsApiWrapper
 
-        wrapper = NwsApiWrapper()
+        wrapper = NwsApiWrapper(min_request_interval=0)
         data = wrapper.get_alerts(
             lat=us_location.latitude,
             lon=us_location.longitude,
@@ -257,7 +257,7 @@ class TestNwsAlerts:
         """Test fetching alerts for Alaska."""
         from accessiweather.api.nws import NwsApiWrapper
 
-        wrapper = NwsApiWrapper()
+        wrapper = NwsApiWrapper(min_request_interval=0)
         data = wrapper.get_alerts(
             lat=alaska_location.latitude,
             lon=alaska_location.longitude,
@@ -276,7 +276,7 @@ class TestNwsDiscussion:
         """Test fetching forecast discussion for a US location."""
         from accessiweather.api.nws import NwsApiWrapper
 
-        wrapper = NwsApiWrapper()
+        wrapper = NwsApiWrapper(min_request_interval=0)
         discussion = wrapper.get_discussion(
             lat=us_location.latitude,
             lon=us_location.longitude,
@@ -300,7 +300,7 @@ class TestNwsLocationIdentification:
         """Test identifying location type for a US location."""
         from accessiweather.api.nws import NwsApiWrapper
 
-        wrapper = NwsApiWrapper()
+        wrapper = NwsApiWrapper(min_request_interval=0)
         location_type, location_id = wrapper.identify_location_type(
             lat=us_location.latitude,
             lon=us_location.longitude,
@@ -329,7 +329,7 @@ class TestNwsErrorHandling:
         from accessiweather.api.nws import NwsApiWrapper
         from accessiweather.api_client import ApiClientError, NoaaApiError
 
-        wrapper = NwsApiWrapper()
+        wrapper = NwsApiWrapper(min_request_interval=0)
 
         # Ocean coordinates (no NWS coverage)
         # With VCR replay, may return error response instead of raising
@@ -345,6 +345,6 @@ class TestNwsErrorHandling:
                 data.get("status") == 404
                 or data.get("title") == "Data Unavailable For Requested Point"
             )
-        except (NoaaApiError, ApiClientError, Exception):
+        except (NoaaApiError, ApiClientError):
             # Exception is also acceptable (live API behavior)
             pass

@@ -30,4 +30,35 @@ interactions:
     status:
       code: 200
       message: OK
+- request:
+    body: ''
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - api.open-meteo.com
+    method: GET
+    uri: https://api.open-meteo.com/v1/forecast?current=apparent_temperature&current=cloud_cover&current=dew_point_2m&current=is_day&current=precipitation&current=pressure_msl&current=relative_humidity_2m&current=snow_depth&current=snowfall&current=surface_pressure&current=temperature_2m&current=uv_index&current=visibility&current=weather_code&current=wind_direction_10m&current=wind_gusts_10m&current=wind_speed_10m&daily=sunrise&daily=sunset&daily=uv_index_max&forecast_days=1&latitude=61.2181&longitude=-149.9003&precipitation_unit=inch&temperature_unit=fahrenheit&timezone=auto&wind_speed_unit=mph
+  response:
+    body:
+      string: "{\"latitude\":61.265377,\"longitude\":-149.92735,\"generationtime_ms\":0.25653839111328125,\"utc_offset_seconds\":-28800,\"timezone\":\"America/Anchorage\",\"timezone_abbreviation\":\"GMT-8\",\"elevation\":34.0,\"current_units\":{\"time\":\"iso8601\",\"interval\":\"seconds\",\"temperature_2m\":\"\xB0F\",\"relative_humidity_2m\":\"%\",\"dew_point_2m\":\"\xB0F\",\"apparent_temperature\":\"\xB0F\",\"is_day\":\"\",\"precipitation\":\"inch\",\"weather_code\":\"wmo
+        code\",\"cloud_cover\":\"%\",\"pressure_msl\":\"hPa\",\"surface_pressure\":\"hPa\",\"wind_speed_10m\":\"mp/h\",\"wind_direction_10m\":\"\xB0\",\"wind_gusts_10m\":\"mp/h\",\"uv_index\":\"\",\"snowfall\":\"inch\",\"snow_depth\":\"ft\",\"visibility\":\"ft\"},\"current\":{\"time\":\"2026-05-11T14:30\",\"interval\":900,\"temperature_2m\":52.2,\"relative_humidity_2m\":37,\"dew_point_2m\":27.0,\"apparent_temperature\":44.5,\"is_day\":1,\"precipitation\":0.000,\"weather_code\":3,\"cloud_cover\":86,\"pressure_msl\":1015.6,\"surface_pressure\":1011.5,\"wind_speed_10m\":8.0,\"wind_direction_10m\":143,\"wind_gusts_10m\":21.3,\"uv_index\":4.55,\"snowfall\":0.000,\"snow_depth\":0.000,\"visibility\":203149.609},\"daily_units\":{\"time\":\"iso8601\",\"sunrise\":\"iso8601\",\"sunset\":\"iso8601\",\"uv_index_max\":\"\"},\"daily\":{\"time\":[\"2026-05-11\"],\"sunrise\":[\"2026-05-11T05:20\"],\"sunset\":[\"2026-05-11T22:31\"],\"uv_index_max\":[4.65]}}"
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 11 May 2026 22:44:57 GMT
+      Transfer-Encoding:
+      - chunked
+      content-length:
+      - '1229'
+    status:
+      code: 200
+      message: OK
 version: 1

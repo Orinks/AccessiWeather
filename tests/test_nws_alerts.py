@@ -212,6 +212,25 @@ class TestParseNwsAlerts:
         alerts = parse_nws_alerts(data)
         assert alerts.alerts[0].id == "at-id-based-id"
 
+    def test_area_desc_splits_semicolon_without_spaces(self):
+        """NWS areaDesc is semicolon-delimited; spaces are not guaranteed."""
+        data = {
+            "features": [
+                {
+                    "id": "area-test",
+                    "properties": {
+                        "headline": "Test Alert",
+                        "severity": "Moderate",
+                        "areaDesc": "County A;County B; County C ",
+                    },
+                }
+            ]
+        }
+
+        alerts = parse_nws_alerts(data)
+
+        assert alerts.alerts[0].areas == ["County A", "County B", "County C"]
+
 
 class TestGetNwsAlertsParameters:
     """
@@ -374,6 +393,30 @@ class TestGetNwsAlertsParameters:
             assert len(result.alerts) == 1
             assert result.alerts[0].event == "Winter Storm Warning"
             assert "UPDATED" in result.alerts[0].headline
+
+    def test_parse_alerts_populates_affected_zones(self):
+        """NWS affectedZones should be preserved as compact zone IDs."""
+        data = {
+            "features": [
+                {
+                    "id": "urn:test:zones",
+                    "properties": {
+                        "headline": "Severe Thunderstorm Watch",
+                        "description": "Watch text.",
+                        "severity": "Severe",
+                        "event": "Severe Thunderstorm Watch",
+                        "affectedZones": [
+                            "https://api.weather.gov/zones/county/TXC121",
+                            "https://api.weather.gov/zones/forecast/TXZ119",
+                        ],
+                    },
+                }
+            ]
+        }
+
+        result = parse_nws_alerts(data)
+
+        assert result.alerts[0].affected_zones == ["TXC121", "TXZ119"]
 
 
 class TestAlertTimeParsing:

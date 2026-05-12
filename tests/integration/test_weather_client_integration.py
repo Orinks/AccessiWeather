@@ -54,7 +54,6 @@ class TestWeatherClientDataSourceSelection:
 class TestWeatherClientOpenMeteoIntegration:
     """Test WeatherClient with OpenMeteo backend."""
 
-    @pytest.mark.live_only  # Current conditions parsing needs investigation
     @integration_vcr.use_cassette("weather_client/openmeteo_current.yaml")
     @pytest.mark.asyncio
     async def test_get_weather_openmeteo(self, international_location):

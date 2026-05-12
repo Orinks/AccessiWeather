@@ -193,6 +193,7 @@ class TestPirateWeatherMinutely:
 class TestPirateWeatherErrorHandling:
     """Test Pirate Weather error handling."""
 
+    @pytest.mark.live_only
     @pytest.mark.asyncio
     async def test_invalid_api_key(self, us_location):
         """Test that invalid API key raises appropriate error."""

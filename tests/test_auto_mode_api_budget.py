@@ -116,12 +116,15 @@ def _stub_enrichments(client: WeatherClient) -> None:
 def test_auto_mode_api_budget_defaults_and_round_trips() -> None:
     settings = AppSettings()
     assert settings.auto_mode_api_budget == "max_coverage"
+    assert settings.parallel_fetch_timeout == 10.0
 
     restored = AppSettings.from_dict(settings.to_dict())
     assert restored.auto_mode_api_budget == "max_coverage"
+    assert restored.parallel_fetch_timeout == 10.0
 
     restored = AppSettings.from_dict({})
     assert restored.auto_mode_api_budget == "max_coverage"
+    assert restored.parallel_fetch_timeout == 10.0
 
     restored.auto_mode_api_budget = "nope"
     assert restored.validate_on_access("auto_mode_api_budget") is True
@@ -129,6 +132,13 @@ def test_auto_mode_api_budget_defaults_and_round_trips() -> None:
 
     restored = AppSettings.from_dict({"auto_mode_api_budget": "nope"})
     assert restored.auto_mode_api_budget == "max_coverage"
+
+    restored = AppSettings.from_dict({"parallel_fetch_timeout": "12.5"})
+    assert restored.parallel_fetch_timeout == 12.5
+    assert restored.to_dict()["parallel_fetch_timeout"] == 12.5
+
+    restored = AppSettings.from_dict({"parallel_fetch_timeout": 0})
+    assert restored.parallel_fetch_timeout == 10.0
 
 
 def test_data_sources_tab_budget_load_save_round_trip() -> None:
@@ -224,6 +234,32 @@ async def test_default_auto_mode_max_coverage_fetches_all_enabled_sources(
 
 
 @pytest.mark.asyncio
+async def test_auto_mode_uses_configured_parallel_fetch_timeout(
+    us_location: Location,
+) -> None:
+    settings = AppSettings(
+        parallel_fetch_timeout=12.5,
+        auto_sources_us=["nws"],
+    )
+    client = WeatherClient(data_source="auto", settings=settings)
+    _stub_enrichments(client)
+    client._fetch_nws_data = AsyncMock(
+        return_value=(_current(), _forecast("NWS"), None, None, WeatherAlerts(alerts=[]), _hourly())
+    )
+
+    timeouts: list[float] = []
+
+    async def _recording_fetch_all(self, location, **kwargs):
+        timeouts.append(self.timeout)
+        return await _execute_fetch_all(self, location, **kwargs)
+
+    with patch.object(ParallelFetchCoordinator, "fetch_all", new=_recording_fetch_all):
+        await client._fetch_smart_auto_source(us_location)
+
+    assert timeouts == [12.5]
+
+
+@pytest.mark.asyncio
 async def test_economy_us_fetches_nws_then_openmeteo_for_extended_forecast(
     us_location: Location,
 ) -> None:
@@ -254,6 +290,69 @@ async def test_economy_us_fetches_nws_then_openmeteo_for_extended_forecast(
     assert result.source_attribution is not None
     assert "nws" in result.source_attribution.contributing_sources
     assert "openmeteo" in result.source_attribution.contributing_sources
+
+
+@pytest.mark.asyncio
+async def test_economy_us_extended_forecast_prefers_openmeteo_over_ordered_pirateweather(
+    us_location: Location,
+) -> None:
+    settings = AppSettings(
+        auto_mode_api_budget="economy",
+        auto_sources_us=["nws", "pirateweather", "openmeteo"],
+        forecast_duration_days=10,
+    )
+    client = WeatherClient(data_source="auto", settings=settings, pirate_weather_api_key="test-key")
+    _stub_enrichments(client)
+    client._fetch_nws_data = AsyncMock(
+        return_value=(_current(), _forecast("NWS"), None, None, WeatherAlerts(alerts=[]), _hourly())
+    )
+    client._fetch_openmeteo_data = AsyncMock(return_value=(_current(), _forecast("OM"), _hourly()))
+
+    pw_client = MagicMock()
+    pw_client.get_current_conditions = AsyncMock(return_value=_current())
+    pw_client.get_forecast = AsyncMock(return_value=_forecast("PW"))
+    pw_client.get_hourly_forecast = AsyncMock(return_value=_hourly())
+    pw_client.get_alerts = AsyncMock(return_value=WeatherAlerts(alerts=[]))
+    client._pirate_weather_client_for_location = MagicMock(return_value=pw_client)
+
+    calls: list[list[str]] = []
+
+    async def _recording_fetch_all(self, location, **kwargs):
+        calls.append(
+            [name.removeprefix("fetch_") for name, coro in kwargs.items() if coro is not None]
+        )
+        return await _execute_fetch_all(self, location, **kwargs)
+
+    with patch.object(ParallelFetchCoordinator, "fetch_all", new=_recording_fetch_all):
+        await client._fetch_smart_auto_source(us_location)
+
+    assert calls == [["nws"], ["openmeteo"]]
+    client._fetch_openmeteo_data.assert_awaited_once()
+    pw_client.get_current_conditions.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_auto_mode_uses_nws_discussion_from_primary_fetch(us_location: Location) -> None:
+    issuance = datetime(2026, 5, 11, 12, 30, tzinfo=UTC)
+    client = WeatherClient(data_source="auto", settings=AppSettings(auto_mode_api_budget="economy"))
+    _stub_enrichments(client)
+    client._fetch_nws_data = AsyncMock(
+        return_value=(
+            _current(),
+            _forecast("NWS"),
+            "AFD text from primary fetch",
+            issuance,
+            WeatherAlerts(alerts=[]),
+            _hourly(),
+        )
+    )
+    client._fetch_openmeteo_data = AsyncMock()
+
+    with patch.object(ParallelFetchCoordinator, "fetch_all", new=_execute_fetch_all):
+        result = await client._fetch_smart_auto_source(us_location)
+
+    assert result.discussion == "AFD text from primary fetch"
+    assert result.discussion_issuance_time == issuance
 
 
 @pytest.mark.asyncio

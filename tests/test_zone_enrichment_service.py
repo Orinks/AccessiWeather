@@ -113,6 +113,10 @@ class TestIsUsLocation:
         loc = Location(name="London", latitude=51.5, longitude=-0.12)
         assert _is_us_location(loc) is False
 
+    def test_western_canada_without_country_code_is_not_us(self):
+        loc = Location(name="Victoria", latitude=48.4284, longitude=-123.3656)
+        assert _is_us_location(loc) is False
+
 
 # ---------------------------------------------------------------------------
 # ZoneEnrichmentService scenarios (plan A-R1 / A-R2 / A-R3)

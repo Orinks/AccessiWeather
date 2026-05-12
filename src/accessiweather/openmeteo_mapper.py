@@ -20,6 +20,22 @@ from .utils import TemperatureUnit, calculate_dewpoint
 logger = logging.getLogger(__name__)
 
 
+def _pressure_to_pascals(value: float | int | None, unit: str | None) -> float | None:
+    """Normalize Open-Meteo pressure values to the NWS-compatible Pascal unit."""
+    if value is None:
+        return None
+
+    numeric = float(value)
+    unit_text = (unit or "").strip().lower()
+    if "hpa" in unit_text or "mb" in unit_text:
+        return numeric * 100
+    if "pa" in unit_text:
+        return numeric
+    if "inch" in unit_text or unit_text in {"in", "inhg"}:
+        return numeric * 3386.39
+    return numeric * 100
+
+
 def _parse_openmeteo_datetime(
     datetime_str: str | None, utc_offset_seconds: int | None
 ) -> str | None:
@@ -150,10 +166,9 @@ class OpenMeteoMapper:
                         "qualityControl": "qc:V",
                     },
                     "barometricPressure": {
-                        "value": (
-                            current.get("pressure_msl") * 100
-                            if current.get("pressure_msl") is not None
-                            else None
+                        "value": _pressure_to_pascals(
+                            current.get("pressure_msl"),
+                            current_units.get("pressure_msl", "hPa"),
                         ),
                         "unitCode": "wmoUnit:Pa",
                         "qualityControl": "qc:V",

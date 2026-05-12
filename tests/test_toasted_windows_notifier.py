@@ -7,6 +7,7 @@ import time
 from unittest.mock import MagicMock, patch
 
 from accessiweather.notifications import toast_notifier
+from accessiweather.sound_events import DEFAULT_MUTED_SOUND_EVENTS
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -141,7 +142,11 @@ class TestToastedWindowsNotifierSend:
         ):
             notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=True)
             notifier.send_notification("Title", "Body", play_sound=True)
-            mock_sound.assert_called_once_with("alert", "default", muted_events=[])
+            mock_sound.assert_called_once_with(
+                "alert",
+                "default",
+                muted_events=list(DEFAULT_MUTED_SOUND_EVENTS),
+            )
 
     def test_send_skips_sound_when_play_sound_false(self):
         """When play_sound=False, no sound is played."""
@@ -165,7 +170,7 @@ class TestToastedWindowsNotifierSend:
                 ["alert", "notify"],
                 "default",
                 logical_event="alert",
-                muted_events=[],
+                muted_events=list(DEFAULT_MUTED_SOUND_EVENTS),
             )
 
     def test_send_catches_exceptions(self):

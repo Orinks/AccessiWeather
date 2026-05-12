@@ -13,6 +13,7 @@ same executable and arguments as `_get_launch_command()` returns now.
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -109,4 +110,20 @@ def test_disabled_when_shortcut_target_unreadable(manager, monkeypatch):
     monkeypatch.setattr(manager, "_read_windows_shortcut", lambda _path: None)
     _shortcut_path(manager).touch()
 
+    assert manager._is_windows_startup_enabled() is False
+
+
+def test_disabled_when_shortcut_read_times_out(manager, monkeypatch):
+    """A stalled PowerShell shortcut read must not hang settings dialog startup."""
+    monkeypatch.setattr(
+        manager, "_get_launch_command", lambda: (Path("C:/app/AccessiWeather.exe"), [])
+    )
+    _shortcut_path(manager).touch()
+
+    def timeout_run(*args, **kwargs):
+        raise subprocess.TimeoutExpired(cmd=args[0], timeout=kwargs.get("timeout"))
+
+    monkeypatch.setattr(subprocess, "run", timeout_run)
+
+    assert manager._read_windows_shortcut(_shortcut_path(manager)) is None
     assert manager._is_windows_startup_enabled() is False

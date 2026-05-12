@@ -15,6 +15,22 @@ from accessiweather.api.openmeteo_wrapper import OpenMeteoApiWrapper
 logger = logging.getLogger(__name__)
 
 
+def _is_nws_supported_coordinate(lat: float, lon: float) -> bool:
+    """Return whether a coordinate is inside the approximate NWS coverage area."""
+    bounds = [
+        (24.0, 50.0, -125.0, -66.0),  # Continental US
+        (51.0, 72.0, -180.0, -130.0),  # Alaska
+        (51.0, 55.0, 172.0, 180.0),  # Aleutians crossing the dateline
+        (18.0, 23.0, -161.0, -154.0),  # Hawaii
+        (17.0, 19.0, -68.0, -64.0),  # Puerto Rico / US Virgin Islands
+        (13.0, 14.0, 144.0, 146.0),  # Guam
+    ]
+    return any(
+        min_lat <= lat <= max_lat and min_lon <= lon <= max_lon
+        for min_lat, max_lat, min_lon, max_lon in bounds
+    )
+
+
 class NoaaApiWrapper:
     """
     Provider coordinator for weather API operations.
@@ -96,9 +112,8 @@ class NoaaApiWrapper:
             return "openmeteo"
         if self.preferred_provider == "auto":
             # Auto-selection logic: Use NWS for US locations, Open-Meteo for international
-            # US boundaries (approximate): lat 24-49, lon -125 to -66
-            if 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0:
-                logger.debug(f"Auto-selected NWS for US location: ({lat}, {lon})")
+            if _is_nws_supported_coordinate(lat, lon):
+                logger.debug(f"Auto-selected NWS for NWS-supported location: ({lat}, {lon})")
                 return "nws"
             logger.debug(f"Auto-selected Open-Meteo for international location: ({lat}, {lon})")
             return "openmeteo"

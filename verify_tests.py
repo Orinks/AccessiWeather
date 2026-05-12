@@ -11,9 +11,10 @@ from __future__ import annotations
 import ast
 import sys
 from pathlib import Path
+from typing import Any
 
 
-def analyze_test_file(test_file: Path) -> dict[str, any]:
+def analyze_test_file(test_file: Path) -> dict[str, Any]:
     """Analyze a test file for completeness and correctness."""
     try:
         with open(test_file) as f:
@@ -67,22 +68,6 @@ def main():
     print(f"✅ Found {unit_results['total_tests']} test functions")
     print()
 
-    # Check integration tests
-    integration_test_file = Path("tests/test_config_properties.py")
-    if not integration_test_file.exists():
-        print(f"❌ ERROR: {integration_test_file} not found!")
-        return 1
-
-    print(f"📁 Analyzing {integration_test_file}...")
-    integration_results = analyze_test_file(integration_test_file)
-
-    if not integration_results["valid"]:
-        print(f"❌ ERROR: {integration_results['error']}")
-        return 1
-
-    print(f"✅ Valid Python syntax")
-    print()
-
     # Check source module
     source_file = Path("src/accessiweather/config/file_permissions.py")
     if not source_file.exists():
@@ -108,13 +93,10 @@ def main():
     print("1. Unit Tests (cross-platform):")
     print("   pytest tests/test_file_permissions.py -v")
     print()
-    print("2. Integration Tests (cross-platform):")
-    print("   pytest tests/test_config_properties.py::TestConfigFilePermissionsIntegration -v")
+    print("2. All file permission checks with parallel execution disabled:")
+    print("   pytest tests/test_file_permissions.py -n 0 -v")
     print()
-    print("3. All Tests with Parallel Execution:")
-    print("   pytest tests/test_file_permissions.py tests/test_config_properties.py -n auto -v")
-    print()
-    print("4. Platform-Specific Verification:")
+    print("3. Platform-Specific Verification:")
     print()
     print("   On Windows:")
     print("   - Verify USERNAME environment variable is set")
@@ -137,13 +119,6 @@ def main():
     print("  ✅ File validation and path conversion")
     print("  ✅ Subprocess timeout and error handling")
     print("  ✅ Integration tests on real files")
-    print()
-    print("Integration Tests (test_config_properties.py):")
-    print("  ✅ POSIX permissions after config save")
-    print("  ✅ Windows permissions after config save")
-    print("  ✅ Fail-safe behavior (permission failures don't prevent saves)")
-    print("  ✅ Multiple saves maintain permissions")
-    print("  ✅ New config file creation with correct permissions")
     print()
     print("=" * 70)
     print("✅ ALL STATIC CHECKS PASSED")

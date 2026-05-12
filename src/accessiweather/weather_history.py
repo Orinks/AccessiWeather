@@ -19,6 +19,15 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _daily_value(daily: dict, field_name: str, target_date: date) -> float | int | str | None:
+    """Return the first daily archive value, rejecting absent or empty fields."""
+    values = daily.get(field_name)
+    if not isinstance(values, list) or not values:
+        logger.warning("Archive response for %s did not include %s", target_date, field_name)
+        return None
+    return values[0]
+
+
 @dataclass
 class HistoricalWeatherData:
     """Historical weather data for a specific date."""
@@ -197,19 +206,39 @@ class WeatherHistoryService:
             if not daily.get("time") or len(daily["time"]) == 0:
                 return None
 
-            # Get weather description from code
-            weather_code = daily.get("weather_code", [0])[0]
+            weather_code = _daily_value(daily, "weather_code", target_date)
             condition = self.openmeteo_client.get_weather_description(weather_code)
+            temperature_max = _daily_value(daily, "temperature_2m_max", target_date)
+            temperature_min = _daily_value(daily, "temperature_2m_min", target_date)
+            temperature_mean = _daily_value(daily, "temperature_2m_mean", target_date)
+            wind_speed = _daily_value(daily, "wind_speed_10m_max", target_date)
+            wind_direction = _daily_value(daily, "wind_direction_10m_dominant", target_date)
+
+            required_values = {
+                "weather_code": weather_code,
+                "temperature_2m_max": temperature_max,
+                "temperature_2m_min": temperature_min,
+                "temperature_2m_mean": temperature_mean,
+                "wind_speed_10m_max": wind_speed,
+            }
+            missing = [field for field, value in required_values.items() if value is None]
+            if missing:
+                logger.warning(
+                    "Archive response for %s is missing required daily values: %s",
+                    target_date,
+                    ", ".join(missing),
+                )
+                return None
 
             return HistoricalWeatherData(
                 date=target_date,
-                temperature_max=daily.get("temperature_2m_max", [0])[0],
-                temperature_min=daily.get("temperature_2m_min", [0])[0],
-                temperature_mean=daily.get("temperature_2m_mean", [0])[0],
+                temperature_max=float(temperature_max),
+                temperature_min=float(temperature_min),
+                temperature_mean=float(temperature_mean),
                 condition=condition,
                 humidity=None,  # Not available in archive endpoint
-                wind_speed=daily.get("wind_speed_10m_max", [0])[0],
-                wind_direction=daily.get("wind_direction_10m_dominant", [None])[0],
+                wind_speed=float(wind_speed),
+                wind_direction=int(wind_direction) if wind_direction is not None else None,
                 pressure=None,  # Not available in archive endpoint
             )
 

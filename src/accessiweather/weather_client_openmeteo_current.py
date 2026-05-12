@@ -8,6 +8,10 @@ from typing import Any
 
 from .models import CurrentConditions
 from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
+from .weather_client_openmeteo_units import (
+    normalize_snow_depth_to_inches_and_cm,
+    normalize_visibility_to_miles_and_km,
+)
 from .weather_client_parsers import (
     convert_f_to_c,
     convert_wind_speed_to_mph_and_kph,
@@ -22,7 +26,6 @@ SNOW_WEATHER_CODES = {71, 73, 75, 77, 85, 86}
 RAIN_WEATHER_CODES = {51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82}
 ACTIVE_PRECIP_EPSILON_IN = 0.001
 NEAR_ZERO_SNOW_EPSILON_IN = 0.0005
-VISIBILITY_CAP_M = 16093.4
 
 
 def pick_precipitation_type(rain_in: float, snow_in: float) -> list[str] | None:
@@ -120,19 +123,6 @@ def _parse_uv_index(current: dict[str, Any], daily: dict[str, Any]) -> float | N
     return None
 
 
-def _normalize_snow_depth(
-    value: float | None,
-    unit: str,
-) -> tuple[float | None, float | None]:
-    if value is None:
-        return None, None
-    if "ft" in unit or "feet" in unit:
-        return value * 12, value * 30.48
-    if "m" in unit and "mm" not in unit:
-        return value * 39.3701, value * 100
-    return value * 39.3701, value * 100
-
-
 def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
     """Parse Open-Meteo current condition payload into a CurrentConditions model."""
     current = data.get("current", {})
@@ -183,16 +173,15 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
     snow_rate_in = float(snowfall_rate or 0.0)
     precipitation_type = pick_precipitation_type(rain_rate_in, snow_rate_in)
 
-    snow_depth_in, snow_depth_cm = _normalize_snow_depth(
+    snow_depth_in, snow_depth_cm = normalize_snow_depth_to_inches_and_cm(
         current.get("snow_depth"),
-        units.get("snow_depth", "").lower(),
+        units.get("snow_depth"),
     )
 
-    visibility_m = current.get("visibility")
-    if visibility_m is not None:
-        visibility_m = min(visibility_m, VISIBILITY_CAP_M)
-    visibility_miles = visibility_m / 1609.344 if visibility_m is not None else None
-    visibility_km = visibility_m / 1000 if visibility_m is not None else None
+    visibility_miles, visibility_km = normalize_visibility_to_miles_and_km(
+        current.get("visibility"),
+        units.get("visibility"),
+    )
 
     wind_chill_f = None
     wind_chill_c = None

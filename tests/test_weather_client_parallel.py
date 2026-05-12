@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -68,6 +69,21 @@ class TestParallelFetchCoordinator:
         assert results[0].hourly_forecast is mock_hourly
         assert results[0].alerts is None
         assert results[0].error is None
+
+    @pytest.mark.asyncio
+    async def test_fetch_all_preserves_nws_discussion(
+        self, coordinator, location, mock_current, mock_forecast, mock_hourly
+    ):
+        """NWS source metadata survives the shared parallel fetch wrapper."""
+        issuance = datetime(2026, 5, 11, 12, 30, tzinfo=UTC)
+
+        async def fake_nws():
+            return (mock_current, mock_forecast, mock_hourly, None, "AFD text", issuance)
+
+        results = await coordinator.fetch_all(location, fetch_nws=fake_nws())
+
+        assert results[0].discussion == "AFD text"
+        assert results[0].discussion_issuance_time == issuance
 
     @pytest.mark.asyncio
     async def test_fetch_all_multiple_sources(

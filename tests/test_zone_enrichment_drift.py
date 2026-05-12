@@ -423,3 +423,48 @@ class TestPointsFetchErrorSkipsDrift:
         finally:
             weather_client_nws.set_zone_drift_sink(None)
         assert manager.save_calls == 0
+
+    async def test_get_nws_all_data_parallel_passes_alert_radius_type(self):
+        """The parallel helper should pass the selected alert area to alert fetching."""
+        from accessiweather import weather_client_nws
+        from accessiweather.models import WeatherAlerts
+
+        stored = _us_location()
+        mock_client = MagicMock(spec=httpx.AsyncClient)
+        point_response = MagicMock()
+        point_response.raise_for_status = MagicMock()
+        point_response.json.return_value = {"properties": {}}
+        mock_client.get = AsyncMock(return_value=point_response)
+
+        with (
+            patch.object(
+                weather_client_nws, "get_nws_current_conditions", new_callable=AsyncMock
+            ) as mock_current,
+            patch.object(
+                weather_client_nws,
+                "get_nws_forecast_and_discussion",
+                new_callable=AsyncMock,
+            ) as mock_forecast,
+            patch.object(
+                weather_client_nws, "get_nws_alerts", new_callable=AsyncMock
+            ) as mock_alerts,
+            patch.object(
+                weather_client_nws, "get_nws_hourly_forecast", new_callable=AsyncMock
+            ) as mock_hourly,
+        ):
+            mock_current.return_value = None
+            mock_forecast.return_value = (None, None, None)
+            mock_alerts.return_value = WeatherAlerts(alerts=[])
+            mock_hourly.return_value = None
+
+            await weather_client_nws.get_nws_all_data_parallel.__wrapped__(
+                stored,
+                "https://api.weather.gov",
+                "UA",
+                5.0,
+                mock_client,
+                alert_radius_type="state",
+            )
+
+            mock_alerts.assert_awaited_once()
+            assert mock_alerts.await_args.kwargs.get("alert_radius_type") == "state"

@@ -23,6 +23,7 @@ class StartupManager:
 
     _MACOS_PLIST_LABEL = "net.orinks.accessiweather.startup"
     _LINUX_DESKTOP_FILENAME = "accessiweather.desktop"
+    _WINDOWS_SHORTCUT_COMMAND_TIMEOUT_SECONDS = 5
 
     def __init__(self, platform_detector: PlatformDetector | None = None) -> None:
         """Create a manager using an optional platform detector override."""
@@ -209,9 +210,17 @@ class StartupManager:
         ]
         for command in commands:
             try:
-                result = subprocess.run(command, check=True, capture_output=True)
+                result = subprocess.run(
+                    command,
+                    check=True,
+                    capture_output=True,
+                    timeout=self._WINDOWS_SHORTCUT_COMMAND_TIMEOUT_SECONDS,
+                )
             except FileNotFoundError:
                 continue
+            except subprocess.TimeoutExpired as exc:
+                logger.warning("Timed out reading shortcut via PowerShell: %s", exc)
+                return None
             except subprocess.CalledProcessError as exc:
                 stderr = exc.stderr.decode("utf-8", errors="ignore") if exc.stderr else ""
                 logger.warning("Failed reading shortcut via PowerShell: %s", stderr)
@@ -259,11 +268,18 @@ class StartupManager:
         missing_errors: list[FileNotFoundError] = []
         for command in commands:
             try:
-                subprocess.run(command, check=True, capture_output=True)
+                subprocess.run(
+                    command,
+                    check=True,
+                    capture_output=True,
+                    timeout=self._WINDOWS_SHORTCUT_COMMAND_TIMEOUT_SECONDS,
+                )
                 return
             except FileNotFoundError as exc:
                 missing_errors.append(exc)
                 continue
+            except subprocess.TimeoutExpired as exc:
+                raise RuntimeError("Timed out creating shortcut via PowerShell") from exc
             except subprocess.CalledProcessError as exc:
                 stderr = exc.stderr.decode("utf-8", errors="ignore") if exc.stderr else ""
                 raise RuntimeError(f"Failed to create shortcut via PowerShell: {stderr}") from exc

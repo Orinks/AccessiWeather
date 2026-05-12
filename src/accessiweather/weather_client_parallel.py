@@ -46,17 +46,7 @@ class ParallelFetchCoordinator:
     async def fetch_all(
         self,
         location: Location,
-        fetch_nws: Coroutine[
-            Any,
-            Any,
-            tuple[
-                CurrentConditions | None,
-                Forecast | None,
-                HourlyForecast | None,
-                WeatherAlerts | None,
-            ],
-        ]
-        | None = None,
+        fetch_nws: Coroutine[Any, Any, tuple[Any, ...]] | None = None,
         fetch_openmeteo: Coroutine[
             Any, Any, tuple[CurrentConditions | None, Forecast | None, HourlyForecast | None]
         ]
@@ -199,7 +189,8 @@ class ParallelFetchCoordinator:
 
         Args:
             source_name: Name of the source
-            result: Tuple of (current, forecast, hourly_forecast, [alerts])
+            result: Tuple of (current, forecast, hourly_forecast, [alerts], [discussion],
+                [discussion_issuance_time])
 
         Returns:
             SourceData with the fetched data
@@ -210,6 +201,8 @@ class ParallelFetchCoordinator:
         forecast = result[1] if len(result) > 1 else None
         hourly_forecast = result[2] if len(result) > 2 else None
         alerts = result[3] if len(result) > 3 else None
+        discussion = result[4] if len(result) > 4 else None
+        discussion_issuance_time = result[5] if len(result) > 5 else None
 
         return SourceData(
             source=source_name,
@@ -217,6 +210,8 @@ class ParallelFetchCoordinator:
             forecast=forecast,
             hourly_forecast=hourly_forecast,
             alerts=alerts,
+            discussion=discussion,
+            discussion_issuance_time=discussion_issuance_time,
             fetch_time=datetime.now(UTC),
             success=True,
             error=None,

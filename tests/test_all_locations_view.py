@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 # ---------------------------------------------------------------------------
@@ -451,6 +452,34 @@ class TestEditLocation:
         win.app.config_manager.update_location_marine_mode.assert_called_once_with(
             "Annapolis", True
         )
+
+    def test_edit_location_applies_coordinate_result_from_dialog(self):
+        import accessiweather.ui.main_window as mw_module
+        from accessiweather.ui.main_window import MainWindow
+
+        win = _make_window()
+        win.location_dropdown.GetStringSelection.return_value = "Annapolis"
+        annapolis = _make_location("Annapolis")
+        annapolis.marine_mode = False
+        win.app.config_manager.get_all_locations.return_value = [annapolis]
+        edit_result = SimpleNamespace(
+            latitude=38.9784,
+            longitude=-76.4922,
+            country_code="US",
+            marine_mode=True,
+        )
+
+        with patch.object(mw_module, "show_edit_location_dialog", return_value=edit_result):
+            MainWindow.on_edit_location(win)
+
+        win.app.config_manager.update_location_details.assert_called_once_with(
+            "Annapolis",
+            latitude=38.9784,
+            longitude=-76.4922,
+            country_code="US",
+            marine_mode=True,
+        )
+        win.app.config_manager.update_location_marine_mode.assert_not_called()
 
     def test_edit_location_does_nothing_on_cancel(self):
         import accessiweather.ui.main_window as mw_module

@@ -133,6 +133,7 @@ class WeatherPresenter:
             current=weather_data.current,
             hourly_forecast=weather_data.hourly_forecast,
             include_pressure=getattr(self.settings, "show_pressure_trend", True),
+            unit_pref=unit_pref,
         )
         status_messages = self._build_status_messages(weather_data)
         source_attribution = self._build_source_attribution(weather_data)
@@ -312,6 +313,7 @@ class WeatherPresenter:
             weather_data.trend_insights,
             current=weather_data.current,
             hourly_forecast=weather_data.hourly_forecast,
+            unit_pref=unit_pref,
         )
         if trend_lines:
             parts.append(trend_lines[0])

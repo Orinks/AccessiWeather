@@ -162,6 +162,41 @@ def _normalize_daily_start_time(
     return local_date, normalized
 
 
+def _epoch_to_datetime(value: object, response_tz: timezone | ZoneInfo) -> datetime | None:
+    """Parse a Pirate Weather epoch timestamp, treating sentinel values as missing."""
+    if value in (None, "", -999):
+        return None
+    try:
+        timestamp = float(value)
+    except (TypeError, ValueError):
+        return None
+    if timestamp == -999:
+        return None
+    return datetime.fromtimestamp(timestamp, tz=response_tz)
+
+
+def _accumulation_inches(client: Any, value: object) -> float | None:
+    """Normalize Pirate Weather accumulation depth to inches."""
+    if value is None:
+        return None
+    try:
+        amount = float(value)
+    except (TypeError, ValueError):
+        return None
+    if client.units == "us":
+        return amount
+    return amount / 2.54
+
+
+def _precipitation_amount_inches(client: Any, data_point: dict[str, object]) -> float | None:
+    """Return accumulated precipitation amount, not precipitation rate."""
+    for key in ("liquidAccumulation", "precipAccumulation"):
+        amount = _accumulation_inches(client, data_point.get(key))
+        if amount is not None:
+            return amount
+    return None
+
+
 def parse_forecast(client: Any, data: dict, days: int | None = None) -> Forecast | None:
     """
     Parse Pirate Weather ``daily`` block into a Forecast.
@@ -193,8 +228,12 @@ def parse_forecast(client: Any, data: dict, days: int | None = None) -> Forecast
             name = f"Day {i + 1}"
             start_time = None
 
-        temp_high = day.get("temperatureHigh") if using_us else day.get("temperatureMax")
-        temp_low = day.get("temperatureLow") if using_us else day.get("temperatureMin")
+        temp_high = day.get("temperatureHigh")
+        if temp_high is None:
+            temp_high = day.get("temperatureMax")
+        temp_low = day.get("temperatureLow")
+        if temp_low is None:
+            temp_low = day.get("temperatureMin")
 
         # Wind speed formatting
         wind_raw = day.get("windSpeed")
@@ -222,11 +261,8 @@ def parse_forecast(client: Any, data: dict, days: int | None = None) -> Forecast
         precip_prob_raw = day.get("precipProbability")
         precip_prob = round(precip_prob_raw * 100) if precip_prob_raw is not None else None
 
-        precip_intensity = day.get("precipIntensity")
-        if precip_intensity is not None:
-            precip_amount = precip_intensity if using_us else precip_intensity / 25.4
-        else:
-            precip_amount = None
+        precip_amount = _precipitation_amount_inches(client, day)
+        snowfall = _accumulation_inches(client, day.get("snowAccumulation"))
 
         cloud_cover_raw = day.get("cloudCover")
         cloud_cover = round(cloud_cover_raw * 100) if cloud_cover_raw is not None else None
@@ -246,6 +282,7 @@ def parse_forecast(client: Any, data: dict, days: int | None = None) -> Forecast
             wind_speed=wind_str,
             wind_direction=degrees_to_cardinal(day.get("windBearing")),
             precipitation_probability=precip_prob,
+            snowfall=snowfall,
             uv_index=uv_index,
             cloud_cover=cloud_cover,
             wind_gust=wind_gust_str,
@@ -339,11 +376,8 @@ def parse_hourly_forecast(client: Any, data: dict) -> HourlyForecast:
         precip_prob_raw = hour.get("precipProbability")
         precip_prob = round(precip_prob_raw * 100) if precip_prob_raw is not None else None
 
-        precip_intensity = hour.get("precipIntensity")
-        if precip_intensity is not None:
-            precip_amount = precip_intensity if using_us else precip_intensity / 25.4
-        else:
-            precip_amount = None
+        precip_amount = _precipitation_amount_inches(client, hour)
+        snowfall = _accumulation_inches(client, hour.get("snowAccumulation"))
 
         cloud_cover_raw = hour.get("cloudCover")
         cloud_cover = round(cloud_cover_raw * 100) if cloud_cover_raw is not None else None
@@ -386,6 +420,7 @@ def parse_hourly_forecast(client: Any, data: dict) -> HourlyForecast:
             pressure_mb=pressure_mb,
             pressure_in=pressure_in,
             precipitation_probability=precip_prob,
+            snowfall=snowfall,
             uv_index=uv_index,
             cloud_cover=cloud_cover,
             wind_gust_mph=wind_gust_mph,
@@ -425,13 +460,8 @@ def parse_alerts(client: Any, data: dict) -> WeatherAlerts:
             continue
         alert_id = _build_alert_id(alert_data)
 
-        onset_raw = alert_data.get("time")
-        expires_raw_val = alert_data.get("expires")
-
-        onset = datetime.fromtimestamp(onset_raw, tz=location_tz) if onset_raw else None
-        expires = (
-            datetime.fromtimestamp(expires_raw_val, tz=location_tz) if expires_raw_val else None
-        )
+        onset = _epoch_to_datetime(alert_data.get("time"), location_tz)
+        expires = _epoch_to_datetime(alert_data.get("expires"), location_tz)
 
         areas = _normalize_regions(alert_data.get("regions"))
 

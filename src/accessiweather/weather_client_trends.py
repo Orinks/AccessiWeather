@@ -10,6 +10,14 @@ from .models import HourlyForecastPeriod, TrendInsight, WeatherData
 
 logger = logging.getLogger(__name__)
 
+MAX_PRESSURE_TREND_MB = 24.0
+MAX_PRESSURE_TREND_IN = MAX_PRESSURE_TREND_MB / 33.8639
+MIN_PRESSURE_TREND_MB = 10.0
+MIN_PRESSURE_TREND_IN = 0.30
+MIXED_PRESSURE_REFERENCE_SUMMARY = (
+    "Pressure outlook unavailable: pressure data uses mixed reference levels."
+)
+
 
 def apply_trend_insights(
     weather_data: WeatherData,
@@ -125,6 +133,14 @@ def compute_pressure_trend(
 
     base, future, unit = value_pairs[0]
     change = future - base
+    if pressure_change_is_implausible(change, unit, trend_hours):
+        logger.debug(
+            "Suppressing implausible pressure trend: change=%s %s over %sh",
+            change,
+            unit,
+            trend_hours,
+        )
+        return _pressure_unavailable_insight(MIXED_PRESSURE_REFERENCE_SUMMARY, trend_hours)
     direction, sparkline = trend_descriptor(
         change,
         minor=0.5 if unit == "mb" else 0.02,
@@ -140,6 +156,15 @@ def compute_pressure_trend(
         summary=summary,
         sparkline=sparkline,
     )
+
+
+def pressure_change_is_implausible(change: float, unit: str, trend_hours: int) -> bool:
+    """Return True when pressure change is too large to present as a reliable trend."""
+    if unit == "mb":
+        max_change = max(MIN_PRESSURE_TREND_MB, min(MAX_PRESSURE_TREND_MB, trend_hours * 1.0))
+    else:
+        max_change = max(MIN_PRESSURE_TREND_IN, min(MAX_PRESSURE_TREND_IN, trend_hours / 33.8639))
+    return abs(change) > max_change
 
 
 def compute_pressure_outlook_unavailable(
@@ -218,7 +243,7 @@ def pressure_trend_summary(direction: str, change: float, unit: str, trend_hours
     elif direction == "rising":
         action = "rise predicted"
     else:
-        action = "steady"
+        return f"Pressure steady over next {trend_hours}h"
     return f"Pressure {action}: {change:+.2f} {unit} over next {trend_hours}h"
 
 

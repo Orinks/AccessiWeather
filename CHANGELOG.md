@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- You can now search for a US street address when adding or editing a location, so AccessiWeather can save coordinates for that specific address instead of the nearest city or ZIP result.
 - **National Products in Forecaster Notes** — Forecaster Notes now opens a dedicated National Products dialog for SPC, WPC, NHC, CPC, and other national NWS text products. The new view replaces the old Nationwide Discussions scraper with IEM AFOS plain-text products while keeping the existing Advanced Lookup path available for direct product searches (#641).
 - **Guided Advanced Lookup in Forecaster Notes** — Advanced Lookup now organizes NWS and IEM text products into product groups with clearer product choices, office selection, date presets, result limits, sort order, source selection, aviation AFD, center, WMO, and text-match filters.
 
@@ -12,6 +13,21 @@ All notable changes to this project will be documented in this file.
 - Linux nightly and release downloads now ship as `.tar.gz` tarballs instead of ZIP files.
 
 ### Fixed
+- The weather-refresh completion sound is now off by default, and switching to a cached location no longer plays it before the real refresh finishes.
+- Open-Meteo forecasts now keep unit-aware wind, visibility, snow depth, pressure, and freezing-level details instead of misreading feet, meters, or kilometers in some payloads.
+- Open-Meteo daily forecasts now include low temperatures and wind details when the API provides them.
+- Weather history comparisons now skip incomplete Open-Meteo archive responses instead of comparing against placeholder zero values.
+- Pressure outlooks no longer show unrealistic swings when current conditions and hourly forecasts use mixed pressure reference levels.
+- NWS and Pirate Weather data handling is more accurate: NWS alert lookups now avoid rejected radius parameters and stale cross-location alert caches, while Pirate Weather no longer treats precipitation rate as accumulated amount or reuses US units for international minutely precipitation checks.
+- NWS forecasts now pair daytime highs with following nighttime lows when NWS provides day/night forecast periods.
+- Smart Auto mode now keeps the NWS forecaster discussion from its main NWS fetch, avoids a duplicate follow-up request when it already has that discussion, and chooses Open-Meteo for extended US forecasts even if Pirate Weather is listed first.
+- Smart Auto mode now fills in current condition text from Open-Meteo or Pirate Weather when NWS reports an empty or unknown condition.
+- Canadian locations near the border no longer try NWS in Automatic mode when an older/manual location is missing a saved country code.
+- IEM text-product lookup errors no longer appear as if they were valid forecaster text.
+- Alerts now honor your selected alert area during regular refreshes, including state and zone alert modes.
+- Zone alert mode now checks both county and forecast zones so county-based watches and warnings are less likely to be missed.
+- The "Launch automatically at startup" setting now updates the system startup entry instead of only saving the checkbox.
+- Repeated checks of unchanged alerts no longer use up notification rate-limit capacity before newer alerts are handled.
 - The update dialog now shows release notes as screen-reader-friendly plain text instead of raw Markdown.
 - Linux builds now stage `sound_lib`'s native audio libraries in the path expected by the packaged app.
 - Linux builds no longer bundle OpenSSL libraries that can conflict with the target system's `libcurl`.

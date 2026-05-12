@@ -618,6 +618,19 @@ class TestComputePressureTrend:
         result = compute_pressure_trend_from_hourly(current, hourly)
         assert result is None
 
+    def test_implausible_pressure_mismatch_is_suppressed(self):
+        """Do not announce huge trends caused by mixed pressure reference surfaces."""
+        current = CurrentConditions(pressure_in=30.0, pressure_mb=1015.9)
+        dt = datetime(2026, 2, 7, 12, 0, tzinfo=UTC)
+        periods = [
+            HourlyForecastPeriod(start_time=dt, pressure_in=29.03, pressure_mb=983.1),
+        ]
+        hourly = HourlyForecast(periods=periods)
+
+        result = compute_pressure_trend_from_hourly(current, hourly)
+
+        assert result is None
+
 
 # ── format_trend_lines ──
 
