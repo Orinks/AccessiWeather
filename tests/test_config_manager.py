@@ -6,6 +6,7 @@ Tests configuration loading, saving, and location management.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -148,6 +149,31 @@ class TestConfigManager:
         manager.add_location("Test", 40.0, -74.0)
         result = manager.add_location("Test", 40.0, -74.0)
         assert result is False
+
+    def test_locations_are_returned_alphabetically(self, manager):
+        """Saved locations are listed alphabetically regardless of add order."""
+        manager.add_location("zurich", 47.3769, 8.5417)
+        manager.add_location("Austin", 30.2672, -97.7431)
+        manager.add_location("boston", 42.3601, -71.0589)
+
+        assert [location.name for location in manager.get_all_locations()] == [
+            "Austin",
+            "boston",
+            "zurich",
+        ]
+        assert manager.get_location_names() == ["Austin", "boston", "zurich"]
+
+    def test_locations_are_saved_alphabetically(self, manager):
+        """Location order is persisted alphabetically for future app launches."""
+        manager.add_location("Zurich", 47.3769, 8.5417)
+        manager.add_location("Austin", 30.2672, -97.7431)
+
+        data = json.loads(manager.config_file.read_text(encoding="utf-8"))
+        assert [location["name"] for location in data["locations"]] == ["Austin", "Zurich"]
+
+        manager2 = ConfigManager(manager.app, config_dir=manager.config_dir)
+        manager2.load_config()
+        assert manager2.get_location_names() == ["Austin", "Zurich"]
 
     def test_remove_location(self, manager):
         """Test removing a location."""
