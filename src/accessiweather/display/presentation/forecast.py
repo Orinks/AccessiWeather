@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from ...forecast_confidence import ForecastConfidence
 from ...impact_summary import ImpactSummary, build_forecast_impact_summary
+from ...location_classification import is_us_location
 from ...models import (
     AppSettings,
     Forecast,
@@ -41,16 +42,7 @@ __all__ = [
 
 def _is_us_location(location: Location) -> bool:
     """Determine whether a location should use US/NWS forecast limits."""
-    country_code = getattr(location, "country_code", None)
-    if country_code:
-        return country_code.upper() == "US"
-
-    lat = location.latitude
-    lon = location.longitude
-    in_continental_bounds = 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0
-    in_alaska_bounds = 51.0 <= lat <= 71.5 and -172.0 <= lon <= -130.0
-    in_hawaii_bounds = 18.0 <= lat <= 23.0 and -161.0 <= lon <= -154.0
-    return in_continental_bounds or in_alaska_bounds or in_hawaii_bounds
+    return is_us_location(location)
 
 
 def _looks_like_half_day_periods(forecast: Forecast) -> bool:

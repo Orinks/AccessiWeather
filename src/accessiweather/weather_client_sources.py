@@ -12,6 +12,7 @@ from . import (
     weather_client_openmeteo as openmeteo_client,
     weather_client_parsers as parsers,
 )
+from .location_classification import is_us_location
 from .models import (
     AviationData,
     CurrentConditions,
@@ -101,50 +102,16 @@ class WeatherClientSourcesMixin:
         Uses country_code when available for accurate detection. Falls back to
         coordinate bounds only for clear-cut cases. For ambiguous regions (near US-Canada
         border), requires country_code to be set - otherwise returns False to avoid
-        misclassifying Canadian cities like Toronto, Montreal, Ottawa as US locations.
+        misclassifying Canadian cities as US locations.
         """
-        country_code = getattr(location, "country_code", None)
-        if country_code:
-            return country_code.upper() == "US"
-
-        lat = location.latitude
-        lon = location.longitude
-
-        # Continental US bounds (approximate)
-        in_continental_bounds = 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0
-
-        # Alaska bounds (51-71°N, 130-172°W)
-        in_alaska_bounds = 51.0 <= lat <= 71.5 and -172.0 <= lon <= -130.0
-
-        # Hawaii bounds (18-23°N, 154-161°W)
-        in_hawaii_bounds = 18.0 <= lat <= 23.0 and -161.0 <= lon <= -154.0
-
-        # For clear-cut cases (far from borders), coordinate bounds are reliable
-        # - Hawaii (obvious island)
-        # - Alaska (far northwest, separated from Canada)
-        # - Deep in continental US (away from Canadian/Mexican borders)
-        if in_hawaii_bounds or in_alaska_bounds:
-            return True
-
-        # For continental US, use both lat/lon to identify clearly US vs ambiguous zones
-        if in_continental_bounds:
-            # Canadian border cities (Toronto ~43°N/-79°, Montreal ~45.5°N/-73°, Ottawa ~45.4°N/-75°)
-            # are in the eastern half of the continent (east of ~-95° longitude)
-            # US Pacific Northwest (Seattle ~47.6°N/-122°, Portland ~45.5°N/-122°) is further west
-            # Use lon < -95 as a proxy for "eastern region where Canadian cities cluster"
-            if lat >= 43.0 and lon > -95.0 and lon < -70.0:
-                # Eastern region near Canadian border - require country_code for accurate detection
-                # This catches Canadian cities while allowing US Pacific Northwest
-                logger.debug(
-                    f"Location '{location.name}' ({lat:.2f}, {lon:.2f}) is in eastern "
-                    f"North America near Canadian border but has no country_code. "
-                    f"To ensure correct detection, re-add the location to set country_code via geocoding."
-                )
-                return False
-            return True
-
-        # Outside all US bounds - definitely not US
-        return False
+        result = is_us_location(location)
+        if not result and getattr(location, "country_code", None) is None:
+            logger.debug(
+                "Location '%s' lacks country_code and is not safely classifiable as US; "
+                "re-add it through geocoding to set country_code.",
+                location.name,
+            )
+        return result
 
     def _set_empty_weather_data(self, weather_data: WeatherData) -> None:
         """Set empty weather data when all APIs fail."""

@@ -79,6 +79,10 @@ class TestIsUsLocation:
     def test_outside_us_bounding_box(self, engine, intl_location_no_country):
         assert engine._is_us_location(intl_location_no_country) is False
 
+    def test_western_canada_without_country_code_is_not_us(self, engine):
+        loc = Location(name="Victoria", latitude=48.4284, longitude=-123.3656)
+        assert engine._is_us_location(loc) is False
+
 
 # --- merge_current_conditions ---
 

@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - NWS and Pirate Weather data handling is more accurate: NWS alert lookups now avoid rejected radius parameters and stale cross-location alert caches, while Pirate Weather no longer treats precipitation rate as accumulated amount or reuses US units for international minutely precipitation checks.
 - Smart Auto mode now keeps the NWS forecaster discussion from its main NWS fetch, avoids a duplicate follow-up request when it already has that discussion, and chooses Open-Meteo for extended US forecasts even if Pirate Weather is listed first.
 - Smart Auto mode now fills in current condition text from Open-Meteo or Pirate Weather when NWS reports an empty or unknown condition.
+- Canadian locations near the border no longer try NWS in Automatic mode when an older/manual location is missing a saved country code.
 - Alerts now honor your selected alert area during regular refreshes, including state and zone alert modes.
 - Zone alert mode now checks both county and forecast zones so county-based watches and warnings are less likely to be missed.
 - The "Launch automatically at startup" setting now updates the system startup entry instead of only saving the checkbox.

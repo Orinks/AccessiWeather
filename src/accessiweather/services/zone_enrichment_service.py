@@ -19,6 +19,8 @@ from typing import TYPE_CHECKING
 
 import httpx
 
+from ..location_classification import is_us_location
+
 if TYPE_CHECKING:
     from ..models import Location
 
@@ -33,19 +35,10 @@ def _is_us_location(location: Location) -> bool:
     """
     Return True when the location should use NWS (US) data sources.
 
-    Mirrors the heuristic in ``display/presentation/forecast.py`` so enrichment
-    and forecast-rendering agree on what counts as a US location.
+    Kept as a local wrapper for existing callers; the shared helper keeps
+    enrichment, fetching, fusion, and forecast rendering aligned.
     """
-    country_code = getattr(location, "country_code", None)
-    if country_code:
-        return country_code.upper() == "US"
-
-    lat = location.latitude
-    lon = location.longitude
-    in_continental_bounds = 24.0 <= lat <= 49.0 and -125.0 <= lon <= -66.0
-    in_alaska_bounds = 51.0 <= lat <= 71.5 and -172.0 <= lon <= -130.0
-    in_hawaii_bounds = 18.0 <= lat <= 23.0 and -161.0 <= lon <= -154.0
-    return in_continental_bounds or in_alaska_bounds or in_hawaii_bounds
+    return is_us_location(location)
 
 
 def _last_path_segment(url: str | None) -> str | None:

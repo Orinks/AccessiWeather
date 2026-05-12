@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Any
 
 from accessiweather.config.source_priority import SourcePriorityConfig
+from accessiweather.location_classification import is_us_location
 from accessiweather.models.weather import (
     CurrentConditions,
     Forecast,
@@ -75,11 +76,7 @@ class DataFusionEngine:
 
     def _is_us_location(self, location: Location) -> bool:
         """Check if location is in the US."""
-        if location.country_code:
-            return location.country_code.upper() == "US"
-        # Rough bounding box for continental US
-        lat, lon = location.latitude, location.longitude
-        return 24.0 <= lat <= 50.0 and -125.0 <= lon <= -66.0
+        return is_us_location(location)
 
     def _get_field_value(self, obj: Any, field_name: str) -> Any:
         """Get a field value from an object, returning None if not present."""
