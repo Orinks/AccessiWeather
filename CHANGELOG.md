@@ -14,7 +14,11 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Open-Meteo forecasts now keep unit-aware wind, visibility, snow depth, pressure, and freezing-level details instead of misreading feet, meters, or kilometers in some payloads.
+- Open-Meteo daily forecasts now include low temperatures and wind details when the API provides them.
+- Weather history comparisons now skip incomplete Open-Meteo archive responses instead of comparing against placeholder zero values.
+- Pressure outlooks no longer show unrealistic swings when current conditions and hourly forecasts use mixed pressure reference levels.
 - NWS and Pirate Weather data handling is more accurate: NWS alert lookups now avoid rejected radius parameters and stale cross-location alert caches, while Pirate Weather no longer treats precipitation rate as accumulated amount or reuses US units for international minutely precipitation checks.
+- NWS forecasts now pair daytime highs with following nighttime lows when NWS provides day/night forecast periods.
 - Smart Auto mode now keeps the NWS forecaster discussion from its main NWS fetch, avoids a duplicate follow-up request when it already has that discussion, and chooses Open-Meteo for extended US forecasts even if Pirate Weather is listed first.
 - Smart Auto mode now fills in current condition text from Open-Meteo or Pirate Weather when NWS reports an empty or unknown condition.
 - Canadian locations near the border no longer try NWS in Automatic mode when an older/manual location is missing a saved country code.
