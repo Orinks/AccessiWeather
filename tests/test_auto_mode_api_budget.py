@@ -116,12 +116,15 @@ def _stub_enrichments(client: WeatherClient) -> None:
 def test_auto_mode_api_budget_defaults_and_round_trips() -> None:
     settings = AppSettings()
     assert settings.auto_mode_api_budget == "max_coverage"
+    assert settings.parallel_fetch_timeout == 10.0
 
     restored = AppSettings.from_dict(settings.to_dict())
     assert restored.auto_mode_api_budget == "max_coverage"
+    assert restored.parallel_fetch_timeout == 10.0
 
     restored = AppSettings.from_dict({})
     assert restored.auto_mode_api_budget == "max_coverage"
+    assert restored.parallel_fetch_timeout == 10.0
 
     restored.auto_mode_api_budget = "nope"
     assert restored.validate_on_access("auto_mode_api_budget") is True
@@ -129,6 +132,13 @@ def test_auto_mode_api_budget_defaults_and_round_trips() -> None:
 
     restored = AppSettings.from_dict({"auto_mode_api_budget": "nope"})
     assert restored.auto_mode_api_budget == "max_coverage"
+
+    restored = AppSettings.from_dict({"parallel_fetch_timeout": "12.5"})
+    assert restored.parallel_fetch_timeout == 12.5
+    assert restored.to_dict()["parallel_fetch_timeout"] == 12.5
+
+    restored = AppSettings.from_dict({"parallel_fetch_timeout": 0})
+    assert restored.parallel_fetch_timeout == 10.0
 
 
 def test_data_sources_tab_budget_load_save_round_trip() -> None:
@@ -221,6 +231,32 @@ async def test_default_auto_mode_max_coverage_fetches_all_enabled_sources(
     assert {"nws", "openmeteo", "pirateweather"}.issubset(
         result.source_attribution.contributing_sources
     )
+
+
+@pytest.mark.asyncio
+async def test_auto_mode_uses_configured_parallel_fetch_timeout(
+    us_location: Location,
+) -> None:
+    settings = AppSettings(
+        parallel_fetch_timeout=12.5,
+        auto_sources_us=["nws"],
+    )
+    client = WeatherClient(data_source="auto", settings=settings)
+    _stub_enrichments(client)
+    client._fetch_nws_data = AsyncMock(
+        return_value=(_current(), _forecast("NWS"), None, None, WeatherAlerts(alerts=[]), _hourly())
+    )
+
+    timeouts: list[float] = []
+
+    async def _recording_fetch_all(self, location, **kwargs):
+        timeouts.append(self.timeout)
+        return await _execute_fetch_all(self, location, **kwargs)
+
+    with patch.object(ParallelFetchCoordinator, "fetch_all", new=_recording_fetch_all):
+        await client._fetch_smart_auto_source(us_location)
+
+    assert timeouts == [12.5]
 
 
 @pytest.mark.asyncio

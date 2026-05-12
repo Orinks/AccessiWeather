@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from .weather_client_nws_common import *  # noqa: F403
+from .weather_client_parsers import normalize_pressure
 
 
 def parse_nws_current_conditions(
@@ -334,21 +335,46 @@ def parse_nws_gridpoint_pressure(data: dict) -> dict[datetime, tuple[float | Non
     """Parse NWS gridpoint pressure values keyed by valid-time start."""
     pressure = data.get("properties", {}).get("pressure", {})
     values = pressure.get("values", []) if isinstance(pressure, dict) else []
+    pressure_unit = None
+    if isinstance(pressure, dict):
+        pressure_unit = pressure.get("uom") or pressure.get("unitCode")
     pressure_by_time: dict[datetime, tuple[float | None, float | None]] = {}
 
     for item in values:
         if not isinstance(item, dict):
             continue
         start_time = _parse_valid_time_start(item.get("validTime"))
-        pressure_pa = item.get("value")
-        if start_time is None or pressure_pa is None:
+        pressure_value = _extract_float(item.get("value"))
+        if start_time is None or pressure_value is None:
             continue
-        pressure_by_time[start_time] = (
-            convert_pa_to_inches(pressure_pa),
-            convert_pa_to_mb(pressure_pa),
+        pressure_by_time[start_time] = _normalize_nws_gridpoint_pressure(
+            pressure_value,
+            item.get("uom") or item.get("unitCode") or pressure_unit,
         )
 
     return pressure_by_time
+
+
+def _normalize_nws_gridpoint_pressure(
+    value: float, unit_code: str | None
+) -> tuple[float | None, float | None]:
+    """
+    Normalize NWS gridpoint pressure values to inches and millibars.
+
+    Most NWS pressure values are pascals, but some gridpoint layers currently
+    return station-pressure-like values around 29-31 with no unit metadata. Treat
+    those as inches of mercury instead of displaying impossible sub-1 mb values.
+    """
+    if unit_code:
+        pressure_in, pressure_mb = normalize_pressure(value, str(unit_code))
+        if pressure_in is not None or pressure_mb is not None:
+            return pressure_in, pressure_mb
+
+    if 20 <= value <= 35:
+        return value, value * 33.8639
+    if 850 <= value <= 1100:
+        return value * 0.0295299830714, value
+    return convert_pa_to_inches(value), convert_pa_to_mb(value)
 
 
 def apply_nws_gridpoint_pressure(

@@ -85,6 +85,7 @@ class AppSettingsSerializationMixin:
             "auto_mode_api_budget": settings.auto_mode_api_budget,
             "auto_sources_us": settings.auto_sources_us,
             "auto_sources_international": settings.auto_sources_international,
+            "parallel_fetch_timeout": settings.parallel_fetch_timeout,
             "openmeteo_weather_model": settings.openmeteo_weather_model,
             "station_selection_strategy": settings.station_selection_strategy,
             # AI settings and AVWX key stored in secure storage, not here
@@ -209,6 +210,10 @@ class AppSettingsSerializationMixin:
             auto_sources_international=data.get(
                 "auto_sources_international", ["openmeteo", "pirateweather"]
             ),
+            parallel_fetch_timeout=settings_cls._as_float(
+                data.get("parallel_fetch_timeout"),
+                10.0,
+            ),
             openmeteo_weather_model=data.get("openmeteo_weather_model", "best_match"),
             station_selection_strategy=data.get("station_selection_strategy", "hybrid_default"),
             # AVWX and AI settings (stored in secure storage)
@@ -252,6 +257,7 @@ class AppSettingsSerializationMixin:
         settings.validate_on_access("source_priority_international")
         settings.validate_on_access("auto_sources_us")
         settings.validate_on_access("auto_sources_international")
+        settings.validate_on_access("parallel_fetch_timeout")
         if settings.data_source not in {"auto", "nws", "openmeteo", "pirateweather"}:
             settings.data_source = "auto"
         return settings

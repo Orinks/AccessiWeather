@@ -134,7 +134,7 @@ class WeatherClientAutoMixin:
             international_default=auto_sources_international,
         )
         auto_budget = self._get_auto_mode_api_budget()
-        parallel_timeout = getattr(self.settings, "parallel_fetch_timeout", 5.0)
+        parallel_timeout = getattr(self.settings, "parallel_fetch_timeout", self.timeout)
         coordinator = ParallelFetchCoordinator(timeout=parallel_timeout)
         fusion_engine = DataFusionEngine(config)
         alert_aggregator = AlertAggregator()

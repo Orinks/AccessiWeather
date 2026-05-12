@@ -69,6 +69,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "update_check_interval_hours",
     "trend_insights_enabled",
     "trend_hours",
+    "parallel_fetch_timeout",
     "show_dewpoint",
     "show_pressure_trend",
     "show_visibility",
