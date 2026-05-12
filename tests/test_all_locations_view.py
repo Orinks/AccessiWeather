@@ -154,10 +154,7 @@ class TestPopulateLocations:
         MainWindow._populate_locations(win)
 
         call_args = win.location_dropdown.Append.call_args[0][0]
-        assert "Boston" in call_args
-        assert "Austin" in call_args
-        assert call_args.index("Boston") > 0
-        assert call_args.index("Austin") > 0
+        assert call_args == ["All Locations", "Austin", "Boston"]
 
     def test_selects_current_location_when_set(self):
         from accessiweather.ui.main_window import MainWindow
@@ -169,8 +166,8 @@ class TestPopulateLocations:
 
         MainWindow._populate_locations(win)
 
-        # Austin is at index 2 (0=All Locations, 1=Boston, 2=Austin)
-        win.location_dropdown.SetSelection.assert_called_with(2)
+        # Austin is at index 1 (0=All Locations, then sorted saved locations)
+        win.location_dropdown.SetSelection.assert_called_with(1)
 
     def test_falls_back_to_index_zero_when_no_current(self):
         from accessiweather.ui.main_window import MainWindow

@@ -183,7 +183,10 @@ class MainWindowUIMixin:
         """
         try:
             locations = self.app.config_manager.get_all_locations()
-            location_names = [loc.name for loc in locations]
+            location_names = sorted(
+                (loc.name for loc in locations),
+                key=lambda name: (name.casefold(), name),
+            )
             all_names = [ALL_LOCATIONS_SENTINEL] + location_names
             self.location_dropdown.Clear()
             self.location_dropdown.Append(all_names)

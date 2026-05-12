@@ -10,6 +10,11 @@ from .weather import Location
 _LEGACY_NATIONWIDE_LOCATION_NAME = "Nationwide"
 
 
+def _location_sort_key(location: Location) -> tuple[str, str]:
+    """Return a stable, case-insensitive sort key for saved locations."""
+    return (location.name.casefold(), location.name)
+
+
 @dataclass
 class AppConfig:
     """Application configuration."""
@@ -36,7 +41,7 @@ class AppConfig:
                     **({"fire_zone_id": loc.fire_zone_id} if loc.fire_zone_id else {}),
                     **({"radar_station": loc.radar_station} if loc.radar_station else {}),
                 }
-                for loc in self.locations
+                for loc in sorted(self.locations, key=_location_sort_key)
                 if loc.name != _LEGACY_NATIONWIDE_LOCATION_NAME
             ],
             "current_location": {
