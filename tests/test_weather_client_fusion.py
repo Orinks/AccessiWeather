@@ -149,6 +149,36 @@ class TestMergeCurrentConditions:
         assert result.humidity == 55  # from openmeteo (nws was None)
         assert attr.field_sources["humidity"] == "openmeteo"
 
+    def test_empty_condition_falls_back_to_next_source(self, engine, us_location):
+        """Empty NWS condition text should not block lower-priority usable text."""
+        nws_cc = CurrentConditions(temperature_f=70.0, condition="")
+        om_cc = CurrentConditions(temperature_f=68.0, condition="Partly Cloudy")
+        sources = [
+            _make_source("nws", current=nws_cc),
+            _make_source("openmeteo", current=om_cc),
+        ]
+
+        result, attr = engine.merge_current_conditions(sources, us_location)
+
+        assert result is not None
+        assert result.condition == "Partly Cloudy"
+        assert attr.field_sources["condition"] == "openmeteo"
+
+    def test_unknown_condition_falls_back_to_next_source(self, engine, us_location):
+        """Placeholder condition text should not win automatic source fusion."""
+        nws_cc = CurrentConditions(temperature_f=70.0, condition="Unknown")
+        om_cc = CurrentConditions(temperature_f=68.0, condition="Clear")
+        sources = [
+            _make_source("nws", current=nws_cc),
+            _make_source("openmeteo", current=om_cc),
+        ]
+
+        result, attr = engine.merge_current_conditions(sources, us_location)
+
+        assert result is not None
+        assert result.condition == "Clear"
+        assert attr.field_sources["condition"] == "openmeteo"
+
     def test_failed_sources_tracked(self, engine, us_location):
         cc = CurrentConditions(temperature_f=70.0)
         sources = [
