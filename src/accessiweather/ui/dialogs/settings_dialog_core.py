@@ -181,8 +181,6 @@ class SettingsDialogCoreMixin:
     def _load_settings(self):
         """Load current settings into UI controls."""
         try:
-            if hasattr(self.config_manager, "sync_startup_setting"):
-                self.config_manager.sync_startup_setting()
             settings = self.config_manager.get_settings()
             for tab in getattr(self, "_tab_objects", []):
                 tab.load(settings)

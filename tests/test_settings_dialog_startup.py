@@ -32,12 +32,12 @@ def _make_dialog(*, startup_enabled: bool, actual_enabled: bool = False) -> Sett
     return dialog
 
 
-def test_load_settings_syncs_startup_state_before_populating_tabs():
+def test_load_settings_does_not_sync_startup_state_before_populating_tabs():
     dialog = _make_dialog(startup_enabled=False, actual_enabled=True)
 
     dialog._load_settings()
 
-    dialog.config_manager.sync_startup_setting.assert_called_once()
+    dialog.config_manager.sync_startup_setting.assert_not_called()
     dialog.config_manager.get_settings.assert_called_once()
     assert dialog._tab_objects[0].loaded_settings.startup_enabled is True
 
