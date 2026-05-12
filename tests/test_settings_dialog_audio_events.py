@@ -3,6 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+from accessiweather.models.config import AppSettings
 from accessiweather.ui.dialogs.settings_dialog import SettingsDialogSimple
 from accessiweather.ui.dialogs.settings_tabs.audio import AudioTab
 
@@ -153,3 +154,9 @@ def test_configure_event_sounds_cancel_keeps_existing_state():
     dialog._on_configure_event_sounds(event=None)
 
     assert dialog._event_sound_states["startup"] is False
+
+
+def test_weather_refresh_sound_is_muted_by_default():
+    settings = AppSettings.from_dict({})
+
+    assert settings.muted_sound_events == ["data_updated"]

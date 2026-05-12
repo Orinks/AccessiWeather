@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 - Linux nightly and release downloads now ship as `.tar.gz` tarballs instead of ZIP files.
 
 ### Fixed
+- The weather-refresh completion sound is now off by default, and switching to a cached location no longer plays it before the real refresh finishes.
 - Open-Meteo forecasts now keep unit-aware wind, visibility, snow depth, pressure, and freezing-level details instead of misreading feet, meters, or kilometers in some payloads.
 - Open-Meteo daily forecasts now include low temperatures and wind details when the API provides them.
 - Weather history comparisons now skip incomplete Open-Meteo archive responses instead of comparing against placeholder zero values.

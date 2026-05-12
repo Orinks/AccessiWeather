@@ -112,6 +112,19 @@ class TestMainWindowRefreshSuccessSound:
 
         mock_play.assert_called_once_with("default", muted_events=["data_updated"])
 
+    def test_cached_location_display_does_not_play_refresh_sound(self, mock_app):
+        """Cached weather shown while switching locations is not a refresh completion."""
+        win = self._make_window(mock_app)
+        weather_data = MagicMock()
+        weather_data.alert_lifecycle_diff = None
+
+        with patch(
+            "accessiweather.notifications.sound_player.play_data_updated_sound"
+        ) as mock_play:
+            win._on_weather_data_received(weather_data, play_refresh_sound=False)
+
+        mock_play.assert_not_called()
+
 
 class TestMainWindowFetchErrorSound:
     """Tests for fetch_error sound playback in _on_weather_error."""

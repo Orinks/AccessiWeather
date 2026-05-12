@@ -184,7 +184,7 @@ class MainWindowRefreshMixin:
                     exc_info=True,
                 )
 
-    def _on_weather_data_received(self, weather_data) -> None:
+    def _on_weather_data_received(self, weather_data, *, play_refresh_sound: bool = True) -> None:
         """Handle received weather data (called on main thread)."""
         # Guard: if we switched to All Locations view, ignore stale single-location data.
         if getattr(self, "_all_locations_active", False):
@@ -286,17 +286,20 @@ class MainWindowRefreshMixin:
             # any panels.  Silent (no screen-reader announcement).
             self._set_last_updated_status()
 
-            # Play the weather-updated sound on successful refresh.
-            try:
-                settings = self.app.config_manager.get_settings()
-                if getattr(settings, "sound_enabled", True):
-                    from accessiweather.notifications.sound_player import play_data_updated_sound
+            if play_refresh_sound:
+                # Play the weather-updated sound on successful refresh.
+                try:
+                    settings = self.app.config_manager.get_settings()
+                    if getattr(settings, "sound_enabled", True):
+                        from accessiweather.notifications.sound_player import (
+                            play_data_updated_sound,
+                        )
 
-                    sound_pack = getattr(settings, "sound_pack", "default")
-                    muted_events = getattr(settings, "muted_sound_events", [])
-                    play_data_updated_sound(sound_pack, muted_events=muted_events)
-            except Exception as sound_exc:
-                logger.debug(f"Failed to play weather-updated sound: {sound_exc}")
+                        sound_pack = getattr(settings, "sound_pack", "default")
+                        muted_events = getattr(settings, "muted_sound_events", [])
+                        play_data_updated_sound(sound_pack, muted_events=muted_events)
+                except Exception as sound_exc:
+                    logger.debug(f"Failed to play weather-updated sound: {sound_exc}")
 
         except Exception as e:
             logger.error(f"Failed to update weather display: {e}")

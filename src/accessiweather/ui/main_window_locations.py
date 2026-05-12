@@ -52,7 +52,7 @@ class MainWindowLocationMixin:
             cached = self.app.weather_client.get_cached_weather(location)
             if cached and cached.has_any_data():
                 logger.info(f"Showing cached data for {selected} while refreshing")
-                self._on_weather_data_received(cached)
+                self._on_weather_data_received(cached, play_refresh_sound=False)
 
         # Fire an immediate alert/event check for the new location (lightweight)
         if location and hasattr(self.app, "weather_client") and self.app.weather_client:
