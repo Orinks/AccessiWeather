@@ -86,6 +86,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "time_format_12hour",
     "show_timezone_suffix",
     "alert_display_style",
+    "location_sort_order",
     "date_format",
     "taskbar_icon_text_enabled",
     "taskbar_icon_dynamic_enabled",

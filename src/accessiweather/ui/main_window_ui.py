@@ -182,18 +182,18 @@ class MainWindowUIMixin:
         "All Locations" is always the first entry.
         """
         try:
-            locations = self.app.config_manager.get_all_locations()
-            location_names = sorted(
-                (loc.name for loc in locations),
-                key=lambda name: (name.casefold(), name),
-            )
+            locations = self._get_ordered_saved_locations()
+            location_names = [loc.name for loc in locations]
             all_names = [ALL_LOCATIONS_SENTINEL] + location_names
             self.location_dropdown.Clear()
             self.location_dropdown.Append(all_names)
 
             # Select current location if set; otherwise land on "All Locations".
             current = self.app.config_manager.get_current_location()
-            if current and current.name in all_names:
+            if getattr(self, "_all_locations_active", False):
+                self.location_dropdown.SetSelection(0)
+                self._update_title_for_location(ALL_LOCATIONS_SENTINEL)
+            elif current and current.name in all_names:
                 idx = all_names.index(current.name)
                 self.location_dropdown.SetSelection(idx)
                 self._update_title_for_location(current.name)
@@ -203,6 +203,14 @@ class MainWindowUIMixin:
             self._update_forecast_products_button_state()
         except Exception as e:
             logger.error(f"Failed to populate locations: {e}")
+
+    def _get_ordered_saved_locations(self):
+        """Return saved locations in the user's preferred display order."""
+        locations = self.app.config_manager.get_all_locations()
+        settings = self.app.config_manager.get_settings()
+        sort_order = getattr(settings, "location_sort_order", "alphabetical")
+        current = self.app.config_manager.get_current_location()
+        return sort_locations_for_display(locations, sort_order, anchor=current)
 
     def _update_title_for_location(self, location_name: str | None) -> None:
         """
