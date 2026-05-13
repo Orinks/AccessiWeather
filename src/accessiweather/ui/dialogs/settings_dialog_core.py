@@ -182,6 +182,7 @@ class SettingsDialogCoreMixin:
         """Load current settings into UI controls."""
         try:
             settings = self.config_manager.get_settings()
+            self._loaded_startup_enabled = bool(getattr(settings, "startup_enabled", False))
             for tab in getattr(self, "_tab_objects", []):
                 tab.load(settings)
         except Exception as e:
@@ -237,11 +238,13 @@ class SettingsDialogCoreMixin:
             return None
 
         desired_enabled = bool(settings_dict["startup_enabled"])
-        current_enabled = False
-        if hasattr(self.config_manager, "is_startup_enabled"):
-            current_enabled = bool(self.config_manager.is_startup_enabled())
+        previous_enabled = getattr(self, "_loaded_startup_enabled", None)
+        if previous_enabled is None:
+            previous_enabled = bool(
+                getattr(self.config_manager.get_settings(), "startup_enabled", False)
+            )
 
-        if desired_enabled == current_enabled:
+        if desired_enabled == previous_enabled:
             return True
 
         if desired_enabled:
@@ -251,6 +254,7 @@ class SettingsDialogCoreMixin:
 
         if success:
             logger.info("Startup setting applied: %s", message)
+            self._loaded_startup_enabled = desired_enabled
             return True
 
         logger.error("Failed to apply startup setting: %s", message)
@@ -259,7 +263,7 @@ class SettingsDialogCoreMixin:
             "Startup Setting Failed",
             wx.OK | wx.ICON_ERROR,
         )
-        settings_dict["startup_enabled"] = current_enabled
+        settings_dict["startup_enabled"] = previous_enabled
         return False
 
     def _setup_accessibility(self):

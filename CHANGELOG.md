@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Linux nightly and release downloads now ship as `.tar.gz` tarballs instead of ZIP files.
 
 ### Fixed
+- Saving Settings no longer waits on the Windows startup shortcut check unless you actually change the launch-at-startup checkbox.
 - Settings now opens without waiting on the Windows startup shortcut check.
 - The weather-refresh completion sound is now off by default, and switching to a cached location no longer plays it before the real refresh finishes.
 - Open-Meteo forecasts now keep unit-aware wind, visibility, snow depth, pressure, and freezing-level details instead of misreading feet, meters, or kilometers in some payloads.

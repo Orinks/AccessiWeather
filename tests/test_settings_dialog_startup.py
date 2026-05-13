@@ -21,6 +21,7 @@ class _StartupTab:
 def _make_dialog(*, startup_enabled: bool, actual_enabled: bool = False) -> SettingsDialogSimple:
     dialog = SettingsDialogSimple.__new__(SettingsDialogSimple)
     dialog._tab_objects = [_StartupTab(startup_enabled)]
+    dialog._loaded_startup_enabled = actual_enabled
     dialog.config_manager = MagicMock()
     dialog.config_manager.get_settings.return_value = SimpleNamespace(
         startup_enabled=actual_enabled
@@ -40,6 +41,21 @@ def test_load_settings_does_not_sync_startup_state_before_populating_tabs():
     dialog.config_manager.sync_startup_setting.assert_not_called()
     dialog.config_manager.get_settings.assert_called_once()
     assert dialog._tab_objects[0].loaded_settings.startup_enabled is True
+    assert dialog._loaded_startup_enabled is True
+
+
+def test_save_settings_does_not_check_os_startup_when_setting_unchanged():
+    dialog = _make_dialog(startup_enabled=True, actual_enabled=True)
+    dialog.config_manager.is_startup_enabled.side_effect = AssertionError(
+        "save should not probe OS startup state when the checkbox was unchanged"
+    )
+
+    assert dialog._save_settings() is True
+
+    dialog.config_manager.is_startup_enabled.assert_not_called()
+    dialog.config_manager.enable_startup.assert_not_called()
+    dialog.config_manager.disable_startup.assert_not_called()
+    dialog.config_manager.update_settings.assert_called_once_with(startup_enabled=True)
 
 
 def test_save_settings_enables_os_startup_before_persisting_setting():
@@ -47,6 +63,7 @@ def test_save_settings_enables_os_startup_before_persisting_setting():
 
     assert dialog._save_settings() is True
 
+    dialog.config_manager.is_startup_enabled.assert_not_called()
     dialog.config_manager.enable_startup.assert_called_once()
     dialog.config_manager.disable_startup.assert_not_called()
     dialog.config_manager.update_settings.assert_called_once_with(startup_enabled=True)
@@ -57,6 +74,7 @@ def test_save_settings_disables_os_startup_before_persisting_setting():
 
     assert dialog._save_settings() is True
 
+    dialog.config_manager.is_startup_enabled.assert_not_called()
     dialog.config_manager.disable_startup.assert_called_once()
     dialog.config_manager.enable_startup.assert_not_called()
     dialog.config_manager.update_settings.assert_called_once_with(startup_enabled=False)
