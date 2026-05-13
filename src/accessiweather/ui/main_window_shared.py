@@ -11,6 +11,7 @@ import wx
 from wx.lib.sized_controls import SizedPanel
 
 from ..display.presentation.formatters import get_temperature_precision
+from ..location_sorting import sort_locations_for_display
 from ..runtime_env import is_compiled_runtime
 from ..units import resolve_temperature_unit_preference
 from ..user_manual import open_user_manual
@@ -61,5 +62,6 @@ __all__ = [
     "open_user_manual",
     "resolve_temperature_unit_preference",
     "show_edit_location_dialog",
+    "sort_locations_for_display",
     "wx",
 ]

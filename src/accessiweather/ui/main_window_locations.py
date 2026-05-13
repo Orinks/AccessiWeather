@@ -186,6 +186,7 @@ class MainWindowLocationMixin:
 
         if show_settings_dialog(self, self.app, tab=tab):
             self.app.refresh_runtime_settings()
+            self._populate_locations()
             # Update menu label in case update channel changed
             self.update_check_updates_menu_label()
             # Immediately refresh weather so source/key changes take effect

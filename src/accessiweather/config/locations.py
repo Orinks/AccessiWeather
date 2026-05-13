@@ -6,6 +6,7 @@ import logging
 from math import isclose
 from typing import TYPE_CHECKING
 
+from ..location_sorting import location_name_sort_key
 from ..models import Location
 
 if TYPE_CHECKING:
@@ -13,11 +14,6 @@ if TYPE_CHECKING:
     from .config_manager import ConfigManager
 
 logger = logging.getLogger("accessiweather.config")
-
-
-def _location_sort_key(location: Location) -> tuple[str, str]:
-    """Return a stable, case-insensitive sort key for saved locations."""
-    return (location.name.casefold(), location.name)
 
 
 class LocationOperations:
@@ -140,7 +136,7 @@ class LocationOperations:
 
     def _sort_locations(self, config) -> None:
         """Keep saved locations in alphabetical order."""
-        config.locations.sort(key=_location_sort_key)
+        config.locations.sort(key=location_name_sort_key)
 
     def update_zone_metadata(self, location_name: str, fields: dict[str, str]) -> bool:
         """
@@ -308,7 +304,7 @@ class LocationOperations:
                 for location in self._manager.get_config().locations.copy()
                 if location.name != "Nationwide"
             ],
-            key=_location_sort_key,
+            key=location_name_sort_key,
         )
 
     def get_location_names(self) -> list[str]:

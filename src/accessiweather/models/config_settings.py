@@ -80,6 +80,8 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     # Place Add/Edit/Remove Location buttons on the location row instead of the
     # bottom button panel.  Takes effect on app restart.
     location_buttons_on_top: bool = False
+    # Saved location ordering in user-facing lists.
+    location_sort_order: str = "alphabetical"  # "alphabetical" | "nearest_current"
     # Date format preset for rendered dates
     date_format: str = "iso"  # "iso" | "us_short" | "us_long" | "eu"
     # Taskbar icon text options

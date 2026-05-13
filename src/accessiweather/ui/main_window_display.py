@@ -192,7 +192,7 @@ class MainWindowDisplayMixin:
 
         """
         try:
-            all_locs = self.app.config_manager.get_all_locations()
+            all_locs = self._get_ordered_saved_locations()
         except Exception as e:
             logger.error(f"Failed to get locations for All Locations summary: {e}")
             all_locs = []

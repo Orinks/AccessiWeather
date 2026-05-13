@@ -76,6 +76,7 @@ class AppSettingsSerializationMixin:
             "show_timezone_suffix": settings.show_timezone_suffix,
             "alert_display_style": settings.alert_display_style,
             "location_buttons_on_top": settings.location_buttons_on_top,
+            "location_sort_order": settings.location_sort_order,
             "date_format": settings.date_format,
             "taskbar_icon_text_enabled": settings.taskbar_icon_text_enabled,
             "taskbar_icon_dynamic_enabled": settings.taskbar_icon_dynamic_enabled,
@@ -191,6 +192,7 @@ class AppSettingsSerializationMixin:
             location_buttons_on_top=settings_cls._as_bool(
                 data.get("location_buttons_on_top"), False
             ),
+            location_sort_order=data.get("location_sort_order", "alphabetical"),
             date_format=data.get("date_format", "iso"),
             taskbar_icon_text_enabled=settings_cls._as_bool(
                 data.get("taskbar_icon_text_enabled"), False
@@ -252,6 +254,7 @@ class AppSettingsSerializationMixin:
         )
         settings.validate_on_access("auto_mode_api_budget")
         settings.validate_on_access("alert_display_style")
+        settings.validate_on_access("location_sort_order")
         settings.validate_on_access("date_format")
         settings.validate_on_access("source_priority_us")
         settings.validate_on_access("source_priority_international")

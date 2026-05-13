@@ -21,6 +21,12 @@ _VERBOSITY_MAP = {"minimal": 0, "standard": 1, "detailed": 2}
 _ALERT_DISPLAY_MAP = {"separate": 0, "combined": 1}
 _ALERT_DISPLAY_VALUES = ["separate", "combined"]
 _ALERT_DISPLAY_CHOICES = ["Separate fields (default)", "Single combined view"]
+_LOCATION_SORT_MAP = {"alphabetical": 0, "nearest_current": 1}
+_LOCATION_SORT_VALUES = ["alphabetical", "nearest_current"]
+_LOCATION_SORT_CHOICES = [
+    "Alphabetical (default)",
+    "Nearest to current location",
+]
 
 _DATE_FORMAT_MAP = {"iso": 0, "us_short": 1, "us_long": 2, "eu": 3}
 _DATE_FORMAT_VALUES = ["iso", "us_short", "us_long", "eu"]
@@ -269,8 +275,15 @@ class DisplayTab:
             panel,
             sizer,
             "Main window layout",
-            "Adjust where the main window places location-management buttons. "
-            "Changes take effect after you restart AccessiWeather.",
+            "Adjust how the main window orders saved locations and where it places "
+            "location-management buttons. Button placement changes take effect after "
+            "you restart AccessiWeather.",
+        )
+        controls["location_sort_order"] = self.dialog.add_labeled_control_row(
+            panel,
+            layout_section,
+            "Saved location order:",
+            lambda parent: wx.Choice(parent, choices=_LOCATION_SORT_CHOICES),
         )
         controls["location_buttons_on_top"] = wx.CheckBox(
             panel,
@@ -337,6 +350,9 @@ class DisplayTab:
         alert_display = getattr(settings, "alert_display_style", "separate")
         controls["alert_display_style"].SetSelection(_ALERT_DISPLAY_MAP.get(alert_display, 0))
 
+        location_sort_order = getattr(settings, "location_sort_order", "alphabetical")
+        controls["location_sort_order"].SetSelection(_LOCATION_SORT_MAP.get(location_sort_order, 0))
+
         controls["location_buttons_on_top"].SetValue(
             getattr(settings, "location_buttons_on_top", False)
         )
@@ -368,6 +384,9 @@ class DisplayTab:
             "severe_weather_override": controls["severe_weather_override"].GetValue(),
             "alert_display_style": _ALERT_DISPLAY_VALUES[
                 controls["alert_display_style"].GetSelection()
+            ],
+            "location_sort_order": _LOCATION_SORT_VALUES[
+                controls["location_sort_order"].GetSelection()
             ],
             "location_buttons_on_top": controls["location_buttons_on_top"].GetValue(),
         }
@@ -401,6 +420,7 @@ class DisplayTab:
             "verbosity_level": "Verbosity level",
             "severe_weather_override": "Automatically prioritize severe weather details",
             "alert_display_style": "Alert display style",
+            "location_sort_order": "Saved location order",
             "location_buttons_on_top": (
                 "Show Add, Edit, and Remove Location buttons next to the "
                 "location dropdown (restart required)"
