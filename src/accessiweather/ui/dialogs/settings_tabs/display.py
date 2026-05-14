@@ -90,6 +90,19 @@ class DisplayTab:
             10,
         )
 
+        saved_locations_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Saved locations",
+            "Choose how saved locations are ordered in the main window.",
+        )
+        controls["location_sort_order"] = self.dialog.add_labeled_control_row(
+            panel,
+            saved_locations_section,
+            "Saved location order:",
+            lambda parent: wx.Choice(parent, choices=_LOCATION_SORT_CHOICES),
+        )
+
         forecast_section = self.dialog.create_section(
             panel,
             sizer,
@@ -274,16 +287,9 @@ class DisplayTab:
         layout_section = self.dialog.create_section(
             panel,
             sizer,
-            "Main window layout",
-            "Adjust how the main window orders saved locations and where it places "
-            "location-management buttons. Button placement changes take effect after "
-            "you restart AccessiWeather.",
-        )
-        controls["location_sort_order"] = self.dialog.add_labeled_control_row(
-            panel,
-            layout_section,
-            "Saved location order:",
-            lambda parent: wx.Choice(parent, choices=_LOCATION_SORT_CHOICES),
+            "Location buttons",
+            "Choose where the main window places location-management buttons. "
+            "Button placement changes take effect after you restart AccessiWeather.",
         )
         controls["location_buttons_on_top"] = wx.CheckBox(
             panel,
