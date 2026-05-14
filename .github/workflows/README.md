@@ -22,7 +22,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 ### 2. Build and Package (`build.yml`)
 **Purpose**: Build nightly or tagged release artifacts separately from pull request validation
 **Triggers**:
-- Nightly schedule
+- Nightly schedule at 02:17 UTC (10:17 PM EDT / 9:17 PM EST)
 - Version tags
 - Manual dispatch (with optional version override)
 
