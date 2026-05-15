@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import tomllib
 import zipfile
 from pathlib import Path
 
@@ -9,8 +10,13 @@ import pytest
 from installer import build, build_nuitka
 
 
+def _pyproject_version() -> str:
+    with (build_nuitka.ROOT / "pyproject.toml").open("rb") as f:
+        return tomllib.load(f)["project"]["version"]
+
+
 def test_get_version_reads_pyproject() -> None:
-    assert build_nuitka.get_version() == "0.6.1.dev0"
+    assert build_nuitka.get_version() == _pyproject_version()
 
 
 def test_write_inno_version_file_uses_pyproject_version(tmp_path, monkeypatch) -> None:
@@ -19,10 +25,11 @@ def test_write_inno_version_file_uses_pyproject_version(tmp_path, monkeypatch) -
     version_file = build_nuitka.write_inno_version_file()
 
     assert version_file == tmp_path / "version.txt"
-    assert version_file.read_text(encoding="utf-8") == "[version]\nvalue=0.6.1.dev0\n"
+    assert version_file.read_text(encoding="utf-8") == f"[version]\nvalue={_pyproject_version()}\n"
 
 
 def test_windows_nuitka_command_uses_standalone_dir_and_pyproject_version() -> None:
+    numeric_version = build_nuitka._nuitka_version(_pyproject_version())
     command = build_nuitka.build_nuitka_command(
         output_dir=Path("dist"),
         build_tag="nightly-20260427",
@@ -34,8 +41,8 @@ def test_windows_nuitka_command_uses_standalone_dir_and_pyproject_version() -> N
     assert "--windows-console-mode=disable" in command
     assert "--output-filename=AccessiWeather" in command
     assert "--report=dist/compilation-report.xml" in command
-    assert "--product-version=0.6.1.0" in command
-    assert "--file-version=0.6.1.0" in command
+    assert f"--product-version={numeric_version}" in command
+    assert f"--file-version={numeric_version}" in command
     assert "--include-data-dir=src/accessiweather/resources=accessiweather/resources" in command
     assert "--include-data-dir=soundpacks/default=soundpacks/default" in command
     assert "--python-flag=-m" not in command
