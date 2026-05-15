@@ -13,7 +13,7 @@ Instead of mixing everything into one long report, AccessiWeather separates weat
 - Weather Alerts
 - Event Center
 
-The app can also provide forecast discussions, air quality details, UV details, aviation weather, NOAA Weather Radio access, AI weather explanations, Weather Assistant chat, and optional notification sounds.
+The app can also provide Forecaster Notes, air quality details, UV details, aviation weather, NOAA Weather Radio access, AI weather explanations, Weather Assistant chat, and optional notification sounds.
 
 This manual explains how to install the app, add locations, read the weather, choose weather sources, manage alerts and notifications, and adjust settings.
 
@@ -26,7 +26,8 @@ Prebuilt downloads are available from the [AccessiWeather page](https://orinks.n
 Typical download options are:
 
 - Windows: setup installer or portable ZIP
-- macOS: DMG
+- macOS: ZIP
+- Linux: tar.gz portable tarball
 
 ## 3. First-time setup
 
@@ -59,7 +60,7 @@ To add a location:
 
 1. Open Location > Add Location, or press Ctrl+L.
 2. Enter a friendly name in Location Name.
-3. Search by city name or ZIP or postal code.
+3. Search by city name, ZIP/postal code, or US street address.
 4. Select one result from the results list.
 5. Save the location.
 
@@ -68,6 +69,18 @@ Important things to know:
 - The name must be unique in your saved list.
 - You cannot save the location until you choose a search result.
 - Double-clicking a search result also saves it.
+- US street addresses use a precise address lookup first, then fall back to the normal place search if there is no address match.
+
+### Edit a location
+
+To edit the current location:
+
+- choose Location > Edit Location
+- or use the Edit Location button
+
+Use Edit Location when you want to rename a saved place, toggle Marine Mode, review its saved NWS zone details, or update the coordinates from a US street address.
+
+The address lookup in Edit Location is useful when a saved city or ZIP result is close but not quite where you want it. Search for the street address, choose a matched address, review the coordinate comparison, and save.
 
 ### Switch locations
 
@@ -94,14 +107,20 @@ To remove the current location:
 
 AccessiWeather will not let you remove your last remaining location.
 
-### Open the forecast discussion
+### Open Forecaster Notes
 
-To open a forecast discussion:
+To open Forecaster Notes:
 
-- use the Discussion button
-- or choose View > Forecast Discussion
+- use the Forecaster Notes button
+- or choose View > Forecaster Notes
 
-For normal US locations, this opens the local NWS Area Forecast Discussion, often called the AFD.
+For normal US locations, this opens a tabbed NWS text-product window for the selected location. It starts with local products such as:
+
+- Area Forecast Discussion, often called the AFD
+- Hazardous Weather Outlook, often called the HWO
+- Special Weather Statement, often called the SPS
+
+AccessiWeather may also add active SPC and WPC tabs when IEM-backed products apply to the selected point, such as mesoscale discussions, watches, excessive rainfall outlooks, or mesoscale precipitation discussions. Confirmed-empty supplemental tabs are hidden instead of leaving blank placeholders.
 
 An AFD is a text product written by National Weather Service forecasters. It explains what they think will happen, why they think it, and how confident they are. This is different from the regular forecast, which mainly tells you the expected result.
 
@@ -115,11 +134,13 @@ Use this when:
 
 This is helpful if the regular forecast feels too short. The AFD often explains whether rain is likely to arrive before or after your commute, why temperatures may be tricky near freezing, whether thunderstorm coverage is uncertain, and how confident forecasters are in the next update.
 
-If Nationwide is selected, AccessiWeather opens national discussion products instead.
+Use National Products inside Forecaster Notes for broader national NWS text products from sources such as SPC, WPC, NHC, and CPC.
+
+Use Advanced Lookup when you want to search text products directly. It provides product groups, product choices, office selection, date presets, result limits, sort order, source selection, aviation AFD filtering, center, WMO, and text-match filters. The date presets are meant to save you from guessing valid archive ranges.
 
 Leave this alone if you only want a quick answer such as the current temperature, today's high, or whether an alert is active. The regular forecast sections are faster for that.
 
-If your current source or location does not support forecast discussions, the discussion may be unavailable.
+Forecaster Notes are US-only. If the selected location is outside US NWS coverage, the button is disabled and AccessiWeather shows a nearby explanation.
 
 ### View alert details
 
@@ -146,12 +167,12 @@ The main window is designed for quick keyboard and screen-reader use.
 The button row provides common actions without requiring the menu bar:
 
 - Add Location
+- Edit Location
 - Remove Location
 - Refresh Weather
 - Explain Weather
-- Forecast Discussion
+- Forecaster Notes
 - Settings
-- View Alert Details
 
 ### Top-level navigation
 
@@ -322,7 +343,7 @@ Best for:
 
 - US forecasts
 - US alerts
-- US forecast discussions
+- US Forecaster Notes and NWS text products
 - NOAA Weather Radio features
 
 Important limits:
@@ -341,7 +362,7 @@ Best for:
 Important limits:
 
 - no weather alerts in AccessiWeather
-- no forecast discussion support
+- no Forecaster Notes support
 
 #### Pirate Weather
 
@@ -458,16 +479,16 @@ For international locations:
 - NWS alerts do not apply
 - Pirate Weather alerts are preferred when available
 
-### Forecast discussion behavior in Automatic mode
+### Forecaster Notes behavior in Automatic mode
 
-Forecast discussions in AccessiWeather come from NWS.
+Forecaster Notes in AccessiWeather come from NWS and IEM-backed NWS text products.
 
 That means:
 
-- US users can open discussions when NWS is part of the active path
-- Nationwide can open national discussion products
-- if Automatic mode does not use NWS for the current weather path, forecast discussion may be unavailable
-- Open-Meteo and Pirate Weather do not provide forecast discussions in AccessiWeather
+- US users can open local AFD, HWO, and SPS products when the selected location has NWS office metadata
+- active SPC and WPC tabs are added only when matching products apply to the selected point
+- National Products opens broader national NWS products in a separate dialog
+- Open-Meteo and Pirate Weather do not provide Forecaster Notes in AccessiWeather
 
 Use this when you want the forecaster's reasoning rather than only the final forecast numbers. This is especially useful when thunderstorm timing is uncertain, when a snow or ice changeover is possible, or when you want to know how confident the local office is.
 
@@ -554,12 +575,16 @@ Leave this alone if you are new to the app and want the broadest awareness first
 In addition to standard alerts, AccessiWeather can notify you about:
 
 - Area Forecast Discussion updates for NWS US locations
+- Hazardous Weather Outlook updates
+- informational Special Weather Statements
 - minutely precipitation start soon from Pirate Weather
 - minutely precipitation stop soon from Pirate Weather
 
-These are optional and should be turned on only if you want those extra updates.
+These are separate from standard alert notifications so you can decide how much forecaster text and short-term precipitation guidance should interrupt you.
 
 Use discussion update notifications when you follow developing weather closely and want to know when local forecaster reasoning changes.
+
+Use Hazardous Weather Outlook and Special Weather Statement notifications when you want early or informational NWS text-product changes, even when they are not formal warnings.
 
 Use minutely precipitation notifications when short outdoor trips matter and a few minutes of notice would help.
 
@@ -630,18 +655,6 @@ Use a shorter interval when you want faster background updates. This is helpful 
 Use a longer interval when you prefer less network activity or when you mostly refresh by hand.
 
 Leave this alone if the app already feels current enough. Many users never need to adjust it.
-
-#### Show the Nationwide location when a supported data source is selected
-
-Shows or hides the built-in Nationwide location.
-
-Nationwide is available when your weather source is set to Automatic or NWS.
-
-Use this when you want quick access to national discussion products or broad national awareness during major weather setups.
-
-This is helpful if you track hurricanes, winter storms, or other widespread events that matter beyond one city.
-
-Leave this alone if you only care about your saved local locations.
 
 #### Tray icon text options
 
@@ -1088,20 +1101,22 @@ What to try:
 4. Review Alert Area and severity settings in Settings > Alerts.
 5. Make sure alert monitoring and alert notifications are enabled.
 
-### Problem: Forecast discussion is unavailable
+### Problem: Forecaster Notes are unavailable
 
 What it usually means:
 
-- the current location is outside NWS coverage
-- the current provider does not support discussions
-- Automatic mode did not use NWS for the current path
+- the current location is outside US NWS coverage
+- the selected location does not have saved NWS office metadata yet
+- a local text product is not currently published
+- an optional SPC or WPC tab has no active product for the selected point
 
 What to try:
 
 1. Switch to a US location.
-2. Use Automatic or NWS as the weather source.
-3. If you need national products, enable and select Nationwide.
-4. Refresh and try again.
+2. Refresh once so AccessiWeather can update saved NWS metadata.
+3. Open Forecaster Notes again.
+4. Use National Products or Advanced Lookup if you need a broader product.
+5. Try again later if the product is temporarily unavailable.
 
 ### Problem: AI features are unavailable
 

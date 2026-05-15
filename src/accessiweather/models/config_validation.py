@@ -199,6 +199,11 @@ class AppSettingsValidationMixin:
             if value not in valid_styles:
                 setattr(settings, setting_name, "separate")
 
+        elif setting_name == "location_sort_order":
+            valid_orders = {"alphabetical", "nearest_current"}
+            if value not in valid_orders:
+                setattr(settings, setting_name, "alphabetical")
+
         elif setting_name == "date_format":
             valid_formats = {"iso", "us_short", "us_long", "eu"}
             if value not in valid_formats:

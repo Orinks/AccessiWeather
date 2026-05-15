@@ -167,3 +167,25 @@ def test_get_selected_temperature_unit_returns_auto_for_first_choice():
     dialog._controls["temp_unit"].SetSelection(0)
 
     assert dialog._get_selected_temperature_unit() == "auto"
+
+
+def test_load_settings_populates_saved_location_sort_order():
+    settings = SimpleNamespace(location_sort_order="nearest_current")
+    dialog = _make_dialog_for_settings(settings)
+
+    dialog._load_settings()
+
+    assert dialog._controls["location_sort_order"].GetSelection() == 1
+
+
+def test_save_settings_persists_saved_location_sort_order():
+    dialog = _make_dialog_for_settings(SimpleNamespace())
+    dialog._get_ai_model_preference = lambda: "openrouter/free"
+    dialog.config_manager.update_settings.return_value = True
+    dialog._controls["location_sort_order"].SetSelection(1)
+
+    success = dialog._save_settings()
+
+    assert success is True
+    kwargs = dialog.config_manager.update_settings.call_args.kwargs
+    assert kwargs["location_sort_order"] == "nearest_current"

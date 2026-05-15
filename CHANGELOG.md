@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - You can now search for a US street address when adding or editing a location, so AccessiWeather can save coordinates for that specific address instead of the nearest city or ZIP result.
+- Saved locations now stay sorted alphabetically in the location list (#667).
+- You can now choose to sort saved locations alphabetically or nearest to the current location.
 - **National Products in Forecaster Notes** — Forecaster Notes now opens a dedicated National Products dialog for SPC, WPC, NHC, CPC, and other national NWS text products. The new view replaces the old Nationwide Discussions scraper with IEM AFOS plain-text products while keeping the existing Advanced Lookup path available for direct product searches (#641).
 - **Guided Advanced Lookup in Forecaster Notes** — Advanced Lookup now organizes NWS and IEM text products into product groups with clearer product choices, office selection, date presets, result limits, sort order, source selection, aviation AFD, center, WMO, and text-match filters.
 
@@ -13,6 +15,8 @@ All notable changes to this project will be documented in this file.
 - Linux nightly and release downloads now ship as `.tar.gz` tarballs instead of ZIP files.
 
 ### Fixed
+- Saving Settings no longer waits on the Windows startup shortcut check unless you actually change the launch-at-startup checkbox.
+- Settings now opens without waiting on the Windows startup shortcut check.
 - The weather-refresh completion sound is now off by default, and switching to a cached location no longer plays it before the real refresh finishes.
 - Open-Meteo forecasts now keep unit-aware wind, visibility, snow depth, pressure, and freezing-level details instead of misreading feet, meters, or kilometers in some payloads.
 - Open-Meteo daily forecasts now include low temperatures and wind details when the API provides them.

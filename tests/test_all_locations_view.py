@@ -74,6 +74,9 @@ def _make_window():
     win._get_all_locations_tray_data = MainWindow._get_all_locations_tray_data.__get__(
         win, MainWindow
     )
+    win._get_ordered_saved_locations = MainWindow._get_ordered_saved_locations.__get__(
+        win, MainWindow
+    )
     win._show_alert_details = MainWindow._show_alert_details.__get__(win, MainWindow)
     win.refresh_weather_async = MainWindow.refresh_weather_async.__get__(win, MainWindow)
 
@@ -154,10 +157,25 @@ class TestPopulateLocations:
         MainWindow._populate_locations(win)
 
         call_args = win.location_dropdown.Append.call_args[0][0]
-        assert "Boston" in call_args
-        assert "Austin" in call_args
-        assert call_args.index("Boston") > 0
-        assert call_args.index("Austin") > 0
+        assert call_args == ["All Locations", "Austin", "Boston"]
+
+    def test_real_locations_can_sort_nearest_to_current_location(self):
+        from accessiweather.ui.main_window import MainWindow
+
+        win = _make_window()
+        denver = _make_location("Denver", 39.7392, -104.9903)
+        boulder = _make_location("Boulder", 40.0150, -105.2705)
+        miami = _make_location("Miami", 25.7617, -80.1918)
+        anchorage = _make_location("Anchorage", 61.2181, -149.9003)
+        locs = [anchorage, miami, denver, boulder]
+        win.app.config_manager.get_all_locations.return_value = locs
+        win.app.config_manager.get_current_location.return_value = denver
+        win.app.config_manager.get_settings.return_value.location_sort_order = "nearest_current"
+
+        MainWindow._populate_locations(win)
+
+        call_args = win.location_dropdown.Append.call_args[0][0]
+        assert call_args == ["All Locations", "Denver", "Boulder", "Miami", "Anchorage"]
 
     def test_selects_current_location_when_set(self):
         from accessiweather.ui.main_window import MainWindow
@@ -169,8 +187,22 @@ class TestPopulateLocations:
 
         MainWindow._populate_locations(win)
 
-        # Austin is at index 2 (0=All Locations, 1=Boston, 2=Austin)
-        win.location_dropdown.SetSelection.assert_called_with(2)
+        # Austin is at index 1 (0=All Locations, then sorted saved locations)
+        win.location_dropdown.SetSelection.assert_called_with(1)
+
+    def test_keeps_all_locations_selected_when_active(self):
+        from accessiweather.ui.main_window import MainWindow
+
+        win = _make_window()
+        win._all_locations_active = True
+        locs = [_make_location("Boston"), _make_location("Austin")]
+        win.app.config_manager.get_all_locations.return_value = locs
+        win.app.config_manager.get_current_location.return_value = locs[1]
+
+        MainWindow._populate_locations(win)
+
+        win.location_dropdown.SetSelection.assert_called_with(0)
+        win._update_title_for_location.assert_called_with("All Locations")
 
     def test_falls_back_to_index_zero_when_no_current(self):
         from accessiweather.ui.main_window import MainWindow
