@@ -20,6 +20,7 @@ USER_FACING_PATHS = {
 }
 USER_FACING_SUFFIXES = (".spec",)
 SECTION_ORDER = ("Added", "Changed", "Fixed", "Improved", "Removed", "Deprecated", "Security")
+PYPROJECT_METADATA_FIELDS_WITHOUT_CHANGELOG = {"version", "description"}
 
 
 @dataclass(frozen=True)
@@ -39,6 +40,32 @@ def is_user_facing_path(path: str) -> bool:
         or normalized.endswith(USER_FACING_SUFFIXES)
         or normalized.startswith(USER_FACING_PATH_PREFIXES)
     )
+
+
+def pyproject_changed_lines_require_changelog(changed_lines: list[str]) -> bool:
+    for line in changed_lines:
+        field = line.split("=", 1)[0].strip()
+        if field not in PYPROJECT_METADATA_FIELDS_WITHOUT_CHANGELOG:
+            return True
+    return False
+
+
+def pyproject_change_requires_changelog(base: str, head: str) -> bool:
+    diff = run_git(["diff", "--unified=0", f"{base}..{head}", "--", "pyproject.toml"])
+    changed_lines: list[str] = []
+    for line in diff.splitlines():
+        if line.startswith(("+++", "---", "@@")):
+            continue
+        if line.startswith(("+", "-")):
+            changed_lines.append(line[1:].strip())
+    return pyproject_changed_lines_require_changelog(changed_lines)
+
+
+def requires_changelog_entry(path: str, base: str, head: str) -> bool:
+    normalized = path.replace("\\", "/")
+    if normalized == "pyproject.toml":
+        return pyproject_change_requires_changelog(base, head)
+    return is_user_facing_path(normalized)
 
 
 def changed_files(base: str, head: str) -> list[str]:
@@ -177,7 +204,7 @@ def sections_added_since(
 
 def check_command(args: argparse.Namespace) -> int:
     files = changed_files(args.base, args.head)
-    user_facing = [path for path in files if is_user_facing_path(path)]
+    user_facing = [path for path in files if requires_changelog_entry(path, args.base, args.head)]
     if not user_facing:
         print("No user-facing paths changed.")
         return 0

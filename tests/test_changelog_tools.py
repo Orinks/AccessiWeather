@@ -7,6 +7,7 @@ from scripts.changelog_tools import (
     is_user_facing_path,
     normalize_entry,
     parse_sections,
+    pyproject_changed_lines_require_changelog,
 )
 
 
@@ -69,6 +70,25 @@ def test_user_facing_paths_match_release_build_surface() -> None:
     assert is_user_facing_path("accessiweather.spec")
     assert not is_user_facing_path(".github/workflows/ci.yml")
     assert not is_user_facing_path("tests/test_app.py")
+
+
+def test_pyproject_metadata_only_changes_do_not_need_changelog() -> None:
+    assert not pyproject_changed_lines_require_changelog(
+        [
+            'version = "0.7.0"',
+            'version = "0.7.1.dev0"',
+            'description = "Old description"',
+            'description = "New description"',
+        ]
+    )
+
+
+def test_pyproject_dependency_changes_need_changelog() -> None:
+    assert pyproject_changed_lines_require_changelog(
+        [
+            '"requests>=2.34.2",',
+        ]
+    )
 
 
 def test_normalize_entry_matches_curated_release_body_wording() -> None:
