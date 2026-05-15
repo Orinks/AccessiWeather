@@ -11,7 +11,7 @@ httpx>=0.20.0
 requests>=2.33.1
 desktop-notifier
 python-dateutil
-beautifulsoup4>=4.0
+beautifulsoup4>=4.14.3
 attrs>=22.2.0
 psutil
 packaging
