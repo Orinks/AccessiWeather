@@ -148,7 +148,8 @@ class TestWizardKeyringWarning:
 
         def fake_msg_dialog(parent, msg, title, style=0):
             shown_titles.append(title)
-            return _make_wx_dialog()
+            result = wx.ID_YES if title == "Getting started" else wx.ID_OK
+            return _make_wx_dialog(result)
 
         with (
             patch("accessiweather.app.wx.MessageDialog", side_effect=fake_msg_dialog),
@@ -174,7 +175,8 @@ class TestWizardKeyringWarning:
 
         def fake_msg_dialog(parent, msg, title, style=0):
             shown_titles.append(title)
-            return _make_wx_dialog()
+            result = wx.ID_YES if title == "Getting started" else wx.ID_OK
+            return _make_wx_dialog(result)
 
         with (
             patch("accessiweather.app.wx.MessageDialog", side_effect=fake_msg_dialog),
@@ -199,7 +201,8 @@ class TestWizardKeyringWarning:
 
         def fake_msg_dialog(parent, msg, title, style=0):
             shown_titles.append(title)
-            return _make_wx_dialog()
+            result = wx.ID_YES if title == "Getting started" else wx.ID_OK
+            return _make_wx_dialog(result)
 
         with (
             patch("accessiweather.app.wx.MessageDialog", side_effect=fake_msg_dialog),
@@ -231,7 +234,10 @@ class TestWizardKeyringWarning:
 
         with (
             patch(
-                "accessiweather.app.wx.MessageDialog", side_effect=lambda *a, **k: _make_wx_dialog()
+                "accessiweather.app.wx.MessageDialog",
+                side_effect=lambda *a, **k: _make_wx_dialog(
+                    wx.ID_YES if len(a) >= 3 and a[2] == "Getting started" else wx.ID_OK
+                ),
             ),
             patch.object(app, "_prompt_optional_secret_with_link", side_effect=fake_prompt),
             patch.object(app, "_should_show_first_start_onboarding", return_value=True),

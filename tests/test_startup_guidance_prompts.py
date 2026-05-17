@@ -22,6 +22,8 @@ def _ensure_wx_dialog_constants() -> None:
         "ID_YES": 1,
         "ID_NO": 0,
         "ID_CANCEL": 2,
+        "FD_OPEN": 0,
+        "FD_FILE_MUST_EXIST": 0,
     }.items():
         if not hasattr(wx, name):
             setattr(wx, name, value)
@@ -61,6 +63,23 @@ class _FakeTextEntryDialog:
         if self._responses:
             return self._responses.pop(0)
         return ""
+
+
+class _FakeFileDialog:
+    def __init__(self, paths: list[str]):
+        self._paths = paths
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+    def ShowModal(self):
+        return getattr(wx, "ID_OK", 1)
+
+    def GetPath(self):
+        return self._paths.pop(0)
 
 
 def test_portable_missing_api_keys_hint_shown_once_and_persists(monkeypatch, tmp_path):
@@ -140,10 +159,11 @@ def test_portable_missing_api_keys_hint_noops_when_not_portable():
     app.config_manager.update_settings.assert_not_called()
 
 
-def test_onboarding_wizard_shown_once_with_skip_path(monkeypatch):
+def test_onboarding_wizard_escape_closes_and_marks_shown(monkeypatch):
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     app._portable_mode = False
     app._force_wizard = False
+    app._run_deferred_startup_update_check = MagicMock()
     app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
     settings = SimpleNamespace(onboarding_wizard_shown=False)
     app.config_manager = SimpleNamespace(
@@ -152,9 +172,8 @@ def test_onboarding_wizard_shown_once_with_skip_path(monkeypatch):
     )
 
     _ensure_wx_dialog_constants()
-    skip_id = getattr(wx, "ID_NO", 0)
     cancel_id = getattr(wx, "ID_CANCEL", 2)
-    responses = [skip_id, cancel_id, cancel_id, cancel_id, getattr(wx, "ID_OK", 1)]
+    responses = [cancel_id]
     monkeypatch.setattr(
         "accessiweather.app.wx.MessageDialog",
         lambda *args, **kwargs: _FakeDialog(responses),
@@ -174,11 +193,279 @@ def test_onboarding_wizard_shown_once_with_skip_path(monkeypatch):
     assert app.config_manager.update_settings.call_args_list[-1].kwargs == {
         "onboarding_wizard_shown": True
     }
+    app._run_deferred_startup_update_check.assert_called_once()
 
     settings.onboarding_wizard_shown = True
     app.config_manager.update_settings.reset_mock()
     app._maybe_show_first_start_onboarding()
     app.config_manager.update_settings.assert_not_called()
+
+
+def test_onboarding_wizard_escape_from_key_setup_closes_without_summary(monkeypatch):
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._portable_mode = False
+    app._force_wizard = False
+    app._portable_keys_imported_this_session = False
+    app._run_deferred_startup_update_check = MagicMock()
+    app._show_onboarding_readiness_summary = MagicMock()
+    app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
+    settings = SimpleNamespace(onboarding_wizard_shown=False)
+    app.config_manager = SimpleNamespace(
+        get_config=lambda: SimpleNamespace(locations=[], settings=settings),
+        update_settings=MagicMock(),
+    )
+
+    _ensure_wx_dialog_constants()
+    responses = [
+        getattr(wx, "ID_YES", 1),  # step 1: add location
+        getattr(wx, "ID_CANCEL", 2),  # OpenRouter key setup: configure myself / Escape
+    ]
+    monkeypatch.setattr(
+        "accessiweather.app.wx.MessageDialog",
+        lambda *args, **kwargs: _FakeDialog(responses),
+        raising=False,
+    )
+    monkeypatch.setattr(app, "_has_saved_api_key", lambda key_name: False)
+
+    app._maybe_show_first_start_onboarding()
+
+    app.main_window.on_add_location.assert_called_once()
+    app._show_onboarding_readiness_summary.assert_not_called()
+    assert app.config_manager.update_settings.call_args_list[-1].kwargs == {
+        "onboarding_wizard_shown": True
+    }
+    app._run_deferred_startup_update_check.assert_called_once()
+
+
+def test_onboarding_wizard_escape_from_key_entry_closes_without_summary(monkeypatch):
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._portable_mode = False
+    app._force_wizard = False
+    app._portable_keys_imported_this_session = False
+    app._run_deferred_startup_update_check = MagicMock()
+    app._show_onboarding_readiness_summary = MagicMock()
+    app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
+    settings = SimpleNamespace(onboarding_wizard_shown=False)
+    app.config_manager = SimpleNamespace(
+        get_config=lambda: SimpleNamespace(locations=[], settings=settings),
+        update_settings=MagicMock(),
+    )
+
+    class _CancelTextEntryDialog:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def ShowModal(self):
+            return getattr(wx, "ID_CANCEL", 2)
+
+        def GetValue(self):
+            return ""
+
+    _ensure_wx_dialog_constants()
+    responses = [
+        getattr(wx, "ID_YES", 1),  # step 1: add location
+        getattr(wx, "ID_YES", 1),  # OpenRouter key: set up now
+        getattr(wx, "ID_YES", 1),  # OpenRouter key: enter key
+    ]
+    monkeypatch.setattr(
+        "accessiweather.app.wx.MessageDialog",
+        lambda *args, **kwargs: _FakeDialog(responses),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "accessiweather.app.wx.TextEntryDialog",
+        _CancelTextEntryDialog,
+        raising=False,
+    )
+    monkeypatch.setattr(app, "_has_saved_api_key", lambda key_name: False)
+
+    app._maybe_show_first_start_onboarding()
+
+    app._show_onboarding_readiness_summary.assert_not_called()
+    assert app.config_manager.update_settings.call_args_list[-1].kwargs == {
+        "onboarding_wizard_shown": True
+    }
+    app._run_deferred_startup_update_check.assert_called_once()
+
+
+def test_onboarding_wizard_escape_from_import_file_picker_closes_without_summary(
+    monkeypatch, tmp_path
+):
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._portable_mode = False
+    app._force_wizard = False
+    app._portable_keys_imported_this_session = False
+    app._run_deferred_startup_update_check = MagicMock()
+    app._show_onboarding_readiness_summary = MagicMock()
+    app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
+    settings = SimpleNamespace(onboarding_wizard_shown=False)
+    config = SimpleNamespace(locations=[], settings=settings)
+    app.config_manager = SimpleNamespace(
+        get_config=lambda: config,
+        update_settings=MagicMock(),
+        import_settings=MagicMock(return_value=True),
+        import_encrypted_api_keys=MagicMock(return_value=True),
+        has_locations=lambda: False,
+        config_dir=tmp_path,
+    )
+
+    class _CancelFileDialog:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def ShowModal(self):
+            return getattr(wx, "ID_CANCEL", 2)
+
+        def GetPath(self):
+            return ""
+
+    _ensure_wx_dialog_constants()
+    responses = [
+        getattr(wx, "ID_NO", 0),  # step 1: import existing
+        getattr(wx, "ID_YES", 1),  # import settings
+    ]
+    monkeypatch.setattr(
+        "accessiweather.app.wx.MessageDialog",
+        lambda *args, **kwargs: _FakeDialog(responses),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "accessiweather.app.wx.FileDialog",
+        _CancelFileDialog,
+        raising=False,
+    )
+
+    app._maybe_show_first_start_onboarding()
+
+    app.config_manager.import_settings.assert_not_called()
+    app._show_onboarding_readiness_summary.assert_not_called()
+    assert app.config_manager.update_settings.call_args_list[-1].kwargs == {
+        "onboarding_wizard_shown": True
+    }
+    app._run_deferred_startup_update_check.assert_called_once()
+
+
+def test_onboarding_wizard_imports_existing_setup_and_finishes(monkeypatch, tmp_path):
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._portable_mode = False
+    app._force_wizard = False
+    app._portable_keys_imported_this_session = False
+    app.refresh_runtime_settings = MagicMock()
+    app._run_deferred_startup_update_check = MagicMock()
+    app.main_window = SimpleNamespace(
+        on_add_location=MagicMock(),
+        open_settings=MagicMock(),
+        _populate_locations=MagicMock(),
+        refresh_weather_async=MagicMock(),
+    )
+    settings = SimpleNamespace(onboarding_wizard_shown=False)
+    config = SimpleNamespace(locations=[], settings=settings)
+
+    def import_settings(_path):
+        config.locations.append(SimpleNamespace(name="Home"))
+        return True
+
+    app.config_manager = SimpleNamespace(
+        get_config=lambda: config,
+        update_settings=MagicMock(),
+        import_settings=MagicMock(side_effect=import_settings),
+        import_encrypted_api_keys=MagicMock(return_value=True),
+        has_locations=lambda: bool(config.locations),
+    )
+
+    _ensure_wx_dialog_constants()
+    responses = [
+        getattr(wx, "ID_NO", 0),  # step 1: import existing
+        getattr(wx, "ID_YES", 1),  # import settings
+        getattr(wx, "ID_YES", 1),  # import API keys
+        getattr(wx, "ID_OK", 1),  # onboarding summary
+    ]
+    monkeypatch.setattr(
+        "accessiweather.app.wx.MessageDialog",
+        lambda *args, **kwargs: _FakeDialog(responses),
+        raising=False,
+    )
+    file_paths = [str(tmp_path / "settings.json"), str(tmp_path / "api-keys.keys")]
+    monkeypatch.setattr(
+        "accessiweather.app.wx.FileDialog",
+        lambda *args, **kwargs: _FakeFileDialog(file_paths),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "accessiweather.app.wx.TextEntryDialog",
+        lambda *args, **kwargs: _FakeTextEntryDialog(["FAKE_IMPORT_PASSPHRASE"]),
+        raising=False,
+    )
+    monkeypatch.setattr("accessiweather.app.wx.MessageBox", lambda *a, **kw: None, raising=False)
+    monkeypatch.setattr(app, "_has_saved_api_key", lambda key_name: True)
+
+    app._maybe_show_first_start_onboarding()
+
+    app.main_window.on_add_location.assert_not_called()
+    app.config_manager.import_settings.assert_called_once()
+    app.config_manager.import_encrypted_api_keys.assert_called_once()
+    app.main_window._populate_locations.assert_called()
+    app.main_window.refresh_weather_async.assert_called_with(force_refresh=True)
+    assert app.config_manager.update_settings.call_args_list[-1].kwargs == {
+        "onboarding_wizard_shown": True
+    }
+    app._run_deferred_startup_update_check.assert_called_once()
+
+
+def test_onboarding_import_prompt_can_continue_normal_wizard(monkeypatch):
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._portable_mode = False
+    app._force_wizard = False
+    app._portable_keys_imported_this_session = False
+    app.main_window = SimpleNamespace(on_add_location=MagicMock(), open_settings=MagicMock())
+    settings = SimpleNamespace(onboarding_wizard_shown=False)
+    app.config_manager = SimpleNamespace(
+        get_config=lambda: SimpleNamespace(locations=[], settings=settings),
+        update_settings=MagicMock(),
+        import_settings=MagicMock(return_value=False),
+        import_encrypted_api_keys=MagicMock(return_value=False),
+    )
+
+    _ensure_wx_dialog_constants()
+    responses = [
+        getattr(wx, "ID_NO", 0),  # step 1: import existing
+        getattr(wx, "ID_NO", 0),  # skip settings import
+        getattr(wx, "ID_NO", 0),  # skip API key import
+        getattr(wx, "ID_NO", 0),  # skip OpenRouter key
+        getattr(wx, "ID_NO", 0),  # skip Pirate Weather key
+        getattr(wx, "ID_OK", 1),  # onboarding summary
+    ]
+    monkeypatch.setattr(
+        "accessiweather.app.wx.MessageDialog",
+        lambda *args, **kwargs: _FakeDialog(responses),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        "accessiweather.app.wx.TextEntryDialog",
+        lambda *args, **kwargs: _FakeTextEntryDialog([]),
+        raising=False,
+    )
+    monkeypatch.setattr(app, "_has_saved_api_key", lambda key_name: False)
+
+    app._maybe_show_first_start_onboarding()
+
+    app.config_manager.import_settings.assert_not_called()
+    app.config_manager.import_encrypted_api_keys.assert_not_called()
+    assert app.config_manager.update_settings.call_args_list[-1].kwargs == {
+        "onboarding_wizard_shown": True
+    }
 
 
 def test_onboarding_wizard_portable_happy_path_sets_keys_and_bundle(monkeypatch, tmp_path):
@@ -199,10 +486,12 @@ def test_onboarding_wizard_portable_happy_path_sets_keys_and_bundle(monkeypatch,
     )
 
     _ensure_wx_dialog_constants()
-    # Step 1: skip location; step 2: OR key; step 3: Pirate key; summary OK
+    # Step 1: add location; step 2: OR key; step 3: Pirate key; summary OK
     responses = [
-        getattr(wx, "ID_NO", 0),  # step 1: skip location
+        getattr(wx, "ID_YES", 1),  # step 1: add location
+        getattr(wx, "ID_YES", 1),  # step 2: OR key — set up now
         getattr(wx, "ID_YES", 1),  # step 2: OR key — choose "Enter key"
+        getattr(wx, "ID_YES", 1),  # step 3: Pirate key — set up now
         getattr(wx, "ID_YES", 1),  # step 3: Pirate key — choose "Enter key"
         getattr(wx, "ID_OK", 1),  # onboarding summary
     ]
@@ -264,14 +553,14 @@ def test_onboarding_wizard_api_key_link_actions_open_browser(monkeypatch):
 
     _ensure_wx_dialog_constants()
     responses = [
-        getattr(wx, "ID_NO", 0),
-        getattr(wx, "ID_NO", 0),
-        getattr(wx, "ID_YES", 1),
-        getattr(wx, "ID_NO", 0),
-        getattr(wx, "ID_NO", 0),
-        getattr(wx, "ID_CANCEL", 2),
-        getattr(wx, "ID_NO", 0),
-        getattr(wx, "ID_CANCEL", 2),
+        getattr(wx, "ID_YES", 1),  # step 1: add location
+        getattr(wx, "ID_YES", 1),  # OpenRouter: set up now
+        getattr(wx, "ID_NO", 0),  # OpenRouter: open key page
+        getattr(wx, "ID_YES", 1),  # OpenRouter: enter key
+        getattr(wx, "ID_NO", 0),  # OpenRouter saved: test later
+        getattr(wx, "ID_YES", 1),  # Pirate Weather: set up now
+        getattr(wx, "ID_NO", 0),  # Pirate Weather: open key page
+        getattr(wx, "ID_YES", 1),  # Pirate Weather: enter blank to skip
         getattr(wx, "ID_OK", 1),
     ]
     monkeypatch.setattr(
@@ -323,10 +612,9 @@ def test_onboarding_summary_includes_readiness_status(monkeypatch):
 
     _ensure_wx_dialog_constants()
     responses = [
+        getattr(wx, "ID_YES", 1),
         getattr(wx, "ID_NO", 0),
-        getattr(wx, "ID_CANCEL", 2),
-        getattr(wx, "ID_CANCEL", 2),
-        getattr(wx, "ID_CANCEL", 2),
+        getattr(wx, "ID_NO", 0),
         getattr(wx, "ID_OK", 1),
     ]
     captured_messages: list[str] = []
@@ -374,10 +662,9 @@ def test_onboarding_completion_triggers_deferred_startup_update_check(monkeypatc
 
     _ensure_wx_dialog_constants()
     responses = [
+        getattr(wx, "ID_YES", 1),
         getattr(wx, "ID_NO", 0),
-        getattr(wx, "ID_CANCEL", 2),
-        getattr(wx, "ID_CANCEL", 2),
-        getattr(wx, "ID_CANCEL", 2),
+        getattr(wx, "ID_NO", 0),
         getattr(wx, "ID_OK", 1),
     ]
     monkeypatch.setattr(
@@ -422,11 +709,11 @@ def _capture_wizard_step_messages(monkeypatch, *, portable: bool):
             super().__init__(responses)
             captured_messages.append(message)
 
-    # Skip location, skip OR key, skip Pirate key, OK summary
+    # Add location, skip OR key, skip Pirate key, OK summary
     responses = [
+        getattr(wx, "ID_YES", 1),
         getattr(wx, "ID_NO", 0),
-        getattr(wx, "ID_CANCEL", 2),
-        getattr(wx, "ID_CANCEL", 2),
+        getattr(wx, "ID_NO", 0),
         getattr(wx, "ID_OK", 1),
     ]
     monkeypatch.setattr(
@@ -934,10 +1221,10 @@ def test_wizard_portable_export_failure_shows_warning(monkeypatch, tmp_path):
 
     _ensure_wx_dialog_constants()
     responses = [
-        getattr(wx, "ID_NO", 0),  # step 1: skip location
+        getattr(wx, "ID_YES", 1),  # step 1: add location
+        getattr(wx, "ID_YES", 1),  # step 2: OR key — set up now
         getattr(wx, "ID_YES", 1),  # step 2: OR key — choose "Enter key"
-        getattr(wx, "ID_CANCEL", 2),  # step 3: VC key — skip
-        getattr(wx, "ID_CANCEL", 2),  # step 4: Pirate key — skip
+        getattr(wx, "ID_NO", 0),  # step 3: Pirate key — skip
         getattr(wx, "ID_OK", 1),  # onboarding summary
     ]
     monkeypatch.setattr(
