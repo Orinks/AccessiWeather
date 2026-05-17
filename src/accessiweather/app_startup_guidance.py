@@ -10,6 +10,10 @@ import wx
 logger = logging.getLogger("accessiweather.app")
 
 
+class _OnboardingCancelled(Exception):
+    """Raised when the user exits first-start onboarding."""
+
+
 class AppStartupGuidanceMixin:
     def _schedule_startup_guidance_prompts(self) -> None:
         """Schedule lightweight first-run and portable hints after startup."""
@@ -212,13 +216,13 @@ class AppStartupGuidanceMixin:
         if result == wx.ID_YES and self.main_window:
             self.main_window.open_settings()
 
-    def _prompt_optional_secret(self, title: str, message: str) -> str | None:
+    def _prompt_optional_secret(self, title: str, message: str) -> str:
         """Prompt for optional secret text value. Empty input means skip."""
         with wx.TextEntryDialog(
             self.main_window, message, title, style=wx.OK | wx.CANCEL | wx.TE_PASSWORD
         ) as dlg:
             if dlg.ShowModal() != wx.ID_OK:
-                return None
+                raise _OnboardingCancelled
             return dlg.GetValue().strip() or ""
 
     def _prompt_optional_secret_with_link(
@@ -227,16 +231,35 @@ class AppStartupGuidanceMixin:
         message: str,
         key_page_url: str,
         key_page_action_label: str,
-    ) -> str | None:
+    ) -> str:
         """Prompt for an optional secret with an action to open its key page."""
+        setup_dialog = wx.MessageDialog(
+            self.main_window,
+            f"{message}\n\nChoose Set up now to enter or get a key, Skip this key to keep going, "
+            "or Configure myself to close the wizard.",
+            title,
+            wx.YES_NO | wx.CANCEL | wx.ICON_INFORMATION,
+        )
+        setup_dialog.SetYesNoCancelLabels("Set up now", "Skip this key", "Configure myself")
+        setup_result = setup_dialog.ShowModal()
+        setup_dialog.Destroy()
+
+        if setup_result == wx.ID_NO:
+            return ""
+        if setup_result != wx.ID_YES:
+            raise _OnboardingCancelled
+
         while True:
             choice_dialog = wx.MessageDialog(
                 self.main_window,
-                f"{message}\n\nChoose Enter key to type it now, {key_page_action_label}, or Skip.",
+                f"{message}\n\nChoose Enter key to type it now, {key_page_action_label}, "
+                "or Configure myself to close the wizard.",
                 title,
                 wx.YES_NO | wx.CANCEL | wx.ICON_INFORMATION,
             )
-            choice_dialog.SetYesNoCancelLabels("Enter key", key_page_action_label, "Skip")
+            choice_dialog.SetYesNoCancelLabels(
+                "Enter key", key_page_action_label, "Configure myself"
+            )
             result = choice_dialog.ShowModal()
             choice_dialog.Destroy()
 
@@ -250,7 +273,7 @@ class AppStartupGuidanceMixin:
                 except Exception as exc:
                     logger.warning("Failed opening API key page %s: %s", key_page_url, exc)
                 continue
-            return ""
+            raise _OnboardingCancelled
 
     def _maybe_offer_test_key_now(self, key_name: str) -> None:
         """Offer to open settings so users can validate the entered key immediately."""
@@ -313,6 +336,140 @@ class AppStartupGuidanceMixin:
         summary_dialog.ShowModal()
         summary_dialog.Destroy()
 
+    def _finish_first_start_onboarding(self) -> None:
+        """Mark onboarding complete and run any deferred startup work."""
+        self._show_onboarding_readiness_summary()
+        self.config_manager.update_settings(onboarding_wizard_shown=True)
+        self._run_deferred_startup_update_check()
+
+    def _skip_first_start_onboarding(self) -> None:
+        """Close first-start onboarding so users can configure manually."""
+        self.config_manager.update_settings(onboarding_wizard_shown=True)
+        self._run_deferred_startup_update_check()
+
+    def _refresh_after_onboarding_import(self) -> None:
+        """Refresh app state after importing settings or keys during onboarding."""
+        self.refresh_runtime_settings()
+        if not self.main_window:
+            return
+        if hasattr(self.main_window, "_populate_locations"):
+            self.main_window._populate_locations()
+        if (
+            hasattr(self.main_window, "refresh_weather_async")
+            and self.config_manager.has_locations()
+        ):
+            self.main_window.refresh_weather_async(force_refresh=True)
+
+    def _prompt_onboarding_settings_import(self) -> bool:
+        """Prompt for and import an AccessiWeather settings export."""
+        with wx.FileDialog(
+            self.main_window,
+            "Import AccessiWeather settings",
+            wildcard="JSON files (*.json)|*.json",
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+        ) as dlg:
+            if dlg.ShowModal() != wx.ID_OK:
+                raise _OnboardingCancelled
+            import_path = Path(dlg.GetPath())
+
+        if self.config_manager.import_settings(import_path):
+            self._refresh_after_onboarding_import()
+            wx.MessageBox(
+                "Settings imported successfully. Any saved locations from the backup are ready to use.",
+                "Settings imported",
+                wx.OK | wx.ICON_INFORMATION,
+            )
+            return True
+
+        wx.MessageBox(
+            "Failed to import settings. The file may be invalid or corrupted.",
+            "Settings import failed",
+            wx.OK | wx.ICON_ERROR,
+        )
+        return False
+
+    def _prompt_onboarding_api_key_import(self) -> bool:
+        """Prompt for and import an encrypted API key bundle."""
+        with wx.FileDialog(
+            self.main_window,
+            "Import API keys (encrypted)",
+            wildcard="Encrypted bundle (*.keys)|*.keys|Legacy bundle (*.awkeys)|*.awkeys",
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+        ) as dlg:
+            if dlg.ShowModal() != wx.ID_OK:
+                raise _OnboardingCancelled
+            import_path = Path(dlg.GetPath())
+
+        passphrase = self._prompt_optional_secret(
+            "Import API keys (encrypted)",
+            "Enter the passphrase used when exporting this encrypted API key bundle.",
+        )
+        if not passphrase:
+            return False
+
+        if self.config_manager.import_encrypted_api_keys(import_path, passphrase):
+            if self._portable_mode:
+                self._portable_keys_imported_this_session = True
+                from .config.secure_storage import SecureStorage
+
+                SecureStorage.set_password(self._PORTABLE_PASSPHRASE_KEYRING_KEY, passphrase)
+                self._write_keys_file_after_import(self.config_manager.config_dir, passphrase)
+            self._refresh_after_onboarding_import()
+            wx.MessageBox(
+                "API keys imported successfully. They are now active.",
+                "API keys imported",
+                wx.OK | wx.ICON_INFORMATION,
+            )
+            return True
+
+        wx.MessageBox(
+            "Failed to import encrypted API keys. Check the passphrase and bundle file.",
+            "API key import failed",
+            wx.OK | wx.ICON_ERROR,
+        )
+        return False
+
+    def _maybe_run_onboarding_import_flow(self) -> bool:
+        """Offer first-run import of settings and encrypted API keys."""
+        if not self.config_manager or not all(
+            hasattr(self.config_manager, name)
+            for name in ("import_settings", "import_encrypted_api_keys")
+        ):
+            return False
+
+        imported_any = False
+        settings_dialog = wx.MessageDialog(
+            self.main_window,
+            "Import a settings backup now? This can restore preferences and saved locations.\n\n"
+            "Choose Configure myself, or press Escape, to close this wizard.",
+            "Import settings",
+            wx.YES_NO | wx.CANCEL | wx.ICON_INFORMATION,
+        )
+        settings_dialog.SetYesNoCancelLabels("Import settings", "Skip settings", "Configure myself")
+        settings_choice = settings_dialog.ShowModal()
+        settings_dialog.Destroy()
+        if settings_choice == wx.ID_YES:
+            imported_any = self._prompt_onboarding_settings_import() or imported_any
+        elif settings_choice != wx.ID_NO:
+            raise _OnboardingCancelled
+
+        keys_dialog = wx.MessageDialog(
+            self.main_window,
+            "Import an encrypted API key bundle now?\n\n"
+            "Choose Configure myself, or press Escape, to close this wizard.",
+            "Import API keys",
+            wx.YES_NO | wx.CANCEL | wx.ICON_INFORMATION,
+        )
+        keys_dialog.SetYesNoCancelLabels("Import API keys", "Skip API keys", "Configure myself")
+        keys_choice = keys_dialog.ShowModal()
+        keys_dialog.Destroy()
+        if keys_choice == wx.ID_YES:
+            imported_any = self._prompt_onboarding_api_key_import() or imported_any
+        elif keys_choice != wx.ID_NO:
+            raise _OnboardingCancelled
+
+        return imported_any
+
     def _maybe_show_first_start_onboarding(self) -> None:
         """Show a minimal onboarding wizard once on fresh setup."""
         if not self._should_show_first_start_onboarding():
@@ -323,16 +480,31 @@ class AppStartupGuidanceMixin:
 
         step1 = wx.MessageDialog(
             self.main_window,
-            f"Welcome to AccessiWeather.\n\nStep 1 of {total_steps}: Add your first location now?",
+            f"Welcome to AccessiWeather.\n\n"
+            f"Step 1 of {total_steps}: Add your first location now?\n\n"
+            "If you already have settings or API keys to bring over, choose Import existing.\n\n"
+            "Choose Configure myself, or press Escape, to close this wizard and set things up later.",
             "Getting started",
-            wx.YES_NO | wx.ICON_INFORMATION,
+            wx.YES_NO | wx.CANCEL | wx.ICON_INFORMATION,
         )
-        step1.SetYesNoLabels("Add location", "Skip")
+        step1.SetYesNoCancelLabels("Add location", "Import existing", "Configure myself")
         step1_result = step1.ShowModal()
         step1.Destroy()
 
         if step1_result == wx.ID_YES and self.main_window:
             self.main_window.on_add_location()
+        elif step1_result == wx.ID_NO:
+            try:
+                imported = self._maybe_run_onboarding_import_flow()
+            except _OnboardingCancelled:
+                self._skip_first_start_onboarding()
+                return
+            if imported and self.config_manager.has_locations():
+                self._finish_first_start_onboarding()
+                return
+        else:
+            self._skip_first_start_onboarding()
+            return
 
         from .config.secure_storage import is_keyring_available
 
@@ -355,40 +527,54 @@ class AppStartupGuidanceMixin:
         # the bundle rather than going through keyring (which isn't used in portable).
         _wizard_keys: dict[str, str] = {}
 
-        openrouter_key = self._prompt_optional_secret_with_link(
-            "OpenRouter API key (optional)",
-            f"Step 2 of {total_steps}: Enter your OpenRouter API key now, or leave blank to skip.",
-            "https://openrouter.ai/keys",
-            "Get OpenRouter API key",
-        )
-        if openrouter_key is not None and openrouter_key:
-            if not self._portable_mode:
-                self.config_manager.update_settings(openrouter_api_key=openrouter_key)
-                self._maybe_offer_test_key_now("OpenRouter API key")
-            else:
-                _wizard_keys["openrouter_api_key"] = openrouter_key
+        if not self._has_saved_api_key("openrouter_api_key"):
+            try:
+                openrouter_key = self._prompt_optional_secret_with_link(
+                    "OpenRouter API key (optional)",
+                    f"Step 2 of {total_steps}: Enter your OpenRouter API key now, or leave blank to skip.",
+                    "https://openrouter.ai/keys",
+                    "Get OpenRouter API key",
+                )
+            except _OnboardingCancelled:
+                self._skip_first_start_onboarding()
+                return
+            if openrouter_key is not None and openrouter_key:
+                if not self._portable_mode:
+                    self.config_manager.update_settings(openrouter_api_key=openrouter_key)
+                    self._maybe_offer_test_key_now("OpenRouter API key")
+                else:
+                    _wizard_keys["openrouter_api_key"] = openrouter_key
 
-        pirate_weather_key = self._prompt_optional_secret_with_link(
-            "Pirate Weather provider key (optional)",
-            f"Step 3 of {total_steps}: Enter your Pirate Weather provider key now, or leave blank to skip.",
-            "https://pirateweather.net/",
-            "Get Pirate Weather provider key",
-        )
-        if pirate_weather_key is not None and pirate_weather_key:
-            if not self._portable_mode:
-                self.config_manager.update_settings(pirate_weather_api_key=pirate_weather_key)
-                self._maybe_offer_test_key_now("Pirate Weather provider key")
-            else:
-                _wizard_keys["pirate_weather_api_key"] = pirate_weather_key
+        if not self._has_saved_api_key("pirate_weather_api_key"):
+            try:
+                pirate_weather_key = self._prompt_optional_secret_with_link(
+                    "Pirate Weather provider key (optional)",
+                    f"Step 3 of {total_steps}: Enter your Pirate Weather provider key now, or leave blank to skip.",
+                    "https://pirateweather.net/",
+                    "Get Pirate Weather provider key",
+                )
+            except _OnboardingCancelled:
+                self._skip_first_start_onboarding()
+                return
+            if pirate_weather_key is not None and pirate_weather_key:
+                if not self._portable_mode:
+                    self.config_manager.update_settings(pirate_weather_api_key=pirate_weather_key)
+                    self._maybe_offer_test_key_now("Pirate Weather provider key")
+                else:
+                    _wizard_keys["pirate_weather_api_key"] = pirate_weather_key
 
         if self._portable_mode and _wizard_keys:
             # Keys were entered — prompt for passphrase and write bundle directly.
-            passphrase = self._prompt_optional_secret(
-                f"Step {total_steps} of {total_steps}: Secure your API keys",
-                "Enter a passphrase to encrypt your API keys into a portable bundle.\n"
-                "This bundle travels with the app so your keys work on any machine.\n\n"
-                "Leave blank to skip (keys will not be saved).",
-            )
+            try:
+                passphrase = self._prompt_optional_secret(
+                    f"Step {total_steps} of {total_steps}: Secure your API keys",
+                    "Enter a passphrase to encrypt your API keys into a portable bundle.\n"
+                    "This bundle travels with the app so your keys work on any machine.\n\n"
+                    "Leave blank to skip (keys will not be saved).",
+                )
+            except _OnboardingCancelled:
+                self._skip_first_start_onboarding()
+                return
             if passphrase:
                 try:
                     # Set keys in-memory first so export_encrypted_api_keys can read them.
@@ -430,9 +616,7 @@ class AppStartupGuidanceMixin:
                 )
         # No keys entered — skip step 4 entirely, nothing to bundle.
 
-        self._show_onboarding_readiness_summary()
-        self.config_manager.update_settings(onboarding_wizard_shown=True)
-        self._run_deferred_startup_update_check()
+        self._finish_first_start_onboarding()
 
     def _show_force_start_dialog(self) -> bool:
         """
