@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - Linux nightly and release downloads now ship as `.tar.gz` tarballs instead of ZIP files.
+- Alert sounds and sound-pack creation now focus on alert severity instead of a long list of specific alert names, while existing packs can keep their older mappings.
 
 ### Fixed
 - Saving Settings no longer waits on the Windows startup shortcut check unless you actually change the launch-at-startup checkbox.

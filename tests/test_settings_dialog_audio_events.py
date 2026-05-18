@@ -4,6 +4,12 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from accessiweather.models.config import AppSettings
+from accessiweather.sound_events import (
+    LEGACY_SOUND_EVENT_KEYS,
+    SOUND_EVENT_SECTIONS,
+    USER_MUTABLE_SOUND_EVENT_KEYS,
+    normalize_known_muted_sound_events,
+)
 from accessiweather.ui.dialogs.settings_dialog import SettingsDialogSimple
 from accessiweather.ui.dialogs.settings_tabs.audio import AudioTab
 
@@ -72,6 +78,7 @@ def _make_dialog(settings: SimpleNamespace) -> SettingsDialogSimple:
     dialog._sound_pack_ids = ["default"]
     dialog._selected_specific_model = None
     dialog._event_sound_states = AudioTab._build_default_event_sound_states()
+    dialog._hidden_muted_sound_events = []
     dialog._source_settings_states = SettingsDialogSimple._build_default_source_settings_states()
     dialog._pw_config_sizer = _DummySizer()
     dialog._auto_sources_sizer = _DummySizer()
@@ -122,6 +129,25 @@ def test_save_settings_collects_unchecked_audio_events():
     assert kwargs["muted_sound_events"] == ["data_updated"]
 
 
+def test_save_settings_preserves_hidden_legacy_muted_audio_events():
+    dialog = _make_dialog(
+        SimpleNamespace(
+            sound_enabled=True,
+            sound_pack="default",
+            muted_sound_events=["tornado_warning", "data_updated"],
+        )
+    )
+    dialog._controls["sound_enabled"].SetValue(True)
+    dialog._controls["sound_pack"].SetSelection(0)
+
+    dialog._load_settings()
+    success = dialog._save_settings()
+
+    assert success is True
+    kwargs = dialog.config_manager.update_settings.call_args.kwargs
+    assert kwargs["muted_sound_events"] == ["tornado_warning", "data_updated"]
+
+
 def test_configure_event_sounds_applies_modal_result_and_refreshes_summary():
     dialog = _make_dialog(SimpleNamespace())
     dialog._run_event_sounds_dialog = MagicMock(
@@ -160,3 +186,38 @@ def test_weather_refresh_sound_is_muted_by_default():
     settings = AppSettings.from_dict({})
 
     assert settings.muted_sound_events == ["data_updated"]
+
+
+def test_visible_audio_events_are_core_lifecycle_and_severity_only():
+    section_titles = [title for title, _description, _events in SOUND_EVENT_SECTIONS]
+
+    assert section_titles == ["Core notifications", "App lifecycle", "Alert severities"]
+    assert {
+        "alert",
+        "notify",
+        "error",
+        "success",
+        "data_updated",
+        "fetch_error",
+        "discussion_update",
+        "severe_risk",
+        "startup",
+        "exit",
+        "extreme",
+        "severe",
+        "moderate",
+        "minor",
+    } == USER_MUTABLE_SOUND_EVENT_KEYS
+    assert "tornado_warning" not in USER_MUTABLE_SOUND_EVENT_KEYS
+    assert "warning" not in USER_MUTABLE_SOUND_EVENT_KEYS
+
+
+def test_legacy_muted_alert_keys_are_preserved_but_hidden_from_ui():
+    assert "tornado_warning" in LEGACY_SOUND_EVENT_KEYS
+    assert "warning" in LEGACY_SOUND_EVENT_KEYS
+
+    normalized = normalize_known_muted_sound_events(
+        ["data_updated", "tornado_warning", "warning", "not_real"]
+    )
+
+    assert normalized == ["data_updated", "tornado_warning", "warning"]

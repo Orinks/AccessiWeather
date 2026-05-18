@@ -82,28 +82,26 @@ Both formats can be mixed - inline volume takes precedence if specified.
 - `notify` - General notifications
 - `error` - Error conditions and failures
 - `success` - Successful operations
+- `data_updated` - Weather refresh completed
+- `fetch_error` - Weather refresh failed
+- `discussion_update` - Forecast discussion updated
+- `severe_risk` - Severe weather risk changed
 - `startup` - Application startup sound
 - `exit` - Application exit sound
 
-### Weather-Specific Sound Events
+### Alert Severity Sound Events
 
-AccessiWeather supports specific sound mappings for different types of weather alerts:
+AccessiWeather maps alert notifications by severity first, then falls back to
+`alert` and `notify` when a pack does not provide the severity key.
 
-- `tornado_warning` - Tornado warnings (highest priority)
-- `thunderstorm_warning` - Severe thunderstorm warnings
-- `flood_warning` - Flood warnings
-- `heat_advisory` - Heat advisories and excessive heat warnings
-- `winter_storm_warning` - Winter storm warnings
-- `hurricane_warning` - Hurricane warnings
-- `wind_warning` - High wind warnings
-- `fire_warning` - Fire weather warnings
-- `air_quality_alert` - Air quality alerts
-- `fog_advisory` - Dense fog advisories
-- `ice_warning` - Ice storm warnings
-- `snow_warning` - Heavy snow warnings
-- `dust_warning` - Dust storm warnings
-- `warning` - Generic severe weather warnings
-- `watch` - Generic weather watches
+- `extreme` - Extreme severity alerts
+- `severe` - Severe severity alerts
+- `moderate` - Moderate severity alerts
+- `minor` - Minor severity alerts
+
+Older sound packs can keep specific keys such as `tornado_warning`, `warning`,
+or `watch`; AccessiWeather still tolerates those mappings for compatibility,
+but new packs should use the compact severity keys above.
 
 ## Built-in Sound Packs
 

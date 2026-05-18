@@ -40,6 +40,11 @@ class AudioTab:
         return tuple(USER_MUTABLE_SOUND_EVENTS)
 
     @classmethod
+    def _get_mutable_sound_event_keys(cls) -> frozenset[str]:
+        """Return visible user-configurable sound event keys."""
+        return frozenset(event_key for event_key, _label in cls._get_mutable_sound_events())
+
+    @classmethod
     def _build_default_event_sound_states(cls) -> dict[str, bool]:
         """Return the default enabled state for each mutable sound event."""
         return {event_key: True for event_key, _label in cls._get_mutable_sound_events()}
@@ -61,11 +66,13 @@ class AudioTab:
             getattr(self.dialog, "_event_sound_states", {})
             or self._build_default_event_sound_states()
         )
-        return [
+        hidden_events = list(getattr(self.dialog, "_hidden_muted_sound_events", []))
+        visible_events = [
             event_key
             for event_key, _label in self._get_mutable_sound_events()
             if not state_map.get(event_key, True)
         ]
+        return hidden_events + [event for event in visible_events if event not in hidden_events]
 
     def _get_event_sound_summary_text(self) -> str:
         """Build summary text shown on the audio tab."""
@@ -83,7 +90,17 @@ class AudioTab:
 
     def set_event_sound_states(self, muted_sound_events: list[str] | tuple[str, ...]) -> None:
         """Apply muted event settings to the in-memory audio state."""
-        muted_event_set = set(muted_sound_events)
+        try:
+            from ....sound_events import normalize_known_muted_sound_events
+        except ImportError:
+            from accessiweather.sound_events import normalize_known_muted_sound_events
+
+        normalized_muted_events = normalize_known_muted_sound_events(muted_sound_events)
+        mutable_keys = self._get_mutable_sound_event_keys()
+        self.dialog._hidden_muted_sound_events = [
+            event for event in normalized_muted_events if event not in mutable_keys
+        ]
+        muted_event_set = set(normalized_muted_events)
         self.dialog._event_sound_states = {
             event_key: event_key not in muted_event_set
             for event_key, _label in self._get_mutable_sound_events()
