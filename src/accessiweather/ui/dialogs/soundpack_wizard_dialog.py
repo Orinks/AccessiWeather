@@ -53,7 +53,7 @@ class SoundPackWizardDialog(wx.Dialog):
         """Render the current step."""
         titles = {
             1: "Pack Details",
-            2: "Select Alert Types",
+            2: "Select Sound Events",
             3: "Assign Sounds",
             4: "Preview & Finalize",
         }
@@ -130,10 +130,10 @@ class SoundPackWizardDialog(wx.Dialog):
         self.name_input.SetFocus()
 
     def _build_step2(self) -> None:
-        """Step 2: Select alert types."""
+        """Step 2: Select sound events."""
         help_text = wx.StaticText(
             self.content_panel,
-            label="Choose the alert categories you want sounds for:",
+            label="Choose the app and alert-severity events you want sounds for:",
         )
         self.content_sizer.Add(help_text, 0, wx.BOTTOM, 10)
 
@@ -166,17 +166,22 @@ class SoundPackWizardDialog(wx.Dialog):
         self.content_sizer.Add(btn_sizer, 0)
 
     def _select_common_alerts(self, event) -> None:
-        """Select common alert types."""
+        """Select common sound events."""
         common = {
             "alert",
             "notify",
             "error",
             "success",
+            "data_updated",
+            "fetch_error",
+            "discussion_update",
+            "severe_risk",
             "startup",
             "exit",
-            "tornado_warning",
-            "thunderstorm_warning",
-            "flood_warning",
+            "extreme",
+            "severe",
+            "moderate",
+            "minor",
         }
         for key, cb in self.category_checks:
             cb.SetValue(key in common)
@@ -190,7 +195,7 @@ class SoundPackWizardDialog(wx.Dialog):
         """Step 3: Assign sounds."""
         help_text = wx.StaticText(
             self.content_panel,
-            label="Assign a sound file to each selected alert. You can leave some blank.",
+            label="Assign a sound file to each selected event. You can leave some blank.",
         )
         self.content_sizer.Add(help_text, 0, wx.BOTTOM, 10)
 
@@ -374,7 +379,7 @@ class SoundPackWizardDialog(wx.Dialog):
             ]
             if not self.state.selected_alert_keys:
                 wx.MessageBox(
-                    "Please select at least one alert type.",
+                    "Please select at least one sound event.",
                     "No Selection",
                     wx.OK | wx.ICON_WARNING,
                 )
