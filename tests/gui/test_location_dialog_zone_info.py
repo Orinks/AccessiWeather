@@ -36,12 +36,21 @@ for _attr, _val in {
     "RIGHT": 0x0020,
     "TOP": 0x0040,
     "BOTTOM": 0x0080,
+    "RESIZE_BORDER": 0x0040,
+    "TE_PROCESS_ENTER": 0x0400,
+    "LC_REPORT": 0x4000,
+    "LC_SINGLE_SEL": 0x2000,
+    "BORDER_SUNKEN": 0x0800,
 }.items():
     if not hasattr(_wx, _attr):
         setattr(_wx, _attr, _val)
 
+for _attr in ("EVT_TEXT_ENTER", "EVT_LIST_ITEM_SELECTED"):
+    if not hasattr(_wx, _attr):
+        setattr(_wx, _attr, MagicMock(name=_attr))
+
 # StaticBox / StaticBoxSizer / StdDialogButtonSizer / Size are not in the root stub.
-for _attr in ("StaticBox", "StaticBoxSizer", "StdDialogButtonSizer", "Size"):
+for _attr in ("ListCtrl", "StaticBox", "StaticBoxSizer", "StdDialogButtonSizer", "Size"):
     if not hasattr(_wx, _attr):
         setattr(_wx, _attr, MagicMock(name=_attr))
 
@@ -128,6 +137,7 @@ def recorder():
     # Track StaticBox creations — record Show() calls for visibility assertions.
     def _make_static_box(*args, **kwargs):
         box = MagicMock(name="StaticBox")
+        box._test_label = kwargs.get("label", args[1] if len(args) > 1 else "")
         box.IsShown.return_value = True
 
         def _box_show(visible=True):
@@ -203,6 +213,19 @@ def _find_text_with_prefix(texts, prefix: str):
     return None
 
 
+def _find_static_box_with_label(boxes, label: str):
+    """Return the first StaticBox mock whose label matches."""
+    for box in boxes:
+        if box._test_label == label:
+            return box
+    return None
+
+
+def _open_edit_dialog(location: Location):
+    """Open the edit dialog with the app argument required by current UI wiring."""
+    return EditLocationDialog(parent=MagicMock(), app=MagicMock(), location=location)
+
+
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
@@ -220,7 +243,7 @@ class TestEditLocationDialogZoneInfo:
             cwa_office="RAH",
         )
 
-        EditLocationDialog(parent=MagicMock(), location=loc)
+        _open_edit_dialog(loc)
 
         zone_row = _find_text_with_prefix(recorder.static_texts, "Forecast Zone:")
         office_row = _find_text_with_prefix(recorder.static_texts, "NWS Office:")
@@ -230,8 +253,9 @@ class TestEditLocationDialogZoneInfo:
         assert office_row._test_label == "NWS Office: RAH"
 
         # StaticBox exists and was NOT hidden.
-        assert len(recorder.static_boxes) == 1
-        assert recorder.static_boxes[0].IsShown() is True
+        zone_box = _find_static_box_with_label(recorder.static_boxes, "NWS Zone Information")
+        assert zone_box is not None
+        assert zone_box.IsShown() is True
 
     def test_non_us_location_hides_staticbox(self, recorder):
         """Non-US location hides the entire NWS Zone Information StaticBox."""
@@ -244,10 +268,10 @@ class TestEditLocationDialogZoneInfo:
             cwa_office=None,
         )
 
-        EditLocationDialog(parent=MagicMock(), location=loc)
+        _open_edit_dialog(loc)
 
-        assert len(recorder.static_boxes) == 1
-        box = recorder.static_boxes[0]
+        box = _find_static_box_with_label(recorder.static_boxes, "NWS Zone Information")
+        assert box is not None
         # Show(False) was called on the box.
         box.Show.assert_called_once_with(False)
         assert box.IsShown() is False
@@ -263,7 +287,7 @@ class TestEditLocationDialogZoneInfo:
             cwa_office=None,
         )
 
-        EditLocationDialog(parent=MagicMock(), location=loc)
+        _open_edit_dialog(loc)
 
         zone_row = _find_text_with_prefix(recorder.static_texts, "Forecast Zone:")
         office_row = _find_text_with_prefix(recorder.static_texts, "NWS Office:")
@@ -273,8 +297,10 @@ class TestEditLocationDialogZoneInfo:
         assert "Not yet resolved" in office_row._test_label
 
         # StaticBox is still shown (US location).
-        assert recorder.static_boxes[0].IsShown() is True
-        recorder.static_boxes[0].Show.assert_not_called()
+        zone_box = _find_static_box_with_label(recorder.static_boxes, "NWS Zone Information")
+        assert zone_box is not None
+        assert zone_box.IsShown() is True
+        zone_box.Show.assert_not_called()
 
     def test_us_partial_mixed_values(self, recorder):
         """US location with one field populated and the other null."""
@@ -287,7 +313,7 @@ class TestEditLocationDialogZoneInfo:
             cwa_office=None,
         )
 
-        EditLocationDialog(parent=MagicMock(), location=loc)
+        _open_edit_dialog(loc)
 
         zone_row = _find_text_with_prefix(recorder.static_texts, "Forecast Zone:")
         office_row = _find_text_with_prefix(recorder.static_texts, "NWS Office:")
@@ -306,15 +332,15 @@ class TestEditLocationDialogZoneInfo:
             cwa_office="RAH",
         )
 
-        EditLocationDialog(parent=MagicMock(), location=loc)
+        _open_edit_dialog(loc)
 
         # Fit() was called at least once
         assert recorder.fit_calls >= 1
-        # SetMinSize was called (with a wx.Size built from 420, -1).
+        # SetMinSize was called (with a wx.Size built from 640, -1).
         assert len(recorder.min_size_calls) >= 1
-        # wx.Size was constructed with (420, -1) during dialog init.
+        # wx.Size was constructed with (640, -1) during dialog init.
         size_ctor_calls = [(c.args, c.kwargs) for c in getattr(_wx.Size, "call_args_list", [])]
-        assert ((420, -1), {}) in size_ctor_calls
+        assert ((640, -1), {}) in size_ctor_calls
 
         # And the fixed size=(420, 200) is no longer passed to Dialog.__init__.
         assert "size" not in recorder.dialog_kwargs or recorder.dialog_kwargs.get("size") != (
@@ -338,7 +364,7 @@ class TestEditLocationDialogZoneInfo:
             cwa_office="RAH",
         )
 
-        EditLocationDialog(parent=MagicMock(), location=loc)
+        _open_edit_dialog(loc)
 
         zone_row = _find_text_with_prefix(recorder.static_texts, "Forecast Zone:")
         office_row = _find_text_with_prefix(recorder.static_texts, "NWS Office:")
