@@ -55,12 +55,40 @@ for _attr in ("ListCtrl", "StaticBoxSizer", "StdDialogButtonSizer", "Size"):
         setattr(_wx, _attr, MagicMock(name=_attr))
 
 
-if not hasattr(_wx, "StaticBox") or isinstance(_wx.StaticBox, MagicMock):
+class _StaticBoxStub(_wx.Control):
+    """Class-like StaticBox stub so MagicMock(spec=wx.StaticBox) stays valid."""
 
-    class _StaticBoxStub(_wx.Control):
-        """Class-like StaticBox stub so MagicMock(spec=wx.StaticBox) stays valid."""
 
-    _wx.StaticBox = _StaticBoxStub
+def _ensure_static_box_stub():
+    if not hasattr(_wx, "StaticBox") or isinstance(_wx.StaticBox, MagicMock):
+        _wx.StaticBox = _StaticBoxStub
+
+
+_ensure_static_box_stub()
+
+
+class _ListCtrlStub(_wx.Control):
+    """Class-like ListCtrl stub so full-suite wx mock leaks cannot affect this module."""
+
+
+def _ensure_list_ctrl_stub():
+    if not hasattr(_wx, "ListCtrl") or isinstance(_wx.ListCtrl, MagicMock):
+        _wx.ListCtrl = _ListCtrlStub
+
+
+_ensure_list_ctrl_stub()
+
+
+class _TextCtrlStub(_wx.Control):
+    """Class-like TextCtrl stub for stable dialog construction in the wx stub."""
+
+
+def _ensure_text_ctrl_stub():
+    if not hasattr(_wx, "TextCtrl") or isinstance(_wx.TextCtrl, MagicMock):
+        _wx.TextCtrl = _TextCtrlStub
+
+
+_ensure_text_ctrl_stub()
 
 _USING_STUB = (
     not hasattr(sys.modules.get("wx", None), "App") or _wx.Dialog.__name__ == "_WxStubBase"
@@ -94,6 +122,10 @@ class _DialogRecorder:
 @pytest.fixture
 def recorder():
     """Patch wx classes to capture widgets and dialog init kwargs."""
+    _ensure_static_box_stub()
+    _ensure_list_ctrl_stub()
+    _ensure_text_ctrl_stub()
+
     rec = _DialogRecorder()
     saved: dict = {}
     active_patches: list = []
@@ -142,6 +174,11 @@ def recorder():
     saved["StaticText"] = _wx.StaticText
     _wx.StaticText = _make_static_text
 
+    saved["TextCtrl"] = _wx.TextCtrl
+    _wx.TextCtrl = MagicMock(
+        name="TextCtrl", side_effect=lambda *a, **kw: MagicMock(name="TextCtrlInst")
+    )
+
     # Track StaticBox creations — record Show() calls for visibility assertions.
     def _make_static_box(*args, **kwargs):
         box = MagicMock(name="StaticBox")
@@ -176,6 +213,11 @@ def recorder():
         name="BoxSizer", side_effect=lambda *a, **kw: MagicMock(name="BoxSizerInst")
     )
 
+    saved["ListCtrl"] = _wx.ListCtrl
+    _wx.ListCtrl = MagicMock(
+        name="ListCtrl", side_effect=lambda *a, **kw: MagicMock(name="ListCtrlInst")
+    )
+
     saved["Panel"] = _wx.Panel
     _wx.Panel = MagicMock(name="Panel", side_effect=lambda *a, **kw: MagicMock(name="PanelInst"))
 
@@ -202,7 +244,9 @@ def recorder():
         "StaticBoxSizer",
         "StdDialogButtonSizer",
         "BoxSizer",
+        "ListCtrl",
         "Panel",
+        "TextCtrl",
         "Button",
         "CheckBox",
         "Size",
