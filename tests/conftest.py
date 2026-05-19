@@ -118,6 +118,36 @@ if "wx" not in sys.modules:
             def GetParent(self):
                 return self._test_parent
 
+        class _WxTextDataObject:
+            """Tiny clipboard text carrier matching the wx API used by tests."""
+
+            def __init__(self, text=""):
+                self._text = text
+
+            def SetText(self, text):
+                self._text = text
+
+            def GetText(self):
+                return self._text
+
+        class _WxClipboard:
+            def __init__(self):
+                self._text = ""
+
+            def Open(self):
+                return True
+
+            def Close(self):
+                return None
+
+            def SetData(self, data):
+                self._text = data.GetText()
+                return True
+
+            def GetData(self, data):
+                data.SetText(self._text)
+                return True
+
         def _wx_mock(*args, **kwargs):
             return MagicMock()
 
@@ -146,6 +176,8 @@ if "wx" not in sys.modules:
         _wx.Image = _wx_mock
         _wx.ListBox = _wx_mock
         _wx.Size = lambda width, height: (width, height)
+        _wx.TextDataObject = _WxTextDataObject
+        _wx.TheClipboard = _WxClipboard()
 
         # Common constants
         _wx.EVT_CLOSE = MagicMock()
@@ -165,16 +197,23 @@ if "wx" not in sys.modules:
         _wx.ID_ANY = -1
         _wx.ID_OK = 5100
         _wx.ID_CANCEL = 5101
+        _wx.ID_COPY = 5102
+        _wx.ID_CLOSE = 5103
         _wx.OK = 0x0004
         _wx.CANCEL = 0x0010
         _wx.HORIZONTAL = 0x0004
         _wx.VERTICAL = 0x0008
+        _wx.DEFAULT_DIALOG_STYLE = 0
         _wx.EXPAND = 0x2000
         _wx.ALL = 0x0F
         _wx.LEFT = 0x0010
         _wx.RIGHT = 0x0020
         _wx.TOP = 0x0040
         _wx.BOTTOM = 0x0080
+        _wx.RESIZE_BORDER = 0x4000
+        _wx.TE_MULTILINE = 0x0020
+        _wx.TE_READONLY = 0x0010
+        _wx.TE_RICH2 = 0x8000
         _wx.DEFAULT_FRAME_STYLE = 0
         _wx.ICON_INFORMATION = 0
         _wx.ICON_WARNING = 0
