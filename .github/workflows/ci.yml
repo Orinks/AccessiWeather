@@ -79,12 +79,14 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # Unit tests use the in-repo wx stub when wxPython is unavailable.
+        # Unit tests use in-repo stubs for wx, gui_builder, and sound_lib when
+        # those GUI/audio runtime packages are unavailable.
         # Keep CI validation independent from extras.wxpython.org wheel availability;
         # packaging workflows still install real wxPython for build artifacts.
         python - <<'PY'
         from pathlib import Path
 
+        runtime_stubs = ("wxpython", "gui_builder @", "sound_lib @")
         filters = {
             "requirements.txt": Path("/tmp/requirements-ci.txt"),
             "requirements-dev.txt": Path("/tmp/requirements-dev-ci.txt"),
@@ -93,7 +95,7 @@ jobs:
             kept = []
             for line in Path(source).read_text(encoding="utf-8").splitlines():
                 stripped = line.strip().lower()
-                if stripped.startswith("wxpython") or stripped == "-r requirements.txt":
+                if stripped == "-r requirements.txt" or stripped.startswith(runtime_stubs):
                     continue
                 kept.append(line)
             target.write_text("\n".join(kept) + "\n", encoding="utf-8")
