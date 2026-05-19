@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 import sys
 import tempfile
+from importlib.machinery import ModuleSpec
 
 # ---------------------------------------------------------------------------
 # Provide stub wx module when wxPython is not installed (headless servers).
@@ -26,6 +27,7 @@ if "wx" not in sys.modules:
         # Build a minimal wx stub module with real base classes so that
         # subclassing (e.g. class MainWindow(wx.Frame)) and patch.object work.
         _wx = types.ModuleType("wx")
+        _wx.__spec__ = ModuleSpec("wx", loader=None, is_package=True)
         _wx.__package__ = "wx"
         _wx.__path__ = []
 
@@ -35,6 +37,9 @@ if "wx" not in sys.modules:
             def __init__(self, *args, **kwargs):
                 pass
 
+        def _wx_mock(*args, **kwargs):
+            return MagicMock()
+
         _wx.Frame = _WxStubBase
         _wx.Panel = _WxStubBase
         _wx.Dialog = _WxStubBase
@@ -42,19 +47,23 @@ if "wx" not in sys.modules:
         _wx.Window = _WxStubBase
         _wx.Control = _WxStubBase
         _wx.TaskBarIcon = _WxStubBase
-        _wx.Menu = MagicMock
-        _wx.MenuBar = MagicMock
-        _wx.BoxSizer = MagicMock
-        _wx.StaticText = MagicMock
-        _wx.TextCtrl = MagicMock
-        _wx.Button = MagicMock
-        _wx.Choice = MagicMock
-        _wx.CheckBox = MagicMock
-        _wx.Timer = MagicMock
-        _wx.Icon = MagicMock
-        _wx.Bitmap = MagicMock
-        _wx.Image = MagicMock
-        _wx.ListBox = MagicMock
+        _wx.Menu = _wx_mock
+        _wx.MenuBar = _wx_mock
+        _wx.BoxSizer = _wx_mock
+        _wx.StaticText = _wx_mock
+        _wx.TextCtrl = _wx_mock
+        _wx.Button = _wx_mock
+        _wx.Choice = _wx_mock
+        _wx.ComboBox = _wx_mock
+        _wx.CheckBox = _wx_mock
+        _wx.MessageDialog = _wx_mock
+        _wx.MessageBox = MagicMock()
+        _wx.Timer = _wx_mock
+        _wx.Icon = _wx_mock
+        _wx.Bitmap = _wx_mock
+        _wx.Image = _wx_mock
+        _wx.ListBox = _wx_mock
+        _wx.Size = lambda width, height: (width, height)
 
         # Common constants
         _wx.EVT_CLOSE = MagicMock()
@@ -80,11 +89,17 @@ if "wx" not in sys.modules:
         _wx.VERTICAL = 0x0008
         _wx.EXPAND = 0x2000
         _wx.ALL = 0x0F
+        _wx.LEFT = 0x0010
+        _wx.RIGHT = 0x0020
+        _wx.TOP = 0x0040
+        _wx.BOTTOM = 0x0080
         _wx.DEFAULT_FRAME_STYLE = 0
         _wx.ICON_INFORMATION = 0
         _wx.ICON_WARNING = 0
         _wx.ICON_ERROR = 0
         _wx.CallAfter = MagicMock()
+        _wx.BeginBusyCursor = MagicMock()
+        _wx.EndBusyCursor = MagicMock()
 
         # System colour constants
         _wx.SYS_COLOUR_GRAYTEXT = 17
@@ -98,26 +113,32 @@ if "wx" not in sys.modules:
 
         # wx sub-modules
         _wx_lib = types.ModuleType("wx.lib")
+        _wx_lib.__spec__ = ModuleSpec("wx.lib", loader=None, is_package=True)
         _wx_lib.__package__ = "wx.lib"
         _wx_lib.__path__ = []
 
         _wx_lib_sized = types.ModuleType("wx.lib.sized_controls")
+        _wx_lib_sized.__spec__ = ModuleSpec("wx.lib.sized_controls", loader=None)
         _wx_lib_sized.SizedFrame = _WxStubBase
         _wx_lib_sized.SizedPanel = _WxStubBase
         _wx_lib_sized.SizedDialog = _WxStubBase
 
         _wx_lib_newevent = types.ModuleType("wx.lib.newevent")
+        _wx_lib_newevent.__spec__ = ModuleSpec("wx.lib.newevent", loader=None)
         _wx_lib_newevent.NewEvent = lambda: (MagicMock, MagicMock())
         _wx_lib_newevent.NewCommandEvent = lambda: (MagicMock, MagicMock())
 
         _wx_lib_scrolledpanel = types.ModuleType("wx.lib.scrolledpanel")
+        _wx_lib_scrolledpanel.__spec__ = ModuleSpec("wx.lib.scrolledpanel", loader=None)
         _wx_lib_scrolledpanel.ScrolledPanel = _WxStubBase
 
         _wx_adv = types.ModuleType("wx.adv")
+        _wx_adv.__spec__ = ModuleSpec("wx.adv", loader=None)
         _wx_adv.TaskBarIcon = _WxStubBase
 
         _wx_html2 = types.ModuleType("wx.html2")
-        _wx_html2.WebView = MagicMock
+        _wx_html2.__spec__ = ModuleSpec("wx.html2", loader=None)
+        _wx_html2.WebView = _wx_mock
 
         # Wire sub-modules as attributes so `wx.adv`, `wx.lib` etc. resolve
         _wx.lib = _wx_lib
@@ -138,20 +159,29 @@ if "sound_lib" not in sys.modules:
         import sound_lib  # noqa: F401
     except ImportError:
         import types
+        from pathlib import Path
         from unittest.mock import MagicMock
 
+        _sl_package_dir = Path(tempfile.mkdtemp(prefix="accessiweather-sound-lib-stub-"))
+        _sl_lib_dir = _sl_package_dir / "lib"
+        _sl_lib_dir.mkdir()
+        (_sl_lib_dir / "libbass.so").write_bytes(b"stub")
+
         _sl = types.ModuleType("sound_lib")
+        _sl.__spec__ = ModuleSpec("sound_lib", loader=None, is_package=True)
+        _sl.__spec__.submodule_search_locations = [str(_sl_package_dir)]
         _sl.__package__ = "sound_lib"
-        _sl.__path__ = []
+        _sl.__path__ = [str(_sl_package_dir)]
 
         _sl_output = types.ModuleType("sound_lib.output")
+        _sl_output.__spec__ = ModuleSpec("sound_lib.output", loader=None)
         _sl_output.Output = MagicMock
 
         _sl_stream = types.ModuleType("sound_lib.stream")
+        _sl_stream.__spec__ = ModuleSpec("sound_lib.stream", loader=None)
         _sl_stream.FileStream = MagicMock()
 
         _sl.output = _sl_output
-        _sl.stream = _sl_stream
 
         sys.modules["sound_lib"] = _sl
         sys.modules["sound_lib.output"] = _sl_output

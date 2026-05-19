@@ -35,6 +35,41 @@ def _neutralize_wx():
     def _noop(self, *a, **kw):
         return None
 
+    def _control_stub(*a, _name: str, **kw):
+        control = MagicMock(name=kw.get("label", _name))
+        choices = list(kw.get("choices", []))
+        selection = {"index": 0 if choices else -1}
+
+        def _set_items(items):
+            choices[:] = list(items)
+            selection["index"] = 0 if choices else -1
+            control.GetCount.return_value = len(choices)
+            control.GetStringSelection.return_value = _selected_string()
+
+        def _set_selection(index):
+            selection["index"] = index
+            control.GetStringSelection.return_value = _selected_string()
+
+        def _get_string(index):
+            return choices[index]
+
+        def _selected_string():
+            index = selection["index"]
+            if 0 <= index < len(choices):
+                return choices[index]
+            return ""
+
+        if _name == "CheckBox":
+            control.GetValue.return_value = False
+        else:
+            control.GetValue.return_value = kw.get("value", "")
+        control.GetStringSelection.return_value = _selected_string()
+        control.GetCount.return_value = len(choices)
+        control.GetString.side_effect = _get_string
+        control.SetItems.side_effect = _set_items
+        control.SetSelection.side_effect = _set_selection
+        return control
+
     _wx.Dialog.__init__ = _noop
     for name in ("StaticText", "TextCtrl", "Button", "Choice", "ComboBox", "CheckBox"):
         saved[name] = getattr(_wx, name)
@@ -43,7 +78,7 @@ def _neutralize_wx():
             name,
             MagicMock(
                 name=name,
-                side_effect=lambda *a, _name=name, **kw: MagicMock(name=kw.get("label", _name)),
+                side_effect=lambda *a, _name=name, **kw: _control_stub(*a, _name=_name, **kw),
             ),
         )
 
