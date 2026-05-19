@@ -50,9 +50,17 @@ for _attr in ("EVT_TEXT_ENTER", "EVT_LIST_ITEM_SELECTED"):
         setattr(_wx, _attr, MagicMock(name=_attr))
 
 # StaticBox / StaticBoxSizer / StdDialogButtonSizer / Size are not in the root stub.
-for _attr in ("ListCtrl", "StaticBox", "StaticBoxSizer", "StdDialogButtonSizer", "Size"):
+for _attr in ("ListCtrl", "StaticBoxSizer", "StdDialogButtonSizer", "Size"):
     if not hasattr(_wx, _attr):
         setattr(_wx, _attr, MagicMock(name=_attr))
+
+
+if not hasattr(_wx, "StaticBox") or isinstance(_wx.StaticBox, MagicMock):
+
+    class _StaticBoxStub(_wx.Control):
+        """Class-like StaticBox stub so MagicMock(spec=wx.StaticBox) stays valid."""
+
+    _wx.StaticBox = _StaticBoxStub
 
 _USING_STUB = (
     not hasattr(sys.modules.get("wx", None), "App") or _wx.Dialog.__name__ == "_WxStubBase"
