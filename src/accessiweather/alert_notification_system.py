@@ -198,7 +198,12 @@ class AlertNotificationSystem:
                 try:
                     from .notifications.alert_sound_mapper import get_candidate_sound_events
 
-                    sound_candidates = get_candidate_sound_events(alert)
+                    sound_candidates = get_candidate_sound_events(
+                        alert,
+                        include_specific_events=getattr(
+                            self.settings, "specific_alert_sounds_enabled", False
+                        ),
+                    )
                     logger.debug(f"[notify] Sound candidates for alert: {sound_candidates}")
                 except Exception as e:
                     logger.debug(f"[notify] Sound mapper unavailable: {e}")

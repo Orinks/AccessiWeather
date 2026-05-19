@@ -78,6 +78,45 @@ class TestGetCandidateSoundEvents:
         assert "tornado" not in candidates
         assert "warning" not in candidates
 
+    def test_specific_alert_sounds_try_exact_event_before_severity(self):
+        candidates = get_candidate_sound_events(
+            _alert("Extreme", event="Tornado Warning"), include_specific_events=True
+        )
+
+        assert candidates == [
+            "tornado_warning",
+            "tornado_extreme",
+            "tornado",
+            "warning",
+            "extreme",
+            "alert",
+            "notify",
+        ]
+
+    def test_specific_alert_sounds_distinguish_watch_from_warning(self):
+        watch_candidates = get_candidate_sound_events(
+            _alert("Moderate", event="Tornado Watch"), include_specific_events=True
+        )
+        warning_candidates = get_candidate_sound_events(
+            _alert("Extreme", event="Tornado Warning"), include_specific_events=True
+        )
+
+        assert watch_candidates[0] == "tornado_watch"
+        assert warning_candidates[0] == "tornado_warning"
+
+    def test_specific_alert_sounds_include_hazard_type_fallback(self):
+        candidates = get_candidate_sound_events(
+            _alert("Severe", event="Severe Thunderstorm Warning"),
+            include_specific_events=True,
+        )
+
+        assert candidates[:3] == [
+            "severe_thunderstorm_warning",
+            "thunderstorm_warning",
+            "thunderstorm_severe",
+        ]
+        assert candidates[-3:] == ["severe", "alert", "notify"]
+
     def test_generic_fallbacks_always_present_at_end(self):
         candidates = get_candidate_sound_events(_alert("Moderate"))
 
@@ -96,6 +135,11 @@ class TestChooseSoundEvent:
 
     def test_choose_with_unknown_severity_returns_alert(self):
         assert choose_sound_event(_alert("Unknown")) == "alert"
+
+    def test_choose_with_specific_alert_sounds_returns_exact_event(self):
+        assert (
+            choose_sound_event(_alert("Extreme"), include_specific_events=True) == "tornado_warning"
+        )
 
 
 class TestEdgeCases:

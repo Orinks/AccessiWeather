@@ -101,6 +101,7 @@ def test_load_settings_updates_event_sound_state_and_summary():
             sound_enabled=True,
             sound_pack="default",
             muted_sound_events=["data_updated"],
+            specific_alert_sounds_enabled=True,
         )
     )
 
@@ -108,6 +109,7 @@ def test_load_settings_updates_event_sound_state_and_summary():
 
     assert dialog._event_sound_states["data_updated"] is False
     assert dialog._event_sound_states["fetch_error"] is True
+    assert dialog._controls["specific_alert_sounds_enabled"].GetValue() is True
     total_events = len(AudioTab._build_default_event_sound_states())
     assert (
         dialog._controls["event_sounds_summary"].GetLabel()
@@ -118,6 +120,7 @@ def test_load_settings_updates_event_sound_state_and_summary():
 def test_save_settings_collects_unchecked_audio_events():
     dialog = _make_dialog(SimpleNamespace())
     dialog._controls["sound_enabled"].SetValue(True)
+    dialog._controls["specific_alert_sounds_enabled"].SetValue(True)
     dialog._controls["sound_pack"].SetSelection(0)
     dialog._event_sound_states["data_updated"] = False
     dialog._event_sound_states["fetch_error"] = True
@@ -127,6 +130,7 @@ def test_save_settings_collects_unchecked_audio_events():
     assert success is True
     kwargs = dialog.config_manager.update_settings.call_args.kwargs
     assert kwargs["muted_sound_events"] == ["data_updated"]
+    assert kwargs["specific_alert_sounds_enabled"] is True
 
 
 def test_save_settings_preserves_hidden_legacy_muted_audio_events():
@@ -186,6 +190,17 @@ def test_weather_refresh_sound_is_muted_by_default():
     settings = AppSettings.from_dict({})
 
     assert settings.muted_sound_events == ["data_updated"]
+
+
+def test_specific_alert_sounds_setting_defaults_off_and_round_trips():
+    settings = AppSettings.from_dict({})
+
+    assert settings.specific_alert_sounds_enabled is False
+    payload = settings.to_dict()
+    assert payload["specific_alert_sounds_enabled"] is False
+
+    restored = AppSettings.from_dict({"specific_alert_sounds_enabled": "true"})
+    assert restored.specific_alert_sounds_enabled is True
 
 
 def test_visible_audio_events_are_core_lifecycle_and_severity_only():

@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Settings > Audio now has an optional specific-alert sound mode, so custom sound packs can use different sounds for alerts like tornado watch and tornado warning while the default stays severity-based.
 - First-run setup can now import existing settings and encrypted API keys from the wizard, or exit with Escape at any wizard step when you want to configure everything yourself.
 - You can now search for a US street address when adding or editing a location, so AccessiWeather can save coordinates for that specific address instead of the nearest city or ZIP result.
 - Saved locations now stay sorted alphabetically in the location list (#667).

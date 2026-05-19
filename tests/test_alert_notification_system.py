@@ -228,6 +228,31 @@ class TestAlertNotificationSoundControl:
         mock_notifier.send_notification.assert_called_once()
         call_kwargs = mock_notifier.send_notification.call_args.kwargs
         assert call_kwargs.get("play_sound") is True
+        assert call_kwargs["sound_candidates"] == ["moderate", "alert", "notify"]
+
+    @pytest.mark.asyncio
+    async def test_send_notification_can_use_specific_alert_sounds(
+        self, alert_manager, mock_notifier
+    ):
+        """Specific alert sound preference should try exact event keys before severity."""
+        settings = AppSettings(specific_alert_sounds_enabled=True)
+        notification_system = AlertNotificationSystem(
+            alert_manager=alert_manager,
+            notifier=mock_notifier,
+            settings=settings,
+        )
+        alert = WeatherAlert(
+            id="test-specific",
+            title="Tornado Warning",
+            description="A tornado has been spotted.",
+            severity="Extreme",
+            event="Tornado Warning",
+        )
+
+        await notification_system._send_alert_notification(alert, "new_alert", play_sound=True)
+
+        call_kwargs = mock_notifier.send_notification.call_args.kwargs
+        assert call_kwargs["sound_candidates"][:2] == ["tornado_warning", "tornado_extreme"]
 
     @pytest.mark.asyncio
     async def test_send_notification_without_sound(self, notification_system, mock_notifier):

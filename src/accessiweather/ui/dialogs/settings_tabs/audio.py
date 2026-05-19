@@ -134,6 +134,18 @@ class AudioTab:
             wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
             10,
         )
+        controls["specific_alert_sounds_enabled"] = wx.CheckBox(
+            panel, label="Use specific alert sounds when available"
+        )
+        controls["specific_alert_sounds_enabled"].SetToolTip(
+            "Try custom sound pack keys like tornado_warning before severity sounds."
+        )
+        playback_section.Add(
+            controls["specific_alert_sounds_enabled"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
 
         self.dialog._sound_pack_ids = ["default"]
         pack_names = ["Default"]
@@ -198,6 +210,9 @@ class AudioTab:
         controls = self.dialog._controls
 
         controls["sound_enabled"].SetValue(getattr(settings, "sound_enabled", True))
+        controls["specific_alert_sounds_enabled"].SetValue(
+            getattr(settings, "specific_alert_sounds_enabled", False)
+        )
 
         current_pack = getattr(settings, "sound_pack", "default")
         pack_ids = getattr(self.dialog, "_sound_pack_ids", ["default"])
@@ -220,6 +235,7 @@ class AudioTab:
             "sound_enabled": controls["sound_enabled"].GetValue(),
             "sound_pack": sound_pack,
             "muted_sound_events": self._get_muted_sound_events(),
+            "specific_alert_sounds_enabled": controls["specific_alert_sounds_enabled"].GetValue(),
         }
 
     def setup_accessibility(self):
@@ -227,6 +243,7 @@ class AudioTab:
         controls = self.dialog._controls
         names = {
             "sound_enabled": "Play notification sounds",
+            "specific_alert_sounds_enabled": "Use specific alert sounds when available",
             "sound_pack": "Sound pack",
             "event_sounds_summary": "Event sound summary",
             "configure_event_sounds": "Choose event sounds",
