@@ -44,6 +44,7 @@ if "wx" not in sys.modules:
         _wx.Panel = _WxStubBase
         _wx.Dialog = _WxStubBase
         _wx.App = _WxStubBase
+        _wx.GetApp = MagicMock(return_value=None)
         _wx.Window = _WxStubBase
         _wx.Control = _WxStubBase
         _wx.TaskBarIcon = _WxStubBase
