@@ -148,6 +148,19 @@ if "wx" not in sys.modules:
                 data.SetText(self._text)
                 return True
 
+        class _WxControlStub(_WxStubBase):
+            """Stateful fallback for controls whose tests inspect ids, labels, or values."""
+
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self._test_id = args[1] if len(args) > 1 else kwargs.get("id", _wx.ID_ANY)
+                if len(args) > 2:
+                    self._test_label = args[2]
+                self._test_value = kwargs.get("value", self._test_value)
+
+            def GetId(self):
+                return self._test_id
+
         def _wx_mock(*args, **kwargs):
             return MagicMock()
 
@@ -162,9 +175,9 @@ if "wx" not in sys.modules:
         _wx.Menu = _wx_mock
         _wx.MenuBar = _wx_mock
         _wx.BoxSizer = _wx_mock
-        _wx.StaticText = _wx_mock
-        _wx.TextCtrl = _wx_mock
-        _wx.Button = _wx_mock
+        _wx.StaticText = _WxControlStub
+        _wx.TextCtrl = _WxControlStub
+        _wx.Button = _WxControlStub
         _wx.Choice = _wx_mock
         _wx.ComboBox = _wx_mock
         _wx.CheckBox = _wx_mock
@@ -219,6 +232,7 @@ if "wx" not in sys.modules:
         _wx.ICON_WARNING = 0
         _wx.ICON_ERROR = 0
         _wx.CallAfter = MagicMock()
+        _wx.CallLater = MagicMock()
         _wx.BeginBusyCursor = MagicMock()
         _wx.EndBusyCursor = MagicMock()
 
