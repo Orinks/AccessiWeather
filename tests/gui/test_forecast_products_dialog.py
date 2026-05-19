@@ -206,13 +206,16 @@ def panel_factory():
             created.append({"product_type": self.product_type, "instance": self, **kwargs})
 
     # The dialog imports ForecastProductPanel directly from the module;
-    # patch the symbol it bound at import time.
-    from accessiweather.ui.dialogs import forecast_products_dialog
+    # patch the symbols each dialog module bound at import time.
+    from accessiweather.ui.dialogs import forecast_products_dialog, national_products_dialog
 
-    original_sym = forecast_products_dialog.ForecastProductPanel
+    original_forecast_sym = forecast_products_dialog.ForecastProductPanel
+    original_national_sym = national_products_dialog.ForecastProductPanel
     forecast_products_dialog.ForecastProductPanel = _FakePanel  # type: ignore[assignment]
+    national_products_dialog.ForecastProductPanel = _FakePanel  # type: ignore[assignment]
     yield created
-    forecast_products_dialog.ForecastProductPanel = original_sym  # type: ignore[assignment]
+    forecast_products_dialog.ForecastProductPanel = original_forecast_sym  # type: ignore[assignment]
+    national_products_dialog.ForecastProductPanel = original_national_sym  # type: ignore[assignment]
 
 
 @pytest.fixture
@@ -349,8 +352,8 @@ class TestForecastProductsDialog:
         result = asyncio.run(dlg._make_loader(spc_tab)())
 
         assert result.product_type == "SPC_OUTLOOK"
-        assert result.latitude == 35.7796
-        assert result.longitude == -78.6382
+        assert result.latitude == sample_us_location.latitude
+        assert result.longitude == sample_us_location.longitude
         assert result.kwargs == {"day": 1, "current": True, "max_items": 3, "timeout": 10.0}
         service.get_iem_afos.assert_not_called()
 

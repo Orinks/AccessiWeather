@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from ..runtime_env import is_compiled_runtime
-from ..sound_events import normalize_muted_sound_events
+from ..sound_events import LEGACY_SOUND_EVENT_KEYS, normalize_muted_sound_events
 from ..soundpack_paths import get_soundpacks_dir
 from .sound_pack_helpers import (
     get_available_sound_packs as _get_available_sound_packs,
@@ -13,6 +13,7 @@ from .sound_pack_helpers import (
     get_sound_entry_for_candidates as _get_pack_sound_entry_for_candidates,
     get_sound_pack_sounds as _get_pack_sounds,
     parse_sound_entry,
+    sound_pack_prefers_specific_alert_sounds as _pack_prefers_specific_alert_sounds,
     validate_sound_pack as _validate_sound_pack,
 )
 
@@ -372,6 +373,16 @@ def get_available_sound_packs() -> dict[str, dict]:
 def get_sound_pack_sounds(pack_dir: str) -> dict[str, str]:
     """Get all sounds available in a sound pack."""
     return _get_pack_sounds(pack_dir, soundpacks_dir=SOUNDPACKS_DIR, logger=logger)
+
+
+def sound_pack_uses_specific_alert_sounds(pack_dir: str) -> bool:
+    """Return whether a sound pack should use specific alert sound candidates."""
+    return _pack_prefers_specific_alert_sounds(
+        pack_dir,
+        soundpacks_dir=SOUNDPACKS_DIR,
+        specific_alert_keys=LEGACY_SOUND_EVENT_KEYS,
+        logger=logger,
+    )
 
 
 def get_sound_entry_for_candidates(

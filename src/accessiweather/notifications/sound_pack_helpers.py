@@ -122,6 +122,42 @@ def get_sound_pack_sounds(
         return {}
 
 
+def sound_pack_prefers_specific_alert_sounds(
+    pack_dir: str,
+    *,
+    soundpacks_dir: Path,
+    specific_alert_keys: set[str] | frozenset[str],
+    logger: logging.Logger,
+) -> bool:
+    """
+    Return whether a pack should use specific alert sound candidates.
+
+    Packs can opt in explicitly with ``"specific_alert_sounds": true`` in
+    pack.json. Older packs are also treated as specific-alert packs when their
+    sounds map contains legacy alert keys such as ``tornado_warning`` or
+    ``watch``.
+    """
+    pack_json = soundpacks_dir / pack_dir / "pack.json"
+    if not pack_json.exists():
+        return False
+
+    try:
+        with open(pack_json, encoding="utf-8") as f:
+            pack_data: dict[str, Any] = json.load(f)
+
+        explicit = pack_data.get("specific_alert_sounds")
+        if isinstance(explicit, bool):
+            return explicit
+
+        sounds = pack_data.get("sounds", {})
+        if not isinstance(sounds, dict):
+            return False
+        return bool(set(sounds) & set(specific_alert_keys))
+    except Exception as e:
+        logger.error(f"Failed to inspect sound pack {pack_dir}: {e}")
+        return False
+
+
 def get_sound_entry_for_candidates(
     candidates: list[str],
     pack_dir: str,
