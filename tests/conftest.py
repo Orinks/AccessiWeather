@@ -157,14 +157,6 @@ if "sound_lib" not in sys.modules:
         sys.modules["sound_lib.output"] = _sl_output
         sys.modules["sound_lib.stream"] = _sl_stream
 
-# Provide stub gui_builder when not installed
-if "gui_builder" not in sys.modules:
-    try:
-        import gui_builder  # noqa: F401
-    except ImportError:
-        from unittest.mock import MagicMock
-
-        sys.modules["gui_builder"] = MagicMock()
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
