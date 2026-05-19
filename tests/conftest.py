@@ -35,7 +35,88 @@ if "wx" not in sys.modules:
             """Patchable base class standing in for wx widgets."""
 
             def __init__(self, *args, **kwargs):
-                pass
+                self._test_parent = args[0] if args else kwargs.get("parent")
+                self._test_label = kwargs.get("label", "")
+                self._test_name = ""
+                self._test_value = kwargs.get("value", "")
+                self._test_shown = True
+
+            def Show(self, show=True):
+                self._test_shown = bool(show)
+                return True
+
+            def Hide(self):
+                self._test_shown = False
+                return True
+
+            def IsShown(self):
+                return self._test_shown
+
+            def Destroy(self):
+                return None
+
+            def Close(self):
+                return None
+
+            def ShowModal(self):
+                return _wx.ID_OK
+
+            def EndModal(self, *args, **kwargs):
+                return None
+
+            def Bind(self, *args, **kwargs):
+                return None
+
+            def Layout(self):
+                return None
+
+            def Fit(self):
+                return None
+
+            def SetSizer(self, *args, **kwargs):
+                return None
+
+            def SetFocus(self):
+                return None
+
+            def SetFont(self, *args, **kwargs):
+                return None
+
+            def GetFont(self):
+                return self
+
+            def Bold(self):
+                return self
+
+            def SetName(self, name):
+                self._test_name = name
+
+            def GetName(self):
+                return self._test_name
+
+            def SetValue(self, value):
+                self._test_value = value
+
+            def GetValue(self):
+                return self._test_value
+
+            def SetLabel(self, label):
+                self._test_label = label
+
+            def GetLabel(self):
+                return self._test_label
+
+            def SetToolTip(self, *args, **kwargs):
+                return None
+
+            def SetSize(self, *args, **kwargs):
+                return None
+
+            def SetMinSize(self, *args, **kwargs):
+                return None
+
+            def GetParent(self):
+                return self._test_parent
 
         def _wx_mock(*args, **kwargs):
             return MagicMock()
