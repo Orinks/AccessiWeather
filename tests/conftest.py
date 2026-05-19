@@ -153,6 +153,13 @@ if "wx" not in sys.modules:
 
             def __init__(self, *args, **kwargs):
                 super().__init__(*args, **kwargs)
+                self._test_parent = getattr(
+                    self, "_test_parent", args[0] if args else kwargs.get("parent")
+                )
+                self._test_label = getattr(self, "_test_label", kwargs.get("label", ""))
+                self._test_name = getattr(self, "_test_name", "")
+                self._test_value = getattr(self, "_test_value", kwargs.get("value", ""))
+                self._test_shown = getattr(self, "_test_shown", True)
                 self._test_id = args[1] if len(args) > 1 else kwargs.get("id", _wx.ID_ANY)
                 if len(args) > 2:
                     self._test_label = args[2]
