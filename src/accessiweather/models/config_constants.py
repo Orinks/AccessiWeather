@@ -32,7 +32,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "sound_enabled",
     "sound_pack",
     "muted_sound_events",
-    "specific_alert_sounds_enabled",
+    "specific_alert_sound_packs",
     # Event notifications
     "notify_discussion_update",
     "notify_hwo_update",

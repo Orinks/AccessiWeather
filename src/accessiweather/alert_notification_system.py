@@ -159,6 +159,21 @@ class AlertNotificationSystem:
         except Exception as exc:
             logger.error("Failed to trigger immediate alert popup: %s", exc)
 
+    def _should_use_specific_alert_sounds(self) -> bool:
+        """Return whether current sound-pack settings should try specific alert keys."""
+        pack = getattr(self.settings, "sound_pack", "default")
+        specific_packs = set(getattr(self.settings, "specific_alert_sound_packs", []) or [])
+        if pack in specific_packs:
+            return True
+
+        try:
+            from .notifications.sound_player import sound_pack_uses_specific_alert_sounds
+
+            return sound_pack_uses_specific_alert_sounds(pack)
+        except Exception as e:
+            logger.debug(f"[notify] Could not inspect sound pack for alert sound mode: {e}")
+            return False
+
     async def _send_alert_notification(
         self, alert: WeatherAlert, reason: str, play_sound: bool = True
     ) -> bool:
@@ -200,9 +215,7 @@ class AlertNotificationSystem:
 
                     sound_candidates = get_candidate_sound_events(
                         alert,
-                        include_specific_events=getattr(
-                            self.settings, "specific_alert_sounds_enabled", False
-                        ),
+                        include_specific_events=self._should_use_specific_alert_sounds(),
                     )
                     logger.debug(f"[notify] Sound candidates for alert: {sound_candidates}")
                 except Exception as e:

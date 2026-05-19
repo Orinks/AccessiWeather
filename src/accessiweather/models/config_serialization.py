@@ -31,7 +31,7 @@ class AppSettingsSerializationMixin:
             "sound_enabled": settings.sound_enabled,
             "sound_pack": settings.sound_pack,
             "muted_sound_events": settings.muted_sound_events,
-            "specific_alert_sounds_enabled": settings.specific_alert_sounds_enabled,
+            "specific_alert_sound_packs": settings.specific_alert_sound_packs,
             "notify_discussion_update": settings.notify_discussion_update,
             "notify_hwo_update": settings.notify_hwo_update,
             "notify_sps_issued": settings.notify_sps_issued,
@@ -111,6 +111,13 @@ class AppSettingsSerializationMixin:
     def from_dict(cls, data: dict) -> AppSettings:
         """Create from dictionary."""
         settings_cls = cast("type[AppSettings]", cls)
+        specific_alert_sound_packs = data.get("specific_alert_sound_packs")
+        if specific_alert_sound_packs is None:
+            specific_alert_sound_packs = []
+            if settings_cls._as_bool(data.get("specific_alert_sounds_enabled"), False):
+                sound_pack = str(data.get("sound_pack", "default")).strip() or "default"
+                specific_alert_sound_packs = [sound_pack]
+
         settings = settings_cls(
             temperature_unit=data.get("temperature_unit", "both"),
             update_interval_minutes=data.get("update_interval_minutes", 10),
@@ -126,9 +133,7 @@ class AppSettingsSerializationMixin:
             sound_enabled=settings_cls._as_bool(data.get("sound_enabled"), True),
             sound_pack=data.get("sound_pack", "default"),
             muted_sound_events=data.get("muted_sound_events", list(DEFAULT_MUTED_SOUND_EVENTS)),
-            specific_alert_sounds_enabled=settings_cls._as_bool(
-                data.get("specific_alert_sounds_enabled"), False
-            ),
+            specific_alert_sound_packs=specific_alert_sound_packs,
             notify_discussion_update=settings_cls._as_bool(
                 data.get("notify_discussion_update"), True
             ),
@@ -265,6 +270,7 @@ class AppSettingsSerializationMixin:
         settings.validate_on_access("auto_sources_us")
         settings.validate_on_access("auto_sources_international")
         settings.validate_on_access("parallel_fetch_timeout")
+        settings.validate_on_access("specific_alert_sound_packs")
         if settings.data_source not in {"auto", "nws", "openmeteo", "pirateweather"}:
             settings.data_source = "auto"
         return settings

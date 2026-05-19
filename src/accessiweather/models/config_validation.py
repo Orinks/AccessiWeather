@@ -100,6 +100,19 @@ class AppSettingsValidationMixin:
                 normalized = normalize_known_muted_sound_events(value)
                 setattr(settings, setting_name, normalized)
 
+        elif setting_name == "specific_alert_sound_packs":
+            if not isinstance(value, list):
+                setattr(settings, setting_name, [])
+            else:
+                normalized = []
+                seen = set()
+                for item in value:
+                    pack = str(item).strip()
+                    if pack and pack not in seen:
+                        seen.add(pack)
+                        normalized.append(pack)
+                setattr(settings, setting_name, normalized)
+
         elif setting_name == "taskbar_icon_text_format":
             # Ensure format string is valid
             if not isinstance(value, str) or not value.strip():

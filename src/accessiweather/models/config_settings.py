@@ -27,7 +27,7 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     sound_enabled: bool = True
     sound_pack: str = "default"
     muted_sound_events: list[str] = field(default_factory=lambda: list(DEFAULT_MUTED_SOUND_EVENTS))
-    specific_alert_sounds_enabled: bool = False
+    specific_alert_sound_packs: list[str] = field(default_factory=list)
     # Event-based notifications
     notify_discussion_update: bool = True
     notify_hwo_update: bool = True

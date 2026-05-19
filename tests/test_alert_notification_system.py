@@ -223,7 +223,11 @@ class TestAlertNotificationSoundControl:
             event="Test Warning",
         )
 
-        await notification_system._send_alert_notification(alert, "new_alert", play_sound=True)
+        with patch(
+            "accessiweather.notifications.sound_player.sound_pack_uses_specific_alert_sounds",
+            return_value=False,
+        ):
+            await notification_system._send_alert_notification(alert, "new_alert", play_sound=True)
 
         mock_notifier.send_notification.assert_called_once()
         call_kwargs = mock_notifier.send_notification.call_args.kwargs
@@ -235,7 +239,7 @@ class TestAlertNotificationSoundControl:
         self, alert_manager, mock_notifier
     ):
         """Specific alert sound preference should try exact event keys before severity."""
-        settings = AppSettings(specific_alert_sounds_enabled=True)
+        settings = AppSettings(sound_pack="custom", specific_alert_sound_packs=["custom"])
         notification_system = AlertNotificationSystem(
             alert_manager=alert_manager,
             notifier=mock_notifier,

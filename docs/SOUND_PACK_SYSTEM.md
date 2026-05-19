@@ -27,6 +27,7 @@ Each sound pack is a directory containing:
     "author": "Author Name",
     "description": "Pack description",
     "version": "1.0.0",
+    "specific_alert_sounds": false,
     "sounds": {
         "alert": "alert_sound.wav",
         "notify": "notification_sound.wav",
@@ -103,12 +104,17 @@ Older sound packs can keep specific keys such as `tornado_warning`, `warning`,
 or `watch`; AccessiWeather still tolerates those mappings for compatibility,
 but new packs should use the compact severity keys above by default.
 
-Users who want different sounds for specific alerts can turn on **Use specific
-alert sounds when available** in Settings > Audio. With that option enabled,
-AccessiWeather tries specific alert keys before severity keys. For example, a
-Tornado Warning can use `tornado_warning`, while a Tornado Watch can use
-`tornado_watch`; if those sounds are missing, playback still falls back to
-severity, then `alert`, then `notify`.
+If a pack already contains old specific alert keys, AccessiWeather
+automatically tries those keys for that pack before the severity keys. Pack
+authors can also set `"specific_alert_sounds": true` in `pack.json` to opt in
+explicitly.
+
+Users who want different sounds for specific alerts in a severity-only pack can
+turn on **Use specific alert sounds for this sound pack** in Settings > Audio.
+That checkbox applies only to the selected pack. For example, a Tornado Warning
+can use `tornado_warning`, while a Tornado Watch can use `tornado_watch`; if
+those sounds are missing, playback still falls back to severity, then `alert`,
+then `notify`.
 
 ## Built-in Sound Packs
 
