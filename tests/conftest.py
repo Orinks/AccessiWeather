@@ -10,19 +10,33 @@ from __future__ import annotations
 import os
 import sys
 import tempfile
+from datetime import UTC, datetime, timedelta
 from importlib.machinery import ModuleSpec
+from pathlib import Path
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+from hypothesis import settings as hypothesis_settings
 
 # ---------------------------------------------------------------------------
 # Provide stub wx module when wxPython is not installed (headless servers).
 # This allows tests that mock wx to import accessiweather.ui submodules
 # without requiring a full wxPython build.
 # ---------------------------------------------------------------------------
+_force_wx_stub = os.environ.get("ACCESSIWEATHER_FORCE_WX_STUB") == "1"
+if _force_wx_stub:
+    for _module_name in list(sys.modules):
+        if _module_name == "wx" or _module_name.startswith("wx."):
+            del sys.modules[_module_name]
+
 if "wx" not in sys.modules:
     try:
+        if _force_wx_stub:
+            raise ImportError
         import wx  # noqa: F401
     except ImportError:
         import types
-        from unittest.mock import MagicMock
 
         # Build a minimal wx stub module with real base classes so that
         # subclassing (e.g. class MainWindow(wx.Frame)) and patch.object work.
@@ -164,9 +178,27 @@ if "wx" not in sys.modules:
                 if len(args) > 2:
                     self._test_label = args[2]
                 self._test_value = kwargs.get("value", self._test_value)
+                self.GetId = MagicMock(return_value=self._test_id)
+                self.SetValue = MagicMock(side_effect=self._set_test_value)
+                self.GetValue = MagicMock(return_value=self._test_value)
+                self.SetLabel = MagicMock(side_effect=self._set_test_label)
+                self.GetLabel = MagicMock(return_value=self._test_label)
+                self.SetName = MagicMock(side_effect=self._set_test_name)
+                self.GetName = MagicMock(return_value=self._test_name)
+                self.SetToolTip = MagicMock(return_value=None)
+                self.SetFocus = MagicMock(return_value=None)
 
-            def GetId(self):
-                return self._test_id
+            def _set_test_value(self, value):
+                self._test_value = value
+                self.GetValue.return_value = value
+
+            def _set_test_label(self, label):
+                self._test_label = label
+                self.GetLabel.return_value = label
+
+            def _set_test_name(self, name):
+                self._test_name = name
+                self.GetName.return_value = name
 
         def _wx_mock(*args, **kwargs):
             return MagicMock()
@@ -214,6 +246,7 @@ if "wx" not in sys.modules:
         _wx.WXK_RETURN = 13
         _wx.WXK_NUMPAD_ENTER = 370
         _wx.WXK_SPACE = 32
+        _wx.WXK_ESCAPE = 27
         _wx.ID_ANY = -1
         _wx.ID_OK = 5100
         _wx.ID_CANCEL = 5101
@@ -234,6 +267,8 @@ if "wx" not in sys.modules:
         _wx.TE_MULTILINE = 0x0020
         _wx.TE_READONLY = 0x0010
         _wx.TE_RICH2 = 0x8000
+        _wx.HSCROLL = 0x8000
+        _wx.CB_READONLY = 0x0010
         _wx.DEFAULT_FRAME_STYLE = 0
         _wx.ICON_INFORMATION = 0
         _wx.ICON_WARNING = 0
@@ -329,20 +364,11 @@ if "sound_lib" not in sys.modules:
         sys.modules["sound_lib.output"] = _sl_output
         sys.modules["sound_lib.stream"] = _sl_stream
 
-from datetime import UTC, datetime, timedelta
-from pathlib import Path
-from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, MagicMock, patch
-
-import pytest
-
 # Set test environment variables before any imports
 os.environ["ACCESSIWEATHER_TEST_MODE"] = "1"
 os.environ["PYTEST_CURRENT_TEST"] = "true"
 
 # Configure hypothesis for fast CI runs
-from hypothesis import settings as hypothesis_settings
-
 hypothesis_settings.register_profile("ci", max_examples=25, deadline=None)
 hypothesis_settings.register_profile("dev", max_examples=50, deadline=None)
 hypothesis_settings.register_profile("thorough", max_examples=200, deadline=None)
