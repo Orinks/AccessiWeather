@@ -79,14 +79,28 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # Use prebuilt wx wheels only — never build from source.
-        # extras.wxpython.org provides Linux wheels for supported Python versions.
-        pip install \
-          -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-24.04 \
-          --only-binary wxPython \
-          wxPython
-        pip install -r requirements-dev.txt
-        pip install -e .
+        # Unit tests use the in-repo wx stub when wxPython is unavailable.
+        # Keep CI validation independent from extras.wxpython.org wheel availability;
+        # packaging workflows still install real wxPython for build artifacts.
+        python - <<'PY'
+        from pathlib import Path
+
+        filters = {
+            "requirements.txt": Path("/tmp/requirements-ci.txt"),
+            "requirements-dev.txt": Path("/tmp/requirements-dev-ci.txt"),
+        }
+        for source, target in filters.items():
+            kept = []
+            for line in Path(source).read_text(encoding="utf-8").splitlines():
+                stripped = line.strip().lower()
+                if stripped.startswith("wxpython") or stripped == "-r requirements.txt":
+                    continue
+                kept.append(line)
+            target.write_text("\n".join(kept) + "\n", encoding="utf-8")
+        PY
+        pip install -r /tmp/requirements-ci.txt
+        pip install -r /tmp/requirements-dev-ci.txt
+        pip install --no-deps -e .
 
     - name: Check CHANGELOG entry
       if: matrix.primary
