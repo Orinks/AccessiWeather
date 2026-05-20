@@ -20,6 +20,7 @@ SOUND_EVENT_SECTIONS: tuple[tuple[str, str, tuple[tuple[str, str], ...]], ...] =
             ("fetch_error", "Weather refresh failed"),
             ("discussion_update", "Forecast discussion updated"),
             ("severe_risk", "Severe weather risk changed"),
+            ("alert_updated", "Weather alert updated"),
         ),
     ),
     (

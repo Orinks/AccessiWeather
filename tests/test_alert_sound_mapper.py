@@ -11,6 +11,7 @@ import pytest
 
 from accessiweather.models.alerts import WeatherAlert
 from accessiweather.notifications.alert_sound_mapper import (
+    ALERT_UPDATED_EVENT,
     GENERIC_FALLBACKS,
     KNOWN_SEVERITY_KEYS,
     choose_sound_event,
@@ -139,6 +140,29 @@ class TestGetCandidateSoundEvents:
         candidates = get_candidate_sound_events(_alert("Moderate"))
 
         assert candidates[-2:] == GENERIC_FALLBACKS
+
+    def test_alert_update_reason_uses_update_event_before_severity_fallback(self):
+        candidates = get_candidate_sound_events(
+            _alert("Moderate"),
+            notification_reason="content_changed",
+        )
+
+        assert candidates == [ALERT_UPDATED_EVENT, "moderate", "alert", "notify"]
+
+    def test_alert_update_reason_keeps_specific_alert_fallbacks(self):
+        candidates = get_candidate_sound_events(
+            _alert("Severe", event="Severe Thunderstorm Warning"),
+            include_specific_events=True,
+            notification_reason="content_changed",
+        )
+
+        assert candidates[:4] == [
+            ALERT_UPDATED_EVENT,
+            "severe_thunderstorm_warning",
+            "thunderstorm_warning",
+            "thunderstorm_severe",
+        ]
+        assert candidates[-3:] == ["severe", "alert", "notify"]
 
 
 class TestChooseSoundEvent:

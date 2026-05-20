@@ -440,8 +440,8 @@ class TestNotifyLifecycleChanges:
         mock_notifier.send_notification.assert_called_once()
         call_kwargs = mock_notifier.send_notification.call_args.kwargs
         assert "UPDATED" in call_kwargs["title"]
-        # No sound for a plain update (not an escalation)
-        assert call_kwargs.get("play_sound") is False
+        assert call_kwargs.get("play_sound") is True
+        assert call_kwargs["sound_candidates"][0] == "alert_updated"
 
     @pytest.mark.asyncio
     async def test_escalated_alert_plays_sound(self, notification_system, mock_notifier):

@@ -216,6 +216,7 @@ class AlertNotificationSystem:
                     sound_candidates = get_candidate_sound_events(
                         alert,
                         include_specific_events=self._should_use_specific_alert_sounds(),
+                        notification_reason=reason,
                     )
                     logger.debug(f"[notify] Sound candidates for alert: {sound_candidates}")
                 except Exception as e:
@@ -296,9 +297,7 @@ class AlertNotificationSystem:
                 continue
             reason = "content_changed"
             try:
-                success = await self._send_alert_notification(
-                    change.alert, reason, play_sound=False
-                )
+                success = await self._send_alert_notification(change.alert, reason, play_sound=True)
                 if success:
                     sent += 1
                     logger.info(

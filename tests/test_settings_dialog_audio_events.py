@@ -255,6 +255,7 @@ def test_visible_audio_events_are_core_lifecycle_and_severity_only():
         "fetch_error",
         "discussion_update",
         "severe_risk",
+        "alert_updated",
         "startup",
         "exit",
         "extreme",

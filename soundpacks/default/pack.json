@@ -2,7 +2,7 @@
   "name": "Default",
   "author": "AccessiWeather Team",
   "description": "The default sound pack for AccessiWeather. Replace the .ogg files to customize.",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "sounds": {
     "alert": "alert.ogg",
     "notify": "notify.ogg",
@@ -13,6 +13,7 @@
     "data_updated": "success.ogg",
     "fetch_error": "error.ogg",
     "discussion_update": "notify.ogg",
+    "alert_updated": "alert_updated.ogg",
     "advisory": "advisory.ogg",
     "statement": "statement.ogg",
     "extreme": "critical_alert.ogg",

@@ -176,6 +176,7 @@ class SoundPackWizardDialog(wx.Dialog):
             "fetch_error",
             "discussion_update",
             "severe_risk",
+            "alert_updated",
             "startup",
             "exit",
             "extreme",
