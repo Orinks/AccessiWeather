@@ -81,20 +81,25 @@ HAZARD_KEYWORDS = {
 }
 
 
-def _extract_hazard(alert: WeatherAlert) -> str | None:
-    text = " ".join(
-        [
-            getattr(alert, "event", "") or "",
-            getattr(alert, "headline", "") or "",
-            getattr(alert, "title", "") or "",
-            getattr(alert, "description", "") or "",
-        ]
-    ).lower()
+def _find_hazard_in_text(text: str) -> str | None:
+    text = text.lower()
     for hazard_key, phrases in HAZARD_KEYWORDS.items():
         for phrase in phrases:
             if phrase in text:
                 return hazard_key
     return None
+
+
+def _extract_hazard(alert: WeatherAlert) -> str | None:
+    primary_text = " ".join(
+        [
+            getattr(alert, "event", "") or "",
+            getattr(alert, "headline", "") or "",
+            getattr(alert, "title", "") or "",
+        ]
+    )
+    description_text = getattr(alert, "description", "") or ""
+    return _find_hazard_in_text(primary_text) or _find_hazard_in_text(description_text)
 
 
 def _normalize_event_to_key(text: str | None) -> str | None:

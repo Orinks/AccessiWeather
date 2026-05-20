@@ -117,6 +117,24 @@ class TestGetCandidateSoundEvents:
         ]
         assert candidates[-3:] == ["severe", "alert", "notify"]
 
+    def test_primary_alert_event_takes_priority_over_description_hazard_terms(self):
+        alert = WeatherAlert(
+            title="Severe Thunderstorm Watch",
+            event="Severe Thunderstorm Watch",
+            headline="Severe Thunderstorm Watch",
+            description="Severe thunderstorms with damaging wind possible.",
+            severity="Severe",
+        )
+
+        candidates = get_candidate_sound_events(alert, include_specific_events=True)
+
+        assert candidates[:3] == [
+            "severe_thunderstorm_watch",
+            "thunderstorm_watch",
+            "thunderstorm_severe",
+        ]
+        assert "wind_watch" not in candidates
+
     def test_generic_fallbacks_always_present_at_end(self):
         candidates = get_candidate_sound_events(_alert("Moderate"))
 

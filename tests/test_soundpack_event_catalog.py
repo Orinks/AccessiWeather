@@ -3,7 +3,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from accessiweather.sound_events import FRIENDLY_SOUND_EVENT_CHOICES, USER_MUTABLE_SOUND_EVENT_KEYS
+from accessiweather.sound_events import (
+    FRIENDLY_SOUND_EVENT_CHOICES,
+    LEGACY_SOUND_EVENT_KEYS,
+    USER_MUTABLE_SOUND_EVENT_KEYS,
+)
 from accessiweather.ui.dialogs.soundpack_manager_models import FRIENDLY_ALERT_CATEGORIES
 from accessiweather.ui.dialogs.soundpack_wizard_dialog import SoundPackWizardDialog
 
@@ -45,8 +49,11 @@ def test_default_pack_supports_all_visible_events_and_legacy_keys():
     sounds = pack_data["sounds"]
 
     assert set(sounds) >= USER_MUTABLE_SOUND_EVENT_KEYS
-    for key in ("warning", "watch", "advisory", "statement", "tornado_warning"):
-        assert key in sounds
+    assert set(sounds) >= LEGACY_SOUND_EVENT_KEYS
+    assert "severe_thunderstorm_watch" in sounds
+    assert "thunderstorm_severe" in sounds
+    assert "wind_watch" in sounds
+    assert "wind_severe" in sounds
 
     for key, filename in sounds.items():
         sound_path = pack_json.parent / filename

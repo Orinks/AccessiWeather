@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - Alert sounds and sound-pack creation now focus on alert severity instead of a long list of specific alert names, while existing packs can keep their older mappings.
 
 ### Fixed
+- Default soundpack now includes specific sounds for mapped weather alert types.
 - Saving Settings no longer waits on the Windows startup shortcut check unless you actually change the launch-at-startup checkbox.
 - Settings now opens without waiting on the Windows startup shortcut check.
 - The weather-refresh completion sound is now off by default, and switching to a cached location no longer plays it before the real refresh finishes.
