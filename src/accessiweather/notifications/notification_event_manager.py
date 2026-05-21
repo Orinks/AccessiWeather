@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 from ..runtime_state import RuntimeStateManager
 from .minutely_precipitation import (
     SENSITIVITY_THRESHOLDS,
+    TRANSITION_NOTICE_LEAD_MINUTES,
     build_minutely_likelihood_signature,
     build_minutely_transition_signature,
     detect_minutely_precipitation_likelihood,
@@ -503,6 +504,18 @@ class NotificationEventManager:
         if signature is None:
             return None
 
+        transition = detect_minutely_precipitation_transition(
+            minutely_precipitation, threshold=threshold
+        )
+        if transition is not None and transition.minutes_until > TRANSITION_NOTICE_LEAD_MINUTES:
+            signature = f"pending:{signature}"
+            if self.state.last_minutely_transition_signature not in (
+                signature,
+                signature.removeprefix("pending:"),
+            ):
+                self.state.last_minutely_transition_signature = signature
+            return None
+
         if self.state.last_minutely_transition_signature is None:
             self.state.last_minutely_transition_signature = signature
             logger.debug("First minutely precipitation state stored: %s", signature)
@@ -512,9 +525,6 @@ class NotificationEventManager:
             return None
 
         self.state.last_minutely_transition_signature = signature
-        transition = detect_minutely_precipitation_transition(
-            minutely_precipitation, threshold=threshold
-        )
         if transition is None:
             return None
 

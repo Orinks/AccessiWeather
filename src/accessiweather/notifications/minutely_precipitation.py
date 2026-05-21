@@ -36,6 +36,7 @@ def _probability_band(prob: float) -> str:
 INTENSITY_THRESHOLD_LIGHT = 0.01
 INTENSITY_THRESHOLD_MODERATE = 0.1
 INTENSITY_THRESHOLD_HEAVY = 1.0
+TRANSITION_NOTICE_LEAD_MINUTES = 10
 
 # Map setting values to thresholds
 SENSITIVITY_THRESHOLDS: dict[str, float] = {
@@ -195,6 +196,9 @@ def build_minutely_transition_signature(
     """
     Return a stable signature for the current minutely transition state.
 
+    The signature intentionally excludes ``minutes_until`` so repeated polls of
+    the same forecasted start/stop do not become countdown notifications.
+
     ``None`` means the forecast was unavailable. ``NO_TRANSITION_SIGNATURE`` means
     the forecast was available but no dry/wet transition was detected.
 
@@ -211,7 +215,7 @@ def build_minutely_transition_signature(
         return NO_TRANSITION_SIGNATURE
 
     precip_type = transition.precipitation_type or "precipitation"
-    return f"{transition.transition_type}:{transition.minutes_until}:{precip_type}"
+    return f"{transition.transition_type}:{precip_type}"
 
 
 def detect_minutely_precipitation_likelihood(

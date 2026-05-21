@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Default soundpack now includes specific sounds for mapped weather alert types.
+- Pirate Weather minute-by-minute precipitation notifications now wait until start/stop changes are near-term and no longer count down repeatedly for the same rain event.
 - Saving Settings no longer waits on the Windows startup shortcut check unless you actually change the launch-at-startup checkbox.
 - Settings now opens without waiting on the Windows startup shortcut check.
 - The weather-refresh completion sound is now off by default, and switching to a cached location no longer plays it before the real refresh finishes.
