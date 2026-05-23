@@ -448,6 +448,53 @@ async def get_nws_daily_climate_report(
     return products[0] if products else None
 
 
+async def get_nws_observation_station_ids_for_point(
+    latitude: float,
+    longitude: float,
+    *,
+    nws_base_url: str = "https://api.weather.gov",
+    client: httpx.AsyncClient | None = None,
+    timeout: float = 10.0,
+    user_agent: str = "AccessiWeather (github.com/orinks/accessiweather)",
+    limit: int = 12,
+) -> list[str]:
+    """Fetch nearby NWS observation station identifiers for a point."""
+    headers = {"User-Agent": user_agent}
+    point_url = f"{nws_base_url}/points/{latitude:.4f},{longitude:.4f}"
+
+    async def _run(http_client: httpx.AsyncClient) -> list[str]:
+        try:
+            point_response = await _client_get(http_client, point_url, headers=headers)
+            if point_response.status_code != 200:
+                return []
+            stations_url = point_response.json().get("properties", {}).get("observationStations")
+            if not isinstance(stations_url, str) or not stations_url:
+                return []
+            stations_response = await _client_get(http_client, stations_url, headers=headers)
+            if stations_response.status_code != 200:
+                return []
+        except (httpx.TimeoutException, httpx.TransportError, httpx.RequestError, ValueError):
+            return []
+
+        station_urls = stations_response.json().get("observationStations") or []
+        candidates: list[str] = []
+        for station_url in station_urls:
+            if not isinstance(station_url, str):
+                continue
+            station_id = station_url.rstrip("/").rsplit("/", 1)[-1].strip().upper()
+            if station_id and station_id not in candidates:
+                candidates.append(station_id)
+            if len(candidates) >= limit:
+                break
+        return candidates
+
+    if client is not None:
+        return await _run(client)
+
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+        return await _run(new_client)
+
+
 async def get_nws_discussion(
     client: httpx.AsyncClient,
     headers: dict[str, str],

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, call
 
 import pytest
 
@@ -33,6 +33,34 @@ async def test_forecast_product_service_caches_daily_climate_by_station():
 
     assert first is second
     fetcher.assert_awaited_once_with("RDU")
+
+
+@pytest.mark.asyncio
+async def test_daily_climate_for_location_falls_back_to_observation_stations():
+    issued = datetime(2026, 5, 23, 5, 53, tzinfo=UTC)
+    product = _climate_product("cli-ttn", "CLIMATE REPORT FOR TRENTON", issued)
+    fetcher = AsyncMock(side_effect=[None, None, None, product])
+    station_fetcher = AsyncMock(return_value=["KVAY", "KTTN", "KPHL"])
+    service = ForecastProductService(
+        Cache(),
+        daily_climate_fetcher=fetcher,
+        observation_station_fetcher=station_fetcher,
+    )
+    location = Location(
+        name="Lumberton, NJ",
+        latitude=39.965,
+        longitude=-74.805,
+        country_code="US",
+        cwa_office="PHI",
+        radar_station="KDIX",
+    )
+
+    result = await service.get_daily_climate_report_for_location(location)
+
+    assert result is product
+    assert fetcher.await_args_list == [call("DIX"), call("PHI"), call("VAY"), call("TTN")]
+    station_fetcher.assert_awaited_once_with(39.965, -74.805)
+    assert service._cache.get("iem_text_product:CLI:DIX:latest") is product
 
 
 def test_location_daily_climate_station_candidates_prefer_radar_then_office():

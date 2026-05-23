@@ -33,6 +33,7 @@ from ..models import TextProduct
 from ..weather_client_nws import (
     TextProductFetchError,
     get_nws_daily_climate_report,
+    get_nws_observation_station_ids_for_point,
     get_nws_text_product,
     get_nws_text_product_history,
 )
@@ -53,6 +54,7 @@ FetcherResult = TextProduct | list[TextProduct] | None
 Fetcher = Callable[..., Awaitable[FetcherResult]]
 HistoryFetcher = Callable[..., Awaitable[list[TextProduct]]]
 DailyClimateFetcher = Callable[..., Awaitable[TextProduct | None]]
+ObservationStationFetcher = Callable[[float, float], Awaitable[list[str]]]
 
 
 class ForecastProductService:
@@ -67,6 +69,7 @@ class ForecastProductService:
         fetcher: Fetcher | None = None,
         history_fetcher: HistoryFetcher | None = None,
         daily_climate_fetcher: DailyClimateFetcher | None = None,
+        observation_station_fetcher: ObservationStationFetcher | None = None,
     ) -> None:
         """
         Initialize the service.
@@ -81,6 +84,8 @@ class ForecastProductService:
                 :func:`get_nws_text_product_history`.
             daily_climate_fetcher: Optional async callable with the same
                 signature as :func:`get_nws_daily_climate_report`.
+            observation_station_fetcher: Optional async callable used to find
+                nearby NWS observation stations for daily climate fallback.
 
         """
         self._cache = cache
@@ -88,6 +93,9 @@ class ForecastProductService:
         self._history_fetcher: HistoryFetcher = history_fetcher or get_nws_text_product_history
         self._daily_climate_fetcher: DailyClimateFetcher = (
             daily_climate_fetcher or get_nws_daily_climate_report
+        )
+        self._observation_station_fetcher: ObservationStationFetcher = (
+            observation_station_fetcher or get_nws_observation_station_ids_for_point
         )
 
     @staticmethod
@@ -153,9 +161,26 @@ class ForecastProductService:
         **fetcher_kwargs: Any,
     ) -> TextProduct | None:
         """Try likely CLI stations for a location until a report is found."""
-        for station in self.daily_climate_station_candidates(location):
+        primary_candidates = self.daily_climate_station_candidates(location)
+        candidates = list(primary_candidates)
+        latitude = getattr(location, "latitude", None)
+        longitude = getattr(location, "longitude", None)
+        if isinstance(latitude, int | float) and isinstance(longitude, int | float):
+            try:
+                for station in await self._observation_station_fetcher(latitude, longitude):
+                    normalized_station = self._normalize_daily_climate_station(station)
+                    if normalized_station and normalized_station not in candidates:
+                        candidates.append(normalized_station)
+            except Exception as exc:  # noqa: BLE001
+                logger.debug("Daily climate observation-station lookup failed: %s", exc)
+
+        for station in candidates:
             product = await self.get_daily_climate_report(station, **fetcher_kwargs)
             if product is not None:
+                ttl = self._TTLS.get("CLI", 3600)
+                for primary_station in primary_candidates:
+                    key = self._iem_cache_key("CLI", primary_station, "latest")
+                    self._cache.set(key, product, ttl=ttl)
                 return product
         return None
 
