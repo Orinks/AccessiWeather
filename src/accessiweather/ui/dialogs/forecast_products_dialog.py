@@ -181,7 +181,7 @@ class ForecastProductsDialog(wx.Dialog):
 
             loader = _override_loader
 
-        panel_cwa = cwa_office if tab.requires_cwa else "IEM"
+        panel_cwa = cwa_office if tab.requires_cwa or tab.loader_kind == "daily_climate" else "IEM"
         panel = ForecastProductPanel(
             parent=self.notebook,
             product_type=tab.product_type,

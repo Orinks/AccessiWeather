@@ -430,7 +430,7 @@ class TestForecastProductsDialog:
         )
 
         openers = [entry["advanced_lookup_opener"] for entry in panel_factory]
-        assert len(openers) == 3
+        assert len(openers) == 4
         for opener in openers:
             assert callable(opener)
 
