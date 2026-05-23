@@ -448,6 +448,36 @@ async def get_nws_daily_climate_report(
     return products[0] if products else None
 
 
+async def get_nws_daily_climate_locations(
+    *,
+    nws_base_url: str = "https://api.weather.gov",
+    client: httpx.AsyncClient | None = None,
+    timeout: float = 10.0,
+    user_agent: str = "AccessiWeather (github.com/orinks/accessiweather)",
+) -> set[str]:
+    """Fetch NWS location identifiers that currently support CLI products."""
+    headers = {"User-Agent": user_agent}
+    locations_url = f"{nws_base_url}/products/types/CLI/locations"
+
+    async def _run(http_client: httpx.AsyncClient) -> set[str]:
+        try:
+            response = await _client_get(http_client, locations_url, headers=headers)
+            if response.status_code != 200:
+                return set()
+            locations = response.json().get("locations") or {}
+        except (httpx.TimeoutException, httpx.TransportError, httpx.RequestError, ValueError):
+            return set()
+        if not isinstance(locations, dict):
+            return set()
+        return {str(station).strip().upper() for station in locations if str(station).strip()}
+
+    if client is not None:
+        return await _run(client)
+
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as new_client:
+        return await _run(new_client)
+
+
 async def get_nws_observation_station_ids_for_point(
     latitude: float,
     longitude: float,

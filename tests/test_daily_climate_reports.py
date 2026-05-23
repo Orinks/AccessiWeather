@@ -45,6 +45,7 @@ async def test_daily_climate_for_location_falls_back_to_observation_stations():
         Cache(),
         daily_climate_fetcher=fetcher,
         observation_station_fetcher=station_fetcher,
+        daily_climate_location_fetcher=AsyncMock(return_value=set()),
     )
     location = Location(
         name="Lumberton, NJ",
@@ -61,6 +62,69 @@ async def test_daily_climate_for_location_falls_back_to_observation_stations():
     assert fetcher.await_args_list == [call("DIX"), call("PHI"), call("VAY"), call("TTN")]
     station_fetcher.assert_awaited_once_with(39.965, -74.805)
     assert service._cache.get("iem_text_product:CLI:DIX:latest") is product
+
+
+@pytest.mark.asyncio
+async def test_daily_climate_for_location_uses_cli_location_index_to_skip_dead_candidates():
+    issued = datetime(2026, 5, 23, 5, 53, tzinfo=UTC)
+    product = _climate_product("cli-ttn", "CLIMATE REPORT FOR TRENTON", issued)
+    fetcher = AsyncMock(return_value=product)
+    station_fetcher = AsyncMock(return_value=["KVAY", "KWRI", "KPNE", "KTTN", "KPHL"])
+    cli_location_fetcher = AsyncMock(return_value={"TTN", "PHL", "ACY"})
+    service = ForecastProductService(
+        Cache(),
+        daily_climate_fetcher=fetcher,
+        observation_station_fetcher=station_fetcher,
+        daily_climate_location_fetcher=cli_location_fetcher,
+    )
+    location = Location(
+        name="Lumberton, NJ",
+        latitude=39.965,
+        longitude=-74.805,
+        country_code="US",
+        cwa_office="PHI",
+        radar_station="KDIX",
+    )
+
+    result = await service.get_daily_climate_report_for_location(location)
+
+    assert result is product
+    fetcher.assert_awaited_once_with("TTN")
+    station_fetcher.assert_awaited_once_with(39.965, -74.805)
+    cli_location_fetcher.assert_awaited_once()
+    assert service._cache.get("iem_text_product:CLI:DIX:latest") is product
+
+
+@pytest.mark.asyncio
+async def test_daily_climate_for_location_caches_resolved_cli_station():
+    issued = datetime(2026, 5, 23, 5, 53, tzinfo=UTC)
+    product = _climate_product("cli-ttn", "CLIMATE REPORT FOR TRENTON", issued)
+    fetcher = AsyncMock(return_value=product)
+    station_fetcher = AsyncMock(return_value=["KTTN", "KPHL"])
+    cli_location_fetcher = AsyncMock(return_value={"TTN", "PHL"})
+    service = ForecastProductService(
+        Cache(),
+        daily_climate_fetcher=fetcher,
+        observation_station_fetcher=station_fetcher,
+        daily_climate_location_fetcher=cli_location_fetcher,
+    )
+    location = Location(
+        name="Lumberton, NJ",
+        latitude=39.965,
+        longitude=-74.805,
+        country_code="US",
+        cwa_office="PHI",
+        radar_station="KDIX",
+    )
+
+    first = await service.get_daily_climate_report_for_location(location)
+    second = await service.get_daily_climate_report_for_location(location)
+
+    assert first is product
+    assert second is product
+    fetcher.assert_awaited_once_with("TTN")
+    station_fetcher.assert_awaited_once()
+    cli_location_fetcher.assert_awaited_once()
 
 
 def test_location_daily_climate_station_candidates_prefer_radar_then_office():
