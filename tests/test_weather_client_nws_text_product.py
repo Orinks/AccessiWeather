@@ -18,7 +18,10 @@ import pytest
 from accessiweather.models import TextProduct
 from accessiweather.weather_client_nws import (
     TextProductFetchError,
+    get_nws_daily_climate_locations,
+    get_nws_daily_climate_report,
     get_nws_discussion,
+    get_nws_observation_station_ids_for_point,
     get_nws_text_product,
     get_nws_text_product_history,
 )
@@ -250,8 +253,6 @@ class TestGetNwsDailyClimateReport:
             }
         )
 
-        from accessiweather.weather_client_nws import get_nws_daily_climate_report
-
         result = await get_nws_daily_climate_report("RDU", nws_base_url=NWS_BASE, client=client)
 
         assert isinstance(result, TextProduct)
@@ -260,6 +261,110 @@ class TestGetNwsDailyClimateReport:
         assert result.cwa_office == "RDU"
         assert result.issuance_time == datetime(2026, 5, 22, 20, 54, 0, tzinfo=UTC)
         assert "CLIMATE REPORT" in result.product_text
+
+    @pytest.mark.asyncio
+    async def test_daily_climate_report_normalizes_k_station_prefix(self):
+        client = _client_for(
+            {
+                f"{NWS_BASE}/products?location=TTN&type=CLI&limit=1": _resp({"@graph": []}),
+            }
+        )
+
+        result = await get_nws_daily_climate_report("KTTN", nws_base_url=NWS_BASE, client=client)
+
+        assert result is None
+        client.get.assert_called_once()
+        assert client.get.call_args.args[0] == f"{NWS_BASE}/products?location=TTN&type=CLI&limit=1"
+
+    @pytest.mark.asyncio
+    async def test_daily_climate_report_empty_station_skips_http(self):
+        client = MagicMock(spec=httpx.AsyncClient)
+
+        result = await get_nws_daily_climate_report("", nws_base_url=NWS_BASE, client=client)
+
+        assert result is None
+        client.get.assert_not_called()
+
+
+class TestGetNwsDailyClimateLocations:
+    @pytest.mark.asyncio
+    async def test_daily_climate_locations_returns_station_ids(self):
+        client = _client_for(
+            {
+                f"{NWS_BASE}/products/types/CLI/locations": _resp(
+                    {"locations": {"TTN": None, "phl": "Philadelphia", "": None}}
+                ),
+            }
+        )
+
+        result = await get_nws_daily_climate_locations(nws_base_url=NWS_BASE, client=client)
+
+        assert result == {"TTN", "PHL"}
+
+    @pytest.mark.asyncio
+    async def test_daily_climate_locations_non_200_returns_empty_set(self):
+        client = _client_for(
+            {f"{NWS_BASE}/products/types/CLI/locations": _resp({}, status_code=503)}
+        )
+
+        result = await get_nws_daily_climate_locations(nws_base_url=NWS_BASE, client=client)
+
+        assert result == set()
+
+    @pytest.mark.asyncio
+    async def test_daily_climate_locations_malformed_payload_returns_empty_set(self):
+        client = _client_for({f"{NWS_BASE}/products/types/CLI/locations": _resp({"locations": []})})
+
+        result = await get_nws_daily_climate_locations(nws_base_url=NWS_BASE, client=client)
+
+        assert result == set()
+
+
+class TestGetNwsObservationStationIdsForPoint:
+    @pytest.mark.asyncio
+    async def test_observation_station_ids_for_point_returns_limited_station_ids(self):
+        stations_url = f"{NWS_BASE}/gridpoints/PHI/62,81/stations"
+        client = _client_for(
+            {
+                f"{NWS_BASE}/points/39.9650,-74.8050": _resp(
+                    {"properties": {"observationStations": stations_url}}
+                ),
+                stations_url: _resp(
+                    {
+                        "observationStations": [
+                            f"{NWS_BASE}/stations/KVAY",
+                            f"{NWS_BASE}/stations/KTTN",
+                            f"{NWS_BASE}/stations/KTTN",
+                            123,
+                            f"{NWS_BASE}/stations/KPHL",
+                        ]
+                    }
+                ),
+            }
+        )
+
+        result = await get_nws_observation_station_ids_for_point(
+            39.965,
+            -74.805,
+            nws_base_url=NWS_BASE,
+            client=client,
+            limit=2,
+        )
+
+        assert result == ["KVAY", "KTTN"]
+
+    @pytest.mark.asyncio
+    async def test_observation_station_ids_for_point_missing_station_url_returns_empty_list(self):
+        client = _client_for({f"{NWS_BASE}/points/39.9650,-74.8050": _resp({"properties": {}})})
+
+        result = await get_nws_observation_station_ids_for_point(
+            39.965,
+            -74.805,
+            nws_base_url=NWS_BASE,
+            client=client,
+        )
+
+        assert result == []
 
 
 # ---------------------------------------------------------------------------
