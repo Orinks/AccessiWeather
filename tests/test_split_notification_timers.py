@@ -571,6 +571,146 @@ class TestNotificationEventHelpers:
             category="Updated discussion",
         )
 
+    def test_process_notification_events_suppresses_startup_discussion_toast(self):
+        win = self._make_window()
+        win._suppress_startup_text_product_notifications = True
+        settings = MagicMock()
+        settings.notify_discussion_update = True
+        settings.notify_severe_risk_change = False
+        settings.notify_minutely_precipitation_start = False
+        settings.notify_minutely_precipitation_stop = False
+        settings.sound_enabled = True
+        win.app.config_manager.get_settings.return_value = settings
+        location = MagicMock()
+        location.name = "PHI"
+        win.app.config_manager.get_current_location.return_value = location
+        win.app.notifier = MagicMock()
+
+        event = MagicMock()
+        event.event_type = "discussion_update"
+        event.title = "Updated discussion"
+        event.message = "Summary"
+        event.sound_event = "discussion_update"
+
+        with patch(
+            "accessiweather.ui.main_window_notification_events.NotificationEventManager"
+        ) as manager_cls:
+            manager_cls.return_value.check_for_events.return_value = [event]
+
+            win._process_notification_events(MagicMock())
+
+        win.app.notifier.send_notification.assert_not_called()
+        win.append_event_center_entry.assert_not_called()
+        assert win._suppress_startup_text_product_notifications is False
+
+    def test_startup_suppression_keeps_non_discussion_events(self):
+        win = self._make_window()
+        win._suppress_startup_text_product_notifications = True
+        settings = MagicMock()
+        settings.notify_discussion_update = True
+        settings.notify_severe_risk_change = True
+        settings.notify_minutely_precipitation_start = False
+        settings.notify_minutely_precipitation_stop = False
+        settings.sound_enabled = False
+        win.app.config_manager.get_settings.return_value = settings
+        location = MagicMock()
+        location.name = "PHI"
+        win.app.config_manager.get_current_location.return_value = location
+        win.app.notifier = MagicMock()
+        win.app.notifier.send_notification.return_value = True
+
+        discussion_event = MagicMock()
+        discussion_event.event_type = "discussion_update"
+        risk_event = MagicMock()
+        risk_event.event_type = "severe_risk_change"
+        risk_event.title = "Severe risk changed"
+        risk_event.message = "Risk increased"
+        risk_event.sound_event = "notify"
+
+        with patch(
+            "accessiweather.ui.main_window_notification_events.NotificationEventManager"
+        ) as manager_cls:
+            manager_cls.return_value.check_for_events.return_value = [
+                discussion_event,
+                risk_event,
+            ]
+
+            win._process_notification_events(MagicMock())
+
+        win.app.notifier.send_notification.assert_called_once_with(
+            title="Severe risk changed",
+            message="Risk increased",
+            timeout=10,
+            sound_event="notify",
+            play_sound=False,
+            activation_arguments="accessiweather-toast:kind=generic_fallback",
+        )
+        win.append_event_center_entry.assert_called_once_with(
+            "Risk increased",
+            category="Severe risk changed",
+        )
+        assert win._suppress_startup_text_product_notifications is False
+
+    def test_startup_suppression_applies_to_cached_text_product_checks(self):
+        win = self._make_window()
+        win._suppress_startup_text_product_notifications = True
+        settings = MagicMock()
+        settings.notify_discussion_update = False
+        settings.notify_severe_risk_change = False
+        settings.notify_minutely_precipitation_start = False
+        settings.notify_minutely_precipitation_stop = False
+        settings.notify_precipitation_likelihood = False
+        settings.notify_hwo_update = True
+        settings.notify_sps_issued = True
+        settings.notify_daily_climate_report_update = True
+        settings.sound_enabled = False
+        win.app.config_manager.get_settings.return_value = settings
+        location = MagicMock()
+        location.name = "PHI"
+        win.app.config_manager.get_current_location.return_value = location
+
+        with (
+            patch(
+                "accessiweather.ui.main_window_notification_events.NotificationEventManager"
+            ) as manager_cls,
+            patch(
+                "accessiweather.ui.main_window_notification_events._check_hwo_from_cache"
+            ) as hwo_check,
+            patch(
+                "accessiweather.ui.main_window_notification_events._check_sps_from_cache"
+            ) as sps_check,
+            patch(
+                "accessiweather.ui.main_window_notification_events._check_daily_climate_from_cache"
+            ) as climate_check,
+        ):
+            manager = manager_cls.return_value
+            manager.check_for_events.return_value = []
+
+            win._process_notification_events(MagicMock())
+
+        hwo_check.assert_called_once_with(
+            win,
+            manager,
+            location,
+            settings,
+            suppress_notification=True,
+        )
+        sps_check.assert_called_once_with(
+            win,
+            manager,
+            location,
+            settings,
+            suppress_notification=True,
+        )
+        climate_check.assert_called_once_with(
+            win,
+            manager,
+            location,
+            settings,
+            suppress_notification=True,
+        )
+        assert win._suppress_startup_text_product_notifications is False
+
 
 class TestSpsProductLocationFiltering:
     """SPS product notifications must honor the user's saved NWS zones."""

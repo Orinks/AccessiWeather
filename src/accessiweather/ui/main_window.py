@@ -99,6 +99,7 @@ class MainWindow(
         self.app = app
         self._escape_id = None
         self._fetch_generation = 0  # Tracks which fetch is current (prevents stale updates)
+        self._suppress_startup_text_product_notifications = True
         # Persistent map of alert_id -> lifecycle label ("New", "Updated", "Escalated", "Extended").
         # Updated on each successful weather fetch; cleared when the location changes.
         self._alert_lifecycle_labels: dict[str, str] = {}
