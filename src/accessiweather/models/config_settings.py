@@ -27,8 +27,10 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     sound_enabled: bool = True
     sound_pack: str = "default"
     muted_sound_events: list[str] = field(default_factory=lambda: list(DEFAULT_MUTED_SOUND_EVENTS))
+    specific_alert_sound_packs: list[str] = field(default_factory=list)
     # Event-based notifications
     notify_discussion_update: bool = True
+    notify_daily_climate_report_update: bool = False
     notify_hwo_update: bool = True
     notify_sps_issued: bool = True
     notify_severe_risk_change: bool = False

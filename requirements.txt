@@ -1,6 +1,5 @@
 # wxPython UI framework
 wxPython>=4.2.0
-gui_builder @ git+https://github.com/accessibleapps/gui_builder.git
 
 # Audio
 sound_lib @ git+https://github.com/accessibleapps/sound_lib.git

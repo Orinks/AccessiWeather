@@ -27,6 +27,7 @@ Each sound pack is a directory containing:
     "author": "Author Name",
     "description": "Pack description",
     "version": "1.0.0",
+    "specific_alert_sounds": false,
     "sounds": {
         "alert": "alert_sound.wav",
         "notify": "notification_sound.wav",
@@ -82,28 +83,38 @@ Both formats can be mixed - inline volume takes precedence if specified.
 - `notify` - General notifications
 - `error` - Error conditions and failures
 - `success` - Successful operations
+- `data_updated` - Weather refresh completed
+- `fetch_error` - Weather refresh failed
+- `discussion_update` - Forecast discussion updated
+- `severe_risk` - Severe weather risk changed
 - `startup` - Application startup sound
 - `exit` - Application exit sound
 
-### Weather-Specific Sound Events
+### Alert Severity Sound Events
 
-AccessiWeather supports specific sound mappings for different types of weather alerts:
+AccessiWeather maps alert notifications by severity first, then falls back to
+`alert` and `notify` when a pack does not provide the severity key.
 
-- `tornado_warning` - Tornado warnings (highest priority)
-- `thunderstorm_warning` - Severe thunderstorm warnings
-- `flood_warning` - Flood warnings
-- `heat_advisory` - Heat advisories and excessive heat warnings
-- `winter_storm_warning` - Winter storm warnings
-- `hurricane_warning` - Hurricane warnings
-- `wind_warning` - High wind warnings
-- `fire_warning` - Fire weather warnings
-- `air_quality_alert` - Air quality alerts
-- `fog_advisory` - Dense fog advisories
-- `ice_warning` - Ice storm warnings
-- `snow_warning` - Heavy snow warnings
-- `dust_warning` - Dust storm warnings
-- `warning` - Generic severe weather warnings
-- `watch` - Generic weather watches
+- `extreme` - Extreme severity alerts
+- `severe` - Severe severity alerts
+- `moderate` - Moderate severity alerts
+- `minor` - Minor severity alerts
+
+Older sound packs can keep specific keys such as `tornado_warning`, `warning`,
+or `watch`; AccessiWeather still tolerates those mappings for compatibility,
+but new packs should use the compact severity keys above by default.
+
+If a pack already contains old specific alert keys, AccessiWeather
+automatically tries those keys for that pack before the severity keys. Pack
+authors can also set `"specific_alert_sounds": true` in `pack.json` to opt in
+explicitly.
+
+Users who want different sounds for specific alerts in a severity-only pack can
+turn on **Use specific alert sounds for this sound pack** in Settings > Audio.
+That checkbox applies only to the selected pack. For example, a Tornado Warning
+can use `tornado_warning`, while a Tornado Watch can use `tornado_watch`; if
+those sounds are missing, playback still falls back to severity, then `alert`,
+then `notify`.
 
 ## Built-in Sound Packs
 

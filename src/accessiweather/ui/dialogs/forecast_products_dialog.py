@@ -65,6 +65,7 @@ class ForecastProductsDialog(wx.Dialog):
         TextProductTab("AFD", "Area Forecast Discussion", "current", requires_cwa=True),
         TextProductTab("HWO", "Hazardous Weather Outlook", "current", requires_cwa=True),
         TextProductTab("SPS", "Special Weather Statement", "current", requires_cwa=True),
+        TextProductTab("CLI", "Daily Climate Report", "daily_climate"),
         TextProductTab("SPC_OUTLOOK", "SPC Outlook (Storm Prediction Center)", "spc_outlook"),
         TextProductTab("SPC_MCD", "SPC MCD (Mesoscale Discussion)", "spc_mcd"),
         TextProductTab(
@@ -138,7 +139,7 @@ class ForecastProductsDialog(wx.Dialog):
                 pending_iem_tabs.append(tab)
                 continue
             is_first_tab = len(self.panels) == 0
-            self._add_tab_panel(tab, autoload=is_first_tab)
+            self._add_tab_panel(tab, autoload=self._should_autoload_tab(tab, is_first_tab))
         self._pending_iem_tabs = tuple(pending_iem_tabs)
 
         main_sizer.Add(self.notebook, 1, wx.ALL | wx.EXPAND, 8)
@@ -160,6 +161,11 @@ class ForecastProductsDialog(wx.Dialog):
 
         self.SetSizer(main_sizer)
 
+    @staticmethod
+    def _should_autoload_tab(tab: TextProductTab, is_first_tab: bool) -> bool:
+        """Return whether a tab should begin loading when the dialog opens."""
+        return is_first_tab or tab.loader_kind == "daily_climate"
+
     def _add_tab_panel(
         self,
         tab: TextProductTab,
@@ -180,7 +186,7 @@ class ForecastProductsDialog(wx.Dialog):
 
             loader = _override_loader
 
-        panel_cwa = cwa_office if tab.requires_cwa else "IEM"
+        panel_cwa = cwa_office if tab.requires_cwa or tab.loader_kind == "daily_climate" else "IEM"
         panel = ForecastProductPanel(
             parent=self.notebook,
             product_type=tab.product_type,
@@ -305,6 +311,10 @@ class ForecastProductsDialog(wx.Dialog):
                 return await self._service.get(cast(Any, tab.product_type), str(cwa_office))
             if tab.loader_kind == "nws_history":
                 return await self._service.get_history(tab.product_type, str(cwa_office), limit=1)
+            if tab.loader_kind == "daily_climate":
+                product = await self._service.get_daily_climate_report_for_location(self._location)
+                self._check_daily_climate_notification(product)
+                return product
             if latitude is None or longitude is None:
                 return None
             if tab.loader_kind == "spc_outlook":
@@ -359,6 +369,39 @@ class ForecastProductsDialog(wx.Dialog):
             return None
 
         return _loader
+
+    def _check_daily_climate_notification(self, product: TextProduct | None) -> None:
+        """Pipe loaded CLI reports through the opt-in event notification path."""
+        if product is None or self._app is None:
+            return
+        try:
+            app = cast(Any, self._app)
+            settings = app.config_manager.get_settings()
+            if not getattr(settings, "notify_daily_climate_report_update", False):
+                return
+            manager_getter = getattr(self.GetParent(), "_get_notification_event_manager", None)
+            manager = manager_getter() if callable(manager_getter) else None
+            if manager is None:
+                return
+            event = cast(Any, manager).check_daily_climate_report(
+                product,
+                settings,
+                self._location.name,
+            )
+            if event is None:
+                return
+            notifier = getattr(app, "notifier", None)
+            if notifier is None:
+                return
+            notifier.send_notification(
+                title=event.title,
+                message=event.message,
+                timeout=10,
+                sound_event=event.sound_event,
+                play_sound=bool(getattr(settings, "sound_enabled", False)),
+            )
+        except Exception:  # noqa: BLE001
+            logger.debug("Daily climate report notification check skipped", exc_info=True)
 
     def _make_advanced_lookup_opener(self, product_type: str):
         """Bind an advanced lookup opener for ``product_type``."""

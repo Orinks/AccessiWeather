@@ -25,6 +25,8 @@ concurrency:
 env:
   PYTHON_VERSION: "3.12"
   NUITKA_CACHE_DIR: ${{ github.workspace }}/.nuitka-cache
+  PIP_DEFAULT_TIMEOUT: "120"
+  PIP_RETRIES: "8"
 
 jobs:
   prepare:
@@ -37,7 +39,7 @@ jobs:
       is_nightly: ${{ steps.check.outputs.is_nightly }}
       tag: ${{ steps.check.outputs.tag }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
           fetch-depth: 0
@@ -101,16 +103,16 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 210
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
           fetch-depth: 0
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v6.2.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v5.0.5
         with:
           path: |
             ~/.cache/pip
@@ -121,7 +123,7 @@ jobs:
             pip-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-
             pip-${{ runner.os }}-
 
-      - uses: actions/cache/restore@v5
+      - uses: actions/cache/restore@v5.0.5
         with:
           path: .nuitka-cache
           key: nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-${{ github.run_id }}
@@ -144,14 +146,14 @@ jobs:
           python installer/create_icons.py
           python installer/build_nuitka.py --tag "${{ needs.prepare.outputs.is_nightly == 'true' && needs.prepare.outputs.tag || '' }}"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: windows
           path: |
             dist/AccessiWeather_Setup_*.exe
             dist/AccessiWeather_Portable_*.zip
 
-      - uses: actions/cache/save@v5
+      - uses: actions/cache/save@v5.0.5
         if: always()
         with:
           path: .nuitka-cache
@@ -164,16 +166,16 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
           fetch-depth: 0
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v6.2.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v5.0.5
         with:
           path: |
             ~/.cache/pip
@@ -184,7 +186,7 @@ jobs:
             pip-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-
             pip-${{ runner.os }}-
 
-      - uses: actions/cache/restore@v5
+      - uses: actions/cache/restore@v5.0.5
         with:
           path: .nuitka-cache
           key: nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-${{ github.run_id }}
@@ -207,12 +209,12 @@ jobs:
           python installer/create_icons.py
           python installer/build_nuitka.py --tag "${{ needs.prepare.outputs.is_nightly == 'true' && needs.prepare.outputs.tag || '' }}"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: macos
           path: dist/AccessiWeather_macOS_*.zip
 
-      - uses: actions/cache/save@v5
+      - uses: actions/cache/save@v5.0.5
         if: always()
         with:
           path: .nuitka-cache
@@ -225,16 +227,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 75
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
           fetch-depth: 0
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v6.2.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - uses: actions/cache@v5
+      - uses: actions/cache@v5.0.5
         with:
           path: |
             ~/.cache/pip
@@ -245,7 +247,7 @@ jobs:
             pip-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-
             pip-${{ runner.os }}-
 
-      - uses: actions/cache/restore@v5
+      - uses: actions/cache/restore@v5.0.5
         with:
           path: .nuitka-cache
           key: nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-${{ github.run_id }}
@@ -267,10 +269,10 @@ jobs:
 
       - name: Install dependencies
         run: |
+          WX_PYTHON_VERSION=4.2.5
+          PY_TAG=$(python -c 'import sys; print(f"cp{sys.version_info.major}{sys.version_info.minor}")')
           pip install \
-            -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-24.04 \
-            --only-binary wxPython \
-            wxPython
+            "https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-24.04/wxpython-${WX_PYTHON_VERSION}-${PY_TAG}-${PY_TAG}-linux_x86_64.whl"
           pip install -e .[build]
 
       - name: Build
@@ -326,12 +328,12 @@ jobs:
             fi
           done
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7.0.1
         with:
           name: linux
           path: dist/AccessiWeather_Linux_*.tar.gz
 
-      - uses: actions/cache/save@v5
+      - uses: actions/cache/save@v5.0.5
         if: always()
         with:
           path: .nuitka-cache
@@ -344,7 +346,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
           fetch-depth: 0

@@ -113,6 +113,8 @@ def _check_hwo_from_cache(
     manager: NotificationEventManager,
     location,
     settings,
+    *,
+    suppress_notification: bool = False,
 ) -> None:
     """Feed a cache-warm HWO product (if any) to the manager's HWO update check."""
     try:
@@ -138,7 +140,16 @@ def _check_hwo_from_cache(
             product = product[0] if product else None
         if product is None:
             return
-        manager._check_hwo_update(location, product, settings)
+        if not suppress_notification:
+            manager._check_hwo_update(location, product, settings)
+            return
+
+        dispatch = manager._dispatch_hwo_notification
+        try:
+            manager._dispatch_hwo_notification = lambda **_: None  # type: ignore[method-assign]
+            manager._check_hwo_update(location, product, settings)
+        finally:
+            manager._dispatch_hwo_notification = dispatch  # type: ignore[method-assign]
     except Exception as e:  # noqa: BLE001
         logger.debug("[events] HWO check skipped: %s", e)
 
@@ -179,6 +190,8 @@ def _check_sps_from_cache(
     manager: NotificationEventManager,
     location,
     settings,
+    *,
+    suppress_notification: bool = False,
 ) -> None:
     """Feed cache-warm SPS products (plus cached active alerts) into the check."""
     try:
@@ -209,9 +222,76 @@ def _check_sps_from_cache(
 
         products = _filter_sps_products_for_location(products, location)
         active_alerts = _active_alerts_for_current_location(window)
-        manager._check_sps_new(location, products, active_alerts, settings)
+        if not suppress_notification:
+            manager._check_sps_new(location, products, active_alerts, settings)
+            return
+
+        dispatch = manager._dispatch_sps_notification
+        try:
+            manager._dispatch_sps_notification = lambda **_: None  # type: ignore[method-assign]
+            manager._check_sps_new(location, products, active_alerts, settings)
+        finally:
+            manager._dispatch_sps_notification = dispatch  # type: ignore[method-assign]
     except Exception as e:  # noqa: BLE001
         logger.debug("[events] SPS check skipped: %s", e)
+
+
+def _check_daily_climate_from_cache(
+    window: MainWindow,
+    manager: NotificationEventManager,
+    location,
+    settings,
+    *,
+    suppress_notification: bool = False,
+) -> None:
+    """Feed a cache-warm Daily Climate Report into the opt-in update check."""
+    try:
+        if getattr(settings, "notify_daily_climate_report_update", False) is not True:
+            return
+        service = getattr(window, "_forecast_product_service", None)
+        if service is None:
+            getter = getattr(window, "_get_forecast_product_service", None)
+            if getter is None:
+                return
+            service = getter()
+        cache = getattr(service, "_cache", None)
+        if cache is None:
+            return
+        candidates_getter = getattr(service, "daily_climate_station_candidates", None)
+        if not callable(candidates_getter):
+            return
+        for station in candidates_getter(location):
+            key = f"iem_text_product:CLI:{station}:latest"
+            if not cache.has_key(key):
+                continue
+            product = cache.get(key)
+            if product is None:
+                continue
+            event = manager.check_daily_climate_report(product, settings, location.name)
+            if event is None:
+                return
+            if suppress_notification:
+                logger.info(
+                    "[events] Suppressed startup daily climate report notification; "
+                    "stored current report as baseline"
+                )
+                return
+            notifier = getattr(window.app, "notifier", None) or get_fallback_notifier(window)
+            _log_reviewable_event_text(window, event.title, event.message)
+            notifier.send_notification(
+                title=event.title,
+                message=event.message,
+                timeout=10,
+                sound_event=event.sound_event,
+                play_sound=bool(getattr(settings, "sound_enabled", False)),
+                activation_arguments=serialize_activation_request(
+                    NotificationActivationRequest(kind="generic_fallback")
+                ),
+            )
+            logger.info("[events] Sent daily_climate_report_update notification for %s", station)
+            return
+    except Exception as e:  # noqa: BLE001
+        logger.debug("[events] Daily Climate Report check skipped: %s", e)
 
 
 def _filter_sps_products_for_location(products: list, location) -> list:
@@ -393,10 +473,12 @@ def process_notification_events(window: MainWindow, weather_data) -> None:
             and not getattr(settings, "notify_precipitation_likelihood", False)
             and not getattr(settings, "notify_hwo_update", True)
             and not getattr(settings, "notify_sps_issued", True)
+            and not getattr(settings, "notify_daily_climate_report_update", False)
         ):
             logger.debug(
                 "[events] _process_notification_events: discussion=%s severe_risk=%s "
-                "minutely_start=%s minutely_stop=%s likelihood=%s hwo=%s sps=%s disabled -- skipping",
+                "minutely_start=%s minutely_stop=%s likelihood=%s hwo=%s sps=%s cli=%s "
+                "disabled -- skipping",
                 settings.notify_discussion_update,
                 settings.notify_severe_risk_change,
                 settings.notify_minutely_precipitation_start,
@@ -404,6 +486,7 @@ def process_notification_events(window: MainWindow, weather_data) -> None:
                 getattr(settings, "notify_precipitation_likelihood", False),
                 getattr(settings, "notify_hwo_update", True),
                 getattr(settings, "notify_sps_issued", True),
+                getattr(settings, "notify_daily_climate_report_update", False),
             )
             return
 
@@ -426,16 +509,51 @@ def process_notification_events(window: MainWindow, weather_data) -> None:
 
         event_manager = get_notification_event_manager(window)
         events = event_manager.check_for_events(weather_data, settings, location.name)
+        suppress_startup_text_products = getattr(
+            window, "_suppress_startup_text_product_notifications", False
+        )
+        if suppress_startup_text_products:
+            discussion_events = [
+                event for event in events if event.event_type == "discussion_update"
+            ]
+            if discussion_events:
+                events = [event for event in events if event.event_type != "discussion_update"]
+                logger.info(
+                    "[events] Suppressed %d startup discussion notification(s); "
+                    "stored current discussion as baseline",
+                    len(discussion_events),
+                )
 
         # Unit 10 — Hazardous Weather Outlook change detection. Pre-warm in
         # _pre_warm_products_for_location already populated the shared cache,
         # so a cache-hit lookup here is sync and cheap. A miss (e.g. non-US
         # location or failed pre-warm) silently no-ops.
-        _check_hwo_from_cache(window, event_manager, location, settings)
+        _check_hwo_from_cache(
+            window,
+            event_manager,
+            location,
+            settings,
+            suppress_notification=suppress_startup_text_products,
+        )
         # Unit 11 — informational Special Weather Statement notifications.
         # Dedupes against currently-cached active alerts for this location so
         # event-style SPS (already on /alerts/active) don't double-notify.
-        _check_sps_from_cache(window, event_manager, location, settings)
+        _check_sps_from_cache(
+            window,
+            event_manager,
+            location,
+            settings,
+            suppress_notification=suppress_startup_text_products,
+        )
+        _check_daily_climate_from_cache(
+            window,
+            event_manager,
+            location,
+            settings,
+            suppress_notification=suppress_startup_text_products,
+        )
+        if suppress_startup_text_products:
+            window._suppress_startup_text_product_notifications = False
 
         logger.debug(
             "[events] check_for_events returned %d event(s) for location %r",

@@ -110,7 +110,7 @@ class SoundPackManagerUiMixin:
 
         # Category selection
         cat_row = wx.BoxSizer(wx.HORIZONTAL)
-        cat_label = wx.StaticText(parent, label="Alert Category:")
+        cat_label = wx.StaticText(parent, label="Sound Event:")
         cat_row.Add(cat_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
 
         self.category_choice = wx.Choice(
@@ -148,7 +148,7 @@ class SoundPackManagerUiMixin:
         custom_row.Add(custom_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
 
         self.custom_key_input = wx.TextCtrl(parent, size=(200, -1), style=wx.TE_PROCESS_ENTER)
-        self.custom_key_input.SetHint("e.g., excessive_heat_warning")
+        self.custom_key_input.SetHint("e.g., severe")
         custom_row.Add(self.custom_key_input, 1, wx.RIGHT, 5)
 
         add_mapping_btn = wx.Button(parent, label="Choose Sound...")

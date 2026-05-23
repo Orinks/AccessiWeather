@@ -566,6 +566,41 @@ class TestGetSoundEntry:
             finally:
                 sp.SOUNDPACKS_DIR = original_dir
 
+    def test_get_sound_entry_for_candidates_falls_back_within_pack(self):
+        """Candidate lookup should use the next available event in the selected pack."""
+        from accessiweather.notifications.sound_player import get_sound_entry_for_candidates
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import accessiweather.notifications.sound_player as sp
+
+            original_dir = sp.SOUNDPACKS_DIR
+            sp.SOUNDPACKS_DIR = Path(tmpdir)
+
+            try:
+                pack_path = Path(tmpdir) / "test_pack"
+                pack_path.mkdir()
+                default_path = Path(tmpdir) / "default"
+                default_path.mkdir()
+
+                pack_data = {"name": "Test", "sounds": {"alert": "alert.wav"}}
+                (pack_path / "pack.json").write_text(json.dumps(pack_data))
+                (pack_path / "alert.wav").touch()
+
+                default_data = {"name": "Default", "sounds": {"severe": "severe.wav"}}
+                (default_path / "pack.json").write_text(json.dumps(default_data))
+                (default_path / "severe.wav").touch()
+
+                sound_file, volume = get_sound_entry_for_candidates(
+                    ["severe", "alert", "notify"], "test_pack"
+                )
+
+                assert sound_file is not None
+                assert sound_file.parent == pack_path
+                assert sound_file.name == "alert.wav"
+                assert volume == 1.0
+            finally:
+                sp.SOUNDPACKS_DIR = original_dir
+
 
 class TestValidateSoundPackWithVolume:
     """Test validate_sound_pack with volume-related fields."""
@@ -678,6 +713,92 @@ class TestGetSoundPackSoundsWithVolume:
 
                 assert sounds["alert"] == "alert.wav"
                 assert sounds["warning"] == "warning.wav"
+            finally:
+                sp.SOUNDPACKS_DIR = original_dir
+
+
+class TestSoundPackSpecificAlertMode:
+    """Test sound pack detection for specific alert sound mode."""
+
+    def test_legacy_alert_keys_enable_specific_alert_sounds(self):
+        from accessiweather.notifications.sound_player import (
+            sound_pack_uses_specific_alert_sounds,
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import accessiweather.notifications.sound_player as sp
+
+            original_dir = sp.SOUNDPACKS_DIR
+            sp.SOUNDPACKS_DIR = Path(tmpdir)
+
+            try:
+                pack_path = Path(tmpdir) / "old_pack"
+                pack_path.mkdir()
+                pack_data = {
+                    "name": "Old Pack",
+                    "sounds": {
+                        "alert": "alert.wav",
+                        "tornado_warning": "tornado.wav",
+                    },
+                }
+                (pack_path / "pack.json").write_text(json.dumps(pack_data))
+
+                assert sound_pack_uses_specific_alert_sounds("old_pack") is True
+            finally:
+                sp.SOUNDPACKS_DIR = original_dir
+
+    def test_severity_only_pack_does_not_enable_specific_alert_sounds(self):
+        from accessiweather.notifications.sound_player import (
+            sound_pack_uses_specific_alert_sounds,
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import accessiweather.notifications.sound_player as sp
+
+            original_dir = sp.SOUNDPACKS_DIR
+            sp.SOUNDPACKS_DIR = Path(tmpdir)
+
+            try:
+                pack_path = Path(tmpdir) / "new_pack"
+                pack_path.mkdir()
+                pack_data = {
+                    "name": "New Pack",
+                    "sounds": {
+                        "alert": "alert.wav",
+                        "severe": "severe.wav",
+                    },
+                }
+                (pack_path / "pack.json").write_text(json.dumps(pack_data))
+
+                assert sound_pack_uses_specific_alert_sounds("new_pack") is False
+            finally:
+                sp.SOUNDPACKS_DIR = original_dir
+
+    def test_pack_manifest_can_explicitly_enable_specific_alert_sounds(self):
+        from accessiweather.notifications.sound_player import (
+            sound_pack_uses_specific_alert_sounds,
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import accessiweather.notifications.sound_player as sp
+
+            original_dir = sp.SOUNDPACKS_DIR
+            sp.SOUNDPACKS_DIR = Path(tmpdir)
+
+            try:
+                pack_path = Path(tmpdir) / "declared_pack"
+                pack_path.mkdir()
+                pack_data = {
+                    "name": "Declared Pack",
+                    "specific_alert_sounds": True,
+                    "sounds": {
+                        "alert": "alert.wav",
+                        "severe": "severe.wav",
+                    },
+                }
+                (pack_path / "pack.json").write_text(json.dumps(pack_data))
+
+                assert sound_pack_uses_specific_alert_sounds("declared_pack") is True
             finally:
                 sp.SOUNDPACKS_DIR = original_dir
 

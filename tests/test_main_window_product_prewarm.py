@@ -60,10 +60,11 @@ def _run(coro):
     return asyncio.get_event_loop().run_until_complete(coro) if False else asyncio.run(coro)
 
 
-def test_pre_warm_fetches_three_products_for_us_location():
-    """Happy path: a single US location triggers three product fetches."""
+def test_pre_warm_fetches_text_products_and_daily_climate_for_us_location():
+    """Happy path: a single US location triggers text products and CLI fetches."""
     service = MagicMock()
     service.get = AsyncMock(return_value=None)
+    service.get_daily_climate_report_for_location = AsyncMock(return_value=None)
 
     win = _make_window(service)
     asyncio.run(win._pre_warm_products_for_location(_us_location("Philadelphia")))
@@ -71,28 +72,65 @@ def test_pre_warm_fetches_three_products_for_us_location():
     assert service.get.await_count == 3
     fetched_types = {call.args[0] for call in service.get.await_args_list}
     assert fetched_types == {"AFD", "HWO", "SPS"}
+    service.get_daily_climate_report_for_location.assert_awaited_once()
+
+
+def test_pre_warm_starts_daily_climate_without_waiting_for_other_products():
+    """CLI pre-warm should begin beside AFD/HWO/SPS so the tab opens warm."""
+    started: list[str] = []
+    release_products = asyncio.Event()
+
+    async def _get(product_type: str, _cwa: str, **_kw):
+        started.append(product_type)
+        await release_products.wait()
+
+    async def _get_daily_climate(_location):
+        started.append("CLI")
+
+    service = MagicMock()
+    service.get = AsyncMock(side_effect=_get)
+    service.get_daily_climate_report_for_location = AsyncMock(side_effect=_get_daily_climate)
+
+    async def _run_prewarm():
+        win = _make_window(service)
+        task = asyncio.create_task(
+            win._pre_warm_products_for_location(_us_location("Philadelphia"))
+        )
+        for _ in range(5):
+            await asyncio.sleep(0)
+            if "CLI" in started:
+                break
+        assert "CLI" in started
+        release_products.set()
+        await task
+
+    asyncio.run(_run_prewarm())
 
 
 def test_pre_warm_skips_non_us_location():
     """Non-US locations never hit the service."""
     service = MagicMock()
     service.get = AsyncMock(return_value=None)
+    service.get_daily_climate_report_for_location = AsyncMock(return_value=None)
 
     win = _make_window(service)
     asyncio.run(win._pre_warm_products_for_location(_non_us_location()))
 
     service.get.assert_not_awaited()
+    service.get_daily_climate_report_for_location.assert_not_awaited()
 
 
 def test_pre_warm_skips_us_location_without_cwa_office():
     """US location with ``cwa_office=None`` yields zero fetches."""
     service = MagicMock()
     service.get = AsyncMock(return_value=None)
+    service.get_daily_climate_report_for_location = AsyncMock(return_value=None)
 
     win = _make_window(service)
     asyncio.run(win._pre_warm_products_for_location(_us_location("Nowhere", cwa=None)))
 
     service.get.assert_not_awaited()
+    service.get_daily_climate_report_for_location.assert_not_awaited()
 
 
 def test_pre_warm_fetch_error_isolated_to_single_product():
@@ -161,6 +199,39 @@ def _window_with_app(service: MagicMock, locations: list[Location]):
     win.app.config_manager = _FakeConfigManager(locations)
     win.app.weather_client = _FakeWeatherClient()
     return win
+
+
+@pytest.mark.asyncio
+async def test_fetch_weather_data_warms_active_products_before_ui_delivery():
+    """HWO/SPS notification checks need active text products cached before UI processing."""
+    from accessiweather.ui.main_window import MainWindow
+
+    with patch.object(MainWindow, "__init__", lambda self, *a, **kw: None):
+        win = MainWindow.__new__(MainWindow)
+
+    location = _us_location("Philadelphia")
+    weather_data = MagicMock()
+    order: list[str] = []
+
+    win.app = MagicMock()
+    win.app.config_manager.get_current_location.return_value = location
+    win.app.weather_client.get_weather_data = AsyncMock(return_value=weather_data)
+    win._fetch_generation = 1
+    win._pre_warm_products_for_location = AsyncMock(side_effect=lambda _loc: order.append("warm"))
+    win._pre_warm_other_locations = AsyncMock(side_effect=lambda _loc: order.append("others"))
+    win._on_weather_data_received = MagicMock()
+    win._on_weather_error = MagicMock()
+
+    def _call_after(callback, *args):
+        order.append("ui")
+        callback(*args)
+
+    with patch("accessiweather.ui.main_window_refresh.wx.CallAfter", side_effect=_call_after):
+        await win._fetch_weather_data(force_refresh=False, generation=1)
+
+    assert order == ["warm", "ui", "others"]
+    win._pre_warm_products_for_location.assert_awaited_once_with(location)
+    win._on_weather_data_received.assert_called_once_with(weather_data)
 
 
 @pytest.mark.asyncio

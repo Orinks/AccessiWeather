@@ -206,13 +206,16 @@ def panel_factory():
             created.append({"product_type": self.product_type, "instance": self, **kwargs})
 
     # The dialog imports ForecastProductPanel directly from the module;
-    # patch the symbol it bound at import time.
-    from accessiweather.ui.dialogs import forecast_products_dialog
+    # patch the symbols each dialog module bound at import time.
+    from accessiweather.ui.dialogs import forecast_products_dialog, national_products_dialog
 
-    original_sym = forecast_products_dialog.ForecastProductPanel
+    original_forecast_sym = forecast_products_dialog.ForecastProductPanel
+    original_national_sym = national_products_dialog.ForecastProductPanel
     forecast_products_dialog.ForecastProductPanel = _FakePanel  # type: ignore[assignment]
+    national_products_dialog.ForecastProductPanel = _FakePanel  # type: ignore[assignment]
     yield created
-    forecast_products_dialog.ForecastProductPanel = original_sym  # type: ignore[assignment]
+    forecast_products_dialog.ForecastProductPanel = original_forecast_sym  # type: ignore[assignment]
+    national_products_dialog.ForecastProductPanel = original_national_sym  # type: ignore[assignment]
 
 
 @pytest.fixture
@@ -277,8 +280,9 @@ class TestForecastProductsDialog:
         )
 
         types = [entry["product_type"] for entry in panel_factory]
-        assert types == ["AFD", "HWO", "SPS"]
-        assert len(dlg.panels) == 3
+        assert types == ["AFD", "HWO", "SPS", "CLI"]
+        assert dlg.notebook.AddPage.call_args_list[3].args[1] == "Daily Climate Report"
+        assert len(dlg.panels) == 4
 
         # Each panel got wired to the same service + explainer.
         for entry in panel_factory:
@@ -286,7 +290,9 @@ class TestForecastProductsDialog:
             assert entry["cwa_office"] == "RAH"
             assert entry["location_name"] == "Raleigh, NC"
         assert panel_factory[0]["autoload"] is True
-        assert all(entry["autoload"] is False for entry in panel_factory[1:])
+        assert panel_factory[1]["autoload"] is False
+        assert panel_factory[2]["autoload"] is False
+        assert panel_factory[3]["autoload"] is True
 
     def test_loader_invokes_service_get(self, notebook_factory, panel_factory, sample_us_location):
         """Each panel's bound loader calls service.get(product_type, cwa_office)."""
@@ -349,8 +355,8 @@ class TestForecastProductsDialog:
         result = asyncio.run(dlg._make_loader(spc_tab)())
 
         assert result.product_type == "SPC_OUTLOOK"
-        assert result.latitude == 35.7796
-        assert result.longitude == -78.6382
+        assert result.latitude == sample_us_location.latitude
+        assert result.longitude == sample_us_location.longitude
         assert result.kwargs == {"day": 1, "current": True, "max_items": 3, "timeout": 10.0}
         service.get_iem_afos.assert_not_called()
 
@@ -426,7 +432,7 @@ class TestForecastProductsDialog:
         )
 
         openers = [entry["advanced_lookup_opener"] for entry in panel_factory]
-        assert len(openers) == 3
+        assert len(openers) == 4
         for opener in openers:
             assert callable(opener)
 

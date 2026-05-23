@@ -5,7 +5,10 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from accessiweather.ui.dialogs.forecast_products_dialog import ForecastProductsDialog
+from accessiweather.ui.dialogs.forecast_products_dialog import (
+    ForecastProductsDialog,
+    TextProductTab,
+)
 
 
 def _dialog_stub(product_types: list[str]):
@@ -38,3 +41,15 @@ def test_available_optional_product_keeps_tab():
 
     dlg.notebook.DeletePage.assert_not_called()
     assert [panel.product_type for panel in dlg.panels] == ["AFD", "HWO", "SPS"]
+
+
+def test_daily_climate_autoloads_when_dialog_opens():
+    assert ForecastProductsDialog._should_autoload_tab(
+        TextProductTab("AFD", "Area Forecast Discussion", "current"), is_first_tab=True
+    )
+    assert ForecastProductsDialog._should_autoload_tab(
+        TextProductTab("CLI", "Daily Climate Report", "daily_climate"), is_first_tab=False
+    )
+    assert not ForecastProductsDialog._should_autoload_tab(
+        TextProductTab("HWO", "Hazardous Weather Outlook", "current"), is_first_tab=False
+    )

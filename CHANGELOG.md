@@ -5,17 +5,24 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Alert updates can now use their own mappable sound in sound packs.
+- Settings > Audio can now enable specific-alert sounds per sound pack, so packs with sounds like `tornado_watch` and `tornado_warning` keep working while severity-only packs stay simple.
 - First-run setup can now import existing settings and encrypted API keys from the wizard, or exit with Escape at any wizard step when you want to configure everything yourself.
 - You can now search for a US street address when adding or editing a location, so AccessiWeather can save coordinates for that specific address instead of the nearest city or ZIP result.
 - Saved locations now stay sorted alphabetically in the location list (#667).
 - You can now choose to sort saved locations alphabetically or nearest to the current location.
+- **Daily Climate Reports in Forecaster Notes** — You can now read the latest NWS Daily Climate Report for supported US climate stations, with station-aware lookup, cached refreshes, history through Advanced Lookup, and optional update notifications.
 - **National Products in Forecaster Notes** — Forecaster Notes now opens a dedicated National Products dialog for SPC, WPC, NHC, CPC, and other national NWS text products. The new view replaces the old Nationwide Discussions scraper with IEM AFOS plain-text products while keeping the existing Advanced Lookup path available for direct product searches (#641).
 - **Guided Advanced Lookup in Forecaster Notes** — Advanced Lookup now organizes NWS and IEM text products into product groups with clearer product choices, office selection, date presets, result limits, sort order, source selection, aviation AFD, center, WMO, and text-match filters.
 
 ### Changed
 - Linux nightly and release downloads now ship as `.tar.gz` tarballs instead of ZIP files.
+- Alert sounds and sound-pack creation now focus on alert severity instead of a long list of specific alert names, while existing packs can keep their older mappings.
 
 ### Fixed
+- Opening AccessiWeather no longer sends catch-up notifications for older Forecaster Notes updates; text-product notifications now start from the current session, and HWO/SPS checks run after their latest products are loaded.
+- Default soundpack now includes specific sounds for mapped weather alert types.
+- Pirate Weather minute-by-minute precipitation notifications now wait until start/stop changes are near-term and no longer count down repeatedly for the same rain event.
 - Saving Settings no longer waits on the Windows startup shortcut check unless you actually change the launch-at-startup checkbox.
 - Settings now opens without waiting on the Windows startup shortcut check.
 - The weather-refresh completion sound is now off by default, and switching to a cached location no longer plays it before the real refresh finishes.

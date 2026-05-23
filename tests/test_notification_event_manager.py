@@ -61,12 +61,12 @@ class TestNotificationState:
 
     def test_minutely_signature_round_trip(self):
         """Test minutely state serialization."""
-        state = NotificationState(last_minutely_transition_signature="starting:12:rain")
+        state = NotificationState(last_minutely_transition_signature="starting:rain")
 
         data = state.to_dict()
         restored = NotificationState.from_dict(data)
 
-        assert restored.last_minutely_transition_signature == "starting:12:rain"
+        assert restored.last_minutely_transition_signature == "starting:rain"
 
 
 class TestNotificationEventManager:
@@ -559,7 +559,7 @@ class TestNotificationEventManager:
         assert transition.transition_type == "starting"
         assert transition.minutes_until == 2
         assert transition.precipitation_type == "rain"
-        assert build_minutely_transition_signature(forecast) == "starting:2:rain"
+        assert build_minutely_transition_signature(forecast) == "starting:rain"
 
     def test_detect_minutely_precipitation_stop_transition(self):
         """Wet-to-dry transitions should announce when precipitation stops."""
@@ -592,7 +592,7 @@ class TestNotificationEventManager:
             {
                 "data": [
                     {"time": 1768917600, "precipIntensity": 0},
-                    {"time": 1768917660, "precipIntensity": 0.02, "precipType": "rain"},
+                    {"time": 1768917660, "precipIntensity": 0},
                 ]
             }
         )
@@ -618,7 +618,187 @@ class TestNotificationEventManager:
         assert events[0].event_type == "minutely_precipitation_start"
         assert events[0].title == "Rain starting in 2 minutes"
         assert events[0].message == "Rain starting in 2 minutes for Test City."
-        assert manager.state.last_minutely_transition_signature == "starting:2:rain"
+        assert manager.state.last_minutely_transition_signature == "starting:rain"
+
+    def test_minutely_start_countdown_does_not_renotify(self, manager, settings_with_minutely):
+        """Same forecasted start should notify once even as minutes count down."""
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.discussion = None
+        weather_data.discussion_issuance_time = None
+        weather_data.current = None
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0},
+                    {"time": 1768917660, "precipIntensity": 0},
+                ]
+            }
+        )
+        manager.check_for_events(weather_data, settings_with_minutely, "Test City")
+
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0},
+                    {"time": 1768917660, "precipIntensity": 0},
+                    {"time": 1768917720, "precipIntensity": 0.02, "precipType": "rain"},
+                ]
+            }
+        )
+        events = manager.check_for_events(weather_data, settings_with_minutely, "Test City")
+        assert len(events) == 1
+        assert events[0].title == "Rain starting in 2 minutes"
+
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0},
+                    {"time": 1768917660, "precipIntensity": 0.02, "precipType": "rain"},
+                ]
+            }
+        )
+        events = manager.check_for_events(weather_data, settings_with_minutely, "Test City")
+
+        assert events == []
+        assert manager.state.last_minutely_transition_signature == "starting:rain"
+
+    def test_minutely_start_waits_until_near_term_window(self, manager, settings_with_minutely):
+        """Forecasted starts should notify when they become actionable, not an hour out."""
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.discussion = None
+        weather_data.discussion_issuance_time = None
+        weather_data.current = None
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0},
+                    {"time": 1768917660, "precipIntensity": 0},
+                ]
+            }
+        )
+        manager.check_for_events(weather_data, settings_with_minutely, "Test City")
+
+        far_start_points = [
+            {"time": 1768917600 + (minute * 60), "precipIntensity": 0} for minute in range(12)
+        ]
+        far_start_points.append(
+            {"time": 1768917600 + (12 * 60), "precipIntensity": 0.02, "precipType": "rain"}
+        )
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {"data": far_start_points}
+        )
+        events = manager.check_for_events(weather_data, settings_with_minutely, "Test City")
+
+        assert events == []
+        assert manager.state.last_minutely_transition_signature == "pending:starting:rain"
+
+        near_start_points = [
+            {"time": 1768917600 + (minute * 60), "precipIntensity": 0} for minute in range(9)
+        ]
+        near_start_points.append(
+            {"time": 1768917600 + (9 * 60), "precipIntensity": 0.02, "precipType": "rain"}
+        )
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {"data": near_start_points}
+        )
+        events = manager.check_for_events(weather_data, settings_with_minutely, "Test City")
+
+        assert len(events) == 1
+        assert events[0].title == "Rain starting in 9 minutes"
+        assert manager.state.last_minutely_transition_signature == "starting:rain"
+
+    def test_minutely_stop_countdown_does_not_renotify(self, manager, settings_with_minutely):
+        """Same forecasted stop should notify once even as minutes count down."""
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.discussion = None
+        weather_data.discussion_issuance_time = None
+        weather_data.current = None
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0.04, "precipType": "rain"},
+                    {"time": 1768917660, "precipIntensity": 0.03, "precipType": "rain"},
+                ]
+            }
+        )
+        manager.check_for_events(weather_data, settings_with_minutely, "Test City")
+
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0.04, "precipType": "rain"},
+                    {"time": 1768917660, "precipIntensity": 0.03, "precipType": "rain"},
+                    {"time": 1768917720, "precipIntensity": 0},
+                ]
+            }
+        )
+        events = manager.check_for_events(weather_data, settings_with_minutely, "Test City")
+        assert len(events) == 1
+        assert events[0].title == "Rain stopping in 2 minutes"
+
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0.04, "precipType": "rain"},
+                    {"time": 1768917660, "precipIntensity": 0},
+                ]
+            }
+        )
+        events = manager.check_for_events(weather_data, settings_with_minutely, "Test City")
+
+        assert events == []
+        assert manager.state.last_minutely_transition_signature == "stopping:rain"
+
+    def test_minutely_stop_waits_until_near_term_window(self, manager, settings_with_minutely):
+        """Forecasted stops should notify when the stop is near, not an hour out."""
+        weather_data = MagicMock(spec=WeatherData)
+        weather_data.discussion = None
+        weather_data.discussion_issuance_time = None
+        weather_data.current = None
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {
+                "data": [
+                    {"time": 1768917600, "precipIntensity": 0.04, "precipType": "rain"},
+                    {"time": 1768917660, "precipIntensity": 0.03, "precipType": "rain"},
+                ]
+            }
+        )
+        manager.check_for_events(weather_data, settings_with_minutely, "Test City")
+
+        far_stop_points = [
+            {
+                "time": 1768917600 + (minute * 60),
+                "precipIntensity": 0.04,
+                "precipType": "rain",
+            }
+            for minute in range(12)
+        ]
+        far_stop_points.append({"time": 1768917600 + (12 * 60), "precipIntensity": 0})
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {"data": far_stop_points}
+        )
+        events = manager.check_for_events(weather_data, settings_with_minutely, "Test City")
+
+        assert events == []
+        assert manager.state.last_minutely_transition_signature == "pending:stopping:rain"
+
+        near_stop_points = [
+            {
+                "time": 1768917600 + (minute * 60),
+                "precipIntensity": 0.04,
+                "precipType": "rain",
+            }
+            for minute in range(9)
+        ]
+        near_stop_points.append({"time": 1768917600 + (9 * 60), "precipIntensity": 0})
+        weather_data.minutely_precipitation = parse_pirate_weather_minutely_block(
+            {"data": near_stop_points}
+        )
+        events = manager.check_for_events(weather_data, settings_with_minutely, "Test City")
+
+        assert len(events) == 1
+        assert events[0].title == "Rain stopping in 9 minutes"
+        assert manager.state.last_minutely_transition_signature == "stopping:rain"
 
     def test_minutely_precipitation_stop_can_be_disabled(self, manager):
         """Disabled stop notifications should still update state without notifying."""
@@ -657,7 +837,7 @@ class TestNotificationEventManager:
         events = manager.check_for_events(weather_data, settings, "Test City")
 
         assert events == []
-        assert manager.state.last_minutely_transition_signature == "stopping:2:rain"
+        assert manager.state.last_minutely_transition_signature == "stopping:rain"
 
     # ------------------------------------------------------------------
     # is_wet threshold tests

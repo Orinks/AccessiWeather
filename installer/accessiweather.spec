@@ -95,7 +95,6 @@ hiddenimports = [
     "wx.lib.agw.aui",
     "wx.lib.mixins",
     "wx.lib.mixins.inspection",
-    "gui_builder",
     "httpx",
     "httpx._transports",
     "httpx._transports.default",

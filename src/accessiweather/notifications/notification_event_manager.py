@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING
 from ..runtime_state import RuntimeStateManager
 from .minutely_precipitation import (
     SENSITIVITY_THRESHOLDS,
+    TRANSITION_NOTICE_LEAD_MINUTES,
     build_minutely_likelihood_signature,
     build_minutely_transition_signature,
     detect_minutely_precipitation_likelihood,
@@ -307,6 +308,84 @@ class NotificationEventManager:
         )
         return None
 
+    def check_daily_climate_report(
+        self,
+        product: TextProduct | None,
+        settings: AppSettings,
+        location_name: str,
+    ) -> NotificationEvent | None:
+        """Inspect a daily climate report and notify only on newer report text."""
+        if product is None or not getattr(settings, "notify_daily_climate_report_update", False):
+            return None
+        issuance_time = product.issuance_time
+        product_text = product.product_text
+        station = product.cwa_office
+        if issuance_time is None or not product_text:
+            return None
+
+        same_station = self.state.last_daily_climate_report_station == station
+        last_issuance = self.state.last_daily_climate_report_issuance_time
+        if last_issuance is None or not same_station:
+            self.state.last_daily_climate_report_issuance_time = issuance_time
+            self.state.last_daily_climate_report_text = product_text
+            self.state.last_daily_climate_report_station = station
+            self._save_state()
+            return None
+
+        if issuance_time <= last_issuance:
+            self.state.last_daily_climate_report_text = product_text
+            self._save_state()
+            return None
+
+        summary = self._summarize_daily_climate_change(
+            self.state.last_daily_climate_report_text,
+            product_text,
+        )
+        if summary is None:
+            summary = summarize_discussion_change(
+                self.state.last_daily_climate_report_text,
+                product_text,
+            )
+        self.state.last_daily_climate_report_issuance_time = issuance_time
+        self.state.last_daily_climate_report_text = product_text
+        self.state.last_daily_climate_report_station = station
+        self._save_state()
+
+        message = (
+            f"The Daily Climate Report for {location_name} ({station}) was updated by "
+            "the National Weather Service."
+        )
+        if summary:
+            message += f" Change summary: {summary}"
+        return NotificationEvent(
+            event_type="daily_climate_report_update",
+            title="Daily Climate Report Updated",
+            message=message,
+            sound_event="discussion_update",
+        )
+
+    @staticmethod
+    def _summarize_daily_climate_change(
+        previous_text: str | None,
+        current_text: str | None,
+    ) -> str | None:
+        previous_lines = {
+            " ".join(line.split()) for line in (previous_text or "").splitlines() if line.strip()
+        }
+        interesting = ("MAXIMUM", "MINIMUM", "AVERAGE", "PRECIPITATION", "SNOWFALL")
+        changed: list[str] = []
+        for raw_line in (current_text or "").splitlines():
+            line = " ".join(raw_line.split())
+            if not line or line in previous_lines:
+                continue
+            if any(token in line.upper() for token in interesting):
+                changed.append(line)
+            if len(changed) == 3:
+                break
+        if changed:
+            return "; ".join(changed)
+        return summarize_discussion_change(previous_text, current_text)
+
     def _check_hwo_update(
         self,
         location: Location,
@@ -503,6 +582,18 @@ class NotificationEventManager:
         if signature is None:
             return None
 
+        transition = detect_minutely_precipitation_transition(
+            minutely_precipitation, threshold=threshold
+        )
+        if transition is not None and transition.minutes_until > TRANSITION_NOTICE_LEAD_MINUTES:
+            signature = f"pending:{signature}"
+            if self.state.last_minutely_transition_signature not in (
+                signature,
+                signature.removeprefix("pending:"),
+            ):
+                self.state.last_minutely_transition_signature = signature
+            return None
+
         if self.state.last_minutely_transition_signature is None:
             self.state.last_minutely_transition_signature = signature
             logger.debug("First minutely precipitation state stored: %s", signature)
@@ -512,9 +603,6 @@ class NotificationEventManager:
             return None
 
         self.state.last_minutely_transition_signature = signature
-        transition = detect_minutely_precipitation_transition(
-            minutely_precipitation, threshold=threshold
-        )
         if transition is None:
             return None
 
