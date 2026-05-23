@@ -422,6 +422,32 @@ async def get_nws_text_product_history(
         return await _run(new_client)
 
 
+async def get_nws_daily_climate_report(
+    station_id: str | None,
+    *,
+    nws_base_url: str = "https://api.weather.gov",
+    client: httpx.AsyncClient | None = None,
+    timeout: float = 10.0,
+    user_agent: str = "AccessiWeather (github.com/orinks/accessiweather)",
+) -> TextProduct | None:
+    """Fetch the latest official NWS daily climate report for a climate station."""
+    station = (station_id or "").strip().upper()
+    if station.startswith("K") and len(station) == 4:
+        station = station[1:]
+    if not station:
+        return None
+    products = await get_nws_text_product_history(
+        "CLI",
+        station,
+        nws_base_url=nws_base_url,
+        client=client,
+        timeout=timeout,
+        user_agent=user_agent,
+        limit=1,
+    )
+    return products[0] if products else None
+
+
 async def get_nws_discussion(
     client: httpx.AsyncClient,
     headers: dict[str, str],

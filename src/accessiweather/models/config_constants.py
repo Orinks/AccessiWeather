@@ -35,6 +35,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "specific_alert_sound_packs",
     # Event notifications
     "notify_discussion_update",
+    "notify_daily_climate_report_update",
     "notify_hwo_update",
     "notify_sps_issued",
     "notify_severe_risk_change",

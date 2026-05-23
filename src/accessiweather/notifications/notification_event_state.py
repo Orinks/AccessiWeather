@@ -22,6 +22,9 @@ class NotificationState:
 
     last_discussion_issuance_time: datetime | None = None
     last_discussion_text: str | None = None
+    last_daily_climate_report_issuance_time: datetime | None = None
+    last_daily_climate_report_text: str | None = None
+    last_daily_climate_report_station: str | None = None
     last_severe_risk: int | None = None
     last_minutely_transition_signature: str | None = None
     last_minutely_likelihood_signature: str | None = None
@@ -40,6 +43,13 @@ class NotificationState:
                 else None
             ),
             "last_discussion_text": self.last_discussion_text,
+            "last_daily_climate_report_issuance_time": (
+                self.last_daily_climate_report_issuance_time.isoformat()
+                if self.last_daily_climate_report_issuance_time
+                else None
+            ),
+            "last_daily_climate_report_text": self.last_daily_climate_report_text,
+            "last_daily_climate_report_station": self.last_daily_climate_report_station,
             "last_severe_risk": self.last_severe_risk,
             "last_minutely_transition_signature": self.last_minutely_transition_signature,
             "last_minutely_likelihood_signature": self.last_minutely_likelihood_signature,
@@ -57,6 +67,7 @@ class NotificationState:
         """Create from dictionary."""
         last_check = data.get("last_check_time")
         last_issuance = data.get("last_discussion_issuance_time")
+        last_cli_issuance = data.get("last_daily_climate_report_issuance_time")
         last_hwo_issuance = data.get("last_hwo_issuance_time")
         sps_ids = data.get("last_sps_product_ids") or []
         return cls(
@@ -64,6 +75,11 @@ class NotificationState:
                 datetime.fromisoformat(last_issuance) if last_issuance else None
             ),
             last_discussion_text=data.get("last_discussion_text"),
+            last_daily_climate_report_issuance_time=(
+                datetime.fromisoformat(last_cli_issuance) if last_cli_issuance else None
+            ),
+            last_daily_climate_report_text=data.get("last_daily_climate_report_text"),
+            last_daily_climate_report_station=data.get("last_daily_climate_report_station"),
             last_severe_risk=data.get("last_severe_risk"),
             last_minutely_transition_signature=data.get("last_minutely_transition_signature"),
             last_minutely_likelihood_signature=data.get("last_minutely_likelihood_signature"),
@@ -80,6 +96,7 @@ class NotificationState:
 def runtime_section_to_legacy_shape(section: dict) -> dict:
     """Convert unified runtime state to the legacy notification-state shape."""
     discussion = section.get("discussion", {})
+    daily_climate = section.get("daily_climate_report", {})
     severe_risk = section.get("severe_risk", {})
     minutely_precipitation = section.get("minutely_precipitation", {})
     hwo = section.get("hwo", {})
@@ -87,6 +104,9 @@ def runtime_section_to_legacy_shape(section: dict) -> dict:
     return {
         "last_discussion_issuance_time": discussion.get("last_issuance_time"),
         "last_discussion_text": discussion.get("last_text"),
+        "last_daily_climate_report_issuance_time": daily_climate.get("last_issuance_time"),
+        "last_daily_climate_report_text": daily_climate.get("last_text"),
+        "last_daily_climate_report_station": daily_climate.get("last_station"),
         "last_severe_risk": severe_risk.get("last_value"),
         "last_minutely_transition_signature": minutely_precipitation.get(
             "last_transition_signature"
@@ -112,6 +132,12 @@ def legacy_shape_to_runtime_section(data: dict) -> dict:
         "discussion": {
             "last_issuance_time": data.get("last_discussion_issuance_time"),
             "last_text": data.get("last_discussion_text"),
+            "last_check_time": last_check_time,
+        },
+        "daily_climate_report": {
+            "last_issuance_time": data.get("last_daily_climate_report_issuance_time"),
+            "last_text": data.get("last_daily_climate_report_text"),
+            "last_station": data.get("last_daily_climate_report_station"),
             "last_check_time": last_check_time,
         },
         "severe_risk": {

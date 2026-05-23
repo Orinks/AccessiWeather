@@ -227,6 +227,41 @@ class TestGetNwsTextProductHistory:
         assert result == []
 
 
+class TestGetNwsDailyClimateReport:
+    @pytest.mark.asyncio
+    async def test_daily_climate_report_uses_station_location(self):
+        graph = {
+            "@graph": [
+                {
+                    "id": "cli-rdu",
+                    "issuanceTime": "2026-05-22T20:54:00+00:00",
+                    "issuingOffice": "KRAH",
+                }
+            ]
+        }
+        product = {
+            "productText": "CLIMATE REPORT\n...THE RALEIGH NC CLIMATE SUMMARY...\n",
+            "issuanceTime": "2026-05-22T20:54:00+00:00",
+        }
+        client = _client_for(
+            {
+                f"{NWS_BASE}/products?location=RDU&type=CLI&limit=1": _resp(graph),
+                f"{NWS_BASE}/products/cli-rdu": _resp(product),
+            }
+        )
+
+        from accessiweather.weather_client_nws import get_nws_daily_climate_report
+
+        result = await get_nws_daily_climate_report("RDU", nws_base_url=NWS_BASE, client=client)
+
+        assert isinstance(result, TextProduct)
+        assert result.product_type == "CLI"
+        assert result.product_id == "cli-rdu"
+        assert result.cwa_office == "RDU"
+        assert result.issuance_time == datetime(2026, 5, 22, 20, 54, 0, tzinfo=UTC)
+        assert "CLIMATE REPORT" in result.product_text
+
+
 # ---------------------------------------------------------------------------
 # SPS — always returns a list, possibly empty, sorted newest-first
 # ---------------------------------------------------------------------------

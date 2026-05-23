@@ -33,6 +33,7 @@ class AppSettingsSerializationMixin:
             "muted_sound_events": settings.muted_sound_events,
             "specific_alert_sound_packs": settings.specific_alert_sound_packs,
             "notify_discussion_update": settings.notify_discussion_update,
+            "notify_daily_climate_report_update": settings.notify_daily_climate_report_update,
             "notify_hwo_update": settings.notify_hwo_update,
             "notify_sps_issued": settings.notify_sps_issued,
             "notify_severe_risk_change": settings.notify_severe_risk_change,
@@ -136,6 +137,9 @@ class AppSettingsSerializationMixin:
             specific_alert_sound_packs=specific_alert_sound_packs,
             notify_discussion_update=settings_cls._as_bool(
                 data.get("notify_discussion_update"), True
+            ),
+            notify_daily_climate_report_update=settings_cls._as_bool(
+                data.get("notify_daily_climate_report_update"), False
             ),
             notify_hwo_update=settings_cls._as_bool(data.get("notify_hwo_update"), True),
             notify_sps_issued=settings_cls._as_bool(data.get("notify_sps_issued"), True),

@@ -280,8 +280,9 @@ class TestForecastProductsDialog:
         )
 
         types = [entry["product_type"] for entry in panel_factory]
-        assert types == ["AFD", "HWO", "SPS"]
-        assert len(dlg.panels) == 3
+        assert types == ["AFD", "HWO", "SPS", "CLI"]
+        assert dlg.notebook.AddPage.call_args_list[3].args[1] == "Daily Climate Report"
+        assert len(dlg.panels) == 4
 
         # Each panel got wired to the same service + explainer.
         for entry in panel_factory:

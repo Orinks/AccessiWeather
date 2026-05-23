@@ -65,6 +65,7 @@ class ForecastProductsDialog(wx.Dialog):
         TextProductTab("AFD", "Area Forecast Discussion", "current", requires_cwa=True),
         TextProductTab("HWO", "Hazardous Weather Outlook", "current", requires_cwa=True),
         TextProductTab("SPS", "Special Weather Statement", "current", requires_cwa=True),
+        TextProductTab("CLI", "Daily Climate Report", "daily_climate"),
         TextProductTab("SPC_OUTLOOK", "SPC Outlook (Storm Prediction Center)", "spc_outlook"),
         TextProductTab("SPC_MCD", "SPC MCD (Mesoscale Discussion)", "spc_mcd"),
         TextProductTab(
@@ -305,6 +306,10 @@ class ForecastProductsDialog(wx.Dialog):
                 return await self._service.get(cast(Any, tab.product_type), str(cwa_office))
             if tab.loader_kind == "nws_history":
                 return await self._service.get_history(tab.product_type, str(cwa_office), limit=1)
+            if tab.loader_kind == "daily_climate":
+                product = await self._service.get_daily_climate_report_for_location(self._location)
+                self._check_daily_climate_notification(product)
+                return product
             if latitude is None or longitude is None:
                 return None
             if tab.loader_kind == "spc_outlook":
@@ -359,6 +364,39 @@ class ForecastProductsDialog(wx.Dialog):
             return None
 
         return _loader
+
+    def _check_daily_climate_notification(self, product: TextProduct | None) -> None:
+        """Pipe loaded CLI reports through the opt-in event notification path."""
+        if product is None or self._app is None:
+            return
+        try:
+            app = cast(Any, self._app)
+            settings = app.config_manager.get_settings()
+            if not getattr(settings, "notify_daily_climate_report_update", False):
+                return
+            manager_getter = getattr(self.GetParent(), "_get_notification_event_manager", None)
+            manager = manager_getter() if callable(manager_getter) else None
+            if manager is None:
+                return
+            event = cast(Any, manager).check_daily_climate_report(
+                product,
+                settings,
+                self._location.name,
+            )
+            if event is None:
+                return
+            notifier = getattr(app, "notifier", None)
+            if notifier is None:
+                return
+            notifier.send_notification(
+                title=event.title,
+                message=event.message,
+                timeout=10,
+                sound_event=event.sound_event,
+                play_sound=bool(getattr(settings, "sound_enabled", False)),
+            )
+        except Exception:  # noqa: BLE001
+            logger.debug("Daily climate report notification check skipped", exc_info=True)
 
     def _make_advanced_lookup_opener(self, product_type: str):
         """Bind an advanced lookup opener for ``product_type``."""
