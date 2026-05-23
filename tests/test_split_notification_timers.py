@@ -457,11 +457,37 @@ class TestNotificationEventHelpers:
         settings.notify_precipitation_likelihood = False
         settings.notify_hwo_update = False
         settings.notify_sps_issued = False
+        settings.notify_daily_climate_report_update = False
         win.app.config_manager.get_settings.return_value = settings
 
         win._process_notification_events(MagicMock())
 
         win.app.config_manager.get_current_location.assert_not_called()
+
+    def test_process_notification_events_runs_when_daily_climate_enabled(self):
+        win = self._make_window()
+        settings = MagicMock()
+        settings.notify_discussion_update = False
+        settings.notify_severe_risk_change = False
+        settings.notify_minutely_precipitation_start = False
+        settings.notify_minutely_precipitation_stop = False
+        settings.notify_precipitation_likelihood = False
+        settings.notify_hwo_update = False
+        settings.notify_sps_issued = False
+        settings.notify_daily_climate_report_update = True
+        settings.sound_enabled = False
+        win.app.config_manager.get_settings.return_value = settings
+        location = MagicMock()
+        location.name = "PHI"
+        win.app.config_manager.get_current_location.return_value = location
+        win._forecast_product_service = MagicMock()
+        win._forecast_product_service.get_daily_climate_report_for_location = AsyncMock(
+            return_value=None
+        )
+
+        win._process_notification_events(MagicMock())
+
+        win.app.config_manager.get_current_location.assert_called_once()
 
     def test_process_notification_events_uses_fallback_notifier(self):
         win = self._make_window()

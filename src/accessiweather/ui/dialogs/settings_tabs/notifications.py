@@ -136,6 +136,16 @@ class NotificationsTab:
             wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
             10,
         )
+        controls["notify_daily_climate_report_update"] = wx.CheckBox(
+            panel,
+            label="Notify when a Daily Climate Report changes (NWS US only)",
+        )
+        event_section.Add(
+            controls["notify_daily_climate_report_update"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
         controls["notify_hwo_update"] = wx.CheckBox(
             panel,
             label="Notify on Hazardous Weather Outlook updates",
@@ -302,6 +312,9 @@ class NotificationsTab:
         controls["notify_discussion_update"].SetValue(
             getattr(settings, "notify_discussion_update", True)
         )
+        controls["notify_daily_climate_report_update"].SetValue(
+            getattr(settings, "notify_daily_climate_report_update", False)
+        )
         controls["notify_hwo_update"].SetValue(getattr(settings, "notify_hwo_update", True))
         controls["notify_sps_issued"].SetValue(getattr(settings, "notify_sps_issued", True))
         controls["notify_severe_risk_change"].SetValue(
@@ -344,6 +357,9 @@ class NotificationsTab:
             "alert_freshness_window_minutes": controls["freshness_window"].GetValue(),
             "alert_max_notifications_per_hour": controls["max_notifications"].GetValue(),
             "notify_discussion_update": controls["notify_discussion_update"].GetValue(),
+            "notify_daily_climate_report_update": controls[
+                "notify_daily_climate_report_update"
+            ].GetValue(),
             "notify_hwo_update": controls["notify_hwo_update"].GetValue(),
             "notify_sps_issued": controls["notify_sps_issued"].GetValue(),
             "notify_severe_risk_change": controls["notify_severe_risk_change"].GetValue(),
@@ -381,6 +397,7 @@ class NotificationsTab:
             "notify_unknown": "Uncategorized alerts",
             "immediate_alert_details_popups": "Open alert details immediately while AccessiWeather is running",
             "notify_discussion_update": "Notify when the Area Forecast Discussion changes",
+            "notify_daily_climate_report_update": ("Notify when a Daily Climate Report changes"),
             "notify_hwo_update": "Notify on Hazardous Weather Outlook updates",
             "notify_sps_issued": "Notify on Special Weather Statement (informational)",
             "notify_severe_risk_change": "Notify when severe weather risk changes",

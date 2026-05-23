@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - You can now search for a US street address when adding or editing a location, so AccessiWeather can save coordinates for that specific address instead of the nearest city or ZIP result.
 - Saved locations now stay sorted alphabetically in the location list (#667).
 - You can now choose to sort saved locations alphabetically or nearest to the current location.
+- **Daily Climate Reports in Forecaster Notes** — You can now read the latest NWS Daily Climate Report for supported US climate stations, with station-aware lookup, cached refreshes, history through Advanced Lookup, and optional update notifications.
 - **National Products in Forecaster Notes** — Forecaster Notes now opens a dedicated National Products dialog for SPC, WPC, NHC, CPC, and other national NWS text products. The new view replaces the old Nationwide Discussions scraper with IEM AFOS plain-text products while keeping the existing Advanced Lookup path available for direct product searches (#641).
 - **Guided Advanced Lookup in Forecaster Notes** — Advanced Lookup now organizes NWS and IEM text products into product groups with clearer product choices, office selection, date presets, result limits, sort order, source selection, aviation AFD, center, WMO, and text-match filters.
 

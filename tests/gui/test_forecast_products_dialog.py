@@ -280,8 +280,9 @@ class TestForecastProductsDialog:
         )
 
         types = [entry["product_type"] for entry in panel_factory]
-        assert types == ["AFD", "HWO", "SPS"]
-        assert len(dlg.panels) == 3
+        assert types == ["AFD", "HWO", "SPS", "CLI"]
+        assert dlg.notebook.AddPage.call_args_list[3].args[1] == "Daily Climate Report"
+        assert len(dlg.panels) == 4
 
         # Each panel got wired to the same service + explainer.
         for entry in panel_factory:
@@ -289,7 +290,9 @@ class TestForecastProductsDialog:
             assert entry["cwa_office"] == "RAH"
             assert entry["location_name"] == "Raleigh, NC"
         assert panel_factory[0]["autoload"] is True
-        assert all(entry["autoload"] is False for entry in panel_factory[1:])
+        assert panel_factory[1]["autoload"] is False
+        assert panel_factory[2]["autoload"] is False
+        assert panel_factory[3]["autoload"] is True
 
     def test_loader_invokes_service_get(self, notebook_factory, panel_factory, sample_us_location):
         """Each panel's bound loader calls service.get(product_type, cwa_office)."""
@@ -429,7 +432,7 @@ class TestForecastProductsDialog:
         )
 
         openers = [entry["advanced_lookup_opener"] for entry in panel_factory]
-        assert len(openers) == 3
+        assert len(openers) == 4
         for opener in openers:
             assert callable(opener)
 

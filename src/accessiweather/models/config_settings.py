@@ -30,6 +30,7 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     specific_alert_sound_packs: list[str] = field(default_factory=list)
     # Event-based notifications
     notify_discussion_update: bool = True
+    notify_daily_climate_report_update: bool = False
     notify_hwo_update: bool = True
     notify_sps_issued: bool = True
     notify_severe_risk_change: bool = False

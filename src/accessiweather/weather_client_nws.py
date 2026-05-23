@@ -31,9 +31,12 @@ from .weather_client_nws_current import (
 )
 from .weather_client_nws_forecast import (
     TextProductFetchError,
+    get_nws_daily_climate_locations,
+    get_nws_daily_climate_report,
     get_nws_discussion,
     get_nws_discussion_only,
     get_nws_forecast_and_discussion,
+    get_nws_observation_station_ids_for_point,
     get_nws_text_product,
     get_nws_text_product_history,
 )
