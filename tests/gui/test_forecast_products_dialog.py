@@ -290,7 +290,9 @@ class TestForecastProductsDialog:
             assert entry["cwa_office"] == "RAH"
             assert entry["location_name"] == "Raleigh, NC"
         assert panel_factory[0]["autoload"] is True
-        assert all(entry["autoload"] is False for entry in panel_factory[1:])
+        assert panel_factory[1]["autoload"] is False
+        assert panel_factory[2]["autoload"] is False
+        assert panel_factory[3]["autoload"] is True
 
     def test_loader_invokes_service_get(self, notebook_factory, panel_factory, sample_us_location):
         """Each panel's bound loader calls service.get(product_type, cwa_office)."""

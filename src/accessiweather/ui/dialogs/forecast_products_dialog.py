@@ -139,7 +139,7 @@ class ForecastProductsDialog(wx.Dialog):
                 pending_iem_tabs.append(tab)
                 continue
             is_first_tab = len(self.panels) == 0
-            self._add_tab_panel(tab, autoload=is_first_tab)
+            self._add_tab_panel(tab, autoload=self._should_autoload_tab(tab, is_first_tab))
         self._pending_iem_tabs = tuple(pending_iem_tabs)
 
         main_sizer.Add(self.notebook, 1, wx.ALL | wx.EXPAND, 8)
@@ -160,6 +160,11 @@ class ForecastProductsDialog(wx.Dialog):
         main_sizer.Add(button_sizer, 0, wx.ALL | wx.EXPAND, 8)
 
         self.SetSizer(main_sizer)
+
+    @staticmethod
+    def _should_autoload_tab(tab: TextProductTab, is_first_tab: bool) -> bool:
+        """Return whether a tab should begin loading when the dialog opens."""
+        return is_first_tab or tab.loader_kind == "daily_climate"
 
     def _add_tab_panel(
         self,
