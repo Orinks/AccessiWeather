@@ -202,6 +202,39 @@ def _window_with_app(service: MagicMock, locations: list[Location]):
 
 
 @pytest.mark.asyncio
+async def test_fetch_weather_data_warms_active_products_before_ui_delivery():
+    """HWO/SPS notification checks need active text products cached before UI processing."""
+    from accessiweather.ui.main_window import MainWindow
+
+    with patch.object(MainWindow, "__init__", lambda self, *a, **kw: None):
+        win = MainWindow.__new__(MainWindow)
+
+    location = _us_location("Philadelphia")
+    weather_data = MagicMock()
+    order: list[str] = []
+
+    win.app = MagicMock()
+    win.app.config_manager.get_current_location.return_value = location
+    win.app.weather_client.get_weather_data = AsyncMock(return_value=weather_data)
+    win._fetch_generation = 1
+    win._pre_warm_products_for_location = AsyncMock(side_effect=lambda _loc: order.append("warm"))
+    win._pre_warm_other_locations = AsyncMock(side_effect=lambda _loc: order.append("others"))
+    win._on_weather_data_received = MagicMock()
+    win._on_weather_error = MagicMock()
+
+    def _call_after(callback, *args):
+        order.append("ui")
+        callback(*args)
+
+    with patch("accessiweather.ui.main_window_refresh.wx.CallAfter", side_effect=_call_after):
+        await win._fetch_weather_data(force_refresh=False, generation=1)
+
+    assert order == ["warm", "ui", "others"]
+    win._pre_warm_products_for_location.assert_awaited_once_with(location)
+    win._on_weather_data_received.assert_called_once_with(weather_data)
+
+
+@pytest.mark.asyncio
 async def test_pre_warm_other_locations_iterates_saved_us_locations():
     """With three saved US locations, the non-active two each get three fetches."""
     service = MagicMock()

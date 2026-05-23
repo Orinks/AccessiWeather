@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - Alert sounds and sound-pack creation now focus on alert severity instead of a long list of specific alert names, while existing packs can keep their older mappings.
 
 ### Fixed
+- Opening AccessiWeather no longer sends catch-up notifications for older Forecaster Notes updates; text-product notifications now start from the current session, and HWO/SPS checks run after their latest products are loaded.
 - Default soundpack now includes specific sounds for mapped weather alert types.
 - Pirate Weather minute-by-minute precipitation notifications now wait until start/stop changes are near-term and no longer count down repeatedly for the same rain event.
 - Saving Settings no longer waits on the Windows startup shortcut check unless you actually change the launch-at-startup checkbox.

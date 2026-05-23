@@ -82,13 +82,14 @@ class MainWindowRefreshMixin:
                 )
                 return
 
-            # Update UI on main thread
-            wx.CallAfter(self._on_weather_data_received, weather_data)
-
             # Pre-warm NWS text products (AFD/HWO/SPS) for the active location
             # so the Forecast Products dialog and Unit 10/11 notification
             # checks see fresh data without issuing an on-demand fetch.
             await self._pre_warm_products_for_location(location)
+
+            # Update UI on main thread after active-location text products are
+            # warm so HWO/SPS/CLI notification checks can read the cache.
+            wx.CallAfter(self._on_weather_data_received, weather_data)
 
             # Pre-warm cache for other locations in background (non-blocking)
             if not force_refresh:
