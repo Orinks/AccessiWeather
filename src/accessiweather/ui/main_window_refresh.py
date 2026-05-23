@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from .main_window_shared import *  # noqa: F403
 
 
@@ -166,7 +168,7 @@ class MainWindowRefreshMixin:
             logger.debug("ForecastProductService unavailable for pre-warm", exc_info=True)
             return
 
-        for product_type in ("AFD", "HWO", "SPS"):
+        async def _pre_warm_text_product(product_type: str) -> None:
             try:
                 await service.get(product_type, location.cwa_office)
             except TextProductFetchError:
@@ -184,20 +186,26 @@ class MainWindowRefreshMixin:
                     exc_info=True,
                 )
 
-        try:
-            await service.get_daily_climate_report_for_location(location)
-        except TextProductFetchError:
-            logger.debug(
-                "Pre-warm daily climate report for %s (%s) failed",
-                location.name,
-                location.cwa_office,
-            )
-        except Exception:  # noqa: BLE001
-            logger.debug(
-                "Unexpected pre-warm failure for daily climate report at %s",
-                location.name,
-                exc_info=True,
-            )
+        async def _pre_warm_daily_climate() -> None:
+            try:
+                await service.get_daily_climate_report_for_location(location)
+            except TextProductFetchError:
+                logger.debug(
+                    "Pre-warm daily climate report for %s (%s) failed",
+                    location.name,
+                    location.cwa_office,
+                )
+            except Exception:  # noqa: BLE001
+                logger.debug(
+                    "Unexpected pre-warm failure for daily climate report at %s",
+                    location.name,
+                    exc_info=True,
+                )
+
+        await asyncio.gather(
+            *(_pre_warm_text_product(product_type) for product_type in ("AFD", "HWO", "SPS")),
+            _pre_warm_daily_climate(),
+        )
 
     def _on_weather_data_received(self, weather_data, *, play_refresh_sound: bool = True) -> None:
         """Handle received weather data (called on main thread)."""

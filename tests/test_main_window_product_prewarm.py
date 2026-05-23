@@ -75,6 +75,38 @@ def test_pre_warm_fetches_text_products_and_daily_climate_for_us_location():
     service.get_daily_climate_report_for_location.assert_awaited_once()
 
 
+def test_pre_warm_starts_daily_climate_without_waiting_for_other_products():
+    """CLI pre-warm should begin beside AFD/HWO/SPS so the tab opens warm."""
+    started: list[str] = []
+    release_products = asyncio.Event()
+
+    async def _get(product_type: str, _cwa: str, **_kw):
+        started.append(product_type)
+        await release_products.wait()
+
+    async def _get_daily_climate(_location):
+        started.append("CLI")
+
+    service = MagicMock()
+    service.get = AsyncMock(side_effect=_get)
+    service.get_daily_climate_report_for_location = AsyncMock(side_effect=_get_daily_climate)
+
+    async def _run_prewarm():
+        win = _make_window(service)
+        task = asyncio.create_task(
+            win._pre_warm_products_for_location(_us_location("Philadelphia"))
+        )
+        for _ in range(5):
+            await asyncio.sleep(0)
+            if "CLI" in started:
+                break
+        assert "CLI" in started
+        release_products.set()
+        await task
+
+    asyncio.run(_run_prewarm())
+
+
 def test_pre_warm_skips_non_us_location():
     """Non-US locations never hit the service."""
     service = MagicMock()
