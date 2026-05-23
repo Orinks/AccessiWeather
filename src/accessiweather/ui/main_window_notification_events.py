@@ -214,6 +214,56 @@ def _check_sps_from_cache(
         logger.debug("[events] SPS check skipped: %s", e)
 
 
+def _check_daily_climate_from_cache(
+    window: MainWindow,
+    manager: NotificationEventManager,
+    location,
+    settings,
+) -> None:
+    """Feed a cache-warm Daily Climate Report into the opt-in update check."""
+    try:
+        if getattr(settings, "notify_daily_climate_report_update", False) is not True:
+            return
+        service = getattr(window, "_forecast_product_service", None)
+        if service is None:
+            getter = getattr(window, "_get_forecast_product_service", None)
+            if getter is None:
+                return
+            service = getter()
+        cache = getattr(service, "_cache", None)
+        if cache is None:
+            return
+        candidates_getter = getattr(service, "daily_climate_station_candidates", None)
+        if not callable(candidates_getter):
+            return
+        for station in candidates_getter(location):
+            key = f"iem_text_product:CLI:{station}:latest"
+            if not cache.has_key(key):
+                continue
+            product = cache.get(key)
+            if product is None:
+                continue
+            event = manager.check_daily_climate_report(product, settings, location.name)
+            if event is None:
+                return
+            notifier = getattr(window.app, "notifier", None) or get_fallback_notifier(window)
+            _log_reviewable_event_text(window, event.title, event.message)
+            notifier.send_notification(
+                title=event.title,
+                message=event.message,
+                timeout=10,
+                sound_event=event.sound_event,
+                play_sound=bool(getattr(settings, "sound_enabled", False)),
+                activation_arguments=serialize_activation_request(
+                    NotificationActivationRequest(kind="generic_fallback")
+                ),
+            )
+            logger.info("[events] Sent daily_climate_report_update notification for %s", station)
+            return
+    except Exception as e:  # noqa: BLE001
+        logger.debug("[events] Daily Climate Report check skipped: %s", e)
+
+
 def _filter_sps_products_for_location(products: list, location) -> list:
     """
     Keep only SPS products whose UGC zones include the saved location zones.
@@ -393,10 +443,12 @@ def process_notification_events(window: MainWindow, weather_data) -> None:
             and not getattr(settings, "notify_precipitation_likelihood", False)
             and not getattr(settings, "notify_hwo_update", True)
             and not getattr(settings, "notify_sps_issued", True)
+            and not getattr(settings, "notify_daily_climate_report_update", False)
         ):
             logger.debug(
                 "[events] _process_notification_events: discussion=%s severe_risk=%s "
-                "minutely_start=%s minutely_stop=%s likelihood=%s hwo=%s sps=%s disabled -- skipping",
+                "minutely_start=%s minutely_stop=%s likelihood=%s hwo=%s sps=%s cli=%s "
+                "disabled -- skipping",
                 settings.notify_discussion_update,
                 settings.notify_severe_risk_change,
                 settings.notify_minutely_precipitation_start,
@@ -404,6 +456,7 @@ def process_notification_events(window: MainWindow, weather_data) -> None:
                 getattr(settings, "notify_precipitation_likelihood", False),
                 getattr(settings, "notify_hwo_update", True),
                 getattr(settings, "notify_sps_issued", True),
+                getattr(settings, "notify_daily_climate_report_update", False),
             )
             return
 
@@ -436,6 +489,7 @@ def process_notification_events(window: MainWindow, weather_data) -> None:
         # Dedupes against currently-cached active alerts for this location so
         # event-style SPS (already on /alerts/active) don't double-notify.
         _check_sps_from_cache(window, event_manager, location, settings)
+        _check_daily_climate_from_cache(window, event_manager, location, settings)
 
         logger.debug(
             "[events] check_for_events returned %d event(s) for location %r",

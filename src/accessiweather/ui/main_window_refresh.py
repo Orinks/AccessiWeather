@@ -143,7 +143,7 @@ class MainWindowRefreshMixin:
 
     async def _pre_warm_products_for_location(self, location: Location) -> None:
         """
-        Pre-warm AFD/HWO/SPS caches for a single location.
+        Pre-warm AFD/HWO/SPS/CLI caches for a single location.
 
         Non-US locations and US locations without a populated ``cwa_office``
         are skipped. Each product fetch is wrapped in its own try/except so
@@ -183,6 +183,21 @@ class MainWindowRefreshMixin:
                     location.name,
                     exc_info=True,
                 )
+
+        try:
+            await service.get_daily_climate_report_for_location(location)
+        except TextProductFetchError:
+            logger.debug(
+                "Pre-warm daily climate report for %s (%s) failed",
+                location.name,
+                location.cwa_office,
+            )
+        except Exception:  # noqa: BLE001
+            logger.debug(
+                "Unexpected pre-warm failure for daily climate report at %s",
+                location.name,
+                exc_info=True,
+            )
 
     def _on_weather_data_received(self, weather_data, *, play_refresh_sound: bool = True) -> None:
         """Handle received weather data (called on main thread)."""
