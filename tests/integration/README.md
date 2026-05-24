@@ -23,6 +23,9 @@ Integration tests verify actual API behavior by recording HTTP interactions as "
 # Default: Run integration tests with recorded cassettes (fast)
 pytest tests/integration/ -v
 
+# Audit recorded cassettes for accidental API errors
+pytest tests/integration/test_cassette_quality.py -v -n 0
+
 # Run all integration tests except live_only tests
 pytest tests/integration/ -v -m "integration and not live_only"
 
@@ -64,6 +67,7 @@ tests/integration/cassettes/
 ├── nws/               # National Weather Service API tests
 ├── openmeteo/         # OpenMeteo weather API tests
 ├── pirate_weather/    # Pirate Weather API tests
+├── weatherindex/      # WeatherIndex NOAA radio API tests
 └── weather_client/    # WeatherClient orchestration tests
 ```
 
@@ -75,6 +79,10 @@ tests/integration/cassettes/
 4. **Match non-secret query params**: Query values often choose provider response shape; API keys are filtered before matching
 5. **Filter headers**: User-Agent and auth headers should be filtered
 6. **Keep cassettes small**: Request only data needed for assertions
+7. **Audit API errors**: Replay runs fail when a cassette records an unexpected
+   HTTP error or provider JSON error. If a test intentionally records an error
+   response, add that cassette to `EXPECTED_ERROR_CASSETTES` in
+   `tests/integration/conftest.py`.
 
 ## Troubleshooting
 

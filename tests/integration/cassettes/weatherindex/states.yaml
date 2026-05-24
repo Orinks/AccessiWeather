@@ -1,0 +1,58 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+    method: GET
+    uri: https://api.wxindex.org/v1/states
+  response:
+    body:
+      string: '[{"state_name":"Alabama","state_slug":"AL","station_count":21,"stations_with_feeds":2},{"state_name":"Alaska","state_slug":"AK","station_count":52,"stations_with_feeds":0},{"state_name":"American
+        Samoa","state_slug":"AS","station_count":2,"stations_with_feeds":0},{"state_name":"Arizona","state_slug":"AZ","station_count":13,"stations_with_feeds":3},{"state_name":"Arkansas","state_slug":"AR","station_count":19,"stations_with_feeds":1},{"state_name":"California","state_slug":"CA","station_count":35,"stations_with_feeds":10},{"state_name":"Colorado","state_slug":"CO","station_count":29,"stations_with_feeds":1},{"state_name":"Connecticut","state_slug":"CT","station_count":4,"stations_with_feeds":1},{"state_name":"Delaware","state_slug":"DE","station_count":2,"stations_with_feeds":0},{"state_name":"Florida","state_slug":"FL","station_count":32,"stations_with_feeds":10},{"state_name":"Georgia","state_slug":"GA","station_count":28,"stations_with_feeds":4},{"state_name":"Guam","state_slug":"GU","station_count":1,"stations_with_feeds":0},{"state_name":"Hawaii","state_slug":"HI","station_count":8,"stations_with_feeds":1},{"state_name":"Idaho","state_slug":"ID","station_count":14,"stations_with_feeds":0},{"state_name":"Illinois","state_slug":"IL","station_count":29,"stations_with_feeds":8},{"state_name":"Indiana","state_slug":"IN","station_count":19,"stations_with_feeds":3},{"state_name":"Iowa","state_slug":"IA","station_count":27,"stations_with_feeds":2},{"state_name":"Kansas","state_slug":"KS","station_count":23,"stations_with_feeds":2},{"state_name":"Kentucky","state_slug":"KY","station_count":41,"stations_with_feeds":3},{"state_name":"Louisiana","state_slug":"LA","station_count":11,"stations_with_feeds":3},{"state_name":"Maine","state_slug":"ME","station_count":11,"stations_with_feeds":1},{"state_name":"Maryland","state_slug":"MD","station_count":5,"stations_with_feeds":1},{"state_name":"Massachusetts","state_slug":"MA","station_count":6,"stations_with_feeds":3},{"state_name":"Michigan","state_slug":"MI","station_count":28,"stations_with_feeds":7},{"state_name":"Minnesota","state_slug":"MN","station_count":37,"stations_with_feeds":5},{"state_name":"Mississippi","state_slug":"MS","station_count":13,"stations_with_feeds":0},{"state_name":"Missouri","state_slug":"MO","station_count":35,"stations_with_feeds":4},{"state_name":"Montana","state_slug":"MT","station_count":31,"stations_with_feeds":1},{"state_name":"Nebraska","state_slug":"NE","station_count":25,"stations_with_feeds":4},{"state_name":"Nevada","state_slug":"NV","station_count":14,"stations_with_feeds":2},{"state_name":"New
+        Hampshire","state_slug":"NH","station_count":7,"stations_with_feeds":0},{"state_name":"New
+        Jersey","state_slug":"NJ","station_count":3,"stations_with_feeds":0},{"state_name":"New
+        Mexico","state_slug":"NM","station_count":12,"stations_with_feeds":2},{"state_name":"New
+        York","state_slug":"NY","station_count":24,"stations_with_feeds":7},{"state_name":"North
+        Carolina","state_slug":"NC","station_count":21,"stations_with_feeds":1},{"state_name":"North
+        Dakota","state_slug":"ND","station_count":18,"stations_with_feeds":2},{"state_name":"Northern
+        Mariana Islands","state_slug":"MP","station_count":1,"stations_with_feeds":0},{"state_name":"Ohio","state_slug":"OH","station_count":18,"stations_with_feeds":8},{"state_name":"Oklahoma","state_slug":"OK","station_count":20,"stations_with_feeds":4},{"state_name":"Oregon","state_slug":"OR","station_count":25,"stations_with_feeds":0},{"state_name":"Pennsylvania","state_slug":"PA","station_count":21,"stations_with_feeds":5},{"state_name":"Puerto
+        Rico","state_slug":"PR","station_count":2,"stations_with_feeds":0},{"state_name":"Rhode
+        Island","state_slug":"RI","station_count":1,"stations_with_feeds":0},{"state_name":"South
+        Carolina","state_slug":"SC","station_count":16,"stations_with_feeds":1},{"state_name":"South
+        Dakota","state_slug":"SD","station_count":18,"stations_with_feeds":0},{"state_name":"Tennessee","state_slug":"TN","station_count":21,"stations_with_feeds":3},{"state_name":"Texas","state_slug":"TX","station_count":79,"stations_with_feeds":13},{"state_name":"U.S.
+        Virgin Islands","state_slug":"VI","station_count":1,"stations_with_feeds":0},{"state_name":"Utah","state_slug":"UT","station_count":17,"stations_with_feeds":0},{"state_name":"Vermont","state_slug":"VT","station_count":4,"stations_with_feeds":0},{"state_name":"Virginia","state_slug":"VA","station_count":13,"stations_with_feeds":2},{"state_name":"Washington","state_slug":"WA","station_count":17,"stations_with_feeds":4},{"state_name":"West
+        Virginia","state_slug":"WV","station_count":12,"stations_with_feeds":3},{"state_name":"Wisconsin","state_slug":"WI","station_count":28,"stations_with_feeds":7},{"state_name":"Wyoming","state_slug":"WY","station_count":21,"stations_with_feeds":1}]'
+    headers:
+      CF-RAY:
+      - a00f2f946aed2e7a-EWR
+      Cache-Control:
+      - public, max-age=60
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Sun, 24 May 2026 20:52:44 GMT
+      Nel:
+      - '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}'
+      Report-To:
+      - '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=ypyVxguAsdDuvWglcY8iE7sq2B%2FrHRW7NaRlU5C5SPx6eqkQwnBaXnBVhUiDuit4XLdWNUtRc%2FECq3fMbWaZXsvT%2Br7SLLdNs6yv5R2ii3EjeDVt1E0yMWzn1TSMO9tJad8yhHsrtbCXaFxoGVo%3D"}]}'
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      content-length:
+      - '4829'
+    status:
+      code: 200
+      message: OK
+version: 1

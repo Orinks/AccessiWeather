@@ -164,6 +164,18 @@ jobs:
             -n 0 -v --tb=short -m "not integration"
         fi
 
+    - name: Run integration tests (cassette replay)
+      if: matrix.primary
+      timeout-minutes: 10
+      env:
+        PYTHONPATH: src
+        ACCESSIWEATHER_TEST_MODE: "1"
+        HYPOTHESIS_PROFILE: ci
+        VCR_RECORD_MODE: "none"
+      run: |
+        xvfb-run -a pytest tests/integration/ \
+          -n 0 -v --tb=short --record-mode=none
+
     - name: Install diff-cover
       if: matrix.primary && github.event_name == 'pull_request'
       run: pip install diff-cover>=9.0.0
