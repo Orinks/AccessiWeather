@@ -1,18 +1,10 @@
-"""
-Single instance manager for AccessiWeather.
+"""Win32 mutex-backed single-instance support for AccessiWeather."""
 
-This module provides functionality to ensure only one instance of the application
-can run at a time using a lock file approach.
-"""
+from __future__ import annotations
 
-import atexit
-import contextlib
+import ctypes
 import logging
-import os
-import signal
-import subprocess
-import time
-from pathlib import Path
+import sys
 
 from .notification_activation import (
     NotificationActivationRequest,
@@ -23,43 +15,27 @@ from .paths import RuntimeStoragePaths
 
 logger = logging.getLogger(__name__)
 
-# Global reference for cleanup handlers (needed for atexit and signal handlers)
-_active_manager: "SingleInstanceManager | None" = None
+SINGLE_INSTANCE_MUTEX_NAME = "Local\\AccessiWeather.SingleInstance"
+ERROR_ALREADY_EXISTS = 183
+SW_SHOWNORMAL = 1
+SW_RESTORE = 9
 
 
 class SingleInstanceManager:
-    """Manages single instance functionality using a lock file approach."""
+    """Coordinates one running AccessiWeather instance per Windows session."""
 
     def __init__(
         self,
         app,
-        lock_filename: str = "accessiweather.lock",
+        mutex_name: str = SINGLE_INSTANCE_MUTEX_NAME,
         runtime_paths: RuntimeStoragePaths | None = None,
-    ):
-        """
-        Initialize the single instance manager.
-
-        Args:
-        ----
-            app: The application instance
-            lock_filename: Name of the lock file to create
-            runtime_paths: Resolved canonical runtime storage layout
-
-        """
+    ) -> None:
+        """Initialize the manager with the app and optional mutex/runtime paths."""
         self.app = app
-        self.lock_filename = lock_filename
+        self.mutex_name = mutex_name
         self.runtime_paths = runtime_paths or getattr(app, "runtime_paths", None)
-        self.lock_file_path: Path | None = None
+        self._mutex_handle: int | None = None
         self._lock_acquired = False
-        self._cleanup_registered = False
-
-    def _get_lock_file_path(self) -> Path:
-        """Return the canonical lock file path for the current runtime layout."""
-        if self.runtime_paths is not None:
-            return self.runtime_paths.lock_file
-
-        lock_dir = self.app.paths.data
-        return lock_dir / self.lock_filename
 
     def write_activation_handoff(self, request: NotificationActivationRequest) -> bool:
         """Write a notification activation request for the primary instance."""
@@ -77,329 +53,133 @@ class SingleInstanceManager:
 
     def try_acquire_lock(self) -> bool:
         """
-        Try to acquire the single instance lock.
+        Acquire the process-wide mutex.
 
-        Returns
-        -------
-            bool: True if lock was acquired successfully, False if another instance is running
-
+        Non-Windows platforms do not use the old lock-file fallback. They run
+        without single-instance enforcement until a native strategy is added.
         """
-        try:
-            self.lock_file_path = self._get_lock_file_path()
-            self.lock_file_path.parent.mkdir(parents=True, exist_ok=True)
-
-            logger.info(f"Checking for existing instance using lock file: {self.lock_file_path}")
-
-            # Check if lock file exists and is valid
-            if self.lock_file_path and self.lock_file_path.exists():
-                if self._is_lock_file_stale():
-                    logger.info("Found stale lock file, removing it")
-                    self._remove_lock_file()
-                else:
-                    logger.info("Another instance is already running")
-                    return False
-
-            # Create lock file with current process info
-            self._create_lock_file()
+        if sys.platform != "win32":
             self._lock_acquired = True
-
-            # Register cleanup handlers for various termination scenarios
-            self._register_cleanup_handlers()
-
-            logger.info("Successfully acquired single instance lock")
             return True
 
-        except Exception as e:
-            logger.error(f"Error checking for another instance: {e}")
-            # If there's an error, assume no other instance is running
-            # to avoid blocking the application unnecessarily
-            return True
-
-    def _is_lock_file_stale(self) -> bool:
-        """
-        Check if the lock file is stale (from a crashed instance).
-
-        Returns
-        -------
-            bool: True if the lock file is stale and should be removed
-
-        """
         try:
-            if not self.lock_file_path or not self.lock_file_path.exists():
-                return False
-
-            # Read the lock file content
-            with open(self.lock_file_path, encoding="utf-8") as f:
-                content = f.read().strip()
-
-            # Parse the lock file content
-            lines = content.split("\n")
-            if len(lines) < 2:
-                logger.warning("Invalid lock file format, considering it stale")
-                return True
-
-            try:
-                pid = int(lines[0])
-                timestamp = float(lines[1])
-            except (ValueError, IndexError):
-                logger.warning("Invalid lock file content, considering it stale")
-                return True
-
-            # Check if the process is still running (cross-platform approach)
-            if not self._is_process_running(pid):
-                logger.info(f"Process {pid} is no longer running, lock file is stale")
-                return True
-
-            # Check if the lock file is very old (more than 24 hours)
-            current_time = time.time()
-            if current_time - timestamp > 24 * 60 * 60:  # 24 hours
-                logger.info("Lock file is older than 24 hours, considering it stale")
-                return True
-
-            return False
-
-        except Exception as e:
-            logger.error(f"Error checking if lock file is stale: {e}")
-            # If we can't determine, assume it's not stale to be safe
-            return False
-
-    def _is_process_running(self, pid: int) -> bool:
-        """
-        Check if a process with the given PID is running.
-
-        Args:
-        ----
-            pid: Process ID to check
-
-        Returns:
-        -------
-            bool: True if the process is running, False otherwise
-
-        """
-        try:
-            if os.name == "nt":  # Windows - use ctypes for fast, silent check
-                return self._is_windows_process_running(pid)
-            # Unix-like systems (macOS, Linux)
-            # Send signal 0 to check if process exists
-            os.kill(pid, 0)
-            return True
-        except Exception:
-            # Catch all exceptions to avoid blocking the app
-            # This includes OSError, subprocess errors, and any other unexpected issues
-            return False
-
-    def _is_windows_process_running(self, pid: int) -> bool:
-        """
-        Check if a Windows process is running using the Windows API.
-
-        This is much faster than spawning tasklist.exe and doesn't create
-        a visible terminal window.
-        """
-        try:
-            import ctypes
-            from ctypes import wintypes
-
             kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-
-            # Set up function signatures for proper error handling
-            kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
-            kernel32.OpenProcess.restype = wintypes.HANDLE
-            kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
-            kernel32.CloseHandle.restype = wintypes.BOOL
-
-            # OpenProcess with PROCESS_QUERY_LIMITED_INFORMATION (0x1000)
-            # This is the minimum access right needed to query process info
-            PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
-            handle = kernel32.OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
-
-            if handle:
-                # Process exists, close the handle
-                kernel32.CloseHandle(handle)
+            handle = kernel32.CreateMutexW(None, False, self.mutex_name)
+            if not handle:
+                logger.warning("CreateMutexW failed; allowing startup to continue")
                 return True
 
-            # Check if access was denied (process exists but we can't open it)
-            ERROR_ACCESS_DENIED = 5
-            last_error = ctypes.get_last_error()
-            return last_error == ERROR_ACCESS_DENIED
-
-        except Exception as e:
-            logger.debug(f"Windows process check failed, falling back to tasklist: {e}")
-            # Fallback to tasklist if ctypes fails (shouldn't happen on Windows)
-            try:
-                result = subprocess.run(
-                    ["tasklist", "/FI", f"PID eq {pid}"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5,
-                    creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
-                )
-                return str(pid) in result.stdout
-            except Exception:
+            if ctypes.get_last_error() == ERROR_ALREADY_EXISTS:
+                logger.info("Another AccessiWeather instance already owns the mutex")
+                kernel32.CloseHandle(handle)
+                self._mutex_handle = None
+                self._lock_acquired = False
                 return False
 
-    def _create_lock_file(self) -> None:
-        """Create the lock file with current process information."""
+            if self._existing_window_is_present():
+                logger.info(
+                    "Found an existing AccessiWeather window without the mutex; "
+                    "treating it as the running instance"
+                )
+                kernel32.CloseHandle(handle)
+                self._mutex_handle = None
+                self._lock_acquired = False
+                return False
+
+            self._mutex_handle = handle
+            self._lock_acquired = True
+            logger.info("Acquired AccessiWeather single-instance mutex")
+            return True
+        except Exception as exc:
+            logger.warning("Single-instance mutex check failed; allowing startup: %s", exc)
+            return True
+
+    def request_existing_instance_show(
+        self, request: NotificationActivationRequest | None = None
+    ) -> bool:
+        """Ask the existing instance to become visible and optionally route activation."""
+        if request is not None:
+            self.write_activation_handoff(request)
+        if sys.platform != "win32":
+            return False
+
         try:
-            if not self.lock_file_path:
-                raise RuntimeError("Lock file path not set")
+            user32 = ctypes.WinDLL("user32", use_last_error=True)
+            hwnd = self._find_accessiweather_window(user32)
+            if not hwnd:
+                logger.info("No existing AccessiWeather window found to restore")
+                return False
 
-            # Get current process ID and timestamp
-            pid = os.getpid()
-            timestamp = time.time()
+            user32.ShowWindow(hwnd, SW_RESTORE)
+            user32.ShowWindow(hwnd, SW_SHOWNORMAL)
+            user32.SetForegroundWindow(hwnd)
+            return True
+        except Exception as exc:
+            logger.warning("Failed to show existing AccessiWeather instance: %s", exc)
+            return False
 
-            # Write lock file content
-            app_name = getattr(self.app, "formal_name", "AccessiWeather")
-            lock_content = f"{pid}\n{timestamp}\n{app_name}\n"
+    def _find_accessiweather_window(self, user32) -> int:
+        """Find the primary AccessiWeather top-level window by title."""
+        hwnd = user32.FindWindowW(None, "AccessiWeather")
+        if hwnd:
+            return int(hwnd)
+        if not hasattr(user32, "EnumWindows"):
+            return 0
 
-            with open(self.lock_file_path, "w", encoding="utf-8") as f:
-                f.write(lock_content)
+        handles: list[int] = []
 
-            logger.info(f"Created lock file with PID {pid} at {self.lock_file_path}")
+        def _enum_callback(window_handle, _lparam) -> bool:
+            title = self._get_window_title(user32, window_handle)
+            if title.startswith("AccessiWeather"):
+                handles.append(int(window_handle))
+                return False
+            return True
 
-        except Exception as e:
-            logger.error(f"Failed to create lock file: {e}")
-            raise
+        enum_proc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)(
+            _enum_callback
+        )
+        user32.EnumWindows(enum_proc, 0)
+        return handles[0] if handles else 0
 
-    def _remove_lock_file(self) -> None:
-        """Remove the lock file."""
+    def _existing_window_is_present(self) -> bool:
         try:
-            if self.lock_file_path and self.lock_file_path.exists():
-                self.lock_file_path.unlink()
-                logger.info(f"Removed lock file: {self.lock_file_path}")
-        except Exception as e:
-            logger.error(f"Failed to remove lock file: {e}")
+            user32 = ctypes.WinDLL("user32", use_last_error=True)
+            return bool(self._find_accessiweather_window(user32))
+        except Exception:
+            return False
 
-    def _register_cleanup_handlers(self) -> None:
-        """
-        Register cleanup handlers for various termination scenarios.
-
-        This ensures the lock file is cleaned up when:
-        - Python exits normally (atexit)
-        - Process receives SIGTERM or SIGINT (signal handlers)
-        - On Windows: SIGBREAK (Ctrl+Break)
-
-        Note: SIGKILL (kill -9) and Windows Task Manager "End Process"
-        cannot be caught - the stale lock detection handles those cases.
-        """
-        global _active_manager
-
-        if self._cleanup_registered:
-            return
-
-        _active_manager = self
-
-        # Register atexit handler for normal Python exit
-        atexit.register(_cleanup_lock_file)
-
-        # Register signal handlers for graceful termination
-        # SIGTERM: Standard termination signal (kill command default)
-        # SIGINT: Interrupt signal (Ctrl+C)
+    @staticmethod
+    def _get_window_title(user32, hwnd) -> str:
         try:
-            signal.signal(signal.SIGTERM, _signal_handler)
-            signal.signal(signal.SIGINT, _signal_handler)
-        except (ValueError, OSError) as e:
-            # Signal handlers can fail in some environments (e.g., threads)
-            logger.debug(f"Could not register signal handlers: {e}")
-
-        # Windows-specific: SIGBREAK (Ctrl+Break)
-        if os.name == "nt":
-            with contextlib.suppress(ValueError, OSError, AttributeError):
-                signal.signal(signal.SIGBREAK, _signal_handler)
-
-        self._cleanup_registered = True
-        logger.debug("Registered cleanup handlers for lock file")
+            length = int(user32.GetWindowTextLengthW(hwnd))
+            if length <= 0:
+                return ""
+            buffer = ctypes.create_unicode_buffer(length + 1)
+            user32.GetWindowTextW(hwnd, buffer, length + 1)
+            return buffer.value
+        except Exception:
+            return ""
 
     def release_lock(self) -> None:
-        """Release the single instance lock."""
-        global _active_manager
-
-        if self._lock_acquired:
-            self._remove_lock_file()
+        """Release the owned mutex handle."""
+        if not self._mutex_handle:
             self._lock_acquired = False
-            _active_manager = None
-            logger.info("Released single instance lock")
+            return
 
-    def force_remove_lock(self) -> bool:
-        """
-        Force remove the lock file regardless of ownership.
-
-        This is used when the user explicitly chooses to force start the app,
-        typically when a previous instance crashed and left a stale lock.
-
-        Returns
-        -------
-            bool: True if lock was removed successfully, False otherwise
-
-        """
         try:
-            if self.lock_file_path is None:
-                self.lock_file_path = self._get_lock_file_path()
-                self.lock_file_path.parent.mkdir(parents=True, exist_ok=True)
-
-            if self.lock_file_path.exists():
-                self.lock_file_path.unlink()
-                logger.info(f"Force removed lock file: {self.lock_file_path}")
-            return True
-        except Exception as e:
-            logger.error(f"Failed to force remove lock file: {e}")
-            return False
-
-    async def show_already_running_dialog(self) -> None:
-        """Show a user-friendly dialog when another instance is already running."""
-        try:
-            await self.app.main_window.info_dialog(
-                "AccessiWeather Already Running",
-                "AccessiWeather is already running.\n\n"
-                "Please check your system tray or taskbar for the existing instance.\n"
-                "If you cannot find it, please wait a moment and try again.",
-            )
-        except Exception as e:
-            logger.error(f"Failed to show already running dialog: {e}")
-            # Fallback to console message
-            print("AccessiWeather is already running. Please check your system tray.")
+            kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            kernel32.CloseHandle(self._mutex_handle)
+            logger.info("Released AccessiWeather single-instance mutex")
+        except Exception as exc:
+            logger.debug("Failed to close single-instance mutex handle: %s", exc)
+        finally:
+            self._mutex_handle = None
+            self._lock_acquired = False
 
     def __enter__(self):
         """Context manager entry."""
         return self
 
     def __exit__(self, _exc_type, _exc_val, _exc_tb):
-        """Context manager exit - ensure lock is released."""
+        """Context manager exit."""
         self.release_lock()
-
-
-def _cleanup_lock_file() -> None:
-    """
-    Cleanup function called by atexit.
-
-    This is a module-level function because atexit requires a callable
-    that doesn't hold references that might be garbage collected.
-    """
-    global _active_manager
-    if _active_manager and _active_manager._lock_acquired:
-        try:
-            _active_manager._remove_lock_file()
-            logger.debug("Lock file cleaned up via atexit handler")
-        except Exception as e:
-            logger.debug(f"Failed to clean up lock file in atexit: {e}")
-
-
-def _signal_handler(signum: int, frame) -> None:
-    """
-    Signal handler for SIGTERM, SIGINT, and SIGBREAK.
-
-    Cleans up the lock file before the process terminates.
-    """
-    global _active_manager
-    signal_name = signal.Signals(signum).name if hasattr(signal, "Signals") else str(signum)
-    logger.info(f"Received signal {signal_name}, cleaning up lock file")
-
-    if _active_manager and _active_manager._lock_acquired:
-        try:
-            _active_manager._remove_lock_file()
-            _active_manager._lock_acquired = False
-        except Exception as e:
-            logger.debug(f"Failed to clean up lock file in signal handler: {e}")
-
-    # Re-raise the signal with default handler to allow normal termination
-    signal.signal(signum, signal.SIG_DFL)
-    os.kill(os.getpid(), signum)
