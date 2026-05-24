@@ -25,7 +25,6 @@ class TestGeocodingAddressLookup:
     Mark as live_only if the API is rate-limited or unavailable.
     """
 
-    @pytest.mark.live_only
     @integration_vcr.use_cassette("geocoding/geocode_nyc.yaml")
     def test_geocode_us_city(self):
         """Test geocoding a US city."""
@@ -42,7 +41,6 @@ class TestGeocodingAddressLookup:
         assert 40.0 < lat < 41.0
         assert -75.0 < lon < -73.0
 
-    @pytest.mark.live_only
     @integration_vcr.use_cassette("geocoding/geocode_london.yaml")
     def test_geocode_international_city(self):
         """Test geocoding an international city with auto data source."""
