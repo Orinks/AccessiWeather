@@ -35,6 +35,7 @@ class _SingleInstanceManagerStub:
         self.runtime_paths = runtime_paths
         self.try_acquire_lock = MagicMock(return_value=False)
         self.write_activation_handoff = MagicMock(return_value=True)
+        self.request_existing_instance_show = MagicMock(return_value=True)
 
 
 def test_handle_notification_activation_routes_discussion_without_restore() -> None:
@@ -77,17 +78,46 @@ def test_on_init_forwards_activation_to_running_instance_and_exits(tmp_path) -> 
     app.runtime_paths = runtime_paths
     app._updated = False
     app._activation_request = NotificationActivationRequest(kind="discussion")
-    show_force_start_dialog = MagicMock()
+    with patch("accessiweather.app.SingleInstanceManager", _SingleInstanceManagerStub):
+        started = app.OnInit()
+
+    assert started is True
+    app.single_instance_manager.request_existing_instance_show.assert_called_once_with(
+        app._activation_request
+    )
+
+
+def test_on_init_requests_existing_window_for_second_plain_launch(tmp_path) -> None:
+    runtime_paths = RuntimeStoragePaths(config_root=tmp_path / "config")
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app.runtime_paths = runtime_paths
+    app._updated = False
+    app._activation_request = None
+
+    with patch("accessiweather.app.SingleInstanceManager", _SingleInstanceManagerStub):
+        started = app.OnInit()
+
+    assert started is True
+    app.single_instance_manager.request_existing_instance_show.assert_called_once_with(None)
+
+
+def test_on_init_duplicate_launch_skips_toast_identity_side_effects(tmp_path) -> None:
+    runtime_paths = RuntimeStoragePaths(config_root=tmp_path / "config")
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app.runtime_paths = runtime_paths
+    app._updated = False
+    app._activation_request = None
 
     with (
         patch("accessiweather.app.SingleInstanceManager", _SingleInstanceManagerStub),
-        patch.object(app, "_show_force_start_dialog", show_force_start_dialog),
+        patch(
+            "accessiweather.windows_toast_identity.ensure_windows_toast_identity"
+        ) as ensure_identity,
     ):
         started = app.OnInit()
 
-    assert started is False
-    assert app.single_instance_manager.write_activation_handoff.called is True
-    show_force_start_dialog.assert_not_called()
+    assert started is True
+    ensure_identity.assert_not_called()
 
 
 def test_handle_activation_restores_via_main_window_when_no_tray() -> None:

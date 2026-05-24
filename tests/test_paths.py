@@ -240,7 +240,9 @@ class TestRuntimeStorageResolution:
         assert runtime.runtime_state_file == tmp_path / "Config" / "state" / "runtime_state.json"
         assert runtime.cache_dir == tmp_path / "Config" / "weather_cache"
         assert runtime.noaa_radio_preferences_file == tmp_path / "Config" / "noaa_radio_prefs.json"
-        assert runtime.lock_file == tmp_path / "Config" / "state" / "accessiweather.lock"
+        assert runtime.activation_request_file == (
+            tmp_path / "Config" / "state" / "activation_request.json"
+        )
 
     def test_custom_config_dir_wins(self, tmp_path):
         paths = Paths()

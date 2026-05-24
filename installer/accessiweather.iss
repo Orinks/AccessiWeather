@@ -38,6 +38,9 @@ AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}/issues
 AppUpdatesURL={#MyAppURL}/releases
 AppComments={#MyAppDescription}
+; Match the runtime single-instance mutex so setup waits for any installed or
+; portable copy before replacing files or launching after install.
+AppMutex=Local\AccessiWeather.SingleInstance
 
 ; Installation settings
 DefaultDirName={autopf}\{#MyAppName}

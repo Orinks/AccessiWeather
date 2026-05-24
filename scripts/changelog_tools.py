@@ -21,6 +21,7 @@ USER_FACING_PATHS = {
 USER_FACING_SUFFIXES = (".spec",)
 SECTION_ORDER = ("Added", "Changed", "Fixed", "Improved", "Removed", "Deprecated", "Security")
 PYPROJECT_METADATA_FIELDS_WITHOUT_CHANGELOG = {"version", "description"}
+PYPROJECT_TOOLING_REQUIREMENTS_WITHOUT_CHANGELOG = {"pyright", "ruff"}
 
 
 @dataclass(frozen=True)
@@ -44,6 +45,13 @@ def is_user_facing_path(path: str) -> bool:
 
 def pyproject_changed_lines_require_changelog(changed_lines: list[str]) -> bool:
     for line in changed_lines:
+        requirement_match = re.match(r'"([A-Za-z0-9_.-]+)', line)
+        if (
+            requirement_match
+            and requirement_match.group(1).casefold()
+            in PYPROJECT_TOOLING_REQUIREMENTS_WITHOUT_CHANGELOG
+        ):
+            continue
         field = line.split("=", 1)[0].strip()
         if field not in PYPROJECT_METADATA_FIELDS_WITHOUT_CHANGELOG:
             return True

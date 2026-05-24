@@ -6,12 +6,14 @@ Covers the seven scenarios defined in the Forecast Products PR 1 plan (B-R6):
 1. Happy path AFD: system prompt is byte-identical to the current AFD prompt.
 2. Happy path HWO: uses the HWO system prompt.
 3. Happy path SPS: uses the SPS system prompt.
-4. Cache: repeated call with identical inputs returns cached=True without
+4. Other text products use the app default system prompt.
+5. Custom prompts and instructions apply to all text products.
+6. Cache: repeated call with identical inputs returns cached=True without
    re-invoking the LLM.
-5. Custom prompt: custom_system_prompt replaces the default (existing
+7. Custom prompt: custom_system_prompt replaces the default (existing
    explain_afd semantics).
-6. Wrapper: explain_afd delegates to explain_text_product("AFD", ...).
-7. Error path: LLM errors propagate; failures are not cached.
+8. Wrapper: explain_afd delegates to explain_text_product("AFD", ...).
+9. Error path: LLM errors propagate; failures are not cached.
 """
 
 from __future__ import annotations
@@ -60,6 +62,15 @@ def sample_sps_text():
         "...SPECIAL WEATHER STATEMENT...\n"
         "A strong thunderstorm will affect portions of the area through 4 PM.\n"
         "Locations impacted include Springfield and surrounding communities.\n"
+    )
+
+
+@pytest.fixture
+def sample_cli_text():
+    return (
+        "CLIMATE REPORT\n"
+        "...THE RALEIGH NC CLIMATE SUMMARY FOR MAY 23 2026...\n"
+        "HIGH TEMPERATURE 82. LOW TEMPERATURE 61. PRECIPITATION 0.12 INCHES.\n"
     )
 
 
@@ -188,6 +199,58 @@ class TestExplainTextProductPrompts:
             assert system_prompt != _SYSTEM_PROMPTS["AFD"]
             assert system_prompt != _SYSTEM_PROMPTS["HWO"]
             assert "Special Weather Statement" in system_prompt
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("product_type", ["CLI", "SWODY1", "PMDMRD"])
+    async def test_text_products_without_product_default_use_app_default_system_prompt(
+        self, product_type, sample_cli_text, mock_response
+    ):
+        """Products with no product default use the app default system prompt."""
+        explainer = AIExplainer(api_key="test-key")
+        with patch.object(explainer, "_call_openrouter") as mock_call:
+            mock_call.return_value = mock_response
+
+            result = await explainer.explain_text_product(
+                sample_cli_text,
+                product_type,
+                "Test City",
+                style=ExplanationStyle.STANDARD,
+            )
+
+            assert isinstance(result, ExplanationResult)
+            args, _ = mock_call.call_args
+            system_prompt = args[0]
+            user_prompt = args[1]
+            assert system_prompt == explainer.get_effective_system_prompt(ExplanationStyle.STANDARD)
+            assert (
+                f"Please explain this National Weather Service text product ({product_type})"
+                in user_prompt
+            )
+            assert sample_cli_text in user_prompt
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("product_type", ["AFD", "HWO", "SPS", "CLI", "SWODY1"])
+    async def test_custom_prompt_and_instructions_apply_to_all_text_products(
+        self, product_type, sample_cli_text, mock_response
+    ):
+        """User custom prompts and instructions apply to every text product."""
+        custom_prompt = "Use the user's preferred weather-summary voice."
+        custom_instructions = "Mention records and departures from normal."
+        explainer = AIExplainer(
+            api_key="test-key",
+            custom_system_prompt=custom_prompt,
+            custom_instructions=custom_instructions,
+        )
+        with patch.object(explainer, "_call_openrouter") as mock_call:
+            mock_call.return_value = mock_response
+
+            await explainer.explain_text_product(sample_cli_text, product_type, "Test City")
+
+            args, _ = mock_call.call_args
+            system_prompt = args[0]
+            user_prompt = args[1]
+            assert system_prompt == custom_prompt
+            assert f"Additional Instructions: {custom_instructions}" in user_prompt
 
 
 # ---------------------------------------------------------------------------

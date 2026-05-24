@@ -27,6 +27,13 @@ logger = logging.getLogger(__name__)
 
 # Maximum conversation turns to keep in context
 MAX_CONTEXT_TURNS = 20
+DEFAULT_WEATHER_ASSISTANT_MODEL = "openrouter/free"
+
+# Models with currently available free-tier function-calling support, in preference order.
+TOOL_CAPABLE_MODELS = [
+    "qwen/qwen3-coder:free",
+    "meta-llama/llama-3.3-70b-instruct:free",
+]
 
 
 class WeatherAssistantDialog(wx.Dialog):
@@ -245,14 +252,7 @@ class WeatherAssistantDialog(wx.Dialog):
                     timeout=30.0,
                 )
 
-                effective_model = model if model else "meta-llama/llama-3.3-70b-instruct:free"
-
-                # Models with reliable function calling on free tier (in preference order)
-                TOOL_CAPABLE_MODELS = [
-                    "qwen/qwen3-coder:free",
-                    "mistralai/mistral-small-3.1-24b-instruct:free",
-                    "meta-llama/llama-3.3-70b-instruct:free",
-                ]
+                effective_model = model if model else DEFAULT_WEATHER_ASSISTANT_MODEL
 
                 extra_kwargs: dict = {}
                 use_tool_fallback = False

@@ -6,8 +6,10 @@ from dataclasses import dataclass, field
 from unittest.mock import MagicMock
 
 from accessiweather.ui.dialogs.weather_assistant_dialog import (
+    DEFAULT_WEATHER_ASSISTANT_MODEL,
     MAX_CONTEXT_TURNS,
     SYSTEM_PROMPT,
+    TOOL_CAPABLE_MODELS,
     _build_weather_context,
     show_weather_assistant_dialog,
 )
@@ -214,6 +216,18 @@ class TestMaxContextTurns:
         """Test max turns is reasonable."""
         assert MAX_CONTEXT_TURNS > 0
         assert MAX_CONTEXT_TURNS <= 50
+
+
+class TestWeatherAssistantModels:
+    """Tests for Weather Assistant model defaults."""
+
+    def test_default_free_model_uses_openrouter_router(self):
+        """Free automatic mode should use OpenRouter's router instead of a stale model."""
+        assert DEFAULT_WEATHER_ASSISTANT_MODEL == "openrouter/free"
+
+    def test_tool_fallback_models_do_not_include_removed_mistral_model(self):
+        """Tool fallback chain should not offer models OpenRouter has removed."""
+        assert "mistralai/mistral-small-3.1-24b-instruct:free" not in TOOL_CAPABLE_MODELS
 
 
 class TestShowWeatherChatDialog:

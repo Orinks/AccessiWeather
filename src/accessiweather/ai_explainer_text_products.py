@@ -40,7 +40,7 @@ class AIExplainerTextProductMixin:
     }
 
     # Product-wide style instructions appended to the user prompt. Shared
-    # across AFD/HWO/SPS so customization lives in one place.
+    # across all text products so customization lives in one place.
     _PRODUCT_STYLE_INSTRUCTIONS: dict[ExplanationStyle, str] = {
         ExplanationStyle.BRIEF: "Provide a 2-3 sentence summary of the key points.",
         ExplanationStyle.STANDARD: "Provide a clear 1-2 paragraph summary.",
@@ -62,10 +62,51 @@ class AIExplainerTextProductMixin:
 
         Key shape: ``ai_text_product:<TYPE>:<location>:<sha256>:<style>``.
         Hashing the product text keeps the key bounded and deterministic for
-        long AFDs/HWOs/SPSs.
+        long NWS text products.
         """
         text_hash = hashlib.sha256(product_text.encode("utf-8")).hexdigest()
         return f"ai_text_product:{product_type}:{location_name}:{text_hash}:{style.value}"
+
+    def _text_product_system_prompt(
+        self,
+        product_type: str,
+        style: ExplanationStyle,
+    ) -> str:
+        """Return the system prompt for any text product."""
+        if self.custom_system_prompt:
+            return self.custom_system_prompt
+        if product_default := _SYSTEM_PROMPTS.get(product_type):
+            return product_default
+        return self.get_effective_system_prompt(style)
+
+    def _text_product_user_intro(self, product_type: str, location_name: str) -> str:
+        """Return the user-prompt lead-in for any text product."""
+        if intro_template := self._PRODUCT_USER_INTRO.get(product_type):
+            return intro_template.format(location=location_name)
+        product_label = product_type or "unknown type"
+        return (
+            "Please explain this National Weather Service text product "
+            f"({product_label}) for {location_name} in plain language:"
+        )
+
+    def _build_text_product_user_prompt(
+        self,
+        product_text: str,
+        product_type: str,
+        location_name: str,
+        style: ExplanationStyle,
+    ) -> str:
+        """Build the user prompt for any text product."""
+        intro = self._text_product_user_intro(product_type, location_name)
+        style_instruction = self._PRODUCT_STYLE_INSTRUCTIONS.get(
+            style, self._PRODUCT_STYLE_INSTRUCTIONS[ExplanationStyle.DETAILED]
+        )
+        user_prompt = f"{intro}\n\n{product_text}\n\n{style_instruction}"
+
+        if self.custom_instructions and self.custom_instructions.strip():
+            user_prompt += f"\n\nAdditional Instructions: {self.custom_instructions}"
+
+        return user_prompt
 
     async def explain_text_product(
         self,
@@ -79,16 +120,16 @@ class AIExplainerTextProductMixin:
         """
         Generate a plain-language explanation of an NWS text product.
 
-        Supports AFD (Area Forecast Discussion), HWO (Hazardous Weather
-        Outlook), and SPS (Special Weather Statement). The system prompt is
-        selected per product type from :data:`_SYSTEM_PROMPTS`. A per-product
-        result cache (300 s TTL) avoids re-invoking the LLM for identical
-        inputs. LLM errors propagate and are not cached — a retry will
-        re-hit the model.
+        Supports any NWS/IEM text product ID. System prompts are selected the
+        same way for every product: user custom prompt first, product default
+        when available, then the app default AI explanation prompt. A
+        per-product result cache (300 s TTL) avoids re-invoking the LLM for
+        identical inputs. LLM errors propagate and are not cached — a retry
+        will re-hit the model.
 
         Args:
             product_text: Raw product text as issued by NWS.
-            product_type: One of ``"AFD"``, ``"HWO"``, ``"SPS"``.
+            product_type: NWS/IEM text product ID, such as ``"AFD"`` or ``"CLI"``.
             location_name: Human-readable location the product covers.
             style: Explanation style (brief, standard, detailed).
             preserve_markdown: Keep markdown in the response when True.
@@ -99,11 +140,6 @@ class AIExplainerTextProductMixin:
 
         """
         import asyncio
-
-        if product_type not in _SYSTEM_PROMPTS:
-            raise ValueError(
-                f"Unknown product_type {product_type!r}; expected one of {sorted(_SYSTEM_PROMPTS)}"
-            )
 
         # Cache lookup (custom prompts + instructions are applied per-instance
         # and already reflected in the request; keying off product_type /
@@ -122,21 +158,10 @@ class AIExplainerTextProductMixin:
                     timestamp=datetime.fromisoformat(cached["timestamp"]),
                 )
 
-        # System prompt: custom overrides the default (preserves existing
-        # explain_afd semantics — replace, not append).
-        system_prompt = self.custom_system_prompt or _SYSTEM_PROMPTS[product_type]
-
-        # User prompt: product-type-aware lead-in + raw product + style hint.
-        intro_template = self._PRODUCT_USER_INTRO[product_type]
-        intro = intro_template.format(location=location_name)
-        style_instruction = self._PRODUCT_STYLE_INSTRUCTIONS.get(
-            style, self._PRODUCT_STYLE_INSTRUCTIONS[ExplanationStyle.DETAILED]
+        system_prompt = self._text_product_system_prompt(product_type, style)
+        user_prompt = self._build_text_product_user_prompt(
+            product_text, product_type, location_name, style
         )
-        user_prompt = f"{intro}\n\n{product_text}\n\n{style_instruction}"
-
-        # Custom per-user instructions apply identically to all product types.
-        if self.custom_instructions and self.custom_instructions.strip():
-            user_prompt += f"\n\nAdditional Instructions: {self.custom_instructions}"
 
         # Build list of models to try: primary first, then fallbacks
         primary_model = self.get_effective_model()

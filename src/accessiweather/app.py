@@ -81,7 +81,7 @@ class AccessiWeatherApp(
             portable_mode: If True, use portable mode (config in app directory)
             debug: If True, enable debug mode (enables debug logging and extra UI tools)
             force_wizard: If True, force the onboarding wizard even if already shown
-            updated: If True, skip lock-file prompt (app was restarted after an update)
+            updated: If True, mark the app as restarted after an update
             activation_request: Optional toast activation request passed from Windows
 
         """
@@ -184,31 +184,24 @@ class AccessiWeatherApp(
         """Initialize the application (wxPython entry point)."""
         logger.info("Starting AccessiWeather application (wxPython)")
 
-        # Ensure Start Menu shortcut has the correct AUMID for Action Center clicks.
-        # Uses pure Python ctypes COM — no subprocess, no visible terminal window.
-        from .windows_toast_identity import ensure_windows_toast_identity
-
-        ensure_windows_toast_identity()
-
         try:
             # Check for single instance
             self.single_instance_manager = SingleInstanceManager(
                 self, runtime_paths=self.runtime_paths
             )
             if not self.single_instance_manager.try_acquire_lock():
-                if self._activation_request is not None:
-                    logger.info("Forwarding notification activation to running instance")
-                    self.single_instance_manager.write_activation_handoff(self._activation_request)
-                    return False
-                if self._updated:
-                    # After an update restart the old lock file is stale; force-acquire it
-                    logger.info("Post-update restart: forcing lock acquisition")
-                    self.single_instance_manager.force_remove_lock()
-                    self.single_instance_manager.try_acquire_lock()
-                else:
-                    logger.info("Another instance is already running, showing force start dialog")
-                    if not self._show_force_start_dialog():
-                        return False
+                logger.info("Another instance is already running; requesting window restore")
+                self.single_instance_manager.request_existing_instance_show(
+                    self._activation_request
+                )
+                self._exit_after_existing_instance_request()
+                return True
+
+            # Ensure Start Menu shortcut has the correct AUMID for Action Center clicks.
+            # Uses pure Python ctypes COM — no subprocess, no visible terminal window.
+            from .windows_toast_identity import ensure_windows_toast_identity
+
+            ensure_windows_toast_identity()
 
             # Start async event loop in background thread
             self._start_async_loop()
@@ -264,6 +257,13 @@ class AccessiWeatherApp(
                 wx.OK | wx.ICON_ERROR,
             )
             return False
+
+    def _exit_after_existing_instance_request(self) -> None:
+        """Exit cleanly after handing launch activation to an existing instance."""
+        try:
+            wx.CallAfter(self.ExitMainLoop)
+        except Exception:
+            logger.debug("Could not schedule clean MainLoop exit", exc_info=True)
 
     def _start_async_loop(self) -> None:
         """Start asyncio event loop in a background thread."""
@@ -328,7 +328,7 @@ def main(
         fake_version: Fake version for testing updates (e.g., '0.1.0').
         fake_nightly: Fake nightly tag for testing updates (e.g., 'nightly-20250101').
         force_wizard: Force the onboarding wizard even if already shown.
-        updated: Skip lock-file prompt (app was restarted after an update).
+        updated: Mark this launch as an update restart.
         activation_request: Optional toast activation request passed from Windows.
 
     """

@@ -46,9 +46,9 @@ dev = [
     "pytest-rerunfailures>=12.0",
     "hypothesis>=6.0.0",
     "vcrpy>=6.0.0",
-    "ruff>=0.9.0",
+    "ruff>=0.15.14",
     "mypy>=1.0.0",
-    "pyright",
+    "pyright>=1.1.409",
 ]
 build = [
     "nuitka>=4.0.8",
