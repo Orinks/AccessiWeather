@@ -91,6 +91,17 @@ def test_pyproject_dependency_changes_need_changelog() -> None:
     )
 
 
+def test_pyproject_tooling_dependency_changes_do_not_need_changelog() -> None:
+    assert not pyproject_changed_lines_require_changelog(
+        [
+            '"ruff>=0.9.0",',
+            '"ruff>=0.15.14",',
+            '"pyright",',
+            '"pyright>=1.1.409",',
+        ]
+    )
+
+
 def test_normalize_entry_matches_curated_release_body_wording() -> None:
     changelog_entry = (
         "- **National Products in Forecaster Notes** — Forecaster Notes now opens a dedicated "
