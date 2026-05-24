@@ -13,13 +13,16 @@ import logging
 import re
 import time
 import unicodedata
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
 import httpx
 
+_unidecode: Callable[[str], str]
+
 try:
-    from unidecode import unidecode
+    from unidecode import unidecode as _imported_unidecode
 except ImportError:  # pragma: no cover - exercised when the dependency is unavailable locally
     FALLBACK_TRANSLITERATION_MAP = str.maketrans(
         {
@@ -82,13 +85,26 @@ except ImportError:  # pragma: no cover - exercised when the dependency is unava
         }
     )
 
-    def unidecode(value: str) -> str:
+    def _fallback_unidecode(value: str) -> str:
         """Best-effort ASCII transliteration when Unidecode is unavailable."""
         normalized = value.translate(FALLBACK_TRANSLITERATION_MAP)
         return unicodedata.normalize("NFKD", normalized).encode("ascii", "ignore").decode("ascii")
 
+    _unidecode = _fallback_unidecode
+else:
+
+    def _call_unidecode(value: str) -> str:
+        return _imported_unidecode(value)
+
+    _unidecode = _call_unidecode
+
 
 logger = logging.getLogger(__name__)
+
+
+def _transliterate(value: str) -> str:
+    """Return a best-effort ASCII transliteration for matching location names."""
+    return _unidecode(value)
 
 
 class OpenMeteoGeocodingError(Exception):
@@ -296,7 +312,11 @@ class OpenMeteoGeocodingClient:
 
         for fallback_query in self._build_fallback_queries(search_name):
             fallback_results = self._search_once(fallback_query, params)
-            matched_results = self._filter_matching_results(search_name, fallback_results)
+            matched_results = self._filter_matching_results(
+                search_name,
+                fallback_results,
+                fallback_query=fallback_query,
+            )
             if matched_results:
                 logger.info(
                     "Geocoding fallback matched '%s' using retry query '%s'",
@@ -325,6 +345,9 @@ class OpenMeteoGeocodingClient:
         fallback_queries: list[str] = []
         seen: set[str] = {name.casefold()}
 
+        for simplified_query in self._build_simplified_location_queries(name):
+            self._append_unique_query(fallback_queries, seen, simplified_query)
+
         for variant in self._generate_unicode_variants(name):
             self._append_unique_query(fallback_queries, seen, variant)
 
@@ -340,6 +363,18 @@ class OpenMeteoGeocodingClient:
                     )
 
         return fallback_queries
+
+    def _build_simplified_location_queries(self, name: str) -> list[str]:
+        """Build simpler retry queries from comma-qualified place names."""
+        parts = [part.strip() for part in name.split(",") if part.strip()]
+        if len(parts) < 2:
+            return []
+
+        place_name = parts[0]
+        if not place_name or place_name.casefold() == name.casefold():
+            return []
+
+        return [place_name]
 
     def _append_unique_query(
         self,
@@ -389,16 +424,27 @@ class OpenMeteoGeocodingClient:
         self,
         original_query: str,
         results: list[GeocodingResult],
+        fallback_query: str | None = None,
     ) -> list[GeocodingResult]:
         """Keep fallback results that still match the user's original query."""
-        normalized_query = self._normalize_text(original_query)
+        normalized_queries = [self._normalize_text(original_query)]
+        if fallback_query is not None:
+            normalized_fallback = self._normalize_text(fallback_query)
+            if normalized_fallback not in normalized_queries:
+                normalized_queries.append(normalized_fallback)
+
         scored_results: list[tuple[int, GeocodingResult]] = []
 
         for result in results:
-            if not self._result_matches_query(normalized_query, result):
+            matching_scores = [
+                self._score_result_match(normalized_query, result)
+                for normalized_query in normalized_queries
+                if self._result_matches_query(normalized_query, result)
+            ]
+            if not matching_scores:
                 continue
 
-            scored_results.append((self._score_result_match(normalized_query, result), result))
+            scored_results.append((min(matching_scores), result))
 
         scored_results.sort(
             key=lambda item: (
@@ -439,7 +485,7 @@ class OpenMeteoGeocodingClient:
 
     def _normalize_text(self, text: str) -> str:
         """Normalize text for accent-insensitive comparisons."""
-        ascii_text = unidecode(text).casefold()
+        ascii_text = _transliterate(text).casefold()
         return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9]+", " ", ascii_text)).strip()
 
     def _parse_results(self, data: dict[str, Any]) -> list[GeocodingResult]:

@@ -198,6 +198,37 @@ class TestGeocodeAddress:
         # Verify the search was called with formatted ZIP
         service.client.search.assert_called_with("10001, USA", count=5)
 
+    def test_geocode_retries_comma_qualified_city_with_place_name(self, service, mock_us_result):
+        """Test city/state searches retry with the place name when the API returns no results."""
+        service.data_source = "nws"
+
+        def make_request(_endpoint, params):
+            if params["name"] == "New York":
+                return {
+                    "results": [
+                        {
+                            "name": mock_us_result.name,
+                            "latitude": mock_us_result.latitude,
+                            "longitude": mock_us_result.longitude,
+                            "country": mock_us_result.country,
+                            "country_code": mock_us_result.country_code,
+                            "timezone": mock_us_result.timezone,
+                            "admin1": mock_us_result.admin1,
+                        }
+                    ]
+                }
+            return {"results": []}
+
+        service.client._make_request = MagicMock(side_effect=make_request)
+
+        result = service.geocode_address("New York, NY")
+
+        assert result == (40.7128, -74.006, "New York, New York, United States")
+        queried_names = [
+            call.args[1]["name"] for call in service.client._make_request.call_args_list
+        ]
+        assert queried_names[:2] == ["New York, NY", "New York"]
+
     @pytest.mark.parametrize(
         ("query", "fallback_query", "name", "country", "admin1"),
         [

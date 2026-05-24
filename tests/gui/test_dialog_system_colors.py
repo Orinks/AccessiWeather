@@ -30,6 +30,7 @@ for _attr, _val in {
     "TE_READONLY": 0x0010,
     "TE_RICH2": 0x8000,
     "TE_PROCESS_ENTER": 0x0400,
+    "TE_PASSWORD": 0x0800,
     "LEFT": 0x0010,
     "RIGHT": 0x0020,
     "TOP": 0x0040,
@@ -168,7 +169,7 @@ def _widget_factories():
     """Replace wx widget constructors with spec-free factories."""
     saved = {}
 
-    for name in ("StaticText", "BoxSizer", "Panel", "ListCtrl", "FlexGridSizer"):
+    for name in ("StaticText", "BoxSizer", "ListCtrl", "FlexGridSizer"):
         saved[name] = getattr(_wx, name, None)
         setattr(_wx, name, lambda *a, **kw: MagicMock())
 
@@ -215,7 +216,9 @@ def _make_environmental(*, has_data_val=True, has_hourly=True):
 class TestSystemColorsUsedAtRuntime:
     """Verify wx.SystemSettings.GetColour is called during dialog init."""
 
-    _USING_STUB = not hasattr(sys.modules.get("wx", None), "App")
+    _USING_STUB = getattr(sys.modules.get("wx", None), "App", object).__module__.endswith(
+        "conftest"
+    )
     _skip_when_real_wx = pytest.mark.skipif(
         not _USING_STUB,
         reason="Dialog instantiation tests require wx stub mode; real wx needs real parent window",

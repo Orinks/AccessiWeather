@@ -115,10 +115,15 @@ def _is_openmeteo_forecast(uri: str) -> bool:
     return parts.netloc.endswith("open-meteo.com") and parts.path.endswith("/v1/forecast")
 
 
+def _is_openmeteo_geocoding(uri: str) -> bool:
+    parts = urlsplit(uri)
+    return parts.netloc == "geocoding-api.open-meteo.com" and parts.path.endswith("/v1/search")
+
+
 def _is_query_sensitive_provider(uri: str) -> bool:
     parts = urlsplit(uri)
     host = parts.netloc.lower()
-    if _is_openmeteo_forecast(uri):
+    if _is_openmeteo_forecast(uri) or _is_openmeteo_geocoding(uri):
         return True
     return host.endswith(("api.weather.gov", "api.pirateweather.net"))
 
