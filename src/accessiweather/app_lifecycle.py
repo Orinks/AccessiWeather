@@ -347,7 +347,7 @@ class AppLifecycleMixin:
             self.tray_icon.Destroy()
             self.tray_icon = None
 
-        # Release single instance lock
+        # Release single instance mutex
         if self.single_instance_manager:
             self.single_instance_manager.release_lock()
 

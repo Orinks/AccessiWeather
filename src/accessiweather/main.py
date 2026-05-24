@@ -55,7 +55,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--updated",
         action="store_true",
-        help="Skip lock-file prompt (set automatically after an update restart)",
+        help="Mark this launch as an update restart",
     )
     return parser
 
