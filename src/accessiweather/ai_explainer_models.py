@@ -5,11 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Literal
+from typing import Any
 
-# Product-type literal used by explain_text_product. Keep in sync with
-# ai_explainer_prompts.SYSTEM_PROMPTS keys.
-TextProductType = Literal["AFD", "HWO", "SPS"]
+# NWS/IEM text products are open-ended product IDs such as AFD, CLI, SWODY1,
+# PMDMRD, and future products that should not require code changes to explain.
+TextProductType = str
 
 
 class AIExplainerError(Exception):

@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - Alert sounds and sound-pack creation now focus on alert severity instead of a long list of specific alert names, while existing packs can keep their older mappings.
 
 ### Fixed
+- Plain Language Summary now works for Daily Climate Reports and other Forecaster Notes text products, not just AFD, HWO, and SPS.
 - Weather Assistant now avoids a removed OpenRouter free model, so automatic free mode no longer fails with a 404 before answering.
 - Opening AccessiWeather no longer sends catch-up notifications for older Forecaster Notes updates; text-product notifications now start from the current session, and HWO/SPS checks run after their latest products are loaded.
 - Default soundpack now includes specific sounds for mapped weather alert types.
