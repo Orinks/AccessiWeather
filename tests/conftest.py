@@ -19,12 +19,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from hypothesis import settings as hypothesis_settings
 
+# Set test environment variables before any application imports.
+os.environ["ACCESSIWEATHER_TEST_MODE"] = "1"
+os.environ["PYTEST_CURRENT_TEST"] = "true"
+
 # ---------------------------------------------------------------------------
-# Provide stub wx module when wxPython is not installed (headless servers).
-# This allows tests that mock wx to import accessiweather.ui submodules
-# without requiring a full wxPython build.
+# Provide a stub wx module by default. This keeps local pytest runs from
+# constructing real wxPython windows when wx is installed on the developer box.
 # ---------------------------------------------------------------------------
-_force_wx_stub = os.environ.get("ACCESSIWEATHER_FORCE_WX_STUB") == "1"
+_allow_real_wx = os.environ.get("ACCESSIWEATHER_ALLOW_REAL_WX_IN_TESTS") == "1"
+_force_wx_stub = os.environ.get("ACCESSIWEATHER_FORCE_WX_STUB", "1") == "1"
+_force_wx_stub = _force_wx_stub and not _allow_real_wx
 if _force_wx_stub:
     for _module_name in list(sys.modules):
         if _module_name == "wx" or _module_name.startswith("wx."):
@@ -364,10 +369,6 @@ if "sound_lib" not in sys.modules:
         sys.modules["sound_lib.output"] = _sl_output
         sys.modules["sound_lib.stream"] = _sl_stream
 
-# Set test environment variables before any imports
-os.environ["ACCESSIWEATHER_TEST_MODE"] = "1"
-os.environ["PYTEST_CURRENT_TEST"] = "true"
-
 # Configure hypothesis for fast CI runs
 hypothesis_settings.register_profile("ci", max_examples=25, deadline=None)
 hypothesis_settings.register_profile("dev", max_examples=50, deadline=None)
@@ -641,3 +642,27 @@ def _isolate_keyring_from_real_backend():
     finally:
         ss._keyring_module = original_module
         ss._keyring_checked = original_checked
+
+
+@pytest.fixture(autouse=True)
+def _suppress_real_notification_backends(monkeypatch):
+    """Keep pytest from reaching OS toast backends unless a test installs fakes."""
+    import accessiweather.notifications.toast_notifier as toast_notifier
+
+    monkeypatch.setattr(toast_notifier, "TOASTED_AVAILABLE", False)
+    monkeypatch.setattr(toast_notifier, "WINRT_AVAILABLE", False)
+    monkeypatch.setattr(toast_notifier, "DESKTOP_NOTIFIER_AVAILABLE", False)
+    monkeypatch.setattr(toast_notifier, "NOTIFIER_AVAILABLE", False)
+    monkeypatch.setattr(toast_notifier, "_Toast", None)
+    monkeypatch.setattr(toast_notifier, "_Text", None)
+    monkeypatch.setattr(toast_notifier, "_WinRT_XmlDocument", None)
+    monkeypatch.setattr(toast_notifier, "_WinRT_ToastActivatedEventArgs", None)
+    monkeypatch.setattr(toast_notifier, "_WinRT_ToastNotification", None)
+    monkeypatch.setattr(toast_notifier, "_WinRT_ToastNotificationManager", None)
+    monkeypatch.setattr(toast_notifier, "DesktopNotifier", None)
+    monkeypatch.setattr(
+        toast_notifier,
+        "_WINDOWS_BACKEND_IMPORTS",
+        (None, None, None, None, None, None),
+    )
+    monkeypatch.setattr(toast_notifier, "SafeDesktopNotifier", toast_notifier._TestModeNotifier)

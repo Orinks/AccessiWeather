@@ -8,6 +8,7 @@ rename, and the non-US adjacent-StaticText pattern.
 
 from __future__ import annotations
 
+import asyncio
 import sys
 from datetime import UTC, datetime
 from types import SimpleNamespace
@@ -566,6 +567,23 @@ class TestForecastProductsDialog:
         panel_factory[1]["instance"].ensure_loaded.assert_called_once()
         panel_factory[1]["instance"].product_textctrl.SetFocus.assert_not_called()
         event.Skip.assert_called_once()
+
+    def test_active_iem_check_without_app_runner_does_not_leave_pending_coroutine(self):
+        dlg = object.__new__(ForecastProductsDialog)
+        dlg._app = None
+        dlg._pending_iem_tabs = (MagicMock(name="pending_tab"),)
+        dlg._finish_active_iem_tab_check = MagicMock()
+
+        async def _fake_resolve():
+            return None
+
+        with patch.object(asyncio, "ensure_future") as ensure_future:
+            dlg._resolve_active_iem_tabs = MagicMock(return_value=_fake_resolve())
+
+            dlg._schedule_active_iem_tab_check()
+
+        ensure_future.assert_not_called()
+        dlg._finish_active_iem_tab_check.assert_called_once()
 
 
 # ---------------------------------------------------------------------------

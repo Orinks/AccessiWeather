@@ -50,6 +50,7 @@ All notable changes to this project will be documented in this file.
 - Forecaster Notes now starts with NWS discussion tabs only and adds IEM-backed tabs only when active SPC/WPC products apply to your selected location.
 - Pirate Weather now requests API v2 data and carries v2 precipitation types like freezing rain and wintry mix into current, daily, and hourly forecasts.
 - Forecaster Notes now hides Hazardous Weather Outlook and Special Weather Statement tabs when NWS confirms there is no matching product for the selected office.
+- Forecaster Notes now avoids stray background task warnings when a product-tab check runs without the normal app scheduler.
 - Nightly builds now report the dev package version consistently instead of using stale generated build metadata.
 
 ## [0.6.0] - 2026-04-24
