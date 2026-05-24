@@ -94,6 +94,18 @@ jobs:
           VCR_RECORD_MODE: "all"
         timeout-minutes: 15
 
+      - name: Audit refreshed cassettes for API errors
+        if: ${{ github.event.inputs.update_cassettes == 'true' }}
+        run: |
+          pytest tests/integration/test_cassette_quality.py \
+            -n 0 \
+            -v \
+            --tb=short \
+            --record-mode=none
+        env:
+          VCR_RECORD_MODE: "none"
+        timeout-minutes: 5
+
       - name: Commit and push new cassettes (if any)
         if: ${{ success() && github.event.inputs.update_cassettes == 'true' }}
         env:
