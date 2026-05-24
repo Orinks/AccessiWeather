@@ -72,7 +72,7 @@ jobs:
       # explicit pip cache) saves ~10s per CI run while keeping
       # the same fail-before-install-deps ordering.
       run: |
-        pip install --quiet 'ruff>=0.9.0'
+        pip install --quiet 'ruff>=0.15.14'
         ruff format --check .
         ruff check .
 
