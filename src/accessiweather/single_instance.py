@@ -119,9 +119,34 @@ class SingleInstanceManager:
             return False
 
     def _find_accessiweather_window(self, user32) -> int:
-        """Find the primary AccessiWeather top-level window by exact title."""
+        """Find the primary AccessiWeather top-level window."""
         hwnd = user32.FindWindowW(None, "AccessiWeather")
-        return int(hwnd) if hwnd else 0
+        if hwnd:
+            return int(hwnd)
+
+        found_hwnd = 0
+
+        try:
+            enum_windows_proc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
+
+            def _enum_window_callback(candidate_hwnd, _lparam):
+                nonlocal found_hwnd
+                title = self._get_window_title(user32, candidate_hwnd).strip()
+                if self._is_accessiweather_window_title(title):
+                    found_hwnd = int(candidate_hwnd)
+                    return False
+                return True
+
+            user32.EnumWindows(enum_windows_proc(_enum_window_callback), None)
+        except Exception:
+            return 0
+
+        return found_hwnd
+
+    @staticmethod
+    def _is_accessiweather_window_title(title: str) -> bool:
+        """Return True for AccessiWeather's main window titles, but not browser pages."""
+        return title == "AccessiWeather" or title.startswith("AccessiWeather \u2014 ")
 
     def _existing_window_is_present(self) -> bool:
         try:

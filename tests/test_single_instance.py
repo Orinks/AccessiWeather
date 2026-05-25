@@ -165,6 +165,25 @@ def test_second_windows_launch_detects_existing_mutex_and_can_show_window(monkey
     assert kernel32.closed_handles == [100]
 
 
+def test_second_windows_launch_restores_window_with_location_title(monkeypatch, tmp_path):
+    runtime_paths = RuntimeStoragePaths(config_root=tmp_path / "config")
+    app = SimpleNamespace(runtime_paths=runtime_paths, formal_name="AccessiWeather")
+    kernel32 = _FakeKernel32(last_error=ERROR_ALREADY_EXISTS)
+    user32 = _EnumeratingFakeUser32(windows={2468: "AccessiWeather \u2014 Boston, MA"})
+
+    import accessiweather.single_instance as single_instance
+
+    monkeypatch.setattr(single_instance.sys, "platform", "win32")
+    monkeypatch.setattr(single_instance, "ctypes", _FakeCtypes(kernel32, user32))
+
+    manager = SingleInstanceManager(app, runtime_paths=runtime_paths)
+
+    assert manager.try_acquire_lock() is False
+    assert manager.request_existing_instance_show() is True
+    assert user32.show_window_calls
+    assert user32.foreground_calls == [2468]
+
+
 def test_existing_instance_activation_writes_handoff_then_shows_window(monkeypatch, tmp_path):
     runtime_paths = RuntimeStoragePaths(config_root=tmp_path / "config")
     app = SimpleNamespace(runtime_paths=runtime_paths, formal_name="AccessiWeather")
