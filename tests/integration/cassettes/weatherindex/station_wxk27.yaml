@@ -1,0 +1,45 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+    method: GET
+    uri: https://api.wxindex.org/v1/stations/WXK27
+  response:
+    body:
+      string: '{"callsign":"WXK27","state_name":"Texas","state_slug":"TX","city":"Austin","frequency":"162.400","wfo":"Austin/San
+        Antonio TX","status":"NORMAL","latitude":30.3219,"longitude":-97.8033,"tower_site":"Austin","power":"1010","served_counties":[{"county":"Bastrop","same_code":"048021","state":"TX","area":"All"},{"county":"Blanco","same_code":"048031","state":"TX","area":"All"},{"county":"Burnet","same_code":"048053","state":"TX","area":"All"},{"county":"Caldwell","same_code":"048055","state":"TX","area":"All"},{"county":"Hays","same_code":"048209","state":"TX","area":"All"},{"county":"Lee","same_code":"048287","state":"TX","area":"All"},{"county":"Travis","same_code":"048453","state":"TX","area":"All"},{"county":"Williamson","same_code":"048491","state":"TX","area":"All"}],"feeds":[]}'
+    headers:
+      CF-RAY:
+      - a00f2f961d2a43c2-EWR
+      Cache-Control:
+      - public, max-age=60
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Sun, 24 May 2026 20:52:45 GMT
+      Nel:
+      - '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}'
+      Report-To:
+      - '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=OO81AWOjWpPfmywuHHliVpV%2BLXdM6KHlvFQEww1UApjzCy%2BYRr5w6MRcWVuN38%2FDfQPWdpOTN%2B3PRM5kr9rPlbG%2FUnikYCBpEYHCkAqbMk61KD5VWZWoK7qKPMfapHnMRKb%2FBemaqkqNh8RhemU%3D"}]}'
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      content-length:
+      - '791'
+    status:
+      code: 200
+      message: OK
+version: 1

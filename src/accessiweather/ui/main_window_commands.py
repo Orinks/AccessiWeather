@@ -430,8 +430,8 @@ class MainWindowCommandMixin:
         """Handle window close event."""
         # Check if minimize to tray is enabled
         if self._should_minimize_to_tray():
-            self._minimize_to_tray()
             event.Veto()  # Prevent the window from being destroyed
+            self._minimize_to_tray()
             return
 
         # Otherwise, exit the application

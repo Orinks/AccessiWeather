@@ -18,12 +18,15 @@ Best Practices for API Integration Testing:
 
 from __future__ import annotations
 
+import json
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import parse_qsl, urlsplit
 
 import pytest
+import yaml
 
 try:
     import vcr
@@ -69,6 +72,24 @@ LIVE_TESTS = os.environ.get("LIVE_TESTS", "false").lower() == "true"
 PIRATE_WEATHER_API_KEY = os.environ.get("PIRATE_WEATHER_API_KEY", "test-api-key")
 
 
+@dataclass(frozen=True)
+class CassetteApiError:
+    """Unexpected API-error response recorded in a VCR cassette."""
+
+    relative_path: str
+    interaction_index: int
+    status_code: int | None
+    uri: str
+    reason: str
+
+
+EXPECTED_ERROR_CASSETTES: dict[str, frozenset[int]] = {
+    "nws/error_invalid_coords.yaml": frozenset({404}),
+    "nws/point_international_error.yaml": frozenset({404}),
+    "openmeteo/error_invalid_coords.yaml": frozenset({400}),
+}
+
+
 # =============================================================================
 # VCR Configuration
 # =============================================================================
@@ -94,10 +115,15 @@ def _is_openmeteo_forecast(uri: str) -> bool:
     return parts.netloc.endswith("open-meteo.com") and parts.path.endswith("/v1/forecast")
 
 
+def _is_openmeteo_geocoding(uri: str) -> bool:
+    parts = urlsplit(uri)
+    return parts.netloc == "geocoding-api.open-meteo.com" and parts.path.endswith("/v1/search")
+
+
 def _is_query_sensitive_provider(uri: str) -> bool:
     parts = urlsplit(uri)
     host = parts.netloc.lower()
-    if _is_openmeteo_forecast(uri):
+    if _is_openmeteo_forecast(uri) or _is_openmeteo_geocoding(uri):
         return True
     return host.endswith(("api.weather.gov", "api.pirateweather.net"))
 
@@ -128,6 +154,89 @@ def _match_provider_query(request_1, request_2):
     query_2 = _scrubbed_query_items(request_2.uri)
     if query_1 != query_2:
         raise AssertionError(f"{query_1} != {query_2}")
+
+
+def _response_body_text(response: dict) -> str:
+    body = response.get("body")
+    if not isinstance(body, dict):
+        return ""
+    value = body.get("string")
+    return value if isinstance(value, str) else ""
+
+
+def _provider_error_reason(response: dict) -> str | None:
+    """Return a provider-error reason from JSON bodies that advertise failure."""
+    body_text = _response_body_text(response).strip()
+    if not body_text:
+        return None
+
+    try:
+        payload = json.loads(body_text)
+    except json.JSONDecodeError:
+        return None
+
+    if not isinstance(payload, dict):
+        return None
+
+    if payload.get("error") is True:
+        return "JSON body contains error=true"
+
+    status = payload.get("status")
+    if isinstance(status, int) and status >= 400:
+        return f"JSON body contains status={status}"
+
+    return None
+
+
+def find_unexpected_cassette_api_errors(cassette_dir: Path) -> list[CassetteApiError]:
+    """Find recorded HTTP/provider errors outside cassettes that intentionally test errors."""
+    failures: list[CassetteApiError] = []
+
+    for cassette_path in sorted(cassette_dir.rglob("*.yaml")):
+        relative_path = cassette_path.relative_to(cassette_dir).as_posix()
+        allowed_statuses = EXPECTED_ERROR_CASSETTES.get(relative_path, frozenset())
+
+        cassette = yaml.safe_load(cassette_path.read_text(encoding="utf-8")) or {}
+        interactions = cassette.get("interactions", [])
+        if not isinstance(interactions, list):
+            continue
+
+        for index, interaction in enumerate(interactions, start=1):
+            if not isinstance(interaction, dict):
+                continue
+
+            response = interaction.get("response") or {}
+            request = interaction.get("request") or {}
+            status = response.get("status") if isinstance(response, dict) else {}
+            status_code = status.get("code") if isinstance(status, dict) else None
+            uri = request.get("uri", "") if isinstance(request, dict) else ""
+
+            if isinstance(status_code, int) and status_code >= 400:
+                if status_code not in allowed_statuses:
+                    failures.append(
+                        CassetteApiError(
+                            relative_path=relative_path,
+                            interaction_index=index,
+                            status_code=status_code,
+                            uri=uri,
+                            reason=f"unexpected HTTP {status_code}",
+                        )
+                    )
+                continue
+
+            error_reason = _provider_error_reason(response)
+            if error_reason is not None:
+                failures.append(
+                    CassetteApiError(
+                        relative_path=relative_path,
+                        interaction_index=index,
+                        status_code=status_code if isinstance(status_code, int) else None,
+                        uri=uri,
+                        reason=error_reason,
+                    )
+                )
+
+    return failures
 
 
 integration_vcr = vcr.VCR(

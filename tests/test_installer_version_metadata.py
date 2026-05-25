@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from accessiweather.single_instance import SINGLE_INSTANCE_MUTEX_NAME
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -22,10 +20,15 @@ def test_inno_installer_avoids_ultra_compression_for_ci_runtime():
     assert "Compression=lzma2/ultra" not in script
 
 
-def test_inno_installer_uses_runtime_mutex_to_block_running_app():
+def test_inno_installer_closes_running_accessiweather_instead_of_prompting():
     script = (ROOT / "installer" / "accessiweather.iss").read_text()
 
-    assert f"AppMutex={SINGLE_INSTANCE_MUTEX_NAME}" in script
+    assert "AppMutex=" not in script
+    assert "CloseRunningAccessiWeather" in script
+    assert "WaitForAccessiWeatherToExit" in script
+    assert "taskkill.exe" in script
+    assert "Parameters := '/IM ' + RunningAppImageName + ' /T';" in script
+    assert "Parameters := '/F ' + Parameters;" in script
 
 
 def test_build_workflow_uses_nuitka_builder_for_windows_installer_metadata():

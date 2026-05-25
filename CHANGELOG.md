@@ -20,7 +20,13 @@ All notable changes to this project will be documented in this file.
 - Alert sounds and sound-pack creation now focus on alert severity instead of a long list of specific alert names, while existing packs can keep their older mappings.
 
 ### Fixed
+- Relaunching AccessiWeather from the desktop now brings the running window forward even after the title changes to show your selected location.
 - Starting AccessiWeather again now brings the running window forward instead of opening a force-start prompt or leaving behind lock-file state.
+- Automatic Windows startup now stays in the background when AccessiWeather is already running, and startup shortcuts are recreated with a stable AccessiWeather target for portable copies.
+- The Windows installer now closes running AccessiWeather copies automatically before installing, then can launch the updated app normally when setup exits.
+- Alt+F4 now respects "Minimize to the notification area when closing" again, so keyboard users can send AccessiWeather to the background without exiting.
+- Launching AccessiWeather no longer focuses a browser tab whose title starts with "AccessiWeather" instead of opening the app.
+- Open-Meteo location searches now handle common city/state or city/country entries like "New York, NY" and "London, UK" when adding locations.
 - The Windows installer now waits for any running AccessiWeather copy before replacing files, including portable copies launched from a folder.
 - Plain Language Summary now works for Daily Climate Reports and other Forecaster Notes text products, not just AFD, HWO, and SPS.
 - Weather Assistant now avoids a removed OpenRouter free model, so automatic free mode no longer fails with a 404 before answering.
@@ -50,6 +56,7 @@ All notable changes to this project will be documented in this file.
 - Forecaster Notes now starts with NWS discussion tabs only and adds IEM-backed tabs only when active SPC/WPC products apply to your selected location.
 - Pirate Weather now requests API v2 data and carries v2 precipitation types like freezing rain and wintry mix into current, daily, and hourly forecasts.
 - Forecaster Notes now hides Hazardous Weather Outlook and Special Weather Statement tabs when NWS confirms there is no matching product for the selected office.
+- Forecaster Notes now avoids stray background task warnings when a product-tab check runs without the normal app scheduler.
 - Nightly builds now report the dev package version consistently instead of using stale generated build metadata.
 
 ## [0.6.0] - 2026-04-24

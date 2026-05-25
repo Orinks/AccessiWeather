@@ -41,6 +41,12 @@ def parse_args(args: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Run in portable mode (saves configuration to local directory instead of user directory)",
     )
+    parser.add_argument(
+        "--startup",
+        action="store_true",
+        dest="startup_launch",
+        help="Mark this launch as an automatic startup launch",
+    )
 
     parsed_args, extras = parser.parse_known_args(args)
     parsed_args.activation_request = extract_activation_request_from_argv(
@@ -71,6 +77,7 @@ def main() -> int:
             config_dir=args.config,
             portable_mode=args.portable,
             debug=args.debug,
+            startup_launch=args.startup_launch,
             activation_request=args.activation_request,
         )
         return 0

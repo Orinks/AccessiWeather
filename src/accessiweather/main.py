@@ -57,6 +57,12 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Mark this launch as an update restart",
     )
+    parser.add_argument(
+        "--startup",
+        action="store_true",
+        dest="startup_launch",
+        help="Mark this launch as an automatic startup launch",
+    )
     return parser
 
 
@@ -88,6 +94,7 @@ def main() -> None:
         fake_nightly=args.fake_nightly,
         force_wizard=args.wizard,
         updated=args.updated,
+        startup_launch=args.startup_launch,
         activation_request=args.activation_request,
     )
 

@@ -23,6 +23,7 @@ class StartupManager:
 
     _MACOS_PLIST_LABEL = "net.orinks.accessiweather.startup"
     _LINUX_DESKTOP_FILENAME = "accessiweather.desktop"
+    _WINDOWS_STARTUP_SHORTCUT_NAME = "AccessiWeather.lnk"
     _WINDOWS_SHORTCUT_COMMAND_TIMEOUT_SECONDS = 5
 
     def __init__(self, platform_detector: PlatformDetector | None = None) -> None:
@@ -102,10 +103,13 @@ class StartupManager:
             return Path(sys.argv[0]).resolve()
         return Path.cwd()
 
-    def _get_launch_command(self) -> tuple[Path, list[str]]:
+    def _get_launch_command(self, *, for_startup: bool = False) -> tuple[Path, list[str]]:
         if is_compiled_runtime():
             executable = self._get_app_executable()
-            return executable, []
+            args: list[str] = []
+            if for_startup:
+                args.append("--startup")
+            return executable, args
 
         if sys.executable:
             executable = Path(sys.executable).resolve()
@@ -120,6 +124,8 @@ class StartupManager:
         else:
             args = []
 
+        if for_startup:
+            args.append("--startup")
         return executable, args
 
     def _ensure_directory_exists(self, directory: Path) -> bool:
@@ -144,13 +150,41 @@ class StartupManager:
         )
         if not self._ensure_directory_exists(startup_dir):
             raise OSError(f"Unable to create startup directory: {startup_dir}")
-        return startup_dir / f"{self._get_app_name()}.lnk"
+        return startup_dir / self._WINDOWS_STARTUP_SHORTCUT_NAME
+
+    def _get_legacy_windows_startup_shortcuts(self) -> list[Path]:
+        shortcut_path = self._get_windows_startup_shortcut()
+        candidates = [
+            shortcut_path.parent / f"{self._get_app_name()}.lnk",
+            shortcut_path.parent / "accessiweather.lnk",
+        ]
+        current_shortcut = os.path.normcase(os.path.normpath(str(shortcut_path)))
+        legacy_shortcuts: list[Path] = []
+        seen: set[str] = {current_shortcut}
+        for candidate in candidates:
+            normalized = os.path.normcase(os.path.normpath(str(candidate)))
+            if normalized not in seen:
+                legacy_shortcuts.append(candidate)
+                seen.add(normalized)
+        return legacy_shortcuts
+
+    def _remove_windows_startup_shortcuts(self, shortcut_paths: list[Path]) -> None:
+        seen: set[str] = set()
+        for shortcut_path in shortcut_paths:
+            normalized = os.path.normcase(os.path.normpath(str(shortcut_path)))
+            if normalized in seen:
+                continue
+            seen.add(normalized)
+            if shortcut_path.exists():
+                shortcut_path.unlink()
+                logger.info("Removed Windows startup shortcut at %s", shortcut_path)
 
     def _enable_windows_startup(self) -> bool:
         try:
             shortcut_path = self._get_windows_startup_shortcut()
-            executable, args = self._get_launch_command()
+            executable, args = self._get_launch_command(for_startup=True)
             self._create_windows_shortcut(executable, shortcut_path, args)
+            self._remove_windows_startup_shortcuts(self._get_legacy_windows_startup_shortcuts())
             logger.info("Created Windows startup shortcut at %s", shortcut_path)
             return True
         except (PermissionError, FileNotFoundError, OSError) as exc:
@@ -162,9 +196,9 @@ class StartupManager:
     def _disable_windows_startup(self) -> bool:
         try:
             shortcut_path = self._get_windows_startup_shortcut()
-            if shortcut_path.exists():
-                shortcut_path.unlink()
-                logger.info("Removed Windows startup shortcut at %s", shortcut_path)
+            self._remove_windows_startup_shortcuts(
+                [shortcut_path, *self._get_legacy_windows_startup_shortcuts()]
+            )
             return True
         except (PermissionError, FileNotFoundError, OSError) as exc:
             logger.error("Failed disabling Windows startup: %s", exc)
@@ -181,7 +215,7 @@ class StartupManager:
                 return False
             actual_target, actual_args = actual
 
-            expected_target, expected_args_list = self._get_launch_command()
+            expected_target, expected_args_list = self._get_launch_command(for_startup=True)
             expected_args = (
                 subprocess.list2cmdline(expected_args_list) if expected_args_list else ""
             )
@@ -244,10 +278,7 @@ class StartupManager:
         working_dir_str = self._escape_powershell_single_quotes(str(target.parent))
         shortcut_str = self._escape_powershell_single_quotes(str(shortcut_path))
         args_cmd = subprocess.list2cmdline(args) if args else ""
-        args_script_line = ""
-        if args_cmd:
-            escaped_args = self._escape_powershell_single_quotes(args_cmd)
-            args_script_line = f"$shortcut.Arguments = '{escaped_args}';"
+        escaped_args = self._escape_powershell_single_quotes(args_cmd)
 
         script = (
             "$shell = New-Object -COMObject WScript.Shell;"
@@ -256,7 +287,7 @@ class StartupManager:
             f"$shortcut.WorkingDirectory = '{working_dir_str}';"
             "$shortcut.WindowStyle = 1;"
             f"$shortcut.Description = '{self._escape_powershell_single_quotes(self._get_app_name())} startup shortcut';"
-            f"{args_script_line}"
+            f"$shortcut.Arguments = '{escaped_args}';"
             "$shortcut.Save();"
         )
 
@@ -265,7 +296,7 @@ class StartupManager:
             ["pwsh", "-NoProfile", "-Command", script],
         ]
 
-        missing_errors: list[FileNotFoundError] = []
+        last_error: Exception | None = None
         for command in commands:
             try:
                 subprocess.run(
@@ -276,17 +307,48 @@ class StartupManager:
                 )
                 return
             except FileNotFoundError as exc:
-                missing_errors.append(exc)
+                last_error = exc
                 continue
             except subprocess.TimeoutExpired as exc:
-                raise RuntimeError("Timed out creating shortcut via PowerShell") from exc
+                last_error = exc
+                logger.warning("Timed out creating shortcut via PowerShell: %s", exc)
+                continue
             except subprocess.CalledProcessError as exc:
                 stderr = exc.stderr.decode("utf-8", errors="ignore") if exc.stderr else ""
-                raise RuntimeError(f"Failed to create shortcut via PowerShell: {stderr}") from exc
+                last_error = RuntimeError(f"Failed to create shortcut via PowerShell: {stderr}")
+                logger.warning("Failed creating shortcut via PowerShell: %s", stderr)
+                continue
 
-        raise RuntimeError(
-            "PowerShell is required to create shortcuts on Windows; neither powershell.exe nor pwsh was found"
-        ) from (missing_errors[-1] if missing_errors else None)
+        if self._create_windows_shortcut_with_com(target, shortcut_path, args):
+            return
+
+        raise RuntimeError("Failed to create Windows shortcut") from last_error
+
+    def _create_windows_shortcut_with_com(
+        self, target: Path, shortcut_path: Path, args: list[str] | None = None
+    ) -> bool:
+        if sys.platform != "win32":
+            return False
+
+        try:
+            import win32com.client  # type: ignore[import-untyped]
+
+            shortcut_path.parent.mkdir(parents=True, exist_ok=True)
+            shell = win32com.client.Dispatch("WScript.Shell")
+            shortcut = shell.CreateShortcut(str(shortcut_path))
+            shortcut.TargetPath = str(target)
+            shortcut.WorkingDirectory = str(target.parent)
+            shortcut.WindowStyle = 1
+            shortcut.Description = f"{self._get_app_name()} startup shortcut"
+            shortcut.Arguments = subprocess.list2cmdline(args) if args else ""
+            shortcut.IconLocation = f"{target},0"
+            shortcut.Save()
+            return True
+        except ImportError:
+            logger.warning("pywin32 is not available for Windows shortcut creation fallback")
+        except Exception as exc:
+            logger.warning("Failed creating shortcut via Windows COM fallback: %s", exc)
+        return False
 
     # macOS helpers ------------------------------------------------------
     def _get_macos_plist_path(self) -> Path:

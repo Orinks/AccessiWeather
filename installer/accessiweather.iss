@@ -38,9 +38,8 @@ AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}/issues
 AppUpdatesURL={#MyAppURL}/releases
 AppComments={#MyAppDescription}
-; Match the runtime single-instance mutex so setup waits for any installed or
-; portable copy before replacing files or launching after install.
-AppMutex=Local\AccessiWeather.SingleInstance
+; Running copies are closed from PrepareToInstall so setup can continue without
+; the default mutex prompt and launch the updated app after install.
 
 ; Installation settings
 DefaultDirName={autopf}\{#MyAppName}
@@ -120,8 +119,83 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\{#MyApp
 // entry for this AppId to avoid duplicate Add/Remove Programs rows.
 // (Per-user mode intentionally does not touch HKLM for safety/permissions.)
 const
+  RunningAppImageName = 'AccessiWeather.exe';
   UninstallKeyWithBraces = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{B8F4D7A2-9E3C-4B5A-8D1F-6C2E7A9B0D3E}_is1';
   UninstallKeyWithoutBraces = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\B8F4D7A2-9E3C-4B5A-8D1F-6C2E7A9B0D3E_is1';
+
+function IsAccessiWeatherRunning(): Boolean;
+var
+  ResultCode: Integer;
+begin
+  Result := False;
+  if Exec(
+    ExpandConstant('{cmd}'),
+    '/C tasklist /FI "IMAGENAME eq ' + RunningAppImageName + '" /NH | find /I "' + RunningAppImageName + '" >nul',
+    '',
+    SW_HIDE,
+    ewWaitUntilTerminated,
+    ResultCode
+  ) then
+    Result := ResultCode = 0
+  else
+    Log('Could not query running AccessiWeather processes.');
+end;
+
+procedure KillAccessiWeather(Force: Boolean);
+var
+  ResultCode: Integer;
+  Parameters: String;
+begin
+  Parameters := '/IM ' + RunningAppImageName + ' /T';
+  if Force then
+    Parameters := '/F ' + Parameters;
+
+  if Exec(
+    ExpandConstant('{sys}\taskkill.exe'),
+    Parameters,
+    '',
+    SW_HIDE,
+    ewWaitUntilTerminated,
+    ResultCode
+  ) then
+    Log('taskkill.exe ' + Parameters + ' exited with code ' + IntToStr(ResultCode))
+  else
+    Log('Could not run taskkill.exe ' + Parameters);
+end;
+
+procedure WaitForAccessiWeatherToExit(MaxWaitMilliseconds: Integer);
+var
+  WaitedMilliseconds: Integer;
+begin
+  WaitedMilliseconds := 0;
+  while (WaitedMilliseconds < MaxWaitMilliseconds) and IsAccessiWeatherRunning() do
+  begin
+    Sleep(500);
+    WaitedMilliseconds := WaitedMilliseconds + 500;
+  end;
+end;
+
+function CloseRunningAccessiWeather(): Boolean;
+begin
+  Result := True;
+  if not IsAccessiWeatherRunning() then
+    exit;
+
+  Log('AccessiWeather is running; requesting shutdown before install.');
+  KillAccessiWeather(False);
+  WaitForAccessiWeatherToExit(5000);
+
+  if IsAccessiWeatherRunning() then
+  begin
+    Log('AccessiWeather is still running; force-stopping before install.');
+    KillAccessiWeather(True);
+    WaitForAccessiWeatherToExit(5000);
+  end;
+
+  Result := not IsAccessiWeatherRunning();
+  if not Result then
+    Log('AccessiWeather is still running after automatic close attempts.');
+end;
 
 procedure RemoveStalePerUserArpEntriesForAdminInstall();
 begin
@@ -150,6 +224,13 @@ function InitializeSetup(): Boolean;
 begin
   Result := True;
   // Could add accessibility checks here
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  Result := '';
+  if not CloseRunningAccessiWeather() then
+    Result := 'Setup could not close AccessiWeather automatically. Please close it and run setup again.';
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);

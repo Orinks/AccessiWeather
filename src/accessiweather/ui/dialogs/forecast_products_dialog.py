@@ -229,10 +229,12 @@ class ForecastProductsDialog(wx.Dialog):
             runner(coro)
             return
         try:
-            asyncio.ensure_future(coro)
+            loop = asyncio.get_running_loop()
         except RuntimeError:
             coro.close()
             self._finish_active_iem_tab_check()
+            return
+        loop.create_task(coro)
 
     async def _resolve_active_iem_tabs(self) -> None:
         """Resolve active IEM products without touching wx objects off-thread."""
