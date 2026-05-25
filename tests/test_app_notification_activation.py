@@ -246,6 +246,21 @@ def test_on_activation_handoff_timer_noop_when_no_single_instance_manager() -> N
     app._on_activation_handoff_timer(None)
 
 
+def test_start_activation_ipc_server_routes_requests_through_ui_thread() -> None:
+    """IPC activation callbacks should be routed onto the wx UI thread."""
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    request = NotificationActivationRequest(kind="generic_fallback")
+    app.single_instance_manager = MagicMock()
+
+    with patch("accessiweather.app_activation.wx") as mock_wx:
+        app._start_activation_ipc_server()
+        app.single_instance_manager.start_activation_ipc_server.assert_called_once()
+        callback = app.single_instance_manager.start_activation_ipc_server.call_args.args[0]
+        callback(request)
+
+    mock_wx.CallAfter.assert_called_once_with(app._handle_notification_activation_request, request)
+
+
 def test_schedule_startup_activation_request_calls_handler() -> None:
     """_schedule_startup_activation_request invokes wx.CallAfter."""
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)

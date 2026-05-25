@@ -259,8 +259,11 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
                     hwnd = frame.GetHandle()
                     user32 = ctypes.windll.user32
                     SW_RESTORE = 9
+                    SW_SHOWNORMAL = 1
                     if user32.IsIconic(hwnd):
                         user32.ShowWindow(hwnd, SW_RESTORE)
+                    else:
+                        user32.ShowWindow(hwnd, SW_SHOWNORMAL)
                     user32.AllowSetForegroundWindow(ctypes.windll.kernel32.GetCurrentProcessId())
                     user32.SetForegroundWindow(hwnd)
                 except Exception:

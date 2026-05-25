@@ -6,6 +6,7 @@ Tests the SystemTrayIcon class, minimize on startup, and dynamic tray tooltip fe
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -116,6 +117,34 @@ class TestShowMainWindow:
 
         # Should not raise
         show_main_window(mock_app)
+
+    def test_show_main_window_forces_hidden_windows_visible_on_windows(self, monkeypatch):
+        """Hidden tray windows should get a native show command even when not iconic."""
+        import ctypes
+
+        from accessiweather.ui import system_tray
+
+        tray = system_tray.SystemTrayIcon.__new__(system_tray.SystemTrayIcon)
+        frame = MagicMock()
+        frame.GetHandle.return_value = 12345
+        tray.app = SimpleNamespace(main_window=frame)
+        user32 = SimpleNamespace(
+            IsIconic=MagicMock(return_value=False),
+            ShowWindow=MagicMock(return_value=True),
+            AllowSetForegroundWindow=MagicMock(return_value=True),
+            SetForegroundWindow=MagicMock(return_value=True),
+        )
+        kernel32 = SimpleNamespace(GetCurrentProcessId=MagicMock(return_value=67890))
+
+        monkeypatch.setattr(system_tray.sys, "platform", "win32")
+        monkeypatch.setattr(ctypes, "windll", SimpleNamespace(user32=user32, kernel32=kernel32))
+
+        tray.show_main_window()
+
+        frame.Show.assert_called_once_with(True)
+        frame.Iconize.assert_called_once_with(False)
+        user32.ShowWindow.assert_called()
+        user32.SetForegroundWindow.assert_called_once_with(12345)
 
 
 class TestUpdateTooltip:

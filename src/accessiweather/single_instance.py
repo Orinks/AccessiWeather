@@ -5,7 +5,9 @@ from __future__ import annotations
 import ctypes
 import logging
 import sys
+from collections.abc import Callable
 
+from .activation_ipc import ActivationIpcServer, send_activation_request
 from .notification_activation import (
     NotificationActivationRequest,
     consume_activation_request_handoff,
@@ -36,6 +38,7 @@ class SingleInstanceManager:
         self.runtime_paths = runtime_paths or getattr(app, "runtime_paths", None)
         self._mutex_handle: int | None = None
         self._lock_acquired = False
+        self._activation_ipc_server = ActivationIpcServer()
 
     def write_activation_handoff(self, request: NotificationActivationRequest) -> bool:
         """Write a notification activation request for the primary instance."""
@@ -99,6 +102,9 @@ class SingleInstanceManager:
     ) -> bool:
         """Ask the existing instance to become visible and optionally route activation."""
         handoff_request = request or NotificationActivationRequest(kind="generic_fallback")
+        if sys.platform == "win32" and _send_activation_request_ipc(handoff_request):
+            return True
+
         self.write_activation_handoff(handoff_request)
         if sys.platform != "win32":
             return False
@@ -117,6 +123,16 @@ class SingleInstanceManager:
         except Exception as exc:
             logger.warning("Failed to show existing AccessiWeather instance: %s", exc)
             return False
+
+    def start_activation_ipc_server(
+        self, on_request: Callable[[NotificationActivationRequest], None]
+    ) -> bool:
+        """Start a Windows named-pipe listener for duplicate-launch activation."""
+        return self._activation_ipc_server.start(on_request)
+
+    def stop_activation_ipc_server(self) -> None:
+        """Stop the duplicate-launch activation IPC listener."""
+        self._activation_ipc_server.stop()
 
     def _find_accessiweather_window(self, user32) -> int:
         """Find the primary AccessiWeather top-level window."""
@@ -169,6 +185,7 @@ class SingleInstanceManager:
 
     def release_lock(self) -> None:
         """Release the owned mutex handle."""
+        self.stop_activation_ipc_server()
         if not self._mutex_handle:
             self._lock_acquired = False
             return
@@ -190,3 +207,8 @@ class SingleInstanceManager:
     def __exit__(self, _exc_type, _exc_val, _exc_tb):
         """Context manager exit."""
         self.release_lock()
+
+
+def _send_activation_request_ipc(request: NotificationActivationRequest) -> bool:
+    """Send an activation request to the primary instance over a Windows named pipe."""
+    return send_activation_request(request)

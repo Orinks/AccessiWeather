@@ -92,6 +92,16 @@ class AppActivationMixin:
         )
         self._activation_handoff_timer.Start(750)
 
+    def _start_activation_ipc_server(self) -> None:
+        """Start duplicate-launch IPC and route requests onto the UI thread."""
+        if self.single_instance_manager is None:
+            return
+
+        def _on_request(request: NotificationActivationRequest) -> None:
+            wx.CallAfter(self._handle_notification_activation_request, request)
+
+        self.single_instance_manager.start_activation_ipc_server(_on_request)
+
     def _on_activation_handoff_timer(self, event) -> None:
         """Consume and route any pending notification activation handoff request."""
         if self.single_instance_manager is None:

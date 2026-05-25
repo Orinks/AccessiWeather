@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Forecaster Notes AI summaries now use the same default prompt for every text product unless you've set custom AI prompt options.
 - Default AI summaries now stay grounded in the provided weather text or data, so they are less likely to invent forecast details when summarizing reports.
+- Relaunching AccessiWeather on Windows now uses a shared activation channel, so installed, direct EXE, and portable launches can restore the already-running window without matching its title.
 - Relaunching AccessiWeather from the desktop now brings the running window forward even after the title changes to show your selected location.
 - Relaunching AccessiWeather now asks the already-running app to restore its own window instead of relying on fragile title matching.
 - Starting AccessiWeather again now brings the running window forward instead of opening a force-start prompt or leaving behind lock-file state.
