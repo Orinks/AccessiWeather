@@ -119,27 +119,9 @@ class SingleInstanceManager:
             return False
 
     def _find_accessiweather_window(self, user32) -> int:
-        """Find the primary AccessiWeather top-level window by title."""
+        """Find the primary AccessiWeather top-level window by exact title."""
         hwnd = user32.FindWindowW(None, "AccessiWeather")
-        if hwnd:
-            return int(hwnd)
-        if not hasattr(user32, "EnumWindows"):
-            return 0
-
-        handles: list[int] = []
-
-        def _enum_callback(window_handle, _lparam) -> bool:
-            title = self._get_window_title(user32, window_handle)
-            if title.startswith("AccessiWeather"):
-                handles.append(int(window_handle))
-                return False
-            return True
-
-        enum_proc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)(
-            _enum_callback
-        )
-        user32.EnumWindows(enum_proc, 0)
-        return handles[0] if handles else 0
+        return int(hwnd) if hwnd else 0
 
     def _existing_window_is_present(self) -> bool:
         try:

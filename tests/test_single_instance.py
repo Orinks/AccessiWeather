@@ -48,6 +48,25 @@ class _FakeUser32:
         return True
 
 
+class _EnumeratingFakeUser32(_FakeUser32):
+    def __init__(self, *, windows: dict[int, str]) -> None:
+        super().__init__(hwnd=0)
+        self.windows = windows
+
+    def EnumWindows(self, callback, lparam):
+        for hwnd in self.windows:
+            if callback(hwnd, lparam) is False:
+                break
+        return True
+
+    def GetWindowTextLengthW(self, hwnd):
+        return len(self.windows.get(hwnd, ""))
+
+    def GetWindowTextW(self, hwnd, buffer, max_count):
+        buffer.value = self.windows.get(hwnd, "")[: max_count - 1]
+        return len(buffer.value)
+
+
 class _FakeCtypes(types.SimpleNamespace):
     def __init__(self, kernel32: _FakeKernel32, user32: _FakeUser32 | None = None) -> None:
         super().__init__()
@@ -104,6 +123,25 @@ def test_windows_startup_exits_when_legacy_window_exists_without_mutex(monkeypat
 
     assert manager.try_acquire_lock() is False
     assert kernel32.closed_handles == [100]
+
+
+def test_windows_startup_ignores_browser_window_with_accessiweather_title(monkeypatch, tmp_path):
+    runtime_paths = RuntimeStoragePaths(config_root=tmp_path / "config")
+    app = SimpleNamespace(runtime_paths=runtime_paths, formal_name="AccessiWeather")
+    kernel32 = _FakeKernel32()
+    user32 = _EnumeratingFakeUser32(
+        windows={2468: "AccessiWeather downloads - Orinks - Google Chrome"}
+    )
+
+    import accessiweather.single_instance as single_instance
+
+    monkeypatch.setattr(single_instance.sys, "platform", "win32")
+    monkeypatch.setattr(single_instance, "ctypes", _FakeCtypes(kernel32, user32))
+
+    manager = SingleInstanceManager(app, runtime_paths=runtime_paths)
+
+    assert manager.try_acquire_lock() is True
+    assert kernel32.closed_handles == []
 
 
 def test_second_windows_launch_detects_existing_mutex_and_can_show_window(monkeypatch, tmp_path):
