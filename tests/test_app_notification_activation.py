@@ -101,6 +101,21 @@ def test_on_init_requests_existing_window_for_second_plain_launch(tmp_path) -> N
     app.single_instance_manager.request_existing_instance_show.assert_called_once_with(None)
 
 
+def test_on_init_startup_duplicate_exits_without_restoring_window(tmp_path) -> None:
+    runtime_paths = RuntimeStoragePaths(config_root=tmp_path / "config")
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app.runtime_paths = runtime_paths
+    app._updated = False
+    app._activation_request = None
+    app._startup_launch = True
+
+    with patch("accessiweather.app.SingleInstanceManager", _SingleInstanceManagerStub):
+        started = app.OnInit()
+
+    assert started is True
+    app.single_instance_manager.request_existing_instance_show.assert_not_called()
+
+
 def test_on_init_duplicate_launch_skips_toast_identity_side_effects(tmp_path) -> None:
     runtime_paths = RuntimeStoragePaths(config_root=tmp_path / "config")
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)

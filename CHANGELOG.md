@@ -21,6 +21,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Starting AccessiWeather again now brings the running window forward instead of opening a force-start prompt or leaving behind lock-file state.
+- Automatic Windows startup now stays in the background when AccessiWeather is already running, and startup shortcuts are recreated with a stable AccessiWeather target for portable copies.
+- The Windows installer now closes running AccessiWeather copies automatically before installing, then can launch the updated app normally when setup exits.
 - Alt+F4 now respects "Minimize to the notification area when closing" again, so keyboard users can send AccessiWeather to the background without exiting.
 - Launching AccessiWeather no longer focuses a browser tab whose title starts with "AccessiWeather" instead of opening the app.
 - Open-Meteo location searches now handle common city/state or city/country entries like "New York, NY" and "London, UK" when adding locations.

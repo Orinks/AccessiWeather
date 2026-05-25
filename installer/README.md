@@ -103,6 +103,7 @@ The `accessiweather.iss` script creates:
 - Desktop shortcut (optional)
 - Proper uninstaller
 - Per-user installation (no admin required)
+- Automatic close of running AccessiWeather copies before files are replaced
 
 Installer scope policy (ARP hardening):
 - Default scope is per-user (`PrivilegesRequired=lowest`).

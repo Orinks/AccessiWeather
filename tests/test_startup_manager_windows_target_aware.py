@@ -41,14 +41,116 @@ def test_disabled_when_shortcut_missing(manager):
     assert manager._is_windows_startup_enabled() is False
 
 
+def test_windows_startup_shortcut_uses_stable_accessiweather_name(manager):
+    assert _shortcut_path(manager).name == "AccessiWeather.lnk"
+
+
+def test_windows_startup_launch_command_marks_automatic_startup(manager, monkeypatch):
+    executable = Path("C:/Program Files/AccessiWeather/AccessiWeather.exe")
+    monkeypatch.setattr(manager, "_get_app_executable", lambda: executable)
+    monkeypatch.setattr("accessiweather.services.startup_utils.is_compiled_runtime", lambda: True)
+
+    assert manager._get_launch_command(for_startup=True) == (
+        executable,
+        ["--startup"],
+    )
+
+
+def test_enable_windows_startup_creates_shortcut_with_startup_marker(manager, monkeypatch):
+    expected_target = Path("C:/Program Files/AccessiWeather/AccessiWeather.exe")
+    created = {}
+
+    monkeypatch.setattr(
+        manager,
+        "_get_launch_command",
+        lambda *, for_startup=False: (expected_target, ["--startup"] if for_startup else []),
+    )
+    monkeypatch.setattr(
+        manager,
+        "_create_windows_shortcut",
+        lambda target, shortcut_path, args: created.update(
+            {"target": target, "shortcut_path": shortcut_path, "args": args}
+        ),
+    )
+
+    assert manager._enable_windows_startup() is True
+    assert created == {
+        "target": expected_target,
+        "shortcut_path": _shortcut_path(manager),
+        "args": ["--startup"],
+    }
+
+
+def test_enable_windows_startup_removes_legacy_shortcuts(manager, monkeypatch):
+    expected_target = Path("C:/Program Files/AccessiWeather/AccessiWeather.exe")
+    legacy_shortcut = _shortcut_path(manager).parent / "portable-copy.lnk"
+    legacy_shortcut.touch()
+    monkeypatch.setattr(
+        manager,
+        "_get_launch_command",
+        lambda *, for_startup=False: (expected_target, ["--startup"] if for_startup else []),
+    )
+    monkeypatch.setattr(manager, "_get_legacy_windows_startup_shortcuts", lambda: [legacy_shortcut])
+    monkeypatch.setattr(manager, "_create_windows_shortcut", lambda *_args: None)
+
+    assert manager._enable_windows_startup() is True
+    assert not legacy_shortcut.exists()
+
+
+def test_disable_windows_startup_removes_legacy_shortcuts(manager, monkeypatch):
+    current_shortcut = _shortcut_path(manager)
+    legacy_shortcut = current_shortcut.parent / "portable-copy.lnk"
+    current_shortcut.touch()
+    legacy_shortcut.touch()
+    monkeypatch.setattr(manager, "_get_legacy_windows_startup_shortcuts", lambda: [legacy_shortcut])
+
+    assert manager._disable_windows_startup() is True
+    assert not current_shortcut.exists()
+    assert not legacy_shortcut.exists()
+
+
+def test_create_windows_shortcut_falls_back_to_com_when_powershell_is_unavailable(
+    manager, monkeypatch, tmp_path
+):
+    target = tmp_path / "AccessiWeather.exe"
+    target.touch()
+    shortcut_path = tmp_path / "AccessiWeather.lnk"
+    fallback = {}
+
+    def missing_powershell(*_args, **_kwargs):
+        raise FileNotFoundError("powershell.exe")
+
+    monkeypatch.setattr(subprocess, "run", missing_powershell)
+    monkeypatch.setattr(
+        manager,
+        "_create_windows_shortcut_with_com",
+        lambda target, shortcut_path, args: (
+            fallback.update({"target": target, "shortcut_path": shortcut_path, "args": args})
+            or True
+        ),
+    )
+
+    manager._create_windows_shortcut(target, shortcut_path, ["--startup"])
+
+    assert fallback == {
+        "target": target,
+        "shortcut_path": shortcut_path,
+        "args": ["--startup"],
+    }
+
+
 def test_enabled_when_shortcut_targets_current_launch_command(manager, monkeypatch):
     expected_target = Path("C:/Program Files/AccessiWeather/AccessiWeather.exe")
-    expected_args: list[str] = []
-    monkeypatch.setattr(manager, "_get_launch_command", lambda: (expected_target, expected_args))
+    expected_args = ["--startup"]
+    monkeypatch.setattr(
+        manager,
+        "_get_launch_command",
+        lambda *, for_startup=False: (expected_target, expected_args if for_startup else []),
+    )
     monkeypatch.setattr(
         manager,
         "_read_windows_shortcut",
-        lambda _path: (str(expected_target), ""),
+        lambda _path: (str(expected_target), "--startup"),
     )
     _shortcut_path(manager).touch()
 
@@ -66,7 +168,10 @@ def test_disabled_when_shortcut_targets_different_executable(manager, monkeypatc
     monkeypatch.setattr(
         manager,
         "_get_launch_command",
-        lambda: (Path("C:/Program Files/AccessiWeather/AccessiWeather.exe"), []),
+        lambda *, for_startup=False: (
+            Path("C:/Program Files/AccessiWeather/AccessiWeather.exe"),
+            ["--startup"] if for_startup else [],
+        ),
     )
     monkeypatch.setattr(
         manager,
@@ -86,12 +191,15 @@ def test_enabled_when_shortcut_targets_python_with_matching_args(manager, monkey
     monkeypatch.setattr(
         manager,
         "_get_launch_command",
-        lambda: (Path("C:/venv/Scripts/python.exe"), ["-m", "accessiweather"]),
+        lambda *, for_startup=False: (
+            Path("C:/venv/Scripts/python.exe"),
+            ["-m", "accessiweather", "--startup"] if for_startup else ["-m", "accessiweather"],
+        ),
     )
     monkeypatch.setattr(
         manager,
         "_read_windows_shortcut",
-        lambda _path: ("C:/venv/Scripts/python.exe", "-m accessiweather"),
+        lambda _path: ("C:/venv/Scripts/python.exe", "-m accessiweather --startup"),
     )
     _shortcut_path(manager).touch()
 

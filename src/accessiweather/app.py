@@ -71,6 +71,7 @@ class AccessiWeatherApp(
         debug: bool = False,
         force_wizard: bool = False,
         updated: bool = False,
+        startup_launch: bool = False,
         activation_request: NotificationActivationRequest | None = None,
     ):
         """
@@ -82,10 +83,12 @@ class AccessiWeatherApp(
             debug: If True, enable debug mode (enables debug logging and extra UI tools)
             force_wizard: If True, force the onboarding wizard even if already shown
             updated: If True, mark the app as restarted after an update
+            startup_launch: If True, this process was launched by OS startup.
             activation_request: Optional toast activation request passed from Windows
 
         """
         self._updated = updated
+        self._startup_launch = bool(startup_launch)
         self._activation_request = activation_request
         self._config_dir = config_dir
 
@@ -191,9 +194,12 @@ class AccessiWeatherApp(
             )
             if not self.single_instance_manager.try_acquire_lock():
                 logger.info("Another instance is already running; requesting window restore")
-                self.single_instance_manager.request_existing_instance_show(
-                    self._activation_request
-                )
+                if self._activation_request is not None or not getattr(
+                    self, "_startup_launch", False
+                ):
+                    self.single_instance_manager.request_existing_instance_show(
+                        self._activation_request
+                    )
                 self._exit_after_existing_instance_request()
                 return True
 
@@ -316,6 +322,7 @@ def main(
     fake_nightly: str | None = None,
     force_wizard: bool = False,
     updated: bool = False,
+    startup_launch: bool = False,
     activation_request: NotificationActivationRequest | None = None,
 ):
     """
@@ -329,6 +336,7 @@ def main(
         fake_nightly: Fake nightly tag for testing updates (e.g., 'nightly-20250101').
         force_wizard: Force the onboarding wizard even if already shown.
         updated: Mark this launch as an update restart.
+        startup_launch: Mark this launch as an automatic startup launch.
         activation_request: Optional toast activation request passed from Windows.
 
     """
@@ -338,6 +346,7 @@ def main(
         debug=debug,
         force_wizard=force_wizard,
         updated=updated,
+        startup_launch=startup_launch,
         activation_request=activation_request,
     )
 
