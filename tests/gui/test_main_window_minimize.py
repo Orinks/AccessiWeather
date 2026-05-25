@@ -10,6 +10,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from accessiweather.ui.main_window_commands import MainWindowCommandMixin
+
 
 class TestMainWindowMinimizeToTray:
     """Tests for MainWindow minimize to tray behavior."""
@@ -72,9 +74,9 @@ class TestMainWindowMinimizeToTray:
             try:
                 settings = app.config_manager.get_settings()
                 if getattr(settings, "minimize_to_tray", False):
+                    event.Veto()
                     frame.Iconize(False)
                     frame.Hide()
-                    event.Veto()
                     return "minimized"
             except Exception:
                 pass
@@ -97,9 +99,9 @@ class TestMainWindowMinimizeToTray:
             try:
                 settings = app.config_manager.get_settings()
                 if getattr(settings, "minimize_to_tray", False):
+                    event.Veto()
                     frame.Iconize(False)
                     frame.Hide()
-                    event.Veto()
                     return "minimized"
             except Exception:
                 pass
@@ -261,3 +263,43 @@ class TestMinimizeToTrayMethod:
 
         # Iconize(False) should be called before Hide()
         assert call_order == [("Iconize", False), ("Hide",)]
+
+
+class TestMainWindowNativeClose:
+    """Regression coverage for native close-to-tray behavior."""
+
+    def test_native_close_vetoes_before_minimizing_when_enabled(self):
+        """Native window close should stay in the app-owned close event path."""
+        window = MainWindowCommandMixin()
+        window._should_minimize_to_tray = MagicMock(return_value=True)
+        close_event = MagicMock()
+        call_order = []
+
+        close_event.Veto.side_effect = lambda: call_order.append("veto")
+        window._minimize_to_tray = MagicMock(side_effect=lambda: call_order.append("minimize"))
+        window._announcer = MagicMock()
+        window.app = MagicMock()
+
+        MainWindowCommandMixin._on_close(window, close_event)
+
+        close_event.Veto.assert_called_once_with()
+        window._minimize_to_tray.assert_called_once_with()
+        window.app.request_exit.assert_not_called()
+        window._announcer.shutdown.assert_not_called()
+        assert call_order == ["veto", "minimize"]
+
+    def test_native_close_exits_when_minimize_to_tray_disabled(self):
+        """Native window close keeps normal exit behavior when minimize-to-tray is off."""
+        window = MainWindowCommandMixin()
+        window._should_minimize_to_tray = MagicMock(return_value=False)
+        window._minimize_to_tray = MagicMock()
+        window._announcer = MagicMock()
+        window.app = MagicMock()
+        close_event = MagicMock()
+
+        MainWindowCommandMixin._on_close(window, close_event)
+
+        close_event.Veto.assert_not_called()
+        window._minimize_to_tray.assert_not_called()
+        window._announcer.shutdown.assert_called_once_with()
+        window.app.request_exit.assert_called_once_with()

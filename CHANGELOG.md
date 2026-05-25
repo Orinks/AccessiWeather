@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Starting AccessiWeather again now brings the running window forward instead of opening a force-start prompt or leaving behind lock-file state.
+- Alt+F4 now respects "Minimize to the notification area when closing" again, so keyboard users can send AccessiWeather to the background without exiting.
 - Open-Meteo location searches now handle common city/state or city/country entries like "New York, NY" and "London, UK" when adding locations.
 - The Windows installer now waits for any running AccessiWeather copy before replacing files, including portable copies launched from a folder.
 - Plain Language Summary now works for Daily Climate Reports and other Forecaster Notes text products, not just AFD, HWO, and SPS.
