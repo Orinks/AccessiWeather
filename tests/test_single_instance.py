@@ -184,6 +184,29 @@ def test_second_windows_launch_restores_window_with_location_title(monkeypatch, 
     assert user32.foreground_calls == [2468]
 
 
+def test_second_windows_launch_writes_generic_handoff_when_window_lookup_fails(
+    monkeypatch, tmp_path
+):
+    runtime_paths = RuntimeStoragePaths(config_root=tmp_path / "config")
+    app = SimpleNamespace(runtime_paths=runtime_paths, formal_name="AccessiWeather")
+    kernel32 = _FakeKernel32(last_error=ERROR_ALREADY_EXISTS)
+    user32 = _EnumeratingFakeUser32(windows={})
+
+    import accessiweather.single_instance as single_instance
+
+    monkeypatch.setattr(single_instance.sys, "platform", "win32")
+    monkeypatch.setattr(single_instance, "ctypes", _FakeCtypes(kernel32, user32))
+
+    manager = SingleInstanceManager(app, runtime_paths=runtime_paths)
+
+    assert manager.try_acquire_lock() is False
+    assert manager.request_existing_instance_show() is False
+    request = manager.consume_activation_handoff()
+    assert request == NotificationActivationRequest(kind="generic_fallback")
+    assert user32.show_window_calls == []
+    assert user32.foreground_calls == []
+
+
 def test_existing_instance_activation_writes_handoff_then_shows_window(monkeypatch, tmp_path):
     runtime_paths = RuntimeStoragePaths(config_root=tmp_path / "config")
     app = SimpleNamespace(runtime_paths=runtime_paths, formal_name="AccessiWeather")

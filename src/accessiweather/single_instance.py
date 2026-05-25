@@ -98,8 +98,8 @@ class SingleInstanceManager:
         self, request: NotificationActivationRequest | None = None
     ) -> bool:
         """Ask the existing instance to become visible and optionally route activation."""
-        if request is not None:
-            self.write_activation_handoff(request)
+        handoff_request = request or NotificationActivationRequest(kind="generic_fallback")
+        self.write_activation_handoff(handoff_request)
         if sys.platform != "win32":
             return False
 
