@@ -6,11 +6,14 @@ Tests the minimize behaviors including close, iconize, and escape key handlers.
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
 
 import pytest
 
+from accessiweather.app_shortcuts import AppShortcutsMixin
 from accessiweather.ui.main_window_commands import MainWindowCommandMixin
+from accessiweather.ui.main_window_ui import MainWindowUIMixin
 
 
 class TestMainWindowMinimizeToTray:
@@ -303,3 +306,111 @@ class TestMainWindowNativeClose:
         window._minimize_to_tray.assert_not_called()
         window._announcer.shutdown.assert_called_once_with()
         window.app.request_exit.assert_called_once_with()
+
+
+class _FakeWxForAccelerators:
+    ACCEL_NORMAL = 0
+    ACCEL_CTRL = 1
+    ACCEL_ALT = 2
+    ACCEL_SHIFT = 4
+    WXK_ESCAPE = 27
+    WXK_F4 = 115
+    WXK_F5 = 116
+    EVT_MENU = object()
+    ID_REFRESH = 5104
+
+    def __init__(self) -> None:
+        self._next_id = 7000
+        self.entries = []
+        self.tables = []
+
+    def NewIdRef(self):
+        self._next_id += 1
+        return self._next_id
+
+    def AcceleratorEntry(self, flags, key, cmd_id):
+        entry = SimpleNamespace(flags=flags, key=key, cmd_id=cmd_id)
+        self.entries.append(entry)
+        return entry
+
+    def AcceleratorTable(self, entries):
+        table = [
+            entry
+            if hasattr(entry, "flags")
+            else SimpleNamespace(flags=entry[0], key=entry[1], cmd_id=entry[2])
+            for entry in entries
+        ]
+        self.tables.append(table)
+        return table
+
+
+class _AcceleratorFrame:
+    def __init__(self) -> None:
+        self.bound_handlers = {}
+        self.accelerator_table = None
+        self.Close = MagicMock()
+        self.SetTitle = MagicMock()
+
+    def Bind(self, _event_type, handler, item=None, id=None):
+        bound_id = id if id is not None else item
+        self.bound_handlers[bound_id] = handler
+
+    def SetAcceleratorTable(self, table):
+        self.accelerator_table = table
+
+
+class TestAltF4AcceleratorClosePath:
+    """Alt+F4 should always route through normal frame close, not direct exit."""
+
+    def test_app_accelerator_table_preserves_alt_f4_as_native_close(self):
+        fake_wx = _FakeWxForAccelerators()
+        frame = _AcceleratorFrame()
+        app = AppShortcutsMixin()
+        app.main_window = frame
+        app.request_exit = MagicMock()
+
+        with (
+            patch("accessiweather.app_shortcuts.wx", fake_wx),
+            patch("accessiweather.native_shortcuts.wx", fake_wx),
+        ):
+            app._setup_accelerators()
+
+        alt_f4_entry = next(
+            entry
+            for entry in frame.accelerator_table
+            if entry.flags == fake_wx.ACCEL_ALT and entry.key == fake_wx.WXK_F4
+        )
+        frame.bound_handlers[alt_f4_entry.cmd_id](MagicMock())
+
+        frame.Close.assert_called_once_with()
+        app.request_exit.assert_not_called()
+
+    def test_main_window_accelerator_table_keeps_alt_f4_after_title_change(self):
+        fake_wx = _FakeWxForAccelerators()
+        window = _AcceleratorFrame()
+        window._settings_id = 1
+        window._exit_id = 2
+        window._add_location_id = 3
+        window._remove_location_id = 4
+        window._explain_id = 5
+        window._history_id = 6
+        window._noaa_radio_id = 7
+        window._weather_chat_id = 8
+        window._on_escape_pressed = MagicMock()
+
+        with (
+            patch("accessiweather.ui.main_window_ui.wx", fake_wx),
+            patch("accessiweather.native_shortcuts.wx", fake_wx),
+        ):
+            MainWindowUIMixin._setup_escape_accelerator(window)
+            MainWindowUIMixin._update_title_for_location(window, "Boston")
+
+        alt_f4_entry = next(
+            entry
+            for entry in window.accelerator_table
+            if entry.flags == fake_wx.ACCEL_ALT and entry.key == fake_wx.WXK_F4
+        )
+        window.bound_handlers[alt_f4_entry.cmd_id](MagicMock())
+
+        window.SetTitle.assert_called_once_with("AccessiWeather \u2014 Boston")
+        window.Close.assert_called_once_with()
