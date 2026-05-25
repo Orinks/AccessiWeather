@@ -475,6 +475,66 @@ class TestForecastProductPanelAIVisibility:
         panel.explain_button.Disable.assert_called()
 
 
+class TestForecastProductPanelAIStatus:
+    def test_status_callback_updates_summary_text(self, captured_sizer):
+        """Model-progress callbacks replace the generic generating message."""
+        panel = _build_panel("AFD", loader_result=_make_product("AFD"))
+
+        panel._on_explain_status("Trying backup free model after the selected model was busy.")
+
+        panel.ai_summary_display.SetValue.assert_any_call(
+            "Trying backup free model after the selected model was busy."
+        )
+
+    def test_status_callback_announces_summary_status(self, captured_sizer):
+        """Model-progress callbacks are spoken through the Prism wrapper."""
+        panel = _build_panel("AFD", loader_result=_make_product("AFD"))
+        panel._announcer = MagicMock()
+
+        panel._on_explain_status("Trying backup free model after the selected model was busy.")
+
+        panel._announcer.announce.assert_called_once_with(
+            "Trying backup free model after the selected model was busy."
+        )
+
+    def test_model_selection_reason_is_shown_in_model_info(self, captured_sizer):
+        """Success metadata explains why a fallback model answered."""
+        panel = _build_panel("AFD", loader_result=_make_product("AFD"))
+
+        panel._on_explain_complete(
+            "Plain explanation",
+            "backup/free-model:free",
+            123,
+            0.0,
+            False,
+            "Selected free model was rate limited, so a backup free model answered.",
+            "selected/free-model:free",
+            ("selected/free-model:free", "backup/free-model:free"),
+        )
+
+        info = panel.model_info.SetValue.call_args.args[0]
+        assert "Requested: selected/free-model:free" in info
+        assert "Selection: Selected free model was rate limited" in info
+        assert "Tried: selected/free-model:free, backup/free-model:free" in info
+
+    def test_complete_announces_generation_finished(self, captured_sizer):
+        """Completion is spoken through the Prism wrapper."""
+        panel = _build_panel("AFD", loader_result=_make_product("AFD"))
+        panel._announcer = MagicMock()
+
+        panel._on_explain_complete(
+            "Plain explanation",
+            "backup/free-model:free",
+            123,
+            0.0,
+            False,
+        )
+
+        panel._announcer.announce.assert_called_once_with(
+            "Plain Language Summary generated using backup/free-model:free."
+        )
+
+
 class TestFormattingHelpers:
     def test_format_issuance_none(self):
         assert _format_issuance(None) == "Issued: unknown"

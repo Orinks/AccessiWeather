@@ -24,6 +24,7 @@ from accessiweather.ai_explainer import (
     AIExplainerError,
     ExplanationResult,
     ExplanationStyle,
+    RateLimitError,
 )
 
 # ---------------------------------------------------------------------------
@@ -119,7 +120,7 @@ class TestExplainTextProductPrompts:
         with (
             patch.object(explainer, "_call_openrouter") as mock_call,
             patch(
-                "accessiweather.ai_explainer_text_products.get_available_free_models",
+                "accessiweather.ai_explainer_openrouter_client.get_available_free_models",
                 return_value=[],
             ),
         ):
@@ -167,6 +168,117 @@ class TestExplainTextProductPrompts:
             user_prompt = args[1]
             assert system_prompt == custom_prompt
             assert f"Additional Instructions: {custom_instructions}" in user_prompt
+
+
+class TestExplainTextProductModelProgress:
+    """Model fallback progress should be visible to calling UIs."""
+
+    @pytest.mark.asyncio
+    async def test_fallback_reason_uses_structured_error_cause(
+        self, sample_cli_text, mock_response
+    ):
+        """Selection reasons should read structured API error fields first."""
+        selected_model = "selected/free-model:free"
+        backup_model = "backup/free-model:free"
+        explainer = AIExplainer(api_key="test-key", model=selected_model)
+
+        def fake_call(_system_prompt, _user_prompt, model_override=None):
+            called_model = model_override or selected_model
+            if called_model == selected_model:
+                api_error = Exception("provider unavailable")
+                api_error.status_code = 429  # type: ignore[attr-defined]
+                api_error.body = {"error": {"code": "rate_limit_exceeded"}}  # type: ignore[attr-defined]
+                raise RateLimitError("Selected model failed") from api_error
+            return {**mock_response, "model": backup_model}
+
+        with (
+            patch.object(explainer, "_call_openrouter", side_effect=fake_call),
+            patch(
+                "accessiweather.ai_explainer_openrouter_client.get_available_free_models",
+                return_value=[backup_model],
+            ),
+        ):
+            result = await explainer.explain_text_product(
+                sample_cli_text,
+                "CLI",
+                "Test City",
+            )
+
+        assert result.model_selection_reason
+        assert "rate limits" in result.model_selection_reason.lower()
+
+    @pytest.mark.asyncio
+    async def test_free_model_fallback_reports_progress_and_selection_reason(
+        self, sample_cli_text, mock_response
+    ):
+        """A selected free model can fall back, and the result explains why."""
+        selected_model = "selected/free-model:free"
+        backup_model = "backup/free-model:free"
+        explainer = AIExplainer(api_key="test-key", model=selected_model)
+        status_updates: list[str] = []
+
+        def fake_call(_system_prompt, _user_prompt, model_override=None):
+            called_model = model_override or selected_model
+            if called_model == selected_model:
+                raise RateLimitError("rate limit exceeded")
+            return {
+                **mock_response,
+                "model": backup_model,
+            }
+
+        with (
+            patch.object(explainer, "_call_openrouter", side_effect=fake_call),
+            patch(
+                "accessiweather.ai_explainer_openrouter_client.get_available_free_models",
+                return_value=[backup_model],
+            ),
+        ):
+            result = await explainer.explain_text_product(
+                sample_cli_text,
+                "CLI",
+                "Test City",
+                status_callback=status_updates.append,
+            )
+
+        assert result.model_used == backup_model
+        assert result.requested_model == selected_model
+        assert result.model_attempts == (selected_model, "openrouter/free")
+        assert result.model_selection_reason
+        assert "selected free model" in result.model_selection_reason.lower()
+        assert "rate limits" in result.model_selection_reason.lower()
+        assert any("Trying selected free model" in update for update in status_updates)
+        assert any(
+            "Trying OpenRouter's free router as a backup" in update for update in status_updates
+        )
+
+    @pytest.mark.asyncio
+    async def test_free_router_selection_reason_names_router_choice(
+        self, sample_cli_text, mock_response
+    ):
+        """The default free router can pick a concrete free model without a failure."""
+        router_selected_model = "router/picked-model:free"
+        explainer = AIExplainer(api_key="test-key", model="openrouter/free")
+
+        with (
+            patch.object(explainer, "_call_openrouter") as mock_call,
+            patch(
+                "accessiweather.ai_explainer_openrouter_client.get_available_free_models",
+                return_value=[],
+            ),
+        ):
+            mock_call.return_value = {**mock_response, "model": router_selected_model}
+
+            result = await explainer.explain_text_product(
+                sample_cli_text,
+                "CLI",
+                "Test City",
+            )
+
+        assert result.model_used == router_selected_model
+        assert result.requested_model == "openrouter/free"
+        assert result.model_selection_reason
+        assert "free router selected" in result.model_selection_reason.lower()
+        assert "did not answer" not in result.model_selection_reason.lower()
 
 
 # ---------------------------------------------------------------------------

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+from collections.abc import Callable
 from datetime import datetime
 
 from .ai_explainer_models import (
@@ -16,11 +17,6 @@ from .ai_explainer_models import (
     RateLimitError,
     RequestTimeoutError,
     TextProductType,
-)
-from .ai_explainer_openrouter import (
-    DEFAULT_FREE_MODEL,
-    DEFAULT_FREE_ROUTER,
-    get_available_free_models,
 )
 
 logger = logging.getLogger(__name__)
@@ -101,6 +97,7 @@ class AIExplainerTextProductMixin:
         *,
         style: ExplanationStyle = ExplanationStyle.DETAILED,
         preserve_markdown: bool = False,
+        status_callback: Callable[[str], None] | None = None,
     ) -> ExplanationResult:
         """
         Generate a plain-language explanation of an NWS text product.
@@ -118,6 +115,7 @@ class AIExplainerTextProductMixin:
             location_name: Human-readable location the product covers.
             style: Explanation style (brief, standard, detailed).
             preserve_markdown: Keep markdown in the response when True.
+            status_callback: Optional callback for user-facing generation progress.
 
         Returns:
             :class:`ExplanationResult`. ``cached=True`` if served from the
@@ -141,6 +139,9 @@ class AIExplainerTextProductMixin:
                     estimated_cost=cached["estimated_cost"],
                     cached=True,
                     timestamp=datetime.fromisoformat(cached["timestamp"]),
+                    requested_model=cached.get("requested_model"),
+                    model_attempts=tuple(cached.get("model_attempts", ())),
+                    model_selection_reason=cached.get("model_selection_reason"),
                 )
 
         system_prompt = self._text_product_system_prompt(product_type, style)
@@ -150,20 +151,17 @@ class AIExplainerTextProductMixin:
 
         # Build list of models to try: primary first, then fallbacks
         primary_model = self.get_effective_model()
-        models_to_try = [primary_model]
-
-        if primary_model != DEFAULT_FREE_MODEL:
-            models_to_try.append(DEFAULT_FREE_MODEL)
-
-        if ":free" in primary_model or primary_model in (DEFAULT_FREE_MODEL, DEFAULT_FREE_ROUTER):
-            fallback_models = get_available_free_models(exclude_model=primary_model)
-            for fallback in fallback_models:
-                if fallback not in models_to_try:
-                    models_to_try.append(fallback)
+        models_to_try = self._build_model_attempts(primary_model)
 
         response = None
         last_error = None
-        for model in models_to_try:
+        attempted_models: list[str] = []
+        for attempt_index, model in enumerate(models_to_try):
+            attempted_models.append(model)
+            self._notify_generation_status(
+                status_callback,
+                self._describe_model_attempt(model, primary_model, attempt_index),
+            )
             try:
                 model_override = model if model != primary_model else None
                 response = await asyncio.to_thread(
@@ -179,11 +177,23 @@ class AIExplainerTextProductMixin:
                     f"Model {model} returned insufficient {product_type} response "
                     f"(len={len(content) if content else 0}), trying fallback..."
                 )
+                last_error = EmptyResponseError("empty or too-short response")
+                self._notify_generation_status(
+                    status_callback,
+                    f"{model} returned an empty response; trying another available model.",
+                )
                 response = None
 
             except Exception as e:
                 last_error = e
                 logger.warning(f"Model {model} failed for {product_type}: {e}, trying fallback...")
+                if attempt_index + 1 < len(models_to_try):
+                    reason = self._describe_generation_error(e)
+                    self._notify_generation_status(
+                        status_callback,
+                        f"{model} could not generate a summary because of {reason}; "
+                        "trying another available model.",
+                    )
                 continue
 
         if response is None:
@@ -260,6 +270,12 @@ class AIExplainerTextProductMixin:
         text = self._format_response(raw_content, preserve_markdown)
         token_count = response["total_tokens"]
         model_used = response["model"]
+        model_selection_reason = self._build_model_selection_reason(
+            primary_model,
+            model_used,
+            attempted_models,
+            last_error,
+        )
         estimated_cost = self._estimate_cost(model_used, token_count)
         self._session_token_count += token_count
 
@@ -270,6 +286,9 @@ class AIExplainerTextProductMixin:
             estimated_cost=estimated_cost,
             cached=False,
             timestamp=datetime.now(),
+            requested_model=primary_model,
+            model_attempts=tuple(attempted_models),
+            model_selection_reason=model_selection_reason,
         )
 
         # Cache only successful results — failures must not be memoized.
@@ -280,6 +299,9 @@ class AIExplainerTextProductMixin:
                 "token_count": result.token_count,
                 "estimated_cost": result.estimated_cost,
                 "timestamp": result.timestamp.isoformat(),
+                "requested_model": result.requested_model,
+                "model_attempts": list(result.model_attempts),
+                "model_selection_reason": result.model_selection_reason,
             }
             self.cache.set(cache_key, cache_data, ttl=300)
             logger.debug(f"Cached text product explanation: {cache_key}")
@@ -292,6 +314,7 @@ class AIExplainerTextProductMixin:
         location_name: str,
         style: ExplanationStyle = ExplanationStyle.DETAILED,
         preserve_markdown: bool = False,
+        status_callback: Callable[[str], None] | None = None,
     ) -> ExplanationResult:
         """
         Generate a plain-language explanation of an Area Forecast Discussion.
@@ -306,4 +329,5 @@ class AIExplainerTextProductMixin:
             location_name,
             style=style,
             preserve_markdown=preserve_markdown,
+            status_callback=status_callback,
         )

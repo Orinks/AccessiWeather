@@ -201,11 +201,12 @@ class TestAIExplanationGeneration:
                     "custom_instructions": custom_instructions,
                 }
 
-            async def explain_afd(self, discussion_text, location_name, style):
+            async def explain_afd(self, discussion_text, location_name, style, **kwargs):
                 captured["call"] = {
                     "discussion_text": discussion_text,
                     "location_name": location_name,
                     "style": style,
+                    "kwargs": kwargs,
                 }
                 return MagicMock(text="Result text", model_used="test-model")
 
@@ -230,6 +231,7 @@ class TestAIExplanationGeneration:
         assert captured["call"]["discussion_text"] == "Discussion text"
         assert captured["call"]["location_name"] == "Test City"
         assert captured["call"]["style"] == ExplanationStyle.DETAILED
+        assert callable(captured["call"]["kwargs"]["status_callback"])
         call_args = dialog._on_explain_complete.call_args
         assert call_args[0][0] == "Result text"
         assert call_args[0][1] == "test-model"
@@ -408,6 +410,7 @@ def _build_dialog_state():
     dialog._sizer = _FakeSizer()
     dialog.GetSizer = lambda: dialog._sizer
     dialog._set_status = MagicMock()
+    dialog._announcer = MagicMock()
     return dialog
 
 
@@ -442,12 +445,49 @@ class TestDiscussionDialogVisibilityStates:
 
         assert dialog.explanation_header.IsShown() is True
         assert dialog.explanation_display.IsShown() is True
-        assert dialog.explanation_display.value == "Generating plain language summary..."
+        assert (
+            dialog.explanation_display.value
+            == "Generating plain language summary. Selecting an OpenRouter model..."
+        )
         assert dialog.model_info_label.IsShown() is False
         assert dialog.model_info.IsShown() is False
         assert dialog.regenerate_button.IsShown() is False
         assert dialog.explain_button.IsShown() is True
         assert dialog.explain_button.enabled is False
+
+    def test_explain_status_updates_summary_and_status_label(self):
+        """Model-progress callbacks tell users what is happening."""
+        from accessiweather.ui.dialogs import discussion_dialog
+
+        dialog = _build_dialog_state()
+
+        discussion_dialog.DiscussionDialog._on_explain_status(
+            dialog,
+            "Trying backup free model after the selected model was busy.",
+        )
+
+        assert (
+            dialog.explanation_display.value
+            == "Trying backup free model after the selected model was busy."
+        )
+        dialog._set_status.assert_called_with(
+            "Trying backup free model after the selected model was busy."
+        )
+
+    def test_explain_status_is_announced(self):
+        """Model-progress callbacks are spoken through the Prism wrapper."""
+        from accessiweather.ui.dialogs import discussion_dialog
+
+        dialog = _build_dialog_state()
+
+        discussion_dialog.DiscussionDialog._on_explain_status(
+            dialog,
+            "Trying backup free model after the selected model was busy.",
+        )
+
+        dialog._announcer.announce.assert_called_once_with(
+            "Trying backup free model after the selected model was busy."
+        )
 
     def test_on_explain_complete_shows_summary_model_info_and_regenerate(self):
         """Test successful explanation shows summary, model info, and regenerate."""
@@ -472,6 +512,49 @@ class TestDiscussionDialogVisibilityStates:
         assert dialog.model_info.IsShown() is True
         assert dialog.regenerate_button.IsShown() is True
         assert dialog.explain_button.IsShown() is False
+
+    def test_on_explain_complete_includes_model_selection_details(self):
+        """Model info explains when a fallback answered instead of the requested model."""
+        from accessiweather.ui.dialogs import discussion_dialog
+
+        dialog = _build_dialog_state()
+        dialog._is_explaining = True
+
+        discussion_dialog.DiscussionDialog._on_explain_complete(
+            dialog,
+            "Plain explanation",
+            "backup/free-model:free",
+            123,
+            0.0,
+            False,
+            "Selected free model was rate limited, so a backup free model answered.",
+            "selected/free-model:free",
+            ("selected/free-model:free", "backup/free-model:free"),
+        )
+
+        assert "Requested: selected/free-model:free" in dialog.model_info.value
+        assert "Selection: Selected free model was rate limited" in dialog.model_info.value
+        assert "Tried: selected/free-model:free, backup/free-model:free" in dialog.model_info.value
+
+    def test_on_explain_complete_announces_generation_finished(self):
+        """Completion is spoken through the Prism wrapper."""
+        from accessiweather.ui.dialogs import discussion_dialog
+
+        dialog = _build_dialog_state()
+        dialog._is_explaining = True
+
+        discussion_dialog.DiscussionDialog._on_explain_complete(
+            dialog,
+            "Plain explanation",
+            "backup/free-model:free",
+            123,
+            0.0,
+            False,
+        )
+
+        dialog._announcer.announce.assert_called_once_with(
+            "Explanation generated using backup/free-model:free."
+        )
 
     def test_on_explain_error_shows_error_text_and_regenerate_only(self):
         """Test failed explanation keeps summary visible and offers retry."""

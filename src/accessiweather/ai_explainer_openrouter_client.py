@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import logging
+from collections.abc import Callable
 from typing import Any
 
 from .ai_explainer_models import (
@@ -16,6 +18,7 @@ from .ai_explainer_models import (
 )
 from .ai_explainer_openrouter import (
     DEFAULT_FREE_MODEL,
+    DEFAULT_FREE_ROUTER,
     OPENROUTER_BASE_URL,
     get_available_free_models,
 )
@@ -25,6 +28,187 @@ logger = logging.getLogger(__name__)
 
 class AIExplainerOpenRouterMixin:
     """OpenRouter API integration helpers."""
+
+    def _build_model_attempts(self, primary_model: str) -> list[str]:
+        """Return the ordered model list used for a generation attempt."""
+        models_to_try = [primary_model]
+
+        if primary_model != DEFAULT_FREE_MODEL:
+            models_to_try.append(DEFAULT_FREE_MODEL)
+
+        if ":free" in primary_model or primary_model in (DEFAULT_FREE_MODEL, DEFAULT_FREE_ROUTER):
+            fallback_models = get_available_free_models(exclude_model=primary_model)
+            for fallback in fallback_models:
+                if fallback not in models_to_try:
+                    models_to_try.append(fallback)
+
+        return models_to_try
+
+    def _notify_generation_status(
+        self,
+        status_callback: Callable[[str], None] | None,
+        message: str,
+    ) -> None:
+        """Send a generation status update without letting UI callback errors abort work."""
+        if status_callback is None:
+            return
+        try:
+            status_callback(message)
+        except Exception:
+            logger.debug("AI generation status callback failed", exc_info=True)
+
+    def _describe_model_attempt(self, model: str, primary_model: str, attempt_index: int) -> str:
+        """Return user-facing status text for a model attempt."""
+        if attempt_index == 0:
+            if model == DEFAULT_FREE_MODEL:
+                return (
+                    "Trying OpenRouter's free router. Free models share capacity and may "
+                    "take a little while; backup free models will be tried if needed."
+                )
+            if ":free" in model:
+                return (
+                    f"Trying selected free model {model}. Free models share rate limits; "
+                    "backup free models will be tried if this one is busy."
+                )
+            return f"Trying selected model {model}."
+
+        if model == DEFAULT_FREE_MODEL:
+            return (
+                "Trying OpenRouter's free router as a backup because the selected model "
+                "did not answer."
+            )
+        if ":free" in model:
+            return f"Trying backup free model {model} because an earlier model did not answer."
+        return f"Trying backup model {model} because {primary_model} did not answer."
+
+    def _iter_error_chain(self, error: Exception):
+        """Yield an exception and its chained structured causes."""
+        seen: set[int] = set()
+        current: BaseException | None = error
+        while current is not None and id(current) not in seen:
+            seen.add(id(current))
+            yield current
+            current = getattr(current, "__cause__", None) or getattr(current, "__context__", None)
+
+    def _coerce_error_body(self, body: Any) -> dict[str, Any]:
+        """Return a dict body from common SDK error payload shapes."""
+        if isinstance(body, dict):
+            return body
+        if isinstance(body, str):
+            try:
+                parsed = json.loads(body)
+            except json.JSONDecodeError:
+                return {}
+            return parsed if isinstance(parsed, dict) else {}
+        return {}
+
+    def _extract_api_error_details(self, error: Exception) -> dict[str, Any]:
+        """Extract structured status/code/message fields from API exceptions."""
+        details: dict[str, Any] = {}
+
+        for exc in self._iter_error_chain(error):
+            status_code = getattr(exc, "status_code", None)
+            if status_code is not None and "status_code" not in details:
+                details["status_code"] = status_code
+
+            response = getattr(exc, "response", None)
+            response_status = getattr(response, "status_code", None)
+            if response_status is not None and "status_code" not in details:
+                details["status_code"] = response_status
+
+            for attr in ("code", "type", "message"):
+                value = getattr(exc, attr, None)
+                if value and attr not in details:
+                    details[attr] = value
+
+            body = self._coerce_error_body(getattr(exc, "body", None))
+            if not body and response is not None:
+                json_method = getattr(response, "json", None)
+                if callable(json_method):
+                    try:
+                        body = self._coerce_error_body(json_method())
+                    except Exception:
+                        body = {}
+
+            error_body = body.get("error") if isinstance(body.get("error"), dict) else body
+            for key in ("code", "type", "message"):
+                value = error_body.get(key)
+                if value and key not in details:
+                    details[key] = value
+
+        return details
+
+    def _api_error_text(self, details: dict[str, Any]) -> str:
+        """Return searchable text from structured API error details."""
+        return " ".join(str(value) for value in details.values() if value)
+
+    def _api_status_code(self, details: dict[str, Any]) -> int | None:
+        """Return an int status code when structured error details include one."""
+        status_code = details.get("status_code")
+        if isinstance(status_code, int):
+            return status_code
+        if isinstance(status_code, str) and status_code.isdigit():
+            return int(status_code)
+        return None
+
+    def _describe_generation_error(self, error: Exception) -> str:
+        """Return a short, non-technical reason for a failed model attempt."""
+        details = self._extract_api_error_details(error)
+        status_code = self._api_status_code(details)
+        error_message = f"{self._api_error_text(details)} {error}".lower()
+        if (
+            status_code == 429
+            or "429" in error_message
+            or "rate limit" in error_message
+            or "rate_limit" in error_message
+            or "rate-limited" in error_message
+            or "too many requests" in error_message
+        ):
+            return "rate limits"
+        if "timed out" in error_message or "timeout" in error_message:
+            return "a timeout"
+        if (
+            status_code == 404
+            or "404" in error_message
+            or "not found" in error_message
+            or "does not exist" in error_message
+        ):
+            return "the model was unavailable"
+        if "empty" in error_message or "short" in error_message or "insufficient" in error_message:
+            return "an empty response"
+        return "a service error"
+
+    def _build_model_selection_reason(
+        self,
+        requested_model: str,
+        model_used: str,
+        attempted_models: list[str],
+        last_error: Exception | None = None,
+    ) -> str:
+        """Return user-facing context for why a model answered."""
+        if model_used == requested_model and len(attempted_models) <= 1:
+            if requested_model == DEFAULT_FREE_MODEL:
+                return "OpenRouter's free router selected the answering free model."
+            return "Used the selected model."
+        if requested_model == DEFAULT_FREE_MODEL and last_error is None:
+            return f"OpenRouter's free router selected {model_used} from available free models."
+
+        reason = self._describe_generation_error(last_error) if last_error else "an earlier model"
+        if ":free" in requested_model:
+            return (
+                "Selected free model was limited by "
+                f"{reason}, so AccessiWeather tried backup free models and "
+                f"{model_used} answered."
+            )
+        if requested_model == DEFAULT_FREE_MODEL:
+            return (
+                "OpenRouter's free router or an earlier free model did not answer, "
+                f"so {model_used} answered."
+            )
+        return (
+            f"The selected model {requested_model} did not answer because of {reason}, "
+            f"so {model_used} answered instead."
+        )
 
     def _get_client(self):
         """Get or create OpenAI client configured for OpenRouter."""
@@ -147,7 +331,9 @@ class AIExplainerOpenRouterMixin:
             }
 
         except Exception as e:
-            error_message = str(e).lower()
+            error_details = self._extract_api_error_details(e)
+            status_code = self._api_status_code(error_details)
+            error_message = f"{self._api_error_text(error_details)} {e}".lower()
             original_error = str(e)
 
             # Map specific errors to custom exceptions
@@ -169,7 +355,11 @@ class AIExplainerOpenRouterMixin:
                     "Get a free key at: openrouter.ai/keys"
                 ) from e
 
-            if "401" in error_message or "unauthorized" in error_message:
+            if (
+                status_code in (401, 403)
+                or "401" in error_message
+                or "unauthorized" in error_message
+            ):
                 raise InvalidAPIKeyError(
                     "API key authentication failed.\n\n"
                     "Your API key may be expired or incorrectly entered.\n"
@@ -177,7 +367,11 @@ class AIExplainerOpenRouterMixin:
                 ) from e
 
             # Insufficient credits
-            if "insufficient" in error_message or "no credits" in error_message:
+            if (
+                status_code == 402
+                or "insufficient" in error_message
+                or "no credits" in error_message
+            ):
                 raise InsufficientCreditsError(
                     "Your OpenRouter account has no funds.\n\n"
                     "Options:\n"
@@ -187,8 +381,10 @@ class AIExplainerOpenRouterMixin:
 
             # Rate limiting (429) - check for status code AND common phrases
             if (
-                "429" in error_message
+                status_code == 429
+                or "429" in error_message
                 or "rate limit" in error_message
+                or "rate_limit" in error_message
                 or "too many requests" in error_message
                 or "rate-limited" in error_message
             ):
@@ -217,7 +413,8 @@ class AIExplainerOpenRouterMixin:
 
             # Network/connection errors - use specific phrases to avoid false matches
             if (
-                "502" in error_message
+                status_code in (502, 503)
+                or "502" in error_message
                 or "503" in error_message
                 or "network error" in error_message
                 or "connection refused" in error_message
@@ -231,7 +428,8 @@ class AIExplainerOpenRouterMixin:
 
             # Model not found (404)
             if (
-                "404" in error_message
+                status_code == 404
+                or "404" in error_message
                 or "not found" in error_message
                 or "no endpoints found" in error_message
                 or "does not exist" in error_message

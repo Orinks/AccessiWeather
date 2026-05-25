@@ -62,6 +62,9 @@ class ExplanationResult:
     estimated_cost: float
     cached: bool
     timestamp: datetime
+    requested_model: str | None = None
+    model_attempts: tuple[str, ...] = ()
+    model_selection_reason: str | None = None
 
 
 @dataclass

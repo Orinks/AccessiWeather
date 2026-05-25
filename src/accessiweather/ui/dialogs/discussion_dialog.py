@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 
 import wx
 
+from ...screen_reader import ScreenReaderAnnouncer
+
 if TYPE_CHECKING:
     from ...app import AccessiWeatherApp
 
@@ -33,6 +35,7 @@ class DiscussionDialog(wx.Dialog):
         self._is_loading = False
         self._is_explaining = False
         self._current_discussion: str | None = None
+        self._announcer = ScreenReaderAnnouncer()
 
         self._create_widgets()
         self._bind_events()
@@ -308,11 +311,28 @@ class DiscussionDialog(wx.Dialog):
         DiscussionDialog._hide_model_info(self)
         DiscussionDialog._set_post_explain_buttons(self, has_attempted_explanation=False)
         self.explain_button.Disable()
-        self.explanation_display.SetValue("Generating plain language summary...")
-        self._set_status("Generating AI explanation...")
+        self.explanation_display.SetValue(
+            "Generating plain language summary. Selecting an OpenRouter model..."
+        )
+        self._set_status("Generating AI explanation. Selecting an OpenRouter model...")
 
         # Run async explanation
         self.app.run_async(self._do_explain())
+
+    def _on_explain_status(self, message: str) -> None:
+        """Show model-selection progress while the summary is running."""
+        DiscussionDialog._show_ai_summary_section(self)
+        self.explanation_display.SetValue(message)
+        self._set_status(message)
+        DiscussionDialog._announce_explain_status(self, message)
+
+    def _announce_explain_status(self, message: str) -> None:
+        """Speak model-selection progress through the screen-reader wrapper."""
+        if not message:
+            return
+        announcer = getattr(self, "_announcer", None)
+        if announcer is not None:
+            announcer.announce(message)
 
     async def _do_explain(self):
         """Perform the AI explanation."""
@@ -350,6 +370,7 @@ class DiscussionDialog(wx.Dialog):
                 discussion_text,
                 location_name,
                 style=ExplanationStyle.DETAILED,
+                status_callback=lambda message: wx.CallAfter(self._on_explain_status, message),
             )
 
             wx.CallAfter(
@@ -359,11 +380,37 @@ class DiscussionDialog(wx.Dialog):
                 result.token_count,
                 result.estimated_cost,
                 result.cached,
+                result.model_selection_reason,
+                result.requested_model,
+                result.model_attempts,
             )
 
         except Exception as e:
             logger.error(f"AI explanation failed: {e}")
             wx.CallAfter(self._on_explain_error, str(e))
+
+    def _build_model_info(
+        self,
+        model_used: str,
+        token_count: int,
+        estimated_cost: float,
+        cached: bool,
+        model_selection_reason: str | None = None,
+        requested_model: str | None = None,
+        model_attempts: tuple[str, ...] = (),
+    ) -> str:
+        """Build the model metadata shown after a summary finishes."""
+        cost_text = "No cost" if estimated_cost == 0 else f"~${estimated_cost:.6f}"
+        info_lines = [f"Model: {model_used}", f"Tokens: {token_count}", f"Cost: {cost_text}"]
+        if requested_model and requested_model != model_used:
+            info_lines.append(f"Requested: {requested_model}")
+        if model_selection_reason:
+            info_lines.append(f"Selection: {model_selection_reason}")
+        if model_attempts and len(model_attempts) > 1:
+            info_lines.append(f"Tried: {', '.join(model_attempts)}")
+        if cached:
+            info_lines.append("Cached: Yes")
+        return "\n".join(info_lines)
 
     def _on_explain_complete(
         self,
@@ -372,19 +419,31 @@ class DiscussionDialog(wx.Dialog):
         token_count: int = 0,
         estimated_cost: float = 0.0,
         cached: bool = False,
+        model_selection_reason: str | None = None,
+        requested_model: str | None = None,
+        model_attempts: tuple[str, ...] = (),
     ) -> None:
         """Handle explanation completion."""
         self._is_explaining = False
         DiscussionDialog._show_ai_summary_section(self)
         DiscussionDialog._set_post_explain_buttons(self, has_attempted_explanation=True)
         self.explanation_display.SetValue(explanation)
-        cost_text = "No cost" if estimated_cost == 0 else f"~${estimated_cost:.6f}"
-        info = f"Model: {model_used}\nTokens: {token_count}\nCost: {cost_text}"
-        if cached:
-            info += "\nCached: Yes"
-        self.model_info.SetValue(info)
+        self.model_info.SetValue(
+            DiscussionDialog._build_model_info(
+                self,
+                model_used,
+                token_count,
+                estimated_cost,
+                cached,
+                model_selection_reason,
+                requested_model,
+                model_attempts,
+            )
+        )
         DiscussionDialog._show_model_info(self)
-        self._set_status(f"Explanation generated using {model_used}.")
+        completion_message = f"Explanation generated using {model_used}."
+        self._set_status(completion_message)
+        DiscussionDialog._announce_explain_status(self, completion_message)
 
     def _on_regenerate(self, event) -> None:
         """Regenerate explanation with fresh (non-cached) result."""

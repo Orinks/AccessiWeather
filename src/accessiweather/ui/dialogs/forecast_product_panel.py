@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING, cast
 
 import wx
 
+from ...screen_reader import ScreenReaderAnnouncer
 from .forecast_product_ai import (
     build_explainer,
     has_openrouter_key,
@@ -111,6 +112,7 @@ class ForecastProductPanel(wx.Panel):
         self._is_loading = False
         self._is_explaining = False
         self._load_started = False
+        self._announcer = ScreenReaderAnnouncer()
 
         self._create_widgets()
         self._bind_events()
@@ -418,8 +420,24 @@ class ForecastProductPanel(wx.Panel):
         self._hide_model_info()
         self._set_post_explain_buttons(has_attempted=False)
         self.explain_button.Disable()
-        self.ai_summary_display.SetValue("Generating plain language summary...")
+        self.ai_summary_display.SetValue(
+            "Generating plain language summary. Selecting an OpenRouter model..."
+        )
         self._schedule_explain(self._current_text)
+
+    def _on_explain_status(self, message: str) -> None:
+        """Show model-selection progress while the summary is running."""
+        self._show_ai_summary_section()
+        self.ai_summary_display.SetValue(message)
+        self._announce_explain_status(message)
+
+    def _announce_explain_status(self, message: str) -> None:
+        """Speak model-selection progress through the screen-reader wrapper."""
+        if not message:
+            return
+        announcer = getattr(self, "_announcer", None)
+        if announcer is not None:
+            announcer.announce(message)
 
     def _on_regenerate(self, event) -> None:
         """Regenerate summary — clear the explainer cache and re-invoke."""
@@ -470,6 +488,7 @@ class ForecastProductPanel(wx.Panel):
                 text,
                 cast(ProductType, self.product_type),
                 self._location_name,
+                status_callback=lambda message: wx.CallAfter(self._on_explain_status, message),
             )
             wx.CallAfter(
                 self._on_explain_complete,
@@ -478,9 +497,35 @@ class ForecastProductPanel(wx.Panel):
                 getattr(result, "token_count", 0),
                 getattr(result, "estimated_cost", 0.0),
                 getattr(result, "cached", False),
+                getattr(result, "model_selection_reason", None),
+                getattr(result, "requested_model", None),
+                getattr(result, "model_attempts", ()),
             )
         except Exception as exc:  # noqa: BLE001
             wx.CallAfter(self._on_explain_error, str(exc))
+
+    def _build_model_info(
+        self,
+        model_used: str,
+        token_count: int,
+        estimated_cost: float,
+        cached: bool,
+        model_selection_reason: str | None = None,
+        requested_model: str | None = None,
+        model_attempts: tuple[str, ...] = (),
+    ) -> str:
+        """Build the model metadata shown after a summary finishes."""
+        cost_text = "No cost" if estimated_cost == 0 else f"~${estimated_cost:.6f}"
+        info_lines = [f"Model: {model_used}", f"Tokens: {token_count}", f"Cost: {cost_text}"]
+        if requested_model and requested_model != model_used:
+            info_lines.append(f"Requested: {requested_model}")
+        if model_selection_reason:
+            info_lines.append(f"Selection: {model_selection_reason}")
+        if model_attempts and len(model_attempts) > 1:
+            info_lines.append(f"Tried: {', '.join(model_attempts)}")
+        if cached:
+            info_lines.append("Cached: Yes")
+        return "\n".join(info_lines)
 
     def _on_explain_complete(
         self,
@@ -489,18 +534,31 @@ class ForecastProductPanel(wx.Panel):
         token_count: int = 0,
         estimated_cost: float = 0.0,
         cached: bool = False,
+        model_selection_reason: str | None = None,
+        requested_model: str | None = None,
+        model_attempts: tuple[str, ...] = (),
     ) -> None:
         """Fill in the AI summary TextCtrl + Model Information on success."""
         self._is_explaining = False
         self._show_ai_summary_section()
         self._set_post_explain_buttons(has_attempted=True)
         self.ai_summary_display.SetValue(summary)
-        cost_text = "No cost" if estimated_cost == 0 else f"~${estimated_cost:.6f}"
-        info = f"Model: {model_used}\nTokens: {token_count}\nCost: {cost_text}"
-        if cached:
-            info += "\nCached: Yes"
-        self.model_info.SetValue(info)
+        self.model_info.SetValue(
+            self._build_model_info(
+                model_used,
+                token_count,
+                estimated_cost,
+                cached,
+                model_selection_reason,
+                requested_model,
+                model_attempts,
+            )
+        )
         self._show_model_info()
+        completion_message = "Plain Language Summary generated."
+        if model_used:
+            completion_message = f"Plain Language Summary generated using {model_used}."
+        self._announce_explain_status(completion_message)
 
     def _on_explain_error(self, message: str) -> None:
         """Populate the AI summary TextCtrl with an error message."""
