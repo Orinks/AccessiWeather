@@ -22,22 +22,12 @@ from .ai_explainer_openrouter import (
     DEFAULT_FREE_ROUTER,
     get_available_free_models,
 )
-from .ai_explainer_prompts import SYSTEM_PROMPTS as _SYSTEM_PROMPTS
 
 logger = logging.getLogger(__name__)
 
 
 class AIExplainerTextProductMixin:
     """Plain-language explanation helpers for NWS text products."""
-
-    # Product-type-specific phrasing for the user-message lead-in. The AFD
-    # phrasing is preserved byte-for-byte from the historical explain_afd
-    # implementation to keep downstream prompt templates stable.
-    _PRODUCT_USER_INTRO: dict[str, str] = {
-        "AFD": "Please explain this Area Forecast Discussion for {location} in plain language:",
-        "HWO": "Please explain this Hazardous Weather Outlook for {location} in plain language:",
-        "SPS": "Please explain this Special Weather Statement for {location} in plain language:",
-    }
 
     # Product-wide style instructions appended to the user prompt. Shared
     # across all text products so customization lives in one place.
@@ -73,16 +63,11 @@ class AIExplainerTextProductMixin:
         style: ExplanationStyle,
     ) -> str:
         """Return the system prompt for any text product."""
-        if self.custom_system_prompt:
-            return self.custom_system_prompt
-        if product_default := _SYSTEM_PROMPTS.get(product_type):
-            return product_default
+        del product_type
         return self.get_effective_system_prompt(style)
 
     def _text_product_user_intro(self, product_type: str, location_name: str) -> str:
         """Return the user-prompt lead-in for any text product."""
-        if intro_template := self._PRODUCT_USER_INTRO.get(product_type):
-            return intro_template.format(location=location_name)
         product_label = product_type or "unknown type"
         return (
             "Please explain this National Weather Service text product "

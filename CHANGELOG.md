@@ -20,6 +20,8 @@ All notable changes to this project will be documented in this file.
 - Alert sounds and sound-pack creation now focus on alert severity instead of a long list of specific alert names, while existing packs can keep their older mappings.
 
 ### Fixed
+- Forecaster Notes AI summaries now use the same default prompt for every text product unless you've set custom AI prompt options.
+- Default AI summaries now stay grounded in the provided weather text or data, so they are less likely to invent forecast details when summarizing reports.
 - Relaunching AccessiWeather from the desktop now brings the running window forward even after the title changes to show your selected location.
 - Starting AccessiWeather again now brings the running window forward instead of opening a force-start prompt or leaving behind lock-file state.
 - Alt+F4 now stays routed through the normal close-to-tray behavior after switching between All Locations and saved locations.
