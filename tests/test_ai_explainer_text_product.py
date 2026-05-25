@@ -1,19 +1,16 @@
 """
 Tests for the generic explain_text_product method on AIExplainer.
 
-Covers the seven scenarios defined in the Forecast Products PR 1 plan (B-R6):
+Covers the text-product AI explanation behavior:
 
-1. Happy path AFD: system prompt is byte-identical to the current AFD prompt.
-2. Happy path HWO: uses the HWO system prompt.
-3. Happy path SPS: uses the SPS system prompt.
-4. Other text products use the app default system prompt.
-5. Custom prompts and instructions apply to all text products.
-6. Cache: repeated call with identical inputs returns cached=True without
+1. All text products use the app default system prompt when no custom prompt is set.
+2. Custom prompts and instructions apply to all text products.
+3. Cache: repeated call with identical inputs returns cached=True without
    re-invoking the LLM.
-7. Custom prompt: custom_system_prompt replaces the default (existing
+4. Custom prompt: custom_system_prompt replaces the default (existing
    explain_afd semantics).
-8. Wrapper: explain_afd delegates to explain_text_product("AFD", ...).
-9. Error path: LLM errors propagate; failures are not cached.
+5. Wrapper: explain_afd delegates to explain_text_product("AFD", ...).
+6. Error path: LLM errors propagate; failures are not cached.
 """
 
 from __future__ import annotations
@@ -23,7 +20,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from accessiweather.ai_explainer import (
-    _SYSTEM_PROMPTS,
     AIExplainer,
     AIExplainerError,
     ExplanationResult,
@@ -107,107 +103,26 @@ def in_memory_cache():
 
 
 # ---------------------------------------------------------------------------
-# Happy-path tests: system prompt identity per product type
+# Happy-path tests: shared system prompt for every product type
 # ---------------------------------------------------------------------------
 
 
 class TestExplainTextProductPrompts:
-    """Verify the correct system prompt is routed for each product type."""
+    """Verify every product type uses the same app default system prompt."""
 
     @pytest.mark.asyncio
-    async def test_afd_prompt_byte_identical(self, sample_afd_text, mock_response):
-        """AFD prompt must match the historical explain_afd prompt byte-for-byte."""
-        # The historical AFD system prompt — this string must remain stable
-        # because user-customized prompt overrides in the wild are calibrated
-        # against it. If this test fails, you changed the AFD prompt — don't.
-        expected_afd_prompt = (
-            "You are a helpful weather assistant that explains National Weather Service "
-            "Area Forecast Discussions (AFDs) in plain, accessible language. AFDs contain "
-            "technical meteorological terminology that most people don't understand. "
-            "Your job is to translate this into clear, everyday language that anyone can "
-            "understand. Focus on:\n"
-            "- What weather to expect and when\n"
-            "- Any significant weather events or changes\n"
-            "- How confident forecasters are in their predictions\n"
-            "- What this means for daily activities\n\n"
-            "Avoid using technical jargon. If you must use a technical term, explain it.\n\n"
-            "IMPORTANT: Do NOT start with a preamble like 'Here is a summary...' or "
-            "'This forecast discussion explains...'. Do NOT repeat the location name. "
-            "Jump straight into explaining the weather. The user already knows what they asked for.\n\n"
-            "IMPORTANT: Respond in plain text only. Do NOT use markdown formatting such as "
-            "bold (**text**), italic (*text*), headers (#), bullet points, or any other "
-            "markdown syntax. Use simple paragraph text that can be read directly."
-        )
-
-        assert _SYSTEM_PROMPTS["AFD"] == expected_afd_prompt
-
-        explainer = AIExplainer(api_key="test-key")
-        with patch.object(explainer, "_call_openrouter") as mock_call:
-            mock_call.return_value = mock_response
-
-            result = await explainer.explain_text_product(
-                sample_afd_text,
-                "AFD",
-                "Test City",
-                style=ExplanationStyle.DETAILED,
-            )
-
-            assert isinstance(result, ExplanationResult)
-            assert result.cached is False
-
-            # The first positional argument to _call_openrouter is the
-            # system prompt; it must start with the AFD prompt byte-for-byte.
-            args, _ = mock_call.call_args
-            system_prompt = args[0]
-            assert system_prompt == expected_afd_prompt
-
-    @pytest.mark.asyncio
-    async def test_hwo_uses_hwo_prompt(self, sample_hwo_text, mock_response):
-        explainer = AIExplainer(api_key="test-key")
-        with patch.object(explainer, "_call_openrouter") as mock_call:
-            mock_call.return_value = mock_response
-
-            await explainer.explain_text_product(
-                sample_hwo_text,
-                "HWO",
-                "Test City",
-            )
-
-            args, _ = mock_call.call_args
-            system_prompt = args[0]
-            assert system_prompt == _SYSTEM_PROMPTS["HWO"]
-            # HWO prompt must not equal AFD prompt
-            assert system_prompt != _SYSTEM_PROMPTS["AFD"]
-            # Sanity: the HWO prompt should mention the product by name
-            assert "Hazardous Weather Outlook" in system_prompt
-
-    @pytest.mark.asyncio
-    async def test_sps_uses_sps_prompt(self, sample_sps_text, mock_response):
-        explainer = AIExplainer(api_key="test-key")
-        with patch.object(explainer, "_call_openrouter") as mock_call:
-            mock_call.return_value = mock_response
-
-            await explainer.explain_text_product(
-                sample_sps_text,
-                "SPS",
-                "Test City",
-            )
-
-            args, _ = mock_call.call_args
-            system_prompt = args[0]
-            assert system_prompt == _SYSTEM_PROMPTS["SPS"]
-            assert system_prompt != _SYSTEM_PROMPTS["AFD"]
-            assert system_prompt != _SYSTEM_PROMPTS["HWO"]
-            assert "Special Weather Statement" in system_prompt
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize("product_type", ["CLI", "SWODY1", "PMDMRD"])
-    async def test_text_products_without_product_default_use_app_default_system_prompt(
+    @pytest.mark.parametrize("product_type", ["AFD", "HWO", "SPS", "CLI", "SWODY1", "PMDMRD"])
+    async def test_text_products_use_app_default_system_prompt(
         self, product_type, sample_cli_text, mock_response
     ):
-        """Products with no product default use the app default system prompt."""
         explainer = AIExplainer(api_key="test-key")
-        with patch.object(explainer, "_call_openrouter") as mock_call:
+        with (
+            patch.object(explainer, "_call_openrouter") as mock_call,
+            patch(
+                "accessiweather.ai_explainer_text_products.get_available_free_models",
+                return_value=[],
+            ),
+        ):
             mock_call.return_value = mock_response
 
             result = await explainer.explain_text_product(
@@ -218,6 +133,7 @@ class TestExplainTextProductPrompts:
             )
 
             assert isinstance(result, ExplanationResult)
+            assert result.cached is False
             args, _ = mock_call.call_args
             system_prompt = args[0]
             user_prompt = args[1]
@@ -317,8 +233,7 @@ class TestCustomSystemPrompt:
             args, _ = mock_call.call_args
             system_prompt = args[0]
             assert system_prompt == custom
-            # Default HWO prompt should NOT be present
-            assert _SYSTEM_PROMPTS["HWO"] not in system_prompt
+            assert explainer.get_default_system_prompt() not in system_prompt
 
 
 # ---------------------------------------------------------------------------
@@ -374,9 +289,9 @@ class TestExplainAFDWrapper:
             assert isinstance(result, ExplanationResult)
             assert result.cached is False
             assert result.text  # non-empty
-            # Verify AFD prompt was used
+            # Verify the shared app default prompt was used.
             args, _ = mock_call.call_args
-            assert args[0] == _SYSTEM_PROMPTS["AFD"]
+            assert args[0] == explainer.get_effective_system_prompt(ExplanationStyle.DETAILED)
 
 
 # ---------------------------------------------------------------------------

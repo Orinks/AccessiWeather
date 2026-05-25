@@ -32,7 +32,6 @@ from .ai_explainer_openrouter import (
 )
 from .ai_explainer_openrouter_client import AIExplainerOpenRouterMixin
 from .ai_explainer_prompting import AIExplainerPromptMixin
-from .ai_explainer_prompts import SYSTEM_PROMPTS as _SYSTEM_PROMPTS
 from .ai_explainer_text_products import AIExplainerTextProductMixin
 from .ai_explainer_validation import AIExplainerValidationMixin
 
@@ -55,7 +54,6 @@ __all__ = [
     "RequestTimeoutError",
     "TextProductType",
     "WeatherContext",
-    "_SYSTEM_PROMPTS",
     "get_available_free_models",
     "has_valid_api_key",
 ]

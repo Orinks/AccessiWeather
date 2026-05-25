@@ -164,6 +164,11 @@ class TestSystemPrompts:
         assert prompt is not None
         assert len(prompt) > 0
         assert "weather" in prompt.lower()
+        assert "weather information" in prompt
+        assert "Use only the information provided in the request" in prompt
+        assert "Do not invent missing details" in prompt
+        assert "If something is unclear or not provided" in prompt
+        assert "comfort, travel, planning, or safety" in prompt
 
     def test_effective_system_prompt_uses_custom(self):
         """Test that custom system prompt is used when provided."""
