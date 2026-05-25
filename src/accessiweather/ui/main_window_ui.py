@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from ..native_shortcuts import install_accelerator_table_preserving_native_close
 from .main_window_shared import *  # noqa: F403
 
 
@@ -439,8 +440,7 @@ class MainWindowUIMixin:
         for flags, key, attr in ctrl_shortcuts:
             if hasattr(self, attr):
                 entries.append((flags, ord(key), getattr(self, attr)))
-        accel_tbl = wx.AcceleratorTable(entries)
-        self.SetAcceleratorTable(accel_tbl)
+        install_accelerator_table_preserving_native_close(self, entries)
         # Bind the escape action
         self.Bind(wx.EVT_MENU, self._on_escape_pressed, id=self._escape_id)
 

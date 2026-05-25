@@ -6,6 +6,8 @@ import logging
 
 import wx
 
+from .native_shortcuts import install_accelerator_table_preserving_native_close
+
 logger = logging.getLogger(__name__)
 
 
@@ -39,10 +41,9 @@ class AppShortcutsMixin:
         for flags, key, handler in accelerators:
             cmd_id = wx.NewIdRef()
             frame.Bind(wx.EVT_MENU, handler, id=cmd_id)
-            accel_entries.append(wx.AcceleratorEntry(flags, key, cmd_id))
+            accel_entries.append((flags, key, cmd_id))
 
-        accel_table = wx.AcceleratorTable(accel_entries)
-        frame.SetAcceleratorTable(accel_table)
+        install_accelerator_table_preserving_native_close(frame, accel_entries)
         logger.info("Keyboard accelerators set up successfully")
 
     def _on_refresh_shortcut(self, event) -> None:

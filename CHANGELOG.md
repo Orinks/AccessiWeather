@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Relaunching AccessiWeather from the desktop now brings the running window forward even after the title changes to show your selected location.
 - Starting AccessiWeather again now brings the running window forward instead of opening a force-start prompt or leaving behind lock-file state.
+- Alt+F4 now stays routed through the normal close-to-tray behavior after switching between All Locations and saved locations.
 - Automatic Windows startup now stays in the background when AccessiWeather is already running, and startup shortcuts are recreated with a stable AccessiWeather target for portable copies.
 - The Windows installer now closes running AccessiWeather copies automatically before installing, then can launch the updated app normally when setup exits.
 - Alt+F4 now respects "Minimize to the notification area when closing" again, so keyboard users can send AccessiWeather to the background without exiting.
