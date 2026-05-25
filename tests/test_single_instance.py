@@ -1,7 +1,13 @@
 from __future__ import annotations
 
+import queue
+import sys as runtime_sys
+import time
 import types
+import uuid
 from types import SimpleNamespace
+
+import pytest
 
 from accessiweather.notification_activation import NotificationActivationRequest
 from accessiweather.paths import RuntimeStoragePaths
@@ -154,6 +160,7 @@ def test_second_windows_launch_detects_existing_mutex_and_can_show_window(monkey
 
     monkeypatch.setattr(single_instance.sys, "platform", "win32")
     monkeypatch.setattr(single_instance, "ctypes", _FakeCtypes(kernel32, user32))
+    monkeypatch.setattr(single_instance, "_send_activation_request_ipc", lambda request: False)
 
     manager = SingleInstanceManager(app, runtime_paths=runtime_paths)
 
@@ -175,6 +182,7 @@ def test_second_windows_launch_restores_window_with_location_title(monkeypatch, 
 
     monkeypatch.setattr(single_instance.sys, "platform", "win32")
     monkeypatch.setattr(single_instance, "ctypes", _FakeCtypes(kernel32, user32))
+    monkeypatch.setattr(single_instance, "_send_activation_request_ipc", lambda request: False)
 
     manager = SingleInstanceManager(app, runtime_paths=runtime_paths)
 
@@ -207,6 +215,62 @@ def test_second_windows_launch_writes_generic_handoff_when_window_lookup_fails(
     assert user32.foreground_calls == []
 
 
+def test_second_windows_launch_uses_ipc_before_title_lookup(monkeypatch, tmp_path):
+    runtime_paths = RuntimeStoragePaths(config_root=tmp_path / "config")
+    app = SimpleNamespace(runtime_paths=runtime_paths, formal_name="AccessiWeather")
+    kernel32 = _FakeKernel32(last_error=ERROR_ALREADY_EXISTS)
+    user32 = _EnumeratingFakeUser32(windows={})
+    sent_requests: list[NotificationActivationRequest] = []
+
+    import accessiweather.single_instance as single_instance
+
+    monkeypatch.setattr(single_instance.sys, "platform", "win32")
+    monkeypatch.setattr(single_instance, "ctypes", _FakeCtypes(kernel32, user32))
+
+    def fake_send(request):
+        sent_requests.append(request)
+        return True
+
+    monkeypatch.setattr(single_instance, "_send_activation_request_ipc", fake_send)
+
+    manager = SingleInstanceManager(app, runtime_paths=runtime_paths)
+
+    assert manager.try_acquire_lock() is False
+    assert manager.request_existing_instance_show() is True
+    assert sent_requests == [NotificationActivationRequest(kind="generic_fallback")]
+    assert user32.show_window_calls == []
+    assert user32.foreground_calls == []
+
+
+def test_windows_activation_ipc_round_trips_request(monkeypatch, tmp_path):
+    if runtime_sys.platform != "win32":
+        pytest.skip("Windows named-pipe IPC is only available on Windows")
+
+    runtime_paths = RuntimeStoragePaths(config_root=tmp_path / "config")
+    app = SimpleNamespace(runtime_paths=runtime_paths, formal_name="AccessiWeather")
+    received: queue.Queue[NotificationActivationRequest] = queue.Queue()
+
+    from accessiweather.activation_ipc import ActivationIpcServer, send_activation_request
+
+    pipe_address = rf"\\.\pipe\AccessiWeather.Test.{uuid.uuid4()}"
+
+    manager = SingleInstanceManager(app, runtime_paths=runtime_paths)
+    ipc_server = ActivationIpcServer(address=pipe_address)
+    manager._activation_ipc_server = ipc_server
+    manager.start_activation_ipc_server(received.put)
+    try:
+        deadline = time.monotonic() + 2
+        while ipc_server._listener is None and time.monotonic() < deadline:
+            time.sleep(0.01)
+        assert ipc_server._listener is not None
+
+        request = NotificationActivationRequest(kind="discussion")
+        assert send_activation_request(request, address=pipe_address) is True
+        assert received.get(timeout=2) == request
+    finally:
+        manager.stop_activation_ipc_server()
+
+
 def test_existing_instance_activation_writes_handoff_then_shows_window(monkeypatch, tmp_path):
     runtime_paths = RuntimeStoragePaths(config_root=tmp_path / "config")
     app = SimpleNamespace(runtime_paths=runtime_paths, formal_name="AccessiWeather")
@@ -217,6 +281,7 @@ def test_existing_instance_activation_writes_handoff_then_shows_window(monkeypat
 
     monkeypatch.setattr(single_instance.sys, "platform", "win32")
     monkeypatch.setattr(single_instance, "ctypes", _FakeCtypes(kernel32, user32))
+    monkeypatch.setattr(single_instance, "_send_activation_request_ipc", lambda request: False)
 
     manager = SingleInstanceManager(app, runtime_paths=runtime_paths)
     manager.try_acquire_lock()
