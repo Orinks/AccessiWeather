@@ -827,6 +827,48 @@ class TestPlaySoundFileWithVolume:
         finally:
             temp_path.unlink(missing_ok=True)
 
+    def test_play_sound_file_reinitializes_sound_lib_after_first_stream_failure(self):
+        """A stale post-resume sound_lib output should be reinitialized and retried once."""
+        from accessiweather.notifications.sound_player import _play_sound_file
+
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+            temp_path = Path(f.name)
+
+        try:
+            mock_stream_module = MagicMock()
+            mock_file_stream = MagicMock()
+            mock_file_stream.is_playing = False
+            mock_stream_module.FileStream.side_effect = [
+                RuntimeError("BASS device unavailable after resume"),
+                mock_file_stream,
+            ]
+            mock_output_module = MagicMock()
+            stale_output = MagicMock()
+            fresh_output = MagicMock()
+            mock_output_module.Output.return_value = fresh_output
+
+            with (
+                patch("accessiweather.notifications.sound_player.SOUND_LIB_AVAILABLE", True),
+                patch("accessiweather.notifications.sound_player._sound_lib_output", stale_output),
+                patch.dict(
+                    "sys.modules",
+                    {
+                        "sound_lib.stream": mock_stream_module,
+                        "sound_lib.output": mock_output_module,
+                    },
+                ),
+            ):
+                result = _play_sound_file(temp_path, volume=0.5)
+
+            assert result is True
+            assert mock_stream_module.FileStream.call_count == 2
+            stale_output.free.assert_called_once()
+            mock_output_module.Output.assert_called_once()
+            mock_file_stream.play.assert_called_once()
+            assert mock_file_stream.volume == 0.5
+        finally:
+            temp_path.unlink(missing_ok=True)
+
     @pytest.mark.skipif(
         not SOUND_LIB_AVAILABLE,
         reason="sound_lib not available or working on this system",

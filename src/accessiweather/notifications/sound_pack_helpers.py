@@ -51,6 +51,21 @@ def get_sound_entry(
 
         sound_file = pack_path / filename
         if not sound_file.exists():
+            if pack_dir != default_pack and event != "notify":
+                fallback_file, fallback_volume = parse_sound_entry(
+                    sounds.get("notify", "notify.ogg"),
+                    "notify",
+                    volumes,
+                )
+                fallback_path = pack_path / fallback_file
+                if fallback_path.exists():
+                    logger.warning(
+                        "Sound file %s not found, using %s from selected pack.",
+                        sound_file,
+                        fallback_path,
+                    )
+                    return fallback_path, fallback_volume
+
             logger.warning(f"Sound file {sound_file} not found, falling back to default pack.")
             if pack_dir != default_pack:
                 return get_sound_entry(

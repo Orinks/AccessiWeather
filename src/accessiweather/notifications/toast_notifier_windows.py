@@ -304,6 +304,7 @@ class ToastedWindowsNotifier:
             # Generate XML from the toasted Toast object
             xml_string = toast.to_xml_string()
             xml_string = _state._apply_protocol_activation_to_xml(xml_string, activation_arguments)
+            xml_string = _state._ensure_toast_xml_silent(xml_string)
 
             xml_doc = _state._WinRT_XmlDocument()
             xml_doc.load_xml(xml_string)

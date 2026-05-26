@@ -20,6 +20,8 @@ All notable changes to this project will be documented in this file.
 - Alert sounds and sound-pack creation now focus on alert severity instead of a long list of specific alert names, while existing packs can keep their older mappings.
 
 ### Fixed
+- Notification sounds now recover after Windows sleep or hibernation, so update
+  notifications don't fall back to only the generic Windows toast sound.
 - Plain Language Summary now shows and speaks which OpenRouter model it is trying, when it falls back from a busy free model, and why the final model was used.
 - Forecaster Notes AI summaries now use the same default prompt for every text product unless you've set custom AI prompt options.
 - Default AI summaries now stay grounded in the provided weather text or data, so they are less likely to invent forecast details when summarizing reports.
