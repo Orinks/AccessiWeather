@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING
 
 import wx
 
+from ...current_location import CurrentLocationService, LocationDetectionStatus
+
 if TYPE_CHECKING:
     from ...app import AccessiWeatherApp
     from ...models import Location
@@ -132,10 +134,12 @@ class EditLocationDialog(wx.Dialog):
         self._selected_location: Location | None = None
         self._search_results: list[Location] = []
         self._is_searching = False
+        self._is_detecting_current_location = False
 
         from ...location_manager import LocationManager
 
         self.location_manager = LocationManager()
+        self.current_location_service = CurrentLocationService()
 
         panel = wx.Panel(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -184,6 +188,18 @@ class EditLocationDialog(wx.Dialog):
         self.address_search_button.Bind(wx.EVT_BUTTON, self._on_address_search)
         search_row.Add(self.address_search_button, 0)
         address_sizer.Add(search_row, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.current_location_button = wx.Button(
+            address_parent,
+            label="Use my current location",
+        )
+        self.current_location_button.SetToolTip(
+            "Ask the operating system once for your current coordinates. "
+            "The existing coordinates stay available if this is unavailable or denied."
+        )
+        self.current_location_button.SetName("Use my current location for this saved location")
+        self.current_location_button.Bind(wx.EVT_BUTTON, self._on_use_current_location)
+        address_sizer.Add(self.current_location_button, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
 
         self.address_results_list = wx.ListCtrl(
             address_parent,
@@ -261,6 +277,51 @@ class EditLocationDialog(wx.Dialog):
         self._selected_location = None
 
         self.app.run_async(self._do_address_search(query))
+
+    def _on_use_current_location(self, event) -> None:
+        """Handle one-time current-location detection for an existing location."""
+        if self._is_detecting_current_location:
+            self._set_coordinate_comparison(
+                "Current location detection is already in progress.",
+                is_error=True,
+            )
+            return
+
+        self._is_detecting_current_location = True
+        self.current_location_button.Disable()
+        self._set_coordinate_comparison(
+            "Requesting current location. Your system may ask for permission now..."
+        )
+        self.app.run_async(self._do_current_location_detection())
+
+    async def _do_current_location_detection(self) -> None:
+        """Run native location detection once."""
+        result = await self.current_location_service.detect_once()
+        if result.status is LocationDetectionStatus.SUCCESS and result.location is not None:
+            wx.CallAfter(self._on_current_location_detected, result.location)
+            return
+        wx.CallAfter(self._on_current_location_error, result.message)
+
+    def _on_current_location_detected(self, location: Location) -> None:
+        """Apply detected coordinates as the pending coordinate update."""
+        self._is_detecting_current_location = False
+        self.current_location_button.Enable()
+        self._selected_location = location
+        self._search_results = [location]
+        self.address_results_list.DeleteAllItems()
+        coords = self.location_manager.format_coordinates(location.latitude, location.longitude)
+        index = self.address_results_list.InsertItem(0, location.name)
+        self.address_results_list.SetItem(index, 1, coords)
+        distance = self.location_manager.calculate_distance(self._location, location)
+        self._set_coordinate_comparison(
+            f"Detected current location: {coords}. Difference from saved coordinates: {distance:.2f} miles."
+        )
+
+    def _on_current_location_error(self, message: str) -> None:
+        """Handle unavailable, denied, unsupported, or timed-out detection."""
+        self._is_detecting_current_location = False
+        self.current_location_button.Enable()
+        self._set_coordinate_comparison(message, is_error=True)
 
     async def _do_address_search(self, query: str) -> None:
         """Perform the address lookup."""
@@ -372,11 +433,13 @@ class AddLocationDialog(wx.Dialog):
         self._search_results = []
         self._selected_location = None
         self._is_searching = False
+        self._is_detecting_current_location = False
 
         # Import LocationManager
         from ...location_manager import LocationManager
 
         self.location_manager = LocationManager()
+        self.current_location_service = CurrentLocationService()
 
         self._create_ui()
         self._setup_accessibility()
@@ -436,6 +499,14 @@ class AddLocationDialog(wx.Dialog):
 
         search_sizer.Add(search_row, 0, wx.EXPAND)
 
+        self.current_location_button = wx.Button(panel, label="Use my current location")
+        self.current_location_button.SetToolTip(
+            "Ask the operating system once for your current coordinates. "
+            "Manual search stays available if this is unavailable or denied."
+        )
+        self.current_location_button.Bind(wx.EVT_BUTTON, self._on_use_current_location)
+        search_sizer.Add(self.current_location_button, 0, wx.TOP, 8)
+
         search_help = wx.StaticText(
             panel,
             label="Examples: 'London', 'New York', '10001', or '123 Main St, Carrollton, TX'",
@@ -488,6 +559,7 @@ class AddLocationDialog(wx.Dialog):
         self.search_input.SetName("Search for location")
         self.results_list.SetName("Search results")
         self.marine_mode_checkbox.SetName("Enable Marine Mode for this location")
+        self.current_location_button.SetName("Use my current location")
 
     def _on_key(self, event: wx.KeyEvent) -> None:
         """Handle key events."""
@@ -530,6 +602,54 @@ class AddLocationDialog(wx.Dialog):
 
         # Run async search
         self.app.run_async(self._do_search(query))
+
+    def _on_use_current_location(self, event) -> None:
+        """Handle one-time current-location detection button press."""
+        if self._is_detecting_current_location:
+            self._update_status("Current location detection is already in progress.", is_error=True)
+            return
+
+        self._is_detecting_current_location = True
+        self.current_location_button.Disable()
+        self._update_status(
+            "Requesting current location. Your system may ask for permission now..."
+        )
+        self.app.run_async(self._do_current_location_detection())
+
+    async def _do_current_location_detection(self) -> None:
+        """Run native location detection once."""
+        result = await self.current_location_service.detect_once()
+        if result.status is LocationDetectionStatus.SUCCESS and result.location is not None:
+            wx.CallAfter(self._on_current_location_detected, result.location)
+            return
+        wx.CallAfter(self._on_current_location_error, result.message)
+
+    def _on_current_location_detected(self, location: Location) -> None:
+        """Handle successful current-location detection."""
+        self._is_detecting_current_location = False
+        self.current_location_button.Enable()
+        self._apply_detected_location(location)
+
+    def _apply_detected_location(self, location: Location) -> None:
+        """Populate the normal add-location fields from detected coordinates."""
+        self._selected_location = location
+        self._search_results = [location]
+        self.results_list.DeleteAllItems()
+        coords_str = self.location_manager.format_coordinates(
+            location.latitude,
+            location.longitude,
+        )
+        index = self.results_list.InsertItem(0, location.name)
+        self.results_list.SetItem(index, 1, coords_str)
+        if not self.name_input.GetValue().strip():
+            self.name_input.SetValue(location.name)
+        self._update_status("Detected current location. Review the editable name, then save it.")
+
+    def _on_current_location_error(self, message: str) -> None:
+        """Handle unavailable, denied, unsupported, or timed-out detection."""
+        self._is_detecting_current_location = False
+        self.current_location_button.Enable()
+        self._update_status(message, is_error=True)
 
     async def _do_search(self, query: str):
         """Perform the location search."""

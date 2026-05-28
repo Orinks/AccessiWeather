@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- You can now choose "Use my current location" when adding or updating a saved location. AccessiWeather asks the OS once, only after you press the button, and keeps manual search available if location access is denied or unavailable.
 - Alert updates can now use their own mappable sound in sound packs.
 - Settings > Audio can now enable specific-alert sounds per sound pack, so packs with sounds like `tornado_watch` and `tornado_warning` keep working while severity-only packs stay simple.
 - First-run setup can now import existing settings and encrypted API keys from the wizard, or exit with Escape at any wizard step when you want to configure everything yourself.
