@@ -192,6 +192,52 @@ def test_second_windows_launch_restores_window_with_location_title(monkeypatch, 
     assert user32.foreground_calls == [2468]
 
 
+def test_generic_fallback_skips_handoff_when_window_restore_succeeds(monkeypatch, tmp_path):
+    runtime_paths = RuntimeStoragePaths(config_root=tmp_path / "config")
+    app = SimpleNamespace(runtime_paths=runtime_paths, formal_name="AccessiWeather")
+    kernel32 = _FakeKernel32(last_error=ERROR_ALREADY_EXISTS)
+    user32 = _FakeUser32(hwnd=2468)
+
+    import accessiweather.single_instance as single_instance
+
+    monkeypatch.setattr(single_instance.sys, "platform", "win32")
+    monkeypatch.setattr(single_instance, "ctypes", _FakeCtypes(kernel32, user32))
+    monkeypatch.setattr(single_instance, "_send_activation_request_ipc", lambda request: False)
+
+    manager = SingleInstanceManager(app, runtime_paths=runtime_paths)
+
+    assert manager.try_acquire_lock() is False
+    assert manager.request_existing_instance_show() is True
+    assert user32.foreground_calls == [2468]
+    # A plain generic restore that succeeded must not also leave a handoff for
+    # the primary to consume and act on a second time.
+    assert manager.consume_activation_handoff() is None
+
+
+def test_discussion_request_still_writes_handoff_when_window_restore_succeeds(
+    monkeypatch, tmp_path
+):
+    runtime_paths = RuntimeStoragePaths(config_root=tmp_path / "config")
+    app = SimpleNamespace(runtime_paths=runtime_paths, formal_name="AccessiWeather")
+    kernel32 = _FakeKernel32(last_error=ERROR_ALREADY_EXISTS)
+    user32 = _FakeUser32(hwnd=2468)
+
+    import accessiweather.single_instance as single_instance
+
+    monkeypatch.setattr(single_instance.sys, "platform", "win32")
+    monkeypatch.setattr(single_instance, "ctypes", _FakeCtypes(kernel32, user32))
+    monkeypatch.setattr(single_instance, "_send_activation_request_ipc", lambda request: False)
+
+    manager = SingleInstanceManager(app, runtime_paths=runtime_paths)
+
+    assert manager.try_acquire_lock() is False
+    assert manager.request_existing_instance_show(NotificationActivationRequest(kind="discussion"))
+    assert user32.foreground_calls == [2468]
+    # The window poke can't open the discussion dialog, so the intent must still
+    # be handed off for the primary to route.
+    assert manager.consume_activation_handoff() == NotificationActivationRequest(kind="discussion")
+
+
 def test_second_windows_launch_writes_generic_handoff_when_window_lookup_fails(
     monkeypatch, tmp_path
 ):
