@@ -5,6 +5,7 @@ from scripts.changelog_tools import (
     extract_release_block,
     format_sections,
     is_user_facing_path,
+    messages_opt_out_of_changelog,
     normalize_entry,
     parse_sections,
     pyproject_changed_lines_require_changelog,
@@ -70,6 +71,25 @@ def test_user_facing_paths_match_release_build_surface() -> None:
     assert is_user_facing_path("accessiweather.spec")
     assert not is_user_facing_path(".github/workflows/ci.yml")
     assert not is_user_facing_path("tests/test_app.py")
+
+
+def test_generated_api_client_is_not_user_facing() -> None:
+    assert not is_user_facing_path("src/accessiweather/weather_gov_api_client/models/alert.py")
+    # A real app module under src/ stays user-facing.
+    assert is_user_facing_path("src/accessiweather/weather_client.py")
+
+
+def test_skip_marker_opts_out_only_when_all_commits_carry_it() -> None:
+    assert messages_opt_out_of_changelog(["chore: tidy logging\n\nChangelog: none"])
+    assert messages_opt_out_of_changelog(
+        ["ci: bump action [skip changelog]", "test: add case\n\nchangelog: none"]
+    )
+    # Mixed: one commit opts out, another does not -> gate still applies.
+    assert not messages_opt_out_of_changelog(
+        ["fix: real user-facing fix", "chore: cleanup\n\nChangelog: none"]
+    )
+    # No commits (e.g. empty range) is not an opt-out.
+    assert not messages_opt_out_of_changelog([])
 
 
 def test_pyproject_metadata_only_changes_do_not_need_changelog() -> None:

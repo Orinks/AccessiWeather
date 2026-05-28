@@ -13,12 +13,21 @@ USER_FACING_PATH_PREFIXES = (
     "installer/",
     "soundpacks/",
 )
+# Paths that ship inside the build surface but never warrant a release note.
+# Checked before USER_FACING_PATH_PREFIXES, so these win even though they live
+# under src/. Extend this as recurring false positives show up.
+EXCLUDED_PATH_PREFIXES = (
+    "src/accessiweather/weather_gov_api_client/",  # generated NWS API client
+)
 USER_FACING_PATHS = {
     "accessiweather.spec",
     "pyproject.toml",
     "scripts/generate_build_meta.py",
 }
 USER_FACING_SUFFIXES = (".spec",)
+# Markers a commit message can carry to opt its change set out of the gate.
+# Used for direct pushes, where there is no PR label to apply.
+SKIP_CHANGELOG_MARKERS = ("changelog: none", "[skip changelog]")
 SECTION_ORDER = ("Added", "Changed", "Fixed", "Improved", "Removed", "Deprecated", "Security")
 PYPROJECT_METADATA_FIELDS_WITHOUT_CHANGELOG = {"version", "description"}
 PYPROJECT_TOOLING_REQUIREMENTS_WITHOUT_CHANGELOG = {"pyright", "ruff"}
@@ -36,6 +45,8 @@ def run_git(args: list[str]) -> str:
 
 def is_user_facing_path(path: str) -> bool:
     normalized = path.replace("\\", "/")
+    if normalized.startswith(EXCLUDED_PATH_PREFIXES):
+        return False
     return (
         normalized in USER_FACING_PATHS
         or normalized.endswith(USER_FACING_SUFFIXES)
@@ -79,6 +90,31 @@ def requires_changelog_entry(path: str, base: str, head: str) -> bool:
 def changed_files(base: str, head: str) -> list[str]:
     output = run_git(["diff", "--name-only", f"{base}..{head}"])
     return [line for line in output.splitlines() if line]
+
+
+def messages_opt_out_of_changelog(messages: list[str]) -> bool:
+    """
+    Return True only when every commit message opts out of the gate.
+
+    Requiring all commits (rather than any) prevents a single skip marker from
+    silently exempting a change set that also contains user-facing work.
+    """
+    if not messages:
+        return False
+    return all(
+        any(marker in message.casefold() for marker in SKIP_CHANGELOG_MARKERS)
+        for message in messages
+    )
+
+
+def commit_messages(base: str, head: str) -> list[str]:
+    log = run_git(["log", "--no-merges", "--format=%H", f"{base}..{head}"])
+    hashes = [line for line in log.splitlines() if line]
+    return [run_git(["show", "-s", "--format=%B", commit]) for commit in hashes]
+
+
+def commits_opt_out_of_changelog(base: str, head: str) -> bool:
+    return messages_opt_out_of_changelog(commit_messages(base, head))
 
 
 def unreleased_added_entries(base: str, head: str) -> list[str]:
@@ -215,6 +251,10 @@ def check_command(args: argparse.Namespace) -> int:
     user_facing = [path for path in files if requires_changelog_entry(path, args.base, args.head)]
     if not user_facing:
         print("No user-facing paths changed.")
+        return 0
+
+    if commits_opt_out_of_changelog(args.base, args.head):
+        print("All commits opt out of the changelog gate via a skip marker.")
         return 0
 
     if CHANGELOG_PATH.as_posix() not in files:

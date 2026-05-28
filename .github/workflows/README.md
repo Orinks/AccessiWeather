@@ -75,6 +75,17 @@ Every user-facing PR needs a `CHANGELOG.md` bullet under `## [Unreleased]`. Dire
 `dev` or `main` are checked too, so user-facing commits without an associated PR still need a
 curated changelog entry.
 
+**Skipping the gate for non-user-facing work.** The gate flags any change under `src/`,
+`installer/`, or `soundpacks/` (the generated `weather_gov_api_client/` client is excluded). When a
+PR is purely internal — refactors, CI, tooling, release plumbing — you have two escape hatches:
+
+- **PR:** add the `skip-changelog` label. The `Check CHANGELOG entry` step is skipped entirely.
+- **Direct push:** put `Changelog: none` (or `[skip changelog]`) in the commit message. The gate
+  passes only when *every* non-merge commit in the range carries the marker, so a marker can't
+  silently exempt a change set that also contains user-facing work.
+
+Note: `.github/`, `tests/`, and `docs/` are never gated, so CI and test-only changes need no marker.
+
 Nightly release notes include only newly added Unreleased entries since the previous nightly tag.
 Stable release notes use the matching version section, such as `## [0.6.1]`, and fall back to
 Unreleased only when a version section has not been cut yet.
