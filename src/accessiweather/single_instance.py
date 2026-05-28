@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import ctypes
 import logging
 import sys
@@ -21,6 +22,39 @@ SINGLE_INSTANCE_MUTEX_NAME = "Local\\AccessiWeather.SingleInstance"
 ERROR_ALREADY_EXISTS = 183
 SW_SHOWNORMAL = 1
 SW_RESTORE = 9
+
+
+def _configure_kernel32_signatures(kernel32) -> None:
+    """
+    Declare kernel32 signatures so 64-bit HANDLEs are not truncated.
+
+    ctypes defaults a function's restype/argtypes to 32-bit ``c_int``. On
+    64-bit Windows a HANDLE is pointer-width, so without these declarations the
+    handle returned by CreateMutexW would be truncated before being passed back
+    to CloseHandle. The suppression keeps the test fakes (plain methods, which
+    reject attribute assignment) working unchanged.
+    """
+    with contextlib.suppress(Exception):
+        kernel32.CreateMutexW.restype = ctypes.c_void_p
+        kernel32.CreateMutexW.argtypes = [ctypes.c_void_p, ctypes.c_bool, ctypes.c_wchar_p]
+        kernel32.CloseHandle.restype = ctypes.c_bool
+        kernel32.CloseHandle.argtypes = [ctypes.c_void_p]
+
+
+def _configure_user32_signatures(user32) -> None:
+    """Declare user32 signatures so window handles are not truncated to int."""
+    with contextlib.suppress(Exception):
+        user32.FindWindowW.restype = ctypes.c_void_p
+        user32.FindWindowW.argtypes = [ctypes.c_wchar_p, ctypes.c_wchar_p]
+        user32.EnumWindows.restype = ctypes.c_bool
+        user32.GetWindowTextLengthW.restype = ctypes.c_int
+        user32.GetWindowTextLengthW.argtypes = [ctypes.c_void_p]
+        user32.GetWindowTextW.restype = ctypes.c_int
+        user32.GetWindowTextW.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p, ctypes.c_int]
+        user32.ShowWindow.restype = ctypes.c_bool
+        user32.ShowWindow.argtypes = [ctypes.c_void_p, ctypes.c_int]
+        user32.SetForegroundWindow.restype = ctypes.c_bool
+        user32.SetForegroundWindow.argtypes = [ctypes.c_void_p]
 
 
 class SingleInstanceManager:
@@ -67,6 +101,7 @@ class SingleInstanceManager:
 
         try:
             kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            _configure_kernel32_signatures(kernel32)
             handle = kernel32.CreateMutexW(None, False, self.mutex_name)
             if not handle:
                 logger.warning("CreateMutexW failed; allowing startup to continue")
@@ -111,6 +146,7 @@ class SingleInstanceManager:
 
         try:
             user32 = ctypes.WinDLL("user32", use_last_error=True)
+            _configure_user32_signatures(user32)
             hwnd = self._find_accessiweather_window(user32)
             if not hwnd:
                 logger.info("No existing AccessiWeather window found to restore")
@@ -167,6 +203,7 @@ class SingleInstanceManager:
     def _existing_window_is_present(self) -> bool:
         try:
             user32 = ctypes.WinDLL("user32", use_last_error=True)
+            _configure_user32_signatures(user32)
             return bool(self._find_accessiweather_window(user32))
         except Exception:
             return False
@@ -192,6 +229,7 @@ class SingleInstanceManager:
 
         try:
             kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            _configure_kernel32_signatures(kernel32)
             kernel32.CloseHandle(self._mutex_handle)
             logger.info("Released AccessiWeather single-instance mutex")
         except Exception as exc:

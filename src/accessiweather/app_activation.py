@@ -159,11 +159,21 @@ class AppActivationMixin:
             import ctypes
 
             hwnd = frame.GetHandle()
-            user32 = ctypes.windll.user32
+            user32 = ctypes.WinDLL("user32", use_last_error=True)
+            kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            # Declare signatures so the 64-bit HWND is not truncated to c_int.
+            user32.IsIconic.restype = ctypes.c_bool
+            user32.IsIconic.argtypes = [ctypes.c_void_p]
+            user32.ShowWindow.restype = ctypes.c_bool
+            user32.ShowWindow.argtypes = [ctypes.c_void_p, ctypes.c_int]
+            user32.AllowSetForegroundWindow.argtypes = [ctypes.c_ulong]
+            user32.SetForegroundWindow.restype = ctypes.c_bool
+            user32.SetForegroundWindow.argtypes = [ctypes.c_void_p]
+            kernel32.GetCurrentProcessId.restype = ctypes.c_ulong
             SW_RESTORE = 9
             if user32.IsIconic(hwnd):
                 user32.ShowWindow(hwnd, SW_RESTORE)
-            user32.AllowSetForegroundWindow(ctypes.windll.kernel32.GetCurrentProcessId())
+            user32.AllowSetForegroundWindow(kernel32.GetCurrentProcessId())
             user32.SetForegroundWindow(hwnd)
         except Exception:
             frame.Raise()
