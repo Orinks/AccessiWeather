@@ -207,15 +207,24 @@ class LocationOperations:
         longitude: float,
         country_code: str | None,
         marine_mode: bool,
+        display_name: str | None = None,
     ) -> bool:
         """
         Update editable details on an existing location and persist them.
 
-        The location name is intentionally stable. When coordinates change,
-        cached NWS metadata is cleared so the next refresh resolves zones for
-        the new point instead of reusing the old city/ZIP point.
+        When coordinates change, cached NWS metadata is cleared so the next
+        refresh resolves zones for the new point instead of reusing the old
+        city/ZIP point.
         """
         config = self._manager.get_config()
+        new_name = (display_name or name).strip()
+        if not new_name:
+            self.logger.warning("Location %s update rejected: empty display name", name)
+            return False
+
+        if new_name != name and any(location.name == new_name for location in config.locations):
+            self.logger.warning("Location %s update rejected: %s already exists", name, new_name)
+            return False
 
         for location in config.locations:
             if location.name != name:
@@ -225,7 +234,10 @@ class LocationOperations:
                 isclose(location.latitude, latitude, abs_tol=1e-6)
                 and isclose(location.longitude, longitude, abs_tol=1e-6)
             )
+            current = config.current_location
+            current_matches_location = current is not None and current.name == name
 
+            location.name = new_name
             location.latitude = latitude
             location.longitude = longitude
             location.country_code = country_code
@@ -239,13 +251,16 @@ class LocationOperations:
                 location.fire_zone_id = None
                 location.radar_station = None
 
-            current = config.current_location
-            if current is not None and current.name == name:
+            if current_matches_location:
                 config.current_location = location
 
+            if new_name != name:
+                self._sort_locations(config)
+
             self.logger.info(
-                "Updated location details for %s%s",
+                "Updated location details for %s%s%s",
                 name,
+                f" as {new_name}" if new_name != name else "",
                 " and cleared zone metadata" if coordinates_changed else "",
             )
             return self._manager.save_config()

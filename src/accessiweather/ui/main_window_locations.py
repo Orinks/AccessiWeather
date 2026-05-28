@@ -119,13 +119,21 @@ class MainWindowLocationMixin:
         if isinstance(edit_result, bool):
             self.app.config_manager.update_location_marine_mode(selected, edit_result)
         else:
-            self.app.config_manager.update_location_details(
+            updated = self.app.config_manager.update_location_details(
                 selected,
                 latitude=edit_result.latitude,
                 longitude=edit_result.longitude,
                 country_code=edit_result.country_code,
                 marine_mode=edit_result.marine_mode,
+                display_name=getattr(edit_result, "display_name", selected),
             )
+            if updated:
+                self._populate_locations()
+                new_name = getattr(edit_result, "display_name", selected)
+                idx = self.location_dropdown.FindString(new_name)
+                if idx != getattr(wx, "NOT_FOUND", -1):
+                    self.location_dropdown.SetSelection(idx)
+                    self._set_current_location(new_name)
         self.refresh_weather_async(force_refresh=True)
 
     def on_remove_location(self) -> None:

@@ -168,6 +168,56 @@ class LocationManager:
 
         return locations
 
+    async def reverse_geocode_coordinates(
+        self,
+        latitude: float,
+        longitude: float,
+    ) -> Location | None:
+        """Resolve coordinates to a friendly location label when a native source can name them."""
+        url = f"https://api.weather.gov/points/{latitude},{longitude}"
+        headers = {
+            "User-Agent": "AccessiWeather/1.0 (AccessiWeather)",
+            "Accept": "application/geo+json",
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
+                response = await client.get(url, headers=headers)
+        except Exception as exc:  # noqa: BLE001 - reverse lookup should never block manual save
+            logger.debug("Reverse geocoding failed for (%s, %s): %s", latitude, longitude, exc)
+            return None
+
+        if response.status_code != 200:
+            logger.debug(
+                "Reverse geocoding returned status %s for (%s, %s)",
+                response.status_code,
+                latitude,
+                longitude,
+            )
+            return None
+
+        try:
+            properties = response.json().get("properties", {})
+        except (AttributeError, ValueError) as exc:
+            logger.debug("Reverse geocoding returned invalid JSON: %s", exc)
+            return None
+
+        relative = properties.get("relativeLocation", {})
+        relative_properties = relative.get("properties", {}) if isinstance(relative, dict) else {}
+        city = str(relative_properties.get("city") or "").strip()
+        state = str(relative_properties.get("state") or "").strip()
+        if not city:
+            return None
+
+        display_name = f"{city}, {state}" if state else city
+        return Location(
+            name=display_name,
+            latitude=latitude,
+            longitude=longitude,
+            timezone=properties.get("timeZone") or None,
+            country_code="US",
+        )
+
     def _parse_census_address_match(self, data: dict) -> Location | None:
         """Parse a Census Geocoder address match into a Location."""
         try:

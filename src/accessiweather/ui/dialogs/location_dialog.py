@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 class EditLocationResult:
     """Editable values returned by the edit location dialog."""
 
+    display_name: str
     latitude: float
     longitude: float
     country_code: str | None
@@ -144,8 +145,14 @@ class EditLocationDialog(wx.Dialog):
         panel = wx.Panel(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
 
-        name_label = wx.StaticText(panel, label=f"Location: {location.name}")
-        sizer.Add(name_label, 0, wx.ALL, 10)
+        name_sizer = wx.BoxSizer(wx.VERTICAL)
+        name_label = wx.StaticText(panel, label="Location Name:")
+        name_sizer.Add(name_label, 0, wx.BOTTOM, 5)
+        self.name_input = wx.TextCtrl(panel, value=location.name, size=wx.Size(400, -1))
+        self.name_input.SetHint("Enter a descriptive name for this location")
+        self.name_input.SetName("Location name input")
+        name_sizer.Add(self.name_input, 0, wx.EXPAND)
+        sizer.Add(name_sizer, 0, wx.ALL | wx.EXPAND, 10)
 
         self.current_coordinates_label = wx.StaticText(
             panel,
@@ -298,9 +305,22 @@ class EditLocationDialog(wx.Dialog):
         """Run native location detection once."""
         result = await self.current_location_service.detect_once()
         if result.status is LocationDetectionStatus.SUCCESS and result.location is not None:
-            wx.CallAfter(self._on_current_location_detected, result.location)
+            location = await self._resolve_detected_location(result.location)
+            wx.CallAfter(self._on_current_location_detected, location)
             return
         wx.CallAfter(self._on_current_location_error, result.message)
+
+    async def _resolve_detected_location(self, location: Location) -> Location:
+        """Prefer a reverse-geocoded label and metadata for detected coordinates."""
+        try:
+            resolved = await self.location_manager.reverse_geocode_coordinates(
+                location.latitude,
+                location.longitude,
+            )
+        except Exception as exc:  # noqa: BLE001 - fallback label remains editable
+            logger.debug("Detected-location reverse geocoding failed: %s", exc)
+            return location
+        return resolved or location
 
     def _on_current_location_detected(self, location: Location) -> None:
         """Apply detected coordinates as the pending coordinate update."""
@@ -312,9 +332,12 @@ class EditLocationDialog(wx.Dialog):
         coords = self.location_manager.format_coordinates(location.latitude, location.longitude)
         index = self.address_results_list.InsertItem(0, location.name)
         self.address_results_list.SetItem(index, 1, coords)
+        self.name_input.SetValue(location.name)
         distance = self.location_manager.calculate_distance(self._location, location)
         self._set_coordinate_comparison(
-            f"Detected current location: {coords}. Difference from saved coordinates: {distance:.2f} miles."
+            f"Detected current location as {location.name}: {coords}. "
+            f"Difference from saved coordinates: {distance:.2f} miles. "
+            "Review the editable name, then save it."
         )
 
     def _on_current_location_error(self, message: str) -> None:
@@ -369,19 +392,21 @@ class EditLocationDialog(wx.Dialog):
         if not 0 <= index < len(self._search_results):
             return
 
-        self._selected_location = self._search_results[index]
+        selected_location = self._search_results[index]
+        self._selected_location = selected_location
         distance = self.location_manager.calculate_distance(
             self._location,
-            self._selected_location,
+            selected_location,
         )
         current_coords = self.location_manager.format_coordinates(
             self._location.latitude,
             self._location.longitude,
         )
         new_coords = self.location_manager.format_coordinates(
-            self._selected_location.latitude,
-            self._selected_location.longitude,
+            selected_location.latitude,
+            selected_location.longitude,
         )
+        self.name_input.SetValue(selected_location.name)
         self._set_coordinate_comparison(
             f"Current: {current_coords}. New: {new_coords}. Difference: {distance:.2f} miles."
         )
@@ -401,6 +426,7 @@ class EditLocationDialog(wx.Dialog):
         """Return the editable values chosen in the dialog."""
         selected = self._selected_location
         return EditLocationResult(
+            display_name=self.name_input.GetValue().strip(),
             latitude=selected.latitude if selected else self._location.latitude,
             longitude=selected.longitude if selected else self._location.longitude,
             country_code=(selected.country_code if selected else self._location.country_code),
@@ -620,9 +646,22 @@ class AddLocationDialog(wx.Dialog):
         """Run native location detection once."""
         result = await self.current_location_service.detect_once()
         if result.status is LocationDetectionStatus.SUCCESS and result.location is not None:
-            wx.CallAfter(self._on_current_location_detected, result.location)
+            location = await self._resolve_detected_location(result.location)
+            wx.CallAfter(self._on_current_location_detected, location)
             return
         wx.CallAfter(self._on_current_location_error, result.message)
+
+    async def _resolve_detected_location(self, location: Location) -> Location:
+        """Prefer a reverse-geocoded label and metadata for detected coordinates."""
+        try:
+            resolved = await self.location_manager.reverse_geocode_coordinates(
+                location.latitude,
+                location.longitude,
+            )
+        except Exception as exc:  # noqa: BLE001 - fallback label remains editable
+            logger.debug("Detected-location reverse geocoding failed: %s", exc)
+            return location
+        return resolved or location
 
     def _on_current_location_detected(self, location: Location) -> None:
         """Handle successful current-location detection."""

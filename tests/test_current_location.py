@@ -602,3 +602,80 @@ class TestAddLocationDialogCurrentLocation:
         dialog._update_status.assert_called_once_with(
             "Detected current location. Review the editable name, then save it."
         )
+
+
+class TestEditLocationDialogCurrentLocation:
+    async def test_detection_uses_reverse_geocoded_location_when_available(self, monkeypatch):
+        from accessiweather.current_location import (
+            CurrentCoordinates,
+            CurrentLocationResult,
+            LocationDetectionStatus,
+            location_from_coordinates,
+        )
+        from accessiweather.models import Location
+        from accessiweather.ui.dialogs.location_dialog import EditLocationDialog
+
+        detected = location_from_coordinates(
+            CurrentCoordinates(latitude=39.9571, longitude=-74.8069)
+        )
+        resolved = Location(
+            name="Mount Holly, NJ",
+            latitude=39.9571,
+            longitude=-74.8069,
+            country_code="US",
+            timezone="America/New_York",
+        )
+        applied: list[Location] = []
+        dialog = EditLocationDialog.__new__(EditLocationDialog)
+        dialog.current_location_service = MagicMock()
+        dialog.current_location_service.detect_once = AsyncMock(
+            return_value=CurrentLocationResult(
+                status=LocationDetectionStatus.SUCCESS,
+                message="Detected",
+                coordinates=CurrentCoordinates(latitude=39.9571, longitude=-74.8069),
+                location=detected,
+            )
+        )
+        dialog.location_manager = MagicMock()
+        dialog.location_manager.reverse_geocode_coordinates = AsyncMock(return_value=resolved)
+
+        monkeypatch.setattr(
+            "accessiweather.ui.dialogs.location_dialog.wx.CallAfter",
+            lambda func, *args: func(*args),
+        )
+        dialog._on_current_location_detected = applied.append
+
+        await dialog._do_current_location_detection()
+
+        assert applied == [resolved]
+        dialog.location_manager.reverse_geocode_coordinates.assert_awaited_once_with(
+            39.9571,
+            -74.8069,
+        )
+
+    def test_edit_result_includes_editable_display_name(self):
+        from accessiweather.models import Location
+        from accessiweather.ui.dialogs.location_dialog import EditLocationDialog
+
+        original = Location(name="Lumberton", latitude=39.965, longitude=-74.805)
+        selected = Location(
+            name="Mount Holly, NJ",
+            latitude=39.9571,
+            longitude=-74.8069,
+            country_code="US",
+        )
+        dialog = EditLocationDialog.__new__(EditLocationDialog)
+        dialog._location = original
+        dialog._selected_location = selected
+        dialog.name_input = MagicMock()
+        dialog.name_input.GetValue.return_value = "Mount Holly, NJ"
+        dialog.marine_checkbox = MagicMock()
+        dialog.marine_checkbox.GetValue.return_value = True
+
+        result = dialog.get_result()
+
+        assert result.display_name == "Mount Holly, NJ"
+        assert result.latitude == pytest.approx(39.9571)
+        assert result.longitude == pytest.approx(-74.8069)
+        assert result.country_code == "US"
+        assert result.marine_mode is True

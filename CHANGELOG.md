@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - Alert sounds and sound-pack creation now focus on alert severity instead of a long list of specific alert names, while existing packs can keep their older mappings.
 
 ### Fixed
+- Editing a location after using "Use my current location" now refreshes the editable name and saved US metadata for the detected point, so locations don't quietly fall back to metric defaults.
 - Notification sounds now recover after Windows sleep or hibernation, so update
   notifications don't fall back to only the generic Windows toast sound.
 - Plain Language Summary now shows and speaks which OpenRouter model it is trying, when it falls back from a busy free model, and why the final model was used.
