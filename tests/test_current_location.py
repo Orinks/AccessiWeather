@@ -245,6 +245,26 @@ class TestCurrentLocationProviders:
         assert result.location.name == "Current Location (39.9526, -75.1652)"
         assert result.location.latitude == pytest.approx(39.9526)
         assert result.location.longitude == pytest.approx(-75.1652)
+        assert result.location.country_code == "US"
+
+    async def test_service_leaves_unclear_international_coordinates_without_country_code(self):
+        from accessiweather.current_location import (
+            CurrentCoordinates,
+            CurrentLocationService,
+            LocationDetectionStatus,
+        )
+
+        provider = MagicMock()
+        provider.detect = AsyncMock(
+            return_value=CurrentCoordinates(latitude=51.5074, longitude=-0.1278, accuracy_meters=25)
+        )
+        service = CurrentLocationService(provider=provider)
+
+        result = await service.detect_once()
+
+        assert result.status is LocationDetectionStatus.SUCCESS
+        assert result.location is not None
+        assert result.location.country_code is None
 
 
 class TestWindowsCurrentLocationProvider:

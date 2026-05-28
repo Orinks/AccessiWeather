@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Protocol
 
+from .location_classification import is_us_location
 from .models import Location
 
 logger = logging.getLogger(__name__)
@@ -70,7 +71,10 @@ def location_from_coordinates(
 ) -> Location:
     """Create the same editable Location object used by manual location saves."""
     label = name or f"Current Location ({coordinates.latitude:.4f}, {coordinates.longitude:.4f})"
-    return Location(name=label, latitude=coordinates.latitude, longitude=coordinates.longitude)
+    location = Location(name=label, latitude=coordinates.latitude, longitude=coordinates.longitude)
+    if is_us_location(location):
+        location.country_code = "US"
+    return location
 
 
 class CurrentLocationService:
