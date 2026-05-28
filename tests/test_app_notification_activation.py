@@ -351,3 +351,19 @@ def test_force_foreground_window_uses_win32_handle_apis(monkeypatch) -> None:
     user32.ShowWindow.assert_called_once_with(0x1_0000_4242, 9)
     user32.SetForegroundWindow.assert_called_once_with(0x1_0000_4242)
     frame.Raise.assert_not_called()
+
+
+def test_start_activation_handoff_polling_uses_relaxed_interval() -> None:
+    """Handoff polling arms the timer at the relaxed fallback interval."""
+    from accessiweather import app_activation
+
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._activation_handoff_timer = None
+    app.Bind = MagicMock()
+
+    with patch("accessiweather.app_activation.wx") as mock_wx:
+        app._start_activation_handoff_polling()
+        timer = mock_wx.Timer.return_value
+
+    assert app_activation._ACTIVATION_HANDOFF_POLL_MS == 2000
+    timer.Start.assert_called_once_with(app_activation._ACTIVATION_HANDOFF_POLL_MS)

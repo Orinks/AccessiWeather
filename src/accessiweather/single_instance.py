@@ -99,6 +99,10 @@ class SingleInstanceManager:
             self._lock_acquired = True
             return True
 
+        # Policy: on any unexpected failure of the mutex check we return True
+        # ("allow startup"). A guard that occasionally permits a second instance
+        # is far better than one that can wedge the app shut, so every error
+        # path below intentionally falls through to launching.
         try:
             kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
             _configure_kernel32_signatures(kernel32)
@@ -140,10 +144,23 @@ class SingleInstanceManager:
         if sys.platform == "win32" and _send_activation_request_ipc(handoff_request):
             return True
 
-        self.write_activation_handoff(handoff_request)
         if sys.platform != "win32":
+            self.write_activation_handoff(handoff_request)
             return False
 
+        shown = self._show_existing_window()
+        # The direct window restore only raises the window; it cannot act on a
+        # specific request. Write the handoff so the primary instance still
+        # routes discussion/alert_details intents — but skip it for a plain
+        # generic_fallback that a successful restore already satisfied, so the
+        # primary doesn't handle the same generic request a second time when it
+        # polls for handoffs.
+        if not shown or handoff_request.kind != "generic_fallback":
+            self.write_activation_handoff(handoff_request)
+        return shown
+
+    def _show_existing_window(self) -> bool:
+        """Restore and foreground the existing main window; True if one was shown."""
         try:
             user32 = ctypes.WinDLL("user32", use_last_error=True)
             _configure_user32_signatures(user32)

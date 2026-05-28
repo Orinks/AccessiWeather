@@ -11,6 +11,11 @@ from .notification_activation import NotificationActivationRequest
 
 logger = logging.getLogger(__name__)
 
+# The handoff file is only a fallback for when the named-pipe IPC channel is
+# unavailable, so it doesn't need sub-second latency. Poll on a relaxed
+# interval to avoid a perpetual high-frequency wakeup for the whole session.
+_ACTIVATION_HANDOFF_POLL_MS = 2000
+
 
 def show_alert_dialog(parent, alert, settings=None) -> None:
     """Lazy wrapper for the single-alert details dialog."""
@@ -90,7 +95,7 @@ class AppActivationMixin:
             self._on_activation_handoff_timer,
             self._activation_handoff_timer,
         )
-        self._activation_handoff_timer.Start(750)
+        self._activation_handoff_timer.Start(_ACTIVATION_HANDOFF_POLL_MS)
 
     def _start_activation_ipc_server(self) -> None:
         """Start duplicate-launch IPC and route requests onto the UI thread."""
