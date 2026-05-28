@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- You can now choose "Use my current location" when adding or updating a saved location. AccessiWeather asks the OS once, only after you press the button, and keeps manual search available if location access is denied or unavailable.
 - Alert updates can now use their own mappable sound in sound packs.
 - Settings > Audio can now enable specific-alert sounds per sound pack, so packs with sounds like `tornado_watch` and `tornado_warning` keep working while severity-only packs stay simple.
 - First-run setup can now import existing settings and encrypted API keys from the wizard, or exit with Escape at any wizard step when you want to configure everything yourself.
@@ -20,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - Alert sounds and sound-pack creation now focus on alert severity instead of a long list of specific alert names, while existing packs can keep their older mappings.
 
 ### Fixed
+- Editing a location after using "Use my current location" now refreshes the editable name and saved US metadata for the detected point, so locations don't quietly fall back to metric defaults.
 - Notification sounds now recover after Windows sleep or hibernation, so update
   notifications don't fall back to only the generic Windows toast sound.
 - Plain Language Summary now shows and speaks which OpenRouter model it is trying, when it falls back from a busy free model, and why the final model was used.

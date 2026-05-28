@@ -204,6 +204,7 @@ def test_second_windows_launch_writes_generic_handoff_when_window_lookup_fails(
 
     monkeypatch.setattr(single_instance.sys, "platform", "win32")
     monkeypatch.setattr(single_instance, "ctypes", _FakeCtypes(kernel32, user32))
+    monkeypatch.setattr(single_instance, "_send_activation_request_ipc", lambda request: False)
 
     manager = SingleInstanceManager(app, runtime_paths=runtime_paths)
 

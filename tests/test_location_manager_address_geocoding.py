@@ -16,6 +16,13 @@ def _make_response(payload: dict) -> MagicMock:
     return response
 
 
+def _make_nws_response(payload: dict, status_code: int = 200) -> MagicMock:
+    response = MagicMock()
+    response.status_code = status_code
+    response.json.return_value = payload
+    return response
+
+
 @pytest.fixture
 def census_payload() -> dict:
     return {
@@ -121,3 +128,48 @@ async def test_search_locations_falls_back_to_openmeteo_when_address_has_no_matc
     assert locations[0].latitude == pytest.approx(32.95373)
     assert locations[0].longitude == pytest.approx(-96.89028)
     assert mock_client.get.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_reverse_geocode_coordinates_uses_nws_relative_location() -> None:
+    manager = LocationManager()
+
+    with patch("accessiweather.location_manager.httpx.AsyncClient") as mock_client_class:
+        mock_client = AsyncMock()
+        mock_client_class.return_value.__aenter__.return_value = mock_client
+        mock_client.get.return_value = _make_nws_response(
+            {
+                "properties": {
+                    "relativeLocation": {
+                        "properties": {
+                            "city": "Mount Holly",
+                            "state": "NJ",
+                        }
+                    },
+                    "timeZone": "America/New_York",
+                }
+            }
+        )
+
+        location = await manager.reverse_geocode_coordinates(39.9571, -74.8069)
+
+    assert location is not None
+    assert location.name == "Mount Holly, NJ"
+    assert location.latitude == pytest.approx(39.9571)
+    assert location.longitude == pytest.approx(-74.8069)
+    assert location.country_code == "US"
+    assert location.timezone == "America/New_York"
+
+
+@pytest.mark.asyncio
+async def test_reverse_geocode_coordinates_returns_none_when_nws_cannot_name_point() -> None:
+    manager = LocationManager()
+
+    with patch("accessiweather.location_manager.httpx.AsyncClient") as mock_client_class:
+        mock_client = AsyncMock()
+        mock_client_class.return_value.__aenter__.return_value = mock_client
+        mock_client.get.return_value = _make_nws_response({"properties": {}}, status_code=404)
+
+        location = await manager.reverse_geocode_coordinates(51.5074, -0.1278)
+
+    assert location is None
