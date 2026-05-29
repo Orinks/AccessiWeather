@@ -211,10 +211,14 @@ def test_is_installed_version_false_for_portable():
 
 @pytest.mark.asyncio
 async def test_simple_update_service_download(tmp_path):
-    """Test download_update method."""
+    """Test download_update method with a valid checksum (happy path)."""
+    import hashlib
     from unittest.mock import AsyncMock, MagicMock
 
     from accessiweather.services.simple_update import UpdateInfo, UpdateService
+
+    artifact_content = b"x" * 100
+    correct_hash = hashlib.sha256(artifact_content).hexdigest()
 
     # Create a mock HTTP client
     mock_response = MagicMock()
@@ -224,6 +228,73 @@ async def test_simple_update_service_download(tmp_path):
     async def mock_aiter_bytes(chunk_size=None):
         yield b"x" * 50
         yield b"x" * 50
+
+    mock_response.aiter_bytes = mock_aiter_bytes
+    mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+    mock_response.__aexit__ = AsyncMock(return_value=None)
+
+    checksum_response = MagicMock()
+    checksum_response.raise_for_status = MagicMock()
+    checksum_response.text = f"{correct_hash}  update.zip"
+
+    mock_client = MagicMock()
+    mock_client.stream = MagicMock(return_value=mock_response)
+    mock_client.get = AsyncMock(return_value=checksum_response)
+
+    service = UpdateService("TestApp", http_client=mock_client)
+
+    release = {
+        "assets": [
+            {"name": "update.zip", "browser_download_url": "https://example.com/update.zip"},
+            {
+                "name": "update.zip.sha256",
+                "browser_download_url": "https://example.com/update.zip.sha256",
+            },
+        ]
+    }
+
+    update_info = UpdateInfo(
+        version="1.0.0",
+        download_url="https://example.com/update.zip",
+        artifact_name="update.zip",
+        release_notes="Test release",
+        commit_hash=None,
+        is_nightly=False,
+        is_prerelease=False,
+        release=release,
+    )
+
+    progress_calls = []
+
+    def progress_callback(downloaded, total):
+        progress_calls.append((downloaded, total))
+
+    result = await service.download_update(update_info, tmp_path, progress_callback)
+
+    assert result == tmp_path / "update.zip"
+    assert result.exists()
+    assert result.read_bytes() == b"x" * 100
+    assert len(progress_calls) == 2
+    assert progress_calls[-1] == (100, 100)
+
+
+@pytest.mark.asyncio
+async def test_download_update_refuses_without_release_metadata(tmp_path):
+    """Fail-closed: an update with no release metadata cannot be verified, so it must be rejected."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    from accessiweather.services.simple_update import (
+        ChecksumVerificationError,
+        UpdateInfo,
+        UpdateService,
+    )
+
+    mock_response = MagicMock()
+    mock_response.headers = {"content-length": "100"}
+    mock_response.raise_for_status = MagicMock()
+
+    async def mock_aiter_bytes(chunk_size=None):
+        yield b"x" * 100
 
     mock_response.aiter_bytes = mock_aiter_bytes
     mock_response.__aenter__ = AsyncMock(return_value=mock_response)
@@ -242,20 +313,14 @@ async def test_simple_update_service_download(tmp_path):
         commit_hash=None,
         is_nightly=False,
         is_prerelease=False,
+        # No release attached -> integrity cannot be verified.
     )
 
-    progress_calls = []
+    with pytest.raises(ChecksumVerificationError, match="no release metadata"):
+        await service.download_update(update_info, tmp_path)
 
-    def progress_callback(downloaded, total):
-        progress_calls.append((downloaded, total))
-
-    result = await service.download_update(update_info, tmp_path, progress_callback)
-
-    assert result == tmp_path / "update.zip"
-    assert result.exists()
-    assert result.read_bytes() == b"x" * 100
-    assert len(progress_calls) == 2
-    assert progress_calls[-1] == (100, 100)
+    # The unverifiable file must not be left on disk.
+    assert not (tmp_path / "update.zip").exists()
 
 
 class TestApplyUpdateNoShellInjection:

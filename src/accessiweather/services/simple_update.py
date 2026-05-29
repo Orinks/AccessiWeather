@@ -10,7 +10,7 @@ import subprocess
 import sys
 import tempfile
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -76,6 +76,11 @@ class UpdateInfo:
     commit_hash: str | None
     is_nightly: bool
     is_prerelease: bool
+    # The originating GitHub release dict, retained so download_update() can
+    # locate the checksum asset and verify integrity without the caller having
+    # to thread the release through. Excluded from equality/hash/repr because
+    # it is large and not part of the update's identity.
+    release: dict[str, Any] | None = field(default=None, compare=False, repr=False)
 
 
 def parse_commit_hash(release_notes: str) -> str | None:
@@ -360,6 +365,7 @@ class UpdateService:
             commit_hash=commit_hash,
             is_nightly=release_type == "nightly",
             is_prerelease=bool(latest.get("prerelease")),
+            release=latest,
         )
 
     async def download_update(
@@ -407,48 +413,72 @@ class UpdateService:
 
         logger.info("Downloaded update to %s", dest_path)
 
-        # Verify integrity if a checksum asset is available
-        if release is not None:
-            checksum_asset = find_checksum_asset(release, update_info.artifact_name)
-            if checksum_asset:
-                checksum_url = checksum_asset.get("browser_download_url", "")
-                if checksum_url:
-                    try:
-                        checksum_response = await self.http_client.get(checksum_url)
-                        checksum_response.raise_for_status()
-                        checksum_content = checksum_response.text
+        # Verify integrity. Fall back to the release attached to the UpdateInfo
+        # so the integrity check runs even when the caller does not pass one.
+        if release is None:
+            release = update_info.release
 
-                        parsed = parse_checksum_file(checksum_content, update_info.artifact_name)
-                        if parsed:
-                            algo, expected_hash = parsed
-                            if not verify_file_checksum(dest_path, algo, expected_hash):
-                                # Remove the corrupt/tampered file
-                                dest_path.unlink(missing_ok=True)
-                                raise ChecksumVerificationError(
-                                    f"Checksum verification failed for {update_info.artifact_name}. "
-                                    f"Expected {algo}:{expected_hash}. "
-                                    "The downloaded file may be corrupted or tampered with."
-                                )
-                            logger.info(
-                                "Checksum verified (%s) for %s",
-                                algo,
-                                update_info.artifact_name,
-                            )
-                        else:
-                            logger.warning(
-                                "Could not parse checksum for %s from checksum file",
-                                update_info.artifact_name,
-                            )
-                    except httpx.HTTPError:
-                        logger.warning(
-                            "Failed to download checksum file for %s; skipping verification",
-                            update_info.artifact_name,
-                        )
-            else:
-                logger.warning(
-                    "No checksum file found for %s; integrity not verified",
-                    update_info.artifact_name,
-                )
+        if release is None:
+            # We cannot identify the source release, so we cannot prove the
+            # artifact is genuine. Refuse to hand back an unverifiable update.
+            dest_path.unlink(missing_ok=True)
+            raise ChecksumVerificationError(
+                f"Cannot verify {update_info.artifact_name}: no release metadata available. "
+                "Refusing to install an unverified update."
+            )
+
+        checksum_asset = find_checksum_asset(release, update_info.artifact_name)
+        if checksum_asset is None:
+            # No checksum was published for this release. This is unusual for
+            # current releases (the build pipeline always uploads checksums.txt)
+            # so treat a missing checksum as a soft failure: warn loudly but do
+            # not block, to stay forward-compatible with releases that omit it.
+            logger.warning(
+                "No checksum asset found for %s; integrity could not be verified",
+                update_info.artifact_name,
+            )
+            return dest_path
+
+        # A checksum asset exists, so verification is mandatory. Any failure to
+        # download, parse, or match it is treated as a verification failure and
+        # the downloaded file is discarded (fail-closed).
+        checksum_url = checksum_asset.get("browser_download_url", "")
+        if not checksum_url:
+            dest_path.unlink(missing_ok=True)
+            raise ChecksumVerificationError(
+                f"Checksum asset for {update_info.artifact_name} has no download URL; "
+                "cannot verify integrity."
+            )
+
+        try:
+            checksum_response = await self.http_client.get(checksum_url)
+            checksum_response.raise_for_status()
+            checksum_content = checksum_response.text
+        except httpx.HTTPError as err:
+            dest_path.unlink(missing_ok=True)
+            raise ChecksumVerificationError(
+                f"Failed to download checksum file for {update_info.artifact_name}; "
+                "cannot verify integrity."
+            ) from err
+
+        parsed = parse_checksum_file(checksum_content, update_info.artifact_name)
+        if parsed is None:
+            dest_path.unlink(missing_ok=True)
+            raise ChecksumVerificationError(
+                f"Could not find a checksum for {update_info.artifact_name} in the "
+                "published checksum file; cannot verify integrity."
+            )
+
+        algo, expected_hash = parsed
+        if not verify_file_checksum(dest_path, algo, expected_hash):
+            # Remove the corrupt/tampered file
+            dest_path.unlink(missing_ok=True)
+            raise ChecksumVerificationError(
+                f"Checksum verification failed for {update_info.artifact_name}. "
+                f"Expected {algo}:{expected_hash}. "
+                "The downloaded file may be corrupted or tampered with."
+            )
+        logger.info("Checksum verified (%s) for %s", algo, update_info.artifact_name)
 
         return dest_path
 

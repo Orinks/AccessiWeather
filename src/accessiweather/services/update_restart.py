@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import platform
+import shlex
 import sys
 import tempfile
 import textwrap
@@ -22,21 +23,37 @@ def build_macos_update_script(
     update_path: Path,
     app_path: Path,
 ) -> str:
-    """Build a shell script to apply a macOS update."""
+    """
+    Build a shell script to apply a macOS update.
+
+    Paths are shell-quoted so spaces or shell metacharacters in the install
+    location cannot break or inject into the generated script. The DMG branch
+    mounts to a specific mountpoint reported by ``hdiutil`` instead of globbing
+    ``/Volumes/*``, which could otherwise pick up an unrelated mounted volume.
+    """
     app_dir = app_path.parent
+    q_update = shlex.quote(str(update_path))
+    q_app_dir = shlex.quote(str(app_dir))
+    q_app_path = shlex.quote(str(app_path))
     return textwrap.dedent(
         f"""
         #!/bin/bash
         sleep 2
-        if [[ "{update_path}" == *.zip ]]; then
-            unzip -o "{update_path}" -d "{app_dir}"
-        elif [[ "{update_path}" == *.dmg ]]; then
-            hdiutil attach "{update_path}" -nobrowse -quiet
-            cp -R /Volumes/*/*.app "{app_dir}/"
-            hdiutil detach /Volumes/* -quiet
+        UPDATE_PATH={q_update}
+        APP_DIR={q_app_dir}
+        APP_PATH={q_app_path}
+        if [[ "$UPDATE_PATH" == *.zip ]]; then
+            unzip -o "$UPDATE_PATH" -d "$APP_DIR"
+        elif [[ "$UPDATE_PATH" == *.dmg ]]; then
+            MOUNT_DIR=$(hdiutil attach "$UPDATE_PATH" -nobrowse -quiet \
+                | grep -oE '/Volumes/[^[:cntrl:]]+' | tail -1)
+            if [[ -n "$MOUNT_DIR" ]]; then
+                cp -R "$MOUNT_DIR"/*.app "$APP_DIR/"
+                hdiutil detach "$MOUNT_DIR" -quiet
+            fi
         fi
-        open "{app_path}" --args --updated
-        rm -f "$0" "{update_path}"
+        open "$APP_PATH" --args --updated
+        rm -f "$0" "$UPDATE_PATH"
         """
     ).strip()
 
