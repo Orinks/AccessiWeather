@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - Alert sounds and sound-pack creation now focus on alert severity instead of a long list of specific alert names, while existing packs can keep their older mappings.
 
 ### Fixed
+- Reliability fixes now prevent several update, notification, tray tooltip, dialog, NOAA radio, and alert-refresh edge cases from interrupting normal use.
 - Detected current locations outside the US now get an editable place name when reverse geocoding can identify the coordinates.
 - Editing a location after using "Use my current location" now refreshes the editable name and saved US metadata for the detected point, so locations don't quietly fall back to metric defaults.
 - Notification sounds now recover after Windows sleep or hibernation, so update

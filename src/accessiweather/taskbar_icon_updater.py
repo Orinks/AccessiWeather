@@ -287,6 +287,10 @@ class TaskbarIconUpdater:
             parts.append(formatted_direction)
         if speed_str != PLACEHOLDER_NA:
             parts.append(f"at {speed_str}")
+        else:
+            legacy_speed = getattr(current, "wind_speed", None)
+            if legacy_speed is not None:
+                parts.append(f"at {legacy_speed:.0f} mph")
 
         return " ".join(parts) if parts else PLACEHOLDER_NA
 
