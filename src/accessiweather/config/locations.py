@@ -43,6 +43,21 @@ class LocationOperations:
     def logger(self) -> logging.Logger:
         return self._manager._get_logger()
 
+    def _valid_coordinates(self, name: str, latitude: float, longitude: float) -> bool:
+        """Return True if the coordinates are within valid geographic bounds."""
+        try:
+            lat = float(latitude)
+            lon = float(longitude)
+        except (TypeError, ValueError):
+            self.logger.warning(f"Location {name} has non-numeric coordinates; rejecting")
+            return False
+        if not (-90.0 <= lat <= 90.0 and -180.0 <= lon <= 180.0):
+            self.logger.warning(
+                f"Location {name} has out-of-range coordinates ({latitude}, {longitude}); rejecting"
+            )
+            return False
+        return True
+
     def add_location(
         self,
         name: str,
@@ -52,6 +67,9 @@ class LocationOperations:
         marine_mode: bool = False,
     ) -> bool:
         """Add a new location if it doesn't already exist."""
+        if not self._valid_coordinates(name, latitude, longitude):
+            return False
+
         config = self._manager.get_config()
 
         for existing_location in config.locations:
@@ -95,6 +113,9 @@ class LocationOperations:
         those cases the zone fields remain null and the location is still
         saved.
         """
+        if not self._valid_coordinates(name, latitude, longitude):
+            return False
+
         config = self._manager.get_config()
 
         for existing_location in config.locations:

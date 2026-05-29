@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import wx
 
 from ...screen_reader import ScreenReaderAnnouncer
+from .async_guard import guard_destroyed
 
 if TYPE_CHECKING:
     from ...app import AccessiWeatherApp
@@ -235,6 +236,7 @@ class DiscussionDialog(wx.Dialog):
             logger.error(f"Discussion fetch failed: {e}")
             wx.CallAfter(self._on_fetch_error, str(e))
 
+    @guard_destroyed
     def _on_fetch_complete(self, location_name: str, discussion: str | None) -> None:
         """Handle fetch completion."""
         self._is_loading = False
@@ -253,6 +255,7 @@ class DiscussionDialog(wx.Dialog):
             )
             self.explain_button.Disable()
 
+    @guard_destroyed
     def _on_fetch_error(self, error: str) -> None:
         """Handle fetch error."""
         self._is_loading = False
@@ -319,6 +322,7 @@ class DiscussionDialog(wx.Dialog):
         # Run async explanation
         self.app.run_async(self._do_explain())
 
+    @guard_destroyed
     def _on_explain_status(self, message: str) -> None:
         """Show model-selection progress while the summary is running."""
         DiscussionDialog._show_ai_summary_section(self)
@@ -412,6 +416,7 @@ class DiscussionDialog(wx.Dialog):
             info_lines.append("Cached: Yes")
         return "\n".join(info_lines)
 
+    @guard_destroyed
     def _on_explain_complete(
         self,
         explanation: str,
@@ -452,6 +457,7 @@ class DiscussionDialog(wx.Dialog):
             cache.clear()
         self._on_explain(event)
 
+    @guard_destroyed
     def _on_explain_error(self, error: str) -> None:
         """Handle explanation error."""
         self._is_explaining = False
@@ -473,6 +479,9 @@ class DiscussionDialog(wx.Dialog):
 
     def _on_close(self, event) -> None:
         """Handle close button press."""
+        announcer = getattr(self, "_announcer", None)
+        if announcer is not None:
+            announcer.shutdown()
         self.EndModal(wx.ID_CLOSE)
 
 

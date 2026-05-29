@@ -17,6 +17,7 @@ Allergy
 
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -76,7 +77,7 @@ def _outdoor_from_conditions(
     3. Appends precipitation warning when condition text implies active precipitation.
     """
     ref_temp = feels_like_f if feels_like_f is not None else temp_f
-    if ref_temp is None:
+    if ref_temp is None or not math.isfinite(ref_temp):
         return None
 
     comfort = next(label for upper, label in _OUTDOOR_TEMP_BANDS if ref_temp < upper)

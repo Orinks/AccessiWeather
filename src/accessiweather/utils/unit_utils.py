@@ -5,25 +5,30 @@ This module provides utility functions for formatting wind speed, pressure, and 
 copied from the wx version for consistency.
 """
 
-import logging
+from __future__ import annotations
 
-from ..units import DisplayUnitSystem
+import logging
+from typing import TYPE_CHECKING
+
 from .temperature_utils import TemperatureUnit
+
+if TYPE_CHECKING:
+    from ..units import DisplayUnitSystem
 
 logger = logging.getLogger(__name__)
 
 
-def _normalize_unit_system(unit_system: DisplayUnitSystem | str | None) -> DisplayUnitSystem | None:
+def _normalize_unit_system(unit_system: DisplayUnitSystem | str | None) -> str | None:
     """Normalize optional unit-system hints."""
-    if isinstance(unit_system, DisplayUnitSystem):
-        return unit_system
-    if isinstance(unit_system, str):
-        normalized = unit_system.strip().lower()
-        if normalized == "uk2":
-            normalized = "uk"
-        for candidate in DisplayUnitSystem:
-            if candidate.value == normalized:
-                return candidate
+    value = getattr(unit_system, "value", unit_system)
+    if not isinstance(value, str):
+        return None
+
+    normalized = value.strip().lower()
+    if normalized == "uk2":
+        normalized = "uk"
+    if normalized in {"us", "uk", "ca", "si"}:
+        return normalized
     return None
 
 
@@ -62,13 +67,13 @@ def format_wind_speed(
     assert wind_speed_kph is not None
 
     normalized_system = _normalize_unit_system(unit_system)
-    if normalized_system == DisplayUnitSystem.US:
+    if normalized_system == "us":
         return f"{wind_speed_mph:.{precision}f} mph"
-    if normalized_system == DisplayUnitSystem.UK:
+    if normalized_system == "uk":
         return f"{wind_speed_mph:.{precision}f} mph"
-    if normalized_system == DisplayUnitSystem.CA:
+    if normalized_system == "ca":
         return f"{wind_speed_kph:.{precision}f} km/h"
-    if normalized_system == DisplayUnitSystem.SI:
+    if normalized_system == "si":
         wind_speed_mps = wind_speed_kph / 3.6
         return f"{wind_speed_mps:.{precision}f} m/s"
 
@@ -114,9 +119,9 @@ def format_pressure(
         pressure_mb = pressure_inhg * 33.8639
 
     normalized_system = _normalize_unit_system(unit_system)
-    if normalized_system == DisplayUnitSystem.US:
+    if normalized_system == "us":
         return f"{pressure_inhg:.{precision}f} inHg"
-    if normalized_system in {DisplayUnitSystem.UK, DisplayUnitSystem.CA, DisplayUnitSystem.SI}:
+    if normalized_system in {"uk", "ca", "si"}:
         return f"{pressure_mb:.{precision}f} hPa"
 
     # Format based on user preference
@@ -161,9 +166,9 @@ def format_visibility(
         visibility_km = visibility_miles * 1.60934
 
     normalized_system = _normalize_unit_system(unit_system)
-    if normalized_system in {DisplayUnitSystem.US, DisplayUnitSystem.UK}:
+    if normalized_system in {"us", "uk"}:
         return f"{visibility_miles:.{precision}f} mi"
-    if normalized_system in {DisplayUnitSystem.CA, DisplayUnitSystem.SI}:
+    if normalized_system in {"ca", "si"}:
         return f"{visibility_km:.{precision}f} km"
 
     # Format based on user preference
@@ -208,9 +213,9 @@ def format_precipitation(
         precipitation_mm = precipitation_inches * 25.4
 
     normalized_system = _normalize_unit_system(unit_system)
-    if normalized_system == DisplayUnitSystem.US:
+    if normalized_system == "us":
         return f"{precipitation_inches:.{precision}f} in"
-    if normalized_system in {DisplayUnitSystem.UK, DisplayUnitSystem.CA, DisplayUnitSystem.SI}:
+    if normalized_system in {"uk", "ca", "si"}:
         return f"{precipitation_mm:.{precision}f} mm"
 
     # Format based on user preference

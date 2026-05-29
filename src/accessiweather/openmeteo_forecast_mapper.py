@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 
 from .openmeteo_client import OpenMeteoApiClient
@@ -38,18 +38,25 @@ def map_forecast(
 
         for i, date_str in enumerate(dates):
             try:
-                # Parse the date - convert from local time to UTC
-                date_str_utc = parse_datetime(date_str, utc_offset_seconds)
-                if date_str_utc:
-                    date_obj = datetime.fromisoformat(date_str_utc)
-                else:
-                    # Fallback to treating as UTC if parsing fails
+                # Open-Meteo daily "time" values are calendar dates (e.g.
+                # "2026-05-28") already in the location's local timezone. Treat
+                # them as local dates so the weekday label and the 6am/6pm
+                # period boundaries are correct. Converting to UTC (as the
+                # hourly path does) would shift the day backwards for locations
+                # east of UTC and place the boundaries in UTC rather than local.
+                try:
+                    date_obj = datetime.fromisoformat(date_str)
+                except ValueError:
                     date_obj = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+                if date_obj.tzinfo is None and utc_offset_seconds is not None:
+                    date_obj = date_obj.replace(
+                        tzinfo=timezone(timedelta(seconds=utc_offset_seconds))
+                    )
 
                 # Create day and night periods (NWS style)
                 day_period = {
                     "number": i * 2 + 1,
-                    "name": date_obj.strftime("%A") if i == 0 else date_obj.strftime("%A"),
+                    "name": date_obj.strftime("%A"),
                     "startTime": date_obj.replace(hour=6).isoformat(),
                     "endTime": date_obj.replace(hour=18).isoformat(),
                     "isDaytime": True,

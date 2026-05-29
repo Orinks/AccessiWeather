@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 GITHUB_API_URL = "https://api.github.com/repos/{owner}/{repo}/releases"
 CACHE_EXPIRY_SECONDS = 3600  # 1 hour
-VALID_CHANNELS = {"stable", "dev"}
+# "nightly" is the canonical non-stable channel; "dev" is kept as a legacy alias.
+VALID_CHANNELS = {"stable", "nightly", "dev"}
 
 
 class ReleaseManager:
@@ -198,8 +199,8 @@ class ReleaseManager:
                 if not prerelease and not is_nightly:
                     filtered.append(release)
 
-            elif channel == "dev":
-                # Dev: all releases
+            else:
+                # Non-stable ("nightly"/"dev"): all releases
                 filtered.append(release)
 
         return filtered

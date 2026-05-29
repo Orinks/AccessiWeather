@@ -348,6 +348,10 @@ class WeatherNotifier:
                 sent_time = isoparse(sent_str) if sent_str else datetime.min.replace(tzinfo=UTC)
             except Exception:
                 sent_time = datetime.min.replace(tzinfo=UTC)
+            # Normalize to tz-aware so sorting never mixes naive and aware
+            # datetimes (which raises TypeError and would drop all notifications).
+            if sent_time.tzinfo is None:
+                sent_time = sent_time.replace(tzinfo=UTC)
 
             # Return tuple for sorting: (severity_score, sent_time)
             # Higher severity score and more recent time are preferred

@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, cast
 import wx
 
 from ...screen_reader import ScreenReaderAnnouncer
+from .async_guard import guard_destroyed
 from .forecast_product_ai import (
     build_explainer,
     has_openrouter_key,
@@ -269,6 +270,7 @@ class ForecastProductPanel(wx.Panel):
         self._hide_ai_summary_section()
         self.explain_button.Disable()
 
+    @guard_destroyed
     def _on_load_complete(
         self,
         result: TextProduct | list[TextProduct] | None,
@@ -352,6 +354,7 @@ class ForecastProductPanel(wx.Panel):
         self._hide_ai_summary_section()
         self._set_post_explain_buttons(has_attempted=False)
 
+    @guard_destroyed
     def _on_load_error(self, exc: Exception) -> None:
         """Render the fetch-failed state."""
         del exc
@@ -425,6 +428,7 @@ class ForecastProductPanel(wx.Panel):
         )
         self._schedule_explain(self._current_text)
 
+    @guard_destroyed
     def _on_explain_status(self, message: str) -> None:
         """Show model-selection progress while the summary is running."""
         self._show_ai_summary_section()
@@ -527,6 +531,7 @@ class ForecastProductPanel(wx.Panel):
             info_lines.append("Cached: Yes")
         return "\n".join(info_lines)
 
+    @guard_destroyed
     def _on_explain_complete(
         self,
         summary: str,
@@ -560,6 +565,7 @@ class ForecastProductPanel(wx.Panel):
             completion_message = f"Plain Language Summary generated using {model_used}."
         self._announce_explain_status(completion_message)
 
+    @guard_destroyed
     def _on_explain_error(self, message: str) -> None:
         """Populate the AI summary TextCtrl with an error message."""
         self._is_explaining = False

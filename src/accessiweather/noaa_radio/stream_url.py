@@ -423,4 +423,17 @@ class StreamURLProvider:
 
         # WeatherIndex requires call sign specific queries, so we can't
         # pre-warm all at once - this would require knowing all station
-        # call signs ahead of time. The cache will warm on first play.
+        # call signs ahead of time. Use prewarm_stations() to warm a known set.
+
+    def prewarm_stations(self, call_signs: list[str]) -> None:
+        """
+        Pre-warm per-call-sign stream URL caches for a set of stations.
+
+        Resolves stream URLs for each call sign so a later, main-thread
+        ``get_stream_urls`` lookup (e.g. when the user presses Play) hits a warm
+        cache instead of blocking on a network request. Intended to be called
+        from a background thread. Safe to call multiple times.
+        """
+        for call_sign in call_signs:
+            with suppress(Exception):
+                self.get_stream_urls(call_sign)

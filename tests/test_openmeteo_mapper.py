@@ -101,6 +101,27 @@ class TestOpenMeteoMapperForecastPairing:
 
         assert "temperature_low" not in periods[0]
 
+    def test_daily_weekday_uses_local_date_for_eastern_hemisphere(self):
+        # 2026-03-19 is a Thursday. With a +10h offset (e.g. Australia), naive
+        # local midnight converts to the previous day in UTC; the period name
+        # must still reflect the local calendar day, not the UTC-shifted one.
+        payload = _make_daily_payload(["2026-03-19"], [54.0], [39.0])
+        payload["utc_offset_seconds"] = 10 * 3600
+
+        periods = OpenMeteoMapper().map_forecast(payload)["properties"]["periods"]
+
+        assert periods[0]["name"] == "Thursday"
+        assert periods[1]["name"] == "Thursday Night"
+        # Day period should start at 6am local (not in UTC).
+        assert periods[0]["startTime"].startswith("2026-03-19T06:00:00")
+
+    def test_daily_date_with_z_suffix_uses_value_error_fallback(self):
+        payload = _make_daily_payload(["2026-03-19Z"], [54.0], [39.0])
+
+        periods = OpenMeteoMapper().map_forecast(payload)["properties"]["periods"]
+
+        assert periods[0]["name"] == "Thursday"
+
 
 class TestOpenMeteoMapperHourlyFields:
     def test_hourly_mapping_includes_humidity_and_dewpoint(self):

@@ -74,6 +74,9 @@ class ToastedWindowsNotifier:
         logger.info("ToastedWindowsNotifier initialized (app_id=%s)", WINDOWS_APP_USER_MODEL_ID)
         # Eagerly start worker thread to avoid first-notification delay
         self._ensure_worker()
+        # Start the watchdog so a dead worker thread is detected and restarted;
+        # without this, toasts silently stop until the app is relaunched.
+        self._start_watchdog()
 
     # -- worker thread management ------------------------------------------
 

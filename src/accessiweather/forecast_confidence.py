@@ -71,6 +71,24 @@ def _valid_sources(sources: list[SourceData]) -> list[SourceData]:
     return [s for s in sources if s.success and s.forecast is not None and s.forecast.has_data()]
 
 
+def _representative_period(forecast):
+    """
+    Pick a comparable period: the first daytime high, not an overnight low.
+
+    Sources don't agree on whether ``periods[0]`` is a daytime "Today" high or
+    an overnight "Tonight" low (it depends on the time of day a source is
+    fetched), so comparing ``periods[0]`` blindly can pit a high against a low
+    and produce a falsely large spread. Prefer the first period that has a
+    temperature and isn't named like a night period; fall back to the first
+    period when nothing better is found.
+    """
+    periods = forecast.periods
+    for period in periods:
+        if period.temperature is not None and "night" not in (period.name or "").lower():
+            return period
+    return periods[0] if periods else None
+
+
 def calculate_forecast_confidence(sources: list[SourceData]) -> ForecastConfidence:
     """
     Compute a confidence level by comparing the first forecast period across sources.
@@ -111,12 +129,12 @@ def calculate_forecast_confidence(sources: list[SourceData]) -> ForecastConfiden
 
     for s in valid:
         assert s.forecast is not None  # already filtered above
-        if s.forecast.periods:
-            p0 = s.forecast.periods[0]
-            if p0.temperature is not None:
-                temps.append(p0.temperature)
-            if p0.precipitation_probability is not None:
-                precips.append(p0.precipitation_probability)
+        period = _representative_period(s.forecast)
+        if period is not None:
+            if period.temperature is not None:
+                temps.append(period.temperature)
+            if period.precipitation_probability is not None:
+                precips.append(period.precipitation_probability)
 
     temp_spread = (max(temps) - min(temps)) if len(temps) >= 2 else 0.0
     precip_spread = (max(precips) - min(precips)) if len(precips) >= 2 else None
