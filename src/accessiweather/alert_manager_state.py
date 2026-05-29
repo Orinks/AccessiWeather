@@ -157,4 +157,7 @@ class AlertSettings:
         """Check if we should notify for this event category."""
         if not event:
             return True
-        return event.lower() not in self.ignored_categories
+        # Compare case-insensitively: ignored_categories is populated from
+        # settings/imports without case normalization, so a stored value like
+        # "Tornado Warning" must still match the lowercased event.
+        return event.lower() not in {category.lower() for category in self.ignored_categories}

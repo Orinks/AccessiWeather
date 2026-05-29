@@ -70,8 +70,13 @@ class AppSettingsValidationMixin:
                 setattr(settings, setting_name, "standard")
 
         elif setting_name == "update_channel":
-            valid_channels = {"stable", "beta", "dev"}
-            if value not in valid_channels:
+            # Canonical channels are "stable" and "nightly". "dev"/"beta" are
+            # legacy aliases for the non-stable channel — migrate them to
+            # "nightly" rather than resetting to stable (which would silently
+            # downgrade a nightly user).
+            if value in {"dev", "beta"}:
+                setattr(settings, setting_name, "nightly")
+            elif value not in {"stable", "nightly"}:
                 setattr(settings, setting_name, "stable")
 
         elif setting_name == "time_display_mode":

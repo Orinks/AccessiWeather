@@ -277,17 +277,16 @@ class TaskbarIconUpdater:
     def _format_wind(self, current: Any) -> str:
         """Format wind direction and speed."""
         direction = getattr(current, "wind_direction", None)
-        speed = getattr(current, "wind_speed", None)
-
-        if direction is None and speed is None:
-            return PLACEHOLDER_NA
+        # Format the speed through the unit-aware helper rather than assuming
+        # mph: wind_speed may carry km/h for metric-only sources.
+        speed_str = self._format_wind_speed(current)
 
         parts = []
         formatted_direction = self._format_wind_direction(direction)
         if formatted_direction != PLACEHOLDER_NA:
             parts.append(formatted_direction)
-        if speed is not None:
-            parts.append(f"at {speed:.0f} mph")
+        if speed_str != PLACEHOLDER_NA:
+            parts.append(f"at {speed_str}")
 
         return " ".join(parts) if parts else PLACEHOLDER_NA
 
