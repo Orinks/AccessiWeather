@@ -121,6 +121,13 @@ class TestConfigManager:
         assert len(locations) == 1
         assert locations[0].name == "New York"
 
+    def test_add_location_rejects_non_numeric_coordinates(self, manager):
+        """Invalid coordinate values are rejected before saving."""
+        result = manager.add_location("Bad", "north", -74.0060)  # type: ignore[arg-type]
+
+        assert result is False
+        assert manager.get_all_locations() == []
+
     def test_add_location_persists_marine_mode_roundtrip(self, manager):
         """Marine mode should save and reload with locations."""
         result = manager.add_location(

@@ -115,6 +115,13 @@ class TestOpenMeteoMapperForecastPairing:
         # Day period should start at 6am local (not in UTC).
         assert periods[0]["startTime"].startswith("2026-03-19T06:00:00")
 
+    def test_daily_date_with_z_suffix_uses_value_error_fallback(self):
+        payload = _make_daily_payload(["2026-03-19Z"], [54.0], [39.0])
+
+        periods = OpenMeteoMapper().map_forecast(payload)["properties"]["periods"]
+
+        assert periods[0]["name"] == "Thursday"
+
 
 class TestOpenMeteoMapperHourlyFields:
     def test_hourly_mapping_includes_humidity_and_dewpoint(self):

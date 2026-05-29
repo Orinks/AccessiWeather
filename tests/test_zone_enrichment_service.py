@@ -422,6 +422,20 @@ class TestAddLocationWithEnrichment:
         mock_service.enrich_location.assert_not_awaited()
         assert manager.save_calls == 0
 
+    async def test_invalid_coordinates_rejected_without_calling_service(self):
+        mock_service = MagicMock(spec=ZoneEnrichmentService)
+        mock_service.enrich_location = AsyncMock(side_effect=lambda loc: loc)
+
+        manager = _FakeConfigManager()
+        ops = LocationOperations(cast(ConfigManager, manager), zone_enrichment_service=mock_service)
+
+        ok = await ops.add_location_with_enrichment("Bad", 91.0, -75.16, country_code="US")
+
+        assert ok is False
+        mock_service.enrich_location.assert_not_awaited()
+        assert manager.get_config().locations == []
+        assert manager.save_calls == 0
+
 
 class TestNoModalDialog:
     """Scenario 6: save flow never spawns a modal dialog on /points failure."""

@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 from unittest.mock import AsyncMock, MagicMock
 
+import httpx
 import pytest
 
 from accessiweather.services.simple_update import (
@@ -59,6 +60,33 @@ def test_find_checksum_asset_no_match():
         ]
     }
     assert find_checksum_asset(release, "app.zip") is None
+
+
+def _mock_update_stream(content: bytes) -> MagicMock:
+    response = MagicMock()
+    response.headers = {"content-length": str(len(content))}
+    response.raise_for_status = MagicMock()
+
+    async def aiter_bytes(chunk_size=None):
+        yield content
+
+    response.aiter_bytes = aiter_bytes
+    response.__aenter__ = AsyncMock(return_value=response)
+    response.__aexit__ = AsyncMock(return_value=None)
+    return response
+
+
+def _update_info_with_release(release: dict | None = None) -> UpdateInfo:
+    return UpdateInfo(
+        version="1.0.0",
+        download_url="https://example.com/update.zip",
+        artifact_name="update.zip",
+        release_notes="",
+        commit_hash=None,
+        is_nightly=False,
+        is_prerelease=False,
+        release=release,
+    )
 
 
 def test_find_checksum_asset_generic_checksums_file():
@@ -234,3 +262,80 @@ async def test_download_update_should_accept_valid_artifact(tmp_path):
     result = await service.download_update(update_info, tmp_path, release=release)
     assert result.exists()
     assert result.read_bytes() == artifact_content
+
+
+@pytest.mark.asyncio
+async def test_download_update_allows_release_without_checksum_asset(tmp_path):
+    artifact_content = b"valid artifact content"
+    release = {"assets": [{"name": "update.zip", "browser_download_url": "https://example.com/u"}]}
+    mock_client = MagicMock()
+    mock_client.stream = MagicMock(return_value=_mock_update_stream(artifact_content))
+
+    service = UpdateService("TestApp", http_client=mock_client)
+
+    result = await service.download_update(_update_info_with_release(release), tmp_path)
+
+    assert result.exists()
+    assert result.read_bytes() == artifact_content
+
+
+@pytest.mark.asyncio
+async def test_download_update_rejects_checksum_asset_without_url(tmp_path):
+    release = {"assets": [{"name": "update.zip.sha256"}]}
+    mock_client = MagicMock()
+    mock_client.stream = MagicMock(return_value=_mock_update_stream(b"artifact"))
+
+    service = UpdateService("TestApp", http_client=mock_client)
+
+    with pytest.raises(ChecksumVerificationError, match="no download URL"):
+        await service.download_update(_update_info_with_release(release), tmp_path)
+
+    assert not (tmp_path / "update.zip").exists()
+
+
+@pytest.mark.asyncio
+async def test_download_update_rejects_checksum_download_failure(tmp_path):
+    release = {
+        "assets": [
+            {
+                "name": "update.zip.sha256",
+                "browser_download_url": "https://example.com/update.zip.sha256",
+            }
+        ]
+    }
+    mock_client = MagicMock()
+    mock_client.stream = MagicMock(return_value=_mock_update_stream(b"artifact"))
+    mock_client.get = AsyncMock(side_effect=httpx.ConnectError("no net"))
+
+    service = UpdateService("TestApp", http_client=mock_client)
+
+    with pytest.raises(ChecksumVerificationError, match="Failed to download checksum"):
+        await service.download_update(_update_info_with_release(release), tmp_path)
+
+    assert not (tmp_path / "update.zip").exists()
+
+
+@pytest.mark.asyncio
+async def test_download_update_rejects_checksum_file_without_artifact_entry(tmp_path):
+    release = {
+        "assets": [
+            {
+                "name": "update.zip.sha256",
+                "browser_download_url": "https://example.com/update.zip.sha256",
+            }
+        ]
+    }
+    checksum_response = MagicMock()
+    checksum_response.raise_for_status = MagicMock()
+    checksum_response.text = f"{hashlib.sha256(b'other').hexdigest()}  other.zip"
+
+    mock_client = MagicMock()
+    mock_client.stream = MagicMock(return_value=_mock_update_stream(b"artifact"))
+    mock_client.get = AsyncMock(return_value=checksum_response)
+
+    service = UpdateService("TestApp", http_client=mock_client)
+
+    with pytest.raises(ChecksumVerificationError, match="Could not find a checksum"):
+        await service.download_update(_update_info_with_release(release), tmp_path)
+
+    assert not (tmp_path / "update.zip").exists()

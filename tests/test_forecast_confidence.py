@@ -80,6 +80,18 @@ class TestZeroAndOneSources:
         result = calculate_forecast_confidence([make_empty_forecast_source()])
         assert result.level == ForecastConfidenceLevel.LOW
 
+    def test_night_only_forecast_falls_back_to_first_period(self):
+        source = SourceData(
+            source="nws",
+            forecast=Forecast(periods=[ForecastPeriod(name="Tonight", temperature=62.0)]),
+            success=True,
+        )
+
+        result = calculate_forecast_confidence([source])
+
+        assert result.level == ForecastConfidenceLevel.MEDIUM
+        assert result.sources_compared == 1
+
     def test_single_valid_source_returns_medium(self):
         result = calculate_forecast_confidence([make_source(72.0)])
         assert result.level == ForecastConfidenceLevel.MEDIUM
