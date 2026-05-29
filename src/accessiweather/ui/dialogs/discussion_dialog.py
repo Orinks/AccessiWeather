@@ -479,6 +479,9 @@ class DiscussionDialog(wx.Dialog):
 
     def _on_close(self, event) -> None:
         """Handle close button press."""
+        announcer = getattr(self, "_announcer", None)
+        if announcer is not None:
+            announcer.shutdown()
         self.EndModal(wx.ID_CLOSE)
 
 

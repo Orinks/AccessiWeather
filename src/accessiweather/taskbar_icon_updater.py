@@ -463,7 +463,10 @@ class TaskbarIconUpdater:
 
         result = self.parser.format_string(format_string, data)
 
-        if "Error" in result:
+        # The parser signals failure with a string starting with "Error:".
+        # Match the prefix so a legitimate value containing the word "error"
+        # doesn't blank the tooltip.
+        if result.startswith("Error:"):
             logger.warning("Format error: %s", result)
             return DEFAULT_TOOLTIP_TEXT
 

@@ -422,6 +422,11 @@ class CommunitySoundPackService:
                     continue
                 rel_path = item.get("path") or ""
                 target_path = staging_dir / rel_path
+                # Defense-in-depth: ensure a malicious/unexpected tree path can't
+                # escape the staging directory (path traversal / zip-slip).
+                staging_root = staging_dir.resolve()
+                if not target_path.resolve().is_relative_to(staging_root):
+                    raise RuntimeError(f"Unsafe path in repository tree: {rel_path!r}")
                 target_path.parent.mkdir(parents=True, exist_ok=True)
                 raw_url = (
                     f"https://raw.githubusercontent.com/{self.repo_owner}/{self.repo_name}/"
