@@ -137,12 +137,15 @@ class TestShowMainWindow:
         kernel32 = SimpleNamespace(GetCurrentProcessId=MagicMock(return_value=67890))
 
         monkeypatch.setattr(system_tray.sys, "platform", "win32")
-        monkeypatch.setattr(
-            ctypes,
-            "windll",
-            SimpleNamespace(user32=user32, kernel32=kernel32),
-            raising=False,
-        )
+
+        def fake_windll(name, *args, **kwargs):
+            if name == "user32":
+                return user32
+            if name == "kernel32":
+                return kernel32
+            raise ValueError(name)
+
+        monkeypatch.setattr(ctypes, "WinDLL", fake_windll, raising=False)
 
         tray.show_main_window()
 

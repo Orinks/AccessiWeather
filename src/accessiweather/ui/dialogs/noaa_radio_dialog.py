@@ -107,6 +107,9 @@ class NOAARadioDialog(wx.Dialog):
         self._current_urls: list[str] = []
         self._current_url_index: int = 0
         self._playing_station: Station | None = None
+        # Set once the dialog is closed so background-thread completion handlers
+        # (delivered via wx.CallAfter) don't touch destroyed widgets.
+        self._closed = False
         self._health_timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self._on_health_check, self._health_timer)
 
@@ -175,6 +178,11 @@ class NOAARadioDialog(wx.Dialog):
         """Worker that pre-warms stream cache."""
         try:
             self._url_provider.prewarm_cache()
+            # Also warm the per-call-sign WeatherIndex cache for the displayed
+            # stations so the synchronous lookup in _on_play doesn't block the
+            # UI thread on first play.
+            call_signs = [station.call_sign for station in stations]
+            self._url_provider.prewarm_stations(call_signs)
             logger.debug("Pre-warmed stream cache")
         except Exception as e:
             logger.debug(f"Failed to pre-warm stream cache: {e}")
@@ -182,7 +190,7 @@ class NOAARadioDialog(wx.Dialog):
     def _on_stations_loaded(self, stations: list[Station], choices: list[str]) -> None:
         """Handle stations loaded in background thread."""
         # Check if dialog was closed while background thread was running
-        if self._station_choice is None:
+        if getattr(self, "_closed", False):
             return
         previous_station = self._get_selected_station()
         previous_call_sign = previous_station.call_sign if previous_station is not None else None
@@ -242,6 +250,9 @@ class NOAARadioDialog(wx.Dialog):
             self._set_status("No station selected")
             return
 
+        # Stream URLs for the displayed stations are warmed in the background by
+        # _prewarm_stream_cache_worker after the list loads, so this lookup
+        # normally hits a warm per-call-sign cache instead of blocking on HTTP.
         urls = self._url_provider.get_stream_urls(station.call_sign)
         if not urls:
             self._set_status(f"No stream available for {station.call_sign}")
@@ -385,6 +396,8 @@ class NOAARadioDialog(wx.Dialog):
 
     def _set_status(self, text: str) -> None:
         """Update the status text."""
+        if getattr(self, "_closed", False):
+            return
         self._status_text.SetLabel(text)
 
     def _on_show_unavailable_changed(self, _event: wx.CommandEvent) -> None:
@@ -439,6 +452,7 @@ class NOAARadioDialog(wx.Dialog):
 
     def _on_close(self, _event: wx.Event) -> None:
         """Handle dialog close."""
+        self._closed = True
         self._health_timer.Stop()
         self._player.stop()
         self.Destroy()

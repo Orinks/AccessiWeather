@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING, Any
 
 import wx
 
+from .async_guard import guard_destroyed
+
 if TYPE_CHECKING:
     from ...models import Location, TextProduct
     from ...services.forecast_product_service import ForecastProductService
@@ -538,7 +540,12 @@ class AdvancedTextProductDialog(wx.Dialog):
         except Exception as exc:  # noqa: BLE001
             logger.warning("Advanced text product lookup failed: %s", exc)
             text = f"Lookup failed: {exc}"
-        wx.CallAfter(self.result_text.SetValue, text)
+        wx.CallAfter(self._apply_lookup_result, text)
+
+    @guard_destroyed
+    def _apply_lookup_result(self, text: str) -> None:
+        """Apply the lookup result to the UI (guarded against dialog close)."""
+        self.result_text.SetValue(text)
 
     def _run_lookup_sync(self) -> str:
         """Run a lookup synchronously for stub GUI tests."""
