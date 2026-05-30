@@ -1,7 +1,14 @@
 from __future__ import annotations
 
+import argparse
+import subprocess
+from pathlib import Path
+
+import pytest
+
 from scripts.changelog_tools import (
     ChangelogSection,
+    check_command,
     extract_release_block,
     format_sections,
     is_user_facing_path,
@@ -9,7 +16,53 @@ from scripts.changelog_tools import (
     normalize_entry,
     parse_sections,
     pyproject_changed_lines_require_changelog,
+    resolve_base,
+    unreleased_added_entries,
 )
+
+
+def git(repo: Path, *args: str) -> str:
+    result = subprocess.run(
+        ["git", *args],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip()
+
+
+def make_changelog_repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> str:
+    git(tmp_path, "init", "-q")
+    git(tmp_path, "config", "user.email", "test@example.com")
+    git(tmp_path, "config", "user.name", "Test User")
+
+    source_file = tmp_path / "src" / "accessiweather" / "app.py"
+    source_file.parent.mkdir(parents=True)
+    source_file.write_text("print('hello')\n", encoding="utf-8")
+    (tmp_path / "CHANGELOG.md").write_text(
+        """# AccessiWeather Changelog
+
+## [Unreleased]
+
+### Fixed
+- Existing fix.
+
+## [0.1.0] - 2026-01-01
+
+### Fixed
+- Old fix.
+""",
+        encoding="utf-8",
+    )
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-q", "-m", "initial")
+    monkeypatch.chdir(tmp_path)
+    return git(tmp_path, "rev-parse", "HEAD")
+
+
+def check_args(base: str) -> argparse.Namespace:
+    return argparse.Namespace(base=base, head="HEAD")
 
 
 def test_extract_unreleased_block_stops_at_next_release() -> None:
@@ -92,6 +145,69 @@ def test_skip_marker_opts_out_only_when_all_commits_carry_it() -> None:
     assert not messages_opt_out_of_changelog([])
 
 
+def test_resolve_base_uses_main_for_main_branch(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("scripts.changelog_tools.current_branch", lambda: "main")
+
+    assert resolve_base("auto") == "origin/main"
+
+
+def test_resolve_base_uses_dev_for_other_branches(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("scripts.changelog_tools.current_branch", lambda: "feature/fix")
+
+    assert resolve_base("auto") == "origin/dev"
+
+
+def test_resolve_base_preserves_explicit_base(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "scripts.changelog_tools.current_branch",
+        lambda: pytest.fail("explicit base should not inspect the branch"),
+    )
+
+    assert resolve_base("origin/release") == "origin/release"
+
+
+def test_check_command_flags_dirty_user_facing_worktree_change(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    base = make_changelog_repo(tmp_path, monkeypatch)
+    source_file = tmp_path / "src" / "accessiweather" / "app.py"
+    source_file.write_text("print('changed')\n", encoding="utf-8")
+
+    assert check_command(check_args(base)) == 1
+
+
+def test_check_command_accepts_dirty_worktree_changelog_entry(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    base = make_changelog_repo(tmp_path, monkeypatch)
+    (tmp_path / "src" / "accessiweather" / "app.py").write_text(
+        "print('changed')\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "CHANGELOG.md").write_text(
+        """# AccessiWeather Changelog
+
+## [Unreleased]
+
+### Fixed
+- New user-facing fix.
+- Existing fix.
+
+## [0.1.0] - 2026-01-01
+
+### Fixed
+- Old fix.
+""",
+        encoding="utf-8",
+    )
+
+    assert check_command(check_args(base)) == 0
+    assert "Found CHANGELOG.md Unreleased entries" in capsys.readouterr().out
+
+
 def test_pyproject_metadata_only_changes_do_not_need_changelog() -> None:
     assert not pyproject_changed_lines_require_changelog(
         [
@@ -133,3 +249,30 @@ def test_normalize_entry_matches_curated_release_body_wording() -> None:
     )
 
     assert normalize_entry(changelog_entry) == normalize_entry(release_body_entry)
+
+
+def test_unreleased_added_entries_ignores_existing_entry_reformat(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    base_text = """# Changelog
+
+## [Unreleased]
+
+### Fixed
+- **National Products in Forecaster Notes** — Forecaster Notes now opens a dedicated dialog.
+"""
+    head_text = """# Changelog
+
+## [Unreleased]
+
+### Fixed
+- **National Products in Forecaster Notes** - Forecaster Notes now opens a dedicated dialog.
+"""
+
+    monkeypatch.setattr("scripts.changelog_tools.changelog_at", lambda _ref: base_text)
+    monkeypatch.setattr(
+        "scripts.changelog_tools.run_git",
+        lambda _args: head_text,
+    )
+
+    assert unreleased_added_entries("base", "head") == []

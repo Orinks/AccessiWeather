@@ -1,3 +1,5 @@
+default_install_hook_types: [pre-commit, pre-push]
+
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
@@ -20,3 +22,12 @@ repos:
     -   id: ruff-format
         files: ^(src/|tests/)
         exclude: ^src/accessiweather/(weather_gov_api_client|weatherapi_client)/
+
+-   repo: local
+    hooks:
+    -   id: changelog-check
+        name: changelog check
+        entry: python scripts/changelog_tools.py check --base auto --head HEAD --committed-only
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
