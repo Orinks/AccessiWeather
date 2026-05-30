@@ -28,6 +28,7 @@ USER_FACING_SUFFIXES = (".spec",)
 # Markers a commit message can carry to opt its change set out of the gate.
 # Used for direct pushes, where there is no PR label to apply.
 SKIP_CHANGELOG_MARKERS = ("changelog: none", "[skip changelog]")
+NIGHTLY_BUILD_MARKERS = ("nightly: build", "[nightly build]")
 SECTION_ORDER = ("Added", "Changed", "Fixed", "Improved", "Removed", "Deprecated", "Security")
 PYPROJECT_METADATA_FIELDS_WITHOUT_CHANGELOG = {"version", "description"}
 PYPROJECT_TOOLING_REQUIREMENTS_WITHOUT_CHANGELOG = {"pyright", "ruff"}
@@ -165,6 +166,17 @@ def commits_opt_out_of_changelog(base: str, head: str) -> bool:
     return messages_opt_out_of_changelog(commit_messages(base, head))
 
 
+def messages_request_nightly_build(messages: list[str]) -> bool:
+    return any(
+        any(marker in message.casefold() for marker in NIGHTLY_BUILD_MARKERS)
+        for message in messages
+    )
+
+
+def commits_request_nightly_build(base: str, head: str) -> bool:
+    return messages_request_nightly_build(commit_messages(base, head))
+
+
 def unreleased_added_entries(base: str, head: str, include_worktree: bool = False) -> list[str]:
     base_entries = {
         normalize_entry(entry)
@@ -297,6 +309,16 @@ def sections_added_since(
     return added_sections
 
 
+def excluded_entries_from_notes(path: str) -> set[str]:
+    if not path:
+        return set()
+    return {
+        normalize_entry(entry)
+        for section in parse_sections(Path(path).read_text(encoding="utf-8"))
+        for entry in section.entries
+    }
+
+
 def check_command(args: argparse.Namespace) -> int:
     base = resolve_base(args.base)
     should_check_worktree = args.head == "HEAD" and not getattr(args, "committed_only", False)
@@ -340,13 +362,7 @@ def check_command(args: argparse.Namespace) -> int:
 def notes_command(args: argparse.Namespace) -> int:
     changelog_text = CHANGELOG_PATH.read_text(encoding="utf-8")
     if args.kind == "nightly":
-        excluded_entries: set[str] = set()
-        if args.exclude_notes:
-            excluded_entries = {
-                normalize_entry(entry)
-                for section in parse_sections(Path(args.exclude_notes).read_text(encoding="utf-8"))
-                for entry in section.entries
-            }
+        excluded_entries = excluded_entries_from_notes(args.exclude_notes)
         if not args.previous_tag:
             notes = format_sections(
                 parse_sections(extract_release_block(changelog_text, r"^## \[?Unreleased\]?.*$"))
@@ -367,6 +383,32 @@ def notes_command(args: argparse.Namespace) -> int:
 
     Path(args.output).write_text(notes + "\n", encoding="utf-8")
     print(f"Wrote release notes to {args.output}.")
+    return 0
+
+
+def should_build_nightly_command(args: argparse.Namespace) -> int:
+    if not args.previous_tag:
+        print("should_build=true")
+        print("No previous nightly tag found; building once.", file=sys.stderr)
+        return 0
+
+    if commits_request_nightly_build(args.previous_tag, args.head):
+        print("should_build=true")
+        print("Nightly build requested by commit marker.", file=sys.stderr)
+        return 0
+
+    changelog_text = CHANGELOG_PATH.read_text(encoding="utf-8")
+    sections = sections_added_since(
+        args.previous_tag,
+        changelog_text,
+        excluded_entries_from_notes(args.exclude_notes),
+    )
+    if sections:
+        print("should_build=true")
+        print("New curated changelog entries found for nightly build.", file=sys.stderr)
+    else:
+        print("should_build=false")
+        print("No new curated changelog entries or nightly build marker found.", file=sys.stderr)
     return 0
 
 
@@ -395,6 +437,15 @@ def main() -> int:
     notes.add_argument("--exclude-notes", default="")
     notes.add_argument("--output", default="notes.md")
     notes.set_defaults(func=notes_command)
+
+    should_build = subparsers.add_parser(
+        "should-build-nightly",
+        help="Decide whether a scheduled nightly should build artifacts.",
+    )
+    should_build.add_argument("--previous-tag", default="")
+    should_build.add_argument("--exclude-notes", default="")
+    should_build.add_argument("--head", default="HEAD")
+    should_build.set_defaults(func=should_build_nightly_command)
 
     args = parser.parse_args()
     return args.func(args)

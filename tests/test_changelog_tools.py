@@ -13,10 +13,12 @@ from scripts.changelog_tools import (
     format_sections,
     is_user_facing_path,
     messages_opt_out_of_changelog,
+    messages_request_nightly_build,
     normalize_entry,
     parse_sections,
     pyproject_changed_lines_require_changelog,
     resolve_base,
+    should_build_nightly_command,
     unreleased_added_entries,
 )
 
@@ -63,6 +65,13 @@ def make_changelog_repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> str:
 
 def check_args(base: str) -> argparse.Namespace:
     return argparse.Namespace(base=base, head="HEAD")
+
+
+def should_build_args(
+    previous_tag: str = "nightly-20260529",
+    exclude_notes: str = "",
+) -> argparse.Namespace:
+    return argparse.Namespace(previous_tag=previous_tag, exclude_notes=exclude_notes, head="HEAD")
 
 
 def test_extract_unreleased_block_stops_at_next_release() -> None:
@@ -143,6 +152,12 @@ def test_skip_marker_opts_out_only_when_all_commits_carry_it() -> None:
     )
     # No commits (e.g. empty range) is not an opt-out.
     assert not messages_opt_out_of_changelog([])
+
+
+def test_nightly_build_marker_requests_build() -> None:
+    assert messages_request_nightly_build(["fix: internal crash\n\nNightly: build"])
+    assert messages_request_nightly_build(["fix: internal crash [nightly build]"])
+    assert not messages_request_nightly_build(["fix: internal crash\n\nChangelog: none"])
 
 
 def test_resolve_base_uses_main_for_main_branch(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -276,3 +291,95 @@ def test_unreleased_added_entries_ignores_existing_entry_reformat(
     )
 
     assert unreleased_added_entries("base", "head") == []
+
+
+def test_should_build_nightly_when_no_previous_tag(capsys: pytest.CaptureFixture[str]) -> None:
+    assert should_build_nightly_command(should_build_args(previous_tag="")) == 0
+
+    captured = capsys.readouterr()
+    assert captured.out == "should_build=true\n"
+    assert "No previous nightly tag" in captured.err
+
+
+def test_should_build_nightly_for_commit_marker(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        "scripts.changelog_tools.commit_messages",
+        lambda _base, _head: ["fix: internal startup repair\n\nNightly: build"],
+    )
+
+    assert should_build_nightly_command(should_build_args()) == 0
+
+    captured = capsys.readouterr()
+    assert captured.out == "should_build=true\n"
+    assert "commit marker" in captured.err
+
+
+def test_should_build_nightly_for_new_changelog_entry(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    base_text = """# Changelog
+
+## [Unreleased]
+
+### Fixed
+- Existing fix.
+"""
+    head_text = """# Changelog
+
+## [Unreleased]
+
+### Fixed
+- New user-facing fix.
+- Existing fix.
+"""
+    changelog_path = tmp_path / "CHANGELOG.md"
+    changelog_path.write_text(head_text, encoding="utf-8")
+    monkeypatch.setattr("scripts.changelog_tools.CHANGELOG_PATH", changelog_path)
+    monkeypatch.setattr("scripts.changelog_tools.changelog_at", lambda _ref: base_text)
+    monkeypatch.setattr("scripts.changelog_tools.commit_messages", lambda _base, _head: [])
+
+    assert should_build_nightly_command(should_build_args()) == 0
+
+    captured = capsys.readouterr()
+    assert captured.out == "should_build=true\n"
+    assert "New curated changelog entries" in captured.err
+
+
+def test_should_not_build_nightly_when_notes_already_shipped(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    base_text = """# Changelog
+
+## [Unreleased]
+
+### Fixed
+- Existing fix.
+"""
+    head_text = """# Changelog
+
+## [Unreleased]
+
+### Fixed
+- Shipped fix.
+- Existing fix.
+"""
+    notes_path = tmp_path / "previous-notes.md"
+    notes_path.write_text("## Fixed\n- Shipped fix.\n", encoding="utf-8")
+    changelog_path = tmp_path / "CHANGELOG.md"
+    changelog_path.write_text(head_text, encoding="utf-8")
+    monkeypatch.setattr("scripts.changelog_tools.CHANGELOG_PATH", changelog_path)
+    monkeypatch.setattr("scripts.changelog_tools.changelog_at", lambda _ref: base_text)
+    monkeypatch.setattr("scripts.changelog_tools.commit_messages", lambda _base, _head: [])
+
+    assert should_build_nightly_command(should_build_args(exclude_notes=str(notes_path))) == 0
+
+    captured = capsys.readouterr()
+    assert captured.out == "should_build=false\n"
+    assert "No new curated changelog entries" in captured.err

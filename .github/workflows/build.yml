@@ -45,6 +45,8 @@ jobs:
 
       - name: Check build conditions
         id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
 
@@ -72,26 +74,11 @@ jobs:
               # No prior nightly: build once
               echo "should_build=true" >> $GITHUB_OUTPUT
             else
-              RANGE="$LAST_TAG"..HEAD
-
-              # Build only when there is at least one user-facing file change.
-              # This avoids shipping nightlies for docs/test/ci-only changes and
-              # works even when squash merges or sync commits hide the original
-              # commit subjects on first-parent history.
-              USER_FACING_PATHS=$(git diff --name-only "$RANGE" -- \
-                src/ \
-                installer/ \
-                scripts/generate_build_meta.py \
-                pyproject.toml \
-                accessiweather.spec \
-                '*.spec' \
-                soundpacks/ | sed '/^$/d')
-
-              if [ -n "$USER_FACING_PATHS" ]; then
-                echo "should_build=true" >> $GITHUB_OUTPUT
-              else
-                echo "should_build=false" >> $GITHUB_OUTPUT
-              fi
+              gh release view "$LAST_TAG" --json body -q .body > previous-notes.md || true
+              python scripts/changelog_tools.py should-build-nightly \
+                --previous-tag "$LAST_TAG" \
+                --exclude-notes previous-notes.md \
+                >> "$GITHUB_OUTPUT"
             fi
           fi
 
