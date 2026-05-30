@@ -259,6 +259,9 @@ class EditLocationDialog(wx.Dialog):
         sizer.Add(button_sizer, 0, wx.ALL | wx.ALIGN_RIGHT, 10)
 
         panel.SetSizer(sizer)
+        dialog_sizer = wx.BoxSizer(wx.VERTICAL)
+        dialog_sizer.Add(panel, 1, wx.EXPAND)
+        self.SetSizer(dialog_sizer)
         ok_button.SetDefault()
 
         # Fit to content, but keep a baseline minimum width.

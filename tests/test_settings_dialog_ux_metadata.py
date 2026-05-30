@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 import accessiweather.ui.dialogs.settings_dialog as settings_module
 from accessiweather.ui.dialogs.settings_dialog import SettingsDialogSimple
+from accessiweather.ui.dialogs.settings_tabs.ai import AITab
 from accessiweather.ui.dialogs.settings_tabs.audio import AudioTab
 from accessiweather.ui.dialogs.settings_tabs.data_sources import DataSourcesTab
 
@@ -223,3 +224,80 @@ def test_data_sources_tab_provider_groups_avoid_static_box_sizers(monkeypatch):
 
     assert panel is dialog.notebook.pages[0][0]
     assert dialog.create_section.call_count >= 3
+
+
+def test_ai_custom_prompt_fields_create_static_text_before_multiline_controls(monkeypatch):
+    creation_order: list[str] = []
+
+    class FakeControl:
+        def __init__(self, *args, **kwargs):
+            self.args = args
+            self.kwargs = kwargs
+
+        def Bind(self, *args, **kwargs):
+            return None
+
+        def SetHint(self, *args, **kwargs):
+            return None
+
+        def SetScrollRate(self, *args, **kwargs):
+            return None
+
+        def SetSizer(self, *args, **kwargs):
+            return None
+
+    class FakeSizer:
+        def Add(self, *args, **kwargs):
+            return None
+
+    class FakeNotebook:
+        def __init__(self):
+            self.pages = []
+
+        def AddPage(self, panel, label):
+            self.pages.append((panel, label))
+
+    def fake_static_text(parent, label):
+        if label.startswith("Custom "):
+            creation_order.append(f"label:{label}")
+        return FakeControl(parent, label=label)
+
+    def fake_text_ctrl(parent, *args, **kwargs):
+        if kwargs.get("style", 0) & settings_module.wx.TE_MULTILINE:
+            creation_order.append("multiline")
+        return FakeControl(parent, *args, **kwargs)
+
+    monkeypatch.setattr(settings_module.wx, "ScrolledWindow", FakeControl, raising=False)
+    monkeypatch.setattr(settings_module.wx, "BoxSizer", lambda *a, **k: FakeSizer(), raising=False)
+    monkeypatch.setattr(settings_module.wx, "StaticText", fake_static_text, raising=False)
+    monkeypatch.setattr(settings_module.wx, "TextCtrl", fake_text_ctrl, raising=False)
+    monkeypatch.setattr(settings_module.wx, "Button", FakeControl, raising=False)
+    monkeypatch.setattr(settings_module.wx, "Choice", FakeControl, raising=False)
+    monkeypatch.setattr(settings_module.wx, "TE_MULTILINE", 0x20, raising=False)
+    monkeypatch.setattr(settings_module.wx, "TE_PASSWORD", 0x40, raising=False)
+    monkeypatch.setattr(settings_module.wx, "VERTICAL", 0, raising=False)
+    monkeypatch.setattr(settings_module.wx, "LEFT", 0, raising=False)
+    monkeypatch.setattr(settings_module.wx, "RIGHT", 0, raising=False)
+    monkeypatch.setattr(settings_module.wx, "BOTTOM", 0, raising=False)
+    monkeypatch.setattr(settings_module.wx, "EXPAND", 0, raising=False)
+    monkeypatch.setattr(settings_module.wx, "EVT_BUTTON", object(), raising=False)
+
+    dialog = SimpleNamespace(
+        notebook=FakeNotebook(),
+        _controls={},
+        add_help_text=MagicMock(),
+        create_section=MagicMock(side_effect=lambda *args, **kwargs: FakeSizer()),
+        add_labeled_control_row=MagicMock(side_effect=lambda *args, **kwargs: FakeControl()),
+        _on_validate_openrouter_key=MagicMock(),
+        _on_browse_models=MagicMock(),
+        _on_reset_prompt=MagicMock(),
+    )
+
+    AITab(dialog).create()
+
+    assert creation_order == [
+        "label:Custom system prompt (optional):",
+        "multiline",
+        "label:Custom instructions (optional):",
+        "multiline",
+    ]

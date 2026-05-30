@@ -116,6 +116,7 @@ class _DialogRecorder:
         self.static_boxes: list[MagicMock] = []
         self.static_texts: list[MagicMock] = []
         self.min_size_calls: list = []
+        self.dialog_sizer_calls: list = []
         self.fit_calls: int = 0
 
 
@@ -155,10 +156,14 @@ def recorder():
     def _set_min_size(self, *a, **kw):
         rec.min_size_calls.append(a[0] if a else kw)
 
+    def _set_sizer(self, *a, **kw):
+        rec.dialog_sizer_calls.append(a[0] if a else kw)
+
     def _fit(self, *a, **kw):
         rec.fit_calls += 1
 
     _StubBase.SetMinSize = _set_min_size
+    _StubBase.SetSizer = _set_sizer
     _StubBase.Fit = _fit
 
     # Track StaticText creations — return real MagicMocks that retain the label
@@ -399,6 +404,21 @@ class TestEditLocationDialogZoneInfo:
             420,
             200,
         )
+
+    def test_dialog_owns_panel_sizer_before_fit(self, recorder):
+        """Dialog receives a top-level sizer so the panel contents are visible."""
+        loc = Location(
+            name="Raleigh, NC",
+            latitude=35.78,
+            longitude=-78.64,
+            country_code="US",
+            forecast_zone_id="NCZ027",
+            cwa_office="RAH",
+        )
+
+        _open_edit_dialog(loc)
+
+        assert recorder.dialog_sizer_calls
 
     def test_accessibility_labels_via_getlabel(self, recorder):
         """
