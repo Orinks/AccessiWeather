@@ -70,8 +70,15 @@ def check_args(base: str) -> argparse.Namespace:
 def should_build_args(
     previous_tag: str = "nightly-20260529",
     exclude_notes: str = "",
+    latest_stable_tag: str = "",
 ) -> argparse.Namespace:
-    return argparse.Namespace(previous_tag=previous_tag, exclude_notes=exclude_notes, head="HEAD")
+    return argparse.Namespace(
+        previous_tag=previous_tag,
+        exclude_notes=exclude_notes,
+        latest_stable_tag=latest_stable_tag,
+        exclude_stable_notes="",
+        head="HEAD",
+    )
 
 
 def test_extract_unreleased_block_stops_at_next_release() -> None:
@@ -379,6 +386,74 @@ def test_should_not_build_nightly_when_notes_already_shipped(
     monkeypatch.setattr("scripts.changelog_tools.commit_messages", lambda _base, _head: [])
 
     assert should_build_nightly_command(should_build_args(exclude_notes=str(notes_path))) == 0
+
+    captured = capsys.readouterr()
+    assert captured.out == "should_build=false\n"
+    assert "No new curated changelog entries" in captured.err
+
+
+def test_missing_note_exclusion_file_is_ignored(tmp_path: Path) -> None:
+    from scripts.changelog_tools import excluded_entries_from_notes
+
+    assert excluded_entries_from_notes(str(tmp_path / "missing-notes.md")) == set()
+
+
+def test_should_not_build_nightly_when_latest_stable_contains_head(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        "scripts.changelog_tools.ref_is_ancestor",
+        lambda ancestor, descendant: ancestor == "HEAD" and descendant == "v0.7.2",
+    )
+    monkeypatch.setattr(
+        "scripts.changelog_tools.commit_messages",
+        lambda _base, _head: pytest.fail("stable-covered head should skip before commit scan"),
+    )
+
+    assert should_build_nightly_command(should_build_args(latest_stable_tag="v0.7.2")) == 0
+
+    captured = capsys.readouterr()
+    assert captured.out == "should_build=false\n"
+    assert "Latest stable release already contains this commit" in captured.err
+
+
+def test_should_use_latest_stable_as_nightly_baseline(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    changelogs = {
+        "nightly-20260529": """# Changelog
+
+## [Unreleased]
+""",
+        "v0.7.2": """# Changelog
+
+## [Unreleased]
+
+### Fixed
+- Shipped stable fix.
+""",
+    }
+    head_text = """# Changelog
+
+## [Unreleased]
+
+### Fixed
+- Shipped stable fix.
+"""
+    changelog_path = tmp_path / "CHANGELOG.md"
+    changelog_path.write_text(head_text, encoding="utf-8")
+    monkeypatch.setattr("scripts.changelog_tools.CHANGELOG_PATH", changelog_path)
+    monkeypatch.setattr("scripts.changelog_tools.changelog_at", changelogs.__getitem__)
+    monkeypatch.setattr("scripts.changelog_tools.commit_messages", lambda _base, _head: [])
+    monkeypatch.setattr(
+        "scripts.changelog_tools.ref_is_ancestor",
+        lambda ancestor, descendant: (ancestor, descendant) == ("nightly-20260529", "v0.7.2"),
+    )
+
+    assert should_build_nightly_command(should_build_args(latest_stable_tag="v0.7.2")) == 0
 
     captured = capsys.readouterr()
     assert captured.out == "should_build=false\n"

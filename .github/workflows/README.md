@@ -88,10 +88,11 @@ PR is purely internal — refactors, CI, tooling, release plumbing — you have 
 Note: `.github/`, `tests/`, and `docs/` are never gated, so CI and test-only changes need no marker.
 
 Scheduled nightlies build when there is at least one newly added Unreleased entry that has not
-already shipped in the previous nightly notes. Internal packaged/runtime fixes that should still
-ship can opt in with `Nightly: build` or `[nightly build]` in the commit message. Stable release
-notes use the matching version section, such as `## [0.6.1]`, and fall back to Unreleased only when
-a version section has not been cut yet.
+already shipped in the previous nightly or latest stable notes. If the latest stable release already
+contains the scheduled commit, the nightly is skipped. Internal packaged/runtime fixes that should
+still ship can opt in with `Nightly: build` or `[nightly build]` in the commit message. Stable
+release notes use the matching version section, such as `## [0.6.1]`, and fall back to Unreleased
+only when a version section has not been cut yet.
 
 Everything else stays out of the PR path.
 

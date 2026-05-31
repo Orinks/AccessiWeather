@@ -75,9 +75,17 @@ jobs:
               echo "should_build=true" >> $GITHUB_OUTPUT
             else
               gh release view "$LAST_TAG" --json body -q .body > previous-notes.md || true
+              : > latest-stable-notes.md
+              LATEST_STABLE_TAG=$(gh api "repos/${GITHUB_REPOSITORY}/releases" \
+                --jq '[.[] | select(.draft == false and .prerelease == false)][0].tag_name // ""')
+              if [ -n "$LATEST_STABLE_TAG" ]; then
+                gh release view "$LATEST_STABLE_TAG" --json body -q .body > latest-stable-notes.md || true
+              fi
               python scripts/changelog_tools.py should-build-nightly \
                 --previous-tag "$LAST_TAG" \
                 --exclude-notes previous-notes.md \
+                --latest-stable-tag "$LATEST_STABLE_TAG" \
+                --exclude-stable-notes latest-stable-notes.md \
                 >> "$GITHUB_OUTPUT"
             fi
           fi
