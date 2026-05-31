@@ -42,6 +42,9 @@ class SoundPackWizardDialog(wx.Dialog):
 
         self._create_ui()
         self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
+        # Route the title-bar close button through the same cancel/cleanup path
+        # so the staging temp directory isn't leaked when closed via the "X".
+        self.Bind(wx.EVT_CLOSE, self._on_close)
         self._render_step()
         self.Centre()
 
@@ -421,37 +424,48 @@ class SoundPackWizardDialog(wx.Dialog):
             suffix += 1
 
         pack_dir = self.soundpacks_dir / pack_id
-        pack_dir.mkdir(parents=True)
 
-        # Copy sound files
-        sounds_mapping = {}
-        for key, src_path_str in self.state.sound_mappings.items():
-            if not src_path_str:
-                continue
-            src_path = Path(src_path_str)
-            if src_path.exists():
-                dest = pack_dir / src_path.name
-                shutil.copy2(src_path, dest)
-                sounds_mapping[key] = src_path.name
+        try:
+            pack_dir.mkdir(parents=True)
 
-        # Create pack.json
-        pack_data = {
-            "name": self.state.pack_name,
-            "author": self.state.author or "Unknown",
-            "description": self.state.description,
-            "version": "1.0.0",
-            "sounds": sounds_mapping,
-        }
+            # Copy sound files
+            sounds_mapping = {}
+            for key, src_path_str in self.state.sound_mappings.items():
+                if not src_path_str:
+                    continue
+                src_path = Path(src_path_str)
+                if src_path.exists():
+                    dest = pack_dir / src_path.name
+                    shutil.copy2(src_path, dest)
+                    sounds_mapping[key] = src_path.name
 
-        pack_json = pack_dir / "pack.json"
-        with open(pack_json, "w", encoding="utf-8") as f:
-            json.dump(pack_data, f, indent=2)
+            # Create pack.json
+            pack_data = {
+                "name": self.state.pack_name,
+                "author": self.state.author or "Unknown",
+                "description": self.state.description,
+                "version": "1.0.0",
+                "sounds": sounds_mapping,
+            }
+
+            pack_json = pack_dir / "pack.json"
+            with open(pack_json, "w", encoding="utf-8") as f:
+                json.dump(pack_data, f, indent=2)
+        except OSError as exc:
+            logger.error("Failed to create sound pack %s: %s", pack_id, exc)
+            # Remove the partially written pack directory so it isn't left behind.
+            with contextlib.suppress(Exception):
+                shutil.rmtree(pack_dir)
+            wx.MessageBox(
+                f"Failed to create sound pack:\n{exc}",
+                "Pack Creation Failed",
+                wx.OK | wx.ICON_ERROR,
+            )
+            return
 
         self.created_pack_id = pack_id
 
-        # Clean up staging directory
-        with contextlib.suppress(Exception):
-            shutil.rmtree(self.staging_dir)
+        self._cleanup_staging()
 
         wx.MessageBox(
             f"Sound pack '{self.state.pack_name}' created successfully!",
@@ -460,6 +474,11 @@ class SoundPackWizardDialog(wx.Dialog):
         )
 
         self.EndModal(wx.ID_OK)
+
+    def _cleanup_staging(self) -> None:
+        """Remove the temporary staging directory if it still exists."""
+        with contextlib.suppress(Exception):
+            shutil.rmtree(self.staging_dir)
 
     def _on_char_hook(self, event: wx.KeyEvent) -> None:
         """Handle keyboard shortcuts for the dialog."""
@@ -492,9 +511,7 @@ class SoundPackWizardDialog(wx.Dialog):
             if result != wx.YES:
                 return
 
-        # Clean up staging directory
-        with contextlib.suppress(Exception):
-            shutil.rmtree(self.staging_dir)
+        self._cleanup_staging()
 
         self.EndModal(wx.ID_CANCEL)
 

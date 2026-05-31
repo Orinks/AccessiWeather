@@ -436,6 +436,7 @@ def _serialize_weather_data(weather: WeatherData) -> dict:
         "forecast": _serialize_forecast(weather.forecast),
         "hourly_forecast": _serialize_hourly(weather.hourly_forecast),
         "discussion": weather.discussion,
+        "discussion_issuance_time": _serialize_datetime(weather.discussion_issuance_time),
         "alerts": _serialize_alerts(weather.alerts),
         "environmental": _serialize_environmental(weather.environmental),
         "trend_insights": _serialize_trends(weather.trend_insights),

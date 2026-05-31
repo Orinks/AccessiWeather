@@ -225,6 +225,7 @@ class AccessiWeatherApp(
 
             # Initialize system tray icon
             self._initialize_tray_icon()
+            self._start_activation_ipc_server()
             self._start_activation_handoff_polling()
 
             # Load initial data

@@ -58,6 +58,12 @@ class TestFormatWindSpeed:
         result = format_wind_speed(5.556, unit=TemperatureUnit.FAHRENHEIT, precision=2)
         assert result == "5.56 mph"
 
+    def test_format_wind_speed_accepts_legacy_uk2_unit_system(self) -> None:
+        """Legacy UK2 unit-system values should behave like UK."""
+        result = format_wind_speed(10.0, wind_speed_kph=16.0934, unit_system="uk2")
+
+        assert result == "10.0 mph"
+
 
 class TestFormatPressure:
     """Tests for pressure formatting."""

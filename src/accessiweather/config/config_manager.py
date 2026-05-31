@@ -303,6 +303,7 @@ class ConfigManager:
         longitude: float,
         country_code: str | None,
         marine_mode: bool,
+        display_name: str | None = None,
     ) -> bool:
         """Update editable details on an existing location."""
         return self._locations.update_location_details(
@@ -311,6 +312,7 @@ class ConfigManager:
             longitude=longitude,
             country_code=country_code,
             marine_mode=marine_mode,
+            display_name=display_name,
         )
 
     def remove_location(self, name: str) -> bool:

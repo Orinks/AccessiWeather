@@ -8,6 +8,7 @@ using OpenRouter's unified API gateway for AI models.
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
@@ -25,11 +26,7 @@ from .ai_explainer_models import (
     TextProductType,
     WeatherContext,
 )
-from .ai_explainer_openrouter import (
-    DEFAULT_FREE_MODEL,
-    DEFAULT_FREE_ROUTER,
-    get_available_free_models,
-)
+from .ai_explainer_openrouter import DEFAULT_FREE_MODEL, get_available_free_models
 from .ai_explainer_openrouter_client import AIExplainerOpenRouterMixin
 from .ai_explainer_prompting import AIExplainerPromptMixin
 from .ai_explainer_text_products import AIExplainerTextProductMixin
@@ -115,6 +112,7 @@ class AIExplainer(
         location_name: str,
         style: ExplanationStyle = ExplanationStyle.STANDARD,
         preserve_markdown: bool = False,
+        status_callback: Callable[[str], None] | None = None,
     ) -> ExplanationResult:
         """
         Generate explanation for weather data.
@@ -124,6 +122,7 @@ class AIExplainer(
             location_name: Human-readable location name
             style: Explanation style (brief, standard, detailed)
             preserve_markdown: Whether to preserve markdown in output
+            status_callback: Optional callback for user-facing generation progress
 
         Returns:
             ExplanationResult with text, model used, and metadata
@@ -151,6 +150,9 @@ class AIExplainer(
                     estimated_cost=cached_result["estimated_cost"],
                     cached=True,
                     timestamp=datetime.fromisoformat(cached_result["timestamp"]),
+                    requested_model=cached_result.get("requested_model"),
+                    model_attempts=tuple(cached_result.get("model_attempts", ())),
+                    model_selection_reason=cached_result.get("model_selection_reason"),
                 )
 
         # Build prompts
@@ -159,24 +161,18 @@ class AIExplainer(
 
         # Build list of models to try: primary first, then fallbacks
         primary_model = self.get_effective_model()
-        models_to_try = [primary_model]
-
-        # Add default model as fallback if using a custom model
-        # This provides auto-recovery when a user's configured model is removed
-        if primary_model != DEFAULT_FREE_MODEL:
-            models_to_try.append(DEFAULT_FREE_MODEL)
-
-        # Add additional fallbacks for free models (dynamically fetched)
-        if ":free" in primary_model or primary_model in (DEFAULT_FREE_MODEL, DEFAULT_FREE_ROUTER):
-            fallback_models = get_available_free_models(exclude_model=primary_model)
-            for fallback in fallback_models:
-                if fallback not in models_to_try:
-                    models_to_try.append(fallback)
+        models_to_try = self._build_model_attempts(primary_model)
 
         # Try each model until we get a non-empty response
         response = None
         last_error = None
-        for model in models_to_try:
+        attempted_models: list[str] = []
+        for attempt_index, model in enumerate(models_to_try):
+            attempted_models.append(model)
+            self._notify_generation_status(
+                status_callback,
+                self._describe_model_attempt(model, primary_model, attempt_index),
+            )
             try:
                 model_override = model if model != primary_model else None
                 response = await asyncio.to_thread(
@@ -194,11 +190,23 @@ class AIExplainer(
                     f"Model {model} returned insufficient response "
                     f"(len={len(content) if content else 0}), trying fallback..."
                 )
+                last_error = EmptyResponseError("empty or too-short response")
+                self._notify_generation_status(
+                    status_callback,
+                    f"{model} returned an empty response; trying another available model.",
+                )
                 response = None
 
             except Exception as e:
                 last_error = e
                 logger.warning(f"Model {model} failed: {e}, trying fallback...")
+                if attempt_index + 1 < len(models_to_try):
+                    reason = self._describe_generation_error(e)
+                    self._notify_generation_status(
+                        status_callback,
+                        f"{model} could not generate a summary because of {reason}; "
+                        "trying another available model.",
+                    )
                 continue
 
         # If all models failed
@@ -284,6 +292,12 @@ class AIExplainer(
 
         token_count = response["total_tokens"]
         model_used = response["model"]
+        model_selection_reason = self._build_model_selection_reason(
+            primary_model,
+            model_used,
+            attempted_models,
+            last_error,
+        )
 
         # Calculate estimated cost
         estimated_cost = self._estimate_cost(model_used, token_count)
@@ -299,6 +313,9 @@ class AIExplainer(
             estimated_cost=estimated_cost,
             cached=False,
             timestamp=datetime.now(),
+            requested_model=primary_model,
+            model_attempts=tuple(attempted_models),
+            model_selection_reason=model_selection_reason,
         )
 
         # Cache the result
@@ -309,6 +326,9 @@ class AIExplainer(
                 "token_count": result.token_count,
                 "estimated_cost": result.estimated_cost,
                 "timestamp": result.timestamp.isoformat(),
+                "requested_model": result.requested_model,
+                "model_attempts": list(result.model_attempts),
+                "model_selection_reason": result.model_selection_reason,
             }
             self.cache.set(cache_key, cache_data, ttl=300)  # 5 minute TTL
             logger.debug(f"Cached explanation: {cache_key}")

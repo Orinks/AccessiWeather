@@ -105,7 +105,10 @@ jobs:
         pip install --no-deps -e .
 
     - name: Check CHANGELOG entry
-      if: matrix.primary
+      # Skipped when a PR carries the `skip-changelog` label. For non-PR events
+      # the labels expression is null (contains() returns false), so pushes
+      # still run the gate and rely on a `Changelog: none` commit trailer.
+      if: matrix.primary && !contains(github.event.pull_request.labels.*.name, 'skip-changelog')
       run: |
         if [ "${{ github.event_name }}" = "pull_request" ]; then
           BASE="origin/${{ github.base_ref }}"

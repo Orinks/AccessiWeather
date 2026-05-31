@@ -13,12 +13,22 @@ USER_FACING_PATH_PREFIXES = (
     "installer/",
     "soundpacks/",
 )
+# Paths that ship inside the build surface but never warrant a release note.
+# Checked before USER_FACING_PATH_PREFIXES, so these win even though they live
+# under src/. Extend this as recurring false positives show up.
+EXCLUDED_PATH_PREFIXES = (
+    "src/accessiweather/weather_gov_api_client/",  # generated NWS API client
+)
 USER_FACING_PATHS = {
     "accessiweather.spec",
     "pyproject.toml",
     "scripts/generate_build_meta.py",
 }
 USER_FACING_SUFFIXES = (".spec",)
+# Markers a commit message can carry to opt its change set out of the gate.
+# Used for direct pushes, where there is no PR label to apply.
+SKIP_CHANGELOG_MARKERS = ("changelog: none", "[skip changelog]")
+NIGHTLY_BUILD_MARKERS = ("nightly: build", "[nightly build]")
 SECTION_ORDER = ("Added", "Changed", "Fixed", "Improved", "Removed", "Deprecated", "Security")
 PYPROJECT_METADATA_FIELDS_WITHOUT_CHANGELOG = {"version", "description"}
 PYPROJECT_TOOLING_REQUIREMENTS_WITHOUT_CHANGELOG = {"pyright", "ruff"}
@@ -34,8 +44,18 @@ def run_git(args: list[str]) -> str:
     return subprocess.check_output(["git", *args], text=True, encoding="utf-8").strip()
 
 
+def output_lines(output: str) -> list[str]:
+    return [line for line in output.splitlines() if line]
+
+
+def dedupe_preserving_order(items: list[str]) -> list[str]:
+    return list(dict.fromkeys(items))
+
+
 def is_user_facing_path(path: str) -> bool:
     normalized = path.replace("\\", "/")
+    if normalized.startswith(EXCLUDED_PATH_PREFIXES):
+        return False
     return (
         normalized in USER_FACING_PATHS
         or normalized.endswith(USER_FACING_SUFFIXES)
@@ -58,43 +78,135 @@ def pyproject_changed_lines_require_changelog(changed_lines: list[str]) -> bool:
     return False
 
 
-def pyproject_change_requires_changelog(base: str, head: str) -> bool:
-    diff = run_git(["diff", "--unified=0", f"{base}..{head}", "--", "pyproject.toml"])
+def changed_lines_from_diff(diff: str) -> list[str]:
     changed_lines: list[str] = []
     for line in diff.splitlines():
         if line.startswith(("+++", "---", "@@")):
             continue
         if line.startswith(("+", "-")):
             changed_lines.append(line[1:].strip())
+    return changed_lines
+
+
+def pyproject_change_requires_changelog(
+    base: str,
+    head: str,
+    include_worktree: bool = False,
+) -> bool:
+    diffs = [run_git(["diff", "--unified=0", f"{base}..{head}", "--", "pyproject.toml"])]
+    if include_worktree:
+        diffs.append(run_git(["diff", "--unified=0", "HEAD", "--", "pyproject.toml"]))
+    changed_lines = [line for diff in diffs for line in changed_lines_from_diff(diff)]
     return pyproject_changed_lines_require_changelog(changed_lines)
 
 
-def requires_changelog_entry(path: str, base: str, head: str) -> bool:
+def requires_changelog_entry(
+    path: str,
+    base: str,
+    head: str,
+    include_worktree: bool = False,
+) -> bool:
     normalized = path.replace("\\", "/")
     if normalized == "pyproject.toml":
-        return pyproject_change_requires_changelog(base, head)
+        return pyproject_change_requires_changelog(base, head, include_worktree)
     return is_user_facing_path(normalized)
 
 
-def changed_files(base: str, head: str) -> list[str]:
-    output = run_git(["diff", "--name-only", f"{base}..{head}"])
-    return [line for line in output.splitlines() if line]
+def worktree_changed_files() -> list[str]:
+    tracked = output_lines(run_git(["diff", "--name-only", "HEAD"]))
+    untracked = output_lines(run_git(["ls-files", "--others", "--exclude-standard"]))
+    return dedupe_preserving_order([*tracked, *untracked])
 
 
-def unreleased_added_entries(base: str, head: str) -> list[str]:
+def changed_files(
+    base: str,
+    head: str,
+    worktree_files: list[str] | None = None,
+) -> list[str]:
+    committed = output_lines(run_git(["diff", "--name-only", f"{base}..{head}"]))
+    if worktree_files is None:
+        return committed
+    return dedupe_preserving_order([*committed, *worktree_files])
+
+
+def current_branch() -> str:
+    return run_git(["branch", "--show-current"])
+
+
+def resolve_base(base: str) -> str:
+    if base != "auto":
+        return base
+    if current_branch() == "main":
+        return "origin/main"
+    return "origin/dev"
+
+
+def messages_opt_out_of_changelog(messages: list[str]) -> bool:
+    """
+    Return True only when every commit message opts out of the gate.
+
+    Requiring all commits (rather than any) prevents a single skip marker from
+    silently exempting a change set that also contains user-facing work.
+    """
+    if not messages:
+        return False
+    return all(
+        any(marker in message.casefold() for marker in SKIP_CHANGELOG_MARKERS)
+        for message in messages
+    )
+
+
+def commit_messages(base: str, head: str) -> list[str]:
+    log = run_git(["log", "--no-merges", "--format=%H", f"{base}..{head}"])
+    hashes = [line for line in log.splitlines() if line]
+    return [run_git(["show", "-s", "--format=%B", commit]) for commit in hashes]
+
+
+def ref_is_ancestor(ancestor: str, descendant: str) -> bool:
+    try:
+        subprocess.run(
+            ["git", "merge-base", "--is-ancestor", ancestor, descendant],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except subprocess.CalledProcessError:
+        return False
+    return True
+
+
+def commits_opt_out_of_changelog(base: str, head: str) -> bool:
+    return messages_opt_out_of_changelog(commit_messages(base, head))
+
+
+def messages_request_nightly_build(messages: list[str]) -> bool:
+    return any(
+        any(marker in message.casefold() for marker in NIGHTLY_BUILD_MARKERS)
+        for message in messages
+    )
+
+
+def commits_request_nightly_build(base: str, head: str) -> bool:
+    return messages_request_nightly_build(commit_messages(base, head))
+
+
+def unreleased_added_entries(base: str, head: str, include_worktree: bool = False) -> list[str]:
     base_entries = {
-        entry
+        normalize_entry(entry)
         for section in parse_sections(
             extract_release_block(changelog_at(base), r"^## \[?Unreleased\]?.*$")
         )
         for entry in section.entries
     }
-    head_text = run_git(["show", f"{head}:{CHANGELOG_PATH.as_posix()}"])
+    if include_worktree:
+        head_text = CHANGELOG_PATH.read_text(encoding="utf-8")
+    else:
+        head_text = run_git(["show", f"{head}:{CHANGELOG_PATH.as_posix()}"])
     return [
         entry
         for section in parse_sections(extract_release_block(head_text, r"^## \[?Unreleased\]?.*$"))
         for entry in section.entries
-        if entry not in base_entries
+        if normalize_entry(entry) not in base_entries
     ]
 
 
@@ -210,11 +322,39 @@ def sections_added_since(
     return added_sections
 
 
+def excluded_entries_from_notes(path: str) -> set[str]:
+    if not path:
+        return set()
+    notes_path = Path(path)
+    if not notes_path.exists():
+        return set()
+    return {
+        normalize_entry(entry)
+        for section in parse_sections(notes_path.read_text(encoding="utf-8"))
+        for entry in section.entries
+    }
+
+
 def check_command(args: argparse.Namespace) -> int:
-    files = changed_files(args.base, args.head)
-    user_facing = [path for path in files if requires_changelog_entry(path, args.base, args.head)]
+    base = resolve_base(args.base)
+    should_check_worktree = args.head == "HEAD" and not getattr(args, "committed_only", False)
+    worktree_files = worktree_changed_files() if should_check_worktree else []
+    include_worktree = bool(worktree_files)
+    files = changed_files(base, args.head, worktree_files if include_worktree else None)
+    user_facing = [
+        path for path in files if requires_changelog_entry(path, base, args.head, include_worktree)
+    ]
     if not user_facing:
         print("No user-facing paths changed.")
+        return 0
+
+    worktree_user_facing = [
+        path
+        for path in worktree_files
+        if requires_changelog_entry(path, "HEAD", "HEAD", include_worktree)
+    ]
+    if not worktree_user_facing and commits_opt_out_of_changelog(base, args.head):
+        print("All commits opt out of the changelog gate via a skip marker.")
         return 0
 
     if CHANGELOG_PATH.as_posix() not in files:
@@ -223,7 +363,7 @@ def check_command(args: argparse.Namespace) -> int:
             print(f"- {path}", file=sys.stderr)
         return 1
 
-    entries = unreleased_added_entries(args.base, args.head)
+    entries = unreleased_added_entries(base, args.head, include_worktree)
     if not entries:
         print(
             "CHANGELOG.md changed, but no new bullet was added under ## [Unreleased].",
@@ -238,13 +378,7 @@ def check_command(args: argparse.Namespace) -> int:
 def notes_command(args: argparse.Namespace) -> int:
     changelog_text = CHANGELOG_PATH.read_text(encoding="utf-8")
     if args.kind == "nightly":
-        excluded_entries: set[str] = set()
-        if args.exclude_notes:
-            excluded_entries = {
-                normalize_entry(entry)
-                for section in parse_sections(Path(args.exclude_notes).read_text(encoding="utf-8"))
-                for entry in section.entries
-            }
+        excluded_entries = excluded_entries_from_notes(args.exclude_notes)
         if not args.previous_tag:
             notes = format_sections(
                 parse_sections(extract_release_block(changelog_text, r"^## \[?Unreleased\]?.*$"))
@@ -268,13 +402,60 @@ def notes_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def should_build_nightly_command(args: argparse.Namespace) -> int:
+    if not args.previous_tag:
+        print("should_build=true")
+        print("No previous nightly tag found; building once.", file=sys.stderr)
+        return 0
+
+    latest_stable_tag = getattr(args, "latest_stable_tag", "")
+    if latest_stable_tag and ref_is_ancestor(args.head, latest_stable_tag):
+        print("should_build=false")
+        print("Latest stable release already contains this commit.", file=sys.stderr)
+        return 0
+
+    baseline_tag = args.previous_tag
+    if latest_stable_tag and ref_is_ancestor(args.previous_tag, latest_stable_tag):
+        baseline_tag = latest_stable_tag
+
+    if commits_request_nightly_build(baseline_tag, args.head):
+        print("should_build=true")
+        print("Nightly build requested by commit marker.", file=sys.stderr)
+        return 0
+
+    changelog_text = CHANGELOG_PATH.read_text(encoding="utf-8")
+    excluded_entries = excluded_entries_from_notes(args.exclude_notes)
+    excluded_entries.update(excluded_entries_from_notes(getattr(args, "exclude_stable_notes", "")))
+    sections = sections_added_since(
+        baseline_tag,
+        changelog_text,
+        excluded_entries,
+    )
+    if sections:
+        print("should_build=true")
+        print("New curated changelog entries found for nightly build.", file=sys.stderr)
+    else:
+        print("should_build=false")
+        print("No new curated changelog entries or nightly build marker found.", file=sys.stderr)
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate and extract curated changelog entries.")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     check = subparsers.add_parser("check", help="Require Unreleased changelog entries.")
-    check.add_argument("--base", required=True)
+    check.add_argument(
+        "--base",
+        required=True,
+        help="Base ref to compare against, or 'auto' for origin/main on main and origin/dev otherwise.",
+    )
     check.add_argument("--head", default="HEAD")
+    check.add_argument(
+        "--committed-only",
+        action="store_true",
+        help="Ignore uncommitted working-tree changes during local checks.",
+    )
     check.set_defaults(func=check_command)
 
     notes = subparsers.add_parser("notes", help="Generate release notes from CHANGELOG.md.")
@@ -284,6 +465,17 @@ def main() -> int:
     notes.add_argument("--exclude-notes", default="")
     notes.add_argument("--output", default="notes.md")
     notes.set_defaults(func=notes_command)
+
+    should_build = subparsers.add_parser(
+        "should-build-nightly",
+        help="Decide whether a scheduled nightly should build artifacts.",
+    )
+    should_build.add_argument("--previous-tag", default="")
+    should_build.add_argument("--exclude-notes", default="")
+    should_build.add_argument("--latest-stable-tag", default="")
+    should_build.add_argument("--exclude-stable-notes", default="")
+    should_build.add_argument("--head", default="HEAD")
+    should_build.set_defaults(func=should_build_nightly_command)
 
     args = parser.parse_args()
     return args.func(args)

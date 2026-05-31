@@ -58,6 +58,7 @@ def _make_window():
     win._fetch_weather_data = MagicMock(return_value=MagicMock())
     win._set_current_location = MagicMock()
     win._update_title_for_location = MagicMock()
+    win._populate_locations = MagicMock()
 
     # Delegate the real implementations we want to test.
     win.set_status = MainWindow.set_status.__get__(win, MainWindow)
@@ -499,6 +500,7 @@ class TestEditLocation:
             longitude=-76.4922,
             country_code="US",
             marine_mode=True,
+            display_name="Annapolis Harbor",
         )
 
         with patch.object(mw_module, "show_edit_location_dialog", return_value=edit_result):
@@ -510,8 +512,11 @@ class TestEditLocation:
             longitude=-76.4922,
             country_code="US",
             marine_mode=True,
+            display_name="Annapolis Harbor",
         )
         win.app.config_manager.update_location_marine_mode.assert_not_called()
+        win._populate_locations.assert_called_once()
+        win.location_dropdown.FindString.assert_called_once_with("Annapolis Harbor")
 
     def test_edit_location_does_nothing_on_cancel(self):
         import accessiweather.ui.main_window as mw_module

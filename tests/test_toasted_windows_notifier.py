@@ -501,6 +501,31 @@ class TestDirectWinRTActivation:
             assert mock_notification in notifier._live_notifications
             mock_notifier_mgr.create_toast_notifier.assert_called_once()
 
+    def test_show_toast_direct_silences_windows_default_sound(self):
+        """Direct WinRT toasts are silent because AccessiWeather plays soundpack audio."""
+        mock_xml_doc = MagicMock()
+        mock_notification = MagicMock()
+        mock_notifier_mgr = MagicMock()
+
+        with (
+            patch.object(toast_notifier, "TOASTED_AVAILABLE", True),
+            patch.object(toast_notifier, "WINRT_AVAILABLE", True),
+            patch.object(toast_notifier, "_WinRT_XmlDocument", return_value=mock_xml_doc),
+            patch.object(
+                toast_notifier, "_WinRT_ToastNotification", return_value=mock_notification
+            ),
+            patch.object(toast_notifier, "_WinRT_ToastNotificationManager", mock_notifier_mgr),
+        ):
+            notifier = toast_notifier.ToastedWindowsNotifier(sound_enabled=True)
+            fake_toast = MagicMock()
+            fake_toast.to_xml_string.return_value = "<toast><visual></visual></toast>"
+
+            result = notifier._show_toast_direct(fake_toast, "test-args")
+
+            assert result is True
+            xml_payload = mock_xml_doc.load_xml.call_args.args[0]
+            assert '<audio silent="true"' in xml_payload
+
     def test_show_toast_direct_uses_protocol_activation_for_cold_start(self):
         """Cold-start safe Windows toasts use protocol activation, not plain launch args."""
         mock_xml_doc = MagicMock()

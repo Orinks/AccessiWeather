@@ -1,6 +1,8 @@
 import logging
 import sys
 from collections.abc import Collection
+from contextlib import suppress
+from importlib import import_module
 from pathlib import Path
 from typing import Any
 
@@ -96,33 +98,76 @@ def _play_sound_file(sound_file: Path, block: bool = False, volume: float = 1.0)
 
     # Always prefer sound_lib when available (supports volume, stop, better reliability)
     if SOUND_LIB_AVAILABLE:
-        try:
-            from sound_lib import stream
-
-            # Clean up finished streams to prevent memory leak
-            _active_streams[:] = [s for s in _active_streams if s.is_playing]
-
-            s = stream.FileStream(file=str(sound_file))
-            s.volume = volume
-            s.play()
-            if block:
-                # Wait for playback to complete
-                import time
-
-                while s.is_playing:
-                    time.sleep(0.1)
-                s.free()
-            else:
-                # Keep reference to prevent garbage collection during playback
-                _active_streams.append(s)
-            logger.debug(f"Played sound using sound_lib at volume {volume}: {sound_file}")
+        if _play_sound_file_with_sound_lib(sound_file, block=block, volume=volume):
             return True
-        except Exception as e:
-            logger.warning(f"sound_lib playback failed: {e}")
-            return False
+
+        if _reinitialize_sound_lib_output():
+            logger.info("Retrying sound playback after sound_lib output reinitialization")
+            return _play_sound_file_with_sound_lib(sound_file, block=block, volume=volume)
+
+        return False
 
     logger.warning("sound_lib audio backend unavailable")
     return False
+
+
+def _play_sound_file_with_sound_lib(sound_file: Path, *, block: bool, volume: float) -> bool:
+    """Play a sound file with the current sound_lib output."""
+    try:
+        stream = import_module("sound_lib.stream")
+
+        # Clean up finished streams to prevent memory leak
+        _active_streams[:] = [s for s in _active_streams if s.is_playing]
+
+        s = stream.FileStream(file=str(sound_file))
+        s.volume = volume
+        s.play()
+        if block:
+            # Wait for playback to complete
+            import time
+
+            while s.is_playing:
+                time.sleep(0.1)
+            s.free()
+        else:
+            # Keep reference to prevent garbage collection during playback
+            _active_streams.append(s)
+        logger.debug(f"Played sound using sound_lib at volume {volume}: {sound_file}")
+        return True
+    except Exception as e:
+        logger.warning(f"sound_lib playback failed: {e}")
+        return False
+
+
+def _reinitialize_sound_lib_output() -> bool:
+    """Recreate the sound_lib output after a stale audio device failure."""
+    global SOUND_LIB_AVAILABLE, _sound_lib_output
+
+    if not SOUND_LIB_AVAILABLE:
+        return False
+
+    try:
+        for active_stream in list(_active_streams):
+            with suppress(Exception):
+                active_stream.stop()
+            with suppress(Exception):
+                active_stream.free()
+        _active_streams.clear()
+
+        if _sound_lib_output is not None:
+            with suppress(Exception):
+                _sound_lib_output.free()
+
+        output = import_module("sound_lib.output")
+        _sound_lib_output = output.Output()
+        SOUND_LIB_AVAILABLE = True
+        logger.info("Reinitialized sound_lib output device")
+        return True
+    except Exception as e:
+        logger.warning("sound_lib output reinitialization failed: %s", e)
+        _sound_lib_output = None
+        SOUND_LIB_AVAILABLE = False
+        return False
 
 
 def play_sound_file(sound_file: Path) -> bool:

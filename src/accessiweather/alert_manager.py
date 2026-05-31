@@ -425,6 +425,9 @@ class AlertManager:
         # Update global notification time if we're sending any notifications
         if notifications_to_send:
             self.last_global_notification = current_time
+            # Roll the hourly counter over at the hour boundary so it reflects
+            # notifications in the current hour, not a lifetime total.
+            self._reset_hourly_counter()
             self.notifications_this_hour += len(notifications_to_send)
 
         # Save state changes - always save to persist any alert state modifications

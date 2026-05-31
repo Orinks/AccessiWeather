@@ -157,6 +157,9 @@ class NoaaApiClient(AlertsAndProductsMixin):
                         response = client.get(
                             request_url, headers=self.headers, params=params, timeout=10
                         )
+                        # Buffer the body while the client is still open; .json()
+                        # and .text are accessed below after the client closes.
+                        response.read()
                     logger.debug(
                         f"Received response from {request_url} with status code: "
                         f"{response.status_code}"

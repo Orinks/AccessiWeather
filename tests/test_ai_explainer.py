@@ -508,6 +508,28 @@ class TestExplainAFD:
 class TestErrorHandling:
     """Tests for error handling."""
 
+    def test_call_openrouter_uses_structured_status_code_for_rate_limits(self):
+        """Structured API status should win even when message text is vague."""
+        explainer = AIExplainer(api_key="test-key", model="selected/free:free")
+        api_error = Exception("provider unavailable")
+        api_error.status_code = 429  # type: ignore[attr-defined]
+        api_error.body = {  # type: ignore[attr-defined]
+            "error": {
+                "code": "rate_limit_exceeded",
+                "message": "Provider quota exceeded.",
+            }
+        }
+
+        with patch.object(explainer, "_get_client") as mock_client:
+            mock_client_instance = MagicMock()
+            mock_client.return_value = mock_client_instance
+            mock_client_instance.chat.completions.create.side_effect = api_error
+
+            with pytest.raises(RateLimitError) as exc:
+                explainer._call_openrouter("system", "user")
+
+        assert exc.value.__cause__ is api_error
+
     @pytest.mark.asyncio
     async def test_invalid_api_key_error(self, sample_weather_data):
         """Test InvalidAPIKeyError is raised for invalid API key."""

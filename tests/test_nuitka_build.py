@@ -70,6 +70,10 @@ def test_macos_nuitka_command_uses_app_mode() -> None:
     assert "--mode=app" in command
     assert "--macos-create-app-bundle" not in command
     assert "--macos-app-name=AccessiWeather" in command
+    assert any(
+        item.startswith("--macos-app-protected-resource=NSLocationWhenInUseUsageDescription:")
+        for item in command
+    )
     assert "--include-data-dir=src/accessiweather/resources=accessiweather/resources" not in command
 
 

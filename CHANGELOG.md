@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- You can now choose "Use my current location" when adding or updating a saved location. AccessiWeather asks the OS once, only after you press the button, and keeps manual search available if location access is denied or unavailable.
 - Alert updates can now use their own mappable sound in sound packs.
 - Settings > Audio can now enable specific-alert sounds per sound pack, so packs with sounds like `tornado_watch` and `tornado_warning` keep working while severity-only packs stay simple.
 - First-run setup can now import existing settings and encrypted API keys from the wizard, or exit with Escape at any wizard step when you want to configure everything yourself.
@@ -20,11 +21,18 @@ All notable changes to this project will be documented in this file.
 - Alert sounds and sound-pack creation now focus on alert severity instead of a long list of specific alert names, while existing packs can keep their older mappings.
 
 ### Fixed
+- Edit Location and Settings > AI prompt fields now expose their visible labels correctly to screen readers.
+- Reliability fixes now prevent several update, notification, tray tooltip, dialog, NOAA radio, and alert-refresh edge cases from interrupting normal use.
+- Detected current locations outside the US now get an editable place name when reverse geocoding can identify the coordinates.
+- Editing a location after using "Use my current location" now refreshes the editable name and saved US metadata for the detected point, so locations don't quietly fall back to metric defaults.
+- Notification sounds now recover after Windows sleep or hibernation, so update
+  notifications don't fall back to only the generic Windows toast sound.
+- Plain Language Summary now shows and speaks which OpenRouter model it is trying, when it falls back from a busy free model, and why the final model was used.
 - Forecaster Notes AI summaries now use the same default prompt for every text product unless you've set custom AI prompt options.
 - Default AI summaries now stay grounded in the provided weather text or data, so they are less likely to invent forecast details when summarizing reports.
-- Relaunching AccessiWeather from the desktop now brings the running window forward even after the title changes to show your selected location.
-- Relaunching AccessiWeather now asks the already-running app to restore its own window instead of relying on fragile title matching.
-- Starting AccessiWeather again now brings the running window forward instead of opening a force-start prompt or leaving behind lock-file state.
+- Relaunching AccessiWeather on Windows now reliably restores the already-running window from desktop shortcuts, direct EXE launches, and portable copies without relying on the window title.
+- Restoring the running AccessiWeather window on relaunch, and bringing it to the front from a notification, now work reliably on 64-bit Windows where an internal window-handle bug could previously leave the window in the background.
+- Relaunching AccessiWeather no longer briefly activates the already-running window twice in the rare case its primary relaunch signal can't be delivered.
 - Alt+F4 now stays routed through the normal close-to-tray behavior after switching between All Locations and saved locations.
 - Automatic Windows startup now stays in the background when AccessiWeather is already running, and startup shortcuts are recreated with a stable AccessiWeather target for portable copies.
 - The Windows installer now closes running AccessiWeather copies automatically before installing, then can launch the updated app normally when setup exits.

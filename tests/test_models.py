@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
 from accessiweather.models import (
     AppConfig,
     AppSettings,
@@ -455,6 +457,15 @@ class TestAppSettings:
 
         assert settings.validate_on_access("forecast_time_reference") is True
         assert settings.forecast_time_reference == "location"
+
+    @pytest.mark.parametrize("legacy_channel", ["dev", "beta"])
+    def test_update_channel_legacy_aliases_migrate_to_nightly(self, legacy_channel):
+        """Legacy non-stable update channels should remain on the nightly track."""
+        settings = AppSettings()
+        settings.update_channel = legacy_channel
+
+        assert settings.validate_on_access("update_channel") is True
+        assert settings.update_channel == "nightly"
 
     def test_forecast_duration_days_validation(self):
         """Ensure invalid forecast duration values fall back to default."""

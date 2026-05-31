@@ -11,6 +11,11 @@ from .notification_activation import NotificationActivationRequest
 
 logger = logging.getLogger(__name__)
 
+# The handoff file is only a fallback for when the named-pipe IPC channel is
+# unavailable, so it doesn't need sub-second latency. Poll on a relaxed
+# interval to avoid a perpetual high-frequency wakeup for the whole session.
+_ACTIVATION_HANDOFF_POLL_MS = 2000
+
 
 def show_alert_dialog(parent, alert, settings=None) -> None:
     """Lazy wrapper for the single-alert details dialog."""
@@ -90,7 +95,17 @@ class AppActivationMixin:
             self._on_activation_handoff_timer,
             self._activation_handoff_timer,
         )
-        self._activation_handoff_timer.Start(750)
+        self._activation_handoff_timer.Start(_ACTIVATION_HANDOFF_POLL_MS)
+
+    def _start_activation_ipc_server(self) -> None:
+        """Start duplicate-launch IPC and route requests onto the UI thread."""
+        if self.single_instance_manager is None:
+            return
+
+        def _on_request(request: NotificationActivationRequest) -> None:
+            wx.CallAfter(self._handle_notification_activation_request, request)
+
+        self.single_instance_manager.start_activation_ipc_server(_on_request)
 
     def _on_activation_handoff_timer(self, event) -> None:
         """Consume and route any pending notification activation handoff request."""
@@ -149,11 +164,21 @@ class AppActivationMixin:
             import ctypes
 
             hwnd = frame.GetHandle()
-            user32 = ctypes.windll.user32
+            user32 = ctypes.WinDLL("user32", use_last_error=True)
+            kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            # Declare signatures so the 64-bit HWND is not truncated to c_int.
+            user32.IsIconic.restype = ctypes.c_bool
+            user32.IsIconic.argtypes = [ctypes.c_void_p]
+            user32.ShowWindow.restype = ctypes.c_bool
+            user32.ShowWindow.argtypes = [ctypes.c_void_p, ctypes.c_int]
+            user32.AllowSetForegroundWindow.argtypes = [ctypes.c_ulong]
+            user32.SetForegroundWindow.restype = ctypes.c_bool
+            user32.SetForegroundWindow.argtypes = [ctypes.c_void_p]
+            kernel32.GetCurrentProcessId.restype = ctypes.c_ulong
             SW_RESTORE = 9
             if user32.IsIconic(hwnd):
                 user32.ShowWindow(hwnd, SW_RESTORE)
-            user32.AllowSetForegroundWindow(ctypes.windll.kernel32.GetCurrentProcessId())
+            user32.AllowSetForegroundWindow(kernel32.GetCurrentProcessId())
             user32.SetForegroundWindow(hwnd)
         except Exception:
             frame.Raise()

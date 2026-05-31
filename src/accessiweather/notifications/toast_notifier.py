@@ -151,6 +151,24 @@ def _apply_protocol_activation_to_xml(xml_payload: str, activation_arguments: st
     return ET.tostring(root, encoding="unicode")
 
 
+def _ensure_toast_xml_silent(xml_payload: str) -> str:
+    """Mark toast XML silent so Windows does not play over app-managed sounds."""
+    try:
+        root = ET.fromstring(xml_payload)
+    except ET.ParseError:
+        logger.debug("[toasted] Failed to parse toast XML for silent audio", exc_info=True)
+        return xml_payload
+
+    if root.tag != "toast":
+        return xml_payload
+
+    audio = root.find("audio")
+    if audio is None:
+        audio = ET.SubElement(root, "audio")
+    audio.set("silent", "true")
+    return ET.tostring(root, encoding="unicode")
+
+
 class _DesktopNotifierBackend:
     """
     Cross-platform notification backend using the desktop-notifier package.

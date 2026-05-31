@@ -74,6 +74,9 @@ class ToastedWindowsNotifier:
         logger.info("ToastedWindowsNotifier initialized (app_id=%s)", WINDOWS_APP_USER_MODEL_ID)
         # Eagerly start worker thread to avoid first-notification delay
         self._ensure_worker()
+        # Start the watchdog so a dead worker thread is detected and restarted;
+        # without this, toasts silently stop until the app is relaunched.
+        self._start_watchdog()
 
     # -- worker thread management ------------------------------------------
 
@@ -304,6 +307,7 @@ class ToastedWindowsNotifier:
             # Generate XML from the toasted Toast object
             xml_string = toast.to_xml_string()
             xml_string = _state._apply_protocol_activation_to_xml(xml_string, activation_arguments)
+            xml_string = _state._ensure_toast_xml_silent(xml_string)
 
             xml_doc = _state._WinRT_XmlDocument()
             xml_doc.load_xml(xml_string)

@@ -101,7 +101,11 @@ class UpdatesTab:
         controls = self.dialog._controls
         return {
             "auto_update_enabled": controls["auto_update"].GetValue(),
-            "update_channel": "stable" if controls["update_channel"].GetSelection() == 0 else "dev",
+            # The canonical non-stable channel is "nightly" (matches the build
+            # migration default, select_latest_release, and the startup guard).
+            "update_channel": (
+                "stable" if controls["update_channel"].GetSelection() == 0 else "nightly"
+            ),
             "update_check_interval_hours": controls["update_check_interval"].GetValue(),
         }
 

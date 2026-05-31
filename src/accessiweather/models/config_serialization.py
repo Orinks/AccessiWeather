@@ -159,8 +159,8 @@ class AppSettingsSerializationMixin:
             notify_precipitation_likelihood=settings_cls._as_bool(
                 data.get("notify_precipitation_likelihood"), False
             ),
-            precipitation_likelihood_threshold=float(
-                data.get("precipitation_likelihood_threshold", 0.5)
+            precipitation_likelihood_threshold=settings_cls._as_float(
+                data.get("precipitation_likelihood_threshold"), 0.5
             ),
             github_backend_url=data.get("github_backend_url", ""),
             alert_radius_type=data.get("alert_radius_type", "county"),

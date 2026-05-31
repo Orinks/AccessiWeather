@@ -242,6 +242,10 @@ def build_nuitka_command(
             [
                 f"--macos-app-name={APP_NAME}",
                 f"--macos-app-icon={_repo_path(icon)}",
+                "--macos-app-protected-resource="
+                "NSLocationWhenInUseUsageDescription:"
+                "AccessiWeather uses your location only when you choose Use my current location "
+                "to add or edit a saved weather location.",
             ]
         )
     elif system == "Linux":

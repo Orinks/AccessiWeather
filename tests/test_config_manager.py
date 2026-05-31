@@ -121,6 +121,13 @@ class TestConfigManager:
         assert len(locations) == 1
         assert locations[0].name == "New York"
 
+    def test_add_location_rejects_non_numeric_coordinates(self, manager):
+        """Invalid coordinate values are rejected before saving."""
+        result = manager.add_location("Bad", "north", -74.0060)  # type: ignore[arg-type]
+
+        assert result is False
+        assert manager.get_all_locations() == []
+
     def test_add_location_persists_marine_mode_roundtrip(self, manager):
         """Marine mode should save and reload with locations."""
         result = manager.add_location(
@@ -238,7 +245,7 @@ class TestConfigManager:
         assert manager.update_location_marine_mode("Nowhere", True) is False
 
     def test_update_location_details_changes_coordinates_and_clears_zone_metadata(self, manager):
-        """Updating saved coordinates keeps the name and clears stale zone fields."""
+        """Updating saved coordinates can also update the editable display name."""
         manager.add_location("Lumberton", 39.965, -74.805, country_code="US")
         location = manager.get_all_locations()[0]
         location.timezone = "America/New_York"
@@ -255,11 +262,12 @@ class TestConfigManager:
             longitude=-74.8069,
             country_code="US",
             marine_mode=True,
+            display_name="Mount Holly, New Jersey",
         )
 
         assert result is True
         updated = manager.get_all_locations()[0]
-        assert updated.name == "Lumberton"
+        assert updated.name == "Mount Holly, New Jersey"
         assert updated.latitude == pytest.approx(39.9571)
         assert updated.longitude == pytest.approx(-74.8069)
         assert updated.country_code == "US"
@@ -272,6 +280,7 @@ class TestConfigManager:
         assert updated.radar_station is None
         assert manager.get_current_location() is not None
         assert manager.get_current_location().latitude == pytest.approx(39.9571)
+        assert manager.get_current_location().name == "Mount Holly, New Jersey"
 
     def test_update_location_details_keeps_zone_metadata_when_coordinates_match(self, manager):
         """Updating only marine mode/country preserves resolved zone metadata."""
@@ -287,6 +296,7 @@ class TestConfigManager:
             longitude=-74.805,
             country_code="US",
             marine_mode=True,
+            display_name="Lumberton",
         )
 
         assert result is True
@@ -303,9 +313,27 @@ class TestConfigManager:
                 longitude=2.0,
                 country_code="US",
                 marine_mode=False,
+                display_name="Nowhere",
             )
             is False
         )
+
+    def test_update_location_details_rejects_duplicate_display_name(self, manager):
+        """Renaming a location cannot collide with another saved location."""
+        manager.add_location("Lumberton", 39.965, -74.805, country_code="US")
+        manager.add_location("Mount Holly", 39.9934, -74.7879, country_code="US")
+
+        result = manager.update_location_details(
+            "Lumberton",
+            latitude=39.9571,
+            longitude=-74.8069,
+            country_code="US",
+            marine_mode=False,
+            display_name="Mount Holly",
+        )
+
+        assert result is False
+        assert sorted(manager.get_location_names()) == ["Lumberton", "Mount Holly"]
 
     def test_update_settings(self, manager):
         """Test updating settings."""

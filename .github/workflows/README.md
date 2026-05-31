@@ -22,7 +22,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 ### 2. Build and Package (`build.yml`)
 **Purpose**: Build nightly or tagged release artifacts separately from pull request validation
 **Triggers**:
-- Nightly schedule at 02:17 UTC (10:17 PM EDT / 9:17 PM EST)
+- Nightly schedule at 00:17 UTC (8:17 PM EDT / 7:17 PM EST)
 - Version tags
 - Manual dispatch (with optional version override)
 
@@ -30,6 +30,7 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 - Builds Windows installer + portable ZIP, macOS ZIP, and Linux tarball
 - Creates nightly or stable GitHub releases
 - Builds release bodies from curated `CHANGELOG.md` entries instead of PR titles
+- Skips scheduled nightlies when there are no new curated release notes or explicit build marker
 
 ---
 
@@ -75,9 +76,23 @@ Every user-facing PR needs a `CHANGELOG.md` bullet under `## [Unreleased]`. Dire
 `dev` or `main` are checked too, so user-facing commits without an associated PR still need a
 curated changelog entry.
 
-Nightly release notes include only newly added Unreleased entries since the previous nightly tag.
-Stable release notes use the matching version section, such as `## [0.6.1]`, and fall back to
-Unreleased only when a version section has not been cut yet.
+**Skipping the gate for non-user-facing work.** The gate flags any change under `src/`,
+`installer/`, or `soundpacks/` (the generated `weather_gov_api_client/` client is excluded). When a
+PR is purely internal — refactors, CI, tooling, release plumbing — you have two escape hatches:
+
+- **PR:** add the `skip-changelog` label. The `Check CHANGELOG entry` step is skipped entirely.
+- **Direct push:** put `Changelog: none` (or `[skip changelog]`) in the commit message. The gate
+  passes only when *every* non-merge commit in the range carries the marker, so a marker can't
+  silently exempt a change set that also contains user-facing work.
+
+Note: `.github/`, `tests/`, and `docs/` are never gated, so CI and test-only changes need no marker.
+
+Scheduled nightlies build when there is at least one newly added Unreleased entry that has not
+already shipped in the previous nightly or latest stable notes. If the latest stable release already
+contains the scheduled commit, the nightly is skipped. Internal packaged/runtime fixes that should
+still ship can opt in with `Nightly: build` or `[nightly build]` in the commit message. Stable
+release notes use the matching version section, such as `## [0.6.1]`, and fall back to Unreleased
+only when a version section has not been cut yet.
 
 Everything else stays out of the PR path.
 

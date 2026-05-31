@@ -92,13 +92,13 @@ class AITab:
             "Custom prompts",
             "Leave these blank to use the default behavior. Add text only if you want more control over tone or focus.",
         )
-        controls["custom_prompt"] = wx.TextCtrl(panel, style=wx.TE_MULTILINE, size=(420, 70))
         prompt_section.Add(
             wx.StaticText(panel, label="Custom system prompt (optional):"),
             0,
             wx.LEFT | wx.RIGHT | wx.BOTTOM,
             10,
         )
+        controls["custom_prompt"] = wx.TextCtrl(panel, style=wx.TE_MULTILINE, size=(420, 70))
         prompt_section.Add(
             controls["custom_prompt"],
             0,
@@ -108,6 +108,12 @@ class AITab:
         reset_prompt_btn = wx.Button(panel, label="Reset prompt to default")
         reset_prompt_btn.Bind(wx.EVT_BUTTON, self.dialog._on_reset_prompt)
         prompt_section.Add(reset_prompt_btn, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        prompt_section.Add(
+            wx.StaticText(panel, label="Custom instructions (optional):"),
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            10,
+        )
         controls["custom_instructions"] = wx.TextCtrl(
             panel,
             style=wx.TE_MULTILINE,
@@ -115,12 +121,6 @@ class AITab:
         )
         controls["custom_instructions"].SetHint(
             "For example: focus on outdoor activities, keep responses under 50 words"
-        )
-        prompt_section.Add(
-            wx.StaticText(panel, label="Custom instructions (optional):"),
-            0,
-            wx.LEFT | wx.RIGHT | wx.BOTTOM,
-            10,
         )
         prompt_section.Add(
             controls["custom_instructions"],

@@ -16,6 +16,7 @@ import wx
 
 from ...ai_tools import WeatherToolExecutor, get_tools_for_message
 from ...screen_reader import ScreenReaderAnnouncer
+from .async_guard import guard_destroyed
 from .weather_assistant_context import build_weather_context as _build_weather_context
 from .weather_assistant_prompt import SYSTEM_PROMPT
 from .weather_assistant_widgets import create_weather_assistant_widgets
@@ -439,6 +440,7 @@ class WeatherAssistantDialog(wx.Dialog):
         thread = threading.Thread(target=do_generate, daemon=True)
         thread.start()
 
+    @guard_destroyed
     def _on_response_received(self, text: str, model_used: str) -> None:
         """Handle successful AI response."""
         self._conversation.append({"role": "assistant", "content": text})
@@ -447,6 +449,7 @@ class WeatherAssistantDialog(wx.Dialog):
         self._set_status(f"Model: {model_used}")
         self._set_generating(False)
 
+    @guard_destroyed
     def _on_response_error(self, error: str) -> None:
         """Handle AI response error."""
         error_message = f"Sorry, I couldn't respond: {error}"

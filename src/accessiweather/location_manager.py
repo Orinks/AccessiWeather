@@ -39,6 +39,7 @@ class LocationManager:
         self.timeout = 10.0
         self.geocoding_base_url = "https://geocoding-api.open-meteo.com/v1"
         self.census_geocoding_base_url = "https://geocoding.geo.census.gov/geocoder"
+        self.nominatim_base_url = "https://nominatim.openstreetmap.org"
 
     @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=15.0)
     async def search_locations(self, query: str, limit: int = 5) -> list[Location]:
@@ -167,6 +168,184 @@ class LocationManager:
                 break
 
         return locations
+
+    async def reverse_geocode_coordinates(
+        self,
+        latitude: float,
+        longitude: float,
+    ) -> Location | None:
+        """Resolve coordinates to a friendly location label when a native source can name them."""
+        location = await self._reverse_geocode_with_nws(latitude, longitude)
+        if location is not None:
+            return location
+
+        return await self._reverse_geocode_with_nominatim(latitude, longitude)
+
+    async def _reverse_geocode_with_nws(
+        self,
+        latitude: float,
+        longitude: float,
+    ) -> Location | None:
+        """Resolve US coordinates through the National Weather Service points endpoint."""
+        url = f"https://api.weather.gov/points/{latitude},{longitude}"
+        headers = {
+            "User-Agent": "AccessiWeather/1.0 (AccessiWeather)",
+            "Accept": "application/geo+json",
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
+                response = await client.get(url, headers=headers)
+        except Exception as exc:  # noqa: BLE001 - reverse lookup should never block manual save
+            logger.debug("Reverse geocoding failed for (%s, %s): %s", latitude, longitude, exc)
+            return None
+
+        if response.status_code != 200:
+            logger.debug(
+                "Reverse geocoding returned status %s for (%s, %s)",
+                response.status_code,
+                latitude,
+                longitude,
+            )
+            return None
+
+        try:
+            properties = response.json().get("properties", {})
+        except (AttributeError, ValueError) as exc:
+            logger.debug("Reverse geocoding returned invalid JSON: %s", exc)
+            return None
+
+        relative = properties.get("relativeLocation", {})
+        relative_properties = relative.get("properties", {}) if isinstance(relative, dict) else {}
+        city = str(relative_properties.get("city") or "").strip()
+        state = str(relative_properties.get("state") or "").strip()
+        if not city:
+            return None
+
+        display_name = f"{city}, {state}" if state else city
+        return Location(
+            name=display_name,
+            latitude=latitude,
+            longitude=longitude,
+            timezone=properties.get("timeZone") or None,
+            country_code="US",
+        )
+
+    async def _reverse_geocode_with_nominatim(
+        self,
+        latitude: float,
+        longitude: float,
+    ) -> Location | None:
+        """Resolve non-US coordinates through OpenStreetMap Nominatim when available."""
+        url = f"{self.nominatim_base_url}/reverse"
+        params = {
+            "format": "jsonv2",
+            "lat": latitude,
+            "lon": longitude,
+            "zoom": 10,
+            "addressdetails": 1,
+            "accept-language": "en",
+        }
+        headers = {
+            "User-Agent": "AccessiWeather/1.0 (AccessiWeather)",
+            "Accept": "application/json",
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
+                response = await client.get(url, params=params, headers=headers)
+        except Exception as exc:  # noqa: BLE001 - manual location entry must remain available
+            logger.debug(
+                "Nominatim reverse geocoding failed for (%s, %s): %s",
+                latitude,
+                longitude,
+                exc,
+            )
+            return None
+
+        if response.status_code != 200:
+            logger.debug(
+                "Nominatim reverse geocoding returned status %s for (%s, %s)",
+                response.status_code,
+                latitude,
+                longitude,
+            )
+            return None
+
+        try:
+            data = response.json()
+        except ValueError as exc:
+            logger.debug("Nominatim reverse geocoding returned invalid JSON: %s", exc)
+            return None
+
+        if not isinstance(data, dict):
+            return None
+
+        name = self._format_nominatim_location_name(data)
+        if not name:
+            return None
+
+        address = data.get("address", {})
+        country_code = None
+        if isinstance(address, dict):
+            country_code_value = str(address.get("country_code") or "").strip()
+            country_code = country_code_value.upper() or None
+
+        return Location(
+            name=name,
+            latitude=latitude,
+            longitude=longitude,
+            country_code=country_code,
+        )
+
+    def _format_nominatim_location_name(self, data: dict) -> str | None:
+        """Build an editable display label from a Nominatim reverse geocoding response."""
+        address = data.get("address", {})
+        if not isinstance(address, dict):
+            display_name = str(data.get("display_name") or "").strip()
+            return display_name or None
+
+        locality = self._first_non_empty_address_value(
+            address,
+            (
+                "city",
+                "town",
+                "village",
+                "municipality",
+                "hamlet",
+                "suburb",
+                "county",
+            ),
+        )
+        region = self._first_non_empty_address_value(
+            address,
+            (
+                "state",
+                "province",
+                "region",
+                "state_district",
+            ),
+        )
+        country = str(address.get("country") or "").strip()
+
+        parts: list[str] = []
+        for value in (locality, region, country):
+            if value and value.casefold() not in {part.casefold() for part in parts}:
+                parts.append(value)
+
+        if parts:
+            return ", ".join(parts)
+
+        display_name = str(data.get("display_name") or "").strip()
+        return display_name or None
+
+    def _first_non_empty_address_value(self, address: dict, keys: tuple[str, ...]) -> str | None:
+        """Return the first non-empty string value for a set of Nominatim address keys."""
+        for key in keys:
+            value = str(address.get(key) or "").strip()
+            if value:
+                return value
+        return None
 
     def _parse_census_address_match(self, data: dict) -> Location | None:
         """Parse a Census Geocoder address match into a Location."""

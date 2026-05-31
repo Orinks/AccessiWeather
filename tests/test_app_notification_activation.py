@@ -246,6 +246,21 @@ def test_on_activation_handoff_timer_noop_when_no_single_instance_manager() -> N
     app._on_activation_handoff_timer(None)
 
 
+def test_start_activation_ipc_server_routes_requests_through_ui_thread() -> None:
+    """IPC activation callbacks should be routed onto the wx UI thread."""
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    request = NotificationActivationRequest(kind="generic_fallback")
+    app.single_instance_manager = MagicMock()
+
+    with patch("accessiweather.app_activation.wx") as mock_wx:
+        app._start_activation_ipc_server()
+        app.single_instance_manager.start_activation_ipc_server.assert_called_once()
+        callback = app.single_instance_manager.start_activation_ipc_server.call_args.args[0]
+        callback(request)
+
+    mock_wx.CallAfter.assert_called_once_with(app._handle_notification_activation_request, request)
+
+
 def test_schedule_startup_activation_request_calls_handler() -> None:
     """_schedule_startup_activation_request invokes wx.CallAfter."""
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
@@ -298,3 +313,57 @@ def test_handle_activation_uses_force_foreground_on_windows() -> None:
         request = NotificationActivationRequest(kind="generic_fallback")
         app._handle_notification_activation_request(request)
         mock_force.assert_called_once_with(mw)
+
+
+def test_force_foreground_window_non_windows_uses_raise(monkeypatch) -> None:
+    """On non-Windows, _force_foreground_window just raises the frame."""
+    from accessiweather import app_activation
+
+    monkeypatch.setattr(app_activation.sys, "platform", "linux")
+    frame = SimpleNamespace(Raise=MagicMock())
+
+    AccessiWeatherApp._force_foreground_window(frame)
+
+    frame.Raise.assert_called_once_with()
+
+
+def test_force_foreground_window_uses_win32_handle_apis(monkeypatch) -> None:
+    """The Windows branch passes the full window handle to the Win32 calls."""
+    import ctypes
+
+    from accessiweather import app_activation
+
+    user32 = MagicMock()
+    kernel32 = MagicMock()
+    user32.IsIconic.return_value = True
+
+    def fake_windll(name, use_last_error=True):
+        return {"user32": user32, "kernel32": kernel32}[name]
+
+    monkeypatch.setattr(app_activation.sys, "platform", "win32")
+    monkeypatch.setattr(ctypes, "WinDLL", fake_windll, raising=False)
+
+    frame = SimpleNamespace(GetHandle=lambda: 0x1_0000_4242, Raise=MagicMock())
+
+    AccessiWeatherApp._force_foreground_window(frame)
+
+    user32.IsIconic.assert_called_once_with(0x1_0000_4242)
+    user32.ShowWindow.assert_called_once_with(0x1_0000_4242, 9)
+    user32.SetForegroundWindow.assert_called_once_with(0x1_0000_4242)
+    frame.Raise.assert_not_called()
+
+
+def test_start_activation_handoff_polling_uses_relaxed_interval() -> None:
+    """Handoff polling arms the timer at the relaxed fallback interval."""
+    from accessiweather import app_activation
+
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._activation_handoff_timer = None
+    app.Bind = MagicMock()
+
+    with patch("accessiweather.app_activation.wx") as mock_wx:
+        app._start_activation_handoff_polling()
+        timer = mock_wx.Timer.return_value
+
+    assert app_activation._ACTIVATION_HANDOFF_POLL_MS == 2000
+    timer.Start.assert_called_once_with(app_activation._ACTIVATION_HANDOFF_POLL_MS)

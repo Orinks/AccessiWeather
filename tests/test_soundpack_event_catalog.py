@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 
+from accessiweather.notifications.sound_pack_helpers import get_sound_entry
 from accessiweather.sound_events import (
     FRIENDLY_SOUND_EVENT_CHOICES,
     LEGACY_SOUND_EVENT_KEYS,
@@ -58,3 +60,36 @@ def test_default_pack_supports_all_visible_events_and_legacy_keys():
     for key, filename in sounds.items():
         sound_path = pack_json.parent / filename
         assert sound_path.exists(), f"{key} maps to missing file {filename}"
+
+
+def test_missing_specific_event_uses_selected_pack_notify_fallback(tmp_path):
+    soundpacks_dir = tmp_path / "soundpacks"
+    custom_pack = soundpacks_dir / "custom"
+    default_pack = soundpacks_dir / "default"
+    custom_pack.mkdir(parents=True)
+    default_pack.mkdir(parents=True)
+    (custom_pack / "notify.wav").write_bytes(b"custom notify")
+    (default_pack / "notify.ogg").write_bytes(b"default notify")
+    (custom_pack / "pack.json").write_text(
+        json.dumps({"name": "Custom", "sounds": {"notify": "notify.wav"}}),
+        encoding="utf-8",
+    )
+    (default_pack / "pack.json").write_text(
+        json.dumps(
+            {
+                "name": "Default",
+                "sounds": {"notify": "notify.ogg", "discussion_update": "notify.ogg"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    sound_file, _volume = get_sound_entry(
+        "discussion_update",
+        "custom",
+        soundpacks_dir=soundpacks_dir,
+        default_pack="default",
+        logger=logging.getLogger(__name__),
+    )
+
+    assert sound_file == custom_pack / "notify.wav"

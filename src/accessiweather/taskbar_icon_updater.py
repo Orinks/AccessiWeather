@@ -277,17 +277,20 @@ class TaskbarIconUpdater:
     def _format_wind(self, current: Any) -> str:
         """Format wind direction and speed."""
         direction = getattr(current, "wind_direction", None)
-        speed = getattr(current, "wind_speed", None)
-
-        if direction is None and speed is None:
-            return PLACEHOLDER_NA
+        # Format the speed through the unit-aware helper rather than assuming
+        # mph: wind_speed may carry km/h for metric-only sources.
+        speed_str = self._format_wind_speed(current)
 
         parts = []
         formatted_direction = self._format_wind_direction(direction)
         if formatted_direction != PLACEHOLDER_NA:
             parts.append(formatted_direction)
-        if speed is not None:
-            parts.append(f"at {speed:.0f} mph")
+        if speed_str != PLACEHOLDER_NA:
+            parts.append(f"at {speed_str}")
+        else:
+            legacy_speed = getattr(current, "wind_speed", None)
+            if legacy_speed is not None:
+                parts.append(f"at {legacy_speed:.0f} mph")
 
         return " ".join(parts) if parts else PLACEHOLDER_NA
 
@@ -464,7 +467,10 @@ class TaskbarIconUpdater:
 
         result = self.parser.format_string(format_string, data)
 
-        if "Error" in result:
+        # The parser signals failure with a string starting with "Error:".
+        # Match the prefix so a legitimate value containing the word "error"
+        # doesn't blank the tooltip.
+        if result.startswith("Error:"):
             logger.warning("Format error: %s", result)
             return DEFAULT_TOOLTIP_TEXT
 

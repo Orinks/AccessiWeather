@@ -165,3 +165,11 @@ class TestStreamURLProvider:
         assert provider.get_stream_urls("UNKNOWN99") == [
             "https://broadcastify.cdnstream1.com/noaa/UNKNOWN99"
         ]
+
+    def test_prewarm_stations_fetches_each_station_and_suppresses_errors(self) -> None:
+        provider = StreamURLProvider(use_fallback=False)
+        provider.get_stream_urls = MagicMock(side_effect=[["https://example.com/live"], OSError])
+
+        provider.prewarm_stations(["WXJ76", "BAD"])
+
+        assert provider.get_stream_urls.call_count == 2

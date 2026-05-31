@@ -187,9 +187,11 @@ class SettingsOperations:
         }
         if is_portable:
             secure_keys -= portable_api_keys
-        # These keys should be redacted in logs
+        # These keys should be redacted in logs (everything stored as a secret)
         redacted_keys = {
             "github_app_private_key",
+            "github_app_id",
+            "github_app_installation_id",
             "pirate_weather_api_key",
             "openrouter_api_key",
             "avwx_api_key",
