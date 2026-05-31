@@ -19,7 +19,7 @@ All notable changes to this project will be documented in this file.
 - **Guided Advanced Lookup in Forecaster Notes** — Advanced Lookup now organizes NWS and IEM text products into product groups with clearer product choices, office selection, date presets, result limits, sort order, source selection, aviation AFD, center, WMO, and text-match filters.
 
 ### Changed
-- Linux nightly and release downloads now ship as `.tar.gz` tarballs instead of ZIP files.
+- Linux downloads now ship as `.tar.gz` tarballs instead of ZIP files.
 - Alert sounds and sound-pack creation now focus on alert severity instead of a long list of specific alert names, while existing packs can keep their older mappings.
 
 ### Fixed
@@ -65,13 +65,11 @@ All notable changes to this project will be documented in this file.
 - The "Launch automatically at startup" setting now updates the system startup entry instead of only saving the checkbox.
 - Repeated checks of unchanged alerts no longer use up notification rate-limit capacity before newer alerts are handled.
 - The update dialog now shows release notes as screen-reader-friendly plain text instead of raw Markdown.
-- Linux builds now stage `sound_lib`'s native audio libraries in the path expected by the packaged app.
-- Linux builds no longer bundle OpenSSL libraries that can conflict with the target system's `libcurl`.
+- Linux packages now include the native audio libraries needed for notification sounds.
+- Linux packages now avoid a startup compatibility issue on systems with different SSL libraries.
 - Forecaster Notes now starts with NWS discussion tabs only and adds IEM-backed tabs only when active SPC/WPC products apply to your selected location.
 - Pirate Weather now requests API v2 data and carries v2 precipitation types like freezing rain and wintry mix into current, daily, and hourly forecasts.
 - Forecaster Notes now hides Hazardous Weather Outlook and Special Weather Statement tabs when NWS confirms there is no matching product for the selected office.
-- Forecaster Notes now avoids stray background task warnings when a product-tab check runs without the normal app scheduler.
-- Nightly builds now report the dev package version consistently instead of using stale generated build metadata.
 
 ## [0.6.0] - 2026-04-24
 
