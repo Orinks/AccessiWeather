@@ -33,8 +33,8 @@ All notable changes to this project will be documented in this file.
 - Forecaster Notes AI summaries now use the same default prompt for every text product unless you've set custom AI prompt options.
 - Default AI summaries now stay grounded in the provided weather text or data, so they are less likely to invent forecast details when summarizing reports.
 - Relaunching AccessiWeather on Windows now reliably restores the already-running window from desktop shortcuts, direct EXE launches, and portable copies without relying on the window title.
-- Restoring the running AccessiWeather window on relaunch, and bringing it to the front from a notification, now work reliably on 64-bit Windows where an internal window-handle bug could previously leave the window in the background.
-- Relaunching AccessiWeather no longer briefly activates the already-running window twice in the rare case its primary relaunch signal can't be delivered.
+- Restoring the running AccessiWeather window on relaunch, and bringing it to the front from a notification, now work reliably on 64-bit Windows instead of leaving the window in the background.
+- Relaunching AccessiWeather no longer briefly activates the already-running window twice in rare fallback cases.
 - Alt+F4 now stays routed through the normal close-to-tray behavior after switching between All Locations and saved locations.
 - Automatic Windows startup now stays in the background when AccessiWeather is already running, and startup shortcuts are recreated with a stable AccessiWeather target for portable copies.
 - The Windows installer now closes running AccessiWeather copies automatically before installing, then can launch the updated app normally when setup exits.
@@ -65,8 +65,8 @@ All notable changes to this project will be documented in this file.
 - The "Launch automatically at startup" setting now updates the system startup entry instead of only saving the checkbox.
 - Repeated checks of unchanged alerts no longer use up notification rate-limit capacity before newer alerts are handled.
 - The update dialog now shows release notes as screen-reader-friendly plain text instead of raw Markdown.
-- Linux packages now include the native audio libraries needed for notification sounds.
-- Linux packages now avoid a startup compatibility issue on systems with different SSL libraries.
+- Linux packages now include the files needed for notification sounds.
+- Linux packages now avoid a startup compatibility issue on some systems.
 - Forecaster Notes now starts with NWS discussion tabs only and adds IEM-backed tabs only when active SPC/WPC products apply to your selected location.
 - Pirate Weather now requests API v2 data and carries v2 precipitation types like freezing rain and wintry mix into current, daily, and hourly forecasts.
 - Forecaster Notes now hides Hazardous Weather Outlook and Special Weather Statement tabs when NWS confirms there is no matching product for the selected office.
