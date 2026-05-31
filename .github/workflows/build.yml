@@ -15,6 +15,7 @@ on:
         default: false
 
 permissions:
+  actions: read
   contents: write
 
 concurrency:
@@ -345,11 +346,10 @@ jobs:
           ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
           fetch-depth: 0
 
-      - uses: actions/download-artifact@v8.0.1
-        with:
-          path: dist
-          merge-multiple: true
-        continue-on-error: true
+      - name: Download artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --dir dist
 
       - name: Prepare release
         id: prep
@@ -363,8 +363,7 @@ jobs:
           TIMESTAMP=$(date -u +%Y%m%d)
 
           # Rename assets based on release type
-          for f in dist/*.exe dist/*.zip dist/*.tar.gz; do
-            [ -f "$f" ] || continue
+          while IFS= read -r f; do
             name=$(basename "$f")
             if [ "$IS_NIGHTLY" = "true" ]; then
               case "$name" in
@@ -381,7 +380,7 @@ jobs:
                 *Linux*.tar.gz) mv "$f" "assets/AccessiWeather-${VERSION}-linux.tar.gz" ;;
               esac
             fi
-          done
+          done < <(find dist -type f \( -name '*.exe' -o -name '*.zip' -o -name '*.tar.gz' \))
 
           # Generate checksums
           cd assets && sha256sum * > checksums.txt 2>/dev/null || true

@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-05-30
+
 ### Added
 - You can now choose "Use my current location" when adding or updating a saved location. AccessiWeather asks the OS once, only after you press the button, and keeps manual search available if location access is denied or unavailable.
 - Alert updates can now use their own mappable sound in sound packs.
