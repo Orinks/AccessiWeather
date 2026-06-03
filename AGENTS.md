@@ -170,14 +170,32 @@ HYPOTHESIS_PROFILE: ci
 
 ---
 
-## Changelog Maintenance
+## Changelog Gate
 
-Update `CHANGELOG.md` under `[Unreleased]` for user-visible features, fixes, UI behavior, performance, or packaging changes.
+AccessiWeather runs a CI gate (`scripts/changelog_tools.py check`) that fails
+when a user-facing change reaches `dev`/`main` without a curated `CHANGELOG.md`
+bullet under `## [Unreleased]`.
+
+- **When an entry is required:** changes under `src/`, `installer/`, or
+  `soundpacks/` (plus `accessiweather.spec`, `pyproject.toml` dependency
+  changes, and `scripts/generate_build_meta.py`). Write the bullet as a
+  plain-language, user-facing note; describe the benefit, not the
+  implementation.
+- **Already exempt, with no entry or marker needed:** `.github/`, `tests/`,
+  `docs/`, most of `scripts/`, and the generated
+  `src/accessiweather/weather_gov_api_client/` client.
+- **Exempting an internal change that still touches gated paths** such as
+  refactors, CI, tooling, or release plumbing inside `src/`:
+  - On a PR: add the `skip-changelog` label.
+  - On a direct push to `dev`/`main`: include `Changelog: none` or
+    `[skip changelog]` in the commit message. The gate only passes when every
+    non-merge commit in the range carries the marker, so do not mix a marked
+    internal commit with an unmarked user-facing one in the same push.
+- Do not pad the changelog with technical or internal notes just to satisfy the
+  gate. Use the exemptions above instead.
 
 Write entries like a human:
 
 ```markdown
 - Detected current locations outside the US now get an editable place name when reverse geocoding can identify the coordinates.
 ```
-
-Skip changelog entries for internal-only refactors, test-only work, and CI plumbing unless users are affected.
