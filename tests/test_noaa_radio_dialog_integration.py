@@ -55,10 +55,12 @@ def _create_wx_mock():
         "ICON_INFORMATION",
         "SL_HORIZONTAL",
         "ID_CLOSE",
+        "TE_PROCESS_ENTER",
     ]:
         setattr(wx_mock, attr, 0)
     wx_mock.NOT_FOUND = -1
     wx_mock.EVT_CHECKBOX = MagicMock()
+    wx_mock.EVT_TEXT_ENTER = MagicMock()
     wx_mock.Window = _FakeWxWindow
     wx_mock.Dialog = _FakeWxDialog
 
@@ -73,6 +75,10 @@ def _create_wx_mock():
     checkbox_inst = MagicMock()
     checkbox_inst.GetValue.return_value = False
     wx_mock.CheckBox.return_value = checkbox_inst
+
+    text_ctrl_inst = MagicMock()
+    text_ctrl_inst.GetValue.return_value = ""
+    wx_mock.TextCtrl.return_value = text_ctrl_inst
 
     return wx_mock
 
@@ -128,7 +134,17 @@ def _make_dialog(module):
         Station("WXJ76", 162.40, "Philadelphia", 39.95, -75.17, "PA"),
     ]
     dlg._player = MagicMock()
+    dlg._player.get_volume.return_value = 1.0
     dlg._player.is_playing.return_value = False
+    dlg._session = MagicMock()
+    dlg._session.player = dlg._player
+    dlg._session.current_urls = dlg._current_urls = [
+        "http://example.com/stream1",
+        "http://example.com/stream2",
+    ]
+    dlg._session.current_url_index = 0
+    dlg._session.playing_station = None
+    dlg._session.is_playing.return_value = False
     dlg._url_provider = MagicMock()
     dlg._station_choice = MagicMock()
     dlg._station_choice.GetSelection.return_value = 0
@@ -148,6 +164,8 @@ def _make_dialog(module):
     dlg._prefer_btn = MagicMock()
     dlg._show_unavailable_checkbox = MagicMock()
     dlg._show_unavailable_checkbox.GetValue.return_value = False
+    dlg._search_ctrl = MagicMock()
+    dlg._search_ctrl.GetValue.return_value = ""
     dlg._auto_advance_stream = True
     dlg._playing_station = None
     return dlg
@@ -173,7 +191,7 @@ class TestFullPlaybackFlow:
 
         # Stop
         dlg._on_stop(MagicMock())
-        dlg._player.stop.assert_called_once()
+        dlg._session.stop.assert_called_once()
 
         # Simulate stopped callback
         dlg._on_stopped()
@@ -238,7 +256,7 @@ class TestDialogCleanup:
     """Test dialog close cleanup."""
 
     def test_close_during_playback(self, noaa_dialog_module):
-        """Test closing dialog during active playback stops player."""
+        """Test closing dialog during active playback keeps player running."""
         dlg = _make_dialog(noaa_dialog_module)
         dlg.Destroy = MagicMock()
 
@@ -247,15 +265,17 @@ class TestDialogCleanup:
 
         # Close
         dlg._on_close(MagicMock())
-        dlg._player.stop.assert_called_once()
+        dlg._player.stop.assert_not_called()
+        dlg._session.unbind_callbacks.assert_called_once()
         dlg.Destroy.assert_called_once()
 
     def test_close_when_stopped(self, noaa_dialog_module):
-        """Test closing dialog when not playing still calls stop (safe)."""
+        """Test closing dialog when stopped just dismisses the UI."""
         dlg = _make_dialog(noaa_dialog_module)
         dlg.Destroy = MagicMock()
         dlg._on_close(MagicMock())
-        dlg._player.stop.assert_called_once()
+        dlg._player.stop.assert_not_called()
+        dlg._session.unbind_callbacks.assert_called_once()
         dlg.Destroy.assert_called_once()
 
 
@@ -349,6 +369,40 @@ class TestLoadStations:
             [entry.station],
             show_unavailable=True,
         )
+
+    def test_load_stations_without_coordinates_browses_station_database(self, noaa_dialog_module):
+        dlg = _make_dialog(noaa_dialog_module)
+        dlg._lat = None
+        dlg._lon = None
+        entry = MagicMock()
+        entry.station = Station("WXK27", 162.4, "Austin, TX", 30.2672, -97.7431, "TX")
+        entry.label = "WXK27 - Austin, TX (162.4 MHz)"
+        dlg._station_availability.build_entries.return_value = [entry]
+
+        with patch("accessiweather.ui.dialogs.noaa_radio_dialog.StationDatabase") as mock_db_cls:
+            mock_db_cls.return_value.search.return_value = [entry.station]
+            dlg._load_stations_worker(station_limit=25)
+
+        mock_db_cls.return_value.search.assert_called_once_with("", limit=25)
+        mock_db_cls.return_value.find_nearest.assert_not_called()
+        dlg._station_availability.build_entries.assert_called_once_with(
+            [entry.station],
+            show_unavailable=False,
+        )
+
+    def test_load_stations_uses_search_query(self, noaa_dialog_module):
+        dlg = _make_dialog(noaa_dialog_module)
+        entry = MagicMock()
+        entry.station = Station("WXK27", 162.4, "Austin, TX", 30.2672, -97.7431, "TX")
+        entry.label = "WXK27 - Austin, TX (162.4 MHz)"
+        dlg._station_availability.build_entries.return_value = [entry]
+
+        with patch("accessiweather.ui.dialogs.noaa_radio_dialog.StationDatabase") as mock_db_cls:
+            mock_db_cls.return_value.search.return_value = [entry.station]
+            dlg._load_stations_worker(station_limit=10, search_query="Austin")
+
+        mock_db_cls.return_value.search.assert_called_once_with("Austin", limit=10)
+        mock_db_cls.return_value.find_nearest.assert_not_called()
 
 
 class TestSuppressionIntegration:

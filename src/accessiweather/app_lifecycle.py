@@ -319,6 +319,13 @@ class AppLifecycleMixin:
         if activation_handoff_timer:
             activation_handoff_timer.Stop()
 
+        try:
+            from .noaa_radio.session import stop_shared_radio_session
+
+            stop_shared_radio_session()
+        except Exception:
+            logger.debug("Could not stop NOAA radio session during shutdown", exc_info=True)
+
         # Play exit sound without blocking shutdown.
         try:
             settings = self.config_manager.get_settings()

@@ -50,10 +50,12 @@ def _create_wx_mock():
         "ICON_INFORMATION",
         "SL_HORIZONTAL",
         "ID_CLOSE",
+        "TE_PROCESS_ENTER",
     ]:
         setattr(wx_mock, attr, 0)
     wx_mock.NOT_FOUND = -1
     wx_mock.EVT_CHECKBOX = MagicMock()
+    wx_mock.EVT_TEXT_ENTER = MagicMock()
 
     # Use real classes for inheritance
     wx_mock.Window = _FakeWxWindow
@@ -72,6 +74,10 @@ def _create_wx_mock():
     checkbox_inst = MagicMock()
     checkbox_inst.GetValue.return_value = False
     wx_mock.CheckBox.return_value = checkbox_inst
+
+    text_ctrl_inst = MagicMock()
+    text_ctrl_inst.GetValue.return_value = ""
+    wx_mock.TextCtrl.return_value = text_ctrl_inst
 
     return wx_mock
 
@@ -143,6 +149,16 @@ def _make_dialog_instance(module):
         ),
     ]
     dlg._player = MagicMock()
+    dlg._player.get_volume.return_value = 1.0
+    dlg._session = MagicMock()
+    dlg._session.player = dlg._player
+    dlg._session.current_urls = dlg._current_urls = [
+        "http://example.com/stream1",
+        "http://example.com/stream2",
+    ]
+    dlg._session.current_url_index = 0
+    dlg._session.playing_station = None
+    dlg._session.is_playing.return_value = False
     dlg._url_provider = MagicMock()
     dlg._station_choice = MagicMock()
     dlg._station_choice.GetSelection.return_value = 0
@@ -162,6 +178,8 @@ def _make_dialog_instance(module):
     dlg._prefer_btn = MagicMock()
     dlg._show_unavailable_checkbox = MagicMock()
     dlg._show_unavailable_checkbox.GetValue.return_value = False
+    dlg._search_ctrl = MagicMock()
+    dlg._search_ctrl.GetValue.return_value = ""
     dlg._auto_advance_stream = True
     dlg._playing_station = None
     return dlg
@@ -192,7 +210,7 @@ class TestNOAARadioDialogModule:
 
         with (
             patch.object(noaa_dialog_module.wx, "GetApp", return_value=fake_app),
-            patch.object(noaa_dialog_module, "RadioPlayer"),
+            patch.object(noaa_dialog_module, "get_shared_radio_session", return_value=MagicMock()),
             patch.object(noaa_dialog_module, "StreamURLProvider"),
             patch.object(
                 noaa_dialog_module, "_get_clients", return_value=(MagicMock(), MagicMock())
@@ -216,7 +234,7 @@ class TestNOAARadioDialogModule:
 
         with (
             patch.object(noaa_dialog_module.wx, "GetApp", return_value=fake_app),
-            patch.object(noaa_dialog_module, "RadioPlayer"),
+            patch.object(noaa_dialog_module, "get_shared_radio_session", return_value=MagicMock()),
             patch.object(noaa_dialog_module, "StreamURLProvider"),
             patch.object(
                 noaa_dialog_module, "_get_clients", return_value=(MagicMock(), MagicMock())
@@ -291,7 +309,7 @@ class TestPlaybackControls:
         """Test Stop triggers player.stop."""
         dlg = _make_dialog_instance(noaa_dialog_module)
         dlg._on_stop(MagicMock())
-        dlg._player.stop.assert_called_once()
+        dlg._session.stop.assert_called_once()
 
     def test_on_volume_change(self, noaa_dialog_module):
         """Test volume slider change updates player."""
@@ -347,13 +365,44 @@ class TestCallbacks:
 class TestDialogLifecycle:
     """Tests for dialog open/close behavior."""
 
-    def test_on_close_stops_and_destroys(self, noaa_dialog_module):
-        """Test closing dialog stops player and destroys window."""
+    def test_on_close_dismisses_without_stopping(self, noaa_dialog_module):
+        """Test closing dialog leaves the shared player alone."""
         dlg = _make_dialog_instance(noaa_dialog_module)
         dlg.Destroy = MagicMock()
         dlg._on_close(MagicMock())
-        dlg._player.stop.assert_called_once()
+        dlg._player.stop.assert_not_called()
+        dlg._session.unbind_callbacks.assert_called_once()
         dlg.Destroy.assert_called_once()
+
+    def test_escape_dismisses_without_stopping(self, noaa_dialog_module):
+        """Test Escape follows the same dismiss-only path as Close."""
+        import wx
+
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg.Destroy = MagicMock()
+        event = MagicMock()
+        event.GetKeyCode.return_value = wx.WXK_ESCAPE
+
+        dlg._on_char_hook(event)
+
+        dlg._player.stop.assert_not_called()
+        dlg._session.unbind_callbacks.assert_called_once()
+        event.Skip.assert_not_called()
+
+    def test_reopen_syncs_active_stream_state(self, noaa_dialog_module):
+        """Test a reopened dialog reflects the already-playing station."""
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._session.is_playing.return_value = True
+        dlg._session.playing_station = dlg._stations[0]
+        dlg._session.current_urls = ["https://example.com/1", "https://example.com/2"]
+        dlg._session.current_url_index = 1
+
+        dlg._sync_playback_state_from_session()
+
+        dlg._status_text.SetLabel.assert_called_with("Playing: KEC49 (stream 2 of 2)")
+        dlg._play_stop_btn.SetLabel.assert_called_with("Stop")
+        dlg._next_stream_btn.Enable.assert_called_with(True)
+        dlg._prefer_btn.Enable.assert_called_with(True)
 
     def test_show_noaa_radio_dialog_creates_and_shows(self, noaa_dialog_module):
         """Test convenience function creates and shows dialog."""
@@ -489,7 +538,19 @@ class TestPlayStopSwitch:
         dlg._playing_station = dlg._stations[0]
         dlg._station_choice.GetSelection.return_value = 0
         dlg._on_play_stop(MagicMock())
-        dlg._player.stop.assert_called()
+        dlg._session.stop.assert_called()
+        dlg._player.play.assert_not_called()
+
+    def test_playing_without_selection_triggers_stop(self, noaa_dialog_module):
+        """When playback is active but no station is selected, the button still stops."""
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._player.is_playing.return_value = True
+        dlg._playing_station = dlg._stations[0]
+        dlg._station_choice.GetSelection.return_value = -1
+
+        dlg._on_play_stop(MagicMock())
+
+        dlg._session.stop.assert_called_once()
         dlg._player.play.assert_not_called()
 
     def test_different_station_playing_triggers_switch(self, noaa_dialog_module):

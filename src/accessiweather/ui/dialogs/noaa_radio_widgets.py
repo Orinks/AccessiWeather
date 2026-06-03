@@ -12,6 +12,26 @@ def create_noaa_radio_widgets(dialog: Any, station_limit_labels: tuple[str, ...]
     panel = wx.Panel(dialog)
     sizer = wx.BoxSizer(wx.VERTICAL)
 
+    sizer.Add(wx.StaticText(panel, label="Find station:"), 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
+
+    search_sizer = wx.BoxSizer(wx.HORIZONTAL)
+    dialog._search_ctrl = wx.TextCtrl(
+        panel,
+        style=wx.TE_PROCESS_ENTER,
+        name="NOAA radio station search",
+    )
+    dialog._search_ctrl.Bind(wx.EVT_TEXT_ENTER, dialog._on_search)
+    search_sizer.Add(dialog._search_ctrl, 1, wx.RIGHT, 5)
+
+    search_btn = wx.Button(panel, label="Search")
+    search_btn.Bind(wx.EVT_BUTTON, dialog._on_search)
+    search_sizer.Add(search_btn, 0, wx.RIGHT, 5)
+
+    clear_btn = wx.Button(panel, label="Clear")
+    clear_btn.Bind(wx.EVT_BUTTON, dialog._on_clear_search)
+    search_sizer.Add(clear_btn, 0)
+    sizer.Add(search_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
+
     sizer.Add(wx.StaticText(panel, label="Station:"), 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
     dialog._station_choice = wx.Choice(panel, choices=[])
@@ -20,7 +40,7 @@ def create_noaa_radio_widgets(dialog: Any, station_limit_labels: tuple[str, ...]
     sizer.Add(dialog._station_choice, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
     sizer.Add(
-        wx.StaticText(panel, label="Nearby station count:"),
+        wx.StaticText(panel, label="Station count:"),
         0,
         wx.LEFT | wx.RIGHT | wx.TOP,
         10,

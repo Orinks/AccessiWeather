@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pathlib
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -43,24 +44,22 @@ class TestNoaaRadioMenuItemSource:
         assert "_noaa_radio_id" in source
 
     def test_no_location_check(self, source):
-        """Test that handler checks for no location."""
-        assert "get_current_location" in source
-        # Find the _on_noaa_radio method and check it has location check
+        """Test that handler does not require a weather location."""
         method_start = source.index("def _on_noaa_radio")
         method_end = source.index("\n    def ", method_start + 1)
         method_body = source[method_start:method_end]
-        assert "get_current_location" in method_body
-        assert "MessageBox" in method_body
-        assert "select a location" in method_body.lower()
+        assert "get_current_location" not in method_body
+        assert "MessageBox" not in method_body
+        assert "select a location" not in method_body.lower()
 
     def test_show_noaa_radio_dialog_called(self, source):
-        """Test that show_noaa_radio_dialog is called with lat/lon."""
+        """Test that show_noaa_radio_dialog is called standalone."""
         method_start = source.index("def _on_noaa_radio")
         method_end = source.index("\n    def ", method_start + 1)
         method_body = source[method_start:method_end]
         assert "show_noaa_radio_dialog" in method_body
-        assert "latitude" in method_body
-        assert "longitude" in method_body
+        assert "latitude" not in method_body
+        assert "longitude" not in method_body
 
     def test_menu_item_after_uv_index(self, source):
         """Test that NOAA Radio item appears after UV Index."""
@@ -74,3 +73,20 @@ class TestNoaaRadioMenuItemSource:
         noaa_pos = source.index("NOAA Weather &Radio")
         chat_pos = source.index("Weather Assistan&t")
         assert noaa_pos < chat_pos
+
+
+def test_noaa_radio_opens_without_saved_location(monkeypatch):
+    """NOAA Weather Radio is standalone and does not require a selected location."""
+    from accessiweather.ui import dialogs
+    from accessiweather.ui.main_window_commands import MainWindowCommandMixin
+
+    window = object.__new__(MainWindowCommandMixin)
+    window.app = MagicMock()
+    window.app.config_manager.get_current_location.return_value = None
+    show_dialog = MagicMock()
+    monkeypatch.setattr(dialogs, "show_noaa_radio_dialog", show_dialog)
+
+    window._on_noaa_radio()
+
+    show_dialog.assert_called_once_with(window)
+    window.app.config_manager.get_current_location.assert_not_called()

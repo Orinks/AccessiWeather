@@ -86,6 +86,25 @@ class TestStationDatabase:
         assert isinstance(results[0].station, Station)
         assert isinstance(results[0].distance_km, float)
 
+    def test_search_by_call_sign(self) -> None:
+        db = StationDatabase()
+        results = db.search("wxk27")
+        assert [station.call_sign for station in results] == ["WXK27"]
+
+    def test_search_by_city_or_state(self) -> None:
+        db = StationDatabase()
+        city_results = db.search("Austin")
+        assert any(station.call_sign == "WXK27" for station in city_results)
+
+        state_results = db.search("TX", limit=2)
+        assert len(state_results) == 2
+        assert all(station.state == "TX" for station in state_results)
+
+    def test_search_by_coordinates_returns_nearest_stations(self) -> None:
+        db = StationDatabase()
+        results = db.search("40.7128, -74.0060", limit=1)
+        assert results[0].call_sign == "KWO35"
+
     def test_custom_stations(self) -> None:
         custom = [Station("TEST1", 162.5, "Test", 0.0, 0.0, "XX")]
         db = StationDatabase(stations=custom)
