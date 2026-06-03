@@ -91,6 +91,14 @@ class TestStationDatabase:
         results = db.search("wxk27")
         assert [station.call_sign for station in results] == ["WXK27"]
 
+    def test_search_empty_query_browses_stations(self) -> None:
+        db = StationDatabase()
+        all_results = db.search("")
+        limited_results = db.search("   ", limit=3)
+
+        assert len(all_results) == len(db.get_all_stations())
+        assert limited_results == db.get_all_stations()[:3]
+
     def test_search_by_city_or_state(self) -> None:
         db = StationDatabase()
         city_results = db.search("Austin")
