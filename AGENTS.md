@@ -112,6 +112,22 @@ asyncio.create_task(background_refresh())
 - Integration tests live under `tests/integration/` and should avoid live API dependence unless explicitly intended.
 - Use Hypothesis for broad input-space edge cases.
 
+### Test Quality Conventions
+
+- Prefer behavior and user-contract tests over coverage-padding tests.
+- Name regression tests after the behavior or failure mode, not a PR number,
+  coverage gap, or CI failure. If a temporary coverage/CI test is unavoidable,
+  give it a clear follow-up path.
+- Avoid `inspect.getsource()` and source-string assertions unless there is no
+  practical runtime behavior to assert.
+- If coverage pressure makes a test awkward, first consider whether the code
+  should be refactored, excluded for a reasoned defensive branch, or tested
+  through a public/domain behavior.
+- Large parameterized or matrix tests are fine when they protect real parsing,
+  mapping, provider, accessibility, playback, notification, or user-visible
+  behavior. Avoid duplicating the same contract at multiple layers only for
+  line coverage.
+
 ```bash
 pytest -n auto -v --tb=short
 pytest tests/ -m "not integration" -n auto
