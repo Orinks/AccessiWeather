@@ -118,6 +118,18 @@ class TestStationDatabase:
         db = StationDatabase(stations=custom)
         assert len(db.get_all_stations()) == 1
 
+    def test_get_stations_by_call_signs_preserves_requested_order(self) -> None:
+        stations = [
+            Station("WXK27", 162.4, "Austin", 30.2672, -97.7431, "TX"),
+            Station("KEC49", 162.55, "New York", 40.7128, -74.0060, "NY"),
+            Station("WXJ76", 162.55, "Champaign", 40.1164, -88.2434, "IL"),
+        ]
+        db = StationDatabase(stations)
+
+        results = db.get_stations_by_call_signs(["kec49", "MISSING", "WXK27", "KEC49"])
+
+        assert [station.call_sign for station in results] == ["KEC49", "WXK27"]
+
     def test_all_50_states_covered(self) -> None:
         """Verify every US state has at least one station."""
         db = StationDatabase()

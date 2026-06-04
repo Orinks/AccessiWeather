@@ -256,6 +256,55 @@ class TestRadioPreferences:
         assert prefs.get_preferred_url("WXJ76") == "http://stream.com"
         assert prefs.get_station_limit() == DEFAULT_STATION_LIMIT
 
+    def test_favorite_stations_default_empty(self, tmp_path):
+        prefs = RadioPreferences(config_dir=tmp_path)
+
+        assert prefs.get_favorite_stations() == []
+        assert prefs.is_favorite_station("WXK27") is False
+
+    def test_add_remove_favorite_stations_persist_in_stable_order(self, tmp_path):
+        prefs = RadioPreferences(config_dir=tmp_path)
+
+        prefs.add_favorite_station("wxk27")
+        prefs.add_favorite_station("KEC49")
+        prefs.add_favorite_station("WXK27")
+
+        assert prefs.get_favorite_stations() == ["WXK27", "KEC49"]
+        assert prefs.is_favorite_station("wxk27") is True
+
+        reloaded = RadioPreferences(config_dir=tmp_path)
+        assert reloaded.get_favorite_stations() == ["WXK27", "KEC49"]
+
+        reloaded.remove_favorite_station("WXK27")
+        assert reloaded.get_favorite_stations() == ["KEC49"]
+
+    def test_structured_preferences_load_favorites_without_losing_streams_or_limit(self, tmp_path):
+        prefs_file = tmp_path / "noaa_radio_prefs.json"
+        prefs_file.write_text(
+            json.dumps(
+                {
+                    "preferred_streams": {"wxk27": "http://stream.com"},
+                    "station_limit": 25,
+                    "favorite_stations": ["wxk27", "KEC49", "wxk27", ""],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        prefs = RadioPreferences(config_dir=tmp_path)
+
+        assert prefs.get_preferred_url("WXK27") == "http://stream.com"
+        assert prefs.get_station_limit() == 25
+        assert prefs.get_favorite_stations() == ["WXK27", "KEC49"]
+
+    def test_legacy_preferences_default_favorites_empty(self, tmp_path):
+        prefs_file = tmp_path / "noaa_radio_prefs.json"
+        prefs_file.write_text(json.dumps({"WXJ76": "http://stream.com"}), encoding="utf-8")
+
+        prefs = RadioPreferences(config_dir=tmp_path)
+
+        assert prefs.get_favorite_stations() == []
+
 
 class TestRadioPreferencesEdgeCases:
     """Additional tests for RadioPreferences coverage."""
