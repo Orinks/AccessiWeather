@@ -207,6 +207,18 @@ class TestWeatherAlert:
         assert alert.title == "Heat Advisory"
         assert alert.severity == "Moderate"
 
+    def test_references_none_defaults_to_empty_list(self):
+        """Alert references remain iterable when upstream data omits them."""
+        alert = WeatherAlert(
+            title="Test",
+            description="desc",
+            severity="Severe",
+            urgency="Immediate",
+            certainty="Observed",
+            references=None,
+        )
+        assert alert.references == []
+
     def test_is_expired(self):
         """Test expiration checking."""
         # Expired alert

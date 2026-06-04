@@ -212,6 +212,35 @@ class TestParseNwsAlerts:
         alerts = parse_nws_alerts(data)
         assert alerts.alerts[0].id == "at-id-based-id"
 
+    def test_parse_references_from_multiple_identifier_fields(self):
+        """Cancellation/update references are preserved for lifecycle matching."""
+        data = {
+            "features": [
+                {
+                    "properties": {
+                        "id": "urn:oid:2.49.0.1.840.0.123",
+                        "headline": "Tornado Warning",
+                        "severity": "Extreme",
+                        "urgency": "Immediate",
+                        "certainty": "Observed",
+                        "event": "Tornado Warning",
+                        "description": "desc",
+                        "references": [
+                            {"identifier": "ref-A"},
+                            {"@id": "ref-B"},
+                            {"id": "ref-C"},
+                        ],
+                    }
+                }
+            ]
+        }
+        alerts = parse_nws_alerts(data)
+
+        assert len(alerts.alerts) == 1
+        assert "ref-A" in alerts.alerts[0].references
+        assert "ref-B" in alerts.alerts[0].references
+        assert "ref-C" in alerts.alerts[0].references
+
     def test_area_desc_splits_semicolon_without_spaces(self):
         """NWS areaDesc is semicolon-delimited; spaces are not guaranteed."""
         data = {
