@@ -2,74 +2,63 @@
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock
+
 import pytest
 
-from accessiweather.ui.dialogs.settings_tabs.display import (
-    _TEMP_MAP,
-    _TEMP_VALUES,
-)
+from accessiweather.ui.dialogs.settings_tabs import display as display_module
+from accessiweather.ui.dialogs.settings_tabs.display import _TEMP_MAP, _TEMP_VALUES, DisplayTab
 
 
 class TestTempUnitChoiceLabels:
     """The UI choices must use the new Auto/Imperial/Metric naming convention."""
 
-    def test_choices_list_length(self):
-        # Four options: Auto, Imperial, Metric, Both
-        # (verified via _TEMP_VALUES mapping)
-        assert len(_TEMP_VALUES) == 4
-
-    @pytest.mark.parametrize(
-        "label",
-        [
-            "Fahrenheit only",
-            "Celsius only",
-            "Both (Fahrenheit and Celsius)",
-        ],
-    )
-    def test_old_labels_not_present_in_module(self, label):
-        """Old Fahrenheit/Celsius/Both labels must not appear in display module source."""
-        import inspect
-
-        import accessiweather.ui.dialogs.settings_tabs.display as display_module
-
-        source = inspect.getsource(display_module)
-        assert label not in source, f"Old label '{label}' still present in display module"
-
-    @pytest.mark.parametrize(
-        "label",
-        [
+    def test_temperature_unit_choices_use_public_labels(self, monkeypatch):
+        """Temperature unit choices should be asserted through the constructed UI."""
+        expected_labels = [
+            "Auto (based on location)",
             "Imperial (°F)",
             "Metric (°C)",
             "Both (°F and °C)",
-            "Auto (based on location)",
-        ],
-    )
-    def test_new_labels_present_in_module(self, label):
-        """New labels must appear in the display module source."""
-        import inspect
+        ]
 
-        import accessiweather.ui.dialogs.settings_tabs.display as display_module
+        monkeypatch.setattr(
+            display_module.wx,
+            "ScrolledWindow",
+            MagicMock(return_value=MagicMock()),
+            raising=False,
+        )
+        monkeypatch.setattr(
+            display_module.wx,
+            "SpinCtrl",
+            MagicMock(return_value=MagicMock()),
+            raising=False,
+        )
+        monkeypatch.setattr(display_module.wx, "ALIGN_CENTER_VERTICAL", 0, raising=False)
+        monkeypatch.setattr(display_module.wx, "Choice", MagicMock(return_value=MagicMock()))
 
-        source = inspect.getsource(display_module)
-        assert label in source, f"New label '{label}' not found in display module"
+        dialog = MagicMock()
+        dialog._controls = {}
+        dialog.create_section.return_value = MagicMock()
+
+        def add_labeled_control_row(_panel, _sizer, label, control_factory, **_kwargs):
+            control = control_factory(_panel)
+            dialog._controls[label] = control
+            return control
+
+        dialog.add_labeled_control_row.side_effect = add_labeled_control_row
+
+        DisplayTab(dialog).create()
+
+        temperature_choice_call = display_module.wx.Choice.call_args_list[0]
+        assert temperature_choice_call.kwargs["choices"] == expected_labels
+
+    def test_temperature_unit_values_preserve_saved_config_contract(self):
+        assert _TEMP_VALUES == ["auto", "f", "c", "both"]
 
 
 class TestTempUnitBackwardCompatibility:
     """Internal config values must not change (backward compat with saved settings)."""
-
-    def test_auto_value_unchanged(self):
-        assert _TEMP_VALUES[0] == "auto"
-
-    def test_imperial_maps_to_fahrenheit_value(self):
-        # Index 1 is Imperial — must still save "f" to config
-        assert _TEMP_VALUES[1] == "f"
-
-    def test_metric_maps_to_celsius_value(self):
-        # Index 2 is Metric — must still save "c" to config
-        assert _TEMP_VALUES[2] == "c"
-
-    def test_both_value_unchanged(self):
-        assert _TEMP_VALUES[3] == "both"
 
     @pytest.mark.parametrize(
         "saved_value,expected_index",
