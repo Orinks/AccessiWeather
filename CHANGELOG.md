@@ -5,7 +5,8 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
-- NOAA Weather Radio now opens independently of saved weather locations, has a clearer Station Finder for searching all stations, browsing by state, or finding nearby stations by coordinates, and keeps playing when you close the player until you press Stop or exit the app.
+- NOAA Weather Radio now opens independently of saved weather locations and keeps playing after you close the player until you press Stop or exit the app.
+- The NOAA Weather Radio Station Finder now has clearer modes for searching all stations, browsing by full state or territory name, and finding nearby stations by coordinates.
 
 ## [0.7.2] - 2026-05-30
 
