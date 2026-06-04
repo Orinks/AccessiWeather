@@ -193,6 +193,7 @@ def _make_dialog_instance(module):
     dlg._saved_location_choice.GetSelection.return_value = 0
     dlg._saved_locations = []
     dlg._station_base_labels = []
+    dlg._station_load_generation = 0
     dlg._auto_advance_stream = True
     dlg._playing_station = None
     return dlg
@@ -637,6 +638,16 @@ class TestUnavailableStations:
 class TestStationFinderControls:
     """Tests for NOAA radio finder mode controls."""
 
+    def test_finder_mode_change_reloads_station_list(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._load_stations_async = MagicMock()
+        event = MagicMock()
+
+        dlg._on_finder_mode_changed(event)
+
+        dlg._load_stations_async.assert_called_once()
+        event.Skip.assert_called_once()
+
     def test_clear_resets_finder_to_search_all(self, noaa_dialog_module):
         dlg = _make_dialog_instance(noaa_dialog_module)
         dlg._load_stations_async = MagicMock()
@@ -659,6 +670,21 @@ class TestStationFinderControls:
 
         dlg._load_stations_async.assert_called_once()
         event.Skip.assert_called_once()
+
+    def test_stale_station_load_does_not_replace_current_results(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._station_load_generation = 2
+        stations = [dlg._stations[0]]
+        choices = ["KEC49 - New York, NY - 162.550 MHz - Available"]
+
+        dlg._on_stations_loaded(stations, choices, load_generation=2)
+        dlg._station_choice.Set.reset_mock()
+        dlg._status_text.SetLabel.reset_mock()
+
+        dlg._on_stations_loaded([], [], "No favorite stations yet", load_generation=1)
+
+        dlg._station_choice.Set.assert_not_called()
+        dlg._status_text.SetLabel.assert_not_called()
 
     def test_get_finder_mode_defaults_to_nearest_when_opened_with_coordinates(
         self,

@@ -192,6 +192,7 @@ class NOAARadioDialog(wx.Dialog):
             availability_cache=self._availability_cache,
         )
         self._station_base_labels: list[str] = []
+        self._station_load_generation = 0
         self._current_urls: list[str] = self._session.current_urls
         self._current_url_index: int = self._session.current_url_index
         self._playing_station: Station | None = self._session.playing_station
@@ -222,6 +223,8 @@ class NOAARadioDialog(wx.Dialog):
 
     def _load_stations_async(self) -> None:
         """Load stations in a background thread to not block UI initialization."""
+        self._station_load_generation += 1
+        load_generation = self._station_load_generation
         # Show loading state immediately
         self._station_choice.Set(["Loading stations..."])
         self._set_status("Finding stations...")
@@ -244,6 +247,7 @@ class NOAARadioDialog(wx.Dialog):
                 state_code,
                 saved_location,
                 empty_status,
+                load_generation,
             ),
             daemon=True,
         )
@@ -258,6 +262,7 @@ class NOAARadioDialog(wx.Dialog):
         state_code: str = "",
         saved_location: Location | None = None,
         empty_status: str | None = None,
+        load_generation: int | None = None,
     ) -> None:
         """Worker method that loads stations in background thread."""
         try:
@@ -314,7 +319,13 @@ class NOAARadioDialog(wx.Dialog):
             choices = [entry.label for entry in entries]
 
             # Update UI on main thread
-            wx.CallAfter(self._on_stations_loaded, stations, choices, empty_status)
+            wx.CallAfter(
+                self._on_stations_loaded,
+                stations,
+                choices,
+                empty_status,
+                load_generation,
+            )
 
             # Pre-warm the stream cache in background for faster play button response
             # This runs after UI is shown so user sees stations immediately
@@ -350,10 +361,15 @@ class NOAARadioDialog(wx.Dialog):
         stations: list[Station],
         choices: list[str],
         empty_status: str | None = None,
+        load_generation: int | None = None,
     ) -> None:
         """Handle stations loaded in background thread."""
         # Check if dialog was closed while background thread was running
         if getattr(self, "_closed", False):
+            return
+        if load_generation is not None and load_generation != getattr(
+            self, "_station_load_generation", load_generation
+        ):
             return
         previous_station = self._get_selected_station()
         previous_call_sign = previous_station.call_sign if previous_station is not None else None
@@ -625,6 +641,7 @@ class NOAARadioDialog(wx.Dialog):
     def _on_finder_mode_changed(self, event: wx.CommandEvent) -> None:
         """Update finder controls when the station finder mode changes."""
         self._update_finder_mode_controls()
+        self._load_stations_async()
         event.Skip()
 
     def _on_find(self, event: wx.CommandEvent) -> None:

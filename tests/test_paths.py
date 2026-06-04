@@ -262,6 +262,7 @@ class TestRuntimeStorageResolution:
 
         assert runtime.config_root == tmp_path / "config"
         assert runtime.portable_mode is True
+        assert runtime.noaa_radio_preferences_file == tmp_path / "config" / "noaa_radio_prefs.json"
 
     def test_frozen_with_portable_marker_uses_exe_dir(self, tmp_path):
         exe = tmp_path / "AccessiWeather.exe"

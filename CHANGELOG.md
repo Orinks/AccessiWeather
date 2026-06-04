@@ -9,6 +9,9 @@ All notable changes to this project will be documented in this file.
 - The NOAA Weather Radio Station Finder now has clearer modes for searching all stations, browsing by full state or territory name, and finding nearby stations by coordinates.
 - NOAA Weather Radio stations can now be saved as favorites, with a Favorites finder mode and optional nearby-station lookup from your saved AccessiWeather locations.
 
+### Fixed
+- NOAA Weather Radio Station Finder now repopulates stations when leaving an empty Favorites view, so you no longer need to reopen the radio dialog.
+
 ## [0.7.2] - 2026-05-30
 
 ### Added
