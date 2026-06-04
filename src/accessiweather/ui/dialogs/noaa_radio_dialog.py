@@ -37,6 +37,64 @@ FINDER_MODE_LABELS: tuple[str, ...] = (
     FINDER_MODE_NEAREST,
 )
 STATE_ALL_CHOICE = "All states and territories"
+STATE_TERRITORY_NAMES: dict[str, str] = {
+    "AL": "Alabama",
+    "AK": "Alaska",
+    "AZ": "Arizona",
+    "AR": "Arkansas",
+    "CA": "California",
+    "CO": "Colorado",
+    "CT": "Connecticut",
+    "DE": "Delaware",
+    "DC": "District of Columbia",
+    "FL": "Florida",
+    "GA": "Georgia",
+    "HI": "Hawaii",
+    "ID": "Idaho",
+    "IL": "Illinois",
+    "IN": "Indiana",
+    "IA": "Iowa",
+    "KS": "Kansas",
+    "KY": "Kentucky",
+    "LA": "Louisiana",
+    "ME": "Maine",
+    "MD": "Maryland",
+    "MA": "Massachusetts",
+    "MI": "Michigan",
+    "MN": "Minnesota",
+    "MS": "Mississippi",
+    "MO": "Missouri",
+    "MT": "Montana",
+    "NE": "Nebraska",
+    "NV": "Nevada",
+    "NH": "New Hampshire",
+    "NJ": "New Jersey",
+    "NM": "New Mexico",
+    "NY": "New York",
+    "NC": "North Carolina",
+    "ND": "North Dakota",
+    "OH": "Ohio",
+    "OK": "Oklahoma",
+    "OR": "Oregon",
+    "PA": "Pennsylvania",
+    "RI": "Rhode Island",
+    "SC": "South Carolina",
+    "SD": "South Dakota",
+    "TN": "Tennessee",
+    "TX": "Texas",
+    "UT": "Utah",
+    "VT": "Vermont",
+    "VA": "Virginia",
+    "WA": "Washington",
+    "WV": "West Virginia",
+    "WI": "Wisconsin",
+    "WY": "Wyoming",
+    "AS": "American Samoa",
+    "GU": "Guam",
+    "MP": "Northern Mariana Islands",
+    "PR": "Puerto Rico",
+    "VI": "U.S. Virgin Islands",
+}
 
 
 def show_noaa_radio_dialog(
@@ -600,7 +658,7 @@ class NOAARadioDialog(wx.Dialog):
         selection = choice.GetSelection()
         if selection <= 0 or selection >= len(state_choices):
             return ""
-        return state_choices[selection]
+        return self._state_choice_code(state_choices[selection])
 
     def _update_finder_mode_controls(self) -> None:
         """Show and label the finder controls for the active mode."""
@@ -652,7 +710,23 @@ class NOAARadioDialog(wx.Dialog):
     def _get_state_choices() -> tuple[str, ...]:
         """Return state/territory choices from the local station database."""
         states = sorted({station.state for station in StationDatabase().get_all_stations()})
-        return (STATE_ALL_CHOICE, *states)
+        return (
+            STATE_ALL_CHOICE,
+            *(NOAARadioDialog._format_state_choice(state) for state in states),
+        )
+
+    @staticmethod
+    def _format_state_choice(state_code: str) -> str:
+        """Return a user-friendly state/territory choice label."""
+        name = STATE_TERRITORY_NAMES.get(state_code)
+        return f"{name} ({state_code})" if name else state_code
+
+    @staticmethod
+    def _state_choice_code(choice_label: str) -> str:
+        """Return the station database code from a state choice label."""
+        if choice_label.endswith(")") and "(" in choice_label:
+            return choice_label.rsplit("(", 1)[1].rstrip(")")
+        return choice_label
 
     @staticmethod
     def _parse_coordinate_query(query: str) -> tuple[float, float] | None:

@@ -172,7 +172,12 @@ def _make_dialog(module):
     )
     dlg._state_choice = MagicMock()
     dlg._state_choice.GetSelection.return_value = 0
-    dlg._state_choices = ("All states and territories", "NY", "PA", "TX")
+    dlg._state_choices = (
+        "All states and territories",
+        "New York (NY)",
+        "Pennsylvania (PA)",
+        "Texas (TX)",
+    )
     dlg._auto_advance_stream = True
     dlg._playing_station = None
     return dlg

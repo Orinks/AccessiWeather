@@ -184,7 +184,7 @@ def _make_dialog_instance(module):
     dlg._finder_mode_choice.GetSelection.return_value = 0
     dlg._state_choice = MagicMock()
     dlg._state_choice.GetSelection.return_value = 0
-    dlg._state_choices = ("All states and territories", "NY", "PA")
+    dlg._state_choices = ("All states and territories", "New York (NY)", "Pennsylvania (PA)")
     dlg._auto_advance_stream = True
     dlg._playing_station = None
     return dlg
@@ -610,6 +610,30 @@ class TestStationFinderControls:
         dlg._state_choice.GetSelection.return_value = 2
 
         assert dlg._get_selected_state_code() == "PA"
+
+    def test_get_state_choices_uses_full_state_names(self, noaa_dialog_module):
+        stations = [
+            Station("WXK27", 162.4, "Austin", 0.0, 0.0, "TX"),
+            Station("KEC49", 162.55, "New York", 0.0, 0.0, "NY"),
+        ]
+
+        with patch.object(noaa_dialog_module, "StationDatabase") as mock_db_cls:
+            mock_db_cls.return_value.get_all_stations.return_value = stations
+
+            choices = noaa_dialog_module.NOAARadioDialog._get_state_choices()
+
+        assert choices == (
+            "All states and territories",
+            "New York (NY)",
+            "Texas (TX)",
+        )
+
+    def test_get_selected_state_code_supports_legacy_code_labels(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._state_choices = ("All states and territories", "NY", "PA")
+        dlg._state_choice.GetSelection.return_value = 1
+
+        assert dlg._get_selected_state_code() == "NY"
 
     def test_parse_coordinate_query(self, noaa_dialog_module):
         parse = noaa_dialog_module.NOAARadioDialog._parse_coordinate_query
