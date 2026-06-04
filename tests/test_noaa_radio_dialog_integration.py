@@ -166,6 +166,13 @@ def _make_dialog(module):
     dlg._show_unavailable_checkbox.GetValue.return_value = False
     dlg._search_ctrl = MagicMock()
     dlg._search_ctrl.GetValue.return_value = ""
+    dlg._finder_mode_choice = MagicMock()
+    dlg._finder_mode_choice.GetSelection.return_value = module.FINDER_MODE_LABELS.index(
+        module.FINDER_MODE_NEAREST
+    )
+    dlg._state_choice = MagicMock()
+    dlg._state_choice.GetSelection.return_value = 0
+    dlg._state_choices = ("All states and territories", "NY", "PA", "TX")
     dlg._auto_advance_stream = True
     dlg._playing_station = None
     return dlg
@@ -374,6 +381,9 @@ class TestLoadStations:
         dlg = _make_dialog(noaa_dialog_module)
         dlg._lat = None
         dlg._lon = None
+        dlg._finder_mode_choice.GetSelection.return_value = (
+            noaa_dialog_module.FINDER_MODE_LABELS.index(noaa_dialog_module.FINDER_MODE_SEARCH_ALL)
+        )
         entry = MagicMock()
         entry.station = Station("WXK27", 162.4, "Austin, TX", 30.2672, -97.7431, "TX")
         entry.label = "WXK27 - Austin, TX (162.4 MHz)"
@@ -403,6 +413,77 @@ class TestLoadStations:
 
         mock_db_cls.return_value.search.assert_called_once_with("Austin", limit=10)
         mock_db_cls.return_value.find_nearest.assert_not_called()
+
+    def test_load_stations_browse_by_state_uses_state_database_filter(self, noaa_dialog_module):
+        dlg = _make_dialog(noaa_dialog_module)
+        tx_station = Station("WXK27", 162.4, "Austin, TX", 30.2672, -97.7431, "TX")
+        entry = MagicMock()
+        entry.station = tx_station
+        entry.label = "WXK27 - Austin, TX - 162.400 MHz - Available"
+        dlg._station_availability.build_entries.return_value = [entry]
+
+        with patch("accessiweather.ui.dialogs.noaa_radio_dialog.StationDatabase") as mock_db_cls:
+            mock_db_cls.return_value.get_stations_by_state.return_value = [tx_station]
+            dlg._load_stations_worker(
+                station_limit=25,
+                finder_mode=noaa_dialog_module.FINDER_MODE_BROWSE_STATE,
+                state_code="TX",
+            )
+
+        mock_db_cls.return_value.get_stations_by_state.assert_called_once_with("TX")
+        mock_db_cls.return_value.search.assert_not_called()
+        mock_db_cls.return_value.find_nearest.assert_not_called()
+        dlg._station_availability.build_entries.assert_called_once_with(
+            [tx_station],
+            show_unavailable=False,
+        )
+
+    def test_load_stations_coordinate_mode_uses_nearest_lookup(self, noaa_dialog_module):
+        dlg = _make_dialog(noaa_dialog_module)
+        station = Station("WXK27", 162.4, "Austin, TX", 30.2672, -97.7431, "TX")
+        entry = MagicMock()
+        entry.station = station
+        entry.label = "WXK27 - Austin, TX - 162.400 MHz - Available"
+        dlg._station_availability.build_entries.return_value = [entry]
+        results = [StationResult(station=station, distance_km=0.0)]
+
+        with patch("accessiweather.ui.dialogs.noaa_radio_dialog.StationDatabase") as mock_db_cls:
+            mock_db_cls.return_value.find_nearest.return_value = results
+            dlg._load_stations_worker(
+                station_limit=10,
+                search_query="30.2672, -97.7431",
+                finder_mode=noaa_dialog_module.FINDER_MODE_NEAREST,
+            )
+
+        mock_db_cls.return_value.find_nearest.assert_called_once_with(
+            30.2672,
+            -97.7431,
+            limit=10,
+        )
+        mock_db_cls.return_value.search.assert_not_called()
+
+    def test_load_stations_coordinate_mode_rejects_non_coordinate_text(
+        self,
+        noaa_dialog_module,
+    ):
+        dlg = _make_dialog(noaa_dialog_module)
+        dlg._lat = None
+        dlg._lon = None
+        dlg._station_availability.build_entries.return_value = []
+
+        with patch("accessiweather.ui.dialogs.noaa_radio_dialog.StationDatabase") as mock_db_cls:
+            dlg._load_stations_worker(
+                station_limit=10,
+                search_query="Austin",
+                finder_mode=noaa_dialog_module.FINDER_MODE_NEAREST,
+            )
+
+        mock_db_cls.return_value.find_nearest.assert_not_called()
+        mock_db_cls.return_value.search.assert_not_called()
+        dlg._station_availability.build_entries.assert_called_once_with(
+            [],
+            show_unavailable=False,
+        )
 
 
 class TestSuppressionIntegration:

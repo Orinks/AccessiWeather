@@ -180,6 +180,11 @@ def _make_dialog_instance(module):
     dlg._show_unavailable_checkbox.GetValue.return_value = False
     dlg._search_ctrl = MagicMock()
     dlg._search_ctrl.GetValue.return_value = ""
+    dlg._finder_mode_choice = MagicMock()
+    dlg._finder_mode_choice.GetSelection.return_value = 0
+    dlg._state_choice = MagicMock()
+    dlg._state_choice.GetSelection.return_value = 0
+    dlg._state_choices = ("All states and territories", "NY", "PA")
     dlg._auto_advance_stream = True
     dlg._playing_station = None
     return dlg
@@ -468,14 +473,61 @@ class TestUnavailableStations:
         dlg._on_close = MagicMock()
         dlg._on_show_unavailable_changed = MagicMock()
         dlg._on_station_limit_changed = MagicMock()
+        dlg._on_finder_mode_changed = MagicMock()
+        dlg._on_find = MagicMock()
+        dlg._on_clear_search = MagicMock()
         dlg._prefs = MagicMock()
         dlg._prefs.get_station_limit.return_value = 25
 
         noaa_dialog_module.NOAARadioDialog._init_ui(dlg)
 
-        assert noaa_dialog_module.wx.Choice.call_count == 2
-        station_limit_choice = noaa_dialog_module.wx.Choice.call_args_list[1]
+        assert noaa_dialog_module.wx.Choice.call_count == 4
+        station_limit_choice = noaa_dialog_module.wx.Choice.call_args_list[3]
         assert station_limit_choice.kwargs["choices"] == ["10", "25", "50", "100", "All"]
+
+    def test_station_finder_widgets_are_created(self, noaa_dialog_module):
+        dlg = object.__new__(noaa_dialog_module.NOAARadioDialog)
+        dlg.Bind = MagicMock()
+        dlg._lat = None
+        dlg._lon = None
+        dlg._on_health_check = MagicMock()
+        dlg._on_station_changed = MagicMock()
+        dlg._on_choice_key = MagicMock()
+        dlg._on_play_stop = MagicMock()
+        dlg._on_next_stream = MagicMock()
+        dlg._on_set_preferred = MagicMock()
+        dlg._on_volume_change = MagicMock()
+        dlg._on_close = MagicMock()
+        dlg._on_show_unavailable_changed = MagicMock()
+        dlg._on_station_limit_changed = MagicMock()
+        dlg._on_finder_mode_changed = MagicMock()
+        dlg._on_find = MagicMock()
+        dlg._on_clear_search = MagicMock()
+        dlg._prefs = MagicMock()
+        dlg._prefs.get_station_limit.return_value = 10
+
+        noaa_dialog_module.NOAARadioDialog._init_ui(dlg)
+
+        static_labels = [
+            call.kwargs["label"]
+            for call in noaa_dialog_module.wx.StaticText.call_args_list
+            if "label" in call.kwargs
+        ]
+        button_labels = [
+            call.kwargs["label"]
+            for call in noaa_dialog_module.wx.Button.call_args_list
+            if "label" in call.kwargs
+        ]
+        assert "Station Finder" in static_labels
+        assert "Search mode:" in static_labels
+        assert "State or territory:" in static_labels
+        assert "Station results:" in static_labels
+        assert "Maximum results:" in static_labels
+        assert "Find" in button_labels
+        assert "Search" not in button_labels
+
+        mode_choice = noaa_dialog_module.wx.Choice.call_args_list[0]
+        assert mode_choice.kwargs["choices"] == list(noaa_dialog_module.FINDER_MODE_LABELS)
 
     def test_show_unavailable_toggle_refreshes_station_list(self, noaa_dialog_module):
         dlg = _make_dialog_instance(noaa_dialog_module)
@@ -510,12 +562,61 @@ class TestUnavailableStations:
 
         dlg._on_stations_loaded(
             [station],
-            ["WXK27 - Austin (162.4 MHz) - temporarily unavailable"],
+            ["WXK27 - Austin, TX - 162.400 MHz - Temporarily unavailable"],
         )
 
         dlg._station_choice.Set.assert_called_with(
-            ["WXK27 - Austin (162.4 MHz) - temporarily unavailable"]
+            ["WXK27 - Austin, TX - 162.400 MHz - Temporarily unavailable"]
         )
+
+
+class TestStationFinderControls:
+    """Tests for NOAA radio finder mode controls."""
+
+    def test_clear_resets_finder_to_search_all(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._load_stations_async = MagicMock()
+        event = MagicMock()
+
+        dlg._on_clear_search(event)
+
+        dlg._finder_mode_choice.SetSelection.assert_called_once_with(0)
+        dlg._state_choice.SetSelection.assert_called_once_with(0)
+        dlg._search_ctrl.SetValue.assert_called_once_with("")
+        dlg._load_stations_async.assert_called_once()
+        event.Skip.assert_called_once()
+
+    def test_on_find_reloads_station_list(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._load_stations_async = MagicMock()
+        event = MagicMock()
+
+        dlg._on_find(event)
+
+        dlg._load_stations_async.assert_called_once()
+        event.Skip.assert_called_once()
+
+    def test_get_finder_mode_defaults_to_nearest_when_opened_with_coordinates(
+        self,
+        noaa_dialog_module,
+    ):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        del dlg._finder_mode_choice
+
+        assert dlg._get_finder_mode() == noaa_dialog_module.FINDER_MODE_NEAREST
+
+    def test_get_selected_state_code(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._state_choice.GetSelection.return_value = 2
+
+        assert dlg._get_selected_state_code() == "PA"
+
+    def test_parse_coordinate_query(self, noaa_dialog_module):
+        parse = noaa_dialog_module.NOAARadioDialog._parse_coordinate_query
+
+        assert parse("30.2672, -97.7431") == (30.2672, -97.7431)
+        assert parse("Austin") is None
+        assert parse("91, 0") is None
 
 
 class TestPlayStopSwitch:

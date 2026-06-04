@@ -28,6 +28,15 @@ logger = logging.getLogger(__name__)
 SUPPRESSION_TTL_SECONDS = 1800
 STATION_LIMIT_PRESETS: tuple[int | None, ...] = (10, 25, 50, 100, None)
 STATION_LIMIT_LABELS: tuple[str, ...] = ("10", "25", "50", "100", "All")
+FINDER_MODE_SEARCH_ALL = "Search all stations"
+FINDER_MODE_BROWSE_STATE = "Browse by state"
+FINDER_MODE_NEAREST = "Nearest by coordinates"
+FINDER_MODE_LABELS: tuple[str, ...] = (
+    FINDER_MODE_SEARCH_ALL,
+    FINDER_MODE_BROWSE_STATE,
+    FINDER_MODE_NEAREST,
+)
+STATE_ALL_CHOICE = "All states and territories"
 
 
 def show_noaa_radio_dialog(
@@ -135,7 +144,15 @@ class NOAARadioDialog(wx.Dialog):
 
     def _init_ui(self) -> None:
         """Create and layout all UI controls."""
-        create_noaa_radio_widgets(self, STATION_LIMIT_LABELS)
+        create_noaa_radio_widgets(
+            self,
+            STATION_LIMIT_LABELS,
+            FINDER_MODE_LABELS,
+            self._get_state_choices(),
+            self._get_initial_finder_mode_index(),
+        )
+        self._apply_initial_finder_values()
+        self._update_finder_mode_controls()
 
     def _load_stations_async(self) -> None:
         """Load stations in a background thread to not block UI initialization."""
@@ -145,11 +162,13 @@ class NOAARadioDialog(wx.Dialog):
         show_unavailable = self._show_unavailable_enabled()
         station_limit = self._get_selected_station_limit()
         search_query = self._get_search_query()
+        finder_mode = self._get_finder_mode()
+        state_code = self._get_selected_state_code()
 
         # Run station loading in background thread
         thread = threading.Thread(
             target=self._load_stations_worker,
-            args=(show_unavailable, station_limit, search_query),
+            args=(show_unavailable, station_limit, search_query, finder_mode, state_code),
             daemon=True,
         )
         thread.start()
@@ -159,15 +178,37 @@ class NOAARadioDialog(wx.Dialog):
         show_unavailable: bool = False,
         station_limit: int | None = DEFAULT_STATION_LIMIT,
         search_query: str = "",
+        finder_mode: str | None = None,
+        state_code: str = "",
     ) -> None:
         """Worker method that loads stations in background thread."""
         try:
             db = StationDatabase()
-            if search_query:
+            active_mode = finder_mode or (
+                FINDER_MODE_SEARCH_ALL if search_query else self._get_finder_mode()
+            )
+            if active_mode == FINDER_MODE_BROWSE_STATE:
+                if state_code:
+                    candidates = db.get_stations_by_state(state_code)
+                    if station_limit is not None:
+                        candidates = candidates[:station_limit]
+                else:
+                    candidates = db.search("", limit=station_limit)
+            elif active_mode == FINDER_MODE_NEAREST:
+                coordinates = self._parse_coordinate_query(search_query)
+                if (
+                    coordinates is None
+                    and getattr(self, "_lat", None) is not None
+                    and getattr(self, "_lon", None) is not None
+                ):
+                    coordinates = (self._lat, self._lon)
+                if coordinates is None:
+                    candidates = []
+                else:
+                    results = db.find_nearest(*coordinates, limit=station_limit)
+                    candidates = [r.station for r in results]
+            elif search_query:
                 candidates = db.search(search_query, limit=station_limit)
-            elif self._lat is not None and self._lon is not None:
-                results = db.find_nearest(self._lat, self._lon, limit=station_limit)
-                candidates = [r.station for r in results]
             else:
                 candidates = db.search("", limit=station_limit)
             entries = self._station_availability.build_entries(
@@ -451,14 +492,30 @@ class NOAARadioDialog(wx.Dialog):
         self._load_stations_async()
         event.Skip()
 
-    def _on_search(self, event: wx.CommandEvent) -> None:
-        """Reload stations using the current station search text."""
+    def _on_finder_mode_changed(self, event: wx.CommandEvent) -> None:
+        """Update finder controls when the station finder mode changes."""
+        self._update_finder_mode_controls()
+        event.Skip()
+
+    def _on_find(self, event: wx.CommandEvent) -> None:
+        """Reload stations using the selected station finder mode."""
         self._load_stations_async()
         event.Skip()
 
+    def _on_search(self, event: wx.CommandEvent) -> None:
+        """Compatibility alias for older tests and callers."""
+        self._on_find(event)
+
     def _on_clear_search(self, event: wx.CommandEvent) -> None:
-        """Clear the station search and browse the default station list."""
+        """Clear the station finder and browse the default station list."""
+        finder_choice = getattr(self, "_finder_mode_choice", None)
+        if finder_choice is not None:
+            finder_choice.SetSelection(FINDER_MODE_LABELS.index(FINDER_MODE_SEARCH_ALL))
+        state_choice = getattr(self, "_state_choice", None)
+        if state_choice is not None:
+            state_choice.SetSelection(0)
         self._search_ctrl.SetValue("")
+        self._update_finder_mode_controls()
         self._load_stations_async()
         event.Skip()
 
@@ -519,6 +576,98 @@ class NOAARadioDialog(wx.Dialog):
         if search_ctrl is None:
             return ""
         return str(search_ctrl.GetValue()).strip()
+
+    def _get_finder_mode(self) -> str:
+        """Return the selected station finder mode."""
+        choice = getattr(self, "_finder_mode_choice", None)
+        if choice is None:
+            if getattr(self, "_lat", None) is not None and getattr(self, "_lon", None) is not None:
+                return FINDER_MODE_NEAREST
+            return FINDER_MODE_SEARCH_ALL
+
+        selection = choice.GetSelection()
+        if selection == wx.NOT_FOUND or selection >= len(FINDER_MODE_LABELS):
+            return FINDER_MODE_SEARCH_ALL
+        return FINDER_MODE_LABELS[selection]
+
+    def _get_selected_state_code(self) -> str:
+        """Return the selected state/territory code, or an empty string for all."""
+        choice = getattr(self, "_state_choice", None)
+        state_choices = getattr(self, "_state_choices", ())
+        if choice is None or not state_choices:
+            return ""
+
+        selection = choice.GetSelection()
+        if selection <= 0 or selection >= len(state_choices):
+            return ""
+        return state_choices[selection]
+
+    def _update_finder_mode_controls(self) -> None:
+        """Show and label the finder controls for the active mode."""
+        mode = self._get_finder_mode()
+        search_label = getattr(self, "_search_label", None)
+        search_ctrl = getattr(self, "_search_ctrl", None)
+        state_label = getattr(self, "_state_label", None)
+        state_choice = getattr(self, "_state_choice", None)
+
+        state_mode = mode == FINDER_MODE_BROWSE_STATE
+        coordinate_mode = mode == FINDER_MODE_NEAREST
+
+        if search_label is not None:
+            label = (
+                "Coordinates (latitude, longitude):"
+                if coordinate_mode
+                else "Search text (call sign, city, or state):"
+            )
+            search_label.SetLabel(label)
+            search_label.Show(not state_mode)
+        if search_ctrl is not None:
+            hint = "Example: 30.2672, -97.7431" if coordinate_mode else "Call sign, city, or state"
+            search_ctrl.SetHint(hint)
+            search_ctrl.Show(not state_mode)
+        if state_label is not None:
+            state_label.Show(state_mode)
+        if state_choice is not None:
+            state_choice.Show(state_mode)
+
+        finder_panel = getattr(self, "_finder_panel", None)
+        if finder_panel is not None:
+            finder_panel.Layout()
+
+    def _apply_initial_finder_values(self) -> None:
+        """Prefill coordinate mode when the dialog is opened for a point."""
+        if getattr(self, "_lat", None) is None or getattr(self, "_lon", None) is None:
+            return
+        search_ctrl = getattr(self, "_search_ctrl", None)
+        if search_ctrl is not None:
+            search_ctrl.SetValue(f"{self._lat:.4f}, {self._lon:.4f}")
+
+    def _get_initial_finder_mode_index(self) -> int:
+        """Return the mode index to use when building the dialog."""
+        if getattr(self, "_lat", None) is not None and getattr(self, "_lon", None) is not None:
+            return FINDER_MODE_LABELS.index(FINDER_MODE_NEAREST)
+        return FINDER_MODE_LABELS.index(FINDER_MODE_SEARCH_ALL)
+
+    @staticmethod
+    def _get_state_choices() -> tuple[str, ...]:
+        """Return state/territory choices from the local station database."""
+        states = sorted({station.state for station in StationDatabase().get_all_stations()})
+        return (STATE_ALL_CHOICE, *states)
+
+    @staticmethod
+    def _parse_coordinate_query(query: str) -> tuple[float, float] | None:
+        """Parse a latitude, longitude query for nearest-station mode."""
+        parts = [part.strip() for part in query.split(",", 1)]
+        if len(parts) != 2:
+            return None
+        try:
+            lat = float(parts[0])
+            lon = float(parts[1])
+        except ValueError:
+            return None
+        if -90 <= lat <= 90 and -180 <= lon <= 180:
+            return lat, lon
+        return None
 
     def _get_selected_station_limit(self) -> int | None:
         """Return the chosen nearby-station limit, or None for all stations."""
