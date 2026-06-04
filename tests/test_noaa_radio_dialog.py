@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from accessiweather.models import Location
 from accessiweather.noaa_radio import Station
 
 
@@ -170,12 +171,15 @@ def _make_dialog_instance(module):
     dlg._status_text = MagicMock()
     dlg._health_timer = MagicMock()
     dlg._prefs = MagicMock()
+    dlg._prefs.is_favorite_station.return_value = False
+    dlg._prefs.get_favorite_stations.return_value = []
     dlg._availability_cache = MagicMock()
     dlg._station_availability = MagicMock()
     dlg._current_urls = ["http://example.com/stream1", "http://example.com/stream2"]
     dlg._current_url_index = 0
     dlg._next_stream_btn = MagicMock()
     dlg._prefer_btn = MagicMock()
+    dlg._favorite_btn = MagicMock()
     dlg._show_unavailable_checkbox = MagicMock()
     dlg._show_unavailable_checkbox.GetValue.return_value = False
     dlg._search_ctrl = MagicMock()
@@ -185,6 +189,10 @@ def _make_dialog_instance(module):
     dlg._state_choice = MagicMock()
     dlg._state_choice.GetSelection.return_value = 0
     dlg._state_choices = ("All states and territories", "New York (NY)", "Pennsylvania (PA)")
+    dlg._saved_location_choice = MagicMock()
+    dlg._saved_location_choice.GetSelection.return_value = 0
+    dlg._saved_locations = []
+    dlg._station_base_labels = []
     dlg._auto_advance_stream = True
     dlg._playing_station = None
     return dlg
@@ -447,6 +455,7 @@ class TestUnavailableStations:
         dlg._on_play_stop = MagicMock()
         dlg._on_next_stream = MagicMock()
         dlg._on_set_preferred = MagicMock()
+        dlg._on_toggle_favorite = MagicMock()
         dlg._on_volume_change = MagicMock()
         dlg._on_close = MagicMock()
         dlg._on_show_unavailable_changed = MagicMock()
@@ -469,6 +478,7 @@ class TestUnavailableStations:
         dlg._on_play_stop = MagicMock()
         dlg._on_next_stream = MagicMock()
         dlg._on_set_preferred = MagicMock()
+        dlg._on_toggle_favorite = MagicMock()
         dlg._on_volume_change = MagicMock()
         dlg._on_close = MagicMock()
         dlg._on_show_unavailable_changed = MagicMock()
@@ -481,8 +491,8 @@ class TestUnavailableStations:
 
         noaa_dialog_module.NOAARadioDialog._init_ui(dlg)
 
-        assert noaa_dialog_module.wx.Choice.call_count == 4
-        station_limit_choice = noaa_dialog_module.wx.Choice.call_args_list[3]
+        assert noaa_dialog_module.wx.Choice.call_count == 5
+        station_limit_choice = noaa_dialog_module.wx.Choice.call_args_list[4]
         assert station_limit_choice.kwargs["choices"] == ["10", "25", "50", "100", "All"]
 
     def test_station_finder_widgets_are_created(self, noaa_dialog_module):
@@ -496,6 +506,7 @@ class TestUnavailableStations:
         dlg._on_play_stop = MagicMock()
         dlg._on_next_stream = MagicMock()
         dlg._on_set_preferred = MagicMock()
+        dlg._on_toggle_favorite = MagicMock()
         dlg._on_volume_change = MagicMock()
         dlg._on_close = MagicMock()
         dlg._on_show_unavailable_changed = MagicMock()
@@ -521,8 +532,10 @@ class TestUnavailableStations:
         assert "Station Finder" in static_labels
         assert "Search mode:" in static_labels
         assert "State or territory:" in static_labels
+        assert "Saved location:" in static_labels
         assert "Station results:" in static_labels
         assert "Maximum results:" in static_labels
+        assert "Favorite" in button_labels
         assert "Find" in button_labels
         assert "Search" not in button_labels
 
@@ -568,6 +581,57 @@ class TestUnavailableStations:
         dlg._station_choice.Set.assert_called_with(
             ["WXK27 - Austin, TX - 162.400 MHz - Temporarily unavailable"]
         )
+
+    def test_favorite_station_label_is_marked_in_loaded_choices(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        station = Station("WXK27", 162.4, "Austin", 0.0, 0.0, "TX")
+        dlg._prefs.is_favorite_station.side_effect = lambda call_sign: call_sign == "WXK27"
+
+        dlg._on_stations_loaded(
+            [station],
+            ["WXK27 - Austin, TX - 162.400 MHz - Available"],
+        )
+
+        dlg._station_choice.Set.assert_called_with(
+            ["Favorite - WXK27 - Austin, TX - 162.400 MHz - Available"]
+        )
+
+    def test_favorite_button_updates_for_selected_station(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._prefs.is_favorite_station.return_value = True
+
+        dlg._update_favorite_button_state()
+
+        dlg._favorite_btn.Enable.assert_called_with(True)
+        dlg._favorite_btn.SetLabel.assert_called_with("Remove Favorite")
+
+    def test_toggle_favorite_adds_selected_station_and_refreshes_label(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._station_base_labels = ["WXK27 - Austin, TX - 162.400 MHz - Available"]
+        dlg._stations = [Station("WXK27", 162.4, "Austin", 0.0, 0.0, "TX")]
+        dlg._prefs.is_favorite_station.return_value = False
+        event = MagicMock()
+
+        dlg._on_toggle_favorite(event)
+
+        dlg._prefs.add_favorite_station.assert_called_once_with("WXK27")
+        dlg._status_text.SetLabel.assert_called_with("WXK27 added to favorites")
+        event.Skip.assert_called_once()
+
+    def test_toggle_favorite_in_favorites_mode_removes_and_reloads(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._prefs.is_favorite_station.return_value = True
+        dlg._finder_mode_choice.GetSelection.return_value = (
+            noaa_dialog_module.FINDER_MODE_LABELS.index(noaa_dialog_module.FINDER_MODE_FAVORITES)
+        )
+        dlg._load_stations_async = MagicMock()
+        event = MagicMock()
+
+        dlg._on_toggle_favorite(event)
+
+        dlg._prefs.remove_favorite_station.assert_called_once_with("KEC49")
+        dlg._load_stations_async.assert_called_once()
+        event.Skip.assert_called_once()
 
 
 class TestStationFinderControls:
@@ -641,6 +705,31 @@ class TestStationFinderControls:
         assert parse("30.2672, -97.7431") == (30.2672, -97.7431)
         assert parse("Austin") is None
         assert parse("91, 0") is None
+
+    def test_get_selected_saved_location(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        austin = Location("Austin", 30.2672, -97.7431)
+        boston = Location("Boston", 42.3601, -71.0589)
+        dlg._saved_locations = [austin, boston]
+        dlg._saved_location_choice.GetSelection.return_value = 1
+
+        assert dlg._get_selected_saved_location() is boston
+
+    def test_load_saved_locations_uses_user_display_order(self, noaa_dialog_module):
+        current = Location("Austin", 30.2672, -97.7431)
+        boston = Location("Boston", 42.3601, -71.0589)
+        houston = Location("Houston", 29.7604, -95.3698)
+        fake_app = MagicMock()
+        fake_app.config_manager.get_all_locations.return_value = [boston, houston, current]
+        fake_app.config_manager.get_settings.return_value.location_sort_order = "nearest_current"
+        fake_app.config_manager.get_current_location.return_value = current
+
+        locations = noaa_dialog_module.NOAARadioDialog._load_saved_locations_from_app(fake_app)
+
+        assert [location.name for location in locations] == ["Austin", "Houston", "Boston"]
+
+    def test_load_saved_locations_falls_back_to_empty_without_config(self, noaa_dialog_module):
+        assert noaa_dialog_module.NOAARadioDialog._load_saved_locations_from_app(None) == []
 
 
 class TestPlayStopSwitch:

@@ -12,6 +12,7 @@ def create_noaa_radio_widgets(
     station_limit_labels: tuple[str, ...],
     finder_mode_labels: tuple[str, ...],
     state_choices: tuple[str, ...],
+    saved_location_choices: tuple[str, ...],
     initial_finder_mode_index: int = 0,
 ) -> None:
     """Create and layout all NOAA radio dialog controls."""
@@ -62,6 +63,13 @@ def create_noaa_radio_widgets(
     dialog._state_choice = wx.Choice(panel, choices=list(state_choices))
     dialog._state_choice.SetSelection(0)
     sizer.Add(dialog._state_choice, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
+
+    dialog._saved_location_label = wx.StaticText(panel, label="Saved location:")
+    sizer.Add(dialog._saved_location_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
+    dialog._saved_location_choice = wx.Choice(panel, choices=list(saved_location_choices))
+    if saved_location_choices:
+        dialog._saved_location_choice.SetSelection(0)
+    sizer.Add(dialog._saved_location_choice, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
     sizer.Add(wx.StaticText(panel, label="Station results:"), 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
@@ -134,5 +142,10 @@ def _add_button_row(dialog: Any, panel: wx.Panel, sizer: wx.BoxSizer) -> None:
     dialog._prefer_btn.Bind(wx.EVT_BUTTON, dialog._on_set_preferred)
     dialog._prefer_btn.Enable(False)
     btn_sizer.Add(dialog._prefer_btn, 0, wx.RIGHT, 5)
+
+    dialog._favorite_btn = wx.Button(panel, label="Favorite")
+    dialog._favorite_btn.Bind(wx.EVT_BUTTON, dialog._on_toggle_favorite)
+    dialog._favorite_btn.Enable(False)
+    btn_sizer.Add(dialog._favorite_btn, 0, wx.RIGHT, 5)
 
     sizer.Add(btn_sizer, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)

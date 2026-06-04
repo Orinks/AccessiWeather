@@ -257,6 +257,22 @@ class StationDatabase:
         state_upper = state.upper()
         return [s for s in self._stations if s.state.upper() == state_upper]
 
+    def get_stations_by_call_signs(self, call_signs: list[str]) -> list[Station]:
+        """Return stations matching call signs in caller-provided order."""
+        station_by_call_sign = {station.call_sign.upper(): station for station in self._stations}
+        stations: list[Station] = []
+        seen: set[str] = set()
+        for call_sign in call_signs:
+            normalized = call_sign.strip().upper()
+            if not normalized or normalized in seen:
+                continue
+            station = station_by_call_sign.get(normalized)
+            if station is None:
+                continue
+            stations.append(station)
+            seen.add(normalized)
+        return stations
+
     def search(self, query: str, limit: int | None = None) -> list[Station]:
         """Search stations by call sign, city/name, state, or explicit lat/lon."""
         normalized = query.strip()

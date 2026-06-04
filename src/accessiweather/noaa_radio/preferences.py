@@ -20,6 +20,7 @@ class RadioPreferences:
     ) -> None:
         """Initialize with an optional canonical preferences file path."""
         self._prefs: dict[str, str] = {}
+        self._favorite_stations: list[str] = []
         self._station_limit: int | None = DEFAULT_STATION_LIMIT
         if path is not None:
             self._path = Path(path)
@@ -46,6 +47,9 @@ class RadioPreferences:
                         for call_sign, url in preferred_streams.items()
                         if isinstance(url, str)
                     }
+                self._favorite_stations = self._normalize_favorite_stations(
+                    data.get("favorite_stations", [])
+                )
                 station_limit = data.get("station_limit", DEFAULT_STATION_LIMIT)
                 self._station_limit = self._normalize_station_limit(station_limit)
             else:
@@ -54,6 +58,7 @@ class RadioPreferences:
                     for call_sign, url in data.items()
                     if isinstance(url, str)
                 }
+                self._favorite_stations = []
                 self._station_limit = DEFAULT_STATION_LIMIT
         except Exception as e:
             logger.warning(f"Failed to load radio preferences: {e}")
@@ -66,6 +71,7 @@ class RadioPreferences:
             payload = {
                 "preferred_streams": self._prefs,
                 "station_limit": self._station_limit,
+                "favorite_stations": self._favorite_stations,
             }
             self._path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         except Exception as e:
@@ -80,6 +86,20 @@ class RadioPreferences:
         if isinstance(value, int) and value > 0:
             return value
         return DEFAULT_STATION_LIMIT
+
+    def _normalize_favorite_stations(self, value: object) -> list[str]:
+        """Return unique uppercase favorite call signs while preserving order."""
+        if not isinstance(value, list):
+            return []
+        favorites: list[str] = []
+        seen: set[str] = set()
+        for item in value:
+            call_sign = str(item).strip().upper() if item is not None else ""
+            if not call_sign or call_sign in seen:
+                continue
+            favorites.append(call_sign)
+            seen.add(call_sign)
+        return favorites
 
     def get_preferred_url(self, call_sign: str) -> str | None:
         """Get the preferred stream URL for a station, or None."""
@@ -102,6 +122,37 @@ class RadioPreferences:
         if preferred and preferred in urls:
             return [preferred] + [u for u in urls if u != preferred]
         return list(urls)
+
+    def get_favorite_stations(self) -> list[str]:
+        """Return favorite station call signs in saved order."""
+        return list(self._favorite_stations)
+
+    def is_favorite_station(self, call_sign: str) -> bool:
+        """Return whether the given station call sign is favorited."""
+        return call_sign.strip().upper() in self._favorite_stations
+
+    def set_favorite_stations(self, call_signs: list[str]) -> None:
+        """Replace favorite stations with a normalized, duplicate-free list."""
+        self._favorite_stations = self._normalize_favorite_stations(call_signs)
+        self._save()
+
+    def add_favorite_station(self, call_sign: str) -> None:
+        """Add a station to favorites if it is not already present."""
+        normalized = call_sign.strip().upper()
+        if not normalized or normalized in self._favorite_stations:
+            return
+        self._favorite_stations.append(normalized)
+        self._save()
+
+    def remove_favorite_station(self, call_sign: str) -> None:
+        """Remove a station from favorites if present."""
+        normalized = call_sign.strip().upper()
+        if normalized not in self._favorite_stations:
+            return
+        self._favorite_stations = [
+            favorite for favorite in self._favorite_stations if favorite != normalized
+        ]
+        self._save()
 
     def get_station_limit(self) -> int | None:
         """Return the preferred nearby-station limit, or None for all stations."""

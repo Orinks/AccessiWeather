@@ -14,6 +14,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from accessiweather.models import Location
 from accessiweather.noaa_radio import Station
 from accessiweather.noaa_radio.station_db import StationResult
 
@@ -156,12 +157,15 @@ def _make_dialog(module):
     dlg._status_text = MagicMock()
     dlg._health_timer = MagicMock()
     dlg._prefs = MagicMock()
+    dlg._prefs.is_favorite_station.return_value = False
+    dlg._prefs.get_favorite_stations.return_value = []
     dlg._availability_cache = MagicMock()
     dlg._station_availability = MagicMock()
     dlg._current_urls = ["http://example.com/stream1", "http://example.com/stream2"]
     dlg._current_url_index = 0
     dlg._next_stream_btn = MagicMock()
     dlg._prefer_btn = MagicMock()
+    dlg._favorite_btn = MagicMock()
     dlg._show_unavailable_checkbox = MagicMock()
     dlg._show_unavailable_checkbox.GetValue.return_value = False
     dlg._search_ctrl = MagicMock()
@@ -178,6 +182,10 @@ def _make_dialog(module):
         "Pennsylvania (PA)",
         "Texas (TX)",
     )
+    dlg._saved_location_choice = MagicMock()
+    dlg._saved_location_choice.GetSelection.return_value = 0
+    dlg._saved_locations = []
+    dlg._station_base_labels = []
     dlg._auto_advance_stream = True
     dlg._playing_station = None
     return dlg
@@ -481,6 +489,101 @@ class TestLoadStations:
                 station_limit=10,
                 search_query="Austin",
                 finder_mode=noaa_dialog_module.FINDER_MODE_NEAREST,
+            )
+
+        mock_db_cls.return_value.find_nearest.assert_not_called()
+        mock_db_cls.return_value.search.assert_not_called()
+        dlg._station_availability.build_entries.assert_called_once_with(
+            [],
+            show_unavailable=False,
+        )
+
+    def test_load_stations_favorites_mode_uses_saved_favorite_order(self, noaa_dialog_module):
+        dlg = _make_dialog(noaa_dialog_module)
+        dlg._prefs.get_favorite_stations.return_value = ["WXK27", "KEC49"]
+        wxk27 = Station("WXK27", 162.4, "Austin, TX", 30.2672, -97.7431, "TX")
+        kec49 = Station("KEC49", 162.55, "New York, NY", 40.7128, -74.0060, "NY")
+        entries = []
+        for station in (wxk27, kec49):
+            entry = MagicMock()
+            entry.station = station
+            entry.label = f"{station.call_sign} - {station.name} - Available"
+            entries.append(entry)
+        dlg._station_availability.build_entries.return_value = entries
+
+        with patch("accessiweather.ui.dialogs.noaa_radio_dialog.StationDatabase") as mock_db_cls:
+            mock_db_cls.return_value.get_stations_by_call_signs.return_value = [wxk27, kec49]
+            dlg._load_stations_worker(
+                station_limit=10,
+                finder_mode=noaa_dialog_module.FINDER_MODE_FAVORITES,
+            )
+
+        mock_db_cls.return_value.get_stations_by_call_signs.assert_called_once_with(
+            ["WXK27", "KEC49"]
+        )
+        mock_db_cls.return_value.search.assert_not_called()
+        mock_db_cls.return_value.find_nearest.assert_not_called()
+        dlg._station_availability.build_entries.assert_called_once_with(
+            [wxk27, kec49],
+            show_unavailable=False,
+        )
+
+    def test_load_stations_favorites_mode_empty_skips_availability(self, noaa_dialog_module):
+        dlg = _make_dialog(noaa_dialog_module)
+        dlg._prefs.get_favorite_stations.return_value = []
+
+        with patch("accessiweather.ui.dialogs.noaa_radio_dialog.StationDatabase") as mock_db_cls:
+            dlg._load_stations_worker(
+                station_limit=10,
+                finder_mode=noaa_dialog_module.FINDER_MODE_FAVORITES,
+            )
+
+        mock_db_cls.return_value.get_stations_by_call_signs.assert_not_called()
+        dlg._station_availability.build_entries.assert_called_once_with(
+            [],
+            show_unavailable=False,
+        )
+
+    def test_load_stations_saved_location_mode_uses_selected_location_coordinates(
+        self,
+        noaa_dialog_module,
+    ):
+        dlg = _make_dialog(noaa_dialog_module)
+        saved = Location("Austin", 30.2672, -97.7431)
+        station = Station("WXK27", 162.4, "Austin, TX", 30.2672, -97.7431, "TX")
+        entry = MagicMock()
+        entry.station = station
+        entry.label = "WXK27 - Austin, TX - 162.400 MHz - Available"
+        dlg._station_availability.build_entries.return_value = [entry]
+        results = [StationResult(station=station, distance_km=0.0)]
+
+        with patch("accessiweather.ui.dialogs.noaa_radio_dialog.StationDatabase") as mock_db_cls:
+            mock_db_cls.return_value.find_nearest.return_value = results
+            dlg._load_stations_worker(
+                station_limit=10,
+                finder_mode=noaa_dialog_module.FINDER_MODE_SAVED_LOCATION,
+                saved_location=saved,
+            )
+
+        mock_db_cls.return_value.find_nearest.assert_called_once_with(
+            30.2672,
+            -97.7431,
+            limit=10,
+        )
+        mock_db_cls.return_value.search.assert_not_called()
+
+    def test_load_stations_saved_location_mode_without_locations_is_empty(
+        self,
+        noaa_dialog_module,
+    ):
+        dlg = _make_dialog(noaa_dialog_module)
+        dlg._station_availability.build_entries.return_value = []
+
+        with patch("accessiweather.ui.dialogs.noaa_radio_dialog.StationDatabase") as mock_db_cls:
+            dlg._load_stations_worker(
+                station_limit=10,
+                finder_mode=noaa_dialog_module.FINDER_MODE_SAVED_LOCATION,
+                saved_location=None,
             )
 
         mock_db_cls.return_value.find_nearest.assert_not_called()
