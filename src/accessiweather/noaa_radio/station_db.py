@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import dataclass
 
 from accessiweather.noaa_radio.stations import Station
 
 # Earth's mean radius in kilometres
 _EARTH_RADIUS_KM = 6371.0
+_COORDINATE_QUERY_RE = re.compile(
+    r"^\s*(?P<lat>[+-]?\d+(?:\.\d+)?)\s*,\s*(?P<lon>[+-]?\d+(?:\.\d+)?)\s*$"
+)
 
 
 @dataclass
@@ -252,6 +256,31 @@ class StationDatabase:
         """Return stations filtered by US state abbreviation (case-insensitive)."""
         state_upper = state.upper()
         return [s for s in self._stations if s.state.upper() == state_upper]
+
+    def search(self, query: str, limit: int | None = None) -> list[Station]:
+        """Search stations by call sign, city/name, state, or explicit lat/lon."""
+        normalized = query.strip()
+        if not normalized:
+            stations = self.get_all_stations()
+            return stations if limit is None else stations[:limit]
+
+        coordinate_match = _COORDINATE_QUERY_RE.match(normalized)
+        if coordinate_match:
+            lat = float(coordinate_match.group("lat"))
+            lon = float(coordinate_match.group("lon"))
+            if -90 <= lat <= 90 and -180 <= lon <= 180:
+                return [result.station for result in self.find_nearest(lat, lon, limit=limit)]
+
+        normalized_upper = normalized.upper()
+        normalized_lower = normalized.lower()
+        matches = [
+            station
+            for station in self._stations
+            if normalized_upper in station.call_sign.upper()
+            or normalized_upper == station.state.upper()
+            or normalized_lower in station.name.lower()
+        ]
+        return matches if limit is None else matches[:limit]
 
     def find_nearest(self, lat: float, lon: float, limit: int | None = 5) -> list[StationResult]:
         """Return the nearest stations sorted by distance ascending."""

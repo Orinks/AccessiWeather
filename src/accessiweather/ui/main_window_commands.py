@@ -120,18 +120,9 @@ class MainWindowCommandMixin:
 
     def _on_noaa_radio(self) -> None:
         """Open NOAA Weather Radio dialog."""
-        location = self.app.config_manager.get_current_location()
-        if not location:
-            wx.MessageBox(
-                "Please select a location first.",
-                "No Location Selected",
-                wx.OK | wx.ICON_WARNING,
-            )
-            return
-
         from .dialogs import show_noaa_radio_dialog
 
-        show_noaa_radio_dialog(self, location.latitude, location.longitude)
+        show_noaa_radio_dialog(self)
 
     def _on_weather_chat(self) -> None:
         """Open Weather Assistant dialog."""

@@ -53,7 +53,7 @@ class StationAvailabilityService:
                     StationAvailabilityEntry(
                         station=station,
                         available=False,
-                        label=f"{label} - {TEMPORARILY_UNAVAILABLE}",
+                        label=f"{label} - Temporarily unavailable",
                         unavailable_reason=TEMPORARILY_UNAVAILABLE,
                     )
                 )
@@ -63,11 +63,15 @@ class StationAvailabilityService:
                 StationAvailabilityEntry(
                     station=station,
                     available=True,
-                    label=label,
+                    label=f"{label} - Available",
                 )
             )
         return entries
 
     @staticmethod
     def _base_label(station: Station) -> str:
-        return f"{station.call_sign} - {station.name} ({station.frequency} MHz)"
+        location = station.name.strip()
+        state = station.state.strip().upper()
+        if state and not location.upper().endswith(f", {state}"):
+            location = f"{location}, {state}"
+        return f"{station.call_sign} - {location} - {station.frequency:.3f} MHz"

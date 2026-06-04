@@ -15,8 +15,8 @@ from accessiweather.noaa_radio import (
     StationDatabase,
     StreamURLProvider,
 )
-from accessiweather.noaa_radio.player import RadioPlayer
 from accessiweather.noaa_radio.preferences import DEFAULT_STATION_LIMIT, RadioPreferences
+from accessiweather.noaa_radio.session import RadioSession, get_shared_radio_session
 
 from .noaa_radio_clients import get_clients as _get_clients
 from .noaa_radio_widgets import create_noaa_radio_widgets
@@ -28,9 +28,80 @@ logger = logging.getLogger(__name__)
 SUPPRESSION_TTL_SECONDS = 1800
 STATION_LIMIT_PRESETS: tuple[int | None, ...] = (10, 25, 50, 100, None)
 STATION_LIMIT_LABELS: tuple[str, ...] = ("10", "25", "50", "100", "All")
+FINDER_MODE_SEARCH_ALL = "Search all stations"
+FINDER_MODE_BROWSE_STATE = "Browse by state"
+FINDER_MODE_NEAREST = "Nearest by coordinates"
+FINDER_MODE_LABELS: tuple[str, ...] = (
+    FINDER_MODE_SEARCH_ALL,
+    FINDER_MODE_BROWSE_STATE,
+    FINDER_MODE_NEAREST,
+)
+STATE_ALL_CHOICE = "All states and territories"
+STATE_TERRITORY_NAMES: dict[str, str] = {
+    "AL": "Alabama",
+    "AK": "Alaska",
+    "AZ": "Arizona",
+    "AR": "Arkansas",
+    "CA": "California",
+    "CO": "Colorado",
+    "CT": "Connecticut",
+    "DE": "Delaware",
+    "DC": "District of Columbia",
+    "FL": "Florida",
+    "GA": "Georgia",
+    "HI": "Hawaii",
+    "ID": "Idaho",
+    "IL": "Illinois",
+    "IN": "Indiana",
+    "IA": "Iowa",
+    "KS": "Kansas",
+    "KY": "Kentucky",
+    "LA": "Louisiana",
+    "ME": "Maine",
+    "MD": "Maryland",
+    "MA": "Massachusetts",
+    "MI": "Michigan",
+    "MN": "Minnesota",
+    "MS": "Mississippi",
+    "MO": "Missouri",
+    "MT": "Montana",
+    "NE": "Nebraska",
+    "NV": "Nevada",
+    "NH": "New Hampshire",
+    "NJ": "New Jersey",
+    "NM": "New Mexico",
+    "NY": "New York",
+    "NC": "North Carolina",
+    "ND": "North Dakota",
+    "OH": "Ohio",
+    "OK": "Oklahoma",
+    "OR": "Oregon",
+    "PA": "Pennsylvania",
+    "RI": "Rhode Island",
+    "SC": "South Carolina",
+    "SD": "South Dakota",
+    "TN": "Tennessee",
+    "TX": "Texas",
+    "UT": "Utah",
+    "VT": "Vermont",
+    "VA": "Virginia",
+    "WA": "Washington",
+    "WV": "West Virginia",
+    "WI": "Wisconsin",
+    "WY": "Wyoming",
+    "AS": "American Samoa",
+    "GU": "Guam",
+    "MP": "Northern Mariana Islands",
+    "PR": "Puerto Rico",
+    "VI": "U.S. Virgin Islands",
+}
 
 
-def show_noaa_radio_dialog(parent: wx.Window, lat: float, lon: float) -> NOAARadioDialog:
+def show_noaa_radio_dialog(
+    parent: wx.Window,
+    lat: float | None = None,
+    lon: float | None = None,
+) -> NOAARadioDialog:
     """
     Show the NOAA Weather Radio player dialog.
 
@@ -38,8 +109,8 @@ def show_noaa_radio_dialog(parent: wx.Window, lat: float, lon: float) -> NOAARad
 
     Args:
         parent: Parent window.
-        lat: Latitude for finding nearest stations.
-        lon: Longitude for finding nearest stations.
+        lat: Optional latitude for finding nearest stations.
+        lon: Optional longitude for finding nearest stations.
 
     Returns:
         The dialog instance (non-modal, caller may keep a reference).
@@ -53,14 +124,22 @@ def show_noaa_radio_dialog(parent: wx.Window, lat: float, lon: float) -> NOAARad
 class NOAARadioDialog(wx.Dialog):
     """Non-modal dialog for streaming NOAA Weather Radio stations."""
 
-    def __init__(self, parent: wx.Window, lat: float, lon: float) -> None:
+    def __init__(
+        self,
+        parent: wx.Window,
+        lat: float | None = None,
+        lon: float | None = None,
+        *,
+        session: RadioSession | None = None,
+    ) -> None:
         """
         Initialize the NOAA Radio dialog.
 
         Args:
             parent: Parent window.
-            lat: Latitude for station lookup.
-            lon: Longitude for station lookup.
+            lat: Optional latitude for station lookup.
+            lon: Optional longitude for station lookup.
+            session: Optional playback session, injected by tests.
 
         """
         super().__init__(
@@ -73,13 +152,15 @@ class NOAARadioDialog(wx.Dialog):
         self._lat = lat
         self._lon = lon
         self._stations: list[Station] = []
-        self._player = RadioPlayer(
+        self._session = session or get_shared_radio_session()
+        self._session.bind_callbacks(
             on_playing=self._on_playing,
             on_stopped=self._on_stopped,
             on_error=self._on_error,
             on_stalled=self._on_stalled,
             on_reconnecting=self._on_reconnecting,
         )
+        self._player = self._session.player
         # Use cached clients to leverage HTTP response caching across dialog opens
         wxradio, weatherindex = _get_clients()
         self._url_provider = StreamURLProvider(
@@ -104,9 +185,9 @@ class NOAARadioDialog(wx.Dialog):
             weatherindex_client=weatherindex,
             availability_cache=self._availability_cache,
         )
-        self._current_urls: list[str] = []
-        self._current_url_index: int = 0
-        self._playing_station: Station | None = None
+        self._current_urls: list[str] = self._session.current_urls
+        self._current_url_index: int = self._session.current_url_index
+        self._playing_station: Station | None = self._session.playing_station
         # Set once the dialog is closed so background-thread completion handlers
         # (delivered via wx.CallAfter) don't touch destroyed widgets.
         self._closed = False
@@ -115,25 +196,37 @@ class NOAARadioDialog(wx.Dialog):
 
         self._init_ui()
         self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
+        self._sync_playback_state_from_session()
         # Start station loading in background thread to not block UI initialization
         self._load_stations_async()
 
     def _init_ui(self) -> None:
         """Create and layout all UI controls."""
-        create_noaa_radio_widgets(self, STATION_LIMIT_LABELS)
+        create_noaa_radio_widgets(
+            self,
+            STATION_LIMIT_LABELS,
+            FINDER_MODE_LABELS,
+            self._get_state_choices(),
+            self._get_initial_finder_mode_index(),
+        )
+        self._apply_initial_finder_values()
+        self._update_finder_mode_controls()
 
     def _load_stations_async(self) -> None:
         """Load stations in a background thread to not block UI initialization."""
         # Show loading state immediately
         self._station_choice.Set(["Loading stations..."])
-        self._set_status("Finding nearest stations...")
+        self._set_status("Finding stations...")
         show_unavailable = self._show_unavailable_enabled()
         station_limit = self._get_selected_station_limit()
+        search_query = self._get_search_query()
+        finder_mode = self._get_finder_mode()
+        state_code = self._get_selected_state_code()
 
         # Run station loading in background thread
         thread = threading.Thread(
             target=self._load_stations_worker,
-            args=(show_unavailable, station_limit),
+            args=(show_unavailable, station_limit, search_query, finder_mode, state_code),
             daemon=True,
         )
         thread.start()
@@ -142,14 +235,42 @@ class NOAARadioDialog(wx.Dialog):
         self,
         show_unavailable: bool = False,
         station_limit: int | None = DEFAULT_STATION_LIMIT,
+        search_query: str = "",
+        finder_mode: str | None = None,
+        state_code: str = "",
     ) -> None:
         """Worker method that loads stations in background thread."""
         try:
             db = StationDatabase()
-            results = db.find_nearest(self._lat, self._lon, limit=station_limit)
-            nearby = [r.station for r in results]
+            active_mode = finder_mode or (
+                FINDER_MODE_SEARCH_ALL if search_query else self._get_finder_mode()
+            )
+            if active_mode == FINDER_MODE_BROWSE_STATE:
+                if state_code:
+                    candidates = db.get_stations_by_state(state_code)
+                    if station_limit is not None:
+                        candidates = candidates[:station_limit]
+                else:
+                    candidates = db.search("", limit=station_limit)
+            elif active_mode == FINDER_MODE_NEAREST:
+                coordinates = self._parse_coordinate_query(search_query)
+                if (
+                    coordinates is None
+                    and getattr(self, "_lat", None) is not None
+                    and getattr(self, "_lon", None) is not None
+                ):
+                    coordinates = (self._lat, self._lon)
+                if coordinates is None:
+                    candidates = []
+                else:
+                    results = db.find_nearest(*coordinates, limit=station_limit)
+                    candidates = [r.station for r in results]
+            elif search_query:
+                candidates = db.search(search_query, limit=station_limit)
+            else:
+                candidates = db.search("", limit=station_limit)
             entries = self._station_availability.build_entries(
-                nearby,
+                candidates,
                 show_unavailable=show_unavailable,
             )
             stations = [entry.station for entry in entries]
@@ -203,10 +324,19 @@ class NOAARadioDialog(wx.Dialog):
                     if station.call_sign == previous_call_sign:
                         selection = index
                         break
+            elif self._session.playing_station is not None:
+                for index, station in enumerate(stations):
+                    if station.call_sign == self._session.playing_station.call_sign:
+                        selection = index
+                        break
             self._station_choice.SetSelection(selection)
-            self._set_status("Ready")
+            self._sync_playback_state_from_session()
+            if not self._session.is_playing():
+                self._set_status("Ready")
         else:
-            self._set_status("No stations with streams available")
+            self._sync_playback_state_from_session()
+            if not self._session.is_playing():
+                self._set_status("No stations with streams available")
 
     def _get_selected_station(self) -> Station | None:
         """Return the currently selected station, or None."""
@@ -228,14 +358,13 @@ class NOAARadioDialog(wx.Dialog):
             self._on_play(event)
         else:
             selected = self._get_selected_station()
-            if (
-                selected is not None
-                and self._playing_station is not None
+            if selected is None or (
+                self._playing_station is not None
                 and selected.call_sign == self._playing_station.call_sign
             ):
                 self._on_stop(event)
             else:
-                # Different station (or unknown) — switch without a second press
+                # Different station — switch without a second press
                 self._on_play(event)
 
     def _on_play(self, _event: wx.CommandEvent) -> None:
@@ -243,7 +372,7 @@ class NOAARadioDialog(wx.Dialog):
         # Stop any currently playing stream
         if self._player.is_playing():
             self._health_timer.Stop()
-            self._player.stop()
+            self._player.stop(notify=False)
 
         station = self._get_selected_station()
         if station is None:
@@ -265,8 +394,11 @@ class NOAARadioDialog(wx.Dialog):
             )
             return
 
+        self._session.playing_station = station
         self._playing_station = station
-        self._current_urls = self._prefs.reorder_urls(station.call_sign, urls)
+        self._session.current_urls = self._prefs.reorder_urls(station.call_sign, urls)
+        self._current_urls = self._session.current_urls
+        self._session.current_url_index = 0
         self._current_url_index = 0
         self._try_play_current(station.call_sign)
 
@@ -283,7 +415,8 @@ class NOAARadioDialog(wx.Dialog):
             self._prefer_btn.Enable(True)
         elif total > 1:
             # Auto-advance to next stream on connection failure
-            self._current_url_index = (idx + 1) % total
+            self._session.current_url_index = (idx + 1) % total
+            self._current_url_index = self._session.current_url_index
             if self._current_url_index == 0:
                 # Wrapped around, all streams failed
                 self._mark_current_station_unavailable()
@@ -297,7 +430,7 @@ class NOAARadioDialog(wx.Dialog):
     def _on_stop(self, _event: wx.CommandEvent) -> None:
         """Handle Stop action."""
         self._health_timer.Stop()
-        self._player.stop()
+        self._session.stop()
         self._play_stop_btn.SetLabel("Play")
 
     def _on_volume_change(self, _event: wx.CommandEvent) -> None:
@@ -307,6 +440,9 @@ class NOAARadioDialog(wx.Dialog):
 
     def _on_playing(self) -> None:
         """Handle playback started event."""
+        self._current_urls = self._session.current_urls
+        self._current_url_index = self._session.current_url_index
+        self._playing_station = self._session.playing_station or self._get_selected_station()
         station = self._playing_station or self._get_selected_station()
         self._clear_station_suppression(station)
         name = station.call_sign if station else "Unknown"
@@ -321,6 +457,7 @@ class NOAARadioDialog(wx.Dialog):
     def _on_stopped(self) -> None:
         """Handle playback stopped event."""
         self._playing_station = None
+        self._session.playing_station = None
         self._set_status("Stopped")
         self._play_stop_btn.Enable(True)
         self._play_stop_btn.SetLabel("Play")
@@ -330,6 +467,7 @@ class NOAARadioDialog(wx.Dialog):
     def _on_error(self, message: str) -> None:
         """Handle playback error event."""
         self._playing_station = None
+        self._session.playing_station = None
         self._health_timer.Stop()
         self._set_status(f"Error: {message}")
         self._play_stop_btn.Enable(True)
@@ -363,7 +501,8 @@ class NOAARadioDialog(wx.Dialog):
         self._health_timer.Stop()
         self._player.stop(notify=False)  # Don't reset button states mid-switch
 
-        self._current_url_index = (self._current_url_index + 1) % len(self._current_urls)
+        self._session.current_url_index = (self._current_url_index + 1) % len(self._current_urls)
+        self._current_url_index = self._session.current_url_index
         url = self._current_urls[self._current_url_index]
         station = self._get_selected_station()
         name = station.call_sign if station else "Unknown"
@@ -382,7 +521,8 @@ class NOAARadioDialog(wx.Dialog):
         if not self._current_urls or len(self._current_urls) <= 1:
             self._set_status("Stream has no audio")
             return
-        self._current_url_index = (self._current_url_index + 1) % len(self._current_urls)
+        self._session.current_url_index = (self._current_url_index + 1) % len(self._current_urls)
+        self._current_url_index = self._session.current_url_index
         url = self._current_urls[self._current_url_index]
         station = self._get_selected_station()
         name = station.call_sign if station else "Unknown"
@@ -410,6 +550,33 @@ class NOAARadioDialog(wx.Dialog):
         self._load_stations_async()
         event.Skip()
 
+    def _on_finder_mode_changed(self, event: wx.CommandEvent) -> None:
+        """Update finder controls when the station finder mode changes."""
+        self._update_finder_mode_controls()
+        event.Skip()
+
+    def _on_find(self, event: wx.CommandEvent) -> None:
+        """Reload stations using the selected station finder mode."""
+        self._load_stations_async()
+        event.Skip()
+
+    def _on_search(self, event: wx.CommandEvent) -> None:
+        """Compatibility alias for older tests and callers."""
+        self._on_find(event)
+
+    def _on_clear_search(self, event: wx.CommandEvent) -> None:
+        """Clear the station finder and browse the default station list."""
+        finder_choice = getattr(self, "_finder_mode_choice", None)
+        if finder_choice is not None:
+            finder_choice.SetSelection(FINDER_MODE_LABELS.index(FINDER_MODE_SEARCH_ALL))
+        state_choice = getattr(self, "_state_choice", None)
+        if state_choice is not None:
+            state_choice.SetSelection(0)
+        self._search_ctrl.SetValue("")
+        self._update_finder_mode_controls()
+        self._load_stations_async()
+        event.Skip()
+
     def _on_station_changed(self, event: wx.CommandEvent) -> None:
         """Update button label when the user picks a different station."""
         self._update_play_btn_label()
@@ -434,9 +601,8 @@ class NOAARadioDialog(wx.Dialog):
             self._play_stop_btn.SetLabel("Play")
             return
         selected = self._get_selected_station()
-        if (
-            selected is not None
-            and self._playing_station is not None
+        if selected is None or (
+            self._playing_station is not None
             and selected.call_sign == self._playing_station.call_sign
         ):
             self._play_stop_btn.SetLabel("Stop")
@@ -451,16 +617,131 @@ class NOAARadioDialog(wx.Dialog):
         event.Skip()
 
     def _on_close(self, _event: wx.Event) -> None:
-        """Handle dialog close."""
+        """Dismiss the dialog while leaving any active stream playing."""
         self._closed = True
         self._health_timer.Stop()
-        self._player.stop()
+        self._session.unbind_callbacks()
         self.Destroy()
 
     def _show_unavailable_enabled(self) -> bool:
         """Return the current state of the unavailable-station filter."""
         checkbox = getattr(self, "_show_unavailable_checkbox", None)
         return bool(checkbox.GetValue()) if checkbox is not None else False
+
+    def _get_search_query(self) -> str:
+        """Return the current station search query."""
+        search_ctrl = getattr(self, "_search_ctrl", None)
+        if search_ctrl is None:
+            return ""
+        return str(search_ctrl.GetValue()).strip()
+
+    def _get_finder_mode(self) -> str:
+        """Return the selected station finder mode."""
+        choice = getattr(self, "_finder_mode_choice", None)
+        if choice is None:
+            if getattr(self, "_lat", None) is not None and getattr(self, "_lon", None) is not None:
+                return FINDER_MODE_NEAREST
+            return FINDER_MODE_SEARCH_ALL
+
+        selection = choice.GetSelection()
+        if selection == wx.NOT_FOUND or selection >= len(FINDER_MODE_LABELS):
+            return FINDER_MODE_SEARCH_ALL
+        return FINDER_MODE_LABELS[selection]
+
+    def _get_selected_state_code(self) -> str:
+        """Return the selected state/territory code, or an empty string for all."""
+        choice = getattr(self, "_state_choice", None)
+        state_choices = getattr(self, "_state_choices", ())
+        if choice is None or not state_choices:
+            return ""
+
+        selection = choice.GetSelection()
+        if selection <= 0 or selection >= len(state_choices):
+            return ""
+        return self._state_choice_code(state_choices[selection])
+
+    def _update_finder_mode_controls(self) -> None:
+        """Show and label the finder controls for the active mode."""
+        mode = self._get_finder_mode()
+        search_label = getattr(self, "_search_label", None)
+        search_ctrl = getattr(self, "_search_ctrl", None)
+        state_label = getattr(self, "_state_label", None)
+        state_choice = getattr(self, "_state_choice", None)
+
+        state_mode = mode == FINDER_MODE_BROWSE_STATE
+        coordinate_mode = mode == FINDER_MODE_NEAREST
+
+        if search_label is not None:
+            label = (
+                "Coordinates (latitude, longitude):"
+                if coordinate_mode
+                else "Search text (call sign, city, or state):"
+            )
+            search_label.SetLabel(label)
+            search_label.Show(not state_mode)
+        if search_ctrl is not None:
+            hint = "Example: 30.2672, -97.7431" if coordinate_mode else "Call sign, city, or state"
+            search_ctrl.SetHint(hint)
+            search_ctrl.Show(not state_mode)
+        if state_label is not None:
+            state_label.Show(state_mode)
+        if state_choice is not None:
+            state_choice.Show(state_mode)
+
+        finder_panel = getattr(self, "_finder_panel", None)
+        if finder_panel is not None:
+            finder_panel.Layout()
+
+    def _apply_initial_finder_values(self) -> None:
+        """Prefill coordinate mode when the dialog is opened for a point."""
+        if getattr(self, "_lat", None) is None or getattr(self, "_lon", None) is None:
+            return
+        search_ctrl = getattr(self, "_search_ctrl", None)
+        if search_ctrl is not None:
+            search_ctrl.SetValue(f"{self._lat:.4f}, {self._lon:.4f}")
+
+    def _get_initial_finder_mode_index(self) -> int:
+        """Return the mode index to use when building the dialog."""
+        if getattr(self, "_lat", None) is not None and getattr(self, "_lon", None) is not None:
+            return FINDER_MODE_LABELS.index(FINDER_MODE_NEAREST)
+        return FINDER_MODE_LABELS.index(FINDER_MODE_SEARCH_ALL)
+
+    @staticmethod
+    def _get_state_choices() -> tuple[str, ...]:
+        """Return state/territory choices from the local station database."""
+        states = sorted({station.state for station in StationDatabase().get_all_stations()})
+        return (
+            STATE_ALL_CHOICE,
+            *(NOAARadioDialog._format_state_choice(state) for state in states),
+        )
+
+    @staticmethod
+    def _format_state_choice(state_code: str) -> str:
+        """Return a user-friendly state/territory choice label."""
+        name = STATE_TERRITORY_NAMES.get(state_code)
+        return f"{name} ({state_code})" if name else state_code
+
+    @staticmethod
+    def _state_choice_code(choice_label: str) -> str:
+        """Return the station database code from a state choice label."""
+        if choice_label.endswith(")") and "(" in choice_label:
+            return choice_label.rsplit("(", 1)[1].rstrip(")")
+        return choice_label
+
+    @staticmethod
+    def _parse_coordinate_query(query: str) -> tuple[float, float] | None:
+        """Parse a latitude, longitude query for nearest-station mode."""
+        parts = [part.strip() for part in query.split(",", 1)]
+        if len(parts) != 2:
+            return None
+        try:
+            lat = float(parts[0])
+            lon = float(parts[1])
+        except ValueError:
+            return None
+        if -90 <= lat <= 90 and -180 <= lon <= 180:
+            return lat, lon
+        return None
 
     def _get_selected_station_limit(self) -> int | None:
         """Return the chosen nearby-station limit, or None for all stations."""
@@ -497,3 +778,26 @@ class NOAARadioDialog(wx.Dialog):
         if current_station is None:
             return
         self._availability_cache.clear(current_station.call_sign)
+
+    def _sync_playback_state_from_session(self) -> None:
+        """Refresh dialog controls from the shared playback session."""
+        if not hasattr(self, "_volume_slider"):
+            return
+        self._current_urls = self._session.current_urls
+        self._current_url_index = self._session.current_url_index
+        self._playing_station = self._session.playing_station
+        self._volume_slider.SetValue(round(self._player.get_volume() * 100))
+        if self._session.is_playing() and self._playing_station is not None:
+            total = len(self._current_urls)
+            idx = self._current_url_index + 1
+            stream_info = f" (stream {idx} of {total})" if total > 1 else ""
+            self._set_status(f"Playing: {self._playing_station.call_sign}{stream_info}")
+            self._play_stop_btn.Enable(True)
+            self._update_play_btn_label()
+            self._next_stream_btn.Enable(total > 1)
+            self._prefer_btn.Enable(bool(self._current_urls))
+            self._health_timer.Start(5000)
+        else:
+            self._play_stop_btn.SetLabel("Play")
+            self._next_stream_btn.Enable(False)
+            self._prefer_btn.Enable(False)

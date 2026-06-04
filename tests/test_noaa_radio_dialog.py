@@ -50,10 +50,12 @@ def _create_wx_mock():
         "ICON_INFORMATION",
         "SL_HORIZONTAL",
         "ID_CLOSE",
+        "TE_PROCESS_ENTER",
     ]:
         setattr(wx_mock, attr, 0)
     wx_mock.NOT_FOUND = -1
     wx_mock.EVT_CHECKBOX = MagicMock()
+    wx_mock.EVT_TEXT_ENTER = MagicMock()
 
     # Use real classes for inheritance
     wx_mock.Window = _FakeWxWindow
@@ -72,6 +74,10 @@ def _create_wx_mock():
     checkbox_inst = MagicMock()
     checkbox_inst.GetValue.return_value = False
     wx_mock.CheckBox.return_value = checkbox_inst
+
+    text_ctrl_inst = MagicMock()
+    text_ctrl_inst.GetValue.return_value = ""
+    wx_mock.TextCtrl.return_value = text_ctrl_inst
 
     return wx_mock
 
@@ -143,6 +149,16 @@ def _make_dialog_instance(module):
         ),
     ]
     dlg._player = MagicMock()
+    dlg._player.get_volume.return_value = 1.0
+    dlg._session = MagicMock()
+    dlg._session.player = dlg._player
+    dlg._session.current_urls = dlg._current_urls = [
+        "http://example.com/stream1",
+        "http://example.com/stream2",
+    ]
+    dlg._session.current_url_index = 0
+    dlg._session.playing_station = None
+    dlg._session.is_playing.return_value = False
     dlg._url_provider = MagicMock()
     dlg._station_choice = MagicMock()
     dlg._station_choice.GetSelection.return_value = 0
@@ -162,6 +178,13 @@ def _make_dialog_instance(module):
     dlg._prefer_btn = MagicMock()
     dlg._show_unavailable_checkbox = MagicMock()
     dlg._show_unavailable_checkbox.GetValue.return_value = False
+    dlg._search_ctrl = MagicMock()
+    dlg._search_ctrl.GetValue.return_value = ""
+    dlg._finder_mode_choice = MagicMock()
+    dlg._finder_mode_choice.GetSelection.return_value = 0
+    dlg._state_choice = MagicMock()
+    dlg._state_choice.GetSelection.return_value = 0
+    dlg._state_choices = ("All states and territories", "New York (NY)", "Pennsylvania (PA)")
     dlg._auto_advance_stream = True
     dlg._playing_station = None
     return dlg
@@ -192,7 +215,7 @@ class TestNOAARadioDialogModule:
 
         with (
             patch.object(noaa_dialog_module.wx, "GetApp", return_value=fake_app),
-            patch.object(noaa_dialog_module, "RadioPlayer"),
+            patch.object(noaa_dialog_module, "get_shared_radio_session", return_value=MagicMock()),
             patch.object(noaa_dialog_module, "StreamURLProvider"),
             patch.object(
                 noaa_dialog_module, "_get_clients", return_value=(MagicMock(), MagicMock())
@@ -216,7 +239,7 @@ class TestNOAARadioDialogModule:
 
         with (
             patch.object(noaa_dialog_module.wx, "GetApp", return_value=fake_app),
-            patch.object(noaa_dialog_module, "RadioPlayer"),
+            patch.object(noaa_dialog_module, "get_shared_radio_session", return_value=MagicMock()),
             patch.object(noaa_dialog_module, "StreamURLProvider"),
             patch.object(
                 noaa_dialog_module, "_get_clients", return_value=(MagicMock(), MagicMock())
@@ -291,7 +314,7 @@ class TestPlaybackControls:
         """Test Stop triggers player.stop."""
         dlg = _make_dialog_instance(noaa_dialog_module)
         dlg._on_stop(MagicMock())
-        dlg._player.stop.assert_called_once()
+        dlg._session.stop.assert_called_once()
 
     def test_on_volume_change(self, noaa_dialog_module):
         """Test volume slider change updates player."""
@@ -347,13 +370,44 @@ class TestCallbacks:
 class TestDialogLifecycle:
     """Tests for dialog open/close behavior."""
 
-    def test_on_close_stops_and_destroys(self, noaa_dialog_module):
-        """Test closing dialog stops player and destroys window."""
+    def test_on_close_dismisses_without_stopping(self, noaa_dialog_module):
+        """Test closing dialog leaves the shared player alone."""
         dlg = _make_dialog_instance(noaa_dialog_module)
         dlg.Destroy = MagicMock()
         dlg._on_close(MagicMock())
-        dlg._player.stop.assert_called_once()
+        dlg._player.stop.assert_not_called()
+        dlg._session.unbind_callbacks.assert_called_once()
         dlg.Destroy.assert_called_once()
+
+    def test_escape_dismisses_without_stopping(self, noaa_dialog_module):
+        """Test Escape follows the same dismiss-only path as Close."""
+        import wx
+
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg.Destroy = MagicMock()
+        event = MagicMock()
+        event.GetKeyCode.return_value = wx.WXK_ESCAPE
+
+        dlg._on_char_hook(event)
+
+        dlg._player.stop.assert_not_called()
+        dlg._session.unbind_callbacks.assert_called_once()
+        event.Skip.assert_not_called()
+
+    def test_reopen_syncs_active_stream_state(self, noaa_dialog_module):
+        """Test a reopened dialog reflects the already-playing station."""
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._session.is_playing.return_value = True
+        dlg._session.playing_station = dlg._stations[0]
+        dlg._session.current_urls = ["https://example.com/1", "https://example.com/2"]
+        dlg._session.current_url_index = 1
+
+        dlg._sync_playback_state_from_session()
+
+        dlg._status_text.SetLabel.assert_called_with("Playing: KEC49 (stream 2 of 2)")
+        dlg._play_stop_btn.SetLabel.assert_called_with("Stop")
+        dlg._next_stream_btn.Enable.assert_called_with(True)
+        dlg._prefer_btn.Enable.assert_called_with(True)
 
     def test_show_noaa_radio_dialog_creates_and_shows(self, noaa_dialog_module):
         """Test convenience function creates and shows dialog."""
@@ -419,14 +473,61 @@ class TestUnavailableStations:
         dlg._on_close = MagicMock()
         dlg._on_show_unavailable_changed = MagicMock()
         dlg._on_station_limit_changed = MagicMock()
+        dlg._on_finder_mode_changed = MagicMock()
+        dlg._on_find = MagicMock()
+        dlg._on_clear_search = MagicMock()
         dlg._prefs = MagicMock()
         dlg._prefs.get_station_limit.return_value = 25
 
         noaa_dialog_module.NOAARadioDialog._init_ui(dlg)
 
-        assert noaa_dialog_module.wx.Choice.call_count == 2
-        station_limit_choice = noaa_dialog_module.wx.Choice.call_args_list[1]
+        assert noaa_dialog_module.wx.Choice.call_count == 4
+        station_limit_choice = noaa_dialog_module.wx.Choice.call_args_list[3]
         assert station_limit_choice.kwargs["choices"] == ["10", "25", "50", "100", "All"]
+
+    def test_station_finder_widgets_are_created(self, noaa_dialog_module):
+        dlg = object.__new__(noaa_dialog_module.NOAARadioDialog)
+        dlg.Bind = MagicMock()
+        dlg._lat = None
+        dlg._lon = None
+        dlg._on_health_check = MagicMock()
+        dlg._on_station_changed = MagicMock()
+        dlg._on_choice_key = MagicMock()
+        dlg._on_play_stop = MagicMock()
+        dlg._on_next_stream = MagicMock()
+        dlg._on_set_preferred = MagicMock()
+        dlg._on_volume_change = MagicMock()
+        dlg._on_close = MagicMock()
+        dlg._on_show_unavailable_changed = MagicMock()
+        dlg._on_station_limit_changed = MagicMock()
+        dlg._on_finder_mode_changed = MagicMock()
+        dlg._on_find = MagicMock()
+        dlg._on_clear_search = MagicMock()
+        dlg._prefs = MagicMock()
+        dlg._prefs.get_station_limit.return_value = 10
+
+        noaa_dialog_module.NOAARadioDialog._init_ui(dlg)
+
+        static_labels = [
+            call.kwargs["label"]
+            for call in noaa_dialog_module.wx.StaticText.call_args_list
+            if "label" in call.kwargs
+        ]
+        button_labels = [
+            call.kwargs["label"]
+            for call in noaa_dialog_module.wx.Button.call_args_list
+            if "label" in call.kwargs
+        ]
+        assert "Station Finder" in static_labels
+        assert "Search mode:" in static_labels
+        assert "State or territory:" in static_labels
+        assert "Station results:" in static_labels
+        assert "Maximum results:" in static_labels
+        assert "Find" in button_labels
+        assert "Search" not in button_labels
+
+        mode_choice = noaa_dialog_module.wx.Choice.call_args_list[0]
+        assert mode_choice.kwargs["choices"] == list(noaa_dialog_module.FINDER_MODE_LABELS)
 
     def test_show_unavailable_toggle_refreshes_station_list(self, noaa_dialog_module):
         dlg = _make_dialog_instance(noaa_dialog_module)
@@ -461,12 +562,85 @@ class TestUnavailableStations:
 
         dlg._on_stations_loaded(
             [station],
-            ["WXK27 - Austin (162.4 MHz) - temporarily unavailable"],
+            ["WXK27 - Austin, TX - 162.400 MHz - Temporarily unavailable"],
         )
 
         dlg._station_choice.Set.assert_called_with(
-            ["WXK27 - Austin (162.4 MHz) - temporarily unavailable"]
+            ["WXK27 - Austin, TX - 162.400 MHz - Temporarily unavailable"]
         )
+
+
+class TestStationFinderControls:
+    """Tests for NOAA radio finder mode controls."""
+
+    def test_clear_resets_finder_to_search_all(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._load_stations_async = MagicMock()
+        event = MagicMock()
+
+        dlg._on_clear_search(event)
+
+        dlg._finder_mode_choice.SetSelection.assert_called_once_with(0)
+        dlg._state_choice.SetSelection.assert_called_once_with(0)
+        dlg._search_ctrl.SetValue.assert_called_once_with("")
+        dlg._load_stations_async.assert_called_once()
+        event.Skip.assert_called_once()
+
+    def test_on_find_reloads_station_list(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._load_stations_async = MagicMock()
+        event = MagicMock()
+
+        dlg._on_find(event)
+
+        dlg._load_stations_async.assert_called_once()
+        event.Skip.assert_called_once()
+
+    def test_get_finder_mode_defaults_to_nearest_when_opened_with_coordinates(
+        self,
+        noaa_dialog_module,
+    ):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        del dlg._finder_mode_choice
+
+        assert dlg._get_finder_mode() == noaa_dialog_module.FINDER_MODE_NEAREST
+
+    def test_get_selected_state_code(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._state_choice.GetSelection.return_value = 2
+
+        assert dlg._get_selected_state_code() == "PA"
+
+    def test_get_state_choices_uses_full_state_names(self, noaa_dialog_module):
+        stations = [
+            Station("WXK27", 162.4, "Austin", 0.0, 0.0, "TX"),
+            Station("KEC49", 162.55, "New York", 0.0, 0.0, "NY"),
+        ]
+
+        with patch.object(noaa_dialog_module, "StationDatabase") as mock_db_cls:
+            mock_db_cls.return_value.get_all_stations.return_value = stations
+
+            choices = noaa_dialog_module.NOAARadioDialog._get_state_choices()
+
+        assert choices == (
+            "All states and territories",
+            "New York (NY)",
+            "Texas (TX)",
+        )
+
+    def test_get_selected_state_code_supports_legacy_code_labels(self, noaa_dialog_module):
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._state_choices = ("All states and territories", "NY", "PA")
+        dlg._state_choice.GetSelection.return_value = 1
+
+        assert dlg._get_selected_state_code() == "NY"
+
+    def test_parse_coordinate_query(self, noaa_dialog_module):
+        parse = noaa_dialog_module.NOAARadioDialog._parse_coordinate_query
+
+        assert parse("30.2672, -97.7431") == (30.2672, -97.7431)
+        assert parse("Austin") is None
+        assert parse("91, 0") is None
 
 
 class TestPlayStopSwitch:
@@ -489,7 +663,19 @@ class TestPlayStopSwitch:
         dlg._playing_station = dlg._stations[0]
         dlg._station_choice.GetSelection.return_value = 0
         dlg._on_play_stop(MagicMock())
-        dlg._player.stop.assert_called()
+        dlg._session.stop.assert_called()
+        dlg._player.play.assert_not_called()
+
+    def test_playing_without_selection_triggers_stop(self, noaa_dialog_module):
+        """When playback is active but no station is selected, the button still stops."""
+        dlg = _make_dialog_instance(noaa_dialog_module)
+        dlg._player.is_playing.return_value = True
+        dlg._playing_station = dlg._stations[0]
+        dlg._station_choice.GetSelection.return_value = -1
+
+        dlg._on_play_stop(MagicMock())
+
+        dlg._session.stop.assert_called_once()
         dlg._player.play.assert_not_called()
 
     def test_different_station_playing_triggers_switch(self, noaa_dialog_module):

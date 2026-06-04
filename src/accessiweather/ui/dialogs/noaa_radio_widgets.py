@@ -7,12 +7,63 @@ from typing import Any
 import wx
 
 
-def create_noaa_radio_widgets(dialog: Any, station_limit_labels: tuple[str, ...]) -> None:
+def create_noaa_radio_widgets(
+    dialog: Any,
+    station_limit_labels: tuple[str, ...],
+    finder_mode_labels: tuple[str, ...],
+    state_choices: tuple[str, ...],
+    initial_finder_mode_index: int = 0,
+) -> None:
     """Create and layout all NOAA radio dialog controls."""
     panel = wx.Panel(dialog)
     sizer = wx.BoxSizer(wx.VERTICAL)
 
-    sizer.Add(wx.StaticText(panel, label="Station:"), 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
+    dialog._finder_panel = panel
+    dialog._finder_sizer = sizer
+
+    finder_heading = wx.StaticText(panel, label="Station Finder")
+    sizer.Add(finder_heading, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
+
+    sizer.Add(wx.StaticText(panel, label="Search mode:"), 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
+    dialog._finder_mode_labels = finder_mode_labels
+    dialog._finder_mode_choice = wx.Choice(panel, choices=list(finder_mode_labels))
+    dialog._finder_mode_choice.SetSelection(initial_finder_mode_index)
+    dialog._finder_mode_choice.Bind(wx.EVT_CHOICE, dialog._on_finder_mode_changed)
+    sizer.Add(dialog._finder_mode_choice, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
+
+    dialog._search_label = wx.StaticText(
+        panel,
+        label="Search text (call sign, city, or state):",
+    )
+    sizer.Add(dialog._search_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
+
+    find_sizer = wx.BoxSizer(wx.HORIZONTAL)
+    dialog._search_ctrl = wx.TextCtrl(
+        panel,
+        style=wx.TE_PROCESS_ENTER,
+        name="NOAA radio station finder text",
+    )
+    dialog._search_ctrl.SetHint("Call sign, city, state, or latitude, longitude")
+    dialog._search_ctrl.Bind(wx.EVT_TEXT_ENTER, dialog._on_find)
+    find_sizer.Add(dialog._search_ctrl, 1, wx.RIGHT, 5)
+
+    find_btn = wx.Button(panel, label="Find")
+    find_btn.Bind(wx.EVT_BUTTON, dialog._on_find)
+    find_sizer.Add(find_btn, 0, wx.RIGHT, 5)
+
+    clear_btn = wx.Button(panel, label="Clear")
+    clear_btn.Bind(wx.EVT_BUTTON, dialog._on_clear_search)
+    find_sizer.Add(clear_btn, 0)
+    sizer.Add(find_sizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
+
+    dialog._state_label = wx.StaticText(panel, label="State or territory:")
+    sizer.Add(dialog._state_label, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
+    dialog._state_choices = state_choices
+    dialog._state_choice = wx.Choice(panel, choices=list(state_choices))
+    dialog._state_choice.SetSelection(0)
+    sizer.Add(dialog._state_choice, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
+
+    sizer.Add(wx.StaticText(panel, label="Station results:"), 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
     dialog._station_choice = wx.Choice(panel, choices=[])
     dialog._station_choice.Bind(wx.EVT_CHOICE, dialog._on_station_changed)
@@ -20,7 +71,7 @@ def create_noaa_radio_widgets(dialog: Any, station_limit_labels: tuple[str, ...]
     sizer.Add(dialog._station_choice, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
     sizer.Add(
-        wx.StaticText(panel, label="Nearby station count:"),
+        wx.StaticText(panel, label="Maximum results:"),
         0,
         wx.LEFT | wx.RIGHT | wx.TOP,
         10,
