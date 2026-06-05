@@ -262,6 +262,7 @@ def test_visible_audio_events_are_core_lifecycle_and_severity_only():
         "severe",
         "moderate",
         "minor",
+        "unknown",
     } == USER_MUTABLE_SOUND_EVENT_KEYS
     assert "tornado_warning" not in USER_MUTABLE_SOUND_EVENT_KEYS
     assert "warning" not in USER_MUTABLE_SOUND_EVENT_KEYS

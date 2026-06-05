@@ -61,15 +61,15 @@ class TestGetCandidateSoundEvents:
 
         assert candidates == [expected_key, "alert", "notify"]
 
-    def test_unknown_severity_uses_generic_fallbacks(self):
+    def test_unknown_severity_uses_unknown_sound_before_generic_fallbacks(self):
         candidates = get_candidate_sound_events(_alert("Unknown", event="Excessive Heat Watch"))
 
-        assert candidates == ["alert", "notify"]
+        assert candidates == ["unknown", "alert", "notify"]
 
-    def test_missing_severity_uses_generic_fallbacks(self):
+    def test_missing_severity_uses_unknown_sound_before_generic_fallbacks(self):
         candidates = get_candidate_sound_events(_alert(None))
 
-        assert candidates == ["alert", "notify"]
+        assert candidates == ["unknown", "alert", "notify"]
 
     def test_alert_text_does_not_generate_specific_candidates(self):
         candidates = get_candidate_sound_events(_alert("Extreme", event="Tornado Warning"))
@@ -117,6 +117,15 @@ class TestGetCandidateSoundEvents:
             "thunderstorm_severe",
         ]
         assert candidates[-3:] == ["severe", "alert", "notify"]
+
+    def test_specific_air_quality_unknown_keeps_exact_and_hazard_before_unknown(self):
+        candidates = get_candidate_sound_events(
+            _alert("Unknown", event="Air Quality Alert"),
+            include_specific_events=True,
+        )
+
+        assert candidates[:3] == ["air_quality_alert", "air_quality_unknown", "air_quality"]
+        assert candidates[-3:] == ["unknown", "alert", "notify"]
 
     def test_primary_alert_event_takes_priority_over_description_hazard_terms(self):
         alert = WeatherAlert(
@@ -175,8 +184,8 @@ class TestChooseSoundEvent:
         assert chosen == get_candidate_sound_events(alert)[0]
         assert chosen == "extreme"
 
-    def test_choose_with_unknown_severity_returns_alert(self):
-        assert choose_sound_event(_alert("Unknown")) == "alert"
+    def test_choose_with_unknown_severity_returns_unknown(self):
+        assert choose_sound_event(_alert("Unknown")) == "unknown"
 
     def test_choose_with_specific_alert_sounds_returns_exact_event(self):
         assert (
@@ -203,7 +212,7 @@ class TestKnownConstants:
     """Tests to verify the constants are properly defined."""
 
     def test_known_severity_keys(self):
-        assert KNOWN_SEVERITY_KEYS == ["extreme", "severe", "moderate", "minor"]
+        assert KNOWN_SEVERITY_KEYS == ["extreme", "severe", "moderate", "minor", "unknown"]
 
     def test_generic_fallbacks(self):
         assert GENERIC_FALLBACKS == ["alert", "notify"]

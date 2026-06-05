@@ -39,6 +39,7 @@ SOUND_EVENT_SECTIONS: tuple[tuple[str, str, tuple[tuple[str, str], ...]], ...] =
             ("severe", "Severe severity"),
             ("moderate", "Moderate severity"),
             ("minor", "Minor severity"),
+            ("unknown", "Unknown/uncategorized severity"),
         ),
     ),
 )

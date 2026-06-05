@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - NOAA Weather Radio stations can now be saved as favorites, with a Favorites finder mode and optional nearby-station lookup from your saved AccessiWeather locations.
 
 ### Fixed
+- Unknown or uncategorized weather alerts now have a mappable default sound, and missing custom-pack event sounds fall back to the matching default sound before generic notification audio.
 - NOAA Weather Radio Station Finder now repopulates stations when leaving an empty Favorites view, so you no longer need to reopen the radio dialog.
 
 ## [0.7.2] - 2026-05-30
