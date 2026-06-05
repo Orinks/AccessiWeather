@@ -186,6 +186,7 @@ class SoundPackWizardDialog(wx.Dialog):
             "severe",
             "moderate",
             "minor",
+            "unknown",
         }
         for key, cb in self.category_checks:
             cb.SetValue(key in common)

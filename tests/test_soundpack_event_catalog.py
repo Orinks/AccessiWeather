@@ -7,6 +7,7 @@ from pathlib import Path
 from accessiweather.notifications.sound_pack_helpers import get_sound_entry
 from accessiweather.sound_events import (
     FRIENDLY_SOUND_EVENT_CHOICES,
+    KNOWN_SOUND_EVENT_KEYS,
     LEGACY_SOUND_EVENT_KEYS,
     USER_MUTABLE_SOUND_EVENT_KEYS,
 )
@@ -50,6 +51,8 @@ def test_default_pack_supports_all_visible_events_and_legacy_keys():
     pack_data = json.loads(pack_json.read_text(encoding="utf-8"))
     sounds = pack_data["sounds"]
 
+    assert "unknown" in USER_MUTABLE_SOUND_EVENT_KEYS
+    assert set(sounds) >= KNOWN_SOUND_EVENT_KEYS
     assert set(sounds) >= USER_MUTABLE_SOUND_EVENT_KEYS
     assert set(sounds) >= LEGACY_SOUND_EVENT_KEYS
     assert "severe_thunderstorm_watch" in sounds
@@ -62,7 +65,7 @@ def test_default_pack_supports_all_visible_events_and_legacy_keys():
         assert sound_path.exists(), f"{key} maps to missing file {filename}"
 
 
-def test_missing_specific_event_uses_selected_pack_notify_fallback(tmp_path):
+def test_missing_specific_event_uses_default_pack_event_before_selected_pack_notify(tmp_path):
     soundpacks_dir = tmp_path / "soundpacks"
     custom_pack = soundpacks_dir / "custom"
     default_pack = soundpacks_dir / "default"
@@ -92,4 +95,4 @@ def test_missing_specific_event_uses_selected_pack_notify_fallback(tmp_path):
         logger=logging.getLogger(__name__),
     )
 
-    assert sound_file == custom_pack / "notify.wav"
+    assert sound_file == default_pack / "notify.ogg"

@@ -25,6 +25,7 @@ KNOWN_SEVERITY_KEYS = [
     "severe",
     "moderate",
     "minor",
+    "unknown",
 ]
 
 # Ultimate fallbacks for weather alerts
@@ -53,8 +54,10 @@ def _extract_alert_type(alert: WeatherAlert) -> str | None:
 
 def _normalize_severity(sev: str | None) -> str | None:
     if not sev:
-        return None
+        return "unknown"
     s = sev.strip().lower()
+    if not s:
+        return "unknown"
     if s in KNOWN_SEVERITY_KEYS:
         return s
     # Accept common provider aliases in addition to the canonical severity keys.
@@ -64,7 +67,7 @@ def _normalize_severity(sev: str | None) -> str | None:
         "low": "minor",
         "critical": "extreme",
     }.get(s)
-    return alias if alias in KNOWN_SEVERITY_KEYS else None
+    return alias if alias in KNOWN_SEVERITY_KEYS else "unknown"
 
 
 HAZARD_KEYWORDS = {
