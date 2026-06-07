@@ -126,6 +126,30 @@ class TestAlertNotificationBatchSound:
         )
 
     @pytest.mark.asyncio
+    async def test_process_and_notify_sends_eligible_batch_to_radio_auto_tuner(
+        self, alert_manager, mock_notifier, multiple_alerts
+    ):
+        """The radio auto-tuner should receive the deduplicated eligible alert batch."""
+        radio_auto_tuner = MagicMock()
+        notification_system = AlertNotificationSystem(
+            alert_manager=alert_manager,
+            notifier=mock_notifier,
+            radio_auto_tuner=radio_auto_tuner,
+        )
+
+        notifications_sent = await notification_system.process_and_notify(multiple_alerts)
+
+        assert notifications_sent == 4
+        radio_auto_tuner.tune_for_alerts.assert_called_once()
+        tuned_alerts = radio_auto_tuner.tune_for_alerts.call_args.args[0]
+        assert [alert.severity for alert in tuned_alerts] == [
+            "Extreme",
+            "Severe",
+            "Severe",
+            "Minor",
+        ]
+
+    @pytest.mark.asyncio
     async def test_most_severe_alert_plays_sound(
         self, notification_system, mock_notifier, multiple_alerts
     ):
@@ -235,6 +259,28 @@ class TestAlertNotificationSoundControl:
         assert call_kwargs["sound_candidates"] == ["moderate", "alert", "notify"]
 
     @pytest.mark.asyncio
+    async def test_send_notification_with_unknown_severity_uses_unknown_sound(
+        self, notification_system, mock_notifier
+    ):
+        """Uncategorized alert severities should get the unknown sound candidate."""
+        alert = WeatherAlert(
+            id="test-unknown",
+            title="Air Quality Alert",
+            description="Air quality may be unhealthy for sensitive groups.",
+            severity="Unknown",
+            event="Air Quality Alert",
+        )
+
+        with patch(
+            "accessiweather.notifications.sound_player.sound_pack_uses_specific_alert_sounds",
+            return_value=False,
+        ):
+            await notification_system._send_alert_notification(alert, "new_alert", play_sound=True)
+
+        call_kwargs = mock_notifier.send_notification.call_args.kwargs
+        assert call_kwargs["sound_candidates"] == ["unknown", "alert", "notify"]
+
+    @pytest.mark.asyncio
     async def test_send_notification_can_use_specific_alert_sounds(
         self, alert_manager, mock_notifier
     ):
@@ -274,6 +320,27 @@ class TestAlertNotificationSoundControl:
         mock_notifier.send_notification.assert_called_once()
         call_kwargs = mock_notifier.send_notification.call_args.kwargs
         assert call_kwargs.get("play_sound") is False
+
+    @pytest.mark.asyncio
+    async def test_unknown_severity_below_threshold_does_not_send_notification_or_sound(
+        self, notification_system, mock_notifier
+    ):
+        """Sound fallback coverage should not bypass alert notification severity filters."""
+        alert = WeatherAlert(
+            id="test-unknown-filtered",
+            title="Air Quality Alert",
+            description="Air quality may be unhealthy for sensitive groups.",
+            severity="Unknown",
+            urgency="Expected",
+            certainty="Likely",
+            event="Air Quality Alert",
+            expires=datetime.now(UTC) + timedelta(hours=1),
+        )
+
+        result = await notification_system.process_and_notify(WeatherAlerts(alerts=[alert]))
+
+        assert result == 0
+        mock_notifier.send_notification.assert_not_called()
 
 
 class TestImmediateAlertPopupOptIn:

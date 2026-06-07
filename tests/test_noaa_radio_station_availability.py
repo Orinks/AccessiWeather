@@ -28,7 +28,7 @@ def test_filters_out_station_without_weatherindex_feeds():
     entries = service.build_entries(stations)
 
     assert [entry.station.call_sign for entry in entries] == ["WXK27"]
-    assert entries[0].label == "WXK27 - Austin (162.4 MHz)"
+    assert entries[0].label == "WXK27 - Austin, TX - 162.400 MHz - Available"
     assert entries[0].available is True
 
 
@@ -64,4 +64,4 @@ def test_includes_suppressed_station_when_show_unavailable_enabled():
     assert len(entries) == 1
     assert entries[0].available is False
     assert entries[0].unavailable_reason == "temporarily unavailable"
-    assert entries[0].label == "WXK27 - Austin (162.4 MHz) - temporarily unavailable"
+    assert entries[0].label == "WXK27 - Austin, TX - 162.400 MHz - Temporarily unavailable"

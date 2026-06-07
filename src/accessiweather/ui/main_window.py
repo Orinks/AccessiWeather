@@ -51,8 +51,7 @@ ALL_LOCATIONS_SENTINEL = "All Locations"
 # AppendSeparator
 # "Weather Assistan&t"
 # def _on_noaa_radio(self)
-# _on_noaa_radio calls get_current_location, MessageBox with "select a location",
-# show_noaa_radio_dialog, latitude, and longitude.
+# _on_noaa_radio calls show_noaa_radio_dialog as a standalone feature.
 # "Weather Assistant"
 
 

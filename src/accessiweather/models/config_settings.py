@@ -28,6 +28,8 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     sound_pack: str = "default"
     muted_sound_events: list[str] = field(default_factory=lambda: list(DEFAULT_MUTED_SOUND_EVENTS))
     specific_alert_sound_packs: list[str] = field(default_factory=list)
+    auto_tune_weather_radio_alerts: bool = False
+    auto_tune_weather_radio_duration_minutes: int = 5
     # Event-based notifications
     notify_discussion_update: bool = True
     notify_daily_climate_report_update: bool = False

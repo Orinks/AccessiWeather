@@ -20,6 +20,7 @@
     "severe": "severe.ogg",
     "moderate": "moderate.ogg",
     "minor": "minor.ogg",
+    "unknown": "alert.ogg",
     "warning": "critical_alert.ogg",
     "watch": "watch.ogg",
     "severe_risk": "critical_alert.ogg",

@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from .config import ConfigManager
     from .display import WeatherPresenter
     from .location_manager import LocationManager
+    from .noaa_radio.alert_auto_tune import AlertRadioAutoTuner
     from .ui.main_window import MainWindow
     from .weather_client import WeatherClient
 
@@ -158,6 +159,7 @@ class AccessiWeatherApp(
         # Alert management
         self.alert_manager: AlertManager | None = None
         self.alert_notification_system: AlertNotificationSystem | None = None
+        self.alert_radio_auto_tuner: AlertRadioAutoTuner | None = None
 
         # Notification system
         self._notifier = None

@@ -566,6 +566,46 @@ class TestGetSoundEntry:
             finally:
                 sp.SOUNDPACKS_DIR = original_dir
 
+    def test_get_sound_entry_uses_default_event_before_selected_pack_notify(self):
+        """A custom pack missing an event should use the default event before generic notify."""
+        from accessiweather.notifications.sound_player import get_sound_entry
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import accessiweather.notifications.sound_player as sp
+
+            original_dir = sp.SOUNDPACKS_DIR
+            sp.SOUNDPACKS_DIR = Path(tmpdir)
+
+            try:
+                pack_path = Path(tmpdir) / "custom"
+                pack_path.mkdir()
+                default_path = Path(tmpdir) / "default"
+                default_path.mkdir()
+
+                pack_data = {"name": "Custom", "sounds": {"notify": "custom_notify.wav"}}
+                (pack_path / "pack.json").write_text(json.dumps(pack_data))
+                (pack_path / "custom_notify.wav").touch()
+
+                default_data = {
+                    "name": "Default",
+                    "sounds": {
+                        "data_updated": "default_data_updated.wav",
+                        "notify": "default_notify.wav",
+                    },
+                }
+                (default_path / "pack.json").write_text(json.dumps(default_data))
+                (default_path / "default_data_updated.wav").touch()
+                (default_path / "default_notify.wav").touch()
+
+                sound_file, volume = get_sound_entry("data_updated", "custom")
+
+                assert sound_file is not None
+                assert sound_file.parent == default_path
+                assert sound_file.name == "default_data_updated.wav"
+                assert volume == 1.0
+            finally:
+                sp.SOUNDPACKS_DIR = original_dir
+
     def test_get_sound_entry_for_candidates_falls_back_within_pack(self):
         """Candidate lookup should use the next available event in the selected pack."""
         from accessiweather.notifications.sound_player import get_sound_entry_for_candidates
@@ -597,6 +637,74 @@ class TestGetSoundEntry:
                 assert sound_file is not None
                 assert sound_file.parent == pack_path
                 assert sound_file.name == "alert.wav"
+                assert volume == 1.0
+            finally:
+                sp.SOUNDPACKS_DIR = original_dir
+
+    def test_get_sound_entry_for_candidates_uses_default_pack_when_custom_lacks_candidates(self):
+        """Candidate lookup should use default-pack event coverage when a custom pack lacks it."""
+        from accessiweather.notifications.sound_player import get_sound_entry_for_candidates
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import accessiweather.notifications.sound_player as sp
+
+            original_dir = sp.SOUNDPACKS_DIR
+            sp.SOUNDPACKS_DIR = Path(tmpdir)
+
+            try:
+                pack_path = Path(tmpdir) / "custom"
+                pack_path.mkdir()
+                default_path = Path(tmpdir) / "default"
+                default_path.mkdir()
+
+                (pack_path / "pack.json").write_text(json.dumps({"name": "Custom", "sounds": {}}))
+
+                default_data = {"name": "Default", "sounds": {"unknown": "alert.ogg"}}
+                (default_path / "pack.json").write_text(json.dumps(default_data))
+                (default_path / "alert.ogg").touch()
+
+                sound_file, volume = get_sound_entry_for_candidates(
+                    ["unknown", "alert", "notify"], "custom"
+                )
+
+                assert sound_file is not None
+                assert sound_file.parent == default_path
+                assert sound_file.name == "alert.ogg"
+                assert volume == 1.0
+            finally:
+                sp.SOUNDPACKS_DIR = original_dir
+
+    def test_get_sound_entry_for_candidates_preserves_selected_pack_precedence(self):
+        """Selected-pack candidate sounds should win before default-pack fallback."""
+        from accessiweather.notifications.sound_player import get_sound_entry_for_candidates
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import accessiweather.notifications.sound_player as sp
+
+            original_dir = sp.SOUNDPACKS_DIR
+            sp.SOUNDPACKS_DIR = Path(tmpdir)
+
+            try:
+                pack_path = Path(tmpdir) / "custom"
+                pack_path.mkdir()
+                default_path = Path(tmpdir) / "default"
+                default_path.mkdir()
+
+                pack_data = {"name": "Custom", "sounds": {"unknown": "custom_unknown.wav"}}
+                (pack_path / "pack.json").write_text(json.dumps(pack_data))
+                (pack_path / "custom_unknown.wav").touch()
+
+                default_data = {"name": "Default", "sounds": {"unknown": "default_unknown.wav"}}
+                (default_path / "pack.json").write_text(json.dumps(default_data))
+                (default_path / "default_unknown.wav").touch()
+
+                sound_file, volume = get_sound_entry_for_candidates(
+                    ["unknown", "alert", "notify"], "custom"
+                )
+
+                assert sound_file is not None
+                assert sound_file.parent == pack_path
+                assert sound_file.name == "custom_unknown.wav"
                 assert volume == 1.0
             finally:
                 sp.SOUNDPACKS_DIR = original_dir
@@ -918,6 +1026,19 @@ class TestUserLevelMute:
                 "default",
                 logical_event="discussion_update",
                 muted_events=["discussion_update"],
+            )
+
+        mock_play.assert_not_called()
+
+    def test_play_notification_sound_candidates_does_not_bypass_muted_primary_with_fallbacks(self):
+        """A muted primary candidate should not play selected or default fallback sounds."""
+        from accessiweather.notifications.sound_player import play_notification_sound_candidates
+
+        with patch("accessiweather.notifications.sound_player._play_sound_file") as mock_play:
+            play_notification_sound_candidates(
+                ["unknown", "alert", "notify"],
+                "default",
+                muted_events=["unknown"],
             )
 
         mock_play.assert_not_called()

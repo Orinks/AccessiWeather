@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- AccessiWeather can now automatically tune NOAA Weather Radio for qualifying alerts that use Specific Area Message Encoding (SAME) when you turn on the opt-in setting on the Alerts tab, then stop after the duration you choose when a reliable station match is available.
+- NOAA Weather Radio now opens independently of saved weather locations and keeps playing after you close the player until you press Stop or exit the app.
+- The NOAA Weather Radio Station Finder now has clearer modes for searching all stations, browsing by full state or territory name, and finding nearby stations by coordinates.
+- NOAA Weather Radio stations can now be saved as favorites, with a Favorites finder mode and optional nearby-station lookup from your saved AccessiWeather locations.
+
+### Fixed
+- Unknown or uncategorized weather alerts now have a mappable default sound, and missing custom-pack event sounds fall back to the matching default sound before generic notification audio.
+- NOAA Weather Radio Station Finder now repopulates stations when leaving an empty Favorites view, so you no longer need to reopen the radio dialog.
+
 ## [0.7.2] - 2026-05-30
 
 ### Added

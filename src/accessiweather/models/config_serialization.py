@@ -32,6 +32,10 @@ class AppSettingsSerializationMixin:
             "sound_pack": settings.sound_pack,
             "muted_sound_events": settings.muted_sound_events,
             "specific_alert_sound_packs": settings.specific_alert_sound_packs,
+            "auto_tune_weather_radio_alerts": settings.auto_tune_weather_radio_alerts,
+            "auto_tune_weather_radio_duration_minutes": (
+                settings.auto_tune_weather_radio_duration_minutes
+            ),
             "notify_discussion_update": settings.notify_discussion_update,
             "notify_daily_climate_report_update": settings.notify_daily_climate_report_update,
             "notify_hwo_update": settings.notify_hwo_update,
@@ -135,6 +139,12 @@ class AppSettingsSerializationMixin:
             sound_pack=data.get("sound_pack", "default"),
             muted_sound_events=data.get("muted_sound_events", list(DEFAULT_MUTED_SOUND_EVENTS)),
             specific_alert_sound_packs=specific_alert_sound_packs,
+            auto_tune_weather_radio_alerts=settings_cls._as_bool(
+                data.get("auto_tune_weather_radio_alerts"), False
+            ),
+            auto_tune_weather_radio_duration_minutes=data.get(
+                "auto_tune_weather_radio_duration_minutes", 5
+            ),
             notify_discussion_update=settings_cls._as_bool(
                 data.get("notify_discussion_update"), True
             ),
@@ -275,6 +285,7 @@ class AppSettingsSerializationMixin:
         settings.validate_on_access("auto_sources_international")
         settings.validate_on_access("parallel_fetch_timeout")
         settings.validate_on_access("specific_alert_sound_packs")
+        settings.validate_on_access("auto_tune_weather_radio_duration_minutes")
         if settings.data_source not in {"auto", "nws", "openmeteo", "pirateweather"}:
             settings.data_source = "auto"
         return settings

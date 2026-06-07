@@ -118,6 +118,10 @@ class AppSettingsValidationMixin:
                         normalized.append(pack)
                 setattr(settings, setting_name, normalized)
 
+        elif setting_name == "auto_tune_weather_radio_duration_minutes":
+            if not isinstance(value, int) or value < 1 or value > 60:
+                setattr(settings, setting_name, 5)
+
         elif setting_name == "taskbar_icon_text_format":
             # Ensure format string is valid
             if not isinstance(value, str) or not value.strip():

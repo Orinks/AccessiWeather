@@ -86,10 +86,49 @@ class TestStationDatabase:
         assert isinstance(results[0].station, Station)
         assert isinstance(results[0].distance_km, float)
 
+    def test_search_by_call_sign(self) -> None:
+        db = StationDatabase()
+        results = db.search("wxk27")
+        assert [station.call_sign for station in results] == ["WXK27"]
+
+    def test_search_empty_query_browses_stations(self) -> None:
+        db = StationDatabase()
+        all_results = db.search("")
+        limited_results = db.search("   ", limit=3)
+
+        assert len(all_results) == len(db.get_all_stations())
+        assert limited_results == db.get_all_stations()[:3]
+
+    def test_search_by_city_or_state(self) -> None:
+        db = StationDatabase()
+        city_results = db.search("Austin")
+        assert any(station.call_sign == "WXK27" for station in city_results)
+
+        state_results = db.search("TX", limit=2)
+        assert len(state_results) == 2
+        assert all(station.state == "TX" for station in state_results)
+
+    def test_search_by_coordinates_returns_nearest_stations(self) -> None:
+        db = StationDatabase()
+        results = db.search("40.7128, -74.0060", limit=1)
+        assert results[0].call_sign == "KWO35"
+
     def test_custom_stations(self) -> None:
         custom = [Station("TEST1", 162.5, "Test", 0.0, 0.0, "XX")]
         db = StationDatabase(stations=custom)
         assert len(db.get_all_stations()) == 1
+
+    def test_get_stations_by_call_signs_preserves_requested_order(self) -> None:
+        stations = [
+            Station("WXK27", 162.4, "Austin", 30.2672, -97.7431, "TX"),
+            Station("KEC49", 162.55, "New York", 40.7128, -74.0060, "NY"),
+            Station("WXJ76", 162.55, "Champaign", 40.1164, -88.2434, "IL"),
+        ]
+        db = StationDatabase(stations)
+
+        results = db.get_stations_by_call_signs(["kec49", "MISSING", "WXK27", "KEC49"])
+
+        assert [station.call_sign for station in results] == ["KEC49", "WXK27"]
 
     def test_all_50_states_covered(self) -> None:
         """Verify every US state has at least one station."""

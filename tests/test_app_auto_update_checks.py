@@ -218,6 +218,33 @@ def test_request_exit_stops_timers_when_present():
     app.ExitMainLoop.assert_called_once()
 
 
+def test_request_exit_continues_when_noaa_radio_shutdown_fails(monkeypatch):
+    app = AccessiWeatherApp.__new__(AccessiWeatherApp)
+    app._update_timer = None
+    app._event_check_timer = None
+    app._auto_update_check_timer = None
+    app._activation_handoff_timer = None
+    app.config_manager = MagicMock()
+    app.config_manager.get_settings.return_value = SimpleNamespace(sound_enabled=False)
+    app.tray_icon = None
+    app.single_instance_manager = None
+    app._async_loop = None
+    app.main_window = None
+    app.ExitMainLoop = MagicMock()
+
+    import accessiweather.noaa_radio.session as session_module
+
+    monkeypatch.setattr(
+        session_module,
+        "stop_shared_radio_session",
+        MagicMock(side_effect=RuntimeError("audio cleanup failed")),
+    )
+
+    app.request_exit()
+
+    app.ExitMainLoop.assert_called_once()
+
+
 def test_refresh_runtime_settings_restarts_auto_update_checks():
     app = AccessiWeatherApp.__new__(AccessiWeatherApp)
     alert_settings = object()
