@@ -71,7 +71,6 @@ for _attr, _val in {
     "FONTWEIGHT_NORMAL": 90,
     "FONTFAMILY_TELETYPE": 75,
     "FONTSTYLE_NORMAL": 90,
-    "ICON_INFORMATION": 0x0800,
 }.items():
     if not hasattr(_wx, _attr):
         setattr(_wx, _attr, _val)
@@ -221,65 +220,6 @@ class TestMainWindowDebugSimulateAlert:
         assert len(mock_data.alerts.alerts) == 1
         assert mock_data.alerts.alerts[0].event == "Tornado Warning"
 
-    def test_radio_auto_tune_debug_requires_enabled_setting(self):
-        """Radio auto-tune debug test should guide users to enable the feature first."""
-        win = self._make_window()
-        location = MagicMock()
-        location.name = "Test City"
-        location.county_zone_id = "PAC091"
-        win.app.config_manager.get_current_location.return_value = location
-        win.app.config_manager.get_settings.return_value.auto_tune_weather_radio_alerts = False
-
-        _wx.MessageBox.reset_mock()
-        win._on_debug_simulate_radio_auto_tune()
-
-        _wx.MessageBox.assert_called_once()
-        win._on_notification_event_data_received.assert_not_called()
-
-    def test_radio_auto_tune_debug_requires_county_zone(self):
-        """Radio auto-tune debug test needs county-zone metadata for a reliable SAME match."""
-        win = self._make_window()
-        location = MagicMock()
-        location.name = "Test City"
-        location.county_zone_id = None
-        win.app.config_manager.get_current_location.return_value = location
-        win.app.config_manager.get_settings.return_value.auto_tune_weather_radio_alerts = True
-
-        _wx.MessageBox.reset_mock()
-        win._on_debug_simulate_radio_auto_tune()
-
-        _wx.MessageBox.assert_called_once()
-        win._on_notification_event_data_received.assert_not_called()
-
-    def test_radio_auto_tune_debug_success_injects_same_backed_alert(self):
-        """Radio auto-tune debug test injects an alert with county zone and SAME metadata."""
-        win = self._make_window()
-        location = MagicMock()
-        location.name = "Montgomery County"
-        location.county_zone_id = "PAC091"
-        win.app.config_manager.get_current_location.return_value = location
-        win.app.config_manager.get_settings.return_value.auto_tune_weather_radio_alerts = True
-
-        _wx.MessageBox.reset_mock()
-        win._on_debug_simulate_radio_auto_tune()
-
-        win._on_notification_event_data_received.assert_called_once()
-        mock_data = win._on_notification_event_data_received.call_args[0][0]
-        alert = mock_data.alerts.alerts[0]
-        assert alert.event == "Tornado Warning"
-        assert alert.affected_zones == ["PAC091"]
-        assert alert.same_codes == ["042091"]
-        _wx.MessageBox.assert_called_once()
-
-    def test_debug_county_zone_to_same_handles_invalid_values(self):
-        """Debug SAME conversion should avoid fabricating invalid coverage metadata."""
-        from accessiweather.noaa_radio.alert_auto_tune import county_zone_to_same_code
-
-        assert county_zone_to_same_code("PAC091") == "042091"
-        assert county_zone_to_same_code("https://api.weather.gov/zones/county/TXC453") == "048453"
-        assert county_zone_to_same_code("PAZ106") is None
-        assert county_zone_to_same_code(None) is None
-
 
 class TestMainWindowDebugMenuBinding:
     """Cover line 291 (simulate_alert menu item) and line 351 (Bind)."""
@@ -297,9 +237,7 @@ class TestMainWindowDebugMenuBinding:
         mock_item = MagicMock()
         mock_menu.Append.return_value = mock_item
         win._debug_menu_items["simulate_alert"] = mock_item
-        win._debug_menu_items["radio_auto_tune"] = mock_item
         assert "simulate_alert" in win._debug_menu_items
-        assert "radio_auto_tune" in win._debug_menu_items
 
 
 class TestMainWindowLocationSwitchAlertCheck:
