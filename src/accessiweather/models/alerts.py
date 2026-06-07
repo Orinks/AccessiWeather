@@ -33,6 +33,9 @@ class WeatherAlert:
     # from the NWS API's ``affectedZones`` field so downstream consumers (SPS
     # notification dedupe, zone-based filtering) can match without re-parsing.
     affected_zones: list[str] = field(default_factory=list)
+    # SAME/FIPS county codes from NWS alert geocoding, when present. NOAA
+    # Weather Radio coverage metadata uses these codes to map alerts to stations.
+    same_codes: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         if self.areas is None:
@@ -41,6 +44,8 @@ class WeatherAlert:
             self.references = []
         if self.affected_zones is None:
             self.affected_zones = []
+        if self.same_codes is None:
+            self.same_codes = []
 
     def get_unique_id(self) -> str:
         """

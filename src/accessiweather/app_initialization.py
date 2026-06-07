@@ -102,6 +102,7 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     # Lazy import alert components
     from .alert_manager import AlertManager
     from .alert_notification_system import AlertNotificationSystem
+    from .noaa_radio.alert_auto_tune import AlertRadioAutoTuner
 
     config_dir_str = str(app.config_manager.config_dir)
     alert_settings = config.settings.to_alert_settings()
@@ -110,11 +111,20 @@ def initialize_components(app: AccessiWeatherApp) -> None:
         alert_settings,
         runtime_state_manager=app.runtime_state_manager,
     )
+    app.alert_radio_auto_tuner = AlertRadioAutoTuner(
+        settings_provider=app.config_manager.get_settings,
+        location_provider=app.config_manager.get_current_location,
+        preferences_path=app.runtime_paths.noaa_radio_preferences_file,
+        status_callback=lambda message: (
+            app.main_window.set_status(message) if app.main_window is not None else None
+        ),
+    )
     app.alert_notification_system = AlertNotificationSystem(
         app.alert_manager,
         app._notifier,
         config.settings,
         on_alerts_popup=getattr(app, "_queue_immediate_alert_popup", None),
+        radio_auto_tuner=app.alert_radio_auto_tuner,
     )
 
     # Defer weather history service initialization

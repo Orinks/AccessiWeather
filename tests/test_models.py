@@ -219,6 +219,18 @@ class TestWeatherAlert:
         )
         assert alert.references == []
 
+    def test_same_codes_none_defaults_to_empty_list(self):
+        """Alert SAME metadata remains iterable when legacy callers pass None."""
+        alert = WeatherAlert(
+            title="Test",
+            description="desc",
+            severity="Severe",
+            urgency="Immediate",
+            certainty="Observed",
+            same_codes=None,
+        )
+        assert alert.same_codes == []
+
     def test_is_expired(self):
         """Test expiration checking."""
         # Expired alert
@@ -439,6 +451,28 @@ class TestAppSettings:
         restored = AppSettings.from_dict(settings.to_dict())
 
         assert restored.immediate_alert_details_popups is True
+
+    def test_weather_radio_auto_tune_settings_round_trip(self):
+        """Weather radio alert auto-tune settings should serialize and load cleanly."""
+        settings = AppSettings(
+            auto_tune_weather_radio_alerts=True,
+            auto_tune_weather_radio_duration_minutes=9,
+        )
+
+        restored = AppSettings.from_dict(settings.to_dict())
+
+        assert restored.auto_tune_weather_radio_alerts is True
+        assert restored.auto_tune_weather_radio_duration_minutes == 9
+
+    def test_weather_radio_auto_tune_defaults_and_validation(self):
+        """Weather radio alert auto-tune defaults to off with a 5-minute duration."""
+        settings = AppSettings.from_dict({})
+        assert settings.auto_tune_weather_radio_alerts is False
+        assert settings.auto_tune_weather_radio_duration_minutes == 5
+
+        settings.auto_tune_weather_radio_duration_minutes = 0
+        assert settings.validate_on_access("auto_tune_weather_radio_duration_minutes") is True
+        assert settings.auto_tune_weather_radio_duration_minutes == 5
 
     def test_precipitation_sensitivity_round_trip(self):
         """precipitation_sensitivity should round-trip through to_dict/from_dict."""

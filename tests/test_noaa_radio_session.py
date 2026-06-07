@@ -88,6 +88,41 @@ def test_session_forwards_callbacks_and_player_state() -> None:
     on_reconnecting.assert_called_once_with(2)
 
 
+def test_session_dispatches_worker_callback_through_wx_callafter() -> None:
+    import accessiweather.noaa_radio.session as session_module
+
+    callback = MagicMock()
+    worker_thread = object()
+    main_thread = object()
+
+    with (
+        patch.object(session_module.threading, "current_thread", return_value=worker_thread),
+        patch.object(session_module.threading, "main_thread", return_value=main_thread),
+        patch.object(session_module.wx, "CallAfter") as call_after,
+    ):
+        session_module.RadioSession._dispatch_callback(callback, "ready")
+
+    callback.assert_not_called()
+    call_after.assert_called_once_with(callback, "ready")
+
+
+def test_session_dispatch_ignores_wx_callafter_failure_from_worker() -> None:
+    import accessiweather.noaa_radio.session as session_module
+
+    callback = MagicMock()
+    worker_thread = object()
+    main_thread = object()
+
+    with (
+        patch.object(session_module.threading, "current_thread", return_value=worker_thread),
+        patch.object(session_module.threading, "main_thread", return_value=main_thread),
+        patch.object(session_module.wx, "CallAfter", side_effect=RuntimeError("closed")),
+    ):
+        session_module.RadioSession._dispatch_callback(callback, "ready")
+
+    callback.assert_not_called()
+
+
 def test_shared_session_helpers_create_and_stop_existing_session() -> None:
     import accessiweather.noaa_radio.session as session_module
 

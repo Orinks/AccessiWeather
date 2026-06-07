@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+import logging
+import threading
 from collections.abc import Callable
+
+import wx
 
 from accessiweather.noaa_radio.player import RadioPlayer
 from accessiweather.noaa_radio.stations import Station
+
+logger = logging.getLogger(__name__)
 
 
 class RadioSession:
@@ -64,25 +70,36 @@ class RadioSession:
 
     def _handle_playing(self) -> None:
         if self._on_playing is not None:
-            self._on_playing()
+            self._dispatch_callback(self._on_playing)
 
     def _handle_stopped(self) -> None:
         self.playing_station = None
         if self._on_stopped is not None:
-            self._on_stopped()
+            self._dispatch_callback(self._on_stopped)
 
     def _handle_error(self, message: str) -> None:
         self.playing_station = None
         if self._on_error is not None:
-            self._on_error(message)
+            self._dispatch_callback(self._on_error, message)
 
     def _handle_stalled(self) -> None:
         if self._on_stalled is not None:
-            self._on_stalled()
+            self._dispatch_callback(self._on_stalled)
 
     def _handle_reconnecting(self, attempt: int) -> None:
         if self._on_reconnecting is not None:
-            self._on_reconnecting(attempt)
+            self._dispatch_callback(self._on_reconnecting, attempt)
+
+    @staticmethod
+    def _dispatch_callback(callback: Callable, *args) -> None:
+        """Run session UI callbacks on the wx thread when invoked by a worker."""
+        if threading.current_thread() is threading.main_thread():
+            callback(*args)
+            return
+        try:
+            wx.CallAfter(callback, *args)
+        except Exception:
+            logger.debug("Could not dispatch radio session callback", exc_info=True)
 
 
 _shared_session: RadioSession | None = None

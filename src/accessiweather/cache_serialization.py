@@ -300,6 +300,8 @@ def _serialize_alert(alert: WeatherAlert) -> dict:
     # never carried the key and we keep the shape stable for the common case.
     if alert.affected_zones:
         payload["affected_zones"] = list(alert.affected_zones)
+    if alert.same_codes:
+        payload["same_codes"] = list(alert.same_codes)
     return payload
 
 
@@ -319,6 +321,7 @@ def _deserialize_alert(data: dict) -> WeatherAlert:
         id=data.get("id"),
         source=data.get("source"),
         affected_zones=list(data.get("affected_zones", [])),
+        same_codes=list(data.get("same_codes", [])),
     )
 
 
