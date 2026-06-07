@@ -208,8 +208,18 @@ def notifications_tab_panel(monkeypatch):
     monkeypatch.setattr(notif_mod.wx, "StaticText", _RecordedStaticText, raising=False)
     monkeypatch.setattr(notif_mod.wx, "BoxSizer", lambda *_a, **_kw: _FakeSizer(), raising=False)
     monkeypatch.setattr(notif_mod.wx, "ScrolledWindow", MagicMock(), raising=False)
-    monkeypatch.setattr(notif_mod.wx, "SpinCtrl", MagicMock(), raising=False)
-    monkeypatch.setattr(notif_mod.wx, "Choice", MagicMock(), raising=False)
+    monkeypatch.setattr(
+        notif_mod.wx,
+        "SpinCtrl",
+        lambda *_a, **_kw: _DummyControl(),
+        raising=False,
+    )
+    monkeypatch.setattr(
+        notif_mod.wx,
+        "Choice",
+        lambda *_a, **_kw: _DummyControl(),
+        raising=False,
+    )
     monkeypatch.setattr(notif_mod.wx, "Button", MagicMock(), raising=False)
 
     # wx constants referenced as flags — harmless integers suffice.
@@ -254,6 +264,20 @@ def test_tab_creates_hwo_and_sps_checkboxes_with_descriptive_labels(
     assert sps_ctrl.label == "Notify on Special Weather Statement (informational)"
 
 
+def test_tab_creates_weather_radio_auto_tune_controls_under_alerts(
+    notifications_tab_panel,
+):
+    _tab, dialog = notifications_tab_panel
+    controls = dialog._controls
+
+    assert "auto_tune_weather_radio_alerts" in controls
+    assert "auto_tune_weather_radio_duration_minutes" in controls
+    assert controls["auto_tune_weather_radio_alerts"].label == (
+        "Automatically tune NOAA Weather Radio for qualifying Specific Area "
+        "Message Encoding (SAME) alerts"
+    )
+
+
 def test_tab_intro_copy_reflects_defaults_on_behavior(notifications_tab_panel):
     _tab, _dialog = notifications_tab_panel
 
@@ -274,11 +298,15 @@ def test_load_populates_new_toggles_from_settings(notifications_tab_panel):
     settings = AppSettings()
     settings.notify_hwo_update = True
     settings.notify_sps_issued = False
+    settings.auto_tune_weather_radio_alerts = True
+    settings.auto_tune_weather_radio_duration_minutes = 8
 
     tab.load(settings)
 
     assert dialog._controls["notify_hwo_update"].GetValue() is True
     assert dialog._controls["notify_sps_issued"].GetValue() is False
+    assert dialog._controls["auto_tune_weather_radio_alerts"].GetValue() is True
+    assert dialog._controls["auto_tune_weather_radio_duration_minutes"].GetValue() == 8
 
 
 def test_save_round_trips_new_toggle_state(notifications_tab_panel):
@@ -286,8 +314,12 @@ def test_save_round_trips_new_toggle_state(notifications_tab_panel):
 
     dialog._controls["notify_hwo_update"].SetValue(False)
     dialog._controls["notify_sps_issued"].SetValue(True)
+    dialog._controls["auto_tune_weather_radio_alerts"].SetValue(True)
+    dialog._controls["auto_tune_weather_radio_duration_minutes"].SetValue(12)
 
     payload = tab.save()
 
     assert payload["notify_hwo_update"] is False
     assert payload["notify_sps_issued"] is True
+    assert payload["auto_tune_weather_radio_alerts"] is True
+    assert payload["auto_tune_weather_radio_duration_minutes"] == 12

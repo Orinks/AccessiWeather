@@ -60,6 +60,25 @@ class NotificationsTab:
             wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
             10,
         )
+        controls["auto_tune_weather_radio_alerts"] = wx.CheckBox(
+            panel,
+            label=(
+                "Automatically tune NOAA Weather Radio for qualifying Specific Area "
+                "Message Encoding (SAME) alerts"
+            ),
+        )
+        delivery_section.Add(
+            controls["auto_tune_weather_radio_alerts"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
+        controls["auto_tune_weather_radio_duration_minutes"] = self.dialog.add_labeled_control_row(
+            panel,
+            delivery_section,
+            "Play weather radio for (minutes):",
+            lambda parent: wx.SpinCtrl(parent, min=1, max=60, initial=5),
+        )
 
         coverage_section = self.dialog.create_section(
             panel,
@@ -297,6 +316,12 @@ class NotificationsTab:
         controls["immediate_alert_details_popups"].SetValue(
             getattr(settings, "immediate_alert_details_popups", False)
         )
+        controls["auto_tune_weather_radio_alerts"].SetValue(
+            getattr(settings, "auto_tune_weather_radio_alerts", False)
+        )
+        controls["auto_tune_weather_radio_duration_minutes"].SetValue(
+            getattr(settings, "auto_tune_weather_radio_duration_minutes", 5)
+        )
 
         controls["global_cooldown"].SetValue(getattr(settings, "alert_global_cooldown_minutes", 5))
         controls["per_alert_cooldown"].SetValue(
@@ -352,6 +377,10 @@ class NotificationsTab:
             "alert_notify_minor": controls["notify_minor"].GetValue(),
             "alert_notify_unknown": controls["notify_unknown"].GetValue(),
             "immediate_alert_details_popups": controls["immediate_alert_details_popups"].GetValue(),
+            "auto_tune_weather_radio_alerts": controls["auto_tune_weather_radio_alerts"].GetValue(),
+            "auto_tune_weather_radio_duration_minutes": controls[
+                "auto_tune_weather_radio_duration_minutes"
+            ].GetValue(),
             "alert_global_cooldown_minutes": controls["global_cooldown"].GetValue(),
             "alert_per_alert_cooldown_minutes": controls["per_alert_cooldown"].GetValue(),
             "alert_freshness_window_minutes": controls["freshness_window"].GetValue(),
@@ -396,6 +425,13 @@ class NotificationsTab:
             "notify_minor": "Minor severity alerts",
             "notify_unknown": "Uncategorized alerts",
             "immediate_alert_details_popups": "Open alert details immediately while AccessiWeather is running",
+            "auto_tune_weather_radio_alerts": (
+                "Automatically tune NOAA Weather Radio for qualifying Specific Area "
+                "Message Encoding (SAME) alerts"
+            ),
+            "auto_tune_weather_radio_duration_minutes": (
+                "Play weather radio for this many minutes"
+            ),
             "notify_discussion_update": "Notify when the Area Forecast Discussion changes",
             "notify_daily_climate_report_update": ("Notify when a Daily Climate Report changes"),
             "notify_hwo_update": "Notify on Hazardous Weather Outlook updates",
