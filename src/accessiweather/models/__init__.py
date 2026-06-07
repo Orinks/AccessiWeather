@@ -14,7 +14,7 @@ from .config import AppConfig, AppSettings
 # Error models
 from .errors import ApiError
 
-# Text product models (NWS AFD / HWO / SPS)
+# Text product models (NWS text products and source-labelled summaries)
 from .text_product import TextProduct
 from .weather import (
     AviationData,

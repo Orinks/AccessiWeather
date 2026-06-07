@@ -1,15 +1,17 @@
 """
 Reusable per-tab panel for the Forecast Products dialog.
 
-Each :class:`ForecastProductPanel` renders one NWS text product type (AFD, HWO,
-or SPS) with a shared shape: header, optional SPS-multi chooser, raw-product
+Each :class:`ForecastProductPanel` renders one text product type with a shared
+shape: header, optional SPS-multi chooser, raw-product
 TextCtrl, issuance timestamp StaticText, "Plain Language Summary" AI button
 (hidden until clicked), and a retry button shown only in the fetch-failed
 state.
 
-The panel owns its own content-state machine — AFD/HWO have a single product,
-SPS can have multiple. All empty/error states render inside the content area
-because ``wx.Notebook`` doesn't support per-tab disable on Windows.
+The panel owns its own content-state machine. SPS can have multiple products.
+Regional surf products include an app-owned context line above the raw text so
+they are not mistaken for point forecasts. All empty/error states render inside
+the content area because ``wx.Notebook`` doesn't support per-tab disable on
+Windows.
 
 Accessibility note: screen readers announce adjacent ``wx.StaticText``, NOT
 ``SetName()`` or tooltips (project convention). Descriptive ``label=``
@@ -36,6 +38,7 @@ from .forecast_product_formatting import (
     PRODUCT_FULL_NAMES as _PRODUCT_FULL_NAMES,
     format_issuance as _format_issuance,
     format_sps_choice_entry as _format_sps_choice_entry,
+    regional_product_intro as _regional_product_intro,
 )
 from .forecast_product_widgets import create_product_panel_widgets
 
@@ -73,7 +76,7 @@ class ForecastProductPanel(wx.Panel):
 
         Args:
             parent: Parent window (the ``wx.Notebook``).
-            product_type: One of ``"AFD"``, ``"HWO"``, ``"SPS"``.
+            product_type: A supported text product identifier.
             product_loader: Zero-arg async callable that returns the fetched
                 product(s). May raise ``TextProductFetchError``.
             ai_explainer: Optional explainer; when ``None`` the AI summary
@@ -204,7 +207,7 @@ class ForecastProductPanel(wx.Panel):
     # ------------------------------------------------------------------
     def _trigger_load(self) -> None:
         """Enter the loading state and dispatch the async loader."""
-        if self._cwa_office is None:
+        if self._cwa_office is None and self.product_type not in {"SURF", "SURF_CONDITIONS"}:
             # Nothing we can do — surface the pre-refresh message.
             self._render_no_cwa_state()
             return
@@ -313,8 +316,14 @@ class ForecastProductPanel(wx.Panel):
 
     def _render_single_product(self, product: TextProduct) -> None:
         """Render a single product (AFD / HWO / single SPS)."""
-        self._current_text = product.product_text
-        self.product_textctrl.SetValue(product.product_text)
+        product_type = getattr(product, "product_type", self.product_type)
+        intro = _regional_product_intro(product_type, self._cwa_office)
+        product_text = product.product_text
+        display_text = (
+            f"{intro}\n\n{product_text}" if intro and intro not in product_text else product_text
+        )
+        self._current_text = display_text
+        self.product_textctrl.SetValue(display_text)
         self.issuance_label.SetLabel(_format_issuance(product.issuance_time))
         self._show_sps_chooser(False)
         self._update_explain_button_state()

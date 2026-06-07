@@ -44,6 +44,17 @@ def _sps(office: str = "PHI", product_id: str = "sps-1") -> TextProduct:
     )
 
 
+def _srf(office: str = "PHI", product_id: str = "srf-1") -> TextProduct:
+    return TextProduct(
+        product_type="SRF",
+        product_id=product_id,
+        cwa_office=office,
+        issuance_time=datetime(2026, 4, 16, 14, 32, 0, tzinfo=UTC),
+        product_text="SURF ZONE FORECAST\nNew Jersey beaches...",
+        headline="Surf Zone Forecast",
+    )
+
+
 class TestForecastProductServiceCaching:
     @pytest.mark.asyncio
     async def test_repeat_calls_within_ttl_hit_cache(self):
@@ -125,11 +136,119 @@ class TestForecastProductServiceCacheKeys:
         afd = await service.get("AFD", "PHI")
         hwo = await service.get("HWO", "PHI")
         sps = await service.get("SPS", "PHI")
+        srf = await service.get("SRF", "PHI")
 
         assert isinstance(afd, TextProduct) and afd.product_type == "AFD"
         assert isinstance(hwo, TextProduct) and hwo.product_type == "HWO"
         assert isinstance(sps, list)
-        assert fetcher.call_count == 3
+        assert isinstance(srf, TextProduct) and srf.product_type == "SRF"
+        assert fetcher.call_count == 4
+
+
+class TestForecastProductServiceSurfConditions:
+    @pytest.mark.asyncio
+    async def test_official_srf_preferred_over_derived_conditions(self):
+        cache = Cache()
+        fetcher = AsyncMock(return_value=_srf())
+        openmeteo = AsyncMock(
+            return_value=TextProduct(
+                product_type="SURF_CONDITIONS",
+                product_id="openmeteo",
+                cwa_office="Open-Meteo Marine",
+                issuance_time=None,
+                product_text="derived",
+                headline="Surf conditions from Open-Meteo Marine",
+            )
+        )
+        pirate = AsyncMock(return_value=None)
+        service = ForecastProductService(
+            cache,
+            fetcher=fetcher,
+            openmeteo_marine_fetcher=openmeteo,
+            pirate_beach_fetcher=pirate,
+        )
+        location = type("Location", (), {"name": "Lumberton", "cwa_office": "PHI"})()
+
+        result = await service.get_surf_conditions_for_location(location)
+
+        assert isinstance(result, TextProduct)
+        assert result.product_type == "SRF"
+        assert "SURF ZONE FORECAST" in result.product_text
+        fetcher.assert_awaited_once_with("SRF", "PHI")
+        openmeteo.assert_not_awaited()
+        pirate.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_openmeteo_marine_used_when_official_srf_missing(self):
+        cache = Cache()
+        fetcher = AsyncMock(return_value=None)
+        openmeteo_product = TextProduct(
+            product_type="SURF_CONDITIONS",
+            product_id="openmeteo",
+            cwa_office="Open-Meteo Marine",
+            issuance_time=None,
+            product_text=(
+                "Surf conditions from Open-Meteo Marine for Porto.\n"
+                "Marine/surf conditions from Open-Meteo Marine; not an official NWS "
+                "Surf Zone Forecast."
+            ),
+            headline="Surf conditions from Open-Meteo Marine",
+        )
+        openmeteo = AsyncMock(return_value=openmeteo_product)
+        pirate = AsyncMock(return_value=None)
+        service = ForecastProductService(
+            cache,
+            fetcher=fetcher,
+            openmeteo_marine_fetcher=openmeteo,
+            pirate_beach_fetcher=pirate,
+        )
+        location = type("Location", (), {"name": "Porto", "cwa_office": ""})()
+
+        result = await service.get_surf_conditions_for_location(location)
+
+        assert result is openmeteo_product
+        assert result.product_type == "SURF_CONDITIONS"
+        assert "not an official NWS Surf Zone Forecast" in result.product_text
+        fetcher.assert_not_awaited()
+        openmeteo.assert_awaited_once_with(location)
+        pirate.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_pirate_weather_used_when_openmeteo_marine_unavailable(self):
+        cache = Cache()
+        fetcher = AsyncMock(return_value=None)
+        openmeteo = AsyncMock(return_value=None)
+        pirate_product = TextProduct(
+            product_type="SURF_CONDITIONS",
+            product_id="pirate",
+            cwa_office="Pirate Weather",
+            issuance_time=None,
+            product_text=(
+                "Surf conditions from Pirate Weather for London.\n"
+                "Beach-weather context from Pirate Weather; not an official NWS Surf "
+                "Zone Forecast."
+            ),
+            headline="Surf conditions from Pirate Weather",
+        )
+        pirate = AsyncMock(return_value=pirate_product)
+        service = ForecastProductService(
+            cache,
+            fetcher=fetcher,
+            openmeteo_marine_fetcher=openmeteo,
+            pirate_beach_fetcher=pirate,
+        )
+        location = type("Location", (), {"name": "London", "cwa_office": ""})()
+        weather_client = object()
+
+        result = await service.get_surf_conditions_for_location(
+            location,
+            weather_client=weather_client,
+        )
+
+        assert result is pirate_product
+        assert result.product_type == "SURF_CONDITIONS"
+        assert "Beach-weather context from Pirate Weather" in result.product_text
+        pirate.assert_awaited_once_with(location, weather_client=weather_client)
 
 
 class TestForecastProductServiceEmpty:

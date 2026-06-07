@@ -2,7 +2,7 @@
 Tests for the generic NWS text-product fetcher.
 
 Covers:
-- ``get_nws_text_product`` for AFD / HWO / SPS
+- ``get_nws_text_product`` for office-issued NWS text products
 - ``TextProductFetchError`` signalling network / non-200 failures
 - ``get_nws_discussion`` backward-compat wrapper preserves its tuple shape
 """
@@ -167,6 +167,35 @@ class TestGetNwsTextProductHWO:
         assert result.product_id == "hwo-001"
         assert result.cwa_office == OFFICE
         assert "HAZARDOUS WEATHER" in result.product_text
+
+
+class TestGetNwsTextProductSRF:
+    @pytest.mark.asyncio
+    async def test_srf_returns_single_official_text_product(self):
+        graph = {
+            "@graph": [
+                {"id": "srf-phi", "issuanceTime": "2026-06-07T10:00:00+00:00"},
+            ]
+        }
+        product = {
+            "productText": "SURF ZONE FORECAST\nNew Jersey and Delaware beaches...\n",
+            "issuanceTime": "2026-06-07T10:00:00+00:00",
+            "headline": "Surf Zone Forecast",
+        }
+        client = _client_for(
+            {
+                f"{NWS_BASE}/products/types/SRF/locations/{OFFICE}": _resp(graph),
+                f"{NWS_BASE}/products/srf-phi": _resp(product),
+            }
+        )
+
+        result = await get_nws_text_product("SRF", OFFICE, nws_base_url=NWS_BASE, client=client)
+
+        assert isinstance(result, TextProduct)
+        assert result.product_type == "SRF"
+        assert result.cwa_office == OFFICE
+        assert result.headline == "Surf Zone Forecast"
+        assert "SURF ZONE FORECAST" in result.product_text
 
 
 class TestGetNwsTextProductHistory:

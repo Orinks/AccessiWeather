@@ -1,14 +1,14 @@
 """
 Tests for ``MainWindow._pre_warm_products_for_location``.
 
-Unit 9 adds a background pre-warm step that fetches AFD/HWO/SPS for every
+Unit 9 adds a background pre-warm step that fetches AFD/HWO/SPS/SRF for every
 saved US location with a populated ``cwa_office`` whenever the active
 location's weather refresh succeeds (and symmetrically for non-active
 locations inside ``_pre_warm_other_locations``).
 
 The tests exercise the helper directly rather than driving the full
-``_fetch_weather_data`` path — the helper is where all the policy lives
-(US-only, cwa gating, per-product failure isolation) and driving it
+``_fetch_weather_data`` path — the helper is where the official NWS text-product
+policy lives (US-only, cwa gating, per-product failure isolation) and driving it
 directly keeps the test surface narrow.
 """
 
@@ -69,14 +69,14 @@ def test_pre_warm_fetches_text_products_and_daily_climate_for_us_location():
     win = _make_window(service)
     asyncio.run(win._pre_warm_products_for_location(_us_location("Philadelphia")))
 
-    assert service.get.await_count == 3
+    assert service.get.await_count == 4
     fetched_types = {call.args[0] for call in service.get.await_args_list}
-    assert fetched_types == {"AFD", "HWO", "SPS"}
+    assert fetched_types == {"AFD", "HWO", "SPS", "SRF"}
     service.get_daily_climate_report_for_location.assert_awaited_once()
 
 
 def test_pre_warm_starts_daily_climate_without_waiting_for_other_products():
-    """CLI pre-warm should begin beside AFD/HWO/SPS so the tab opens warm."""
+    """CLI pre-warm should begin beside AFD/HWO/SPS/SRF so the tab opens warm."""
     started: list[str] = []
     release_products = asyncio.Event()
 
@@ -134,7 +134,7 @@ def test_pre_warm_skips_us_location_without_cwa_office():
 
 
 def test_pre_warm_fetch_error_isolated_to_single_product():
-    """A ``TextProductFetchError`` on HWO doesn't block AFD or SPS."""
+    """A ``TextProductFetchError`` on HWO doesn't block other NWS products."""
     service = MagicMock()
 
     async def _get(product_type: str, _cwa: str, **_kw):
@@ -148,9 +148,9 @@ def test_pre_warm_fetch_error_isolated_to_single_product():
     # Should NOT raise — failure isolation is the whole point.
     asyncio.run(win._pre_warm_products_for_location(_us_location("Philadelphia")))
 
-    assert service.get.await_count == 3
+    assert service.get.await_count == 4
     fetched_types = [call.args[0] for call in service.get.await_args_list]
-    assert fetched_types == ["AFD", "HWO", "SPS"]
+    assert fetched_types == ["AFD", "HWO", "SPS", "SRF"]
 
 
 def test_pre_warm_unexpected_exception_is_swallowed():
@@ -167,7 +167,7 @@ def test_pre_warm_unexpected_exception_is_swallowed():
     win = _make_window(service)
     asyncio.run(win._pre_warm_products_for_location(_us_location("Philadelphia")))
 
-    assert service.get.await_count == 3
+    assert service.get.await_count == 4
 
 
 class _FakeWeatherClient:
@@ -236,7 +236,7 @@ async def test_fetch_weather_data_warms_active_products_before_ui_delivery():
 
 @pytest.mark.asyncio
 async def test_pre_warm_other_locations_iterates_saved_us_locations():
-    """With three saved US locations, the non-active two each get three fetches."""
+    """With three saved US locations, the non-active two each get four fetches."""
     service = MagicMock()
     service.get = AsyncMock(return_value=None)
 
@@ -250,12 +250,17 @@ async def test_pre_warm_other_locations_iterates_saved_us_locations():
 
     await win._pre_warm_other_locations(active)
 
-    # Two non-active US locations * 3 product types = 6 fetches.
-    assert service.get.await_count == 6
+    # Two non-active US locations * 4 product types = 8 fetches.
+    assert service.get.await_count == 8
     cwas_by_product = {call.args[0]: set() for call in service.get.await_args_list}
     for call in service.get.await_args_list:
         cwas_by_product[call.args[0]].add(call.args[1])
-    assert cwas_by_product == {"AFD": {"OKX", "BOX"}, "HWO": {"OKX", "BOX"}, "SPS": {"OKX", "BOX"}}
+    assert cwas_by_product == {
+        "AFD": {"OKX", "BOX"},
+        "HWO": {"OKX", "BOX"},
+        "SPS": {"OKX", "BOX"},
+        "SRF": {"OKX", "BOX"},
+    }
 
 
 @pytest.mark.asyncio
@@ -272,7 +277,7 @@ async def test_pre_warm_other_locations_skips_non_us_peers():
 
     await win._pre_warm_other_locations(active)
 
-    # Only the US peer contributes fetches (3), the non-US one is skipped.
-    assert service.get.await_count == 3
+    # Only the US peer contributes fetches (4), the non-US one is skipped.
+    assert service.get.await_count == 4
     fetched_cwas = {call.args[1] for call in service.get.await_args_list}
     assert fetched_cwas == {"OKX"}

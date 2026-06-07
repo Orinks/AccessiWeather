@@ -1,5 +1,5 @@
 """
-Forecast product service — caches NWS text products (AFD / HWO / SPS).
+Forecast product service — caches NWS text products and surf/beach summaries.
 
 Wraps :func:`accessiweather.weather_client_nws.get_nws_text_product` with a
 per-key TTL cache driven by :class:`accessiweather.cache.Cache`. TTLs differ by
@@ -8,6 +8,7 @@ product type:
 - AFD: 3600 s  (discussions update every ~6 h)
 - HWO: 7200 s  (hazardous-weather outlooks update once daily)
 - SPS:  900 s  (special statements are time-sensitive)
+- SRF: 3600 s  (surf forecasts are office-issued regional beach products)
 
 Failed fetches (:class:`TextProductFetchError`) are NOT cached — the caller
 sees the exception and the next call retries.
@@ -30,6 +31,10 @@ from ..iem_client import (
     fetch_iem_wpc_outlook,
 )
 from ..models import TextProduct
+from ..surf_conditions import (
+    fetch_openmeteo_marine_surf_conditions,
+    fetch_pirate_weather_beach_conditions,
+)
 from ..weather_client_nws import (
     TextProductFetchError,
     get_nws_daily_climate_locations,
@@ -41,7 +46,7 @@ from ..weather_client_nws import (
 
 logger = logging.getLogger(__name__)
 
-ProductType = Literal["AFD", "HWO", "SPS"]
+ProductType = Literal["AFD", "HWO", "SPS", "SRF"]
 
 # Per-type cache TTLs in seconds. Keyed by product_type; see module docstring
 # for rationale.
@@ -49,6 +54,8 @@ _PRODUCT_TTLS: dict[str, int] = {
     "AFD": 3600,
     "HWO": 7200,
     "SPS": 900,
+    "SRF": 3600,
+    "SURF_CONDITIONS": 3600,
 }
 
 FetcherResult = TextProduct | list[TextProduct] | None
@@ -57,6 +64,8 @@ HistoryFetcher = Callable[..., Awaitable[list[TextProduct]]]
 DailyClimateFetcher = Callable[..., Awaitable[TextProduct | None]]
 ObservationStationFetcher = Callable[[float, float], Awaitable[list[str]]]
 DailyClimateLocationFetcher = Callable[[], Awaitable[set[str]]]
+OpenMeteoMarineFetcher = Callable[..., Awaitable[TextProduct | None]]
+PirateBeachFetcher = Callable[..., Awaitable[TextProduct | None]]
 
 
 class ForecastProductService:
@@ -73,6 +82,8 @@ class ForecastProductService:
         daily_climate_fetcher: DailyClimateFetcher | None = None,
         observation_station_fetcher: ObservationStationFetcher | None = None,
         daily_climate_location_fetcher: DailyClimateLocationFetcher | None = None,
+        openmeteo_marine_fetcher: OpenMeteoMarineFetcher | None = None,
+        pirate_beach_fetcher: PirateBeachFetcher | None = None,
     ) -> None:
         """
         Initialize the service.
@@ -91,6 +102,10 @@ class ForecastProductService:
                 nearby NWS observation stations for daily climate fallback.
             daily_climate_location_fetcher: Optional async callable used to fetch
                 the NWS CLI-capable location index.
+            openmeteo_marine_fetcher: Optional async callable used for derived
+                global surf/marine conditions.
+            pirate_beach_fetcher: Optional async callable used for Pirate Weather
+                beach-weather context when marine wave data is unavailable.
 
         """
         self._cache = cache
@@ -104,6 +119,12 @@ class ForecastProductService:
         )
         self._daily_climate_location_fetcher: DailyClimateLocationFetcher = (
             daily_climate_location_fetcher or get_nws_daily_climate_locations
+        )
+        self._openmeteo_marine_fetcher: OpenMeteoMarineFetcher = (
+            openmeteo_marine_fetcher or fetch_openmeteo_marine_surf_conditions
+        )
+        self._pirate_beach_fetcher: PirateBeachFetcher = (
+            pirate_beach_fetcher or fetch_pirate_weather_beach_conditions
         )
 
     @staticmethod
@@ -133,6 +154,14 @@ class ForecastProductService:
         longitude = getattr(location, "longitude", "")
         name = getattr(location, "name", "")
         return f"daily_climate_location_station:{name}:{latitude}:{longitude}"
+
+    @staticmethod
+    def _surf_conditions_cache_key(location: object) -> str:
+        latitude = getattr(location, "latitude", "")
+        longitude = getattr(location, "longitude", "")
+        cwa = getattr(location, "cwa_office", "")
+        name = getattr(location, "name", "")
+        return f"surf_conditions:{name}:{latitude}:{longitude}:{cwa}"
 
     @staticmethod
     def _normalize_daily_climate_station(station_id: str | None) -> str:
@@ -227,6 +256,54 @@ class ForecastProductService:
                 return product
         return None
 
+    async def get_surf_conditions_for_location(
+        self,
+        location: object,
+        *,
+        weather_client: object | None = None,
+        **fetcher_kwargs: Any,
+    ) -> TextProduct | None:
+        """
+        Return official NWS SRF when available, otherwise derived surf/beach conditions.
+
+        The official NWS product keeps ``product_type="SRF"``. Derived Open-Meteo
+        or Pirate Weather summaries use ``product_type="SURF_CONDITIONS"`` so the
+        UI can label them as non-official surf/beach context.
+        """
+        key = self._surf_conditions_cache_key(location)
+        if self._cache.has_key(key):
+            cached = self._cache.get(key)
+            if cached is None or isinstance(cached, TextProduct):
+                return cached
+
+        cwa_office = (getattr(location, "cwa_office", None) or "").strip().upper()
+        if cwa_office:
+            try:
+                official = await self.get("SRF", cwa_office, **fetcher_kwargs)
+            except TextProductFetchError:
+                official = None
+            if isinstance(official, TextProduct):
+                self._cache.set(key, official, ttl=self._TTLS.get("SRF", 3600))
+                return official
+
+        try:
+            derived = await self._openmeteo_marine_fetcher(location, **fetcher_kwargs)
+        except Exception:  # noqa: BLE001
+            logger.debug("Open-Meteo surf conditions fallback failed", exc_info=True)
+            derived = None
+        if derived is None:
+            try:
+                derived = await self._pirate_beach_fetcher(
+                    location,
+                    weather_client=weather_client,
+                )
+            except Exception:  # noqa: BLE001
+                logger.debug("Pirate Weather beach conditions fallback failed", exc_info=True)
+                derived = None
+
+        self._cache.set(key, derived, ttl=self._TTLS.get("SURF_CONDITIONS", 3600))
+        return derived
+
     async def get(
         self,
         product_type: ProductType,
@@ -272,7 +349,7 @@ class ForecastProductService:
         Return cached or freshly-fetched NWS text-product history.
 
         History uses a separate cache namespace from the current-product path so
-        current AFD/HWO/SPS fetches never collide with historical listings.
+        current AFD/HWO/SPS/SRF fetches never collide with historical listings.
         """
         key = self._history_cache_key(product_type, cwa_office, limit, start, end)
 

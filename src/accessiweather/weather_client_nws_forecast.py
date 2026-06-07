@@ -240,7 +240,7 @@ async def _fetch_text_product_by_id(
 
 
 async def get_nws_text_product(
-    product_type: Literal[AFD, HWO, SPS],
+    product_type: str,
     cwa_office: str | None,
     *,
     nws_base_url: str = "https://api.weather.gov",
@@ -249,7 +249,7 @@ async def get_nws_text_product(
     user_agent: str = "AccessiWeather (github.com/orinks/accessiweather)",
 ) -> TextProduct | list[TextProduct] | None:
     """
-    Fetch an NWS text product (AFD / HWO / SPS) for a CWA office.
+    Fetch an NWS text product for a CWA office.
 
     Endpoint: ``/products/types/{product_type}/locations/{cwa_office}`` returns
     an ``@graph`` of product stubs; each is fetched individually via
@@ -257,8 +257,9 @@ async def get_nws_text_product(
 
     Return convention:
         - ``cwa_office`` falsy -> ``None`` (no HTTP call).
-        - AFD or HWO, empty ``@graph`` -> ``None``.
-        - AFD or HWO, products present -> single ``TextProduct`` (newest @graph entry).
+        - AFD, HWO, SRF, or similar single-product types, empty ``@graph`` -> ``None``.
+        - AFD, HWO, SRF, or similar single-product types present -> single
+          ``TextProduct`` (newest @graph entry).
         - SPS -> ``list[TextProduct]`` (possibly empty), sorted newest-first.
 
     Raises:
