@@ -126,6 +126,30 @@ class TestAlertNotificationBatchSound:
         )
 
     @pytest.mark.asyncio
+    async def test_process_and_notify_sends_eligible_batch_to_radio_auto_tuner(
+        self, alert_manager, mock_notifier, multiple_alerts
+    ):
+        """The radio auto-tuner should receive the deduplicated eligible alert batch."""
+        radio_auto_tuner = MagicMock()
+        notification_system = AlertNotificationSystem(
+            alert_manager=alert_manager,
+            notifier=mock_notifier,
+            radio_auto_tuner=radio_auto_tuner,
+        )
+
+        notifications_sent = await notification_system.process_and_notify(multiple_alerts)
+
+        assert notifications_sent == 4
+        radio_auto_tuner.tune_for_alerts.assert_called_once()
+        tuned_alerts = radio_auto_tuner.tune_for_alerts.call_args.args[0]
+        assert [alert.severity for alert in tuned_alerts] == [
+            "Extreme",
+            "Severe",
+            "Severe",
+            "Minor",
+        ]
+
+    @pytest.mark.asyncio
     async def test_most_severe_alert_plays_sound(
         self, notification_system, mock_notifier, multiple_alerts
     ):

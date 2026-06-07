@@ -244,6 +244,29 @@ class AudioTab:
             10,
         )
 
+        weather_radio_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Weather radio alerts",
+            "Automatically tune NOAA Weather Radio for qualifying alert notifications.",
+        )
+        controls["auto_tune_weather_radio_alerts"] = wx.CheckBox(
+            panel,
+            label="Automatically play a matching NOAA Weather Radio station for alert notifications",
+        )
+        weather_radio_section.Add(
+            controls["auto_tune_weather_radio_alerts"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
+        controls["auto_tune_weather_radio_duration_minutes"] = self.dialog.add_labeled_control_row(
+            panel,
+            weather_radio_section,
+            "Play weather radio for (minutes):",
+            lambda parent: wx.SpinCtrl(parent, min=1, max=60, initial=5),
+        )
+
         panel.SetSizer(sizer)
         self.dialog.notebook.AddPage(panel, page_label)
         return panel
@@ -267,6 +290,12 @@ class AudioTab:
         self._refresh_specific_alert_sounds_control()
 
         self.set_event_sound_states(getattr(settings, "muted_sound_events", []))
+        controls["auto_tune_weather_radio_alerts"].SetValue(
+            getattr(settings, "auto_tune_weather_radio_alerts", False)
+        )
+        controls["auto_tune_weather_radio_duration_minutes"].SetValue(
+            getattr(settings, "auto_tune_weather_radio_duration_minutes", 5)
+        )
 
     def save(self) -> dict:
         """Return Audio tab settings as a dict."""
@@ -286,6 +315,10 @@ class AudioTab:
             "sound_pack": sound_pack,
             "muted_sound_events": self._get_muted_sound_events(),
             "specific_alert_sound_packs": sorted(specific_packs),
+            "auto_tune_weather_radio_alerts": controls["auto_tune_weather_radio_alerts"].GetValue(),
+            "auto_tune_weather_radio_duration_minutes": controls[
+                "auto_tune_weather_radio_duration_minutes"
+            ].GetValue(),
         }
 
     def setup_accessibility(self):
@@ -297,6 +330,12 @@ class AudioTab:
             "sound_pack": "Sound pack",
             "event_sounds_summary": "Event sound summary",
             "configure_event_sounds": "Choose event sounds",
+            "auto_tune_weather_radio_alerts": (
+                "Automatically play a matching NOAA Weather Radio station for alert notifications"
+            ),
+            "auto_tune_weather_radio_duration_minutes": (
+                "Play weather radio for this many minutes"
+            ),
         }
         for key, name in names.items():
             controls[key].SetName(name)

@@ -320,6 +320,12 @@ class AppLifecycleMixin:
             activation_handoff_timer.Stop()
 
         try:
+            if getattr(self, "alert_radio_auto_tuner", None) is not None:
+                self.alert_radio_auto_tuner.stop()
+        except Exception:
+            logger.debug("Could not stop weather radio auto-tune during shutdown", exc_info=True)
+
+        try:
             from .noaa_radio.session import stop_shared_radio_session
 
             stop_shared_radio_session()

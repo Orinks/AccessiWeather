@@ -438,6 +438,7 @@ class TestGetNwsAlertsParameters:
                             "https://api.weather.gov/zones/county/TXC121",
                             "https://api.weather.gov/zones/forecast/TXZ119",
                         ],
+                        "geocode": {"SAME": ["048121"]},
                     },
                 }
             ]
@@ -446,6 +447,7 @@ class TestGetNwsAlertsParameters:
         result = parse_nws_alerts(data)
 
         assert result.alerts[0].affected_zones == ["TXC121", "TXZ119"]
+        assert result.alerts[0].same_codes == ["048121"]
 
 
 class TestAlertTimeParsing:

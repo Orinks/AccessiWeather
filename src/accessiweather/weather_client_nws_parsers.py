@@ -223,6 +223,11 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
         if not isinstance(affected_zones_raw, list):
             affected_zones_raw = []
 
+        geocode = props.get("geocode") or {}
+        same_codes_raw = geocode.get("SAME", []) if isinstance(geocode, dict) else []
+        if not isinstance(same_codes_raw, list):
+            same_codes_raw = []
+
         alert = WeatherAlert(
             title=props.get("headline", "Weather Alert"),
             description=props.get("description", ""),
@@ -245,6 +250,11 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
                 zone.rsplit("/", 1)[-1]
                 for zone in affected_zones_raw
                 if isinstance(zone, str) and zone
+            ],
+            same_codes=[
+                str(same_code).strip()
+                for same_code in same_codes_raw
+                if isinstance(same_code, str | int) and str(same_code).strip()
             ],
         )
         alerts.append(alert)

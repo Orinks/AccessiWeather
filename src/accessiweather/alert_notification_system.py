@@ -6,9 +6,12 @@ with the AlertManager to provide user-controlled, accessible notifications
 with proper cooldown and filtering capabilities.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from .alert_lifecycle import AlertLifecycleDiff
 from .alert_manager import AlertManager, AlertSettings
@@ -27,6 +30,9 @@ from .models import AppSettings, WeatherAlert, WeatherAlerts
 from .notification_activation import NotificationActivationRequest, serialize_activation_request
 from .notifications.toast_notifier import SafeDesktopNotifier
 
+if TYPE_CHECKING:
+    from .noaa_radio.alert_auto_tune import AlertRadioAutoTuner
+
 logger = logging.getLogger(__name__)
 
 
@@ -39,12 +45,14 @@ class AlertNotificationSystem:
         notifier: SafeDesktopNotifier | None = None,
         settings: AppSettings | None = None,
         on_alerts_popup: Callable[[list[WeatherAlert]], None] | None = None,
+        radio_auto_tuner: AlertRadioAutoTuner | None = None,
     ):
         """Initialize the instance."""
         self.alert_manager = alert_manager
         self.notifier = notifier or SafeDesktopNotifier()
         self.settings = settings
         self.on_alerts_popup = on_alerts_popup
+        self.radio_auto_tuner = radio_auto_tuner
 
         logger.info("AlertNotificationSystem initialized")
 
@@ -114,6 +122,7 @@ class AlertNotificationSystem:
             )
 
             self._trigger_immediate_alert_popup_if_enabled(sorted_notifications)
+            self._trigger_radio_auto_tune_if_enabled(sorted_notifications)
 
             # Send notifications - only play sound for the first (most severe) one
             notifications_sent = 0
@@ -139,6 +148,20 @@ class AlertNotificationSystem:
         except Exception as e:
             logger.error(f"Error processing alert notifications: {e}")
             return 0
+
+    def _trigger_radio_auto_tune_if_enabled(
+        self,
+        sorted_notifications: list[tuple[WeatherAlert, str]],
+    ) -> None:
+        """Start or extend NOAA radio auto-tune for the eligible alert batch."""
+        if self.radio_auto_tuner is None:
+            return
+        try:
+            self.radio_auto_tuner.tune_for_alerts(
+                [alert for alert, _reason in sorted_notifications]
+            )
+        except Exception as exc:
+            logger.warning("Failed to schedule weather radio auto-tune: %s", exc)
 
     def _trigger_immediate_alert_popup_if_enabled(
         self,

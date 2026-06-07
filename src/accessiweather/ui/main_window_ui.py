@@ -345,6 +345,11 @@ class MainWindowUIMixin:
                 "Test: &Simulate Alert Change (poll cycle)",
                 "Inject a mock alert into the next event check cycle to test the full polling path",
             )
+            self._debug_menu_items["radio_auto_tune"] = debug_menu.Append(
+                wx.ID_ANY,
+                "Test: Weather &Radio Auto-Tune Alert",
+                "Inject a SAME-backed alert for the current location to test radio auto-tune",
+            )
             debug_menu.AppendSeparator()
             self._debug_menu_items["diagnostics"] = debug_menu.Append(
                 wx.ID_ANY,
@@ -409,6 +414,11 @@ class MainWindowUIMixin:
                 wx.EVT_MENU,
                 lambda e: self._on_debug_simulate_alert(),
                 self._debug_menu_items["simulate_alert"],
+            )
+            self.Bind(
+                wx.EVT_MENU,
+                lambda e: self._on_debug_simulate_radio_auto_tune(),
+                self._debug_menu_items["radio_auto_tune"],
             )
         self.Bind(wx.EVT_MENU, lambda e: self._on_report_issue(), report_issue_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_about(), about_item)

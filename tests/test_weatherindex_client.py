@@ -89,3 +89,38 @@ class TestWeatherIndexClient:
         client.get_stream_urls("WXJ76")
 
         assert client._session.get.call_count == 2  # type: ignore[union-attr]
+
+    def test_get_station_metadata_parses_coverage_fields(self) -> None:
+        client = self._make_client(
+            {
+                "callsign": "WXK27",
+                "wfo": "Austin/San Antonio TX",
+                "latitude": 30.3219,
+                "longitude": -97.8033,
+                "served_counties": [
+                    {
+                        "county": "Travis",
+                        "same_code": "048453",
+                        "state": "TX",
+                        "area": "All",
+                    }
+                ],
+            }
+        )
+
+        metadata = client.get_station_metadata("wxk27")
+
+        assert metadata is not None
+        assert metadata.call_sign == "WXK27"
+        assert metadata.wfo == "Austin/San Antonio TX"
+        assert metadata.latitude == 30.3219
+        assert metadata.longitude == -97.8033
+        assert metadata.served_counties[0].same_code == "048453"
+
+    def test_get_station_metadata_allows_empty_coverage_payload(self) -> None:
+        client = self._make_client({"feeds": []})
+
+        metadata = client.get_station_metadata("WXJ76")
+
+        assert metadata is not None
+        assert metadata.served_counties == ()
