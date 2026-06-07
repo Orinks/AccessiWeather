@@ -30,6 +30,47 @@ StatusCallback = Callable[[str], None]
 ThreadFactory = Callable[[Callable[[], None]], threading.Thread]
 
 _COUNTY_ZONE_RE = re.compile(r"^(?P<state>[A-Z]{2})C(?P<county>\d{3})$")
+_NWR_SAME_WEATHER_EVENT_NAMES: frozenset[str] = frozenset(
+    {
+        # Weather-related operational NWR-SAME event codes published by NWS.
+        # Weather advisories and their follow-up statements are intentionally
+        # absent because NWSI 10-1710 Appendix G says they have no SAME/EAS
+        # event code and are not broadcast with SAME/EAS headers or 1050 Hz WAT.
+        "blizzard warning",
+        "coastal flood watch",
+        "coastal flood warning",
+        "dust storm warning",
+        "extreme wind warning",
+        "flash flood watch",
+        "flash flood warning",
+        "flash flood statement",
+        "flood watch",
+        "flood warning",
+        "flood statement",
+        "high wind watch",
+        "high wind warning",
+        "hurricane watch",
+        "hurricane warning",
+        "hurricane statement",
+        "hurricane local statement",
+        "severe thunderstorm watch",
+        "severe thunderstorm warning",
+        "severe weather statement",
+        "snow squall warning",
+        "special marine warning",
+        "special weather statement",
+        "storm surge watch",
+        "storm surge warning",
+        "tornado watch",
+        "tornado warning",
+        "tropical storm watch",
+        "tropical storm warning",
+        "tsunami watch",
+        "tsunami warning",
+        "winter storm watch",
+        "winter storm warning",
+    }
+)
 _STATE_FIPS: dict[str, str] = {
     "AL": "01",
     "AK": "02",
@@ -103,6 +144,17 @@ def county_zone_to_same_code(zone_id: str | None) -> str | None:
     if state_fips is None:
         return None
     return f"0{state_fips}{match.group('county')}"
+
+
+def is_nwr_same_weather_event(alert: WeatherAlert) -> bool:
+    """Return whether an alert event is eligible for NWR-SAME auto-tune."""
+    return _normalize_event_name(alert.event) in _NWR_SAME_WEATHER_EVENT_NAMES
+
+
+def _normalize_event_name(value: object) -> str:
+    if not isinstance(value, str):
+        return ""
+    return " ".join(value.strip().casefold().split())
 
 
 class AlertStationResolver(Protocol):
@@ -301,6 +353,11 @@ class AlertRadioAutoTuner:
         if not alerts:
             return
 
+        eligible_alerts = [alert for alert in alerts if is_nwr_same_weather_event(alert)]
+        if not eligible_alerts:
+            logger.info("Weather radio auto-tune skipped: no NWR-SAME weather event in alert batch")
+            return
+
         settings = self._safe_get_settings()
         if not getattr(settings, "auto_tune_weather_radio_alerts", False):
             return
@@ -317,7 +374,7 @@ class AlertRadioAutoTuner:
                 logger.info(
                     "Extended pending or active weather radio auto-tune for alert batch of "
                     "%d alert(s)",
-                    len(alerts),
+                    len(eligible_alerts),
                 )
                 return
 
@@ -337,7 +394,9 @@ class AlertRadioAutoTuner:
             self._auto_station_call_sign = None
             self._stop_at_monotonic = stop_at
             self._wake_event.clear()
-            self._worker = self._thread_factory(lambda: self._worker_loop(list(alerts), generation))
+            self._worker = self._thread_factory(
+                lambda: self._worker_loop(list(eligible_alerts), generation)
+            )
             self._worker.start()
 
         logger.info(

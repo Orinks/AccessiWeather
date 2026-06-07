@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
-- Settings can now automatically play a matching NOAA Weather Radio station for qualifying alert notifications, then stop after the chosen duration when a reliable station match is available.
+- Settings can now automatically play a matching NOAA Weather Radio station for qualifying NWR/SAME alert notifications, then stop after the chosen duration when a reliable station match is available.
 - Debug mode now includes a SAME-backed weather radio auto-tune alert test for manually verifying matching station playback.
 - NOAA Weather Radio now opens independently of saved weather locations and keeps playing after you close the player until you press Stop or exit the app.
 - The NOAA Weather Radio Station Finder now has clearer modes for searching all stations, browsing by full state or territory name, and finding nearby stations by coordinates.

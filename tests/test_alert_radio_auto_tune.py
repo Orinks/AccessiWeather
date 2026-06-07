@@ -9,6 +9,7 @@ from accessiweather.models import AppSettings, Location, WeatherAlert
 from accessiweather.noaa_radio.alert_auto_tune import (
     AlertRadioAutoTuner,
     WeatherIndexAlertStationResolver,
+    is_nwr_same_weather_event,
 )
 from accessiweather.noaa_radio.station_db import StationDatabase
 from accessiweather.noaa_radio.stations import Station
@@ -103,6 +104,14 @@ def _forecast_zone_alert() -> WeatherAlert:
     return alert
 
 
+def _air_quality_alert() -> WeatherAlert:
+    alert = _alert()
+    alert.title = "Air Quality Alert"
+    alert.event = "Air Quality Alert"
+    alert.severity = "Moderate"
+    return alert
+
+
 def _settings(**kwargs) -> AppSettings:
     return AppSettings(auto_tune_weather_radio_alerts=True, **kwargs)
 
@@ -172,6 +181,48 @@ def test_auto_tune_without_reliable_station_match_does_not_play_station():
     started[0]()
 
     _url_provider.get_stream_urls.assert_not_called()
+
+
+def test_auto_tune_skips_non_nwr_same_event_without_worker():
+    tuner, _session, started, _url_provider, resolver = _make_tuner()
+
+    tuner.tune_for_alerts([_air_quality_alert()])
+
+    assert started == []
+    assert resolver.calls == []
+    _url_provider.get_stream_urls.assert_not_called()
+
+
+def test_auto_tune_filters_mixed_batch_to_nwr_same_events_only():
+    tuner, _session, started, _url_provider, resolver = _make_tuner()
+
+    tuner.tune_for_alerts([_air_quality_alert(), _alert()])
+    assert len(started) == 1
+    _url_provider.get_stream_urls.return_value = []
+    started[0]()
+
+    resolved_alerts = resolver.calls[0][0]
+    assert [alert.event for alert in resolved_alerts] == ["Tornado Warning"]
+
+
+def test_nwr_same_weather_event_eligibility_includes_operational_weather_events():
+    assert is_nwr_same_weather_event(WeatherAlert("Tornado", "body", event="Tornado Warning"))
+    assert is_nwr_same_weather_event(
+        WeatherAlert("Special Weather", "body", event="Special Weather Statement")
+    )
+    assert is_nwr_same_weather_event(
+        WeatherAlert("Snow Squall", "body", event="Snow Squall Warning")
+    )
+
+
+def test_nwr_same_weather_event_eligibility_excludes_advisory_only_events():
+    assert not is_nwr_same_weather_event(
+        WeatherAlert("Air Quality", "body", event="Air Quality Alert")
+    )
+    assert not is_nwr_same_weather_event(WeatherAlert("Heat", "body", event="Heat Advisory"))
+    assert not is_nwr_same_weather_event(
+        WeatherAlert("Small Craft", "body", event="Small Craft Advisory")
+    )
 
 
 def test_default_resolver_skips_in_worker_when_alert_has_no_reliable_coverage_metadata():

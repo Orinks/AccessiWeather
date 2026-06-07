@@ -248,11 +248,14 @@ class AudioTab:
             panel,
             sizer,
             "Weather radio alerts",
-            "Automatically tune NOAA Weather Radio for qualifying alert notifications.",
+            "Automatically tune NOAA Weather Radio for NWR/SAME alert notifications.",
         )
         controls["auto_tune_weather_radio_alerts"] = wx.CheckBox(
             panel,
-            label="Automatically play a matching NOAA Weather Radio station for alert notifications",
+            label=(
+                "Automatically play a matching NOAA Weather Radio station for NWR/SAME "
+                "alert notifications"
+            ),
         )
         weather_radio_section.Add(
             controls["auto_tune_weather_radio_alerts"],
@@ -331,7 +334,8 @@ class AudioTab:
             "event_sounds_summary": "Event sound summary",
             "configure_event_sounds": "Choose event sounds",
             "auto_tune_weather_radio_alerts": (
-                "Automatically play a matching NOAA Weather Radio station for alert notifications"
+                "Automatically play a matching NOAA Weather Radio station for NWR/SAME "
+                "alert notifications"
             ),
             "auto_tune_weather_radio_duration_minutes": (
                 "Play weather radio for this many minutes"
