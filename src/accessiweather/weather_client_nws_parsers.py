@@ -8,6 +8,7 @@ from .provider_normalization import (
     normalize_pressure_pair,
     normalize_temperature_pair,
 )
+from .thermal_comfort import sanitize_thermal_comfort_readings
 from .weather_client_nws_common import *  # noqa: F403
 from .weather_client_parsers import normalize_pressure
 
@@ -80,19 +81,15 @@ def parse_nws_current_conditions(
         props.get("heatIndex", {}).get("unitCode") or "wmoUnit:degC",
     )
 
-    # Determine feels_like based on wind chill or heat index
-    feels_like_f = None
-    feels_like_c = None
-    if wind_chill.fahrenheit is not None and (
-        temperature.fahrenheit is None or wind_chill.fahrenheit < temperature.fahrenheit
-    ):
-        feels_like_f = wind_chill.fahrenheit
-        feels_like_c = wind_chill.celsius
-    elif heat_index.fahrenheit is not None and (
-        temperature.fahrenheit is None or heat_index.fahrenheit > temperature.fahrenheit
-    ):
-        feels_like_f = heat_index.fahrenheit
-        feels_like_c = heat_index.celsius
+    comfort = sanitize_thermal_comfort_readings(
+        temperature_f=temperature.fahrenheit,
+        temperature_c=temperature.celsius,
+        humidity=humidity,
+        wind_chill_f=wind_chill.fahrenheit,
+        wind_chill_c=wind_chill.celsius,
+        heat_index_f=heat_index.fahrenheit,
+        heat_index_c=heat_index.celsius,
+    )
 
     return CurrentConditions(
         temperature_f=temperature.fahrenheit,
@@ -106,16 +103,16 @@ def parse_nws_current_conditions(
         wind_direction=wind_direction,
         pressure_in=pressure.inches,
         pressure_mb=pressure.millibars,
-        feels_like_f=feels_like_f,
-        feels_like_c=feels_like_c,
+        feels_like_f=comfort.feels_like_f,
+        feels_like_c=comfort.feels_like_c,
         visibility_miles=visibility_miles,
         visibility_km=visibility_km,
         uv_index=uv_index,
         # Seasonal fields
-        wind_chill_f=wind_chill.fahrenheit,
-        wind_chill_c=wind_chill.celsius,
-        heat_index_f=heat_index.fahrenheit,
-        heat_index_c=heat_index.celsius,
+        wind_chill_f=comfort.wind_chill_f,
+        wind_chill_c=comfort.wind_chill_c,
+        heat_index_f=comfort.heat_index_f,
+        heat_index_c=comfort.heat_index_c,
     )
 
 

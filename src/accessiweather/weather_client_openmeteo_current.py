@@ -8,11 +8,11 @@ from typing import Any
 
 from .models import CurrentConditions
 from .provider_normalization import (
-    classify_apparent_temperature,
     normalize_dewpoint_pair,
     normalize_humidity_percent,
     normalize_temperature_pair,
 )
+from .thermal_comfort import sanitize_thermal_comfort_readings
 from .weather_client_openmeteo_units import (
     normalize_snow_depth_to_inches_and_cm,
     normalize_visibility_to_miles_and_km,
@@ -184,10 +184,12 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         units.get("visibility"),
     )
 
-    apparent = classify_apparent_temperature(
-        temperature.fahrenheit,
-        feels_like.fahrenheit,
-        feels_like.celsius,
+    comfort = sanitize_thermal_comfort_readings(
+        temperature_f=temperature.fahrenheit,
+        temperature_c=temperature.celsius,
+        humidity=humidity,
+        feels_like_f=feels_like.fahrenheit,
+        feels_like_c=feels_like.celsius,
     )
 
     return CurrentConditions(
@@ -202,8 +204,8 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         wind_direction=current.get("wind_direction_10m"),
         pressure_in=pressure_in,
         pressure_mb=pressure_mb,
-        feels_like_f=feels_like.fahrenheit,
-        feels_like_c=feels_like.celsius,
+        feels_like_f=comfort.feels_like_f,
+        feels_like_c=comfort.feels_like_c,
         visibility_miles=visibility_miles,
         visibility_km=visibility_km,
         sunrise_time=sunrise_time,
@@ -212,9 +214,9 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         snowfall_rate_in=snowfall_rate,
         snow_depth_in=snow_depth_in,
         snow_depth_cm=snow_depth_cm,
-        wind_chill_f=apparent.wind_chill_f,
-        wind_chill_c=apparent.wind_chill_c,
-        heat_index_f=apparent.heat_index_f,
-        heat_index_c=apparent.heat_index_c,
+        wind_chill_f=comfort.wind_chill_f,
+        wind_chill_c=comfort.wind_chill_c,
+        heat_index_f=comfort.heat_index_f,
+        heat_index_c=comfort.heat_index_c,
         precipitation_type=precipitation_type,
     )
