@@ -1,13 +1,14 @@
 """
-TextProduct dataclass for NWS text-based products (AFD, HWO, SPS).
+TextProduct dataclass for NWS text-based products and source-labelled summaries.
 
 AFD = Area Forecast Discussion
 HWO = Hazardous Weather Outlook
 SPS = Special Weather Statement
+SRF = Surf Zone Forecast
 
 These are fetched from ``/products/types/{TYPE}/locations/{cwa_office}`` and
-``/products/{id}`` on the NWS API. All three endpoints share the same response
-shape, so a single dataclass is sufficient.
+``/products/{id}`` on the NWS API. Derived source summaries can also use this
+shape when they are clearly labelled as non-NWS products.
 """
 
 from __future__ import annotations

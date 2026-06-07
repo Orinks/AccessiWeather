@@ -154,6 +154,32 @@ def test_lookup_prefers_nws_history_for_supported_local_products():
     assert "official text" in dlg.result_text.SetValue.call_args.args[0]
 
 
+def test_srf_nws_lookup_includes_official_regional_beach_wording():
+    service = MagicMock()
+    service.get_history = AsyncMock(return_value=[_product("SRF")])
+    service.get_iem_afos = AsyncMock(return_value=_product("SRFPHI"))
+
+    dlg = AdvancedTextProductDialog(
+        parent=MagicMock(),
+        location=_location(),
+        forecast_product_service=service,
+        initial_product_type="SRF",
+    )
+    dlg.product_input.GetValue.return_value = "SRF"
+    dlg.office_choice.GetStringSelection.return_value = "Selected location office (RAH)"
+    dlg.limit_input.GetValue.return_value = "1"
+    dlg.start_input.GetValue.return_value = ""
+    dlg.end_input.GetValue.return_value = ""
+    dlg.source_choice.GetStringSelection.return_value = "Prefer NWS when available"
+
+    dlg._run_lookup_sync()
+
+    output = dlg.result_text.SetValue.call_args.args[0]
+    assert "Source: NWS" in output
+    assert "Surf Zone Forecast issued by NWS RAH for regional beaches." in output
+    service.get_iem_afos.assert_not_awaited()
+
+
 def test_lookup_uses_iem_for_national_pil_without_nws_location():
     service = MagicMock()
     service.get_history = AsyncMock(return_value=[])
@@ -294,6 +320,31 @@ def test_local_product_preset_selects_location_office_choice():
     dlg._on_product_preset(MagicMock())
 
     dlg.product_input.SetValue.assert_called_with("AFD")
+    dlg.office_choice.SetSelection.assert_called_with(0)
+
+
+def test_srf_product_preset_selects_location_office_choice():
+    service = MagicMock()
+    dlg = AdvancedTextProductDialog(
+        parent=MagicMock(),
+        location=_location(),
+        forecast_product_service=service,
+        initial_product_type="AFD",
+    )
+    dlg.product_preset_choice.GetStringSelection.return_value = (
+        "Official NWS Surf Zone Forecast for regional beaches"
+    )
+    dlg.office_choice.GetCount.return_value = 3
+    dlg.office_choice.GetString.side_effect = [
+        "Selected location office (RAH)",
+        "No office or national product",
+        "Custom office below",
+    ]
+
+    dlg._on_product_preset(MagicMock())
+
+    dlg.product_input.SetValue.assert_called_with("SRF")
+    dlg.source_choice.SetSelection.assert_called_with(0)
     dlg.office_choice.SetSelection.assert_called_with(0)
 
 
