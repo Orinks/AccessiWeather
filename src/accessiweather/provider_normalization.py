@@ -187,16 +187,21 @@ def normalize_visibility_pair(
     unit_text = (unit or "").strip().lower().replace(" ", "_")
     if "ft" in unit_text or "feet" in unit_text:
         miles = numeric / 5280
+        kilometers = miles * KM_PER_MILE
     elif "km" in unit_text or "kilometer" in unit_text or "kilometre" in unit_text:
         miles = numeric / KM_PER_MILE
+        kilometers = numeric
     elif unit_text in {"mi", "mile", "miles"}:
         miles = numeric
+        kilometers = numeric * KM_PER_MILE
     else:
         miles = numeric / 1609.344
+        kilometers = numeric / 1000
 
     if cap_miles is not None:
         miles = min(miles, cap_miles)
-    return VisibilityPair(miles, miles * KM_PER_MILE)
+        kilometers = miles * KM_PER_MILE
+    return VisibilityPair(miles, kilometers)
 
 
 def classify_apparent_temperature(
