@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from typing import Any
 from unittest.mock import MagicMock
 
 import requests
@@ -13,7 +14,7 @@ from accessiweather.noaa_radio.weatherindex_client import WeatherIndexClient
 class TestWeatherIndexClient:
     """Tests for the WeatherIndex client."""
 
-    def _make_client(self, json_data: dict, **kwargs) -> WeatherIndexClient:
+    def _make_client(self, json_data: Any, **kwargs) -> WeatherIndexClient:
         session = MagicMock(spec=requests.Session)
         response = MagicMock()
         response.json.return_value = json_data
@@ -116,6 +117,91 @@ class TestWeatherIndexClient:
         assert metadata.latitude == 30.3219
         assert metadata.longitude == -97.8033
         assert metadata.served_counties[0].same_code == "048453"
+
+    def test_get_station_metadata_returns_none_for_blank_call_sign_without_network(self) -> None:
+        session = MagicMock(spec=requests.Session)
+        client = WeatherIndexClient(session=session)
+
+        assert client.get_station_metadata("   ") is None
+        session.get.assert_not_called()
+
+    def test_get_station_metadata_uses_per_station_cache(self) -> None:
+        client = self._make_client(
+            {
+                "callsign": "WXK27",
+                "served_counties": [
+                    {"county": "Travis", "same_code": "048453", "state": "TX"},
+                ],
+            },
+            cache_ttl=60,
+        )
+
+        first = client.get_station_metadata("WXK27")
+        second = client.get_station_metadata("WXK27")
+
+        assert first == second
+        client._session.get.assert_called_once()  # type: ignore[union-attr]
+
+    def test_get_station_metadata_refetches_after_cache_expiry(self) -> None:
+        client = self._make_client(
+            {
+                "callsign": "WXK27",
+                "served_counties": [
+                    {"county": "Travis", "same_code": "048453", "state": "TX"},
+                ],
+            },
+            cache_ttl=1,
+        )
+
+        client.get_station_metadata("WXK27")
+        client._metadata_cache["WXK27"] = (None, time.monotonic() - 2)
+        client.get_station_metadata("WXK27")
+
+        assert client._session.get.call_count == 2  # type: ignore[union-attr]
+
+    def test_get_station_metadata_returns_none_on_network_error(self) -> None:
+        session = MagicMock(spec=requests.Session)
+        session.get.side_effect = requests.ConnectionError("fail")
+        client = WeatherIndexClient(session=session)
+
+        assert client.get_station_metadata("WXK27") is None
+
+    def test_get_station_metadata_returns_none_on_malformed_payload(self) -> None:
+        client = self._make_client(["not", "a", "station"])
+
+        assert client.get_station_metadata("WXK27") is None
+
+    def test_get_station_metadata_skips_incomplete_counties_and_normalizes_fields(self) -> None:
+        client = self._make_client(
+            {
+                "station": {
+                    "call_sign": " wxk27 ",
+                    "wfo": "  Austin/San Antonio TX ",
+                    "latitude": "bad-latitude",
+                    "longitude": None,
+                    "served_counties": [
+                        "not-a-dict",
+                        {"county": "Travis", "same_code": "abc", "state": "TX"},
+                        {"county": "Travis", "same_code": "048453"},
+                        {"county": " Travis ", "same_code": 48453, "state": " tx ", "area": " "},
+                    ],
+                }
+            }
+        )
+
+        metadata = client.get_station_metadata("WXK27")
+
+        assert metadata is not None
+        assert metadata.call_sign == "WXK27"
+        assert metadata.wfo == "Austin/San Antonio TX"
+        assert metadata.latitude is None
+        assert metadata.longitude is None
+        assert len(metadata.served_counties) == 1
+        county = metadata.served_counties[0]
+        assert county.county == "Travis"
+        assert county.same_code == "048453"
+        assert county.state == "TX"
+        assert county.area is None
 
     def test_get_station_metadata_allows_empty_coverage_payload(self) -> None:
         client = self._make_client({"feeds": []})

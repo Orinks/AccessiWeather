@@ -8,7 +8,9 @@ from unittest.mock import MagicMock
 from accessiweather.models import AppSettings, Location, WeatherAlert
 from accessiweather.noaa_radio.alert_auto_tune import (
     AlertRadioAutoTuner,
+    NoReliableAlertStationResolver,
     WeatherIndexAlertStationResolver,
+    county_zone_to_same_code,
     is_nwr_same_weather_event,
 )
 from accessiweather.noaa_radio.station_db import StationDatabase
@@ -29,8 +31,17 @@ class _FakeThread:
 
 
 class _FakePlayer:
+    def __init__(self, session=None, results: list[bool] | None = None) -> None:
+        self._session = session
+        self._results = list(results) if results is not None else None
+        self.played_urls = []
+
     def play(self, _url: str) -> bool:
-        return True
+        self.played_urls.append(_url)
+        result = self._results.pop(0) if self._results else True
+        if result and self._session is not None:
+            self._session._playing = True
+        return result
 
 
 class _FakeSession:
@@ -38,7 +49,7 @@ class _FakeSession:
         self.playing_station = station
         self.current_urls = []
         self.current_url_index = 0
-        self.player = _FakePlayer()
+        self.player = _FakePlayer(self)
         self._playing = playing
         self.stop = MagicMock(side_effect=self._stop)
 
@@ -59,6 +70,12 @@ class _FakePreferences:
 class _NoMatchResolver:
     def resolve_station(self, alerts, location):
         del alerts, location
+
+
+class _RaisingResolver:
+    def resolve_station(self, alerts, location):
+        del alerts, location
+        raise RuntimeError("metadata unavailable")
 
 
 class _MappedResolver:
@@ -225,6 +242,37 @@ def test_nwr_same_weather_event_eligibility_excludes_advisory_only_events():
     )
 
 
+def test_nwr_same_weather_event_eligibility_rejects_missing_event_name():
+    assert not is_nwr_same_weather_event(WeatherAlert("Unknown", "body", event=None))
+
+
+def test_county_zone_conversion_rejects_unknown_state_prefix():
+    assert county_zone_to_same_code("XXC001") is None
+
+
+def test_no_reliable_resolver_never_selects_unrelated_station():
+    assert NoReliableAlertStationResolver().resolve_station([_alert()], _location()) is None
+
+
+def test_empty_alert_batch_does_not_schedule_worker():
+    tuner, _session, started, _url_provider, resolver = _make_tuner()
+
+    tuner.tune_for_alerts([])
+
+    assert started == []
+    assert resolver.calls == []
+
+
+def test_settings_provider_failure_disables_auto_tune_safely():
+    tuner, _session, started, _url_provider, resolver = _make_tuner()
+    tuner._settings_provider = MagicMock(side_effect=RuntimeError("settings unavailable"))
+
+    tuner.tune_for_alerts([_alert()])
+
+    assert started == []
+    assert resolver.calls == []
+
+
 def test_default_resolver_skips_in_worker_when_alert_has_no_reliable_coverage_metadata():
     started = []
     session = _FakeSession()
@@ -243,6 +291,33 @@ def test_default_resolver_skips_in_worker_when_alert_has_no_reliable_coverage_me
     started[0]()
 
     url_provider.get_stream_urls.assert_not_called()
+
+
+def test_station_resolution_failure_does_not_fetch_or_play_streams():
+    tuner, _session, started, url_provider, _resolver = _make_tuner(resolver=_RaisingResolver())
+
+    tuner.tune_for_alerts([_alert()])
+    assert len(started) == 1
+    started[0]()
+
+    url_provider.get_stream_urls.assert_not_called()
+
+
+def test_location_provider_failure_still_allows_resolver_without_location():
+    station = Station("WXK27", 162.4, "Austin, TX", 30.2672, -97.7431, "TX")
+    resolver = _MappedResolver(station)
+    started = []
+    tuner, _session, _started, url_provider, _resolver = _make_tuner(
+        resolver=resolver,
+        started=started,
+    )
+    tuner._location_provider = MagicMock(side_effect=RuntimeError("location unavailable"))
+    url_provider.get_stream_urls.return_value = []
+
+    tuner.tune_for_alerts([_alert()])
+    started[0]()
+
+    assert resolver.calls[0][1] is None
 
 
 def test_weatherindex_resolver_matches_alert_same_code_to_station_coverage():
@@ -349,6 +424,47 @@ def test_weatherindex_resolver_uses_call_sign_order_without_location():
     assert weatherindex.calls == ["AAAAA"]
 
 
+def test_weatherindex_resolver_uses_alert_same_code_state_for_no_location_tie_breaker():
+    texas_station = Station("ZZZZZ", 162.4, "Texas, TX", 30.3, -97.8, "TX")
+    kansas_station = Station("AAAAA", 162.4, "Kansas, KS", 39.0, -96.0, "KS")
+    station_db = StationDatabase([kansas_station, texas_station])
+    weatherindex = _FakeWeatherIndexClient(
+        {
+            "AAAAA": _metadata("AAAAA", ["048453"]),
+            "ZZZZZ": _metadata("ZZZZZ", ["048453"]),
+        }
+    )
+    resolver = WeatherIndexAlertStationResolver(
+        station_database=station_db,
+        weatherindex_client=weatherindex,
+    )
+    alert = _alert()
+    alert.affected_zones = []
+    alert.same_codes = ["048453"]
+
+    station = resolver.resolve_station([alert], None)
+
+    assert station == texas_station
+    assert weatherindex.calls == ["ZZZZZ"]
+
+
+def test_weatherindex_resolver_ignores_malformed_same_codes_and_unknown_states():
+    station_db = StationDatabase([Station("WXK27", 162.4, "Austin, TX", 30.2672, -97.7431, "TX")])
+    weatherindex = _FakeWeatherIndexClient({"WXK27": _metadata("WXK27", ["048453"])})
+    resolver = WeatherIndexAlertStationResolver(
+        station_database=station_db,
+        weatherindex_client=weatherindex,
+    )
+    alert = _alert()
+    alert.affected_zones = ["XXC001"]
+    alert.same_codes = ["abc", object()]
+
+    station = resolver.resolve_station([alert], None)
+
+    assert station is None
+    assert weatherindex.calls == []
+
+
 def test_auto_tune_schedules_worker_for_resolved_alert_station():
     tuner, _session, started, _url_provider, resolver = _make_tuner()
 
@@ -360,6 +476,62 @@ def test_auto_tune_schedules_worker_for_resolved_alert_station():
     started[0]()
     assert resolver.calls[0][0][0].event == "Tornado Warning"
     assert resolver.calls[0][1].name == "Austin"
+
+
+def test_auto_tune_invalid_duration_defaults_to_five_minutes_and_stops_playback():
+    times = iter([100.0, 401.0])
+    tuner, session, started, _url_provider, _resolver = _make_tuner(
+        settings=_settings(auto_tune_weather_radio_duration_minutes=0),
+    )
+    tuner._monotonic = lambda: next(times)
+
+    tuner.tune_for_alerts([_alert()])
+    started[0]()
+
+    session.stop.assert_called_once_with()
+    assert session.is_playing() is False
+
+
+def test_stop_cancels_pending_auto_tune_before_stream_starts():
+    tuner, session, started, url_provider, _resolver = _make_tuner()
+
+    tuner.tune_for_alerts([_alert()])
+    tuner.stop()
+    started[0]()
+
+    url_provider.get_stream_urls.assert_not_called()
+    assert session.playing_station is None
+
+
+def test_manual_playback_starting_during_resolution_prevents_auto_tune():
+    manual_station = Station("KHB40", 162.55, "Manual, TX", 30.0, -97.0, "TX")
+    tuner, session, started, url_provider, _resolver = _make_tuner()
+
+    tuner.tune_for_alerts([_alert()])
+    session._playing = True
+    session.playing_station = manual_station
+    started[0]()
+
+    url_provider.get_stream_urls.assert_not_called()
+    assert session.playing_station == manual_station
+
+
+def test_auto_tune_clears_station_when_all_stream_urls_fail():
+    tuner, session, started, url_provider, _resolver = _make_tuner()
+    url_provider.get_stream_urls.return_value = [
+        "https://example.test/primary",
+        "https://example.test/backup",
+    ]
+    session.player = _FakePlayer(session, results=[False, False])
+
+    tuner.tune_for_alerts([_alert()])
+    started[0]()
+
+    assert session.player.played_urls == [
+        "https://example.test/primary",
+        "https://example.test/backup",
+    ]
+    assert session.playing_station is None
 
 
 def test_duplicate_alert_batch_extends_existing_auto_tune_without_overlap():

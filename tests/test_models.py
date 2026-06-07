@@ -219,6 +219,18 @@ class TestWeatherAlert:
         )
         assert alert.references == []
 
+    def test_same_codes_none_defaults_to_empty_list(self):
+        """Alert SAME metadata remains iterable when legacy callers pass None."""
+        alert = WeatherAlert(
+            title="Test",
+            description="desc",
+            severity="Severe",
+            urgency="Immediate",
+            certainty="Observed",
+            same_codes=None,
+        )
+        assert alert.same_codes == []
+
     def test_is_expired(self):
         """Test expiration checking."""
         # Expired alert

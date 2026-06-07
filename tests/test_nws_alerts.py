@@ -449,6 +449,29 @@ class TestGetNwsAlertsParameters:
         assert result.alerts[0].affected_zones == ["TXC121", "TXZ119"]
         assert result.alerts[0].same_codes == ["048121"]
 
+    def test_parse_alerts_ignores_malformed_same_geocode(self):
+        """Malformed NWS SAME geocode metadata should not fabricate station coverage."""
+        data = {
+            "features": [
+                {
+                    "id": "urn:test:bad-same",
+                    "properties": {
+                        "headline": "Tornado Warning",
+                        "description": "Warning text.",
+                        "severity": "Extreme",
+                        "event": "Tornado Warning",
+                        "affectedZones": ["https://api.weather.gov/zones/county/TXC121"],
+                        "geocode": {"SAME": "048121"},
+                    },
+                }
+            ]
+        }
+
+        result = parse_nws_alerts(data)
+
+        assert result.alerts[0].affected_zones == ["TXC121"]
+        assert result.alerts[0].same_codes == []
+
 
 class TestAlertTimeParsing:
     """Tests for alert time field parsing."""
