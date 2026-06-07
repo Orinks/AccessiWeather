@@ -250,6 +250,66 @@ class TestForecastProductServiceSurfConditions:
         assert "Beach-weather context from Pirate Weather" in result.product_text
         pirate.assert_awaited_once_with(location, weather_client=weather_client)
 
+    @pytest.mark.asyncio
+    async def test_surf_conditions_cache_hit_returns_cached_none(self):
+        cache = Cache()
+        location = type("Location", (), {"name": "Nowhere", "cwa_office": ""})()
+        cache.set(ForecastProductService._surf_conditions_cache_key(location), None, ttl=3600)
+        openmeteo = AsyncMock(return_value=_srf())
+        service = ForecastProductService(cache, openmeteo_marine_fetcher=openmeteo)
+
+        result = await service.get_surf_conditions_for_location(location)
+
+        assert result is None
+        openmeteo.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_srf_fetch_error_falls_back_to_openmeteo(self):
+        cache = Cache()
+        fetcher = AsyncMock(side_effect=TextProductFetchError("no srf"))
+        openmeteo_product = TextProduct(
+            product_type="SURF_CONDITIONS",
+            product_id="openmeteo",
+            cwa_office="Open-Meteo Marine",
+            issuance_time=None,
+            product_text="Open-Meteo fallback",
+            headline="Surf conditions from Open-Meteo Marine",
+        )
+        openmeteo = AsyncMock(return_value=openmeteo_product)
+        service = ForecastProductService(
+            cache,
+            fetcher=fetcher,
+            openmeteo_marine_fetcher=openmeteo,
+            pirate_beach_fetcher=AsyncMock(return_value=None),
+        )
+        location = type("Location", (), {"name": "Lumberton", "cwa_office": "PHI"})()
+
+        result = await service.get_surf_conditions_for_location(location)
+
+        assert result is openmeteo_product
+        fetcher.assert_awaited_once_with("SRF", "PHI")
+
+    @pytest.mark.asyncio
+    async def test_derived_fetcher_exceptions_return_none(self):
+        cache = Cache()
+
+        async def failing_openmeteo(*_args, **_kwargs):
+            raise RuntimeError("marine unavailable")
+
+        async def failing_pirate(*_args, **_kwargs):
+            raise RuntimeError("pirate unavailable")
+
+        service = ForecastProductService(
+            cache,
+            openmeteo_marine_fetcher=failing_openmeteo,
+            pirate_beach_fetcher=failing_pirate,
+        )
+        location = type("Location", (), {"name": "Porto", "cwa_office": ""})()
+
+        result = await service.get_surf_conditions_for_location(location)
+
+        assert result is None
+
 
 class TestForecastProductServiceEmpty:
     @pytest.mark.asyncio
