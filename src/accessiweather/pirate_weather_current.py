@@ -22,6 +22,7 @@ from .provider_normalization import (
     pirate_visibility_unit,
     pirate_wind_unit,
 )
+from .thermal_comfort import sanitize_thermal_comfort_readings
 from .weather_client_parsers import degrees_to_cardinal, describe_moon_phase
 
 
@@ -52,6 +53,14 @@ def parse_current_conditions(client: Any, data: dict) -> CurrentConditions:
     visibility = normalize_visibility_pair(current.get("visibility"), visibility_unit)
 
     feels_like = normalize_temperature_pair(current.get("apparentTemperature"), temperature_unit)
+
+    comfort = sanitize_thermal_comfort_readings(
+        temperature_f=temperature.fahrenheit,
+        temperature_c=temperature.celsius,
+        humidity=humidity,
+        feels_like_f=feels_like.fahrenheit,
+        feels_like_c=feels_like.celsius,
+    )
 
     wind_gust = normalize_speed_pair(current.get("windGust"), wind_unit)
 
@@ -96,8 +105,8 @@ def parse_current_conditions(client: Any, data: dict) -> CurrentConditions:
         wind_direction=degrees_to_cardinal(wind_direction),
         pressure_in=pressure.inches,
         pressure_mb=pressure.millibars,
-        feels_like_f=feels_like.fahrenheit,
-        feels_like_c=feels_like.celsius,
+        feels_like_f=comfort.feels_like_f,
+        feels_like_c=comfort.feels_like_c,
         visibility_miles=visibility.miles,
         visibility_km=visibility.kilometers,
         uv_index=uv_index,
@@ -110,4 +119,8 @@ def parse_current_conditions(client: Any, data: dict) -> CurrentConditions:
         sunrise_time=sunrise_time,
         sunset_time=sunset_time,
         moon_phase=moon_phase,
+        wind_chill_f=comfort.wind_chill_f,
+        wind_chill_c=comfort.wind_chill_c,
+        heat_index_f=comfort.heat_index_f,
+        heat_index_c=comfort.heat_index_c,
     )
