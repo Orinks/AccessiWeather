@@ -8,6 +8,7 @@ updating the system tray icon tooltip text based on current weather conditions.
 from __future__ import annotations
 
 import logging
+import re
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 
@@ -35,6 +36,14 @@ DEFAULT_TOOLTIP_TEXT = "AccessiWeather"
 DEFAULT_TOOLTIP_FORMAT = "{temp} {condition}"
 TOOLTIP_MAX_LENGTH = 127
 PLACEHOLDER_NA = "N/A"
+FEELS_LIKE_ITEM_PATTERNS = (
+    re.compile(r"\s*\((?:feels(?:\s+like)?|heat\s+index)\s+\{feels_like\}\)", re.IGNORECASE),
+    re.compile(
+        r"\s*(?:[|•,;:-]\s*)?(?:feels(?:\s+like)?|heat\s+index):?\s*\{feels_like\}"
+        r"(?:\s*[|•,;:-])?",
+        re.IGNORECASE,
+    ),
+)
 
 
 class TaskbarIconUpdater:
@@ -217,7 +226,7 @@ class TaskbarIconUpdater:
         feels_c = getattr(current, "feels_like_c", None)
 
         if feels_f is None and feels_c is None:
-            return PLACEHOLDER_NA
+            return ""
 
         if feels_f is None and feels_c is not None:
             feels_f = celsius_to_fahrenheit(feels_c)
@@ -465,7 +474,8 @@ class TaskbarIconUpdater:
                 self._last_format_error = error
             return DEFAULT_TOOLTIP_TEXT
 
-        result = self.parser.format_string(format_string, data)
+        effective_format = self._omit_missing_feels_like_item(format_string, data)
+        result = self.parser.format_string(effective_format, data)
 
         # The parser signals failure with a string starting with "Error:".
         # Match the prefix so a legitimate value containing the word "error"
@@ -476,6 +486,16 @@ class TaskbarIconUpdater:
 
         result = result.strip()
         return result or DEFAULT_TOOLTIP_TEXT
+
+    def _omit_missing_feels_like_item(self, format_string: str, data: dict[str, str]) -> str:
+        """Remove common feels-like text fragments when the value is not available."""
+        if data.get("feels_like"):
+            return format_string
+
+        cleaned = format_string
+        for pattern in FEELS_LIKE_ITEM_PATTERNS:
+            cleaned = pattern.sub(" ", cleaned)
+        return re.sub(r"\s{2,}", " ", cleaned).strip()
 
     def _truncate_tooltip(self, text: str) -> str:
         """Truncate tooltip text to platform-dependent limits."""

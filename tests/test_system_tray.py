@@ -657,7 +657,6 @@ class TestFeelsLikeFormatterFallbacks:
             ("c", _weather_data_with_feels_like(feels_like_f=68.0), "20C"),
             ("both", _weather_data_with_feels_like(feels_like_c=20.0), "68F/20C"),
             ("both", _weather_data_with_feels_like(feels_like_f=68.0), "68F/20C"),
-            ("f", _weather_data_with_feels_like(), "N/A"),
         ],
     )
     def test_feels_like_converts_missing_counterpart_unit(
@@ -697,6 +696,52 @@ class TestFeelsLikeFormatterFallbacks:
 
         assert result == _expected_feels_like_text(value, source_unit, temperature_unit)
         assert result.lower() != "n/a"
+
+    def test_missing_feels_like_omits_common_labeled_fragment(self):
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            format_string="{temp} (feels {feels_like}) • {condition}",
+            temperature_unit="f",
+        )
+
+        result = updater.format_tooltip(_weather_data_with_feels_like(), "Test City")
+
+        assert result == "72F • Sunny"
+        assert "feels" not in result.lower()
+        assert "n/a" not in result.lower()
+
+    def test_missing_heat_index_omits_common_labeled_fragment(self):
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            format_string="{temp} | Heat index: {feels_like} | {condition}",
+            temperature_unit="f",
+        )
+
+        result = updater.format_tooltip(_weather_data_with_feels_like(), "Test City")
+
+        assert result == "72F Sunny"
+        assert "heat index" not in result.lower()
+        assert "n/a" not in result.lower()
+
+    def test_present_feels_like_still_displays_in_labeled_fragment(self):
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            format_string="{temp} (feels {feels_like}) • {condition}",
+            temperature_unit="f",
+        )
+
+        result = updater.format_tooltip(
+            _weather_data_with_feels_like(feels_like_f=68.0),
+            "Test City",
+        )
+
+        assert result == "72F (feels 68F) • Sunny"
 
 
 class TestPopupMenu:
