@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Feels-like and heat-index readings now ignore implausibly warm provider values when the current temperature and humidity do not support them, while keeping valid humid heat-index and cold wind-chill readings.
 - Unknown or uncategorized weather alerts now have a mappable default sound, and missing custom-pack event sounds fall back to the matching default sound before generic notification audio.
 - NOAA Weather Radio Station Finder now repopulates stations when leaving an empty Favorites view, so you no longer need to reopen the radio dialog.
+- Feels-like temperatures now keep showing in tray text when only one temperature unit is available, instead of falling back to `N/A`.
 
 ## [0.7.2] - 2026-05-30
 

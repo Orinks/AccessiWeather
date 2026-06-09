@@ -219,21 +219,21 @@ class TaskbarIconUpdater:
         if feels_f is None and feels_c is None:
             return PLACEHOLDER_NA
 
+        if feels_f is None and feels_c is not None:
+            feels_f = celsius_to_fahrenheit(feels_c)
+        if feels_c is None and feels_f is not None:
+            feels_c = fahrenheit_to_celsius(feels_f)
+
+        assert feels_f is not None
+        assert feels_c is not None
+
         effective_unit = self._resolve_temperature_unit()
 
         if effective_unit == TemperatureUnit.FAHRENHEIT:
             return self._format_temp_value(feels_f, "F")
         if effective_unit == TemperatureUnit.CELSIUS:
-            if feels_c is not None:
-                return self._format_temp_value(feels_c, "C")
-            return PLACEHOLDER_NA
-        if feels_f is not None and feels_c is not None:
-            return f"{feels_f:.0f}F/{feels_c:.0f}C"
-        if feels_f is not None:
-            return f"{feels_f:.0f}F"
-        if feels_c is not None:
-            return f"{feels_c:.0f}C"
-        return PLACEHOLDER_NA
+            return self._format_temp_value(feels_c, "C")
+        return f"{feels_f:.0f}F/{feels_c:.0f}C"
 
     def _format_temp_value(self, value: float | None, suffix: str) -> str:
         """Format a single temperature value."""
