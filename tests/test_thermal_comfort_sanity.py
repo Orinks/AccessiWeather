@@ -244,6 +244,40 @@ def test_fusion_keeps_cross_source_coherent_humid_heat_index() -> None:
     assert attribution.field_sources["feels_like_f"] == "pirateweather"
 
 
+def test_fusion_prefers_nws_literal_heat_index_for_us_location() -> None:
+    engine = DataFusionEngine()
+    location = Location(name="Houston", latitude=29.76, longitude=-95.37, country_code="US")
+    nws_current = CurrentConditions(
+        temperature_f=90.0,
+        temperature_c=32.2,
+        humidity=70,
+        feels_like_f=104.0,
+        feels_like_c=40.0,
+        heat_index_f=104.0,
+        heat_index_c=40.0,
+    )
+    openmeteo_current = CurrentConditions(
+        temperature_f=90.0,
+        temperature_c=32.2,
+        humidity=70,
+        feels_like_f=106.0,
+        feels_like_c=41.1,
+        heat_index_f=106.0,
+        heat_index_c=41.1,
+    )
+
+    current, attribution = engine.merge_current_conditions(
+        [_source("openmeteo", openmeteo_current), _source("nws", nws_current)],
+        location,
+    )
+
+    assert current is not None
+    assert current.heat_index_f == pytest.approx(104.0)
+    assert current.feels_like_f == pytest.approx(104.0)
+    assert attribution.field_sources["heat_index_f"] == "nws"
+    assert attribution.field_sources["feels_like_f"] == "nws"
+
+
 def test_presentation_ignores_implausible_warm_feels_like_fallback() -> None:
     current = CurrentConditions(temperature_f=81.0, humidity=36, feels_like_f=87.0)
 
@@ -268,3 +302,24 @@ def test_presentation_shows_plausible_low_humidity_solar_feels_like() -> None:
 
     assert temperature == "81°F (feels like 85°F)"
     assert reason is None
+
+
+def test_presentation_labels_coherent_humid_apparent_temperature_as_heat_index() -> None:
+    current = CurrentConditions(
+        temperature_f=90.0,
+        temperature_c=32.2,
+        humidity=70,
+        feels_like_f=106.0,
+        feels_like_c=41.1,
+        heat_index_f=106.0,
+        heat_index_c=41.1,
+    )
+
+    temperature, reason = format_temperature_with_feels_like(
+        current,
+        TemperatureUnit.FAHRENHEIT,
+        precision=1,
+    )
+
+    assert temperature == "90°F (feels like 106°F)"
+    assert reason == "due to heat index"
