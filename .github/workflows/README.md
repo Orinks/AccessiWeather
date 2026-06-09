@@ -94,6 +94,10 @@ still ship can opt in with `Nightly: build` or `[nightly build]` in the commit m
 release notes use the matching version section, such as `## [0.6.1]`, and fall back to Unreleased
 only when a version section has not been cut yet.
 
+Internal commits do not suppress a scheduled nightly when the same range also contains a new
+curated Unreleased entry. For example, merging a user-facing PR with a changelog bullet and then an
+internal `Changelog: none` refactor before the next schedule still builds the nightly.
+
 Everything else stays out of the PR path.
 
 ---
