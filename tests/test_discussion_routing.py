@@ -51,7 +51,7 @@ class TestDiscussionRouting:
         When current location is set, _on_forecast_products should run.
 
         Unit 8 rerouted this branch from the old single-AFD DiscussionDialog to
-        the new tabbed ForecastProductsDialog (AFD + HWO + SPS).
+        the tabbed ForecastProductsDialog.
         """
         from accessiweather.ui.main_window import MainWindow
 

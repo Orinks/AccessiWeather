@@ -11,6 +11,7 @@ from accessiweather.models.weather import (
     SourceAttribution,
     SourceData,
 )
+from accessiweather.thermal_comfort import sanitize_thermal_comfort_readings
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +95,71 @@ def discard_gust_if_below_wind_speed(
         merged_values.pop("wind_gust_kph", None)
         attribution.field_sources.pop("wind_gust_mph", None)
         attribution.field_sources.pop("wind_gust_kph", None)
+
+
+def sanitize_thermal_comfort_values(
+    merged_values: dict[str, Any], attribution: SourceAttribution
+) -> None:
+    """
+    Drop apparent-temperature readings that no longer fit after cross-source fusion.
+
+    Feels-like, wind-chill, and heat-index fields are selected independently from
+    temperature and humidity, so the final merged payload needs one more coherence
+    check before it is displayed.
+    """
+    comfort = sanitize_thermal_comfort_readings(
+        temperature_f=merged_values.get("temperature_f"),
+        temperature_c=merged_values.get("temperature_c"),
+        humidity=merged_values.get("humidity"),
+        feels_like_f=merged_values.get("feels_like_f"),
+        feels_like_c=merged_values.get("feels_like_c"),
+        wind_chill_f=merged_values.get("wind_chill_f"),
+        wind_chill_c=merged_values.get("wind_chill_c"),
+        heat_index_f=merged_values.get("heat_index_f"),
+        heat_index_c=merged_values.get("heat_index_c"),
+    )
+
+    _set_or_clear_thermal_field(merged_values, attribution, "feels_like_f", comfort.feels_like_f)
+    _set_or_clear_thermal_field(merged_values, attribution, "feels_like_c", comfort.feels_like_c)
+    _set_or_clear_thermal_field(merged_values, attribution, "wind_chill_f", comfort.wind_chill_f)
+    _set_or_clear_thermal_field(merged_values, attribution, "wind_chill_c", comfort.wind_chill_c)
+    _set_or_clear_thermal_field(merged_values, attribution, "heat_index_f", comfort.heat_index_f)
+    _set_or_clear_thermal_field(merged_values, attribution, "heat_index_c", comfort.heat_index_c)
+
+
+def _set_or_clear_thermal_field(
+    merged_values: dict[str, Any],
+    attribution: SourceAttribution,
+    field_name: str,
+    value: float | None,
+) -> None:
+    if value is None:
+        merged_values.pop(field_name, None)
+        attribution.field_sources.pop(field_name, None)
+    else:
+        merged_values[field_name] = value
+        source = _thermal_field_source(field_name, attribution)
+        if source is not None:
+            attribution.field_sources[field_name] = source
+
+
+def _thermal_field_source(field_name: str, attribution: SourceAttribution) -> str | None:
+    if field_name in attribution.field_sources:
+        return attribution.field_sources[field_name]
+
+    fallback_fields = {
+        "feels_like_f": ("feels_like_c", "wind_chill_f", "heat_index_f"),
+        "feels_like_c": ("feels_like_f", "wind_chill_c", "heat_index_c"),
+        "wind_chill_f": ("wind_chill_c", "feels_like_f", "feels_like_c"),
+        "wind_chill_c": ("wind_chill_f", "feels_like_c", "feels_like_f"),
+        "heat_index_f": ("heat_index_c", "feels_like_f", "feels_like_c"),
+        "heat_index_c": ("heat_index_f", "feels_like_c", "feels_like_f"),
+    }
+    for fallback_field in fallback_fields.get(field_name, ()):
+        source = attribution.field_sources.get(fallback_field)
+        if source is not None:
+            return source
+    return None
 
 
 def build_wind_gust_values(current: CurrentConditions) -> dict[str, float | None]:

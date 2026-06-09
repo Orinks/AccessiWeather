@@ -3,6 +3,12 @@
 
 from __future__ import annotations
 
+from .provider_normalization import (
+    normalize_humidity_percent,
+    normalize_pressure_pair,
+    normalize_temperature_pair,
+)
+from .thermal_comfort import sanitize_thermal_comfort_readings
 from .weather_client_nws_common import *  # noqa: F403
 from .weather_client_parsers import normalize_pressure
 
@@ -23,14 +29,17 @@ def parse_nws_current_conditions(
     """
     props = data.get("properties", {})
 
-    temp_c = props.get("temperature", {}).get("value")
-    temp_f = (temp_c * 9 / 5) + 32 if temp_c is not None else None
+    temperature = normalize_temperature_pair(
+        props.get("temperature", {}).get("value"),
+        props.get("temperature", {}).get("unitCode") or "wmoUnit:degC",
+    )
 
-    humidity = props.get("relativeHumidity", {}).get("value")
-    humidity = round(humidity) if humidity is not None else None
+    humidity = normalize_humidity_percent(props.get("relativeHumidity", {}).get("value"))
 
-    dewpoint_c = props.get("dewpoint", {}).get("value")
-    dewpoint_f = (dewpoint_c * 9 / 5) + 32 if dewpoint_c is not None else None
+    dewpoint = normalize_temperature_pair(
+        props.get("dewpoint", {}).get("value"),
+        props.get("dewpoint", {}).get("unitCode") or "wmoUnit:degC",
+    )
 
     visibility_m = props.get("visibility", {}).get("value")
     visibility_miles = visibility_m / 1609.344 if visibility_m is not None else None
@@ -54,47 +63,56 @@ def parse_nws_current_conditions(
     wind_direction = props.get("windDirection", {}).get("value")
 
     pressure_pa = props.get("barometricPressure", {}).get("value")
-    pressure_in = convert_pa_to_inches(pressure_pa)
+    pressure = normalize_pressure_pair(
+        pressure_pa,
+        props.get("barometricPressure", {}).get("unitCode") or "wmoUnit:Pa",
+    )
 
     # Seasonal fields - wind chill and heat index
     wind_chill_c = props.get("windChill", {}).get("value")
-    wind_chill_f = (wind_chill_c * 9 / 5) + 32 if wind_chill_c is not None else None
+    wind_chill = normalize_temperature_pair(
+        wind_chill_c,
+        props.get("windChill", {}).get("unitCode") or "wmoUnit:degC",
+    )
 
     heat_index_c = props.get("heatIndex", {}).get("value")
-    heat_index_f = (heat_index_c * 9 / 5) + 32 if heat_index_c is not None else None
+    heat_index = normalize_temperature_pair(
+        heat_index_c,
+        props.get("heatIndex", {}).get("unitCode") or "wmoUnit:degC",
+    )
 
-    # Determine feels_like based on wind chill or heat index
-    feels_like_f = None
-    feels_like_c = None
-    if wind_chill_f is not None and (temp_f is None or wind_chill_f < temp_f):
-        feels_like_f = wind_chill_f
-        feels_like_c = wind_chill_c
-    elif heat_index_f is not None and (temp_f is None or heat_index_f > temp_f):
-        feels_like_f = heat_index_f
-        feels_like_c = heat_index_c
+    comfort = sanitize_thermal_comfort_readings(
+        temperature_f=temperature.fahrenheit,
+        temperature_c=temperature.celsius,
+        humidity=humidity,
+        wind_chill_f=wind_chill.fahrenheit,
+        wind_chill_c=wind_chill.celsius,
+        heat_index_f=heat_index.fahrenheit,
+        heat_index_c=heat_index.celsius,
+    )
 
     return CurrentConditions(
-        temperature_f=temp_f,
-        temperature_c=temp_c,
+        temperature_f=temperature.fahrenheit,
+        temperature_c=temperature.celsius,
         condition=props.get("textDescription"),
         humidity=humidity,
-        dewpoint_f=dewpoint_f,
-        dewpoint_c=dewpoint_c,
+        dewpoint_f=dewpoint.fahrenheit,
+        dewpoint_c=dewpoint.celsius,
         wind_speed_mph=wind_speed_mph,
         wind_speed_kph=wind_speed_kph,
         wind_direction=wind_direction,
-        pressure_in=pressure_in,
-        pressure_mb=convert_pa_to_mb(pressure_pa),
-        feels_like_f=feels_like_f,
-        feels_like_c=feels_like_c,
+        pressure_in=pressure.inches,
+        pressure_mb=pressure.millibars,
+        feels_like_f=comfort.feels_like_f,
+        feels_like_c=comfort.feels_like_c,
         visibility_miles=visibility_miles,
         visibility_km=visibility_km,
         uv_index=uv_index,
         # Seasonal fields
-        wind_chill_f=wind_chill_f,
-        wind_chill_c=wind_chill_c,
-        heat_index_f=heat_index_f,
-        heat_index_c=heat_index_c,
+        wind_chill_f=comfort.wind_chill_f,
+        wind_chill_c=comfort.wind_chill_c,
+        heat_index_f=comfort.heat_index_f,
+        heat_index_c=comfort.heat_index_c,
     )
 
 

@@ -15,6 +15,7 @@ from .openmeteo_forecast_mapper import (
     map_forecast as map_openmeteo_forecast,
     map_hourly_forecast as map_openmeteo_hourly_forecast,
 )
+from .provider_normalization import normalize_pressure_to_pascals
 from .utils import TemperatureUnit, calculate_dewpoint
 
 logger = logging.getLogger(__name__)
@@ -22,18 +23,7 @@ logger = logging.getLogger(__name__)
 
 def _pressure_to_pascals(value: float | int | None, unit: str | None) -> float | None:
     """Normalize Open-Meteo pressure values to the NWS-compatible Pascal unit."""
-    if value is None:
-        return None
-
-    numeric = float(value)
-    unit_text = (unit or "").strip().lower()
-    if "hpa" in unit_text or "mb" in unit_text:
-        return numeric * 100
-    if "pa" in unit_text:
-        return numeric
-    if "inch" in unit_text or unit_text in {"in", "inhg"}:
-        return numeric * 3386.39
-    return numeric * 100
+    return normalize_pressure_to_pascals(value, unit)
 
 
 def _parse_openmeteo_datetime(

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ...models import CurrentConditions, ForecastPeriod, HourlyForecastPeriod
+from ...thermal_comfort import sanitize_thermal_comfort_readings
 from ...units import DisplayUnitSystem
 from ...utils import (
     TemperatureUnit,
@@ -219,6 +220,17 @@ def select_feels_like_temperature(
         wind_mph = current.wind_speed_kph * 0.621371
 
     humidity = current.humidity
+    comfort = sanitize_thermal_comfort_readings(
+        temperature_f=temp_f,
+        temperature_c=current.temperature_c,
+        humidity=humidity,
+        feels_like_f=current.feels_like_f,
+        feels_like_c=current.feels_like_c,
+        wind_chill_f=current.wind_chill_f,
+        wind_chill_c=current.wind_chill_c,
+        heat_index_f=current.heat_index_f,
+        heat_index_c=current.heat_index_c,
+    )
 
     # Check for wind chill conditions: cold and windy
     if (
@@ -226,12 +238,9 @@ def select_feels_like_temperature(
         and temp_f < 50
         and wind_mph is not None
         and wind_mph > 3
-        and current.wind_chill_f is not None
+        and comfort.wind_chill_f is not None
     ):
-        wind_chill_c = current.wind_chill_c
-        if wind_chill_c is None and current.wind_chill_f is not None:
-            wind_chill_c = (current.wind_chill_f - 32) * 5 / 9
-        return current.wind_chill_f, wind_chill_c, "wind chill"
+        return comfort.wind_chill_f, comfort.wind_chill_c, "wind chill"
 
     # Check for heat index conditions: hot and humid
     if (
@@ -239,16 +248,13 @@ def select_feels_like_temperature(
         and temp_f > 80
         and humidity is not None
         and humidity > 40
-        and current.heat_index_f is not None
+        and comfort.heat_index_f is not None
     ):
-        heat_index_c = current.heat_index_c
-        if heat_index_c is None and current.heat_index_f is not None:
-            heat_index_c = (current.heat_index_f - 32) * 5 / 9
-        return current.heat_index_f, heat_index_c, "heat index"
+        return comfort.heat_index_f, comfort.heat_index_c, "heat index"
 
     # Fall back to existing feels_like or actual temperature
-    if current.feels_like_f is not None or current.feels_like_c is not None:
-        return current.feels_like_f, current.feels_like_c, None
+    if comfort.feels_like_f is not None or comfort.feels_like_c is not None:
+        return comfort.feels_like_f, comfort.feels_like_c, None
 
     return current.temperature_f, current.temperature_c, None
 

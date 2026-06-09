@@ -24,7 +24,7 @@ class MainWindowCommandMixin:
         self._on_forecast_products()
 
     def _on_forecast_products(self) -> None:
-        """Open the Forecast Products dialog (AFD + HWO + SPS) for the active location."""
+        """Open Forecaster Notes and surf/beach conditions for the active location."""
         current = self.app.config_manager.get_current_location()
         if current is None:
             wx.MessageBox(
@@ -60,29 +60,13 @@ class MainWindowCommandMixin:
 
     def _update_forecast_products_button_state(self) -> None:
         """
-        Enable/disable the Forecast Products button based on country.
+        Keep Forecaster Notes reachable for every saved location.
 
-        Non-US locations disable the button and reveal the adjacent
-        "NWS products are US-only" StaticText so screen readers announce the
-        reason. US locations re-enable the button and hide the label.
+        Official NWS text tabs are only populated for US locations with NWS
+        metadata, but Surf/Beach Conditions can use global supported sources.
         """
-        try:
-            current = self.app.config_manager.get_current_location()
-        except Exception:  # noqa: BLE001
-            current = None
-
-        is_us = True  # default: don't needlessly disable
-        if current is not None:
-            country = getattr(current, "country_code", None)
-            if country:
-                is_us = country.upper() == "US"
-
-        if is_us:
-            self.discussion_button.Enable()
-            self.forecast_products_us_only_label.Hide()
-        else:
-            self.discussion_button.Disable()
-            self.forecast_products_us_only_label.Show()
+        self.discussion_button.Enable()
+        self.forecast_products_us_only_label.Hide()
 
     def _get_forecast_product_service(self):
         """Get or lazily build the shared ForecastProductService instance."""

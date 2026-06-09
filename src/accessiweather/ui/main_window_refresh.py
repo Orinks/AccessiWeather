@@ -82,7 +82,7 @@ class MainWindowRefreshMixin:
                 )
                 return
 
-            # Pre-warm NWS text products (AFD/HWO/SPS) for the active location
+            # Pre-warm NWS text products (AFD/HWO/SPS/SRF) for the active location
             # so the Forecast Products dialog and Unit 10/11 notification
             # checks see fresh data without issuing an on-demand fetch.
             await self._pre_warm_products_for_location(location)
@@ -134,7 +134,7 @@ class MainWindowRefreshMixin:
                 logger.debug(f"Pre-warming cache for {len(uncached)} locations")
                 await self.app.weather_client.pre_warm_batch(uncached)
 
-            # Pre-warm NWS text products (AFD/HWO/SPS) for every non-active
+            # Pre-warm NWS text products (AFD/HWO/SPS/SRF) for every non-active
             # saved US location. Failure isolation is per-(product, location):
             # one failure never cascades to other products or other locations.
             for loc in all_locations:
@@ -146,7 +146,7 @@ class MainWindowRefreshMixin:
 
     async def _pre_warm_products_for_location(self, location: Location) -> None:
         """
-        Pre-warm AFD/HWO/SPS/CLI caches for a single location.
+        Pre-warm AFD/HWO/SPS/SRF/CLI caches for a single location.
 
         Non-US locations and US locations without a populated ``cwa_office``
         are skipped. Each product fetch is wrapped in its own try/except so
@@ -204,7 +204,10 @@ class MainWindowRefreshMixin:
                 )
 
         await asyncio.gather(
-            *(_pre_warm_text_product(product_type) for product_type in ("AFD", "HWO", "SPS")),
+            *(
+                _pre_warm_text_product(product_type)
+                for product_type in ("AFD", "HWO", "SPS", "SRF")
+            ),
             _pre_warm_daily_climate(),
         )
 

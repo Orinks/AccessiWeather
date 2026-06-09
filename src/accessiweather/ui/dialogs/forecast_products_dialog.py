@@ -1,8 +1,8 @@
 """
-Forecast Products dialog — tabbed host for AFD, HWO, and SPS panels.
+Forecast Products dialog — tabbed host for forecaster-note and surf-condition panels.
 
-A ``wx.Notebook`` with three :class:`ForecastProductPanel` pages. Focus lands
-on the AFD TextCtrl when the dialog opens so the user sees content immediately.
+A ``wx.Notebook`` with :class:`ForecastProductPanel` pages for official NWS
+text products and clearly labelled source-derived conditions.
 Tab switches deliberately do NOT grab focus — the notebook tab strip stays
 the active focus level until the user Tabs into content, matching the
 accessible notebook contract.
@@ -59,12 +59,13 @@ class TextProductTab:
 
 
 class ForecastProductsDialog(wx.Dialog):
-    """Tabbed dialog showing available NWS AFD, HWO, and SPS products."""
+    """Tabbed dialog showing available text products and surf/beach conditions."""
 
     _TABS: tuple[TextProductTab, ...] = (
         TextProductTab("AFD", "Area Forecast Discussion", "current", requires_cwa=True),
         TextProductTab("HWO", "Hazardous Weather Outlook", "current", requires_cwa=True),
         TextProductTab("SPS", "Special Weather Statement", "current", requires_cwa=True),
+        TextProductTab("SURF", "Surf/Beach Conditions", "surf_conditions"),
         TextProductTab("CLI", "Daily Climate Report", "daily_climate"),
         TextProductTab("SPC_OUTLOOK", "SPC Outlook (Storm Prediction Center)", "spc_outlook"),
         TextProductTab("SPC_MCD", "SPC MCD (Mesoscale Discussion)", "spc_mcd"),
@@ -134,7 +135,10 @@ class ForecastProductsDialog(wx.Dialog):
         self.panels: list[ForecastProductPanel] = []
 
         pending_iem_tabs: list[TextProductTab] = []
+        cwa_office = getattr(self._location, "cwa_office", None)
         for tab in self._TABS:
+            if tab.requires_cwa and not cwa_office:
+                continue
             if tab.loader_kind in _ACTIVE_IEM_LOADER_KINDS:
                 pending_iem_tabs.append(tab)
                 continue
@@ -186,7 +190,11 @@ class ForecastProductsDialog(wx.Dialog):
 
             loader = _override_loader
 
-        panel_cwa = cwa_office if tab.requires_cwa or tab.loader_kind == "daily_climate" else "IEM"
+        panel_cwa = (
+            cwa_office
+            if tab.requires_cwa or tab.loader_kind in {"daily_climate", "surf_conditions"}
+            else "IEM"
+        )
         panel = ForecastProductPanel(
             parent=self.notebook,
             product_type=tab.product_type,
@@ -311,6 +319,11 @@ class ForecastProductsDialog(wx.Dialog):
                 return None
             if tab.loader_kind == "current":
                 return await self._service.get(cast(Any, tab.product_type), str(cwa_office))
+            if tab.loader_kind == "surf_conditions":
+                return await self._service.get_surf_conditions_for_location(
+                    self._location,
+                    weather_client=getattr(self._app, "weather_client", None),
+                )
             if tab.loader_kind == "nws_history":
                 return await self._service.get_history(tab.product_type, str(cwa_office), limit=1)
             if tab.loader_kind == "daily_climate":
@@ -407,13 +420,14 @@ class ForecastProductsDialog(wx.Dialog):
 
     def _make_advanced_lookup_opener(self, product_type: str):
         """Bind an advanced lookup opener for ``product_type``."""
+        initial_product_type = "SRF" if product_type == "SURF" else product_type
 
         def _open() -> None:
             show_advanced_text_product_dialog(
                 self,
                 self._location,
                 self._service,
-                initial_product_type=product_type,
+                initial_product_type=initial_product_type,
                 app=self._app,
             )
 
@@ -429,8 +443,9 @@ class ForecastProductsDialog(wx.Dialog):
 
         AFD stays visible even when empty because it is the primary forecaster
         notes product and gives users a stable place to retry/read status.
-        HWO and SPS are supplemental; when NWS confirms there is no product for
-        the office, hiding those tabs avoids advertising unavailable content.
+        HWO, SPS, and surf/beach conditions are supplemental; when lookup
+        confirms there is no content, hiding those tabs avoids advertising
+        unavailable content.
         Fetch errors report ``has_product=True`` so the tab remains available
         with its retry button.
         """

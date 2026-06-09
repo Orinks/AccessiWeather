@@ -11,90 +11,58 @@ from .pirate_weather_parsing import (
     _normalize_precipitation_type,
     _resolve_response_timezone,
 )
-from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
-from .weather_client_parsers import convert_f_to_c, degrees_to_cardinal, describe_moon_phase
+from .provider_normalization import (
+    normalize_dewpoint_pair,
+    normalize_humidity_percent,
+    normalize_millibars,
+    normalize_speed_pair,
+    normalize_temperature_pair,
+    normalize_visibility_pair,
+    pirate_temperature_unit,
+    pirate_visibility_unit,
+    pirate_wind_unit,
+)
+from .thermal_comfort import sanitize_thermal_comfort_readings
+from .weather_client_parsers import degrees_to_cardinal, describe_moon_phase
 
 
 def parse_current_conditions(client: Any, data: dict) -> CurrentConditions:
     """Parse Pirate Weather ``currently`` block into CurrentConditions."""
     current = data.get("currently", {})
 
-    # Temperature (PW returns °F in "us" units, °C otherwise)
-    temp = current.get("temperature")
-    using_us = client.units == "us"
+    temperature_unit = pirate_temperature_unit(client.units)
+    wind_unit = pirate_wind_unit(client.units)
+    visibility_unit = pirate_visibility_unit(client.units)
+    temperature = normalize_temperature_pair(current.get("temperature"), temperature_unit)
 
-    if using_us:
-        temp_f = float(temp) if temp is not None else None
-        temp_c = convert_f_to_c(temp_f)
-    else:
-        temp_c = float(temp) if temp is not None else None
-        temp_f = (temp_c * 9 / 5 + 32) if temp_c is not None else None
+    humidity = normalize_humidity_percent(current.get("humidity"), fraction=True)
 
-    # Humidity (0-1 in PW → 0-100)
-    humidity_raw = current.get("humidity")
-    humidity = round(humidity_raw * 100) if humidity_raw is not None else None
+    dewpoint = normalize_dewpoint_pair(
+        current.get("dewPoint"),
+        temperature_unit,
+        fallback_temperature_f=temperature.fahrenheit,
+        humidity_percent=humidity,
+    )
 
-    # Dew point
-    dewpoint = current.get("dewPoint")
-    if using_us:
-        dewpoint_f = float(dewpoint) if dewpoint is not None else None
-        dewpoint_c = convert_f_to_c(dewpoint_f)
-        if dewpoint_f is None and temp_f is not None and humidity is not None:
-            dewpoint_f = calculate_dewpoint(temp_f, humidity, unit=TemperatureUnit.FAHRENHEIT)
-            dewpoint_c = convert_f_to_c(dewpoint_f)
-    else:
-        dewpoint_c = float(dewpoint) if dewpoint is not None else None
-        dewpoint_f = (dewpoint_c * 9 / 5 + 32) if dewpoint_c is not None else None
-
-    # Wind – PW "us" = mph, "si" = m/s, "ca" = km/h, "uk2" = mph
-    wind_speed_raw = current.get("windSpeed")
-    if using_us or client.units == "uk2":
-        wind_speed_mph = float(wind_speed_raw) if wind_speed_raw is not None else None
-        wind_speed_kph = wind_speed_mph * 1.60934 if wind_speed_mph is not None else None
-    elif client.units == "ca":
-        wind_speed_kph = float(wind_speed_raw) if wind_speed_raw is not None else None
-        wind_speed_mph = wind_speed_kph / 1.60934 if wind_speed_kph is not None else None
-    else:  # si: m/s
-        wind_mps = float(wind_speed_raw) if wind_speed_raw is not None else None
-        wind_speed_mph = wind_mps * 2.23694 if wind_mps is not None else None
-        wind_speed_kph = wind_mps * 3.6 if wind_mps is not None else None
+    wind_speed = normalize_speed_pair(current.get("windSpeed"), wind_unit)
 
     wind_direction = current.get("windBearing")  # degrees
 
-    # Pressure – PW returns mb in all unit groups
-    pressure_mb = current.get("pressure")
-    pressure_in = pressure_mb / 33.8639 if pressure_mb is not None else None
+    pressure = normalize_millibars(current.get("pressure"))
 
-    # Visibility – PW "us" = miles, others = km
-    visibility_raw = current.get("visibility")
-    if using_us or client.units == "uk2":
-        visibility_miles = float(visibility_raw) if visibility_raw is not None else None
-        visibility_km = visibility_miles * 1.60934 if visibility_miles is not None else None
-    else:
-        visibility_km = float(visibility_raw) if visibility_raw is not None else None
-        visibility_miles = visibility_km / 1.60934 if visibility_km is not None else None
+    visibility = normalize_visibility_pair(current.get("visibility"), visibility_unit)
 
-    # Feels like (apparent temperature)
-    apparent = current.get("apparentTemperature")
-    if using_us:
-        feels_like_f = float(apparent) if apparent is not None else None
-        feels_like_c = convert_f_to_c(feels_like_f)
-    else:
-        feels_like_c = float(apparent) if apparent is not None else None
-        feels_like_f = (feels_like_c * 9 / 5 + 32) if feels_like_c is not None else None
+    feels_like = normalize_temperature_pair(current.get("apparentTemperature"), temperature_unit)
 
-    # Wind gust
-    wind_gust_raw = current.get("windGust")
-    if using_us or client.units == "uk2":
-        wind_gust_mph = float(wind_gust_raw) if wind_gust_raw is not None else None
-        wind_gust_kph = wind_gust_mph * 1.60934 if wind_gust_mph is not None else None
-    elif client.units == "ca":
-        wind_gust_kph = float(wind_gust_raw) if wind_gust_raw is not None else None
-        wind_gust_mph = wind_gust_kph / 1.60934 if wind_gust_kph is not None else None
-    else:
-        wind_gust_mps = float(wind_gust_raw) if wind_gust_raw is not None else None
-        wind_gust_mph = wind_gust_mps * 2.23694 if wind_gust_mps is not None else None
-        wind_gust_kph = wind_gust_mps * 3.6 if wind_gust_mps is not None else None
+    comfort = sanitize_thermal_comfort_readings(
+        temperature_f=temperature.fahrenheit,
+        temperature_c=temperature.celsius,
+        humidity=humidity,
+        feels_like_f=feels_like.fahrenheit,
+        feels_like_c=feels_like.celsius,
+    )
+
+    wind_gust = normalize_speed_pair(current.get("windGust"), wind_unit)
 
     # Current-condition model fields represent accumulated amount. Pirate Weather's
     # current precipIntensity is a rate, so leave amount fields blank.
@@ -126,29 +94,33 @@ def parse_current_conditions(client: Any, data: dict) -> CurrentConditions:
     precipitation_type = _normalize_precipitation_type(current.get("precipType"))
 
     return CurrentConditions(
-        temperature_f=temp_f,
-        temperature_c=temp_c,
+        temperature_f=temperature.fahrenheit,
+        temperature_c=temperature.celsius,
         condition=condition_str,
         humidity=humidity,
-        dewpoint_f=dewpoint_f,
-        dewpoint_c=dewpoint_c,
-        wind_speed_mph=wind_speed_mph,
-        wind_speed_kph=wind_speed_kph,
+        dewpoint_f=dewpoint.fahrenheit,
+        dewpoint_c=dewpoint.celsius,
+        wind_speed_mph=wind_speed.mph,
+        wind_speed_kph=wind_speed.kph,
         wind_direction=degrees_to_cardinal(wind_direction),
-        pressure_in=pressure_in,
-        pressure_mb=pressure_mb,
-        feels_like_f=feels_like_f,
-        feels_like_c=feels_like_c,
-        visibility_miles=visibility_miles,
-        visibility_km=visibility_km,
+        pressure_in=pressure.inches,
+        pressure_mb=pressure.millibars,
+        feels_like_f=comfort.feels_like_f,
+        feels_like_c=comfort.feels_like_c,
+        visibility_miles=visibility.miles,
+        visibility_km=visibility.kilometers,
         uv_index=uv_index,
         cloud_cover=cloud_cover,
-        wind_gust_mph=wind_gust_mph,
-        wind_gust_kph=wind_gust_kph,
+        wind_gust_mph=wind_gust.mph,
+        wind_gust_kph=wind_gust.kph,
         precipitation_in=precip_in,
         precipitation_mm=precip_mm,
         precipitation_type=precipitation_type,
         sunrise_time=sunrise_time,
         sunset_time=sunset_time,
         moon_phase=moon_phase,
+        wind_chill_f=comfort.wind_chill_f,
+        wind_chill_c=comfort.wind_chill_c,
+        heat_index_f=comfort.heat_index_f,
+        heat_index_c=comfort.heat_index_c,
     )

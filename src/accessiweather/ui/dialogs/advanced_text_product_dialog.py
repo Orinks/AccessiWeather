@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_NWS_PRODUCT_TYPES = {"AFD", "HWO", "SPS", "CLI", "CF6", "RER", "LSR", "PNS"}
+_NWS_PRODUCT_TYPES = {"AFD", "HWO", "SPS", "SRF", "CLI", "CF6", "RER", "LSR", "PNS"}
 _SOURCE_PREFER_NWS = "Prefer NWS when available"
 _SOURCE_IEM_ONLY = "IEM AFOS only"
 _SOURCE_NWS_ONLY = "NWS history only"
@@ -77,6 +77,12 @@ _PRODUCT_PRESET_ITEMS: tuple[ProductPreset, ...] = (
     ProductPreset("Local office", "Local Area Forecast Discussion", "AFD", True),
     ProductPreset("Local office", "Local Hazardous Weather Outlook", "HWO", True),
     ProductPreset("Local office", "Local Special Weather Statement", "SPS", True),
+    ProductPreset(
+        "Local office",
+        "Official NWS Surf Zone Forecast for regional beaches",
+        "SRF",
+        True,
+    ),
     ProductPreset("Local office", "Local Storm Report", "LSR", True),
     ProductPreset("Local office", "Daily Climate Report", "CLI", True),
     ProductPreset("Local office", "Monthly Climate Report", "CF6", True),
@@ -982,17 +988,25 @@ class AdvancedTextProductDialog(wx.Dialog):
 
         chunks = [f"Source: {source}"]
         for product in products:
+            product_type = getattr(product, "product_type", "unknown")
+            cwa_office = getattr(product, "cwa_office", "")
             headline = getattr(product, "headline", None)
             issuance = getattr(product, "issuance_time", None)
             issued = issuance.isoformat() if isinstance(issuance, datetime) else "unknown"
+            regional_note = ""
+            if product_type == "SRF":
+                regional_note = (
+                    f"Surf Zone Forecast issued by NWS {cwa_office} for regional beaches."
+                )
             chunks.append(
                 "\n".join(
                     part
                     for part in (
                         "",
-                        f"Product: {getattr(product, 'product_type', 'unknown')}",
+                        f"Product: {product_type}",
                         f"Issued: {issued}",
                         f"Headline: {headline}" if headline else "",
+                        regional_note,
                         getattr(product, "product_text", ""),
                     )
                     if part
