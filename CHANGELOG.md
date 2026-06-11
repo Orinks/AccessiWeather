@@ -17,6 +17,10 @@ All notable changes to this project will be documented in this file.
 - Unknown or uncategorized weather alerts now have a mappable default sound, and missing custom-pack event sounds fall back to the matching default sound before generic notification audio.
 - NOAA Weather Radio Station Finder now repopulates stations when leaving an empty Favorites view, so you no longer need to reopen the radio dialog.
 - Feels-like temperatures now keep showing in tray text when only one temperature unit is available, instead of falling back to `N/A`.
+- Editing a location now tells you when the new name is empty or already in use, instead of silently discarding your changes.
+- The tray text format dialog now warns you about unknown placeholders or unbalanced braces before saving, so a typo like `{tmp}` can't quietly end up in your tray tooltip.
+- Closing the Add or Edit Location dialog while a search or current-location detection is still running no longer risks a crash.
+- Weather history's "Today vs Yesterday" section now reads naturally when both days have the same temperature, instead of "is 0.0°F about the same than yesterday".
 
 ## [0.7.2] - 2026-05-30
 

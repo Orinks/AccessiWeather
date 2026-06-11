@@ -134,6 +134,12 @@ class MainWindowLocationMixin:
                 if idx != getattr(wx, "NOT_FOUND", -1):
                     self.location_dropdown.SetSelection(idx)
                     self._set_current_location(new_name)
+            else:
+                base_module.wx.MessageBox(
+                    f"Could not update '{selected}'. Your changes were not saved.",
+                    "Update Failed",
+                    base_module.wx.OK | base_module.wx.ICON_WARNING,
+                )
         self.refresh_weather_async(force_refresh=True)
 
     def on_remove_location(self) -> None:

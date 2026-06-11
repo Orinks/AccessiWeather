@@ -120,11 +120,17 @@ def _build_history_sections(app, weather_data) -> list[tuple[str, str]]:
 
             if current_temp is not None and yesterday_temp is not None:
                 diff = current_temp - yesterday_temp
-                direction = "warmer" if diff > 0 else "cooler" if diff < 0 else "about the same"
-                comparison_text.append(
-                    f"Current temperature ({current_temp}°F) is {abs(diff):.1f}°F {direction} "
-                    f"than yesterday ({yesterday_temp}°F)."
-                )
+                if abs(diff) < 0.5:
+                    comparison_text.append(
+                        f"Current temperature ({current_temp}°F) is about the same "
+                        f"as yesterday ({yesterday_temp}°F)."
+                    )
+                else:
+                    direction = "warmer" if diff > 0 else "cooler"
+                    comparison_text.append(
+                        f"Current temperature ({current_temp}°F) is {abs(diff):.1f}°F {direction} "
+                        f"than yesterday ({yesterday_temp}°F)."
+                    )
 
             if comparison_text:
                 sections.append(("Today vs Yesterday", "\n".join(comparison_text)))

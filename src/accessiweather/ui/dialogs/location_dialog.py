@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 import wx
 
 from ...current_location import CurrentLocationService, LocationDetectionStatus
+from .async_guard import guard_destroyed
 
 if TYPE_CHECKING:
     from ...app import AccessiWeatherApp
@@ -252,6 +253,7 @@ class EditLocationDialog(wx.Dialog):
 
         button_sizer = wx.StdDialogButtonSizer()
         ok_button = wx.Button(panel, wx.ID_OK, "&Save")
+        ok_button.Bind(wx.EVT_BUTTON, self._on_save)
         cancel_button = wx.Button(panel, wx.ID_CANCEL, "Cancel")
         button_sizer.AddButton(ok_button)
         button_sizer.AddButton(cancel_button)
@@ -325,6 +327,7 @@ class EditLocationDialog(wx.Dialog):
             return location
         return resolved or location
 
+    @guard_destroyed
     def _on_current_location_detected(self, location: Location) -> None:
         """Apply detected coordinates as the pending coordinate update."""
         self._is_detecting_current_location = False
@@ -343,6 +346,7 @@ class EditLocationDialog(wx.Dialog):
             "Review the editable name, then save it."
         )
 
+    @guard_destroyed
     def _on_current_location_error(self, message: str) -> None:
         """Handle unavailable, denied, unsupported, or timed-out detection."""
         self._is_detecting_current_location = False
@@ -358,6 +362,7 @@ class EditLocationDialog(wx.Dialog):
             logger.error(f"Address lookup failed: {e}")
             wx.CallAfter(self._on_address_search_error, str(e))
 
+    @guard_destroyed
     def _on_address_search_complete(self, locations: list[Location]) -> None:
         """Handle address lookup completion."""
         self._is_searching = False
@@ -383,6 +388,7 @@ class EditLocationDialog(wx.Dialog):
             f"Found {len(locations)} matches. Select one to compare coordinates."
         )
 
+    @guard_destroyed
     def _on_address_search_error(self, error: str) -> None:
         """Handle address lookup failure."""
         self._is_searching = False
@@ -424,6 +430,35 @@ class EditLocationDialog(wx.Dialog):
         self.coordinate_comparison_label.Wrap(580)
         self.Layout()
         self.Fit()
+
+    def _on_save(self, event) -> None:
+        """Validate the edited name before closing, so rejections are never silent."""
+        new_name = self.name_input.GetValue().strip()
+        if not new_name:
+            wx.MessageBox(
+                "Please enter a location name.",
+                "Location Name Required",
+                wx.OK | wx.ICON_WARNING,
+                self,
+            )
+            self.name_input.SetFocus()
+            return
+
+        if new_name != self._location.name:
+            config_manager = getattr(self.app, "config_manager", None)
+            existing_names = config_manager.get_location_names() if config_manager else []
+            if new_name in existing_names:
+                wx.MessageBox(
+                    f"A location named '{new_name}' already exists. "
+                    "Please choose a different name.",
+                    "Duplicate Location Name",
+                    wx.OK | wx.ICON_WARNING,
+                    self,
+                )
+                self.name_input.SetFocus()
+                return
+
+        self.EndModal(wx.ID_OK)
 
     def get_result(self) -> EditLocationResult:
         """Return the editable values chosen in the dialog."""
@@ -666,6 +701,7 @@ class AddLocationDialog(wx.Dialog):
             return location
         return resolved or location
 
+    @guard_destroyed
     def _on_current_location_detected(self, location: Location) -> None:
         """Handle successful current-location detection."""
         self._is_detecting_current_location = False
@@ -687,6 +723,7 @@ class AddLocationDialog(wx.Dialog):
             self.name_input.SetValue(location.name)
         self._update_status("Detected current location. Review the editable name, then save it.")
 
+    @guard_destroyed
     def _on_current_location_error(self, message: str) -> None:
         """Handle unavailable, denied, unsupported, or timed-out detection."""
         self._is_detecting_current_location = False
@@ -705,6 +742,7 @@ class AddLocationDialog(wx.Dialog):
             logger.error(f"Search failed: {e}")
             wx.CallAfter(self._on_search_error, str(e))
 
+    @guard_destroyed
     def _on_search_complete(self, locations):
         """Handle search completion."""
         self._is_searching = False
@@ -730,6 +768,7 @@ class AddLocationDialog(wx.Dialog):
         else:
             self._update_status("No locations found. Try a different search term.", is_error=True)
 
+    @guard_destroyed
     def _on_search_error(self, error: str):
         """Handle search error."""
         self._is_searching = False

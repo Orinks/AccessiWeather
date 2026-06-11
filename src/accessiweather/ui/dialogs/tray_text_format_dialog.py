@@ -81,9 +81,25 @@ class TrayTextFormatDialog(wx.Dialog):
             main_sizer.Add(button_sizer, 0, wx.EXPAND | wx.ALL, 10)
 
         self.SetSizer(main_sizer)
+        self.Bind(wx.EVT_BUTTON, self._on_ok, id=wx.ID_OK)
 
     def _on_format_changed(self, event: wx.CommandEvent) -> None:
         self._update_preview()
+        event.Skip()
+
+    def _on_ok(self, event: wx.CommandEvent) -> None:
+        """Warn about typos like unknown placeholders or unbalanced braces before saving."""
+        is_valid, error = self._updater.validate_format_string(self._format_ctrl.GetValue().strip())
+        if not is_valid:
+            choice = wx.MessageBox(
+                f"{error}\n\nSave this format anyway?",
+                "Tray Text Format Problem",
+                wx.YES_NO | wx.ICON_WARNING,
+                self,
+            )
+            if choice != wx.YES:
+                self._format_ctrl.SetFocus()
+                return
         event.Skip()
 
     def _update_preview(self) -> None:

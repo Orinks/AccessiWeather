@@ -259,6 +259,9 @@ if "wx" not in sys.modules:
         _wx.ID_CLOSE = 5103
         _wx.OK = 0x0004
         _wx.CANCEL = 0x0010
+        _wx.YES = 0x0002
+        _wx.NO = 0x0008
+        _wx.YES_NO = 0x000A
         _wx.HORIZONTAL = 0x0004
         _wx.VERTICAL = 0x0008
         _wx.DEFAULT_DIALOG_STYLE = 0
