@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import importlib
 import logging
-from types import SimpleNamespace
+import sys
+from types import ModuleType, SimpleNamespace
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock
 
@@ -12,6 +14,20 @@ import pytest
 from accessiweather.config.config_manager import ConfigManager
 from accessiweather.config.locations import LocationOperations
 from accessiweather.models import AppConfig, AppSettings
+
+
+def _current_location_module():
+    """Return the real module even if the package attribute was shadowed."""
+    module = sys.modules.get("accessiweather.current_location")
+    if not isinstance(module, ModuleType):
+        sys.modules.pop("accessiweather.current_location", None)
+        module = importlib.import_module("accessiweather.current_location")
+
+    import accessiweather
+
+    if getattr(accessiweather, "current_location", None) is not module:
+        accessiweather.current_location = module
+    return module
 
 
 class _FakeConfigManager:
@@ -152,7 +168,7 @@ class TestCurrentLocationProviders:
     async def test_factory_returns_unsupported_provider_on_linux(self, monkeypatch):
         from accessiweather.current_location import UnsupportedLocationProvider, get_native_provider
 
-        monkeypatch.setattr("accessiweather.current_location.sys.platform", "linux")
+        monkeypatch.setattr(_current_location_module().sys, "platform", "linux")
 
         provider = get_native_provider()
 
@@ -161,7 +177,7 @@ class TestCurrentLocationProviders:
     async def test_factory_returns_windows_provider_on_windows(self, monkeypatch):
         from accessiweather.current_location import WindowsLocationProvider, get_native_provider
 
-        monkeypatch.setattr("accessiweather.current_location.sys.platform", "win32")
+        monkeypatch.setattr(_current_location_module().sys, "platform", "win32")
 
         provider = get_native_provider()
 
@@ -170,7 +186,7 @@ class TestCurrentLocationProviders:
     async def test_factory_returns_macos_provider_on_macos(self, monkeypatch):
         from accessiweather.current_location import MacOSLocationProvider, get_native_provider
 
-        monkeypatch.setattr("accessiweather.current_location.sys.platform", "darwin")
+        monkeypatch.setattr(_current_location_module().sys, "platform", "darwin")
 
         provider = get_native_provider()
 
@@ -323,7 +339,7 @@ class TestWindowsCurrentLocationProvider:
                 raise ModuleNotFoundError(name)
             raise AssertionError(name)
 
-        monkeypatch.setattr("accessiweather.current_location.importlib.import_module", fake_import)
+        monkeypatch.setattr(_current_location_module().importlib, "import_module", fake_import)
 
         with pytest.raises(CurrentLocationError) as exc_info:
             await WindowsLocationProvider().detect()
@@ -344,7 +360,8 @@ class TestWindowsCurrentLocationProvider:
 
         fake_geolocation = SimpleNamespace(Geolocator=FakeGeolocator)
         monkeypatch.setattr(
-            "accessiweather.current_location.importlib.import_module",
+            _current_location_module().importlib,
+            "import_module",
             lambda name: fake_geolocation,
         )
 
@@ -371,10 +388,11 @@ class TestWindowsCurrentLocationProvider:
 
         fake_geolocation = SimpleNamespace(Geolocator=FakeGeolocator)
         monkeypatch.setattr(
-            "accessiweather.current_location.importlib.import_module",
+            _current_location_module().importlib,
+            "import_module",
             lambda name: fake_geolocation,
         )
-        monkeypatch.setattr("accessiweather.current_location.asyncio.wait_for", fake_wait_for)
+        monkeypatch.setattr(_current_location_module().asyncio, "wait_for", fake_wait_for)
 
         with pytest.raises(CurrentLocationError) as exc_info:
             await WindowsLocationProvider().detect()
@@ -409,10 +427,11 @@ class TestWindowsCurrentLocationProvider:
 
         fake_geolocation = SimpleNamespace(Geolocator=FakeGeolocator)
         monkeypatch.setattr(
-            "accessiweather.current_location.importlib.import_module",
+            _current_location_module().importlib,
+            "import_module",
             lambda name: fake_geolocation,
         )
-        monkeypatch.setattr("accessiweather.current_location.asyncio.wait_for", fake_wait_for)
+        monkeypatch.setattr(_current_location_module().asyncio, "wait_for", fake_wait_for)
 
         with pytest.raises(CurrentLocationError) as exc_info:
             await WindowsLocationProvider().detect()
@@ -440,7 +459,8 @@ class TestWindowsCurrentLocationProvider:
             PositionAccuracy=SimpleNamespace(DEFAULT="default"),
         )
         monkeypatch.setattr(
-            "accessiweather.current_location.importlib.import_module",
+            _current_location_module().importlib,
+            "import_module",
             lambda name: fake_geolocation,
         )
 
@@ -464,7 +484,7 @@ class TestMacOSCurrentLocationProvider:
                 raise ModuleNotFoundError(name)
             raise AssertionError(name)
 
-        monkeypatch.setattr("accessiweather.current_location.importlib.import_module", fake_import)
+        monkeypatch.setattr(_current_location_module().importlib, "import_module", fake_import)
 
         with pytest.raises(CurrentLocationError) as exc_info:
             await MacOSLocationProvider().detect()
@@ -478,10 +498,11 @@ class TestMacOSCurrentLocationProvider:
             "success-request-location"
         )
         monkeypatch.setattr(
-            "accessiweather.current_location.importlib.import_module",
+            _current_location_module().importlib,
+            "import_module",
             lambda name: fake_core_location if name == "CoreLocation" else fake_foundation,
         )
-        monkeypatch.setattr("accessiweather.current_location.threading.Thread", _ImmediateThread)
+        monkeypatch.setattr(_current_location_module().threading, "Thread", _ImmediateThread)
 
         coordinates = await MacOSLocationProvider().detect(timeout_seconds=0.1)
 
@@ -494,10 +515,11 @@ class TestMacOSCurrentLocationProvider:
 
         fake_foundation, fake_core_location = _fake_core_location_modules("success-start-updating")
         monkeypatch.setattr(
-            "accessiweather.current_location.importlib.import_module",
+            _current_location_module().importlib,
+            "import_module",
             lambda name: fake_core_location if name == "CoreLocation" else fake_foundation,
         )
-        monkeypatch.setattr("accessiweather.current_location.threading.Thread", _ImmediateThread)
+        monkeypatch.setattr(_current_location_module().threading, "Thread", _ImmediateThread)
 
         coordinates = await MacOSLocationProvider().detect(timeout_seconds=0.1)
 
@@ -514,10 +536,11 @@ class TestMacOSCurrentLocationProvider:
 
         fake_foundation, fake_core_location = _fake_core_location_modules("failure")
         monkeypatch.setattr(
-            "accessiweather.current_location.importlib.import_module",
+            _current_location_module().importlib,
+            "import_module",
             lambda name: fake_core_location if name == "CoreLocation" else fake_foundation,
         )
-        monkeypatch.setattr("accessiweather.current_location.threading.Thread", _ImmediateThread)
+        monkeypatch.setattr(_current_location_module().threading, "Thread", _ImmediateThread)
 
         with pytest.raises(CurrentLocationError) as exc_info:
             await MacOSLocationProvider().detect(timeout_seconds=0.1)
@@ -533,10 +556,11 @@ class TestMacOSCurrentLocationProvider:
 
         fake_foundation, fake_core_location = _fake_core_location_modules("denied")
         monkeypatch.setattr(
-            "accessiweather.current_location.importlib.import_module",
+            _current_location_module().importlib,
+            "import_module",
             lambda name: fake_core_location if name == "CoreLocation" else fake_foundation,
         )
-        monkeypatch.setattr("accessiweather.current_location.threading.Thread", _ImmediateThread)
+        monkeypatch.setattr(_current_location_module().threading, "Thread", _ImmediateThread)
 
         with pytest.raises(CurrentLocationError) as exc_info:
             await MacOSLocationProvider().detect(timeout_seconds=0.1)
@@ -556,11 +580,12 @@ class TestMacOSCurrentLocationProvider:
             raise TimeoutError
 
         monkeypatch.setattr(
-            "accessiweather.current_location.importlib.import_module",
+            _current_location_module().importlib,
+            "import_module",
             lambda name: fake_core_location if name == "CoreLocation" else fake_foundation,
         )
-        monkeypatch.setattr("accessiweather.current_location.threading.Thread", _ImmediateThread)
-        monkeypatch.setattr("accessiweather.current_location.asyncio.wait_for", fake_wait_for)
+        monkeypatch.setattr(_current_location_module().threading, "Thread", _ImmediateThread)
+        monkeypatch.setattr(_current_location_module().asyncio, "wait_for", fake_wait_for)
 
         with pytest.raises(CurrentLocationError) as exc_info:
             await MacOSLocationProvider().detect(timeout_seconds=0.1)

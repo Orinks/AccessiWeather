@@ -278,6 +278,49 @@ class TestBuildBasicMetrics:
         labels = [m.label for m in metrics]
         assert "Temperature" in labels
         assert "Humidity" not in labels
+        assert "Feels different" not in labels
+        assert all(metric.value.lower() != "n/a" for metric in metrics)
+
+    def test_absent_feels_like_is_not_rendered_as_current_condition_item(self):
+        current = CurrentConditions(
+            temperature_f=72.0,
+            temperature_c=22.2,
+            condition="Sunny",
+        )
+
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.FAHRENHEIT,
+            0,
+            show_dewpoint=True,
+            show_visibility=True,
+            show_uv_index=True,
+        )
+
+        assert Metric("Temperature", "72°F") in metrics
+        assert all("feel" not in metric.label.lower() for metric in metrics)
+        assert all(metric.value.lower() != "n/a" for metric in metrics)
+
+    def test_present_feels_like_still_displays_when_meaningfully_different(self):
+        current = CurrentConditions(
+            temperature_f=81.0,
+            temperature_c=27.2,
+            humidity=36,
+            feels_like_f=85.0,
+            feels_like_c=29.4,
+        )
+
+        metrics = _build_basic_metrics(
+            current,
+            TemperatureUnit.FAHRENHEIT,
+            0,
+            show_dewpoint=True,
+            show_visibility=True,
+            show_uv_index=True,
+        )
+
+        assert Metric("Temperature", "81°F (feels like 85°F)") in metrics
+        assert all(metric.value.lower() != "n/a" for metric in metrics)
 
     def test_dewpoint_hidden(self):
         current = CurrentConditions(temperature_f=72.0, dewpoint_f=50.0)

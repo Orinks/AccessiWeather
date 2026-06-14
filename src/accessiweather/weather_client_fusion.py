@@ -43,6 +43,7 @@ from accessiweather.weather_client_fusion_values import (
     build_wind_gust_values,
     check_temperature_conflicts,
     discard_gust_if_below_wind_speed,
+    sanitize_thermal_comfort_values,
 )
 
 logger = logging.getLogger(__name__)
@@ -355,6 +356,7 @@ class DataFusionEngine:
             field_names=("heat_index_f", "heat_index_c"),
             value_builder=self._build_heat_index_values,
         )
+        self._sanitize_thermal_comfort_values(merged_values, attribution)
 
     def _apply_priority_group_selection(
         self,
@@ -483,6 +485,14 @@ class DataFusionEngine:
     ) -> None:
         """Drop wind gust when it is physically impossible."""
         discard_gust_if_below_wind_speed(merged_values, attribution)
+
+    def _sanitize_thermal_comfort_values(
+        self,
+        merged_values: dict[str, Any],
+        attribution: SourceAttribution,
+    ) -> None:
+        """Drop apparent-temperature readings that conflict with fused conditions."""
+        sanitize_thermal_comfort_values(merged_values, attribution)
 
     def _build_wind_gust_values(self, current: CurrentConditions) -> dict[str, float | None]:
         """Build aligned wind gust values from a single source."""

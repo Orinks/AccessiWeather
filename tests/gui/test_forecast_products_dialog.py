@@ -281,9 +281,10 @@ class TestForecastProductsDialog:
         )
 
         types = [entry["product_type"] for entry in panel_factory]
-        assert types == ["AFD", "HWO", "SPS", "CLI"]
-        assert dlg.notebook.AddPage.call_args_list[3].args[1] == "Daily Climate Report"
-        assert len(dlg.panels) == 4
+        assert types == ["AFD", "HWO", "SPS", "SURF", "CLI"]
+        assert dlg.notebook.AddPage.call_args_list[3].args[1] == "Surf/Beach Conditions"
+        assert dlg.notebook.AddPage.call_args_list[4].args[1] == "Daily Climate Report"
+        assert len(dlg.panels) == 5
 
         # Each panel got wired to the same service + explainer.
         for entry in panel_factory:
@@ -293,7 +294,8 @@ class TestForecastProductsDialog:
         assert panel_factory[0]["autoload"] is True
         assert panel_factory[1]["autoload"] is False
         assert panel_factory[2]["autoload"] is False
-        assert panel_factory[3]["autoload"] is True
+        assert panel_factory[3]["autoload"] is False
+        assert panel_factory[4]["autoload"] is True
 
     def test_loader_invokes_service_get(self, notebook_factory, panel_factory, sample_us_location):
         """Each panel's bound loader calls service.get(product_type, cwa_office)."""
@@ -433,7 +435,7 @@ class TestForecastProductsDialog:
         )
 
         openers = [entry["advanced_lookup_opener"] for entry in panel_factory]
-        assert len(openers) == 4
+        assert len(openers) == 5
         for opener in openers:
             assert callable(opener)
 
@@ -449,6 +451,72 @@ class TestForecastProductsDialog:
             initial_product_type="AFD",
             app=None,
         )
+
+        with patch(
+            "accessiweather.ui.dialogs.forecast_products_dialog.show_advanced_text_product_dialog"
+        ) as show_dialog:
+            openers[3]()
+
+        show_dialog.assert_called_once_with(
+            dlg,
+            sample_us_location,
+            service,
+            initial_product_type="SRF",
+            app=None,
+        )
+
+    def test_surf_loader_invokes_source_aware_service(
+        self, notebook_factory, panel_factory, sample_us_location
+    ):
+        import asyncio
+
+        service = MagicMock(name="ForecastProductService")
+        app = MagicMock()
+        app.weather_client = MagicMock(name="WeatherClient")
+        app.run_async.side_effect = lambda coro: coro.close()
+
+        async def _fake_surf(location, **kwargs):
+            return SimpleNamespace(location=location, kwargs=kwargs)
+
+        service.get_surf_conditions_for_location.side_effect = _fake_surf
+
+        dlg = ForecastProductsDialog(
+            parent=MagicMock(),
+            location=sample_us_location,
+            forecast_product_service=service,
+            ai_explainer=None,
+            app=app,
+        )
+
+        surf_tab = next(tab for tab in ForecastProductsDialog._TABS if tab.product_type == "SURF")
+        result = asyncio.run(dlg._make_loader(surf_tab)())
+
+        assert result.location is sample_us_location
+        assert result.kwargs == {"weather_client": app.weather_client}
+
+    def test_non_us_location_builds_global_surf_tab(self, notebook_factory, panel_factory):
+        service = MagicMock(name="ForecastProductService")
+        location = Location(
+            name="Porto",
+            latitude=41.15,
+            longitude=-8.63,
+            country_code="PT",
+            cwa_office=None,
+        )
+
+        dlg = ForecastProductsDialog(
+            parent=MagicMock(),
+            location=location,
+            forecast_product_service=service,
+            ai_explainer=None,
+        )
+
+        types = [entry["product_type"] for entry in panel_factory]
+        assert "AFD" not in types
+        assert "HWO" not in types
+        assert "SPS" not in types
+        assert types[0] == "SURF"
+        assert dlg.notebook.AddPage.call_args_list[0].args[1] == "Surf/Beach Conditions"
 
     def test_national_products_button_opens_dedicated_dialog(
         self, notebook_factory, panel_factory, sample_us_location
@@ -652,8 +720,8 @@ class TestMainWindowWiring:
         mw.discussion_button.Enable.assert_called()
         mw.forecast_products_us_only_label.Hide.assert_called()
 
-    def test_update_button_state_non_us_disables(self):
-        """Non-US location: button disabled, US-only label shown (adjacent StaticText)."""
+    def test_update_button_state_non_us_keeps_forecaster_notes_available(self):
+        """Non-US location: button stays enabled for global surf/beach conditions."""
         from accessiweather.ui import main_window
 
         mw = MagicMock(spec=main_window.MainWindow)
@@ -668,5 +736,5 @@ class TestMainWindowWiring:
         mw.forecast_products_us_only_label = MagicMock()
 
         main_window.MainWindow._update_forecast_products_button_state(mw)
-        mw.discussion_button.Disable.assert_called()
-        mw.forecast_products_us_only_label.Show.assert_called()
+        mw.discussion_button.Enable.assert_called()
+        mw.forecast_products_us_only_label.Hide.assert_called()

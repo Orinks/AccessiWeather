@@ -113,12 +113,11 @@ class MainWindowUIMixin:
         self.discussion_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["discussion"])
         self.settings_button = wx.Button(button_panel, label=QUICK_ACTION_LABELS["settings"])
 
-        # Adjacent StaticText explaining why the Forecast Products button is
-        # disabled for non-US locations. Screen readers announce adjacent
-        # StaticText, which is the accessibility affordance for this reason
-        # label (SetName/tooltips are ignored in this project).
+        # Reserved adjacent StaticText for any future availability note near
+        # Forecaster Notes. It stays hidden by default; screen readers announce
+        # adjacent StaticText when it is shown.
         self.forecast_products_us_only_label = wx.StaticText(
-            panel, label="Forecaster Notes are US-only"
+            panel, label="Some official NWS products are US-only"
         )
         self.forecast_products_us_only_label.Hide()
 
@@ -287,7 +286,7 @@ class MainWindowUIMixin:
         discussion_item = view_menu.Append(
             wx.ID_ANY,
             "Forecaster &Notes...",
-            "View NWS forecaster notes (AFD, HWO, SPS)",
+            "View forecaster notes and surf or beach conditions",
         )
         aviation_item = view_menu.Append(wx.ID_ANY, "&Aviation Weather...", "View aviation weather")
         air_quality_item = view_menu.Append(

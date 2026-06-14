@@ -149,6 +149,89 @@ class TestAlertNotificationBatchSound:
             "Minor",
         ]
 
+    def test_radio_auto_tune_receives_only_new_initial_alert_notifications(
+        self, alert_manager, mock_notifier
+    ):
+        """Update/cancel notifications should not re-trigger NOAA radio auto-tune."""
+        radio_auto_tuner = MagicMock()
+        notification_system = AlertNotificationSystem(
+            alert_manager=alert_manager,
+            notifier=mock_notifier,
+            radio_auto_tuner=radio_auto_tuner,
+        )
+        now = datetime.now(UTC)
+        initial_alert = WeatherAlert(
+            id="nws-alert-1",
+            title="Tornado Warning",
+            description="Take shelter now.",
+            severity="Extreme",
+            urgency="Immediate",
+            certainty="Observed",
+            event="Tornado Warning",
+            message_type="Alert",
+            expires=now + timedelta(hours=1),
+        )
+        updated_alert = WeatherAlert(
+            id="nws-alert-1",
+            title="Tornado Warning",
+            description="Updated shelter instruction.",
+            severity="Extreme",
+            urgency="Immediate",
+            certainty="Observed",
+            event="Tornado Warning",
+            message_type="Update",
+            expires=now + timedelta(hours=1),
+        )
+        cancelled_alert = WeatherAlert(
+            id="nws-alert-1",
+            title="Tornado Warning",
+            description="Cancelled.",
+            severity="Extreme",
+            urgency="Immediate",
+            certainty="Observed",
+            event="Tornado Warning",
+            message_type="Cancel",
+            expires=now + timedelta(hours=1),
+        )
+
+        notification_system._trigger_radio_auto_tune_if_enabled(
+            [
+                (updated_alert, "content_changed"),
+                (cancelled_alert, "new_alert"),
+                (initial_alert, "new_alert"),
+            ]
+        )
+
+        radio_auto_tuner.tune_for_alerts.assert_called_once_with([initial_alert])
+
+    def test_radio_auto_tune_skips_changed_notification_for_same_alert(
+        self, alert_manager, mock_notifier
+    ):
+        """A later update for the same alert ID should not start a new radio tune."""
+        radio_auto_tuner = MagicMock()
+        notification_system = AlertNotificationSystem(
+            alert_manager=alert_manager,
+            notifier=mock_notifier,
+            radio_auto_tuner=radio_auto_tuner,
+        )
+        updated_alert = WeatherAlert(
+            id="nws-alert-2",
+            title="Severe Thunderstorm Warning",
+            description="Updated warning text.",
+            severity="Severe",
+            urgency="Immediate",
+            certainty="Observed",
+            event="Severe Thunderstorm Warning",
+            message_type="Update",
+            expires=datetime.now(UTC) + timedelta(hours=1),
+        )
+
+        notification_system._trigger_radio_auto_tune_if_enabled(
+            [(updated_alert, "content_changed")]
+        )
+
+        radio_auto_tuner.tune_for_alerts.assert_not_called()
+
     @pytest.mark.asyncio
     async def test_most_severe_alert_plays_sound(
         self, notification_system, mock_notifier, multiple_alerts

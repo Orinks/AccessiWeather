@@ -18,12 +18,15 @@ from .models import (
     HourlyForecastPeriod,
     Location,
 )
+from .provider_normalization import (
+    classify_apparent_temperature,
+    normalize_dewpoint_pair,
+)
 from .utils.retry_utils import (
     RETRYABLE_EXCEPTIONS,
     async_retry_with_backoff,
     is_retryable_http_error,
 )
-from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
 from .weather_client_openmeteo_current import (
     parse_iso_datetime as _parse_iso_datetime,
     parse_openmeteo_current_conditions as parse_openmeteo_current_conditions,
@@ -410,24 +413,18 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
         )
 
         apparent_temp = apparent_temps[i] if i < len(apparent_temps) else None
-        dewpoint_f = dewpoint
-        dewpoint_c = (dewpoint_f - 32) * 5 / 9 if dewpoint_f is not None else None
-        if dewpoint_f is None and temperature is not None and humidity is not None:
-            dewpoint_f = calculate_dewpoint(
-                temperature,
-                humidity,
-                unit=TemperatureUnit.FAHRENHEIT,
-            )
-            dewpoint_c = (dewpoint_f - 32) * 5 / 9 if dewpoint_f is not None else None
+        dewpoint_pair = normalize_dewpoint_pair(
+            dewpoint,
+            hourly_units.get("dew_point_2m", hourly_units.get("temperature_2m", "°F")),
+            fallback_temperature_f=temperature,
+            humidity_percent=humidity,
+        )
 
-        # Determine wind chill vs heat index from apparent temperature
-        wind_chill_f = None
-        heat_index_f = None
-        if apparent_temp is not None and temperature is not None:
-            if apparent_temp < temperature:
-                wind_chill_f = apparent_temp
-            elif apparent_temp > temperature:
-                heat_index_f = apparent_temp
+        apparent = classify_apparent_temperature(
+            temperature,
+            apparent_temp,
+            None,
+        )
 
         period = HourlyForecastPeriod(
             start_time=start_time or datetime.now(),
@@ -437,8 +434,8 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
             wind_speed=_format_wind_speed_mph(wind_speed_mph),
             wind_direction=degrees_to_cardinal(wind_direction),
             humidity=humidity,
-            dewpoint_f=dewpoint_f,
-            dewpoint_c=dewpoint_c,
+            dewpoint_f=dewpoint_pair.fahrenheit,
+            dewpoint_c=dewpoint_pair.celsius,
             pressure_mb=pressure_mb,
             pressure_in=pressure_in,
             precipitation_probability=precip_prob,
@@ -451,8 +448,10 @@ def parse_openmeteo_hourly_forecast(data: dict) -> HourlyForecast:
             visibility_miles=visibility_miles,
             visibility_km=visibility_km,
             feels_like=apparent_temp,
-            wind_chill_f=wind_chill_f,
-            heat_index_f=heat_index_f,
+            wind_chill_f=apparent.wind_chill_f,
+            wind_chill_c=apparent.wind_chill_c,
+            heat_index_f=apparent.heat_index_f,
+            heat_index_c=apparent.heat_index_c,
         )
         periods.append(period)
 

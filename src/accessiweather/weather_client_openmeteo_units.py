@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+from .provider_normalization import normalize_visibility_pair
+
 CM_PER_INCH = 2.54
 FEET_PER_METER = 3.28084
 INCHES_PER_FOOT = 12
-KM_PER_MILE = 1.609344
-METERS_PER_MILE = 1609.344
 VISIBILITY_CAP_MILES = 10.0
 
 
@@ -61,20 +61,5 @@ def normalize_visibility_to_miles_and_km(
     unit: str | None,
 ) -> tuple[float | None, float | None]:
     """Return Open-Meteo visibility normalized to capped miles and kilometers."""
-    if value is None:
-        return None, None
-
-    numeric = float(value)
-    unit_text = _unit_text(unit)
-
-    if "ft" in unit_text or "feet" in unit_text:
-        miles = numeric / 5280
-    elif "km" in unit_text or "kilometer" in unit_text or "kilometre" in unit_text:
-        miles = numeric / KM_PER_MILE
-    elif unit_text in {"mi", "mile", "miles"}:
-        miles = numeric
-    else:
-        miles = numeric / METERS_PER_MILE
-
-    miles = min(miles, VISIBILITY_CAP_MILES)
-    return miles, miles * KM_PER_MILE
+    visibility = normalize_visibility_pair(value, unit, cap_miles=VISIBILITY_CAP_MILES)
+    return visibility.miles, visibility.kilometers

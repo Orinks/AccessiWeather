@@ -12,6 +12,9 @@ PRODUCT_FULL_NAMES: dict[str, str] = {
     "AFD": "Area Forecast Discussion",
     "HWO": "Hazardous Weather Outlook",
     "SPS": "Special Weather Statement",
+    "SRF": "Official NWS Surf Zone Forecast",
+    "SURF": "Surf/Beach Conditions",
+    "SURF_CONDITIONS": "Surf/Beach Conditions",
     "LSR": "Local Storm Report",
     "PNS": "Public Information Statement",
     "CLI": "Daily Climate Report",
@@ -36,6 +39,17 @@ EMPTY_COPY: dict[str, str] = {
     "AFD": "Area Forecast Discussion not currently available for {cwa_office}.",
     "HWO": "Hazardous Weather Outlook not currently available for {cwa_office}.",
     "SPS": "No recent Special Weather Statements for {cwa_office}.",
+    "SRF": (
+        "Surf Zone Forecast issued by NWS {cwa_office} for regional beaches is not "
+        "currently available."
+    ),
+    "SURF": (
+        "No official NWS Surf Zone Forecast or derived surf/beach conditions are currently "
+        "available for this location."
+    ),
+    "SURF_CONDITIONS": (
+        "No derived surf/beach conditions are currently available for this location."
+    ),
     "LSR": "No recent Local Storm Reports for {cwa_office}.",
     "PNS": "No recent Public Information Statements for {cwa_office}.",
     "CLI": "Daily Climate Report not currently available for {cwa_office}.",
@@ -66,6 +80,16 @@ EMPTY_COPY: dict[str, str] = {
 }
 
 NO_CWA_COPY = "NWS text products will populate after the next weather refresh."
+
+
+def regional_product_intro(product_type: str, cwa_office: str | None) -> str:
+    """Return a clear official-vs-derived context line for surf products."""
+    if product_type == "SRF":
+        office = (cwa_office or "").strip().upper() or "the selected office"
+        return f"Surf Zone Forecast issued by NWS {office} for regional beaches."
+    if product_type == "SURF_CONDITIONS":
+        return "Marine/surf conditions from a supported source; not an official NWS Surf Zone Forecast."
+    return ""
 
 
 def format_issuance(issuance_time: datetime | None) -> str:

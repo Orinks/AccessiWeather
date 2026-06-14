@@ -5,14 +5,23 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- Forecaster Notes can now show official NWS Surf Zone Forecasts for regional beaches where available, with surf/beach condition alternatives from supported global sources when an official SRF product is not available.
 - AccessiWeather can now automatically tune NOAA Weather Radio for qualifying alerts that use Specific Area Message Encoding (SAME) when you turn on the opt-in setting on the Alerts tab, then stop after the duration you choose when a reliable station match is available.
 - NOAA Weather Radio now opens independently of saved weather locations and keeps playing after you close the player until you press Stop or exit the app.
 - The NOAA Weather Radio Station Finder now has clearer modes for searching all stations, browsing by full state or territory name, and finding nearby stations by coordinates.
 - NOAA Weather Radio stations can now be saved as favorites, with a Favorites finder mode and optional nearby-station lookup from your saved AccessiWeather locations.
 
 ### Fixed
+- Current conditions and tray text now omit feels-like or heat-index details when they are unavailable instead of announcing them as `N/A`.
+- NOAA Weather Radio auto-tune now starts only for the first issuance of a qualifying SAME alert, reliably stops after your configured playback duration, and no longer restarts for later updates or cancellations of the same alert.
+- Feels-like and heat-index readings now ignore implausibly warm provider values when the current temperature and humidity do not support them, while keeping valid humid heat-index and cold wind-chill readings.
 - Unknown or uncategorized weather alerts now have a mappable default sound, and missing custom-pack event sounds fall back to the matching default sound before generic notification audio.
 - NOAA Weather Radio Station Finder now repopulates stations when leaving an empty Favorites view, so you no longer need to reopen the radio dialog.
+- Feels-like temperatures now keep showing in tray text when only one temperature unit is available, instead of falling back to `N/A`.
+- Editing a location now tells you when the new name is empty or already in use, instead of silently discarding your changes.
+- The tray text format dialog now warns you about unknown placeholders or unbalanced braces before saving, so a typo like `{tmp}` can't quietly end up in your tray tooltip.
+- Closing the Add or Edit Location dialog while a search or current-location detection is still running no longer risks a crash.
+- Weather history's "Today vs Yesterday" section now reads naturally when both days have the same temperature, instead of "is 0.0°F about the same than yesterday".
 
 ## [0.7.2] - 2026-05-30
 

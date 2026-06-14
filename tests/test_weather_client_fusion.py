@@ -340,6 +340,23 @@ class TestMergeCurrentConditions:
         assert attr.field_sources["wind_speed_mph"] == "openmeteo"
         assert attr.field_sources["wind_speed_kph"] == "openmeteo"
 
+    def test_feels_like_falls_back_when_nws_omits_apparent_temperature(self, engine, us_location):
+        """NWS may omit feels-like, but that must not hide Open-Meteo apparent temperature."""
+        nws_cc = CurrentConditions(temperature_f=72.0, temperature_c=22.2)
+        om_cc = CurrentConditions(temperature_f=70.0, temperature_c=21.1, feels_like_c=19.0)
+        sources = [
+            _make_source("nws", current=nws_cc),
+            _make_source("openmeteo", current=om_cc),
+        ]
+
+        result, attr = engine.merge_current_conditions(sources, us_location)
+
+        assert result is not None
+        assert result.feels_like_f == pytest.approx(66.2)
+        assert result.feels_like_c == pytest.approx(19.0)
+        assert attr.field_sources["feels_like_f"] == "openmeteo"
+        assert attr.field_sources["feels_like_c"] == "openmeteo"
+
     def test_us_strips_openmeteo_snow_depth(self, engine, us_location):
         """Open-Meteo snow depth (ERA5/GFS model) is stripped for US locations."""
         nws_cc = CurrentConditions(temperature_f=32.0, snow_depth_in=None, snow_depth_cm=None)

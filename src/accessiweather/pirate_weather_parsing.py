@@ -23,8 +23,19 @@ from .models import (
     WeatherAlert,
     WeatherAlerts,
 )
-from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
-from .weather_client_parsers import convert_f_to_c, degrees_to_cardinal
+from .provider_normalization import (
+    format_speed,
+    normalize_dewpoint_pair,
+    normalize_humidity_percent,
+    normalize_millibars,
+    normalize_speed_pair,
+    normalize_temperature_pair,
+    normalize_visibility_pair,
+    pirate_temperature_unit,
+    pirate_visibility_unit,
+    pirate_wind_unit,
+)
+from .weather_client_parsers import degrees_to_cardinal
 
 logger = logging.getLogger(__name__)
 
@@ -209,7 +220,8 @@ def parse_forecast(client: Any, data: dict, days: int | None = None) -> Forecast
     """
     daily_data = data.get("daily", {}).get("data", [])
     location_tz = _resolve_response_timezone(data)
-    using_us = client.units == "us"
+    temperature_unit = pirate_temperature_unit(client.units)
+    wind_unit = pirate_wind_unit(client.units)
 
     periods: list[ForecastPeriod] = []
     parsed_dates: list[date] = []
@@ -235,28 +247,8 @@ def parse_forecast(client: Any, data: dict, days: int | None = None) -> Forecast
         if temp_low is None:
             temp_low = day.get("temperatureMin")
 
-        # Wind speed formatting
-        wind_raw = day.get("windSpeed")
-        if wind_raw is not None:
-            if using_us or client.units == "uk2":
-                wind_str = f"{round(wind_raw)} mph"
-            elif client.units == "ca":
-                wind_str = f"{round(wind_raw)} km/h"
-            else:
-                wind_str = f"{round(wind_raw)} m/s"
-        else:
-            wind_str = None
-
-        wind_gust_raw = day.get("windGust")
-        if wind_gust_raw is not None:
-            if using_us or client.units == "uk2":
-                wind_gust_str = f"{round(wind_gust_raw)} mph"
-            elif client.units == "ca":
-                wind_gust_str = f"{round(wind_gust_raw)} km/h"
-            else:
-                wind_gust_str = f"{round(wind_gust_raw)} m/s"
-        else:
-            wind_gust_str = None
+        wind_str = format_speed(day.get("windSpeed"), wind_unit)
+        wind_gust_str = format_speed(day.get("windGust"), wind_unit)
 
         precip_prob_raw = day.get("precipProbability")
         precip_prob = round(precip_prob_raw * 100) if precip_prob_raw is not None else None
@@ -276,7 +268,7 @@ def parse_forecast(client: Any, data: dict, days: int | None = None) -> Forecast
             name=name,
             temperature=temp_high,
             temperature_low=temp_low,
-            temperature_unit="F" if using_us else "C",
+            temperature_unit=temperature_unit,
             short_forecast=condition,
             detailed_forecast=condition,
             wind_speed=wind_str,
@@ -309,7 +301,9 @@ def parse_hourly_forecast(client: Any, data: dict) -> HourlyForecast:
     """Parse Pirate Weather ``hourly`` block into an HourlyForecast."""
     hourly_items = data.get("hourly", {}).get("data", [])
     location_tz = _resolve_response_timezone(data)
-    using_us = client.units == "us"
+    temperature_unit = pirate_temperature_unit(client.units)
+    wind_unit = pirate_wind_unit(client.units)
+    visibility_unit = pirate_visibility_unit(client.units)
 
     periods: list[HourlyForecastPeriod] = []
     for hour in hourly_items:
@@ -319,59 +313,23 @@ def parse_hourly_forecast(client: Any, data: dict) -> HourlyForecast:
         else:
             start_time = datetime.now(UTC)
 
-        temp = hour.get("temperature")
-        if using_us:
-            temp_f = float(temp) if temp is not None else None
-        else:
-            temp_c = float(temp) if temp is not None else None
-            temp_f = (temp_c * 9 / 5 + 32) if temp_c is not None else temp_c
+        temperature = normalize_temperature_pair(hour.get("temperature"), temperature_unit)
 
-        humidity_raw = hour.get("humidity")
-        humidity = round(humidity_raw * 100) if humidity_raw is not None else None
+        humidity = normalize_humidity_percent(hour.get("humidity"), fraction=True)
+        dewpoint = normalize_dewpoint_pair(
+            hour.get("dewPoint"),
+            temperature_unit,
+            fallback_temperature_f=temperature.fahrenheit,
+            humidity_percent=humidity,
+        )
 
-        dewpoint = hour.get("dewPoint")
-        if using_us:
-            dewpoint_f = float(dewpoint) if dewpoint is not None else None
-            dewpoint_c = convert_f_to_c(dewpoint_f)
-            if dewpoint_f is None and temp_f is not None and humidity is not None:
-                dewpoint_f = calculate_dewpoint(
-                    temp_f,
-                    humidity,
-                    unit=TemperatureUnit.FAHRENHEIT,
-                )
-                dewpoint_c = convert_f_to_c(dewpoint_f)
-        else:
-            dewpoint_c = float(dewpoint) if dewpoint is not None else None
-            dewpoint_f = (dewpoint_c * 9 / 5 + 32) if dewpoint_c is not None else None
-
-        # Pressure in mb (all unit groups)
-        pressure_mb = hour.get("pressure")
-        pressure_in = pressure_mb / 33.8639 if pressure_mb is not None else None
+        pressure = normalize_millibars(hour.get("pressure"))
 
         wind_raw = hour.get("windSpeed")
-        wind_speed_mph: float | None = None
-        if wind_raw is not None:
-            if using_us or client.units == "uk2":
-                wind_str = f"{round(wind_raw)} mph"
-                wind_speed_mph = float(wind_raw)
-            elif client.units == "ca":
-                wind_str = f"{round(wind_raw)} km/h"
-                wind_speed_mph = float(wind_raw) / 1.60934
-            else:
-                wind_str = f"{round(wind_raw)} m/s"
-                wind_speed_mph = float(wind_raw) * 2.23694
-        else:
-            wind_str = None
+        wind_str = format_speed(wind_raw, wind_unit)
+        wind_speed = normalize_speed_pair(wind_raw, wind_unit)
 
-        wind_gust_raw = hour.get("windGust")
-        wind_gust_mph: float | None = None
-        if wind_gust_raw is not None:
-            if using_us or client.units == "uk2":
-                wind_gust_mph = float(wind_gust_raw)
-            elif client.units == "ca":
-                wind_gust_mph = float(wind_gust_raw) / 1.60934
-            else:
-                wind_gust_mph = float(wind_gust_raw) * 2.23694
+        wind_gust = normalize_speed_pair(hour.get("windGust"), wind_unit)
 
         precip_prob_raw = hour.get("precipProbability")
         precip_prob = round(precip_prob_raw * 100) if precip_prob_raw is not None else None
@@ -384,51 +342,36 @@ def parse_hourly_forecast(client: Any, data: dict) -> HourlyForecast:
 
         uv_index = hour.get("uvIndex")
 
-        visibility_raw = hour.get("visibility")
-        if visibility_raw is not None:
-            if using_us or client.units == "uk2":
-                visibility_miles = float(visibility_raw)
-                visibility_km = visibility_miles * 1.60934
-            else:
-                visibility_km = float(visibility_raw)
-                visibility_miles = visibility_km / 1.60934
-        else:
-            visibility_miles = None
-            visibility_km = None
+        visibility = normalize_visibility_pair(hour.get("visibility"), visibility_unit)
 
-        apparent = hour.get("apparentTemperature")
-        if using_us:
-            feels_like_f = float(apparent) if apparent is not None else None
-        else:
-            feels_like_c = float(apparent) if apparent is not None else None
-            feels_like_f = (feels_like_c * 9 / 5 + 32) if feels_like_c is not None else None
+        feels_like = normalize_temperature_pair(hour.get("apparentTemperature"), temperature_unit)
 
         condition = _data_point_condition(hour)
         precipitation_type = _normalize_precipitation_type(hour.get("precipType"))
 
         period = HourlyForecastPeriod(
             start_time=start_time,
-            temperature=temp_f,
+            temperature=temperature.fahrenheit,
             temperature_unit="F",
             short_forecast=condition,
             wind_speed=wind_str,
-            wind_speed_mph=wind_speed_mph,
+            wind_speed_mph=wind_speed.mph,
             wind_direction=degrees_to_cardinal(hour.get("windBearing")),
             humidity=humidity,
-            dewpoint_f=dewpoint_f,
-            dewpoint_c=dewpoint_c,
-            pressure_mb=pressure_mb,
-            pressure_in=pressure_in,
+            dewpoint_f=dewpoint.fahrenheit,
+            dewpoint_c=dewpoint.celsius,
+            pressure_mb=pressure.millibars,
+            pressure_in=pressure.inches,
             precipitation_probability=precip_prob,
             snowfall=snowfall,
             uv_index=uv_index,
             cloud_cover=cloud_cover,
-            wind_gust_mph=wind_gust_mph,
+            wind_gust_mph=wind_gust.mph,
             precipitation_amount=precip_amount,
             precipitation_type=precipitation_type,
-            feels_like=feels_like_f,
-            visibility_miles=visibility_miles,
-            visibility_km=visibility_km,
+            feels_like=feels_like.fahrenheit,
+            visibility_miles=visibility.miles,
+            visibility_km=visibility.kilometers,
         )
         periods.append(period)
 

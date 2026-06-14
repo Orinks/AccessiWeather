@@ -10,6 +10,10 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
+from hypothesis import (
+    given,
+    strategies as st,
+)
 
 from accessiweather.models import AppSettings, CurrentConditions, Location, WeatherData
 
@@ -614,6 +618,130 @@ class TestFormatterUnitPreferencePlaceholders:
         result = updater.format_tooltip(weather_data, "Test City")
 
         assert result == "N/A / N/A"
+
+
+def _weather_data_with_feels_like(
+    *,
+    feels_like_f: float | None = None,
+    feels_like_c: float | None = None,
+) -> WeatherData:
+    return WeatherData(
+        location=Location(name="Test City", latitude=40.0, longitude=-74.0),
+        current=CurrentConditions(
+            temperature_f=72.0,
+            temperature_c=22.2,
+            condition="Sunny",
+            feels_like_f=feels_like_f,
+            feels_like_c=feels_like_c,
+        ),
+    )
+
+
+def _expected_feels_like_text(value: float, source_unit: str, temperature_unit: str) -> str:
+    feels_f = value if source_unit == "f" else (value * 9 / 5) + 32
+    feels_c = value if source_unit == "c" else (value - 32) * 5 / 9
+    if temperature_unit == "f":
+        return f"{feels_f:.0f}F"
+    if temperature_unit == "c":
+        return f"{feels_c:.0f}C"
+    return f"{feels_f:.0f}F/{feels_c:.0f}C"
+
+
+class TestFeelsLikeFormatterFallbacks:
+    """Regression tests for partially populated feels-like values in tray text."""
+
+    @pytest.mark.parametrize(
+        ("temperature_unit", "weather_data", "expected"),
+        [
+            ("f", _weather_data_with_feels_like(feels_like_c=20.0), "68F"),
+            ("c", _weather_data_with_feels_like(feels_like_f=68.0), "20C"),
+            ("both", _weather_data_with_feels_like(feels_like_c=20.0), "68F/20C"),
+            ("both", _weather_data_with_feels_like(feels_like_f=68.0), "68F/20C"),
+        ],
+    )
+    def test_feels_like_converts_missing_counterpart_unit(
+        self, temperature_unit, weather_data, expected
+    ):
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            format_string="{feels_like}",
+            temperature_unit=temperature_unit,
+        )
+
+        result = updater.format_tooltip(weather_data, "Test City")
+
+        assert result == expected
+
+    @given(
+        value=st.floats(min_value=-80.0, max_value=130.0, allow_nan=False, allow_infinity=False),
+        source_unit=st.sampled_from(("f", "c")),
+        temperature_unit=st.sampled_from(("f", "c", "both")),
+    )
+    def test_feels_like_partial_unit_property(self, value, source_unit, temperature_unit):
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        weather_data = _weather_data_with_feels_like(
+            feels_like_f=value if source_unit == "f" else None,
+            feels_like_c=value if source_unit == "c" else None,
+        )
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            format_string="{feels_like}",
+            temperature_unit=temperature_unit,
+        )
+
+        result = updater.format_tooltip(weather_data, "Test City")
+
+        assert result == _expected_feels_like_text(value, source_unit, temperature_unit)
+        assert result.lower() != "n/a"
+
+    def test_missing_feels_like_omits_common_labeled_fragment(self):
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            format_string="{temp} (feels {feels_like}) • {condition}",
+            temperature_unit="f",
+        )
+
+        result = updater.format_tooltip(_weather_data_with_feels_like(), "Test City")
+
+        assert result == "72F • Sunny"
+        assert "feels" not in result.lower()
+        assert "n/a" not in result.lower()
+
+    def test_missing_heat_index_omits_common_labeled_fragment(self):
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            format_string="{temp} | Heat index: {feels_like} | {condition}",
+            temperature_unit="f",
+        )
+
+        result = updater.format_tooltip(_weather_data_with_feels_like(), "Test City")
+
+        assert result == "72F Sunny"
+        assert "heat index" not in result.lower()
+        assert "n/a" not in result.lower()
+
+    def test_present_feels_like_still_displays_in_labeled_fragment(self):
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            format_string="{temp} (feels {feels_like}) • {condition}",
+            temperature_unit="f",
+        )
+
+        result = updater.format_tooltip(
+            _weather_data_with_feels_like(feels_like_f=68.0),
+            "Test City",
+        )
+
+        assert result == "72F (feels 68F) • Sunny"
 
 
 class TestPopupMenu:

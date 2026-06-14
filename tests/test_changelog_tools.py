@@ -357,6 +357,45 @@ def test_should_build_nightly_for_new_changelog_entry(
     assert "New curated changelog entries" in captured.err
 
 
+def test_should_build_nightly_for_new_changelog_entry_with_internal_commit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    base_text = """# Changelog
+
+## [Unreleased]
+
+### Fixed
+- Existing fix.
+"""
+    head_text = """# Changelog
+
+## [Unreleased]
+
+### Fixed
+- User-facing fix.
+- Existing fix.
+"""
+    changelog_path = tmp_path / "CHANGELOG.md"
+    changelog_path.write_text(head_text, encoding="utf-8")
+    monkeypatch.setattr("scripts.changelog_tools.CHANGELOG_PATH", changelog_path)
+    monkeypatch.setattr("scripts.changelog_tools.changelog_at", lambda _ref: base_text)
+    monkeypatch.setattr(
+        "scripts.changelog_tools.commit_messages",
+        lambda _base, _head: [
+            "fix: user-facing weather display correction",
+            "refactor: internal parser cleanup\n\nChangelog: none",
+        ],
+    )
+
+    assert should_build_nightly_command(should_build_args()) == 0
+
+    captured = capsys.readouterr()
+    assert captured.out == "should_build=true\n"
+    assert "New curated changelog entries" in captured.err
+
+
 def test_should_not_build_nightly_when_notes_already_shipped(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

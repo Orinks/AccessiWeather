@@ -111,6 +111,9 @@ asyncio.create_task(background_refresh())
 - GUI-focused tests may use the wx stub or live wx under xvfb/Windows only when needed.
 - Integration tests live under `tests/integration/` and should avoid live API dependence unless explicitly intended.
 - Use Hypothesis for broad input-space edge cases.
+- Use the Hypothesis testing framework to good effect for bugs involving many
+  combinations of provider data, missing fields, units, priorities, or fallback
+  behavior.
 
 ### Test Quality Conventions
 

@@ -7,16 +7,19 @@ from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 
 from .models import CurrentConditions
-from .utils.temperature_utils import TemperatureUnit, calculate_dewpoint
+from .provider_normalization import (
+    normalize_dewpoint_pair,
+    normalize_humidity_percent,
+    normalize_temperature_pair,
+)
+from .thermal_comfort import sanitize_thermal_comfort_readings
 from .weather_client_openmeteo_units import (
     normalize_snow_depth_to_inches_and_cm,
     normalize_visibility_to_miles_and_km,
 )
 from .weather_client_parsers import (
-    convert_f_to_c,
     convert_wind_speed_to_mph_and_kph,
     normalize_pressure,
-    normalize_temperature,
     weather_code_to_description,
 )
 
@@ -130,19 +133,17 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
     daily = data.get("daily", {})
     utc_offset_seconds = data.get("utc_offset_seconds")
 
-    temp_f, temp_c = normalize_temperature(
+    temperature = normalize_temperature_pair(
         current.get("temperature_2m"), units.get("temperature_2m")
     )
 
-    humidity = current.get("relative_humidity_2m")
-    humidity = round(humidity) if humidity is not None else None
-
-    dewpoint_f = None
-    dewpoint_c = None
-    if temp_f is not None and humidity is not None:
-        dewpoint_f = calculate_dewpoint(temp_f, humidity, unit=TemperatureUnit.FAHRENHEIT)
-        if dewpoint_f is not None:
-            dewpoint_c = convert_f_to_c(dewpoint_f)
+    humidity = normalize_humidity_percent(current.get("relative_humidity_2m"))
+    dewpoint = normalize_dewpoint_pair(
+        None,
+        units.get("temperature_2m"),
+        fallback_temperature_f=temperature.fahrenheit,
+        humidity_percent=humidity,
+    )
 
     wind_speed_mph, wind_speed_kph = convert_wind_speed_to_mph_and_kph(
         current.get("wind_speed_10m"), units.get("wind_speed_10m")
@@ -152,7 +153,7 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         current.get("pressure_msl"), units.get("pressure_msl")
     )
 
-    feels_like_f, feels_like_c = normalize_temperature(
+    feels_like = normalize_temperature_pair(
         current.get("apparent_temperature"), units.get("apparent_temperature")
     )
 
@@ -183,32 +184,28 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         units.get("visibility"),
     )
 
-    wind_chill_f = None
-    wind_chill_c = None
-    heat_index_f = None
-    heat_index_c = None
-    if feels_like_f is not None and temp_f is not None:
-        if feels_like_f < temp_f:
-            wind_chill_f = feels_like_f
-            wind_chill_c = feels_like_c
-        elif feels_like_f > temp_f:
-            heat_index_f = feels_like_f
-            heat_index_c = feels_like_c
+    comfort = sanitize_thermal_comfort_readings(
+        temperature_f=temperature.fahrenheit,
+        temperature_c=temperature.celsius,
+        humidity=humidity,
+        feels_like_f=feels_like.fahrenheit,
+        feels_like_c=feels_like.celsius,
+    )
 
     return CurrentConditions(
-        temperature_f=temp_f,
-        temperature_c=temp_c,
+        temperature_f=temperature.fahrenheit,
+        temperature_c=temperature.celsius,
         condition=resolve_current_condition_description(current),
         humidity=humidity,
-        dewpoint_f=dewpoint_f,
-        dewpoint_c=dewpoint_c,
+        dewpoint_f=dewpoint.fahrenheit,
+        dewpoint_c=dewpoint.celsius,
         wind_speed_mph=wind_speed_mph,
         wind_speed_kph=wind_speed_kph,
         wind_direction=current.get("wind_direction_10m"),
         pressure_in=pressure_in,
         pressure_mb=pressure_mb,
-        feels_like_f=feels_like_f,
-        feels_like_c=feels_like_c,
+        feels_like_f=comfort.feels_like_f,
+        feels_like_c=comfort.feels_like_c,
         visibility_miles=visibility_miles,
         visibility_km=visibility_km,
         sunrise_time=sunrise_time,
@@ -217,9 +214,9 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         snowfall_rate_in=snowfall_rate,
         snow_depth_in=snow_depth_in,
         snow_depth_cm=snow_depth_cm,
-        wind_chill_f=wind_chill_f,
-        wind_chill_c=wind_chill_c,
-        heat_index_f=heat_index_f,
-        heat_index_c=heat_index_c,
+        wind_chill_f=comfort.wind_chill_f,
+        wind_chill_c=comfort.wind_chill_c,
+        heat_index_f=comfort.heat_index_f,
+        heat_index_c=comfort.heat_index_c,
         precipitation_type=precipitation_type,
     )

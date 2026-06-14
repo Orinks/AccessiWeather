@@ -338,6 +338,30 @@ class TestForecastProductPanelRendering:
             "Area Forecast Discussion not currently available for RAH."
         )
 
+    def test_official_srf_includes_regional_nws_context(self, captured_sizer):
+        srf = _make_product("SRF", text="SURF ZONE FORECAST raw text")
+        panel = _build_panel("SURF", loader_result=srf, cwa_office="PHI")
+
+        panel.product_textctrl.SetValue.assert_any_call(
+            "Surf Zone Forecast issued by NWS PHI for regional beaches.\n\n"
+            "SURF ZONE FORECAST raw text"
+        )
+
+    def test_derived_surf_conditions_keep_non_nws_label(self, captured_sizer):
+        derived = _make_product(
+            "SURF_CONDITIONS",
+            text=(
+                "Surf conditions from Open-Meteo Marine for Porto.\n"
+                "Marine/surf conditions from Open-Meteo Marine; not an official NWS "
+                "Surf Zone Forecast."
+            ),
+        )
+        panel = _build_panel("SURF", loader_result=derived, cwa_office=None)
+
+        rendered = panel.product_textctrl.SetValue.call_args.args[0]
+        assert "not an official NWS Surf Zone Forecast" in rendered
+        assert "issued by NWS" not in rendered
+
 
 class TestForecastProductPanelSPS:
     """SPS multi-product selection behaviour."""
