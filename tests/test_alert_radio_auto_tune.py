@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
@@ -28,6 +29,23 @@ class _FakeThread:
 
     def start(self):
         self._started.append(self._target)
+
+
+class _FakeWakeEvent:
+    def __init__(self) -> None:
+        self.wait_calls = []
+        self.set_calls = 0
+        self.clear_calls = 0
+
+    def wait(self, timeout: float | None = None) -> bool:
+        self.wait_calls.append(timeout)
+        return False
+
+    def set(self) -> None:
+        self.set_calls += 1
+
+    def clear(self) -> None:
+        self.clear_calls += 1
 
 
 class _FakePlayer:
@@ -143,6 +161,7 @@ def _make_tuner(
     session: _FakeSession | None = None,
     resolver=None,
     started: list | None = None,
+    monotonic=None,
 ):
     started = started if started is not None else []
     session = session or _FakeSession()
@@ -158,6 +177,7 @@ def _make_tuner(
         station_resolver=resolver,
         url_provider=url_provider,
         thread_factory=lambda target: _FakeThread(target, started),
+        monotonic=monotonic or time.monotonic,
     )
     return tuner, session, started, url_provider, resolver
 
@@ -482,14 +502,45 @@ def test_auto_tune_invalid_duration_defaults_to_five_minutes_and_stops_playback(
     times = iter([100.0, 401.0])
     tuner, session, started, _url_provider, _resolver = _make_tuner(
         settings=_settings(auto_tune_weather_radio_duration_minutes=0),
+        monotonic=lambda: next(times),
     )
-    tuner._monotonic = lambda: next(times)
 
     tuner.tune_for_alerts([_alert()])
     started[0]()
 
     session.stop.assert_called_once_with()
     assert session.is_playing() is False
+
+
+def test_auto_tune_uses_configured_duration_for_stop_deadline():
+    times = iter([100.0, 579.0, 580.0])
+    tuner, session, started, _url_provider, _resolver = _make_tuner(
+        settings=_settings(auto_tune_weather_radio_duration_minutes=8),
+        monotonic=lambda: next(times),
+    )
+    wake_event = _FakeWakeEvent()
+    tuner._wake_event = wake_event
+
+    tuner.tune_for_alerts([_alert()])
+    started[0]()
+
+    assert wake_event.wait_calls == [1.0]
+    session.stop.assert_called_once_with()
+
+
+def test_auto_tune_timer_stops_even_when_backend_play_state_is_stale_false():
+    times = iter([100.0, 101.0, 401.0])
+    tuner, session, started, _url_provider, _resolver = _make_tuner(monotonic=lambda: next(times))
+    session.player = _FakePlayer()
+    wake_event = _FakeWakeEvent()
+    tuner._wake_event = wake_event
+
+    tuner.tune_for_alerts([_alert()])
+    started[0]()
+
+    assert wake_event.wait_calls == [1.0]
+    session.stop.assert_called_once_with()
+    assert session.playing_station is None
 
 
 def test_stop_cancels_pending_auto_tune_before_stream_starts():
@@ -541,6 +592,35 @@ def test_duplicate_alert_batch_extends_existing_auto_tune_without_overlap():
     tuner.tune_for_alerts([_alert()])
 
     assert len(started) == 1
+
+
+def test_duplicate_alert_batch_extends_existing_auto_tune_deadline():
+    times = iter([100.0, 150.0, 399.0, 450.0])
+    tuner, session, started, _url_provider, _resolver = _make_tuner(monotonic=lambda: next(times))
+    wake_event = _FakeWakeEvent()
+    tuner._wake_event = wake_event
+
+    tuner.tune_for_alerts([_alert()])
+    tuner.tune_for_alerts([_alert()])
+    started[0]()
+
+    assert len(started) == 1
+    assert wake_event.set_calls == 1
+    assert wake_event.wait_calls == [1.0]
+    session.stop.assert_called_once_with()
+
+
+def test_auto_tune_timer_cleans_up_when_stop_raises():
+    times = iter([100.0, 401.0])
+    tuner, session, started, _url_provider, _resolver = _make_tuner(monotonic=lambda: next(times))
+    session.stop = MagicMock(side_effect=RuntimeError("stop failed"))
+
+    tuner.tune_for_alerts([_alert()])
+    started[0]()
+
+    session.stop.assert_called_once_with()
+    assert tuner._worker is None
+    assert tuner._stop_at_monotonic is None
 
 
 def test_manual_playback_is_respected_and_not_interrupted():

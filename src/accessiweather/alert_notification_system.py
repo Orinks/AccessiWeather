@@ -36,6 +36,20 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _is_initial_alert_message_type(alert: WeatherAlert) -> bool:
+    """
+    Return whether alert metadata represents the initial alert issuance.
+
+    NWS supplies ``messageType`` values such as Alert, Update, and Cancel.  For
+    non-NWS/provider-neutral alerts, keep the previous behavior and allow
+    missing metadata through when the AlertManager says the alert itself is new.
+    """
+    message_type = alert.message_type
+    if message_type is None:
+        return True
+    return message_type.strip().casefold() in {"", "alert"}
+
+
 class AlertNotificationSystem:
     """Enhanced notification system with user controls and accessibility features."""
 
@@ -153,13 +167,18 @@ class AlertNotificationSystem:
         self,
         sorted_notifications: list[tuple[WeatherAlert, str]],
     ) -> None:
-        """Start or extend NOAA radio auto-tune for the eligible alert batch."""
+        """Start NOAA radio auto-tune only for newly issued alert notifications."""
         if self.radio_auto_tuner is None:
             return
+        initial_alerts = [
+            alert
+            for alert, reason in sorted_notifications
+            if reason == "new_alert" and _is_initial_alert_message_type(alert)
+        ]
+        if not initial_alerts:
+            return
         try:
-            self.radio_auto_tuner.tune_for_alerts(
-                [alert for alert, _reason in sorted_notifications]
-            )
+            self.radio_auto_tuner.tune_for_alerts(initial_alerts)
         except Exception as exc:
             logger.warning("Failed to schedule weather radio auto-tune: %s", exc)
 

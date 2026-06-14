@@ -487,22 +487,17 @@ class AlertRadioAutoTuner:
                 self._wake_event.wait(min(remaining, 1.0))
                 self._wake_event.clear()
 
-                if not self._session.is_playing():
+                playing_station = self._session.playing_station
+                if playing_station is None:
                     logger.info("Weather radio auto-tune ended because playback stopped")
                     return
-
-                playing_station = self._session.playing_station
-                if playing_station is None or playing_station.call_sign != station.call_sign:
+                if playing_station.call_sign != station.call_sign:
                     logger.info("Weather radio auto-tune relinquished control to manual playback")
                     return
 
             playing_station = self._session.playing_station
-            if (
-                self._session.is_playing()
-                and playing_station is not None
-                and playing_station.call_sign == station.call_sign
-            ):
-                self._session.stop()
+            if playing_station is not None and playing_station.call_sign == station.call_sign:
+                self._stop_auto_playback()
                 self._emit_status(f"Weather radio auto-tune stopped {station.call_sign}.")
         finally:
             with self._lock:
@@ -544,6 +539,13 @@ class AlertRadioAutoTuner:
                 self._session.playing_station = None
         self._emit_status(f"Weather radio auto-tune could not start {station.call_sign}.")
         return False
+
+    def _stop_auto_playback(self) -> None:
+        """Stop playback owned by the auto-tuner without trusting backend play state."""
+        try:
+            self._session.stop()
+        except Exception as exc:
+            logger.warning("Weather radio auto-tune failed to stop playback: %s", exc)
 
     def _is_auto_tune_active_locked(self, now: float) -> bool:
         return self._worker is not None and (
