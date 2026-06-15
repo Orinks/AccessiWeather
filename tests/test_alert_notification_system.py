@@ -232,6 +232,32 @@ class TestAlertNotificationBatchSound:
 
         radio_auto_tuner.tune_for_alerts.assert_not_called()
 
+    def test_radio_auto_tune_receives_severity_escalation(self, alert_manager, mock_notifier):
+        """A material alert escalation should start NOAA radio auto-tune again."""
+        radio_auto_tuner = MagicMock()
+        notification_system = AlertNotificationSystem(
+            alert_manager=alert_manager,
+            notifier=mock_notifier,
+            radio_auto_tuner=radio_auto_tuner,
+        )
+        escalated_alert = WeatherAlert(
+            id="nws-alert-3",
+            title="Severe Thunderstorm Warning",
+            description="Warning upgraded with destructive winds.",
+            severity="Extreme",
+            urgency="Immediate",
+            certainty="Observed",
+            event="Severe Thunderstorm Warning",
+            message_type="Update",
+            expires=datetime.now(UTC) + timedelta(hours=1),
+        )
+
+        notification_system._trigger_radio_auto_tune_if_enabled(
+            [(escalated_alert, "severity_escalated")]
+        )
+
+        radio_auto_tuner.tune_for_alerts.assert_called_once_with([escalated_alert])
+
     @pytest.mark.asyncio
     async def test_most_severe_alert_plays_sound(
         self, notification_system, mock_notifier, multiple_alerts

@@ -50,6 +50,13 @@ def _is_initial_alert_message_type(alert: WeatherAlert) -> bool:
     return message_type.strip().casefold() in {"", "alert"}
 
 
+def _should_auto_tune_for_alert_notification(alert: WeatherAlert, reason: str) -> bool:
+    """Return whether this notification should start SAME radio auto-tune."""
+    if reason == "new_alert":
+        return _is_initial_alert_message_type(alert)
+    return reason == "severity_escalated"
+
+
 class AlertNotificationSystem:
     """Enhanced notification system with user controls and accessibility features."""
 
@@ -167,18 +174,18 @@ class AlertNotificationSystem:
         self,
         sorted_notifications: list[tuple[WeatherAlert, str]],
     ) -> None:
-        """Start NOAA radio auto-tune only for newly issued alert notifications."""
+        """Start NOAA radio auto-tune for new alerts and material escalations."""
         if self.radio_auto_tuner is None:
             return
-        initial_alerts = [
+        auto_tune_alerts = [
             alert
             for alert, reason in sorted_notifications
-            if reason == "new_alert" and _is_initial_alert_message_type(alert)
+            if _should_auto_tune_for_alert_notification(alert, reason)
         ]
-        if not initial_alerts:
+        if not auto_tune_alerts:
             return
         try:
-            self.radio_auto_tuner.tune_for_alerts(initial_alerts)
+            self.radio_auto_tuner.tune_for_alerts(auto_tune_alerts)
         except Exception as exc:
             logger.warning("Failed to schedule weather radio auto-tune: %s", exc)
 
