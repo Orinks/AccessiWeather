@@ -45,6 +45,10 @@ def test_windows_startup_shortcut_uses_stable_accessiweather_name(manager):
     assert _shortcut_path(manager).name == "AccessiWeather.lnk"
 
 
+def test_windows_shortcut_probe_timeout_is_short_for_settings_dialog(manager):
+    assert manager._WINDOWS_SHORTCUT_COMMAND_TIMEOUT_SECONDS <= 2
+
+
 def test_windows_startup_launch_command_marks_automatic_startup(manager, monkeypatch):
     executable = Path("C:/Program Files/AccessiWeather/AccessiWeather.exe")
     monkeypatch.setattr(manager, "_get_app_executable", lambda: executable)
@@ -139,6 +143,79 @@ def test_create_windows_shortcut_falls_back_to_com_when_powershell_is_unavailabl
     }
 
 
+def test_create_windows_shortcut_falls_back_to_com_when_powershell_fails(
+    manager, monkeypatch, tmp_path
+):
+    target = tmp_path / "AccessiWeather.exe"
+    target.touch()
+    shortcut_path = tmp_path / "AccessiWeather.lnk"
+    fallback = {}
+
+    def failing_powershell(command, **_kwargs):
+        raise subprocess.CalledProcessError(
+            returncode=1,
+            cmd=command,
+            stderr=b"COM initialization failed",
+        )
+
+    monkeypatch.setattr(subprocess, "run", failing_powershell)
+    monkeypatch.setattr(
+        manager,
+        "_create_windows_shortcut_with_com",
+        lambda target, shortcut_path, args: (
+            fallback.update({"target": target, "shortcut_path": shortcut_path, "args": args})
+            or True
+        ),
+    )
+
+    manager._create_windows_shortcut(target, shortcut_path, ["--startup"])
+
+    assert fallback == {
+        "target": target,
+        "shortcut_path": shortcut_path,
+        "args": ["--startup"],
+    }
+
+
+def test_create_windows_shortcut_quotes_source_args_with_spaces(manager, monkeypatch, tmp_path):
+    target = tmp_path / "Python With Spaces" / "python.exe"
+    target.parent.mkdir()
+    target.touch()
+    shortcut_path = tmp_path / "AccessiWeather.lnk"
+    captured = {}
+
+    def capture_run(command, **_kwargs):
+        captured["command"] = command
+        return subprocess.CompletedProcess(command, 0, stdout=b"", stderr=b"")
+
+    monkeypatch.setattr(subprocess, "run", capture_run)
+
+    manager._create_windows_shortcut(
+        target,
+        shortcut_path,
+        [
+            "-m",
+            "accessiweather",
+            "--config-dir",
+            "C:\\Users\\Name With Spaces\\Config",
+            "--startup",
+        ],
+    )
+
+    script = captured["command"][-1]
+    assert "$shortcut.TargetPath = " in script
+    assert (
+        "$shortcut.Arguments = "
+        "'-m accessiweather --config-dir \"C:\\Users\\Name With Spaces\\Config\" --startup';"
+    ) in script
+
+
+def test_disable_windows_startup_returns_false_when_appdata_is_missing(manager, monkeypatch):
+    monkeypatch.delenv("APPDATA", raising=False)
+
+    assert manager._disable_windows_startup() is False
+
+
 def test_enabled_when_shortcut_targets_current_launch_command(manager, monkeypatch):
     expected_target = Path("C:/Program Files/AccessiWeather/AccessiWeather.exe")
     expected_args = ["--startup"]
@@ -213,7 +290,12 @@ def test_disabled_when_shortcut_target_unreadable(manager, monkeypatch):
     Safer to overwrite than to leave a potentially broken shortcut in place.
     """
     monkeypatch.setattr(
-        manager, "_get_launch_command", lambda: (Path("C:/app/AccessiWeather.exe"), [])
+        manager,
+        "_get_launch_command",
+        lambda *, for_startup=False: (
+            Path("C:/app/AccessiWeather.exe"),
+            ["--startup"] if for_startup else [],
+        ),
     )
     monkeypatch.setattr(manager, "_read_windows_shortcut", lambda _path: None)
     _shortcut_path(manager).touch()
@@ -224,7 +306,12 @@ def test_disabled_when_shortcut_target_unreadable(manager, monkeypatch):
 def test_disabled_when_shortcut_read_times_out(manager, monkeypatch):
     """A stalled PowerShell shortcut read must not hang settings dialog startup."""
     monkeypatch.setattr(
-        manager, "_get_launch_command", lambda: (Path("C:/app/AccessiWeather.exe"), [])
+        manager,
+        "_get_launch_command",
+        lambda *, for_startup=False: (
+            Path("C:/app/AccessiWeather.exe"),
+            ["--startup"] if for_startup else [],
+        ),
     )
     _shortcut_path(manager).touch()
 

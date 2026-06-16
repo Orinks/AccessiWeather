@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Current conditions and tray text now omit feels-like or heat-index details when they are unavailable instead of announcing them as `N/A`.
+- The Settings startup checkbox now reflects and repairs the actual OS startup registration instead of trusting a stale saved preference.
 - NOAA Weather Radio SAME auto-tune now starts again when an existing qualifying alert materially escalates, while still ignoring routine updates and cancellations.
 - NOAA Weather Radio auto-tune now starts only for the first issuance of a qualifying SAME alert, reliably stops after your configured playback duration, and no longer restarts for later updates or cancellations of the same alert.
 - Feels-like and heat-index readings now ignore implausibly warm provider values when the current temperature and humidity do not support them, while keeping valid humid heat-index and cold wind-chill readings.

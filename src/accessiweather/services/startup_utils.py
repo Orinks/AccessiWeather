@@ -24,7 +24,7 @@ class StartupManager:
     _MACOS_PLIST_LABEL = "net.orinks.accessiweather.startup"
     _LINUX_DESKTOP_FILENAME = "accessiweather.desktop"
     _WINDOWS_STARTUP_SHORTCUT_NAME = "AccessiWeather.lnk"
-    _WINDOWS_SHORTCUT_COMMAND_TIMEOUT_SECONDS = 5
+    _WINDOWS_SHORTCUT_COMMAND_TIMEOUT_SECONDS = 2
 
     def __init__(self, platform_detector: PlatformDetector | None = None) -> None:
         """Create a manager using an optional platform detector override."""
