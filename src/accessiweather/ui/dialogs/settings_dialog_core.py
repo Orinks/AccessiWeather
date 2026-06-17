@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from contextlib import suppress
+from copy import copy
 
 import wx
 
@@ -182,7 +183,18 @@ class SettingsDialogCoreMixin:
         """Load current settings into UI controls."""
         try:
             settings = self.config_manager.get_settings()
-            self._loaded_startup_enabled = bool(getattr(settings, "startup_enabled", False))
+            configured_startup_enabled = bool(getattr(settings, "startup_enabled", False))
+            actual_startup_enabled = bool(self.config_manager.is_startup_enabled())
+            if actual_startup_enabled != configured_startup_enabled:
+                logger.info(
+                    "Startup setting differs from OS registration: configured=%s, actual=%s",
+                    configured_startup_enabled,
+                    actual_startup_enabled,
+                )
+                settings = copy(settings)
+                settings.startup_enabled = actual_startup_enabled
+
+            self._loaded_startup_enabled = actual_startup_enabled
             for tab in getattr(self, "_tab_objects", []):
                 tab.load(settings)
         except Exception as e:
@@ -245,7 +257,10 @@ class SettingsDialogCoreMixin:
             )
 
         if desired_enabled == previous_enabled:
-            return True
+            actual_enabled = bool(self.config_manager.is_startup_enabled())
+            if desired_enabled == actual_enabled:
+                self._loaded_startup_enabled = actual_enabled
+                return True
 
         if desired_enabled:
             success, message = self.config_manager.enable_startup()

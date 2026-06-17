@@ -24,7 +24,7 @@ class StartupManager:
     _MACOS_PLIST_LABEL = "net.orinks.accessiweather.startup"
     _LINUX_DESKTOP_FILENAME = "accessiweather.desktop"
     _WINDOWS_STARTUP_SHORTCUT_NAME = "AccessiWeather.lnk"
-    _WINDOWS_SHORTCUT_COMMAND_TIMEOUT_SECONDS = 5
+    _WINDOWS_SHORTCUT_COMMAND_TIMEOUT_SECONDS = 2
 
     def __init__(self, platform_detector: PlatformDetector | None = None) -> None:
         """Create a manager using an optional platform detector override."""
@@ -184,6 +184,9 @@ class StartupManager:
             shortcut_path = self._get_windows_startup_shortcut()
             executable, args = self._get_launch_command(for_startup=True)
             self._create_windows_shortcut(executable, shortcut_path, args)
+            if not shortcut_path.exists():
+                logger.error("Windows startup shortcut was not created at %s", shortcut_path)
+                return False
             self._remove_windows_startup_shortcuts(self._get_legacy_windows_startup_shortcuts())
             logger.info("Created Windows startup shortcut at %s", shortcut_path)
             return True
@@ -274,6 +277,9 @@ class StartupManager:
         if not target.exists():
             raise FileNotFoundError(f"Target executable does not exist: {target}")
 
+        if self._create_windows_shortcut_with_com(target, shortcut_path, args):
+            return
+
         target_str = self._escape_powershell_single_quotes(str(target))
         working_dir_str = self._escape_powershell_single_quotes(str(target.parent))
         shortcut_str = self._escape_powershell_single_quotes(str(shortcut_path))
@@ -288,6 +294,7 @@ class StartupManager:
             "$shortcut.WindowStyle = 1;"
             f"$shortcut.Description = '{self._escape_powershell_single_quotes(self._get_app_name())} startup shortcut';"
             f"$shortcut.Arguments = '{escaped_args}';"
+            f"$shortcut.IconLocation = '{target_str},0';"
             "$shortcut.Save();"
         )
 
@@ -318,9 +325,6 @@ class StartupManager:
                 last_error = RuntimeError(f"Failed to create shortcut via PowerShell: {stderr}")
                 logger.warning("Failed creating shortcut via PowerShell: %s", stderr)
                 continue
-
-        if self._create_windows_shortcut_with_com(target, shortcut_path, args):
-            return
 
         raise RuntimeError("Failed to create Windows shortcut") from last_error
 
