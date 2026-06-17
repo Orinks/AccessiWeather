@@ -81,6 +81,24 @@ def test_save_settings_repairs_missing_os_startup_when_checkbox_is_enabled():
     dialog.config_manager.update_settings.assert_called_once_with(startup_enabled=True)
 
 
+def test_save_settings_does_not_probe_startup_again_when_checkbox_changed_to_enabled():
+    dialog = _make_dialog(
+        checkbox_enabled=True,
+        configured_enabled=False,
+        actual_enabled=False,
+    )
+    dialog.config_manager.is_startup_enabled.side_effect = AssertionError(
+        "save-time shortcut probe should not run for a direct checkbox change"
+    )
+
+    assert dialog._save_settings() is True
+
+    dialog.config_manager.is_startup_enabled.assert_not_called()
+    dialog.config_manager.enable_startup.assert_called_once()
+    dialog.config_manager.disable_startup.assert_not_called()
+    dialog.config_manager.update_settings.assert_called_once_with(startup_enabled=True)
+
+
 def test_save_settings_does_not_reapply_when_os_state_matches_checkbox():
     dialog = _make_dialog(
         checkbox_enabled=True,

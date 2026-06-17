@@ -256,10 +256,11 @@ class SettingsDialogCoreMixin:
                 getattr(self.config_manager.get_settings(), "startup_enabled", False)
             )
 
-        actual_enabled = bool(self.config_manager.is_startup_enabled())
-        if desired_enabled == actual_enabled:
-            self._loaded_startup_enabled = actual_enabled
-            return True
+        if desired_enabled == previous_enabled:
+            actual_enabled = bool(self.config_manager.is_startup_enabled())
+            if desired_enabled == actual_enabled:
+                self._loaded_startup_enabled = actual_enabled
+                return True
 
         if desired_enabled:
             success, message = self.config_manager.enable_startup()

@@ -72,8 +72,9 @@ def test_enable_windows_startup_creates_shortcut_with_startup_marker(manager, mo
     monkeypatch.setattr(
         manager,
         "_create_windows_shortcut",
-        lambda target, shortcut_path, args: created.update(
-            {"target": target, "shortcut_path": shortcut_path, "args": args}
+        lambda target, shortcut_path, args: (
+            shortcut_path.touch()
+            or created.update({"target": target, "shortcut_path": shortcut_path, "args": args})
         ),
     )
 
@@ -95,10 +96,26 @@ def test_enable_windows_startup_removes_legacy_shortcuts(manager, monkeypatch):
         lambda *, for_startup=False: (expected_target, ["--startup"] if for_startup else []),
     )
     monkeypatch.setattr(manager, "_get_legacy_windows_startup_shortcuts", lambda: [legacy_shortcut])
-    monkeypatch.setattr(manager, "_create_windows_shortcut", lambda *_args: None)
+    monkeypatch.setattr(
+        manager,
+        "_create_windows_shortcut",
+        lambda _target, shortcut_path, _args: shortcut_path.touch(),
+    )
 
     assert manager._enable_windows_startup() is True
     assert not legacy_shortcut.exists()
+
+
+def test_enable_windows_startup_fails_when_shortcut_is_not_created(manager, monkeypatch):
+    expected_target = Path("C:/Program Files/AccessiWeather/AccessiWeather.exe")
+    monkeypatch.setattr(
+        manager,
+        "_get_launch_command",
+        lambda *, for_startup=False: (expected_target, ["--startup"] if for_startup else []),
+    )
+    monkeypatch.setattr(manager, "_create_windows_shortcut", lambda *_args: None)
+
+    assert manager._enable_windows_startup() is False
 
 
 def test_disable_windows_startup_removes_legacy_shortcuts(manager, monkeypatch):
@@ -113,68 +130,55 @@ def test_disable_windows_startup_removes_legacy_shortcuts(manager, monkeypatch):
     assert not legacy_shortcut.exists()
 
 
-def test_create_windows_shortcut_falls_back_to_com_when_powershell_is_unavailable(
+def test_create_windows_shortcut_prefers_com_without_starting_powershell(
     manager, monkeypatch, tmp_path
 ):
     target = tmp_path / "AccessiWeather.exe"
     target.touch()
     shortcut_path = tmp_path / "AccessiWeather.lnk"
-    fallback = {}
+    created = {}
 
-    def missing_powershell(*_args, **_kwargs):
-        raise FileNotFoundError("powershell.exe")
+    def unexpected_powershell(*_args, **_kwargs):
+        raise AssertionError("PowerShell should not run when COM shortcut creation succeeds")
 
-    monkeypatch.setattr(subprocess, "run", missing_powershell)
+    monkeypatch.setattr(subprocess, "run", unexpected_powershell)
     monkeypatch.setattr(
         manager,
         "_create_windows_shortcut_with_com",
         lambda target, shortcut_path, args: (
-            fallback.update({"target": target, "shortcut_path": shortcut_path, "args": args})
-            or True
+            created.update({"target": target, "shortcut_path": shortcut_path, "args": args}) or True
         ),
     )
 
     manager._create_windows_shortcut(target, shortcut_path, ["--startup"])
 
-    assert fallback == {
+    assert created == {
         "target": target,
         "shortcut_path": shortcut_path,
         "args": ["--startup"],
     }
 
 
-def test_create_windows_shortcut_falls_back_to_com_when_powershell_fails(
+def test_create_windows_shortcut_falls_back_to_powershell_when_com_is_unavailable(
     manager, monkeypatch, tmp_path
 ):
     target = tmp_path / "AccessiWeather.exe"
     target.touch()
     shortcut_path = tmp_path / "AccessiWeather.lnk"
-    fallback = {}
+    captured = {}
 
-    def failing_powershell(command, **_kwargs):
-        raise subprocess.CalledProcessError(
-            returncode=1,
-            cmd=command,
-            stderr=b"COM initialization failed",
-        )
+    def capture_run(command, **_kwargs):
+        captured["command"] = command
+        shortcut_path.touch()
+        return subprocess.CompletedProcess(command, 0, stdout=b"", stderr=b"")
 
-    monkeypatch.setattr(subprocess, "run", failing_powershell)
-    monkeypatch.setattr(
-        manager,
-        "_create_windows_shortcut_with_com",
-        lambda target, shortcut_path, args: (
-            fallback.update({"target": target, "shortcut_path": shortcut_path, "args": args})
-            or True
-        ),
-    )
+    monkeypatch.setattr(subprocess, "run", capture_run)
+    monkeypatch.setattr(manager, "_create_windows_shortcut_with_com", lambda *_args: False)
 
     manager._create_windows_shortcut(target, shortcut_path, ["--startup"])
 
-    assert fallback == {
-        "target": target,
-        "shortcut_path": shortcut_path,
-        "args": ["--startup"],
-    }
+    assert captured["command"][0] == "powershell.exe"
+    assert shortcut_path.exists()
 
 
 def test_create_windows_shortcut_quotes_source_args_with_spaces(manager, monkeypatch, tmp_path):
@@ -188,6 +192,7 @@ def test_create_windows_shortcut_quotes_source_args_with_spaces(manager, monkeyp
         captured["command"] = command
         return subprocess.CompletedProcess(command, 0, stdout=b"", stderr=b"")
 
+    monkeypatch.setattr(manager, "_create_windows_shortcut_with_com", lambda *_args: False)
     monkeypatch.setattr(subprocess, "run", capture_run)
 
     manager._create_windows_shortcut(
@@ -208,6 +213,7 @@ def test_create_windows_shortcut_quotes_source_args_with_spaces(manager, monkeyp
         "$shortcut.Arguments = "
         "'-m accessiweather --config-dir \"C:\\Users\\Name With Spaces\\Config\" --startup';"
     ) in script
+    assert f"$shortcut.IconLocation = '{target},0';" in script
 
 
 def test_disable_windows_startup_returns_false_when_appdata_is_missing(manager, monkeypatch):
