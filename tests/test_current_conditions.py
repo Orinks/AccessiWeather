@@ -24,6 +24,7 @@ from accessiweather.display.presentation.current_conditions import (
 from accessiweather.display.priority_engine import WeatherCategory
 from accessiweather.display.weather_presenter import Metric
 from accessiweather.models import (
+    AppSettings,
     CurrentConditions,
     EnvironmentalConditions,
     HourlyForecast,
@@ -789,6 +790,29 @@ class TestBuildCurrentConditions:
         assert result.metrics[0].label == "Precipitation outlook"
         assert result.metrics[0].value == "Rain starting in 12 minutes."
         assert "Precipitation outlook: Rain starting in 12 minutes." in result.fallback_text
+
+    def test_canadian_auto_units_show_pressure_in_kpa(self):
+        current = CurrentConditions(
+            temperature_f=50.0,
+            temperature_c=10.0,
+            condition="Cloudy",
+            pressure_mb=1013.0,
+            pressure_in=1013.0 / 33.8639,
+        )
+        location = Location(name="Toronto", latitude=43.6532, longitude=-79.3832, country_code="CA")
+        settings = AppSettings(temperature_unit="auto")
+
+        result = build_current_conditions(
+            current,
+            location,
+            TemperatureUnit.CELSIUS,
+            settings=settings,
+            unit_system="ca",
+        )
+
+        pressure = next(metric for metric in result.metrics if metric.label == "Pressure")
+        assert pressure.value == "101.3 kPa"
+        assert "Pressure: 101.3 kPa" in result.fallback_text
 
     def test_priority_reorder_preserves_labels_in_fallback_text(self):
         """
