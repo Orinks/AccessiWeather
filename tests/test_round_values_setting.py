@@ -343,3 +343,29 @@ class TestTaskbarIconUpdaterRoundValues:
         assert updater.round_values is False
         updater.update_settings(round_values=True)
         assert updater.round_values is True
+
+    def test_canadian_auto_tray_pressure_uses_kpa(self):
+        from types import SimpleNamespace
+
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            format_string="{pressure}",
+            temperature_unit="auto",
+            round_values=False,
+        )
+        current = self._make_current_ns()
+        current.pressure_mb = 1013.0
+        current.pressure_in = 1013.0 / 33.8639
+        weather_data = SimpleNamespace(
+            current_conditions=current,
+            location=Location(
+                name="Toronto",
+                latitude=43.6532,
+                longitude=-79.3832,
+                country_code="CA",
+            ),
+            forecast=None,
+            alerts=None,
+        )
+
+        assert updater.format_tooltip(weather_data) == "101.30 kPa"

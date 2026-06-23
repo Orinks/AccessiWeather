@@ -104,6 +104,30 @@ class TestFormatPressure:
         result = format_pressure(29.1234, unit=TemperatureUnit.FAHRENHEIT, precision=3)
         assert result == "29.123 inHg"
 
+    def test_format_pressure_canadian_unit_system_uses_kpa(self) -> None:
+        """Canadian auto display should present normalized hPa/mbar pressure as kPa."""
+        result = format_pressure(
+            None,
+            unit=TemperatureUnit.CELSIUS,
+            pressure_mb=1013.0,
+            precision=1,
+            unit_system="ca",
+        )
+
+        assert result == "101.3 kPa"
+
+    def test_format_pressure_si_unit_system_keeps_hpa(self) -> None:
+        """Non-Canadian metric auto display still uses hPa."""
+        result = format_pressure(
+            None,
+            unit=TemperatureUnit.CELSIUS,
+            pressure_mb=1013.0,
+            precision=1,
+            unit_system="si",
+        )
+
+        assert result == "1013.0 hPa"
+
 
 class TestFormatVisibility:
     """Tests for visibility formatting."""

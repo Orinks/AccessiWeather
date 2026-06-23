@@ -121,7 +121,9 @@ def format_pressure(
     normalized_system = _normalize_unit_system(unit_system)
     if normalized_system == "us":
         return f"{pressure_inhg:.{precision}f} inHg"
-    if normalized_system in {"uk", "ca", "si"}:
+    if normalized_system == "ca":
+        return f"{pressure_mb / 10:.{precision}f} kPa"
+    if normalized_system in {"uk", "si"}:
         return f"{pressure_mb:.{precision}f} hPa"
 
     # Format based on user preference
