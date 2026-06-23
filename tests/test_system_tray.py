@@ -559,7 +559,7 @@ class TestFormatterUnitPreferencePlaceholders:
             (
                 "auto",
                 Location(name="Toronto", latitude=43.65, longitude=-79.38, country_code="CA"),
-                "16.1 km/h | 1017.00 hPa | 16.1 km | 25.40 mm | 24C | 13C",
+                "16.1 km/h | 101.70 kPa | 16.1 km | 25.40 mm | 24C | 13C",
             ),
             (
                 "auto",
