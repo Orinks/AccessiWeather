@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-06-26
+
+### Fixed
+- Canadian locations now show barometric pressure in kilopascals, such as 101.3 kPa, when using automatic units.
+
 ## [0.8.0] - 2026-06-19
 
 ### Changed
@@ -14,7 +19,6 @@ All notable changes to this project will be documented in this file.
 - NOAA Weather Radio stations can now be saved as favorites, with a Favorites finder mode and optional nearby-station lookup from your saved AccessiWeather locations.
 
 ### Fixed
-- Canadian locations now show barometric pressure in kilopascals, such as 101.3 kPa, when using automatic units.
 - Current conditions and tray text now omit feels-like or heat-index details when they are unavailable instead of announcing them as `N/A`.
 - The Settings startup checkbox now reflects and repairs the actual OS startup registration instead of trusting a stale saved preference.
 - Saving Settings after turning on automatic startup now returns to the main window faster while still updating the OS startup registration.
