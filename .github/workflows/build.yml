@@ -456,7 +456,7 @@ jobs:
               "url": "/accessiweather/downloads",
           }
           request = urllib.request.Request(
-              "https://orinks.net/api/notifications/send",
+              "https://orinks.net/api/notifications/send/",
               data=json.dumps(payload).encode("utf-8"),
               headers={
                   "Authorization": f"Bearer {os.environ['ORINKS_BUILD_NOTIFICATION_TOKEN']}",
