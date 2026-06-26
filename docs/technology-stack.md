@@ -37,7 +37,6 @@ AccessiWeather is a cross-platform desktop weather application built with Python
 | Library | Version | Purpose |
 |---------|---------|---------|
 | **httpx** | ≥0.20.0 | Async HTTP client for API calls with retry support |
-| **beautifulsoup4** | Latest | HTML parsing for weather data extraction |
 | **geopy** | Latest | Geocoding and location services |
 | **python-dateutil** | Latest | Advanced date/time handling for forecasts |
 | **timezonefinder** | Latest | Timezone detection from coordinates |

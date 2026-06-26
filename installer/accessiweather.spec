@@ -125,8 +125,6 @@ hiddenimports = [
     "attrs",
     "dateutil",
     "dateutil.parser",
-    "bs4",
-    "beautifulsoup4",
     "psutil",
     # Generated build-time files (wrapped in try/except, so PyInstaller misses them)
     "accessiweather._version",
