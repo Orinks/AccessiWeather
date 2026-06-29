@@ -107,7 +107,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - uses: actions/cache@v5.0.5
+      - uses: actions/cache@v6
         with:
           path: |
             ~/.cache/pip
@@ -118,7 +118,7 @@ jobs:
             pip-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-
             pip-${{ runner.os }}-
 
-      - uses: actions/cache/restore@v5.0.5
+      - uses: actions/cache/restore@v6
         with:
           path: .nuitka-cache
           key: nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-${{ github.run_id }}
@@ -148,7 +148,7 @@ jobs:
             dist/AccessiWeather_Setup_*.exe
             dist/AccessiWeather_Portable_*.zip
 
-      - uses: actions/cache/save@v5.0.5
+      - uses: actions/cache/save@v6
         if: always()
         with:
           path: .nuitka-cache
@@ -170,7 +170,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - uses: actions/cache@v5.0.5
+      - uses: actions/cache@v6
         with:
           path: |
             ~/.cache/pip
@@ -181,7 +181,7 @@ jobs:
             pip-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-
             pip-${{ runner.os }}-
 
-      - uses: actions/cache/restore@v5.0.5
+      - uses: actions/cache/restore@v6
         with:
           path: .nuitka-cache
           key: nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-${{ github.run_id }}
@@ -209,7 +209,7 @@ jobs:
           name: macos
           path: dist/AccessiWeather_macOS_*.zip
 
-      - uses: actions/cache/save@v5.0.5
+      - uses: actions/cache/save@v6
         if: always()
         with:
           path: .nuitka-cache
@@ -231,7 +231,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - uses: actions/cache@v5.0.5
+      - uses: actions/cache@v6
         with:
           path: |
             ~/.cache/pip
@@ -242,7 +242,7 @@ jobs:
             pip-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-
             pip-${{ runner.os }}-
 
-      - uses: actions/cache/restore@v5.0.5
+      - uses: actions/cache/restore@v6
         with:
           path: .nuitka-cache
           key: nuitka-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('pyproject.toml', 'installer/build_nuitka.py') }}-${{ github.run_id }}
@@ -328,7 +328,7 @@ jobs:
           name: linux
           path: dist/AccessiWeather_Linux_*.tar.gz
 
-      - uses: actions/cache/save@v5.0.5
+      - uses: actions/cache/save@v6
         if: always()
         with:
           path: .nuitka-cache
