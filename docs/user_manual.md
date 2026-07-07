@@ -1058,12 +1058,16 @@ These shortcuts are available in the current app:
 
 - F5 or Ctrl+R: Refresh weather
 - Ctrl+L: Add location
+- Ctrl+Shift+L: Edit the selected location
 - Ctrl+D: Remove location
 - Ctrl+S: Open Settings
 - Ctrl+H: Open Weather History
 - Ctrl+E: Explain Weather
 - Ctrl+T: Open Weather Assistant
 - Ctrl+Shift+R: Open NOAA Weather Radio
+- Ctrl+Shift+W: Show and focus the main window
+- Ctrl+Shift+H: Hide the main window to the notification area
+- Ctrl+Shift+I: Read the current notification-area text
 - Ctrl+Q: Quit
 
 ## 10. Troubleshooting

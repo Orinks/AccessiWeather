@@ -248,7 +248,7 @@ class MainWindowUIMixin:
         self._edit_location_id = wx.NewIdRef()
         edit_item = location_menu.Append(
             self._edit_location_id,
-            "&Edit Location...",
+            "&Edit Location...\tCtrl+Shift+L",
             "Edit the selected location (e.g. enable Marine Mode)",
         )
         self._remove_location_id = wx.NewIdRef()
@@ -270,6 +270,25 @@ class MainWindowUIMixin:
         history_item = view_menu.Append(
             self._history_id, "Weather &History\tCtrl+H", "View weather history"
         )
+        self._show_window_id = wx.NewIdRef()
+        show_window_item = view_menu.Append(
+            self._show_window_id,
+            "Sho&w Window\tCtrl+Shift+W",
+            "Restore and focus the main window",
+        )
+        self._hide_window_id = wx.NewIdRef()
+        hide_window_item = view_menu.Append(
+            self._hide_window_id,
+            "&Hide to Notification Area\tCtrl+Shift+H",
+            "Hide the main window to the system tray",
+        )
+        self._read_tray_info_id = wx.NewIdRef()
+        read_tray_info_item = view_menu.Append(
+            self._read_tray_info_id,
+            "Read Notification Area &Text\tCtrl+Shift+I",
+            "Announce the current system tray information",
+        )
+        view_menu.AppendSeparator()
         self._precipitation_timeline_id = wx.NewIdRef()
         self._precipitation_timeline_item = view_menu.Append(
             self._precipitation_timeline_id,
@@ -371,6 +390,13 @@ class MainWindowUIMixin:
         self.Bind(wx.EVT_MENU, lambda e: self.on_refresh(), refresh_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_explain_weather(), explain_item)
         self.Bind(wx.EVT_MENU, lambda e: self.on_view_history(), history_item)
+        self.Bind(wx.EVT_MENU, lambda e: self.app._on_show_window_shortcut(e), show_window_item)
+        self.Bind(wx.EVT_MENU, lambda e: self.app._on_hide_window_shortcut(e), hide_window_item)
+        self.Bind(
+            wx.EVT_MENU,
+            lambda e: self.app._on_read_tray_info_shortcut(e),
+            read_tray_info_item,
+        )
         self.Bind(
             wx.EVT_MENU,
             lambda e: self._on_precipitation_timeline(),
@@ -430,9 +456,13 @@ class MainWindowUIMixin:
             (wx.ACCEL_CTRL, "S", "_settings_id"),
             (wx.ACCEL_CTRL, "Q", "_exit_id"),
             (wx.ACCEL_CTRL, "L", "_add_location_id"),
+            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, "L", "_edit_location_id"),
             (wx.ACCEL_CTRL, "D", "_remove_location_id"),
             (wx.ACCEL_CTRL, "E", "_explain_id"),
             (wx.ACCEL_CTRL, "H", "_history_id"),
+            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, "W", "_show_window_id"),
+            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, "H", "_hide_window_id"),
+            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, "I", "_read_tray_info_id"),
             (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, "R", "_noaa_radio_id"),
             (wx.ACCEL_CTRL, "T", "_weather_chat_id"),
         ]

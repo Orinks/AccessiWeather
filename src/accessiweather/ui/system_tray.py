@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from ..app import AccessiWeatherApp
 
 logger = logging.getLogger(__name__)
+DEFAULT_TRAY_TOOLTIP_TEXT = "AccessiWeather"
 
 
 class SystemTrayIcon(wx.adv.TaskBarIcon):
@@ -46,6 +47,7 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
         self.app = app
         self._icon_set = False
         self._cached_icon = None  # Cache the icon to avoid reloading
+        self._tooltip_text = DEFAULT_TRAY_TOOLTIP_TEXT
 
         # Set up the tray icon
         self._setup_icon()
@@ -60,7 +62,7 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
         icon = self._load_icon()
         if icon and icon.IsOk():
             self._cached_icon = icon  # Cache the icon
-            self.SetIcon(icon, "AccessiWeather")
+            self.SetIcon(icon, DEFAULT_TRAY_TOOLTIP_TEXT)
             self._icon_set = True
             logger.debug("System tray icon set successfully")
         else:
@@ -295,6 +297,11 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
             text: The new tooltip text
 
         """
+        self._tooltip_text = text or DEFAULT_TRAY_TOOLTIP_TEXT
         if self._icon_set and self._cached_icon and self._cached_icon.IsOk():
-            self.SetIcon(self._cached_icon, text)
-            logger.debug(f"Tray tooltip updated: {text}")
+            self.SetIcon(self._cached_icon, self._tooltip_text)
+            logger.debug(f"Tray tooltip updated: {self._tooltip_text}")
+
+    def get_tooltip_text(self) -> str:
+        """Return the most recent tray tooltip text for announcements and tests."""
+        return self._tooltip_text

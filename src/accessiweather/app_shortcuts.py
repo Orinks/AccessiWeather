@@ -21,6 +21,7 @@ class AppShortcutsMixin:
         accelerators = [
             (wx.ACCEL_CTRL, ord("R"), self._on_refresh_shortcut),
             (wx.ACCEL_CTRL, ord("L"), self._on_add_location_shortcut),
+            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("L"), self._on_edit_location_shortcut),
             (wx.ACCEL_CTRL, ord("D"), self._on_remove_location_shortcut),
             (wx.ACCEL_CTRL, ord("H"), self._on_history_shortcut),
             (wx.ACCEL_CTRL, ord("1"), self._on_focus_current_conditions_shortcut),
@@ -29,6 +30,9 @@ class AppShortcutsMixin:
             (wx.ACCEL_CTRL, ord("4"), self._on_focus_alerts_shortcut),
             (wx.ACCEL_CTRL, ord("5"), self._on_focus_event_center_shortcut),
             (wx.ACCEL_CTRL, ord("S"), self._on_settings_shortcut),
+            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("W"), self._on_show_window_shortcut),
+            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("H"), self._on_hide_window_shortcut),
+            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("I"), self._on_read_tray_info_shortcut),
             (wx.ACCEL_CTRL, ord("Q"), self._on_exit_shortcut),
             (wx.ACCEL_NORMAL, wx.WXK_F5, self._on_refresh_shortcut),
             (wx.ACCEL_NORMAL, getattr(wx, "WXK_F6", wx.WXK_F5), self._on_cycle_sections_shortcut),
@@ -55,6 +59,11 @@ class AppShortcutsMixin:
         """Handle Ctrl+L shortcut."""
         if self.main_window:
             self.main_window.on_add_location()
+
+    def _on_edit_location_shortcut(self, event) -> None:
+        """Handle Ctrl+Shift+L shortcut."""
+        if self.main_window:
+            self.main_window.on_edit_location()
 
     def _on_remove_location_shortcut(self, event) -> None:
         """Handle Ctrl+D shortcut."""
@@ -100,6 +109,39 @@ class AppShortcutsMixin:
         """Handle Ctrl+S shortcut."""
         if self.main_window:
             self.main_window.on_settings()
+
+    def _on_show_window_shortcut(self, event) -> None:
+        """Handle Ctrl+Shift+W shortcut."""
+        tray_icon = getattr(self, "tray_icon", None)
+        if tray_icon and hasattr(tray_icon, "show_main_window"):
+            tray_icon.show_main_window()
+            return
+        if self.main_window:
+            self.main_window.Show(True)
+            self.main_window.Iconize(False)
+            self.main_window.Raise()
+            self.main_window.SetFocus()
+
+    def _on_hide_window_shortcut(self, event) -> None:
+        """Handle Ctrl+Shift+H shortcut."""
+        if self.main_window and getattr(self, "tray_icon", None):
+            self.main_window._minimize_to_tray()
+            return
+        self._announce_shortcut_status("System tray is unavailable.")
+
+    def _on_read_tray_info_shortcut(self, event) -> None:
+        """Handle Ctrl+Shift+I shortcut."""
+        tray_icon = getattr(self, "tray_icon", None)
+        if tray_icon and hasattr(tray_icon, "get_tooltip_text"):
+            tooltip = tray_icon.get_tooltip_text()
+            self._announce_shortcut_status(f"Tray information: {tooltip}")
+            return
+        self._announce_shortcut_status("System tray information is unavailable.")
+
+    def _announce_shortcut_status(self, message: str) -> None:
+        """Announce shortcut feedback via the main window status channel."""
+        if self.main_window and hasattr(self.main_window, "set_status"):
+            self.main_window.set_status(message)
 
     def _on_exit_shortcut(self, event) -> None:
         """Handle Ctrl+Q shortcut."""

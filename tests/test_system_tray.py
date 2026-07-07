@@ -195,6 +195,28 @@ class TestUpdateTooltip:
         assert result is False
         assert set_icon_called == []
 
+    def test_get_tooltip_text_defaults_to_app_name(self):
+        """The tray should keep a readable default tooltip before weather updates arrive."""
+        from accessiweather.ui.system_tray import DEFAULT_TRAY_TOOLTIP_TEXT, SystemTrayIcon
+
+        tray = SystemTrayIcon.__new__(SystemTrayIcon)
+        tray._tooltip_text = DEFAULT_TRAY_TOOLTIP_TEXT
+
+        assert tray.get_tooltip_text() == DEFAULT_TRAY_TOOLTIP_TEXT
+
+    def test_update_tooltip_caches_text_even_without_icon(self):
+        """Reading tray info should still return the newest text when icon updates are skipped."""
+        from accessiweather.ui.system_tray import SystemTrayIcon
+
+        tray = SystemTrayIcon.__new__(SystemTrayIcon)
+        tray._icon_set = False
+        tray._cached_icon = None
+        tray._tooltip_text = "AccessiWeather"
+
+        tray.update_tooltip("72°F Sunny")
+
+        assert tray.get_tooltip_text() == "72°F Sunny"
+
 
 class TestMinimizeOnStartup:
     """Tests for minimize on startup functionality."""
