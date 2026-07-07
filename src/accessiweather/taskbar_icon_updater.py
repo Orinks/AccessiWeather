@@ -13,7 +13,11 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 
 from .format_string_parser import FormatStringParser
-from .units import resolve_display_unit_system, resolve_temperature_unit_preference
+from .units import (
+    resolve_display_unit_system,
+    resolve_temperature_unit_preference,
+    resolve_wind_display_unit_system,
+)
 from .utils.temperature_utils import (
     TemperatureUnit,
     celsius_to_fahrenheit,
@@ -63,6 +67,7 @@ class TaskbarIconUpdater:
         dynamic_enabled: bool = True,
         format_string: str = DEFAULT_TOOLTIP_FORMAT,
         temperature_unit: str = "both",
+        wind_speed_unit: str = "auto",
         verbosity_level: str = "standard",
         round_values: bool = False,
     ):
@@ -71,6 +76,7 @@ class TaskbarIconUpdater:
         self.dynamic_enabled = dynamic_enabled
         self.format_string = format_string
         self.temperature_unit = temperature_unit
+        self.wind_speed_unit = wind_speed_unit
         self.verbosity_level = verbosity_level
         self.round_values = round_values
         self.parser = FormatStringParser()
@@ -82,6 +88,7 @@ class TaskbarIconUpdater:
         dynamic_enabled: bool | None = None,
         format_string: str | None = None,
         temperature_unit: str | None = None,
+        wind_speed_unit: str | None = None,
         verbosity_level: str | None = None,
         round_values: bool | None = None,
     ) -> None:
@@ -94,6 +101,8 @@ class TaskbarIconUpdater:
             self.format_string = format_string
         if temperature_unit is not None:
             self.temperature_unit = temperature_unit
+        if wind_speed_unit is not None:
+            self.wind_speed_unit = wind_speed_unit
         if verbosity_level is not None:
             self.verbosity_level = verbosity_level
         if round_values is not None:
@@ -265,6 +274,18 @@ class TaskbarIconUpdater:
         unit_system = resolve_display_unit_system(self.temperature_unit, resolved_location)
         return unit_system.value if unit_system is not None else None
 
+    def _resolve_wind_display_unit_system(self, location: Any | None = None) -> str | None:
+        """Resolve the effective wind-speed display system for the active location."""
+        resolved_location = location
+        if resolved_location is None and getattr(self, "_active_weather_data", None) is not None:
+            resolved_location = getattr(self._active_weather_data, "location", None)
+        unit_system = resolve_wind_display_unit_system(
+            self.wind_speed_unit,
+            temperature_preference=self.temperature_unit,
+            location=resolved_location,
+        )
+        return unit_system.value if unit_system is not None else None
+
     def _format_numeric(self, value: float | int | None, suffix: str) -> str:
         """Format a numeric value with optional suffix."""
         if value is None:
@@ -311,7 +332,7 @@ class TaskbarIconUpdater:
             unit=self._resolve_temperature_unit(),
             wind_speed_kph=getattr(current, "wind_speed_kph", None),
             precision=precision,
-            unit_system=self._resolve_display_unit_system(),
+            unit_system=self._resolve_wind_display_unit_system(),
         )
 
     def _format_pressure(self, current: Any) -> str:

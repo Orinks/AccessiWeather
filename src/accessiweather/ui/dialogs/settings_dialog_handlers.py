@@ -484,6 +484,7 @@ class SettingsDialogHandlersMixin:
             dynamic_enabled=self._controls["taskbar_icon_dynamic_enabled"].GetValue(),
             format_string=self._controls["taskbar_icon_text_format"].GetValue(),
             temperature_unit=self._get_selected_temperature_unit(),
+            wind_speed_unit=self._get_selected_wind_speed_unit(),
         )
 
         dialog = TrayTextFormatDialog(
@@ -507,6 +508,16 @@ class SettingsDialogHandlersMixin:
         if selection < 0 or selection >= len(temp_values):
             return "both"
         return temp_values[selection]
+
+    def _get_selected_wind_speed_unit(self) -> str:
+        """Return the wind speed unit selection currently shown in the dialog."""
+        if hasattr(self, "_display_tab"):
+            return self._display_tab.get_selected_wind_speed_unit()
+        wind_speed_values = ["auto", "mph", "km/h", "m/s"]
+        selection = self._controls["wind_speed_unit"].GetSelection()
+        if selection < 0 or selection >= len(wind_speed_values):
+            return "auto"
+        return wind_speed_values[selection]
 
     def _get_ai_model_preference(self) -> str:
         """Get the AI model preference based on UI selection."""

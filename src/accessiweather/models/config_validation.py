@@ -84,6 +84,11 @@ class AppSettingsValidationMixin:
             if value not in valid_modes:
                 setattr(settings, setting_name, "local")
 
+        elif setting_name == "wind_speed_unit":
+            valid_units = {"auto", "mph", "km/h", "m/s"}
+            if value not in valid_units:
+                setattr(settings, setting_name, "auto")
+
         elif setting_name == "forecast_time_reference":
             valid_references = {"location", "user_local"}
             if value not in valid_references:

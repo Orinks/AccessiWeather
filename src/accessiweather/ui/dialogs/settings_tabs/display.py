@@ -10,6 +10,18 @@ logger = logging.getLogger(__name__)
 
 _TEMP_VALUES = ["auto", "f", "c", "both"]
 _TEMP_MAP = {"auto": 0, "f": 1, "fahrenheit": 1, "c": 2, "celsius": 2, "both": 3}
+_WIND_SPEED_UNIT_VALUES = ["auto", "mph", "km/h", "m/s"]
+_WIND_SPEED_UNIT_MAP = {
+    "auto": 0,
+    "mph": 1,
+    "mi/h": 1,
+    "km/h": 2,
+    "kmh": 2,
+    "kph": 2,
+    "m/s": 3,
+    "mps": 3,
+    "ms": 3,
+}
 _FORECAST_DURATION_VALUES = [3, 5, 7, 10, 14, 15]
 _FORECAST_DURATION_MAP = {3: 0, 5: 1, 7: 2, 10: 3, 14: 4, 15: 5}
 _FORECAST_TIME_REF_VALUES = ["location", "user_local"]
@@ -76,6 +88,20 @@ class DisplayTab:
                     "Imperial (°F)",
                     "Metric (°C)",
                     "Both (°F and °C)",
+                ],
+            ),
+        )
+        controls["wind_speed_unit"] = self.dialog.add_labeled_control_row(
+            panel,
+            temperature_section,
+            "Wind speed units:",
+            lambda parent: wx.Choice(
+                parent,
+                choices=[
+                    "Match temperature setting/location",
+                    "Miles per hour (mph)",
+                    "Kilometers per hour (km/h)",
+                    "Meters per second (m/s)",
                 ],
             ),
         )
@@ -315,6 +341,8 @@ class DisplayTab:
 
         temp_unit = getattr(settings, "temperature_unit", "both")
         controls["temp_unit"].SetSelection(_TEMP_MAP.get(temp_unit, 3))
+        wind_speed_unit = getattr(settings, "wind_speed_unit", "auto")
+        controls["wind_speed_unit"].SetSelection(_WIND_SPEED_UNIT_MAP.get(wind_speed_unit, 0))
 
         controls["show_dewpoint"].SetValue(getattr(settings, "show_dewpoint", True))
         controls["show_visibility"].SetValue(getattr(settings, "show_visibility", True))
@@ -368,6 +396,9 @@ class DisplayTab:
         controls = self.dialog._controls
         return {
             "temperature_unit": _TEMP_VALUES[controls["temp_unit"].GetSelection()],
+            "wind_speed_unit": _WIND_SPEED_UNIT_VALUES[
+                controls["wind_speed_unit"].GetSelection()
+            ],
             "show_dewpoint": controls["show_dewpoint"].GetValue(),
             "show_visibility": controls["show_visibility"].GetValue(),
             "show_uv_index": controls["show_uv_index"].GetValue(),
@@ -404,11 +435,19 @@ class DisplayTab:
             return "both"
         return _TEMP_VALUES[selection]
 
+    def get_selected_wind_speed_unit(self) -> str:
+        """Return the wind speed unit selection currently shown in the dialog."""
+        selection = self.dialog._controls["wind_speed_unit"].GetSelection()
+        if selection < 0 or selection >= len(_WIND_SPEED_UNIT_VALUES):
+            return "auto"
+        return _WIND_SPEED_UNIT_VALUES[selection]
+
     def setup_accessibility(self):
         """Set accessibility names for Display tab controls."""
         controls = self.dialog._controls
         names = {
             "temp_unit": "Temperature units",
+            "wind_speed_unit": "Wind speed units",
             "show_dewpoint": "Show dew point",
             "show_visibility": "Show visibility",
             "show_uv_index": "Show UV index",

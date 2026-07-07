@@ -64,6 +64,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "pirate_weather_api_key",
     # Display preferences
     "round_values",
+    "wind_speed_unit",
     "enable_alerts",
     "minimize_to_tray",
     "minimize_on_startup",

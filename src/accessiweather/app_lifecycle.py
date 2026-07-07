@@ -38,6 +38,7 @@ class AppLifecycleMixin:
                 dynamic_enabled=getattr(settings, "taskbar_icon_dynamic_enabled", True),
                 format_string=getattr(settings, "taskbar_icon_text_format", "{temp} {condition}"),
                 temperature_unit=getattr(settings, "temperature_unit", "both"),
+                wind_speed_unit=getattr(settings, "wind_speed_unit", "auto"),
                 verbosity_level=getattr(settings, "verbosity_level", "standard"),
                 round_values=getattr(settings, "round_values", False),
             )
@@ -428,6 +429,7 @@ class AppLifecycleMixin:
                         settings, "taskbar_icon_text_format", "{temp} {condition}"
                     ),
                     temperature_unit=getattr(settings, "temperature_unit", "both"),
+                    wind_speed_unit=getattr(settings, "wind_speed_unit", "auto"),
                     verbosity_level=getattr(settings, "verbosity_level", "standard"),
                 )
 

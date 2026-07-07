@@ -16,6 +16,7 @@ from ...models import (
     Location,
     MarineForecast,
 )
+from ...units import DisplayUnitSystem
 from ...utils import TemperatureUnit
 from ...utils.unit_utils import format_precipitation
 from .forecast_hourly import build_hourly_section_text, build_hourly_summary, render_hourly_fallback
@@ -155,6 +156,7 @@ def build_forecast(
     marine: MarineForecast | None = None,
     confidence: ForecastConfidence | None = None,
     mobility_briefing: str | None = None,
+    wind_unit_system: DisplayUnitSystem | str | None = None,
 ) -> ForecastPresentation:
     """Create a structured forecast including optional hourly highlights."""
     title = f"Forecast for {location.name}"
@@ -183,6 +185,7 @@ def build_forecast(
             unit_pref,
             settings=settings,
             location_timezone=location_timezone,
+            wind_unit_system=wind_unit_system,
         )
     else:
         hourly = []
@@ -217,7 +220,11 @@ def build_forecast(
 
     for period in selected_periods:
         temp_pair = format_forecast_temperature(period, unit_pref, precision)
-        wind_value = format_period_wind(period, unit_pref) if include_wind else None
+        wind_value = (
+            format_period_wind(period, unit_pref, unit_system=wind_unit_system)
+            if include_wind
+            else None
+        )
         details = (
             period.detailed_forecast
             if include_details
