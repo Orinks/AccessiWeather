@@ -6,6 +6,7 @@ Tests the SystemTrayIcon class, minimize on startup, and dynamic tray tooltip fe
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -618,6 +619,64 @@ class TestFormatterUnitPreferencePlaceholders:
         result = updater.format_tooltip(weather_data, "Test City")
 
         assert result == "N/A / N/A"
+
+    def test_precip_placeholders_fall_back_to_hourly_forecast_when_current_missing(self):
+        """Precipitation placeholders should use forecast data when current conditions omit it."""
+        from accessiweather.models import HourlyForecast, HourlyForecastPeriod
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        weather_data = WeatherData(
+            location=Location(name="Test City", latitude=40.0, longitude=-74.0),
+            current=CurrentConditions(temperature_f=72.0, temperature_c=22.2, condition="Rain"),
+            hourly_forecast=HourlyForecast(
+                periods=[
+                    HourlyForecastPeriod(
+                        start_time=datetime.now(UTC),
+                        precipitation_amount=0.25,
+                        precipitation_probability=40,
+                    )
+                ]
+            ),
+        )
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            format_string="{precip} | {precip_chance}",
+            temperature_unit="f",
+        )
+
+        result = updater.format_tooltip(weather_data, "Test City")
+
+        assert result == "0.25 in | 40"
+
+    def test_precip_placeholders_fall_back_to_daily_forecast_when_hourly_missing(self):
+        """Daily forecast precipitation should backfill tray placeholders when needed."""
+        from accessiweather.models import Forecast, ForecastPeriod
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        weather_data = WeatherData(
+            location=Location(name="Test City", latitude=40.0, longitude=-74.0),
+            current=CurrentConditions(temperature_f=72.0, temperature_c=22.2, condition="Rain"),
+            forecast=Forecast(
+                periods=[
+                    ForecastPeriod(
+                        name="Today",
+                        temperature=75,
+                        temperature_unit="F",
+                        precipitation_amount=0.5,
+                        precipitation_probability=60,
+                    )
+                ]
+            ),
+        )
+        updater = TaskbarIconUpdater(
+            text_enabled=True,
+            format_string="{precip} | {precip_chance}",
+            temperature_unit="f",
+        )
+
+        result = updater.format_tooltip(weather_data, "Test City")
+
+        assert result == "0.50 in | 60"
 
 
 def _weather_data_with_feels_like(
