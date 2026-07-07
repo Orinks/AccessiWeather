@@ -188,9 +188,10 @@ class TaskbarIconUpdater:
         data["uv"] = self._format_numeric(getattr(current, "uv_index", None), "")
         data["visibility"] = self._format_visibility(current)
         data["high"], data["low"] = self._format_forecast_temperatures(weather_data)
-        data["precip"] = self._format_precipitation(current)
-        data["precip_chance"] = self._format_numeric(
-            getattr(current, "precipitation_probability", None), ""
+        data["precip"] = self._format_precipitation(current, weather_data=weather_data)
+        data["precip_chance"] = self._format_precipitation_probability(
+            current,
+            weather_data=weather_data,
         )
         data["alert"] = self._extract_alert_event(weather_data)
 
@@ -336,22 +337,76 @@ class TaskbarIconUpdater:
             unit_system=self._resolve_display_unit_system(),
         )
 
-    def _format_precipitation(self, current: Any) -> str:
+    def _format_precipitation(
+        self,
+        current: Any,
+        *,
+        weather_data: WeatherData | Any | None = None,
+    ) -> str:
         """Format precipitation using the selected unit preference when source data exists."""
         precip_in = getattr(current, "precipitation_in", None)
         if precip_in is None:
             precip_in = getattr(current, "precipitation_inches", None)
         if precip_in is None:
             precip_in = getattr(current, "precipitation", None)
+        precip_mm = getattr(current, "precipitation_mm", None)
+
+        if precip_in is None and precip_mm is None:
+            precip_in, precip_mm = self._extract_forecast_precipitation_amount(weather_data)
 
         precision = 0 if self.round_values else 2
         return format_precipitation(
             precip_in,
             unit=self._resolve_temperature_unit(),
-            precipitation_mm=getattr(current, "precipitation_mm", None),
+            precipitation_mm=precip_mm,
             precision=precision,
             unit_system=self._resolve_display_unit_system(),
         )
+
+    def _format_precipitation_probability(
+        self,
+        current: Any,
+        *,
+        weather_data: WeatherData | Any | None = None,
+    ) -> str:
+        """Format precipitation probability from current conditions or forecast fallback."""
+        probability = getattr(current, "precipitation_probability", None)
+        if probability is None:
+            probability = self._extract_forecast_precipitation_probability(weather_data)
+        return self._format_numeric(probability, "")
+
+    def _extract_forecast_precipitation_amount(
+        self, weather_data: WeatherData | Any | None
+    ) -> tuple[float | None, float | None]:
+        """Return the first forecast precipitation amount when current conditions omit it."""
+        for period in self._iter_precipitation_periods(weather_data):
+            amount = getattr(period, "precipitation_amount", None)
+            if amount is not None:
+                return amount, amount * 25.4
+        return None, None
+
+    def _extract_forecast_precipitation_probability(
+        self, weather_data: WeatherData | Any | None
+    ) -> float | int | None:
+        """Return the first forecast precipitation probability when current conditions omit it."""
+        for period in self._iter_precipitation_periods(weather_data):
+            probability = getattr(period, "precipitation_probability", None)
+            if probability is not None:
+                return probability
+        return None
+
+    def _iter_precipitation_periods(self, weather_data: WeatherData | Any | None) -> list[Any]:
+        """Yield hourly periods before daily periods for precipitation placeholder fallback."""
+        if weather_data is None:
+            return []
+
+        periods: list[Any] = []
+        hourly_forecast = getattr(weather_data, "hourly_forecast", None)
+        periods.extend(getattr(hourly_forecast, "periods", None) or [])
+
+        forecast = getattr(weather_data, "forecast", None)
+        periods.extend(getattr(forecast, "periods", None) or [])
+        return periods
 
     def _format_forecast_temperatures(
         self, weather_data: WeatherData | Any | None
