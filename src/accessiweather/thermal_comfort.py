@@ -11,6 +11,8 @@ APPARENT_TEMPERATURE_SOLAR_ALLOWANCE_MAX_F = 5.5
 APPARENT_TEMPERATURE_SOLAR_ALLOWANCE_PER_DEGREE_F = 0.15
 HEAT_INDEX_MIN_TEMP_F = 80.0
 HEAT_INDEX_MIN_HUMIDITY = 40
+WIND_CHILL_MAX_TEMP_F = 50.0
+WIND_CHILL_MIN_WIND_MPH = 3.0
 
 
 @dataclass(frozen=True)
@@ -113,6 +115,20 @@ def calculate_heat_index_f(temperature_f: float, humidity: int | float) -> float
         heat_index += ((humidity - 85) / 10) * ((87 - temperature_f) / 5)
 
     return heat_index
+
+
+def calculate_wind_chill_f(temperature_f: float, wind_speed_mph: float) -> float | None:
+    """Calculate the standard NWS wind chill in Fahrenheit when applicable."""
+    if temperature_f > WIND_CHILL_MAX_TEMP_F or wind_speed_mph <= WIND_CHILL_MIN_WIND_MPH:
+        return None
+
+    wind_factor = wind_speed_mph**0.16
+    return (
+        35.74
+        + (0.6215 * temperature_f)
+        - (35.75 * wind_factor)
+        + (0.4275 * temperature_f * wind_factor)
+    )
 
 
 def warm_apparent_temperature_is_coherent(

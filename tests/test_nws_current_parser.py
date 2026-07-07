@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from accessiweather.thermal_comfort import calculate_heat_index_f, calculate_wind_chill_f
 from accessiweather.weather_client_nws import parse_nws_current_conditions
 
 
@@ -42,3 +43,45 @@ def test_parse_nws_current_conditions_normalizes_measurements_to_current_model()
     assert current.heat_index_f is None
     assert current.condition == "Mostly Cloudy"
     assert current.uv_index == 2.5
+
+
+def test_parse_nws_current_conditions_derives_wind_chill_when_field_missing():
+    payload = {
+        "properties": {
+            "temperature": {"value": 0.0, "unitCode": "wmoUnit:degC"},
+            "relativeHumidity": {"value": 72.4, "unitCode": "wmoUnit:percent"},
+            "windSpeed": {"value": 16.09344, "unitCode": "wmoUnit:km_h-1"},
+            "windChill": {"value": None, "unitCode": "wmoUnit:degC"},
+            "heatIndex": {"value": None, "unitCode": "wmoUnit:degC"},
+            "textDescription": "Mostly Cloudy",
+        }
+    }
+
+    current = parse_nws_current_conditions(payload)
+
+    expected = calculate_wind_chill_f(32.0, 10.0)
+    assert expected is not None
+    assert current.feels_like_f == pytest.approx(expected, abs=0.1)
+    assert current.wind_chill_f == pytest.approx(expected, abs=0.1)
+    assert current.heat_index_f is None
+
+
+def test_parse_nws_current_conditions_derives_heat_index_when_field_missing():
+    payload = {
+        "properties": {
+            "temperature": {"value": 32.2222222, "unitCode": "wmoUnit:degC"},
+            "relativeHumidity": {"value": 70.0, "unitCode": "wmoUnit:percent"},
+            "windSpeed": {"value": 7.0, "unitCode": "wmoUnit:mi_h-1"},
+            "windChill": {"value": None, "unitCode": "wmoUnit:degC"},
+            "heatIndex": {"value": None, "unitCode": "wmoUnit:degC"},
+            "textDescription": "Hot",
+        }
+    }
+
+    current = parse_nws_current_conditions(payload)
+
+    expected = calculate_heat_index_f(90.0, 70)
+    assert expected is not None
+    assert current.feels_like_f == pytest.approx(expected, abs=0.1)
+    assert current.heat_index_f == pytest.approx(expected, abs=0.1)
+    assert current.wind_chill_f is None
