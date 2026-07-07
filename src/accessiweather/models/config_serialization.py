@@ -18,6 +18,7 @@ class AppSettingsSerializationMixin:
         settings = cast("AppSettings", self)
         return {
             "temperature_unit": settings.temperature_unit,
+            "wind_speed_unit": settings.wind_speed_unit,
             "update_interval_minutes": settings.update_interval_minutes,
             "enable_alerts": settings.enable_alerts,
             "minimize_to_tray": settings.minimize_to_tray,
@@ -125,6 +126,7 @@ class AppSettingsSerializationMixin:
 
         settings = settings_cls(
             temperature_unit=data.get("temperature_unit", "both"),
+            wind_speed_unit=data.get("wind_speed_unit", "auto"),
             update_interval_minutes=data.get("update_interval_minutes", 10),
             enable_alerts=settings_cls._as_bool(data.get("enable_alerts"), True),
             minimize_to_tray=settings_cls._as_bool(data.get("minimize_to_tray"), False),

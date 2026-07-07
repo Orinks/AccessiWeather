@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - NOAA Weather Radio stations can now be saved as favorites, with a Favorites finder mode and optional nearby-station lookup from your saved AccessiWeather locations.
 
 ### Fixed
+- You can now choose meters per second for wind speed in Settings, and AccessiWeather uses that choice consistently in current conditions, forecasts, and tray text.
 - Canadian locations now show barometric pressure in kilopascals, such as 101.3 kPa, when using automatic units.
 - Current conditions and tray text now omit feels-like or heat-index details when they are unavailable instead of announcing them as `N/A`.
 - The Settings startup checkbox now reflects and repairs the actual OS startup registration instead of trusting a stale saved preference.

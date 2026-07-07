@@ -30,7 +30,11 @@ from ..models import (
     WeatherData,
 )
 from ..services.mobility_briefing import build_mobility_briefing
-from ..units import resolve_display_unit_system, resolve_temperature_unit_preference
+from ..units import (
+    resolve_display_unit_system,
+    resolve_temperature_unit_preference,
+    resolve_wind_display_unit_system,
+)
 from ..utils import TemperatureUnit
 from .presentation.aviation import build_aviation
 from .presentation.environmental import AirQualityPresentation, build_air_quality_panel
@@ -76,7 +80,9 @@ class WeatherPresenter:
 
     def present(self, weather_data: WeatherData) -> WeatherPresentation:
         """Build a structured presentation for the given weather data."""
-        unit_pref, unit_system = self._resolve_unit_preferences(weather_data.location)
+        unit_pref, unit_system, wind_unit_system = self._resolve_unit_preferences(
+            weather_data.location
+        )
 
         air_quality_panel = (
             build_air_quality_panel(
@@ -99,6 +105,7 @@ class WeatherPresenter:
                 air_quality=air_quality_panel,
                 alerts=weather_data.alerts,
                 unit_system=unit_system,
+                wind_unit_system=wind_unit_system,
                 anomaly_callout=getattr(weather_data, "anomaly_callout", None),
             )
             if weather_data.current
@@ -113,6 +120,7 @@ class WeatherPresenter:
                 marine=weather_data.marine,
                 confidence=weather_data.forecast_confidence,
                 mobility_briefing=build_mobility_briefing(weather_data),
+                wind_unit_system=wind_unit_system,
             )
             if weather_data.forecast
             else None
@@ -163,7 +171,7 @@ class WeatherPresenter:
     ) -> CurrentConditionsPresentation | None:
         if not current or not current.has_data():
             return None
-        unit_pref, unit_system = self._resolve_unit_preferences(location)
+        unit_pref, unit_system, wind_unit_system = self._resolve_unit_preferences(location)
         air_quality_panel = (
             build_air_quality_panel(location, environmental, settings=self.settings)
             if environmental
@@ -181,6 +189,7 @@ class WeatherPresenter:
             air_quality=air_quality_panel,
             alerts=alerts,
             unit_system=unit_system,
+            wind_unit_system=wind_unit_system,
         )
 
     def present_forecast(
@@ -194,7 +203,7 @@ class WeatherPresenter:
     ) -> ForecastPresentation | None:
         if not forecast or not forecast.has_data():
             return None
-        unit_pref, _unit_system = self._resolve_unit_preferences(location)
+        unit_pref, _unit_system, wind_unit_system = self._resolve_unit_preferences(location)
         return self._build_forecast(
             forecast,
             hourly_forecast,
@@ -203,6 +212,7 @@ class WeatherPresenter:
             confidence=confidence,
             mobility_briefing=mobility_briefing,
             marine=marine,
+            wind_unit_system=wind_unit_system,
         )
 
     def present_alerts(
@@ -230,6 +240,7 @@ class WeatherPresenter:
         air_quality: AirQualityPresentation | None = None,
         alerts: WeatherAlerts | None = None,
         unit_system=None,
+        wind_unit_system=None,
         anomaly_callout=None,
     ) -> CurrentConditionsPresentation:
         return build_current_conditions(
@@ -244,6 +255,7 @@ class WeatherPresenter:
             air_quality=air_quality,
             alerts=alerts,
             unit_system=unit_system,
+            wind_unit_system=wind_unit_system,
             anomaly_callout=anomaly_callout,
         )
 
@@ -256,6 +268,7 @@ class WeatherPresenter:
         marine: MarineForecast | None = None,
         confidence: ForecastConfidence | None = None,
         mobility_briefing: str | None = None,
+        wind_unit_system=None,
     ) -> ForecastPresentation:
         return build_forecast(
             forecast,
@@ -266,6 +279,7 @@ class WeatherPresenter:
             marine=marine,
             confidence=confidence,
             mobility_briefing=mobility_briefing,
+            wind_unit_system=wind_unit_system,
         )
 
     def _build_alerts(
@@ -347,11 +361,17 @@ class WeatherPresenter:
 
     def _resolve_unit_preferences(
         self, location: Location
-    ) -> tuple[TemperatureUnit, object | None]:
+    ) -> tuple[TemperatureUnit, object | None, object | None]:
         preference = getattr(self.settings, "temperature_unit", "both")
+        wind_preference = getattr(self.settings, "wind_speed_unit", "auto")
         return (
             resolve_temperature_unit_preference(preference, location),
             resolve_display_unit_system(preference, location),
+            resolve_wind_display_unit_system(
+                wind_preference,
+                temperature_preference=preference,
+                location=location,
+            ),
         )
 
     def _format_timestamp(self, value: datetime) -> str:

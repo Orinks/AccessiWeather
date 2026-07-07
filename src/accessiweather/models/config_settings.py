@@ -14,6 +14,7 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     """Application settings."""
 
     temperature_unit: str = "both"
+    wind_speed_unit: str = "auto"
     update_interval_minutes: int = 10
     enable_alerts: bool = True
     minimize_to_tray: bool = False
