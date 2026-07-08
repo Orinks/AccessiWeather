@@ -1,4 +1,5 @@
-"""Repo maintenance scripts.
+"""
+Repo maintenance scripts.
 
 This must be a regular package (not a PEP 420 namespace package): the
 Windows-Toasts dependency installs its own top-level ``scripts`` package into
