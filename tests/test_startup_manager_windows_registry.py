@@ -114,11 +114,10 @@ def manager(tmp_path, monkeypatch, fake_winreg) -> StartupManager:
     platform_detector.get_platform_info.return_value = platform_info
 
     manager = StartupManager(platform_detector=platform_detector)
-    executable = Path("C:/Program Files/AccessiWeather/AccessiWeather.exe")
     monkeypatch.setattr(
         manager,
         "_get_launch_command",
-        lambda *, for_startup=False: (executable, ["--startup"] if for_startup else []),
+        lambda *, for_startup=False: (EXECUTABLE, ["--startup"] if for_startup else []),
     )
     return manager
 
@@ -136,7 +135,11 @@ def _startup_dir(tmp_path: Path) -> Path:
     return tmp_path / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
 
 
-EXPECTED_COMMAND = '"C:\\Program Files\\AccessiWeather\\AccessiWeather.exe" --startup'
+# str(Path) uses backslashes on Windows and forward slashes on POSIX, so the
+# expected command is derived from the same Path the fixture injects. The
+# space in "Program Files" still pins list2cmdline's quoting behavior.
+EXECUTABLE = Path("C:/Program Files/AccessiWeather/AccessiWeather.exe")
+EXPECTED_COMMAND = f'"{EXECUTABLE}" --startup'
 
 
 def test_disabled_when_nothing_registered(manager, no_subprocess):
@@ -294,10 +297,7 @@ def test_source_run_command_quotes_paths_with_spaces(manager, fake_winreg, monke
     )
 
     assert manager._enable_windows_startup() is True
-    assert (
-        fake_winreg.get_value(RUN_KEY, RUN_VALUE)
-        == '"C:\\Python With Spaces\\python.exe" -m accessiweather --startup'
-    )
+    assert fake_winreg.get_value(RUN_KEY, RUN_VALUE) == f'"{python}" -m accessiweather --startup'
 
 
 class _EnsureConfigStub(SimpleNamespace):
