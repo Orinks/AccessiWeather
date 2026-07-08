@@ -170,6 +170,13 @@ class AIExplainerPromptMixin:
             pressure=weather_data.get("pressure"),
             alerts=weather_data.get("alerts", []),
             forecast_summary=weather_data.get("forecast_summary"),
+            temperature_text=weather_data.get("temperature_text"),
+            wind_speed_unit=weather_data.get("wind_speed_unit"),
+            wind_text=weather_data.get("wind_text"),
+            visibility_unit=weather_data.get("visibility_unit"),
+            visibility_text=weather_data.get("visibility_text"),
+            pressure_unit=weather_data.get("pressure_unit"),
+            pressure_text=weather_data.get("pressure_text"),
             local_time=weather_data.get("local_time"),
             utc_time=weather_data.get("utc_time"),
             timezone=weather_data.get("timezone"),
@@ -258,7 +265,11 @@ class AIExplainerPromptMixin:
         key_parts = [
             f"loc:{location_name}",
             f"temp:{weather_data.get('temperature')}",
+            f"temp_text:{weather_data.get('temperature_text')}",
             f"cond:{weather_data.get('conditions')}",
+            f"wind:{weather_data.get('wind_text') or weather_data.get('wind_speed')}",
+            f"visibility:{weather_data.get('visibility_text') or weather_data.get('visibility')}",
+            f"pressure:{weather_data.get('pressure_text') or weather_data.get('pressure')}",
             f"model:{self.get_effective_model()}",
         ]
         return "ai_explanation:" + ":".join(key_parts)

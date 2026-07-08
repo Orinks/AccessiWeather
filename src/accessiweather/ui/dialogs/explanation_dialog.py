@@ -174,7 +174,13 @@ class ExplanationDialog(wx.Dialog):
                     wx.CallAfter(self._on_regenerate_error, "No weather data available.")
                     return
 
-                weather_dict = build_current_weather_payload(weather_data)
+                weather_dict = build_current_weather_payload(
+                    weather_data,
+                    temperature_unit_preference=getattr(settings, "temperature_unit", "both"),
+                    location=location,
+                )
+                if location:
+                    add_location_time_context(weather_dict, location)
 
                 loop = asyncio.new_event_loop()
                 try:
@@ -382,7 +388,11 @@ def show_explanation_dialog(
             )
 
             # Build weather data dict from current conditions
-            weather_dict = build_current_weather_payload(weather_data)
+            weather_dict = build_current_weather_payload(
+                weather_data,
+                temperature_unit_preference=getattr(settings, "temperature_unit", "both"),
+                location=location,
+            )
 
             # Add local time info for the location
             add_location_time_context(weather_dict, location)
