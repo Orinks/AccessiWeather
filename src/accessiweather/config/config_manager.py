@@ -319,6 +319,10 @@ class ConfigManager:
         """Remove a location."""
         return self._locations.remove_location(name)
 
+    def reorder_locations(self, ordered_names: list[str]) -> bool:
+        """Persist a new saved-location order."""
+        return self._locations.reorder_locations(ordered_names)
+
     def set_current_location(self, name: str) -> bool:
         """Set the current location."""
         return self._locations.set_current_location(name)

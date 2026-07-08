@@ -222,7 +222,7 @@ class AppSettingsValidationMixin:
                 setattr(settings, setting_name, "separate")
 
         elif setting_name == "location_sort_order":
-            valid_orders = {"alphabetical", "nearest_current"}
+            valid_orders = {"alphabetical", "manual", "nearest_current"}
             if value not in valid_orders:
                 setattr(settings, setting_name, "alphabetical")
 

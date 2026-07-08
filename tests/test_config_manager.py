@@ -157,30 +157,50 @@ class TestConfigManager:
         result = manager.add_location("Test", 40.0, -74.0)
         assert result is False
 
-    def test_locations_are_returned_alphabetically(self, manager):
-        """Saved locations are listed alphabetically regardless of add order."""
+    def test_locations_are_returned_in_saved_order(self, manager):
+        """Saved locations keep their stored order."""
         manager.add_location("zurich", 47.3769, 8.5417)
         manager.add_location("Austin", 30.2672, -97.7431)
         manager.add_location("boston", 42.3601, -71.0589)
 
         assert [location.name for location in manager.get_all_locations()] == [
+            "zurich",
             "Austin",
             "boston",
-            "zurich",
         ]
-        assert manager.get_location_names() == ["Austin", "boston", "zurich"]
+        assert manager.get_location_names() == ["zurich", "Austin", "boston"]
 
-    def test_locations_are_saved_alphabetically(self, manager):
-        """Location order is persisted alphabetically for future app launches."""
+    def test_locations_are_saved_in_stored_order(self, manager):
+        """Location order is persisted exactly as saved for future app launches."""
         manager.add_location("Zurich", 47.3769, 8.5417)
         manager.add_location("Austin", 30.2672, -97.7431)
 
         data = json.loads(manager.config_file.read_text(encoding="utf-8"))
-        assert [location["name"] for location in data["locations"]] == ["Austin", "Zurich"]
+        assert [location["name"] for location in data["locations"]] == ["Zurich", "Austin"]
 
         manager2 = ConfigManager(manager.app, config_dir=manager.config_dir)
         manager2.load_config()
-        assert manager2.get_location_names() == ["Austin", "Zurich"]
+        assert manager2.get_location_names() == ["Zurich", "Austin"]
+
+    def test_reorder_locations_persists_manual_order(self, manager):
+        """Saved locations can be reordered manually and stay that way after reload."""
+        manager.add_location("Chicago", 41.8781, -87.6298)
+        manager.add_location("London", 51.5072, -0.1276)
+        manager.add_location("Philadelphia", 39.9526, -75.1652)
+
+        assert manager.reorder_locations(["Philadelphia", "Chicago", "London"]) is True
+        assert manager.get_location_names() == ["Philadelphia", "Chicago", "London"]
+
+        data = json.loads(manager.config_file.read_text(encoding="utf-8"))
+        assert [location["name"] for location in data["locations"]] == [
+            "Philadelphia",
+            "Chicago",
+            "London",
+        ]
+
+        manager2 = ConfigManager(manager.app, config_dir=manager.config_dir)
+        manager2.load_config()
+        assert manager2.get_location_names() == ["Philadelphia", "Chicago", "London"]
 
     def test_remove_location(self, manager):
         """Test removing a location."""

@@ -97,6 +97,34 @@ def show_edit_location_dialog(
         return None
 
 
+def show_reorder_locations_dialog(parent, app: AccessiWeatherApp) -> list[str] | None:
+    """
+    Show a dialog that lets users reorder saved locations manually.
+
+    Returns the ordered location names on OK, or ``None`` if the user cancelled.
+    """
+    try:
+        dlg = ReorderLocationsDialog(parent, app)
+        result = dlg.ShowModal()
+
+        if result == wx.ID_OK:
+            ordered_names = dlg.get_result()
+            dlg.Destroy()
+            return ordered_names
+
+        dlg.Destroy()
+        return None
+
+    except Exception as e:
+        logger.error(f"Failed to show reorder locations dialog: {e}")
+        wx.MessageBox(
+            f"Failed to open reorder locations dialog: {e}",
+            "Error",
+            wx.OK | wx.ICON_ERROR,
+        )
+        return None
+
+
 _ZONE_NOT_RESOLVED_MSG = "Not yet resolved - will populate after next weather refresh"
 
 
@@ -470,6 +498,110 @@ class EditLocationDialog(wx.Dialog):
             country_code=(selected.country_code if selected else self._location.country_code),
             marine_mode=self.marine_checkbox.GetValue(),
         )
+
+
+class ReorderLocationsDialog(wx.Dialog):
+    """Dialog for choosing a custom saved-location order."""
+
+    def __init__(self, parent, app: AccessiWeatherApp):
+        """Initialize the reorder dialog and load the current saved-location order."""
+        super().__init__(
+            parent,
+            title="Reorder Saved Locations",
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+        )
+        self.app = app
+        config_manager = getattr(app, "config_manager", None)
+        self._ordered_names = (
+            config_manager.get_location_names()
+            if config_manager is not None and hasattr(config_manager, "get_location_names")
+            else []
+        )
+
+        panel = wx.Panel(self)
+        root = wx.BoxSizer(wx.VERTICAL)
+        root.Add(
+            wx.StaticText(
+                panel,
+                label=(
+                    "Choose the saved-location order you want. "
+                    "Saving here switches Saved location order to Manual (custom)."
+                ),
+            ),
+            0,
+            wx.ALL | wx.EXPAND,
+            10,
+        )
+
+        content = wx.BoxSizer(wx.HORIZONTAL)
+        self._locations_list = wx.ListBox(panel, choices=self._ordered_names, style=wx.LB_SINGLE)
+        self._locations_list.SetName("Saved locations order")
+        content.Add(self._locations_list, 1, wx.ALL | wx.EXPAND, 10)
+
+        button_column = wx.BoxSizer(wx.VERTICAL)
+        self._move_up_button = wx.Button(panel, label="Move Up")
+        self._move_up_button.SetName("Move selected saved location up")
+        self._move_up_button.Bind(wx.EVT_BUTTON, lambda event: self._move_selection(-1))
+        button_column.Add(self._move_up_button, 0, wx.BOTTOM | wx.EXPAND, 8)
+
+        self._move_down_button = wx.Button(panel, label="Move Down")
+        self._move_down_button.SetName("Move selected saved location down")
+        self._move_down_button.Bind(wx.EVT_BUTTON, lambda event: self._move_selection(1))
+        button_column.Add(self._move_down_button, 0, wx.EXPAND)
+        content.Add(button_column, 0, wx.TOP | wx.RIGHT | wx.BOTTOM, 10)
+        root.Add(content, 1, wx.EXPAND)
+
+        self._status_text = wx.StaticText(
+            panel,
+            label="Use Move Up and Move Down to arrange your saved locations.",
+        )
+        root.Add(self._status_text, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 10)
+
+        root.Add(self.CreateSeparatedButtonSizer(wx.OK | wx.CANCEL), 0, wx.ALL | wx.EXPAND, 10)
+        panel.SetSizer(root)
+
+        if self._ordered_names:
+            self._locations_list.SetSelection(0)
+        self._locations_list.Bind(wx.EVT_LISTBOX, self._on_selection_changed)
+        self._refresh_move_buttons()
+        self.SetMinSize(wx.Size(420, 320))
+        self.SetSize(wx.Size(520, 360))
+        self.CentreOnParent()
+
+    def _on_selection_changed(self, event: wx.CommandEvent) -> None:
+        self._refresh_move_buttons()
+        event.Skip()
+
+    def _refresh_move_buttons(self) -> None:
+        selection = self._locations_list.GetSelection()
+        has_selection = selection != wx.NOT_FOUND
+        self._move_up_button.Enable(has_selection and selection > 0)
+        self._move_down_button.Enable(
+            has_selection and 0 <= selection < len(self._ordered_names) - 1
+        )
+
+    def _move_selection(self, direction: int) -> None:
+        selection = self._locations_list.GetSelection()
+        if selection == wx.NOT_FOUND:
+            return
+
+        new_index = selection + direction
+        if new_index < 0 or new_index >= len(self._ordered_names):
+            return
+
+        self._ordered_names[selection], self._ordered_names[new_index] = (
+            self._ordered_names[new_index],
+            self._ordered_names[selection],
+        )
+        self._locations_list.Set(self._ordered_names)
+        self._locations_list.SetSelection(new_index)
+        moved_name = self._ordered_names[new_index]
+        self._status_text.SetLabel(f"{moved_name} moved to position {new_index + 1}.")
+        self._refresh_move_buttons()
+
+    def get_result(self) -> list[str]:
+        """Return the saved-location order chosen by the user."""
+        return list(self._ordered_names)
 
 
 class AddLocationDialog(wx.Dialog):

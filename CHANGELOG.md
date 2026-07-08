@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - NOAA Weather Radio now opens independently of saved weather locations and keeps playing after you close the player until you press Stop or exit the app.
 - The NOAA Weather Radio Station Finder now has clearer modes for searching all stations, browsing by full state or territory name, and finding nearby stations by coordinates.
 - NOAA Weather Radio stations can now be saved as favorites, with a Favorites finder mode and optional nearby-station lookup from your saved AccessiWeather locations.
+- Saved locations can now be reordered manually from the Location menu, and that custom order is available as a saved-location display mode.
 
 ### Fixed
 - Screen reader announcements work again in installed builds — the Weather Assistant now auto-reads replies, and other spoken announcements are back. The installer was shipping without the speech library's native component, so announcements were silently skipped.

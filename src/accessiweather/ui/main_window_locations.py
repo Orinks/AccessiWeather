@@ -180,6 +180,38 @@ class MainWindowLocationMixin:
             self._populate_locations()
             self.refresh_weather_async()
 
+    def on_reorder_locations(self) -> None:
+        """Handle manual saved-location reordering."""
+        locations = self.app.config_manager.get_all_locations()
+        if len(locations) < 2:
+            from . import main_window as base_module
+
+            base_module.wx.MessageBox(
+                "Add at least two saved locations before reordering them.",
+                "Not Enough Locations",
+                base_module.wx.OK | base_module.wx.ICON_INFORMATION,
+            )
+            return
+
+        from . import main_window as base_module
+
+        ordered_names = base_module.show_reorder_locations_dialog(self, self.app)
+        if ordered_names is None:
+            return
+
+        if not self.app.config_manager.reorder_locations(ordered_names):
+            base_module.wx.MessageBox(
+                "Could not save the new saved-location order.",
+                "Reorder Failed",
+                base_module.wx.OK | base_module.wx.ICON_WARNING,
+            )
+            return
+
+        self.app.config_manager.update_settings(location_sort_order="manual")
+        self._populate_locations()
+        if getattr(self, "_all_locations_active", False):
+            self._show_all_locations_summary()
+
     def on_refresh(self) -> None:
         """Handle refresh button click."""
         self.refresh_weather_async(force_refresh=True)

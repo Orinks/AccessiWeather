@@ -178,6 +178,20 @@ class TestPopulateLocations:
         call_args = win.location_dropdown.Append.call_args[0][0]
         assert call_args == ["All Locations", "Denver", "Boulder", "Miami", "Anchorage"]
 
+    def test_real_locations_can_follow_manual_saved_order(self):
+        from accessiweather.ui.main_window import MainWindow
+
+        win = _make_window()
+        locs = [_make_location("Boston"), _make_location("Austin"), _make_location("Chicago")]
+        win.app.config_manager.get_all_locations.return_value = locs
+        win.app.config_manager.get_current_location.return_value = locs[0]
+        win.app.config_manager.get_settings.return_value.location_sort_order = "manual"
+
+        MainWindow._populate_locations(win)
+
+        call_args = win.location_dropdown.Append.call_args[0][0]
+        assert call_args == ["All Locations", "Boston", "Austin", "Chicago"]
+
     def test_selects_current_location_when_set(self):
         from accessiweather.ui.main_window import MainWindow
 
@@ -532,6 +546,48 @@ class TestEditLocation:
             MainWindow.on_edit_location(win)
 
         win.app.config_manager.update_location_marine_mode.assert_not_called()
+
+
+class TestReorderLocations:
+    def test_reorder_locations_requires_two_saved_locations(self):
+        import accessiweather.ui.main_window as mw_module
+        from accessiweather.ui.main_window import MainWindow
+
+        win = _make_window()
+        win.app.config_manager.get_all_locations.return_value = [_make_location("Chicago")]
+
+        mock_wx = MagicMock()
+        with patch.object(mw_module, "wx", mock_wx):
+            MainWindow.on_reorder_locations(win)
+
+        mock_wx.MessageBox.assert_called_once()
+        win.app.config_manager.reorder_locations.assert_not_called()
+
+    def test_reorder_locations_persists_manual_mode_and_refreshes_ui(self):
+        import accessiweather.ui.main_window as mw_module
+        from accessiweather.ui.main_window import MainWindow
+
+        win = _make_window()
+        locations = [
+            _make_location("Chicago"),
+            _make_location("London"),
+            _make_location("Philadelphia"),
+        ]
+        win.app.config_manager.get_all_locations.return_value = locations
+        win._show_all_locations_summary = MagicMock()
+
+        with patch.object(
+            mw_module,
+            "show_reorder_locations_dialog",
+            return_value=["Philadelphia", "Chicago", "London"],
+        ):
+            MainWindow.on_reorder_locations(win)
+
+        win.app.config_manager.reorder_locations.assert_called_once_with(
+            ["Philadelphia", "Chicago", "London"]
+        )
+        win.app.config_manager.update_settings.assert_called_once_with(location_sort_order="manual")
+        win._populate_locations.assert_called_once()
 
 
 # ---------------------------------------------------------------------------
