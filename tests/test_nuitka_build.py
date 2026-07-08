@@ -328,3 +328,28 @@ def test_windows_portable_zip_uses_separate_staging_dir(tmp_path, monkeypatch) -
     assert "AccessiWeather/AccessiWeather.exe" in names
     assert "AccessiWeather/.portable" in names
     assert "AccessiWeather/data/soundpacks/default/pack.json" in names
+
+
+def test_stage_prism_runtime_files_ships_native_library(tmp_path) -> None:
+    """prism.dll must ship or screen reader announcements silently no-op (#677)."""
+    staged = tmp_path / "AccessiWeather_dir"
+    staged.mkdir()
+
+    target = build_nuitka._stage_prism_runtime_files(staged)
+
+    assert target == staged / "prism" / "_native"
+    natives = [p for p in target.iterdir() if p.suffix.lower() in {".dll", ".dylib", ".so"}]
+    assert natives, "no prism native library staged"
+
+
+def test_stage_prism_runtime_files_fails_when_native_library_missing(tmp_path, monkeypatch) -> None:
+    fake_native = tmp_path / "prism" / "_native"
+    fake_native.mkdir(parents=True)
+    (fake_native / "prism.lib").write_bytes(b"import-lib-only")
+    monkeypatch.setattr(build_nuitka, "_prism_native_dir", lambda: fake_native)
+
+    staged = tmp_path / "AccessiWeather_dir"
+    staged.mkdir()
+
+    with pytest.raises(RuntimeError, match="prism native"):
+        build_nuitka._stage_prism_runtime_files(staged)

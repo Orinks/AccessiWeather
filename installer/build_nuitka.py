@@ -84,6 +84,56 @@ def _mirror_sound_lib_flat_files_to_arch_dir(target_dir: Path) -> None:
         shutil.copy2(path, arch_dir / path.name)
 
 
+PRISM_NATIVE_EXTS = {".dll", ".dylib", ".so"}
+
+
+def _prism_native_dir() -> Path:
+    """Locate prismatoid's native library directory in the build environment."""
+    spec = importlib.util.find_spec("prism")
+    if not spec or not spec.submodule_search_locations:
+        raise RuntimeError("prismatoid is not installed; cannot build screen reader support")
+
+    package_dir = Path(next(iter(spec.submodule_search_locations)))
+    native_dir = package_dir / "_native"
+    if native_dir.exists():
+        return native_dir
+    raise RuntimeError(f"prism native library directory was not found: {native_dir}")
+
+
+def _prism_target_dir(staged_dir: Path) -> Path:
+    """Return the frozen path where prism looks for its native library."""
+    if staged_dir.suffix == ".app":
+        return staged_dir / "Contents" / "Resources" / "prism" / "_native"
+    return staged_dir / "prism" / "_native"
+
+
+def _stage_prism_runtime_files(staged_dir: Path) -> Path:
+    """
+    Copy prism's native screen reader library into the frozen runtime layout.
+
+    Nuitka's --include-package-data silently drops DLL/dylib/so files, so
+    releases shipped prism/_native without prism.dll and screen reader
+    announcements (e.g. Weather Assistant auto-read) were a silent no-op in
+    installed builds. Staging the natives explicitly makes a missing library
+    a build failure instead of an accessibility regression.
+    """
+    source_dir = _prism_native_dir()
+    target_dir = _prism_target_dir(staged_dir)
+    target_dir.mkdir(parents=True, exist_ok=True)
+    for path in source_dir.iterdir():
+        if path.is_file():
+            shutil.copy2(path, target_dir / path.name)
+
+    native_files = [
+        path
+        for path in target_dir.iterdir()
+        if path.is_file() and path.suffix.lower() in PRISM_NATIVE_EXTS
+    ]
+    if not native_files:
+        raise RuntimeError(f"No prism native libraries were staged under {target_dir}")
+    return target_dir
+
+
 def _repo_path(path: Path) -> str:
     """Return a POSIX-style path relative to the repository root."""
     return path.relative_to(ROOT).as_posix()
@@ -144,6 +194,7 @@ def stage_nuitka_distribution() -> Path:
     DIST_DIR.mkdir(parents=True, exist_ok=True)
     shutil.copytree(source_dir, target_dir)
     _stage_sound_lib_runtime_files(target_dir)
+    _stage_prism_runtime_files(target_dir)
     return target_dir
 
 

@@ -12,6 +12,8 @@ All notable changes to this project will be documented in this file.
 - NOAA Weather Radio stations can now be saved as favorites, with a Favorites finder mode and optional nearby-station lookup from your saved AccessiWeather locations.
 
 ### Fixed
+- Screen reader announcements work again in installed builds — the Weather Assistant now auto-reads replies, and other spoken announcements are back. The installer was shipping without the speech library's native component, so announcements were silently skipped.
+- The `{precip}` and `{precip_chance}` tray placeholders now show real values instead of N/A. Precipitation chance comes from the current hour's forecast (observations never include it), and Open-Meteo's current precipitation amount now reaches the tray.
 - Canadian locations now show barometric pressure in kilopascals, such as 101.3 kPa, when using automatic units.
 - Current conditions and tray text now omit feels-like or heat-index details when they are unavailable instead of announcing them as `N/A`.
 - "Launch automatically at startup" now survives app updates. Windows startup registration moved from a Startup-folder shortcut to the standard registry Run entry, and AccessiWeather repairs it on every launch — so an update can't silently uncheck the setting or stop the app from starting with Windows.
