@@ -40,6 +40,28 @@ def normalize_snow_depth_to_inches_and_cm(
     return inches, inches * CM_PER_INCH
 
 
+def normalize_precipitation_to_inches_and_mm(
+    value: float | int | None,
+    unit: str | None,
+) -> tuple[float | None, float | None]:
+    """Return Open-Meteo precipitation normalized to inches and millimeters."""
+    if value is None:
+        return None, None
+
+    numeric = float(value)
+    unit_text = _unit_text(unit)
+
+    if "mm" in unit_text or "millimeter" in unit_text or "millimetre" in unit_text:
+        inches = numeric / 25.4
+    elif "cm" in unit_text or "centimeter" in unit_text or "centimetre" in unit_text:
+        inches = numeric / CM_PER_INCH
+    else:
+        # Open-Meteo defaults to inches when precipitation_unit="inch" is requested.
+        inches = numeric
+
+    return inches, inches * 25.4
+
+
 def normalize_height_to_feet(value: float | int | None, unit: str | None) -> float | None:
     """Return a height value normalized to feet."""
     if value is None:
