@@ -10,6 +10,21 @@ import pytest
 from installer import build, build_nuitka
 
 
+@pytest.fixture(autouse=True)
+def _stub_prism_native_dir(tmp_path_factory, monkeypatch):
+    """
+    Stage prism natives from a stub directory.
+
+    CI unit-test environments intentionally run without prismatoid installed
+    (mirroring the in-repo wx/sound_lib stubs), so staging must not depend on
+    the real package here. Real builds still fail loudly when the native
+    library is missing.
+    """
+    native = tmp_path_factory.mktemp("prism-native")
+    (native / "prism.so").write_bytes(b"stub")
+    monkeypatch.setattr(build_nuitka, "_prism_native_dir", lambda: native)
+
+
 def _pyproject_version() -> str:
     with (build_nuitka.ROOT / "pyproject.toml").open("rb") as f:
         return tomllib.load(f)["project"]["version"]
