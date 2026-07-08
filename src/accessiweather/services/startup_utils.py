@@ -15,6 +15,11 @@ from pathlib import Path
 from ..runtime_env import is_compiled_runtime
 from .platform_detector import PlatformDetector
 
+if sys.platform == "win32":
+    import winreg
+else:  # pragma: no cover - exercised via fakes in tests
+    winreg = None  # type: ignore[assignment]
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,8 +28,23 @@ class StartupManager:
 
     _MACOS_PLIST_LABEL = "net.orinks.accessiweather.startup"
     _LINUX_DESKTOP_FILENAME = "accessiweather.desktop"
+
+    # Windows registration lives in the per-user Run key. Registry access is
+    # in-process and instant, unlike the legacy Startup-folder .lnk approach
+    # which needed a PowerShell subprocess just to read the shortcut back.
+    _WINDOWS_RUN_VALUE_NAME = "AccessiWeather"
+    _WINDOWS_RUN_KEY_PATH = r"Software\Microsoft\Windows\CurrentVersion\Run"
+    # Task Manager / Settings "Startup apps" record their enable/disable
+    # toggle here without touching the Run value or the .lnk itself.
+    _WINDOWS_STARTUP_APPROVED_RUN_KEY_PATH = (
+        r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"
+    )
+    _WINDOWS_STARTUP_APPROVED_FOLDER_KEY_PATH = (
+        r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\StartupFolder"
+    )
+    # Shortcut names older releases dropped into the Startup folder. Kept only
+    # so upgrades can migrate/clean them up.
     _WINDOWS_STARTUP_SHORTCUT_NAME = "AccessiWeather.lnk"
-    _WINDOWS_SHORTCUT_COMMAND_TIMEOUT_SECONDS = 2
 
     def __init__(self, platform_detector: PlatformDetector | None = None) -> None:
         """Create a manager using an optional platform detector override."""
@@ -74,6 +94,57 @@ class StartupManager:
 
         logger.error("Unsupported platform for startup status: %s", platform_name)
         return False
+
+    def is_startup_disabled_by_os(self) -> bool:
+        """
+        Return True when startup is registered but the OS has switched it off.
+
+        Windows Task Manager / Settings "Startup apps" disable entries via the
+        StartupApproved registry flags while leaving the registration in place.
+        Re-registering must not silently override that user choice.
+        """
+        if self._get_platform_name() != "windows" or winreg is None:
+            return False
+
+        if self._read_windows_run_value() is not None:
+            return self._is_windows_startup_approved_disabled(
+                self._WINDOWS_STARTUP_APPROVED_RUN_KEY_PATH,
+                self._WINDOWS_RUN_VALUE_NAME,
+            )
+
+        for shortcut in self._get_legacy_windows_startup_shortcuts():
+            if self._path_exists(shortcut):
+                return self._is_windows_startup_approved_disabled(
+                    self._WINDOWS_STARTUP_APPROVED_FOLDER_KEY_PATH,
+                    shortcut.name,
+                )
+        return False
+
+    def is_startup_registration_current(self) -> bool:
+        """
+        Return True when the registration launches the current installation.
+
+        A stale registration (old executable path, legacy shortcut format, or
+        an OS-level disable) reports False so callers can repair it.
+        """
+        platform_name = self._get_platform_name()
+        if platform_name == "windows":
+            if winreg is None:
+                return False
+            value = self._read_windows_run_value()
+            if value is None or value != self._get_windows_run_command():
+                return False
+            if self._is_windows_startup_approved_disabled(
+                self._WINDOWS_STARTUP_APPROVED_RUN_KEY_PATH,
+                self._WINDOWS_RUN_VALUE_NAME,
+            ):
+                return False
+            # Leftover legacy shortcuts would double-launch the app at logon.
+            return not any(
+                self._path_exists(shortcut)
+                for shortcut in self._get_legacy_windows_startup_shortcuts()
+            )
+        return self.is_startup_enabled()
 
     def _get_platform_name(self) -> str:
         platform_info = self._platform_detector.get_platform_info()
@@ -140,218 +211,178 @@ class StartupManager:
             logger.error("Failed creating directory %s: %s", directory, exc)
         return False
 
+    @staticmethod
+    def _path_exists(path: Path) -> bool:
+        try:
+            return path.exists()
+        except OSError:
+            return False
+
     # Windows helpers ---------------------------------------------------
-    def _get_windows_startup_shortcut(self) -> Path:
+    def _get_windows_run_command(self) -> str:
+        executable, args = self._get_launch_command(for_startup=True)
+        return subprocess.list2cmdline([str(executable), *args])
+
+    def _read_windows_run_value(self) -> str | None:
+        if winreg is None:
+            return None
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, self._WINDOWS_RUN_KEY_PATH) as key:
+                value, _value_type = winreg.QueryValueEx(key, self._WINDOWS_RUN_VALUE_NAME)
+        except FileNotFoundError:
+            return None
+        except OSError as exc:
+            logger.error("Failed reading Windows startup Run value: %s", exc)
+            return None
+        return str(value) if value else None
+
+    def _write_windows_run_value(self, command: str) -> bool:
+        if winreg is None:
+            return False
+        try:
+            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, self._WINDOWS_RUN_KEY_PATH) as key:
+                winreg.SetValueEx(key, self._WINDOWS_RUN_VALUE_NAME, 0, winreg.REG_SZ, command)
+            return True
+        except OSError as exc:
+            logger.error("Failed writing Windows startup Run value: %s", exc)
+            return False
+
+    def _delete_windows_registry_value(self, key_path: str, value_name: str) -> bool:
+        """Delete a registry value, returning True when it no longer exists."""
+        if winreg is None:
+            return False
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE) as key:
+                winreg.DeleteValue(key, value_name)
+            return True
+        except FileNotFoundError:
+            return True
+        except OSError as exc:
+            logger.error("Failed deleting registry value %s\\%s: %s", key_path, value_name, exc)
+            return False
+
+    def _is_windows_startup_approved_disabled(self, key_path: str, value_name: str) -> bool:
+        """
+        Return True when a StartupApproved flag marks the entry disabled.
+
+        The flag is REG_BINARY; an even first byte means enabled, an odd first
+        byte means the user disabled the entry in Task Manager or Settings.
+        A missing flag means enabled.
+        """
+        if winreg is None:
+            return False
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path) as key:
+                value, _value_type = winreg.QueryValueEx(key, value_name)
+        except FileNotFoundError:
+            return False
+        except OSError as exc:
+            logger.warning(
+                "Failed reading StartupApproved flag %s\\%s: %s", key_path, value_name, exc
+            )
+            return False
+        try:
+            data = bytes(value) if value is not None else b""
+        except (TypeError, ValueError):
+            return False
+        return bool(data) and bool(data[0] & 0x01)
+
+    def _get_windows_startup_folder(self) -> Path | None:
         appdata = os.environ.get("APPDATA")
         if not appdata:
-            raise FileNotFoundError("APPDATA environment variable not set")
-        startup_dir = (
-            Path(appdata) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
-        )
-        if not self._ensure_directory_exists(startup_dir):
-            raise OSError(f"Unable to create startup directory: {startup_dir}")
-        return startup_dir / self._WINDOWS_STARTUP_SHORTCUT_NAME
+            return None
+        return Path(appdata) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
 
     def _get_legacy_windows_startup_shortcuts(self) -> list[Path]:
-        shortcut_path = self._get_windows_startup_shortcut()
+        """Startup-folder shortcuts created by older releases (cleanup targets)."""
+        startup_dir = self._get_windows_startup_folder()
+        if startup_dir is None:
+            return []
         candidates = [
-            shortcut_path.parent / f"{self._get_app_name()}.lnk",
-            shortcut_path.parent / "accessiweather.lnk",
+            startup_dir / self._WINDOWS_STARTUP_SHORTCUT_NAME,
+            startup_dir / f"{self._get_app_name()}.lnk",
+            startup_dir / "accessiweather.lnk",
         ]
-        current_shortcut = os.path.normcase(os.path.normpath(str(shortcut_path)))
-        legacy_shortcuts: list[Path] = []
-        seen: set[str] = {current_shortcut}
+        shortcuts: list[Path] = []
+        seen: set[str] = set()
         for candidate in candidates:
             normalized = os.path.normcase(os.path.normpath(str(candidate)))
             if normalized not in seen:
-                legacy_shortcuts.append(candidate)
+                shortcuts.append(candidate)
                 seen.add(normalized)
-        return legacy_shortcuts
+        return shortcuts
 
-    def _remove_windows_startup_shortcuts(self, shortcut_paths: list[Path]) -> None:
-        seen: set[str] = set()
-        for shortcut_path in shortcut_paths:
-            normalized = os.path.normcase(os.path.normpath(str(shortcut_path)))
-            if normalized in seen:
-                continue
-            seen.add(normalized)
-            if shortcut_path.exists():
-                shortcut_path.unlink()
-                logger.info("Removed Windows startup shortcut at %s", shortcut_path)
+    def _cleanup_legacy_windows_startup_shortcuts(self) -> bool:
+        """Remove legacy Startup-folder shortcuts; True when none remain."""
+        all_removed = True
+        for shortcut in self._get_legacy_windows_startup_shortcuts():
+            try:
+                if shortcut.exists():
+                    shortcut.unlink()
+                    logger.info("Removed legacy Windows startup shortcut at %s", shortcut)
+            except OSError as exc:
+                logger.warning("Could not remove legacy startup shortcut %s: %s", shortcut, exc)
+            if self._path_exists(shortcut):
+                all_removed = False
+            else:
+                # Drop the Task Manager flag for the shortcut so it cannot
+                # affect a future shortcut with the same name.
+                self._delete_windows_registry_value(
+                    self._WINDOWS_STARTUP_APPROVED_FOLDER_KEY_PATH, shortcut.name
+                )
+        return all_removed
 
     def _enable_windows_startup(self) -> bool:
-        try:
-            shortcut_path = self._get_windows_startup_shortcut()
-            executable, args = self._get_launch_command(for_startup=True)
-            self._create_windows_shortcut(executable, shortcut_path, args)
-            if not shortcut_path.exists():
-                logger.error("Windows startup shortcut was not created at %s", shortcut_path)
-                return False
-            self._remove_windows_startup_shortcuts(self._get_legacy_windows_startup_shortcuts())
-            logger.info("Created Windows startup shortcut at %s", shortcut_path)
-            return True
-        except (PermissionError, FileNotFoundError, OSError) as exc:
-            logger.error("Failed enabling Windows startup: %s", exc)
-        except RuntimeError as exc:
-            logger.error("Failed creating Windows shortcut: %s", exc)
-        return False
+        if winreg is None:
+            logger.error("winreg is unavailable; cannot enable Windows startup")
+            return False
+        command = self._get_windows_run_command()
+        if not self._write_windows_run_value(command):
+            return False
+        # A leftover Task Manager "off" flag would silently block the fresh
+        # registration; enabling here is an explicit user request to run.
+        self._delete_windows_registry_value(
+            self._WINDOWS_STARTUP_APPROVED_RUN_KEY_PATH, self._WINDOWS_RUN_VALUE_NAME
+        )
+        self._cleanup_legacy_windows_startup_shortcuts()
+        logger.info("Registered Windows startup Run entry: %s", command)
+        return True
 
     def _disable_windows_startup(self) -> bool:
-        try:
-            shortcut_path = self._get_windows_startup_shortcut()
-            self._remove_windows_startup_shortcuts(
-                [shortcut_path, *self._get_legacy_windows_startup_shortcuts()]
-            )
+        if winreg is None:
+            logger.error("winreg is unavailable; cannot disable Windows startup")
+            return False
+        run_value_removed = self._delete_windows_registry_value(
+            self._WINDOWS_RUN_KEY_PATH, self._WINDOWS_RUN_VALUE_NAME
+        )
+        self._delete_windows_registry_value(
+            self._WINDOWS_STARTUP_APPROVED_RUN_KEY_PATH, self._WINDOWS_RUN_VALUE_NAME
+        )
+        shortcuts_removed = self._cleanup_legacy_windows_startup_shortcuts()
+        if run_value_removed and shortcuts_removed:
+            logger.info("Windows startup registration removed")
             return True
-        except (PermissionError, FileNotFoundError, OSError) as exc:
-            logger.error("Failed disabling Windows startup: %s", exc)
         return False
 
     def _is_windows_startup_enabled(self) -> bool:
-        try:
-            shortcut_path = self._get_windows_startup_shortcut()
-            if not shortcut_path.exists():
-                return False
-
-            actual = self._read_windows_shortcut(shortcut_path)
-            if actual is None:
-                return False
-            actual_target, actual_args = actual
-
-            expected_target, expected_args_list = self._get_launch_command(for_startup=True)
-            expected_args = (
-                subprocess.list2cmdline(expected_args_list) if expected_args_list else ""
-            )
-
-            return (
-                os.path.normcase(os.path.normpath(actual_target))
-                == os.path.normcase(os.path.normpath(str(expected_target)))
-                and actual_args.strip() == expected_args.strip()
-            )
-        except (PermissionError, FileNotFoundError, OSError) as exc:
-            logger.error("Failed checking Windows startup status: %s", exc)
+        if winreg is None:
             return False
-
-    def _read_windows_shortcut(self, shortcut_path: Path) -> tuple[str, str] | None:
-        """Return ``(target_path, arguments)`` of a ``.lnk`` file or None on failure."""
-        shortcut_str = self._escape_powershell_single_quotes(str(shortcut_path))
-        script = (
-            "$shell = New-Object -COMObject WScript.Shell;"
-            f"$shortcut = $shell.CreateShortcut('{shortcut_str}');"
-            "Write-Output $shortcut.TargetPath;"
-            "Write-Output $shortcut.Arguments;"
-        )
-        commands = [
-            ["powershell.exe", "-NoProfile", "-Command", script],
-            ["pwsh", "-NoProfile", "-Command", script],
-        ]
-        for command in commands:
-            try:
-                result = subprocess.run(
-                    command,
-                    check=True,
-                    capture_output=True,
-                    timeout=self._WINDOWS_SHORTCUT_COMMAND_TIMEOUT_SECONDS,
+        # Presence is keyed on the value name, never on the stored command:
+        # after an update the command may point at a stale path, but the user
+        # intent is still "start with Windows" and callers repair the path.
+        if self._read_windows_run_value() is not None:
+            return not self._is_windows_startup_approved_disabled(
+                self._WINDOWS_STARTUP_APPROVED_RUN_KEY_PATH,
+                self._WINDOWS_RUN_VALUE_NAME,
+            )
+        # Legacy Startup-folder shortcut from an older release still counts as
+        # enabled; the next enable_startup() migrates it to the Run key.
+        for shortcut in self._get_legacy_windows_startup_shortcuts():
+            if self._path_exists(shortcut):
+                return not self._is_windows_startup_approved_disabled(
+                    self._WINDOWS_STARTUP_APPROVED_FOLDER_KEY_PATH,
+                    shortcut.name,
                 )
-            except FileNotFoundError:
-                continue
-            except subprocess.TimeoutExpired as exc:
-                logger.warning("Timed out reading shortcut via PowerShell: %s", exc)
-                return None
-            except subprocess.CalledProcessError as exc:
-                stderr = exc.stderr.decode("utf-8", errors="ignore") if exc.stderr else ""
-                logger.warning("Failed reading shortcut via PowerShell: %s", stderr)
-                return None
-            output = result.stdout.decode("utf-8", errors="ignore").splitlines()
-            target = output[0].strip() if output else ""
-            args = output[1].strip() if len(output) > 1 else ""
-            return target, args
-        return None
-
-    def _escape_powershell_single_quotes(self, value: str) -> str:
-        return value.replace("'", "''")
-
-    def _create_windows_shortcut(
-        self, target: Path, shortcut_path: Path, args: list[str] | None = None
-    ) -> None:
-        if not target.exists():
-            raise FileNotFoundError(f"Target executable does not exist: {target}")
-
-        if self._create_windows_shortcut_with_com(target, shortcut_path, args):
-            return
-
-        target_str = self._escape_powershell_single_quotes(str(target))
-        working_dir_str = self._escape_powershell_single_quotes(str(target.parent))
-        shortcut_str = self._escape_powershell_single_quotes(str(shortcut_path))
-        args_cmd = subprocess.list2cmdline(args) if args else ""
-        escaped_args = self._escape_powershell_single_quotes(args_cmd)
-
-        script = (
-            "$shell = New-Object -COMObject WScript.Shell;"
-            f"$shortcut = $shell.CreateShortcut('{shortcut_str}');"
-            f"$shortcut.TargetPath = '{target_str}';"
-            f"$shortcut.WorkingDirectory = '{working_dir_str}';"
-            "$shortcut.WindowStyle = 1;"
-            f"$shortcut.Description = '{self._escape_powershell_single_quotes(self._get_app_name())} startup shortcut';"
-            f"$shortcut.Arguments = '{escaped_args}';"
-            f"$shortcut.IconLocation = '{target_str},0';"
-            "$shortcut.Save();"
-        )
-
-        commands = [
-            ["powershell.exe", "-NoProfile", "-Command", script],
-            ["pwsh", "-NoProfile", "-Command", script],
-        ]
-
-        last_error: Exception | None = None
-        for command in commands:
-            try:
-                subprocess.run(
-                    command,
-                    check=True,
-                    capture_output=True,
-                    timeout=self._WINDOWS_SHORTCUT_COMMAND_TIMEOUT_SECONDS,
-                )
-                return
-            except FileNotFoundError as exc:
-                last_error = exc
-                continue
-            except subprocess.TimeoutExpired as exc:
-                last_error = exc
-                logger.warning("Timed out creating shortcut via PowerShell: %s", exc)
-                continue
-            except subprocess.CalledProcessError as exc:
-                stderr = exc.stderr.decode("utf-8", errors="ignore") if exc.stderr else ""
-                last_error = RuntimeError(f"Failed to create shortcut via PowerShell: {stderr}")
-                logger.warning("Failed creating shortcut via PowerShell: %s", stderr)
-                continue
-
-        raise RuntimeError("Failed to create Windows shortcut") from last_error
-
-    def _create_windows_shortcut_with_com(
-        self, target: Path, shortcut_path: Path, args: list[str] | None = None
-    ) -> bool:
-        if sys.platform != "win32":
-            return False
-
-        try:
-            import win32com.client  # type: ignore[import-untyped]
-
-            shortcut_path.parent.mkdir(parents=True, exist_ok=True)
-            shell = win32com.client.Dispatch("WScript.Shell")
-            shortcut = shell.CreateShortcut(str(shortcut_path))
-            shortcut.TargetPath = str(target)
-            shortcut.WorkingDirectory = str(target.parent)
-            shortcut.WindowStyle = 1
-            shortcut.Description = f"{self._get_app_name()} startup shortcut"
-            shortcut.Arguments = subprocess.list2cmdline(args) if args else ""
-            shortcut.IconLocation = f"{target},0"
-            shortcut.Save()
-            return True
-        except ImportError:
-            logger.warning("pywin32 is not available for Windows shortcut creation fallback")
-        except Exception as exc:
-            logger.warning("Failed creating shortcut via Windows COM fallback: %s", exc)
         return False
 
     # macOS helpers ------------------------------------------------------

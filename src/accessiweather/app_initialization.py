@@ -43,6 +43,10 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     app.update_service = None
     wx.CallLater(100, _initialize_update_service_deferred, app)
 
+    # Repair the launch-at-login registration in the background so app
+    # updates or moved installs can't silently drop the startup preference.
+    wx.CallLater(150, _ensure_startup_registration_deferred, app)
+
     # Initialize weather client with lazy imports
     data_source = config.settings.data_source if config.settings else "auto"
     # Note: pirate_weather_api_key and avwx_api_key are LazySecureStorage objects
@@ -152,6 +156,15 @@ def _initialize_update_service_deferred(app: AccessiWeatherApp) -> None:
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.warning("Failed to initialize update service: %s", exc)
         app.update_service = None
+
+
+def _ensure_startup_registration_deferred(app: AccessiWeatherApp) -> None:
+    """Repair the launch-at-login registration to match the saved setting."""
+    try:
+        if app.config_manager is not None:
+            app.config_manager.ensure_startup_registration()
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.warning("Failed to repair startup registration: %s", exc)
 
 
 def _initialize_weather_history_deferred(app: AccessiWeatherApp) -> None:

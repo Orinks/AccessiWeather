@@ -14,7 +14,10 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Canadian locations now show barometric pressure in kilopascals, such as 101.3 kPa, when using automatic units.
 - Current conditions and tray text now omit feels-like or heat-index details when they are unavailable instead of announcing them as `N/A`.
-- The Settings startup checkbox now reflects and repairs the actual OS startup registration instead of trusting a stale saved preference.
+- "Launch automatically at startup" now survives app updates. Windows startup registration moved from a Startup-folder shortcut to the standard registry Run entry, and AccessiWeather repairs it on every launch — so an update can't silently uncheck the setting or stop the app from starting with Windows.
+- The startup checkbox no longer unchecks itself when Windows is slow: checking startup status is now instant instead of relying on a PowerShell probe that could time out right after a reboot or update.
+- Disabling AccessiWeather in Task Manager's Startup apps is now respected — the Settings checkbox shows it as off, and re-checking it in Settings turns it back on properly instead of appearing enabled while never launching.
+- Upgrading from an older version now migrates the old Startup-folder shortcut automatically, so you won't get double launches or a stale shortcut pointing at a removed install.
 - Saving Settings after turning on automatic startup now returns to the main window faster while still updating the OS startup registration.
 - NOAA Weather Radio SAME auto-tune now starts again when an existing qualifying alert materially escalates, while still ignoring routine updates and cancellations.
 - NOAA Weather Radio auto-tune now starts only for the first issuance of a qualifying SAME alert, reliably stops after your configured playback duration, and no longer restarts for later updates or cancellations of the same alert.
