@@ -313,10 +313,14 @@ class _FakeWxForAccelerators:
     ACCEL_CTRL = 1
     ACCEL_ALT = 2
     ACCEL_SHIFT = 4
+    MOD_CONTROL = 8
+    MOD_ALT = 16
+    MOD_SHIFT = 32
     WXK_ESCAPE = 27
     WXK_F4 = 115
     WXK_F5 = 116
     EVT_MENU = object()
+    EVT_HOTKEY = object()
     ID_REFRESH = 5104
 
     def __init__(self) -> None:
@@ -348,12 +352,25 @@ class _AcceleratorFrame:
     def __init__(self) -> None:
         self.bound_handlers = {}
         self.accelerator_table = None
+        self.registered_hotkeys = {}
         self.Close = MagicMock()
         self.SetTitle = MagicMock()
 
     def Bind(self, _event_type, handler, item=None, id=None):
         bound_id = id if id is not None else item
         self.bound_handlers[bound_id] = handler
+
+    def RegisterHotKey(self, hotkey_id, modifiers, key_code):
+        self.registered_hotkeys[hotkey_id] = (modifiers, key_code)
+        return True
+
+    def UnregisterHotKey(self, hotkey_id):
+        self.registered_hotkeys.pop(hotkey_id, None)
+        return True
+
+    def Unbind(self, _event_type, id=None):
+        self.bound_handlers.pop(id, None)
+        return True
 
     def SetAcceleratorTable(self, table):
         self.accelerator_table = table
@@ -414,3 +431,47 @@ class TestAltF4AcceleratorClosePath:
 
         window.SetTitle.assert_called_once_with("AccessiWeather \u2014 Boston")
         window.Close.assert_called_once_with()
+
+    def test_setup_accelerators_registers_configurable_window_tray_shortcuts(self):
+        fake_wx = _FakeWxForAccelerators()
+        frame = _AcceleratorFrame()
+        tray_icon = MagicMock()
+        app = AppShortcutsMixin()
+        app.main_window = frame
+        app.tray_icon = tray_icon
+        app.request_exit = MagicMock()
+        app.config_manager = SimpleNamespace(
+            get_settings=lambda: SimpleNamespace(
+                shortcut_show_main_window="Ctrl+Shift+W",
+                shortcut_hide_main_window="Ctrl+Shift+M",
+                shortcut_read_tray_info="Ctrl+Shift+I",
+            )
+        )
+
+        with (
+            patch("accessiweather.app_shortcuts.wx", fake_wx),
+            patch("accessiweather.native_shortcuts.wx", fake_wx),
+        ):
+            app._setup_accelerators()
+
+        assert any(
+            entry.flags == fake_wx.ACCEL_CTRL | fake_wx.ACCEL_SHIFT and entry.key == ord("W")
+            for entry in frame.accelerator_table
+        )
+        assert any(
+            entry.flags == fake_wx.ACCEL_CTRL | fake_wx.ACCEL_SHIFT and entry.key == ord("M")
+            for entry in frame.accelerator_table
+        )
+        assert any(
+            entry.flags == fake_wx.ACCEL_CTRL | fake_wx.ACCEL_SHIFT and entry.key == ord("I")
+            for entry in frame.accelerator_table
+        )
+        assert len(frame.registered_hotkeys) == 3
+
+        show_hotkey_id = next(
+            hotkey_id
+            for hotkey_id, (_modifiers, key_code) in frame.registered_hotkeys.items()
+            if key_code == ord("W")
+        )
+        frame.bound_handlers[show_hotkey_id](MagicMock())
+        tray_icon.show_main_window.assert_called_once_with()
