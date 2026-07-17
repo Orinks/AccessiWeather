@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable
-from datetime import datetime
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 
 import httpx
@@ -53,7 +52,6 @@ class EnvironmentalDataClient:
         """
         try:
             headers = {"User-Agent": self.user_agent}
-            import math
             params = {
                 "latitude": location.latitude,
                 "longitude": location.longitude,
@@ -76,13 +74,24 @@ class EnvironmentalDataClient:
             if not self._is_sequence(times) or not self._is_sequence(aqi_values):
                 return None
 
+            # Open-Meteo returns hourly data starting at local midnight and spanning
+            # several days. Anchor the forecast to the current hour so that entry[0]
+            # represents "now" rather than an earlier hour from earlier today.
+            offset = payload.get("utc_offset_seconds")
+            start = self._current_hour_index(times, offset)
+
             # Build hourly forecast list
             result = []
-            for i, (time_str, aqi) in enumerate(zip(times, aqi_values, strict=False)):
-                if i >= hours:
+            for count, i in enumerate(range(start, len(times))):
+                if count >= hours:
+                    break
+                if i >= len(aqi_values):
                     break
 
-                timestamp = self._parse_iso(time_str)
+                time_str = times[i]
+                aqi = aqi_values[i]
+
+                timestamp = self._parse_local_aware(time_str, offset)
                 aqi_float = self._coerce_float(aqi)
 
                 if timestamp is None or aqi_float is None:
@@ -148,6 +157,7 @@ class EnvironmentalDataClient:
 
         Returns:
             List of HourlyUVIndex objects, or None on error.
+
         """
         try:
             # Import the mapper
@@ -175,6 +185,10 @@ class EnvironmentalDataClient:
             mapper = OpenMeteoMapper()
             hourly_uv_list = mapper.map_hourly_uv_index(payload)
 
+            # The mapper returns entries from local midnight onward. Drop past
+            # hours so entry[0] is the current hour, not the start of the day.
+            hourly_uv_list = self._drop_past_hours(hourly_uv_list)
+
             # Limit to requested hours
             if hourly_uv_list and hours < len(hourly_uv_list):
                 hourly_uv_list = hourly_uv_list[:hours]
@@ -196,7 +210,12 @@ class EnvironmentalDataClient:
         include_hourly_uv: bool = True,
         hourly_hours: int = 48,
     ) -> EnvironmentalConditions | None:
-        if not include_air_quality and not include_pollen and not include_hourly_air_quality and not include_hourly_uv:
+        if (
+            not include_air_quality
+            and not include_pollen
+            and not include_hourly_air_quality
+            and not include_hourly_uv
+        ):
             return None
 
         headers = {"User-Agent": self.user_agent}
@@ -270,13 +289,19 @@ class EnvironmentalDataClient:
         if not self._is_sequence(times) or not self._is_sequence(aqi_values):
             return
 
-        index, timestamp = self._latest_with_timestamp(times, aqi_values)
+        # The series covers midnight-to-forecast-horizon; read the current hour
+        # so the reported AQI reflects "now" rather than a far-future forecast.
+        offset = payload.get("utc_offset_seconds")
+        current = self._current_hour_index(times, offset)
+        index = self._value_near(aqi_values, current)
         if index is None:
             return
 
         environmental.air_quality_index = index
         environmental.air_quality_category = self._air_quality_category(index)
-        environmental.updated_at = timestamp or environmental.updated_at
+        environmental.updated_at = (
+            self._parse_local_aware(times[current], offset) or environmental.updated_at
+        )
         environmental.sources.append("Open-Meteo Air Quality")
 
         pollutant_candidates = {
@@ -288,7 +313,7 @@ class EnvironmentalDataClient:
         for name, series in pollutant_candidates.items():
             if not self._is_sequence(series):
                 continue
-            value, _ = self._latest_with_timestamp(times, series)
+            value = self._value_near(series, current)
             if value is None:
                 continue
             if value > dominant_value:
@@ -319,6 +344,13 @@ class EnvironmentalDataClient:
             return
 
         times = hourly.get("time")
+        if not self._is_sequence(times):
+            return
+
+        # Read the current hour rather than the furthest-future forecast entry.
+        offset = payload.get("utc_offset_seconds")
+        current = self._current_hour_index(times, offset)
+        timestamp = self._parse_local_aware(times[current], offset)
         pollen_types = {
             "Tree": hourly.get("tree_pollen"),
             "Grass": hourly.get("grass_pollen"),
@@ -331,7 +363,7 @@ class EnvironmentalDataClient:
         for label, series in pollen_types.items():
             if not self._is_sequence(series):
                 continue
-            value, timestamp = self._latest_with_timestamp(times, series)
+            value = self._value_near(series, current)
             if value is None:
                 continue
             if label == "Tree":
@@ -356,24 +388,92 @@ class EnvironmentalDataClient:
             environmental.pollen_primary_allergen = primary_allergen
             environmental.sources.append("Open-Meteo Pollen")
 
-    def _latest_with_timestamp(
-        self,
-        times: Iterable[Any],
-        series: Iterable[Any],
-    ) -> tuple[float | None, datetime | None]:
-        latest_value: float | None = None
-        latest_timestamp: datetime | None = None
+    def _current_hour_index(self, times: Any, utc_offset_seconds: Any) -> int:
+        """
+        Return the index into ``times`` representing the current local hour.
 
-        for time_str, raw_value in zip(times, series, strict=False):
-            value = self._coerce_float(raw_value)
-            timestamp = self._parse_iso(time_str)
-            if value is None:
+        Open-Meteo hourly series begin at local midnight and extend several days
+        into the future. The entry that represents "now" is the last one whose
+        local timestamp is at or before the current local time — not the final,
+        furthest-future entry. When the current time precedes the whole series
+        (unexpected), fall back to the first entry.
+        """
+        if not self._is_sequence(times):
+            return 0
+
+        offset = utc_offset_seconds if isinstance(utc_offset_seconds, int | float) else 0
+        now_local = (datetime.now(UTC) + timedelta(seconds=offset)).replace(tzinfo=None)
+
+        best_index = 0
+        found = False
+        for i, time_str in enumerate(times):
+            parsed = self._parse_naive(time_str)
+            if parsed is None:
                 continue
-            if latest_timestamp is None or (timestamp and timestamp > latest_timestamp):
-                latest_value = value
-                latest_timestamp = timestamp
+            if parsed <= now_local:
+                best_index = i
+                found = True
+            else:
+                # times are sorted ascending; everything after this is future
+                break
 
-        return latest_value, latest_timestamp
+        return best_index if found else 0
+
+    def _drop_past_hours(self, entries: list[Any]) -> list[Any]:
+        """
+        Trim leading entries older than the current hour.
+
+        Keeps entries whose ``timestamp`` is at or after the start of the current
+        UTC hour so the forecast begins at "now". Falls back to the original list
+        if every entry is in the past (stale data) or timestamps are unusable.
+        """
+        if not entries:
+            return entries
+
+        now_hour = datetime.now(UTC).replace(minute=0, second=0, microsecond=0)
+
+        def _at_or_after_now(entry: Any) -> bool:
+            timestamp = getattr(entry, "timestamp", None)
+            if not isinstance(timestamp, datetime):
+                return True  # keep entries we can't evaluate
+            if timestamp.tzinfo is None:
+                timestamp = timestamp.replace(tzinfo=UTC)
+            return timestamp >= now_hour
+
+        upcoming = [entry for entry in entries if _at_or_after_now(entry)]
+        return upcoming if upcoming else entries
+
+    def _value_near(self, series: Any, index: int) -> float | None:
+        """
+        Return the value at ``index``, or the nearest non-null value around it.
+
+        Guards against sparse tails/gaps in the forecast where the exact current
+        hour may be missing, scanning outward so a usable reading is still shown.
+        """
+        if not self._is_sequence(series):
+            return None
+
+        length = len(series)
+        if length == 0:
+            return None
+
+        index = max(0, min(index, length - 1))
+        direct = self._coerce_float(series[index])
+        if direct is not None:
+            return direct
+
+        for step in range(1, length):
+            ahead = index + step
+            if ahead < length:
+                value = self._coerce_float(series[ahead])
+                if value is not None:
+                    return value
+            behind = index - step
+            if behind >= 0:
+                value = self._coerce_float(series[behind])
+                if value is not None:
+                    return value
+        return None
 
     def _air_quality_category(self, value: float) -> str:
         if value <= 50:
@@ -398,25 +498,45 @@ class EnvironmentalDataClient:
         return "Very High"
 
     def _is_sequence(self, value: Any) -> bool:
-        return isinstance(value, (list, tuple)) and len(value) > 0
+        return isinstance(value, list | tuple) and len(value) > 0
 
-    def _parse_iso(self, value: Any) -> datetime | None:
+    def _parse_local_aware(self, value: Any, utc_offset_seconds: Any) -> datetime | None:
+        """
+        Parse an Open-Meteo local timestamp into a timezone-aware datetime.
+
+        With ``timezone=auto`` Open-Meteo returns naive wall-clock strings in the
+        location's local time. Rather than mislabelling those as UTC, attach the
+        location's real offset so the value represents the correct instant: it
+        renders as local wall-clock via ``strftime`` and converts to true UTC via
+        ``astimezone(UTC)``. This matches the location-local convention used for
+        sunrise/sunset times.
+        """
+        dt = self._parse_naive(value)
+        if dt is None:
+            return None
+        offset = utc_offset_seconds if isinstance(utc_offset_seconds, int | float) else 0
+        return dt.replace(tzinfo=timezone(timedelta(seconds=offset)))
+
+    def _parse_naive(self, value: Any) -> datetime | None:
+        """
+        Parse an Open-Meteo local timestamp as a naive (tz-free) datetime.
+
+        Open-Meteo returns local wall-clock times when ``timezone=auto``. These
+        are compared against a locally-offset "now" to locate the current hour,
+        so they must stay naive rather than being coerced to UTC.
+        """
         if not isinstance(value, str):
             return None
         text = value.strip()
         if not text:
             return None
         if text.endswith("Z"):
-            text = text[:-1] + "+00:00"
+            text = text[:-1]
         try:
             dt = datetime.fromisoformat(text)
-            # If the datetime is naive (no timezone), assume UTC
-            if dt.tzinfo is None:
-                from datetime import timezone
-                dt = dt.replace(tzinfo=timezone.utc)
-            return dt
         except ValueError:
             return None
+        return dt.replace(tzinfo=None)
 
     def _coerce_float(self, value: Any) -> float | None:
         try:

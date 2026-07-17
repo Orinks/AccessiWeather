@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - NOAA Weather Radio stations can now be saved as favorites, with a Favorites finder mode and optional nearby-station lookup from your saved AccessiWeather locations.
 
 ### Fixed
+- Air quality, pollen, and UV readings now show the current hour instead of a forecast hour. AccessiWeather was reading the far end of Open-Meteo's multi-day hourly forecast, so the AQI, dominant pollutant, "current" pollutant breakdown, and hourly trend could all reflect a time days away rather than right now.
 - Screen reader announcements work again in installed builds — the Weather Assistant now auto-reads replies, and other spoken announcements are back. The installer was shipping without the speech library's native component, so announcements were silently skipped.
 - The `{precip}` and `{precip_chance}` tray placeholders now show real values instead of N/A. Precipitation chance comes from the current hour's forecast (observations never include it), and Open-Meteo's current precipitation amount now reaches the tray.
 - Canadian locations now show barometric pressure in kilopascals, such as 101.3 kPa, when using automatic units.
