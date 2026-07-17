@@ -18,6 +18,9 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     enable_alerts: bool = True
     minimize_to_tray: bool = False
     minimize_on_startup: bool = False
+    shortcut_show_main_window: str = "Ctrl+Shift+W"
+    shortcut_hide_main_window: str = "Ctrl+Shift+M"
+    shortcut_read_tray_info: str = "Ctrl+Shift+I"
     startup_enabled: bool = False
     data_source: str = "auto"
     pirate_weather_api_key: str = ""

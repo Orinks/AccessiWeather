@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- AccessiWeather now includes default shortcuts for showing the main window, hiding it to the tray, and reading the current tray information, and you can change or disable those shortcuts in Settings > Advanced.
 - Forecaster Notes can now show official NWS Surf Zone Forecasts for regional beaches where available, with surf/beach condition alternatives from supported global sources when an official SRF product is not available.
 - AccessiWeather can now automatically tune NOAA Weather Radio for qualifying alerts that use Specific Area Message Encoding (SAME) when you turn on the opt-in setting on the Alerts tab, then stop after the duration you choose when a reliable station match is available.
 - NOAA Weather Radio now opens independently of saved weather locations and keeps playing after you close the player until you press Stop or exit the app.

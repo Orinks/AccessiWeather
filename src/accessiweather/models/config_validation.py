@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from ..shortcut_preferences import WINDOW_TRAY_SHORTCUT_DEFAULTS, normalize_shortcut_text
 from ..sound_events import DEFAULT_MUTED_SOUND_EVENTS, normalize_known_muted_sound_events
 from .config_constants import NON_CRITICAL_SETTINGS
 
@@ -126,6 +127,17 @@ class AppSettingsValidationMixin:
             # Ensure format string is valid
             if not isinstance(value, str) or not value.strip():
                 setattr(settings, setting_name, "{temp} {condition}")
+
+        elif setting_name in WINDOW_TRAY_SHORTCUT_DEFAULTS:
+            default_value = WINDOW_TRAY_SHORTCUT_DEFAULTS[setting_name]
+            if not isinstance(value, str):
+                setattr(settings, setting_name, default_value)
+            else:
+                try:
+                    normalized_value = normalize_shortcut_text(value, allow_empty=True)
+                except ValueError:
+                    normalized_value = default_value
+                setattr(settings, setting_name, normalized_value)
 
         elif setting_name in {
             "alert_global_cooldown_minutes",

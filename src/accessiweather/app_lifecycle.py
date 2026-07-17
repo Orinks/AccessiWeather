@@ -431,6 +431,9 @@ class AppLifecycleMixin:
                     verbosity_level=getattr(settings, "verbosity_level", "standard"),
                 )
 
+            if self.main_window:
+                self._setup_accelerators()
+
             self._start_auto_update_checks()
             self._start_background_updates()
 

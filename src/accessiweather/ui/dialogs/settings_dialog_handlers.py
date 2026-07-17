@@ -6,6 +6,12 @@ import logging
 
 import wx
 
+from ...shortcut_preferences import (
+    RESERVED_SHORTCUTS,
+    WINDOW_TRAY_SHORTCUTS,
+    normalize_shortcut_text,
+)
+
 logger = logging.getLogger("accessiweather.ui.dialogs.settings_dialog")
 
 
@@ -441,10 +447,45 @@ class SettingsDialogHandlersMixin:
 
     def _on_ok(self, event):
         """Handle OK button press."""
+        shortcut_error = self._validate_window_tray_shortcuts()
+        if shortcut_error is not None:
+            wx.MessageBox(shortcut_error, "Shortcut Problem", wx.OK | wx.ICON_WARNING)
+            return
         if self._save_settings():
             self.EndModal(wx.ID_OK)
         else:
             wx.MessageBox("Failed to save settings.", "Error", wx.OK | wx.ICON_ERROR)
+
+    def _validate_window_tray_shortcuts(self) -> str | None:
+        """Validate configurable window/tray shortcut fields before save."""
+        seen: dict[str, str] = {}
+        for preference in WINDOW_TRAY_SHORTCUTS:
+            raw_value = self._controls[preference.setting_name].GetValue()
+            try:
+                normalized = normalize_shortcut_text(raw_value, allow_empty=True)
+            except ValueError as exc:
+                return f"{preference.label}: {exc}"
+
+            self._controls[preference.setting_name].SetValue(normalized)
+            if not normalized:
+                continue
+
+            reserved_use = RESERVED_SHORTCUTS.get(normalized)
+            if reserved_use is not None:
+                return (
+                    f"{preference.label} cannot use {normalized} because that shortcut already "
+                    f"{reserved_use}."
+                )
+
+            existing_label = seen.get(normalized)
+            if existing_label is not None:
+                return (
+                    f"{preference.label} duplicates {existing_label} ({normalized}). "
+                    "Choose a different shortcut or leave one field blank."
+                )
+            seen[normalized] = preference.label
+
+        return None
 
     def _on_minimize_tray_changed(self, event):
         """Handle minimize to tray checkbox state change."""
