@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import wx
@@ -231,7 +232,11 @@ class AirQualityDialog(wx.Dialog):
         # Build forecast text
         forecast_lines = []
         for i, hour in enumerate(hourly_data[:12]):
-            time_str = getattr(hour, "time", f"Hour {i + 1}")
+            timestamp = getattr(hour, "timestamp", None)
+            if isinstance(timestamp, datetime):
+                time_str = timestamp.strftime("%I:%M %p").lstrip("0")
+            else:
+                time_str = f"Hour {i + 1}"
             aqi = getattr(hour, "aqi", None)
             if aqi is not None:
                 forecast_lines.append(f"{time_str}: AQI {int(round(aqi))}")

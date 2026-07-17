@@ -8,6 +8,7 @@ Works in both wx-stub mode (headless without wxPython) and real-wx mode (CI/xvfb
 from __future__ import annotations
 
 import sys
+from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -235,6 +236,31 @@ class TestAirQualityDialogFocus:
         # Only one button is created (Close)
         assert len(widget_tracker.buttons) == 1
         widget_tracker.buttons[0].SetFocus.assert_called_once()
+
+    def test_hourly_section_renders_clock_times(self, widget_tracker):
+        """Regression: hourly rows show the entry's timestamp, not 'Hour N'."""
+        env = _make_environmental(has_data_val=True, has_hourly=True)
+        hour = env.hourly_air_quality[0]
+        hour.timestamp = datetime(2026, 7, 17, 14, 0)  # the model's real field
+        hour.aqi = 55
+
+        captured: list[str] = []
+
+        def _capture(*a, **kw):
+            captured.append(kw.get("value", ""))
+            return MagicMock(name="TextCtrl")
+
+        with patch(
+            "accessiweather.ui.dialogs.air_quality_dialog.wx.TextCtrl",
+            side_effect=_capture,
+        ):
+            AirQualityDialog(
+                parent=MagicMock(), location_name="Test", environmental=env, app=MagicMock()
+            )
+
+        hourly_text = next((value for value in captured if "AQI" in value), "")
+        assert "2:00 PM: AQI 55" in hourly_text
+        assert "Hour 1" not in hourly_text
 
 
 # ===========================================================================
