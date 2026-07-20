@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- New default sounds: The alert and notification audio has been completely replaced with a warm, gentle set of wooden-mallet tones. The old pack was full of piercing high-frequency tones - some dumping most of their energy into the harsh 3-6 kHz range - and one alert ran a jarring 12 seconds. The new sounds stay in a soft, low register (around 200-500 Hz), are short, and are grouped by severity so an advisory, a watch, a warning, and an extreme alert each sound distinct without ever being shrill.
 - Forecaster Notes can now show official NWS Surf Zone Forecasts for regional beaches where available, with surf/beach condition alternatives from supported global sources when an official SRF product is not available.
 - AccessiWeather can now automatically tune NOAA Weather Radio for qualifying alerts that use Specific Area Message Encoding (SAME) when you turn on the opt-in setting on the Alerts tab, then stop after the duration you choose when a reliable station match is available.
 - NOAA Weather Radio now opens independently of saved weather locations and keeps playing after you close the player until you press Stop or exit the app.
