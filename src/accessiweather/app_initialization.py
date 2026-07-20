@@ -272,9 +272,11 @@ def _show_invalid_model_warning(
     if result == wx.ID_YES:
         # Reset to default model
         try:
+            from dataclasses import replace
+
             settings = app.config_manager.get_settings()
-            # Update the setting
-            new_settings = settings._replace(ai_model_preference=DEFAULT_FREE_MODEL)
+            # Update the setting (AppSettings is a dataclass, not a namedtuple)
+            new_settings = replace(settings, ai_model_preference=DEFAULT_FREE_MODEL)
             app.config_manager.save_settings(new_settings)
             logger.info(f"Reset AI model to default: {DEFAULT_FREE_MODEL}")
 
