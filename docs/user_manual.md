@@ -917,15 +917,19 @@ Leave this alone if current conditions already sound reasonable for your area.
 
 Start here with no keys unless you already know you need more. AccessiWeather works without provider keys.
 
-The Data Sources tab includes API key fields and validation actions for:
+The Data Sources tab includes API key fields for:
 
+- AirNow
 - Pirate Weather
 
 Each provider includes:
 
 - an API key field
 - a button to get a key
-- a button to validate the key
+
+Pirate Weather also includes a button to validate its key.
+
+AirNow is optional and supplies official current US Air Quality Index observations. Create your own public AirNow API account, enter its key here, and AccessiWeather will use AirNow for current US AQI while retaining its existing hourly air-quality forecast and fallback source.
 
 Pirate Weather is the optional weather-provider key worth adding. Use it when you want worldwide alert coverage in many regions, minutely precipitation timing, moon phase, or Dark Sky-style summary text. This can be worth it if short-term rain timing matters to you or if you need alerts outside the US.
 
@@ -1193,6 +1197,8 @@ This feature can be turned on or off in Settings > Advanced.
 Use the View menu to open dedicated air quality and UV windows.
 
 These windows can show current values, categories, forecasts, and guidance when the underlying weather data includes them.
+
+For US locations, current AQI comes from EPA AirNow when an AirNow API key is configured in Settings > Data Sources. AirNow observations are preliminary. If no key is configured or AirNow is temporarily unavailable, AccessiWeather continues using its existing air-quality source.
 
 ### Aviation Weather
 

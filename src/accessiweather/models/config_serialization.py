@@ -132,6 +132,7 @@ class AppSettingsSerializationMixin:
             startup_enabled=settings_cls._as_bool(data.get("startup_enabled"), False),
             data_source=data.get("data_source", "auto"),
             pirate_weather_api_key=data.get("pirate_weather_api_key", ""),
+            airnow_api_key=data.get("airnow_api_key", ""),
             auto_update_enabled=settings_cls._as_bool(data.get("auto_update_enabled"), True),
             update_channel=data.get("update_channel", "stable"),
             update_check_interval_hours=data.get("update_check_interval_hours", 24),

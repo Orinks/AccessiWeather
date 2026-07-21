@@ -384,6 +384,16 @@ class AppLifecycleMixin:
                 self.weather_client.settings = settings
                 self.weather_client.data_source = settings.data_source
                 self.weather_client.alerts_enabled = bool(settings.enable_alerts)
+                self.weather_client.air_quality_enabled = bool(
+                    getattr(
+                        settings,
+                        "air_quality_enabled",
+                        self.weather_client.air_quality_enabled,
+                    )
+                )
+                self.weather_client.pollen_enabled = bool(
+                    getattr(settings, "pollen_enabled", self.weather_client.pollen_enabled)
+                )
                 # Reset cached API clients so new keys take effect immediately
                 self.weather_client._pirate_weather_api_key = getattr(  # pragma: no cover
                     settings, "pirate_weather_api_key", ""
@@ -392,6 +402,20 @@ class AppLifecycleMixin:
                 self.weather_client._avwx_api_key = getattr(  # pragma: no cover
                     settings, "avwx_api_key", ""
                 )
+                airnow_api_key = getattr(settings, "airnow_api_key", "")
+                self.weather_client._airnow_api_key = airnow_api_key
+                if self.weather_client.environmental_client is None and (
+                    self.weather_client.air_quality_enabled or self.weather_client.pollen_enabled
+                ):
+                    from .services import EnvironmentalDataClient
+
+                    self.weather_client.environmental_client = EnvironmentalDataClient(
+                        user_agent=self.weather_client.user_agent,
+                        timeout=self.weather_client.timeout,
+                        airnow_api_key=airnow_api_key,
+                    )
+                elif self.weather_client.environmental_client is not None:
+                    self.weather_client.environmental_client.set_airnow_api_key(airnow_api_key)
 
             if self.presenter:
                 self.presenter.settings = settings

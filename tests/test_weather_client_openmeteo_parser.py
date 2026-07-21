@@ -389,3 +389,30 @@ def test_uv_index_invalid_value_returns_none():
     data["current"]["uv_index"] = "bad"
     current = parse_openmeteo_current_conditions(data)
     assert current.uv_index is None
+
+
+def test_current_precipitation_maps_to_inches_and_mm():
+    """Current precipitation must reach CurrentConditions so {precip} is not N/A (#706)."""
+    data = _make_current_data()
+    data["current"]["precipitation"] = 0.12
+    data["current_units"]["precipitation"] = "inch"
+    current = parse_openmeteo_current_conditions(data)
+    assert current.precipitation_in == pytest.approx(0.12)
+    assert current.precipitation_mm == pytest.approx(0.12 * 25.4)
+
+
+def test_current_precipitation_respects_mm_unit_metadata():
+    """Metric payloads report precipitation in mm; both fields must normalize."""
+    data = _make_current_data()
+    data["current"]["precipitation"] = 2.5
+    data["current_units"]["precipitation"] = "mm"
+    current = parse_openmeteo_current_conditions(data)
+    assert current.precipitation_in == pytest.approx(2.5 / 25.4)
+    assert current.precipitation_mm == pytest.approx(2.5)
+
+
+def test_current_precipitation_absent_stays_none():
+    data = _make_current_data()
+    current = parse_openmeteo_current_conditions(data)
+    assert current.precipitation_in is None
+    assert current.precipitation_mm is None

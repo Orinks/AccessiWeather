@@ -43,12 +43,16 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     app.update_service = None
     wx.CallLater(100, _initialize_update_service_deferred, app)
 
+    # Repair the launch-at-login registration in the background so app
+    # updates or moved installs can't silently drop the startup preference.
+    wx.CallLater(150, _ensure_startup_registration_deferred, app)
+
     # Initialize weather client with lazy imports
     data_source = config.settings.data_source if config.settings else "auto"
-    # Note: pirate_weather_api_key and avwx_api_key are LazySecureStorage objects
-    # that defer keyring access until first use.
+    # Provider keys are LazySecureStorage objects that defer keyring access until first use.
     lazy_pw_api_key = config.settings.pirate_weather_api_key if config.settings else ""
     lazy_avwx_key = config.settings.avwx_api_key if config.settings else ""
+    lazy_airnow_key = getattr(config.settings, "airnow_api_key", "") if config.settings else ""
     # Lazy import WeatherDataCache
     from .cache import WeatherDataCache
 
@@ -68,6 +72,7 @@ def initialize_components(app: AccessiWeatherApp) -> None:
         data_source=data_source,
         pirate_weather_api_key=lazy_pw_api_key,
         avwx_api_key=lazy_avwx_key,
+        airnow_api_key=lazy_airnow_key,
         settings=config.settings,
         offline_cache=offline_cache,
     )
@@ -152,6 +157,15 @@ def _initialize_update_service_deferred(app: AccessiWeatherApp) -> None:
     except Exception as exc:  # pragma: no cover - defensive logging
         logger.warning("Failed to initialize update service: %s", exc)
         app.update_service = None
+
+
+def _ensure_startup_registration_deferred(app: AccessiWeatherApp) -> None:
+    """Repair the launch-at-login registration to match the saved setting."""
+    try:
+        if app.config_manager is not None:
+            app.config_manager.ensure_startup_registration()
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.warning("Failed to repair startup registration: %s", exc)
 
 
 def _initialize_weather_history_deferred(app: AccessiWeatherApp) -> None:
@@ -259,9 +273,11 @@ def _show_invalid_model_warning(
     if result == wx.ID_YES:
         # Reset to default model
         try:
+            from dataclasses import replace
+
             settings = app.config_manager.get_settings()
-            # Update the setting
-            new_settings = settings._replace(ai_model_preference=DEFAULT_FREE_MODEL)
+            # Update the setting (AppSettings is a dataclass, not a namedtuple)
+            new_settings = replace(settings, ai_model_preference=DEFAULT_FREE_MODEL)
             app.config_manager.save_settings(new_settings)
             logger.info(f"Reset AI model to default: {DEFAULT_FREE_MODEL}")
 

@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING
 
 # Define what's available for import
 __all__ = [
+    "AirNowClient",
+    "AirNowObservation",
     "PlatformDetector",
     "GitHubUpdateService",
     "EnvironmentalDataClient",
@@ -23,6 +25,10 @@ __all__ = [
 
 # Type hints for static type checkers (not evaluated at runtime)
 if TYPE_CHECKING:
+    from .airnow_client import (
+        AirNowClient as AirNowClient,
+        AirNowObservation as AirNowObservation,
+    )
     from .environmental_client import EnvironmentalDataClient as EnvironmentalDataClient
     from .national_discussion_service import NationalDiscussionService as NationalDiscussionService
     from .platform_detector import PlatformDetector as PlatformDetector
@@ -36,6 +42,10 @@ if TYPE_CHECKING:
 # Lazy import implementation - modules are only imported when accessed
 def __getattr__(name: str) -> type:
     """Lazily import modules on first access to improve startup performance."""
+    if name in {"AirNowClient", "AirNowObservation"}:
+        from .airnow_client import AirNowClient, AirNowObservation
+
+        return {"AirNowClient": AirNowClient, "AirNowObservation": AirNowObservation}[name]
     if name == "EnvironmentalDataClient":
         from .environmental_client import EnvironmentalDataClient
 

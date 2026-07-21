@@ -161,6 +161,9 @@ def test_data_sources_tab_provider_groups_avoid_static_box_sizers(monkeypatch):
         def SetSizer(self, sizer):
             self.sizer = sizer
 
+        def SetName(self, name):
+            self.name = name
+
     class FakeSizer:
         def __init__(self, *args, **kwargs):
             self.children = []
@@ -216,14 +219,27 @@ def test_data_sources_tab_provider_groups_avoid_static_box_sizers(monkeypatch):
         _on_data_source_changed=MagicMock(),
         _on_configure_source_settings=MagicMock(),
         _on_get_pw_api_key=MagicMock(),
+        _on_get_airnow_api_key=MagicMock(),
         _on_validate_pw_api_key=MagicMock(),
     )
 
     tab = DataSourcesTab(dialog)
     panel = tab.create()
+    tab.setup_accessibility()
 
     assert panel is dialog.notebook.pages[0][0]
     assert dialog.create_section.call_count >= 3
+    assert dialog._controls["airnow_key"].name == "AirNow API key"
+    assert dialog._controls["get_airnow_key"].kwargs["label"] == "Get AirNow key"
+    assert any(
+        call.args[2]
+        == (
+            "Optional: supplies current U.S. AQI without changing your weather provider. "
+            "Your API key is stored securely."
+        )
+        and call.kwargs == {"left": 10, "bottom": 10}
+        for call in dialog.add_help_text.call_args_list
+    )
 
 
 def test_ai_custom_prompt_fields_create_static_text_before_multiline_controls(monkeypatch):

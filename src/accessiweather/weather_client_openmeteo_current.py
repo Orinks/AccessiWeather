@@ -14,6 +14,7 @@ from .provider_normalization import (
 )
 from .thermal_comfort import sanitize_thermal_comfort_readings
 from .weather_client_openmeteo_units import (
+    normalize_precipitation_to_inches_and_mm,
     normalize_snow_depth_to_inches_and_cm,
     normalize_visibility_to_miles_and_km,
 )
@@ -174,6 +175,10 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
     snow_rate_in = float(snowfall_rate or 0.0)
     precipitation_type = pick_precipitation_type(rain_rate_in, snow_rate_in)
 
+    precipitation_in, precipitation_mm = normalize_precipitation_to_inches_and_mm(
+        current.get("precipitation"), units.get("precipitation")
+    )
+
     snow_depth_in, snow_depth_cm = normalize_snow_depth_to_inches_and_cm(
         current.get("snow_depth"),
         units.get("snow_depth"),
@@ -219,4 +224,6 @@ def parse_openmeteo_current_conditions(data: dict) -> CurrentConditions:
         heat_index_f=comfort.heat_index_f,
         heat_index_c=comfort.heat_index_c,
         precipitation_type=precipitation_type,
+        precipitation_in=precipitation_in,
+        precipitation_mm=precipitation_mm,
     )

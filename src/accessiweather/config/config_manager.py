@@ -174,10 +174,16 @@ class ConfigManager:
         # In portable mode, API keys live in the bundle — not in keyring.
         # Only load non-API-key secrets (e.g. GitHub app credentials) from keyring.
         is_portable = getattr(self.app, "_portable_mode", False)
-        portable_api_keys = {"pirate_weather_api_key", "openrouter_api_key", "avwx_api_key"}
+        portable_api_keys = {
+            "pirate_weather_api_key",
+            "airnow_api_key",
+            "openrouter_api_key",
+            "avwx_api_key",
+        }
 
         secure_keys = [
             "pirate_weather_api_key",
+            "airnow_api_key",
             "openrouter_api_key",
             "avwx_api_key",
             "github_app_id",
@@ -450,30 +456,48 @@ class ConfigManager:
             logger.error(f"Error checking startup status: {e}")
             return False
 
-    def sync_startup_setting(self) -> bool:
+    def ensure_startup_registration(self) -> bool:
         """
-        Synchronize the startup_enabled setting with actual startup state.
+        Repair the OS launch-at-login registration to match the saved setting.
 
-        This checks the real startup status and updates the setting if needed.
+        Run at app startup so updates, moved installs, and legacy shortcut
+        formats are healed automatically instead of silently dropping the
+        user's preference. An OS-level disable (Windows Task Manager /
+        Settings "Startup apps") is respected by syncing the setting off
+        rather than re-enabling behind the user's back.
 
         Returns
         -------
-            True if successful, False otherwise
+            True if the registration matches the setting (or was repaired),
+            False if a repair was needed but failed
 
         """
         try:
-            actual_startup_enabled = self.is_startup_enabled()
-            current_setting = self.get_settings().startup_enabled
+            manager = self._get_startup_manager()
+            settings = self.get_settings()
 
-            if actual_startup_enabled != current_setting:
-                logger.info(
-                    f"Syncing startup setting: actual={actual_startup_enabled}, setting={current_setting}"
-                )
-                return self.update_settings(startup_enabled=actual_startup_enabled)
+            if not getattr(settings, "startup_enabled", False):
+                # Adopt an existing registration (e.g. config was reset while
+                # an older install's registration survived).
+                if manager.is_startup_enabled():
+                    logger.info("Found existing startup registration; enabling setting to match")
+                    return self.update_settings(startup_enabled=True)
+                return True
 
-            return True
+            if manager.is_startup_disabled_by_os():
+                logger.info("Startup was disabled at the OS level; updating setting to match")
+                return self.update_settings(startup_enabled=False)
+
+            if manager.is_startup_registration_current():
+                return True
+
+            logger.info("Startup registration is missing or stale; re-registering")
+            if manager.enable_startup():
+                return True
+            logger.warning("Failed to repair startup registration")
+            return False
         except Exception as e:
-            logger.error(f"Error syncing startup setting: {e}")
+            logger.error(f"Error ensuring startup registration: {e}")
             return False
 
     def validate_github_app_config(self) -> tuple[bool, str]:

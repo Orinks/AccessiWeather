@@ -188,10 +188,8 @@ class TaskbarIconUpdater:
         data["uv"] = self._format_numeric(getattr(current, "uv_index", None), "")
         data["visibility"] = self._format_visibility(current)
         data["high"], data["low"] = self._format_forecast_temperatures(weather_data)
-        data["precip"] = self._format_precipitation(current)
-        data["precip_chance"] = self._format_numeric(
-            getattr(current, "precipitation_probability", None), ""
-        )
+        data["precip"] = self._format_precipitation(current, weather_data)
+        data["precip_chance"] = self._format_precip_chance(current, weather_data)
         data["alert"] = self._extract_alert_event(weather_data)
 
         return data
@@ -336,22 +334,56 @@ class TaskbarIconUpdater:
             unit_system=self._resolve_display_unit_system(),
         )
 
-    def _format_precipitation(self, current: Any) -> str:
+    def _current_hourly_period(self, weather_data: WeatherData | Any | None) -> Any | None:
+        """Return the hourly forecast period covering the current hour, if any."""
+        hourly = getattr(weather_data, "hourly_forecast", None) if weather_data else None
+        get_next_hours = getattr(hourly, "get_next_hours", None)
+        if get_next_hours is None:
+            return None
+        try:
+            periods = get_next_hours(1)
+        except Exception as exc:
+            logger.debug("Failed selecting current hourly period: %s", exc)
+            return None
+        return periods[0] if periods else None
+
+    def _format_precipitation(
+        self, current: Any, weather_data: WeatherData | Any | None = None
+    ) -> str:
         """Format precipitation using the selected unit preference when source data exists."""
         precip_in = getattr(current, "precipitation_in", None)
         if precip_in is None:
             precip_in = getattr(current, "precipitation_inches", None)
         if precip_in is None:
             precip_in = getattr(current, "precipitation", None)
+        precip_mm = getattr(current, "precipitation_mm", None)
+
+        # Observations from some sources (e.g. NWS) carry no precipitation
+        # amount; fall back to this hour's forecast so {precip} is not N/A.
+        if precip_in is None and precip_mm is None:
+            period = self._current_hourly_period(weather_data)
+            precip_in = getattr(period, "precipitation_amount", None) if period else None
 
         precision = 0 if self.round_values else 2
         return format_precipitation(
             precip_in,
             unit=self._resolve_temperature_unit(),
-            precipitation_mm=getattr(current, "precipitation_mm", None),
+            precipitation_mm=precip_mm,
             precision=precision,
             unit_system=self._resolve_display_unit_system(),
         )
+
+    def _format_precip_chance(
+        self, current: Any, weather_data: WeatherData | Any | None = None
+    ) -> str:
+        """Format precipitation chance, falling back to this hour's forecast."""
+        chance = getattr(current, "precipitation_probability", None)
+        if chance is None:
+            # Current observations never include a probability; it is a
+            # forecast quantity, so read it from the current hourly period.
+            period = self._current_hourly_period(weather_data)
+            chance = getattr(period, "precipitation_probability", None) if period else None
+        return self._format_numeric(chance, "")
 
     def _format_forecast_temperatures(
         self, weather_data: WeatherData | Any | None

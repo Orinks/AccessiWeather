@@ -164,7 +164,7 @@ class DataSourcesTab:
             panel,
             sizer,
             "Provider API keys",
-            "Pirate Weather needs a key. Stored keys stay in secure storage unless you explicitly export them.",
+            "Stored keys stay in secure storage unless you explicitly export them.",
         )
 
         self.dialog._pw_config_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -203,6 +203,38 @@ class DataSourcesTab:
         )
         keys_section.Add(self.dialog._pw_config_sizer, 0, wx.EXPAND)
 
+        airnow_config_sizer = wx.BoxSizer(wx.VERTICAL)
+        airnow_config_sizer.Add(
+            wx.StaticText(panel, label="AirNow"),
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND,
+            10,
+        )
+        controls["airnow_key"] = self.dialog.add_labeled_control_row(
+            panel,
+            airnow_config_sizer,
+            "AirNow API key:",
+            lambda parent: wx.TextCtrl(parent, style=wx.TE_PASSWORD, size=(280, -1)),
+            expand_control=True,
+        )
+        controls["get_airnow_key"] = wx.Button(panel, label="Get AirNow key")
+        controls["get_airnow_key"].Bind(wx.EVT_BUTTON, self.dialog._on_get_airnow_api_key)
+        airnow_config_sizer.Add(
+            controls["get_airnow_key"],
+            0,
+            wx.LEFT | wx.RIGHT | wx.BOTTOM,
+            10,
+        )
+        self.dialog.add_help_text(
+            panel,
+            airnow_config_sizer,
+            "Optional: supplies current U.S. AQI without changing your weather provider. "
+            "Your API key is stored securely.",
+            left=10,
+            bottom=10,
+        )
+        keys_section.Add(airnow_config_sizer, 0, wx.EXPAND)
+
         panel.SetSizer(sizer)
         self.dialog.notebook.AddPage(panel, page_label)
         return panel
@@ -239,6 +271,17 @@ class DataSourcesTab:
                 _dlg._update_auto_source_key_state()
 
             controls["pw_key"].Bind(wx.EVT_TEXT, _on_pw_key_text)
+
+        airnow_key = getattr(settings, "airnow_api_key", "") or ""
+        controls["airnow_key"].SetValue(str(airnow_key))
+        self.dialog._original_airnow_key = str(airnow_key)
+        self.dialog._airnow_key_cleared = False
+        if hasattr(wx, "EVT_TEXT"):
+
+            def _on_airnow_key_text(_event, _dlg=self.dialog):
+                _dlg._airnow_key_cleared = True
+
+            controls["airnow_key"].Bind(wx.EVT_TEXT, _on_airnow_key_text)
 
         saved_strategy = getattr(settings, "station_selection_strategy", "hybrid_default")
         strat_idx = (
@@ -283,6 +326,7 @@ class DataSourcesTab:
         return {
             "data_source": _SOURCE_VALUES[controls["data_source"].GetSelection()],
             "pirate_weather_api_key": controls["pw_key"].GetValue(),
+            "airnow_api_key": controls["airnow_key"].GetValue(),
             "source_priority_us": source_priority_us,
             "source_priority_international": source_priority_intl,
             "auto_mode_api_budget": auto_mode_api_budget,
@@ -298,6 +342,8 @@ class DataSourcesTab:
         names = {
             "data_source": "Weather source",
             "pw_key": "Pirate Weather API key",
+            "airnow_key": "AirNow API key",
+            "get_airnow_key": "Get AirNow key",
             "source_settings_summary": "Automatic mode source summary",
             "configure_source_settings": "Configure automatic mode budget and sources",
         }

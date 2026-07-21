@@ -14,6 +14,7 @@ logger = logging.getLogger("accessiweather.ui.dialogs.settings_dialog")
 class SettingsDialogPortableMixin:
     _PORTABLE_KEY_SETTINGS = (
         "pirate_weather_api_key",
+        "airnow_api_key",
         "openrouter_api_key",
         "avwx_api_key",
     )

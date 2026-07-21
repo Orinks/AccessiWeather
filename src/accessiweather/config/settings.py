@@ -174,11 +174,17 @@ class SettingsOperations:
         config = self._manager.get_config()
         # In portable mode, API keys live in the bundle — skip keyring writes for them.
         is_portable = getattr(self._manager.app, "_portable_mode", False)
-        portable_api_keys = {"pirate_weather_api_key", "openrouter_api_key", "avwx_api_key"}
+        portable_api_keys = {
+            "pirate_weather_api_key",
+            "airnow_api_key",
+            "openrouter_api_key",
+            "avwx_api_key",
+        }
 
         # These keys should be stored in SecureStorage (non-portable, or non-API-key secrets)
         secure_keys = {
             "pirate_weather_api_key",
+            "airnow_api_key",
             "openrouter_api_key",
             "avwx_api_key",
             "github_app_id",
@@ -193,6 +199,7 @@ class SettingsOperations:
             "github_app_id",
             "github_app_installation_id",
             "pirate_weather_api_key",
+            "airnow_api_key",
             "openrouter_api_key",
             "avwx_api_key",
         }

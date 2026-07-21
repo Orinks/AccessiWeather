@@ -103,6 +103,9 @@ class EnvironmentalConditions:
     air_quality_index: float | None = None
     air_quality_category: str | None = None
     air_quality_pollutant: str | None = None
+    air_quality_updated_at: datetime | None = None
+    air_quality_reporting_area: str | None = None
+    air_quality_source: str | None = None
     hourly_air_quality: list[HourlyAirQuality] = field(default_factory=list)
     uv_index: float | None = None
     uv_category: str | None = None

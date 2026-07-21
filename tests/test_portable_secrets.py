@@ -15,6 +15,7 @@ def test_encrypt_decrypt_secret_bundle_round_trip():
     secrets = {
         "openrouter_api_key": "FAKE_SK_TEST_ONLY",
         "pirate_weather_api_key": "FAKE_PW_TEST_ONLY",
+        "airnow_api_key": "FAKE_AIRNOW_TEST_ONLY",
     }
 
     envelope = encrypt_secret_bundle(secrets, "correct horse battery staple")
@@ -66,6 +67,7 @@ class TestPortableSecretsImportExportWiring:
             return {
                 "openrouter_api_key": "FAKE_OR_EXPORTED_TEST",
                 "pirate_weather_api_key": "FAKE_PW_EXPORTED_TEST",
+                "airnow_api_key": "FAKE_AIRNOW_EXPORTED_TEST",
             }.get(key_name)
 
         def _fake_set_password(key_name: str, value: str) -> bool:
@@ -94,6 +96,7 @@ class TestPortableSecretsImportExportWiring:
 
         assert imported_store["openrouter_api_key"] == "FAKE_OR_EXPORTED_TEST"
         assert imported_store["pirate_weather_api_key"] == "FAKE_PW_EXPORTED_TEST"
+        assert imported_store["airnow_api_key"] == "FAKE_AIRNOW_EXPORTED_TEST"
         # After import, in-memory config should be refreshed so keys are active immediately
         manager._load_secure_keys.assert_called_once()
 

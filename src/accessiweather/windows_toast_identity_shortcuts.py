@@ -63,6 +63,18 @@ if sys.platform == "win32":
     # GPS_READWRITE = 2
     _GPS_READWRITE = 2
 
+# IShellLinkW vtable slots (shobjidl_core.h order; slots 0-2 are IUnknown):
+# 3 GetPath, 4 GetIDList, 5 SetIDList, 6 GetDescription, 7 SetDescription,
+# 8 GetWorkingDirectory, 9 SetWorkingDirectory, 10 GetArguments,
+# 11 SetArguments, 12 GetHotkey, 13 SetHotkey, 14 GetShowCmd, 15 SetShowCmd,
+# 16 GetIconLocation, 17 SetIconLocation, 18 SetRelativePath, 19 Resolve,
+# 20 SetPath
+_ISHELLLINKW_VTBL_GET_PATH = 3
+_ISHELLLINKW_VTBL_SET_DESCRIPTION = 7
+_ISHELLLINKW_VTBL_SET_WORKING_DIRECTORY = 9
+_ISHELLLINKW_VTBL_SET_ICON_LOCATION = 17
+_ISHELLLINKW_VTBL_SET_PATH = 20
+
 
 def _guid_from_string(clsid: str) -> GUID:  # pragma: no cover
     """Convert a CLSID string into the local GUID structure."""
@@ -173,8 +185,9 @@ def _read_shortcut_target_ctypes(shortcut_path: Path) -> str | None:
 
     target = None
     if hr == 0:
-        # IShellLinkW::GetPath (vtable index 3)
-        get_path = ctypes.CFUNCTYPE(HRESULT, c_void_p, LPWSTR, c_int, c_void_p, DWORD)(vtable[3])
+        get_path = ctypes.CFUNCTYPE(HRESULT, c_void_p, LPWSTR, c_int, c_void_p, DWORD)(
+            vtable[_ISHELLLINKW_VTBL_GET_PATH]
+        )
         buf = ctypes.create_unicode_buffer(MAX_PATH)
         hr2 = get_path(p_shell_link, buf, MAX_PATH, None, 0)
         if hr2 == 0 and buf.value:
@@ -248,20 +261,22 @@ def _create_shortcut_ctypes(shortcut_path: Path, target_path: str, display_name:
 
     vtable = ctypes.cast(p_shell_link, POINTER(POINTER(c_void_p)))[0]
 
-    # IShellLinkW::SetPath (vtable index 20)
-    set_path = ctypes.CFUNCTYPE(HRESULT, c_void_p, LPCWSTR)(vtable[20])
+    set_path = ctypes.CFUNCTYPE(HRESULT, c_void_p, LPCWSTR)(vtable[_ISHELLLINKW_VTBL_SET_PATH])
     set_path(p_shell_link, target_path)
 
-    # IShellLinkW::SetWorkingDirectory (vtable index 10)
-    set_working_dir = ctypes.CFUNCTYPE(HRESULT, c_void_p, LPCWSTR)(vtable[10])
+    set_working_dir = ctypes.CFUNCTYPE(HRESULT, c_void_p, LPCWSTR)(
+        vtable[_ISHELLLINKW_VTBL_SET_WORKING_DIRECTORY]
+    )
     set_working_dir(p_shell_link, str(Path(target_path).parent))
 
-    # IShellLinkW::SetDescription (vtable index 8)
-    set_description = ctypes.CFUNCTYPE(HRESULT, c_void_p, LPCWSTR)(vtable[8])
+    set_description = ctypes.CFUNCTYPE(HRESULT, c_void_p, LPCWSTR)(
+        vtable[_ISHELLLINKW_VTBL_SET_DESCRIPTION]
+    )
     set_description(p_shell_link, display_name)
 
-    # IShellLinkW::SetIconLocation (vtable index 18)
-    set_icon = ctypes.CFUNCTYPE(HRESULT, c_void_p, LPCWSTR, c_int)(vtable[18])
+    set_icon = ctypes.CFUNCTYPE(HRESULT, c_void_p, LPCWSTR, c_int)(
+        vtable[_ISHELLLINKW_VTBL_SET_ICON_LOCATION]
+    )
     set_icon(p_shell_link, target_path, 0)
 
     # QueryInterface for IPersistFile

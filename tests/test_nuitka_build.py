@@ -10,6 +10,21 @@ import pytest
 from installer import build, build_nuitka
 
 
+@pytest.fixture(autouse=True)
+def _stub_prism_native_dir(tmp_path_factory, monkeypatch):
+    """
+    Stage prism natives from a stub directory.
+
+    CI unit-test environments intentionally run without prismatoid installed
+    (mirroring the in-repo wx/sound_lib stubs), so staging must not depend on
+    the real package here. Real builds still fail loudly when the native
+    library is missing.
+    """
+    native = tmp_path_factory.mktemp("prism-native")
+    (native / "prism.so").write_bytes(b"stub")
+    monkeypatch.setattr(build_nuitka, "_prism_native_dir", lambda: native)
+
+
 def _pyproject_version() -> str:
     with (build_nuitka.ROOT / "pyproject.toml").open("rb") as f:
         return tomllib.load(f)["project"]["version"]
@@ -328,3 +343,28 @@ def test_windows_portable_zip_uses_separate_staging_dir(tmp_path, monkeypatch) -
     assert "AccessiWeather/AccessiWeather.exe" in names
     assert "AccessiWeather/.portable" in names
     assert "AccessiWeather/data/soundpacks/default/pack.json" in names
+
+
+def test_stage_prism_runtime_files_ships_native_library(tmp_path) -> None:
+    """prism.dll must ship or screen reader announcements silently no-op (#677)."""
+    staged = tmp_path / "AccessiWeather_dir"
+    staged.mkdir()
+
+    target = build_nuitka._stage_prism_runtime_files(staged)
+
+    assert target == staged / "prism" / "_native"
+    natives = [p for p in target.iterdir() if p.suffix.lower() in {".dll", ".dylib", ".so"}]
+    assert natives, "no prism native library staged"
+
+
+def test_stage_prism_runtime_files_fails_when_native_library_missing(tmp_path, monkeypatch) -> None:
+    fake_native = tmp_path / "prism" / "_native"
+    fake_native.mkdir(parents=True)
+    (fake_native / "prism.lib").write_bytes(b"import-lib-only")
+    monkeypatch.setattr(build_nuitka, "_prism_native_dir", lambda: fake_native)
+
+    staged = tmp_path / "AccessiWeather_dir"
+    staged.mkdir()
+
+    with pytest.raises(RuntimeError, match="prism native"):
+        build_nuitka._stage_prism_runtime_files(staged)

@@ -798,3 +798,71 @@ class TestAppSettingsMinimizeOnStartup:
         settings = AppSettings.from_dict(data)
 
         assert settings.minimize_on_startup is False
+
+
+class TestTrayPrecipPlaceholders:
+    """
+    {precip}/{precip_chance} must fall back to this hour's forecast (#706).
+
+    Current observations never include a precipitation probability (it is a
+    forecast quantity), and NWS observations carry no precipitation amount,
+    so both placeholders rendered N/A for most sources.
+    """
+
+    def _updater(self):
+        from accessiweather.taskbar_icon_updater import TaskbarIconUpdater
+
+        return TaskbarIconUpdater(text_enabled=True, temperature_unit="f")
+
+    def _weather_with_hourly(self, current, *, chance=None, amount=None):
+        from datetime import UTC, datetime
+
+        from accessiweather.models.weather_forecast import (
+            HourlyForecast,
+            HourlyForecastPeriod,
+        )
+
+        period = HourlyForecastPeriod(
+            start_time=datetime.now(UTC),
+            precipitation_probability=chance,
+            precipitation_amount=amount,
+        )
+        location = Location(name="Test City", latitude=40.0, longitude=-74.0)
+        return WeatherData(
+            location=location,
+            current=current,
+            hourly_forecast=HourlyForecast(periods=[period]),
+        )
+
+    def test_precip_chance_falls_back_to_current_hourly_period(self):
+        current = CurrentConditions(temperature_f=72.0)
+        weather = self._weather_with_hourly(current, chance=40.0, amount=0.1)
+
+        data = self._updater()._extract_weather_variables(
+            current, "Test City", weather_data=weather
+        )
+
+        assert data["precip_chance"] == "40"
+        assert data["precip"] != "N/A"
+
+    def test_precip_uses_current_conditions_when_available(self):
+        current = CurrentConditions(temperature_f=72.0, precipitation_in=0.25)
+        weather = self._weather_with_hourly(current, chance=40.0, amount=0.1)
+
+        data = self._updater()._extract_weather_variables(
+            current, "Test City", weather_data=weather
+        )
+
+        assert "0.25" in data["precip"]
+
+    def test_precip_placeholders_na_without_any_source(self):
+        current = CurrentConditions(temperature_f=72.0)
+        location = Location(name="Test City", latitude=40.0, longitude=-74.0)
+        weather = WeatherData(location=location, current=current)
+
+        data = self._updater()._extract_weather_variables(
+            current, "Test City", weather_data=weather
+        )
+
+        assert data["precip"] == "N/A"
+        assert data["precip_chance"] == "N/A"

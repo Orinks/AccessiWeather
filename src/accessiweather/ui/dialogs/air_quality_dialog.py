@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import wx
@@ -21,6 +22,10 @@ _AIR_QUALITY_GUIDANCE = {
     "Very Unhealthy": "Everyone should avoid prolonged outdoor exertion.",
     "Hazardous": "Everyone should avoid all outdoor exertion. Stay indoors.",
 }
+
+_DEFAULT_AIR_QUALITY_GUIDANCE = (
+    "Check current local air quality guidance before prolonged outdoor activity."
+)
 
 _POLLUTANT_LABELS = {
     "PM2_5": "PM2.5 (Fine Particles)",
@@ -99,6 +104,7 @@ class AirQualityDialog(wx.Dialog):
 
         self._create_ui()
         self._setup_accessibility()
+        self._set_initial_focus()
         self.Bind(wx.EVT_CHAR_HOOK, self._on_char_hook)
 
     def _create_ui(self):
@@ -146,11 +152,11 @@ class AirQualityDialog(wx.Dialog):
 
         panel.SetSizer(main_sizer)
 
-        # Set initial focus for screen readers
-        if has_data and getattr(self, "_hourly_display", None):
-            self._hourly_display.SetFocus()
+        # Defer focus until accessible names are configured.
+        if has_data and getattr(self, "_current_summary", None):
+            self._initial_focus_control = self._current_summary
         else:
-            close_btn.SetFocus()
+            self._initial_focus_control = close_btn
 
     def _build_summary_section(self, panel) -> wx.BoxSizer:
         """Build the current AQI summary section."""
@@ -160,6 +166,8 @@ class AirQualityDialog(wx.Dialog):
         header = wx.StaticText(panel, label="Current Air Quality")
         header.SetFont(header.GetFont().Bold().Scaled(1.1))
         sizer.Add(header, 0, wx.BOTTOM, 8)
+
+        summary_lines = []
 
         # AQI value and category
         aqi = getattr(self.environmental, "air_quality_index", None)
@@ -175,38 +183,87 @@ class AirQualityDialog(wx.Dialog):
                 else:
                     aqi_text = category
 
-            aqi_label = wx.StaticText(panel, label=aqi_text)
-            aqi_label.SetFont(aqi_label.GetFont().Scaled(1.05))
-            sizer.Add(aqi_label, 0, wx.BOTTOM, 4)
+            summary_lines.append(aqi_text)
+        else:
+            summary_lines.append("AQI: Not available")
 
         # Dominant pollutant
         pollutant = getattr(self.environmental, "air_quality_pollutant", None)
         if pollutant:
             pollutant_name = _POLLUTANT_LABELS.get(pollutant.upper(), pollutant)
-            pollutant_label = wx.StaticText(panel, label=f"Dominant pollutant: {pollutant_name}")
-            sizer.Add(pollutant_label, 0, wx.BOTTOM, 4)
+            summary_lines.append(f"Dominant pollutant: {pollutant_name}")
+        else:
+            summary_lines.append("Dominant pollutant: Not available")
 
         # Health guidance
-        guidance = _AIR_QUALITY_GUIDANCE.get(
-            category or "", "Monitor UV levels and use sun protection as needed."
-        )
-        guidance_label = wx.StaticText(panel, label=f"Health guidance: {guidance}")
-        guidance_label.SetForegroundColour(
-            wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
-        )  # pragma: no cover
-        guidance_label.Wrap(550)
-        sizer.Add(guidance_label, 0, wx.BOTTOM, 4)
+        guidance = _AIR_QUALITY_GUIDANCE.get(category or "", _DEFAULT_AIR_QUALITY_GUIDANCE)
+        summary_lines.append(f"Health guidance: {guidance}")
 
         # Last updated
-        updated_at = getattr(self.environmental, "updated_at", None)
-        if updated_at:
+        updated_at = getattr(self.environmental, "air_quality_updated_at", None)
+        if not isinstance(updated_at, datetime):
+            updated_at = getattr(self.environmental, "updated_at", None)
+        if isinstance(updated_at, datetime):
             timestamp = updated_at.strftime("%I:%M %p").lstrip("0")
             date_str = updated_at.strftime("%B %d, %Y")
-            updated_label = wx.StaticText(panel, label=f"Last updated: {timestamp} on {date_str}")
-            updated_label.SetForegroundColour(
-                wx.SystemSettings.GetColour(wx.SYS_COLOUR_GRAYTEXT)
-            )  # pragma: no cover
-            sizer.Add(updated_label, 0)
+            summary_lines.append(f"Last updated: {timestamp} on {date_str}")
+        else:
+            summary_lines.append("Last updated: Not available")
+
+        reporting_area = getattr(self.environmental, "air_quality_reporting_area", None)
+        if isinstance(reporting_area, str) and reporting_area.strip():
+            summary_lines.append(f"Reporting area: {reporting_area.strip()}")
+
+        current_source = getattr(self.environmental, "air_quality_source", None)
+        current_source = (
+            current_source.strip()
+            if isinstance(current_source, str) and current_source.strip()
+            else None
+        )
+        sources = [
+            str(source).strip()
+            for source in (getattr(self.environmental, "sources", None) or [])
+            if str(source).strip()
+        ]
+        airnow_contributed = bool(current_source and "airnow" in current_source.casefold()) or any(
+            "airnow" in source.casefold() for source in sources
+        )
+        if airnow_contributed:
+            summary_lines.append("Source: EPA AirNow and participating air quality agencies")
+            hourly_sources = [
+                source
+                for source in sources
+                if "airnow" not in source.casefold() and "air quality" in source.casefold()
+            ]
+            if hourly_sources:
+                summary_lines.append(
+                    "Hourly forecast and pollutant concentrations: "
+                    f"{', '.join(dict.fromkeys(hourly_sources))}"
+                )
+            summary_lines.append(
+                "Status: Preliminary data; values may change after quality control."
+            )
+        elif current_source:
+            summary_lines.append(f"Source: {current_source}")
+        elif sources:
+            summary_lines.append(f"Source: {', '.join(dict.fromkeys(sources))}")
+        else:
+            summary_lines.append("Source: Not available")
+
+        summary_text = "\n".join(summary_lines) or "Current air quality data is not available."
+        self._current_summary = wx.TextCtrl(
+            panel,
+            value=summary_text,
+            style=wx.TE_MULTILINE | wx.TE_READONLY,
+            size=wx.Size(-1, 150),
+        )
+        self._current_summary.SetForegroundColour(
+            wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOWTEXT)
+        )
+        self._accessibility_text_controls.append(
+            (self._current_summary, "Current air quality summary")
+        )
+        sizer.Add(self._current_summary, 1, wx.EXPAND)
 
         return sizer
 
@@ -231,7 +288,11 @@ class AirQualityDialog(wx.Dialog):
         # Build forecast text
         forecast_lines = []
         for i, hour in enumerate(hourly_data[:12]):
-            time_str = getattr(hour, "time", f"Hour {i + 1}")
+            timestamp = getattr(hour, "timestamp", None)
+            if isinstance(timestamp, datetime):
+                time_str = timestamp.strftime("%I:%M %p").lstrip("0")
+            else:
+                time_str = f"Hour {i + 1}"
             aqi = getattr(hour, "aqi", None)
             if aqi is not None:
                 forecast_lines.append(f"{time_str}: AQI {int(round(aqi))}")
@@ -311,6 +372,10 @@ class AirQualityDialog(wx.Dialog):
         """Set up accessibility labels."""
         for control, label in self._accessibility_text_controls:
             control.SetName(label)
+
+    def _set_initial_focus(self) -> None:
+        """Focus the initial control after its accessible name is ready."""
+        self._initial_focus_control.SetFocus()
 
     def _on_char_hook(self, event: wx.KeyEvent) -> None:
         """Handle keyboard shortcuts for the dialog."""
