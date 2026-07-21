@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - US locations can now use official EPA AirNow observations for current air quality when you add your own AirNow API key in Settings. AccessiWeather keeps its existing hourly air-quality forecast and automatically falls back when AirNow is unavailable.
 
+### Fixed
+- Weather Assistant queries that need live weather tools now let OpenRouter's free endpoint choose an available compatible model instead of failing when a hardcoded free model is retired.
+
 ## [0.9.0] - 2026-07-21
 
 ### Changed

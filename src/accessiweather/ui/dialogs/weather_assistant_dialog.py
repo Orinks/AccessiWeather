@@ -30,11 +30,30 @@ logger = logging.getLogger(__name__)
 MAX_CONTEXT_TURNS = 20
 DEFAULT_WEATHER_ASSISTANT_MODEL = "openrouter/free"
 
-# Models with currently available free-tier function-calling support, in preference order.
-TOOL_CAPABLE_MODELS = [
-    "qwen/qwen3-coder:free",
-    "meta-llama/llama-3.3-70b-instruct:free",
-]
+
+def _build_completion_request(
+    configured_model: str,
+    messages: list[dict],
+    tool_executor: WeatherToolExecutor | None,
+) -> tuple[str, dict]:
+    """Choose the model and optional tools for an assistant completion."""
+    effective_model = configured_model or DEFAULT_WEATHER_ASSISTANT_MODEL
+    extra_kwargs: dict = {}
+
+    if tool_executor is None:
+        return effective_model, extra_kwargs
+
+    user_msg = ""
+    for message in reversed(messages):
+        if message.get("role") == "user":
+            user_msg = message.get("content", "")
+            break
+
+    tools = get_tools_for_message(user_msg)
+    if tools:
+        extra_kwargs["tools"] = tools
+
+    return effective_model, extra_kwargs
 
 
 class WeatherAssistantDialog(wx.Dialog):
@@ -253,95 +272,35 @@ class WeatherAssistantDialog(wx.Dialog):
                     timeout=30.0,
                 )
 
-                effective_model = model if model else DEFAULT_WEATHER_ASSISTANT_MODEL
-
-                extra_kwargs: dict = {}
-                use_tool_fallback = False
-                if tool_executor is not None:
-                    # Get last user message for tool selection
-                    user_msg = ""
-                    for msg in reversed(messages):
-                        if msg.get("role") == "user":
-                            user_msg = msg.get("content", "")
-                            break
-                    tools = get_tools_for_message(user_msg)
-                    if tools:
-                        extra_kwargs["tools"] = tools
-                        # When tools are present, use a model known for
-                        # reliable function calling if user hasn't picked
-                        # a specific model (free router doesn't guarantee
-                        # tool support)
-                        # Use whatever the user selected; only flag
-                        # fallback so rate-limit retry logic can kick in
-                        # for free models
-                        free_routers = {
-                            "openrouter/free",
-                            "meta-llama/llama-3.3-70b-instruct:free",
-                        }
-                        if effective_model in free_routers:
-                            effective_model = TOOL_CAPABLE_MODELS[0]
-                            use_tool_fallback = True
-                        logger.info(
-                            "Tools enabled: %d tools, model: %s",
-                            len(tools),
-                            effective_model,
-                        )
+                effective_model, extra_kwargs = _build_completion_request(
+                    model,
+                    messages,
+                    tool_executor,
+                )
+                tools = extra_kwargs.get("tools", [])
+                if tools:
+                    logger.info(
+                        "Tools enabled: %d tools, model: %s",
+                        len(tools),
+                        effective_model,
+                    )
 
                 max_tool_iterations = 5
                 for _iteration in range(max_tool_iterations + 1):
-                    # Try the API call, with fallback models on rate limit
-                    last_error = None
-                    for _model_attempt in range(3):
-                        try:
-                            response = client.chat.completions.create(
-                                model=effective_model,
-                                messages=messages,
-                                max_tokens=2000,
-                                extra_headers={
-                                    "HTTP-Referer": "https://accessiweather.orinks.net",
-                                    "X-Title": "AccessiWeather Weather Assistant",
-                                },
-                                **extra_kwargs,
-                            )
-                            last_error = None
-                            break
-                        except Exception as api_err:
-                            err_str = str(api_err).lower()
-                            is_retryable = (
-                                "429" in str(api_err)
-                                or "rate" in err_str
-                                or "400" in str(api_err)
-                                or "tool_calls" in err_str
-                                or "provider returned error" in err_str
-                            )
-                            if is_retryable and use_tool_fallback:
-                                # Try next model in the fallback chain
-                                try:
-                                    idx = TOOL_CAPABLE_MODELS.index(effective_model)
-                                    if idx + 1 < len(TOOL_CAPABLE_MODELS):
-                                        effective_model = TOOL_CAPABLE_MODELS[idx + 1]
-                                        logger.info(
-                                            "Provider error, falling back to %s", effective_model
-                                        )
-                                        last_error = api_err
-                                        continue
-                                except ValueError:
-                                    pass
-                            raise
-                    if last_error is not None:
-                        raise last_error
+                    response = client.chat.completions.create(
+                        model=effective_model,
+                        messages=messages,
+                        max_tokens=2000,
+                        extra_headers={
+                            "HTTP-Referer": "https://accessiweather.orinks.net",
+                            "X-Title": "AccessiWeather Weather Assistant",
+                        },
+                        **extra_kwargs,
+                    )
 
                     model_used = response.model or effective_model
 
                     if not response.choices:
-                        if extra_kwargs.get("tools") and use_tool_fallback:
-                            # Model returned empty with tools; retry without
-                            logger.warning(
-                                "Empty response with tools on %s, retrying without tools",
-                                effective_model,
-                            )
-                            extra_kwargs.pop("tools", None)
-                            continue
                         wx.CallAfter(
                             self._on_response_error,
                             "Received an empty response. Try again or switch models in Settings.",
