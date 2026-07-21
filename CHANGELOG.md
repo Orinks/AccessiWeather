@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - US locations can now use official EPA AirNow observations for current air quality when you add your own AirNow API key in Settings. AccessiWeather keeps its existing hourly air-quality forecast and automatically falls back when AirNow is unavailable.
+
+## [0.9.0] - 2026-07-21
+
+### Changed
 - New default sounds: The alert and notification audio has been completely replaced with a warm, gentle set of wooden-mallet tones. The old pack was full of piercing high-frequency tones - some dumping most of their energy into the harsh 3-6 kHz range - and one alert ran a jarring 12 seconds. The new sounds stay in a soft, low register (around 200-500 Hz), are short, and are grouped by severity so an advisory, a watch, a warning, and an extreme alert each sound distinct without ever being shrill. Prefer the old set? It's still available as "Classic Default", a downloadable optional pack in the sound manager, with the worst ear-piercing tones softened.
 - Forecaster Notes can now show official NWS Surf Zone Forecasts for regional beaches where available, with surf/beach condition alternatives from supported global sources when an official SRF product is not available.
 - AccessiWeather can now automatically tune NOAA Weather Radio for qualifying alerts that use Specific Area Message Encoding (SAME) when you turn on the opt-in setting on the Alerts tab, then stop after the duration you choose when a reliable station match is available.
