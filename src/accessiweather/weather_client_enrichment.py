@@ -216,11 +216,20 @@ async def populate_environmental_metrics(
     if not (client.air_quality_enabled or client.pollen_enabled):
         return
 
+    country_code = getattr(location, "country_code", None)
+    use_airnow = (
+        client.air_quality_enabled
+        and isinstance(country_code, str)
+        and country_code.strip().upper() == "US"
+    )
+
     try:
         environmental = await client.environmental_client.fetch(
             location,
             include_air_quality=client.air_quality_enabled,
             include_pollen=client.pollen_enabled,
+            include_hourly_air_quality=client.air_quality_enabled,
+            prefer_airnow=use_airnow,
         )
     except Exception as exc:  # noqa: BLE001
         logger.debug("Environmental metrics failed: %s", exc)

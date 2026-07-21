@@ -174,10 +174,16 @@ class ConfigManager:
         # In portable mode, API keys live in the bundle — not in keyring.
         # Only load non-API-key secrets (e.g. GitHub app credentials) from keyring.
         is_portable = getattr(self.app, "_portable_mode", False)
-        portable_api_keys = {"pirate_weather_api_key", "openrouter_api_key", "avwx_api_key"}
+        portable_api_keys = {
+            "pirate_weather_api_key",
+            "airnow_api_key",
+            "openrouter_api_key",
+            "avwx_api_key",
+        }
 
         secure_keys = [
             "pirate_weather_api_key",
+            "airnow_api_key",
             "openrouter_api_key",
             "avwx_api_key",
             "github_app_id",

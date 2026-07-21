@@ -21,6 +21,7 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     startup_enabled: bool = False
     data_source: str = "auto"
     pirate_weather_api_key: str = ""
+    airnow_api_key: str = ""
     auto_update_enabled: bool = True
     update_channel: str = "stable"
     update_check_interval_hours: int = 24

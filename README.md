@@ -47,6 +47,8 @@ For the full explanation of source behavior, see the [User Manual](docs/user_man
 
 AccessiWeather works without paid services, but some features need optional keys:
 
+- AirNow: official current US Air Quality Index observations
+  - https://docs.airnowapi.org/account/request/
 - Pirate Weather: global alerts, minutely precipitation, Dark Sky-style summaries
   - https://pirate-weather.apiable.io/
 - OpenRouter: Explain Weather and Weather Assistant

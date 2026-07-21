@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import sys
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
@@ -186,6 +186,10 @@ def _make_environmental(*, has_data_val: bool = True, has_hourly: bool = True):
     env.air_quality_index = 42
     env.air_quality_category = "Good"
     env.air_quality_pollutant = "PM2_5"
+    env.air_quality_updated_at = None
+    env.air_quality_reporting_area = None
+    env.air_quality_source = None
+    env.sources = []
     env.uv_index = 3
     env.uv_category = "Moderate"
     env.updated_at = None  # skip timestamp formatting branch
@@ -216,16 +220,21 @@ def _make_environmental(*, has_data_val: bool = True, has_hourly: bool = True):
 class TestAirQualityDialogFocus:
     """Initial-focus tests for AirQualityDialog."""
 
-    def test_focus_hourly_display_with_data(self, widget_tracker):
-        """When data and hourly forecast exist, focus goes to _hourly_display."""
+    def test_focus_current_summary_with_data(self, widget_tracker):
+        """Current AQI summary is the first focused, screen-reader-named control."""
         env = _make_environmental(has_data_val=True, has_hourly=True)
 
         dlg = AirQualityDialog(
             parent=MagicMock(), location_name="Test", environmental=env, app=MagicMock()
         )
 
-        assert dlg._hourly_display is not None
-        dlg._hourly_display.SetFocus.assert_called_once()
+        assert dlg._current_summary is widget_tracker.textctrls[0]
+        dlg._current_summary.SetName.assert_called_once_with("Current air quality summary")
+        dlg._current_summary.SetFocus.assert_called_once()
+        dlg._hourly_display.SetFocus.assert_not_called()
+        assert dlg._current_summary.mock_calls.index(
+            call.SetName("Current air quality summary")
+        ) < dlg._current_summary.mock_calls.index(call.SetFocus())
 
     def test_focus_close_button_without_data(self, widget_tracker):
         """When no data is available, focus goes to the close button."""
@@ -236,6 +245,97 @@ class TestAirQualityDialogFocus:
         # Only one button is created (Close)
         assert len(widget_tracker.buttons) == 1
         widget_tracker.buttons[0].SetFocus.assert_called_once()
+        assert widget_tracker.textctrls == []
+
+    def test_escape_closes_dialog_from_summary(self, widget_tracker):
+        """Escape keeps working after initial focus moves to the summary control."""
+        dlg = AirQualityDialog(
+            parent=MagicMock(),
+            location_name="Test",
+            environmental=_make_environmental(),
+            app=MagicMock(),
+        )
+        dlg.EndModal = MagicMock()
+        event = MagicMock()
+        event.GetKeyCode.return_value = _wx.WXK_ESCAPE
+
+        dlg._on_char_hook(event)
+
+        dlg.EndModal.assert_called_once_with(_wx.ID_CLOSE)
+        event.Skip.assert_not_called()
+
+    def test_current_summary_includes_airnow_attribution_and_preliminary_status(
+        self, widget_tracker
+    ):
+        """AirNow AQI exposes every current-data field as readable text."""
+        env = _make_environmental(has_data_val=True, has_hourly=True)
+        env.air_quality_index = 87
+        env.air_quality_category = "Moderate"
+        env.air_quality_pollutant = "O3"
+        env.air_quality_updated_at = datetime(2026, 7, 21, 14, 30)
+        env.updated_at = datetime(2026, 7, 21, 13, 0)
+        env.air_quality_reporting_area = "Baltimore, MD"
+        env.air_quality_source = "EPA AirNow"
+        env.sources = ["EPA AirNow", "Open-Meteo Air Quality", "Open-Meteo pollen"]
+
+        captured: list[str] = []
+        captured_styles: list[int] = []
+
+        def _capture(*a, **kw):
+            captured.append(kw.get("value", ""))
+            captured_styles.append(kw.get("style", 0))
+            return MagicMock(name="TextCtrl")
+
+        with patch(
+            "accessiweather.ui.dialogs.air_quality_dialog.wx.TextCtrl",
+            side_effect=_capture,
+        ):
+            AirQualityDialog(
+                parent=MagicMock(), location_name="Test", environmental=env, app=MagicMock()
+            )
+
+        summary_text = captured[0]
+        assert "AQI: 87 (Moderate)" in summary_text
+        assert "Dominant pollutant: Ozone" in summary_text
+        assert "Last updated: 2:30 PM on July 21, 2026" in summary_text
+        assert "Reporting area: Baltimore, MD" in summary_text
+        assert "Source: EPA AirNow and participating air quality agencies" in summary_text
+        assert (
+            "Hourly forecast and pollutant concentrations: Open-Meteo Air Quality" in summary_text
+        )
+        assert "Open-Meteo pollen" not in summary_text
+        assert "Status: Preliminary data" in summary_text
+        assert captured_styles[0] & _wx.TE_READONLY
+
+    def test_current_summary_labels_missing_fields_without_using_color(self, widget_tracker):
+        """Partial AQI data names unavailable fields and gives air-quality-specific advice."""
+        env = _make_environmental(has_data_val=True, has_hourly=False)
+        env.air_quality_index = None
+        env.air_quality_category = "Unknown"
+        env.air_quality_pollutant = None
+        env.sources = []
+
+        captured: list[str] = []
+
+        def _capture(*a, **kw):
+            captured.append(kw.get("value", ""))
+            return MagicMock(name="TextCtrl")
+
+        with patch(
+            "accessiweather.ui.dialogs.air_quality_dialog.wx.TextCtrl",
+            side_effect=_capture,
+        ):
+            AirQualityDialog(
+                parent=MagicMock(), location_name="Test", environmental=env, app=MagicMock()
+            )
+
+        summary_text = captured[0]
+        assert "Unknown" in summary_text
+        assert "Dominant pollutant: Not available" in summary_text
+        assert "Last updated: Not available" in summary_text
+        assert "Source: Not available" in summary_text
+        assert "local air quality guidance" in summary_text
+        assert "UV" not in summary_text
 
     def test_hourly_section_renders_clock_times(self, widget_tracker):
         """Regression: hourly rows show the entry's timestamp, not 'Hour N'."""
@@ -258,7 +358,7 @@ class TestAirQualityDialogFocus:
                 parent=MagicMock(), location_name="Test", environmental=env, app=MagicMock()
             )
 
-        hourly_text = next((value for value in captured if "AQI" in value), "")
+        hourly_text = next((value for value in captured if "2:00 PM: AQI" in value), "")
         assert "2:00 PM: AQI 55" in hourly_text
         assert "Hour 1" not in hourly_text
 

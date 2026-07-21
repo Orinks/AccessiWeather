@@ -319,6 +319,23 @@ class TestUpdateSettings:
         assert result is True
 
     @patch("accessiweather.config.settings.SecureStorage.set_password")
+    def test_update_airnow_key_uses_secure_storage(
+        self, mock_set_password, operations, mock_manager
+    ):
+        """AirNow keys are stored in keyring and redacted from logs."""
+        mock_set_password.return_value = True
+
+        result = operations.update_settings(airnow_api_key="FAKE_AIRNOW_KEY_TEST")
+
+        config = mock_manager.get_config.return_value
+        assert config.settings.airnow_api_key == "FAKE_AIRNOW_KEY_TEST"
+        mock_set_password.assert_called_once_with("airnow_api_key", "FAKE_AIRNOW_KEY_TEST")
+        mock_manager._get_logger.return_value.info.assert_called_with(
+            "Updated setting airnow_api_key = ***redacted***"
+        )
+        assert result is True
+
+    @patch("accessiweather.config.settings.SecureStorage.set_password")
     def test_update_secure_setting_storage_fails(self, mock_set_password, operations, mock_manager):
         """Test updating a secure setting when secure storage fails."""
         mock_set_password.return_value = False

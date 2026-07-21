@@ -4,33 +4,66 @@ from __future__ import annotations
 
 import logging
 from datetime import UTC, datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Protocol
 
 import httpx
 
 from ..models import EnvironmentalConditions, HourlyAirQuality, HourlyUVIndex, Location
 from ..utils.retry_utils import async_retry_with_backoff
+from .airnow_client import AirNowClient, AirNowObservation
 
 logger = logging.getLogger(__name__)
 
 
+class AirNowProvider(Protocol):
+    """Minimal AirNow interface used by the environmental data client."""
+
+    async def fetch_current_air_quality(self, location: Location) -> AirNowObservation | None: ...
+
+
 class EnvironmentalDataClient:
-    """Fetch supplemental environmental metrics from Open-Meteo services."""
+    """Fetch supplemental environmental metrics from AirNow and Open-Meteo."""
 
     AIR_QUALITY_ENDPOINT = "https://air-quality-api.open-meteo.com/v1/air-quality"
     POLLEN_ENDPOINT = "https://pollen-api.open-meteo.com/v1/pollen"
 
-    def __init__(self, user_agent: str = "AccessiWeather/2.0", timeout: float = 10.0):
+    def __init__(
+        self,
+        user_agent: str = "AccessiWeather/2.0",
+        timeout: float = 10.0,
+        *,
+        airnow_api_key: object = "",
+        airnow_client: AirNowProvider | None = None,
+    ):
         """
         Initialize the client.
 
         Args:
             user_agent: HTTP User-Agent header value.
             timeout: Request timeout in seconds.
+            airnow_api_key: AirNow key or lazy secure-storage accessor.
+            airnow_client: Optional injected AirNow client for testing.
 
         """
         self.user_agent = user_agent
         self.timeout = timeout
+        self.airnow_client: AirNowProvider = (
+            airnow_client
+            if airnow_client is not None
+            else AirNowClient(
+                airnow_api_key,
+                user_agent=user_agent,
+                timeout=timeout,
+            )
+        )
+
+    def set_airnow_api_key(self, api_key: object) -> None:
+        """Replace the AirNow client so a changed secure key takes effect immediately."""
+        self.airnow_client = AirNowClient(
+            api_key,
+            user_agent=self.user_agent,
+            timeout=self.timeout,
+        )
 
     @async_retry_with_backoff(max_attempts=3, base_delay=1.0, timeout=15.0)
     async def fetch_hourly_air_quality(
@@ -209,6 +242,7 @@ class EnvironmentalDataClient:
         include_hourly_air_quality: bool = True,
         include_hourly_uv: bool = True,
         hourly_hours: int = 48,
+        prefer_airnow: bool = False,
     ) -> EnvironmentalConditions | None:
         if (
             not include_air_quality
@@ -227,16 +261,27 @@ class EnvironmentalDataClient:
 
         environmental = EnvironmentalConditions()
 
-        async with httpx.AsyncClient(timeout=self.timeout, headers=headers) as client:
-            if include_air_quality:
-                await self._populate_air_quality(client, params, environmental)
-            if include_pollen:
-                await self._populate_pollen(client, params, environmental)
+        airnow_supplied_current = False
+        if include_air_quality and prefer_airnow:
+            airnow_supplied_current = await self._populate_airnow_air_quality(
+                location, environmental
+            )
+
+        needs_openmeteo_client = include_pollen or (
+            include_air_quality and not airnow_supplied_current
+        )
+        if needs_openmeteo_client:
+            async with httpx.AsyncClient(timeout=self.timeout, headers=headers) as client:
+                if include_air_quality and not airnow_supplied_current:
+                    await self._populate_air_quality(client, params, environmental)
+                if include_pollen:
+                    await self._populate_pollen(client, params, environmental)
 
         # Fetch hourly air quality separately if requested
         if include_hourly_air_quality:
             hourly_data = await self.fetch_hourly_air_quality(location, hours=hourly_hours)
             if hourly_data:
+                self._append_source(environmental, "Open-Meteo Air Quality")
                 environmental.hourly_air_quality = [
                     HourlyAirQuality(
                         timestamp=entry["timestamp"],
@@ -262,6 +307,31 @@ class EnvironmentalDataClient:
         if environmental.has_data():
             return environmental
         return None
+
+    async def _populate_airnow_air_quality(
+        self,
+        location: Location,
+        environmental: EnvironmentalConditions,
+    ) -> bool:
+        """Populate current AQI from AirNow, returning whether it supplied usable data."""
+        try:
+            observation = await self.airnow_client.fetch_current_air_quality(location)
+        except Exception as exc:  # noqa: BLE001 - invalid input/provider failure falls back
+            logger.debug("AirNow current AQI unavailable (%s)", type(exc).__name__)
+            return False
+        if observation is None:
+            return False
+
+        environmental.air_quality_index = observation.aqi
+        environmental.air_quality_category = observation.category
+        environmental.air_quality_pollutant = observation.pollutant
+        environmental.air_quality_updated_at = observation.observed_at
+        environmental.air_quality_reporting_area = observation.reporting_area
+        environmental.air_quality_source = "EPA AirNow and participating agencies"
+        if observation.observed_at is not None:
+            environmental.updated_at = observation.observed_at
+        self._append_source(environmental, "EPA AirNow and participating agencies")
+        return True
 
     async def _populate_air_quality(
         self,
@@ -299,10 +369,11 @@ class EnvironmentalDataClient:
 
         environmental.air_quality_index = index
         environmental.air_quality_category = self._air_quality_category(index)
-        environmental.updated_at = (
-            self._parse_local_aware(times[current], offset) or environmental.updated_at
-        )
-        environmental.sources.append("Open-Meteo Air Quality")
+        timestamp = self._parse_local_aware(times[current], offset)
+        environmental.air_quality_updated_at = timestamp
+        environmental.air_quality_source = "Open-Meteo Air Quality"
+        environmental.updated_at = timestamp or environmental.updated_at
+        self._append_source(environmental, "Open-Meteo Air Quality")
 
         pollutant_candidates = {
             "pm2_5": hourly.get("us_aqi_pm2_5"),
@@ -543,3 +614,8 @@ class EnvironmentalDataClient:
             return float(value)
         except (TypeError, ValueError):
             return None
+
+    @staticmethod
+    def _append_source(environmental: EnvironmentalConditions, source: str) -> None:
+        if source not in environmental.sources:
+            environmental.sources.append(source)

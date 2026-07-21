@@ -53,6 +53,12 @@ class SettingsDialogHandlersMixin:
 
         base_module.webbrowser.open("https://pirate-weather.apiable.io/signup")
 
+    def _on_get_airnow_api_key(self, event):
+        """Open the AirNow API account request page."""
+        from . import settings_dialog as base_module
+
+        base_module.webbrowser.open("https://docs.airnowapi.org/account/request/")
+
     def _on_validate_pw_api_key(self, event):
         """Validate Pirate Weather API key."""
         key = self._controls["pw_key"].GetValue()

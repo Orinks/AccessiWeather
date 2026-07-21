@@ -65,6 +65,7 @@ class WeatherClient(
         avwx_api_key: str = "",
         settings: AppSettings | None = None,
         *,
+        airnow_api_key: object = "",
         environmental_client: EnvironmentalDataClient | None = None,
         offline_cache: WeatherDataCache | None = None,
     ):
@@ -100,11 +101,17 @@ class WeatherClient(
         # LazySecureStorage; resolved to str on first access via avwx_api_key property).
         self._avwx_api_key = avwx_api_key
 
+        # AirNow API key for current U.S. AQI observations. It may be backed by
+        # LazySecureStorage and is therefore passed through without eager access.
+        self._airnow_api_key = airnow_api_key
+
         # Secondary data providers
         self.environmental_client = environmental_client
         if (self.air_quality_enabled or self.pollen_enabled) and self.environmental_client is None:
             self.environmental_client = EnvironmentalDataClient(
-                user_agent=user_agent, timeout=self.timeout
+                user_agent=user_agent,
+                timeout=self.timeout,
+                airnow_api_key=airnow_api_key,
             )
 
         # Reusable HTTP client for performance
@@ -148,6 +155,14 @@ class WeatherClient(
         if key is None or key == "":
             return ""
         return str(key)
+
+    @property
+    def airnow_api_key(self) -> str:
+        """Get the AirNow API key, resolving lazy secure storage if needed."""
+        key = self._airnow_api_key
+        if key is None or key == "":
+            return ""
+        return str(key).strip()
 
     def _location_key(self, location: Location) -> str:
         """Generate a unique key for a location to track in-flight requests."""

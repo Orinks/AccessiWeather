@@ -211,6 +211,7 @@ class SettingsDialogCoreMixin:
             # only drop it if the user explicitly cleared the field.
             for key, orig_attr, cleared_attr in (
                 ("pirate_weather_api_key", "_original_pw_key", "_pw_key_cleared"),
+                ("airnow_api_key", "_original_airnow_key", "_airnow_key_cleared"),
                 ("openrouter_api_key", "_original_openrouter_key", "_openrouter_key_cleared"),
             ):
                 if not settings_dict.get(key) and getattr(self, orig_attr, ""):

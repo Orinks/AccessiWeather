@@ -59,12 +59,15 @@ class _FakeDialog:
         self._controls = {
             "data_source": _FakeChoice(),
             "pw_key": _FakeTextCtrl(),
+            "airnow_key": _FakeTextCtrl(),
             "source_settings_summary": _FakeTextCtrl(),
             "configure_source_settings": _FakeChoice(),
         }
         self._source_settings_states = DataSourcesTab._build_default_source_settings_states()
         self._original_pw_key = ""
         self._pw_key_cleared = False
+        self._original_airnow_key = ""
+        self._airnow_key_cleared = False
         self.api_visibility_updates = 0
 
     def _update_api_key_visibility(self) -> None:
