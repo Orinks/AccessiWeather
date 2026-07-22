@@ -87,6 +87,61 @@ async def test_fetch_uses_current_ziplatlong_endpoint_and_selects_highest_aqi():
 
 
 @pytest.mark.asyncio
+async def test_fetch_parses_live_camelcase_nowcast_schema():
+    # Captured from the live API on 2026-07-22: camelCase fields, nowcastAQI,
+    # and "HH:MM" hourObserved instead of the documented PascalCase schema.
+    payload = [
+        {
+            "dateObserved": "2026-07-22",
+            "hourObserved": "09:00",
+            "localTimeZone": "EDT",
+            "reportingAreaName": "Riverline",
+            "siteName": "TOR",
+            "parameterName": "PM2.5",
+            "nowcastAQI": 28,
+            "aqiCategoryName": "Good",
+            "reportingAgency": "Philadelphia Air Management Services",
+        },
+        {
+            "dateObserved": "2026-07-22",
+            "hourObserved": "09:00",
+            "localTimeZone": "EDT",
+            "reportingAreaName": "Riverline",
+            "siteName": "Bristol",
+            "parameterName": "OZONE",
+            "nowcastAQI": 28,
+            "aqiCategoryName": "Good",
+        },
+        {
+            "dateObserved": "2026-07-22",
+            "hourObserved": "09:00",
+            "localTimeZone": "EDT",
+            "reportingAreaName": "Riverline",
+            "siteName": "NEW",
+            "parameterName": "PM10",
+            "nowcastAQI": 12,
+            "aqiCategoryName": "Good",
+        },
+    ]
+
+    with patch(
+        "accessiweather.services.airnow_client.httpx.AsyncClient",
+        return_value=_async_client(payload),
+    ):
+        result = await AirNowClient("key").fetch_current_air_quality(_location())
+
+    assert result is not None
+    assert result.aqi == 28
+    assert result.category == "Good"
+    # Ties keep the first (primary) pollutant, matching AirNow.gov's display.
+    assert result.pollutant == "PM2.5"
+    assert result.reporting_area == "Riverline"
+    assert result.observed_at is not None
+    assert result.observed_at.hour == 9
+    assert result.observed_at.utcoffset() == timedelta(hours=-4)
+
+
+@pytest.mark.asyncio
 async def test_invalid_records_are_ignored_and_category_can_be_derived():
     payload = [
         {"ParameterName": "O3", "AQI": -1},

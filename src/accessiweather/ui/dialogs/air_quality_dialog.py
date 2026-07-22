@@ -31,6 +31,7 @@ _POLLUTANT_LABELS = {
     "PM2_5": "PM2.5 (Fine Particles)",
     "PM10": "PM10 (Coarse Particles)",
     "O3": "Ozone",
+    "OZONE": "Ozone",
     "NO2": "Nitrogen Dioxide",
     "SO2": "Sulfur Dioxide",
     "CO": "Carbon Monoxide",
