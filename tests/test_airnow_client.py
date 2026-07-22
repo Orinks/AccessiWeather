@@ -219,3 +219,97 @@ async def test_missing_key_skips_request():
 
     assert result is None
     async_client.assert_not_called()
+
+
+def _validation_client(status_code=200, payload=None, *, error: Exception | None = None):
+    response = SimpleNamespace(status_code=status_code, json=lambda: payload)
+    client = AsyncMock()
+    client.get = AsyncMock(return_value=response, side_effect=error)
+    client.__aenter__ = AsyncMock(return_value=client)
+    client.__aexit__ = AsyncMock(return_value=None)
+    return client
+
+
+@pytest.mark.asyncio
+async def test_validate_api_key_accepts_successful_list_response():
+    http_client = _validation_client(payload=[])
+    client = AirNowClient("  secret-key  ")
+
+    with patch(
+        "accessiweather.services.airnow_client.httpx.AsyncClient",
+        return_value=http_client,
+    ):
+        valid, error = await client.validate_api_key()
+
+    assert valid is True
+    assert error is None
+    params = http_client.get.await_args.kwargs["params"]
+    assert params["API_KEY"] == "secret-key"
+    assert (params["latitude"], params["longitude"]) == AirNowClient.VALIDATION_COORDINATES
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status_code", [401, 403])
+async def test_validate_api_key_reports_invalid_key(status_code):
+    with patch(
+        "accessiweather.services.airnow_client.httpx.AsyncClient",
+        return_value=_validation_client(status_code=status_code),
+    ):
+        valid, error = await AirNowClient("bad-key").validate_api_key()
+
+    assert valid is False
+    assert error == "Invalid API key"
+
+
+@pytest.mark.asyncio
+async def test_validate_api_key_reports_rate_limit_as_probably_valid():
+    with patch(
+        "accessiweather.services.airnow_client.httpx.AsyncClient",
+        return_value=_validation_client(status_code=429),
+    ):
+        valid, error = await AirNowClient("key").validate_api_key()
+
+    assert valid is False
+    assert "key appears valid" in error
+
+
+@pytest.mark.asyncio
+async def test_validate_api_key_treats_error_body_with_ok_status_as_invalid():
+    payload = {"WebServiceError": [{"Message": "Invalid API key"}]}
+    with patch(
+        "accessiweather.services.airnow_client.httpx.AsyncClient",
+        return_value=_validation_client(payload=payload),
+    ):
+        valid, error = await AirNowClient("bad-key").validate_api_key()
+
+    assert valid is False
+    assert error == "Invalid API key"
+
+
+@pytest.mark.asyncio
+async def test_validate_api_key_network_error_does_not_leak_key():
+    request = httpx.Request(
+        "GET",
+        "https://www.airnowapi.org/aq/observation/current/ziplatlong/?API_KEY=secret-key",
+    )
+    error = httpx.ConnectTimeout("timed out at secret-key", request=request)
+
+    with patch(
+        "accessiweather.services.airnow_client.httpx.AsyncClient",
+        return_value=_validation_client(error=error),
+    ):
+        valid, message = await AirNowClient("secret-key").validate_api_key()
+
+    assert valid is False
+    assert "secret-key" not in message
+    assert "ConnectTimeout" in message
+
+
+@pytest.mark.asyncio
+async def test_validate_api_key_requires_key():
+    with patch("accessiweather.services.airnow_client.httpx.AsyncClient") as async_client:
+        valid, error = await AirNowClient("").validate_api_key()
+
+    assert valid is False
+    assert error == "No API key provided"
+    async_client.assert_not_called()

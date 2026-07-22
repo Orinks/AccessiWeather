@@ -35,6 +35,8 @@ class AirNowClient:
 
     ENDPOINT = "https://www.airnowapi.org/aq/observation/current/ziplatlong/"
     DEFAULT_CACHE_TTL_SECONDS = 60 * 60
+    # Washington, DC: reliably inside AirNow coverage for key validation.
+    VALIDATION_COORDINATES = (38.8977, -77.0365)
 
     _TIMEZONE_OFFSETS = {
         "UTC": 0,
@@ -123,6 +125,50 @@ class AirNowClient:
             # provider result. Cache it so routine refreshes do not retry hourly.
             self._cache.set(cache_key, _NO_OBSERVATION)
         return observation
+
+    async def validate_api_key(self) -> tuple[bool, str | None]:
+        """
+        Check the configured API key against the live AirNow API.
+
+        Returns ``(True, None)`` for a working key, otherwise ``(False, reason)``.
+        The reason never includes the request URL, which carries the key.
+        """
+        api_key = self.api_key
+        if not api_key:
+            return False, "No API key provided"
+
+        latitude, longitude = self.VALIDATION_COORDINATES
+        params = {
+            "format": "application/json",
+            "latitude": latitude,
+            "longitude": longitude,
+            "distance": self.distance,
+            "API_KEY": api_key,
+        }
+        headers = {"User-Agent": self.user_agent}
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout, headers=headers) as client:
+                response = await client.get(self.ENDPOINT, params=params)
+        except Exception as exc:  # noqa: BLE001 - reason must not leak the keyed URL
+            return False, f"Could not reach AirNow ({type(exc).__name__})"
+
+        if response.status_code in (401, 403):
+            return False, "Invalid API key"
+        if response.status_code == 429:
+            return False, "Rate limit exceeded — but key appears valid"
+        if response.status_code >= 400:
+            return False, f"AirNow returned HTTP {response.status_code}"
+
+        try:
+            payload = response.json()
+        except ValueError:
+            return False, "Unexpected response from AirNow"
+        if isinstance(payload, list):
+            return True, None
+        if isinstance(payload, dict) and "WebServiceError" in payload:
+            # Some AirNow errors come back as HTTP 200 with an error body.
+            return False, "Invalid API key"
+        return False, "Unexpected response from AirNow"
 
     def clear_cache(self) -> None:
         """Clear cached observations, primarily when runtime settings change."""
