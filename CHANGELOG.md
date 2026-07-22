@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - You can now check your AirNow API key right in Settings: a new "Validate AirNow key" button on the Data Sources tab tests the key against AirNow and tells you immediately whether it works, just like the Pirate Weather key validator.
 
 ### Fixed
+- AirNow air quality now works for US locations saved before country detection existed. Older saved locations were silently skipped by AirNow and kept showing model-based Open-Meteo estimates — which could disagree noticeably with the official AirNow reading — even with a valid AirNow key configured.
 - Weather Assistant queries that need live weather tools now let OpenRouter's free endpoint choose an available compatible model instead of failing when a hardcoded free model is retired.
 
 ## [0.9.0] - 2026-07-21

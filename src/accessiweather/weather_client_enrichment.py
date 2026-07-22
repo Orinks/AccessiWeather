@@ -216,12 +216,9 @@ async def populate_environmental_metrics(
     if not (client.air_quality_enabled or client.pollen_enabled):
         return
 
-    country_code = getattr(location, "country_code", None)
-    use_airnow = (
-        client.air_quality_enabled
-        and isinstance(country_code, str)
-        and country_code.strip().upper() == "US"
-    )
+    # Same classifier as the NWS surfaces: authoritative country_code when set,
+    # conservative coordinate fallback for legacy locations that predate it.
+    use_airnow = client.air_quality_enabled and client._is_us_location(location)
 
     try:
         environmental = await client.environmental_client.fetch(
