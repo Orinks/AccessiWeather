@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=AccessiWeather
+Comment=Accessible weather application with screen reader support
+Exec=AccessiWeather
+Icon=accessiweather
+Categories=Utility;
+Terminal=false
