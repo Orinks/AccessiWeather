@@ -221,6 +221,7 @@ def test_data_sources_tab_provider_groups_avoid_static_box_sizers(monkeypatch):
         _on_get_pw_api_key=MagicMock(),
         _on_get_airnow_api_key=MagicMock(),
         _on_validate_pw_api_key=MagicMock(),
+        _on_validate_airnow_api_key=MagicMock(),
     )
 
     tab = DataSourcesTab(dialog)
@@ -231,6 +232,7 @@ def test_data_sources_tab_provider_groups_avoid_static_box_sizers(monkeypatch):
     assert dialog.create_section.call_count >= 3
     assert dialog._controls["airnow_key"].name == "AirNow API key"
     assert dialog._controls["get_airnow_key"].kwargs["label"] == "Get AirNow key"
+    assert dialog._controls["validate_airnow_key"].kwargs["label"] == "Validate AirNow key"
     assert any(
         call.args[2]
         == (

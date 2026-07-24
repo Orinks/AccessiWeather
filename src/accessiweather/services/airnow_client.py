@@ -35,6 +35,8 @@ class AirNowClient:
 
     ENDPOINT = "https://www.airnowapi.org/aq/observation/current/ziplatlong/"
     DEFAULT_CACHE_TTL_SECONDS = 60 * 60
+    # Washington, DC: reliably inside AirNow coverage for key validation.
+    VALIDATION_COORDINATES = (38.8977, -77.0365)
 
     _TIMEZONE_OFFSETS = {
         "UTC": 0,
@@ -124,6 +126,50 @@ class AirNowClient:
             self._cache.set(cache_key, _NO_OBSERVATION)
         return observation
 
+    async def validate_api_key(self) -> tuple[bool, str | None]:
+        """
+        Check the configured API key against the live AirNow API.
+
+        Returns ``(True, None)`` for a working key, otherwise ``(False, reason)``.
+        The reason never includes the request URL, which carries the key.
+        """
+        api_key = self.api_key
+        if not api_key:
+            return False, "No API key provided"
+
+        latitude, longitude = self.VALIDATION_COORDINATES
+        params = {
+            "format": "application/json",
+            "latitude": latitude,
+            "longitude": longitude,
+            "distance": self.distance,
+            "API_KEY": api_key,
+        }
+        headers = {"User-Agent": self.user_agent}
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout, headers=headers) as client:
+                response = await client.get(self.ENDPOINT, params=params)
+        except Exception as exc:  # noqa: BLE001 - reason must not leak the keyed URL
+            return False, f"Could not reach AirNow ({type(exc).__name__})"
+
+        if response.status_code in (401, 403):
+            return False, "Invalid API key"
+        if response.status_code == 429:
+            return False, "Rate limit exceeded — but key appears valid"
+        if response.status_code >= 400:
+            return False, f"AirNow returned HTTP {response.status_code}"
+
+        try:
+            payload = response.json()
+        except ValueError:
+            return False, "Unexpected response from AirNow"
+        if isinstance(payload, list):
+            return True, None
+        if isinstance(payload, dict) and "WebServiceError" in payload:
+            # Some AirNow errors come back as HTTP 200 with an error body.
+            return False, "Invalid API key"
+        return False, "Unexpected response from AirNow"
+
     def clear_cache(self) -> None:
         """Clear cached observations, primarily when runtime settings change."""
         self._cache.clear()
@@ -152,6 +198,20 @@ class AirNowClient:
     def _cache_key(self, latitude: float, longitude: float) -> str:
         return f"{latitude:.4f},{longitude:.4f},{self.distance}"
 
+    @staticmethod
+    def _field(item: dict[str, Any], *names: str) -> Any:
+        """
+        Return the first present field among documented and live API spellings.
+
+        The documented AirNow schema uses PascalCase (``AQI``, ``ReportingArea``);
+        the live API now returns camelCase with renamed fields (``nowcastAQI``,
+        ``reportingAreaName``). Both must parse.
+        """
+        for name in names:
+            if name in item:
+                return item[name]
+        return None
+
     def _parse_observations(self, payload: Any) -> AirNowObservation | None:
         if not isinstance(payload, list):
             return None
@@ -161,7 +221,7 @@ class AirNowClient:
         for item in payload:
             if not isinstance(item, dict):
                 continue
-            aqi = self._coerce_aqi(item.get("AQI"))
+            aqi = self._coerce_aqi(self._field(item, "AQI", "nowcastAQI"))
             if aqi is None or aqi <= selected_aqi:
                 continue
             selected = item
@@ -170,9 +230,9 @@ class AirNowClient:
         if selected is None:
             return None
 
-        category = self._category_name(selected.get("Category"))
-        pollutant = selected.get("ParameterName")
-        reporting_area = selected.get("ReportingArea")
+        category = self._category_name(self._field(selected, "Category", "aqiCategoryName"))
+        pollutant = self._field(selected, "ParameterName", "parameterName")
+        reporting_area = self._field(selected, "ReportingArea", "reportingAreaName")
         return AirNowObservation(
             aqi=selected_aqi,
             category=category or self._air_quality_category(selected_aqi),
@@ -200,6 +260,19 @@ class AirNowClient:
         return int(round(numeric))
 
     @staticmethod
+    def _coerce_hour(value: Any) -> int | None:
+        """Accept the documented integer hour or the live API's ``"HH:MM"`` string."""
+        if value is None or isinstance(value, bool):
+            return None
+        if isinstance(value, str):
+            value = value.strip().split(":", 1)[0]
+        try:
+            hour = int(value)
+        except (TypeError, ValueError):
+            return None
+        return hour if 0 <= hour <= 23 else None
+
+    @staticmethod
     def _category_name(value: Any) -> str | None:
         if isinstance(value, dict):
             value = value.get("Name")
@@ -208,9 +281,9 @@ class AirNowClient:
         return None
 
     def _parse_observed_at(self, item: dict[str, Any]) -> datetime | None:
-        date_value = item.get("DateObserved")
-        hour_value = item.get("HourObserved")
-        if not isinstance(date_value, str) or hour_value is None or isinstance(hour_value, bool):
+        date_value = self._field(item, "DateObserved", "dateObserved")
+        hour_value = self._field(item, "HourObserved", "hourObserved")
+        if not isinstance(date_value, str):
             return None
 
         parsed_date = None
@@ -223,14 +296,11 @@ class AirNowClient:
         if parsed_date is None:
             return None
 
-        try:
-            hour = int(hour_value)
-        except (TypeError, ValueError):
-            return None
-        if not 0 <= hour <= 23:
+        hour = self._coerce_hour(hour_value)
+        if hour is None:
             return None
 
-        tzinfo = self._parse_timezone(item.get("LocalTimeZone"))
+        tzinfo = self._parse_timezone(self._field(item, "LocalTimeZone", "localTimeZone"))
         return datetime(
             parsed_date.year,
             parsed_date.month,

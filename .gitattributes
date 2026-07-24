@@ -26,3 +26,7 @@ src/accessiweather/location_manager.py merge=ours
 # Allow Git to detect text files normally so diffs are generated and tools that
 # rely on textual patches (including PR automation) function correctly.
 * text=auto
+
+# AppImage launcher runs on Linux; a CRLF checkout would break its shebang.
+installer/appimage/AppRun text eol=lf
+installer/appimage/*.desktop text eol=lf

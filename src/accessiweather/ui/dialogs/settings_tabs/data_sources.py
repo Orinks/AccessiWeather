@@ -217,10 +217,15 @@ class DataSourcesTab:
             lambda parent: wx.TextCtrl(parent, style=wx.TE_PASSWORD, size=(280, -1)),
             expand_control=True,
         )
+        airnow_button_row = wx.BoxSizer(wx.HORIZONTAL)
         controls["get_airnow_key"] = wx.Button(panel, label="Get AirNow key")
         controls["get_airnow_key"].Bind(wx.EVT_BUTTON, self.dialog._on_get_airnow_api_key)
+        airnow_button_row.Add(controls["get_airnow_key"], 0, wx.RIGHT, 10)
+        controls["validate_airnow_key"] = wx.Button(panel, label="Validate AirNow key")
+        controls["validate_airnow_key"].Bind(wx.EVT_BUTTON, self.dialog._on_validate_airnow_api_key)
+        airnow_button_row.Add(controls["validate_airnow_key"], 0)
         airnow_config_sizer.Add(
-            controls["get_airnow_key"],
+            airnow_button_row,
             0,
             wx.LEFT | wx.RIGHT | wx.BOTTOM,
             10,
@@ -344,6 +349,7 @@ class DataSourcesTab:
             "pw_key": "Pirate Weather API key",
             "airnow_key": "AirNow API key",
             "get_airnow_key": "Get AirNow key",
+            "validate_airnow_key": "Validate AirNow key",
             "source_settings_summary": "Automatic mode source summary",
             "configure_source_settings": "Configure automatic mode budget and sources",
         }

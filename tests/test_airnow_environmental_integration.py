@@ -27,8 +27,9 @@ def _location(*, country_code: str | None = "US") -> Location:
     elif country_code == "MX":
         name, latitude, longitude = "Tijuana", 32.5149, -117.0382
     else:
-        # Missing/blank codes deliberately use U.S. coordinates to prove that
-        # coordinates alone cannot opt a location into AirNow.
+        # Missing/blank codes use U.S. coordinates: legacy locations saved
+        # before country detection still opt into AirNow via the coordinate
+        # fallback in is_us_location().
         name, latitude, longitude = "Philadelphia", 39.9526, -75.1652
     return Location(
         name=name,
@@ -156,9 +157,9 @@ async def test_airnow_failure_falls_back_to_openmeteo_current_aqi():
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("country_code", "prefer_airnow"),
-    [("US", True), ("us", True), ("GB", False), ("MX", False), ("", False), (None, False)],
+    [("US", True), ("us", True), ("GB", False), ("MX", False), ("", True), (None, True)],
 )
-async def test_weather_enrichment_requires_confirmed_us_country_code_for_airnow(
+async def test_weather_enrichment_uses_shared_us_classification_for_airnow(
     country_code, prefer_airnow
 ):
     environmental = EnvironmentalConditions(air_quality_index=25)
@@ -174,6 +175,23 @@ async def test_weather_enrichment_requires_confirmed_us_country_code_for_airnow(
     assert weather_data.environmental is environmental
     assert environmental_client.fetch.await_args.kwargs["prefer_airnow"] is prefer_airnow
     assert environmental_client.fetch.await_args.kwargs["include_hourly_air_quality"] is True
+
+
+@pytest.mark.asyncio
+async def test_weather_enrichment_skips_airnow_for_unclassifiable_border_location():
+    # Toronto coordinates without a country_code sit in the eastern Canadian
+    # border strip, where is_us_location() stays conservative — no AirNow.
+    environmental = EnvironmentalConditions(air_quality_index=25)
+    environmental_client = SimpleNamespace(fetch=AsyncMock(return_value=environmental))
+    client = WeatherClient(environmental_client=environmental_client)
+    client.air_quality_enabled = True
+    client.pollen_enabled = False
+    location = Location(name="Toronto", latitude=43.6532, longitude=-79.3832, country_code=None)
+    weather_data = WeatherData(location=location)
+
+    await populate_environmental_metrics(client, weather_data, location)
+
+    assert environmental_client.fetch.await_args.kwargs["prefer_airnow"] is False
 
 
 def test_air_quality_provenance_round_trips_through_weather_cache():

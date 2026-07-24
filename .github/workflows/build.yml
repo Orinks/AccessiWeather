@@ -297,6 +297,46 @@ jobs:
             exit "$status"
           fi
 
+      - name: Package AppImage
+        timeout-minutes: 15
+        run: python installer/build_appimage.py
+
+      - name: Smoke test AppImage on Fedora
+        timeout-minutes: 15
+        run: |
+          cat > fedora-smoke.sh <<'EOF'
+          set -e
+          dnf install -y -q gtk3 libnotify alsa-lib xorg-x11-server-Xvfb dejavu-sans-fonts >/dev/null
+          cd /work
+          appimage=$(find dist -maxdepth 1 -name 'AccessiWeather_Linux_*.AppImage' -print -quit)
+          if [ -z "$appimage" ]; then
+            echo "AppImage was not created."
+            exit 1
+          fi
+          chmod +x "$appimage"
+          export ACCESSIWEATHER_TEST_MODE=1
+          export XDG_DATA_HOME=/tmp/aw-data XDG_CONFIG_HOME=/tmp/aw-config
+          set +e
+          timeout 25s xvfb-run -a "$appimage" --appimage-extract-and-run > fedora-smoke.log 2>&1
+          status=$?
+          set -e
+          cat fedora-smoke.log
+          if grep -E "error while loading shared libraries|cannot open shared object file" fedora-smoke.log; then
+            echo "AppImage is missing a shared library on Fedora."
+            exit 1
+          fi
+          if grep -E "cannot register existing type 'G(Task|AsyncResult|InputStream|Seekable|PollableInputStream)'|GLib-GObject-CRITICAL" fedora-smoke.log; then
+            echo "AppImage hit the GLib/GIO duplicate type-registration crash on Fedora."
+            exit 1
+          fi
+          if [ "$status" -ne 0 ] && [ "$status" -ne 124 ]; then
+            echo "AppImage exited unexpectedly with status $status on Fedora."
+            exit "$status"
+          fi
+          echo "Fedora smoke test passed."
+          EOF
+          docker run --rm -v "$PWD:/work" fedora:43 bash /work/fedora-smoke.sh
+
       - name: Verify Linux tarball avoids bundled OpenSSL
         run: |
           tarball=$(find dist -maxdepth 1 -name 'AccessiWeather_Linux_*.tar.gz' -print -quit)
@@ -326,7 +366,9 @@ jobs:
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: linux
-          path: dist/AccessiWeather_Linux_*.tar.gz
+          path: |
+            dist/AccessiWeather_Linux_*.tar.gz
+            dist/AccessiWeather_Linux_*.AppImage
 
       - uses: actions/cache/save@v5.0.5
         if: always()
@@ -371,6 +413,7 @@ jobs:
                 *Portable*.zip) mv "$f" "assets/AccessiWeather-nightly-${TIMESTAMP}-windows-portable.zip" ;;
                 *macOS*.zip) mv "$f" "assets/AccessiWeather-nightly-${TIMESTAMP}-macOS.zip" ;;
                 *Linux*.tar.gz) mv "$f" "assets/AccessiWeather-nightly-${TIMESTAMP}-linux.tar.gz" ;;
+                *Linux*.AppImage) mv "$f" "assets/AccessiWeather-nightly-${TIMESTAMP}-linux-x86_64.AppImage" ;;
               esac
             else
               case "$name" in
@@ -378,9 +421,10 @@ jobs:
                 *Portable*.zip) mv "$f" "assets/AccessiWeather-${VERSION}-windows-portable.zip" ;;
                 *macOS*.zip) mv "$f" "assets/AccessiWeather-${VERSION}-macOS.zip" ;;
                 *Linux*.tar.gz) mv "$f" "assets/AccessiWeather-${VERSION}-linux.tar.gz" ;;
+                *Linux*.AppImage) mv "$f" "assets/AccessiWeather-${VERSION}-linux-x86_64.AppImage" ;;
               esac
             fi
-          done < <(find dist -type f \( -name '*.exe' -o -name '*.zip' -o -name '*.tar.gz' \))
+          done < <(find dist -type f \( -name '*.exe' -o -name '*.zip' -o -name '*.tar.gz' -o -name '*.AppImage' \))
 
           # Generate checksums
           cd assets && sha256sum * > checksums.txt 2>/dev/null || true

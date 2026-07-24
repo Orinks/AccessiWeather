@@ -59,6 +59,42 @@ class SettingsDialogHandlersMixin:
 
         base_module.webbrowser.open("https://docs.airnowapi.org/account/request/")
 
+    def _on_validate_airnow_api_key(self, event):
+        """Validate AirNow API key."""
+        key = self._controls["airnow_key"].GetValue()
+        if not key:
+            wx.MessageBox("Please enter an API key first.", "Validation", wx.OK | wx.ICON_WARNING)
+            return
+
+        wx.BeginBusyCursor()
+        try:
+            import asyncio
+
+            from ...services.airnow_client import AirNowClient
+
+            client = AirNowClient(api_key=key)
+
+            loop = asyncio.new_event_loop()
+            try:
+                valid, error = loop.run_until_complete(client.validate_api_key())
+            finally:
+                loop.close()
+
+            if valid:
+                wx.MessageBox(
+                    "AirNow API key is valid!",
+                    "Validation Successful",
+                    wx.OK | wx.ICON_INFORMATION,
+                )
+            else:
+                wx.MessageBox(
+                    f"AirNow API key validation failed: {error}",
+                    "Validation Failed",
+                    wx.OK | wx.ICON_ERROR,
+                )
+        finally:
+            wx.EndBusyCursor()
+
     def _on_validate_pw_api_key(self, event):
         """Validate Pirate Weather API key."""
         key = self._controls["pw_key"].GetValue()

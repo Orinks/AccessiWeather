@@ -87,6 +87,61 @@ async def test_fetch_uses_current_ziplatlong_endpoint_and_selects_highest_aqi():
 
 
 @pytest.mark.asyncio
+async def test_fetch_parses_live_camelcase_nowcast_schema():
+    # Captured from the live API on 2026-07-22: camelCase fields, nowcastAQI,
+    # and "HH:MM" hourObserved instead of the documented PascalCase schema.
+    payload = [
+        {
+            "dateObserved": "2026-07-22",
+            "hourObserved": "09:00",
+            "localTimeZone": "EDT",
+            "reportingAreaName": "Riverline",
+            "siteName": "TOR",
+            "parameterName": "PM2.5",
+            "nowcastAQI": 28,
+            "aqiCategoryName": "Good",
+            "reportingAgency": "Philadelphia Air Management Services",
+        },
+        {
+            "dateObserved": "2026-07-22",
+            "hourObserved": "09:00",
+            "localTimeZone": "EDT",
+            "reportingAreaName": "Riverline",
+            "siteName": "Bristol",
+            "parameterName": "OZONE",
+            "nowcastAQI": 28,
+            "aqiCategoryName": "Good",
+        },
+        {
+            "dateObserved": "2026-07-22",
+            "hourObserved": "09:00",
+            "localTimeZone": "EDT",
+            "reportingAreaName": "Riverline",
+            "siteName": "NEW",
+            "parameterName": "PM10",
+            "nowcastAQI": 12,
+            "aqiCategoryName": "Good",
+        },
+    ]
+
+    with patch(
+        "accessiweather.services.airnow_client.httpx.AsyncClient",
+        return_value=_async_client(payload),
+    ):
+        result = await AirNowClient("key").fetch_current_air_quality(_location())
+
+    assert result is not None
+    assert result.aqi == 28
+    assert result.category == "Good"
+    # Ties keep the first (primary) pollutant, matching AirNow.gov's display.
+    assert result.pollutant == "PM2.5"
+    assert result.reporting_area == "Riverline"
+    assert result.observed_at is not None
+    assert result.observed_at.hour == 9
+    assert result.observed_at.utcoffset() == timedelta(hours=-4)
+
+
+@pytest.mark.asyncio
 async def test_invalid_records_are_ignored_and_category_can_be_derived():
     payload = [
         {"ParameterName": "O3", "AQI": -1},
@@ -218,4 +273,98 @@ async def test_missing_key_skips_request():
         result = await AirNowClient(" ").fetch_current_air_quality(_location())
 
     assert result is None
+    async_client.assert_not_called()
+
+
+def _validation_client(status_code=200, payload=None, *, error: Exception | None = None):
+    response = SimpleNamespace(status_code=status_code, json=lambda: payload)
+    client = AsyncMock()
+    client.get = AsyncMock(return_value=response, side_effect=error)
+    client.__aenter__ = AsyncMock(return_value=client)
+    client.__aexit__ = AsyncMock(return_value=None)
+    return client
+
+
+@pytest.mark.asyncio
+async def test_validate_api_key_accepts_successful_list_response():
+    http_client = _validation_client(payload=[])
+    client = AirNowClient("  secret-key  ")
+
+    with patch(
+        "accessiweather.services.airnow_client.httpx.AsyncClient",
+        return_value=http_client,
+    ):
+        valid, error = await client.validate_api_key()
+
+    assert valid is True
+    assert error is None
+    params = http_client.get.await_args.kwargs["params"]
+    assert params["API_KEY"] == "secret-key"
+    assert (params["latitude"], params["longitude"]) == AirNowClient.VALIDATION_COORDINATES
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status_code", [401, 403])
+async def test_validate_api_key_reports_invalid_key(status_code):
+    with patch(
+        "accessiweather.services.airnow_client.httpx.AsyncClient",
+        return_value=_validation_client(status_code=status_code),
+    ):
+        valid, error = await AirNowClient("bad-key").validate_api_key()
+
+    assert valid is False
+    assert error == "Invalid API key"
+
+
+@pytest.mark.asyncio
+async def test_validate_api_key_reports_rate_limit_as_probably_valid():
+    with patch(
+        "accessiweather.services.airnow_client.httpx.AsyncClient",
+        return_value=_validation_client(status_code=429),
+    ):
+        valid, error = await AirNowClient("key").validate_api_key()
+
+    assert valid is False
+    assert "key appears valid" in error
+
+
+@pytest.mark.asyncio
+async def test_validate_api_key_treats_error_body_with_ok_status_as_invalid():
+    payload = {"WebServiceError": [{"Message": "Invalid API key"}]}
+    with patch(
+        "accessiweather.services.airnow_client.httpx.AsyncClient",
+        return_value=_validation_client(payload=payload),
+    ):
+        valid, error = await AirNowClient("bad-key").validate_api_key()
+
+    assert valid is False
+    assert error == "Invalid API key"
+
+
+@pytest.mark.asyncio
+async def test_validate_api_key_network_error_does_not_leak_key():
+    request = httpx.Request(
+        "GET",
+        "https://www.airnowapi.org/aq/observation/current/ziplatlong/?API_KEY=secret-key",
+    )
+    error = httpx.ConnectTimeout("timed out at secret-key", request=request)
+
+    with patch(
+        "accessiweather.services.airnow_client.httpx.AsyncClient",
+        return_value=_validation_client(error=error),
+    ):
+        valid, message = await AirNowClient("secret-key").validate_api_key()
+
+    assert valid is False
+    assert "secret-key" not in message
+    assert "ConnectTimeout" in message
+
+
+@pytest.mark.asyncio
+async def test_validate_api_key_requires_key():
+    with patch("accessiweather.services.airnow_client.httpx.AsyncClient") as async_client:
+        valid, error = await AirNowClient("").validate_api_key()
+
+    assert valid is False
+    assert error == "No API key provided"
     async_client.assert_not_called()

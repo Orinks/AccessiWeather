@@ -1,0 +1,7 @@
+#!/bin/bash
+# AppImage entry point. Bundled libraries live in usr/lib; the Nuitka dist
+# keeps its own layout under opt/accessiweather with rpaths patched by
+# linuxdeploy to reach usr/lib.
+HERE="$(dirname "$(readlink -f "$0")")"
+export LD_LIBRARY_PATH="$HERE/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+exec "$HERE/opt/accessiweather/AccessiWeather" "$@"

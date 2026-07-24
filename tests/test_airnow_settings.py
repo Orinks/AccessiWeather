@@ -90,3 +90,59 @@ def test_get_airnow_key_button_opens_account_request_page(monkeypatch):
     dialog._on_get_airnow_api_key(None)
 
     opened.assert_called_once_with("https://docs.airnowapi.org/account/request/")
+
+
+def _make_validation_dialog(monkeypatch, key: str, messages: list):
+    from accessiweather.ui.dialogs import settings_dialog_handlers as handlers_module
+
+    monkeypatch.setattr(
+        handlers_module.wx,
+        "MessageBox",
+        lambda *args, **kwargs: messages.append(args),
+    )
+    monkeypatch.setattr(handlers_module.wx, "BeginBusyCursor", lambda: None, raising=False)
+    monkeypatch.setattr(handlers_module.wx, "EndBusyCursor", lambda: None, raising=False)
+
+    dialog = settings_module.SettingsDialogSimple.__new__(settings_module.SettingsDialogSimple)
+    dialog._controls = {"airnow_key": SimpleNamespace(GetValue=lambda: key)}
+    return dialog
+
+
+def test_validate_airnow_key_button_reports_valid_key(monkeypatch):
+    from accessiweather.services.airnow_client import AirNowClient
+
+    async def fake_validate(self):
+        return True, None
+
+    monkeypatch.setattr(AirNowClient, "validate_api_key", fake_validate)
+    messages: list = []
+    dialog = _make_validation_dialog(monkeypatch, "FAKE_AIRNOW_KEY_TEST", messages)
+
+    dialog._on_validate_airnow_api_key(None)
+
+    assert messages and messages[0][1] == "Validation Successful"
+
+
+def test_validate_airnow_key_button_reports_invalid_key(monkeypatch):
+    from accessiweather.services.airnow_client import AirNowClient
+
+    async def fake_validate(self):
+        return False, "Invalid API key"
+
+    monkeypatch.setattr(AirNowClient, "validate_api_key", fake_validate)
+    messages: list = []
+    dialog = _make_validation_dialog(monkeypatch, "FAKE_AIRNOW_KEY_TEST", messages)
+
+    dialog._on_validate_airnow_api_key(None)
+
+    assert messages and messages[0][1] == "Validation Failed"
+    assert "Invalid API key" in messages[0][0]
+
+
+def test_validate_airnow_key_button_requires_key_before_request(monkeypatch):
+    messages: list = []
+    dialog = _make_validation_dialog(monkeypatch, "", messages)
+
+    dialog._on_validate_airnow_api_key(None)
+
+    assert messages and messages[0][0] == "Please enter an API key first."

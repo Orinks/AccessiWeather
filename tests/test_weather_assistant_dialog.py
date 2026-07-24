@@ -9,7 +9,7 @@ from accessiweather.ui.dialogs.weather_assistant_dialog import (
     DEFAULT_WEATHER_ASSISTANT_MODEL,
     MAX_CONTEXT_TURNS,
     SYSTEM_PROMPT,
-    TOOL_CAPABLE_MODELS,
+    _build_completion_request,
     _build_weather_context,
     show_weather_assistant_dialog,
 )
@@ -225,9 +225,34 @@ class TestWeatherAssistantModels:
         """Free automatic mode should use OpenRouter's router instead of a stale model."""
         assert DEFAULT_WEATHER_ASSISTANT_MODEL == "openrouter/free"
 
-    def test_tool_fallback_models_do_not_include_removed_mistral_model(self):
-        """Tool fallback chain should not offer models OpenRouter has removed."""
-        assert "mistralai/mistral-small-3.1-24b-instruct:free" not in TOOL_CAPABLE_MODELS
+    def test_free_router_selects_live_tool_capable_model(self):
+        """Tool queries should remain on OpenRouter's live free-model router."""
+        messages = [
+            {
+                "role": "user",
+                "content": "Are there any active weather alerts for Lumberton, NJ right now?",
+            }
+        ]
+
+        model, request_options = _build_completion_request(
+            "openrouter/free",
+            messages,
+            MagicMock(),
+        )
+
+        assert model == "openrouter/free"
+        assert request_options["tools"]
+
+    def test_specific_model_is_preserved_for_tool_queries(self):
+        """A model selected in Settings should remain selected when tools are needed."""
+        model, request_options = _build_completion_request(
+            "openai/gpt-4.1-mini",
+            [{"role": "user", "content": "What alerts are active?"}],
+            MagicMock(),
+        )
+
+        assert model == "openai/gpt-4.1-mini"
+        assert request_options["tools"]
 
 
 class TestShowWeatherChatDialog:

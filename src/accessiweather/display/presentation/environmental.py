@@ -4,14 +4,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from ...models import (
     AppSettings,
     EnvironmentalConditions,
     Location,
 )
-from .environmental_hourly import _format_time, format_hourly_air_quality, format_hourly_uv_index
+from .environmental_hourly import (
+    _format_time as _format_time,
+    format_hourly_air_quality as format_hourly_air_quality,
+    format_hourly_uv_index as format_hourly_uv_index,
+)
 from .formatters import format_display_datetime
+
+if TYPE_CHECKING:
+    from ...models import HourlyAirQuality
 
 _AIR_QUALITY_GUIDANCE: dict[str, str] = {
     "Good": "Air quality is satisfactory; enjoy normal outdoor activities.",
@@ -100,6 +108,7 @@ _POLLUTANT_LABELS: dict[str, str] = {
     "PM2_5": "PM2.5",
     "PM10": "PM10",
     "O3": "Ozone",
+    "OZONE": "Ozone",
     "SO2": "Sulfur Dioxide",
     "NO2": "Nitrogen Dioxide",
     "CO": "Carbon Monoxide",

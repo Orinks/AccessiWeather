@@ -2,22 +2,44 @@
 
 This guide provides detailed instructions for installing and setting up AccessiWeather on your system.
 
-## Prerequisites
+## Installing a Release (Recommended)
+
+Download the latest release from the [releases page](https://github.com/Orinks/AccessiWeather/releases):
+
+- **Windows**: run `AccessiWeather-<version>-windows-setup.exe`, or unzip the portable build.
+- **macOS**: open `AccessiWeather-<version>-macOS.zip` and drag the app to Applications.
+- **Linux (any popular distro — Fedora, Ubuntu, Arch, openSUSE, Mint, etc.)**: download
+  `AccessiWeather-<version>-linux-x86_64.AppImage`, mark it executable, and run it:
+
+  ```bash
+  chmod +x AccessiWeather-*-linux-x86_64.AppImage
+  ./AccessiWeather-*-linux-x86_64.AppImage
+  ```
+
+  No installation is required. If your distro doesn't ship FUSE and the AppImage won't
+  start, run it with `--appimage-extract-and-run`.
+- **Linux (Ubuntu/Debian only)**: alternatively, `AccessiWeather-<version>-linux.tar.gz`
+  unpacks to a folder containing the `AccessiWeather` executable. This build relies on
+  Ubuntu system libraries; on other distros, use the AppImage instead.
+
+## Installing from Source
+
+### Prerequisites
 
 - Python 3.7+ (Python 3.11 recommended)
 - pip (Python package installer)
 - Git (for cloning the repository)
 
-## Installation Steps
+### Installation Steps
 
-### 1. Clone the Repository
+#### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/Orinks/AccessiWeather.git
 cd AccessiWeather
 ```
 
-### 2. Install the Package
+#### 2. Install the Package
 
 Install the package:
 
@@ -27,7 +49,7 @@ pip install -e .
 
 This will install AccessiWeather and all its dependencies.
 
-### 3. First-time Setup
+#### 3. First-time Setup
 
 Run the application once to create the configuration directory:
 
@@ -37,7 +59,7 @@ accessiweather
 
 The application will prompt you to enter your contact information for the NOAA API.
 
-### 4. Manual Configuration (Optional)
+#### 4. Manual Configuration (Optional)
 
 If you prefer to set up the configuration manually:
 

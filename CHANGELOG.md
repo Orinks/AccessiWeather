@@ -5,7 +5,14 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- Linux releases now include an AppImage that runs on Fedora, Ubuntu, Arch, openSUSE, and other popular distros: download it, mark it executable, and run it — no install needed. The old .tar.gz only worked on Ubuntu-family distros because it depended on Ubuntu-specific system libraries, so trying it on Fedora failed at launch with a missing-library error. The AppImage bundles those libraries while still using your desktop's own GTK and screen reader stack, so Orca support works like any native app. (The .tar.gz is still published for Ubuntu/Debian users who prefer it.)
 - US locations can now use official EPA AirNow observations for current air quality when you add your own AirNow API key in Settings. AccessiWeather keeps its existing hourly air-quality forecast and automatically falls back when AirNow is unavailable.
+- You can now check your AirNow API key right in Settings: a new "Validate AirNow key" button on the Data Sources tab tests the key against AirNow and tells you immediately whether it works, just like the Pirate Weather key validator.
+
+### Fixed
+- AirNow observations now actually reach the display. The AirNow API returns a different response format than its documentation describes (renamed camelCase fields like nowcastAQI), so every observation was discarded and AccessiWeather silently kept showing Open-Meteo's model estimate. The parser now accepts both formats, so the AQI, pollutant, and observation time match AirNow.gov.
+- AirNow air quality now works for US locations saved before country detection existed. Older saved locations were silently skipped by AirNow and kept showing model-based Open-Meteo estimates — which could disagree noticeably with the official AirNow reading — even with a valid AirNow key configured.
+- Weather Assistant queries that need live weather tools now let OpenRouter's free endpoint choose an available compatible model instead of failing when a hardcoded free model is retired.
 
 ## [0.9.0] - 2026-07-21
 

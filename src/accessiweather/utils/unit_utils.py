@@ -120,6 +120,10 @@ def format_pressure(
     assert pressure_inhg is not None
     assert pressure_mb is not None
 
+    # The early return and conversions above guarantee both display values.
+    assert pressure_inhg is not None
+    assert pressure_mb is not None
+
     normalized_system = _normalize_unit_system(unit_system)
     if normalized_system == "us":
         return f"{pressure_inhg:.{precision}f} inHg"
