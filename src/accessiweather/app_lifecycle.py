@@ -186,7 +186,7 @@ class AppLifecycleMixin:
         import tempfile
         from pathlib import Path
 
-        from .services.simple_update import UpdateService, apply_update
+        from .services.simple_update import UpdateService, apply_update, can_auto_apply
 
         # Create progress dialog
         parent = self.main_window if self.main_window else None
@@ -226,6 +226,21 @@ class AppLifecycleMixin:
 
                 # Ask for confirmation before applying
                 def confirm_apply():
+                    portable = self._portable_mode
+
+                    # Platforms without a self-update mechanism (e.g. a Linux
+                    # tarball run) get the file location instead of a dead end.
+                    if not can_auto_apply(update_path, portable=portable):
+                        wx.MessageBox(
+                            "The update was downloaded, but this type of "
+                            "install can't update itself automatically.\n\n"
+                            f"The new version was saved to:\n{update_path}\n\n"
+                            "Install it manually, then restart AccessiWeather.",
+                            "Manual Update Required",
+                            wx.OK | wx.ICON_INFORMATION,
+                        )
+                        return
+
                     result = wx.MessageBox(
                         "Download complete. The application will now restart "
                         "to apply the update.\n\n"
@@ -234,7 +249,6 @@ class AppLifecycleMixin:
                         wx.YES_NO | wx.ICON_QUESTION,
                     )
                     if result == wx.YES:
-                        portable = self._portable_mode
                         # Destroy all wx windows so file handles are released before exit
                         for win in wx.GetTopLevelWindows():
                             with contextlib.suppress(Exception):

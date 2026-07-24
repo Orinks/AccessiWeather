@@ -2,10 +2,11 @@
 Platform detection module for AccessiWeather update system.
 
 This module provides functionality to detect the current platform, deployment type,
-and determine appropriate update artifacts for Briefcase-packaged applications.
+and determine appropriate update artifacts for packaged applications.
 """
 
 import logging
+import os
 import platform
 import sys
 from dataclasses import dataclass
@@ -22,7 +23,7 @@ class PlatformInfo:
 
     platform: str  # 'windows', 'macos', 'linux'
     architecture: str  # 'x86_64', 'arm64', etc.
-    deployment_type: str  # 'portable', 'installed'
+    deployment_type: str  # 'portable', 'installed', 'appimage'
     app_directory: Path  # Directory where the app is running from
     is_briefcase_app: bool  # Whether this is a Briefcase-packaged app
     update_capable: bool  # Whether auto-updates are possible
@@ -126,9 +127,16 @@ class PlatformDetector:
 
         Returns:
         -------
-            'portable' or 'installed'
+            'portable', 'installed', or 'appimage'
 
         """
+        # The AppImage runtime exports APPIMAGE with the .AppImage file path.
+        # Detect it before path heuristics: the mounted/extracted payload
+        # lives under paths like /tmp/.mount_*/opt/... that would otherwise
+        # misclassify as an installed deployment.
+        if platform.system().lower() == "linux" and os.environ.get("APPIMAGE"):
+            return "appimage"
+
         app_dir_str = str(app_directory).lower()
 
         # Check for typical installation paths
@@ -218,6 +226,21 @@ class PlatformDetector:
             True if auto-updates are possible
 
         """
+        # AppImages self-update by replacing the .AppImage file, so we only
+        # need write access to the directory holding it.
+        if deployment_type == "appimage":
+            appimage = os.environ.get("APPIMAGE")
+            if not appimage:
+                return False
+            try:
+                test_file = Path(appimage).parent / ".update_test"
+                test_file.touch()
+                test_file.unlink()
+                return True
+            except (PermissionError, OSError):
+                logger.warning("No write permission to AppImage directory, updates not possible")
+                return False
+
         # Portable apps are generally update-capable
         if deployment_type == "portable":
             # Check if we have write permissions to the app directory
@@ -259,8 +282,8 @@ class PlatformDetector:
                 "portable": f"AccessiWeather_Portable_v{version}.zip",
             },
             "linux": {
-                "installer": f"AccessiWeather_v{version}.deb",
-                "portable": f"AccessiWeather_v{version}.AppImage",
+                "installer": f"AccessiWeather-{version}-linux-x86_64.AppImage",
+                "portable": f"AccessiWeather-{version}-linux.tar.gz",
             },
         }
 

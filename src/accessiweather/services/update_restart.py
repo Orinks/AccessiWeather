@@ -101,11 +101,59 @@ def build_portable_update_script(
     ).strip()
 
 
+def build_appimage_update_script(
+    update_path: Path,
+    appimage_path: Path,
+) -> str:
+    """
+    Build a shell script that swaps a running AppImage for its update.
+
+    The script waits for the current process to exit, stages the downloaded
+    AppImage next to the existing one (so the final rename is atomic on the
+    same filesystem), then relaunches. Paths are shell-quoted so spaces or
+    metacharacters in the install location cannot break the script.
+    """
+    q_update = shlex.quote(str(update_path))
+    q_appimage = shlex.quote(str(appimage_path))
+    return textwrap.dedent(
+        f"""
+        #!/bin/bash
+        PID={os.getpid()}
+        UPDATE_PATH={q_update}
+        APPIMAGE_PATH={q_appimage}
+        while kill -0 "$PID" 2>/dev/null; do sleep 1; done
+        STAGED="$APPIMAGE_PATH.update-new"
+        cp "$UPDATE_PATH" "$STAGED" || exit 1
+        chmod +x "$STAGED"
+        mv -f "$STAGED" "$APPIMAGE_PATH" || exit 1
+        rm -f "$UPDATE_PATH"
+        cd "$HOME" || true
+        nohup "$APPIMAGE_PATH" --updated >/dev/null 2>&1 &
+        rm -f "$0"
+        """
+    ).strip()
+
+
+def running_appimage_path(appimage_path: str | None = None) -> Path | None:
+    """
+    Return the path of the AppImage this process is running from, if any.
+
+    The AppImage runtime exports ``APPIMAGE`` with the absolute path of the
+    mounted .AppImage file; when absent we are not an AppImage deployment.
+    """
+    raw = appimage_path or os.environ.get("APPIMAGE")
+    if not raw:
+        return None
+    path = Path(raw)
+    return path if path.is_file() else None
+
+
 def plan_restart(
     update_path: Path,
     *,
     portable: bool,
     platform_system: str | None = None,
+    appimage_path: str | None = None,
 ) -> RestartPlan:
     """Plan how to apply an update and restart."""
     system = (platform_system or platform.system()).lower()
@@ -119,4 +167,12 @@ def plan_restart(
         secure_dir = Path(tempfile.mkdtemp(prefix="accessiweather_update_"))
         script_path = secure_dir / "accessiweather_update.sh"
         return RestartPlan("macos_script", ["bash", str(script_path)], script_path=script_path)
+    if "linux" in system:
+        running_from = running_appimage_path(appimage_path)
+        if running_from and str(update_path).lower().endswith(".appimage"):
+            secure_dir = Path(tempfile.mkdtemp(prefix="accessiweather_update_"))
+            script_path = secure_dir / "accessiweather_appimage_update.sh"
+            return RestartPlan(
+                "appimage_script", ["bash", str(script_path)], script_path=script_path
+            )
     return RestartPlan("unsupported", [str(update_path)])

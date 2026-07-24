@@ -26,9 +26,11 @@ from .update_integrity import (
 )
 from .update_restart import (
     RestartPlan as RestartPlan,
+    build_appimage_update_script,
     build_macos_update_script,
     build_portable_update_script,
     plan_restart,
+    running_appimage_path,
 )
 from .update_service.settings import DEFAULT_OWNER, DEFAULT_REPO
 
@@ -234,17 +236,35 @@ def select_asset(
     return filtered[0] if filtered else (assets[0] if assets else None)
 
 
+def can_auto_apply(
+    update_path: Path,
+    *,
+    portable: bool,
+    platform_system: str | None = None,
+) -> bool:
+    """
+    Check whether apply_update() can install this update automatically.
+
+    Callers should check this before tearing down UI: when it returns False
+    the update file must be installed manually (e.g. a Linux tarball run,
+    where there is no self-update mechanism).
+    """
+    plan = plan_restart(update_path, portable=portable, platform_system=platform_system)
+    return plan.kind != "unsupported"
+
+
 def apply_update(
     update_path: Path,
     *,
     portable: bool,
     platform_system: str | None = None,
-) -> None:
+) -> bool:
     """
     Apply update and restart the application.
 
     This function does not return on success - it exits after launching
-    the update process.
+    the update process. It returns False when the platform has no
+    auto-apply mechanism and the update requires manual installation.
 
     Args:
         update_path: Path to downloaded update file.
@@ -280,7 +300,17 @@ def apply_update(
         subprocess.Popen(plan.command, shell=False)
         os._exit(0)
 
+    if plan.kind == "appimage_script" and plan.script_path:
+        appimage_path = running_appimage_path()
+        if appimage_path is not None:
+            script_content = build_appimage_update_script(update_path, appimage_path)
+            plan.script_path.write_text(script_content, encoding="utf-8")
+            plan.script_path.chmod(0o700)
+            subprocess.Popen(["bash", str(plan.script_path)])
+            os._exit(0)
+
     logger.warning("Update requires manual installation: %s", update_path)
+    return False
 
 
 class UpdateService:
