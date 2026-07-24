@@ -103,7 +103,7 @@ jobs:
           ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
           fetch-depth: 0
 
-      - uses: actions/setup-python@v6.2.0
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -166,7 +166,7 @@ jobs:
           ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
           fetch-depth: 0
 
-      - uses: actions/setup-python@v6.2.0
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -227,7 +227,7 @@ jobs:
           ref: ${{ github.event_name == 'schedule' && 'dev' || github.ref }}
           fetch-depth: 0
 
-      - uses: actions/setup-python@v6.2.0
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
