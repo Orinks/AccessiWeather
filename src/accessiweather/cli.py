@@ -69,7 +69,7 @@ def main() -> int:
     """
     args = parse_args()
 
-    setup_logging(debug=args.debug)
+    setup_logging(debug=args.debug, config_dir=args.config, portable_mode=args.portable)
 
     try:
         # Pass arguments to main application entry point

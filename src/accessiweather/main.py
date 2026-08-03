@@ -9,14 +9,43 @@ import sys
 from .notification_activation import extract_activation_request_from_argv
 
 
-def setup_logging(debug: bool = False) -> None:
-    """Set up logging configuration."""
+def setup_logging(
+    debug: bool = False,
+    config_dir: str | None = None,
+    portable_mode: bool = False,
+) -> None:
+    """
+    Set up console and rotating file logging.
+
+    Packaged builds have no console, so file logging is on by default: without
+    it there is no record of what the app did.  Logs go to ``logs/`` under the
+    same config root the app itself uses, which keeps a portable copy's logs
+    beside the portable config instead of in the user profile.
+    """
     level = logging.DEBUG if debug else logging.INFO
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=[logging.StreamHandler(sys.stdout)],
-    )
+
+    # Mirror the app's own portable resolution so logs and config agree.
+    if not portable_mode and config_dir is None:
+        try:
+            from .paths import detect_portable_mode
+
+            portable_mode = detect_portable_mode()
+        except Exception:
+            portable_mode = False
+
+    try:
+        from .logging_config import setup_logging as setup_file_logging
+
+        setup_file_logging(level, config_dir=config_dir, portable_mode=portable_mode)
+        return
+    except Exception:
+        # A read-only or missing log directory must never stop the app starting.
+        logging.basicConfig(
+            level=level,
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            handlers=[logging.StreamHandler(sys.stdout)],
+        )
+        logging.getLogger(__name__).warning("File logging unavailable; console only", exc_info=True)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -82,7 +111,7 @@ def main() -> None:
     """Run the AccessiWeather application."""
     args = parse_args()
 
-    setup_logging(debug=args.debug)
+    setup_logging(debug=args.debug, config_dir=args.config_dir, portable_mode=args.portable)
 
     from .app import main as app_main
 
