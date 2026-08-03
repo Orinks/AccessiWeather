@@ -385,17 +385,40 @@ class TestAltF4AcceleratorClosePath:
         frame.Close.assert_called_once_with()
         app.request_exit.assert_not_called()
 
+    def test_app_accelerator_table_registers_issue_683_shortcuts(self):
+        fake_wx = _FakeWxForAccelerators()
+        frame = _AcceleratorFrame()
+        app = AppShortcutsMixin()
+        app.main_window = frame
+        app.request_exit = MagicMock()
+
+        with (
+            patch("accessiweather.app_shortcuts.wx", fake_wx),
+            patch("accessiweather.native_shortcuts.wx", fake_wx),
+        ):
+            app._setup_accelerators()
+
+        combos = {(entry.flags, entry.key) for entry in frame.accelerator_table}
+        assert (fake_wx.ACCEL_CTRL | fake_wx.ACCEL_SHIFT, ord("L")) in combos
+        assert (fake_wx.ACCEL_CTRL | fake_wx.ACCEL_SHIFT, ord("W")) in combos
+        assert (fake_wx.ACCEL_CTRL | fake_wx.ACCEL_SHIFT, ord("H")) in combos
+        assert (fake_wx.ACCEL_CTRL | fake_wx.ACCEL_SHIFT, ord("I")) in combos
+
     def test_main_window_accelerator_table_keeps_alt_f4_after_title_change(self):
         fake_wx = _FakeWxForAccelerators()
         window = _AcceleratorFrame()
         window._settings_id = 1
         window._exit_id = 2
         window._add_location_id = 3
-        window._remove_location_id = 4
-        window._explain_id = 5
-        window._history_id = 6
-        window._noaa_radio_id = 7
-        window._weather_chat_id = 8
+        window._edit_location_id = 4
+        window._remove_location_id = 5
+        window._explain_id = 6
+        window._history_id = 7
+        window._show_window_id = 8
+        window._hide_window_id = 9
+        window._read_tray_info_id = 10
+        window._noaa_radio_id = 11
+        window._weather_chat_id = 12
         window._on_escape_pressed = MagicMock()
 
         with (
@@ -414,3 +437,52 @@ class TestAltF4AcceleratorClosePath:
 
         window.SetTitle.assert_called_once_with("AccessiWeather \u2014 Boston")
         window.Close.assert_called_once_with()
+
+    def test_main_window_accelerator_table_re_registers_issue_683_shortcuts(self):
+        fake_wx = _FakeWxForAccelerators()
+        window = _AcceleratorFrame()
+        window._settings_id = 1
+        window._exit_id = 2
+        window._add_location_id = 3
+        window._edit_location_id = 4
+        window._remove_location_id = 5
+        window._explain_id = 6
+        window._history_id = 7
+        window._show_window_id = 8
+        window._hide_window_id = 9
+        window._read_tray_info_id = 10
+        window._noaa_radio_id = 11
+        window._weather_chat_id = 12
+        window._on_escape_pressed = MagicMock()
+
+        with (
+            patch("accessiweather.ui.main_window_ui.wx", fake_wx),
+            patch("accessiweather.native_shortcuts.wx", fake_wx),
+        ):
+            MainWindowUIMixin._setup_escape_accelerator(window)
+
+        combos = {(entry.flags, entry.key) for entry in window.accelerator_table}
+        assert (fake_wx.ACCEL_CTRL | fake_wx.ACCEL_SHIFT, ord("L")) in combos
+        assert (fake_wx.ACCEL_CTRL | fake_wx.ACCEL_SHIFT, ord("W")) in combos
+        assert (fake_wx.ACCEL_CTRL | fake_wx.ACCEL_SHIFT, ord("H")) in combos
+        assert (fake_wx.ACCEL_CTRL | fake_wx.ACCEL_SHIFT, ord("I")) in combos
+
+
+class TestIssue683ShortcutHandlers:
+    def test_read_tray_info_shortcut_announces_cached_tray_text(self):
+        app = AppShortcutsMixin()
+        app.main_window = MagicMock()
+        app.tray_icon = SimpleNamespace(get_tooltip_text=MagicMock(return_value="72°F Sunny"))
+
+        app._on_read_tray_info_shortcut(MagicMock())
+
+        app.main_window.set_status.assert_called_once_with("Tray information: 72°F Sunny")
+
+    def test_hide_window_shortcut_uses_existing_minimize_to_tray_path(self):
+        app = AppShortcutsMixin()
+        app.main_window = MagicMock()
+        app.tray_icon = object()
+
+        app._on_hide_window_shortcut(MagicMock())
+
+        app.main_window._minimize_to_tray.assert_called_once_with()

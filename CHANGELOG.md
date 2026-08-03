@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- New keyboard shortcuts now let you edit the selected location, show or hide the main window, and read the current notification-area text without using the tray menu.
+
 ### Changed
 - AccessiWeather now keeps a log file, so there's something to look at when a problem needs reporting. Logs land in a `logs` folder next to your settings and roll over at 5 MB, keeping the last three. Until now the app only wrote to the console, which installed builds don't have — meaning nothing was recorded anywhere. A portable copy keeps its logs inside the portable folder, so it still leaves nothing behind on the machine.
 - Automatic updates now work on Linux when you run the AppImage: AccessiWeather downloads the new version, verifies its checksum, swaps it in place, and restarts itself — the same experience Windows users already have. If you run from the tarball instead, the update is still downloaded and verified, and AccessiWeather now tells you where the file is and how to finish the install instead of silently doing nothing.
