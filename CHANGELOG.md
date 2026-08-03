@@ -78,6 +78,7 @@ All notable changes to this project will be documented in this file.
 - The tray text format dialog now warns you about unknown placeholders or unbalanced braces before saving, so a typo like `{tmp}` can't quietly end up in your tray tooltip.
 - Closing the Add or Edit Location dialog while a search or current-location detection is still running no longer risks a crash.
 - Weather history's "Today vs Yesterday" section now reads naturally when both days have the same temperature, instead of "is 0.0°F about the same than yesterday".
+- Explain Weather now uses your effective unit preference, including automatic location-based units like Canadian kPa, instead of always prompting the AI with imperial current-condition values.
 
 ## [0.7.2] - 2026-05-30
 
