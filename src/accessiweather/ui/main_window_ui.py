@@ -255,6 +255,12 @@ class MainWindowUIMixin:
         remove_item = location_menu.Append(
             self._remove_location_id, "&Remove Location\tCtrl+D", "Remove selected location"
         )
+        self._reorder_locations_id = wx.NewIdRef()
+        reorder_item = location_menu.Append(
+            self._reorder_locations_id,
+            "Re&order Locations...",
+            "Choose a custom order for saved locations",
+        )
         menu_bar.Append(location_menu, "&Location")
 
         # View menu
@@ -368,6 +374,7 @@ class MainWindowUIMixin:
         self.Bind(wx.EVT_MENU, lambda e: self.on_add_location(), add_item)
         self.Bind(wx.EVT_MENU, lambda e: self.on_edit_location(), edit_item)
         self.Bind(wx.EVT_MENU, lambda e: self.on_remove_location(), remove_item)
+        self.Bind(wx.EVT_MENU, lambda e: self.on_reorder_locations(), reorder_item)
         self.Bind(wx.EVT_MENU, lambda e: self.on_refresh(), refresh_item)
         self.Bind(wx.EVT_MENU, lambda e: self._on_explain_weather(), explain_item)
         self.Bind(wx.EVT_MENU, lambda e: self.on_view_history(), history_item)

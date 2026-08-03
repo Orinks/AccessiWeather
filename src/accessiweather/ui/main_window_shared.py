@@ -17,7 +17,7 @@ from ..units import resolve_temperature_unit_preference
 from ..user_manual import open_user_manual
 from ..utils.temperature_utils import format_temperature
 from . import main_window_notification_events
-from .dialogs.location_dialog import show_edit_location_dialog
+from .dialogs.location_dialog import show_edit_location_dialog, show_reorder_locations_dialog
 
 if TYPE_CHECKING:
     from ..app import AccessiWeatherApp
@@ -62,6 +62,7 @@ __all__ = [
     "open_user_manual",
     "resolve_temperature_unit_preference",
     "show_edit_location_dialog",
+    "show_reorder_locations_dialog",
     "sort_locations_for_display",
     "wx",
 ]

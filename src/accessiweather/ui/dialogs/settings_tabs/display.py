@@ -21,10 +21,11 @@ _VERBOSITY_MAP = {"minimal": 0, "standard": 1, "detailed": 2}
 _ALERT_DISPLAY_MAP = {"separate": 0, "combined": 1}
 _ALERT_DISPLAY_VALUES = ["separate", "combined"]
 _ALERT_DISPLAY_CHOICES = ["Separate fields (default)", "Single combined view"]
-_LOCATION_SORT_MAP = {"alphabetical": 0, "nearest_current": 1}
-_LOCATION_SORT_VALUES = ["alphabetical", "nearest_current"]
+_LOCATION_SORT_MAP = {"alphabetical": 0, "manual": 1, "nearest_current": 2}
+_LOCATION_SORT_VALUES = ["alphabetical", "manual", "nearest_current"]
 _LOCATION_SORT_CHOICES = [
     "Alphabetical (default)",
+    "Manual (custom)",
     "Nearest to current location",
 ]
 

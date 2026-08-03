@@ -175,10 +175,32 @@ def test_load_settings_populates_saved_location_sort_order():
 
     dialog._load_settings()
 
+    assert dialog._controls["location_sort_order"].GetSelection() == 2
+
+
+def test_load_settings_populates_manual_saved_location_sort_order():
+    settings = SimpleNamespace(location_sort_order="manual")
+    dialog = _make_dialog_for_settings(settings)
+
+    dialog._load_settings()
+
     assert dialog._controls["location_sort_order"].GetSelection() == 1
 
 
 def test_save_settings_persists_saved_location_sort_order():
+    dialog = _make_dialog_for_settings(SimpleNamespace())
+    dialog._get_ai_model_preference = lambda: "openrouter/free"
+    dialog.config_manager.update_settings.return_value = True
+    dialog._controls["location_sort_order"].SetSelection(2)
+
+    success = dialog._save_settings()
+
+    assert success is True
+    kwargs = dialog.config_manager.update_settings.call_args.kwargs
+    assert kwargs["location_sort_order"] == "nearest_current"
+
+
+def test_save_settings_persists_manual_saved_location_sort_order():
     dialog = _make_dialog_for_settings(SimpleNamespace())
     dialog._get_ai_model_preference = lambda: "openrouter/free"
     dialog.config_manager.update_settings.return_value = True
@@ -188,4 +210,4 @@ def test_save_settings_persists_saved_location_sort_order():
 
     assert success is True
     kwargs = dialog.config_manager.update_settings.call_args.kwargs
-    assert kwargs["location_sort_order"] == "nearest_current"
+    assert kwargs["location_sort_order"] == "manual"

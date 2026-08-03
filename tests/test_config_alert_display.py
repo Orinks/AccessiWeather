@@ -28,12 +28,12 @@ class TestRoundTrip:
             {
                 "alert_display_style": "combined",
                 "date_format": "us_long",
-                "location_sort_order": "nearest_current",
+                "location_sort_order": "manual",
             }
         )
         assert settings.alert_display_style == "combined"
         assert settings.date_format == "us_long"
-        assert settings.location_sort_order == "nearest_current"
+        assert settings.location_sort_order == "manual"
 
     def test_from_dict_falls_back_on_bogus_alert_display_style(self) -> None:
         settings = AppSettings.from_dict({"alert_display_style": "bogus"})
@@ -65,9 +65,9 @@ class TestRoundTrip:
         original = AppSettings(
             alert_display_style="combined",
             date_format="us_long",
-            location_sort_order="nearest_current",
+            location_sort_order="manual",
         )
         restored = AppSettings.from_dict(original.to_dict())
         assert restored.alert_display_style == "combined"
         assert restored.date_format == "us_long"
-        assert restored.location_sort_order == "nearest_current"
+        assert restored.location_sort_order == "manual"
