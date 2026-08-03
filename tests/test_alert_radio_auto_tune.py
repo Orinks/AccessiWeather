@@ -11,8 +11,8 @@ from accessiweather.noaa_radio.alert_auto_tune import (
     AlertRadioAutoTuner,
     NoReliableAlertStationResolver,
     WeatherIndexAlertStationResolver,
-    county_zone_to_same_code,
     is_nwr_same_weather_event,
+    would_wake_same_radio,
 )
 from accessiweather.noaa_radio.station_db import StationDatabase
 from accessiweather.noaa_radio.stations import Station
@@ -20,6 +20,7 @@ from accessiweather.noaa_radio.weatherindex_client import (
     WeatherIndexServedCounty,
     WeatherIndexStationMetadata,
 )
+from accessiweather.weather_client_nws_parsers import parse_nws_alerts
 
 
 class _FakeThread:
@@ -129,12 +130,20 @@ def _alert() -> WeatherAlert:
         event="Tornado Warning",
         expires=now + timedelta(hours=1),
         affected_zones=["TXC453"],
+        same_codes=["048453"],
     )
 
 
 def _forecast_zone_alert() -> WeatherAlert:
     alert = _alert()
     alert.affected_zones = ["TXZ192"]
+    alert.same_codes = []
+    return alert
+
+
+def _county_alert_without_same_codes() -> WeatherAlert:
+    """Build a county-based alert NWS did not SAME-encode; a real radio stays silent."""
+    alert = _alert()
     alert.same_codes = []
     return alert
 
@@ -266,8 +275,97 @@ def test_nwr_same_weather_event_eligibility_rejects_missing_event_name():
     assert not is_nwr_same_weather_event(WeatherAlert("Unknown", "body", event=None))
 
 
-def test_county_zone_conversion_rejects_unknown_state_prefix():
-    assert county_zone_to_same_code("XXC001") is None
+def test_real_nws_flood_warning_payload_still_auto_tunes():
+    """
+    A Burlington County NJ flood warning (ZIP 08048, Lumberton) must still tune.
+
+    Shaped after the live api.weather.gov payload: NWS ships the county SAME
+    codes in ``geocode.SAME`` alongside the matching UGC county zones.
+    """
+    payload = {
+        "features": [
+            {
+                "id": "urn:oid:2.49.0.1.840.0.lumberton",
+                "properties": {
+                    "event": "Flood Warning",
+                    "headline": "Flood Warning issued for Burlington County NJ",
+                    "description": "Minor flooding is occurring.",
+                    "severity": "Moderate",
+                    "urgency": "Expected",
+                    "certainty": "Likely",
+                    "messageType": "Alert",
+                    "areaDesc": "Burlington, NJ; Camden, NJ",
+                    "expires": "2026-08-03T18:00:00-04:00",
+                    "geocode": {
+                        "SAME": ["034005", "034007", "034015"],
+                        "UGC": ["NJC005", "NJC007", "NJC015"],
+                    },
+                    "affectedZones": [
+                        "https://api.weather.gov/zones/county/NJC005",
+                        "https://api.weather.gov/zones/county/NJC007",
+                        "https://api.weather.gov/zones/county/NJC015",
+                    ],
+                },
+            }
+        ]
+    }
+
+    alert = parse_nws_alerts(payload).alerts[0]
+
+    assert alert.same_codes == ["034005", "034007", "034015"]
+    assert would_wake_same_radio(alert)
+
+    burlington = Station("KHB37", 162.475, "Philadelphia, PA", 40.04, -75.07, "PA")
+    weatherindex = _FakeWeatherIndexClient({"KHB37": _metadata("KHB37", ["034005"])})
+    resolver = WeatherIndexAlertStationResolver(
+        station_database=StationDatabase([burlington]),
+        weatherindex_client=weatherindex,
+    )
+
+    assert resolver.resolve_station([alert], None) == burlington
+
+
+def test_would_wake_same_radio_requires_both_event_code_and_same_coding():
+    assert would_wake_same_radio(_alert())
+    assert not would_wake_same_radio(_county_alert_without_same_codes())
+    assert not would_wake_same_radio(_air_quality_alert())
+
+
+def test_auto_tune_skips_county_alert_without_same_codes():
+    tuner, _session, started, url_provider, resolver = _make_tuner()
+
+    tuner.tune_for_alerts([_county_alert_without_same_codes()])
+
+    assert started == []
+    assert resolver.calls == []
+    url_provider.get_stream_urls.assert_not_called()
+
+
+def test_auto_tune_does_not_carry_same_less_alerts_into_a_resolved_batch():
+    tuner, _session, started, url_provider, resolver = _make_tuner()
+
+    tuner.tune_for_alerts([_county_alert_without_same_codes(), _alert()])
+    assert len(started) == 1
+    url_provider.get_stream_urls.return_value = []
+    started[0]()
+
+    resolved_alerts = resolver.calls[0][0]
+    assert [alert.same_codes for alert in resolved_alerts] == [["048453"]]
+
+
+def test_auto_tune_window_is_not_extended_by_a_same_less_alert():
+    clock = iter([100.0, 150.0])
+    tuner, _session, started, _url_provider, _resolver = _make_tuner(monotonic=lambda: next(clock))
+
+    tuner.tune_for_alerts([_alert()])
+    assert len(started) == 1
+    assert tuner._stop_at_monotonic == 100.0 + 5 * 60
+
+    tuner.tune_for_alerts([_county_alert_without_same_codes()])
+
+    # The SAME-less alert must not re-arm the deadline, so the clock is untouched.
+    assert len(started) == 1
+    assert tuner._stop_at_monotonic == 100.0 + 5 * 60
 
 
 def test_no_reliable_resolver_never_selects_unrelated_station():
@@ -293,7 +391,7 @@ def test_settings_provider_failure_disables_auto_tune_safely():
     assert resolver.calls == []
 
 
-def test_default_resolver_skips_in_worker_when_alert_has_no_reliable_coverage_metadata():
+def test_default_setup_never_starts_work_for_an_alert_without_same_coding():
     started = []
     session = _FakeSession()
     url_provider = MagicMock()
@@ -307,9 +405,9 @@ def test_default_resolver_skips_in_worker_when_alert_has_no_reliable_coverage_me
     )
 
     tuner.tune_for_alerts([_forecast_zone_alert()])
-    assert len(started) == 1
-    started[0]()
 
+    # Rejected before any worker, station lookup, or stream fetch happens.
+    assert started == []
     url_provider.get_stream_urls.assert_not_called()
 
 
@@ -358,7 +456,7 @@ def test_weatherindex_resolver_matches_alert_same_code_to_station_coverage():
     assert weatherindex.calls == ["WXK27"]
 
 
-def test_weatherindex_resolver_converts_county_zone_to_same_code():
+def test_weatherindex_resolver_does_not_synthesize_same_codes_from_county_zones():
     austin = Station("WXK27", 162.4, "Austin, TX", 30.2672, -97.7431, "TX")
     station_db = StationDatabase([austin])
     weatherindex = _FakeWeatherIndexClient({"WXK27": _metadata("WXK27", ["048453"])})
@@ -367,9 +465,12 @@ def test_weatherindex_resolver_converts_county_zone_to_same_code():
         weatherindex_client=weatherindex,
     )
 
-    station = resolver.resolve_station([_alert()], _location())
+    # TXC453 maps to county 048453, but NWS published no SAME coding for this
+    # alert, so no real radio would wake and neither should auto-tune.
+    station = resolver.resolve_station([_county_alert_without_same_codes()], _location())
 
-    assert station == austin
+    assert station is None
+    assert weatherindex.calls == []
 
 
 def test_weatherindex_resolver_skips_forecast_zone_without_same_metadata():
