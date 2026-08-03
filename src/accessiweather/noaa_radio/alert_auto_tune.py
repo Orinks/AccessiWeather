@@ -30,47 +30,12 @@ StatusCallback = Callable[[str], None]
 ThreadFactory = Callable[[Callable[[], None]], threading.Thread]
 
 _COUNTY_ZONE_RE = re.compile(r"^(?P<state>[A-Z]{2})C(?P<county>\d{3})$")
-_NWR_SAME_WEATHER_EVENT_NAMES: frozenset[str] = frozenset(
-    {
-        # Weather-related operational NWR-SAME event codes published by NWS.
-        # Weather advisories and their follow-up statements are intentionally
-        # absent because NWSI 10-1710 Appendix G says they have no SAME/EAS
-        # event code and are not broadcast with SAME/EAS headers or 1050 Hz WAT.
-        "blizzard warning",
-        "coastal flood watch",
-        "coastal flood warning",
-        "dust storm warning",
-        "extreme wind warning",
-        "flash flood watch",
-        "flash flood warning",
-        "flash flood statement",
-        "flood watch",
-        "flood warning",
-        "flood statement",
-        "high wind watch",
-        "high wind warning",
-        "hurricane watch",
-        "hurricane warning",
-        "hurricane statement",
-        "hurricane local statement",
-        "severe thunderstorm watch",
-        "severe thunderstorm warning",
-        "severe weather statement",
-        "snow squall warning",
-        "special marine warning",
-        "special weather statement",
-        "storm surge watch",
-        "storm surge warning",
-        "tornado watch",
-        "tornado warning",
-        "tropical storm watch",
-        "tropical storm warning",
-        "tsunami watch",
-        "tsunami warning",
-        "winter storm watch",
-        "winter storm warning",
-    }
-)
+# NWS puts this placeholder in ``eventCode.SAME`` when a product has no SAME/EAS
+# event code at all. Such an alert is never broadcast with a SAME header, so no
+# physical weather radio wakes for it. The same event *name* can appear both
+# ways -- a Special Marine Warning may carry ["SMW"] or this placeholder -- so
+# the code, not the name, is the only reliable signal.
+_GENERIC_SAME_EVENT_CODE = "NWS"
 _STATE_FIPS: dict[str, str] = {
     "AL": "01",
     "AK": "02",
@@ -160,20 +125,32 @@ def alert_same_codes(alert: WeatherAlert) -> set[str]:
     return codes
 
 
-def is_nwr_same_weather_event(alert: WeatherAlert) -> bool:
-    """Return whether an alert event is eligible for NWR-SAME auto-tune."""
-    return _normalize_event_name(alert.event) in _NWR_SAME_WEATHER_EVENT_NAMES
+def same_event_codes(alert: WeatherAlert) -> set[str]:
+    """
+    Return the SAME/EAS event codes broadcast in this alert's radio header.
+
+    The generic ``NWS`` placeholder is dropped: NWS sends it for products that
+    have no SAME event code, which are exactly the products a physical radio
+    never wakes for.
+    """
+    codes: set[str] = set()
+    for value in getattr(alert, "same_event_codes", None) or []:
+        if not isinstance(value, str):
+            continue
+        normalized = value.strip().upper()
+        if normalized and normalized != _GENERIC_SAME_EVENT_CODE:
+            codes.add(normalized)
+    return codes
 
 
 def would_wake_same_radio(alert: WeatherAlert) -> bool:
-    """Return whether a real SAME weather radio would wake for this alert."""
-    return is_nwr_same_weather_event(alert) and bool(alert_same_codes(alert))
+    """
+    Return whether a real SAME weather radio would wake for this alert.
 
-
-def _normalize_event_name(value: object) -> str:
-    if not isinstance(value, str):
-        return ""
-    return " ".join(value.strip().casefold().split())
+    Both halves of the SAME header must be present: an event code that triggers
+    the receiver, and the county codes that tell it the alert applies locally.
+    """
+    return bool(same_event_codes(alert)) and bool(alert_same_codes(alert))
 
 
 class AlertStationResolver(Protocol):

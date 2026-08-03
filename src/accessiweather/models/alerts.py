@@ -35,7 +35,16 @@ class WeatherAlert:
     affected_zones: list[str] = field(default_factory=list)
     # SAME/FIPS county codes from NWS alert geocoding, when present. NOAA
     # Weather Radio coverage metadata uses these codes to map alerts to stations.
+    # These say *where* an alert applies; NWS sends them on every alert, so they
+    # are geography only and never evidence that a SAME header was broadcast.
     same_codes: list[str] = field(default_factory=list)
+    # SAME/EAS event codes from the NWS alert's ``eventCode.SAME`` field, e.g.
+    # ["TOR"] or ["SMW"]. This is the code a NOAA Weather Radio receives in the
+    # SAME header, so it is what decides whether a physical radio wakes. NWS
+    # sends the generic placeholder ["NWS"] when a product has no SAME event
+    # code, which is why presence alone is not enough -- see
+    # ``accessiweather.noaa_radio.alert_auto_tune.same_event_codes``.
+    same_event_codes: list[str] = field(default_factory=list)
 
     def __post_init__(self):
         if self.areas is None:
@@ -46,6 +55,8 @@ class WeatherAlert:
             self.affected_zones = []
         if self.same_codes is None:
             self.same_codes = []
+        if self.same_event_codes is None:
+            self.same_event_codes = []
 
     def get_unique_id(self) -> str:
         """

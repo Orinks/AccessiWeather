@@ -246,6 +246,14 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
         if not isinstance(same_codes_raw, list):
             same_codes_raw = []
 
+        # ``eventCode.SAME`` carries the SAME/EAS event code broadcast in the
+        # radio header (TOR, SMW, ...), which is a different thing entirely from
+        # the county codes in ``geocode.SAME``.
+        event_code = props.get("eventCode") or {}
+        same_event_codes_raw = event_code.get("SAME", []) if isinstance(event_code, dict) else []
+        if not isinstance(same_event_codes_raw, list):
+            same_event_codes_raw = []
+
         alert = WeatherAlert(
             title=props.get("headline", "Weather Alert"),
             description=props.get("description", ""),
@@ -273,6 +281,11 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
                 str(same_code).strip()
                 for same_code in same_codes_raw
                 if isinstance(same_code, str | int) and str(same_code).strip()
+            ],
+            same_event_codes=[
+                str(event_code_value).strip()
+                for event_code_value in same_event_codes_raw
+                if isinstance(event_code_value, str) and event_code_value.strip()
             ],
         )
         alerts.append(alert)

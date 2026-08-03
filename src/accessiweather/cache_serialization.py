@@ -302,6 +302,8 @@ def _serialize_alert(alert: WeatherAlert) -> dict:
         payload["affected_zones"] = list(alert.affected_zones)
     if alert.same_codes:
         payload["same_codes"] = list(alert.same_codes)
+    if alert.same_event_codes:
+        payload["same_event_codes"] = list(alert.same_event_codes)
     return payload
 
 
@@ -322,6 +324,7 @@ def _deserialize_alert(data: dict) -> WeatherAlert:
         source=data.get("source"),
         affected_zones=list(data.get("affected_zones", [])),
         same_codes=list(data.get("same_codes", [])),
+        same_event_codes=list(data.get("same_event_codes", [])),
     )
 
 

@@ -11,7 +11,7 @@ from accessiweather.noaa_radio.alert_auto_tune import (
     AlertRadioAutoTuner,
     NoReliableAlertStationResolver,
     WeatherIndexAlertStationResolver,
-    is_nwr_same_weather_event,
+    same_event_codes,
     would_wake_same_radio,
 )
 from accessiweather.noaa_radio.station_db import StationDatabase
@@ -131,6 +131,7 @@ def _alert() -> WeatherAlert:
         expires=now + timedelta(hours=1),
         affected_zones=["TXC453"],
         same_codes=["048453"],
+        same_event_codes=["TOR"],
     )
 
 
@@ -153,6 +154,7 @@ def _air_quality_alert() -> WeatherAlert:
     alert.title = "Air Quality Alert"
     alert.event = "Air Quality Alert"
     alert.severity = "Moderate"
+    alert.same_event_codes = ["NWS"]  # NWS placeholder: no SAME header broadcast
     return alert
 
 
@@ -251,36 +253,74 @@ def test_auto_tune_filters_mixed_batch_to_nwr_same_events_only():
     assert [alert.event for alert in resolved_alerts] == ["Tornado Warning"]
 
 
-def test_nwr_same_weather_event_eligibility_includes_operational_weather_events():
-    assert is_nwr_same_weather_event(WeatherAlert("Tornado", "body", event="Tornado Warning"))
-    assert is_nwr_same_weather_event(
-        WeatherAlert("Special Weather", "body", event="Special Weather Statement")
-    )
-    assert is_nwr_same_weather_event(
-        WeatherAlert("Snow Squall", "body", event="Snow Squall Warning")
-    )
+def test_same_event_codes_drops_the_generic_nws_placeholder():
+    assert same_event_codes(WeatherAlert("T", "body", same_event_codes=["TOR"])) == {"TOR"}
+    assert same_event_codes(WeatherAlert("T", "body", same_event_codes=["smw"])) == {"SMW"}
+    assert same_event_codes(WeatherAlert("T", "body", same_event_codes=["NWS"])) == set()
+    assert same_event_codes(WeatherAlert("T", "body", same_event_codes=[])) == set()
 
 
-def test_nwr_same_weather_event_eligibility_excludes_advisory_only_events():
-    assert not is_nwr_same_weather_event(
-        WeatherAlert("Air Quality", "body", event="Air Quality Alert")
+def test_same_named_event_can_carry_a_header_or_not():
+    """
+    A Special Marine Warning is issued both with and without a SAME code.
+
+    Only ``eventCode.SAME`` separates the two, which is why the event name
+    cannot decide whether a physical radio wakes.
+    """
+    broadcast = WeatherAlert(
+        "Special Marine Warning",
+        "body",
+        event="Special Marine Warning",
+        same_codes=["048453"],
+        same_event_codes=["SMW"],
     )
-    assert not is_nwr_same_weather_event(WeatherAlert("Heat", "body", event="Heat Advisory"))
-    assert not is_nwr_same_weather_event(
-        WeatherAlert("Small Craft", "body", event="Small Craft Advisory")
+    silent = WeatherAlert(
+        "Special Marine Warning",
+        "body",
+        event="Special Marine Warning",
+        same_codes=["048453"],
+        same_event_codes=["NWS"],
     )
 
+    assert would_wake_same_radio(broadcast)
+    assert not would_wake_same_radio(silent)
 
-def test_nwr_same_weather_event_eligibility_rejects_missing_event_name():
-    assert not is_nwr_same_weather_event(WeatherAlert("Unknown", "body", event=None))
+
+def test_would_wake_same_radio_ignores_the_event_name_entirely():
+    # An event name absent from any curated list still tunes when NWS assigned
+    # it a real SAME event code -- e.g. Fire Warning / FRW.
+    fire = WeatherAlert(
+        "Fire Warning",
+        "body",
+        event="Fire Warning",
+        same_codes=["048453"],
+        same_event_codes=["FRW"],
+    )
+    assert would_wake_same_radio(fire)
+
+    # ...and an advisory stays silent even though it is county-coded.
+    heat = WeatherAlert(
+        "Heat Advisory",
+        "body",
+        event="Heat Advisory",
+        same_codes=["048453"],
+        same_event_codes=["NWS"],
+    )
+    assert not would_wake_same_radio(heat)
+
+
+def test_would_wake_same_radio_requires_county_codes_too():
+    assert not would_wake_same_radio(
+        WeatherAlert("Tornado", "body", event="Tornado Warning", same_event_codes=["TOR"])
+    )
 
 
 def test_real_nws_flood_warning_payload_still_auto_tunes():
     """
     A Burlington County NJ flood warning (ZIP 08048, Lumberton) must still tune.
 
-    Shaped after the live api.weather.gov payload: NWS ships the county SAME
-    codes in ``geocode.SAME`` alongside the matching UGC county zones.
+    Shaped after the live api.weather.gov payload, which was issued as a Flood
+    Statement (AWIPS FLSPHI) carrying SAME event code FLS.
     """
     payload = {
         "features": [
@@ -296,6 +336,7 @@ def test_real_nws_flood_warning_payload_still_auto_tunes():
                     "messageType": "Alert",
                     "areaDesc": "Burlington, NJ; Camden, NJ",
                     "expires": "2026-08-03T18:00:00-04:00",
+                    "eventCode": {"SAME": ["FLS"], "NationalWeatherService": ["FAW"]},
                     "geocode": {
                         "SAME": ["034005", "034007", "034015"],
                         "UGC": ["NJC005", "NJC007", "NJC015"],
@@ -313,6 +354,7 @@ def test_real_nws_flood_warning_payload_still_auto_tunes():
     alert = parse_nws_alerts(payload).alerts[0]
 
     assert alert.same_codes == ["034005", "034007", "034015"]
+    assert alert.same_event_codes == ["FLS"]
     assert would_wake_same_radio(alert)
 
     burlington = Station("KHB37", 162.475, "Philadelphia, PA", 40.04, -75.07, "PA")
@@ -323,6 +365,42 @@ def test_real_nws_flood_warning_payload_still_auto_tunes():
     )
 
     assert resolver.resolve_station([alert], None) == burlington
+
+
+def test_real_nws_payload_without_a_same_event_code_does_not_tune():
+    """
+    Special Marine Warnings are issued both with and without a SAME header.
+
+    NWS marks the non-broadcast ones with the generic ``NWS`` placeholder; 84 of
+    them appeared in a 4000-alert sample and every one used to start the radio.
+    """
+    payload = {
+        "features": [
+            {
+                "id": "urn:oid:2.49.0.1.840.0.smw-no-header",
+                "properties": {
+                    "event": "Special Marine Warning",
+                    "headline": "Special Marine Warning",
+                    "description": "Strong winds over the water.",
+                    "severity": "Severe",
+                    "urgency": "Immediate",
+                    "certainty": "Observed",
+                    "messageType": "Alert",
+                    "areaDesc": "Coastal waters",
+                    "expires": "2026-08-03T18:00:00-04:00",
+                    "eventCode": {"SAME": ["NWS"], "NationalWeatherService": ["SMW"]},
+                    "geocode": {"SAME": ["048453"], "UGC": ["TXC453"]},
+                    "affectedZones": ["https://api.weather.gov/zones/county/TXC453"],
+                },
+            }
+        ]
+    }
+
+    alert = parse_nws_alerts(payload).alerts[0]
+
+    assert alert.same_event_codes == ["NWS"]
+    assert alert.same_codes == ["048453"]  # county coding is present but irrelevant
+    assert not would_wake_same_radio(alert)
 
 
 def test_would_wake_same_radio_requires_both_event_code_and_same_coding():
