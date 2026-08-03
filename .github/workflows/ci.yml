@@ -72,7 +72,11 @@ jobs:
       # explicit pip cache) saves ~10s per CI run while keeping
       # the same fail-before-install-deps ordering.
       run: |
-        pip install --quiet 'ruff>=0.15.14'
+        # Pinned exactly on purpose. With a floating '>=' this step installs
+        # whatever ruff released most recently, so CI can start failing on a
+        # commit that changed nothing -- 0.16.0 began formatting Markdown and
+        # broke the branch that way. Bump this deliberately.
+        pip install --quiet 'ruff==0.16.1'
         ruff format --check .
         ruff check .
 
