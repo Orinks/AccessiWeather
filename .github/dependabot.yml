@@ -7,9 +7,12 @@ version: 2
 updates:
   - package-ecosystem: "pip"
     directory: "/"
+    # Development happens on dev; main only ever receives merges from it.
+    target-branch: "dev"
     schedule:
       interval: "weekly"
   - package-ecosystem: "github-actions"
     directory: "/"
+    target-branch: "dev"
     schedule:
       interval: "weekly"

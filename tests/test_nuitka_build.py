@@ -128,8 +128,10 @@ def test_production_build_workflow_uses_nuitka() -> None:
     )
 
     assert "NUITKA_CACHE_DIR:" in workflow
-    assert "actions/cache/restore@v5" in workflow
-    assert "actions/cache/save@v5" in workflow
+    # Version-agnostic: the point is the split restore/save pair, not the pin,
+    # which Dependabot bumps on its own schedule.
+    assert "actions/cache/restore@" in workflow
+    assert "actions/cache/save@" in workflow
     assert "brew install ccache" in workflow
     assert "choco install innosetup" in workflow
     assert "--only-binary wxPython" in workflow
