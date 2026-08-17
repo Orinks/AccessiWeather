@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from ..sound_events import DEFAULT_MUTED_SOUND_EVENTS
+from .config_constants import DEFAULT_NOAA_RADIO_HOTKEY
 from .config_serialization import AppSettingsSerializationMixin
 from .config_validation import AppSettingsValidationMixin
 
@@ -31,6 +32,8 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     specific_alert_sound_packs: list[str] = field(default_factory=list)
     auto_tune_weather_radio_alerts: bool = False
     auto_tune_weather_radio_duration_minutes: int = 5
+    # System-wide play/stop hotkey for NOAA Weather Radio; empty disables it.
+    noaa_radio_hotkey: str = DEFAULT_NOAA_RADIO_HOTKEY
     # Event-based notifications
     notify_discussion_update: bool = True
     notify_daily_climate_report_update: bool = False

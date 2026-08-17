@@ -6,6 +6,7 @@ import logging
 
 import wx
 
+from .global_hotkeys import DEFAULT_NOAA_RADIO_HOTKEY, GlobalHotkeyManager, is_supported
 from .native_shortcuts import install_accelerator_table_preserving_native_close
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,56 @@ class AppShortcutsMixin:
 
         install_accelerator_table_preserving_native_close(frame, accel_entries)
         logger.info("Keyboard accelerators set up successfully")
+
+    def _setup_global_hotkeys(self) -> None:
+        """Register the system-wide hotkeys that work without app focus."""
+        if not self.main_window:
+            return
+        self.global_hotkeys = GlobalHotkeyManager(self.main_window, self._on_noaa_radio_hotkey)
+        self.refresh_global_hotkeys()
+
+    def refresh_global_hotkeys(self) -> None:
+        """Apply the configured hotkey combo, reporting a combo Windows will not give us."""
+        manager = getattr(self, "global_hotkeys", None)
+        if manager is None:
+            return
+
+        settings = self.config_manager.get_settings() if self.config_manager else None
+        combo = getattr(settings, "noaa_radio_hotkey", DEFAULT_NOAA_RADIO_HOTKEY)
+        if manager.registered_combo == combo:
+            return
+
+        if not manager.apply(combo) and combo and is_supported():
+            self._notify_radio_hotkey(
+                f"Could not register {combo} as the NOAA Weather Radio hotkey. "
+                "Another program is probably using it. Choose a different combination "
+                "in Settings, General."
+            )
+
+    def _on_noaa_radio_hotkey(self) -> None:
+        """Toggle NOAA Weather Radio playback from the system-wide hotkey."""
+        from .noaa_radio.toggle import RadioToggleController
+
+        if getattr(self, "_radio_toggle", None) is None:
+            self._radio_toggle = RadioToggleController(
+                preferences=getattr(self, "radio_preferences", None),
+                notify=self._notify_radio_hotkey,
+                auto_tuner_provider=lambda: getattr(self, "alert_radio_auto_tuner", None),
+            )
+        self._radio_toggle.toggle()
+
+    def _notify_radio_hotkey(self, message: str) -> None:
+        """Announce a hotkey result as a desktop notification, since the app may be hidden."""
+        notifier = getattr(self, "_notifier", None)
+        if notifier is None:
+            logger.info("NOAA Weather Radio hotkey: %s", message)
+            return
+        wx.CallAfter(
+            notifier.send_notification,
+            "NOAA Weather Radio",
+            message,
+            play_sound=False,
+        )
 
     def _on_refresh_shortcut(self, event) -> None:
         """Handle Ctrl+R / F5 shortcut."""

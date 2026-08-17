@@ -334,6 +334,12 @@ class AppLifecycleMixin:
             activation_handoff_timer.Stop()
 
         try:
+            if getattr(self, "global_hotkeys", None) is not None:
+                self.global_hotkeys.unregister()
+        except Exception:
+            logger.debug("Could not release global hotkeys during shutdown", exc_info=True)
+
+        try:
             if getattr(self, "alert_radio_auto_tuner", None) is not None:
                 self.alert_radio_auto_tuner.stop()
         except Exception:
@@ -468,6 +474,8 @@ class AppLifecycleMixin:
                     temperature_unit=getattr(settings, "temperature_unit", "both"),
                     verbosity_level=getattr(settings, "verbosity_level", "standard"),
                 )
+
+            self.refresh_global_hotkeys()
 
             self._start_auto_update_checks()
             self._start_background_updates()

@@ -1070,6 +1070,29 @@ These shortcuts are available in the current app:
 - Ctrl+Shift+R: Open NOAA Weather Radio
 - Ctrl+Q: Quit
 
+### System-wide hotkey
+
+One shortcut works even when AccessiWeather does not have focus, including
+while it is minimized to the system tray:
+
+- Ctrl+Alt+Shift+R: Play or stop NOAA Weather Radio
+
+Playing resumes the last station you listened to, or the station the alert
+auto-tune last started. If you have never played one, favorite a station or
+play it once from the NOAA Weather Radio dialog first.
+
+Every press announces its result as a desktop notification, so you know what
+happened without looking at the window.
+
+To change or turn off this hotkey, open Settings, go to the General tab, and
+edit "NOAA Weather Radio play/stop hotkey". Combine Ctrl, Alt, Shift, and Win
+with a letter, digit, or function key -- for example Ctrl+Shift+F9. Leave the
+field blank to turn the hotkey off. If another program already owns the
+combination you choose, AccessiWeather tells you so you can pick a different
+one.
+
+This hotkey is Windows-only.
+
 ## 10. Troubleshooting
 
 ### Problem: No weather data appears

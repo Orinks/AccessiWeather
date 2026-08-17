@@ -21,6 +21,7 @@ class RadioPreferences:
         """Initialize with an optional canonical preferences file path."""
         self._prefs: dict[str, str] = {}
         self._favorite_stations: list[str] = []
+        self._last_station: str | None = None
         self._station_limit: int | None = DEFAULT_STATION_LIMIT
         if path is not None:
             self._path = Path(path)
@@ -50,6 +51,7 @@ class RadioPreferences:
                 self._favorite_stations = self._normalize_favorite_stations(
                     data.get("favorite_stations", [])
                 )
+                self._last_station = self._normalize_call_sign(data.get("last_station"))
                 station_limit = data.get("station_limit", DEFAULT_STATION_LIMIT)
                 self._station_limit = self._normalize_station_limit(station_limit)
             else:
@@ -72,6 +74,7 @@ class RadioPreferences:
                 "preferred_streams": self._prefs,
                 "station_limit": self._station_limit,
                 "favorite_stations": self._favorite_stations,
+                "last_station": self._last_station,
             }
             self._path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         except Exception as e:
@@ -86,6 +89,14 @@ class RadioPreferences:
         if isinstance(value, int) and value > 0:
             return value
         return DEFAULT_STATION_LIMIT
+
+    @staticmethod
+    def _normalize_call_sign(value: object) -> str | None:
+        """Return an uppercase call sign, or None when the value is unusable."""
+        if not isinstance(value, str):
+            return None
+        normalized = value.strip().upper()
+        return normalized or None
 
     def _normalize_favorite_stations(self, value: object) -> list[str]:
         """Return unique uppercase favorite call signs while preserving order."""
@@ -152,6 +163,18 @@ class RadioPreferences:
         self._favorite_stations = [
             favorite for favorite in self._favorite_stations if favorite != normalized
         ]
+        self._save()
+
+    def get_last_station(self) -> str | None:
+        """Return the call sign of the station that played most recently."""
+        return self._last_station
+
+    def set_last_station(self, call_sign: str | None) -> None:
+        """Remember the station that played most recently, or clear it when blank."""
+        normalized = self._normalize_call_sign(call_sign)
+        if normalized == self._last_station:
+            return
+        self._last_station = normalized
         self._save()
 
     def get_station_limit(self) -> int | None:

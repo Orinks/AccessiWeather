@@ -41,6 +41,23 @@ class AppSettingsValidationMixin:
         except (TypeError, ValueError):
             return default
 
+    @staticmethod
+    def _normalized_hotkey(value) -> str:
+        """
+        Return a canonical hotkey combo, an empty string for "disabled", or the default.
+
+        Parsing lives in :mod:`accessiweather.global_hotkeys`, imported lazily so
+        settings stay usable without wx loaded.
+        """
+        if not isinstance(value, str) or not value.strip():
+            return ""
+        from ..global_hotkeys import DEFAULT_NOAA_RADIO_HOTKEY, HotkeyParseError, normalize_hotkey
+
+        try:
+            return normalize_hotkey(value)
+        except HotkeyParseError:
+            return DEFAULT_NOAA_RADIO_HOTKEY
+
     def validate_on_access(self, setting_name: str) -> bool:
         """
         Validate a non-critical setting on first access.
@@ -121,6 +138,9 @@ class AppSettingsValidationMixin:
         elif setting_name == "auto_tune_weather_radio_duration_minutes":
             if not isinstance(value, int) or value < 1 or value > 60:
                 setattr(settings, setting_name, 5)
+
+        elif setting_name == "noaa_radio_hotkey":
+            setattr(settings, setting_name, self._normalized_hotkey(value))
 
         elif setting_name == "taskbar_icon_text_format":
             # Ensure format string is valid

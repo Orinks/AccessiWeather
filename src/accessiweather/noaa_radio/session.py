@@ -9,6 +9,7 @@ from collections.abc import Callable
 import wx
 
 from accessiweather.noaa_radio.player import RadioPlayer
+from accessiweather.noaa_radio.preferences import RadioPreferences
 from accessiweather.noaa_radio.stations import Station
 
 logger = logging.getLogger(__name__)
@@ -17,8 +18,9 @@ logger = logging.getLogger(__name__)
 class RadioSession:
     """Owns radio stream state independently from any one dialog."""
 
-    def __init__(self) -> None:
+    def __init__(self, preferences: RadioPreferences | None = None) -> None:
         """Initialize the shared playback session."""
+        self.preferences = preferences
         self.playing_station: Station | None = None
         self.current_urls: list[str] = []
         self.current_url_index = 0
@@ -69,8 +71,22 @@ class RadioSession:
         self.playing_station = None
 
     def _handle_playing(self) -> None:
+        # Both the radio dialog and the alert auto-tuner set ``playing_station``
+        # before starting the player, so recording it here covers every path
+        # that can put a station on the air.
+        self._remember_last_station()
         if self._on_playing is not None:
             self._dispatch_callback(self._on_playing)
+
+    def _remember_last_station(self) -> None:
+        """Persist the current station so a hotkey can resume it later."""
+        station = self.playing_station
+        if self.preferences is None or station is None:
+            return
+        try:
+            self.preferences.set_last_station(station.call_sign)
+        except Exception:
+            logger.debug("Could not save last radio station", exc_info=True)
 
     def _handle_stopped(self) -> None:
         self.playing_station = None

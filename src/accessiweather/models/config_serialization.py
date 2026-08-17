@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from ..sound_events import DEFAULT_MUTED_SOUND_EVENTS
+from .config_constants import DEFAULT_NOAA_RADIO_HOTKEY
 
 if TYPE_CHECKING:
     from .config_settings import AppSettings
@@ -36,6 +37,7 @@ class AppSettingsSerializationMixin:
             "auto_tune_weather_radio_duration_minutes": (
                 settings.auto_tune_weather_radio_duration_minutes
             ),
+            "noaa_radio_hotkey": settings.noaa_radio_hotkey,
             "notify_discussion_update": settings.notify_discussion_update,
             "notify_daily_climate_report_update": settings.notify_daily_climate_report_update,
             "notify_hwo_update": settings.notify_hwo_update,
@@ -146,6 +148,7 @@ class AppSettingsSerializationMixin:
             auto_tune_weather_radio_duration_minutes=data.get(
                 "auto_tune_weather_radio_duration_minutes", 5
             ),
+            noaa_radio_hotkey=data.get("noaa_radio_hotkey", DEFAULT_NOAA_RADIO_HOTKEY),
             notify_discussion_update=settings_cls._as_bool(
                 data.get("notify_discussion_update"), True
             ),
@@ -287,6 +290,7 @@ class AppSettingsSerializationMixin:
         settings.validate_on_access("parallel_fetch_timeout")
         settings.validate_on_access("specific_alert_sound_packs")
         settings.validate_on_access("auto_tune_weather_radio_duration_minutes")
+        settings.validate_on_access("noaa_radio_hotkey")
         if settings.data_source not in {"auto", "nws", "openmeteo", "pirateweather"}:
             settings.data_source = "auto"
         return settings
