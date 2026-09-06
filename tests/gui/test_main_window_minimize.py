@@ -513,3 +513,58 @@ def test_tray_shortcuts_preserve_existing_custom_radio_hotkey():
         app._setup_accelerators()
     assert all(key != ord("W") for _, key in frame.registered_hotkeys.values())
     assert all(e.key != ord("W") for e in frame.accelerator_table)
+
+
+def test_show_shortcut_restores_window_when_tray_is_unavailable():
+    app = AppShortcutsMixin()
+    app.main_window = MagicMock()
+    app._on_show_main_window_shortcut(None)
+    app.main_window.Show.assert_called_once_with(True)
+    app.main_window.Iconize.assert_called_once_with(False)
+    app.main_window.SetFocus.assert_called_once()
+
+
+def test_hide_shortcut_keeps_window_reachable_without_tray():
+    app = AppShortcutsMixin()
+    app.main_window = MagicMock()
+    app._on_hide_main_window_shortcut(None)
+    app.main_window.Hide.assert_not_called()
+    assert "cannot be hidden" in app.main_window.set_status.call_args.args[0]
+
+
+def test_read_shortcut_announces_unavailable_tray():
+    app = AppShortcutsMixin()
+    app.main_window = MagicMock()
+    app._on_read_tray_info_shortcut(None)
+    app.main_window.set_status.assert_called_once_with("Tray information is unavailable.")
+
+
+def test_tray_shortcuts_delegate_hide_and_speech_to_tray():
+    app = AppShortcutsMixin()
+    app.main_window = MagicMock()
+    app.tray_icon = MagicMock()
+    app._on_hide_main_window_shortcut(None)
+    app._on_read_tray_info_shortcut(None)
+    app.tray_icon.hide_main_window.assert_called_once()
+    app.tray_icon.announce_tooltip.assert_called_once()
+
+
+def test_rebinding_shortcuts_unregisters_old_global_bindings():
+    fake_wx = _FakeWxForAccelerators()
+    frame = _AcceleratorFrame()
+    app = AppShortcutsMixin()
+    app.main_window = frame
+    settings = SimpleNamespace(shortcut_show_main_window="Ctrl+Shift+W")
+    app.config_manager = SimpleNamespace(get_settings=lambda: settings)
+    with (
+        patch("accessiweather.app_shortcuts.wx", fake_wx),
+        patch("accessiweather.native_shortcuts.wx", fake_wx),
+    ):
+        app._setup_accelerators()
+        old_ids = set(frame.registered_hotkeys)
+        settings.shortcut_show_main_window = "Ctrl+Alt+Y"
+        app._setup_accelerators()
+    assert not old_ids.intersection(frame.registered_hotkeys)
+    assert len(frame.registered_hotkeys) == 3
+    assert any(key == ord("Y") for _, key in frame.registered_hotkeys.values())
+    assert all(key != ord("W") for _, key in frame.registered_hotkeys.values())
