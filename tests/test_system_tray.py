@@ -196,6 +196,33 @@ class TestUpdateTooltip:
         assert set_icon_called == []
 
 
+class TestTrayShortcutHelpers:
+    """Tests for tray actions used by the configurable hotkeys."""
+
+    def test_hide_main_window_prefers_minimize_to_tray_helper(self):
+        from accessiweather.ui.system_tray import SystemTrayIcon
+
+        frame = SimpleNamespace(_minimize_to_tray=MagicMock())
+        tray = SystemTrayIcon.__new__(SystemTrayIcon)
+        tray.app = SimpleNamespace(main_window=frame)
+
+        tray.hide_main_window()
+
+        frame._minimize_to_tray.assert_called_once_with()
+
+    def test_announce_tooltip_routes_through_main_window_status(self):
+        from accessiweather.ui.system_tray import SystemTrayIcon
+
+        frame = MagicMock()
+        tray = SystemTrayIcon.__new__(SystemTrayIcon)
+        tray.app = SimpleNamespace(main_window=frame)
+        tray._tooltip_text = "72F Sunny"
+
+        tray.announce_tooltip()
+
+        frame.set_status.assert_called_once_with("Tray info: 72F Sunny")
+
+
 class TestMinimizeOnStartup:
     """Tests for minimize on startup functionality."""
 

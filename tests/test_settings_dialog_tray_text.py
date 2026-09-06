@@ -123,6 +123,7 @@ def test_save_settings_persists_tray_text_fields():
     dialog._controls["taskbar_icon_text_enabled"].SetValue(True)
     dialog._controls["taskbar_icon_dynamic_enabled"].SetValue(False)
     dialog._controls["taskbar_icon_text_format"].SetValue("{temp}")
+    dialog._controls["wind_speed_unit"].SetSelection(3)
 
     success = dialog._save_settings()
 
@@ -131,6 +132,7 @@ def test_save_settings_persists_tray_text_fields():
     assert kwargs["taskbar_icon_text_enabled"] is True
     assert kwargs["taskbar_icon_dynamic_enabled"] is False
     assert kwargs["taskbar_icon_text_format"] == "{temp}"
+    assert kwargs["wind_speed_unit"] == "m/s"
 
 
 def test_load_settings_populates_immediate_alert_popup_opt_in():
@@ -169,8 +171,31 @@ def test_get_selected_temperature_unit_returns_auto_for_first_choice():
     assert dialog._get_selected_temperature_unit() == "auto"
 
 
+def test_get_selected_wind_speed_unit_uses_current_choice():
+    dialog = _make_dialog_for_settings(SimpleNamespace())
+    dialog._controls["wind_speed_unit"].SetSelection(3)
+
+    assert dialog._get_selected_wind_speed_unit() == "m/s"
+
+
+def test_get_selected_wind_speed_unit_returns_auto_for_first_choice():
+    dialog = _make_dialog_for_settings(SimpleNamespace())
+    dialog._controls["wind_speed_unit"].SetSelection(0)
+
+    assert dialog._get_selected_wind_speed_unit() == "auto"
+
+
 def test_load_settings_populates_saved_location_sort_order():
     settings = SimpleNamespace(location_sort_order="nearest_current")
+    dialog = _make_dialog_for_settings(settings)
+
+    dialog._load_settings()
+
+    assert dialog._controls["location_sort_order"].GetSelection() == 2
+
+
+def test_load_settings_populates_manual_saved_location_sort_order():
+    settings = SimpleNamespace(location_sort_order="manual")
     dialog = _make_dialog_for_settings(settings)
 
     dialog._load_settings()
@@ -182,10 +207,23 @@ def test_save_settings_persists_saved_location_sort_order():
     dialog = _make_dialog_for_settings(SimpleNamespace())
     dialog._get_ai_model_preference = lambda: "openrouter/free"
     dialog.config_manager.update_settings.return_value = True
-    dialog._controls["location_sort_order"].SetSelection(1)
+    dialog._controls["location_sort_order"].SetSelection(2)
 
     success = dialog._save_settings()
 
     assert success is True
     kwargs = dialog.config_manager.update_settings.call_args.kwargs
     assert kwargs["location_sort_order"] == "nearest_current"
+
+
+def test_save_settings_persists_manual_saved_location_sort_order():
+    dialog = _make_dialog_for_settings(SimpleNamespace())
+    dialog._get_ai_model_preference = lambda: "openrouter/free"
+    dialog.config_manager.update_settings.return_value = True
+    dialog._controls["location_sort_order"].SetSelection(1)
+
+    success = dialog._save_settings()
+
+    assert success is True
+    kwargs = dialog.config_manager.update_settings.call_args.kwargs
+    assert kwargs["location_sort_order"] == "manual"
