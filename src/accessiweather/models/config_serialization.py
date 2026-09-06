@@ -19,10 +19,14 @@ class AppSettingsSerializationMixin:
         settings = cast("AppSettings", self)
         return {
             "temperature_unit": settings.temperature_unit,
+            "wind_speed_unit": settings.wind_speed_unit,
             "update_interval_minutes": settings.update_interval_minutes,
             "enable_alerts": settings.enable_alerts,
             "minimize_to_tray": settings.minimize_to_tray,
             "minimize_on_startup": settings.minimize_on_startup,
+            "shortcut_show_main_window": settings.shortcut_show_main_window,
+            "shortcut_hide_main_window": settings.shortcut_hide_main_window,
+            "shortcut_read_tray_info": settings.shortcut_read_tray_info,
             "startup_enabled": settings.startup_enabled,
             "data_source": settings.data_source,
             # weather provider API keys and github_app_* are stored in secure keyring, not JSON
@@ -127,10 +131,14 @@ class AppSettingsSerializationMixin:
 
         settings = settings_cls(
             temperature_unit=data.get("temperature_unit", "both"),
+            wind_speed_unit=data.get("wind_speed_unit", "auto"),
             update_interval_minutes=data.get("update_interval_minutes", 10),
             enable_alerts=settings_cls._as_bool(data.get("enable_alerts"), True),
             minimize_to_tray=settings_cls._as_bool(data.get("minimize_to_tray"), False),
             minimize_on_startup=settings_cls._as_bool(data.get("minimize_on_startup"), False),
+            shortcut_show_main_window=data.get("shortcut_show_main_window", "Ctrl+Shift+W"),
+            shortcut_hide_main_window=data.get("shortcut_hide_main_window", "Ctrl+Shift+M"),
+            shortcut_read_tray_info=data.get("shortcut_read_tray_info", "Ctrl+Shift+I"),
             startup_enabled=settings_cls._as_bool(data.get("startup_enabled"), False),
             data_source=data.get("data_source", "auto"),
             pirate_weather_api_key=data.get("pirate_weather_api_key", ""),
@@ -291,6 +299,9 @@ class AppSettingsSerializationMixin:
         settings.validate_on_access("specific_alert_sound_packs")
         settings.validate_on_access("auto_tune_weather_radio_duration_minutes")
         settings.validate_on_access("noaa_radio_hotkey")
+        settings.validate_on_access("shortcut_show_main_window")
+        settings.validate_on_access("shortcut_hide_main_window")
+        settings.validate_on_access("shortcut_read_tray_info")
         if settings.data_source not in {"auto", "nws", "openmeteo", "pirateweather"}:
             settings.data_source = "auto"
         return settings

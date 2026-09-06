@@ -78,6 +78,7 @@ def _build_basic_metrics(
     show_uv_index: bool,
     *,
     unit_system: DisplayUnitSystem | str | None = None,
+    wind_unit_system: DisplayUnitSystem | str | None = None,
 ) -> list[Metric]:
     """Build basic weather metrics (temperature, feels like, humidity, wind, dewpoint, etc.)."""
     # Format temperature with inline feels-like when there's a significant difference
@@ -93,9 +94,18 @@ def _build_basic_metrics(
     if current.humidity is not None:
         metrics.append(Metric("Humidity", f"{current.humidity:.0f}%"))
 
-    wind_value = format_wind(current, unit_pref, precision=precision, unit_system=unit_system)
+    resolved_wind_unit_system = wind_unit_system or unit_system
+    wind_value = format_wind(
+        current,
+        unit_pref,
+        precision=precision,
+        unit_system=resolved_wind_unit_system,
+    )
     if wind_value:
-        wind_value = _normalize_metric_wind_units(wind_value, unit_system=unit_system)
+        wind_value = _normalize_metric_wind_units(
+            wind_value,
+            unit_system=resolved_wind_unit_system,
+        )
 
     gust_value: str | None = None
     if current.wind_gust_mph is not None:
@@ -104,9 +114,12 @@ def _build_basic_metrics(
             unit=unit_pref,
             wind_speed_kph=current.wind_gust_kph,
             precision=0,
-            unit_system=unit_system,
+            unit_system=resolved_wind_unit_system,
         )
-        gust_value = _normalize_metric_wind_units(gust_value, unit_system=unit_system)
+        gust_value = _normalize_metric_wind_units(
+            gust_value,
+            unit_system=resolved_wind_unit_system,
+        )
 
     if wind_value and gust_value:
         metrics.append(Metric("Wind", f"{wind_value}, gusting to {gust_value}"))
@@ -365,6 +378,7 @@ def build_current_conditions(
     air_quality: AirQualityPresentation | None = None,
     alerts: WeatherAlerts | None = None,
     unit_system: DisplayUnitSystem | str | None = None,
+    wind_unit_system: DisplayUnitSystem | str | None = None,
     anomaly_callout: AnomalyCallout | None = None,
 ) -> CurrentConditionsPresentation:
     """Create a structured presentation for the current weather using helper functions."""
@@ -410,6 +424,7 @@ def build_current_conditions(
             show_visibility,
             show_uv_index,
             unit_system=unit_system,
+            wind_unit_system=wind_unit_system,
         )
     )
 

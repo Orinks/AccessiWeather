@@ -10,11 +10,14 @@ if TYPE_CHECKING:
     from .models import Location
 
 LOCATION_SORT_ALPHABETICAL = "alphabetical"
+LOCATION_SORT_MANUAL = "manual"
 LOCATION_SORT_NEAREST_CURRENT = "nearest_current"
 
 
 def normalize_location_sort_order(value: object) -> str:
     """Return a supported location sort order."""
+    if value == LOCATION_SORT_MANUAL:
+        return LOCATION_SORT_MANUAL
     if value == LOCATION_SORT_NEAREST_CURRENT:
         return LOCATION_SORT_NEAREST_CURRENT
     return LOCATION_SORT_ALPHABETICAL
@@ -32,8 +35,13 @@ def sort_locations_for_display(
     anchor: Location | None = None,
 ) -> list[Location]:
     """Sort saved locations for user-facing lists."""
-    sorted_locations = sorted(locations, key=location_name_sort_key)
-    if normalize_location_sort_order(sort_order) != LOCATION_SORT_NEAREST_CURRENT or anchor is None:
+    base_locations = list(locations)
+    normalized_sort_order = normalize_location_sort_order(sort_order)
+    if normalized_sort_order == LOCATION_SORT_MANUAL:
+        return base_locations
+
+    sorted_locations = sorted(base_locations, key=location_name_sort_key)
+    if normalized_sort_order != LOCATION_SORT_NEAREST_CURRENT or anchor is None:
         return sorted_locations
 
     return sorted(

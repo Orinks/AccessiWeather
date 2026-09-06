@@ -298,6 +298,8 @@ def format_forecast_temperature(
 def format_period_wind(
     period: ForecastPeriod,
     unit_pref: TemperatureUnit = TemperatureUnit.FAHRENHEIT,
+    *,
+    unit_system: DisplayUnitSystem | str | None = None,
 ) -> str | None:
     """Return a combined wind string for a forecast period, respecting unit preference."""
     if not period.wind_speed and not period.wind_direction:
@@ -306,7 +308,14 @@ def format_period_wind(
     if period.wind_direction:
         parts.append(period.wind_direction)
     if period.wind_speed_mph is not None:
-        parts.append(format_wind_speed(period.wind_speed_mph, unit_pref, precision=0))
+        parts.append(
+            format_wind_speed(
+                period.wind_speed_mph,
+                unit_pref,
+                precision=0,
+                unit_system=unit_system,
+            )
+        )
     elif period.wind_speed:
         parts.append(period.wind_speed)
     return " ".join(parts) if parts else None
@@ -470,12 +479,19 @@ def _get_feels_like_reason(current: CurrentConditions, diff_f: float) -> str | N
 def format_hourly_wind(
     period: HourlyForecastPeriod,
     unit_pref: TemperatureUnit = TemperatureUnit.FAHRENHEIT,
+    *,
+    unit_system: DisplayUnitSystem | str | None = None,
 ) -> str | None:
     """Return wind description for hourly periods when both pieces are present."""
     if not period.wind_direction:
         return None
     if period.wind_speed_mph is not None:
-        speed_str = format_wind_speed(period.wind_speed_mph, unit_pref, precision=0)
+        speed_str = format_wind_speed(
+            period.wind_speed_mph,
+            unit_pref,
+            precision=0,
+            unit_system=unit_system,
+        )
     elif period.wind_speed:
         speed_str = period.wind_speed
     else:

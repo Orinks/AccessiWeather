@@ -83,6 +83,13 @@ class WeatherContext:
     pressure: float | None
     alerts: list[dict[str, Any]]
     forecast_summary: str | None = None
+    temperature_text: str | None = None
+    wind_speed_unit: str | None = None
+    wind_text: str | None = None
+    visibility_unit: str | None = None
+    visibility_text: str | None = None
+    pressure_unit: str | None = None
+    pressure_text: str | None = None
     local_time: str | None = None
     utc_time: str | None = None
     timezone: str | None = None
@@ -100,7 +107,9 @@ class WeatherContext:
         if self.time_of_day:
             parts.append(f"Time of Day: {self.time_of_day}")
 
-        if self.temperature is not None:
+        if self.temperature_text:
+            parts.append(f"Temperature: {self.temperature_text}")
+        elif self.temperature is not None:
             parts.append(f"Temperature: {self.temperature}°{self.temperature_unit}")
 
         if self.conditions:
@@ -109,17 +118,29 @@ class WeatherContext:
         if self.humidity is not None:
             parts.append(f"Humidity: {self.humidity}%")
 
-        if self.wind_speed is not None:
-            wind_info = f"Wind: {self.wind_speed} mph"
+        if self.wind_text:
+            wind_info = f"Wind: {self.wind_text}"
+            if self.wind_direction:
+                wind_info += f" from {self.wind_direction}"
+            parts.append(wind_info)
+        elif self.wind_speed is not None:
+            wind_unit = self.wind_speed_unit or "mph"
+            wind_info = f"Wind: {self.wind_speed} {wind_unit}"
             if self.wind_direction:
                 wind_info += f" from {self.wind_direction}"
             parts.append(wind_info)
 
-        if self.visibility is not None:
-            parts.append(f"Visibility: {self.visibility} miles")
+        if self.visibility_text:
+            parts.append(f"Visibility: {self.visibility_text}")
+        elif self.visibility is not None:
+            visibility_unit = self.visibility_unit or "miles"
+            parts.append(f"Visibility: {self.visibility} {visibility_unit}")
 
-        if self.pressure is not None:
-            parts.append(f"Pressure: {self.pressure} inHg")
+        if self.pressure_text:
+            parts.append(f"Pressure: {self.pressure_text}")
+        elif self.pressure is not None:
+            pressure_unit = self.pressure_unit or "inHg"
+            parts.append(f"Pressure: {self.pressure} {pressure_unit}")
 
         if self.alerts:
             alert_texts = []

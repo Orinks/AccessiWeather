@@ -70,9 +70,13 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "airnow_api_key",
     # Display preferences
     "round_values",
+    "wind_speed_unit",
     "enable_alerts",
     "minimize_to_tray",
     "minimize_on_startup",
+    "shortcut_show_main_window",
+    "shortcut_hide_main_window",
+    "shortcut_read_tray_info",
     "startup_enabled",
     "auto_update_enabled",
     "update_channel",

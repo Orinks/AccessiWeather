@@ -46,6 +46,7 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
         self.app = app
         self._icon_set = False
         self._cached_icon = None  # Cache the icon to avoid reloading
+        self._tooltip_text = "AccessiWeather"
 
         # Set up the tray icon
         self._setup_icon()
@@ -60,7 +61,7 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
         icon = self._load_icon()
         if icon and icon.IsOk():
             self._cached_icon = icon  # Cache the icon
-            self.SetIcon(icon, "AccessiWeather")
+            self.SetIcon(icon, self._tooltip_text)
             self._icon_set = True
             logger.debug("System tray icon set successfully")
         else:
@@ -246,6 +247,16 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
         """Handle Quit menu item click."""
         self.app.request_exit()
 
+    def hide_main_window(self) -> None:
+        """Hide the main window to the tray without exiting the app."""
+        frame = getattr(self.app, "main_window", None)
+        if frame is None:
+            return
+        if hasattr(frame, "_minimize_to_tray"):
+            frame._minimize_to_tray()
+        else:
+            frame.Hide()
+
     def show_main_window(self) -> None:
         """Show and restore the main window."""
         if self.app.main_window:
@@ -287,6 +298,19 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
                 frame.SetFocus()
             logger.debug("Main window restored from tray")
 
+    def get_tooltip_text(self) -> str:
+        """Return the last tooltip text shown in the tray."""
+        return self._tooltip_text or "AccessiWeather"
+
+    def announce_tooltip(self) -> None:
+        """Route the tray tooltip through the main window's accessible status path."""
+        frame = getattr(self.app, "main_window", None)
+        message = f"Tray info: {self.get_tooltip_text()}"
+        if frame is not None and hasattr(frame, "set_status"):
+            frame.set_status(message)
+            return
+        logger.info(message)
+
     def update_tooltip(self, text: str) -> None:
         """
         Update the tray icon tooltip text.
@@ -295,6 +319,7 @@ class SystemTrayIcon(wx.adv.TaskBarIcon):
             text: The new tooltip text
 
         """
+        self._tooltip_text = text or "AccessiWeather"
         if self._icon_set and self._cached_icon and self._cached_icon.IsOk():
-            self.SetIcon(self._cached_icon, text)
-            logger.debug(f"Tray tooltip updated: {text}")
+            self.SetIcon(self._cached_icon, self._tooltip_text)
+            logger.debug(f"Tray tooltip updated: {self._tooltip_text}")

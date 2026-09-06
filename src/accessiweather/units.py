@@ -61,3 +61,22 @@ def resolve_display_unit_system(
     if normalized == "auto":
         return resolve_auto_unit_system(location)
     return None
+
+
+def resolve_wind_display_unit_system(
+    preference: str | None,
+    *,
+    temperature_preference: str | None = None,
+    location: Location | None = None,
+) -> DisplayUnitSystem | None:
+    """Resolve a stored wind-speed preference to an explicit display system."""
+    normalized = (preference or "auto").strip().lower()
+    if normalized in {"mph", "mi/h"}:
+        return DisplayUnitSystem.US
+    if normalized in {"km/h", "kmh", "kph"}:
+        return DisplayUnitSystem.CA
+    if normalized in {"m/s", "mps", "ms", "meter/s", "meters/s", "metre/s", "metres/s"}:
+        return DisplayUnitSystem.SI
+    if normalized == "auto":
+        return resolve_display_unit_system(temperature_preference, location)
+    return None

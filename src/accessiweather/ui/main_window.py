@@ -16,7 +16,10 @@ from wx.lib.sized_controls import SizedFrame
 from ..runtime_env import is_compiled_runtime  # noqa: F401 - public monkeypatch surface
 from ..screen_reader import ScreenReaderAnnouncer
 from ..user_manual import open_user_manual  # noqa: F401 - public monkeypatch surface
-from .dialogs.location_dialog import show_edit_location_dialog  # noqa: F401
+from .dialogs.location_dialog import (  # noqa: F401
+    show_edit_location_dialog,
+    show_reorder_locations_dialog,
+)
 from .main_window_commands import MainWindowCommandMixin
 from .main_window_display import MainWindowDisplayMixin
 from .main_window_locations import MainWindowLocationMixin

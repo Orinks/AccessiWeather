@@ -290,6 +290,34 @@ class TestWeatherContext:
         assert "America/New_York" in prompt_text
         assert "afternoon" in prompt_text
 
+    def test_to_prompt_text_prefers_preformatted_unit_strings(self):
+        """Prompt text should use the already-resolved display units when provided."""
+        context = WeatherContext(
+            location="Toronto",
+            timestamp=datetime.now(UTC),
+            temperature=22.2,
+            temperature_unit="C",
+            conditions="Clear",
+            humidity=50,
+            wind_speed=16.1,
+            wind_direction="NW",
+            visibility=16.1,
+            pressure=101.8,
+            alerts=[],
+            temperature_text="22.2°C",
+            wind_text="16.1 km/h",
+            visibility_text="16.1 km",
+            pressure_text="101.76 kPa",
+        )
+        prompt_text = context.to_prompt_text()
+        assert "Temperature: 22.2°C" in prompt_text
+        assert "Wind: 16.1 km/h from NW" in prompt_text
+        assert "Visibility: 16.1 km" in prompt_text
+        assert "Pressure: 101.76 kPa" in prompt_text
+        assert "mph" not in prompt_text
+        assert "miles" not in prompt_text
+        assert "inHg" not in prompt_text
+
 
 # =============================================================================
 # ExplanationStyle Tests

@@ -6,7 +6,6 @@ import logging
 from math import isclose
 from typing import TYPE_CHECKING
 
-from ..location_sorting import location_name_sort_key
 from ..models import Location
 
 if TYPE_CHECKING:
@@ -85,7 +84,6 @@ class LocationOperations:
             marine_mode=marine_mode,
         )
         config.locations.append(new_location)
-        self._sort_locations(config)
 
         if config.current_location is None:
             config.current_location = new_location
@@ -138,7 +136,6 @@ class LocationOperations:
             self.logger.debug("Zone enrichment raised unexpectedly for %s: %s", name, exc)
 
         config.locations.append(new_location)
-        self._sort_locations(config)
 
         if config.current_location is None:
             config.current_location = new_location
@@ -154,10 +151,6 @@ class LocationOperations:
 
             self._zone_enrichment_service = ZoneEnrichmentService()
         return self._zone_enrichment_service
-
-    def _sort_locations(self, config) -> None:
-        """Keep saved locations in alphabetical order."""
-        config.locations.sort(key=location_name_sort_key)
 
     def update_zone_metadata(self, location_name: str, fields: dict[str, str]) -> bool:
         """
@@ -275,9 +268,6 @@ class LocationOperations:
             if current_matches_location:
                 config.current_location = location
 
-            if new_name != name:
-                self._sort_locations(config)
-
             self.logger.info(
                 "Updated location details for %s%s%s",
                 name,
@@ -296,7 +286,6 @@ class LocationOperations:
         for index, location in enumerate(config.locations):
             if location.name == name:
                 config.locations.pop(index)
-                self._sort_locations(config)
 
                 if config.current_location and config.current_location.name == name:
                     config.current_location = None
@@ -311,6 +300,37 @@ class LocationOperations:
 
         self.logger.warning(f"Location {name} not found")
         return False
+
+    def reorder_locations(self, ordered_names: list[str]) -> bool:
+        """Persist a new saved-location order by location name."""
+        config = self._manager.get_config()
+        visible_locations = [
+            location for location in config.locations if location.name != "Nationwide"
+        ]
+        current_names = [location.name for location in visible_locations]
+
+        if ordered_names == current_names:
+            return True
+
+        if len(ordered_names) != len(current_names) or set(ordered_names) != set(current_names):
+            self.logger.warning("Rejected saved-location reorder with mismatched names")
+            return False
+
+        locations_by_name = {location.name: location for location in visible_locations}
+        reordered_locations = [locations_by_name[name] for name in ordered_names]
+        hidden_locations = [
+            location for location in config.locations if location.name == "Nationwide"
+        ]
+        config.locations = reordered_locations + hidden_locations
+
+        if (
+            config.current_location is not None
+            and config.current_location.name in locations_by_name
+        ):
+            config.current_location = locations_by_name[config.current_location.name]
+
+        self.logger.info("Reordered saved locations: %s", ordered_names)
+        return self._manager.save_config()
 
     def set_current_location(self, name: str) -> bool:
         """Set the current location by name."""
@@ -334,14 +354,11 @@ class LocationOperations:
 
     def get_all_locations(self) -> list[Location]:
         """Return configured locations without synthetic nationwide entries."""
-        return sorted(
-            [
-                location
-                for location in self._manager.get_config().locations.copy()
-                if location.name != "Nationwide"
-            ],
-            key=location_name_sort_key,
-        )
+        return [
+            location
+            for location in self._manager.get_config().locations.copy()
+            if location.name != "Nationwide"
+        ]
 
     def get_location_names(self) -> list[str]:
         """Return the list of configured location names."""
