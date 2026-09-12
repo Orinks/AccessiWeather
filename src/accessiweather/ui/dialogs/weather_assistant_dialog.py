@@ -151,6 +151,7 @@ class WeatherAssistantDialog(wx.Dialog):
         # The _is_generating flag prevents sends during generation.
         if generating:
             self._set_status("Thinking...")
+            self._announcer.announce("Thinking...")
         else:
             self._set_status("Ready")
             self.input_ctrl.SetFocus()
@@ -295,7 +296,8 @@ class WeatherAssistantDialog(wx.Dialog):
             else SYSTEM_PROMPT
         )
         system_message = (
-            f"{prompt}\n\nCurrent local time: {datetime.now().astimezone().isoformat()}"
+            f"{prompt}\n\nCurrent device time: {datetime.now().astimezone().isoformat()}"
+            f"\nUse the weather location's provider timezone for forecast times; the device timezone may differ."
             f"\nTreat weather observation timestamps as the time of that data, not as the current time."
             f"\n\nCurrent weather data:\n{weather_context}"
         )

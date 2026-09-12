@@ -7,6 +7,7 @@ import pytest
 
 from accessiweather.ui.dialogs.weather_assistant_request import (
     AssistantRequestError,
+    needs_live_weather,
     run_assistant_request,
 )
 
@@ -154,6 +155,7 @@ def test_generation_disables_clear_and_completion_keeps_model_status():
     dialog._append_to_display = MagicMock()
     dialog._announcer = MagicMock()
     dialog._set_generating(True)
+    dialog._announcer.announce.assert_called_once_with("Thinking...")
     dialog.clear_button.Enable.assert_called_with(False)
     dialog._on_clear(None)
     assert dialog._conversation == [{"role": "user", "content": "Weather?"}]
@@ -161,3 +163,18 @@ def test_generation_disables_clear_and_completion_keeps_model_status():
     dialog.clear_button.Enable.assert_called_with(True)
     dialog.status_label.SetLabel.assert_called_with("Model: model-used")
     dialog.input_ctrl.SetFocus.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "question",
+    ["Explain today’s forecast", "Why is it so windy now?", "Explain current conditions"],
+)
+def test_explanatory_live_questions_still_require_weather(question):
+    assert needs_live_weather(question)
+
+
+@pytest.mark.parametrize(
+    "question", ["Explain how forecasts work", "What is a weather warning?", "How does rain form?"]
+)
+def test_general_weather_concepts_do_not_require_lookup(question):
+    assert not needs_live_weather(question)

@@ -14,11 +14,16 @@ class AssistantRequestError(Exception):
 def needs_live_weather(message: str) -> bool:
     """Identify concrete weather lookups without forcing tools for conceptual chat."""
     text = message.lower().strip()
-    if re.search(r"\b(explain|define|meaning|how does|how do|why does|what is a)\b", text):
+    live_cue = re.search(
+        r"\b(now|today|tomorrow|tonight|currently|current|this week|next week)\b", text
+    )
+    if not live_cue and re.search(
+        r"\b(explain|define|meaning|how does|how do|why does|what is a)\b", text
+    ):
         return False
     return bool(
         re.search(
-            r"\b(weather|forecast|alerts?|warnings?|temperature|rain|snow|wind|humidity|uv|outlook|conditions)\b",
+            r"\b(weather|forecast|alerts?|warnings?|temperature|rain|raining|snow|snowing|wind|windy|humidity|uv|outlook|conditions)\b",
             text,
         )
     )
