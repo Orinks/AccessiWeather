@@ -55,6 +55,30 @@ def test_unknown_provider_does_not_silently_switch():
         explainer_options(AppSettings(ai_provider="unknown"))
 
 
+def test_forecast_product_uses_selected_provider_and_portable_key():
+    from types import SimpleNamespace
+
+    from accessiweather.ui.dialogs.forecast_product_ai import build_explainer, has_openrouter_key
+
+    settings = AppSettings(
+        ai_provider="venice",
+        venice_api_key="test-portable-key",
+        venice_model="selected-venice-model",
+        openrouter_api_key="test-other-key",
+        custom_system_prompt="Use plain language",
+        custom_instructions="Focus on wind",
+    )
+    app = SimpleNamespace(config_manager=SimpleNamespace(get_settings=lambda: settings))
+    explainer = build_explainer(None, app)
+    assert explainer.provider == "venice"
+    assert explainer.api_key == "test-portable-key"
+    assert explainer.get_effective_model() == "selected-venice-model"
+    assert explainer.custom_system_prompt == "Use plain language"
+    assert has_openrouter_key(app)
+    settings.venice_api_key = ""
+    assert not has_openrouter_key(app)
+
+
 def test_venice_key_uses_secure_storage_and_is_redacted_from_logs():
     manager = MagicMock()
     manager.app._portable_mode = False

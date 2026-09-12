@@ -258,6 +258,9 @@ def test_ai_custom_prompt_fields_create_static_text_before_multiline_controls(mo
         def SetHint(self, *args, **kwargs):
             return None
 
+        def SetSelection(self, *args, **kwargs):
+            return None
+
         def SetScrollRate(self, *args, **kwargs):
             return None
 
@@ -307,6 +310,7 @@ def test_ai_custom_prompt_fields_create_static_text_before_multiline_controls(mo
         create_section=MagicMock(side_effect=lambda *args, **kwargs: FakeSizer()),
         add_labeled_control_row=MagicMock(side_effect=lambda *args, **kwargs: FakeControl()),
         _on_validate_openrouter_key=MagicMock(),
+        _on_validate_venice_key=MagicMock(),
         _on_browse_models=MagicMock(),
         _on_reset_prompt=MagicMock(),
     )

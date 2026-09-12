@@ -11,12 +11,14 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def has_openrouter_key() -> bool:
-    """Return True when the OpenRouter API key is available in SecureStorage."""
+def has_openrouter_key(app: object | None = None) -> bool:
+    """Return whether the active provider has a key (legacy helper name)."""
     try:
-        from ...config.secure_storage import SecureStorage
+        from ...ai_settings import selected_key
 
-        return bool(SecureStorage.get_password("openrouter_api_key"))
+        manager = getattr(app, "config_manager", None)
+        settings = manager.get_settings() if manager is not None else None
+        return bool(selected_key(settings))
     except Exception:  # noqa: BLE001
         return False
 
@@ -30,12 +32,8 @@ def build_explainer(
         return injected_explainer
 
     try:
-        from ...ai_explainer import DEFAULT_FREE_MODEL, AIExplainer
-        from ...config.secure_storage import SecureStorage
-
-        api_key = SecureStorage.get_password("openrouter_api_key")
-        if not api_key:
-            return None
+        from ...ai_explainer import AIExplainer
+        from ...ai_settings import explainer_options
 
         settings = None
         if app is not None:
@@ -43,24 +41,7 @@ def build_explainer(
             if cfg_manager is not None:
                 settings = cfg_manager.get_settings()
 
-        model_pref = getattr(settings, "ai_model_preference", None) if settings else None
-        if model_pref == "auto":
-            model = "openrouter/auto"
-        elif model_pref:
-            model = model_pref
-        else:
-            model = DEFAULT_FREE_MODEL
-
-        return AIExplainer(
-            api_key=api_key,
-            model=model,
-            custom_system_prompt=getattr(settings, "custom_system_prompt", None)
-            if settings
-            else None,
-            custom_instructions=getattr(settings, "custom_instructions", None)
-            if settings
-            else None,
-        )
+        return AIExplainer(**explainer_options(settings))
     except Exception:  # noqa: BLE001
         logger.warning("Failed to build AIExplainer", exc_info=True)
         return None

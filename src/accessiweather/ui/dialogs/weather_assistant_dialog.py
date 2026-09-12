@@ -14,6 +14,13 @@ from typing import TYPE_CHECKING
 
 import wx
 
+from ...ai_provider import (
+    DEFAULT_VENICE_MODEL,
+    create_venice_client,
+    venice_error,
+    venice_request_options,
+)
+from ...ai_settings import selected_provider
 from ...ai_tools import WeatherToolExecutor, get_tools_for_message
 from ...screen_reader import ScreenReaderAnnouncer
 from .async_guard import guard_destroyed
@@ -240,13 +247,30 @@ class WeatherAssistantDialog(wx.Dialog):
         """Generate AI response in a background thread."""
         # Get config
         settings = self.app.config_manager.get_settings() if self.app.config_manager else None
-        api_key = settings.openrouter_api_key if settings else ""
-        model = settings.ai_model_preference if settings else ""
+        provider = getattr(settings, "ai_provider", "openrouter")
+        try:
+            provider = selected_provider(settings)
+        except Exception as error:
+            wx.CallAfter(self._on_response_error, str(error))
+            return
+        is_venice = provider == "venice"
+        api_key = (
+            (settings.venice_api_key if is_venice else settings.openrouter_api_key)
+            if settings
+            else ""
+        )
+        model = (
+            (settings.venice_model if is_venice else settings.ai_model_preference)
+            if settings
+            else ""
+        )
+        if is_venice:
+            model = model or DEFAULT_VENICE_MODEL
 
         if not api_key:
             wx.CallAfter(
                 self._on_response_error,
-                "No OpenRouter API key configured. Set one in Settings > AI Explanations.",
+                f"No {'Venice' if is_venice else 'OpenRouter'} API key configured. Set one in Settings > AI Explanations.",
             )
             return
 
@@ -254,7 +278,16 @@ class WeatherAssistantDialog(wx.Dialog):
         weather_context = _build_weather_context(self.app)
 
         # Build messages for API
-        system_message = f"{SYSTEM_PROMPT}\n\nCurrent weather data:\n{weather_context}"
+        custom_prompt = getattr(settings, "custom_system_prompt", None)
+        prompt = (
+            custom_prompt.strip()
+            if isinstance(custom_prompt, str) and custom_prompt.strip()
+            else SYSTEM_PROMPT
+        )
+        system_message = f"{prompt}\n\nCurrent weather data:\n{weather_context}"
+        instructions = getattr(settings, "custom_instructions", None)
+        if isinstance(instructions, str) and instructions.strip():
+            system_message += f"\n\nAdditional instructions: {instructions.strip()}"
 
         messages: list[dict] = [{"role": "system", "content": system_message}]
         messages.extend(self._conversation)
@@ -266,10 +299,14 @@ class WeatherAssistantDialog(wx.Dialog):
             try:
                 from openai import OpenAI
 
-                client = OpenAI(
-                    base_url="https://openrouter.ai/api/v1",
-                    api_key=api_key,
-                    timeout=30.0,
+                client = (
+                    create_venice_client(api_key)
+                    if is_venice
+                    else OpenAI(
+                        base_url="https://openrouter.ai/api/v1",
+                        api_key=api_key,
+                        timeout=30.0,
+                    )
                 )
 
                 effective_model, extra_kwargs = _build_completion_request(
@@ -277,6 +314,8 @@ class WeatherAssistantDialog(wx.Dialog):
                     messages,
                     tool_executor,
                 )
+                if is_venice:
+                    extra_kwargs.update(venice_request_options())
                 tools = extra_kwargs.get("tools", [])
                 if tools:
                     logger.info(
@@ -380,6 +419,9 @@ class WeatherAssistantDialog(wx.Dialog):
                     )
 
             except Exception as e:
+                if is_venice:
+                    wx.CallAfter(self._on_response_error, str(venice_error(e)))
+                    return
                 error_msg = str(e)
                 logger.error(f"Weather Assistant generation error: {e}", exc_info=True)
 

@@ -217,6 +217,8 @@ def _validate_ai_model_deferred(app: AccessiWeatherApp) -> None:
 
     try:
         settings = app.config_manager.get_settings()
+        if getattr(settings, "ai_provider", "openrouter") != "openrouter":
+            return
         model_id = getattr(settings, "ai_model_preference", None)
 
         # Skip validation if no model configured or using defaults

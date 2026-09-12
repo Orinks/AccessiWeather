@@ -75,6 +75,26 @@ class TestConfigManager:
         loaded = manager2.load_config()
         assert loaded.settings.update_interval_minutes == 30
 
+    def test_fresh_config_preserves_existing_provider_credentials(self, manager, monkeypatch):
+        """Missing JSON settings must not hide credentials already stored in the keyring."""
+        from accessiweather.config.secure_storage import SecureStorage
+
+        manager.app._portable_mode = False
+        existing = {"openrouter_api_key": "existing-router", "venice_api_key": "existing-venice"}
+        monkeypatch.setattr(SecureStorage, "get_password", lambda name: existing.get(name))
+        write = MagicMock(return_value=True)
+        monkeypatch.setattr(SecureStorage, "set_password", write)
+
+        assert not manager.config_file.exists()
+        config = manager.load_config()
+
+        assert str(config.settings.openrouter_api_key) == "existing-router"
+        assert str(config.settings.venice_api_key) == "existing-venice"
+        saved = manager.config_file.read_text(encoding="utf-8")
+        assert "existing-router" not in saved
+        assert "existing-venice" not in saved
+        write.assert_not_called()
+
     def test_legacy_show_nationwide_location_is_ignored_on_load(self, manager):
         """Legacy show_nationwide_location config no longer becomes a setting."""
         manager.config_file.parent.mkdir(parents=True, exist_ok=True)

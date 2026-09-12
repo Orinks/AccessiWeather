@@ -14,9 +14,9 @@ logger = logging.getLogger(__name__)
 
 def resolve_ai_model(settings: Any) -> str:
     """Return the configured AI model name."""
-    if settings.ai_model_preference == "auto":
-        return "openrouter/auto"
-    return settings.ai_model_preference
+    from ...ai_settings import selected_model
+
+    return selected_model(settings)
 
 
 def resolve_explanation_style(settings: Any) -> ExplanationStyle:

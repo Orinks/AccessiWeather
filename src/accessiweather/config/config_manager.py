@@ -146,6 +146,7 @@ class ConfigManager:
                 self._config.settings.update_channel = (
                     self._default_update_channel_for_current_build()
                 )
+                self._load_secure_keys()
                 self.save_config()  # Save default config
 
         except Exception as e:

@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- You can choose Venice AI for weather explanations and the Weather Assistant using your own API key and prepaid credits. OpenRouter remains the default, and each provider keeps its own key and model choice.
+
 ### Changed
 - You can now start and stop NOAA Weather Radio with a system-wide hotkey — Ctrl+Alt+Shift+R by default — without switching to AccessiWeather first. It works while the app is minimized to the tray, and a notification tells you what happened, so silencing the radio no longer means finding the window, opening the radio dialog, and hunting for the Stop button. Press it again and it picks up the last station you played, including one the alert auto-tune started. Rebind it on the General tab in Settings, or clear the field to turn it off. (Windows only.)
 - AccessiWeather now keeps a log file, so there's something to look at when a problem needs reporting. Logs land in a `logs` folder next to your settings and roll over at 5 MB, keeping the last three. Until now the app only wrote to the console, which installed builds don't have — meaning nothing was recorded anywhere. A portable copy keeps its logs inside the portable folder, so it still leaves nothing behind on the machine.
@@ -13,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - You can now check your AirNow API key right in Settings: a new "Validate AirNow key" button on the Data Sources tab tests the key against AirNow and tells you immediately whether it works, just like the Pirate Weather key validator.
 
 ### Fixed
+- Creating a fresh settings file now keeps API keys already saved on your computer available in Settings.
 - NOAA Weather Radio auto-tune no longer turns the radio on for alerts a real weather radio would sleep through. AccessiWeather decided from the alert's name, so a Special Marine Warning started the stream whether or not it was actually broadcast with a SAME tone — and the same name is used for both. It now reads the SAME event code the National Weather Service puts on the alert, the very code a physical radio listens for. In a sample of 4,000 recent alerts this silenced 84 that should never have played, and it also catches ones the old list missed, like a Fire Warning.
 - AirNow observations now actually reach the display. The AirNow API returns a different response format than its documentation describes (renamed camelCase fields like nowcastAQI), so every observation was discarded and AccessiWeather silently kept showing Open-Meteo's model estimate. The parser now accepts both formats, so the AQI, pollutant, and observation time match AirNow.gov.
 - AirNow air quality now works for US locations saved before country detection existed. Older saved locations were silently skipped by AirNow and kept showing model-based Open-Meteo estimates — which could disagree noticeably with the official AirNow reading — even with a valid AirNow key configured.

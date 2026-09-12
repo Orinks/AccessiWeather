@@ -386,7 +386,7 @@ class ForecastProductPanel(wx.Panel):
 
     def _update_explain_button_state(self) -> None:
         """
-        Enable Explain only when we have loaded text + an OpenRouter key.
+        Enable Explain only when we have loaded text and a key for the selected provider.
 
         The explainer itself is built on-demand at click time (mirrors
         ``DiscussionDialog._do_explain``). An injected ``self._ai_explainer``
@@ -403,10 +403,9 @@ class ForecastProductPanel(wx.Panel):
         else:
             self.explain_button.Disable()
 
-    @staticmethod
-    def _has_openrouter_key() -> bool:
-        """Return True when the OpenRouter API key is available in SecureStorage."""
-        return has_openrouter_key()
+    def _has_openrouter_key(self) -> bool:
+        """Return whether the selected AI provider has a configured key."""
+        return has_openrouter_key(self._app)
 
     # ------------------------------------------------------------------
     # Event handlers
@@ -433,7 +432,7 @@ class ForecastProductPanel(wx.Panel):
         self._set_post_explain_buttons(has_attempted=False)
         self.explain_button.Disable()
         self.ai_summary_display.SetValue(
-            "Generating plain language summary. Selecting an OpenRouter model..."
+            "Generating plain language summary. Using the selected AI provider..."
         )
         self._schedule_explain(self._current_text)
 
@@ -494,7 +493,7 @@ class ForecastProductPanel(wx.Panel):
             if explainer is None:
                 wx.CallAfter(
                     self._on_explain_error,
-                    "OpenRouter API key not configured. Set it in Settings > AI.",
+                    "Selected AI provider API key not configured. Set it in Settings > AI.",
                 )
                 return
             result = await explainer.explain_text_product(
@@ -521,14 +520,20 @@ class ForecastProductPanel(wx.Panel):
         self,
         model_used: str,
         token_count: int,
-        estimated_cost: float,
+        estimated_cost: float | None,
         cached: bool,
         model_selection_reason: str | None = None,
         requested_model: str | None = None,
         model_attempts: tuple[str, ...] = (),
     ) -> str:
         """Build the model metadata shown after a summary finishes."""
-        cost_text = "No cost" if estimated_cost == 0 else f"~${estimated_cost:.6f}"
+        cost_text = (
+            "See provider account"
+            if estimated_cost is None
+            else "No cost"
+            if estimated_cost == 0
+            else f"~${estimated_cost:.6f}"
+        )
         info_lines = [f"Model: {model_used}", f"Tokens: {token_count}", f"Cost: {cost_text}"]
         if requested_model and requested_model != model_used:
             info_lines.append(f"Requested: {requested_model}")
@@ -546,7 +551,7 @@ class ForecastProductPanel(wx.Panel):
         summary: str,
         model_used: str = "",
         token_count: int = 0,
-        estimated_cost: float = 0.0,
+        estimated_cost: float | None = 0.0,
         cached: bool = False,
         model_selection_reason: str | None = None,
         requested_model: str | None = None,
@@ -581,5 +586,7 @@ class ForecastProductPanel(wx.Panel):
         self._show_ai_summary_section()
         self._set_post_explain_buttons(has_attempted=True)
         self.ai_summary_display.SetValue(
-            f"Failed to generate summary: {message}\n\nCheck your OpenRouter API key in Settings."
+            f"Failed to generate summary: {message}\n\nCheck the selected provider and API key in Settings."
         )
+        self.ai_summary_display.SetFocus()
+        self._announce_explain_status(f"Summary failed. {message}")
