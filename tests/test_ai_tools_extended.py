@@ -156,7 +156,7 @@ class TestFormatOpenMeteoResponse:
         result = format_open_meteo_response(data, "Berlin")
         assert "Berlin" in result
         assert "temperature_2m: 22.5°C" in result
-        assert "time" not in result.split("Current:")[1]  # time should be excluded
+        assert "Observation time: 2026-02-11T15:00" in result
 
     def test_hourly_data(self):
         data = {

@@ -58,11 +58,11 @@ class TestFormatCurrentWeather:
         assert "Humidity" not in result
         assert "Wind: 5 mph" in result
 
-    def test_fallback_scalar_dump(self):
+    def test_metadata_is_not_reported_as_weather(self):
         data = {"status": "ok", "code": 200}
         result = format_current_weather(data, "Test")
-        assert "status: ok" in result
-        assert "code: 200" in result
+        assert "No current weather data available" in result
+        assert "status: ok" not in result
 
     def test_no_display_name(self):
         data = {"temperature": "70°F"}

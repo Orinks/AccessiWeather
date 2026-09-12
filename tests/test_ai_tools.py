@@ -164,7 +164,7 @@ class TestWeatherToolExecutor:
 
         result = executor.execute("get_current_weather", {"location": "NYC"})
         assert "New York, NY" in result
-        assert "status: ok" in result
+        assert "No current weather data available" in result
 
     def test_execute_forecast_nested_properties(self, executor, mock_weather_service):
         mock_weather_service.get_forecast.return_value = {
