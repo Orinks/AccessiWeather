@@ -43,6 +43,7 @@ def make_tab():
             "venice_key",
             "venice_model",
             "validate_venice_key",
+            "get_venice_key",
             "openrouter_key",
             "ai_model",
             "ai_style",

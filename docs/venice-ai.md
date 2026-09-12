@@ -1,6 +1,6 @@
 # Venice AI setup
 
-Open Settings, then AI, and choose Venice AI as the provider. Add your own Venice API key, select Validate Venice key, and save. AccessiWeather does not provide a shared key or buy credits for you.
+Open Settings, then AI, and choose Venice AI as the provider. Select Get Venice API key to open Venice's account and API settings in your browser. Add your own Venice API key, select Validate Venice key, and save. AccessiWeather does not provide a shared key or buy credits for you.
 
 Venice API requests use prepaid USD API credits from your Venice account. A chat subscription is separate from API usage. Key validation checks access without generating a response; successful validation does not guarantee sufficient credits for every request.
 

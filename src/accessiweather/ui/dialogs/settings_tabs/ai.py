@@ -97,6 +97,9 @@ class AITab:
         controls["validate_venice_key"] = wx.Button(panel, label="Validate Venice key")
         controls["validate_venice_key"].Bind(wx.EVT_BUTTON, self.dialog._on_validate_venice_key)
         venice_section.Add(controls["validate_venice_key"], 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        controls["get_venice_key"] = wx.Button(panel, label="Get Venice API key...")
+        controls["get_venice_key"].Bind(wx.EVT_BUTTON, self._on_get_venice_key)
+        venice_section.Add(controls["get_venice_key"], 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
         controls["venice_model"] = self.dialog.add_labeled_control_row(
             panel,
             venice_section,
@@ -182,6 +185,17 @@ class AITab:
         self.dialog.notebook.AddPage(panel, page_label)
         return panel
 
+    def _on_get_venice_key(self, event):
+        """Open account setup without collecting credentials in the application."""
+        if not wx.LaunchDefaultBrowser("https://venice.ai/settings/api"):
+            wx.MessageBox(
+                "Could not open your browser. Visit https://venice.ai/settings/api "
+                "to sign up or manage your Venice API keys.",
+                "Open Venice API settings",
+                wx.OK | wx.ICON_ERROR,
+                parent=self.dialog,
+            )
+
     def load(self, settings):
         """Populate AI tab controls from settings."""
         controls = self.dialog._controls
@@ -258,6 +272,7 @@ class AITab:
             "venice_key": "Venice API key",
             "venice_model": "Venice model ID",
             "validate_venice_key": "Validate Venice key",
+            "get_venice_key": "Get Venice API key (opens browser)",
             "openrouter_key": "OpenRouter API key",
             "ai_model": "AI model preference",
             "ai_style": "AI explanation style",
