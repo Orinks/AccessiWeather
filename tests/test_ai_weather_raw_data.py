@@ -9,6 +9,7 @@ from hypothesis import (
 )
 
 from accessiweather.ai_tool_formatters import (
+    format_alerts,
     format_current_weather,
     format_forecast,
     format_hourly_forecast,
@@ -120,6 +121,60 @@ def test_elapsed_nws_hour_is_excluded():
     }
     text = format_hourly_forecast(data, now=datetime(2026, 9, 12, 18, 30, tzinfo=UTC))
     assert "-99" not in text and "20" in text and "NWS" in text
+
+
+def test_alert_validity_and_sender_are_explicit():
+    text = format_alerts(
+        {
+            "features": [
+                {
+                    "properties": {
+                        "event": "Flood Watch",
+                        "senderName": "NWS Upton NY",
+                        "effective": "2026-09-12T02:20:00-04:00",
+                        "onset": "2026-09-12T12:00:00-04:00",
+                        "expires": "2026-09-13T11:00:00-04:00",
+                        "ends": None,
+                    }
+                }
+            ]
+        }
+    )
+    assert "Source: NWS" in text and "Sender: NWS Upton NY" in text
+    assert "Effective: 2026-09-12T02:20:00-04:00" in text
+    assert "Onset: 2026-09-12T12:00:00-04:00" in text
+    assert "Expires: 2026-09-13T11:00:00-04:00" in text
+    assert "Ends: unknown" in text
+
+
+def test_nws_forecast_includes_day_and_night_for_requested_days():
+    periods = [{"name": f"Period {i}", "temperature": 20} for i in range(16)]
+    text = format_forecast({"properties": {"periods": periods}}, forecast_days=7)
+    assert "Period 13" in text and "Period 14" not in text
+
+
+def test_combined_current_has_one_provenance_block():
+    text = format_open_meteo_response({"current": {"temperature_2m": 20}})
+    assert text.count("Source:") == 1 and text.count("Timezone:") == 1
+
+
+def test_forecast_stops_at_requested_day_boundary():
+    text = format_forecast(
+        {
+            "properties": {
+                "periods": [
+                    {"name": "First", "startTime": "2026-09-12T06:00:00-04:00", "temperature": 20},
+                    {
+                        "name": "Outside",
+                        "startTime": "2026-09-13T06:00:00-04:00",
+                        "temperature": 21,
+                    },
+                ]
+            }
+        },
+        forecast_days=1,
+    )
+    assert "First" in text and "Outside" not in text
 
 
 @given(

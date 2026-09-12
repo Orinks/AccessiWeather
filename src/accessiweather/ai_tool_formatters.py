@@ -2,10 +2,17 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
-from .ai_weather_time import current_or_future, mapping, measurement, provenance, series_lines
+from .ai_weather_time import (
+    current_or_future,
+    mapping,
+    measurement,
+    provenance,
+    series_lines,
+    timestamp,
+)
 
 
 def format_current_weather(data: dict[str, Any], display_name: str = "") -> str:
@@ -91,8 +98,21 @@ def format_forecast(data: dict[str, Any], display_name: str = "", *, forecast_da
     count = len(lines)
     periods = data.get("periods", mapping(data.get("properties")).get("periods", []))
     if isinstance(periods, list):
-        for period in periods[:7]:
+        days = max(1, min(forecast_days, 16))
+        first_time = next(
+            (
+                timestamp(p.get("startTime"), data)
+                for p in periods
+                if isinstance(p, dict) and timestamp(p.get("startTime"), data)
+            ),
+            None,
+        )
+        boundary = first_time + timedelta(days=days) if first_time else None
+        for period in periods[: 2 * days]:
             if not isinstance(period, dict):
+                continue
+            start = timestamp(period.get("startTime"), data)
+            if boundary and start and start.tzinfo == boundary.tzinfo and start >= boundary:
                 continue
             name = period.get("name") or "Unknown"
             temp = period.get("temperature")
@@ -135,11 +155,12 @@ def format_alerts(data: dict[str, Any], display_name: str = "") -> str:
     lines = [header]
 
     alerts = data.get("alerts", data.get("features", []))
+    lines.append("Source: NWS" if "features" in data else "Source: weather service")
     if isinstance(alerts, list) and len(alerts) > 0:
         for alert in alerts:
             if not isinstance(alert, dict):
                 continue
-            props = alert.get("properties", alert)
+            props = mapping(alert.get("properties", alert))
             event = props.get("event") or "Unknown Alert"
             severity = props.get("severity")
             headline = props.get("headline")
@@ -149,6 +170,19 @@ def format_alerts(data: dict[str, Any], display_name: str = "") -> str:
             if severity:
                 alert_line += f" (Severity: {severity})"
             lines.append(alert_line)
+            for label, key in (
+                ("Sender", "senderName"),
+                ("Effective", "effective"),
+                ("Onset", "onset"),
+                ("Expires", "expires"),
+                ("Ends", "ends"),
+            ):
+                value = props.get(key)
+                if key == "senderName" and not value:
+                    value = props.get("sender")
+                lines.append(
+                    f"  {label}: {value if isinstance(value, str) and value else 'unknown'}"
+                )
             if headline:
                 lines.append(f"  {headline}")
             if description:
@@ -226,7 +260,10 @@ def format_open_meteo_response(
     lines = [f"Open-Meteo data for {display_name}:" if display_name else "Open-Meteo data:"]
     lines.extend(provenance(data, "Open-Meteo"))
     if isinstance(data.get("current"), dict):
-        lines.append(format_current_weather(data))
+        current_lines = format_current_weather(data).splitlines()
+        lines.extend(
+            line for line in current_lines if not line.startswith(("Source:", "Timezone:"))
+        )
     found = isinstance(data.get("current"), dict)
     for section, limit, label in (("hourly", 24, "periods"), ("daily", 16, "days")):
         rows = series_lines(data, section, limit, now)

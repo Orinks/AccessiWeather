@@ -101,7 +101,7 @@ class TestFormatForecast:
         assert "Tonight - 60°F - Clear" in result
         assert "Tomorrow - 85°F - Sunny" in result
 
-    def test_up_to_seven_periods(self):
+    def test_up_to_fourteen_periods_for_seven_days(self):
         data = {
             "periods": [
                 {
@@ -115,7 +115,7 @@ class TestFormatForecast:
         }
         result = format_forecast(data, "Test")
         assert "Period 6" in result
-        assert "Period 7" not in result  # 0-indexed, so Period 7 would be the 8th
+        assert "Period 9" in result  # Both day and night periods are included
 
     def test_nested_properties_periods(self):
         data = {
