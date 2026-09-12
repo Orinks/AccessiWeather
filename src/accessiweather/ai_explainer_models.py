@@ -59,7 +59,7 @@ class ExplanationResult:
     text: str
     model_used: str
     token_count: int
-    estimated_cost: float
+    estimated_cost: float | None
     cached: bool
     timestamp: datetime
     requested_model: str | None = None

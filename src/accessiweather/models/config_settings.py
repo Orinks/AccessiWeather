@@ -111,6 +111,9 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     avwx_api_key: str = ""
     # AI Explanation Settings
     openrouter_api_key: str = ""
+    ai_provider: str = "openrouter"
+    venice_api_key: str = ""
+    venice_model: str = "venice-uncensored-1-2"
     ai_model_preference: str = "openrouter/free"  # free auto-router (default)
     ai_explanation_style: str = "standard"  # "brief", "standard", "detailed"
     ai_cache_ttl: int = 300  # 5 minutes in seconds

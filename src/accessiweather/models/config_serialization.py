@@ -99,6 +99,8 @@ class AppSettingsSerializationMixin:
             "station_selection_strategy": settings.station_selection_strategy,
             # AI settings and AVWX key stored in secure storage, not here
             "ai_model_preference": settings.ai_model_preference,
+            "ai_provider": settings.ai_provider,
+            "venice_model": settings.venice_model,
             "ai_explanation_style": settings.ai_explanation_style,
             "ai_cache_ttl": settings.ai_cache_ttl,
             # AI Prompt Customization
@@ -248,6 +250,9 @@ class AppSettingsSerializationMixin:
             # AVWX and AI settings (stored in secure storage)
             avwx_api_key=data.get("avwx_api_key", ""),
             openrouter_api_key=data.get("openrouter_api_key", ""),
+            ai_provider=data.get("ai_provider", "openrouter"),
+            venice_api_key=data.get("venice_api_key", ""),
+            venice_model=data.get("venice_model", "venice-uncensored-1-2"),
             ai_model_preference=data.get("ai_model_preference", "openrouter/free"),
             ai_explanation_style=data.get("ai_explanation_style", "standard"),
             ai_cache_ttl=data.get("ai_cache_ttl", 300),

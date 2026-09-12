@@ -27,6 +27,12 @@ class AIExplainerValidationMixin:
         """
         import asyncio
 
+        if self.provider == "venice":
+            from .ai_provider import validate_venice_api_key
+
+            valid, _message = await validate_venice_api_key(api_key)
+            return valid
+
         # Temporarily set the API key
         original_key = self.api_key
         self.api_key = api_key

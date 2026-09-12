@@ -256,6 +256,7 @@ class AIExplainerPromptMixin:
         """Generate a cache key for the explanation."""
         # Create a key based on significant weather values
         key_parts = [
+            f"provider:{self.provider}",
             f"loc:{location_name}",
             f"temp:{weather_data.get('temperature')}",
             f"cond:{weather_data.get('conditions')}",

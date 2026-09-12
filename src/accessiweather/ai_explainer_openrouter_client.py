@@ -32,6 +32,8 @@ class AIExplainerOpenRouterMixin:
     def _build_model_attempts(self, primary_model: str) -> list[str]:
         """Return the ordered model list used for a generation attempt."""
         models_to_try = [primary_model]
+        if self.provider == "venice":
+            return models_to_try
 
         if primary_model != DEFAULT_FREE_MODEL:
             models_to_try.append(DEFAULT_FREE_MODEL)
@@ -59,6 +61,8 @@ class AIExplainerOpenRouterMixin:
 
     def _describe_model_attempt(self, model: str, primary_model: str, attempt_index: int) -> str:
         """Return user-facing status text for a model attempt."""
+        if self.provider == "venice":
+            return f"Trying selected Venice model {model}."
         if attempt_index == 0:
             if model == DEFAULT_FREE_MODEL:
                 return (
@@ -186,6 +190,8 @@ class AIExplainerOpenRouterMixin:
         last_error: Exception | None = None,
     ) -> str:
         """Return user-facing context for why a model answered."""
+        if self.provider == "venice":
+            return "Used the selected Venice model."
         if model_used == requested_model and len(attempted_models) <= 1:
             if requested_model == DEFAULT_FREE_MODEL:
                 return "OpenRouter's free router selected the answering free model."
@@ -452,7 +458,7 @@ class AIExplainerOpenRouterMixin:
                 "• Trying again in a few minutes"
             ) from e
 
-    def _estimate_cost(self, model: str, token_count: int) -> float:
+    def _estimate_cost(self, model: str, token_count: int) -> float | None:
         """
         Estimate cost based on model and token count.
 
@@ -464,6 +470,9 @@ class AIExplainerOpenRouterMixin:
             Estimated cost in USD (0.0 for free models)
 
         """
+        if self.provider == "venice":
+            # Custom Venice model prices vary; do not present an invented estimate.
+            return None
         # Free models have no cost
         if ":free" in model:
             return 0.0

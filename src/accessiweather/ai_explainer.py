@@ -31,6 +31,12 @@ from .ai_explainer_openrouter_client import AIExplainerOpenRouterMixin
 from .ai_explainer_prompting import AIExplainerPromptMixin
 from .ai_explainer_text_products import AIExplainerTextProductMixin
 from .ai_explainer_validation import AIExplainerValidationMixin
+from .ai_provider import (
+    DEFAULT_VENICE_MODEL,
+    create_venice_client,
+    venice_error,
+    venice_request_options,
+)
 
 if TYPE_CHECKING:
     from .cache import Cache
@@ -71,6 +77,7 @@ class AIExplainer(
         cache: Cache | None = None,
         custom_system_prompt: str | None = None,
         custom_instructions: str | None = None,
+        provider: str = "openrouter",
     ):
         """
         Initialize with optional API key and model preference.
@@ -81,8 +88,12 @@ class AIExplainer(
             cache: Optional cache instance for explanation caching
             custom_system_prompt: Custom system prompt to use instead of default
             custom_instructions: Custom instructions to append to user prompts
+            provider: Selected AI service, openrouter or venice
 
         """
+        if provider not in ("openrouter", "venice"):
+            raise ValueError("Unsupported AI provider")
+        self.provider = provider
         self.api_key = api_key
         self.model = model
         self.cache = cache
@@ -99,12 +110,45 @@ class AIExplainer(
             Model identifier to use for API calls
 
         """
+        if self.provider == "venice":
+            return (
+                self.model
+                if self.model and self.model != DEFAULT_FREE_MODEL
+                else DEFAULT_VENICE_MODEL
+            )
         # Without API key, always use free model
         if not self.api_key:
             return DEFAULT_FREE_MODEL
 
         # With API key, use configured preference (fall back to default if None)
         return self.model if self.model else DEFAULT_FREE_MODEL
+
+    def _call_provider(self, system_prompt, user_prompt, model_override=None):
+        """Route a completion only to the explicitly selected provider."""
+        if self.provider == "openrouter":
+            return self._call_openrouter(system_prompt, user_prompt, model_override)
+        try:
+            if self._client is None:
+                self._client = create_venice_client(self.api_key)
+            response = self._client.chat.completions.create(
+                model=model_override or self.get_effective_model(),
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                max_tokens=4000,
+                **venice_request_options(),
+            )
+            usage = response.usage
+            return {
+                "content": (response.choices[0].message.content or "") if response.choices else "",
+                "model": response.model or self.get_effective_model(),
+                "total_tokens": usage.total_tokens if usage else 0,
+                "prompt_tokens": usage.prompt_tokens if usage else 0,
+                "completion_tokens": usage.completion_tokens if usage else 0,
+            }
+        except Exception as error:
+            raise venice_error(error) from None
 
     async def explain_weather(
         self,
@@ -176,7 +220,7 @@ class AIExplainer(
             try:
                 model_override = model if model != primary_model else None
                 response = await asyncio.to_thread(
-                    self._call_openrouter, system_prompt, user_prompt, model_override
+                    self._call_provider, system_prompt, user_prompt, model_override
                 )
 
                 # Check if we got actual content (minimum 20 chars for meaningful response)
@@ -193,7 +237,12 @@ class AIExplainer(
                 last_error = EmptyResponseError("empty or too-short response")
                 self._notify_generation_status(
                     status_callback,
-                    f"{model} returned an empty response; trying another available model.",
+                    f"{model} returned an empty response."
+                    + (
+                        " Trying another available model."
+                        if attempt_index + 1 < len(models_to_try)
+                        else " Please try again."
+                    ),
                 )
                 response = None
 
@@ -212,6 +261,8 @@ class AIExplainer(
         # If all models failed
         if response is None:
             if last_error:
+                if self.provider == "venice":
+                    raise last_error
                 logger.error(f"All models failed. Last error: {last_error}", exc_info=True)
                 # Convert common errors to specific exceptions
                 error_message = str(last_error).lower()

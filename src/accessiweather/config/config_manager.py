@@ -178,6 +178,7 @@ class ConfigManager:
             "pirate_weather_api_key",
             "airnow_api_key",
             "openrouter_api_key",
+            "venice_api_key",
             "avwx_api_key",
         }
 
@@ -185,6 +186,7 @@ class ConfigManager:
             "pirate_weather_api_key",
             "airnow_api_key",
             "openrouter_api_key",
+            "venice_api_key",
             "avwx_api_key",
             "github_app_id",
             "github_app_private_key",

@@ -24,6 +24,7 @@ PORTABLE_API_SECRET_KEYS: Final[tuple[str, ...]] = (
     "pirate_weather_api_key",
     "airnow_api_key",
     "openrouter_api_key",
+    "venice_api_key",
     "avwx_api_key",
 )
 

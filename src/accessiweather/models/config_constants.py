@@ -59,6 +59,9 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "github_app_installation_id",
     # AI explanation settings
     "openrouter_api_key",
+    "ai_provider",
+    "venice_api_key",
+    "venice_model",
     "avwx_api_key",
     "ai_model_preference",
     "ai_explanation_style",
