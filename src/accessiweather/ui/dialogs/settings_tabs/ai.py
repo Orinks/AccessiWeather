@@ -85,7 +85,7 @@ class AITab:
             panel,
             sizer,
             "Venice AI access",
-            "Use your own Venice API key. API requests use prepaid USD API credits, separate from a Venice chat subscription.",
+            "Use your own Venice API key. API requests can use prepaid USD, DIEM, or bundled API credits available to your account.",
         )
         controls["venice_key"] = self.dialog.add_labeled_control_row(
             panel,
@@ -107,6 +107,9 @@ class AITab:
             lambda parent: wx.TextCtrl(parent, size=(320, -1)),
             expand_control=True,
         )
+        venice_browse = wx.Button(panel, label="Browse Venice models...")
+        venice_browse.Bind(wx.EVT_BUTTON, self._on_browse_venice_models)
+        venice_section.Add(venice_browse, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
         self.dialog.add_help_text(
             panel,
             venice_section,
@@ -178,7 +181,7 @@ class AITab:
         self.dialog.add_help_text(
             panel,
             cost_section,
-            "OpenRouter offers free models that may be rate limited. Paid OpenRouter and Venice models charge according to usage and model pricing. Venice requires prepaid USD API credits.",
+            "OpenRouter offers free models that may be rate limited. Paid models charge according to usage and model pricing. Venice can use prepaid USD, DIEM, or bundled API credits; having credits does not make a paid model free.",
         )
 
         panel.SetSizer(sizer)
@@ -247,6 +250,19 @@ class AITab:
 
         custom_instructions = getattr(settings, "custom_instructions", "") or ""
         controls["custom_instructions"].SetValue(custom_instructions)
+
+    def _on_browse_venice_models(self, event):
+        """Keep Venice model browsing separate from OpenRouter credentials and selection."""
+        from ..model_browser_dialog import show_model_browser_dialog
+
+        controls = self.dialog._controls
+        selected = show_model_browser_dialog(
+            self.dialog,
+            api_key=controls["venice_key"].GetValue().strip() or None,
+            provider="venice",
+        )
+        if selected:
+            controls["venice_model"].SetValue(selected)
 
     def save(self) -> dict:
         """Return AI tab settings as a dict."""

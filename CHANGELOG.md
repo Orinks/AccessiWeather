@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- You can browse and select Venice text models in AI settings, compare token prices, filter by cost and function-calling support, and check account credit availability when your key permits it.
 - AI settings now include a Get Venice API key button that opens Venice's signup and API settings page in your browser.
 - You can choose Venice AI for weather explanations and the Weather Assistant using your own API key and prepaid credits. OpenRouter remains the default, and each provider keeps its own key and model choice.
 
