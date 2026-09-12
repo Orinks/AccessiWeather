@@ -12,6 +12,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from accessiweather.ai_explainer import ExplanationResult, ExplanationStyle
+from accessiweather.ui.dialogs.explanation_generation import build_current_weather_payload
 
 # =============================================================================
 # Fixtures
@@ -59,6 +60,7 @@ def mock_app():
     location_mock.latitude = 40.7128
     location_mock.longitude = -74.0060
     location_mock.timezone = "America/New_York"
+    location_mock.country_code = "US"
     app.config_manager.get_current_location.return_value = location_mock
     app.config_manager.get_settings.return_value = MagicMock(
         ai_model_preference="auto",
@@ -66,16 +68,21 @@ def mock_app():
         openrouter_api_key="test-api-key",
         custom_system_prompt=None,
         custom_instructions=None,
+        temperature_unit="fahrenheit",
     )
     app.current_weather_data = MagicMock(
         current=MagicMock(
             temperature_f=72.0,
+            temperature_c=22.2,
             condition="Partly Cloudy",
             humidity=65,
             wind_speed_mph=10.0,
+            wind_speed_kph=16.1,
             wind_direction="NW",
             visibility_miles=10.0,
+            visibility_km=16.1,
             pressure_in=30.05,
+            pressure_mb=1017.6,
         ),
         forecast=MagicMock(
             periods=[
@@ -187,6 +194,46 @@ class TestWeatherDataPreparation:
         assert hasattr(first_period, "name")
         assert hasattr(first_period, "temperature")
         assert hasattr(first_period, "short_forecast")
+
+    def test_build_weather_payload_uses_metric_units_when_requested(self, mock_app):
+        """Current-condition prompt payload should honor an explicit metric preference."""
+        weather_dict = build_current_weather_payload(
+            mock_app.current_weather_data,
+            temperature_unit_preference="celsius",
+            location=mock_app.config_manager.get_current_location(),
+        )
+
+        assert weather_dict["temperature"] == pytest.approx(22.2)
+        assert weather_dict["temperature_unit"] == "C"
+        assert weather_dict["temperature_text"] == "22.2°C"
+        assert weather_dict["wind_speed_unit"] == "km/h"
+        assert weather_dict["wind_text"] == "16.1 km/h"
+        assert weather_dict["visibility_unit"] == "km"
+        assert weather_dict["visibility_text"] == "16.1 km"
+        assert weather_dict["pressure_unit"] == "hPa"
+        assert weather_dict["pressure_text"] == "1017.60 hPa"
+
+    def test_build_weather_payload_uses_auto_location_units(self, mock_app):
+        """Auto mode should resolve to the selected location's effective unit system."""
+        location = mock_app.config_manager.get_current_location()
+        location.name = "Toronto, ON"
+        location.country_code = "CA"
+
+        weather_dict = build_current_weather_payload(
+            mock_app.current_weather_data,
+            temperature_unit_preference="auto",
+            location=location,
+        )
+
+        assert weather_dict["temperature"] == pytest.approx(22.2)
+        assert weather_dict["temperature_unit"] == "C"
+        assert weather_dict["temperature_text"] == "22.2°C"
+        assert weather_dict["wind_speed_unit"] == "km/h"
+        assert weather_dict["wind_text"] == "16.1 km/h"
+        assert weather_dict["visibility_unit"] == "km"
+        assert weather_dict["visibility_text"] == "16.1 km"
+        assert weather_dict["pressure_unit"] == "kPa"
+        assert weather_dict["pressure_text"] == "101.76 kPa"
 
 
 # =============================================================================
@@ -433,3 +480,68 @@ class TestTimeZoneHandling:
             time_of_day = "night"
 
         assert time_of_day == "night"
+
+
+def test_explanation_honors_independent_wind_units():
+    from accessiweather.models import CurrentConditions, Location, WeatherData
+
+    location = Location(name="Test", latitude=40, longitude=-74)
+    weather = WeatherData(
+        location=location,
+        current=CurrentConditions(
+            temperature_f=68,
+            temperature_c=20,
+            wind_speed_mph=22.3694,
+            wind_speed_kph=36,
+        ),
+    )
+    payload = build_current_weather_payload(
+        weather,
+        temperature_unit_preference="f",
+        wind_speed_unit_preference="m/s",
+        location=location,
+    )
+    assert payload["temperature_unit"] == "F"
+    assert payload["wind_speed_unit"] == "m/s"
+    assert payload["wind_speed"] == pytest.approx(10)
+    assert "m/s" in payload["wind_text"]
+
+
+def test_explanation_forecast_uses_selected_units():
+    from accessiweather.models import (
+        CurrentConditions,
+        Forecast,
+        ForecastPeriod,
+        Location,
+        WeatherData,
+    )
+
+    location = Location(name="Test", latitude=40, longitude=-74)
+    weather = WeatherData(
+        location=location,
+        current=CurrentConditions(temperature_f=68),
+        forecast=Forecast(
+            periods=[
+                ForecastPeriod(
+                    name="Today",
+                    temperature=68,
+                    temperature_unit="F",
+                    wind_speed="10 mph",
+                    wind_speed_mph=10,
+                    wind_direction="NW",
+                )
+            ]
+        ),
+    )
+    payload = build_current_weather_payload(
+        weather,
+        temperature_unit_preference="c",
+        wind_speed_unit_preference="m/s",
+        location=location,
+    )
+    period = payload["forecast_periods"][0]
+    assert "20" in period["temperature_text"]
+    assert "°C" in period["temperature_text"]
+    assert "°F" not in period["temperature_text"]
+    assert "m/s" in period["wind_speed"]
+    assert "mph" not in period["wind_speed"]

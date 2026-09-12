@@ -6,6 +6,7 @@ from collections.abc import Iterable
 from datetime import tzinfo
 
 from ...models import AppSettings, HourlyForecast
+from ...units import DisplayUnitSystem
 from ...utils import TemperatureUnit, calculate_dewpoint, format_temperature
 from ...utils.unit_utils import format_precipitation, format_wind_speed
 from .forecast_time import _resolve_forecast_display_time
@@ -25,6 +26,7 @@ def build_hourly_summary(
     settings: AppSettings | None = None,
     *,
     location_timezone: tzinfo | None = None,
+    wind_unit_system: DisplayUnitSystem | str | None = None,
 ) -> list[HourlyPeriodPresentation]:
     """Generate the next six hours of simplified forecast data."""
     round_values = getattr(settings, "round_values", False) if settings else False
@@ -64,7 +66,11 @@ def build_hourly_summary(
         if not period.has_data():
             continue
         temperature = format_period_temperature(period, unit_pref, precision)
-        wind = format_hourly_wind(period, unit_pref) if include_wind else None
+        wind = (
+            format_hourly_wind(period, unit_pref, unit_system=wind_unit_system)
+            if include_wind
+            else None
+        )
 
         # Use enhanced time formatter with user preferences
         display_time = _resolve_forecast_display_time(
@@ -107,7 +113,12 @@ def build_hourly_summary(
             else None
         )
         gust_val = (
-            format_wind_speed(period.wind_gust_mph, unit_pref, precision=0)
+            format_wind_speed(
+                period.wind_gust_mph,
+                unit_pref,
+                precision=0,
+                unit_system=wind_unit_system,
+            )
             if include_wind_gust and period.wind_gust_mph is not None
             else None
         )

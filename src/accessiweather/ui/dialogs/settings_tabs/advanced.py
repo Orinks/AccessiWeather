@@ -68,6 +68,40 @@ class AdvancedTab:
             10,
         )
 
+        shortcut_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "Window and tray shortcuts",
+            "Edit the default window-management shortcuts here. Leave a field blank to disable that shortcut.",
+        )
+        self.dialog.add_help_text(
+            panel,
+            shortcut_section,
+            "Use shortcuts like Ctrl+Shift+W. These commands also register as global hotkeys when your system supports them.",
+            left=10,
+        )
+        controls["shortcut_show_main_window"] = self.dialog.add_labeled_control_row(
+            panel,
+            shortcut_section,
+            "Show the hidden window:",
+            lambda parent: wx.TextCtrl(parent),
+            expand_control=True,
+        )
+        controls["shortcut_hide_main_window"] = self.dialog.add_labeled_control_row(
+            panel,
+            shortcut_section,
+            "Hide the window to the tray:",
+            lambda parent: wx.TextCtrl(parent),
+            expand_control=True,
+        )
+        controls["shortcut_read_tray_info"] = self.dialog.add_labeled_control_row(
+            panel,
+            shortcut_section,
+            "Read the current tray information:",
+            lambda parent: wx.TextCtrl(parent),
+            expand_control=True,
+        )
+
         backup_section = self.dialog.create_section(
             panel,
             sizer,
@@ -156,6 +190,15 @@ class AdvancedTab:
         minimize_to_tray = getattr(settings, "minimize_to_tray", False)
         controls["minimize_tray"].SetValue(minimize_to_tray)
         controls["minimize_on_startup"].SetValue(getattr(settings, "minimize_on_startup", False))
+        controls["shortcut_show_main_window"].SetValue(
+            getattr(settings, "shortcut_show_main_window", "Ctrl+Shift+W")
+        )
+        controls["shortcut_hide_main_window"].SetValue(
+            getattr(settings, "shortcut_hide_main_window", "Ctrl+Shift+M")
+        )
+        controls["shortcut_read_tray_info"].SetValue(
+            getattr(settings, "shortcut_read_tray_info", "Ctrl+Shift+I")
+        )
         self.dialog._update_minimize_on_startup_state(minimize_to_tray)
 
         controls["startup"].SetValue(getattr(settings, "startup_enabled", False))
@@ -167,6 +210,9 @@ class AdvancedTab:
         return {
             "minimize_to_tray": controls["minimize_tray"].GetValue(),
             "minimize_on_startup": controls["minimize_on_startup"].GetValue(),
+            "shortcut_show_main_window": controls["shortcut_show_main_window"].GetValue(),
+            "shortcut_hide_main_window": controls["shortcut_hide_main_window"].GetValue(),
+            "shortcut_read_tray_info": controls["shortcut_read_tray_info"].GetValue(),
             "startup_enabled": controls["startup"].GetValue(),
             "weather_history_enabled": controls["weather_history"].GetValue(),
         }
@@ -177,6 +223,9 @@ class AdvancedTab:
         names = {
             "minimize_tray": "Minimize to the notification area when closing",
             "minimize_on_startup": "Start minimized to the notification area",
+            "shortcut_show_main_window": "Shortcut for showing the hidden window",
+            "shortcut_hide_main_window": "Shortcut for hiding the window to the tray",
+            "shortcut_read_tray_info": "Shortcut for reading the current tray information",
             "startup": "Launch automatically at startup",
             "weather_history": "Enable weather history comparisons",
         }

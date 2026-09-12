@@ -6,6 +6,12 @@ import logging
 
 import wx
 
+from ...shortcut_preferences import (
+    RESERVED_SHORTCUTS,
+    WINDOW_TRAY_SHORTCUTS,
+    normalize_shortcut_text,
+)
+
 logger = logging.getLogger("accessiweather.ui.dialogs.settings_dialog")
 
 
@@ -534,10 +540,60 @@ class SettingsDialogHandlersMixin:
 
     def _on_ok(self, event):
         """Handle OK button press."""
+        shortcut_error = self._validate_window_tray_shortcuts()
+        if shortcut_error is not None:
+            wx.MessageBox(shortcut_error, "Shortcut Problem", wx.OK | wx.ICON_WARNING)
+            return
         if self._save_settings():
             self.EndModal(wx.ID_OK)
         else:
             wx.MessageBox("Failed to save settings.", "Error", wx.OK | wx.ICON_ERROR)
+
+    def _validate_window_tray_shortcuts(self) -> str | None:
+        """Validate configurable window/tray shortcut fields before save."""
+        seen: dict[str, str] = {}
+        radio_control = self._controls.get("noaa_radio_hotkey")
+        if radio_control is not None:
+            from ...global_hotkeys import normalize_hotkey
+
+            try:
+                radio_combo = normalize_hotkey(radio_control.GetValue())
+            except ValueError:
+                radio_combo = ""
+            if radio_combo:
+                seen[radio_combo] = "NOAA Weather Radio hotkey"
+        for preference in WINDOW_TRAY_SHORTCUTS:
+            raw_value = self._controls[preference.setting_name].GetValue()
+            try:
+                normalized = normalize_shortcut_text(raw_value, allow_empty=True)
+            except ValueError as exc:
+                return f"{preference.label}: {exc}"
+
+            self._controls[preference.setting_name].SetValue(normalized)
+            if not normalized:
+                continue
+
+            if not ({"Ctrl", "Alt"} & set(normalized.split("+")[:-1])):
+                return (
+                    f"{preference.label} must include Ctrl or Alt to avoid capturing typing keys."
+                )
+
+            reserved_use = RESERVED_SHORTCUTS.get(normalized)
+            if reserved_use is not None:
+                return (
+                    f"{preference.label} cannot use {normalized} because that shortcut already "
+                    f"{reserved_use}."
+                )
+
+            existing_label = seen.get(normalized)
+            if existing_label is not None:
+                return (
+                    f"{preference.label} duplicates {existing_label} ({normalized}). "
+                    "Choose a different shortcut or leave one field blank."
+                )
+            seen[normalized] = preference.label
+
+        return None
 
     def _on_minimize_tray_changed(self, event):
         """Handle minimize to tray checkbox state change."""
@@ -577,6 +633,7 @@ class SettingsDialogHandlersMixin:
             dynamic_enabled=self._controls["taskbar_icon_dynamic_enabled"].GetValue(),
             format_string=self._controls["taskbar_icon_text_format"].GetValue(),
             temperature_unit=self._get_selected_temperature_unit(),
+            wind_speed_unit=self._get_selected_wind_speed_unit(),
         )
 
         dialog = TrayTextFormatDialog(
@@ -600,6 +657,16 @@ class SettingsDialogHandlersMixin:
         if selection < 0 or selection >= len(temp_values):
             return "both"
         return temp_values[selection]
+
+    def _get_selected_wind_speed_unit(self) -> str:
+        """Return the wind speed unit selection currently shown in the dialog."""
+        if hasattr(self, "_display_tab"):
+            return self._display_tab.get_selected_wind_speed_unit()
+        wind_speed_values = ["auto", "mph", "km/h", "m/s"]
+        selection = self._controls["wind_speed_unit"].GetSelection()
+        if selection < 0 or selection >= len(wind_speed_values):
+            return "auto"
+        return wind_speed_values[selection]
 
     def _get_ai_model_preference(self) -> str:
         """Get the AI model preference based on UI selection."""

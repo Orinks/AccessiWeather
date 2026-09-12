@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import pytest
 
+from accessiweather.units import DisplayUnitSystem, resolve_wind_display_unit_system
 from accessiweather.utils.temperature_utils import TemperatureUnit
 from accessiweather.utils.unit_utils import (
     convert_wind_direction_to_cardinal,
@@ -63,6 +64,35 @@ class TestFormatWindSpeed:
         result = format_wind_speed(10.0, wind_speed_kph=16.0934, unit_system="uk2")
 
         assert result == "10.0 mph"
+
+    def test_format_wind_speed_si_unit_system_uses_meters_per_second(self) -> None:
+        """SI wind formatting should render meters per second."""
+        result = format_wind_speed(
+            10.0,
+            unit=TemperatureUnit.CELSIUS,
+            wind_speed_kph=16.0934,
+            precision=1,
+            unit_system="si",
+        )
+
+        assert result == "4.5 m/s"
+
+
+class TestResolveWindDisplayUnitSystem:
+    def test_explicit_meters_per_second_maps_to_si(self) -> None:
+        assert resolve_wind_display_unit_system("m/s") == DisplayUnitSystem.SI
+
+    def test_auto_falls_back_to_auto_location_unit_system(self) -> None:
+        location = type("Location", (), {"country_code": "CA"})()
+
+        assert (
+            resolve_wind_display_unit_system(
+                "auto",
+                temperature_preference="auto",
+                location=location,
+            )
+            == DisplayUnitSystem.CA
+        )
 
 
 class TestFormatPressure:

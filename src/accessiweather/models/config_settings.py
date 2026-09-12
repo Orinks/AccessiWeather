@@ -15,10 +15,14 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     """Application settings."""
 
     temperature_unit: str = "both"
+    wind_speed_unit: str = "auto"
     update_interval_minutes: int = 10
     enable_alerts: bool = True
     minimize_to_tray: bool = False
     minimize_on_startup: bool = False
+    shortcut_show_main_window: str = "Ctrl+Shift+W"
+    shortcut_hide_main_window: str = "Ctrl+Shift+M"
+    shortcut_read_tray_info: str = "Ctrl+Shift+I"
     startup_enabled: bool = False
     data_source: str = "auto"
     pirate_weather_api_key: str = ""
@@ -89,7 +93,7 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     # bottom button panel.  Takes effect on app restart.
     location_buttons_on_top: bool = False
     # Saved location ordering in user-facing lists.
-    location_sort_order: str = "alphabetical"  # "alphabetical" | "nearest_current"
+    location_sort_order: str = "alphabetical"  # "alphabetical" | "manual" | "nearest_current"
     # Date format preset for rendered dates
     date_format: str = "iso"  # "iso" | "us_short" | "us_long" | "eu"
     # Taskbar icon text options
