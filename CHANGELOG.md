@@ -21,6 +21,8 @@ All notable changes to this project will be documented in this file.
 - You can now check your AirNow API key right in Settings: a new "Validate AirNow key" button on the Data Sources tab tests the key against AirNow and tells you immediately whether it works, just like the Pirate Weather key validator.
 
 ### Fixed
+- Weather Assistant now requests live weather more reliably with Venice and OpenRouter, keeps lookup results for follow-up questions, and receives complete measurements with observation times instead of incomplete weather data.
+- NWS lookups now follow coordinate-precision redirects instead of unnecessarily falling back to another weather source.
 - Creating a fresh settings file now keeps API keys already saved on your computer available in Settings.
 - NWS feels-like temperatures now use calculated wind chill or heat index when observations omit them.
 - Explain Weather now follows your selected units, including automatic location-based units, when generating and caching explanations.

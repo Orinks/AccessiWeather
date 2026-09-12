@@ -153,7 +153,7 @@ class NoaaApiClient(AlertsAndProductsMixin):
                 # concurrent access. Added timeout.
                 try:
                     logger.debug(f"Sending GET request to {request_url}")
-                    with httpx.Client() as client:
+                    with httpx.Client(follow_redirects=True) as client:
                         response = client.get(
                             request_url, headers=self.headers, params=params, timeout=10
                         )
