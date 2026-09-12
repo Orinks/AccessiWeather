@@ -140,3 +140,24 @@ def test_adapter_uses_current_location_and_alert_failures_are_unknown(monkeypatc
     assert executor.location_resolver.resolve("Home") == (40.1, -74.2, "Home")
     with pytest.raises(RuntimeError, match="Alert status is unknown"):
         executor.weather_service.get_alerts(40.1, -74.2)
+
+
+def test_generation_disables_clear_and_completion_keeps_model_status():
+    from accessiweather.ui.dialogs.weather_assistant_dialog import WeatherAssistantDialog
+
+    dialog = WeatherAssistantDialog.__new__(WeatherAssistantDialog)
+    dialog.send_button = MagicMock()
+    dialog.clear_button = MagicMock()
+    dialog.input_ctrl = MagicMock()
+    dialog.status_label = MagicMock()
+    dialog._conversation = [{"role": "user", "content": "Weather?"}]
+    dialog._append_to_display = MagicMock()
+    dialog._announcer = MagicMock()
+    dialog._set_generating(True)
+    dialog.clear_button.Enable.assert_called_with(False)
+    dialog._on_clear(None)
+    assert dialog._conversation == [{"role": "user", "content": "Weather?"}]
+    dialog._on_response_received("Sunny", "model-used")
+    dialog.clear_button.Enable.assert_called_with(True)
+    dialog.status_label.SetLabel.assert_called_with("Model: model-used")
+    dialog.input_ctrl.SetFocus.assert_called_once()

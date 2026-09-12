@@ -146,6 +146,7 @@ class WeatherAssistantDialog(wx.Dialog):
         """Toggle generating state."""
         self._is_generating = generating
         self.send_button.Enable(not generating)
+        self.clear_button.Enable(not generating)
         # Keep input_ctrl always enabled so screen readers don't lose focus.
         # The _is_generating flag prevents sends during generation.
         if generating:
@@ -381,8 +382,8 @@ class WeatherAssistantDialog(wx.Dialog):
             self._conversation.append({"role": "assistant", "content": text})
         self._append_to_display("Weather Assistant", text)
         self._announcer.announce(f"Weather Assistant: {text}")
-        self._set_status(f"Model: {model_used}")
         self._set_generating(False)
+        self._set_status(f"Model: {model_used}")
 
     @guard_destroyed
     def _on_response_error(self, error: str) -> None:
@@ -397,6 +398,8 @@ class WeatherAssistantDialog(wx.Dialog):
 
     def _on_clear(self, event: wx.Event) -> None:
         """Clear chat history."""
+        if self._is_generating:
+            return
         self._conversation.clear()
         self.history_display.SetValue("")
         self._set_status("")
