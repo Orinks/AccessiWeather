@@ -240,7 +240,7 @@ class WeatherAssistantDialog(wx.Dialog):
 
             config_manager = getattr(self.app, "config_manager", None)
             weather_client = _CombinedWeatherClient()
-            geocoding_service = GeocodingService()
+            geocoding_service = GeocodingService(data_source="auto")
             location = config_manager.get_current_location() if config_manager else None
             return WeatherToolExecutor(
                 weather_client,

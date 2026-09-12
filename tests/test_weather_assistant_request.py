@@ -178,3 +178,31 @@ def test_explanatory_live_questions_still_require_weather(question):
 )
 def test_general_weather_concepts_do_not_require_lookup(question):
     assert not needs_live_weather(question)
+
+
+def test_assistant_geocoding_keeps_international_match_ahead_of_us_namesake(monkeypatch):
+    from accessiweather import api_client, geocoding, openmeteo_client
+    from accessiweather.ui.dialogs.weather_assistant_dialog import WeatherAssistantDialog
+
+    results = [
+        SimpleNamespace(
+            country_code="GB", latitude=51.5, longitude=-0.12, display_name="London, United Kingdom"
+        ),
+        SimpleNamespace(
+            country_code="US", latitude=39.88, longitude=-83.45, display_name="London, Ohio"
+        ),
+    ]
+    monkeypatch.setattr(
+        geocoding.OpenMeteoGeocodingClient, "search", lambda self, address, count: results
+    )
+    monkeypatch.setattr(api_client, "NoaaApiClient", MagicMock())
+    monkeypatch.setattr(openmeteo_client, "OpenMeteoApiClient", MagicMock())
+    manager = MagicMock()
+    manager.get_current_location.return_value = None
+    dialog = SimpleNamespace(app=SimpleNamespace(config_manager=manager))
+    executor = WeatherAssistantDialog._get_tool_executor(dialog)
+    assert executor.location_resolver.resolve("London, UK") == (
+        51.5,
+        -0.12,
+        "London, United Kingdom",
+    )
