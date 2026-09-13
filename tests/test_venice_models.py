@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from accessiweather.api.venice_models import VeniceModelsClient, VeniceModelsError
+from accessiweather.api.venice_models import (
+    VeniceModelsClient,
+    VeniceModelsError,
+    infer_venice_provider,
+)
 
 
 @pytest.mark.parametrize("value", [None, "invalid", "nan", "inf", -1, False])
@@ -34,7 +38,7 @@ def test_catalog_prices_are_already_per_million():
     )
     assert (model.pricing_prompt, model.pricing_completion) == (0.2, 0.9)
     assert model.supports_function_calling and model.offline
-    assert model.provider == "Venice"
+    assert model.provider == "venice"
     assert model.context_display == "131K"
 
 
@@ -125,3 +129,29 @@ async def test_network_error_is_redacted():
         pytest.raises(VeniceModelsError, match="connection"),
     ):
         await VeniceModelsClient().fetch_models()
+
+
+@pytest.mark.parametrize(
+    ("model_id", "name", "provider"),
+    [
+        ("claude-opus-5", "Claude Opus 5", "anthropic"),
+        ("openai-gpt-55", "GPT-5.5", "openai"),
+        ("gemini-3-6-flash", "Gemini 3.6 Flash", "google"),
+        ("google-gemma-4-31b-it", "Google Gemma 4 31B Instruct", "google"),
+        ("grok-4-6", "Grok 4.6", "x-ai"),
+        ("qwen3-5-9b", "Qwen 3.5 9B", "qwen"),
+        ("deepseek-v4-pro", "DeepSeek V4 Pro", "deepseek"),
+        ("hermes-3-llama-3.1-405b", "Hermes 3 Llama 3.1 405b", "nousresearch"),
+        ("llama-3.3-70b", "Llama 3.3 70B", "meta-llama"),
+        ("mistral-small-2603", "Mistral Small 4", "mistralai"),
+        ("kimi-k3", "Kimi K3", "moonshotai"),
+        ("zai-org-glm-5-2", "GLM 5.2", "z-ai"),
+        ("olafangensan-glm-4.7-flash-heretic", "GLM 4.7 Flash Heretic", "z-ai"),
+        ("e2ee-gpt-oss-120b-p", "GPT OSS 120B", "openai"),
+        ("e2ee-qwen3-8-27b", "Qwen 3.8 27B", "qwen"),
+        ("venice-uncensored-1-2", "Venice Uncensored 1.2", "venice"),
+        ("inkling", "Inkling", "venice"),
+    ],
+)
+def test_venice_provider_is_inferred_from_model_id(model_id, name, provider):
+    assert infer_venice_provider(model_id, name) == provider

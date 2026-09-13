@@ -26,6 +26,41 @@ def _mapping(value: Any) -> dict:
     return value if isinstance(value, dict) else {}
 
 
+# Ordered (keywords, provider id) pairs; earlier entries win. Provider ids match the
+# OpenRouter-style ids used by the model browser's display-name table.
+_VENICE_PROVIDER_KEYWORDS: tuple[tuple[tuple[str, ...], str], ...] = (
+    (("venice",), "venice"),
+    (("hermes",), "nousresearch"),
+    (("claude",), "anthropic"),
+    (("openai", "gpt"), "openai"),
+    (("gemini", "gemma", "google"), "google"),
+    (("grok",), "x-ai"),
+    (("qwen",), "qwen"),
+    (("deepseek",), "deepseek"),
+    (("llama",), "meta-llama"),
+    (("mistral",), "mistralai"),
+    (("kimi",), "moonshotai"),
+    (("glm", "z-ai", "zai-org"), "z-ai"),
+    (("minimax",), "minimax"),
+    (("nvidia", "nemotron"), "nvidia"),
+    (("xiaomi", "mimo"), "xiaomi"),
+    (("seed",), "bytedance"),
+    (("mercury",), "inception"),
+    (("aion",), "aion-labs"),
+)
+
+
+def infer_venice_provider(model_id: str, name: str = "") -> str:
+    """Map a Venice model to a vendor id; Venice-hosted originals fall back to "venice"."""
+    haystack = f"{model_id} {name}".lower()
+    if haystack.startswith("e2ee-"):
+        haystack = haystack[len("e2ee-") :]
+    for keywords, provider in _VENICE_PROVIDER_KEYWORDS:
+        if any(keyword in haystack for keyword in keywords):
+            return provider
+    return "venice"
+
+
 @dataclass
 class VeniceModel:
     """Text model metadata; prices are USD per million tokens."""
@@ -42,8 +77,8 @@ class VeniceModel:
 
     @property
     def provider(self) -> str:
-        """Return the service supplying this model."""
-        return "Venice"
+        """Infer the model vendor from the ID so the browser can filter by provider."""
+        return infer_venice_provider(self.id, self.name)
 
     @property
     def display_name(self) -> str:

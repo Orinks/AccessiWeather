@@ -52,6 +52,14 @@ PROVIDER_DISPLAY_NAMES = {
     "sophosympatheia": "Sophosympatheia",
     "liquid": "Liquid",
     "01-ai": "01.AI",
+    "venice": "Venice",
+    "moonshotai": "Moonshot AI",
+    "z-ai": "Z.ai",
+    "minimax": "MiniMax",
+    "xiaomi": "Xiaomi",
+    "bytedance": "ByteDance",
+    "inception": "Inception",
+    "aion-labs": "Aion Labs",
 }
 
 

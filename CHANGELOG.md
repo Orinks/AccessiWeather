@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - You can choose Venice AI for weather explanations and the Weather Assistant using your own API key and prepaid credits. OpenRouter remains the default, and each provider keeps its own key and model choice.
 
 ### Changed
+- The Venice model browser's Provider filter now lists the actual model vendors (Anthropic, OpenAI, Google, xAI, Qwen, DeepSeek, and more) instead of a single Venice entry, so you can narrow the catalog the same way you can with OpenRouter.
 - The AI settings tab now shows only the key and model fields for the provider you've selected, so switching between OpenRouter and Venice no longer leaves the other provider's controls in the way.
 - Choose wind speed independently of temperature units, including mph, km/h, or m/s, in Settings. The choice also applies to Explain Weather.
 - Reorder saved locations from the Location menu and keep a custom order across restarts.
