@@ -40,32 +40,37 @@ class AITab:
             lambda parent: wx.Choice(parent, choices=["OpenRouter", "Venice AI"]),
         )
         controls["ai_provider"].SetSelection(0)
+        controls["ai_provider"].Bind(wx.EVT_CHOICE, self._on_provider_changed)
+        self._panel = panel
+        self._provider_panels = {}
 
+        openrouter_panel = wx.Panel(panel)
+        openrouter_sizer = wx.BoxSizer(wx.VERTICAL)
         key_section = self.dialog.create_section(
-            panel,
-            sizer,
+            openrouter_panel,
+            openrouter_sizer,
             "OpenRouter access",
             "Add and validate your OpenRouter API key before choosing a model.",
         )
         controls["openrouter_key"] = self.dialog.add_labeled_control_row(
-            panel,
+            openrouter_panel,
             key_section,
             "OpenRouter API key:",
             lambda parent: wx.TextCtrl(parent, style=wx.TE_PASSWORD, size=(320, -1)),
             expand_control=True,
         )
-        validate_btn = wx.Button(panel, label="Validate OpenRouter key")
+        validate_btn = wx.Button(openrouter_panel, label="Validate OpenRouter key")
         validate_btn.Bind(wx.EVT_BUTTON, self.dialog._on_validate_openrouter_key)
         key_section.Add(validate_btn, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         model_section = self.dialog.create_section(
-            panel,
-            sizer,
-            "Model and explanation style",
+            openrouter_panel,
+            openrouter_sizer,
+            "OpenRouter model",
             "Free options are easiest to start with. Paid routing can unlock more model choices.",
         )
         controls["ai_model"] = self.dialog.add_labeled_control_row(
-            panel,
+            openrouter_panel,
             model_section,
             "OpenRouter model preference:",
             lambda parent: wx.Choice(
@@ -77,44 +82,54 @@ class AITab:
                 ],
             ),
         )
-        browse_btn = wx.Button(panel, label="Browse OpenRouter models...")
+        browse_btn = wx.Button(openrouter_panel, label="Browse OpenRouter models...")
         browse_btn.Bind(wx.EVT_BUTTON, self.dialog._on_browse_models)
         model_section.Add(browse_btn, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        openrouter_panel.SetSizer(openrouter_sizer)
+        sizer.Add(openrouter_panel, 0, wx.EXPAND)
+        self._provider_panels["openrouter"] = openrouter_panel
 
+        venice_panel = wx.Panel(panel)
+        venice_sizer = wx.BoxSizer(wx.VERTICAL)
         venice_section = self.dialog.create_section(
-            panel,
-            sizer,
+            venice_panel,
+            venice_sizer,
             "Venice AI access",
             "Use your own Venice API key. API requests can use prepaid USD, DIEM, or bundled API credits available to your account.",
         )
         controls["venice_key"] = self.dialog.add_labeled_control_row(
-            panel,
+            venice_panel,
             venice_section,
             "Venice API key:",
             lambda parent: wx.TextCtrl(parent, style=wx.TE_PASSWORD, size=(320, -1)),
             expand_control=True,
         )
-        controls["validate_venice_key"] = wx.Button(panel, label="Validate Venice key")
+        controls["validate_venice_key"] = wx.Button(venice_panel, label="Validate Venice key")
         controls["validate_venice_key"].Bind(wx.EVT_BUTTON, self.dialog._on_validate_venice_key)
         venice_section.Add(controls["validate_venice_key"], 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
-        controls["get_venice_key"] = wx.Button(panel, label="Get Venice API key...")
+        controls["get_venice_key"] = wx.Button(venice_panel, label="Get Venice API key...")
         controls["get_venice_key"].Bind(wx.EVT_BUTTON, self._on_get_venice_key)
         venice_section.Add(controls["get_venice_key"], 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
         controls["venice_model"] = self.dialog.add_labeled_control_row(
-            panel,
+            venice_panel,
             venice_section,
             "Venice model ID:",
             lambda parent: wx.TextCtrl(parent, size=(320, -1)),
             expand_control=True,
         )
-        venice_browse = wx.Button(panel, label="Browse Venice models...")
+        venice_browse = wx.Button(venice_panel, label="Browse Venice models...")
         venice_browse.Bind(wx.EVT_BUTTON, self._on_browse_venice_models)
         venice_section.Add(venice_browse, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
         self.dialog.add_help_text(
-            panel,
+            venice_panel,
             venice_section,
             "Default: venice-uncensored-1-2. Choose a text model with function calling for the weather assistant. Manage keys and API credits at venice.ai/settings/api.",
         )
+        venice_panel.SetSizer(venice_sizer)
+        sizer.Add(venice_panel, 0, wx.EXPAND)
+        self._provider_panels["venice"] = venice_panel
+        self._apply_provider_visibility()
+
         controls["ai_style"] = self.dialog.add_labeled_control_row(
             panel,
             sizer,
@@ -188,6 +203,26 @@ class AITab:
         self.dialog.notebook.AddPage(panel, page_label)
         return panel
 
+    def _on_provider_changed(self, event):
+        """Show only the settings for the provider the user picked."""
+        self._apply_provider_visibility()
+
+    def _apply_provider_visibility(self):
+        """Hide the sections for providers that are not selected."""
+        panels = getattr(self, "_provider_panels", None)
+        if not panels:
+            return
+        selected = (
+            "venice" if self.dialog._controls["ai_provider"].GetSelection() == 1 else "openrouter"
+        )
+        for name, provider_panel in panels.items():
+            provider_panel.Show(name == selected)
+        page = getattr(self, "_panel", None)
+        if page is not None:
+            page.Layout()
+            if hasattr(page, "FitInside"):
+                page.FitInside()
+
     def _on_get_venice_key(self, event):
         """Open account setup without collecting credentials in the application."""
         if not wx.LaunchDefaultBrowser("https://venice.ai/settings/api"):
@@ -206,6 +241,7 @@ class AITab:
         controls["ai_provider"].SetSelection(
             1 if getattr(settings, "ai_provider", "openrouter") == "venice" else 0
         )
+        self._apply_provider_visibility()
         venice_key = str(getattr(settings, "venice_api_key", "") or "")
         controls["venice_key"].SetValue(venice_key)
         self.dialog._original_venice_key = venice_key

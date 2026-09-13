@@ -177,3 +177,39 @@ def test_validation_announces_progress_and_restores_focus_after_completion(monke
     button.Enable.assert_called_once()
     button.SetFocus.assert_called_once()
     assert message.call_args.args[0] == "Venice key is valid."
+
+
+class Panel:
+    def __init__(self):
+        """Track visibility like a wx.Window."""
+        self.shown = True
+
+    def Show(self, show=True):
+        self.shown = bool(show)
+
+    def IsShown(self):
+        return self.shown
+
+
+def make_tab_with_panels():
+    tab, controls = make_tab()
+    tab._provider_panels = {"openrouter": Panel(), "venice": Panel()}
+    tab._panel = MagicMock()
+    return tab, controls
+
+
+def test_only_selected_provider_section_is_shown():
+    tab, controls = make_tab_with_panels()
+    tab.load(SimpleNamespace(ai_provider="venice"))
+    assert not tab._provider_panels["openrouter"].IsShown()
+    assert tab._provider_panels["venice"].IsShown()
+
+    controls["ai_provider"].SetSelection(0)
+    tab._on_provider_changed(None)
+    assert tab._provider_panels["openrouter"].IsShown()
+    assert not tab._provider_panels["venice"].IsShown()
+
+
+def test_load_without_built_panels_does_not_fail():
+    tab, _controls = make_tab()
+    tab.load(SimpleNamespace(ai_provider="venice"))

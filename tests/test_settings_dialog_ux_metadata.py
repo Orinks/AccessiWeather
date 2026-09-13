@@ -267,6 +267,18 @@ def test_ai_custom_prompt_fields_create_static_text_before_multiline_controls(mo
         def SetSizer(self, *args, **kwargs):
             return None
 
+        def GetSelection(self):
+            return 0
+
+        def Show(self, *args, **kwargs):
+            return None
+
+        def Layout(self):
+            return None
+
+        def FitInside(self):
+            return None
+
     class FakeSizer:
         def Add(self, *args, **kwargs):
             return None
@@ -289,6 +301,7 @@ def test_ai_custom_prompt_fields_create_static_text_before_multiline_controls(mo
         return FakeControl(parent, *args, **kwargs)
 
     monkeypatch.setattr(settings_module.wx, "ScrolledWindow", FakeControl, raising=False)
+    monkeypatch.setattr(settings_module.wx, "Panel", FakeControl, raising=False)
     monkeypatch.setattr(settings_module.wx, "BoxSizer", lambda *a, **k: FakeSizer(), raising=False)
     monkeypatch.setattr(settings_module.wx, "StaticText", fake_static_text, raising=False)
     monkeypatch.setattr(settings_module.wx, "TextCtrl", fake_text_ctrl, raising=False)
