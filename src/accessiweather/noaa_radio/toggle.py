@@ -73,7 +73,9 @@ class RadioToggleController:
             logger.exception("Could not stop NOAA Weather Radio from the hotkey")
             self._announce("Could not stop NOAA Weather Radio.")
             return
-        self._announce("NOAA Weather Radio stopped.")
+        # The silence is the confirmation: a notification after every stop is
+        # one more thing to dismiss for the person who just wanted quiet.
+        logger.info("NOAA Weather Radio hotkey: stopped.")
 
     def _cancel_auto_tune(self) -> None:
         """Keep a pending alert auto-tune from re-starting what the user just stopped."""

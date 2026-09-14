@@ -61,14 +61,15 @@ def _make_controller(
 
 
 class TestToggleWhilePlaying:
-    def test_stops_playback_and_announces(self) -> None:
+    def test_stops_playback_without_a_notification(self) -> None:
         controller, session, _prefs, _db, url_provider, notify = _make_controller(playing=True)
 
         controller.toggle()
 
         session.stop.assert_called_once_with()
         url_provider.get_stream_urls.assert_not_called()
-        assert "stopped" in notify.call_args[0][0].lower()
+        # The silence is the confirmation; only a failed stop is announced.
+        notify.assert_not_called()
 
     def test_cancels_pending_alert_auto_tune(self) -> None:
         auto_tuner = MagicMock()
