@@ -190,21 +190,46 @@ def commits_request_nightly_build(base: str, head: str) -> bool:
     return messages_request_nightly_build(commit_messages(base, head))
 
 
+def release_headings(text: str) -> list[str]:
+    """Return every ``## `` heading line in the changelog except Unreleased."""
+    return [
+        line
+        for line in re.findall(r"^## .*$", text, re.MULTILINE)
+        if not re.match(r"^## \[?Unreleased\]?", line, re.IGNORECASE)
+    ]
+
+
 def unreleased_added_entries(base: str, head: str, include_worktree: bool = False) -> list[str]:
+    """
+    Return curated bullets that ``head`` adds relative to ``base``.
+
+    Bullets under ``## [Unreleased]`` count, and so do bullets under a release
+    heading that exists at ``head`` but not at ``base``. The second case is a
+    release cut: the Unreleased block empties into a new version section, so
+    looking at Unreleased alone would fail every release push.
+    """
+    base_text = changelog_at(base)
     base_entries = {
         normalize_entry(entry)
-        for section in parse_sections(
-            extract_release_block(changelog_at(base), r"^## \[?Unreleased\]?.*$")
-        )
+        for section in parse_sections(extract_release_block(base_text, r"^## \[?Unreleased\]?.*$"))
         for entry in section.entries
     }
     if include_worktree:
         head_text = CHANGELOG_PATH.read_text(encoding="utf-8")
     else:
         head_text = run_git(["show", f"{head}:{CHANGELOG_PATH.as_posix()}"])
+
+    base_headings = set(release_headings(base_text))
+    head_blocks = [extract_release_block(head_text, r"^## \[?Unreleased\]?.*$")]
+    head_blocks.extend(
+        extract_release_block(head_text, f"^{re.escape(heading)}$")
+        for heading in release_headings(head_text)
+        if heading not in base_headings
+    )
     return [
         entry
-        for section in parse_sections(extract_release_block(head_text, r"^## \[?Unreleased\]?.*$"))
+        for block in head_blocks
+        for section in parse_sections(block)
         for entry in section.entries
         if normalize_entry(entry) not in base_entries
     ]

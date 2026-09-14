@@ -497,3 +497,76 @@ def test_should_use_latest_stable_as_nightly_baseline(
     captured = capsys.readouterr()
     assert captured.out == "should_build=false\n"
     assert "No new curated changelog entries" in captured.err
+
+
+def test_unreleased_added_entries_counts_bullets_under_a_new_release_heading(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    base_text = """# Changelog
+
+## [Unreleased]
+
+### Fixed
+- Existing fix.
+
+## [0.1.0] - 2026-01-01
+
+### Fixed
+- Old fix.
+"""
+    head_text = """# Changelog
+
+## [Unreleased]
+
+## [0.2.0] - 2026-09-14
+
+### Added
+- Brand new feature.
+
+### Fixed
+- Existing fix.
+
+## [0.1.0] - 2026-01-01
+
+### Fixed
+- Old fix.
+"""
+
+    monkeypatch.setattr("scripts.changelog_tools.changelog_at", lambda _ref: base_text)
+    monkeypatch.setattr("scripts.changelog_tools.run_git", lambda _args: head_text)
+
+    assert unreleased_added_entries("base", "head") == ["- Brand new feature."]
+
+
+def test_check_command_accepts_release_cut_that_moves_unreleased_into_a_version(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    base = make_changelog_repo(tmp_path, monkeypatch)
+
+    (tmp_path / "src" / "accessiweather" / "app.py").write_text(
+        "print('release')\n", encoding="utf-8"
+    )
+    (tmp_path / "CHANGELOG.md").write_text(
+        """# AccessiWeather Changelog
+
+## [Unreleased]
+
+## [0.2.0] - 2026-09-14
+
+### Added
+- Brand new feature.
+
+### Fixed
+- Existing fix.
+
+## [0.1.0] - 2026-01-01
+
+### Fixed
+- Old fix.
+""",
+        encoding="utf-8",
+    )
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-q", "-m", "Release v0.2.0")
+
+    assert check_command(check_args(base)) == 0
