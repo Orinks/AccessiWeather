@@ -5,34 +5,38 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
-- You can browse and select Venice text models in AI settings, compare token prices, filter by cost and function-calling support, and check account credit availability when your key permits it.
-- AI settings now include a Get Venice API key button that opens Venice's signup and API settings page in your browser.
-- You can choose Venice AI for weather explanations and the Weather Assistant using your own API key and prepaid credits. OpenRouter remains the default, and each provider keeps its own key and model choice.
+- Browse and pick Venice text models in AI settings, with token prices, cost and function-calling filters, and your credit balance when your key allows.
+- A Get Venice API key button in AI settings opens Venice's signup and API settings page.
+- Choose Venice AI for weather explanations and the Weather Assistant with your own key and prepaid credits; OpenRouter stays the default.
+- Choose wind speed units (mph, km/h or m/s) separately from temperature units in Settings; Explain Weather follows the choice.
+- Reorder saved locations from the Location menu; the order survives restarts.
+- Set shortcuts in Advanced Settings to restore the window, hide it to the tray, and read tray information, which work while hidden on Windows.
+- Ctrl+Shift+L now opens Edit Location.
+- Start and stop NOAA Weather Radio from anywhere with Ctrl+Alt+Shift+R, even with AccessiWeather in the tray (Windows only).
+- Rebind the radio hotkey on the General tab in Settings, or clear the field to turn it off.
+- AccessiWeather now keeps a log file in a logs folder next to your settings, so there's something to send when reporting a problem.
+- A portable copy keeps its logs inside the portable folder.
+- Automatic updates now work on Linux from the AppImage, the same way they do on Windows.
+- Running from the tarball, AccessiWeather downloads and verifies the update and tells you where the file is and how to finish installing it.
+- Linux releases now include an AppImage that runs on Fedora, Ubuntu, Arch, openSUSE and other distros; mark it executable and run it.
+- US locations can use official EPA AirNow observations for current air quality when you add your AirNow API key in Settings.
+- A Validate AirNow key button on the Data Sources tab tests your key and tells you whether it works.
 
 ### Changed
-- The Venice model browser's Provider filter now lists the actual model vendors (Anthropic, OpenAI, Google, xAI, Qwen, DeepSeek, and more) instead of a single Venice entry, so you can narrow the catalog the same way you can with OpenRouter.
-- The AI settings tab now shows only the key and model fields for the provider you've selected, so switching between OpenRouter and Venice no longer leaves the other provider's controls in the way.
-- Choose wind speed independently of temperature units, including mph, km/h, or m/s, in Settings. The choice also applies to Explain Weather.
-- Reorder saved locations from the Location menu and keep a custom order across restarts.
-- Configure shortcuts for restoring the window, hiding it to the tray, and reading tray information in Advanced Settings. Windows supports these shortcuts while the app is hidden. Ctrl+Shift+L now opens Edit Location.
-- You can now start and stop NOAA Weather Radio with a system-wide hotkey — Ctrl+Alt+Shift+R by default — without switching to AccessiWeather first. It works while the app is minimized to the tray, and a notification tells you what happened, so silencing the radio no longer means finding the window, opening the radio dialog, and hunting for the Stop button. Press it again and it picks up the last station you played, including one the alert auto-tune started. Rebind it on the General tab in Settings, or clear the field to turn it off. (Windows only.)
-- AccessiWeather now keeps a log file, so there's something to look at when a problem needs reporting. Logs land in a `logs` folder next to your settings and roll over at 5 MB, keeping the last three. Until now the app only wrote to the console, which installed builds don't have — meaning nothing was recorded anywhere. A portable copy keeps its logs inside the portable folder, so it still leaves nothing behind on the machine.
-- Automatic updates now work on Linux when you run the AppImage: AccessiWeather downloads the new version, verifies its checksum, swaps it in place, and restarts itself — the same experience Windows users already have. If you run from the tarball instead, the update is still downloaded and verified, and AccessiWeather now tells you where the file is and how to finish the install instead of silently doing nothing.
-- Linux releases now include an AppImage that runs on Fedora, Ubuntu, Arch, openSUSE, and other popular distros: download it, mark it executable, and run it — no install needed. The old .tar.gz only worked on Ubuntu-family distros because it depended on Ubuntu-specific system libraries, so trying it on Fedora failed at launch with a missing-library error. The AppImage bundles those libraries while still using your desktop's own GTK and screen reader stack, so Orca support works like any native app. (The .tar.gz is still published for Ubuntu/Debian users who prefer it.)
-- US locations can now use official EPA AirNow observations for current air quality when you add your own AirNow API key in Settings. AccessiWeather keeps its existing hourly air-quality forecast and automatically falls back when AirNow is unavailable.
-- You can now check your AirNow API key right in Settings: a new "Validate AirNow key" button on the Data Sources tab tests the key against AirNow and tells you immediately whether it works, just like the Pirate Weather key validator.
+- The Venice model browser's Provider filter lists the model vendors, such as Anthropic, OpenAI and Google, instead of a single Venice entry.
+- The AI settings tab shows only the key and model fields for the provider you've selected.
 
 ### Fixed
-- Weather Assistant now requests live weather more reliably with Venice and OpenRouter, keeps lookup results for follow-up questions, and receives complete measurements with observation times instead of incomplete weather data.
-- NWS lookups now follow coordinate-precision redirects instead of unnecessarily falling back to another weather source.
-- Weather Assistant can find international locations instead of restricting searches to U.S. places with similar names.
-- Creating a fresh settings file now keeps API keys already saved on your computer available in Settings.
-- NWS feels-like temperatures now use calculated wind chill or heat index when observations omit them.
-- Explain Weather now follows your selected units, including automatic location-based units, when generating and caching explanations.
-- NOAA Weather Radio auto-tune no longer turns the radio on for alerts a real weather radio would sleep through. AccessiWeather decided from the alert's name, so a Special Marine Warning started the stream whether or not it was actually broadcast with a SAME tone — and the same name is used for both. It now reads the SAME event code the National Weather Service puts on the alert, the very code a physical radio listens for. In a sample of 4,000 recent alerts this silenced 84 that should never have played, and it also catches ones the old list missed, like a Fire Warning.
-- AirNow observations now actually reach the display. The AirNow API returns a different response format than its documentation describes (renamed camelCase fields like nowcastAQI), so every observation was discarded and AccessiWeather silently kept showing Open-Meteo's model estimate. The parser now accepts both formats, so the AQI, pollutant, and observation time match AirNow.gov.
-- AirNow air quality now works for US locations saved before country detection existed. Older saved locations were silently skipped by AirNow and kept showing model-based Open-Meteo estimates — which could disagree noticeably with the official AirNow reading — even with a valid AirNow key configured.
-- Weather Assistant queries that need live weather tools now let OpenRouter's free endpoint choose an available compatible model instead of failing when a hardcoded free model is retired.
+- Weather Assistant requests live weather more reliably with Venice and OpenRouter, keeps lookup results for follow-up questions, and gets complete measurements with observation times.
+- NWS lookups now follow coordinate-precision redirects instead of falling back to another weather source.
+- Weather Assistant can find international locations instead of only U.S. places with similar names.
+- Creating a fresh settings file keeps API keys already saved on your computer available in Settings.
+- NWS feels-like temperatures use calculated wind chill or heat index when observations leave them out.
+- Explain Weather follows your selected units, including automatic location-based units.
+- NOAA Weather Radio auto-tune no longer starts for alerts a real weather radio would sleep through; it goes by the alert's SAME code now.
+- AirNow observations now reach the display, so the AQI, pollutant and observation time match AirNow.gov.
+- AirNow air quality now works for US locations saved before country detection existed.
+- Weather Assistant queries that need live weather let OpenRouter's free endpoint pick an available model instead of failing when a hardcoded one is retired.
 
 ## [0.9.0] - 2026-07-21
 
