@@ -203,10 +203,11 @@ def unreleased_added_entries(base: str, head: str, include_worktree: bool = Fals
     """
     Return curated bullets that ``head`` adds relative to ``base``.
 
-    Bullets under ``## [Unreleased]`` count, and so do bullets under a release
-    heading that exists at ``head`` but not at ``base``. The second case is a
-    release cut: the Unreleased block empties into a new version section, so
-    looking at Unreleased alone would fail every release push.
+    Bullets under ``## [Unreleased]`` count when ``base`` did not already have
+    them. Every bullet under a release heading that exists at ``head`` but not
+    at ``base`` counts, even one moved verbatim out of Unreleased: cutting a
+    release is itself the curated changelog update, and looking at Unreleased
+    alone would fail every release push.
     """
     base_text = changelog_at(base)
     base_entries = {
@@ -219,20 +220,19 @@ def unreleased_added_entries(base: str, head: str, include_worktree: bool = Fals
     else:
         head_text = run_git(["show", f"{head}:{CHANGELOG_PATH.as_posix()}"])
 
-    base_headings = set(release_headings(base_text))
-    head_blocks = [extract_release_block(head_text, r"^## \[?Unreleased\]?.*$")]
-    head_blocks.extend(
-        extract_release_block(head_text, f"^{re.escape(heading)}$")
-        for heading in release_headings(head_text)
-        if heading not in base_headings
-    )
-    return [
+    added = [
         entry
-        for block in head_blocks
-        for section in parse_sections(block)
+        for section in parse_sections(extract_release_block(head_text, r"^## \[?Unreleased\]?.*$"))
         for entry in section.entries
         if normalize_entry(entry) not in base_entries
     ]
+    base_headings = set(release_headings(base_text))
+    for heading in release_headings(head_text):
+        if heading in base_headings:
+            continue
+        block = extract_release_block(head_text, f"^{re.escape(heading)}$")
+        added.extend(entry for section in parse_sections(block) for entry in section.entries)
+    return added
 
 
 def extract_release_block(text: str, heading_pattern: str) -> str:

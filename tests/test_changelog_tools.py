@@ -535,7 +535,7 @@ def test_unreleased_added_entries_counts_bullets_under_a_new_release_heading(
     monkeypatch.setattr("scripts.changelog_tools.changelog_at", lambda _ref: base_text)
     monkeypatch.setattr("scripts.changelog_tools.run_git", lambda _args: head_text)
 
-    assert unreleased_added_entries("base", "head") == ["- Brand new feature."]
+    assert unreleased_added_entries("base", "head") == ["- Brand new feature.", "- Existing fix."]
 
 
 def test_check_command_accepts_release_cut_that_moves_unreleased_into_a_version(
@@ -568,5 +568,40 @@ def test_check_command_accepts_release_cut_that_moves_unreleased_into_a_version(
     )
     git(tmp_path, "add", ".")
     git(tmp_path, "commit", "-q", "-m", "Release v0.2.0")
+
+    assert check_command(check_args(base)) == 0
+
+
+def test_check_command_accepts_release_cut_that_only_inserts_the_version_heading(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A release cut moves Unreleased bullets verbatim; that alone satisfies the gate."""
+    base = make_changelog_repo(tmp_path, monkeypatch)
+
+    (tmp_path / "src" / "accessiweather" / "app.py").write_text(
+        "print('silent stop')\n", encoding="utf-8"
+    )
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-q", "-m", "fix(radio): the hotkey stop is silent [skip changelog]")
+
+    (tmp_path / "CHANGELOG.md").write_text(
+        """# AccessiWeather Changelog
+
+## [Unreleased]
+
+## [0.2.0] - 2026-09-14
+
+### Fixed
+- Existing fix.
+
+## [0.1.0] - 2026-01-01
+
+### Fixed
+- Old fix.
+""",
+        encoding="utf-8",
+    )
+    git(tmp_path, "add", ".")
+    git(tmp_path, "commit", "-q", "-m", "chore(release): prepare 0.2.0")
 
     assert check_command(check_args(base)) == 0
