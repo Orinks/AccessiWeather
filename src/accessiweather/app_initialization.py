@@ -108,6 +108,13 @@ def initialize_components(app: AccessiWeatherApp) -> None:
     from .alert_manager import AlertManager
     from .alert_notification_system import AlertNotificationSystem
     from .noaa_radio.alert_auto_tune import AlertRadioAutoTuner
+    from .noaa_radio.preferences import RadioPreferences
+    from .noaa_radio.session import get_shared_radio_session
+
+    # One preferences object, shared by the radio dialog's playback session and
+    # the global hotkey, so whatever plays last is what the hotkey resumes.
+    app.radio_preferences = RadioPreferences(path=app.runtime_paths.noaa_radio_preferences_file)
+    get_shared_radio_session().preferences = app.radio_preferences
 
     config_dir_str = str(app.config_manager.config_dir)
     alert_settings = config.settings.to_alert_settings()
@@ -210,6 +217,8 @@ def _validate_ai_model_deferred(app: AccessiWeatherApp) -> None:
 
     try:
         settings = app.config_manager.get_settings()
+        if getattr(settings, "ai_provider", "openrouter") != "openrouter":
+            return
         model_id = getattr(settings, "ai_model_preference", None)
 
         # Skip validation if no model configured or using defaults

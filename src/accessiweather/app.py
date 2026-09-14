@@ -30,8 +30,11 @@ if TYPE_CHECKING:
     from .alert_notification_system import AlertNotificationSystem
     from .config import ConfigManager
     from .display import WeatherPresenter
+    from .global_hotkeys import GlobalHotkeyManager
     from .location_manager import LocationManager
     from .noaa_radio.alert_auto_tune import AlertRadioAutoTuner
+    from .noaa_radio.preferences import RadioPreferences
+    from .noaa_radio.toggle import RadioToggleController
     from .ui.main_window import MainWindow
     from .weather_client import WeatherClient
 
@@ -161,6 +164,11 @@ class AccessiWeatherApp(
         self.alert_notification_system: AlertNotificationSystem | None = None
         self.alert_radio_auto_tuner: AlertRadioAutoTuner | None = None
 
+        # NOAA Weather Radio preferences and the focus-free play/stop hotkey
+        self.radio_preferences: RadioPreferences | None = None
+        self.global_hotkeys: GlobalHotkeyManager | None = None
+        self._radio_toggle: RadioToggleController | None = None
+
         # Notification system
         self._notifier = None
 
@@ -224,6 +232,9 @@ class AccessiWeatherApp(
 
             # Set up keyboard accelerators (shortcuts)
             self._setup_accelerators()
+
+            # Register system-wide hotkeys that work without app focus
+            self._setup_global_hotkeys()
 
             # Initialize system tray icon
             self._initialize_tray_icon()

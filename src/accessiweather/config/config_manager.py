@@ -146,6 +146,7 @@ class ConfigManager:
                 self._config.settings.update_channel = (
                     self._default_update_channel_for_current_build()
                 )
+                self._load_secure_keys()
                 self.save_config()  # Save default config
 
         except Exception as e:
@@ -178,6 +179,7 @@ class ConfigManager:
             "pirate_weather_api_key",
             "airnow_api_key",
             "openrouter_api_key",
+            "venice_api_key",
             "avwx_api_key",
         }
 
@@ -185,6 +187,7 @@ class ConfigManager:
             "pirate_weather_api_key",
             "airnow_api_key",
             "openrouter_api_key",
+            "venice_api_key",
             "avwx_api_key",
             "github_app_id",
             "github_app_private_key",
@@ -324,6 +327,10 @@ class ConfigManager:
     def remove_location(self, name: str) -> bool:
         """Remove a location."""
         return self._locations.remove_location(name)
+
+    def reorder_locations(self, ordered_names: list[str]) -> bool:
+        """Persist a new saved-location order."""
+        return self._locations.reorder_locations(ordered_names)
 
     def set_current_location(self, name: str) -> bool:
         """Set the current location."""

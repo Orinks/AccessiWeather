@@ -2,16 +2,33 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 
 import wx
 
+from .global_hotkeys import DEFAULT_NOAA_RADIO_HOTKEY, GlobalHotkeyManager, is_supported
 from .native_shortcuts import install_accelerator_table_preserving_native_close
+from .shortcut_preferences import (
+    WINDOW_TRAY_SHORTCUTS,
+    resolve_shortcut_binding,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class AppShortcutsMixin:
+    def _get_shortcut_settings(self):
+        """Return live settings when available, else a default placeholder."""
+        config_manager = getattr(self, "config_manager", None)
+        if config_manager is None:
+            return object()
+        try:
+            return config_manager.get_settings()
+        except Exception:
+            logger.debug("Falling back to default shortcut settings", exc_info=True)
+            return object()
+
     def _setup_accelerators(self) -> None:
         """Set up keyboard accelerators (shortcuts)."""
         if not self.main_window:
@@ -33,18 +50,178 @@ class AppShortcutsMixin:
             (wx.ACCEL_NORMAL, wx.WXK_F5, self._on_refresh_shortcut),
             (wx.ACCEL_NORMAL, getattr(wx, "WXK_F6", wx.WXK_F5), self._on_cycle_sections_shortcut),
         ]
+        settings = self._get_shortcut_settings()
+        tray_shortcut_bindings: list[tuple[int, int, object, str]] = []
+        for preference in WINDOW_TRAY_SHORTCUTS:
+            binding = resolve_shortcut_binding(
+                getattr(settings, preference.setting_name, preference.default),
+                default=preference.default,
+            )
+            if binding is None:
+                continue
+            radio_binding = resolve_shortcut_binding(
+                getattr(settings, "noaa_radio_hotkey", DEFAULT_NOAA_RADIO_HOTKEY),
+                default=DEFAULT_NOAA_RADIO_HOTKEY,
+            )
+            if radio_binding == binding:
+                continue
+            tray_shortcut_bindings.append(
+                (
+                    binding.accelerator_flags(wx),
+                    binding.key_code(wx),
+                    getattr(self, preference.handler_name),
+                    preference.label,
+                )
+            )
+        accelerators.extend(
+            (flags, key, handler) for flags, key, handler, _label in tray_shortcut_bindings
+        )
 
         # Create accelerator table
         # Access the frame directly (MainWindow is now a SizedFrame)
         frame = self.main_window
+        for cmd_id in getattr(self, "_app_accelerator_ids", []):
+            if hasattr(frame, "Unbind"):
+                frame.Unbind(wx.EVT_MENU, id=cmd_id)
+        self._app_accelerator_ids = []
         accel_entries = []
         for flags, key, handler in accelerators:
             cmd_id = wx.NewIdRef()
             frame.Bind(wx.EVT_MENU, handler, id=cmd_id)
             accel_entries.append((flags, key, cmd_id))
+            self._app_accelerator_ids.append(cmd_id)
 
+        for flags, key, attribute in (
+            (wx.ACCEL_CTRL, ord("E"), "_explain_id"),
+            (wx.ACCEL_CTRL, ord("T"), "_weather_chat_id"),
+            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("R"), "_noaa_radio_id"),
+            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("L"), "_edit_location_id"),
+            (wx.ACCEL_NORMAL, wx.WXK_ESCAPE, "_escape_id"),
+        ):
+            if hasattr(frame, attribute):
+                accel_entries.append((flags, key, getattr(frame, attribute)))
         install_accelerator_table_preserving_native_close(frame, accel_entries)
+        self._register_global_hotkeys(settings=settings)
         logger.info("Keyboard accelerators set up successfully")
+
+    def _setup_global_hotkeys(self) -> None:
+        """Register the system-wide hotkeys that work without app focus."""
+        if not self.main_window:
+            return
+        self.global_hotkeys = GlobalHotkeyManager(self.main_window, self._on_noaa_radio_hotkey)
+        self.refresh_global_hotkeys()
+
+    def refresh_global_hotkeys(self) -> None:
+        """Apply the configured hotkey combo, reporting a combo Windows will not give us."""
+        manager = getattr(self, "global_hotkeys", None)
+        if manager is None:
+            return
+
+        settings = self.config_manager.get_settings() if self.config_manager else None
+        combo = getattr(settings, "noaa_radio_hotkey", DEFAULT_NOAA_RADIO_HOTKEY)
+        if manager.registered_combo == combo:
+            return
+
+        if not manager.apply(combo) and combo and is_supported():
+            self._notify_radio_hotkey(
+                f"Could not register {combo} as the NOAA Weather Radio hotkey. "
+                "Another program is probably using it. Choose a different combination "
+                "in Settings, General."
+            )
+
+    def _on_noaa_radio_hotkey(self) -> None:
+        """Toggle NOAA Weather Radio playback from the system-wide hotkey."""
+        from .noaa_radio.toggle import RadioToggleController
+
+        if getattr(self, "_radio_toggle", None) is None:
+            self._radio_toggle = RadioToggleController(
+                preferences=getattr(self, "radio_preferences", None),
+                notify=self._notify_radio_hotkey,
+                auto_tuner_provider=lambda: getattr(self, "alert_radio_auto_tuner", None),
+            )
+        self._radio_toggle.toggle()
+
+    def _notify_radio_hotkey(self, message: str) -> None:
+        """Announce a hotkey result as a desktop notification, since the app may be hidden."""
+        notifier = getattr(self, "_notifier", None)
+        if notifier is None:
+            logger.info("NOAA Weather Radio hotkey: %s", message)
+            return
+        wx.CallAfter(
+            notifier.send_notification,
+            "NOAA Weather Radio",
+            message,
+            play_sound=False,
+        )
+
+    def _register_global_hotkeys(self, *, settings) -> None:
+        """Register configurable tray/window shortcuts as global hotkeys when supported."""
+        frame = self.main_window
+        self._unregister_global_hotkeys()
+        if frame is None or not hasattr(frame, "RegisterHotKey"):
+            return
+
+        hotkey_event = getattr(wx, "EVT_HOTKEY", None)
+        if hotkey_event is None:
+            return
+
+        registered_ids: list[int] = []
+        for preference in WINDOW_TRAY_SHORTCUTS:
+            binding = resolve_shortcut_binding(
+                getattr(settings, preference.setting_name, preference.default),
+                default=preference.default,
+            )
+            if binding is None:
+                continue
+            radio_binding = resolve_shortcut_binding(
+                getattr(settings, "noaa_radio_hotkey", DEFAULT_NOAA_RADIO_HOTKEY),
+                default=DEFAULT_NOAA_RADIO_HOTKEY,
+            )
+            if radio_binding == binding:
+                continue
+
+            if not ({"Ctrl", "Alt"} & set(binding.modifiers)):
+                continue
+            hotkey_id = int(wx.NewIdRef())
+            try:
+                registered = frame.RegisterHotKey(
+                    hotkey_id,
+                    binding.hotkey_modifiers(wx),
+                    binding.key_code(wx),
+                )
+            except Exception:
+                logger.debug(
+                    "Failed to register global hotkey %s for %s",
+                    binding.normalized,
+                    preference.label,
+                    exc_info=True,
+                )
+                continue
+            if not registered:
+                logger.warning(
+                    "Global hotkey %s for %s could not be registered",
+                    binding.normalized,
+                    preference.label,
+                )
+                continue
+
+            frame.Bind(hotkey_event, getattr(self, preference.handler_name), id=hotkey_id)
+            registered_ids.append(hotkey_id)
+
+        self._registered_hotkey_ids = registered_ids
+
+    def _unregister_global_hotkeys(self) -> None:
+        """Remove previously-registered global hotkeys."""
+        frame = self.main_window
+        hotkey_event = getattr(wx, "EVT_HOTKEY", None)
+        for hotkey_id in getattr(self, "_registered_hotkey_ids", []):
+            if frame is not None and hasattr(frame, "UnregisterHotKey"):
+                with contextlib.suppress(Exception):
+                    frame.UnregisterHotKey(hotkey_id)
+            if frame is not None and hotkey_event is not None and hasattr(frame, "Unbind"):
+                with contextlib.suppress(Exception):
+                    frame.Unbind(hotkey_event, id=hotkey_id)
+        self._registered_hotkey_ids = []
 
     def _on_refresh_shortcut(self, event) -> None:
         """Handle Ctrl+R / F5 shortcut."""
@@ -104,3 +281,32 @@ class AppShortcutsMixin:
     def _on_exit_shortcut(self, event) -> None:
         """Handle Ctrl+Q shortcut."""
         self.request_exit()
+
+    def _on_show_main_window_shortcut(self, event) -> None:
+        """Show or restore the main window, including from the tray."""
+        if getattr(self, "tray_icon", None) is not None:
+            self.tray_icon.show_main_window()
+            return
+        if self.main_window:
+            self.main_window.Show(True)
+            self.main_window.Iconize(False)
+            self.main_window.Raise()
+            self.main_window.SetFocus()
+
+    def _on_hide_main_window_shortcut(self, event) -> None:
+        """Hide the main window to the tray when available."""
+        tray_icon = getattr(self, "tray_icon", None)
+        if tray_icon is not None:
+            tray_icon.hide_main_window()
+            return
+        if self.main_window and hasattr(self.main_window, "set_status"):
+            self.main_window.set_status("Tray icon unavailable, so the window cannot be hidden.")
+
+    def _on_read_tray_info_shortcut(self, event) -> None:
+        """Speak the current tray tooltip text through the app's announcer path."""
+        tray_icon = getattr(self, "tray_icon", None)
+        if tray_icon is not None:
+            tray_icon.announce_tooltip()
+            return
+        if self.main_window and hasattr(self.main_window, "set_status"):
+            self.main_window.set_status("Tray information is unavailable.")

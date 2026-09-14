@@ -15,21 +15,28 @@ from pathlib import Path  # noqa: F401  # exposed for test patching (logging_con
 from accessiweather.paths import resolve_default_config_root
 
 
-def setup_logging(log_level=logging.INFO):
+def setup_logging(log_level=logging.INFO, *, config_dir=None, portable_mode=False):
     r"""
     Set up logging for the application.
 
     Logs are saved to ``{config_root}/logs/accessiweather.log`` where
-    ``config_root`` comes from the normalized runtime storage layout.
+    ``config_root`` comes from the normalized runtime storage layout.  A
+    portable copy therefore keeps its logs beside its own config directory
+    instead of writing into the user profile.
 
     Args:
     ----
         log_level: Logging level (default: INFO)
+        config_dir: Explicit config root, matching ``--config-dir``
+        portable_mode: Resolve the config root for a portable copy
 
     """
     # Get config directory and create logs subfolder
-    config_dir = resolve_default_config_root()
-    log_dir = config_dir / "logs"
+    config_root = resolve_default_config_root(
+        config_dir=config_dir,
+        portable_mode=portable_mode,
+    )
+    log_dir = config_root / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     # Secure log directory permissions: owner-only access (rwx------)
     with contextlib.suppress(OSError):

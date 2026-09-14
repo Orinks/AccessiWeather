@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from ..sound_events import DEFAULT_MUTED_SOUND_EVENTS
+from .config_constants import DEFAULT_NOAA_RADIO_HOTKEY
 from .config_serialization import AppSettingsSerializationMixin
 from .config_validation import AppSettingsValidationMixin
 
@@ -14,10 +15,14 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     """Application settings."""
 
     temperature_unit: str = "both"
+    wind_speed_unit: str = "auto"
     update_interval_minutes: int = 10
     enable_alerts: bool = True
     minimize_to_tray: bool = False
     minimize_on_startup: bool = False
+    shortcut_show_main_window: str = "Ctrl+Shift+W"
+    shortcut_hide_main_window: str = "Ctrl+Shift+M"
+    shortcut_read_tray_info: str = "Ctrl+Shift+I"
     startup_enabled: bool = False
     data_source: str = "auto"
     pirate_weather_api_key: str = ""
@@ -31,6 +36,8 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     specific_alert_sound_packs: list[str] = field(default_factory=list)
     auto_tune_weather_radio_alerts: bool = False
     auto_tune_weather_radio_duration_minutes: int = 5
+    # System-wide play/stop hotkey for NOAA Weather Radio; empty disables it.
+    noaa_radio_hotkey: str = DEFAULT_NOAA_RADIO_HOTKEY
     # Event-based notifications
     notify_discussion_update: bool = True
     notify_daily_climate_report_update: bool = False
@@ -86,7 +93,7 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     # bottom button panel.  Takes effect on app restart.
     location_buttons_on_top: bool = False
     # Saved location ordering in user-facing lists.
-    location_sort_order: str = "alphabetical"  # "alphabetical" | "nearest_current"
+    location_sort_order: str = "alphabetical"  # "alphabetical" | "manual" | "nearest_current"
     # Date format preset for rendered dates
     date_format: str = "iso"  # "iso" | "us_short" | "us_long" | "eu"
     # Taskbar icon text options
@@ -108,6 +115,9 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     avwx_api_key: str = ""
     # AI Explanation Settings
     openrouter_api_key: str = ""
+    ai_provider: str = "openrouter"
+    venice_api_key: str = ""
+    venice_model: str = "venice-uncensored-1-2"
     ai_model_preference: str = "openrouter/free"  # free auto-router (default)
     ai_explanation_style: str = "standard"  # "brief", "standard", "detailed"
     ai_cache_ttl: int = 300  # 5 minutes in seconds

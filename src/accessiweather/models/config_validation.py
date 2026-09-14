@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from ..shortcut_preferences import WINDOW_TRAY_SHORTCUT_DEFAULTS, normalize_shortcut_text
 from ..sound_events import DEFAULT_MUTED_SOUND_EVENTS, normalize_known_muted_sound_events
 from .config_constants import NON_CRITICAL_SETTINGS
 
@@ -40,6 +41,23 @@ class AppSettingsValidationMixin:
             return float(value)
         except (TypeError, ValueError):
             return default
+
+    @staticmethod
+    def _normalized_hotkey(value) -> str:
+        """
+        Return a canonical hotkey combo, an empty string for "disabled", or the default.
+
+        Parsing lives in :mod:`accessiweather.global_hotkeys`, imported lazily so
+        settings stay usable without wx loaded.
+        """
+        if not isinstance(value, str) or not value.strip():
+            return ""
+        from ..global_hotkeys import DEFAULT_NOAA_RADIO_HOTKEY, HotkeyParseError, normalize_hotkey
+
+        try:
+            return normalize_hotkey(value)
+        except HotkeyParseError:
+            return DEFAULT_NOAA_RADIO_HOTKEY
 
     def validate_on_access(self, setting_name: str) -> bool:
         """
@@ -84,6 +102,11 @@ class AppSettingsValidationMixin:
             if value not in valid_modes:
                 setattr(settings, setting_name, "local")
 
+        elif setting_name == "wind_speed_unit":
+            valid_units = {"auto", "mph", "km/h", "m/s"}
+            if value not in valid_units:
+                setattr(settings, setting_name, "auto")
+
         elif setting_name == "forecast_time_reference":
             valid_references = {"location", "user_local"}
             if value not in valid_references:
@@ -122,10 +145,24 @@ class AppSettingsValidationMixin:
             if not isinstance(value, int) or value < 1 or value > 60:
                 setattr(settings, setting_name, 5)
 
+        elif setting_name == "noaa_radio_hotkey":
+            setattr(settings, setting_name, self._normalized_hotkey(value))
+
         elif setting_name == "taskbar_icon_text_format":
             # Ensure format string is valid
             if not isinstance(value, str) or not value.strip():
                 setattr(settings, setting_name, "{temp} {condition}")
+
+        elif setting_name in WINDOW_TRAY_SHORTCUT_DEFAULTS:
+            default_value = WINDOW_TRAY_SHORTCUT_DEFAULTS[setting_name]
+            if not isinstance(value, str):
+                setattr(settings, setting_name, default_value)
+            else:
+                try:
+                    normalized_value = normalize_shortcut_text(value, allow_empty=True)
+                except ValueError:
+                    normalized_value = default_value
+                setattr(settings, setting_name, normalized_value)
 
         elif setting_name in {
             "alert_global_cooldown_minutes",
@@ -222,7 +259,7 @@ class AppSettingsValidationMixin:
                 setattr(settings, setting_name, "separate")
 
         elif setting_name == "location_sort_order":
-            valid_orders = {"alphabetical", "nearest_current"}
+            valid_orders = {"alphabetical", "manual", "nearest_current"}
             if value not in valid_orders:
                 setattr(settings, setting_name, "alphabetical")
 

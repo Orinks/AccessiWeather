@@ -8,7 +8,11 @@ from .provider_normalization import (
     normalize_pressure_pair,
     normalize_temperature_pair,
 )
-from .thermal_comfort import sanitize_thermal_comfort_readings
+from .thermal_comfort import (
+    calculate_heat_index_f,
+    calculate_wind_chill_f,
+    sanitize_thermal_comfort_readings,
+)
 from .weather_client_nws_common import *  # noqa: F403
 from .weather_client_parsers import normalize_pressure
 
@@ -81,13 +85,38 @@ def parse_nws_current_conditions(
         props.get("heatIndex", {}).get("unitCode") or "wmoUnit:degC",
     )
 
+    derived_wind_chill_f = None
+    if (
+        wind_chill.fahrenheit is None
+        and temperature.fahrenheit is not None
+        and wind_speed_mph is not None
+    ):
+        derived_wind_chill_f = calculate_wind_chill_f(temperature.fahrenheit, wind_speed_mph)
+
+    derived_heat_index_f = None
+    if (
+        heat_index.fahrenheit is None
+        and temperature.fahrenheit is not None
+        and humidity is not None
+    ):
+        derived_heat_index_f = calculate_heat_index_f(temperature.fahrenheit, humidity)
+
+    derived_feels_like_f = (
+        derived_wind_chill_f if derived_wind_chill_f is not None else derived_heat_index_f
+    )
+
     comfort = sanitize_thermal_comfort_readings(
         temperature_f=temperature.fahrenheit,
         temperature_c=temperature.celsius,
         humidity=humidity,
-        wind_chill_f=wind_chill.fahrenheit,
+        feels_like_f=derived_feels_like_f,
+        wind_chill_f=wind_chill.fahrenheit
+        if wind_chill.fahrenheit is not None
+        else derived_wind_chill_f,
         wind_chill_c=wind_chill.celsius,
-        heat_index_f=heat_index.fahrenheit,
+        heat_index_f=heat_index.fahrenheit
+        if heat_index.fahrenheit is not None
+        else derived_heat_index_f,
         heat_index_c=heat_index.celsius,
     )
 
@@ -246,6 +275,14 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
         if not isinstance(same_codes_raw, list):
             same_codes_raw = []
 
+        # ``eventCode.SAME`` carries the SAME/EAS event code broadcast in the
+        # radio header (TOR, SMW, ...), which is a different thing entirely from
+        # the county codes in ``geocode.SAME``.
+        event_code = props.get("eventCode") or {}
+        same_event_codes_raw = event_code.get("SAME", []) if isinstance(event_code, dict) else []
+        if not isinstance(same_event_codes_raw, list):
+            same_event_codes_raw = []
+
         alert = WeatherAlert(
             title=props.get("headline", "Weather Alert"),
             description=props.get("description", ""),
@@ -273,6 +310,11 @@ def parse_nws_alerts(data: dict) -> WeatherAlerts:
                 str(same_code).strip()
                 for same_code in same_codes_raw
                 if isinstance(same_code, str | int) and str(same_code).strip()
+            ],
+            same_event_codes=[
+                str(event_code_value).strip()
+                for event_code_value in same_event_codes_raw
+                if isinstance(event_code_value, str) and event_code_value.strip()
             ],
         )
         alerts.append(alert)

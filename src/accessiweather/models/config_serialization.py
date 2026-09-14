@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from ..sound_events import DEFAULT_MUTED_SOUND_EVENTS
+from .config_constants import DEFAULT_NOAA_RADIO_HOTKEY
 
 if TYPE_CHECKING:
     from .config_settings import AppSettings
@@ -18,10 +19,14 @@ class AppSettingsSerializationMixin:
         settings = cast("AppSettings", self)
         return {
             "temperature_unit": settings.temperature_unit,
+            "wind_speed_unit": settings.wind_speed_unit,
             "update_interval_minutes": settings.update_interval_minutes,
             "enable_alerts": settings.enable_alerts,
             "minimize_to_tray": settings.minimize_to_tray,
             "minimize_on_startup": settings.minimize_on_startup,
+            "shortcut_show_main_window": settings.shortcut_show_main_window,
+            "shortcut_hide_main_window": settings.shortcut_hide_main_window,
+            "shortcut_read_tray_info": settings.shortcut_read_tray_info,
             "startup_enabled": settings.startup_enabled,
             "data_source": settings.data_source,
             # weather provider API keys and github_app_* are stored in secure keyring, not JSON
@@ -36,6 +41,7 @@ class AppSettingsSerializationMixin:
             "auto_tune_weather_radio_duration_minutes": (
                 settings.auto_tune_weather_radio_duration_minutes
             ),
+            "noaa_radio_hotkey": settings.noaa_radio_hotkey,
             "notify_discussion_update": settings.notify_discussion_update,
             "notify_daily_climate_report_update": settings.notify_daily_climate_report_update,
             "notify_hwo_update": settings.notify_hwo_update,
@@ -97,6 +103,8 @@ class AppSettingsSerializationMixin:
             "station_selection_strategy": settings.station_selection_strategy,
             # AI settings and AVWX key stored in secure storage, not here
             "ai_model_preference": settings.ai_model_preference,
+            "ai_provider": settings.ai_provider,
+            "venice_model": settings.venice_model,
             "ai_explanation_style": settings.ai_explanation_style,
             "ai_cache_ttl": settings.ai_cache_ttl,
             # AI Prompt Customization
@@ -125,10 +133,14 @@ class AppSettingsSerializationMixin:
 
         settings = settings_cls(
             temperature_unit=data.get("temperature_unit", "both"),
+            wind_speed_unit=data.get("wind_speed_unit", "auto"),
             update_interval_minutes=data.get("update_interval_minutes", 10),
             enable_alerts=settings_cls._as_bool(data.get("enable_alerts"), True),
             minimize_to_tray=settings_cls._as_bool(data.get("minimize_to_tray"), False),
             minimize_on_startup=settings_cls._as_bool(data.get("minimize_on_startup"), False),
+            shortcut_show_main_window=data.get("shortcut_show_main_window", "Ctrl+Shift+W"),
+            shortcut_hide_main_window=data.get("shortcut_hide_main_window", "Ctrl+Shift+M"),
+            shortcut_read_tray_info=data.get("shortcut_read_tray_info", "Ctrl+Shift+I"),
             startup_enabled=settings_cls._as_bool(data.get("startup_enabled"), False),
             data_source=data.get("data_source", "auto"),
             pirate_weather_api_key=data.get("pirate_weather_api_key", ""),
@@ -146,6 +158,7 @@ class AppSettingsSerializationMixin:
             auto_tune_weather_radio_duration_minutes=data.get(
                 "auto_tune_weather_radio_duration_minutes", 5
             ),
+            noaa_radio_hotkey=data.get("noaa_radio_hotkey", DEFAULT_NOAA_RADIO_HOTKEY),
             notify_discussion_update=settings_cls._as_bool(
                 data.get("notify_discussion_update"), True
             ),
@@ -245,6 +258,9 @@ class AppSettingsSerializationMixin:
             # AVWX and AI settings (stored in secure storage)
             avwx_api_key=data.get("avwx_api_key", ""),
             openrouter_api_key=data.get("openrouter_api_key", ""),
+            ai_provider=data.get("ai_provider", "openrouter"),
+            venice_api_key=data.get("venice_api_key", ""),
+            venice_model=data.get("venice_model", "venice-uncensored-1-2"),
             ai_model_preference=data.get("ai_model_preference", "openrouter/free"),
             ai_explanation_style=data.get("ai_explanation_style", "standard"),
             ai_cache_ttl=data.get("ai_cache_ttl", 300),
@@ -287,6 +303,10 @@ class AppSettingsSerializationMixin:
         settings.validate_on_access("parallel_fetch_timeout")
         settings.validate_on_access("specific_alert_sound_packs")
         settings.validate_on_access("auto_tune_weather_radio_duration_minutes")
+        settings.validate_on_access("noaa_radio_hotkey")
+        settings.validate_on_access("shortcut_show_main_window")
+        settings.validate_on_access("shortcut_hide_main_window")
+        settings.validate_on_access("shortcut_read_tray_info")
         if settings.data_source not in {"auto", "nws", "openmeteo", "pirateweather"}:
             settings.data_source = "auto"
         return settings

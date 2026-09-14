@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+# System-wide hotkey that plays or stops NOAA Weather Radio while AccessiWeather
+# has no focus. Four modifiers keep it clear of screen reader and app shortcuts.
+DEFAULT_NOAA_RADIO_HOTKEY = "Ctrl+Alt+Shift+R"
+
 # Critical settings needed for app initialization (load synchronously)
 # These are essential for the app to start and display basic functionality
 CRITICAL_SETTINGS: set[str] = {
@@ -35,6 +39,7 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "specific_alert_sound_packs",
     "auto_tune_weather_radio_alerts",
     "auto_tune_weather_radio_duration_minutes",
+    "noaa_radio_hotkey",
     # Event notifications
     "notify_discussion_update",
     "notify_daily_climate_report_update",
@@ -54,6 +59,9 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "github_app_installation_id",
     # AI explanation settings
     "openrouter_api_key",
+    "ai_provider",
+    "venice_api_key",
+    "venice_model",
     "avwx_api_key",
     "ai_model_preference",
     "ai_explanation_style",
@@ -65,9 +73,13 @@ NON_CRITICAL_SETTINGS: set[str] = {
     "airnow_api_key",
     # Display preferences
     "round_values",
+    "wind_speed_unit",
     "enable_alerts",
     "minimize_to_tray",
     "minimize_on_startup",
+    "shortcut_show_main_window",
+    "shortcut_hide_main_window",
+    "shortcut_read_tray_info",
     "startup_enabled",
     "auto_update_enabled",
     "update_channel",

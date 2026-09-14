@@ -438,6 +438,10 @@ Write like a human, not a chatbot:
 **Avoid**: Passive voice, hedging language, generic terms ("enhanced", "optimized")
 **Use**: Contractions, direct address ("You can now..."), specific benefits
 
+**Length**: one sentence per change, under 25 words; the root cause, the mechanism and
+the before-and-after story go in the commit or PR, not the bullet. The full recipe is
+the `writing-changelog-entries` skill in `.claude/skills/`.
+
 ---
 
 ## Common Gotchas

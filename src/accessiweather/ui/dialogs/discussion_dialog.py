@@ -288,11 +288,10 @@ class DiscussionDialog(wx.Dialog):
 
     def _update_explain_button_state(self) -> None:
         """Enable or disable the explain button based on AI availability."""
-        # Check if OpenRouter API key is configured
         try:
-            from ...config.secure_storage import SecureStorage
+            from ...ai_settings import selected_key
 
-            api_key = SecureStorage.get_password("openrouter_api_key")
+            api_key = selected_key(self.app.config_manager.get_settings())
             if api_key and self._current_discussion:
                 self.explain_button.Enable()
             else:
@@ -315,9 +314,9 @@ class DiscussionDialog(wx.Dialog):
         DiscussionDialog._set_post_explain_buttons(self, has_attempted_explanation=False)
         self.explain_button.Disable()
         self.explanation_display.SetValue(
-            "Generating plain language summary. Selecting an OpenRouter model..."
+            "Generating plain language summary. Using the selected AI provider..."
         )
-        self._set_status("Generating AI explanation. Selecting an OpenRouter model...")
+        self._set_status("Generating AI explanation. Using the selected AI provider...")
 
         # Run async explanation
         self.app.run_async(self._do_explain())
@@ -342,28 +341,10 @@ class DiscussionDialog(wx.Dialog):
         """Perform the AI explanation."""
         try:
             from ...ai_explainer import AIExplainer, ExplanationStyle
-            from ...config.secure_storage import SecureStorage
+            from ...ai_settings import explainer_options
 
-            api_key = SecureStorage.get_password("openrouter_api_key")
-            if not api_key:
-                wx.CallAfter(
-                    self._on_explain_error,
-                    "OpenRouter API key not configured. Set it in Settings > AI.",
-                )
-                return
-
-            # Get configured model or use default
             settings = self.app.config_manager.get_settings()
-            model_pref = getattr(settings, "ai_model_preference", None)
-            # Convert "auto" to OpenRouter's auto-router model ID
-            model = "openrouter/auto" if model_pref == "auto" else model_pref
-
-            explainer = AIExplainer(
-                api_key=api_key,
-                model=model if model else None,
-                custom_system_prompt=getattr(settings, "custom_system_prompt", None),
-                custom_instructions=getattr(settings, "custom_instructions", None),
-            )
+            explainer = AIExplainer(**explainer_options(settings))
 
             location = self.app.config_manager.get_current_location()
             location_name = location.name if location else "your area"
@@ -397,14 +378,20 @@ class DiscussionDialog(wx.Dialog):
         self,
         model_used: str,
         token_count: int,
-        estimated_cost: float,
+        estimated_cost: float | None,
         cached: bool,
         model_selection_reason: str | None = None,
         requested_model: str | None = None,
         model_attempts: tuple[str, ...] = (),
     ) -> str:
         """Build the model metadata shown after a summary finishes."""
-        cost_text = "No cost" if estimated_cost == 0 else f"~${estimated_cost:.6f}"
+        cost_text = (
+            "See provider account"
+            if estimated_cost is None
+            else "No cost"
+            if estimated_cost == 0
+            else f"~${estimated_cost:.6f}"
+        )
         info_lines = [f"Model: {model_used}", f"Tokens: {token_count}", f"Cost: {cost_text}"]
         if requested_model and requested_model != model_used:
             info_lines.append(f"Requested: {requested_model}")
@@ -422,7 +409,7 @@ class DiscussionDialog(wx.Dialog):
         explanation: str,
         model_used: str,
         token_count: int = 0,
-        estimated_cost: float = 0.0,
+        estimated_cost: float | None = 0.0,
         cached: bool = False,
         model_selection_reason: str | None = None,
         requested_model: str | None = None,
@@ -466,9 +453,11 @@ class DiscussionDialog(wx.Dialog):
         DiscussionDialog._set_post_explain_buttons(self, has_attempted_explanation=True)
         self.explanation_display.SetValue(
             f"Failed to generate explanation: {error}\n\n"
-            "Please check your OpenRouter API key in Settings."
+            "Please check the selected provider and API key in Settings."
         )
         self._set_status("Explanation failed.")
+        self.explanation_display.SetFocus()
+        DiscussionDialog._announce_explain_status(self, f"Explanation failed. {error}")
 
     def _on_key(self, event):
         """Handle key press - close dialog on Escape."""

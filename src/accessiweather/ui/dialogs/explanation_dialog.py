@@ -12,10 +12,11 @@ from typing import TYPE_CHECKING
 
 import wx
 
+from ...ai_settings import explainer_options
+from ...screen_reader import ScreenReaderAnnouncer
 from .explanation_generation import (
     add_location_time_context,
     build_current_weather_payload,
-    resolve_ai_model,
     resolve_explanation_style,
 )
 
@@ -93,7 +94,9 @@ class ExplanationDialog(wx.Dialog):
 
         # Model information
         cost_text = (
-            "No cost"
+            "See provider account"
+            if self.explanation.estimated_cost is None
+            else "No cost"
             if self.explanation.estimated_cost == 0
             else f"~${self.explanation.estimated_cost:.6f}"
         )
@@ -161,11 +164,8 @@ class ExplanationDialog(wx.Dialog):
                 from ...ai_explainer import AIExplainer
 
                 explainer = AIExplainer(
-                    api_key=settings.openrouter_api_key or None,
-                    model=resolve_ai_model(settings),
+                    **explainer_options(settings),
                     cache=getattr(self.app, "ai_explanation_cache", None),
-                    custom_system_prompt=getattr(settings, "custom_system_prompt", None),
-                    custom_instructions=getattr(settings, "custom_instructions", None),
                 )
 
                 location = self.app.config_manager.get_current_location()
@@ -174,7 +174,14 @@ class ExplanationDialog(wx.Dialog):
                     wx.CallAfter(self._on_regenerate_error, "No weather data available.")
                     return
 
-                weather_dict = build_current_weather_payload(weather_data)
+                weather_dict = build_current_weather_payload(
+                    weather_data,
+                    temperature_unit_preference=getattr(settings, "temperature_unit", "both"),
+                    wind_speed_unit_preference=getattr(settings, "wind_speed_unit", "auto"),
+                    location=location,
+                )
+                if location:
+                    add_location_time_context(weather_dict, location)
 
                 loop = asyncio.new_event_loop()
                 try:
@@ -203,7 +210,13 @@ class ExplanationDialog(wx.Dialog):
         timestamp_text = result.timestamp.strftime("%B %d, %Y at %I:%M %p")
         self.timestamp_label.SetLabel(f"Generated: {timestamp_text}")
 
-        cost_text = "No cost" if result.estimated_cost == 0 else f"~${result.estimated_cost:.6f}"
+        cost_text = (
+            "See provider account"
+            if result.estimated_cost is None
+            else "No cost"
+            if result.estimated_cost == 0
+            else f"~${result.estimated_cost:.6f}"
+        )
         info = f"Model: {result.model_used}\nTokens: {result.token_count}\nCost: {cost_text}"
         if result.cached:
             info += "\nCached: Yes"
@@ -215,6 +228,12 @@ class ExplanationDialog(wx.Dialog):
         """Handle regeneration error."""
         self.text_ctrl.SetValue(f"Failed to regenerate: {error_msg}")
         self.regenerate_btn.Enable()
+        self.text_ctrl.SetFocus()
+        announcer = ScreenReaderAnnouncer()
+        try:
+            announcer.announce(f"Failed to regenerate. {error_msg}")
+        finally:
+            announcer.shutdown()
 
     def _on_key(self, event):
         """Handle key press - close dialog on Escape."""
@@ -374,15 +393,17 @@ def show_explanation_dialog(
 
             # Create explainer with custom prompts from settings
             explainer = AIExplainer(
-                api_key=settings.openrouter_api_key or None,
-                model=resolve_ai_model(settings),
+                **explainer_options(settings),
                 cache=getattr(app, "ai_explanation_cache", None),
-                custom_system_prompt=getattr(settings, "custom_system_prompt", None),
-                custom_instructions=getattr(settings, "custom_instructions", None),
             )
 
             # Build weather data dict from current conditions
-            weather_dict = build_current_weather_payload(weather_data)
+            weather_dict = build_current_weather_payload(
+                weather_data,
+                temperature_unit_preference=getattr(settings, "temperature_unit", "both"),
+                wind_speed_unit_preference=getattr(settings, "wind_speed_unit", "auto"),
+                location=location,
+            )
 
             # Add local time info for the location
             add_location_time_context(weather_dict, location)

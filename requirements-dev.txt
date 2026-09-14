@@ -12,13 +12,13 @@ pytest-timeout>=2.4.0
 hypothesis>=6.0.0
 vcrpy>=6.0.0
 requests-mock>=1.12.1
-diff-cover>=10.3.0
+diff-cover>=10.5.1
 
 # Type stubs
-types-requests>=2.33.0.20260518
+types-requests>=2.33.0.20260712
 
 # Dev tools
-pre-commit>=4.6.0
+pre-commit>=4.6.2
 ruff>=0.9.0
 pyright>=1.1.409
 briefcase

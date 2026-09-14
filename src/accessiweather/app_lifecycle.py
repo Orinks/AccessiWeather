@@ -38,6 +38,7 @@ class AppLifecycleMixin:
                 dynamic_enabled=getattr(settings, "taskbar_icon_dynamic_enabled", True),
                 format_string=getattr(settings, "taskbar_icon_text_format", "{temp} {condition}"),
                 temperature_unit=getattr(settings, "temperature_unit", "both"),
+                wind_speed_unit=getattr(settings, "wind_speed_unit", "auto"),
                 verbosity_level=getattr(settings, "verbosity_level", "standard"),
                 round_values=getattr(settings, "round_values", False),
             )
@@ -333,6 +334,13 @@ class AppLifecycleMixin:
         if activation_handoff_timer:
             activation_handoff_timer.Stop()
 
+        self._unregister_global_hotkeys()
+        try:
+            if getattr(self, "global_hotkeys", None) is not None:
+                self.global_hotkeys.unregister()
+        except Exception:
+            logger.debug("Could not release global hotkeys during shutdown", exc_info=True)
+
         try:
             if getattr(self, "alert_radio_auto_tuner", None) is not None:
                 self.alert_radio_auto_tuner.stop()
@@ -466,8 +474,13 @@ class AppLifecycleMixin:
                         settings, "taskbar_icon_text_format", "{temp} {condition}"
                     ),
                     temperature_unit=getattr(settings, "temperature_unit", "both"),
+                    wind_speed_unit=getattr(settings, "wind_speed_unit", "auto"),
                     verbosity_level=getattr(settings, "verbosity_level", "standard"),
                 )
+
+            self.refresh_global_hotkeys()
+            if getattr(self, "main_window", None):
+                self._setup_accelerators()
 
             self._start_auto_update_checks()
             self._start_background_updates()

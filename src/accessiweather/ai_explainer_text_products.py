@@ -51,7 +51,7 @@ class AIExplainerTextProductMixin:
         long NWS text products.
         """
         text_hash = hashlib.sha256(product_text.encode("utf-8")).hexdigest()
-        return f"ai_text_product:{product_type}:{location_name}:{text_hash}:{style.value}"
+        return f"ai_text_product:{self.provider}:{self.get_effective_model()}:{product_type}:{location_name}:{text_hash}:{style.value}"
 
     def _text_product_system_prompt(
         self,
@@ -165,7 +165,7 @@ class AIExplainerTextProductMixin:
             try:
                 model_override = model if model != primary_model else None
                 response = await asyncio.to_thread(
-                    self._call_openrouter, system_prompt, user_prompt, model_override
+                    self._call_provider, system_prompt, user_prompt, model_override
                 )
 
                 content = response["content"]
@@ -180,7 +180,12 @@ class AIExplainerTextProductMixin:
                 last_error = EmptyResponseError("empty or too-short response")
                 self._notify_generation_status(
                     status_callback,
-                    f"{model} returned an empty response; trying another available model.",
+                    f"{model} returned an empty response."
+                    + (
+                        " Trying another available model."
+                        if attempt_index + 1 < len(models_to_try)
+                        else " Please try again."
+                    ),
                 )
                 response = None
 
@@ -198,6 +203,8 @@ class AIExplainerTextProductMixin:
 
         if response is None:
             if last_error:
+                if self.provider == "venice":
+                    raise last_error
                 logger.error(
                     f"All models failed for {product_type}. Last error: {last_error}",
                     exc_info=True,

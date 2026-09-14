@@ -2,8 +2,17 @@
 
 from __future__ import annotations
 
-import json
+from datetime import datetime, timedelta
 from typing import Any
+
+from .ai_weather_time import (
+    current_or_future,
+    mapping,
+    measurement,
+    provenance,
+    series_lines,
+    timestamp,
+)
 
 
 def format_current_weather(data: dict[str, Any], display_name: str = "") -> str:
@@ -24,27 +33,44 @@ def format_current_weather(data: dict[str, Any], display_name: str = "") -> str:
     header = f"Current weather for {display_name}:" if display_name else "Current weather:"
     lines = [header]
 
-    _append_field(lines, "Temperature", data.get("temperature"))
-    _append_field(lines, "Feels Like", data.get("feels_like") or data.get("feelsLike"))
-    _append_field(
-        lines,
-        "Conditions",
-        data.get("description") or data.get("textDescription") or data.get("conditions"),
-    )
-    _append_field(lines, "Humidity", data.get("humidity"))
-    _append_field(lines, "Wind", data.get("wind") or data.get("windSpeed"))
-    _append_field(lines, "Pressure", data.get("pressure") or data.get("barometricPressure"))
-
-    # Fallback: if no known fields matched, dump scalar values
-    if len(lines) == 1:
-        for key, value in data.items():
-            if isinstance(value, str | int | float) and key not in ("lat", "lon"):
-                lines.append(f"{key}: {value}")
+    if isinstance(data.get("current"), dict):
+        current = data["current"]
+        units = mapping(data.get("current_units"))
+        lines.extend(provenance(data, "Open-Meteo"))
+        lines.append(f"Observation time: {current.get('time') or 'not supplied'}")
+        count = len(lines)
+        for key, value in current.items():
+            if key not in ("time", "interval"):
+                _append_field(lines, key, measurement(value, units.get(key, "")))
+    else:
+        current = mapping(data.get("properties")) if "properties" in data else data
+        lines.extend(provenance(data, "NWS" if "properties" in data else "weather service"))
+        lines.append(
+            f"Observation time: {current.get('timestamp') or current.get('time') or 'not supplied'}"
+        )
+        count = len(lines)
+        for label, keys in (
+            ("Temperature", ("temperature",)),
+            ("Feels Like", ("feels_like", "feelsLike", "heatIndex", "windChill")),
+            ("Conditions", ("description", "textDescription", "conditions")),
+            ("Humidity", ("humidity", "relativeHumidity")),
+            ("Wind", ("wind", "windSpeed")),
+            ("Wind direction", ("windDirection",)),
+            ("Pressure", ("pressure", "barometricPressure")),
+            ("Visibility", ("visibility",)),
+        ):
+            for key in keys:
+                text = measurement(current.get(key))
+                if text is not None:
+                    _append_field(lines, label, text)
+                    break
+    if len(lines) == count:
+        lines.append("No current weather data available.")
 
     return "\n".join(lines)
 
 
-def format_forecast(data: dict[str, Any], display_name: str = "") -> str:
+def format_forecast(data: dict[str, Any], display_name: str = "", *, forecast_days: int = 7) -> str:
     """
     Format forecast data as readable text with up to 7 periods.
 
@@ -54,6 +80,7 @@ def format_forecast(data: dict[str, Any], display_name: str = "") -> str:
     Args:
         data: Forecast data dict from WeatherService.get_forecast().
         display_name: Location display name for the header.
+        forecast_days: Maximum daily rows to show.
 
     Returns:
         A human-readable text summary of the forecast.
@@ -62,10 +89,30 @@ def format_forecast(data: dict[str, Any], display_name: str = "") -> str:
     header = f"Forecast for {display_name}:" if display_name else "Forecast:"
     lines = [header]
 
-    periods = data.get("periods", data.get("properties", {}).get("periods", []))
+    if "daily" in data:
+        lines.extend(provenance(data, "Open-Meteo"))
+        rows = series_lines(data, "daily", max(1, min(forecast_days, 16)))
+        lines.extend(rows or ["No forecast data available."])
+        return "\n".join(lines)
+    lines.extend(provenance(data, "NWS" if "properties" in data else "weather service"))
+    count = len(lines)
+    periods = data.get("periods", mapping(data.get("properties")).get("periods", []))
     if isinstance(periods, list):
-        for period in periods[:7]:
+        days = max(1, min(forecast_days, 16))
+        first_time = next(
+            (
+                timestamp(p.get("startTime"), data)
+                for p in periods
+                if isinstance(p, dict) and timestamp(p.get("startTime"), data)
+            ),
+            None,
+        )
+        boundary = first_time + timedelta(days=days) if first_time else None
+        for period in periods[: 2 * days]:
             if not isinstance(period, dict):
+                continue
+            start = timestamp(period.get("startTime"), data)
+            if boundary and start and start.tzinfo == boundary.tzinfo and start >= boundary:
                 continue
             name = period.get("name") or "Unknown"
             temp = period.get("temperature")
@@ -78,10 +125,12 @@ def format_forecast(data: dict[str, Any], display_name: str = "") -> str:
             if short:
                 parts.append(short)
 
+            if period.get("startTime"):
+                parts.append(f"Valid from {period['startTime']}")
             lines.append(" - ".join(parts))
 
-    if len(lines) == 1:
-        lines.append(json.dumps(data, indent=2, default=str)[:500])
+    if len(lines) == count:
+        lines.append("No forecast data available.")
 
     return "\n".join(lines)
 
@@ -106,11 +155,12 @@ def format_alerts(data: dict[str, Any], display_name: str = "") -> str:
     lines = [header]
 
     alerts = data.get("alerts", data.get("features", []))
+    lines.append("Source: NWS" if "features" in data else "Source: weather service")
     if isinstance(alerts, list) and len(alerts) > 0:
         for alert in alerts:
             if not isinstance(alert, dict):
                 continue
-            props = alert.get("properties", alert)
+            props = mapping(alert.get("properties", alert))
             event = props.get("event") or "Unknown Alert"
             severity = props.get("severity")
             headline = props.get("headline")
@@ -120,6 +170,19 @@ def format_alerts(data: dict[str, Any], display_name: str = "") -> str:
             if severity:
                 alert_line += f" (Severity: {severity})"
             lines.append(alert_line)
+            for label, key in (
+                ("Sender", "senderName"),
+                ("Effective", "effective"),
+                ("Onset", "onset"),
+                ("Expires", "expires"),
+                ("Ends", "ends"),
+            ):
+                value = props.get(key)
+                if key == "senderName" and not value:
+                    value = props.get("sender")
+                lines.append(
+                    f"  {label}: {value if isinstance(value, str) and value else 'unknown'}"
+                )
             if headline:
                 lines.append(f"  {headline}")
             if description:
@@ -130,12 +193,15 @@ def format_alerts(data: dict[str, Any], display_name: str = "") -> str:
     return "\n".join(lines)
 
 
-def format_hourly_forecast(data: dict[str, Any], display_name: str = "") -> str:
+def format_hourly_forecast(
+    data: dict[str, Any], display_name: str = "", *, now: datetime | None = None
+) -> str:
     """
     Format hourly forecast data as readable text with up to 12 periods.
 
     Args:
         data: Hourly forecast data dict from WeatherService.get_hourly_forecast().
+        now: Reference time, defaulting to the current UTC time.
         display_name: Location display name for the header.
 
     Returns:
@@ -145,8 +211,21 @@ def format_hourly_forecast(data: dict[str, Any], display_name: str = "") -> str:
     header = f"Hourly forecast for {display_name}:" if display_name else "Hourly forecast:"
     lines = [header]
 
-    periods = data.get("periods", data.get("properties", {}).get("periods", []))
+    if "hourly" in data:
+        lines.extend(provenance(data, "Open-Meteo"))
+        rows = series_lines(data, "hourly", 12, now)
+        lines.extend(rows or ["No hourly forecast data available."])
+        return "\n".join(lines)
+    lines.extend(provenance(data, "NWS" if "properties" in data else "weather service"))
+    count = len(lines)
+    periods = data.get("periods", mapping(data.get("properties")).get("periods", []))
     if isinstance(periods, list):
+        periods = [
+            p
+            for p in periods
+            if isinstance(p, dict)
+            and current_or_future(p.get("startTime"), data, now, p.get("endTime"))
+        ]
         for period in periods[:12]:
             if not isinstance(period, dict):
                 continue
@@ -164,78 +243,36 @@ def format_hourly_forecast(data: dict[str, Any], display_name: str = "") -> str:
             if wind:
                 parts.append(f"Wind: {wind}")
 
+            if period.get("startTime"):
+                parts.append(f"Valid from {period['startTime']}")
             lines.append(" - ".join(parts))
 
-    if len(lines) == 1:
+    if len(lines) == count:
         lines.append("No hourly forecast data available.")
 
     return "\n".join(lines)
 
 
-def format_open_meteo_response(data: dict[str, Any], display_name: str = "") -> str:
-    """
-    Format an Open-Meteo API response as readable text.
-
-    Handles current, hourly, and daily data sections. Limits output
-    to avoid overwhelming the AI context window.
-
-    Args:
-        data: Raw Open-Meteo API response dict.
-        display_name: Location display name for the header.
-
-    Returns:
-        A human-readable text summary of the queried data.
-
-    """
-    header = f"Open-Meteo data for {display_name}:" if display_name else "Open-Meteo data:"
-    lines = [header]
-
-    # Current data
-    current = data.get("current")
-    if isinstance(current, dict):
-        units = data.get("current_units", {})
-        lines.append("\nCurrent:")
-        for key, value in current.items():
-            if key in ("time", "interval"):
-                continue
-            unit = units.get(key, "")
-            lines.append(f"  {key}: {value}{unit}")
-
-    # Hourly data (limit to 24 periods)
-    hourly = data.get("hourly")
-    if isinstance(hourly, dict):
-        units = data.get("hourly_units", {})
-        times = hourly.get("time", [])[:24]
-        lines.append(f"\nHourly ({len(times)} periods):")
-        for i, t in enumerate(times):
-            parts = [t]
-            for key, values in hourly.items():
-                if key == "time" or not isinstance(values, list):
-                    continue
-                if i < len(values):
-                    unit = units.get(key, "")
-                    parts.append(f"{key}: {values[i]}{unit}")
-            lines.append("  " + " | ".join(parts))
-
-    # Daily data
-    daily = data.get("daily")
-    if isinstance(daily, dict):
-        units = data.get("daily_units", {})
-        times = daily.get("time", [])
-        lines.append(f"\nDaily ({len(times)} days):")
-        for i, t in enumerate(times):
-            parts = [t]
-            for key, values in daily.items():
-                if key == "time" or not isinstance(values, list):
-                    continue
-                if i < len(values):
-                    unit = units.get(key, "")
-                    parts.append(f"{key}: {values[i]}{unit}")
-            lines.append("  " + " | ".join(parts))
-
-    if len(lines) == 1:
+def format_open_meteo_response(
+    data: dict[str, Any], display_name: str = "", *, now: datetime | None = None
+) -> str:
+    """Format raw current and forecast sections, retaining their valid times."""
+    lines = [f"Open-Meteo data for {display_name}:" if display_name else "Open-Meteo data:"]
+    lines.extend(provenance(data, "Open-Meteo"))
+    if isinstance(data.get("current"), dict):
+        current_lines = format_current_weather(data).splitlines()
+        lines.extend(
+            line for line in current_lines if not line.startswith(("Source:", "Timezone:"))
+        )
+    found = isinstance(data.get("current"), dict)
+    for section, limit, label in (("hourly", 24, "periods"), ("daily", 16, "days")):
+        rows = series_lines(data, section, limit, now)
+        if rows:
+            found = True
+            lines.append(f"\n{section.title()} ({len(rows)} {label}):")
+            lines.extend(rows)
+    if not found:
         lines.append("No data returned.")
-
     return "\n".join(lines)
 
 

@@ -213,6 +213,12 @@ class WeatherToolExecutor:
         """Get weather forecast."""
         location = arguments["location"]
         lat, lon, display_name = self._resolve_location(location)
+        days = arguments.get("forecast_days")
+        if days is not None:
+            if isinstance(days, bool) or not isinstance(days, int) or not 1 <= days <= 16:
+                return "Error: forecast_days must be a whole number from 1 to 16."
+            data = self.weather_service.get_forecast(lat, lon, days=days)
+            return format_forecast(data, display_name, forecast_days=days)
         data = self.weather_service.get_forecast(lat, lon)
         return format_forecast(data, display_name)
 

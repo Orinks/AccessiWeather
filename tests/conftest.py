@@ -248,10 +248,18 @@ if "wx" not in sys.modules:
         _wx.EVT_CHAR = MagicMock()
         _wx.EVT_CHAR_HOOK = MagicMock()
         _wx.EVT_LISTBOX_DCLICK = MagicMock()
+        _wx.EVT_HOTKEY = MagicMock()
         _wx.WXK_RETURN = 13
         _wx.WXK_NUMPAD_ENTER = 370
         _wx.WXK_SPACE = 32
         _wx.WXK_ESCAPE = 27
+        for _f_number in range(1, 25):
+            setattr(_wx, f"WXK_F{_f_number}", 339 + _f_number)
+        _wx.MOD_ALT = 0x0001
+        _wx.MOD_CONTROL = 0x0002
+        _wx.MOD_SHIFT = 0x0004
+        _wx.MOD_WIN = 0x0008
+        _wx.ID_HIGHEST = 5999
         _wx.ID_ANY = -1
         _wx.ID_OK = 5100
         _wx.ID_CANCEL = 5101

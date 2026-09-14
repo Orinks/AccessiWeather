@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "accessiweather"
-version = "0.9.0"
+version = "0.10.0"
 description = "A free desktop weather app for casual check-ins and detailed forecasts, alerts, and weather data"
 authors = [
     { name = "Orinks" }
@@ -125,7 +125,13 @@ exclude = [
     "*.log",
 
     # Third-party (if present)
-    "node_modules"
+    "node_modules",
+
+    # Markdown. Ruff 0.16 began formatting Python code blocks inside .md
+    # files, which rewrites the deliberately abbreviated snippets in our docs
+    # and specs. Ruff is a Python tool here; docs are not its business, and
+    # leaving this out made CI fail purely on the ruff version it resolved.
+    "*.md"
 ]
 
 [tool.ruff.lint]

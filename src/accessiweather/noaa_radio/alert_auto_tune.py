@@ -30,47 +30,12 @@ StatusCallback = Callable[[str], None]
 ThreadFactory = Callable[[Callable[[], None]], threading.Thread]
 
 _COUNTY_ZONE_RE = re.compile(r"^(?P<state>[A-Z]{2})C(?P<county>\d{3})$")
-_NWR_SAME_WEATHER_EVENT_NAMES: frozenset[str] = frozenset(
-    {
-        # Weather-related operational NWR-SAME event codes published by NWS.
-        # Weather advisories and their follow-up statements are intentionally
-        # absent because NWSI 10-1710 Appendix G says they have no SAME/EAS
-        # event code and are not broadcast with SAME/EAS headers or 1050 Hz WAT.
-        "blizzard warning",
-        "coastal flood watch",
-        "coastal flood warning",
-        "dust storm warning",
-        "extreme wind warning",
-        "flash flood watch",
-        "flash flood warning",
-        "flash flood statement",
-        "flood watch",
-        "flood warning",
-        "flood statement",
-        "high wind watch",
-        "high wind warning",
-        "hurricane watch",
-        "hurricane warning",
-        "hurricane statement",
-        "hurricane local statement",
-        "severe thunderstorm watch",
-        "severe thunderstorm warning",
-        "severe weather statement",
-        "snow squall warning",
-        "special marine warning",
-        "special weather statement",
-        "storm surge watch",
-        "storm surge warning",
-        "tornado watch",
-        "tornado warning",
-        "tropical storm watch",
-        "tropical storm warning",
-        "tsunami watch",
-        "tsunami warning",
-        "winter storm watch",
-        "winter storm warning",
-    }
-)
+# NWS puts this placeholder in ``eventCode.SAME`` when a product has no SAME/EAS
+# event code at all. Such an alert is never broadcast with a SAME header, so no
+# physical weather radio wakes for it. The same event *name* can appear both
+# ways -- a Special Marine Warning may carry ["SMW"] or this placeholder -- so
+# the code, not the name, is the only reliable signal.
+_GENERIC_SAME_EVENT_CODE = "NWS"
 _STATE_FIPS: dict[str, str] = {
     "AL": "01",
     "AK": "02",
@@ -131,30 +96,61 @@ _STATE_FIPS: dict[str, str] = {
 }
 
 
-def county_zone_to_same_code(zone_id: str | None) -> str | None:
-    """Convert an NWS county zone id like PAC091 to a SAME/FIPS code."""
-    if not isinstance(zone_id, str):
-        return None
-    normalized = zone_id.rsplit("/", 1)[-1].strip().upper()
-    match = _COUNTY_ZONE_RE.match(normalized)
-    if not match:
-        return None
-
-    state_fips = _STATE_FIPS.get(match.group("state"))
-    if state_fips is None:
-        return None
-    return f"0{state_fips}{match.group('county')}"
-
-
-def is_nwr_same_weather_event(alert: WeatherAlert) -> bool:
-    """Return whether an alert event is eligible for NWR-SAME auto-tune."""
-    return _normalize_event_name(alert.event) in _NWR_SAME_WEATHER_EVENT_NAMES
-
-
-def _normalize_event_name(value: object) -> str:
+def normalize_same_code(value: object) -> str | None:
+    """Normalize a SAME/FIPS county code to its six digit form."""
+    if isinstance(value, int):
+        return f"{value:06d}"
     if not isinstance(value, str):
-        return ""
-    return " ".join(value.strip().casefold().split())
+        return None
+    digits = "".join(ch for ch in value.strip() if ch.isdigit())
+    if not digits:
+        return None
+    return digits.zfill(6)
+
+
+def alert_same_codes(alert: WeatherAlert) -> set[str]:
+    """
+    Return the SAME county codes NWS published for an alert.
+
+    Only ``geocode.SAME`` counts.  A county zone id such as ``TXC453`` says
+    where an alert applies, not that NWS encoded a SAME header for it, so it
+    must never be converted into a SAME code here: a real weather radio only
+    wakes for alerts that carry SAME coding.
+    """
+    codes: set[str] = set()
+    for value in getattr(alert, "same_codes", None) or []:
+        normalized = normalize_same_code(value)
+        if normalized is not None:
+            codes.add(normalized)
+    return codes
+
+
+def same_event_codes(alert: WeatherAlert) -> set[str]:
+    """
+    Return the SAME/EAS event codes broadcast in this alert's radio header.
+
+    The generic ``NWS`` placeholder is dropped: NWS sends it for products that
+    have no SAME event code, which are exactly the products a physical radio
+    never wakes for.
+    """
+    codes: set[str] = set()
+    for value in getattr(alert, "same_event_codes", None) or []:
+        if not isinstance(value, str):
+            continue
+        normalized = value.strip().upper()
+        if normalized and normalized != _GENERIC_SAME_EVENT_CODE:
+            codes.add(normalized)
+    return codes
+
+
+def would_wake_same_radio(alert: WeatherAlert) -> bool:
+    """
+    Return whether a real SAME weather radio would wake for this alert.
+
+    Both halves of the SAME header must be present: an event code that triggers
+    the receiver, and the county codes that tell it the alert applies locally.
+    """
+    return bool(same_event_codes(alert)) and bool(alert_same_codes(alert))
 
 
 class AlertStationResolver(Protocol):
@@ -206,9 +202,7 @@ class WeatherIndexAlertStationResolver:
         """Return the first station whose WeatherIndex SAME coverage matches the alert."""
         same_codes = self._alert_same_codes(alerts)
         if not same_codes:
-            logger.info(
-                "Weather radio auto-tune skipped: alert has no SAME or county zone metadata"
-            )
+            logger.info("Weather radio auto-tune skipped: alert carries no NWS SAME county coding")
             return None
 
         for station in self._candidate_stations(location, self._alert_states(alerts)):
@@ -249,17 +243,11 @@ class WeatherIndexAlertStationResolver:
             ),
         )
 
-    def _alert_same_codes(self, alerts: list[WeatherAlert]) -> set[str]:
+    @staticmethod
+    def _alert_same_codes(alerts: list[WeatherAlert]) -> set[str]:
         same_codes: set[str] = set()
         for alert in alerts:
-            for same_code in getattr(alert, "same_codes", []):
-                normalized = self._normalize_same_code(same_code)
-                if normalized is not None:
-                    same_codes.add(normalized)
-            for zone_id in alert.affected_zones:
-                same_code = self._county_zone_to_same(zone_id)
-                if same_code is not None:
-                    same_codes.add(same_code)
+            same_codes |= alert_same_codes(alert)
         return same_codes
 
     def _alert_states(self, alerts: list[WeatherAlert]) -> set[str]:
@@ -270,27 +258,11 @@ class WeatherIndexAlertStationResolver:
                 match = _COUNTY_ZONE_RE.match(normalized)
                 if match:
                     states.add(match.group("state"))
-            for same_code in getattr(alert, "same_codes", []):
-                normalized = self._normalize_same_code(same_code)
-                state = self._same_code_to_state(normalized) if normalized else None
+            for same_code in alert_same_codes(alert):
+                state = self._same_code_to_state(same_code)
                 if state:
                     states.add(state)
         return states
-
-    @staticmethod
-    def _normalize_same_code(value: object) -> str | None:
-        if isinstance(value, int):
-            return f"{value:06d}"
-        if not isinstance(value, str):
-            return None
-        digits = "".join(ch for ch in value.strip() if ch.isdigit())
-        if not digits:
-            return None
-        return digits.zfill(6)
-
-    @staticmethod
-    def _county_zone_to_same(zone_id: str) -> str | None:
-        return county_zone_to_same_code(zone_id)
 
     @staticmethod
     def _same_code_to_state(same_code: str | None) -> str | None:
@@ -353,9 +325,11 @@ class AlertRadioAutoTuner:
         if not alerts:
             return
 
-        eligible_alerts = [alert for alert in alerts if is_nwr_same_weather_event(alert)]
+        eligible_alerts = [alert for alert in alerts if would_wake_same_radio(alert)]
         if not eligible_alerts:
-            logger.info("Weather radio auto-tune skipped: no NWR-SAME weather event in alert batch")
+            logger.info(
+                "Weather radio auto-tune skipped: no alert in the batch would wake a SAME radio"
+            )
             return
 
         settings = self._safe_get_settings()

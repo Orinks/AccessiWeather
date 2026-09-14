@@ -166,6 +166,8 @@ class TestAIExplanationGeneration:
         from accessiweather.ui.dialogs import discussion_dialog
 
         settings = MagicMock()
+        settings.ai_provider = "openrouter"
+        settings.openrouter_api_key = "test-key"
         settings.ai_model_preference = ai_model_preference
         settings.custom_system_prompt = "System prompt"
         settings.custom_instructions = "Custom instructions"
@@ -193,6 +195,7 @@ class TestAIExplanationGeneration:
                 model=None,
                 custom_system_prompt=None,
                 custom_instructions=None,
+                provider="openrouter",
             ):
                 captured["init"] = {
                     "api_key": api_key,
@@ -225,7 +228,7 @@ class TestAIExplanationGeneration:
             await discussion_dialog.DiscussionDialog._do_explain(dialog)
 
         assert captured["init"]["api_key"] == "test-key"
-        assert captured["init"]["model"] is expected_model
+        assert captured["init"]["model"] == (expected_model or "openrouter/free")
         assert captured["init"]["custom_system_prompt"] == "System prompt"
         assert captured["init"]["custom_instructions"] == "Custom instructions"
         assert captured["call"]["discussion_text"] == "Discussion text"
@@ -447,7 +450,7 @@ class TestDiscussionDialogVisibilityStates:
         assert dialog.explanation_display.IsShown() is True
         assert (
             dialog.explanation_display.value
-            == "Generating plain language summary. Selecting an OpenRouter model..."
+            == "Generating plain language summary. Using the selected AI provider..."
         )
         assert dialog.model_info_label.IsShown() is False
         assert dialog.model_info.IsShown() is False
@@ -563,7 +566,11 @@ class TestDiscussionDialogVisibilityStates:
         dialog = _build_dialog_state()
         dialog._is_explaining = True
 
+        dialog.explanation_display.SetFocus = MagicMock()
+        dialog._announcer = MagicMock()
         discussion_dialog.DiscussionDialog._on_explain_error(dialog, "boom")
+        dialog.explanation_display.SetFocus.assert_called_once()
+        dialog._announcer.announce.assert_called_once_with("Explanation failed. boom")
 
         assert dialog.explanation_header.IsShown() is True
         assert dialog.explanation_display.IsShown() is True

@@ -10,11 +10,12 @@ logger = logging.getLogger(__name__)
 
 
 class GeneralTab:
-    """General settings tab: update interval and taskbar icon text."""
+    """General settings tab: update interval, taskbar icon text, and the radio hotkey."""
 
     def __init__(self, dialog):
         """Store reference to the parent settings dialog."""
         self.dialog = dialog
+        self._saved_hotkey = ""
 
     def create(self, page_label: str = "General"):
         """Build the General tab panel and add it to the notebook."""
@@ -101,6 +102,26 @@ class GeneralTab:
             10,
         )
 
+        hotkey_section = self.dialog.create_section(
+            panel,
+            sizer,
+            "System-wide hotkey",
+            (
+                "Play or stop NOAA Weather Radio from anywhere, even while "
+                "AccessiWeather is minimized to the tray. Windows only."
+            ),
+        )
+        controls["noaa_radio_hotkey"] = self.dialog.add_labeled_control_row(
+            panel,
+            hotkey_section,
+            (
+                "NOAA Weather Radio play/stop hotkey "
+                "(for example Ctrl+Alt+Shift+R, leave blank to turn off):"
+            ),
+            lambda parent: wx.TextCtrl(parent, size=(320, -1)),
+            expand_control=True,
+        )
+
         panel.SetSizer(sizer)
         self.dialog.notebook.AddPage(panel, page_label)
         return panel
@@ -121,6 +142,9 @@ class GeneralTab:
         )
         self.dialog._update_taskbar_text_controls_state(taskbar_text_enabled)
 
+        controls["noaa_radio_hotkey"].SetValue(getattr(settings, "noaa_radio_hotkey", "") or "")
+        self._saved_hotkey = getattr(settings, "noaa_radio_hotkey", "") or ""
+
     def save(self) -> dict:
         """Return General tab settings as a dict."""
         controls = self.dialog._controls
@@ -129,7 +153,35 @@ class GeneralTab:
             "taskbar_icon_text_enabled": controls["taskbar_icon_text_enabled"].GetValue(),
             "taskbar_icon_dynamic_enabled": controls["taskbar_icon_dynamic_enabled"].GetValue(),
             "taskbar_icon_text_format": controls["taskbar_icon_text_format"].GetValue(),
+            "noaa_radio_hotkey": self._collect_hotkey(),
         }
+
+    def _collect_hotkey(self) -> str:
+        """
+        Return the typed hotkey in canonical form, keeping the old one if it is unusable.
+
+        Silently rewriting an unparseable combo would leave the user with a
+        hotkey they never chose, so say what went wrong instead.
+        """
+        from accessiweather.global_hotkeys import HotkeyParseError, normalize_hotkey
+
+        value = self.dialog._controls["noaa_radio_hotkey"].GetValue()
+        typed = value.strip() if isinstance(value, str) else ""
+        if not typed:
+            return ""
+        try:
+            return normalize_hotkey(typed)
+        except HotkeyParseError:
+            previous = getattr(self, "_saved_hotkey", "")
+            logger.warning("Rejected invalid NOAA Weather Radio hotkey %r", typed)
+            wx.MessageBox(
+                f"{typed!r} is not a usable hotkey. Use one or more of Ctrl, Alt, Shift and "
+                "Win plus a letter, digit or function key, for example Ctrl+Alt+Shift+R. "
+                "Keeping the previous hotkey.",
+                "Invalid hotkey",
+                wx.OK | wx.ICON_WARNING,
+            )
+            return previous
 
     def setup_accessibility(self):
         """Set accessibility names for General tab controls."""
@@ -139,6 +191,7 @@ class GeneralTab:
             "taskbar_icon_text_enabled": "Show weather text on the tray icon",
             "taskbar_icon_dynamic_enabled": "Update tray text as conditions change",
             "taskbar_icon_text_format": "Tray text format",
+            "noaa_radio_hotkey": "NOAA Weather Radio play and stop hotkey",
         }
         for key, name in names.items():
             controls[key].SetName(name)

@@ -6,7 +6,6 @@ Phase 2: Multi-turn chat with function calling for weather lookups.
 
 from __future__ import annotations
 
-import json
 import logging
 import threading
 from datetime import datetime
@@ -14,11 +13,19 @@ from typing import TYPE_CHECKING
 
 import wx
 
+from ...ai_provider import (
+    DEFAULT_VENICE_MODEL,
+    create_venice_client,
+    venice_error,
+    venice_request_options,
+)
+from ...ai_settings import selected_provider
 from ...ai_tools import WeatherToolExecutor, get_tools_for_message
 from ...screen_reader import ScreenReaderAnnouncer
 from .async_guard import guard_destroyed
 from .weather_assistant_context import build_weather_context as _build_weather_context
 from .weather_assistant_prompt import SYSTEM_PROMPT
+from .weather_assistant_request import AssistantRequestError, run_assistant_request
 from .weather_assistant_widgets import create_weather_assistant_widgets
 
 if TYPE_CHECKING:
@@ -139,10 +146,12 @@ class WeatherAssistantDialog(wx.Dialog):
         """Toggle generating state."""
         self._is_generating = generating
         self.send_button.Enable(not generating)
+        self.clear_button.Enable(not generating)
         # Keep input_ctrl always enabled so screen readers don't lose focus.
         # The _is_generating flag prevents sends during generation.
         if generating:
             self._set_status("Thinking...")
+            self._announcer.announce("Thinking...")
         else:
             self._set_status("Ready")
             self.input_ctrl.SetFocus()
@@ -161,8 +170,9 @@ class WeatherAssistantDialog(wx.Dialog):
         self._conversation.append({"role": "user", "content": message})
 
         # Trim conversation if too long
-        if len(self._conversation) > MAX_CONTEXT_TURNS * 2:
-            self._conversation = self._conversation[-(MAX_CONTEXT_TURNS * 2) :]
+        user_turns = [i for i, item in enumerate(self._conversation) if item["role"] == "user"]
+        if len(user_turns) > MAX_CONTEXT_TURNS:
+            self._conversation = self._conversation[user_turns[-MAX_CONTEXT_TURNS] :]
 
         self._set_generating(True)
         self._generate_response()
@@ -203,11 +213,12 @@ class WeatherAssistantDialog(wx.Dialog):
                     return self.openmeteo.get_current_weather(lat, lon)
 
                 def get_forecast(self, lat, lon, **kw):
+                    days = kw.pop("days", 7)
                     try:
                         return self.nws.get_forecast(lat, lon, **kw)
                     except Exception:
                         pass
-                    return self.openmeteo.get_forecast(lat, lon)
+                    return self.openmeteo.get_forecast(lat, lon, days=days)
 
                 def get_hourly_forecast(self, lat, lon, **kw):
                     try:
@@ -219,18 +230,25 @@ class WeatherAssistantDialog(wx.Dialog):
                 def get_alerts(self, lat, lon, **kw):
                     try:
                         return self.nws.get_alerts(lat, lon, **kw)
-                    except Exception:
-                        pass
-                    return {"features": []}
+                    except Exception as error:
+                        raise RuntimeError(
+                            "Weather alerts could not be checked. Alert status is unknown."
+                        ) from error
 
                 def get_discussion(self, lat, lon, **kw):
                     return self.nws.get_discussion(lat, lon, **kw)
 
             config_manager = getattr(self.app, "config_manager", None)
             weather_client = _CombinedWeatherClient()
-            geocoding_service = GeocodingService()
+            geocoding_service = GeocodingService(data_source="auto")
+            location = config_manager.get_current_location() if config_manager else None
             return WeatherToolExecutor(
-                weather_client, geocoding_service, config_manager=config_manager
+                weather_client,
+                geocoding_service,
+                config_manager=config_manager,
+                default_lat=location.latitude if location else None,
+                default_lon=location.longitude if location else None,
+                default_name=location.name if location else None,
             )
         except Exception:
             logger.debug("Could not create WeatherToolExecutor", exc_info=True)
@@ -240,13 +258,30 @@ class WeatherAssistantDialog(wx.Dialog):
         """Generate AI response in a background thread."""
         # Get config
         settings = self.app.config_manager.get_settings() if self.app.config_manager else None
-        api_key = settings.openrouter_api_key if settings else ""
-        model = settings.ai_model_preference if settings else ""
+        provider = getattr(settings, "ai_provider", "openrouter")
+        try:
+            provider = selected_provider(settings)
+        except Exception as error:
+            wx.CallAfter(self._on_response_error, str(error))
+            return
+        is_venice = provider == "venice"
+        api_key = (
+            (settings.venice_api_key if is_venice else settings.openrouter_api_key)
+            if settings
+            else ""
+        )
+        model = (
+            (settings.venice_model if is_venice else settings.ai_model_preference)
+            if settings
+            else ""
+        )
+        if is_venice:
+            model = model or DEFAULT_VENICE_MODEL
 
         if not api_key:
             wx.CallAfter(
                 self._on_response_error,
-                "No OpenRouter API key configured. Set one in Settings > AI Explanations.",
+                f"No {'Venice' if is_venice else 'OpenRouter'} API key configured. Set one in Settings > AI Explanations.",
             )
             return
 
@@ -254,7 +289,21 @@ class WeatherAssistantDialog(wx.Dialog):
         weather_context = _build_weather_context(self.app)
 
         # Build messages for API
-        system_message = f"{SYSTEM_PROMPT}\n\nCurrent weather data:\n{weather_context}"
+        custom_prompt = getattr(settings, "custom_system_prompt", None)
+        prompt = (
+            custom_prompt.strip()
+            if isinstance(custom_prompt, str) and custom_prompt.strip()
+            else SYSTEM_PROMPT
+        )
+        system_message = (
+            f"{prompt}\n\nCurrent device time: {datetime.now().astimezone().isoformat()}"
+            f"\nUse the weather location's provider timezone for forecast times; the device timezone may differ."
+            f"\nTreat weather observation timestamps as the time of that data, not as the current time."
+            f"\n\nCurrent weather data:\n{weather_context}"
+        )
+        instructions = getattr(settings, "custom_instructions", None)
+        if isinstance(instructions, str) and instructions.strip():
+            system_message += f"\n\nAdditional instructions: {instructions.strip()}"
 
         messages: list[dict] = [{"role": "system", "content": system_message}]
         messages.extend(self._conversation)
@@ -266,10 +315,14 @@ class WeatherAssistantDialog(wx.Dialog):
             try:
                 from openai import OpenAI
 
-                client = OpenAI(
-                    base_url="https://openrouter.ai/api/v1",
-                    api_key=api_key,
-                    timeout=30.0,
+                client = (
+                    create_venice_client(api_key)
+                    if is_venice
+                    else OpenAI(
+                        base_url="https://openrouter.ai/api/v1",
+                        api_key=api_key,
+                        timeout=30.0,
+                    )
                 )
 
                 effective_model, extra_kwargs = _build_completion_request(
@@ -277,6 +330,8 @@ class WeatherAssistantDialog(wx.Dialog):
                     messages,
                     tool_executor,
                 )
+                if is_venice:
+                    extra_kwargs.update(venice_request_options())
                 tools = extra_kwargs.get("tools", [])
                 if tools:
                     logger.info(
@@ -285,101 +340,20 @@ class WeatherAssistantDialog(wx.Dialog):
                         effective_model,
                     )
 
-                max_tool_iterations = 5
-                for _iteration in range(max_tool_iterations + 1):
-                    response = client.chat.completions.create(
-                        model=effective_model,
-                        messages=messages,
-                        max_tokens=2000,
-                        extra_headers={
-                            "HTTP-Referer": "https://accessiweather.orinks.net",
-                            "X-Title": "AccessiWeather Weather Assistant",
-                        },
-                        **extra_kwargs,
-                    )
+                answer = run_assistant_request(
+                    client, effective_model, messages, tool_executor, extra_kwargs
+                )
+                wx.CallAfter(
+                    self._on_response_received, answer.text, answer.model, answer.messages[1:]
+                )
 
-                    model_used = response.model or effective_model
-
-                    if not response.choices:
-                        wx.CallAfter(
-                            self._on_response_error,
-                            "Received an empty response. Try again or switch models in Settings.",
-                        )
-                        return
-
-                    choice = response.choices[0]
-                    assistant_message = choice.message
-
-                    # Check for tool calls
-                    logger.info(
-                        "Response finish_reason=%s, tool_calls=%s",
-                        choice.finish_reason,
-                        bool(assistant_message.tool_calls),
-                    )
-                    if assistant_message.tool_calls and tool_executor is not None:
-                        # Append assistant message with tool calls to messages
-                        tool_call_msg: dict = {
-                            "role": "assistant",
-                            "content": assistant_message.content or "",
-                            "tool_calls": [
-                                {
-                                    "id": tc.id,
-                                    "type": "function",
-                                    "function": {
-                                        "name": tc.function.name,
-                                        "arguments": tc.function.arguments,
-                                    },
-                                }
-                                for tc in assistant_message.tool_calls
-                            ],
-                        }
-                        messages.append(tool_call_msg)
-
-                        # Execute each tool call
-                        for tool_call in assistant_message.tool_calls:
-                            tool_name = tool_call.function.name
-                            try:
-                                arguments = json.loads(tool_call.function.arguments)
-                                result = tool_executor.execute(tool_name, arguments)
-                            except Exception as exc:
-                                logger.warning(
-                                    "Tool call %s failed: %s", tool_name, exc, exc_info=True
-                                )
-                                result = f"Error executing {tool_name}: {exc}"
-
-                            messages.append(
-                                {
-                                    "role": "tool",
-                                    "tool_call_id": tool_call.id,
-                                    "content": result,
-                                }
-                            )
-
-                        # Continue loop to get next response
-                        continue
-
-                    # No tool calls — we have the final text response
-                    content = assistant_message.content or ""
-                    if content.strip():
-                        wx.CallAfter(self._on_response_received, content.strip(), model_used)
-                    else:
-                        wx.CallAfter(
-                            self._on_response_error,
-                            "Received an empty response. Try again or switch models in Settings.",
-                        )
-                    return
-
-                # Exhausted max iterations — use whatever content we have
-                fallback = assistant_message.content or "" if assistant_message else ""
-                if fallback.strip():
-                    wx.CallAfter(self._on_response_received, fallback.strip(), model_used)
-                else:
-                    wx.CallAfter(
-                        self._on_response_error,
-                        "The assistant made too many tool calls. Please try a simpler question.",
-                    )
+            except AssistantRequestError as error:
+                wx.CallAfter(self._on_response_error, str(error))
 
             except Exception as e:
+                if is_venice:
+                    wx.CallAfter(self._on_response_error, str(venice_error(e)))
+                    return
                 error_msg = str(e)
                 logger.error(f"Weather Assistant generation error: {e}", exc_info=True)
 
@@ -400,13 +374,18 @@ class WeatherAssistantDialog(wx.Dialog):
         thread.start()
 
     @guard_destroyed
-    def _on_response_received(self, text: str, model_used: str) -> None:
+    def _on_response_received(
+        self, text: str, model_used: str, conversation: list[dict] | None = None
+    ) -> None:
         """Handle successful AI response."""
-        self._conversation.append({"role": "assistant", "content": text})
+        if conversation is not None:
+            self._conversation = conversation
+        else:
+            self._conversation.append({"role": "assistant", "content": text})
         self._append_to_display("Weather Assistant", text)
         self._announcer.announce(f"Weather Assistant: {text}")
-        self._set_status(f"Model: {model_used}")
         self._set_generating(False)
+        self._set_status(f"Model: {model_used}")
 
     @guard_destroyed
     def _on_response_error(self, error: str) -> None:
@@ -421,6 +400,8 @@ class WeatherAssistantDialog(wx.Dialog):
 
     def _on_clear(self, event: wx.Event) -> None:
         """Clear chat history."""
+        if self._is_generating:
+            return
         self._conversation.clear()
         self.history_display.SetValue("")
         self._set_status("")

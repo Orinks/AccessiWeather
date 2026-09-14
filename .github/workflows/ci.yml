@@ -39,12 +39,12 @@ jobs:
         fetch-depth: 0
 
     - name: Set up Python
-      uses: actions/setup-python@v6
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 
     - name: Restore pip cache
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: ~/.cache/pip
         key: pip-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('requirements-dev.txt', 'pyproject.toml') }}
@@ -72,7 +72,11 @@ jobs:
       # explicit pip cache) saves ~10s per CI run while keeping
       # the same fail-before-install-deps ordering.
       run: |
-        pip install --quiet 'ruff>=0.15.14'
+        # Pinned exactly on purpose. With a floating '>=' this step installs
+        # whatever ruff released most recently, so CI can start failing on a
+        # commit that changed nothing -- 0.16.0 began formatting Markdown and
+        # broke the branch that way. Bump this deliberately.
+        pip install --quiet 'ruff==0.16.1'
         ruff format --check .
         ruff check .
 
@@ -208,3 +212,75 @@ jobs:
           --diff-range-notation='..' \
           --exclude '*/accessiweather/ui/*'
         echo "New code meets coverage threshold."
+
+  # A hobby project has nobody watching the Actions dashboard. dev sat red for
+  # ten days once because the failure was only visible if you went looking, so
+  # turn a red protected branch into a GitHub notification that is hard to miss
+  # and that closes itself when the branch recovers.
+  ci-status-issue:
+    name: Track branch CI status
+    needs: validate
+    if: always() && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+
+    steps:
+    - name: Open, update, or close the CI failure issue
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_REPO: ${{ github.repository }}
+        RESULT: ${{ needs.validate.result }}
+        BRANCH: ${{ github.ref_name }}
+        SHA: ${{ github.sha }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |
+        # A cancelled or skipped run says nothing about the branch's health.
+        if [ "$RESULT" != "success" ] && [ "$RESULT" != "failure" ]; then
+          echo "validate result was '$RESULT'; leaving the tracking issue alone."
+          exit 0
+        fi
+
+        LABEL="ci-failure"
+        TITLE="CI is failing on $BRANCH"
+
+        gh label create "$LABEL" --color B60205 --description "Opened automatically when CI goes red on main or dev" >/dev/null 2>&1 || true
+
+        # Match on the exact title so main and dev each get their own issue
+        # instead of trading comments on a shared one.
+        EXISTING=$(gh issue list --state open --label "$LABEL" --limit 50 --json number,title --jq "map(select(.title == \"$TITLE\")) | .[0].number // empty")
+
+        if [ "$RESULT" = "success" ]; then
+          if [ -z "$EXISTING" ]; then
+            echo "$BRANCH is green and no issue is open."
+            exit 0
+          fi
+
+          cat > "$RUNNER_TEMP/ci-body.md" <<EOF
+        CI is green again on \`$BRANCH\` as of $SHA.
+
+        $RUN_URL
+        EOF
+          gh issue comment "$EXISTING" --body-file "$RUNNER_TEMP/ci-body.md"
+          gh issue close "$EXISTING"
+          echo "Closed #$EXISTING; $BRANCH is green again."
+          exit 0
+        fi
+
+        cat > "$RUNNER_TEMP/ci-body.md" <<EOF
+        CI failed on \`$BRANCH\`.
+
+        - Commit: $SHA
+        - Failed run: $RUN_URL
+
+        Opened automatically; closes itself when a push to \`$BRANCH\` passes again.
+        An open issue with the \`$LABEL\` label means that branch is red right now.
+        EOF
+
+        if [ -n "$EXISTING" ]; then
+          gh issue comment "$EXISTING" --body-file "$RUNNER_TEMP/ci-body.md"
+          echo "Commented on existing #$EXISTING."
+        else
+          gh issue create --title "$TITLE" --label "$LABEL" --body-file "$RUNNER_TEMP/ci-body.md"
+        fi

@@ -258,10 +258,25 @@ def test_ai_custom_prompt_fields_create_static_text_before_multiline_controls(mo
         def SetHint(self, *args, **kwargs):
             return None
 
+        def SetSelection(self, *args, **kwargs):
+            return None
+
         def SetScrollRate(self, *args, **kwargs):
             return None
 
         def SetSizer(self, *args, **kwargs):
+            return None
+
+        def GetSelection(self):
+            return 0
+
+        def Show(self, *args, **kwargs):
+            return None
+
+        def Layout(self):
+            return None
+
+        def FitInside(self):
             return None
 
     class FakeSizer:
@@ -286,6 +301,7 @@ def test_ai_custom_prompt_fields_create_static_text_before_multiline_controls(mo
         return FakeControl(parent, *args, **kwargs)
 
     monkeypatch.setattr(settings_module.wx, "ScrolledWindow", FakeControl, raising=False)
+    monkeypatch.setattr(settings_module.wx, "Panel", FakeControl, raising=False)
     monkeypatch.setattr(settings_module.wx, "BoxSizer", lambda *a, **k: FakeSizer(), raising=False)
     monkeypatch.setattr(settings_module.wx, "StaticText", fake_static_text, raising=False)
     monkeypatch.setattr(settings_module.wx, "TextCtrl", fake_text_ctrl, raising=False)
@@ -307,6 +323,7 @@ def test_ai_custom_prompt_fields_create_static_text_before_multiline_controls(mo
         create_section=MagicMock(side_effect=lambda *args, **kwargs: FakeSizer()),
         add_labeled_control_row=MagicMock(side_effect=lambda *args, **kwargs: FakeControl()),
         _on_validate_openrouter_key=MagicMock(),
+        _on_validate_venice_key=MagicMock(),
         _on_browse_models=MagicMock(),
         _on_reset_prompt=MagicMock(),
     )

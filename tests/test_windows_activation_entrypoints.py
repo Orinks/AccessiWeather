@@ -16,7 +16,7 @@ def test_main_entrypoint_forwards_activation_request(monkeypatch) -> None:
     request = NotificationActivationRequest(kind="discussion")
     token = serialize_activation_request(request)
     monkeypatch.setattr(sys, "argv", ["accessiweather", token])
-    monkeypatch.setattr(main_module, "setup_logging", lambda debug=False: None)
+    monkeypatch.setattr(main_module, "setup_logging", lambda *args, **kwargs: None)
 
     with patch("accessiweather.app.main") as mock_app_main:
         main_module.main()
@@ -31,7 +31,7 @@ def test_python_m_entrypoint_forwards_activation_request(monkeypatch) -> None:
     request = NotificationActivationRequest(kind="discussion")
     token = serialize_activation_request(request)
     monkeypatch.setattr(sys, "argv", ["accessiweather", token])
-    monkeypatch.setattr(main_module, "setup_logging", lambda debug=False: None)
+    monkeypatch.setattr(main_module, "setup_logging", lambda *args, **kwargs: None)
 
     with patch("accessiweather.app.main") as mock_app_main:
         module_entry.main()
