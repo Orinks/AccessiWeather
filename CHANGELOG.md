@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-09-14
+
 ### Added
 - Browse and pick Venice text models in AI settings, with token prices, cost and function-calling filters, and your credit balance when your key allows.
 - A Get Venice API key button in AI settings opens Venice's signup and API settings page.
