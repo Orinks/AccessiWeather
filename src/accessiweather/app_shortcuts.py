@@ -94,8 +94,8 @@ class AppShortcutsMixin:
         for flags, key, attribute in (
             (wx.ACCEL_CTRL, ord("E"), "_explain_id"),
             (wx.ACCEL_CTRL, ord("T"), "_weather_chat_id"),
-            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("R"), "_noaa_radio_id"),
-            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord("L"), "_edit_location_id"),
+            (wx.ACCEL_CTRL | wx.ACCEL_ALT, ord("N"), "_noaa_radio_id"),
+            (wx.ACCEL_NORMAL, wx.WXK_F2, "_edit_location_id"),
             (wx.ACCEL_NORMAL, wx.WXK_ESCAPE, "_escape_id"),
         ):
             if hasattr(frame, attribute):
@@ -142,14 +142,18 @@ class AppShortcutsMixin:
         self._radio_toggle.toggle()
 
     def _notify_radio_hotkey(self, message: str) -> None:
+        """Announce a radio hotkey result as a desktop notification."""
+        self._notify_hotkey("NOAA Weather Radio", message)
+
+    def _notify_hotkey(self, title: str, message: str) -> None:
         """Announce a hotkey result as a desktop notification, since the app may be hidden."""
         notifier = getattr(self, "_notifier", None)
         if notifier is None:
-            logger.info("NOAA Weather Radio hotkey: %s", message)
+            logger.info("%s: %s", title, message)
             return
         wx.CallAfter(
             notifier.send_notification,
-            "NOAA Weather Radio",
+            title,
             message,
             play_sound=False,
         )
@@ -203,6 +207,13 @@ class AppShortcutsMixin:
                     binding.normalized,
                     preference.label,
                 )
+                if is_supported():
+                    self._notify_hotkey(
+                        "AccessiWeather shortcuts",
+                        f"Could not register {binding.normalized} as the "
+                        f"{preference.label.lower()}. Another program is probably using it. "
+                        "Choose a different combination in Settings, Advanced.",
+                    )
                 continue
 
             frame.Bind(hotkey_event, getattr(self, preference.handler_name), id=hotkey_id)

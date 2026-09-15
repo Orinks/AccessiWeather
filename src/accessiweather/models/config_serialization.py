@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from ..shortcut_preferences import (
+    WINDOW_TRAY_SHORTCUT_DEFAULTS,
+    migrate_legacy_window_tray_shortcuts,
+)
 from ..sound_events import DEFAULT_MUTED_SOUND_EVENTS
 from .config_constants import DEFAULT_NOAA_RADIO_HOTKEY
 
@@ -138,9 +142,18 @@ class AppSettingsSerializationMixin:
             enable_alerts=settings_cls._as_bool(data.get("enable_alerts"), True),
             minimize_to_tray=settings_cls._as_bool(data.get("minimize_to_tray"), False),
             minimize_on_startup=settings_cls._as_bool(data.get("minimize_on_startup"), False),
-            shortcut_show_main_window=data.get("shortcut_show_main_window", "Ctrl+Shift+W"),
-            shortcut_hide_main_window=data.get("shortcut_hide_main_window", "Ctrl+Shift+M"),
-            shortcut_read_tray_info=data.get("shortcut_read_tray_info", "Ctrl+Shift+I"),
+            shortcut_show_main_window=data.get(
+                "shortcut_show_main_window",
+                WINDOW_TRAY_SHORTCUT_DEFAULTS["shortcut_show_main_window"],
+            ),
+            shortcut_hide_main_window=data.get(
+                "shortcut_hide_main_window",
+                WINDOW_TRAY_SHORTCUT_DEFAULTS["shortcut_hide_main_window"],
+            ),
+            shortcut_read_tray_info=data.get(
+                "shortcut_read_tray_info",
+                WINDOW_TRAY_SHORTCUT_DEFAULTS["shortcut_read_tray_info"],
+            ),
             startup_enabled=settings_cls._as_bool(data.get("startup_enabled"), False),
             data_source=data.get("data_source", "auto"),
             pirate_weather_api_key=data.get("pirate_weather_api_key", ""),
@@ -307,6 +320,7 @@ class AppSettingsSerializationMixin:
         settings.validate_on_access("shortcut_show_main_window")
         settings.validate_on_access("shortcut_hide_main_window")
         settings.validate_on_access("shortcut_read_tray_info")
+        migrate_legacy_window_tray_shortcuts(settings)
         if settings.data_source not in {"auto", "nws", "openmeteo", "pirateweather"}:
             settings.data_source = "auto"
         return settings

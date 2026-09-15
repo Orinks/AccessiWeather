@@ -317,6 +317,7 @@ class _FakeWxForAccelerators:
     MOD_ALT = 16
     MOD_SHIFT = 32
     WXK_ESCAPE = 27
+    WXK_F2 = 113
     WXK_F4 = 115
     WXK_F5 = 116
     EVT_MENU = object()
@@ -442,9 +443,9 @@ class TestAltF4AcceleratorClosePath:
         app.request_exit = MagicMock()
         app.config_manager = SimpleNamespace(
             get_settings=lambda: SimpleNamespace(
-                shortcut_show_main_window="Ctrl+Shift+W",
-                shortcut_hide_main_window="Ctrl+Shift+M",
-                shortcut_read_tray_info="Ctrl+Shift+I",
+                shortcut_show_main_window="Ctrl+Alt+Shift+W",
+                shortcut_hide_main_window="Ctrl+Alt+Shift+M",
+                shortcut_read_tray_info="Ctrl+Alt+Shift+I",
             )
         )
 
@@ -454,17 +455,15 @@ class TestAltF4AcceleratorClosePath:
         ):
             app._setup_accelerators()
 
+        all_three = fake_wx.ACCEL_CTRL | fake_wx.ACCEL_ALT | fake_wx.ACCEL_SHIFT
         assert any(
-            entry.flags == fake_wx.ACCEL_CTRL | fake_wx.ACCEL_SHIFT and entry.key == ord("W")
-            for entry in frame.accelerator_table
+            entry.flags == all_three and entry.key == ord("W") for entry in frame.accelerator_table
         )
         assert any(
-            entry.flags == fake_wx.ACCEL_CTRL | fake_wx.ACCEL_SHIFT and entry.key == ord("M")
-            for entry in frame.accelerator_table
+            entry.flags == all_three and entry.key == ord("M") for entry in frame.accelerator_table
         )
         assert any(
-            entry.flags == fake_wx.ACCEL_CTRL | fake_wx.ACCEL_SHIFT and entry.key == ord("I")
-            for entry in frame.accelerator_table
+            entry.flags == all_three and entry.key == ord("I") for entry in frame.accelerator_table
         )
         assert len(frame.registered_hotkeys) == 3
 
@@ -484,6 +483,7 @@ def test_refresh_app_shortcuts_preserves_menu_actions_and_escape():
     frame._weather_chat_id = 8102
     frame._noaa_radio_id = 8103
     frame._escape_id = 8104
+    frame._edit_location_id = 8105
     app = AppShortcutsMixin()
     app.main_window = frame
     with (
@@ -494,8 +494,33 @@ def test_refresh_app_shortcuts_preserves_menu_actions_and_escape():
     entries = {(e.flags, e.key): e.cmd_id for e in frame.accelerator_table}
     assert entries[(fake_wx.ACCEL_CTRL, ord("E"))] == 8101
     assert entries[(fake_wx.ACCEL_CTRL, ord("T"))] == 8102
-    assert entries[(fake_wx.ACCEL_CTRL | fake_wx.ACCEL_SHIFT, ord("R"))] == 8103
+    assert entries[(fake_wx.ACCEL_CTRL | fake_wx.ACCEL_ALT, ord("N"))] == 8103
     assert entries[(fake_wx.ACCEL_NORMAL, fake_wx.WXK_ESCAPE)] == 8104
+    assert entries[(fake_wx.ACCEL_NORMAL, fake_wx.WXK_F2)] == 8105
+    plain_ctrl_shift = fake_wx.ACCEL_CTRL | fake_wx.ACCEL_SHIFT
+    assert not any(flags == plain_ctrl_shift for flags, _key in entries)
+
+
+def test_refused_window_tray_hotkey_is_reported_to_the_user():
+    fake_wx = _FakeWxForAccelerators()
+    fake_wx.CallAfter = lambda func, *args, **kwargs: func(*args, **kwargs)
+    frame = _AcceleratorFrame()
+    frame.RegisterHotKey = lambda _hotkey_id, _modifiers, key_code: key_code != ord("W")
+    app = AppShortcutsMixin()
+    app.main_window = frame
+    app._notifier = MagicMock()
+    with (
+        patch("accessiweather.app_shortcuts.wx", fake_wx),
+        patch("accessiweather.native_shortcuts.wx", fake_wx),
+        patch("accessiweather.app_shortcuts.is_supported", return_value=True),
+    ):
+        app._setup_accelerators()
+    app._notifier.send_notification.assert_called_once()
+    title, message = app._notifier.send_notification.call_args.args[:2]
+    assert title == "AccessiWeather shortcuts"
+    assert "Ctrl+Alt+Shift+W" in message
+    assert "show main window shortcut" in message
+    assert "Settings, Advanced" in message
 
 
 def test_tray_shortcuts_preserve_existing_custom_radio_hotkey():
@@ -504,7 +529,7 @@ def test_tray_shortcuts_preserve_existing_custom_radio_hotkey():
     app = AppShortcutsMixin()
     app.main_window = frame
     app.config_manager = SimpleNamespace(
-        get_settings=lambda: SimpleNamespace(noaa_radio_hotkey="Ctrl+Shift+W")
+        get_settings=lambda: SimpleNamespace(noaa_radio_hotkey="Ctrl+Alt+Shift+W")
     )
     with (
         patch("accessiweather.app_shortcuts.wx", fake_wx),
@@ -554,7 +579,7 @@ def test_rebinding_shortcuts_unregisters_old_global_bindings():
     frame = _AcceleratorFrame()
     app = AppShortcutsMixin()
     app.main_window = frame
-    settings = SimpleNamespace(shortcut_show_main_window="Ctrl+Shift+W")
+    settings = SimpleNamespace(shortcut_show_main_window="Ctrl+Alt+Shift+W")
     app.config_manager = SimpleNamespace(get_settings=lambda: settings)
     with (
         patch("accessiweather.app_shortcuts.wx", fake_wx),

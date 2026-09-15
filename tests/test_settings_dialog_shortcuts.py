@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from accessiweather.shortcut_preferences import WINDOW_TRAY_SHORTCUTS
 from accessiweather.ui.dialogs.settings_dialog_handlers import SettingsDialogHandlersMixin
 from accessiweather.ui.dialogs.settings_tabs.advanced import AdvancedTab
@@ -12,8 +14,17 @@ class _DummyControl:
         self._value = ""
         self._name = ""
 
+        self.focused = False
+        self.selected_all = False
+
     def SetValue(self, value):
         self._value = value
+
+    def SetFocus(self) -> None:
+        self.focused = True
+
+    def SelectAll(self) -> None:
+        self.selected_all = True
 
     def GetValue(self):
         return self._value
@@ -69,21 +80,45 @@ def test_validate_window_tray_shortcuts_rejects_reserved_shortcut():
     error = dialog._validate_window_tray_shortcuts()
 
     assert error == (
+        "shortcut_show_main_window",
         "Show main window shortcut cannot use Ctrl+R because that shortcut already "
-        "refresh the weather."
+        "refresh the weather.",
     )
+
+
+def test_on_ok_focuses_the_rejected_shortcut_field(monkeypatch):
+    from accessiweather.ui.dialogs import settings_dialog_handlers
+
+    shown: list[tuple[str, str]] = []
+    monkeypatch.setattr(
+        settings_dialog_handlers.wx,
+        "MessageBox",
+        lambda message, caption, *_args, **_kwargs: shown.append((caption, message)),
+    )
+    dialog = _DialogStub()
+    dialog._save_settings = lambda: pytest.fail("settings must not save with a bad shortcut")
+    dialog._controls["shortcut_show_main_window"].SetValue("Ctrl+Alt+Shift+W")
+    dialog._controls["shortcut_hide_main_window"].SetValue("Ctrl+Weather")
+    dialog._controls["shortcut_read_tray_info"].SetValue("")
+
+    dialog._on_ok(None)
+
+    assert shown and shown[0][0] == "Shortcut Problem"
+    assert dialog._controls["shortcut_hide_main_window"].focused
+    assert dialog._controls["shortcut_hide_main_window"].selected_all
+    assert not dialog._controls["shortcut_show_main_window"].focused
 
 
 def test_validate_window_tray_shortcuts_normalizes_values_and_allows_blank():
     dialog = _DialogStub()
-    dialog._controls["shortcut_show_main_window"].SetValue(" control + shift + w ")
+    dialog._controls["shortcut_show_main_window"].SetValue(" control + alt + shift + w ")
     dialog._controls["shortcut_hide_main_window"].SetValue("")
     dialog._controls["shortcut_read_tray_info"].SetValue("ctrl+alt+i")
 
     error = dialog._validate_window_tray_shortcuts()
 
     assert error is None
-    assert dialog._controls["shortcut_show_main_window"].GetValue() == "Ctrl+Shift+W"
+    assert dialog._controls["shortcut_show_main_window"].GetValue() == "Ctrl+Alt+Shift+W"
     assert dialog._controls["shortcut_hide_main_window"].GetValue() == ""
     assert dialog._controls["shortcut_read_tray_info"].GetValue() == "Ctrl+Alt+I"
     assert {preference.setting_name for preference in WINDOW_TRAY_SHORTCUTS} == {

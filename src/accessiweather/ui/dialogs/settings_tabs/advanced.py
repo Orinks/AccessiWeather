@@ -6,6 +6,8 @@ import logging
 
 import wx
 
+from accessiweather.shortcut_preferences import WINDOW_TRAY_SHORTCUTS
+
 logger = logging.getLogger(__name__)
 
 
@@ -77,27 +79,29 @@ class AdvancedTab:
         self.dialog.add_help_text(
             panel,
             shortcut_section,
-            "Use shortcuts like Ctrl+Shift+W. These commands also register as global hotkeys when your system supports them.",
+            "Combine Ctrl, Alt and Shift with a letter, digit, function key, Tab, Space or "
+            "Escape. On Windows these also work while AccessiWeather is hidden in the tray.",
             left=10,
         )
         controls["shortcut_show_main_window"] = self.dialog.add_labeled_control_row(
             panel,
             shortcut_section,
-            "Show the hidden window:",
+            "Show the hidden window (for example Ctrl+Alt+Shift+W, leave blank to turn off):",
             lambda parent: wx.TextCtrl(parent),
             expand_control=True,
         )
         controls["shortcut_hide_main_window"] = self.dialog.add_labeled_control_row(
             panel,
             shortcut_section,
-            "Hide the window to the tray:",
+            "Hide the window to the tray (for example Ctrl+Alt+Shift+M, leave blank to turn off):",
             lambda parent: wx.TextCtrl(parent),
             expand_control=True,
         )
         controls["shortcut_read_tray_info"] = self.dialog.add_labeled_control_row(
             panel,
             shortcut_section,
-            "Read the current tray information:",
+            "Read the current tray information "
+            "(for example Ctrl+Alt+Shift+I, leave blank to turn off):",
             lambda parent: wx.TextCtrl(parent),
             expand_control=True,
         )
@@ -190,15 +194,10 @@ class AdvancedTab:
         minimize_to_tray = getattr(settings, "minimize_to_tray", False)
         controls["minimize_tray"].SetValue(minimize_to_tray)
         controls["minimize_on_startup"].SetValue(getattr(settings, "minimize_on_startup", False))
-        controls["shortcut_show_main_window"].SetValue(
-            getattr(settings, "shortcut_show_main_window", "Ctrl+Shift+W")
-        )
-        controls["shortcut_hide_main_window"].SetValue(
-            getattr(settings, "shortcut_hide_main_window", "Ctrl+Shift+M")
-        )
-        controls["shortcut_read_tray_info"].SetValue(
-            getattr(settings, "shortcut_read_tray_info", "Ctrl+Shift+I")
-        )
+        for preference in WINDOW_TRAY_SHORTCUTS:
+            controls[preference.setting_name].SetValue(
+                getattr(settings, preference.setting_name, preference.default)
+            )
         self.dialog._update_minimize_on_startup_state(minimize_to_tray)
 
         controls["startup"].SetValue(getattr(settings, "startup_enabled", False))

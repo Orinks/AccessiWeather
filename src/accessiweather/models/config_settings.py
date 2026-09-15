@@ -4,6 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from ..shortcut_preferences import (
+    DEFAULT_HIDE_MAIN_WINDOW_SHORTCUT,
+    DEFAULT_READ_TRAY_INFO_SHORTCUT,
+    DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT,
+)
 from ..sound_events import DEFAULT_MUTED_SOUND_EVENTS
 from .config_constants import DEFAULT_NOAA_RADIO_HOTKEY
 from .config_serialization import AppSettingsSerializationMixin
@@ -20,9 +25,9 @@ class AppSettings(AppSettingsValidationMixin, AppSettingsSerializationMixin):
     enable_alerts: bool = True
     minimize_to_tray: bool = False
     minimize_on_startup: bool = False
-    shortcut_show_main_window: str = "Ctrl+Shift+W"
-    shortcut_hide_main_window: str = "Ctrl+Shift+M"
-    shortcut_read_tray_info: str = "Ctrl+Shift+I"
+    shortcut_show_main_window: str = DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT
+    shortcut_hide_main_window: str = DEFAULT_HIDE_MAIN_WINDOW_SHORTCUT
+    shortcut_read_tray_info: str = DEFAULT_READ_TRAY_INFO_SHORTCUT
     startup_enabled: bool = False
     data_source: str = "auto"
     pirate_weather_api_key: str = ""

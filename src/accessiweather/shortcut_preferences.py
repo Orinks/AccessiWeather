@@ -4,9 +4,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT = "Ctrl+Shift+W"
-DEFAULT_HIDE_MAIN_WINDOW_SHORTCUT = "Ctrl+Shift+M"
-DEFAULT_READ_TRAY_INFO_SHORTCUT = "Ctrl+Shift+I"
+# Three modifiers keep these clear of the plain Ctrl+Shift combos that browsers,
+# screen readers and Windows itself already use.  These register system-wide on
+# Windows, so a collision there steals the key from every other program.
+DEFAULT_SHOW_MAIN_WINDOW_SHORTCUT = "Ctrl+Alt+Shift+W"
+DEFAULT_HIDE_MAIN_WINDOW_SHORTCUT = "Ctrl+Alt+Shift+M"
+DEFAULT_READ_TRAY_INFO_SHORTCUT = "Ctrl+Alt+Shift+I"
+
+# Defaults shipped before 0.11.0.  A saved config still holding one of these is
+# moved to the current default on load; see migrate_legacy_window_tray_shortcuts.
+LEGACY_WINDOW_TRAY_SHORTCUT_DEFAULTS = {
+    "shortcut_show_main_window": "Ctrl+Shift+W",
+    "shortcut_hide_main_window": "Ctrl+Shift+M",
+    "shortcut_read_tray_info": "Ctrl+Shift+I",
+}
 
 _MODIFIER_ALIASES = {
     "ALT": "Alt",
@@ -114,7 +125,7 @@ WINDOW_TRAY_SHORTCUT_DEFAULTS = {
 
 RESERVED_SHORTCUTS = {
     "Alt+F4": "close the window",
-    "Ctrl+Shift+L": "edit a location",
+    "F2": "edit a location",
     "Ctrl+R": "refresh the weather",
     "Ctrl+L": "add a location",
     "Ctrl+D": "remove a location",
@@ -128,7 +139,7 @@ RESERVED_SHORTCUTS = {
     "Ctrl+Q": "exit AccessiWeather",
     "Ctrl+E": "open Explain Conditions",
     "Ctrl+T": "open Weather Assistant",
-    "Ctrl+Shift+R": "open NOAA Weather Radio",
+    "Ctrl+Alt+N": "open NOAA Weather Radio",
     "Escape": "hide the window when minimize-to-tray is enabled",
     "F5": "refresh the weather",
     "F6": "cycle through top-level sections",
@@ -145,7 +156,9 @@ def normalize_shortcut_text(value: str | None, *, allow_empty: bool = True) -> s
 
     parts = [part.strip() for part in text.split("+")]
     if not all(parts):
-        raise ValueError("Use '+' only between modifiers and the key, for example Ctrl+Shift+W.")
+        raise ValueError(
+            "Use '+' only between modifiers and the key, for example Ctrl+Alt+Shift+W."
+        )
 
     raw_key = parts[-1]
     modifier_parts = parts[:-1]
@@ -180,6 +193,37 @@ def resolve_shortcut_binding(value: str | None, *, default: str) -> ShortcutBind
         return parse_shortcut_text(value)
     except ValueError:
         return parse_shortcut_text(default)
+
+
+def migrate_legacy_window_tray_shortcuts(settings) -> list[str]:
+    """
+    Move window/tray shortcuts still holding a retired default onto the current one.
+
+    Returns the setting names that changed.  A migrated value that would duplicate
+    a shortcut the user has already chosen elsewhere (including the radio hotkey)
+    is blanked instead, so two commands never fight over one hotkey.
+    """
+    taken: set[str] = set()
+    radio_combo = getattr(settings, "noaa_radio_hotkey", "")
+    if isinstance(radio_combo, str) and radio_combo:
+        taken.add(radio_combo)
+    for setting_name, legacy_default in LEGACY_WINDOW_TRAY_SHORTCUT_DEFAULTS.items():
+        value = getattr(settings, setting_name, "")
+        if isinstance(value, str) and value and value != legacy_default:
+            taken.add(value)
+
+    changed: list[str] = []
+    for setting_name, legacy_default in LEGACY_WINDOW_TRAY_SHORTCUT_DEFAULTS.items():
+        if getattr(settings, setting_name, "") != legacy_default:
+            continue
+        replacement = WINDOW_TRAY_SHORTCUT_DEFAULTS[setting_name]
+        if replacement in taken:
+            replacement = ""
+        else:
+            taken.add(replacement)
+        setattr(settings, setting_name, replacement)
+        changed.append(setting_name)
+    return changed
 
 
 def _normalize_key_token(token: str) -> str:

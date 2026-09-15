@@ -1062,20 +1062,29 @@ These shortcuts are available in the current app:
 
 - F5 or Ctrl+R: Refresh weather
 - Ctrl+L: Add location
+- F2: Edit the selected location
 - Ctrl+D: Remove location
 - Ctrl+S: Open Settings
 - Ctrl+H: Open Weather History
 - Ctrl+E: Explain Weather
 - Ctrl+T: Open Weather Assistant
-- Ctrl+Shift+R: Open NOAA Weather Radio
+- Ctrl+Alt+N: Open NOAA Weather Radio
 - Ctrl+Q: Quit
 
-### System-wide hotkey
+### System-wide hotkeys
 
-One shortcut works even when AccessiWeather does not have focus, including
+These shortcuts work even when AccessiWeather does not have focus, including
 while it is minimized to the system tray:
 
 - Ctrl+Alt+Shift+R: Play or stop NOAA Weather Radio
+- Ctrl+Alt+Shift+W: Show the hidden window
+- Ctrl+Alt+Shift+M: Hide the window to the tray
+- Ctrl+Alt+Shift+I: Read the current tray information
+
+None of them use plain Ctrl+Shift, so they stay out of the way of your
+browser, your screen reader and Windows' own keyboard-layout switch. Change
+the window and tray hotkeys on the Advanced tab in Settings; the radio hotkey
+lives on the General tab.
 
 Playing resumes the last station you listened to, or the station the alert
 auto-tune last started. If you have never played one, favorite a station or
@@ -1086,12 +1095,12 @@ happened without looking at the window.
 
 To change or turn off this hotkey, open Settings, go to the General tab, and
 edit "NOAA Weather Radio play/stop hotkey". Combine Ctrl, Alt, Shift, and Win
-with a letter, digit, or function key -- for example Ctrl+Shift+F9. Leave the
+with a letter, digit, or function key -- for example Ctrl+Alt+Shift+F9. Leave the
 field blank to turn the hotkey off. If another program already owns the
 combination you choose, AccessiWeather tells you so you can pick a different
 one.
 
-This hotkey is Windows-only.
+These hotkeys are Windows-only.
 
 ## 10. Troubleshooting
 

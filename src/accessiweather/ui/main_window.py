@@ -50,7 +50,7 @@ ALL_LOCATIONS_SENTINEL = "All Locations"
 # "_precipitation_timeline_id" "Precipitation &Timeline..." "_on_precipitation_timeline"
 # "UV Index"
 # _noaa_radio_id
-# "NOAA Weather &Radio...\tCtrl+Shift+R"
+# "NOAA Weather &Radio...\tCtrl+Alt+N"
 # AppendSeparator
 # "Weather Assistan&t"
 # def _on_noaa_radio(self)

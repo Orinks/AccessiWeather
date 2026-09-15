@@ -248,7 +248,7 @@ class MainWindowUIMixin:
         self._edit_location_id = wx.NewIdRef()
         edit_item = location_menu.Append(
             self._edit_location_id,
-            "&Edit Location...\tCtrl+Shift+L",
+            "&Edit Location...\tF2",
             "Edit the selected location (e.g. enable Marine Mode)",
         )
         self._remove_location_id = wx.NewIdRef()
@@ -302,7 +302,7 @@ class MainWindowUIMixin:
         self._noaa_radio_id = wx.NewIdRef()
         view_menu.Append(
             self._noaa_radio_id,
-            "NOAA Weather &Radio...\tCtrl+Shift+R",
+            "NOAA Weather &Radio...\tCtrl+Alt+N",
             "Listen to NOAA Weather Radio",
         )
         view_menu.AppendSeparator()
@@ -432,16 +432,17 @@ class MainWindowUIMixin:
             (wx.ACCEL_NORMAL, wx.WXK_ESCAPE, self._escape_id),
             (wx.ACCEL_NORMAL, wx.WXK_F5, wx.ID_REFRESH),
         ]
+        if hasattr(self, "_edit_location_id"):
+            entries.append((wx.ACCEL_NORMAL, wx.WXK_F2, self._edit_location_id))
         # Re-register all Ctrl+ menu accelerators (SetAcceleratorTable replaces them)
         ctrl_shortcuts = [
             (wx.ACCEL_CTRL, "S", "_settings_id"),
             (wx.ACCEL_CTRL, "Q", "_exit_id"),
             (wx.ACCEL_CTRL, "L", "_add_location_id"),
-            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, "L", "_edit_location_id"),
             (wx.ACCEL_CTRL, "D", "_remove_location_id"),
             (wx.ACCEL_CTRL, "E", "_explain_id"),
             (wx.ACCEL_CTRL, "H", "_history_id"),
-            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, "R", "_noaa_radio_id"),
+            (wx.ACCEL_CTRL | wx.ACCEL_ALT, "N", "_noaa_radio_id"),
             (wx.ACCEL_CTRL, "T", "_weather_chat_id"),
         ]
         for flags, key, attr in ctrl_shortcuts:

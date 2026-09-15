@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 
 import wx
@@ -540,17 +541,46 @@ class SettingsDialogHandlersMixin:
 
     def _on_ok(self, event):
         """Handle OK button press."""
-        shortcut_error = self._validate_window_tray_shortcuts()
-        if shortcut_error is not None:
-            wx.MessageBox(shortcut_error, "Shortcut Problem", wx.OK | wx.ICON_WARNING)
+        shortcut_problem = self._validate_window_tray_shortcuts()
+        if shortcut_problem is not None:
+            setting_name, message = shortcut_problem
+            wx.MessageBox(message, "Shortcut Problem", wx.OK | wx.ICON_WARNING)
+            self._focus_settings_control(self._controls.get(setting_name))
             return
         if self._save_settings():
             self.EndModal(wx.ID_OK)
         else:
             wx.MessageBox("Failed to save settings.", "Error", wx.OK | wx.ICON_ERROR)
 
-    def _validate_window_tray_shortcuts(self) -> str | None:
-        """Validate configurable window/tray shortcut fields before save."""
+    def _focus_settings_control(self, control) -> None:
+        """
+        Bring the notebook page holding ``control`` forward and put the caret in it.
+
+        A validation message that names a field is only half the job for a screen
+        reader user; landing on the field means the fix is one keystroke away.
+        """
+        if control is None:
+            return
+        notebook = getattr(self, "notebook", None)
+        if notebook is not None:
+            with contextlib.suppress(Exception):
+                page = control.GetParent()
+                while page is not None and page.GetParent() is not notebook:
+                    page = page.GetParent()
+                if page is not None:
+                    index = notebook.FindPage(page)
+                    if index != wx.NOT_FOUND:
+                        notebook.SetSelection(index)
+        with contextlib.suppress(Exception):
+            control.SetFocus()
+            control.SelectAll()
+
+    def _validate_window_tray_shortcuts(self) -> tuple[str, str] | None:
+        """
+        Validate configurable window/tray shortcut fields before save.
+
+        Returns ``(setting_name, message)`` for the first field that fails, or None.
+        """
         seen: dict[str, str] = {}
         radio_control = self._controls.get("noaa_radio_hotkey")
         if radio_control is not None:
@@ -567,7 +597,7 @@ class SettingsDialogHandlersMixin:
             try:
                 normalized = normalize_shortcut_text(raw_value, allow_empty=True)
             except ValueError as exc:
-                return f"{preference.label}: {exc}"
+                return preference.setting_name, f"{preference.label}: {exc}"
 
             self._controls[preference.setting_name].SetValue(normalized)
             if not normalized:
@@ -575,21 +605,24 @@ class SettingsDialogHandlersMixin:
 
             if not ({"Ctrl", "Alt"} & set(normalized.split("+")[:-1])):
                 return (
-                    f"{preference.label} must include Ctrl or Alt to avoid capturing typing keys."
+                    preference.setting_name,
+                    f"{preference.label} must include Ctrl or Alt to avoid capturing typing keys.",
                 )
 
             reserved_use = RESERVED_SHORTCUTS.get(normalized)
             if reserved_use is not None:
                 return (
+                    preference.setting_name,
                     f"{preference.label} cannot use {normalized} because that shortcut already "
-                    f"{reserved_use}."
+                    f"{reserved_use}.",
                 )
 
             existing_label = seen.get(normalized)
             if existing_label is not None:
                 return (
+                    preference.setting_name,
                     f"{preference.label} duplicates {existing_label} ({normalized}). "
-                    "Choose a different shortcut or leave one field blank."
+                    "Choose a different shortcut or leave one field blank.",
                 )
             seen[normalized] = preference.label
 

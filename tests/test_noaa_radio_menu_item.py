@@ -31,8 +31,8 @@ class TestNoaaRadioMenuItemSource:
         assert "NOAA Weather &Radio..." in source
 
     def test_keyboard_shortcut(self, source):
-        """Test that Ctrl+R shortcut is assigned."""
-        assert "NOAA Weather &Radio...\\tCtrl+Shift+R" in source
+        """Test that the Ctrl+Alt+N shortcut is assigned."""
+        assert "NOAA Weather &Radio...\\tCtrl+Alt+N" in source
 
     def test_handler_method_exists(self, source):
         """Test that _on_noaa_radio handler method exists."""
