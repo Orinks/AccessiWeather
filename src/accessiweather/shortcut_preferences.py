@@ -139,7 +139,7 @@ RESERVED_SHORTCUTS = {
     "Ctrl+Q": "exit AccessiWeather",
     "Ctrl+E": "open Explain Conditions",
     "Ctrl+T": "open Weather Assistant",
-    "Ctrl+Alt+N": "open NOAA Weather Radio",
+    "Ctrl+N": "open NOAA Weather Radio",
     "Escape": "hide the window when minimize-to-tray is enabled",
     "F5": "refresh the weather",
     "F6": "cycle through top-level sections",

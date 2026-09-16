@@ -494,7 +494,7 @@ def test_refresh_app_shortcuts_preserves_menu_actions_and_escape():
     entries = {(e.flags, e.key): e.cmd_id for e in frame.accelerator_table}
     assert entries[(fake_wx.ACCEL_CTRL, ord("E"))] == 8101
     assert entries[(fake_wx.ACCEL_CTRL, ord("T"))] == 8102
-    assert entries[(fake_wx.ACCEL_CTRL | fake_wx.ACCEL_ALT, ord("N"))] == 8103
+    assert entries[(fake_wx.ACCEL_CTRL, ord("N"))] == 8103
     assert entries[(fake_wx.ACCEL_NORMAL, fake_wx.WXK_ESCAPE)] == 8104
     assert entries[(fake_wx.ACCEL_NORMAL, fake_wx.WXK_F2)] == 8105
     plain_ctrl_shift = fake_wx.ACCEL_CTRL | fake_wx.ACCEL_SHIFT

@@ -48,7 +48,7 @@ def test_parse_shortcut_text_produces_accelerator_and_hotkey_values():
 
 
 @pytest.mark.parametrize(
-    "value", ["A", "Space", "Tab", "Shift+A", "Alt+F4", "F2", "Ctrl+Alt+N", "Ctrl+R"]
+    "value", ["A", "Space", "Tab", "Shift+A", "Alt+F4", "F2", "Ctrl+N", "Ctrl+R"]
 )
 def test_tray_shortcuts_reject_typing_and_reserved_actions(value):
     from types import SimpleNamespace
@@ -81,7 +81,7 @@ def test_window_tray_defaults_never_use_plain_ctrl_shift():
 
 def test_reserved_shortcuts_track_the_new_in_app_bindings():
     assert RESERVED_SHORTCUTS["F2"] == "edit a location"
-    assert RESERVED_SHORTCUTS["Ctrl+Alt+N"] == "open NOAA Weather Radio"
+    assert RESERVED_SHORTCUTS["Ctrl+N"] == "open NOAA Weather Radio"
     assert not any(combo.startswith("Ctrl+Shift+") for combo in RESERVED_SHORTCUTS)
 
 

@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - The show, hide and read-tray hotkeys now default to Ctrl+Alt+Shift+W, M and I, so they no longer steal Ctrl+Shift shortcuts from your browser or screen reader.
-- Edit Location is now F2, and NOAA Weather Radio opens with Ctrl+Alt+N.
+- Edit Location is now F2, and NOAA Weather Radio opens with Ctrl+N.
 - AccessiWeather tells you when another program already owns a window or tray hotkey, instead of failing silently. Windows only.
 - A shortcut Settings won't accept now gets focus along with the message, so you can fix it right away.
 

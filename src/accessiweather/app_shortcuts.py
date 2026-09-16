@@ -94,7 +94,7 @@ class AppShortcutsMixin:
         for flags, key, attribute in (
             (wx.ACCEL_CTRL, ord("E"), "_explain_id"),
             (wx.ACCEL_CTRL, ord("T"), "_weather_chat_id"),
-            (wx.ACCEL_CTRL | wx.ACCEL_ALT, ord("N"), "_noaa_radio_id"),
+            (wx.ACCEL_CTRL, ord("N"), "_noaa_radio_id"),
             (wx.ACCEL_NORMAL, wx.WXK_F2, "_edit_location_id"),
             (wx.ACCEL_NORMAL, wx.WXK_ESCAPE, "_escape_id"),
         ):

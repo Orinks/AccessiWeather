@@ -1068,7 +1068,7 @@ These shortcuts are available in the current app:
 - Ctrl+H: Open Weather History
 - Ctrl+E: Explain Weather
 - Ctrl+T: Open Weather Assistant
-- Ctrl+Alt+N: Open NOAA Weather Radio
+- Ctrl+N: Open NOAA Weather Radio
 - Ctrl+Q: Quit
 
 ### System-wide hotkeys

@@ -302,7 +302,7 @@ class MainWindowUIMixin:
         self._noaa_radio_id = wx.NewIdRef()
         view_menu.Append(
             self._noaa_radio_id,
-            "NOAA Weather &Radio...\tCtrl+Alt+N",
+            "NOAA Weather &Radio...\tCtrl+N",
             "Listen to NOAA Weather Radio",
         )
         view_menu.AppendSeparator()
@@ -442,7 +442,7 @@ class MainWindowUIMixin:
             (wx.ACCEL_CTRL, "D", "_remove_location_id"),
             (wx.ACCEL_CTRL, "E", "_explain_id"),
             (wx.ACCEL_CTRL, "H", "_history_id"),
-            (wx.ACCEL_CTRL | wx.ACCEL_ALT, "N", "_noaa_radio_id"),
+            (wx.ACCEL_CTRL, "N", "_noaa_radio_id"),
             (wx.ACCEL_CTRL, "T", "_weather_chat_id"),
         ]
         for flags, key, attr in ctrl_shortcuts:
