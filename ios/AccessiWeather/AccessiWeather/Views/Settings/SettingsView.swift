@@ -23,6 +23,7 @@ struct SettingsView: View {
                 forecastSection
                 displaySection
                 alertsSection
+                soundsSection
                 dataSourcesSection
                 aboutSection
             }
@@ -107,7 +108,66 @@ struct SettingsView: View {
         } header: {
             SectionHeader("Alerts")
         } footer: {
-            Text("Notifications use the system alert sound. Alerts are checked whenever weather is refreshed.")
+            Text("Notifications play the selected sound pack's alert cue when Sounds are on. Alerts are checked whenever weather is refreshed.")
+        }
+    }
+
+    private var soundsSection: some View {
+        Section {
+            Toggle("Play sounds", isOn: $settings.soundEnabled)
+            ForEach(model.sounds.packs) { pack in
+                soundPackRow(pack)
+            }
+            NavigationLink {
+                SoundEventsView()
+            } label: {
+                LabeledContent("Muted events", value: "\(settings.mutedSoundEvents.count)")
+            }
+            .accessibilityHint("Choose which events play a sound")
+            .disabled(!settings.soundEnabled)
+        } header: {
+            SectionHeader("Sounds")
+        } footer: {
+            Text("Sounds mix with VoiceOver and follow the silent switch. Notification sounds come from the selected pack; iOS only allows notification clips shorter than 30 seconds.")
+        }
+    }
+
+    private func soundPackRow(_ pack: SoundPack) -> some View {
+        let isSelected = settings.soundPackID == pack.id
+        return HStack {
+            Button {
+                settings.soundPackID = pack.id
+            } label: {
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text(pack.name)
+                        if !pack.description.isEmpty {
+                            Text(pack.description)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    Spacer()
+                    if isSelected {
+                        Image(systemName: "checkmark")
+                            .accessibilityHidden(true)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(pack.name) sound pack")
+            .accessibilityValue(isSelected ? "Selected" : "")
+            .accessibilityHint("Uses this pack for app sounds and alert notifications")
+            .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+            Button {
+                model.sounds.preview(pack)
+            } label: {
+                Image(systemName: "play.circle")
+                    .imageScale(.large)
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel("Preview \(pack.name)")
+            .accessibilityHint("Plays this pack's alert sound")
         }
     }
 

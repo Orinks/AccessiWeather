@@ -28,7 +28,9 @@ struct ForecasterNotesView: View {
         .task {
             do {
                 text = try await model.weatherService.forecastDiscussion(officeID: officeID)
+                model.sounds.play(.discussionUpdate)
             } catch {
+                model.sounds.play(.fetchError)
                 errorMessage = error.localizedDescription
             }
         }

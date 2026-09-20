@@ -4,6 +4,7 @@ struct WeatherView: View {
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var settings: SettingsStore
     @EnvironmentObject private var locationStore: LocationStore
+    @State private var showRadio = false
 
     var body: some View {
         NavigationStack {
@@ -20,9 +21,20 @@ struct WeatherView: View {
             }
             .navigationTitle(model.selectedLocation?.name ?? "Weather")
             .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(isPresented: $showRadio) {
+                RadioView(radio: model.radio)
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     locationMenu
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showRadio = true
+                    } label: {
+                        Label("NOAA Weather Radio", systemImage: "radio")
+                    }
+                    .accessibilityHint("Opens nearby NOAA Weather Radio stations")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -113,6 +125,12 @@ struct WeatherView: View {
                 }
                 .accessibilityHint("Opens the National Weather Service Area Forecast Discussion")
             }
+            NavigationLink {
+                RadioView(radio: model.radio)
+            } label: {
+                Label("NOAA Weather Radio", systemImage: "radio")
+            }
+            .accessibilityHint("Streams the nearest NOAA Weather Radio stations")
             if model.hasOpenRouterKey {
                 NavigationLink {
                     ExplainConditionsView()

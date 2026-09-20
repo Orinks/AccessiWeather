@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - A first native iPhone version of AccessiWeather, built for VoiceOver, with current conditions, forecasts, alerts, saved locations and settings.
+- The iPhone app now plays sound pack cues for refreshes and alerts, with a Sounds section in Settings to pick a pack and mute events.
+- The iPhone app can stream the nearest NOAA Weather Radio stations from the Weather tab, with Lock Screen controls.
 
 ### Changed
 - The show, hide and read-tray hotkeys now default to Ctrl+Alt+Shift+W, M and I, so they no longer steal Ctrl+Shift shortcuts from your browser or screen reader.
