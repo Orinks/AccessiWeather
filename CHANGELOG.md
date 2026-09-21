@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-09-20
+
 ### Changed
 - The show, hide and read-tray hotkeys now default to Ctrl+Alt+Shift+W, M and I, so they no longer steal Ctrl+Shift shortcuts from your browser or screen reader.
 - Edit Location is now F2, and NOAA Weather Radio opens with Ctrl+N.
