@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- The OpenRouter model picker drops the retired Llama 3.3 70B option; choose the free router, the paid auto router, or browse models.
+
 ## [0.10.1] - 2026-09-20
 
 ### Changed

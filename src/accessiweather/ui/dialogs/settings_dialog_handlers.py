@@ -257,17 +257,15 @@ class SettingsDialogHandlersMixin:
         if selected_model_id:
             if selected_model_id == "openrouter/free":
                 self._controls["ai_model"].SetSelection(0)
-            elif selected_model_id == "meta-llama/llama-3.3-70b-instruct:free":
-                self._controls["ai_model"].SetSelection(1)
             elif selected_model_id == "openrouter/auto":
-                self._controls["ai_model"].SetSelection(2)
+                self._controls["ai_model"].SetSelection(1)
             else:
                 model_display = f"Selected: {selected_model_id.split('/')[-1]}"
-                if self._controls["ai_model"].GetCount() > 3:
-                    self._controls["ai_model"].SetString(3, model_display)
+                if self._controls["ai_model"].GetCount() > 2:
+                    self._controls["ai_model"].SetString(2, model_display)
                 else:
                     self._controls["ai_model"].Append(model_display)
-                self._controls["ai_model"].SetSelection(3)
+                self._controls["ai_model"].SetSelection(2)
                 self._selected_specific_model = selected_model_id
 
     def _on_reset_prompt(self, event):
@@ -707,10 +705,8 @@ class SettingsDialogHandlersMixin:
         if selection == 0:
             return "openrouter/free"
         if selection == 1:
-            return "meta-llama/llama-3.3-70b-instruct:free"
-        if selection == 2:
             return "auto"
-        if selection == 3 and self._selected_specific_model:
+        if selection == 2 and self._selected_specific_model:
             return self._selected_specific_model
         return "openrouter/free"
 

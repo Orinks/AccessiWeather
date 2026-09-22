@@ -77,7 +77,6 @@ class AITab:
                 parent,
                 choices=[
                     "Free router (automatic, free)",
-                    "Llama 3.3 70B (free)",
                     "Auto router (paid)",
                 ],
             ),
@@ -268,14 +267,12 @@ class AITab:
         ai_model = getattr(settings, "ai_model_preference", "openrouter/free")
         if ai_model == "openrouter/free":
             controls["ai_model"].SetSelection(0)
-        elif ai_model == "meta-llama/llama-3.3-70b-instruct:free":
+        elif ai_model in ("auto", "openrouter/auto"):
             controls["ai_model"].SetSelection(1)
-        elif ai_model == "auto":
-            controls["ai_model"].SetSelection(2)
         else:
             model_display = f"Selected: {ai_model.split('/')[-1]}"
             controls["ai_model"].Append(model_display)
-            controls["ai_model"].SetSelection(3)
+            controls["ai_model"].SetSelection(2)
             self.dialog._selected_specific_model = ai_model
 
         ai_style = getattr(settings, "ai_explanation_style", "standard")
