@@ -247,6 +247,10 @@ def build_nuitka_command(
         mode,
         "--assume-yes-for-downloads",
         "--noinclude-pytest-mode=nofollow",
+        # OpenAI loads chat.completions through a deferred import inside a
+        # cached_property. Nuitka misses openai.resources.chat.chat without this,
+        # which breaks Explain Weather / Venice in frozen builds (#749).
+        "--include-package=openai.resources.chat",
         "--include-package-data=desktop_notifier",
         "--include-package-data=prism:_native/*",
         "--include-package-data=sound_lib",

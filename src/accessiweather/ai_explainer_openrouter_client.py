@@ -228,15 +228,16 @@ class AIExplainerOpenRouterMixin:
                 )
 
             try:
-                from openai import OpenAI
+                from .openai_runtime import ensure_openai_chat_runtime
 
+                OpenAI = ensure_openai_chat_runtime()
                 self._client = OpenAI(
                     base_url=OPENROUTER_BASE_URL,
                     api_key=self.api_key,
                     timeout=30.0,  # 30 second timeout to prevent hanging
                 )
             except ImportError as e:
-                logger.error("OpenAI package not installed")
+                logger.error("OpenAI package not installed or chat modules missing: %s", e)
                 raise AIExplainerError(
                     "AI explanation feature requires the openai package. "
                     "Please install it with: pip install openai"

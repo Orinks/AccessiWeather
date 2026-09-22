@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-09-22
+
+### Fixed
+- Explain Weather and the Weather Assistant work again with OpenRouter and Venice after the update that broke every AI model.
+
 ## [0.10.1] - 2026-09-20
 
 ### Changed
