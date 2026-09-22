@@ -4,11 +4,13 @@ OpenAI SDK import surface required by frozen AccessiWeather builds.
 The public ``OpenAI(...).chat.completions.create`` path resolves
 ``openai.resources.chat.chat`` through a deferred import inside a
 ``cached_property``. Nuitka does not follow that import, so Explain Weather
-and Venice fail with ``No module named 'openai.resources.chat.chat'`` (#749)
-unless these modules are imported or force-included at packaging time.
+and Weather Assistant fail for **both** OpenRouter and Venice with
+``No module named 'openai.resources.chat.chat'`` (#749) unless these modules
+are imported or force-included at packaging time.
 
-Importing them here keeps a compile-time edge from AccessiWeather into the
-chat completions modules that OpenRouter and Venice actually call.
+Both providers construct an ``OpenAI`` client (OpenRouter or Venice base URL)
+and then call ``client.chat.completions.create``. Importing the chat modules
+here keeps a compile-time edge from AccessiWeather into that shared path.
 """
 
 from __future__ import annotations

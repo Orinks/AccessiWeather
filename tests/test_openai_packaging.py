@@ -1,4 +1,10 @@
-"""Regression tests for OpenAI chat packaging in frozen builds (#749)."""
+"""
+Regression tests for OpenAI chat packaging in frozen builds (#749).
+
+OpenRouter and Venice both use ``OpenAI(...).chat.completions.create``. The
+failure mode is the shared ``openai.resources.chat.chat`` submodule missing
+from Nuitka builds, so both providers must stay on the same packaging path.
+"""
 
 from __future__ import annotations
 
@@ -12,6 +18,13 @@ import pytest
 from installer import build_nuitka
 
 ROOT = Path(__file__).resolve().parents[1]
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+VENICE_BASE_URL = "https://api.venice.ai/api/v1"
+PROVIDER_CLIENT_SOURCES = (
+    ROOT / "src" / "accessiweather" / "ai_provider.py",
+    ROOT / "src" / "accessiweather" / "ai_explainer_openrouter_client.py",
+    ROOT / "src" / "accessiweather" / "ui" / "dialogs" / "weather_assistant_dialog.py",
+)
 
 
 def _openai_dependency_specs() -> list[str]:
@@ -26,6 +39,12 @@ def _openai_dependency_specs() -> list[str]:
         if line.strip().lower().startswith("openai") and not line.strip().startswith("#")
     ]
     return pyproject_specs + requirement_specs
+
+
+def _require_openai():
+    """Skip when openai is absent; packaging CI installs it via project deps."""
+    if importlib.util.find_spec("openai") is None:
+        pytest.skip("openai is not installed in this environment")
 
 
 def test_openai_dependency_is_pinned_below_major_break() -> None:
@@ -54,9 +73,7 @@ def test_openai_runtime_helper_imports_chat_modules() -> None:
     ``client.chat.completions.create`` resolves ``openai.resources.chat.chat``.
     If that import fails here, the Nuitka-packaged app will fail the same way.
     """
-    openai_spec = importlib.util.find_spec("openai")
-    if openai_spec is None:
-        pytest.skip("openai is not installed in this environment")
+    _require_openai()
 
     from accessiweather.openai_runtime import ensure_openai_chat_runtime
 
@@ -67,6 +84,60 @@ def test_openai_runtime_helper_imports_chat_modules() -> None:
     completions_mod = importlib.import_module("openai.resources.chat.completions")
     assert chat_mod.__name__ == "openai.resources.chat.chat"
     assert completions_mod.__name__.startswith("openai.resources.chat.completions")
+
+
+@pytest.mark.parametrize(
+    ("label", "base_url"),
+    [
+        ("openrouter", OPENROUTER_BASE_URL),
+        ("venice", VENICE_BASE_URL),
+    ],
+)
+def test_openrouter_and_venice_clients_resolve_shared_chat_module(label, base_url) -> None:
+    """
+    Both providers share the OpenAI chat.completions path (#749).
+
+    Repro matrix coverage without a Windows runner: construct each provider's
+    client the same way production does and prove ``client.chat`` loads
+    ``openai.resources.chat.chat`` (the missing frozen module).
+    """
+    _require_openai()
+
+    from accessiweather.ai_explainer_openrouter import OPENROUTER_BASE_URL as PROVIDER_OR_URL
+    from accessiweather.ai_provider import (
+        VENICE_BASE_URL as PROVIDER_VENICE_URL,
+        create_venice_client,
+    )
+    from accessiweather.openai_runtime import ensure_openai_chat_runtime
+
+    assert PROVIDER_VENICE_URL == VENICE_BASE_URL
+    assert PROVIDER_OR_URL == OPENROUTER_BASE_URL
+
+    if label == "venice":
+        client = create_venice_client("test-venice-key")
+        assert str(client.base_url).rstrip("/") == VENICE_BASE_URL.rstrip("/")
+    else:
+        OpenAI = ensure_openai_chat_runtime()
+        client = OpenAI(base_url=base_url, api_key="test-openrouter-key", timeout=30.0)
+        assert str(client.base_url).rstrip("/") == OPENROUTER_BASE_URL.rstrip("/")
+
+    assert type(client.chat).__module__ == "openai.resources.chat.chat"
+    assert type(client.chat.completions).__module__.startswith("openai.resources.chat.completions")
+    assert callable(client.chat.completions.create)
+
+
+def test_provider_call_sites_use_shared_openai_runtime_helper() -> None:
+    """OpenRouter, Venice, and Weather Assistant must all go through the helper."""
+    for path in PROVIDER_CLIENT_SOURCES:
+        source = path.read_text(encoding="utf-8")
+        assert "ensure_openai_chat_runtime" in source, (
+            f"{path.relative_to(ROOT)} must use ensure_openai_chat_runtime "
+            "so OpenRouter and Venice share packaging (#749)"
+        )
+        assert "from openai import OpenAI" not in source, (
+            f"{path.relative_to(ROOT)} must not import OpenAI directly; "
+            "that bypasses the chat submodule import edge"
+        )
 
 
 def test_openai_runtime_module_statically_imports_chat_path() -> None:
