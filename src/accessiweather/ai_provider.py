@@ -96,6 +96,7 @@ def create_venice_client(api_key: str | None):
         raise InvalidAPIKeyError(
             "A Venice API key is required. Add your own key in Settings > AI Explanations."
         )
-    from openai import OpenAI
+    from .openai_runtime import ensure_openai_chat_runtime
 
+    OpenAI = ensure_openai_chat_runtime()
     return OpenAI(base_url=VENICE_BASE_URL, api_key=api_key.strip(), timeout=30.0, max_retries=0)

@@ -313,8 +313,9 @@ class WeatherAssistantDialog(wx.Dialog):
 
         def do_generate():
             try:
-                from openai import OpenAI
+                from accessiweather.openai_runtime import ensure_openai_chat_runtime
 
+                OpenAI = ensure_openai_chat_runtime()
                 client = (
                     create_venice_client(api_key)
                     if is_venice

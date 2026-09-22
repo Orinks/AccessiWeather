@@ -62,6 +62,7 @@ def test_windows_nuitka_command_uses_standalone_dir_and_pyproject_version() -> N
     assert "--include-data-dir=soundpacks/default=soundpacks/default" in command
     assert "--python-flag=-m" not in command
     assert "--noinclude-unittest-mode=nofollow" not in command
+    assert "--include-package=openai.resources.chat" in command
     assert "--include-package-data=tzdata" in command
     assert "--include-package-data=prism:_native/*" in command
     assert "--include-package-data=sound_lib" in command

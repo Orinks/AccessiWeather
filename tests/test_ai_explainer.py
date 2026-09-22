@@ -357,20 +357,29 @@ class TestAPIClient:
 
     def test_get_client_with_api_key(self):
         """Test client creation with API key."""
-        with patch("openai.OpenAI") as mock_openai:
+        mock_openai_cls = MagicMock(name="OpenAI")
+        with patch(
+            "accessiweather.openai_runtime.ensure_openai_chat_runtime",
+            return_value=mock_openai_cls,
+        ) as mock_ensure:
             explainer = AIExplainer(api_key="test-key")
             client = explainer._get_client()
-            mock_openai.assert_called_once()
+            mock_ensure.assert_called_once()
+            mock_openai_cls.assert_called_once()
             assert client is not None
 
     def test_client_is_cached(self):
         """Test that client is cached after first creation."""
-        with patch("openai.OpenAI") as mock_openai:
+        mock_openai_cls = MagicMock(name="OpenAI")
+        with patch(
+            "accessiweather.openai_runtime.ensure_openai_chat_runtime",
+            return_value=mock_openai_cls,
+        ):
             explainer = AIExplainer(api_key="test-key")
             client1 = explainer._get_client()
             client2 = explainer._get_client()
             # Should only create once
-            mock_openai.assert_called_once()
+            mock_openai_cls.assert_called_once()
             assert client1 is client2
 
 
