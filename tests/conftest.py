@@ -289,6 +289,7 @@ if "wx" not in sys.modules:
         _wx.ICON_INFORMATION = 0
         _wx.ICON_WARNING = 0
         _wx.ICON_ERROR = 0
+        _wx.ICON_QUESTION = 0
         _wx.CallAfter = MagicMock()
         _wx.CallLater = MagicMock()
         _wx.BeginBusyCursor = MagicMock()
