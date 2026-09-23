@@ -19,10 +19,9 @@ from .ai_explainer_models import (
 )
 from .ai_explainer_openrouter import (
     DEFAULT_FREE_MODEL,
-    DEFAULT_FREE_ROUTER,
     OPENROUTER_BASE_URL,
-    get_available_free_models,
 )
+from .ai_provider import RequestDeadline
 
 logger = logging.getLogger(__name__)
 
@@ -32,20 +31,10 @@ class AIExplainerOpenRouterMixin:
 
     def _build_model_attempts(self, primary_model: str) -> list[str]:
         """Return the ordered model list used for a generation attempt."""
-        models_to_try = [primary_model]
         if self.provider == "venice":
-            return models_to_try
-
-        if primary_model != DEFAULT_FREE_MODEL:
-            models_to_try.append(DEFAULT_FREE_MODEL)
-
-        if ":free" in primary_model or primary_model in (DEFAULT_FREE_MODEL, DEFAULT_FREE_ROUTER):
-            fallback_models = get_available_free_models(exclude_model=primary_model)
-            for fallback in fallback_models:
-                if fallback not in models_to_try:
-                    models_to_try.append(fallback)
-
-        return models_to_try[:2]
+            return [primary_model]
+        # One retry through the free router, which lands on another available free model.
+        return [primary_model, DEFAULT_FREE_MODEL]
 
     def _notify_generation_status(
         self,
@@ -67,13 +56,13 @@ class AIExplainerOpenRouterMixin:
         if attempt_index == 0:
             if model == DEFAULT_FREE_MODEL:
                 return (
-                    "Trying OpenRouter's free router. Free models share capacity and may "
-                    "take a little while; backup free models will be tried if needed."
+                    "Trying OpenRouter's free router. Free models share capacity; if this "
+                    "one does not answer, the router tries another free model."
                 )
             if ":free" in model:
                 return (
                     f"Trying selected free model {model}. Free models share rate limits; "
-                    "backup free models will be tried if this one is busy."
+                    "the free router will be tried if this one is busy."
                 )
             return f"Trying selected model {model}."
 
@@ -219,7 +208,7 @@ class AIExplainerOpenRouterMixin:
 
     def _get_client(self):
         """Get or create OpenAI client configured for OpenRouter."""
-        if self._client is None:
+        if self._client is None or self._client.is_closed():
             # OpenRouter requires an API key for ALL requests, including free models
             # The :free suffix only means no charges, not no authentication
             if not self.api_key:
@@ -271,29 +260,19 @@ class AIExplainerOpenRouterMixin:
                 f"OpenRouter request: model={model}, system_prompt_len={len(system_prompt)}, user_prompt_len={len(user_prompt)}"
             )
 
-            # Build extra_body with fallback models for free tier
-            # Only use fallbacks for default model, not user-configured models
-            extra_body = {}
-            if model == DEFAULT_FREE_MODEL and ":free" in model:
-                # Use OpenRouter's native models parameter for automatic fallback
-                fallback_models = get_available_free_models(exclude_model=model)
-                if fallback_models:
-                    extra_body["models"] = fallback_models
-                    logger.debug(f"Using fallback models: {fallback_models}")
-
-            response = client.chat.completions.create(
-                model=model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                max_tokens=4000,  # Increased for models with thinking/reasoning features
-                extra_headers={
-                    "HTTP-Referer": "https://accessiweather.orinks.net",
-                    "X-Title": "AccessiWeather",
-                },
-                extra_body=extra_body if extra_body else None,
-            )
+            with RequestDeadline(client):
+                response = client.chat.completions.create(
+                    model=model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    max_tokens=4000,  # Increased for models with thinking/reasoning features
+                    extra_headers={
+                        "HTTP-Referer": "https://accessiweather.orinks.net",
+                        "X-Title": "AccessiWeather",
+                    },
+                )
 
             # Response bodies may contain private user data; never log them.
 

@@ -322,6 +322,7 @@ class WeatherAssistantDialog(wx.Dialog):
                         base_url="https://openrouter.ai/api/v1",
                         api_key=api_key,
                         timeout=30.0,
+                        max_retries=0,
                     )
                 )
 

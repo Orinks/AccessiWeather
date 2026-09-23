@@ -366,6 +366,7 @@ class TestAPIClient:
     def test_client_is_cached(self):
         """Test that client is cached after first creation."""
         with patch("openai.OpenAI") as mock_openai:
+            mock_openai.return_value.is_closed.return_value = False
             explainer = AIExplainer(api_key="test-key")
             client1 = explainer._get_client()
             client2 = explainer._get_client()

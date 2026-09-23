@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import threading
+
 import httpx
 
 from .ai_explainer_models import (
@@ -17,6 +19,41 @@ from .ai_explainer_models import (
 
 VENICE_BASE_URL = "https://api.venice.ai/api/v1"
 DEFAULT_VENICE_MODEL = "venice-uncensored-1-2"
+REQUEST_DEADLINE_SECONDS = 30.0
+
+
+class RequestDeadline:
+    """
+    Abort a completion that outlives a wall-clock limit by closing its client.
+
+    Client timeouts only bound the gap between bytes, and providers send keep-alive
+    bytes while a busy model queues, so one request could otherwise hang for minutes.
+    A closed client is replaced on the next request (see ``is_closed()``).
+    """
+
+    def __init__(self, client, seconds: float = REQUEST_DEADLINE_SECONDS):
+        """Watch ``client`` for at most ``seconds`` once the block is entered."""
+        self.client = client
+        self.seconds = seconds
+        self.expired = False
+
+    def _expire(self) -> None:
+        self.expired = True
+        self.client.close()
+
+    def __enter__(self):
+        self._timer = threading.Timer(self.seconds, self._expire)
+        self._timer.daemon = True
+        self._timer.start()
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self._timer.cancel()
+        if self.expired and exc is not None:
+            raise RequestTimeoutError(
+                f"The AI service did not answer within {self.seconds:.0f} seconds."
+            ) from None
+        return False
 
 
 def venice_request_options() -> dict:

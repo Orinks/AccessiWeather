@@ -27,13 +27,14 @@ from .ai_explainer_models import (
     TextProductType,
     WeatherContext,
 )
-from .ai_explainer_openrouter import DEFAULT_FREE_MODEL, get_available_free_models
+from .ai_explainer_openrouter import DEFAULT_FREE_MODEL
 from .ai_explainer_openrouter_client import AIExplainerOpenRouterMixin
 from .ai_explainer_prompting import AIExplainerPromptMixin
 from .ai_explainer_text_products import AIExplainerTextProductMixin
 from .ai_explainer_validation import AIExplainerValidationMixin
 from .ai_provider import (
     DEFAULT_VENICE_MODEL,
+    RequestDeadline,
     create_venice_client,
     venice_error,
     venice_request_options,
@@ -58,7 +59,6 @@ __all__ = [
     "RequestTimeoutError",
     "TextProductType",
     "WeatherContext",
-    "get_available_free_models",
     "has_valid_api_key",
 ]
 
@@ -129,17 +129,18 @@ class AIExplainer(
         if self.provider == "openrouter":
             return self._call_openrouter(system_prompt, user_prompt, model_override)
         try:
-            if self._client is None:
+            if self._client is None or self._client.is_closed():
                 self._client = create_venice_client(self.api_key)
-            response = self._client.chat.completions.create(
-                model=model_override or self.get_effective_model(),
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                max_tokens=4000,
-                **venice_request_options(),
-            )
+            with RequestDeadline(self._client):
+                response = self._client.chat.completions.create(
+                    model=model_override or self.get_effective_model(),
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    max_tokens=4000,
+                    **venice_request_options(),
+                )
             usage = response.usage
             return {
                 "content": (response.choices[0].message.content or "") if response.choices else "",

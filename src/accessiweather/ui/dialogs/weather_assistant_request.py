@@ -6,6 +6,8 @@ import json
 import re
 from dataclasses import dataclass
 
+from ...ai_provider import RequestDeadline
+
 
 class AssistantRequestError(Exception):
     """A user-facing failure to complete a grounded answer."""
@@ -51,16 +53,17 @@ def run_assistant_request(client, model, messages, executor, options, *, max_too
         request_options = dict(options)
         if require_lookup and tool_rounds == 0 and read_tools:
             request_options.update(tools=read_tools, tool_choice="required")
-        response = client.chat.completions.create(
-            model=model,
-            messages=history,
-            max_tokens=2000,
-            extra_headers={
-                "HTTP-Referer": "https://accessiweather.orinks.net",
-                "X-Title": "AccessiWeather Weather Assistant",
-            },
-            **request_options,
-        )
+        with RequestDeadline(client):
+            response = client.chat.completions.create(
+                model=model,
+                messages=history,
+                max_tokens=2000,
+                extra_headers={
+                    "HTTP-Referer": "https://accessiweather.orinks.net",
+                    "X-Title": "AccessiWeather Weather Assistant",
+                },
+                **request_options,
+            )
         if not response.choices:
             raise AssistantRequestError(
                 "Received an empty response. Try again or switch models in Settings."

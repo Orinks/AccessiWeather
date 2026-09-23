@@ -148,6 +148,8 @@ def test_weather_assistant_venice_uses_saved_prompt_and_provider():
     with (
         patch(f"{module}._build_weather_context", return_value="Sunny"),
         patch(f"{module}.create_venice_client", return_value=client) as create,
+        # Patching threading.Thread is process-wide, so the deadline timer is stubbed too.
+        patch("accessiweather.ui.dialogs.weather_assistant_request.RequestDeadline"),
         patch(f"{module}.threading.Thread") as thread,
         patch(f"{module}.wx.CallAfter"),
     ):
