@@ -337,15 +337,16 @@ class TestUpdateSettings:
 
     @patch("accessiweather.config.settings.SecureStorage.set_password")
     def test_update_secure_setting_storage_fails(self, mock_set_password, operations, mock_manager):
-        """Test updating a secure setting when secure storage fails."""
+        """A failed keyring write must not appear to save or replace a credential."""
         mock_set_password.return_value = False
+        config = mock_manager.get_config.return_value
+        config.settings.pirate_weather_api_key = "previous_key"
 
         result = operations.update_settings(pirate_weather_api_key="test_key")
 
-        # Should still update the setting and save config
-        config = mock_manager.get_config.return_value
-        assert config.settings.pirate_weather_api_key == "test_key"
-        assert result is True
+        assert config.settings.pirate_weather_api_key == "previous_key"
+        assert result is False
+        mock_manager.save_config.assert_called_once()
 
     def test_update_multiple_settings(self, operations, mock_manager):
         """Test updating multiple settings at once."""

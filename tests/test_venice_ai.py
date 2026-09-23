@@ -11,6 +11,7 @@ from accessiweather.ai_explainer_models import (
     InsufficientCreditsError,
     InvalidAPIKeyError,
     NetworkError,
+    ProviderPermissionError,
     RateLimitError,
 )
 from accessiweather.ai_provider import DEFAULT_VENICE_MODEL, validate_venice_api_key, venice_error
@@ -56,6 +57,7 @@ async def test_venice_preserves_prompts_and_never_calls_openrouter(text_product)
     "status,error_type",
     [
         (401, InvalidAPIKeyError),
+        (403, ProviderPermissionError),
         (402, InsufficientCreditsError),
         (429, RateLimitError),
         (503, NetworkError),
@@ -192,3 +194,72 @@ def test_summary_error_focuses_and_announces_error():
     panel._announce_explain_status.assert_called_once_with(
         "Summary failed. Venice account needs credits"
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "balances, no_balance",
+    [
+        ({"USD": 0, "DIEM": 0, "BUNDLED_CREDITS": 0}, True),
+        ({"USD": 0, "DIEM": 0, "BUNDLED_CREDITS": 2}, False),
+        ({"USD": 0, "DIEM": 0}, False),
+        ({"USD": 0, "DIEM": 1}, False),
+        ({"USD": 2, "DIEM": 0}, False),
+        ({"USD": 0, "DIEM": 0, "OTHER": 3}, False),
+        ({"USD": 0}, False),
+        ({"USD": None, "DIEM": 0}, False),
+        ({"USD": False, "DIEM": 0}, False),
+        ({}, False),
+        (None, False),
+    ],
+)
+async def test_venice_validation_reports_only_known_balance_shortfall(balances, no_balance):
+    client = AsyncMock()
+    response = MagicMock()
+    response.json.return_value = {"data": {"accessPermitted": True, "balances": balances}}
+    client.get.return_value = response
+    with patch("accessiweather.ai_provider.httpx.AsyncClient") as factory:
+        factory.return_value.__aenter__.return_value = client
+        valid, message = await validate_venice_api_key("test-key")
+    assert valid is True
+    assert ("no positive balance is listed" in message) is no_balance
+    client.post.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_venice_denied_access_takes_precedence_over_zero_balance():
+    client = AsyncMock()
+    response = MagicMock()
+    response.json.return_value = {
+        "data": {"accessPermitted": False, "balances": {"USD": 0, "DIEM": 0}}
+    }
+    client.get.return_value = response
+    with patch("accessiweather.ai_provider.httpx.AsyncClient") as factory:
+        factory.return_value.__aenter__.return_value = client
+        valid, message = await validate_venice_api_key("test-key")
+    assert valid is False
+    assert "not permitted" in message
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "status, phrase", [(401, "rejected this API key"), (403, "denied permission")]
+)
+async def test_venice_key_validation_distinguishes_rejection_from_permission(
+    status, phrase, caplog
+):
+    client = AsyncMock()
+    response = httpx.Response(
+        status,
+        text="private-response-secret",
+        request=httpx.Request("GET", "https://example.invalid"),
+    )
+    client.get.return_value = response
+    with patch("accessiweather.ai_provider.httpx.AsyncClient") as factory:
+        factory.return_value.__aenter__.return_value = client
+        valid, message = await validate_venice_api_key("test-secret-key")
+    assert valid is False
+    assert phrase in message
+    assert "private-response-secret" not in message + caplog.text
+    assert "test-secret-key" not in message + caplog.text
+    client.post.assert_not_called()

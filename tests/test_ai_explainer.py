@@ -556,7 +556,7 @@ class TestErrorHandling:
             with pytest.raises(RateLimitError) as exc:
                 explainer._call_openrouter("system", "user")
 
-        assert exc.value.__cause__ is api_error
+        assert exc.value.__cause__ is None
 
     @pytest.mark.asyncio
     async def test_invalid_api_key_error(self, sample_weather_data):
@@ -963,15 +963,10 @@ class TestAPIKeyValidation:
         """Test validate_api_key with valid key."""
         explainer = AIExplainer(api_key="test-key")
 
-        with patch.object(explainer, "_call_openrouter") as mock_call:
-            mock_call.return_value = {
-                "content": "OK",
-                "model": "test-model",
-                "total_tokens": 5,
-                "prompt_tokens": 3,
-                "completion_tokens": 2,
-            }
-
+        with patch(
+            "accessiweather.ai_explainer_validation.validate_openrouter_api_key",
+            return_value=(True, "Verified"),
+        ):
             result = await explainer.validate_api_key("valid-key")
             assert result is True
 
@@ -979,10 +974,10 @@ class TestAPIKeyValidation:
     async def test_validate_api_key_invalid(self):
         """Test validate_api_key with invalid key."""
         explainer = AIExplainer(api_key="test-key")
-
-        with patch.object(explainer, "_call_openrouter") as mock_call:
-            mock_call.side_effect = InvalidAPIKeyError("Invalid key")
-
+        with patch(
+            "accessiweather.ai_explainer_validation.validate_openrouter_api_key",
+            return_value=(False, "Rejected"),
+        ):
             result = await explainer.validate_api_key("invalid-key")
             assert result is False
 

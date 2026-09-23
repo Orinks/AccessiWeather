@@ -8,12 +8,15 @@ from collections.abc import Callable
 from datetime import datetime
 
 from .ai_explainer_models import (
+    AIExplainerError,
     EmptyResponseError,
     ExplanationResult,
     ExplanationStyle,
+    InsufficientCreditsError,
     InvalidAPIKeyError,
     InvalidModelError,
     NetworkError,
+    ProviderPermissionError,
     RateLimitError,
     RequestTimeoutError,
     TextProductType,
@@ -191,7 +194,11 @@ class AIExplainerTextProductMixin:
 
             except Exception as e:
                 last_error = e
-                logger.warning(f"Model {model} failed for {product_type}: {e}, trying fallback...")
+                if isinstance(
+                    e, (InvalidAPIKeyError, ProviderPermissionError, InsufficientCreditsError)
+                ):
+                    raise
+                logger.warning("Text-product model attempt failed (%s)", type(e).__name__)
                 if attempt_index + 1 < len(models_to_try):
                     reason = self._describe_generation_error(e)
                     self._notify_generation_status(
@@ -205,10 +212,9 @@ class AIExplainerTextProductMixin:
             if last_error:
                 if self.provider == "venice":
                     raise last_error
-                logger.error(
-                    f"All models failed for {product_type}. Last error: {last_error}",
-                    exc_info=True,
-                )
+                logger.error("All attempted text-product models failed")
+                if isinstance(last_error, AIExplainerError):
+                    raise last_error
                 error_message = str(last_error).lower()
 
                 if "api key" in error_message or "api_key" in error_message:

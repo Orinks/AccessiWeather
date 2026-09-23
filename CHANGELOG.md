@@ -7,6 +7,13 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - The OpenRouter model picker drops the retired Llama 3.3 70B option; choose the free router, the paid auto router, or browse models.
 
+### Fixed
+- OpenRouter key validation now checks the key without generating a response, so unavailable models and account limits no longer make a valid key appear invalid. It reports exhausted key spending allowance, connection and service problems separately, without freezing Settings.
+- Venice key validation distinguishes rejected keys from permission problems and reports when all listed balances are depleted.
+- Settings reports a secure-storage failure instead of claiming an API key was saved, and keeps the prior key in memory if the new write fails.
+- If a key changes during validation, Settings asks to validate the new value instead of reporting the earlier key's result.
+- OpenRouter explanations stop on authentication, permission and credit errors, avoid logging response text, and limit free-model fallback attempts so a failing model does not leave the app waiting through a long chain of retries.
+
 ## [0.10.1] - 2026-09-20
 
 ### Changed

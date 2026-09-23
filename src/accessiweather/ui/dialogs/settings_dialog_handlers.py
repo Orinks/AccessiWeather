@@ -43,6 +43,10 @@ class SettingsDialogHandlersMixin:
             if not self or self.IsBeingDeleted():
                 return
             button.Enable()
+            if self._controls["venice_key"].GetValue().strip() != key:
+                valid = False
+                message = "The key changed during validation. Please validate again."
+                announcer.announce(message)
             wx.MessageBox(
                 message,
                 "Venice Key Valid" if valid else "Venice Validation Failed",
@@ -205,47 +209,59 @@ class SettingsDialogHandlersMixin:
             wx.EndBusyCursor()
 
     def _on_validate_openrouter_key(self, event):
-        """Validate OpenRouter API key."""
-        key = self._controls["openrouter_key"].GetValue()
+        """Validate the user's OpenRouter key without blocking the UI or buying inference."""
+        key = self._controls["openrouter_key"].GetValue().strip()
         if not key:
-            wx.MessageBox("Please enter an API key first.", "Validation", wx.OK | wx.ICON_WARNING)
+            wx.MessageBox(
+                "Please enter your OpenRouter API key first.", "Validation", wx.OK | wx.ICON_WARNING
+            )
+            self._controls["openrouter_key"].SetFocus()
             return
 
-        wx.BeginBusyCursor()
-        try:
+        import threading
+
+        from ...screen_reader import ScreenReaderAnnouncer
+
+        button = event.GetEventObject()
+        button.Disable()
+        self._controls["openrouter_key"].SetFocus()
+        announcer = getattr(self, "_openrouter_validation_announcer", None)
+        if announcer is None:
+            announcer = self._openrouter_validation_announcer = ScreenReaderAnnouncer()
+        announcer.announce("Validating OpenRouter key…")
+
+        def finish(valid, message):
+            if not self or self.IsBeingDeleted():
+                return
+            button.Enable()
+            if self._controls["openrouter_key"].GetValue().strip() != key:
+                valid = False
+                message = "The key changed during validation. Please validate again."
+                announcer.announce(message)
+            wx.MessageBox(
+                message,
+                "OpenRouter Key Valid" if valid else "OpenRouter Validation Failed",
+                wx.OK | (wx.ICON_INFORMATION if valid else wx.ICON_ERROR),
+                parent=self,
+            )
+            button.SetFocus()
+
+        def validate():
             import asyncio
 
-            from ...ai_explainer import AIExplainer
+            from ...ai_explainer_validation import validate_openrouter_api_key
 
-            explainer = AIExplainer()
-
-            loop = asyncio.new_event_loop()
             try:
-                valid = loop.run_until_complete(explainer.validate_api_key(key))
-            finally:
-                loop.close()
+                valid, message = asyncio.run(validate_openrouter_api_key(key))
+            except Exception:
+                # Never include exception text: it could contain a credential or request.
+                valid, message = (
+                    False,
+                    "Unable to validate OpenRouter access. Check your connection and try again.",
+                )
+            wx.CallAfter(finish, valid, message)
 
-            if valid:
-                wx.MessageBox(
-                    "API key is valid!",
-                    "Validation Successful",
-                    wx.OK | wx.ICON_INFORMATION,
-                )
-            else:
-                wx.MessageBox(
-                    "API key validation failed. Please check your key and try again.",
-                    "Validation Failed",
-                    wx.OK | wx.ICON_ERROR,
-                )
-        except Exception as e:
-            logger.error(f"Error validating OpenRouter API key: {e}")
-            wx.MessageBox(
-                f"Error during validation: {e}",
-                "Validation Error",
-                wx.OK | wx.ICON_ERROR,
-            )
-        finally:
-            wx.EndBusyCursor()
+        threading.Thread(target=validate, daemon=True).start()
 
     def _on_browse_models(self, event):
         """Browse available AI models."""

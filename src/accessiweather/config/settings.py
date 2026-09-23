@@ -207,19 +207,22 @@ class SettingsOperations:
             "avwx_api_key",
         }
 
+        credentials_saved = True
         for key, value in kwargs.items():
             if hasattr(config.settings, key):
-                setattr(config.settings, key, value)
-
                 if key in secure_keys and not SecureStorage.set_password(key, value):
                     self.logger.error(f"Failed to save {key} to secure storage")
+                    credentials_saved = False
+                    continue
 
+                setattr(config.settings, key, value)
                 log_value = "***redacted***" if key in redacted_keys else value
                 self.logger.info(f"Updated setting {key} = {log_value}")
             else:
                 self.logger.warning(f"Unknown setting: {key}")
 
-        return self._manager.save_config()
+        config_saved = self._manager.save_config()
+        return config_saved and credentials_saved
 
     def get_settings(self) -> AppSettings:
         """Return the current AppSettings instance."""

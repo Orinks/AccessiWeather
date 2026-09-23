@@ -10,6 +10,7 @@ from .ai_explainer_models import (
     InvalidAPIKeyError,
     InvalidModelError,
     NetworkError,
+    ProviderPermissionError,
     RateLimitError,
     RequestTimeoutError,
 )
@@ -30,9 +31,15 @@ def venice_error(error: Exception) -> AIExplainerError:
     status = getattr(error, "status_code", None)
     if status is None:
         status = getattr(getattr(error, "response", None), "status_code", None)
-    if status in (401, 403):
+    if status == 401:
         return InvalidAPIKeyError(
-            "Your Venice API key is invalid or lacks access. Check Settings > AI Explanations."
+            "Venice rejected this API key. It may be invalid or expired. "
+            "Check your Venice key in Settings > AI Explanations."
+        )
+    if status == 403:
+        return ProviderPermissionError(
+            "Venice denied permission for this request. Check your key and account permissions. "
+            "This does not establish that your key is invalid."
         )
     if status == 402:
         return InsufficientCreditsError(
@@ -82,6 +89,20 @@ async def validate_venice_api_key(api_key: str) -> tuple[bool, str]:
                     False,
                     "Your Venice key is recognized but API access is not permitted. Check your Venice account.",
                 )
+        balances = data.get("balances")
+        if (
+            isinstance(balances, dict)
+            and {"USD", "DIEM", "BUNDLED_CREDITS"}.issubset(balances)
+            and all(
+                isinstance(value, (int, float)) and not isinstance(value, bool) and value <= 0
+                for value in balances.values()
+            )
+        ):
+            return (
+                True,
+                "Venice API key verified, but no positive balance is listed. "
+                "Generation may require credits; other credit types may still apply.",
+            )
         return (
             True,
             "Venice API key verified. Generating responses uses your account's API credits.",

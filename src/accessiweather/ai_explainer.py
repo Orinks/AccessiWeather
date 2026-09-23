@@ -21,6 +21,7 @@ from .ai_explainer_models import (
     InvalidAPIKeyError,
     InvalidModelError,
     NetworkError,
+    ProviderPermissionError,
     RateLimitError,
     RequestTimeoutError,
     TextProductType,
@@ -248,7 +249,11 @@ class AIExplainer(
 
             except Exception as e:
                 last_error = e
-                logger.warning(f"Model {model} failed: {e}, trying fallback...")
+                if isinstance(
+                    e, (InvalidAPIKeyError, ProviderPermissionError, InsufficientCreditsError)
+                ):
+                    raise
+                logger.warning("Model attempt failed (%s)", type(e).__name__)
                 if attempt_index + 1 < len(models_to_try):
                     reason = self._describe_generation_error(e)
                     self._notify_generation_status(
@@ -263,7 +268,9 @@ class AIExplainer(
             if last_error:
                 if self.provider == "venice":
                     raise last_error
-                logger.error(f"All models failed. Last error: {last_error}", exc_info=True)
+                logger.error("All attempted models failed")
+                if isinstance(last_error, AIExplainerError):
+                    raise last_error
                 # Convert common errors to specific exceptions
                 error_message = str(last_error).lower()
 

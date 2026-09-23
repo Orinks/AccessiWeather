@@ -13,6 +13,7 @@ from .ai_explainer_models import (
     InvalidAPIKeyError,
     InvalidModelError,
     NetworkError,
+    ProviderPermissionError,
     RateLimitError,
     RequestTimeoutError,
 )
@@ -44,7 +45,7 @@ class AIExplainerOpenRouterMixin:
                 if fallback not in models_to_try:
                     models_to_try.append(fallback)
 
-        return models_to_try
+        return models_to_try[:2]
 
     def _notify_generation_status(
         self,
@@ -233,14 +234,15 @@ class AIExplainerOpenRouterMixin:
                 self._client = OpenAI(
                     base_url=OPENROUTER_BASE_URL,
                     api_key=self.api_key,
-                    timeout=30.0,  # 30 second timeout to prevent hanging
+                    timeout=20.0,
+                    max_retries=0,
                 )
-            except ImportError as e:
+            except ImportError:
                 logger.error("OpenAI package not installed")
                 raise AIExplainerError(
                     "AI explanation feature requires the openai package. "
                     "Please install it with: pip install openai"
-                ) from e
+                ) from None
         return self._client
 
     def _call_openrouter(
@@ -293,8 +295,7 @@ class AIExplainerOpenRouterMixin:
                 extra_body=extra_body if extra_body else None,
             )
 
-            # Log full response for debugging
-            logger.debug(f"OpenRouter raw response: {response}")
+            # Response bodies may contain private user data; never log them.
 
             # Extract content - handle potential None values
             if not response.choices:
@@ -319,7 +320,7 @@ class AIExplainerOpenRouterMixin:
                 content = ""
             elif len(content.strip()) < 20:
                 logger.warning(
-                    f"OpenRouter returned short content ({len(content)} chars). finish_reason={finish_reason}, content={content[:100]!r}"
+                    f"OpenRouter returned short content ({len(content)} chars). finish_reason={finish_reason}"
                 )
 
             logger.info(
@@ -340,7 +341,21 @@ class AIExplainerOpenRouterMixin:
             error_details = self._extract_api_error_details(e)
             status_code = self._api_status_code(error_details)
             error_message = f"{self._api_error_text(error_details)} {e}".lower()
-            original_error = str(e)
+            if isinstance(e, AIExplainerError):
+                raise
+            if status_code == 403:
+                raise ProviderPermissionError(
+                    "OpenRouter denied this generation request. The model, provider, or account "
+                    "permissions may restrict access. This does not establish that your key is invalid."
+                ) from None
+            if status_code == 401:
+                raise InvalidAPIKeyError(
+                    "OpenRouter could not authenticate this generation request. "
+                    "Validate your key in Settings; model or provider access may also need checking."
+                ) from None
+            # Structured statuses take priority over arbitrary upstream error prose.
+            if status_code is not None:
+                error_message = str(status_code)
 
             # Map specific errors to custom exceptions
             # Note: Check API key errors FIRST to avoid false matches on "connection" in suggestion text
@@ -351,7 +366,7 @@ class AIExplainerOpenRouterMixin:
                     "OpenRouter API key is required.\n\n"
                     "Please add your API key in Settings → AI Explanations.\n"
                     "Get a free key at: openrouter.ai/keys"
-                ) from e
+                ) from None
 
             # Invalid API key / authentication errors (401)
             if "invalid api key" in error_message or "authentication" in error_message:
@@ -359,18 +374,14 @@ class AIExplainerOpenRouterMixin:
                     "Your OpenRouter API key is invalid.\n\n"
                     "Please check Settings → AI Explanations and verify your API key.\n"
                     "Get a free key at: openrouter.ai/keys"
-                ) from e
+                ) from None
 
-            if (
-                status_code in (401, 403)
-                or "401" in error_message
-                or "unauthorized" in error_message
-            ):
+            if status_code == 401 or "401" in error_message or "unauthorized" in error_message:
                 raise InvalidAPIKeyError(
                     "API key authentication failed.\n\n"
                     "Your API key may be expired or incorrectly entered.\n"
                     "Please check Settings → AI Explanations."
-                ) from e
+                ) from None
 
             # Insufficient credits
             if (
@@ -383,7 +394,7 @@ class AIExplainerOpenRouterMixin:
                     "Options:\n"
                     "• Add credits at openrouter.ai/credits\n"
                     "• Switch to a free model in Settings → AI Explanations"
-                ) from e
+                ) from None
 
             # Rate limiting (429) - check for status code AND common phrases
             if (
@@ -407,7 +418,7 @@ class AIExplainerOpenRouterMixin:
                         if is_free
                         else "Please wait a few minutes and try again."
                     )
-                ) from e
+                ) from None
 
             # Timeout errors - check before generic network errors
             if "timed out" in error_message or "timeout" in error_message:
@@ -415,7 +426,7 @@ class AIExplainerOpenRouterMixin:
                     "Request timed out.\n\n"
                     "The AI service is taking too long to respond.\n"
                     "This usually means the servers are busy. Please try again."
-                ) from e
+                ) from None
 
             # Network/connection errors - use specific phrases to avoid false matches
             if (
@@ -430,7 +441,7 @@ class AIExplainerOpenRouterMixin:
                     "Network connection error.\n\n"
                     "Could not reach the AI service. This is usually temporary.\n"
                     "Please check your internet connection and try again."
-                ) from e
+                ) from None
 
             # Model not found (404)
             if (
@@ -445,18 +456,17 @@ class AIExplainerOpenRouterMixin:
                     f"The AI model '{model_used}' was not found.\n\n"
                     "It may have been removed or renamed by OpenRouter.\n"
                     "Please go to Settings → AI Explanations and select a different model."
-                ) from e
+                ) from None
 
             # Generic error - log full details and show user-friendly message
-            logger.error(f"OpenRouter API error: {e}", exc_info=True)
+            logger.error("OpenRouter generation request failed")
             raise AIExplainerError(
                 f"Unable to generate explanation.\n\n"
-                f"Error: {original_error}\n\n"
                 "If this persists, try:\n"
                 "• Checking your internet connection\n"
                 "• Selecting a different AI model in Settings\n"
                 "• Trying again in a few minutes"
-            ) from e
+            ) from None
 
     def _estimate_cost(self, model: str, token_count: int) -> float | None:
         """

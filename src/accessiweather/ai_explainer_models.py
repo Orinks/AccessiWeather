@@ -28,6 +28,10 @@ class InvalidAPIKeyError(AIExplainerError):
     """Raised when API key is invalid or malformed."""
 
 
+class ProviderPermissionError(AIExplainerError):
+    """Raised when a provider denies a generation request or model access."""
+
+
 class InvalidModelError(AIExplainerError):
     """Raised when the specified model ID does not exist."""
 
