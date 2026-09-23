@@ -99,11 +99,80 @@ def test_model_cannot_execute_write_tool_during_required_read_lookup():
     client, executor, options = setup(
         [response("Saving", "add_location"), response("I could not check.")]
     )
-    answer = run_assistant_request(
-        client, "model", [{"role": "user", "content": "Weather now?"}], executor, options
-    )
+    with pytest.raises(AssistantRequestError, match="did not return usable data"):
+        run_assistant_request(
+            client, "model", [{"role": "user", "content": "Weather now?"}], executor, options
+        )
     executor.execute.assert_not_called()
-    assert "not available" in answer.messages[2]["content"]
+
+
+def test_alert_question_uses_selected_location_despite_model_namesake():
+    client, executor, options = setup(
+        [response("Checking", "get_alerts"), response("Alert checked.")]
+    )
+    options["tools"].insert(1, {"type": "function", "function": {"name": "get_alerts"}})
+
+    run_assistant_request(
+        client,
+        "model",
+        [{"role": "user", "content": "Are there alerts for Lumberton right now?"}],
+        executor,
+        options,
+        selected_location="Lumberton, NJ",
+    )
+
+    first = client.chat.completions.create.call_args_list[0]
+    assert [tool["function"]["name"] for tool in first.kwargs["tools"]] == ["get_alerts"]
+    executor.execute.assert_called_once_with("get_alerts", {"location": "Lumberton, NJ"})
+
+
+def test_explicit_other_location_remains_available():
+    client, executor, options = setup(
+        [response("Checking", "get_current_weather"), response("Done")]
+    )
+    run_assistant_request(
+        client,
+        "model",
+        [{"role": "user", "content": "What is the current weather in Home?"}],
+        executor,
+        options,
+        selected_location="Lumberton, NJ",
+    )
+    executor.execute.assert_called_once_with("get_current_weather", {"location": "Home"})
+
+
+def test_assistant_rejects_no_alert_claim_after_alert_tool_reports_warning():
+    client, executor, options = setup(
+        [response("Checking", "get_alerts"), response("There are no active alerts.")]
+    )
+    options["tools"].append({"type": "function", "function": {"name": "get_alerts"}})
+    executor.execute.return_value = "Weather alerts for Home:\n- Coastal Flood Warning"
+
+    with pytest.raises(AssistantRequestError, match="contradicted"):
+        run_assistant_request(
+            client,
+            "model",
+            [{"role": "user", "content": "Any alerts now?"}],
+            executor,
+            options,
+            selected_location="Home",
+        )
+
+
+def test_assistant_rejects_unrequested_namesake_in_answer():
+    client, executor, options = setup(
+        [response("Checking", "get_current_weather"), response("Lumberton, NC is sunny.")]
+    )
+
+    with pytest.raises(AssistantRequestError, match="different place"):
+        run_assistant_request(
+            client,
+            "model",
+            [{"role": "user", "content": "What is the weather now?"}],
+            executor,
+            options,
+            selected_location="Lumberton, NJ",
+        )
 
 
 def test_completed_tool_messages_are_sent_on_followup():
@@ -143,6 +212,34 @@ def test_adapter_uses_current_location_and_alert_failures_are_unknown(monkeypatc
         executor.weather_service.get_alerts(40.1, -74.2)
 
 
+def test_adapter_passes_only_selected_locations_displayed_alerts(monkeypatch):
+    from accessiweather import api_client, geocoding, openmeteo_client
+    from accessiweather.ui.dialogs.weather_assistant_dialog import WeatherAssistantDialog
+
+    monkeypatch.setattr(api_client, "NoaaApiClient", MagicMock())
+    monkeypatch.setattr(openmeteo_client, "OpenMeteoApiClient", MagicMock())
+    monkeypatch.setattr(geocoding, "GeocodingService", MagicMock())
+    manager = MagicMock()
+    manager.get_current_location.return_value = SimpleNamespace(
+        name="Lumberton, NJ", latitude=39.97, longitude=-74.8
+    )
+    warning = SimpleNamespace(event="Coastal Flood Warning")
+    weather = SimpleNamespace(
+        location=SimpleNamespace(latitude=39.97, longitude=-74.8),
+        alerts=SimpleNamespace(alerts=[warning]),
+    )
+    dialog = SimpleNamespace(
+        app=SimpleNamespace(config_manager=manager, current_weather_data=weather)
+    )
+
+    executor = WeatherAssistantDialog._get_tool_executor(dialog)
+    assert executor.displayed_alerts == [warning]
+
+    weather.location.longitude = -80.0
+    other = WeatherAssistantDialog._get_tool_executor(dialog)
+    assert other.displayed_alerts is None
+
+
 def test_generation_disables_clear_and_completion_keeps_model_status():
     from accessiweather.ui.dialogs.weather_assistant_dialog import WeatherAssistantDialog
 
@@ -163,6 +260,27 @@ def test_generation_disables_clear_and_completion_keeps_model_status():
     dialog.clear_button.Enable.assert_called_with(True)
     dialog.status_label.SetLabel.assert_called_with("Model: model-used")
     dialog.input_ctrl.SetFocus.assert_called_once()
+
+
+def test_grounding_error_is_announced_and_returns_focus_to_input():
+    from accessiweather.ui.dialogs.weather_assistant_dialog import WeatherAssistantDialog
+
+    dialog = WeatherAssistantDialog.__new__(WeatherAssistantDialog)
+    dialog.send_button = MagicMock()
+    dialog.clear_button = MagicMock()
+    dialog.input_ctrl = MagicMock()
+    dialog.status_label = MagicMock()
+    dialog._conversation = [{"role": "user", "content": "Any alerts?"}]
+    dialog._append_to_display = MagicMock()
+    dialog._announcer = MagicMock()
+
+    dialog._on_response_error("The model contradicted the alert lookup.")
+
+    expected = "Sorry, I couldn't respond: The model contradicted the alert lookup."
+    dialog._append_to_display.assert_called_once_with("Weather Assistant", expected)
+    dialog._announcer.announce.assert_called_once_with(f"Weather Assistant: {expected}")
+    dialog.input_ctrl.SetFocus.assert_called_once()
+    assert dialog._conversation == []
 
 
 @pytest.mark.parametrize(

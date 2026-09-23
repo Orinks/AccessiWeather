@@ -183,7 +183,7 @@ class AIExplainer(
         import asyncio
 
         # Check cache first
-        cache_key = self._generate_cache_key(weather_data, location_name)
+        cache_key = self._generate_cache_key(weather_data, location_name, style, preserve_markdown)
         if self.cache:
             cached_result = self.cache.get(cache_key)
             if cached_result:
@@ -251,7 +251,7 @@ class AIExplainer(
             except Exception as e:
                 last_error = e
                 if isinstance(
-                    e, (InvalidAPIKeyError, ProviderPermissionError, InsufficientCreditsError)
+                    e, InvalidAPIKeyError | ProviderPermissionError | InsufficientCreditsError
                 ):
                     raise
                 logger.warning("Model attempt failed (%s)", type(e).__name__)

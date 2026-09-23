@@ -122,6 +122,7 @@ class WeatherToolExecutor:
         default_lat: float | None = None,
         default_lon: float | None = None,
         default_name: str | None = None,
+        displayed_alerts: list[Any] | None = None,
     ) -> None:
         """
         Initialize the weather tool executor.
@@ -133,11 +134,13 @@ class WeatherToolExecutor:
             default_lat: Latitude of the app's current/default location.
             default_lon: Longitude of the app's current/default location.
             default_name: Display name of the app's current/default location.
+            displayed_alerts: Alerts currently shown for that location, when available.
 
         """
         self.weather_service = weather_service
         self.geocoding_service = geocoding_service
         self.config_manager = config_manager
+        self.displayed_alerts = displayed_alerts
         self.location_resolver = LocationResolver(
             geocoding_service=geocoding_service,
             default_lat=default_lat,
@@ -226,8 +229,39 @@ class WeatherToolExecutor:
         """Get weather alerts."""
         location = arguments["location"]
         lat, lon, display_name = self._resolve_location(location)
-        data = self.weather_service.get_alerts(lat, lon)
+        selected = self.location_resolver._matches_default(location)
+        displayed = self.displayed_alerts if selected else None
+        try:
+            data = self.weather_service.get_alerts(lat, lon)
+        except Exception:
+            if not displayed:
+                raise
+            return self._format_displayed_alerts(display_name) + (
+                "\nLive alert lookup failed; current alert status is unknown."
+            )
+        live_alerts = data.get("alerts", data.get("features", []))
+        if not live_alerts and displayed:
+            return self._format_displayed_alerts(display_name) + (
+                "\nLive alert lookup found none. The app still displays these alerts; "
+                "verify their current status before relying on either result."
+            )
         return format_alerts(data, display_name)
+
+    def _format_displayed_alerts(self, display_name: str) -> str:
+        """Describe alerts already visible in the app without claiming they are newly verified."""
+        alerts = [
+            {
+                "event": alert.event or alert.title,
+                "severity": alert.severity,
+                "headline": alert.headline,
+                "description": alert.description,
+            }
+            for alert in self.displayed_alerts or []
+            if not getattr(alert, "is_expired", lambda: False)()
+        ]
+        return f"Alerts currently displayed in the app for {display_name}:\n" + format_alerts(
+            {"alerts": alerts}, display_name
+        )
 
     def _get_hourly_forecast(self, arguments: dict[str, Any]) -> str:
         """Get hourly weather forecast."""

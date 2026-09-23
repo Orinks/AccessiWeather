@@ -242,6 +242,20 @@ class WeatherAssistantDialog(wx.Dialog):
             weather_client = _CombinedWeatherClient()
             geocoding_service = GeocodingService(data_source="auto")
             location = config_manager.get_current_location() if config_manager else None
+            displayed_weather = getattr(self.app, "current_weather_data", None)
+            displayed_alerts = None
+            if (
+                location
+                and displayed_weather
+                and displayed_weather.location.latitude == location.latitude
+                and displayed_weather.location.longitude == location.longitude
+                and displayed_weather.alerts
+            ):
+                displayed_alerts = [
+                    alert
+                    for alert in displayed_weather.alerts.alerts
+                    if not getattr(alert, "is_expired", lambda: False)()
+                ]
             return WeatherToolExecutor(
                 weather_client,
                 geocoding_service,
@@ -249,6 +263,7 @@ class WeatherAssistantDialog(wx.Dialog):
                 default_lat=location.latitude if location else None,
                 default_lon=location.longitude if location else None,
                 default_name=location.name if location else None,
+                displayed_alerts=displayed_alerts,
             )
         except Exception:
             logger.debug("Could not create WeatherToolExecutor", exc_info=True)
@@ -345,7 +360,14 @@ class WeatherAssistantDialog(wx.Dialog):
                     )
 
                 answer = run_assistant_request(
-                    client, effective_model, messages, tool_executor, extra_kwargs
+                    client,
+                    effective_model,
+                    messages,
+                    tool_executor,
+                    extra_kwargs,
+                    selected_location=(
+                        tool_executor.location_resolver.default_name if tool_executor else None
+                    ),
                 )
                 wx.CallAfter(
                     self._on_response_received, answer.text, answer.model, answer.messages[1:]

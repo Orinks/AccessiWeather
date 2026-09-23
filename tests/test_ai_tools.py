@@ -9,6 +9,57 @@ import pytest
 from accessiweather.ai_tools import WEATHER_TOOLS, WeatherToolExecutor
 
 
+def test_selected_location_alert_lookup_keeps_displayed_warning_when_live_source_disagrees():
+    weather_service = MagicMock()
+    weather_service.get_alerts.return_value = {"alerts": []}
+    geocoding = MagicMock()
+    warning = MagicMock()
+    warning.event = "Coastal Flood Warning"
+    warning.severity = "Severe"
+    warning.headline = "Flood warning remains on screen"
+    warning.description = "Flooding is possible"
+    warning.is_expired.return_value = False
+    executor = WeatherToolExecutor(
+        weather_service,
+        geocoding,
+        default_lat=39.97,
+        default_lon=-74.8,
+        default_name="Lumberton, NJ",
+        displayed_alerts=[warning],
+    )
+
+    result = executor.execute("get_alerts", {"location": "Lumberton, NJ"})
+
+    weather_service.get_alerts.assert_called_once_with(39.97, -74.8)
+    geocoding.geocode_address.assert_not_called()
+    assert "Coastal Flood Warning" in result
+    assert "Live alert lookup found none" in result
+
+
+def test_selected_location_alert_lookup_reports_unknown_when_live_source_fails():
+    weather_service = MagicMock()
+    weather_service.get_alerts.side_effect = RuntimeError("unavailable")
+    warning = MagicMock()
+    warning.event = "Coastal Flood Advisory"
+    warning.severity = "Moderate"
+    warning.headline = None
+    warning.description = "Advisory still shown"
+    warning.is_expired.return_value = False
+    executor = WeatherToolExecutor(
+        weather_service,
+        MagicMock(),
+        default_lat=39.97,
+        default_lon=-74.8,
+        default_name="Lumberton, NJ",
+        displayed_alerts=[warning],
+    )
+
+    result = executor.execute("get_alerts", {"location": "Lumberton, NJ"})
+
+    assert "Coastal Flood Advisory" in result
+    assert "current alert status is unknown" in result
+
+
 class TestWeatherToolSchemas:
     """Tests for the WEATHER_TOOLS schema definitions."""
 

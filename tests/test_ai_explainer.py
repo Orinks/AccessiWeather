@@ -1067,6 +1067,58 @@ class TestExplanationResult:
 
 
 # =============================================================================
+def test_explanation_cache_changes_with_prompt_style_alerts_and_output_format():
+    weather = {"temperature": 72, "conditions": "Sunny", "alerts": []}
+    plain = AIExplainer(api_key="test-key", custom_system_prompt="Speak like a sailor")
+    different_prompt = AIExplainer(api_key="test-key", custom_system_prompt="Speak formally")
+    different_instructions = AIExplainer(
+        api_key="test-key",
+        custom_system_prompt="Speak like a sailor",
+        custom_instructions="Be brief",
+    )
+    base = plain._generate_cache_key(weather, "Home")
+
+    assert base != different_prompt._generate_cache_key(weather, "Home")
+    assert base != different_instructions._generate_cache_key(weather, "Home")
+    assert base != plain._generate_cache_key(weather, "Home", ExplanationStyle.BRIEF)
+    assert base != plain._generate_cache_key(weather, "Home", preserve_markdown=True)
+    assert base != plain._generate_cache_key(
+        {**weather, "alerts": [{"event": "Flood Warning"}]}, "Home"
+    )
+    assert "Speak like a sailor" not in base
+
+
+def test_custom_explanation_prompt_does_not_append_generic_style_instruction():
+    explainer = AIExplainer(api_key="test-key", custom_system_prompt="Speak like a sailor")
+    user_prompt = explainer._build_prompt(
+        {"conditions": "Sunny"}, "Home", ExplanationStyle.STANDARD
+    )
+
+    assert "Weather information to explain" in user_prompt
+    assert "someone planning their activities" not in user_prompt
+
+
+@pytest.mark.asyncio
+async def test_changing_custom_prompt_fetches_new_explanation_instead_of_cached_text():
+    entries = {}
+    cache = MagicMock()
+    cache.get.side_effect = entries.get
+    cache.set.side_effect = lambda key, value, ttl: entries.__setitem__(key, value)
+    first = AIExplainer(api_key="test-key", cache=cache, custom_system_prompt="Speak like a sailor")
+    second = AIExplainer(api_key="test-key", cache=cache, custom_system_prompt="Speak formally")
+    responses = [
+        {"content": "A fine sunny day ahead, matey.", "model": "model", "total_tokens": 12},
+        {"content": "Sunny conditions are expected today.", "model": "model", "total_tokens": 12},
+    ]
+    with patch.object(AIExplainer, "_call_provider", side_effect=responses) as provider:
+        first_result = await first.explain_weather({"conditions": "Sunny"}, "Home")
+        second_result = await second.explain_weather({"conditions": "Sunny"}, "Home")
+
+    assert first_result.text != second_result.text
+    assert not second_result.cached
+    assert provider.call_count == 2
+
+
 # Integration-style Tests (with mocked API)
 # =============================================================================
 
