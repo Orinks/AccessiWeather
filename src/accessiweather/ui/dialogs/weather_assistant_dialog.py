@@ -15,8 +15,8 @@ import wx
 
 from ...ai_provider import (
     DEFAULT_VENICE_MODEL,
+    ai_request_error,
     create_venice_client,
-    venice_error,
     venice_request_options,
 )
 from ...ai_settings import selected_provider
@@ -262,7 +262,10 @@ class WeatherAssistantDialog(wx.Dialog):
         try:
             provider = selected_provider(settings)
         except Exception as error:
-            wx.CallAfter(self._on_response_error, str(error))
+            logger.warning("Weather Assistant provider selection failed: %s", type(error).__name__)
+            wx.CallAfter(
+                self._on_response_error, "Unknown AI provider. Select one in Settings > AI."
+            )
             return
         is_venice = provider == "venice"
         api_key = (
@@ -352,24 +355,8 @@ class WeatherAssistantDialog(wx.Dialog):
                 wx.CallAfter(self._on_response_error, str(error))
 
             except Exception as e:
-                if is_venice:
-                    wx.CallAfter(self._on_response_error, str(venice_error(e)))
-                    return
-                error_msg = str(e)
-                logger.error(f"Weather Assistant generation error: {e}", exc_info=True)
-
-                if "api key" in error_msg.lower() or "401" in error_msg:
-                    friendly = "API key is invalid. Check Settings > AI Explanations."
-                elif "429" in error_msg or "rate limit" in error_msg.lower():
-                    friendly = (
-                        "Rate limited. Wait a moment and try again, or switch to a different model."
-                    )
-                elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
-                    friendly = "Request timed out. The AI service may be busy, try again."
-                else:
-                    friendly = f"Error: {error_msg}"
-
-                wx.CallAfter(self._on_response_error, friendly)
+                logger.warning("Weather Assistant request failed: %s", type(e).__name__)
+                wx.CallAfter(self._on_response_error, str(ai_request_error(e, provider)))
 
         thread = threading.Thread(target=do_generate, daemon=True)
         thread.start()

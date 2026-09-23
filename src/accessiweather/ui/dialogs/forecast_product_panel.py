@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING, cast
 
 import wx
 
+from ...ai_provider import ai_request_error
 from ...screen_reader import ScreenReaderAnnouncer
 from .async_guard import guard_destroyed
 from .forecast_product_ai import (
@@ -488,6 +489,7 @@ class ForecastProductPanel(wx.Panel):
 
     async def _run_explain(self, text: str) -> None:
         """Invoke ``AIExplainer.explain_text_product`` for this tab's product."""
+        provider = "openrouter"
         try:
             explainer = self._build_explainer()
             if explainer is None:
@@ -496,6 +498,7 @@ class ForecastProductPanel(wx.Panel):
                     "Selected AI provider API key not configured. Set it in Settings > AI.",
                 )
                 return
+            provider = getattr(explainer, "provider", provider)
             result = await explainer.explain_text_product(
                 text,
                 cast(ProductType, self.product_type),
@@ -514,7 +517,7 @@ class ForecastProductPanel(wx.Panel):
                 getattr(result, "model_attempts", ()),
             )
         except Exception as exc:  # noqa: BLE001
-            wx.CallAfter(self._on_explain_error, str(exc))
+            wx.CallAfter(self._on_explain_error, str(ai_request_error(exc, provider)))
 
     def _build_model_info(
         self,

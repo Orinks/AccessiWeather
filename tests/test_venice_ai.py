@@ -8,13 +8,20 @@ import pytest
 
 from accessiweather.ai_explainer import AIExplainer
 from accessiweather.ai_explainer_models import (
+    AIExplainerError,
     InsufficientCreditsError,
     InvalidAPIKeyError,
     NetworkError,
     ProviderPermissionError,
     RateLimitError,
 )
-from accessiweather.ai_provider import DEFAULT_VENICE_MODEL, validate_venice_api_key, venice_error
+from accessiweather.ai_provider import (
+    DEFAULT_VENICE_MODEL,
+    ai_request_error,
+    openrouter_error,
+    validate_venice_api_key,
+    venice_error,
+)
 
 
 @pytest.mark.asyncio
@@ -112,6 +119,43 @@ def test_venice_connection_error_is_redacted():
     assert "sensitive" not in str(error)
 
 
+@pytest.mark.parametrize(
+    "status,error_type,expected",
+    [
+        (401, InvalidAPIKeyError, "authenticate"),
+        (402, InsufficientCreditsError, "credits"),
+        (403, ProviderPermissionError, "permission"),
+        (404, AIExplainerError, "model"),
+        (429, RateLimitError, "rate limit"),
+        (503, NetworkError, "temporarily unavailable"),
+    ],
+)
+def test_openrouter_assistant_status_errors_are_specific_and_redacted(status, error_type, expected):
+    error = httpx.HTTPStatusError(
+        "secret-key upstream response",
+        request=httpx.Request("POST", "https://example.test"),
+        response=httpx.Response(status),
+    )
+    mapped = openrouter_error(error)
+    assert isinstance(mapped, error_type)
+    assert expected in str(mapped).lower()
+    assert "secret-key" not in str(mapped)
+
+
+@pytest.mark.parametrize(
+    "error,expected",
+    [
+        (TimeoutError("secret-key"), "timed out"),
+        (httpx.ConnectError("secret-key"), "internet connection"),
+        (RuntimeError("secret-key"), "could not complete"),
+    ],
+)
+def test_unexpected_openrouter_failures_never_expose_exception_text(error, expected):
+    message = str(ai_request_error(error))
+    assert expected in message.lower()
+    assert "secret-key" not in message
+
+
 def test_provider_cache_isolation():
     first = AIExplainer(provider="venice", api_key="test", model="same")
     second = AIExplainer(provider="openrouter", api_key="test", model="same")
@@ -172,6 +216,50 @@ def test_weather_assistant_rejects_unknown_provider():
         WeatherAssistantDialog._generate_response(dialog)
     assert "Unknown AI provider" in call.call_args.args[1]
     dialog._get_tool_executor.assert_not_called()
+
+
+def test_weather_assistant_redacts_failure_then_recovers():
+    from accessiweather.ui.dialogs.weather_assistant_dialog import WeatherAssistantDialog
+
+    settings = SimpleNamespace(
+        ai_provider="openrouter",
+        openrouter_api_key="secret-key",
+        ai_model_preference="openrouter/free",
+        custom_system_prompt=None,
+        custom_instructions=None,
+    )
+    dialog = MagicMock()
+    dialog.app.config_manager.get_settings.return_value = settings
+    dialog._conversation = [{"role": "user", "content": "Hello"}]
+    dialog._get_tool_executor.return_value = None
+    client = MagicMock()
+    client.chat.completions.create.side_effect = [
+        httpx.HTTPStatusError(
+            "secret-key response body",
+            request=httpx.Request("POST", "https://example.test"),
+            response=httpx.Response(402),
+        ),
+        SimpleNamespace(
+            model="openrouter/free",
+            choices=[SimpleNamespace(message=SimpleNamespace(content="Ready.", tool_calls=None))],
+        ),
+    ]
+    module = "accessiweather.ui.dialogs.weather_assistant_dialog"
+    with (
+        patch(f"{module}._build_weather_context", return_value="Sunny"),
+        patch("openai.OpenAI", return_value=client),
+        patch("accessiweather.ui.dialogs.weather_assistant_request.RequestDeadline"),
+        patch(f"{module}.threading.Thread") as thread,
+        patch(f"{module}.wx.CallAfter", side_effect=lambda callback, *args: callback(*args)),
+    ):
+        thread.side_effect = lambda target, **kwargs: SimpleNamespace(start=target)
+        WeatherAssistantDialog._generate_response(dialog)
+        error = dialog._on_response_error.call_args.args[0]
+        assert "credits" in error
+        assert "secret-key" not in error
+        WeatherAssistantDialog._generate_response(dialog)
+    dialog._on_response_received.assert_called_once()
+    assert dialog._on_response_received.call_args.args[0] == "Ready."
 
 
 def test_regeneration_error_focuses_and_announces_error():

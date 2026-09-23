@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 import wx
 
+from ...ai_provider import ai_request_error
 from ...screen_reader import ScreenReaderAnnouncer
 from .async_guard import guard_destroyed
 
@@ -233,8 +234,8 @@ class DiscussionDialog(wx.Dialog):
             discussion = weather_data.discussion if weather_data else None
             wx.CallAfter(self._on_fetch_complete, location.name, discussion)
         except Exception as e:
-            logger.error(f"Discussion fetch failed: {e}")
-            wx.CallAfter(self._on_fetch_error, str(e))
+            logger.error("Discussion fetch failed: %s", type(e).__name__)
+            wx.CallAfter(self._on_fetch_error, "Could not fetch the discussion. Try again.")
 
     @guard_destroyed
     def _on_fetch_complete(self, location_name: str, discussion: str | None) -> None:
@@ -262,6 +263,9 @@ class DiscussionDialog(wx.Dialog):
         self.refresh_button.Enable()
         self._set_status(f"Error: {error}")
         self.discussion_display.SetValue(f"Failed to load discussion: {error}")
+        announcer = getattr(self, "_announcer", None)
+        if announcer is not None:
+            announcer.announce(f"Discussion load failed. {error} Select Refresh to try again.")
 
     def _on_discussion_loaded(self, discussion: str, location_name: str | None = None) -> None:
         """Handle discussion data loaded."""
@@ -339,11 +343,13 @@ class DiscussionDialog(wx.Dialog):
 
     async def _do_explain(self):
         """Perform the AI explanation."""
+        provider = "openrouter"
         try:
             from ...ai_explainer import AIExplainer, ExplanationStyle
             from ...ai_settings import explainer_options
 
             settings = self.app.config_manager.get_settings()
+            provider = getattr(settings, "ai_provider", provider)
             explainer = AIExplainer(**explainer_options(settings))
 
             location = self.app.config_manager.get_current_location()
@@ -371,8 +377,8 @@ class DiscussionDialog(wx.Dialog):
             )
 
         except Exception as e:
-            logger.error(f"AI explanation failed: {e}")
-            wx.CallAfter(self._on_explain_error, str(e))
+            logger.error("AI explanation failed: %s", type(e).__name__)
+            wx.CallAfter(self._on_explain_error, str(ai_request_error(e, provider)))
 
     def _build_model_info(
         self,
@@ -492,9 +498,9 @@ def show_discussion_dialog(parent, app: AccessiWeatherApp) -> None:
         dlg.Destroy()
 
     except Exception as e:
-        logger.error(f"Failed to show discussion dialog: {e}")
+        logger.error("Failed to show discussion dialog: %s", type(e).__name__)
         wx.MessageBox(
-            f"Failed to open forecast discussion: {e}",
+            "Failed to open forecast discussion. Please try again.",
             "Error",
             wx.OK | wx.ICON_ERROR,
         )

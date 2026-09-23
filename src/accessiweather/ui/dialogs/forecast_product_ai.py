@@ -42,6 +42,6 @@ def build_explainer(
                 settings = cfg_manager.get_settings()
 
         return AIExplainer(**explainer_options(settings))
-    except Exception:  # noqa: BLE001
-        logger.warning("Failed to build AIExplainer", exc_info=True)
+    except Exception as error:  # noqa: BLE001
+        logger.warning("Failed to build AIExplainer: %s", type(error).__name__)
         return None

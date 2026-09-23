@@ -96,6 +96,19 @@ class TestSecureStorageImport:
 class TestExplainButtonState:
     """Tests for explain button enable/disable logic."""
 
+    def test_fetch_error_announces_recovery(self):
+        from accessiweather.ui.dialogs import discussion_dialog
+
+        dialog = MagicMock()
+        dialog._announcer = MagicMock()
+        discussion_dialog.DiscussionDialog._on_fetch_error(
+            dialog, "Could not fetch the discussion."
+        )
+        dialog.refresh_button.Enable.assert_called_once()
+        dialog._announcer.announce.assert_called_once_with(
+            "Discussion load failed. Could not fetch the discussion. Select Refresh to try again."
+        )
+
     def test_button_disabled_without_api_key(self):
         """Test that explain button is disabled without API key."""
         with patch("accessiweather.config.secure_storage.SecureStorage.get_password") as mock_get:

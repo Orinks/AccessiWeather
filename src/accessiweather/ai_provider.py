@@ -106,6 +106,57 @@ def venice_error(error: Exception) -> AIExplainerError:
     )
 
 
+def openrouter_error(error: Exception) -> AIExplainerError:
+    """Map an OpenRouter completion failure without showing upstream text."""
+    if isinstance(error, AIExplainerError):
+        return error
+    status = getattr(error, "status_code", None)
+    if status is None:
+        status = getattr(getattr(error, "response", None), "status_code", None)
+    if status == 401:
+        return InvalidAPIKeyError(
+            "OpenRouter could not authenticate this request. Validate your key in Settings > AI."
+        )
+    if status == 402:
+        return InsufficientCreditsError(
+            "Your OpenRouter account has insufficient credits for this request. "
+            "Add credits or choose a free model in Settings > AI."
+        )
+    if status == 403:
+        return ProviderPermissionError(
+            "OpenRouter denied this request. Check your account and model permissions. "
+            "This does not establish that your key is invalid."
+        )
+    if status == 404:
+        return InvalidModelError(
+            "The selected OpenRouter model is unavailable. Choose another model in Settings > AI."
+        )
+    if status == 429:
+        return RateLimitError("OpenRouter rate limit reached. Wait a moment and try again.")
+    if (
+        isinstance(error, (httpx.TimeoutException, TimeoutError))
+        or "Timeout" in type(error).__name__
+    ):
+        return RequestTimeoutError("OpenRouter request timed out. Please try again.")
+    if (
+        isinstance(error, (httpx.RequestError, ConnectionError))
+        or "Connection" in type(error).__name__
+    ):
+        return NetworkError(
+            "Could not reach OpenRouter. Check your internet connection and try again."
+        )
+    if isinstance(status, int) and status >= 500:
+        return NetworkError("OpenRouter is temporarily unavailable. Please try again later.")
+    return AIExplainerError(
+        "OpenRouter could not complete the request. Check your selected model and try again."
+    )
+
+
+def ai_request_error(error: Exception, provider: str = "openrouter") -> AIExplainerError:
+    """Return a safe message for any AI request failure, including unexpected errors."""
+    return venice_error(error) if provider == "venice" else openrouter_error(error)
+
+
 async def validate_venice_api_key(api_key: str) -> tuple[bool, str]:
     """Validate authentication without spending credits on a generation."""
     if not api_key or not api_key.strip():
