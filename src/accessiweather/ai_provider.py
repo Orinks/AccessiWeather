@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import threading
+import time
 
 import httpx
 
@@ -20,20 +21,23 @@ from .ai_explainer_models import (
 VENICE_BASE_URL = "https://api.venice.ai/api/v1"
 DEFAULT_VENICE_MODEL = "venice-uncensored-1-2"
 REQUEST_DEADLINE_SECONDS = 30.0
-# A queued model streams only keep-alive comments; one that has not produced a
-# token by now is dropped so the retry can reach a model that is free.
+# Streaming limits. A queued model sends only keep-alive comments, so one with no
+# token after FIRST_TOKEN_SECONDS is dropped for the retry; a model that is writing
+# is kept until it goes STALL_SECONDS without a token or hits the overall ceiling.
 FIRST_TOKEN_SECONDS = 10.0
+STALL_SECONDS = 15.0
+STREAM_DEADLINE_SECONDS = 90.0
 
 
 class RequestDeadline:
     """
-    Abort a completion that outlives a wall-clock limit by closing its client.
+    Abort a completion that outlives its limits by closing its client.
 
     Client timeouts only bound the gap between bytes, and providers send keep-alive
     bytes while a busy model queues, so one request could otherwise hang for minutes.
     A closed client is replaced on the next request (see ``is_closed()``).
-    With ``first_token_seconds``, the request is also dropped if ``started()`` is
-    not called within that time.
+    Streaming callers pass ``first_token_seconds`` and ``stall_seconds`` and call
+    ``progress()`` for each token; the request is dropped when tokens stop coming.
     """
 
     def __init__(
@@ -41,44 +45,49 @@ class RequestDeadline:
         client,
         seconds: float = REQUEST_DEADLINE_SECONDS,
         first_token_seconds: float | None = None,
+        stall_seconds: float | None = None,
     ):
         """Watch ``client`` for at most ``seconds`` once the block is entered."""
         self.client = client
         self.seconds = seconds
         self.first_token_seconds = first_token_seconds
+        self.stall_seconds = stall_seconds
         self.expired_message: str | None = None
-        self._first_token_timer: threading.Timer | None = None
+        self._last_progress: float | None = None
 
-    def _expire(self, message: str) -> None:
-        self.expired_message = message
-        self.client.close()
+    def _limit_exceeded(self, now: float) -> str | None:
+        if now - self._started_at >= self.seconds:
+            return f"The AI service did not answer within {self.seconds:.0f} seconds."
+        if self._last_progress is None:
+            if self.first_token_seconds and now - self._started_at >= self.first_token_seconds:
+                return (
+                    "The AI model did not start answering within "
+                    f"{self.first_token_seconds:.0f} seconds."
+                )
+        elif self.stall_seconds and now - self._last_progress >= self.stall_seconds:
+            return f"The AI model stopped answering for {self.stall_seconds:.0f} seconds."
+        return None
 
-    def _start_timer(self, seconds: float, message: str) -> threading.Timer:
-        timer = threading.Timer(seconds, self._expire, (message,))
-        timer.daemon = True
-        timer.start()
-        return timer
+    def _watch(self) -> None:
+        while not self._done.wait(0.1):
+            message = self._limit_exceeded(time.monotonic())
+            if message:
+                self.expired_message = message
+                self.client.close()
+                return
 
     def __enter__(self):
-        self._timer = self._start_timer(
-            self.seconds, f"The AI service did not answer within {self.seconds:.0f} seconds."
-        )
-        if self.first_token_seconds is not None:
-            self._first_token_timer = self._start_timer(
-                self.first_token_seconds,
-                "The AI model did not start answering within "
-                f"{self.first_token_seconds:.0f} seconds.",
-            )
+        self._started_at = time.monotonic()
+        self._done = threading.Event()
+        threading.Thread(target=self._watch, daemon=True).start()
         return self
 
-    def started(self) -> None:
-        """Mark the model as answering, which stops the first-token limit."""
-        if self._first_token_timer is not None:
-            self._first_token_timer.cancel()
+    def progress(self) -> None:
+        """Record that the model produced a token."""
+        self._last_progress = time.monotonic()
 
     def __exit__(self, exc_type, exc, tb):
-        self._timer.cancel()
-        self.started()
+        self._done.set()
         if self.expired_message and exc is not None:
             raise RequestTimeoutError(self.expired_message) from None
         return False
@@ -88,7 +97,8 @@ def stream_chat_completion(
     client,
     *,
     first_token_seconds: float = FIRST_TOKEN_SECONDS,
-    seconds: float = REQUEST_DEADLINE_SECONDS,
+    stall_seconds: float = STALL_SECONDS,
+    seconds: float = STREAM_DEADLINE_SECONDS,
     **request,
 ) -> dict:
     """Stream one completion and return its text, model, finish reason and token counts."""
@@ -96,7 +106,7 @@ def stream_chat_completion(
     model = None
     finish_reason = None
     usage = None
-    with RequestDeadline(client, seconds, first_token_seconds) as deadline:
+    with RequestDeadline(client, seconds, first_token_seconds, stall_seconds) as deadline:
         stream = client.chat.completions.create(
             stream=True, stream_options={"include_usage": True}, **request
         )
@@ -116,7 +126,7 @@ def stream_chat_completion(
                 or getattr(delta, "reasoning", None)
                 or getattr(delta, "reasoning_content", None)
             ):
-                deadline.started()
+                deadline.progress()
             if delta.content:
                 parts.append(delta.content)
     return {

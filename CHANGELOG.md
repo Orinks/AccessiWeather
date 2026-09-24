@@ -17,8 +17,8 @@ All notable changes to this project will be documented in this file.
 - Settings reports a secure-storage failure instead of claiming an API key was saved, and keeps the prior key in memory if the new write fails.
 - If a key changes during validation, Settings asks to validate the new value instead of reporting the earlier key's result.
 - Closing Settings with Escape or Cancel now asks whether to save your changes, so a provider switch isn't silently thrown away.
-- AI explanations and the weather assistant give up on a stalled model after 30 seconds instead of hanging for minutes, and OpenRouter's free router no longer chains through extra backup models.
-- AI explanations move on after 10 seconds when a busy model hasn't started answering, instead of waiting the full 30.
+- AI explanations usually arrive in a few seconds: models skip hidden reasoning, and a busy or stalled model is dropped instead of hanging for minutes.
+- The weather assistant gives up on a stalled model after 30 seconds, and OpenRouter's free router no longer chains through extra backup models.
 - OpenRouter explanations stop on authentication, permission and credit errors, avoid logging response text, and limit free-model fallback attempts so a failing model does not leave the app waiting through a long chain of retries.
 
 ## [0.10.1] - 2026-09-20

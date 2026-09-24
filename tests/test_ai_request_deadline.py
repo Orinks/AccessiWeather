@@ -81,7 +81,7 @@ def _chunk(content=None, usage=None, finish=None):
 
 
 class _StreamHandler(BaseHTTPRequestHandler):
-    """Serve SSE: ``queued`` sends only keep-alive comments; ``slow`` answers at a crawl."""
+    """Serve SSE: ``queued`` only pings, ``stalls`` pings after one word, ``slow`` crawls."""
 
     mode = "queued"
 
@@ -91,7 +91,9 @@ class _StreamHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/event-stream")
         self.end_headers()
         try:
-            if self.mode == "queued":
+            if self.mode in ("queued", "stalls"):
+                if self.mode == "stalls":
+                    self.wfile.write(_chunk("Clear "))
                 for _ in range(200):
                     self.wfile.write(b": OPENROUTER PROCESSING\n\n")
                     self.wfile.flush()
@@ -136,7 +138,7 @@ def test_stream_drops_a_model_that_never_starts_answering():
     try:
         with pytest.raises(RequestTimeoutError, match="start answering"):
             stream_chat_completion(
-                client, model="m", messages=[], first_token_seconds=0.5, seconds=10
+                client, model="m", messages=[], first_token_seconds=0.5, stall_seconds=5, seconds=10
             )
     finally:
         server.shutdown()
@@ -144,11 +146,31 @@ def test_stream_drops_a_model_that_never_starts_answering():
     assert client.is_closed()
 
 
-def test_stream_lets_an_answering_model_run_past_the_first_token_limit():
+def test_stream_drops_a_model_that_stops_answering_midway():
+    server = _stream_server("stalls")
+    client = _client(server)
+    started = time.monotonic()
+    try:
+        with pytest.raises(RequestTimeoutError, match="stopped answering"):
+            stream_chat_completion(
+                client, model="m", messages=[], first_token_seconds=5, stall_seconds=0.5, seconds=10
+            )
+    finally:
+        server.shutdown()
+    assert time.monotonic() - started < 3
+
+
+def test_stream_keeps_a_model_that_writes_longer_than_the_stall_limit():
+    # Each word arrives inside the stall limit, but the whole answer takes longer than it.
     server = _stream_server("slow")
     try:
         result = stream_chat_completion(
-            _client(server), model="m", messages=[], first_token_seconds=0.5, seconds=10
+            _client(server),
+            model="m",
+            messages=[],
+            first_token_seconds=0.5,
+            stall_seconds=0.5,
+            seconds=10,
         )
     finally:
         server.shutdown()

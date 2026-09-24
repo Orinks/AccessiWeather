@@ -1209,3 +1209,14 @@ class TestIntegrationScenarios:
 
             assert result.text is not None
             assert "mid-week" in result.text or "high pressure" in result.text
+
+
+def test_openrouter_requests_skip_model_reasoning():
+    """Free reasoning models can spend the whole token budget thinking and return no text."""
+    explainer = AIExplainer(api_key="test-key", model="openrouter/free")
+    client = MagicMock()
+    client.chat.completions.create.return_value = []
+    with patch.object(explainer, "_get_client", return_value=client):
+        explainer._call_openrouter("system", "user")
+    request = client.chat.completions.create.call_args.kwargs
+    assert request["extra_body"] == {"reasoning": {"effort": "none"}}

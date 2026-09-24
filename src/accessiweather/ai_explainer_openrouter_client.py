@@ -272,6 +272,9 @@ class AIExplainerOpenRouterMixin:
                     "HTTP-Referer": "https://accessiweather.orinks.net",
                     "X-Title": "AccessiWeather",
                 },
+                # Free reasoning models can think for a minute or use the whole token
+                # budget and return no text; a weather summary needs no reasoning.
+                extra_body={"reasoning": {"effort": "none"}},
             )
 
             # Response bodies may contain private user data; never log them.
