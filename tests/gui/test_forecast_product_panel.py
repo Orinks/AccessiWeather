@@ -541,6 +541,16 @@ class TestForecastProductPanelAIStatus:
         assert "Selection: Selected free model was rate limited" in info
         assert "Tried: selected/free-model:free, backup/free-model:free" in info
 
+    def test_complete_moves_focus_when_explain_button_had_focus(self, captured_sizer):
+        """A hidden Explain button gives focus to the generated summary."""
+        panel = _build_panel("AFD", loader_result=_make_product("AFD"))
+        panel.explain_button.HasFocus = MagicMock(return_value=True)
+        panel.ai_summary_display.SetFocus = MagicMock()
+
+        panel._on_explain_complete("Plain explanation", "openrouter/auto")
+
+        panel.ai_summary_display.SetFocus.assert_called_once()
+
     def test_complete_announces_generation_finished(self, captured_sizer):
         """Completion is spoken through the Prism wrapper."""
         panel = _build_panel("AFD", loader_result=_make_product("AFD"))

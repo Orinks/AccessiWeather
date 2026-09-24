@@ -271,6 +271,7 @@ def test_grounding_error_is_announced_and_returns_focus_to_input():
     dialog.input_ctrl = MagicMock()
     dialog.status_label = MagicMock()
     dialog._conversation = [{"role": "user", "content": "Any alerts?"}]
+    dialog.input_ctrl.GetValue.return_value = ""
     dialog._append_to_display = MagicMock()
     dialog._announcer = MagicMock()
 
@@ -278,7 +279,11 @@ def test_grounding_error_is_announced_and_returns_focus_to_input():
 
     expected = "Sorry, I couldn't respond: The model contradicted the alert lookup."
     dialog._append_to_display.assert_called_once_with("Weather Assistant", expected)
-    dialog._announcer.announce.assert_called_once_with(f"Weather Assistant: {expected}")
+    dialog._announcer.announce.assert_called_once_with(
+        f"Weather Assistant: {expected} Your question is restored in the input for editing."
+    )
+    dialog.input_ctrl.SetValue.assert_called_once_with("Any alerts?")
+    dialog.input_ctrl.SetInsertionPointEnd.assert_called_once()
     dialog.input_ctrl.SetFocus.assert_called_once()
     assert dialog._conversation == []
 

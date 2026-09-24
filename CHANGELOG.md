@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - AI error messages now distinguish invalid keys, depleted credits, denied access, unavailable models, rate limits, and connection or timeout failures across the Weather Assistant and explanation views, without displaying raw provider errors.
+- After an AI summary finishes, keyboard focus moves to the result when Explain was focused; failed Weather Assistant questions return to the input for editing, and key errors point to the correct AI settings tab.
 - AI explanations now use your updated custom prompt and instructions immediately, and the Weather Assistant checks alerts for the selected place even when a model supplies an ambiguous location.
 - OpenRouter key validation now checks the key without generating a response, so unavailable models and account limits no longer make a valid key appear invalid. It reports exhausted key spending allowance, connection and service problems separately, without freezing Settings.
 - Venice key validation distinguishes rejected keys from permission problems and reports when all listed balances are depleted.

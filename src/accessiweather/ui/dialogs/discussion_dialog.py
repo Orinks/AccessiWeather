@@ -424,6 +424,7 @@ class DiscussionDialog(wx.Dialog):
         """Handle explanation completion."""
         self._is_explaining = False
         DiscussionDialog._show_ai_summary_section(self)
+        explain_had_focus = getattr(self.explain_button, "HasFocus", lambda: False)()
         DiscussionDialog._set_post_explain_buttons(self, has_attempted_explanation=True)
         self.explanation_display.SetValue(explanation)
         self.model_info.SetValue(
@@ -439,6 +440,8 @@ class DiscussionDialog(wx.Dialog):
             )
         )
         DiscussionDialog._show_model_info(self)
+        if explain_had_focus:
+            self.explanation_display.SetFocus()
         completion_message = f"Explanation generated using {model_used}."
         self._set_status(completion_message)
         DiscussionDialog._announce_explain_status(self, completion_message)

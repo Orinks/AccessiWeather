@@ -71,7 +71,7 @@ def venice_error(error: Exception) -> AIExplainerError:
     if status == 401:
         return InvalidAPIKeyError(
             "Venice rejected this API key. It may be invalid or expired. "
-            "Check your Venice key in Settings > AI Explanations."
+            "Check your Venice key in Settings > AI."
         )
     if status == 403:
         return ProviderPermissionError(
@@ -86,9 +86,7 @@ def venice_error(error: Exception) -> AIExplainerError:
     if status == 429:
         return RateLimitError("Venice rate limit reached. Wait a moment and try again.")
     if status == 404:
-        return InvalidModelError(
-            "The selected Venice model is unavailable. Check Settings > AI Explanations."
-        )
+        return InvalidModelError("The selected Venice model is unavailable. Check Settings > AI.")
     if (
         isinstance(error, (httpx.TimeoutException, TimeoutError))
         or "Timeout" in type(error).__name__
@@ -162,7 +160,7 @@ async def validate_venice_api_key(api_key: str) -> tuple[bool, str]:
     if not api_key or not api_key.strip():
         return (
             False,
-            "A Venice API key is required. Add your own key in Settings > AI Explanations.",
+            "A Venice API key is required. Add your own key in Settings > AI.",
         )
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
@@ -202,9 +200,7 @@ async def validate_venice_api_key(api_key: str) -> tuple[bool, str]:
 def create_venice_client(api_key: str | None):
     """Create an authenticated client; never fall back to another provider."""
     if not api_key or not api_key.strip():
-        raise InvalidAPIKeyError(
-            "A Venice API key is required. Add your own key in Settings > AI Explanations."
-        )
+        raise InvalidAPIKeyError("A Venice API key is required. Add your own key in Settings > AI.")
     from openai import OpenAI
 
     return OpenAI(base_url=VENICE_BASE_URL, api_key=api_key.strip(), timeout=30.0, max_retries=0)

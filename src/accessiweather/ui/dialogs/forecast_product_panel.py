@@ -563,6 +563,7 @@ class ForecastProductPanel(wx.Panel):
         """Fill in the AI summary TextCtrl + Model Information on success."""
         self._is_explaining = False
         self._show_ai_summary_section()
+        explain_had_focus = getattr(self.explain_button, "HasFocus", lambda: False)()
         self._set_post_explain_buttons(has_attempted=True)
         self.ai_summary_display.SetValue(summary)
         self.model_info.SetValue(
@@ -577,6 +578,8 @@ class ForecastProductPanel(wx.Panel):
             )
         )
         self._show_model_info()
+        if explain_had_focus:
+            self.ai_summary_display.SetFocus()
         completion_message = "Plain Language Summary generated."
         if model_used:
             completion_message = f"Plain Language Summary generated using {model_used}."

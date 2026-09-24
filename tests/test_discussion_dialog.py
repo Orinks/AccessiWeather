@@ -529,6 +529,20 @@ class TestDiscussionDialogVisibilityStates:
         assert dialog.regenerate_button.IsShown() is True
         assert dialog.explain_button.IsShown() is False
 
+    def test_on_explain_complete_moves_focus_when_explain_button_had_focus(self):
+        """A hidden focused button must not strand keyboard or screen-reader focus."""
+        from accessiweather.ui.dialogs import discussion_dialog
+
+        dialog = _build_dialog_state()
+        dialog.explain_button.HasFocus = MagicMock(return_value=True)
+        dialog.explanation_display.SetFocus = MagicMock()
+
+        discussion_dialog.DiscussionDialog._on_explain_complete(
+            dialog, "Plain explanation", "openrouter/auto"
+        )
+
+        dialog.explanation_display.SetFocus.assert_called_once()
+
     def test_on_explain_complete_includes_model_selection_details(self):
         """Model info explains when a fallback answered instead of the requested model."""
         from accessiweather.ui.dialogs import discussion_dialog

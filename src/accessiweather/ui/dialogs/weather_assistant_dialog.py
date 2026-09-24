@@ -299,7 +299,7 @@ class WeatherAssistantDialog(wx.Dialog):
         if not api_key:
             wx.CallAfter(
                 self._on_response_error,
-                f"No {'Venice' if is_venice else 'OpenRouter'} API key configured. Set one in Settings > AI Explanations.",
+                f"No {'Venice' if is_venice else 'OpenRouter'} API key configured. Set one in Settings > AI.",
             )
             return
 
@@ -402,10 +402,18 @@ class WeatherAssistantDialog(wx.Dialog):
         """Handle AI response error."""
         error_message = f"Sorry, I couldn't respond: {error}"
         self._append_to_display("Weather Assistant", error_message)
-        self._announcer.announce(f"Weather Assistant: {error_message}")
-        # Remove the last user message from conversation since we failed
+        # Restore the failed question when the input is still empty, so it can be edited.
+        question = ""
         if self._conversation and self._conversation[-1]["role"] == "user":
-            self._conversation.pop()
+            question = self._conversation.pop()["content"]
+        restored = bool(question and not self.input_ctrl.GetValue().strip())
+        if restored:
+            self.input_ctrl.SetValue(question)
+            self.input_ctrl.SetInsertionPointEnd()
+        announcement = f"Weather Assistant: {error_message}"
+        if restored:
+            announcement += " Your question is restored in the input for editing."
+        self._announcer.announce(announcement)
         self._set_generating(False)
 
     def _on_clear(self, event: wx.Event) -> None:
