@@ -66,6 +66,7 @@ def test_windows_nuitka_command_uses_standalone_dir_and_pyproject_version() -> N
     assert "--include-package-data=prism:_native/*" in command
     assert "--include-package-data=sound_lib" in command
     assert "--include-package-data=playsound3" not in command
+    assert "--include-package=openai.resources.chat" in command
     assert "--include-package=accessiweather" not in command
     assert "--deployment" not in command
     assert "--enable-plugin=anti-bloat" not in command

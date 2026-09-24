@@ -438,7 +438,7 @@ class AIExplainerOpenRouterMixin:
                 ) from None
 
             # Generic error - log full details and show user-friendly message
-            logger.error("OpenRouter generation request failed")
+            logger.error("OpenRouter generation request failed (%s)", type(e).__name__)
             raise AIExplainerError(
                 f"Unable to generate explanation.\n\n"
                 "If this persists, try:\n"
