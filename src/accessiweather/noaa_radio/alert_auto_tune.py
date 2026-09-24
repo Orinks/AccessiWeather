@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Protocol
 
 import wx
 
+from accessiweather.noaa_radio.clients import get_weatherindex_client, load_station_database
 from accessiweather.noaa_radio.preferences import RadioPreferences
 from accessiweather.noaa_radio.session import RadioSession, get_shared_radio_session
 from accessiweather.noaa_radio.station_db import StationDatabase
@@ -191,8 +192,14 @@ class WeatherIndexAlertStationResolver:
         weatherindex_client: WeatherIndexClient | None = None,
     ) -> None:
         """Configure station and WeatherIndex dependencies."""
-        self._station_database = station_database or StationDatabase()
-        self._weatherindex_client = weatherindex_client or WeatherIndexClient()
+        self._station_database = station_database
+        self._weatherindex_client = weatherindex_client or get_weatherindex_client()
+
+    def _get_station_database(self) -> StationDatabase:
+        """Return the injected database, or load the WeatherIndex directory on first use."""
+        if self._station_database is None:
+            self._station_database = load_station_database(self._weatherindex_client)
+        return self._station_database
 
     def resolve_station(
         self,
@@ -223,11 +230,12 @@ class WeatherIndexAlertStationResolver:
         return None
 
     def _candidate_stations(self, location: Location | None, states: set[str]) -> list[Station]:
-        stations = self._station_database.get_all_stations()
+        station_database = self._get_station_database()
+        stations = station_database.get_all_stations()
         if location is not None:
             return [
                 result.station
-                for result in self._station_database.find_nearest(
+                for result in station_database.find_nearest(
                     location.latitude, location.longitude, limit=None
                 )
             ]
@@ -293,7 +301,7 @@ class AlertRadioAutoTuner:
         monotonic: Callable[[], float] = time.monotonic,
     ) -> None:
         """Initialize the auto tuner with injectable dependencies for tests."""
-        weatherindex_client = WeatherIndexClient()
+        weatherindex_client = get_weatherindex_client()
         self._settings_provider = settings_provider
         self._location_provider = location_provider
         self._status_callback = status_callback

@@ -65,3 +65,23 @@ def test_includes_suppressed_station_when_show_unavailable_enabled():
     assert entries[0].available is False
     assert entries[0].unavailable_reason == "temporarily unavailable"
     assert entries[0].label == "WXK27 - Austin, TX - 162.400 MHz - Temporarily unavailable"
+
+
+def test_out_of_service_station_hidden_by_default_and_labeled_when_shown():
+    weatherindex = MagicMock()
+    weatherindex.get_stream_urls.return_value = ["https://example.com/live"]
+    cache = MagicMock()
+    cache.is_suppressed.return_value = False
+
+    service = StationAvailabilityService(
+        weatherindex_client=weatherindex,
+        availability_cache=cache,
+    )
+    stations = [Station("WXK27", 162.4, "Austin", 0.0, 0.0, "TX", status="OUT OF SERVICE")]
+
+    assert service.build_entries(stations) == []
+
+    entries = service.build_entries(stations, show_unavailable=True)
+    assert len(entries) == 1
+    assert entries[0].available is False
+    assert entries[0].label.endswith("Out of service")
