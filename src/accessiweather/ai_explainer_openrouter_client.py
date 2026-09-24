@@ -21,7 +21,7 @@ from .ai_explainer_openrouter import (
     DEFAULT_FREE_MODEL,
     OPENROUTER_BASE_URL,
 )
-from .ai_provider import RequestDeadline
+from .ai_provider import stream_chat_completion
 
 logger = logging.getLogger(__name__)
 
@@ -260,61 +260,33 @@ class AIExplainerOpenRouterMixin:
                 f"OpenRouter request: model={model}, system_prompt_len={len(system_prompt)}, user_prompt_len={len(user_prompt)}"
             )
 
-            with RequestDeadline(client):
-                response = client.chat.completions.create(
-                    model=model,
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                    max_tokens=4000,  # Increased for models with thinking/reasoning features
-                    extra_headers={
-                        "HTTP-Referer": "https://accessiweather.orinks.net",
-                        "X-Title": "AccessiWeather",
-                    },
-                )
+            result = stream_chat_completion(
+                client,
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                max_tokens=4000,  # Increased for models with thinking/reasoning features
+                extra_headers={
+                    "HTTP-Referer": "https://accessiweather.orinks.net",
+                    "X-Title": "AccessiWeather",
+                },
+            )
 
             # Response bodies may contain private user data; never log them.
-
-            # Extract content - handle potential None values
-            if not response.choices:
-                logger.warning(
-                    f"OpenRouter returned empty choices. Full response: model={response.model}, id={getattr(response, 'id', 'N/A')}, usage={response.usage}"
-                )
-                return {
-                    "content": "",
-                    "model": response.model or "unknown",
-                    "total_tokens": 0,
-                    "prompt_tokens": 0,
-                    "completion_tokens": 0,
-                }
-
-            content = response.choices[0].message.content
-            finish_reason = getattr(response.choices[0], "finish_reason", "unknown")
-
-            if content is None:
-                logger.warning(
-                    f"OpenRouter returned None content. finish_reason={finish_reason}, model={response.model}"
-                )
-                content = ""
-            elif len(content.strip()) < 20:
+            content = result["content"]
+            finish_reason = result.pop("finish_reason")
+            result["model"] = result["model"] or "unknown"
+            if len(content.strip()) < 20:
                 logger.warning(
                     f"OpenRouter returned short content ({len(content)} chars). finish_reason={finish_reason}"
                 )
 
             logger.info(
-                f"OpenRouter response: model={response.model}, content_len={len(content)}, finish_reason={finish_reason}"
+                f"OpenRouter response: model={result['model']}, content_len={len(content)}, finish_reason={finish_reason}"
             )
-
-            # Handle potential None usage
-            usage = response.usage
-            return {
-                "content": content,
-                "model": response.model or "unknown",
-                "total_tokens": usage.total_tokens if usage else 0,
-                "prompt_tokens": usage.prompt_tokens if usage else 0,
-                "completion_tokens": usage.completion_tokens if usage else 0,
-            }
+            return result
 
         except Exception as e:
             error_details = self._extract_api_error_details(e)

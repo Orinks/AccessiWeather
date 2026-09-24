@@ -36,8 +36,8 @@ from .ai_explainer_text_products import AIExplainerTextProductMixin
 from .ai_explainer_validation import AIExplainerValidationMixin
 from .ai_provider import (
     DEFAULT_VENICE_MODEL,
-    RequestDeadline,
     create_venice_client,
+    stream_chat_completion,
     venice_error,
     venice_request_options,
 )
@@ -133,24 +133,19 @@ class AIExplainer(
         try:
             if self._client is None or self._client.is_closed():
                 self._client = create_venice_client(self.api_key)
-            with RequestDeadline(self._client):
-                response = self._client.chat.completions.create(
-                    model=model_override or self.get_effective_model(),
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                    max_tokens=4000,
-                    **venice_request_options(),
-                )
-            usage = response.usage
-            return {
-                "content": (response.choices[0].message.content or "") if response.choices else "",
-                "model": response.model or self.get_effective_model(),
-                "total_tokens": usage.total_tokens if usage else 0,
-                "prompt_tokens": usage.prompt_tokens if usage else 0,
-                "completion_tokens": usage.completion_tokens if usage else 0,
-            }
+            result = stream_chat_completion(
+                self._client,
+                model=model_override or self.get_effective_model(),
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                max_tokens=4000,
+                **venice_request_options(),
+            )
+            del result["finish_reason"]
+            result["model"] = result["model"] or self.get_effective_model()
+            return result
         except Exception as error:
             raise venice_error(error) from None
 

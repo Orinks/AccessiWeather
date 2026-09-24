@@ -34,13 +34,18 @@ async def test_venice_preserves_prompts_and_never_calls_openrouter(text_product)
         custom_instructions="Use Celsius only",
     )
     client = MagicMock()
-    client.chat.completions.create.return_value = SimpleNamespace(
-        choices=[
-            SimpleNamespace(message=SimpleNamespace(content="A useful weather explanation here."))
-        ],
-        model=DEFAULT_VENICE_MODEL,
-        usage=None,
-    )
+    client.chat.completions.create.return_value = [
+        SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    delta=SimpleNamespace(content="A useful weather explanation here."),
+                    finish_reason="stop",
+                )
+            ],
+            model=DEFAULT_VENICE_MODEL,
+            usage=None,
+        )
+    ]
     with (
         patch("accessiweather.ai_explainer.create_venice_client", return_value=client),
         patch.object(explainer, "_call_openrouter") as openrouter,

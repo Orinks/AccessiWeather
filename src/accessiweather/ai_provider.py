@@ -20,6 +20,9 @@ from .ai_explainer_models import (
 VENICE_BASE_URL = "https://api.venice.ai/api/v1"
 DEFAULT_VENICE_MODEL = "venice-uncensored-1-2"
 REQUEST_DEADLINE_SECONDS = 30.0
+# A queued model streams only keep-alive comments; one that has not produced a
+# token by now is dropped so the retry can reach a model that is free.
+FIRST_TOKEN_SECONDS = 10.0
 
 
 class RequestDeadline:
@@ -29,31 +32,101 @@ class RequestDeadline:
     Client timeouts only bound the gap between bytes, and providers send keep-alive
     bytes while a busy model queues, so one request could otherwise hang for minutes.
     A closed client is replaced on the next request (see ``is_closed()``).
+    With ``first_token_seconds``, the request is also dropped if ``started()`` is
+    not called within that time.
     """
 
-    def __init__(self, client, seconds: float = REQUEST_DEADLINE_SECONDS):
+    def __init__(
+        self,
+        client,
+        seconds: float = REQUEST_DEADLINE_SECONDS,
+        first_token_seconds: float | None = None,
+    ):
         """Watch ``client`` for at most ``seconds`` once the block is entered."""
         self.client = client
         self.seconds = seconds
-        self.expired = False
+        self.first_token_seconds = first_token_seconds
+        self.expired_message: str | None = None
+        self._first_token_timer: threading.Timer | None = None
 
-    def _expire(self) -> None:
-        self.expired = True
+    def _expire(self, message: str) -> None:
+        self.expired_message = message
         self.client.close()
 
+    def _start_timer(self, seconds: float, message: str) -> threading.Timer:
+        timer = threading.Timer(seconds, self._expire, (message,))
+        timer.daemon = True
+        timer.start()
+        return timer
+
     def __enter__(self):
-        self._timer = threading.Timer(self.seconds, self._expire)
-        self._timer.daemon = True
-        self._timer.start()
+        self._timer = self._start_timer(
+            self.seconds, f"The AI service did not answer within {self.seconds:.0f} seconds."
+        )
+        if self.first_token_seconds is not None:
+            self._first_token_timer = self._start_timer(
+                self.first_token_seconds,
+                "The AI model did not start answering within "
+                f"{self.first_token_seconds:.0f} seconds.",
+            )
         return self
+
+    def started(self) -> None:
+        """Mark the model as answering, which stops the first-token limit."""
+        if self._first_token_timer is not None:
+            self._first_token_timer.cancel()
 
     def __exit__(self, exc_type, exc, tb):
         self._timer.cancel()
-        if self.expired and exc is not None:
-            raise RequestTimeoutError(
-                f"The AI service did not answer within {self.seconds:.0f} seconds."
-            ) from None
+        self.started()
+        if self.expired_message and exc is not None:
+            raise RequestTimeoutError(self.expired_message) from None
         return False
+
+
+def stream_chat_completion(
+    client,
+    *,
+    first_token_seconds: float = FIRST_TOKEN_SECONDS,
+    seconds: float = REQUEST_DEADLINE_SECONDS,
+    **request,
+) -> dict:
+    """Stream one completion and return its text, model, finish reason and token counts."""
+    parts: list[str] = []
+    model = None
+    finish_reason = None
+    usage = None
+    with RequestDeadline(client, seconds, first_token_seconds) as deadline:
+        stream = client.chat.completions.create(
+            stream=True, stream_options={"include_usage": True}, **request
+        )
+        for chunk in stream:
+            model = chunk.model or model
+            usage = chunk.usage or usage
+            if not chunk.choices:
+                continue
+            choice = chunk.choices[0]
+            finish_reason = choice.finish_reason or finish_reason
+            delta = choice.delta
+            if delta is None:
+                continue
+            # Reasoning models stream their thinking before any answer text.
+            if (
+                delta.content
+                or getattr(delta, "reasoning", None)
+                or getattr(delta, "reasoning_content", None)
+            ):
+                deadline.started()
+            if delta.content:
+                parts.append(delta.content)
+    return {
+        "content": "".join(parts),
+        "model": model,
+        "finish_reason": finish_reason,
+        "total_tokens": usage.total_tokens if usage else 0,
+        "prompt_tokens": usage.prompt_tokens if usage else 0,
+        "completion_tokens": usage.completion_tokens if usage else 0,
+    }
 
 
 def venice_request_options() -> dict:
