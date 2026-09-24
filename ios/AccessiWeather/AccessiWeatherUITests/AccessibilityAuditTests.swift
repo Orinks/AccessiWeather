@@ -110,6 +110,9 @@ final class AccessibilityAuditTests: XCTestCase {
         XCTAssertTrue(app.navigationBars["NOAA Weather Radio"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Now Playing"].exists)
         XCTAssertTrue(app.staticTexts["Nearest Stations"].exists)
+        XCTAssertTrue(app.navigationBars.buttons["Refresh Stations"].exists, "Missing Refresh Stations button")
+        let sourceFooter = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Station list from WeatherIndex'")).firstMatch
+        XCTAssertTrue(sourceFooter.waitForExistence(timeout: 20), "Station list should load from WeatherIndex")
         let stationRows = app.buttons.matching(NSPredicate(format: "label CONTAINS 'MHz' AND label CONTAINS 'miles away'"))
         try XCTSkipUnless(stationRows.count > 0, "No saved location; station list is empty")
         stationRows.firstMatch.tap()

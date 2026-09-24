@@ -1,20 +1,21 @@
 import SwiftUI
 
-/// NOAA Weather Radio: nearest stations to the selected location with Play/Stop controls.
+/// NOAA Weather Radio: nearest stations (from the WeatherIndex directory) to the selected
+/// location with Play/Stop controls.
 struct RadioView: View {
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var settings: SettingsStore
     @ObservedObject private var radio: RadioPlayer
+    @ObservedObject private var directory: RadioStationDirectory
 
-    private let database = RadioStationDatabase()
-
-    init(radio: RadioPlayer) {
+    init(radio: RadioPlayer, directory: RadioStationDirectory) {
         self.radio = radio
+        self.directory = directory
     }
 
     private var nearby: [NearbyStation] {
         guard let location = model.selectedLocation else { return [] }
-        return database.nearest(latitude: location.latitude, longitude: location.longitude)
+        return directory.nearest(latitude: location.latitude, longitude: location.longitude)
     }
 
     var body: some View {
@@ -25,6 +26,19 @@ struct RadioView: View {
         .listStyle(.insetGrouped)
         .navigationTitle("NOAA Weather Radio")
         .navigationBarTitleDisplayMode(.inline)
+        .task { await directory.refreshIfStale() }
+        .refreshable { await directory.refresh() }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    Task { await directory.refresh() }
+                } label: {
+                    Label("Refresh Stations", systemImage: "arrow.clockwise")
+                }
+                .disabled(directory.isRefreshing)
+                .accessibilityHint("Downloads the latest station list from WeatherIndex")
+            }
+        }
     }
 
     private var nowPlayingSection: some View {
@@ -48,8 +62,14 @@ struct RadioView: View {
 
     private var stationsSection: some View {
         Section {
-            if nearby.isEmpty {
+            if directory.isRefreshing && directory.database.stations.isEmpty {
+                Text("Loading station list…")
+                    .foregroundStyle(.secondary)
+            } else if model.selectedLocation == nil {
                 Text("Add a location to see nearby NOAA Weather Radio stations.")
+                    .foregroundStyle(.secondary)
+            } else if nearby.isEmpty {
+                Text("No NOAA Weather Radio streams are available right now.")
                     .foregroundStyle(.secondary)
             }
             ForEach(nearby) { entry in
@@ -58,7 +78,7 @@ struct RadioView: View {
         } header: {
             SectionHeader("Nearest Stations")
         } footer: {
-            Text("Streams are provided by volunteer relays and may be offline. Playback continues in the background and can be controlled from the Lock Screen. Stations with no stream fall back to Broadcastify.")
+            Text("\(directory.source.description) Streams are provided by volunteer relays and may be offline. Playback continues in the background and can be controlled from the Lock Screen.")
         }
     }
 
