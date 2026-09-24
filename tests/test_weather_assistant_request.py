@@ -72,6 +72,19 @@ def test_model_ignoring_required_tool_never_returns_promise_as_answer():
     executor.execute.assert_not_called()
 
 
+def test_model_refusal_is_an_actionable_assistant_error():
+    client, executor, options = setup([response("I’m sorry, but I can’t help with that.")])
+
+    with pytest.raises(AssistantRequestError, match="declined this request"):
+        run_assistant_request(
+            client,
+            "model",
+            [{"role": "user", "content": "Explain how fog forms."}],
+            executor,
+            options,
+        )
+
+
 def test_conceptual_question_does_not_force_tool():
     client, executor, options = setup([response("Rain forms from condensed moisture.")])
     run_assistant_request(

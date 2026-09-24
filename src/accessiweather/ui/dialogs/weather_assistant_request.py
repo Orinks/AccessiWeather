@@ -6,6 +6,7 @@ import json
 import re
 from dataclasses import dataclass
 
+from ...ai_explainer_models import MODEL_REFUSAL_MESSAGE, is_model_refusal
 from ...ai_provider import RequestDeadline
 
 
@@ -170,6 +171,8 @@ def run_assistant_request(
             raise AssistantRequestError(
                 "Received an empty response. Try again or switch models in Settings."
             )
+        if is_model_refusal(content):
+            raise AssistantRequestError(MODEL_REFUSAL_MESSAGE)
         if alert_result_has_alerts and re.search(
             r"\b(?:no|zero|without)\s+(?:active\s+)?(?:weather\s+)?alerts?\b",
             content,

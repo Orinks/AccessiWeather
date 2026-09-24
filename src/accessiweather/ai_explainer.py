@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from .ai_explainer_models import (
+    MODEL_REFUSAL_MESSAGE,
     AIExplainerError,
     EmptyResponseError,
     ExplanationResult,
@@ -26,6 +27,7 @@ from .ai_explainer_models import (
     RequestTimeoutError,
     TextProductType,
     WeatherContext,
+    is_model_refusal,
 )
 from .ai_explainer_openrouter import DEFAULT_FREE_MODEL
 from .ai_explainer_openrouter_client import AIExplainerOpenRouterMixin
@@ -227,6 +229,10 @@ class AIExplainer(
 
                 # Check if we got actual content (minimum 20 chars for meaningful response)
                 content = response["content"]
+                if is_model_refusal(content):
+                    last_error = AIExplainerError(MODEL_REFUSAL_MESSAGE)
+                    response = None
+                    continue
                 if content and len(content.strip()) >= 20:
                     logger.info(f"Got valid response from model: {model}")
                     break
@@ -279,7 +285,7 @@ class AIExplainer(
                 if "api key" in error_message or "api_key" in error_message:
                     raise InvalidAPIKeyError(
                         "OpenRouter API key is required.\n\n"
-                        "Please add your API key in Settings → AI Explanations.\n"
+                        "Please add your API key in Settings > AI.\n"
                         "Get a free key at: openrouter.ai/keys"
                     ) from last_error
 
@@ -293,7 +299,7 @@ class AIExplainer(
                     raise InvalidModelError(
                         f"The AI model '{primary_model}' was not found.\n\n"
                         "It may have been removed or renamed by OpenRouter.\n"
-                        "Please go to Settings → AI Explanations and select a different model."
+                        "Please go to Settings > AI and select a different model."
                     ) from last_error
 
                 # Rate limiting

@@ -343,7 +343,7 @@ class AIExplainerOpenRouterMixin:
             if "api key required" in error_message or "api key" in error_message:
                 raise InvalidAPIKeyError(
                     "OpenRouter API key is required.\n\n"
-                    "Please add your API key in Settings → AI Explanations.\n"
+                    "Please add your API key in Settings > AI.\n"
                     "Get a free key at: openrouter.ai/keys"
                 ) from None
 
@@ -351,7 +351,7 @@ class AIExplainerOpenRouterMixin:
             if "invalid api key" in error_message or "authentication" in error_message:
                 raise InvalidAPIKeyError(
                     "Your OpenRouter API key is invalid.\n\n"
-                    "Please check Settings → AI Explanations and verify your API key.\n"
+                    "Please check Settings > AI and verify your API key.\n"
                     "Get a free key at: openrouter.ai/keys"
                 ) from None
 
@@ -359,7 +359,7 @@ class AIExplainerOpenRouterMixin:
                 raise InvalidAPIKeyError(
                     "API key authentication failed.\n\n"
                     "Your API key may be expired or incorrectly entered.\n"
-                    "Please check Settings → AI Explanations."
+                    "Please check Settings > AI."
                 ) from None
 
             # Insufficient credits
@@ -372,7 +372,7 @@ class AIExplainerOpenRouterMixin:
                     "Your OpenRouter account has no funds.\n\n"
                     "Options:\n"
                     "• Add credits at openrouter.ai/credits\n"
-                    "• Switch to a free model in Settings → AI Explanations"
+                    "• Switch to a free model in Settings > AI"
                 ) from None
 
             # Rate limiting (429) - check for status code AND common phrases
@@ -434,7 +434,7 @@ class AIExplainerOpenRouterMixin:
                 raise InvalidModelError(
                     f"The AI model '{model_used}' was not found.\n\n"
                     "It may have been removed or renamed by OpenRouter.\n"
-                    "Please go to Settings → AI Explanations and select a different model."
+                    "Please go to Settings > AI and select a different model."
                 ) from None
 
             # Generic error - log full details and show user-friendly message

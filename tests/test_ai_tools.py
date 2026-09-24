@@ -36,6 +36,34 @@ def test_selected_location_alert_lookup_keeps_displayed_warning_when_live_source
     assert "Live alert lookup found none" in result
 
 
+def test_selected_location_alert_lookup_reports_displayed_warning_missing_from_live_point():
+    weather_service = MagicMock()
+    weather_service.get_alerts.return_value = {
+        "features": [{"properties": {"event": "Coastal Flood Advisory", "severity": "Minor"}}]
+    }
+    warning = MagicMock()
+    warning.event = "Coastal Flood Warning"
+    warning.severity = "Severe"
+    warning.headline = "Warning shown in the app"
+    warning.description = "Flooding is possible"
+    warning.is_expired.return_value = False
+    executor = WeatherToolExecutor(
+        weather_service,
+        MagicMock(),
+        default_lat=39.97,
+        default_lon=-74.8,
+        default_name="Lumberton, NJ",
+        displayed_alerts=[warning],
+    )
+
+    result = executor.execute("get_alerts", {"location": "Lumberton, NJ"})
+
+    assert "Coastal Flood Advisory" in result
+    assert "Coastal Flood Warning" in result
+    assert "not returned by the live point lookup" in result
+    assert "do not claim they are currently verified" in result
+
+
 def test_selected_location_alert_lookup_reports_unknown_when_live_source_fails():
     weather_service = MagicMock()
     weather_service.get_alerts.side_effect = RuntimeError("unavailable")

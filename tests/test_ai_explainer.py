@@ -411,6 +411,22 @@ class TestExplainWeather:
             assert result.cached is False
 
     @pytest.mark.asyncio
+    async def test_explain_weather_rejects_model_refusal(self, sample_weather_data):
+        explainer = AIExplainer(api_key="test-key")
+        refusal = {
+            "content": "I’m sorry, but I can’t help with that.",
+            "model": "free-model",
+            "total_tokens": 40,
+            "prompt_tokens": 30,
+            "completion_tokens": 10,
+        }
+        with (
+            patch.object(explainer, "_call_openrouter", return_value=refusal),
+            pytest.raises(AIExplainerError, match="declined this request"),
+        ):
+            await explainer.explain_weather(sample_weather_data, "Test City")
+
+    @pytest.mark.asyncio
     async def test_explain_weather_with_cache_hit(self, sample_weather_data, mock_cache):
         """Test that cached results are returned."""
         mock_cache.get.return_value = {
@@ -505,6 +521,22 @@ class TestExplainAFD:
             assert result.text is not None
             assert len(result.text) > 0
             assert result.cached is False
+
+    @pytest.mark.asyncio
+    async def test_explain_afd_rejects_model_refusal(self, sample_afd_text):
+        explainer = AIExplainer(api_key="test-key")
+        refusal = {
+            "content": "I'm sorry, but I can't help with that.",
+            "model": "free-model",
+            "total_tokens": 40,
+            "prompt_tokens": 30,
+            "completion_tokens": 10,
+        }
+        with (
+            patch.object(explainer, "_call_openrouter", return_value=refusal),
+            pytest.raises(AIExplainerError, match="declined this request"),
+        ):
+            await explainer.explain_afd(sample_afd_text, "Test City")
 
     @pytest.mark.asyncio
     async def test_explain_afd_different_styles(self, sample_afd_text):

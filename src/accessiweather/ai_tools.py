@@ -245,9 +245,29 @@ class WeatherToolExecutor:
                 "\nLive alert lookup found none. The app still displays these alerts; "
                 "verify their current status before relying on either result."
             )
-        return format_alerts(data, display_name)
+        live_events = {
+            str(alert.get("properties", alert).get("event", "")).casefold()
+            for alert in live_alerts
+            if isinstance(alert, dict)
+        }
+        displayed_only = [
+            alert
+            for alert in displayed or []
+            if (alert.event or alert.title).casefold() not in live_events
+        ]
+        result = format_alerts(data, display_name)
+        if displayed_only:
+            result += (
+                "\n\n"
+                + self._format_displayed_alerts(display_name, displayed_only)
+                + "\nThese app-displayed alerts were not returned by the live point lookup. "
+                "Mention the discrepancy and do not claim they are currently verified."
+            )
+        return result
 
-    def _format_displayed_alerts(self, display_name: str) -> str:
+    def _format_displayed_alerts(
+        self, display_name: str, displayed_alerts: list[Any] | None = None
+    ) -> str:
         """Describe alerts already visible in the app without claiming they are newly verified."""
         alerts = [
             {
@@ -256,7 +276,9 @@ class WeatherToolExecutor:
                 "headline": alert.headline,
                 "description": alert.description,
             }
-            for alert in self.displayed_alerts or []
+            for alert in (
+                displayed_alerts if displayed_alerts is not None else self.displayed_alerts or []
+            )
             if not getattr(alert, "is_expired", lambda: False)()
         ]
         return f"Alerts currently displayed in the app for {display_name}:\n" + format_alerts(
