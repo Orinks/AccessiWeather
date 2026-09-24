@@ -1,7 +1,9 @@
 import Foundation
 
-/// A NOAA Weather Radio transmitter, ported from the desktop app's station database.
+/// A NOAA Weather Radio transmitter from the WeatherIndex directory (or the bundled fallback list).
 struct RadioStation: Codable, Identifiable, Hashable {
+    static let outOfServiceStatus = "OUT OF SERVICE"
+
     let callSign: String
     let frequency: Double
     let name: String
@@ -9,8 +11,24 @@ struct RadioStation: Codable, Identifiable, Hashable {
     let longitude: Double
     let state: String
     let streamURLs: [String]
+    var status: String?
+
+    init(callSign: String, frequency: Double, name: String, latitude: Double, longitude: Double, state: String, streamURLs: [String], status: String? = nil) {
+        self.callSign = callSign
+        self.frequency = frequency
+        self.name = name
+        self.latitude = latitude
+        self.longitude = longitude
+        self.state = state
+        self.streamURLs = streamURLs
+        self.status = status
+    }
 
     var id: String { callSign }
+
+    var isOutOfService: Bool {
+        status?.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() == Self.outOfServiceStatus
+    }
 
     var frequencyText: String {
         String(format: "%.3f MHz", frequency)
@@ -43,18 +61,22 @@ struct NearbyStation: Identifiable, Hashable {
     var distanceMiles: Double { distanceKm * 0.621371 }
 }
 
-/// Loads the bundled station list and finds stations nearest a coordinate.
+/// A station list with nearest-station search. `RadioStationDirectory` builds one from
+/// WeatherIndex; `bundled` is the last-resort copy shipped with the app.
 struct RadioStationDatabase {
     let stations: [RadioStation]
 
-    init(bundle: Bundle = .main) {
+    init(stations: [RadioStation]) {
+        self.stations = stations
+    }
+
+    static func bundled(bundle: Bundle = .main) -> RadioStationDatabase {
         guard let url = bundle.url(forResource: "noaa_radio_stations", withExtension: "json"),
               let data = try? Data(contentsOf: url),
               let decoded = try? JSONDecoder().decode([RadioStation].self, from: data) else {
-            stations = []
-            return
+            return RadioStationDatabase(stations: [])
         }
-        stations = decoded
+        return RadioStationDatabase(stations: decoded)
     }
 
     func station(withCallSign callSign: String) -> RadioStation? {
