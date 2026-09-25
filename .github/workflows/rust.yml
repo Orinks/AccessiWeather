@@ -40,7 +40,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libclang-dev libspeechd-dev libxkbcommon-dev libwayland-dev \
-            libxcb-shape0-dev libxcb-xfixes0-dev libfontconfig1-dev xvfb
+            libxkbcommon-x11-0 libxcb-shape0-dev libxcb-xfixes0-dev libfontconfig1-dev xvfb
 
       - name: Format
         run: cargo fmt --all -- --check
