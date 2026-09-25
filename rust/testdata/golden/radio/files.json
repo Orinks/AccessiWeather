@@ -1,0 +1,634 @@
+{
+  "preferences": [
+    {
+      "name": "missing_file",
+      "file": null,
+      "ops": [],
+      "loaded": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "after": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "saved_text": null
+    },
+    {
+      "name": "new_format",
+      "file": "{\"preferred_streams\": {\"kec49\": \"https://b\", \"WXK27\": \"https://z\", \"bad\": 5}, \"station_limit\": 25, \"favorite_stations\": [\"wxk27\", \" KEC49 \", \"WXK27\", null, 7, true, \"\"], \"last_station\": \"  kec49 \"}",
+      "ops": [],
+      "loaded": {
+        "preferred": [
+          [
+            "KEC49",
+            "https://b"
+          ],
+          [
+            "WXK27",
+            "https://z"
+          ]
+        ],
+        "favorites": [
+          "WXK27",
+          "KEC49",
+          "7",
+          "TRUE"
+        ],
+        "last_station": "KEC49",
+        "station_limit": 25
+      },
+      "after": {
+        "preferred": [
+          [
+            "KEC49",
+            "https://b"
+          ],
+          [
+            "WXK27",
+            "https://z"
+          ]
+        ],
+        "favorites": [
+          "WXK27",
+          "KEC49",
+          "7",
+          "TRUE"
+        ],
+        "last_station": "KEC49",
+        "station_limit": 25
+      },
+      "saved_text": "{\"preferred_streams\": {\"kec49\": \"https://b\", \"WXK27\": \"https://z\", \"bad\": 5}, \"station_limit\": 25, \"favorite_stations\": [\"wxk27\", \" KEC49 \", \"WXK27\", null, 7, true, \"\"], \"last_station\": \"  kec49 \"}"
+    },
+    {
+      "name": "mutations",
+      "file": "{\"preferred_streams\": {\"kec49\": \"https://b\", \"WXK27\": \"https://z\", \"bad\": 5}, \"station_limit\": 25, \"favorite_stations\": [\"wxk27\", \" KEC49 \", \"WXK27\", null, 7, true, \"\"], \"last_station\": \"  kec49 \"}",
+      "ops": [
+        [
+          "set_preferred_url",
+          "kih24",
+          "https://k"
+        ],
+        [
+          "set_preferred_url",
+          "KEC49",
+          "https://c"
+        ],
+        [
+          "clear_preferred_url",
+          "wxk27"
+        ],
+        [
+          "clear_preferred_url",
+          "none"
+        ],
+        [
+          "add_favorite_station",
+          " kih24 "
+        ],
+        [
+          "add_favorite_station",
+          "KIH24"
+        ],
+        [
+          "remove_favorite_station",
+          "wxk27"
+        ],
+        [
+          "set_last_station",
+          "wxl58"
+        ],
+        [
+          "set_station_limit",
+          null
+        ]
+      ],
+      "loaded": {
+        "preferred": [
+          [
+            "KEC49",
+            "https://b"
+          ],
+          [
+            "WXK27",
+            "https://z"
+          ]
+        ],
+        "favorites": [
+          "WXK27",
+          "KEC49",
+          "7",
+          "TRUE"
+        ],
+        "last_station": "KEC49",
+        "station_limit": 25
+      },
+      "after": {
+        "preferred": [
+          [
+            "KEC49",
+            "https://c"
+          ],
+          [
+            "KIH24",
+            "https://k"
+          ]
+        ],
+        "favorites": [
+          "KEC49",
+          "7",
+          "TRUE",
+          "KIH24"
+        ],
+        "last_station": "WXL58",
+        "station_limit": null
+      },
+      "saved_text": "{\n  \"preferred_streams\": {\n    \"KEC49\": \"https://c\",\n    \"KIH24\": \"https://k\"\n  },\n  \"station_limit\": null,\n  \"favorite_stations\": [\n    \"KEC49\",\n    \"7\",\n    \"TRUE\",\n    \"KIH24\"\n  ],\n  \"last_station\": \"WXL58\"\n}"
+    },
+    {
+      "name": "legacy",
+      "file": "{\"kec49\": \"https://legacy\", \"bad\": 5}",
+      "ops": [],
+      "loaded": {
+        "preferred": [
+          [
+            "KEC49",
+            "https://legacy"
+          ]
+        ],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "after": {
+        "preferred": [
+          [
+            "KEC49",
+            "https://legacy"
+          ]
+        ],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "saved_text": "{\"kec49\": \"https://legacy\", \"bad\": 5}"
+    },
+    {
+      "name": "legacy_then_save",
+      "file": "{\"kec49\": \"https://legacy\"}",
+      "ops": [
+        [
+          "set_last_station",
+          "KEC49"
+        ]
+      ],
+      "loaded": {
+        "preferred": [
+          [
+            "KEC49",
+            "https://legacy"
+          ]
+        ],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "after": {
+        "preferred": [
+          [
+            "KEC49",
+            "https://legacy"
+          ]
+        ],
+        "favorites": [],
+        "last_station": "KEC49",
+        "station_limit": 10
+      },
+      "saved_text": "{\n  \"preferred_streams\": {\n    \"KEC49\": \"https://legacy\"\n  },\n  \"station_limit\": 10,\n  \"favorite_stations\": [],\n  \"last_station\": \"KEC49\"\n}"
+    },
+    {
+      "name": "invalid_json",
+      "file": "{not json",
+      "ops": [
+        [
+          "set_station_limit",
+          50
+        ]
+      ],
+      "loaded": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "after": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 50
+      },
+      "saved_text": "{\n  \"preferred_streams\": {},\n  \"station_limit\": 50,\n  \"favorite_stations\": [],\n  \"last_station\": null\n}"
+    },
+    {
+      "name": "not_an_object",
+      "file": "[1, 2]",
+      "ops": [],
+      "loaded": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "after": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "saved_text": "[1, 2]"
+    },
+    {
+      "name": "limit_all_string",
+      "file": "{\"station_limit\": \"All\"}",
+      "ops": [],
+      "loaded": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": null
+      },
+      "after": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": null
+      },
+      "saved_text": "{\"station_limit\": \"All\"}"
+    },
+    {
+      "name": "limit_zero",
+      "file": "{\"station_limit\": 0}",
+      "ops": [],
+      "loaded": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "after": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "saved_text": "{\"station_limit\": 0}"
+    },
+    {
+      "name": "limit_negative",
+      "file": "{\"station_limit\": -5}",
+      "ops": [],
+      "loaded": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "after": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "saved_text": "{\"station_limit\": -5}"
+    },
+    {
+      "name": "limit_float",
+      "file": "{\"station_limit\": 2.5}",
+      "ops": [],
+      "loaded": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "after": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "saved_text": "{\"station_limit\": 2.5}"
+    },
+    {
+      "name": "limit_numeric_string",
+      "file": "{\"station_limit\": \"10\"}",
+      "ops": [],
+      "loaded": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "after": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "saved_text": "{\"station_limit\": \"10\"}"
+    },
+    {
+      "name": "limit_null",
+      "file": "{\"station_limit\": null}",
+      "ops": [],
+      "loaded": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": null
+      },
+      "after": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": null
+      },
+      "saved_text": "{\"station_limit\": null}"
+    },
+    {
+      "name": "streams_not_object",
+      "file": "{\"preferred_streams\": [1], \"last_station\": 42}",
+      "ops": [],
+      "loaded": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "after": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "saved_text": "{\"preferred_streams\": [1], \"last_station\": 42}"
+    },
+    {
+      "name": "favorites_not_list",
+      "file": "{\"preferred_streams\": {}, \"favorite_stations\": \"KEC49\"}",
+      "ops": [],
+      "loaded": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "after": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "saved_text": "{\"preferred_streams\": {}, \"favorite_stations\": \"KEC49\"}"
+    },
+    {
+      "name": "set_favorites",
+      "file": null,
+      "ops": [
+        [
+          "set_favorite_stations",
+          [
+            "b",
+            "A",
+            " b ",
+            ""
+          ]
+        ]
+      ],
+      "loaded": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "after": {
+        "preferred": [],
+        "favorites": [
+          "B",
+          "A"
+        ],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "saved_text": "{\n  \"preferred_streams\": {},\n  \"station_limit\": 10,\n  \"favorite_stations\": [\n    \"B\",\n    \"A\"\n  ],\n  \"last_station\": null\n}"
+    },
+    {
+      "name": "blank_last_station",
+      "file": null,
+      "ops": [
+        [
+          "set_last_station",
+          "x"
+        ],
+        [
+          "set_last_station",
+          "  "
+        ]
+      ],
+      "loaded": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "after": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "saved_text": "{\n  \"preferred_streams\": {},\n  \"station_limit\": 10,\n  \"favorite_stations\": [],\n  \"last_station\": null\n}"
+    },
+    {
+      "name": "same_last_station_no_write",
+      "file": null,
+      "ops": [
+        [
+          "set_last_station",
+          null
+        ]
+      ],
+      "loaded": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "after": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "saved_text": null
+    },
+    {
+      "name": "non_ascii_url",
+      "file": null,
+      "ops": [
+        [
+          "set_preferred_url",
+          "kec49",
+          "https://é/😀"
+        ]
+      ],
+      "loaded": {
+        "preferred": [],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "after": {
+        "preferred": [
+          [
+            "KEC49",
+            "https://é/😀"
+          ]
+        ],
+        "favorites": [],
+        "last_station": null,
+        "station_limit": 10
+      },
+      "saved_text": "{\n  \"preferred_streams\": {\n    \"KEC49\": \"https://\\u00e9/\\ud83d\\ude00\"\n  },\n  \"station_limit\": 10,\n  \"favorite_stations\": [],\n  \"last_station\": null\n}"
+    }
+  ],
+  "availability": [
+    {
+      "name": "missing",
+      "file": null,
+      "now": 1750000000.0,
+      "ops": [],
+      "loaded": {},
+      "suppressed": [],
+      "saved_text": null
+    },
+    {
+      "name": "load_and_prune",
+      "file": "{\"kec49\": {\"reason\": \"all_streams_failed\", \"expires_at\": 1750000060.0}, \"WXK27\": {\"reason\": \"old\", \"expires_at\": 1749999999.0}, \"KIH24\": {\"reason\": \"int\", \"expires_at\": 1750000005}, \"BAD1\": {\"reason\": 5, \"expires_at\": 1750000060.0}, \"BAD2\": \"nope\", \"BAD3\": {\"reason\": \"x\"}, \"BOOL\": {\"reason\": \"b\", \"expires_at\": true}, \"  \": {\"reason\": \"blank\", \"expires_at\": 1750000060.0}}",
+      "now": 1750000000.0,
+      "ops": [],
+      "loaded": {
+        "KEC49": {
+          "reason": "all_streams_failed",
+          "expires_at": 1750000060.0
+        },
+        "KIH24": {
+          "reason": "int",
+          "expires_at": 1750000005.0
+        }
+      },
+      "suppressed": [
+        "KEC49",
+        "KIH24"
+      ],
+      "saved_text": "{\n  \"KEC49\": {\n    \"expires_at\": 1750000060.0,\n    \"reason\": \"all_streams_failed\"\n  },\n  \"KIH24\": {\n    \"expires_at\": 1750000005.0,\n    \"reason\": \"int\"\n  }\n}"
+    },
+    {
+      "name": "suppress_advance_clear",
+      "file": null,
+      "now": 1750000000.0,
+      "ops": [
+        [
+          "suppress",
+          "kec49",
+          1800,
+          "all_streams_failed"
+        ],
+        [
+          "suppress",
+          "WXK27",
+          60,
+          "x"
+        ],
+        [
+          "suppress",
+          " ",
+          60,
+          "blank"
+        ],
+        [
+          "advance",
+          60
+        ],
+        [
+          "clear",
+          "kih24"
+        ]
+      ],
+      "loaded": {},
+      "suppressed": [
+        "KEC49"
+      ],
+      "saved_text": "{\n  \"KEC49\": {\n    \"expires_at\": 1750001800.0,\n    \"reason\": \"all_streams_failed\"\n  }\n}"
+    },
+    {
+      "name": "clear_rewrites",
+      "file": null,
+      "now": 1750000000.25,
+      "ops": [
+        [
+          "suppress",
+          "B",
+          1800,
+          "b"
+        ],
+        [
+          "suppress",
+          "A",
+          30,
+          "a"
+        ],
+        [
+          "clear",
+          "b"
+        ]
+      ],
+      "loaded": {},
+      "suppressed": [
+        "A"
+      ],
+      "saved_text": "{\n  \"A\": {\n    \"expires_at\": 1750000030.25,\n    \"reason\": \"a\"\n  }\n}"
+    },
+    {
+      "name": "corrupt",
+      "file": "{nope",
+      "now": 1750000000.0,
+      "ops": [],
+      "loaded": {},
+      "suppressed": [],
+      "saved_text": "{nope"
+    },
+    {
+      "name": "not_object",
+      "file": "[]",
+      "now": 1750000000.0,
+      "ops": [
+        [
+          "suppress",
+          "A",
+          10,
+          "a"
+        ]
+      ],
+      "loaded": {},
+      "suppressed": [
+        "A"
+      ],
+      "saved_text": "{\n  \"A\": {\n    \"expires_at\": 1750000010.0,\n    \"reason\": \"a\"\n  }\n}"
+    }
+  ]
+}

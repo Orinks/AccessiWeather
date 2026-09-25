@@ -619,3 +619,119 @@ fn pure_helpers() {
     );
     assert_eq!(FinderMode::from_index(9), FinderMode::SearchAll);
 }
+
+fn strings(value: &serde_json::Value) -> Vec<String> {
+    serde_json::from_value(value.clone()).unwrap()
+}
+
+#[test]
+fn golden_state_choices_codes_and_limits() {
+    let golden = crate::golden("stations.json");
+    assert_eq!(
+        state_choices(&StationDatabase::new()),
+        strings(&golden["state_choices"])
+    );
+    for (label, code) in golden["state_choice_codes"].as_object().unwrap() {
+        assert_eq!(state_choice_code(label), code.as_str().unwrap(), "{label}");
+    }
+    for pair in golden["station_limit_indexes"].as_array().unwrap() {
+        let limit = pair[0].as_u64().map(|n| n as usize);
+        assert_eq!(
+            station_limit_choice_index(limit) as u64,
+            pair[1].as_u64().unwrap(),
+            "{pair}"
+        );
+    }
+}
+
+#[test]
+fn golden_finder_modes() {
+    let golden = crate::golden("finder.json");
+    let db = StationDatabase::new();
+    let dir = tempfile::tempdir().unwrap();
+    for case in golden["cases"].as_array().unwrap() {
+        let name = case["name"].as_str().unwrap();
+        let mut fixture = FixtureClient::new();
+        for cs in strings(&case["feeds"]) {
+            fixture = fixture.with(
+                &format!("https://api.wxindex.org/v1/stations/{cs}"),
+                json!({"feeds": [{"stream_url": format!("https://feed/{cs}")}]}),
+            );
+        }
+        let mut cache = StationAvailabilityCache::with_clock(
+            dir.path().join(format!("avail-{name}.json")),
+            Box::new(|| 1_750_000_000.0),
+        );
+        for cs in strings(&case["suppressed"]) {
+            cache.suppress(&cs, 600, "all_streams_failed");
+        }
+        let service = StationAvailabilityService::new(
+            Arc::new(crate::weatherindex::WeatherIndexClient::new(Arc::new(
+                fixture,
+            ))),
+            Arc::new(Mutex::new(cache)),
+        );
+        let saved: Vec<Location> = case["saved_locations"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|l| {
+                Location::new(
+                    l[0].as_str().unwrap(),
+                    l[1].as_f64().unwrap(),
+                    l[2].as_f64().unwrap(),
+                )
+            })
+            .collect();
+        let favorites = strings(&case["favorites"]);
+        let mode = FinderMode::from_index(case["mode"].as_u64().unwrap() as usize);
+        let query = FinderQuery {
+            mode,
+            search_query: case["query"].as_str().unwrap().to_string(),
+            state_code: case["state_code"].as_str().unwrap().to_string(),
+            saved_location: case["saved_index"]
+                .as_u64()
+                .map(|i| saved[i as usize].clone()),
+            station_limit: case["limit"].as_u64().map(|n| n as usize),
+            favorites: favorites.clone(),
+            origin: case["origin"]
+                .as_array()
+                .map(|o| (o[0].as_f64().unwrap(), o[1].as_f64().unwrap())),
+        };
+        let candidates = find_candidates(&db, &query);
+        let entries =
+            service.build_entries(&candidates, case["show_unavailable"].as_bool().unwrap());
+        let stations: Vec<String> = entries
+            .iter()
+            .map(|e| e.station.call_sign.clone())
+            .collect();
+        let choices: Vec<String> = entries.iter().map(|e| e.label.clone()).collect();
+        let display: Vec<String> = entries
+            .iter()
+            .map(|e| {
+                format_station_choice_label(favorites.contains(&e.station.call_sign), &e.label)
+            })
+            .collect();
+        assert_eq!(stations, strings(&case["stations"]), "{name}");
+        assert_eq!(choices, strings(&case["choices"]), "{name}");
+        assert_eq!(display, strings(&case["display"]), "{name}");
+        assert_eq!(
+            empty_station_status(mode, !favorites.is_empty(), !saved.is_empty()),
+            case["empty_status"].as_str().unwrap(),
+            "{name}"
+        );
+    }
+
+    for (query, expected) in golden["coordinate_queries"].as_object().unwrap() {
+        let parsed = parse_coordinate_query(query).map(|(a, b)| json!([a, b]));
+        assert_eq!(
+            parsed.unwrap_or(serde_json::Value::Null),
+            *expected,
+            "{query}"
+        );
+    }
+    for case in golden["initial_search_text"].as_array().unwrap() {
+        let (lat, lon) = (case[0].as_f64().unwrap(), case[1].as_f64().unwrap());
+        assert_eq!(format!("{lat:.4}, {lon:.4}"), case[2].as_str().unwrap());
+    }
+}

@@ -334,4 +334,30 @@ mod tests {
             "ABC"
         );
     }
+
+    #[test]
+    fn golden_payload_parsing() {
+        let golden = crate::golden("clients.json");
+        for case in golden["weatherindex"].as_array().unwrap() {
+            let payload = &case["payload"];
+            let urls: Vec<String> = serde_json::from_value(case["urls"].clone()).unwrap();
+            assert_eq!(parse_stream_urls(payload), urls, "{payload}");
+            let metadata = parse_metadata(payload, "REQ1").map(|m| {
+                json!({
+                    "call_sign": m.call_sign,
+                    "wfo": m.wfo,
+                    "latitude": m.latitude,
+                    "longitude": m.longitude,
+                    "served_counties": m.served_counties.iter().map(|c| json!({
+                        "county": c.county, "same_code": c.same_code, "state": c.state, "area": c.area
+                    })).collect::<Vec<_>>(),
+                })
+            });
+            assert_eq!(
+                metadata.unwrap_or(Value::Null),
+                case["metadata"],
+                "{payload}"
+            );
+        }
+    }
 }

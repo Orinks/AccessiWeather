@@ -280,4 +280,71 @@ mod tests {
         let call_signs: Vec<_> = found.iter().map(|s| s.call_sign.as_str()).collect();
         assert_eq!(call_signs, ["WXK27", "KEC49"]);
     }
+
+    fn call_signs(stations: &[Station]) -> Vec<String> {
+        stations.iter().map(|s| s.call_sign.clone()).collect()
+    }
+
+    fn limit(value: &serde_json::Value) -> Option<usize> {
+        value.as_u64().map(|n| n as usize)
+    }
+
+    fn strings(value: &serde_json::Value) -> Vec<String> {
+        serde_json::from_value(value.clone()).unwrap()
+    }
+
+    #[test]
+    fn golden_bundled_stations() {
+        let golden = crate::golden("stations.json");
+        let expected = golden["stations"].as_array().unwrap();
+        let actual = StationDatabase::new().get_all_stations();
+        assert_eq!(actual.len(), expected.len());
+        for (s, e) in actual.iter().zip(expected) {
+            assert_eq!(serde_json::to_value(s).unwrap(), *e);
+        }
+    }
+
+    #[test]
+    fn golden_search_nearest_state_and_call_signs() {
+        let golden = crate::golden("search.json");
+        let db = StationDatabase::new();
+        for case in golden["search"].as_array().unwrap() {
+            let query = case["query"].as_str().unwrap();
+            let result = call_signs(&db.search(query, limit(&case["limit"])));
+            assert_eq!(result, strings(&case["result"]), "search {case}");
+        }
+        for case in golden["nearest"].as_array().unwrap() {
+            let (lat, lon) = (case["lat"].as_f64().unwrap(), case["lon"].as_f64().unwrap());
+            let results = db.find_nearest(lat, lon, limit(&case["limit"]));
+            let expected = case["result"].as_array().unwrap();
+            assert_eq!(results.len(), expected.len());
+            for (r, e) in results.iter().zip(expected) {
+                assert_eq!(
+                    r.station.call_sign,
+                    e[0].as_str().unwrap(),
+                    "nearest {lat},{lon}"
+                );
+                let d = e[1].as_f64().unwrap();
+                assert!(
+                    (r.distance_km - d).abs() <= 1e-9 * d.max(1.0),
+                    "{} vs {d}",
+                    r.distance_km
+                );
+            }
+        }
+        for (state, expected) in golden["by_state"].as_object().unwrap() {
+            assert_eq!(
+                call_signs(&db.get_stations_by_state(state)),
+                strings(expected),
+                "{state}"
+            );
+        }
+        for case in golden["by_call_signs"].as_array().unwrap() {
+            let input = strings(&case["input"]);
+            assert_eq!(
+                call_signs(&db.get_stations_by_call_signs(&input)),
+                strings(&case["result"])
+            );
+        }
+    }
 }

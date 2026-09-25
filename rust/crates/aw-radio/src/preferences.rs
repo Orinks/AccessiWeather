@@ -120,6 +120,11 @@ impl RadioPreferences {
         }
     }
 
+    #[cfg(test)]
+    pub(crate) fn preferred_streams(&self) -> &[(String, String)] {
+        &self.preferred
+    }
+
     pub fn get_preferred_url(&self, call_sign: &str) -> Option<String> {
         let key = call_sign.to_uppercase();
         self.preferred
@@ -383,5 +388,54 @@ mod tests {
         let nested = dir.path().join("a").join("b");
         prefs_at(&nested).set_last_station(Some("KEC49"));
         assert!(nested.join(PREFS_FILE_NAME).exists());
+    }
+
+    fn state(prefs: &RadioPreferences) -> Value {
+        json!({
+            "preferred": prefs.preferred_streams().iter().map(|(k, v)| json!([k, v])).collect::<Vec<_>>(),
+            "favorites": prefs.get_favorite_stations(),
+            "last_station": prefs.get_last_station(),
+            "station_limit": prefs.get_station_limit(),
+        })
+    }
+
+    #[test]
+    fn golden_file_round_trips() {
+        let golden = crate::golden("files.json");
+        let dir = tempfile::tempdir().unwrap();
+        for case in golden["preferences"].as_array().unwrap() {
+            let name = case["name"].as_str().unwrap();
+            let path = dir.path().join(format!("{name}.json"));
+            if let Some(text) = case["file"].as_str() {
+                std::fs::write(&path, text).unwrap();
+            }
+            let mut prefs = RadioPreferences::new(Some(path.clone()));
+            assert_eq!(state(&prefs), case["loaded"], "{name}: loaded");
+            for op in case["ops"].as_array().unwrap() {
+                let arg = |i: usize| op[i].as_str().unwrap_or_default();
+                match arg(0) {
+                    "set_preferred_url" => prefs.set_preferred_url(arg(1), arg(2)),
+                    "clear_preferred_url" => prefs.clear_preferred_url(arg(1)),
+                    "add_favorite_station" => prefs.add_favorite_station(arg(1)),
+                    "remove_favorite_station" => prefs.remove_favorite_station(arg(1)),
+                    "set_favorite_stations" => {
+                        let list: Vec<String> = serde_json::from_value(op[1].clone()).unwrap();
+                        prefs.set_favorite_stations(&list);
+                    }
+                    "set_last_station" => prefs.set_last_station(op[1].as_str()),
+                    "set_station_limit" => {
+                        prefs.set_station_limit(op[1].as_u64().map(|n| n as usize))
+                    }
+                    other => panic!("unknown op {other}"),
+                }
+            }
+            assert_eq!(state(&prefs), case["after"], "{name}: after");
+            let saved = std::fs::read_to_string(&path).ok();
+            assert_eq!(
+                saved.as_deref(),
+                case["saved_text"].as_str(),
+                "{name}: file"
+            );
+        }
     }
 }

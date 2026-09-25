@@ -220,4 +220,25 @@ mod tests {
         ));
         assert_eq!(client.get_streams()["KIH27"], ["u"]);
     }
+
+    #[test]
+    fn golden_status_parsing_and_mounts() {
+        let golden = crate::golden("clients.json");
+        for case in golden["wxradio"].as_array().unwrap() {
+            let expected: StreamMap = serde_json::from_value(case["streams"].clone()).unwrap();
+            assert_eq!(
+                parse_streams(&case["payload"]),
+                expected,
+                "{}",
+                case["payload"]
+            );
+        }
+        for (mount, expected) in golden["mounts"].as_object().unwrap() {
+            assert_eq!(
+                extract_call_sign(mount).as_deref(),
+                expected.as_str(),
+                "{mount}"
+            );
+        }
+    }
 }

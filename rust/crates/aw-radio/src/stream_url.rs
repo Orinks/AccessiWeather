@@ -106,8 +106,20 @@ impl StreamUrls for StreamUrlProvider {
             .as_ref()
             .and_then(|c| c.get_streams().remove(&normalized))
             .unwrap_or_default();
-        let bundled = self.urls.get(&normalized).cloned().unwrap_or_default();
+        self.merge(&normalized, weatherindex, wxradio)
+    }
+}
 
+impl StreamUrlProvider {
+    /// WeatherIndex, then wxradio.org, then the bundled table, deduplicated;
+    /// the fallback pattern only when all are empty.
+    fn merge(
+        &self,
+        normalized: &str,
+        weatherindex: Vec<String>,
+        wxradio: Vec<String>,
+    ) -> Vec<String> {
+        let bundled = self.urls.get(normalized).cloned().unwrap_or_default();
         let mut merged: Vec<String> = Vec::new();
         for url in weatherindex.into_iter().chain(wxradio).chain(bundled) {
             if !merged.contains(&url) {
@@ -115,7 +127,7 @@ impl StreamUrls for StreamUrlProvider {
             }
         }
         if merged.is_empty() && self.use_fallback {
-            merged.push(DEFAULT_PATTERN.replace("{call_sign}", &normalized));
+            merged.push(DEFAULT_PATTERN.replace("{call_sign}", normalized));
         }
         merged
     }
@@ -186,5 +198,41 @@ mod tests {
                 "http://wxradio.dyndns.org:8000/FL-Tallahassee-KIH24",
             ]
         );
+    }
+
+    #[test]
+    fn golden_bundled_table_and_merge_order() {
+        let stations = crate::golden("stations.json");
+        let table = stations["stream_urls"].as_object().unwrap();
+        assert_eq!(table.len(), STREAM_URLS.len());
+        for ((cs, urls), (ecs, eurls)) in STREAM_URLS.iter().zip(table) {
+            assert_eq!(cs, ecs);
+            let eurls: Vec<String> = serde_json::from_value(eurls.clone()).unwrap();
+            assert_eq!(urls.to_vec(), eurls);
+        }
+
+        let clients = crate::golden("clients.json");
+        for case in clients["merge"].as_array().unwrap() {
+            let provider = StreamUrlProvider::new(
+                HashMap::new(),
+                case["use_fallback"].as_bool().unwrap(),
+                None,
+                None,
+            );
+            let normalized = case["call_sign"].as_str().unwrap().trim().to_uppercase();
+            let weatherindex: Vec<String> =
+                serde_json::from_value(case["weatherindex"].clone()).unwrap();
+            let wxradio: Vec<String> = case["wxradio"]
+                .get(&normalized)
+                .map(|v| serde_json::from_value(v.clone()).unwrap())
+                .unwrap_or_default();
+            let urls = if normalized.is_empty() {
+                Vec::new()
+            } else {
+                provider.merge(&normalized, weatherindex, wxradio)
+            };
+            let expected: Vec<String> = serde_json::from_value(case["urls"].clone()).unwrap();
+            assert_eq!(urls, expected, "{case}");
+        }
     }
 }

@@ -392,4 +392,106 @@ mod tests {
         h.controller.toggle();
         assert_eq!(h.backend.opened(), ["http://b"]);
     }
+
+    #[test]
+    fn golden_toggle_outcomes() {
+        for case in crate::golden("toggle.json").as_array().unwrap() {
+            let name = case["name"].as_str().unwrap();
+            let playing = case["playing"].as_bool().unwrap();
+            let mut results: Vec<bool> = case["play_results"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|v| v.as_bool().unwrap())
+                .collect();
+            if playing {
+                results.insert(0, true);
+            }
+            let backend = FakeBackend::with_results(&results);
+            let prefs = RadioPreferences::new(None).shared();
+            {
+                let mut p = prefs.lock().unwrap();
+                p.set_last_station(case["last_station"].as_str());
+                let favorites: Vec<String> =
+                    serde_json::from_value(case["favorites"].clone()).unwrap();
+                p.set_favorite_stations(&favorites);
+                for (cs, url) in case["preferred"].as_object().unwrap() {
+                    p.set_preferred_url(cs, url.as_str().unwrap());
+                }
+            }
+            let session = RadioSession::new(backend.clone(), Some(prefs.clone()));
+            if playing {
+                session.player.play("manual");
+            }
+            let urls: Vec<String> = serde_json::from_value(case["urls"].clone()).unwrap();
+            let lookups = Arc::new(Mutex::new(Vec::new()));
+            let log = lookups.clone();
+            let notes = Arc::new(Mutex::new(Vec::new()));
+            let sink = notes.clone();
+            let controller = RadioToggleController::new(
+                session.clone(),
+                prefs.clone(),
+                Arc::new(StationDatabase::new()),
+                Arc::new(move |cs: &str| {
+                    log.lock().unwrap().push(cs.to_string());
+                    urls.clone()
+                }),
+                Some(Arc::new(move |m| sink.lock().unwrap().push(m))),
+                None,
+                Arc::new(|work| work()),
+            );
+            controller.toggle();
+
+            let played: Vec<String> = backend
+                .opened()
+                .into_iter()
+                .filter(|u| u != "manual")
+                .collect();
+            let stopped = playing
+                && backend.streams.lock().unwrap()[0]
+                    .stopped
+                    .load(std::sync::atomic::Ordering::SeqCst);
+            assert_eq!(
+                *notes.lock().unwrap(),
+                case["notifications"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|v| v.as_str().unwrap().to_string())
+                    .collect::<Vec<_>>(),
+                "{name}"
+            );
+            assert_eq!(
+                played,
+                serde_json::from_value::<Vec<String>>(case["played"].clone()).unwrap(),
+                "{name}"
+            );
+            assert_eq!(
+                u64::from(stopped),
+                case["stops"].as_u64().unwrap(),
+                "{name}"
+            );
+            assert_eq!(
+                *lookups.lock().unwrap(),
+                serde_json::from_value::<Vec<String>>(case["lookups"].clone()).unwrap(),
+                "{name}"
+            );
+            let state = session.state();
+            assert_eq!(
+                state.playing_station.map(|s| s.call_sign).as_deref(),
+                case["final_station"].as_str(),
+                "{name}"
+            );
+            assert_eq!(
+                state.current_url_index as u64,
+                case["current_url_index"].as_u64().unwrap(),
+                "{name}"
+            );
+            assert_eq!(
+                prefs.lock().unwrap().get_last_station().as_deref(),
+                case["last_station"].as_str(),
+                "{name}"
+            );
+        }
+    }
 }

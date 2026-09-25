@@ -655,3 +655,276 @@ fn notification_reasons_that_tune() {
     ));
     assert!(!should_auto_tune_for_alert_notification(&a, "reminder"));
 }
+
+fn golden_alert(spec: &serde_json::Value) -> WeatherAlert {
+    let list = |key: &str| -> Vec<String> {
+        spec.get(key)
+            .map(|v| serde_json::from_value(v.clone()).unwrap())
+            .unwrap_or_default()
+    };
+    let mut alert = WeatherAlert::new(
+        spec.get("title")
+            .and_then(|v| v.as_str())
+            .unwrap_or("Alert"),
+        "body",
+    );
+    alert.event = spec
+        .get("event")
+        .and_then(|v| v.as_str())
+        .map(str::to_string);
+    alert.message_type = spec
+        .get("message_type")
+        .and_then(|v| v.as_str())
+        .map(str::to_string);
+    alert.affected_zones = list("affected_zones");
+    alert.same_codes = list("same_codes");
+    alert.same_event_codes = list("same_event_codes");
+    alert
+}
+
+fn sorted_strings(set: BTreeSet<String>) -> serde_json::Value {
+    json!(set.into_iter().collect::<Vec<_>>())
+}
+
+#[test]
+fn golden_same_logic_and_resolution() {
+    let golden = crate::golden("same.json");
+    for (input, expected) in golden["normalize"].as_object().unwrap() {
+        assert_eq!(
+            normalize_same_code(input).as_deref(),
+            expected.as_str(),
+            "{input:?}"
+        );
+    }
+    let alerts: Vec<(String, WeatherAlert)> = golden["alerts"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|a| (a["name"].as_str().unwrap().to_string(), golden_alert(a)))
+        .collect();
+    for (spec, (_, alert)) in golden["alerts"].as_array().unwrap().iter().zip(&alerts) {
+        assert_eq!(
+            sorted_strings(alert_same_codes(alert)),
+            spec["same_codes_normalized"],
+            "{spec}"
+        );
+        assert_eq!(
+            sorted_strings(same_event_codes(alert)),
+            spec["event_codes"],
+            "{spec}"
+        );
+        assert_eq!(
+            json!(would_wake_same_radio(alert)),
+            spec["would_wake"],
+            "{spec}"
+        );
+        assert_eq!(
+            sorted_strings(alert_states(std::slice::from_ref(alert))),
+            spec["states"],
+            "{spec}"
+        );
+    }
+    for row in golden["notification_reasons"].as_array().unwrap() {
+        let mut alert = WeatherAlert::new("Alert", "body");
+        alert.message_type = row[0].as_str().map(str::to_string);
+        assert_eq!(
+            should_auto_tune_for_alert_notification(&alert, row[1].as_str().unwrap()),
+            row[2].as_bool().unwrap(),
+            "{row}"
+        );
+    }
+    for case in golden["resolver"].as_array().unwrap() {
+        let coverage: Vec<(String, serde_json::Value)> = case["coverage"]
+            .as_object()
+            .unwrap()
+            .iter()
+            .map(|(cs, codes)| {
+                let codes: Vec<String> = serde_json::from_value(codes.clone()).unwrap();
+                let codes: Vec<&str> = codes.iter().map(String::as_str).collect();
+                (cs.clone(), metadata(cs, &codes))
+            })
+            .collect();
+        let refs: Vec<(&str, serde_json::Value)> = coverage
+            .iter()
+            .map(|(cs, v)| (cs.as_str(), v.clone()))
+            .collect();
+        let (resolver, http) =
+            weatherindex_resolver(StationDatabase::new().get_all_stations(), &refs);
+        let batch: Vec<WeatherAlert> = case["alerts"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|n| {
+                alerts
+                    .iter()
+                    .find(|(name, _)| name == n.as_str().unwrap())
+                    .unwrap()
+                    .1
+                    .clone()
+            })
+            .collect();
+        let location = case["location"]
+            .as_array()
+            .map(|l| Location::new("Here", l[0].as_f64().unwrap(), l[1].as_f64().unwrap()));
+        let station = resolver.resolve_station(&batch, location.as_ref());
+        assert_eq!(
+            station.map(|s| s.call_sign).as_deref(),
+            case["station"].as_str(),
+            "{}",
+            case["name"]
+        );
+        let calls: Vec<String> = serde_json::from_value(case["calls"].clone()).unwrap();
+        assert_eq!(requested(&http), calls, "{}", case["name"]);
+    }
+}
+
+#[test]
+fn golden_auto_tune_scenarios() {
+    let same = crate::golden("same.json");
+    let alert_by_name = |name: &str| {
+        golden_alert(
+            same["alerts"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|a| a["name"] == name)
+                .unwrap(),
+        )
+    };
+    let db = StationDatabase::new();
+    let station_by = |cs: Option<&str>| {
+        cs.map(|cs| {
+            db.get_stations_by_call_signs(&[cs])
+                .into_iter()
+                .next()
+                .unwrap_or_else(|| {
+                    Station::new(cs, 162.4, &format!("{cs} City, TX"), 30.0, -97.0, "TX")
+                })
+        })
+    };
+    for case in crate::golden("auto_tune.json").as_array().unwrap() {
+        let name = case["name"].as_str().unwrap();
+        let before = case["playing_before"].as_str();
+        let unknown = case["playing_unknown"].as_bool().unwrap();
+        let manual = case["manual_during_resolution"].as_str();
+        let mut results: Vec<bool> = case["play_results"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v.as_bool().unwrap())
+            .collect();
+        if before.is_some() || unknown || manual.is_some() {
+            results.insert(0, true);
+        }
+        let backend = FakeBackend::with_results(&results);
+        let prefs = RadioPreferences::new(None).shared();
+        for (cs, url) in case["preferred"].as_object().unwrap() {
+            prefs
+                .lock()
+                .unwrap()
+                .set_preferred_url(cs, url.as_str().unwrap());
+        }
+        let session = RadioSession::new(backend.clone(), Some(prefs.clone()));
+        if before.is_some() || unknown {
+            session.update(|s| s.playing_station = station_by(before));
+            session.player.play("manual");
+        }
+        let urls = Arc::new(FakeUrls::default());
+        *urls.urls.lock().unwrap() = serde_json::from_value(case["urls"].clone()).unwrap();
+        let clock: Vec<f64> = serde_json::from_value(case["clock"].clone()).unwrap();
+        let clock = Mutex::new(VecDeque::from(clock));
+        let statuses = Arc::new(Mutex::new(Vec::<String>::new()));
+        let sink = statuses.clone();
+        let pending: Pending = Arc::default();
+        let queue = pending.clone();
+        let (enabled, duration) = (
+            case["enabled"].as_bool().unwrap(),
+            case["duration"].as_i64().unwrap(),
+        );
+        let resolved = station_by(case["resolved"].as_str());
+        let tuner = AlertRadioAutoTuner::new(AutoTunerDeps {
+            settings_provider: Box::new(move || Some(settings(enabled, duration))),
+            location_provider: Box::new(|| None),
+            status_callback: Some(Arc::new(move |m| sink.lock().unwrap().push(m))),
+            session: session.clone(),
+            preferences: prefs.clone(),
+            station_resolver: Arc::new(MappedResolver {
+                station: resolved,
+                ..Default::default()
+            }),
+            url_provider: urls.clone(),
+            spawn: Arc::new(move |work| queue.lock().unwrap().push(work)),
+            monotonic: Arc::new(move || clock.lock().unwrap().pop_front().unwrap_or(0.0)),
+        });
+        for batch in case["batches"].as_array().unwrap() {
+            let alerts: Vec<WeatherAlert> = batch
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|n| alert_by_name(n.as_str().unwrap()))
+                .collect();
+            tuner.tune_for_alerts(&alerts);
+        }
+        if manual.is_some() {
+            session.update(|s| s.playing_station = station_by(manual));
+            session.player.play("manual");
+        }
+        if case["cancel_before_run"].as_bool().unwrap() {
+            tuner.stop();
+        }
+        let workers: Vec<crate::Work> = std::mem::take(&mut *pending.lock().unwrap());
+        let worker_count = workers.len();
+        for work in workers {
+            work();
+        }
+
+        let opened = backend.opened();
+        let played: Vec<String> = opened.iter().filter(|u| *u != "manual").cloned().collect();
+        // Python counts session.stop() calls; here, streams that were stopped.
+        let auto_stops = backend
+            .streams
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|s| s.stopped.load(Ordering::SeqCst))
+            .count();
+        assert_eq!(
+            worker_count as u64,
+            case["workers"].as_u64().unwrap(),
+            "{name}"
+        );
+        assert_eq!(
+            *statuses.lock().unwrap(),
+            serde_json::from_value::<Vec<String>>(case["statuses"].clone()).unwrap(),
+            "{name}"
+        );
+        assert_eq!(
+            played,
+            serde_json::from_value::<Vec<String>>(case["played"].clone()).unwrap(),
+            "{name}"
+        );
+        let waits: Vec<f64> = serde_json::from_value(case["waits"].clone()).unwrap();
+        assert_eq!(*tuner.wake.waits.lock().unwrap(), waits, "{name}");
+        assert_eq!(
+            tuner.wake.sets.load(Ordering::SeqCst) as u64,
+            case["wake_sets"].as_u64().unwrap(),
+            "{name}"
+        );
+        assert_eq!(auto_stops as u64, case["stops"].as_u64().unwrap(), "{name}");
+        assert_eq!(
+            urls.calls.load(Ordering::SeqCst) as u64,
+            case["url_lookups"].as_u64().unwrap(),
+            "{name}"
+        );
+        assert_eq!(
+            session.playing_station().map(|s| s.call_sign).as_deref(),
+            case["final_station"].as_str(),
+            "{name}"
+        );
+        assert_eq!(
+            prefs.lock().unwrap().get_last_station().as_deref(),
+            case["last_station"].as_str(),
+            "{name}"
+        );
+    }
+}

@@ -13,6 +13,7 @@ NSAccessibility and AT-SPI respectively, like the wxPython edition.
 | `aw-core` | Domain models, settings (JSON-compatible with the Python app), units, source planning, alerts, text presentation |
 | `aw-providers` | NWS, Open-Meteo, Pirate Weather, geocoding, multi-source fetch/merge with fallback |
 | `aw-store` | Config directories, portable mode, API keys (keyring / encrypted bundle), atomic JSON persistence |
+| `aw-radio` | NOAA Weather Radio: station finder, stream lookup, network playback (rodio + symphonia), hotkey toggle, alert auto-tune |
 | `aw-app` (`accessiweather`) | The executable: CLI, wxDragon windows and dialogs, refresh loop |
 
 ## Building
@@ -29,7 +30,7 @@ cargo build --release -p accessiweather
 wxDragon compiles wxWidgets from source on first build (needs CMake and a C++
 toolchain; allow several minutes). Linux build dependencies (Debian/Ubuntu):
 `cmake build-essential libclang-dev pkg-config libglibmm-2.68-dev libgtk-3-dev
-libgl1-mesa-dev libglu1-mesa-dev`.
+libgl1-mesa-dev libglu1-mesa-dev libasound2-dev`.
 
 Keyboard shortcuts: F5 / Ctrl+R refresh, Alt+A add location, Ctrl+, settings,
 Ctrl+D forecast discussion, Ctrl+Shift+S read aloud, Escape stop speaking or

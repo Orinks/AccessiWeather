@@ -201,7 +201,7 @@ fn same_code_to_state(same_code: &str) -> Option<&'static str> {
     STATE_FIPS.iter().find(|(_, f)| *f == fips).map(|(s, _)| *s)
 }
 
-fn alert_states(alerts: &[WeatherAlert]) -> BTreeSet<String> {
+pub(crate) fn alert_states(alerts: &[WeatherAlert]) -> BTreeSet<String> {
     let mut states = BTreeSet::new();
     for alert in alerts {
         states.extend(

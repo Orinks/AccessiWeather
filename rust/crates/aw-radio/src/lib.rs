@@ -69,6 +69,16 @@ pub(crate) fn python_json(value: &Value) -> String {
     out
 }
 
+/// A golden file written by `rust/tools/golden/radio.py`.
+#[cfg(test)]
+pub(crate) fn golden(name: &str) -> Value {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../testdata/golden/radio")
+        .join(name);
+    let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+    serde_json::from_str(&text).unwrap()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

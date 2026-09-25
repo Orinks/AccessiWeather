@@ -369,4 +369,66 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn golden_labels() {
+        let golden = crate::golden("stations.json");
+        for case in golden["base_labels"].as_array().unwrap() {
+            let s = &case["station"];
+            let station = Station::new(
+                s["call_sign"].as_str().unwrap(),
+                s["frequency"].as_f64().unwrap(),
+                s["name"].as_str().unwrap(),
+                s["lat"].as_f64().unwrap(),
+                s["lon"].as_f64().unwrap(),
+                s["state"].as_str().unwrap(),
+            );
+            assert_eq!(base_label(&station), case["label"].as_str().unwrap());
+        }
+    }
+
+    #[test]
+    fn golden_cache_file_round_trips() {
+        let golden = crate::golden("files.json");
+        let dir = tempfile::tempdir().unwrap();
+        for case in golden["availability"].as_array().unwrap() {
+            let name = case["name"].as_str().unwrap();
+            let path = dir.path().join(format!("{name}.json"));
+            if let Some(text) = case["file"].as_str() {
+                std::fs::write(&path, text).unwrap();
+            }
+            let now = Arc::new(Mutex::new(case["now"].as_f64().unwrap()));
+            let clock_now = now.clone();
+            let mut cache = StationAvailabilityCache::with_clock(
+                path.clone(),
+                Box::new(move || *clock_now.lock().unwrap()),
+            );
+            let loaded: Map<String, Value> = cache
+                .get_suppressed_call_signs()
+                .into_iter()
+                .map(|cs| {
+                    let r = cache.get_record(&cs).unwrap();
+                    (cs, json!({"reason": r.reason, "expires_at": r.expires_at}))
+                })
+                .collect();
+            assert_eq!(Value::Object(loaded), case["loaded"], "{name}: loaded");
+            for op in case["ops"].as_array().unwrap() {
+                let arg = |i: usize| op[i].as_str().unwrap();
+                match arg(0) {
+                    "advance" => *now.lock().unwrap() += op[1].as_f64().unwrap(),
+                    "suppress" => cache.suppress(arg(1), op[2].as_u64().unwrap(), arg(3)),
+                    "clear" => cache.clear(arg(1)),
+                    other => panic!("unknown op {other}"),
+                }
+            }
+            let expected: Vec<String> = serde_json::from_value(case["suppressed"].clone()).unwrap();
+            assert_eq!(cache.get_suppressed_call_signs(), expected, "{name}");
+            let saved = std::fs::read_to_string(&path).ok();
+            assert_eq!(
+                saved.as_deref(),
+                case["saved_text"].as_str(),
+                "{name}: file"
+            );
+        }
+    }
 }
