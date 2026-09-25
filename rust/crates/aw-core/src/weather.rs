@@ -235,12 +235,6 @@ pub struct WeatherData {
     pub failed_sources: Vec<(String, String)>,
 }
 
-impl Default for Location {
-    fn default() -> Self {
-        Location::new("", 0.0, 0.0)
-    }
-}
-
 impl WeatherData {
     pub fn new(location: Location) -> Self {
         Self {

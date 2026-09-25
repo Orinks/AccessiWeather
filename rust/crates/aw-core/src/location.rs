@@ -59,6 +59,12 @@ impl Location {
     }
 }
 
+impl Default for Location {
+    fn default() -> Self {
+        Location::new("", 0.0, 0.0)
+    }
+}
+
 /// Whether a location should use US/NWS weather surfaces.
 ///
 /// Country codes are authoritative. The coordinate fallback is intentionally
