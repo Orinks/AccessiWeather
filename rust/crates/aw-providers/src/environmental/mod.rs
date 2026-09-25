@@ -6,7 +6,9 @@ pub mod airnow;
 
 use std::sync::{Arc, RwLock};
 
-use aw_core::model::{EnvironmentalConditions, HourlyAirQuality, HourlyUVIndex, Location, Timestamp};
+use aw_core::model::{
+    EnvironmentalConditions, HourlyAirQuality, HourlyUVIndex, Location, Timestamp,
+};
 use aw_core::py;
 use chrono::{Duration, FixedOffset, NaiveDateTime, TimeZone, Timelike};
 use serde_json::Value;
@@ -53,7 +55,9 @@ pub struct EnvironmentalDataClient {
 }
 
 fn is_sequence(value: Option<&Value>) -> bool {
-    value.and_then(Value::as_array).is_some_and(|a| !a.is_empty())
+    value
+        .and_then(Value::as_array)
+        .is_some_and(|a| !a.is_empty())
 }
 
 fn coerce_float(value: Option<&Value>) -> Option<f64> {
@@ -83,7 +87,11 @@ fn parse_local_aware(value: Option<&Value>, utc_offset: Option<&Value>) -> Optio
 }
 
 /// Index of the current local hour: the last entry at or before now.
-pub fn current_hour_index(times: Option<&Value>, utc_offset: Option<&Value>, now: Timestamp) -> usize {
+pub fn current_hour_index(
+    times: Option<&Value>,
+    utc_offset: Option<&Value>,
+    now: Timestamp,
+) -> usize {
     let Some(times) = times.and_then(Value::as_array).filter(|t| !t.is_empty()) else {
         return 0;
     };
@@ -134,7 +142,10 @@ pub fn value_near(series: Option<&Value>, index: usize) -> Option<f64> {
         if let Some(v) = series.get(index + step).and_then(|v| coerce_float(Some(v))) {
             return Some(v);
         }
-        if let Some(v) = index.checked_sub(step).and_then(|i| coerce_float(series.get(i))) {
+        if let Some(v) = index
+            .checked_sub(step)
+            .and_then(|i| coerce_float(series.get(i)))
+        {
             return Some(v);
         }
     }
@@ -172,8 +183,11 @@ impl EnvironmentalDataClient {
 
     /// Replace the AirNow client so a changed key takes effect immediately.
     pub fn set_airnow_api_key(&self, api_key: &str) {
-        *self.airnow.write().unwrap() =
-            Arc::new(AirNowClient::new(self.http.clone(), api_key, &self.user_agent));
+        *self.airnow.write().unwrap() = Arc::new(AirNowClient::new(
+            self.http.clone(),
+            api_key,
+            &self.user_agent,
+        ));
     }
 
     pub fn airnow(&self) -> Arc<AirNowClient> {
@@ -215,7 +229,8 @@ impl EnvironmentalDataClient {
                 ("longitude", py::float_repr(location.longitude)),
                 (
                     "hourly",
-                    "us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide".into(),
+                    "us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide"
+                        .into(),
                 ),
                 ("timezone", "auto".into()),
             ],
@@ -236,9 +251,10 @@ impl EnvironmentalDataClient {
             if count >= hours || i >= aqi_values.len() {
                 break;
             }
-            let (Some(timestamp), Some(aqi)) =
-                (parse_local_aware(times.get(i), offset), coerce_float(aqi_values.get(i)))
-            else {
+            let (Some(timestamp), Some(aqi)) = (
+                parse_local_aware(times.get(i), offset),
+                coerce_float(aqi_values.get(i)),
+            ) else {
                 continue;
             };
             let mut entry = HourlyAirQuality {
@@ -312,7 +328,8 @@ impl EnvironmentalDataClient {
         let mut environmental = EnvironmentalConditions::default();
         let mut airnow_supplied_current = false;
         if options.include_air_quality && options.prefer_airnow {
-            airnow_supplied_current = self.populate_airnow_air_quality(location, &mut environmental);
+            airnow_supplied_current =
+                self.populate_airnow_air_quality(location, &mut environmental);
         }
         if options.include_air_quality && !airnow_supplied_current {
             self.populate_air_quality(location, &mut environmental, now);
@@ -321,7 +338,8 @@ impl EnvironmentalDataClient {
             self.populate_pollen(location, &mut environmental, now);
         }
         if options.include_hourly_air_quality {
-            if let Some(hourly) = self.fetch_hourly_air_quality(location, options.hourly_hours, now) {
+            if let Some(hourly) = self.fetch_hourly_air_quality(location, options.hourly_hours, now)
+            {
                 append_source(&mut environmental, OPENMETEO_AQ_SOURCE);
                 environmental.hourly_air_quality = hourly;
             }
@@ -334,7 +352,11 @@ impl EnvironmentalDataClient {
         environmental.has_data().then_some(environmental)
     }
 
-    fn populate_airnow_air_quality(&self, location: &Location, environmental: &mut EnvironmentalConditions) -> bool {
+    fn populate_airnow_air_quality(
+        &self,
+        location: &Location,
+        environmental: &mut EnvironmentalConditions,
+    ) -> bool {
         let observation = match self.airnow().fetch_current_air_quality(location) {
             Ok(Some(o)) => o,
             Ok(None) => return false,
@@ -356,7 +378,12 @@ impl EnvironmentalDataClient {
         true
     }
 
-    fn populate_air_quality(&self, location: &Location, environmental: &mut EnvironmentalConditions, now: Timestamp) {
+    fn populate_air_quality(
+        &self,
+        location: &Location,
+        environmental: &mut EnvironmentalConditions,
+        now: Timestamp,
+    ) {
         let mut params = Self::base_params(location);
         params.push(("hourly", "us_aqi,us_aqi_pm2_5,us_aqi_pm10".into()));
         let Some(payload) = self.get(&build_url(AIR_QUALITY_ENDPOINT, &params)) else {
@@ -397,7 +424,12 @@ impl EnvironmentalDataClient {
         }
     }
 
-    fn populate_pollen(&self, location: &Location, environmental: &mut EnvironmentalConditions, now: Timestamp) {
+    fn populate_pollen(
+        &self,
+        location: &Location,
+        environmental: &mut EnvironmentalConditions,
+        now: Timestamp,
+    ) {
         let mut params = Self::base_params(location);
         params.push(("hourly", "tree_pollen,grass_pollen,weed_pollen".into()));
         let Some(payload) = self.get(&build_url(POLLEN_ENDPOINT, &params)) else {
@@ -416,7 +448,11 @@ impl EnvironmentalDataClient {
 
         let mut primary: Option<&str> = None;
         let mut primary_value = -1.0;
-        for (label, key) in [("Tree", "tree_pollen"), ("Grass", "grass_pollen"), ("Weed", "weed_pollen")] {
+        for (label, key) in [
+            ("Tree", "tree_pollen"),
+            ("Grass", "grass_pollen"),
+            ("Weed", "weed_pollen"),
+        ] {
             let Some(value) = value_near(hourly.get(key), current) else {
                 continue;
             };
@@ -463,10 +499,22 @@ mod tests {
 
     #[test]
     fn current_hour_index_respects_offset() {
-        assert_eq!(current_hour_index(Some(&times(11, 7)), Some(&json!(0)), now()), 3);
-        assert_eq!(current_hour_index(Some(&times(8, 6)), Some(&json!(-4 * 3600)), now()), 2);
-        assert_eq!(current_hour_index(Some(&json!([])), Some(&json!(0)), now()), 0);
-        assert_eq!(current_hour_index(Some(&times(20, 3)), Some(&json!(0)), now()), 0);
+        assert_eq!(
+            current_hour_index(Some(&times(11, 7)), Some(&json!(0)), now()),
+            3
+        );
+        assert_eq!(
+            current_hour_index(Some(&times(8, 6)), Some(&json!(-4 * 3600)), now()),
+            2
+        );
+        assert_eq!(
+            current_hour_index(Some(&json!([])), Some(&json!(0)), now()),
+            0
+        );
+        assert_eq!(
+            current_hour_index(Some(&times(20, 3)), Some(&json!(0)), now()),
+            0
+        );
     }
 
     #[test]
@@ -481,7 +529,10 @@ mod tests {
     #[test]
     fn drop_past_hours_keeps_current_hour() {
         let at = |h: u32| HourlyUVIndex {
-            timestamp: Utc.with_ymd_and_hms(2025, 6, 1, h, 0, 0).unwrap().fixed_offset(),
+            timestamp: Utc
+                .with_ymd_and_hms(2025, 6, 1, h, 0, 0)
+                .unwrap()
+                .fixed_offset(),
             uv_index: 1.0,
             category: "Low".into(),
         };
@@ -507,7 +558,11 @@ mod tests {
         );
         let client = EnvironmentalDataClient::new(http.clone(), "AccessiWeather/2.0", "");
         let env = client
-            .fetch(&Location::new("x", 40.0, -74.0), FetchOptions::default(), now())
+            .fetch(
+                &Location::new("x", 40.0, -74.0),
+                FetchOptions::default(),
+                now(),
+            )
             .unwrap();
         assert_eq!(env.air_quality_index, Some(55.4));
         assert_eq!(env.air_quality_category.as_deref(), Some("Moderate"));
@@ -515,7 +570,10 @@ mod tests {
         assert_eq!(env.pollen_index, Some(45.5));
         assert_eq!(env.pollen_primary_allergen.as_deref(), Some("Grass"));
         assert_eq!(env.pollen_category.as_deref(), Some("Moderate"));
-        assert_eq!(env.sources, vec!["Open-Meteo Air Quality", "Open-Meteo Pollen"]);
+        assert_eq!(
+            env.sources,
+            vec!["Open-Meteo Air Quality", "Open-Meteo Pollen"]
+        );
         assert_eq!(env.hourly_air_quality.len(), 2);
         assert_eq!(env.hourly_air_quality[0].aqi, 55);
         assert_eq!(env.hourly_air_quality[0].pm2_5, Some(3.1));

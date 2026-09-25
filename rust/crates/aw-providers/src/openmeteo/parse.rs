@@ -34,7 +34,10 @@ fn num(values: &[Value], i: usize) -> Option<f64> {
 /// `f"{value:.1f}"` without trailing zeros, plus " mph".
 pub fn format_wind_speed_mph(value: Option<f64>) -> Option<String> {
     let text = format!("{:.1}", value?);
-    Some(format!("{} mph", text.trim_end_matches('0').trim_end_matches('.')))
+    Some(format!(
+        "{} mph",
+        text.trim_end_matches('0').trim_end_matches('.')
+    ))
 }
 
 /// Daily forecast; `now` (local) stands in for Python's `datetime.now()`.
@@ -111,7 +114,8 @@ pub fn parse_openmeteo_hourly_forecast(data: &Value, now: Timestamp) -> HourlyFo
     let freezing_levels = series(hourly, "freezing_level_height");
     let visibilities = series(hourly, "visibility");
     let apparent_temps = series(hourly, "apparent_temperature");
-    let dewpoint_unit = unit(units, "dew_point_2m").or(Some(unit(units, "temperature_2m").unwrap_or("°F")));
+    let dewpoint_unit =
+        unit(units, "dew_point_2m").or(Some(unit(units, "temperature_2m").unwrap_or("°F")));
 
     let mut periods = Vec::with_capacity(times.len());
     for (i, time) in times.iter().enumerate() {
@@ -128,12 +132,15 @@ pub fn parse_openmeteo_hourly_forecast(data: &Value, now: Timestamp) -> HourlyFo
         );
         let (snow_depth_in, _) =
             normalize_snow_depth_to_inches_and_cm(num(snow_depths, i), unit(units, "snow_depth"));
-        let freezing_level_ft =
-            normalize_height_to_feet(num(freezing_levels, i), unit(units, "freezing_level_height"));
+        let freezing_level_ft = normalize_height_to_feet(
+            num(freezing_levels, i),
+            unit(units, "freezing_level_height"),
+        );
         let (visibility_miles, visibility_km) =
             normalize_visibility_to_miles_and_km(num(visibilities, i), unit(units, "visibility"));
         let apparent_temp = num(apparent_temps, i);
-        let dewpoint = normalize_dewpoint_pair(num(dew_points, i), dewpoint_unit, temperature, humidity);
+        let dewpoint =
+            normalize_dewpoint_pair(num(dew_points, i), dewpoint_unit, temperature, humidity);
         let apparent = classify_apparent_temperature(temperature, apparent_temp, None);
 
         let mut period = HourlyForecastPeriod::new(start_time);
@@ -180,7 +187,10 @@ mod tests {
     #[test]
     fn wind_speed_text_trims_zeros() {
         assert_eq!(format_wind_speed_mph(Some(12.0)).as_deref(), Some("12 mph"));
-        assert_eq!(format_wind_speed_mph(Some(12.34)).as_deref(), Some("12.3 mph"));
+        assert_eq!(
+            format_wind_speed_mph(Some(12.34)).as_deref(),
+            Some("12.3 mph")
+        );
         assert_eq!(format_wind_speed_mph(Some(0.04)).as_deref(), Some("0 mph"));
         assert_eq!(format_wind_speed_mph(None), None);
     }

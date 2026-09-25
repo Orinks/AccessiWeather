@@ -82,13 +82,21 @@ impl<'a> OpenMeteoApiClient<'a> {
         params: &[(&'static str, String)],
         use_archive: bool,
     ) -> Result<Value, OpenMeteoError> {
-        let base = if use_archive { ARCHIVE_BASE_URL } else { BASE_URL };
+        let base = if use_archive {
+            ARCHIVE_BASE_URL
+        } else {
+            BASE_URL
+        };
         let url = build_url(&format!("{base}/{endpoint}"), params);
         self.http
             .get_json_with_headers(&url, &[("User-Agent", &self.user_agent)])
             .map_err(|e| match e {
-                HttpError::Status { status: 400, .. } => OpenMeteoError::Api("API error: Bad request".into()),
-                HttpError::Status { status: 429, .. } => OpenMeteoError::Api("Rate limit exceeded".into()),
+                HttpError::Status { status: 400, .. } => {
+                    OpenMeteoError::Api("API error: Bad request".into())
+                }
+                HttpError::Status { status: 429, .. } => {
+                    OpenMeteoError::Api("Rate limit exceeded".into())
+                }
                 HttpError::Status { status, .. } if status >= 500 => {
                     OpenMeteoError::Api(format!("Server error: {status}"))
                 }
@@ -111,18 +119,38 @@ impl<'a> OpenMeteoApiClient<'a> {
         precipitation_unit: &str,
         model: &str,
     ) -> Result<Value, OpenMeteoError> {
-        let mut params = vec![("latitude", py::float_repr(latitude)), ("longitude", py::float_repr(longitude))];
+        let mut params = vec![
+            ("latitude", py::float_repr(latitude)),
+            ("longitude", py::float_repr(longitude)),
+        ];
         params.extend(list_param(
             "current",
             &[
-                "temperature_2m", "relative_humidity_2m", "dew_point_2m", "apparent_temperature",
-                "is_day", "precipitation", "weather_code", "cloud_cover", "pressure_msl",
-                "surface_pressure", "wind_speed_10m", "wind_direction_10m", "wind_gusts_10m",
-                "uv_index", "snowfall", "snow_depth", "visibility",
+                "temperature_2m",
+                "relative_humidity_2m",
+                "dew_point_2m",
+                "apparent_temperature",
+                "is_day",
+                "precipitation",
+                "weather_code",
+                "cloud_cover",
+                "pressure_msl",
+                "surface_pressure",
+                "wind_speed_10m",
+                "wind_direction_10m",
+                "wind_gusts_10m",
+                "uv_index",
+                "snowfall",
+                "snow_depth",
+                "visibility",
             ],
         ));
         params.extend(list_param("daily", &["sunrise", "sunset", "uv_index_max"]));
-        params.extend(common_units(temperature_unit, wind_speed_unit, precipitation_unit));
+        params.extend(common_units(
+            temperature_unit,
+            wind_speed_unit,
+            precipitation_unit,
+        ));
         params.push(("forecast_days", "1".into()));
         self.make_request("forecast", &with_model(params, model), false)
     }
@@ -138,18 +166,34 @@ impl<'a> OpenMeteoApiClient<'a> {
         precipitation_unit: &str,
         model: &str,
     ) -> Result<Value, OpenMeteoError> {
-        let mut params = vec![("latitude", py::float_repr(latitude)), ("longitude", py::float_repr(longitude))];
+        let mut params = vec![
+            ("latitude", py::float_repr(latitude)),
+            ("longitude", py::float_repr(longitude)),
+        ];
         params.extend(list_param(
             "daily",
             &[
-                "weather_code", "temperature_2m_max", "temperature_2m_min",
-                "apparent_temperature_max", "apparent_temperature_min", "sunrise", "sunset",
-                "precipitation_sum", "precipitation_probability_max", "wind_speed_10m_max",
-                "wind_gusts_10m_max", "wind_direction_10m_dominant", "uv_index_max",
+                "weather_code",
+                "temperature_2m_max",
+                "temperature_2m_min",
+                "apparent_temperature_max",
+                "apparent_temperature_min",
+                "sunrise",
+                "sunset",
+                "precipitation_sum",
+                "precipitation_probability_max",
+                "wind_speed_10m_max",
+                "wind_gusts_10m_max",
+                "wind_direction_10m_dominant",
+                "uv_index_max",
                 "snowfall_sum",
             ],
         ));
-        params.extend(common_units(temperature_unit, wind_speed_unit, precipitation_unit));
+        params.extend(common_units(
+            temperature_unit,
+            wind_speed_unit,
+            precipitation_unit,
+        ));
         params.push(("forecast_days", days.min(16).to_string()));
         self.make_request("forecast", &with_model(params, model), false)
     }
@@ -165,18 +209,38 @@ impl<'a> OpenMeteoApiClient<'a> {
         precipitation_unit: &str,
         model: &str,
     ) -> Result<Value, OpenMeteoError> {
-        let mut params = vec![("latitude", py::float_repr(latitude)), ("longitude", py::float_repr(longitude))];
+        let mut params = vec![
+            ("latitude", py::float_repr(latitude)),
+            ("longitude", py::float_repr(longitude)),
+        ];
         params.extend(list_param(
             "hourly",
             &[
-                "temperature_2m", "relative_humidity_2m", "apparent_temperature",
-                "precipitation_probability", "precipitation", "weather_code", "pressure_msl",
-                "surface_pressure", "cloud_cover", "wind_speed_10m", "wind_direction_10m",
-                "wind_gusts_10m", "is_day", "snowfall", "uv_index", "snow_depth",
-                "freezing_level_height", "visibility",
+                "temperature_2m",
+                "relative_humidity_2m",
+                "apparent_temperature",
+                "precipitation_probability",
+                "precipitation",
+                "weather_code",
+                "pressure_msl",
+                "surface_pressure",
+                "cloud_cover",
+                "wind_speed_10m",
+                "wind_direction_10m",
+                "wind_gusts_10m",
+                "is_day",
+                "snowfall",
+                "uv_index",
+                "snow_depth",
+                "freezing_level_height",
+                "visibility",
             ],
         ));
-        params.extend(common_units(temperature_unit, wind_speed_unit, precipitation_unit));
+        params.extend(common_units(
+            temperature_unit,
+            wind_speed_unit,
+            precipitation_unit,
+        ));
         params.push(("forecast_hours", hours.min(384).to_string()));
         self.make_request("forecast", &with_model(params, model), false)
     }
@@ -279,7 +343,12 @@ pub fn get_openmeteo_current_conditions(
     model: &str,
 ) -> Result<Option<CurrentConditions>, HttpError> {
     let url = current_conditions_url(location, base_url, model);
-    fetch(http, &url, "current conditions", parse_openmeteo_current_conditions)
+    fetch(
+        http,
+        &url,
+        "current conditions",
+        parse_openmeteo_current_conditions,
+    )
 }
 
 /// Daily forecast (`get_openmeteo_forecast`), clamped to 1-16 days.
@@ -329,8 +398,8 @@ pub fn get_openmeteo_all_data_parallel(
         let current = s.spawn(|| get_openmeteo_current_conditions(http, location, base_url, model));
         let forecast =
             s.spawn(|| get_openmeteo_forecast(http, location, base_url, forecast_days, model));
-        let hourly =
-            s.spawn(|| get_openmeteo_hourly_forecast(http, location, base_url, hourly_hours, model));
+        let hourly = s
+            .spawn(|| get_openmeteo_hourly_forecast(http, location, base_url, hourly_hours, model));
         let current = current.join().expect("Open-Meteo current thread")?;
         let forecast = forecast.join().expect("Open-Meteo forecast thread")?;
         let hourly = hourly.join().expect("Open-Meteo hourly thread")?;
@@ -350,7 +419,10 @@ mod tests {
 
     #[test]
     fn weather_descriptions() {
-        assert_eq!(OpenMeteoApiClient::get_weather_description(&json!(0)), "Clear sky");
+        assert_eq!(
+            OpenMeteoApiClient::get_weather_description(&json!(0)),
+            "Clear sky"
+        );
         assert_eq!(
             OpenMeteoApiClient::get_weather_description(&json!(999)),
             "Unknown weather code: 999"
@@ -369,7 +441,9 @@ mod tests {
         );
         assert!(forecast_url(&nyc(), BASE_URL, 30, "gfs_seamless")
             .ends_with("&forecast_days=16&models=gfs_seamless"));
-        assert!(hourly_forecast_url(&nyc(), BASE_URL, 0, "best_match").ends_with("&forecast_hours=1"));
+        assert!(
+            hourly_forecast_url(&nyc(), BASE_URL, 0, "best_match").ends_with("&forecast_hours=1")
+        );
     }
 
     #[test]
@@ -392,9 +466,11 @@ mod tests {
     #[test]
     fn non_retryable_failures_become_none() {
         let http = FixtureClient::new().with_status(BASE_URL, 404);
-        assert!(get_openmeteo_forecast(&http, &nyc(), BASE_URL, 7, "best_match")
-            .unwrap()
-            .is_none());
+        assert!(
+            get_openmeteo_forecast(&http, &nyc(), BASE_URL, 7, "best_match")
+                .unwrap()
+                .is_none()
+        );
         let http = FixtureClient::new().with_status(BASE_URL, 503);
         assert!(get_openmeteo_forecast(&http, &nyc(), BASE_URL, 7, "best_match").is_err());
     }

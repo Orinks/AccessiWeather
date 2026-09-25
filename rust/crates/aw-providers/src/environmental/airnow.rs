@@ -95,7 +95,9 @@ fn coerce_aqi(value: Option<&Value>) -> Option<i64> {
 
 fn coerce_hour(value: Option<&Value>) -> Option<u32> {
     let hour: i64 = match value? {
-        Value::Number(n) => n.as_i64().or_else(|| n.as_f64().map(|f| f.trunc() as i64))?,
+        Value::Number(n) => n
+            .as_i64()
+            .or_else(|| n.as_f64().map(|f| f.trunc() as i64))?,
         Value::String(s) => s.trim().split(':').next()?.trim().parse().ok()?,
         _ => return None,
     };
@@ -132,15 +134,26 @@ fn parse_observed_at(item: &serde_json::Map<String, Value>) -> Option<Timestamp>
     match zone {
         Some(name) => {
             if let Some(hours) = timezone_offset_hours(&name.to_uppercase()) {
-                return FixedOffset::east_opt(hours * 3600)?.from_local_datetime(&naive).single();
+                return FixedOffset::east_opt(hours * 3600)?
+                    .from_local_datetime(&naive)
+                    .single();
             }
             match name.parse::<Tz>() {
-                Ok(tz) => tz.from_local_datetime(&naive).earliest().map(|t| t.fixed_offset()),
+                Ok(tz) => tz
+                    .from_local_datetime(&naive)
+                    .earliest()
+                    .map(|t| t.fixed_offset()),
                 // Python keeps a naive local time here.
-                Err(_) => Local.from_local_datetime(&naive).earliest().map(|t| t.fixed_offset()),
+                Err(_) => Local
+                    .from_local_datetime(&naive)
+                    .earliest()
+                    .map(|t| t.fixed_offset()),
             }
         }
-        None => Local.from_local_datetime(&naive).earliest().map(|t| t.fixed_offset()),
+        None => Local
+            .from_local_datetime(&naive)
+            .earliest()
+            .map(|t| t.fixed_offset()),
     }
 }
 
@@ -219,10 +232,14 @@ impl AirNowClient {
             return Err(InvalidCoordinates("longitude must be finite".into()));
         }
         if !(-90.0..=90.0).contains(&lat) {
-            return Err(InvalidCoordinates("latitude must be between -90 and 90".into()));
+            return Err(InvalidCoordinates(
+                "latitude must be between -90 and 90".into(),
+            ));
         }
         if !(-180.0..=180.0).contains(&lon) {
-            return Err(InvalidCoordinates("longitude must be between -180 and 180".into()));
+            return Err(InvalidCoordinates(
+                "longitude must be between -180 and 180".into(),
+            ));
         }
         Ok((lat, lon))
     }
@@ -287,9 +304,15 @@ impl AirNowClient {
             }
             Err(e) => match e.status() {
                 Some(401 | 403) => (false, Some("Invalid API key".into())),
-                Some(429) => (false, Some("Rate limit exceeded — but key appears valid".into())),
+                Some(429) => (
+                    false,
+                    Some("Rate limit exceeded — but key appears valid".into()),
+                ),
                 Some(status) => (false, Some(format!("AirNow returned HTTP {status}"))),
-                None => (false, Some(format!("Could not reach AirNow ({})", error_kind(&e)))),
+                None => (
+                    false,
+                    Some(format!("Could not reach AirNow ({})", error_kind(&e))),
+                ),
             },
         }
     }
@@ -317,7 +340,10 @@ mod tests {
 
     fn client(http: FixtureClient) -> (Arc<FixtureClient>, AirNowClient) {
         let http = Arc::new(http);
-        (http.clone(), AirNowClient::new(http, " key ", "AccessiWeather/2.0"))
+        (
+            http.clone(),
+            AirNowClient::new(http, " key ", "AccessiWeather/2.0"),
+        )
     }
 
     #[test]
@@ -340,13 +366,17 @@ mod tests {
         assert_eq!(obs.aqi, 61);
         assert_eq!(obs.pollutant, "PM2.5");
         assert_eq!(obs.reporting_area.as_deref(), Some("Metro"));
-        assert_eq!(obs.observed_at.unwrap().to_rfc3339(), "2025-06-01T14:00:00-04:00");
+        assert_eq!(
+            obs.observed_at.unwrap().to_rfc3339(),
+            "2025-06-01T14:00:00-04:00"
+        );
         assert_eq!(
             http.request_log()[0],
             "https://www.airnowapi.org/aq/observation/current/ziplatlong/?format=application%2Fjson&latitude=40.0&longitude=-75.0&distance=25&API_KEY=key"
         );
         // Cached for an hour.
-        c.fetch_current_air_quality(&Location::new("x", 40.0, -75.0)).unwrap();
+        c.fetch_current_air_quality(&Location::new("x", 40.0, -75.0))
+            .unwrap();
         assert_eq!(http.request_log().len(), 1);
     }
 
@@ -358,7 +388,10 @@ mod tests {
         let obs = parse_observations(&payload).unwrap();
         assert_eq!(obs.aqi, 151);
         assert_eq!(obs.category, "Unhealthy");
-        assert_eq!(obs.observed_at.unwrap().to_rfc3339(), "2025-06-01T09:00:00-06:00");
+        assert_eq!(
+            obs.observed_at.unwrap().to_rfc3339(),
+            "2025-06-01T09:00:00-06:00"
+        );
         assert!(parse_observations(&json!([{"AQI": -1}, {"AQI": true}, "x"])).is_none());
         assert!(parse_observations(&json!({"a": 1})).is_none());
     }
@@ -366,30 +399,60 @@ mod tests {
     #[test]
     fn invalid_coordinates_and_missing_key() {
         let (http, c) = client(FixtureClient::new());
-        assert!(c.fetch_current_air_quality(&Location::new("x", 91.0, 0.0)).is_err());
+        assert!(c
+            .fetch_current_air_quality(&Location::new("x", 91.0, 0.0))
+            .is_err());
         let c2 = AirNowClient::new(http.clone(), "", "UA");
-        assert_eq!(c2.fetch_current_air_quality(&Location::new("x", 1.0, 1.0)), Ok(None));
+        assert_eq!(
+            c2.fetch_current_air_quality(&Location::new("x", 1.0, 1.0)),
+            Ok(None)
+        );
         assert!(http.request_log().is_empty());
+    }
+
+    #[test]
+    fn empty_answers_are_cached_but_failures_are_not() {
+        let (http, c) = client(FixtureClient::new().with(ENDPOINT, json!([])));
+        let here = Location::new("x", 1.0, 1.0);
+        assert_eq!(c.fetch_current_air_quality(&here), Ok(None));
+        assert_eq!(c.fetch_current_air_quality(&here), Ok(None));
+        assert_eq!(http.request_log().len(), 1);
+
+        let (http, c) = client(FixtureClient::new().with_status(ENDPOINT, 500));
+        c.fetch_current_air_quality(&here).unwrap();
+        c.fetch_current_air_quality(&here).unwrap();
+        assert_eq!(http.request_log().len(), 2);
     }
 
     #[test]
     fn validation_messages() {
         let check = |http: FixtureClient| client(http).1.validate_api_key();
-        assert_eq!(check(FixtureClient::new().with(ENDPOINT, json!([]))), (true, None));
         assert_eq!(
-            check(FixtureClient::new().with_status(ENDPOINT, 403)).1.as_deref(),
+            check(FixtureClient::new().with(ENDPOINT, json!([]))),
+            (true, None)
+        );
+        assert_eq!(
+            check(FixtureClient::new().with_status(ENDPOINT, 403))
+                .1
+                .as_deref(),
             Some("Invalid API key")
         );
         assert_eq!(
-            check(FixtureClient::new().with_status(ENDPOINT, 429)).1.as_deref(),
+            check(FixtureClient::new().with_status(ENDPOINT, 429))
+                .1
+                .as_deref(),
             Some("Rate limit exceeded — but key appears valid")
         );
         assert_eq!(
-            check(FixtureClient::new().with(ENDPOINT, json!({"WebServiceError": [1]}))).1.as_deref(),
+            check(FixtureClient::new().with(ENDPOINT, json!({"WebServiceError": [1]})))
+                .1
+                .as_deref(),
             Some("Invalid API key")
         );
         assert_eq!(
-            check(FixtureClient::new().with_transport_error(ENDPOINT, "dns")).1.as_deref(),
+            check(FixtureClient::new().with_transport_error(ENDPOINT, "dns"))
+                .1
+                .as_deref(),
             Some("Could not reach AirNow (ConnectError)")
         );
         assert_eq!(
@@ -400,8 +463,14 @@ mod tests {
 
     #[test]
     fn category_boundaries() {
-        for (aqi, cat) in [(50.0, "Good"), (51.0, "Moderate"), (101.0, "Unhealthy for Sensitive Groups"),
-            (151.0, "Unhealthy"), (201.0, "Very Unhealthy"), (301.0, "Hazardous")] {
+        for (aqi, cat) in [
+            (50.0, "Good"),
+            (51.0, "Moderate"),
+            (101.0, "Unhealthy for Sensitive Groups"),
+            (151.0, "Unhealthy"),
+            (201.0, "Very Unhealthy"),
+            (301.0, "Hazardous"),
+        ] {
             assert_eq!(air_quality_category(aqi), cat);
         }
     }

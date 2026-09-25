@@ -33,8 +33,12 @@ pub enum GeocodingError {
 impl GeocodingError {
     fn from_http(e: HttpError) -> Self {
         match e {
-            HttpError::Status { status: 400, .. } => GeocodingError::Api("API error: Bad request".into()),
-            HttpError::Status { status: 429, .. } => GeocodingError::Api("Rate limit exceeded".into()),
+            HttpError::Status { status: 400, .. } => {
+                GeocodingError::Api("API error: Bad request".into())
+            }
+            HttpError::Status { status: 429, .. } => {
+                GeocodingError::Api("Rate limit exceeded".into())
+            }
             HttpError::Status { status, .. } if status >= 500 => {
                 GeocodingError::Api(format!("Server error: {status}"))
             }
@@ -137,7 +141,12 @@ impl<'a> OpenMeteoGeocodingClient<'a> {
 
     /// Search by name, retrying with simplified, accented and country-hinted
     /// queries when the literal query has no results.
-    pub fn search(&self, name: &str, count: usize, language: &str) -> Result<Vec<GeocodingResult>, GeocodingError> {
+    pub fn search(
+        &self,
+        name: &str,
+        count: usize,
+        language: &str,
+    ) -> Result<Vec<GeocodingResult>, GeocodingError> {
         let search_name = name.trim();
         let params = [
             ("count", count.min(100).to_string()),
@@ -159,7 +168,11 @@ impl<'a> OpenMeteoGeocodingClient<'a> {
         Ok(Vec::new())
     }
 
-    fn search_once(&self, name: &str, base: &[(&'static str, String); 3]) -> Result<Vec<GeocodingResult>, GeocodingError> {
+    fn search_once(
+        &self,
+        name: &str,
+        base: &[(&'static str, String); 3],
+    ) -> Result<Vec<GeocodingResult>, GeocodingError> {
         let mut params = base.to_vec();
         params.push(("name", name.to_string()));
         let url = build_url(&format!("{}/search", self.base_url), &params);
@@ -176,7 +189,12 @@ pub fn parse_results(data: &Value) -> Vec<GeocodingResult> {
     let Some(items) = data.get("results").and_then(Value::as_array) else {
         return Vec::new();
     };
-    let text = |item: &Value, key: &str| item.get(key).and_then(Value::as_str).unwrap_or("").to_string();
+    let text = |item: &Value, key: &str| {
+        item.get(key)
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_string()
+    };
     let opt = |item: &Value, key: &str| item.get(key).and_then(Value::as_str).map(str::to_string);
     items
         .iter()
@@ -228,7 +246,11 @@ pub fn build_fallback_queries(name: &str) -> Vec<String> {
 }
 
 fn build_simplified_location_queries(name: &str) -> Vec<String> {
-    let parts: Vec<&str> = name.split(',').map(str::trim).filter(|p| !p.is_empty()).collect();
+    let parts: Vec<&str> = name
+        .split(',')
+        .map(str::trim)
+        .filter(|p| !p.is_empty())
+        .collect();
     if parts.len() < 2 || casefold(parts[0]) == casefold(name) {
         return Vec::new();
     }
@@ -463,7 +485,10 @@ mod tests {
         for bad in ["1234", "123456", "12345-678", "abcde", "12345-abcd"] {
             assert!(!GeocodingService::is_zip_code(bad));
         }
-        assert_eq!(GeocodingService::format_zip_code("12345-6789"), "12345, USA");
+        assert_eq!(
+            GeocodingService::format_zip_code("12345-6789"),
+            "12345, USA"
+        );
     }
 
     #[test]
@@ -493,15 +518,34 @@ mod tests {
     #[test]
     fn nws_source_filters_to_us_and_retries_accents() {
         let http = FixtureClient::new()
-            .with(&format!("{BASE_URL}/search?count=5&language=en&format=json&name=London"),
-                json!({"results": [result("London", "United Kingdom", "GB", Some(8_000_000))]}))
-            .with(&format!("{BASE_URL}/search?count=5&language=en&format=json&name=Zurich"), json!({}))
-            .with(&format!("{BASE_URL}/search?count=5&language=en&format=json&name=Z%C3%BArich"), json!({}))
-            .with(&format!("{BASE_URL}/search?count=5&language=en&format=json&name=Z%C3%B9rich"), json!({}))
-            .with(&format!("{BASE_URL}/search?count=5&language=en&format=json&name=Z%C3%BBrich"), json!({}))
-            .with(&format!("{BASE_URL}/search?count=5&language=en&format=json&name=Z%C3%BCrich"),
-                json!({"results": [result("Zürich", "Switzerland", "CH", Some(400_000))]}))
-            .with(&format!("{BASE_URL}/search?count=5&language=en&format=json&name=Z"), json!({}));
+            .with(
+                &format!("{BASE_URL}/search?count=5&language=en&format=json&name=London"),
+                json!({"results": [result("London", "United Kingdom", "GB", Some(8_000_000))]}),
+            )
+            .with(
+                &format!("{BASE_URL}/search?count=5&language=en&format=json&name=Zurich"),
+                json!({}),
+            )
+            .with(
+                &format!("{BASE_URL}/search?count=5&language=en&format=json&name=Z%C3%BArich"),
+                json!({}),
+            )
+            .with(
+                &format!("{BASE_URL}/search?count=5&language=en&format=json&name=Z%C3%B9rich"),
+                json!({}),
+            )
+            .with(
+                &format!("{BASE_URL}/search?count=5&language=en&format=json&name=Z%C3%BBrich"),
+                json!({}),
+            )
+            .with(
+                &format!("{BASE_URL}/search?count=5&language=en&format=json&name=Z%C3%BCrich"),
+                json!({"results": [result("Zürich", "Switzerland", "CH", Some(400_000))]}),
+            )
+            .with(
+                &format!("{BASE_URL}/search?count=5&language=en&format=json&name=Z"),
+                json!({}),
+            );
         let nws = GeocodingService::new(&http, "AccessiWeather", "nws");
         assert_eq!(nws.geocode_address("London"), None);
         let auto = GeocodingService::new(&http, "AccessiWeather", "auto");

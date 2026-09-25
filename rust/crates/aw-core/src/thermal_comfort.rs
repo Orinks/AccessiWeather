@@ -60,8 +60,7 @@ pub fn sanitize_thermal_comfort_readings(input: ThermalComfortInput) -> ThermalC
     }
 
     if let (Some(feels), Some(t)) = (feels_f, temp_f) {
-        if feels > t && heat_f.is_none() && warm_heat_index_is_coherent(temp_f, humidity, feels_f)
-        {
+        if feels > t && heat_f.is_none() && warm_heat_index_is_coherent(temp_f, humidity, feels_f) {
             heat_f = feels_f;
         } else if feels < t && chill_f.is_none() {
             chill_f = feels_f;
@@ -111,7 +110,10 @@ pub fn calculate_wind_chill_f(temperature_f: f64, wind_speed_mph: f64) -> Option
         return None;
     }
     let wind_factor = wind_speed_mph.powf(0.16);
-    Some(35.74 + (0.6215 * temperature_f) - (35.75 * wind_factor) + (0.4275 * temperature_f * wind_factor))
+    Some(
+        35.74 + (0.6215 * temperature_f) - (35.75 * wind_factor)
+            + (0.4275 * temperature_f * wind_factor),
+    )
 }
 
 pub fn warm_apparent_temperature_is_coherent(
@@ -175,7 +177,12 @@ fn to_celsius(value_f: Option<f64>) -> Option<f64> {
 mod tests {
     use super::*;
 
-    fn readings(temp: f64, humidity: f64, feels: Option<f64>, heat: Option<f64>) -> ThermalComfortReadings {
+    fn readings(
+        temp: f64,
+        humidity: f64,
+        feels: Option<f64>,
+        heat: Option<f64>,
+    ) -> ThermalComfortReadings {
         sanitize_thermal_comfort_readings(ThermalComfortInput {
             temperature_f: Some(temp),
             humidity: Some(humidity),

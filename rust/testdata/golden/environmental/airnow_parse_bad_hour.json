@@ -1,0 +1,17 @@
+{
+ "input": [
+  {
+   "DateObserved": "2026-07-04",
+   "HourObserved": "25",
+   "LocalTimeZone": "HST",
+   "AQI": 5
+  }
+ ],
+ "output": {
+  "aqi": 5,
+  "category": "Good",
+  "pollutant": "Unknown",
+  "observed_at": null,
+  "reporting_area": null
+ }
+}

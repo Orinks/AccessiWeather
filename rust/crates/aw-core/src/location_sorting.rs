@@ -51,7 +51,8 @@ fn distance_miles(first: &Location, second: &Location) -> f64 {
     let lat2 = second.latitude.to_radians();
     let delta_lat = (second.latitude - first.latitude).to_radians();
     let delta_lon = (second.longitude - first.longitude).to_radians();
-    let a = (delta_lat / 2.0).sin().powi(2) + lat1.cos() * lat2.cos() * (delta_lon / 2.0).sin().powi(2);
+    let a =
+        (delta_lat / 2.0).sin().powi(2) + lat1.cos() * lat2.cos() * (delta_lon / 2.0).sin().powi(2);
     let c = 2.0 * a.sqrt().atan2((1.0 - a).max(0.0).sqrt());
     earth_radius_miles * c
 }
@@ -78,7 +79,10 @@ mod tests {
     #[test]
     fn manual_keeps_order() {
         let locs = vec![Location::new("b", 0.0, 0.0), Location::new("a", 0.0, 0.0)];
-        assert_eq!(names(&sort_locations_for_display(&locs, "manual", None)), ["b", "a"]);
+        assert_eq!(
+            names(&sort_locations_for_display(&locs, "manual", None)),
+            ["b", "a"]
+        );
     }
 
     #[test]

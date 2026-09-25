@@ -105,7 +105,8 @@ impl CurrentLocationService {
         match self.provider.detect(timeout) {
             Ok(coordinates) => CurrentLocationResult {
                 status: LocationDetectionStatus::Success,
-                message: "Current location detected. Review the editable name before saving.".into(),
+                message: "Current location detected. Review the editable name before saving."
+                    .into(),
                 coordinates: Some(coordinates),
                 location: Some(location_from_coordinates(coordinates, None)),
             },
@@ -161,7 +162,9 @@ mod windows_provider {
     use windows::Devices::Geolocation::{GeolocationAccessStatus, Geolocator, PositionAccuracy};
     use windows_future::IAsyncOperation;
 
-    use super::{CurrentCoordinates, CurrentLocationProvider, DetectError, LocationDetectionStatus};
+    use super::{
+        CurrentCoordinates, CurrentLocationProvider, DetectError, LocationDetectionStatus,
+    };
 
     /// One-shot Windows Location Services provider.
     pub struct WindowsLocationProvider;
@@ -258,7 +261,8 @@ mod tests {
 
     #[test]
     fn unsupported_provider_reports_manual_fallback() {
-        let r = CurrentLocationService::new(Box::new(UnsupportedLocationProvider)).detect_once(DEFAULT_TIMEOUT);
+        let r = CurrentLocationService::new(Box::new(UnsupportedLocationProvider))
+            .detect_once(DEFAULT_TIMEOUT);
         assert_eq!(r.status, LocationDetectionStatus::Unsupported);
         assert_eq!(
             r.message,
@@ -270,25 +274,45 @@ mod tests {
     fn failures_are_normalized() {
         let r = service(Err(DetectError::Timeout)).detect_once(DEFAULT_TIMEOUT);
         assert_eq!(r.status, LocationDetectionStatus::Timeout);
-        assert_eq!(r.message, "Current location detection timed out. You can still search manually.");
+        assert_eq!(
+            r.message,
+            "Current location detection timed out. You can still search manually."
+        );
         let r = service(Err(DetectError::Failed("boom".into()))).detect_once(DEFAULT_TIMEOUT);
         assert_eq!(r.status, LocationDetectionStatus::Unavailable);
-        assert_eq!(r.message, "Current location is unavailable. You can still search manually.");
+        assert_eq!(
+            r.message,
+            "Current location is unavailable. You can still search manually."
+        );
         let denied = DetectError::Known(LocationDetectionStatus::Denied, "no".into());
-        assert_eq!(service(Err(denied)).detect_once(DEFAULT_TIMEOUT).message, "no");
+        assert_eq!(
+            service(Err(denied)).detect_once(DEFAULT_TIMEOUT).message,
+            "no"
+        );
     }
 
     #[test]
     fn coordinates_become_an_editable_location() {
-        let coords = CurrentCoordinates { latitude: 40.7128, longitude: -74.006, accuracy_meters: Some(25.0) };
+        let coords = CurrentCoordinates {
+            latitude: 40.7128,
+            longitude: -74.006,
+            accuracy_meters: Some(25.0),
+        };
         let r = service(Ok(coords)).detect_once(DEFAULT_TIMEOUT);
         assert_eq!(r.status, LocationDetectionStatus::Success);
-        assert_eq!(r.message, "Current location detected. Review the editable name before saving.");
+        assert_eq!(
+            r.message,
+            "Current location detected. Review the editable name before saving."
+        );
         let location = r.location.unwrap();
         assert_eq!(location.name, "Current Location (40.7128, -74.0060)");
         assert_eq!(location.country_code.as_deref(), Some("US"));
 
-        let toronto = CurrentCoordinates { latitude: 43.65, longitude: -79.38, accuracy_meters: None };
+        let toronto = CurrentCoordinates {
+            latitude: 43.65,
+            longitude: -79.38,
+            accuracy_meters: None,
+        };
         assert_eq!(location_from_coordinates(toronto, None).country_code, None);
     }
 }

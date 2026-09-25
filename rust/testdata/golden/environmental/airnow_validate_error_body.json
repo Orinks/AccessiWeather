@@ -1,0 +1,20 @@
+{
+ "exchanges": [
+  {
+   "url": "https://www.airnowapi.org/aq/observation/current/ziplatlong/?format=application%2Fjson&latitude=38.8977&longitude=-77.0365&distance=25&API_KEY=key",
+   "headers": {
+    "user-agent": "AccessiWeather/2.0"
+   },
+   "status": 200,
+   "body": {
+    "WebServiceError": [
+     {
+      "Message": "Invalid API key"
+     }
+    ]
+   }
+  }
+ ],
+ "valid": false,
+ "reason": "Invalid API key"
+}

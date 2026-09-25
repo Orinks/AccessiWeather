@@ -1,0 +1,38 @@
+{
+ "now": "2025-01-15T12:30:00-05:00",
+ "options": {
+  "include_hourly_uv": true
+ },
+ "airnow_key": "",
+ "exchanges": [
+  {
+   "url": "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=39.9526&longitude=-75.1652&timezone=auto&hourly=us_aqi%2Cus_aqi_pm2_5%2Cus_aqi_pm10",
+   "headers": {
+    "user-agent": "AccessiWeather/2.0"
+   },
+   "error": "transport"
+  },
+  {
+   "url": "https://pollen-api.open-meteo.com/v1/pollen?latitude=39.9526&longitude=-75.1652&timezone=auto&hourly=tree_pollen%2Cgrass_pollen%2Cweed_pollen",
+   "headers": {
+    "user-agent": "AccessiWeather/2.0"
+   },
+   "error": "transport"
+  },
+  {
+   "url": "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=39.9526&longitude=-75.1652&hourly=us_aqi%2Cpm2_5%2Cpm10%2Cozone%2Cnitrogen_dioxide%2Csulphur_dioxide%2Ccarbon_monoxide&timezone=auto",
+   "headers": {
+    "user-agent": "AccessiWeather/2.0"
+   },
+   "error": "transport"
+  },
+  {
+   "url": "https://api.open-meteo.com/v1/forecast?latitude=39.9526&longitude=-75.1652&hourly=uv_index&timezone=auto&forecast_days=3",
+   "headers": {
+    "user-agent": "AccessiWeather/2.0"
+   },
+   "error": "transport"
+  }
+ ],
+ "output": null
+}

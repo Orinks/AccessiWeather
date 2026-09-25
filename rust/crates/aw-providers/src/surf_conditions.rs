@@ -64,7 +64,10 @@ fn format_value(value: Option<&Value>, unit: Option<&str>) -> Option<String> {
         Value::Null => return None,
         v @ (Value::Number(_) | Value::Bool(_)) => {
             let formatted = format!("{:.1}", py::number(Some(v))?);
-            formatted.trim_end_matches('0').trim_end_matches('.').to_string()
+            formatted
+                .trim_end_matches('0')
+                .trim_end_matches('.')
+                .to_string()
         }
         v => py::value_str(v).trim().to_string(),
     };
@@ -99,26 +102,48 @@ pub fn format_openmeteo_marine_report(
     let current = data.get("current")?.as_object().filter(|c| !c.is_empty())?;
     let current = Value::Object(current.clone());
     let empty = serde_json::Map::new();
-    let units = data.get("current_units").and_then(Value::as_object).unwrap_or(&empty);
+    let units = data
+        .get("current_units")
+        .and_then(Value::as_object)
+        .unwrap_or(&empty);
     let unit = |key: &str| units.get(key).and_then(Value::as_str);
 
-    let mut lines = vec![
+    let mut lines =
+        vec![
         format!("Surf conditions from Open-Meteo Marine for {}.", location.name),
         "Marine/surf conditions from Open-Meteo Marine; not an official NWS Surf Zone Forecast."
             .to_string(),
     ];
     let fields = [
-        ("Wave height", format_value(first_present(&current, "wave_height"), unit("wave_height"))),
-        ("Wave direction", format_direction(first_present(&current, "wave_direction"))),
-        ("Wave period", format_value(first_present(&current, "wave_period"), unit("wave_period"))),
+        (
+            "Wave height",
+            format_value(first_present(&current, "wave_height"), unit("wave_height")),
+        ),
+        (
+            "Wave direction",
+            format_direction(first_present(&current, "wave_direction")),
+        ),
+        (
+            "Wave period",
+            format_value(first_present(&current, "wave_period"), unit("wave_period")),
+        ),
         (
             "Swell height",
-            format_value(first_present(&current, "swell_wave_height"), unit("swell_wave_height")),
+            format_value(
+                first_present(&current, "swell_wave_height"),
+                unit("swell_wave_height"),
+            ),
         ),
-        ("Swell direction", format_direction(first_present(&current, "swell_wave_direction"))),
+        (
+            "Swell direction",
+            format_direction(first_present(&current, "swell_wave_direction")),
+        ),
         (
             "Swell period",
-            format_value(first_present(&current, "swell_wave_period"), unit("swell_wave_period")),
+            format_value(
+                first_present(&current, "swell_wave_period"),
+                unit("swell_wave_period"),
+            ),
         ),
         (
             "Sea surface temperature",
@@ -144,7 +169,10 @@ pub fn format_openmeteo_marine_report(
         .and_then(|s| py::fromisoformat(&s.replace('Z', "+00:00")))
         .and_then(|(naive, offset)| match offset {
             Some(off) => off.from_local_datetime(&naive).single(),
-            None => Local.from_local_datetime(&naive).earliest().map(|t| t.fixed_offset()),
+            None => Local
+                .from_local_datetime(&naive)
+                .earliest()
+                .map(|t| t.fixed_offset()),
         });
     Some(SurfConditionReport {
         source_name: "Open-Meteo Marine".into(),
@@ -177,10 +205,8 @@ pub fn fetch_openmeteo_marine_surf_conditions(
 ) -> Option<TextProduct> {
     let url = marine_url(location, marine_base_url);
     match http.get_json_with_headers(&url, &[("User-Agent", user_agent)]) {
-        Ok(data) => {
-            format_openmeteo_marine_report(&data, location, Utc::now().fixed_offset())
-                .map(|r| r.to_text_product())
-        }
+        Ok(data) => format_openmeteo_marine_report(&data, location, Utc::now().fixed_offset())
+            .map(|r| r.to_text_product()),
         Err(e) => {
             tracing::debug!("Open-Meteo Marine surf conditions unavailable: {e}");
             None
@@ -273,7 +299,9 @@ mod tests {
             "current_units": {"wave_height": "m", "wave_period": "s", "swell_wave_height": "m",
                 "sea_surface_temperature": "°C"}
         });
-        let report = format_openmeteo_marine_report(&data, &Location::new("Beach", 1.0, 2.0), now()).unwrap();
+        let report =
+            format_openmeteo_marine_report(&data, &Location::new("Beach", 1.0, 2.0), now())
+                .unwrap();
         assert_eq!(
             report.text,
             "Surf conditions from Open-Meteo Marine for Beach.\n\
@@ -282,14 +310,25 @@ mod tests {
              Swell height: 0.8 m.\nSea surface temperature: 21.5 °C."
         );
         let product = report.to_text_product();
-        assert_eq!(product.headline.as_deref(), Some("Surf conditions from Open-Meteo Marine"));
-        assert_eq!(product.issuance_time.unwrap().to_rfc3339(), "2025-06-01T08:00:00+00:00");
+        assert_eq!(
+            product.headline.as_deref(),
+            Some("Surf conditions from Open-Meteo Marine")
+        );
+        assert_eq!(
+            product.issuance_time.unwrap().to_rfc3339(),
+            "2025-06-01T08:00:00+00:00"
+        );
     }
 
     #[test]
     fn marine_report_requires_values() {
         let loc = Location::new("Beach", 1.0, 2.0);
-        assert!(format_openmeteo_marine_report(&json!({"current": {"wave_height": null}}), &loc, now()).is_none());
+        assert!(format_openmeteo_marine_report(
+            &json!({"current": {"wave_height": null}}),
+            &loc,
+            now()
+        )
+        .is_none());
         assert!(format_openmeteo_marine_report(&json!({"current": {}}), &loc, now()).is_none());
         let r = format_openmeteo_marine_report(
             &json!({"current": {"time": "bad", "wave_height": 1}}),
@@ -304,7 +343,8 @@ mod tests {
     fn pirate_beach_conditions_use_available_context() {
         let payload = json!({"currently": {"summary": "Clear", "temperature": 78.44,
             "windSpeed": 10, "windBearing": 180, "precipProbability": 0.25}});
-        let p = pirate_weather_beach_conditions(&payload, &Location::new("Beach", 1.0, 2.0), now()).unwrap();
+        let p = pirate_weather_beach_conditions(&payload, &Location::new("Beach", 1.0, 2.0), now())
+            .unwrap();
         assert_eq!(
             p.product_text,
             "Surf conditions from Pirate Weather for Beach.\n\
@@ -313,7 +353,14 @@ mod tests {
              Conditions: Clear.\nTemperature: 78.4 degrees.\nWind speed: 10 mph.\n\
              Wind direction: S (180 degrees).\nPrecipitation chance: 25 percent."
         );
-        assert!(pirate_weather_beach_conditions(&json!({"currently": {}}), &Location::new("B", 0.0, 0.0), now()).is_none());
-        assert!(fetch_pirate_weather_beach_conditions(&Location::new("B", 0.0, 0.0), None).is_none());
+        assert!(pirate_weather_beach_conditions(
+            &json!({"currently": {}}),
+            &Location::new("B", 0.0, 0.0),
+            now()
+        )
+        .is_none());
+        assert!(
+            fetch_pirate_weather_beach_conditions(&Location::new("B", 0.0, 0.0), None).is_none()
+        );
     }
 }

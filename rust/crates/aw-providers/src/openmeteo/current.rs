@@ -71,7 +71,14 @@ pub fn resolve_current_condition_description(current: &Value) -> Option<String> 
     }
     if rain > ACTIVE_PRECIP_EPSILON_IN && snow <= NEAR_ZERO_SNOW_EPSILON_IN {
         if code.is_some_and(|c| SNOW_WEATHER_CODES.contains(&c)) {
-            return Some(if rain < 0.02 { "Light drizzle" } else { "Slight rain" }.into());
+            return Some(
+                if rain < 0.02 {
+                    "Light drizzle"
+                } else {
+                    "Slight rain"
+                }
+                .into(),
+            );
         }
         return base;
     }
@@ -89,7 +96,10 @@ pub fn resolve_current_condition_description(current: &Value) -> Option<String> 
 
 /// Parse an ISO 8601 string, attaching (or converting UTC values to) the
 /// location offset; naive values without an offset are UTC.
-pub fn parse_iso_datetime(value: Option<&str>, utc_offset_seconds: Option<i64>) -> Option<Timestamp> {
+pub fn parse_iso_datetime(
+    value: Option<&str>,
+    utc_offset_seconds: Option<i64>,
+) -> Option<Timestamp> {
     let value = value.filter(|v| !v.is_empty())?;
     let (naive, offset) = py::fromisoformat(value)?;
     let local = match utc_offset_seconds {
@@ -99,16 +109,19 @@ pub fn parse_iso_datetime(value: Option<&str>, utc_offset_seconds: Option<i64>) 
     let utc = FixedOffset::east_opt(0)?;
     match (offset, local) {
         (None, local) => local.unwrap_or(utc).from_local_datetime(&naive).single(),
-        (Some(off), Some(local)) if off.local_minus_utc() == 0 => {
-            Some(utc.from_local_datetime(&naive).single()?.with_timezone(&local))
-        }
+        (Some(off), Some(local)) if off.local_minus_utc() == 0 => Some(
+            utc.from_local_datetime(&naive)
+                .single()?
+                .with_timezone(&local),
+        ),
         (Some(off), _) => off.from_local_datetime(&naive).single(),
     }
 }
 
 /// `utc_offset_seconds` from a response, when it is an integer.
 pub(crate) fn utc_offset(data: &Value) -> Option<i64> {
-    get(data, "utc_offset_seconds").and_then(|v| v.as_i64().or_else(|| v.as_f64().map(|f| f as i64)))
+    get(data, "utc_offset_seconds")
+        .and_then(|v| v.as_i64().or_else(|| v.as_f64().map(|f| f as i64)))
 }
 
 fn parse_uv_index(current: &Value, daily: &Value) -> Option<f64> {
@@ -137,7 +150,8 @@ pub fn parse_openmeteo_current_conditions(data: &Value) -> CurrentConditions {
     let offset = utc_offset(data);
     let num = |key: &str| py::as_float(get(current, key));
 
-    let temperature = normalize_temperature_pair(num("temperature_2m"), unit(units, "temperature_2m"));
+    let temperature =
+        normalize_temperature_pair(num("temperature_2m"), unit(units, "temperature_2m"));
     let humidity = normalize_humidity_percent(num("relative_humidity_2m"), false);
     let dewpoint = normalize_dewpoint_pair(
         None,
@@ -147,21 +161,29 @@ pub fn parse_openmeteo_current_conditions(data: &Value) -> CurrentConditions {
     );
     let (wind_speed_mph, wind_speed_kph) =
         convert_wind_speed_to_mph_and_kph(num("wind_speed_10m"), unit(units, "wind_speed_10m"));
-    let (pressure_in, pressure_mb) = normalize_pressure(num("pressure_msl"), unit(units, "pressure_msl"));
-    let feels_like =
-        normalize_temperature_pair(num("apparent_temperature"), unit(units, "apparent_temperature"));
+    let (pressure_in, pressure_mb) =
+        normalize_pressure(num("pressure_msl"), unit(units, "pressure_msl"));
+    let feels_like = normalize_temperature_pair(
+        num("apparent_temperature"),
+        unit(units, "apparent_temperature"),
+    );
 
     let has_daily = daily.as_object().is_some_and(|d| !d.is_empty());
     let (sunrise_time, sunset_time) = if has_daily {
-        (first_time(daily, "sunrise", offset), first_time(daily, "sunset", offset))
+        (
+            first_time(daily, "sunrise", offset),
+            first_time(daily, "sunset", offset),
+        )
     } else {
         (None, None)
     };
 
     let rain_rate_in = rate(current, "rain") + rate(current, "showers");
     let snow_rate_in = rate(current, "snowfall");
-    let (precipitation_in, precipitation_mm) =
-        normalize_precipitation_to_inches_and_mm(num("precipitation"), unit(units, "precipitation"));
+    let (precipitation_in, precipitation_mm) = normalize_precipitation_to_inches_and_mm(
+        num("precipitation"),
+        unit(units, "precipitation"),
+    );
     let (snow_depth_in, snow_depth_cm) =
         normalize_snow_depth_to_inches_and_cm(num("snow_depth"), unit(units, "snow_depth"));
     let (visibility_miles, visibility_km) =
@@ -218,7 +240,10 @@ mod tests {
 
     #[test]
     fn precipitation_type_thresholds() {
-        assert_eq!(pick_precipitation_type(0.0, 0.01), Some(vec!["snow".to_string()]));
+        assert_eq!(
+            pick_precipitation_type(0.0, 0.01),
+            Some(vec!["snow".to_string()])
+        );
         assert_eq!(pick_precipitation_type(0.0, 0.0), None);
         assert_eq!(pick_precipitation_type(0.01, 0.01).unwrap().len(), 2);
     }
@@ -226,21 +251,39 @@ mod tests {
     #[test]
     fn drizzle_not_mapped_to_snow_when_snowfall_zero() {
         let c = json!({"weather_code": 71, "rain": 0.01, "showers": 0.0, "snowfall": 0.0});
-        assert_eq!(resolve_current_condition_description(&c).as_deref(), Some("Light drizzle"));
+        assert_eq!(
+            resolve_current_condition_description(&c).as_deref(),
+            Some("Light drizzle")
+        );
         let c = json!({"weather_code": 73, "rain": 0.05, "snowfall": 0.0});
-        assert_eq!(resolve_current_condition_description(&c).as_deref(), Some("Slight rain"));
+        assert_eq!(
+            resolve_current_condition_description(&c).as_deref(),
+            Some("Slight rain")
+        );
     }
 
     #[test]
     fn mixed_precipitation_labels() {
         let c = json!({"weather_code": 61, "rain": 0.01, "snowfall": 0.05});
-        assert_eq!(resolve_current_condition_description(&c).as_deref(), Some("Mixed rain and snow"));
+        assert_eq!(
+            resolve_current_condition_description(&c).as_deref(),
+            Some("Mixed rain and snow")
+        );
         let c = json!({"weather_code": 73, "rain": 0.01, "snowfall": 0.05});
-        assert_eq!(resolve_current_condition_description(&c).as_deref(), Some("Moderate snow fall"));
+        assert_eq!(
+            resolve_current_condition_description(&c).as_deref(),
+            Some("Moderate snow fall")
+        );
         let c = json!({"weather_code": 3, "rain": 0.02, "snowfall": 0.02});
-        assert_eq!(resolve_current_condition_description(&c).as_deref(), Some("Mixed rain and snow"));
+        assert_eq!(
+            resolve_current_condition_description(&c).as_deref(),
+            Some("Mixed rain and snow")
+        );
         let c = json!({"weather_code": "bad", "rain": 0.0});
-        assert_eq!(resolve_current_condition_description(&c).as_deref(), Some("Weather code bad"));
+        assert_eq!(
+            resolve_current_condition_description(&c).as_deref(),
+            Some("Weather code bad")
+        );
     }
 
     #[test]
@@ -257,21 +300,36 @@ mod tests {
     #[test]
     fn uv_index_sources() {
         let data = json!({"current": {"uv_index": 4.2}, "daily": {"uv_index_max": [7.0]}});
-        assert_eq!(parse_openmeteo_current_conditions(&data).uv_index, Some(4.2));
+        assert_eq!(
+            parse_openmeteo_current_conditions(&data).uv_index,
+            Some(4.2)
+        );
         let data = json!({"current": {}, "daily": {"uv_index_max": [7.0]}});
-        assert_eq!(parse_openmeteo_current_conditions(&data).uv_index, Some(7.0));
+        assert_eq!(
+            parse_openmeteo_current_conditions(&data).uv_index,
+            Some(7.0)
+        );
         let data = json!({"current": {"uv_index": "bad"}, "daily": {"uv_index_max": [7.0]}});
         assert_eq!(parse_openmeteo_current_conditions(&data).uv_index, None);
     }
 
     #[test]
     fn precipitation_units() {
-        let data = json!({"current": {"precipitation": 0.2}, "current_units": {"precipitation": "inch"}});
+        let data =
+            json!({"current": {"precipitation": 0.2}, "current_units": {"precipitation": "inch"}});
         let c = parse_openmeteo_current_conditions(&data);
         assert_eq!(c.precipitation_in, Some(0.2));
         assert!((c.precipitation_mm.unwrap() - 5.08).abs() < 1e-9);
-        let data = json!({"current": {"precipitation": 5.08}, "current_units": {"precipitation": "mm"}});
-        assert!((parse_openmeteo_current_conditions(&data).precipitation_in.unwrap() - 0.2).abs() < 1e-9);
+        let data =
+            json!({"current": {"precipitation": 5.08}, "current_units": {"precipitation": "mm"}});
+        assert!(
+            (parse_openmeteo_current_conditions(&data)
+                .precipitation_in
+                .unwrap()
+                - 0.2)
+                .abs()
+                < 1e-9
+        );
         let c = parse_openmeteo_current_conditions(&json!({"current": {}}));
         assert_eq!((c.precipitation_in, c.precipitation_mm), (None, None));
     }

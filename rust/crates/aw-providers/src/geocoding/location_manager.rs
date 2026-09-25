@@ -140,7 +140,11 @@ impl<'a> LocationManager<'a> {
                 .into_iter()
                 .take(limit)
                 .map(|r| {
-                    let name = if r.display_name().is_empty() { r.name.clone() } else { r.display_name() };
+                    let name = if r.display_name().is_empty() {
+                        r.name.clone()
+                    } else {
+                        r.display_name()
+                    };
                     let mut location = Location::new(name, r.latitude, r.longitude);
                     // Python keeps "" rather than None for a missing code here.
                     location.country_code = Some(r.country_code.to_uppercase());
@@ -160,9 +164,16 @@ impl<'a> LocationManager<'a> {
             || (STARTS_WITH_NUMBER_PATTERN.is_match(query) && query.contains(','))
     }
 
-    fn search_us_street_address(&self, query: &str, limit: usize) -> Result<Vec<Location>, HttpError> {
+    fn search_us_street_address(
+        &self,
+        query: &str,
+        limit: usize,
+    ) -> Result<Vec<Location>, HttpError> {
         let url = build_url(
-            &format!("{}/locations/onelineaddress", self.census_geocoding_base_url),
+            &format!(
+                "{}/locations/onelineaddress",
+                self.census_geocoding_base_url
+            ),
             &[
                 ("address", query.to_string()),
                 ("benchmark", "Public_AR_Current".into()),
@@ -215,7 +226,10 @@ impl<'a> LocationManager<'a> {
         );
         let data = match self.http.get_json_with_headers(
             &url,
-            &[("User-Agent", REVERSE_USER_AGENT), ("Accept", "application/geo+json")],
+            &[
+                ("User-Agent", REVERSE_USER_AGENT),
+                ("Accept", "application/geo+json"),
+            ],
         ) {
             Ok(d) => d,
             Err(e) => {
@@ -233,7 +247,11 @@ impl<'a> LocationManager<'a> {
         if city.is_empty() {
             return None;
         }
-        let name = if state.is_empty() { city } else { format!("{city}, {state}") };
+        let name = if state.is_empty() {
+            city
+        } else {
+            format!("{city}, {state}")
+        };
         let mut location = Location::new(name, latitude, longitude);
         location.timezone = properties
             .get("timeZone")
@@ -257,11 +275,16 @@ impl<'a> LocationManager<'a> {
         );
         let data = match self.http.get_json_with_headers(
             &url,
-            &[("User-Agent", REVERSE_USER_AGENT), ("Accept", "application/json")],
+            &[
+                ("User-Agent", REVERSE_USER_AGENT),
+                ("Accept", "application/json"),
+            ],
         ) {
             Ok(d) => d,
             Err(e) => {
-                tracing::debug!("Nominatim reverse geocoding failed for ({latitude}, {longitude}): {e}");
+                tracing::debug!(
+                    "Nominatim reverse geocoding failed for ({latitude}, {longitude}): {e}"
+                );
                 return None;
             }
         };
@@ -314,7 +337,15 @@ pub fn format_nominatim_location_name(data: &Value) -> Option<String> {
             .map(|k| text_or_empty(address.get(*k)))
             .find(|v| !v.is_empty())
     };
-    let locality = first(&["city", "town", "village", "municipality", "hamlet", "suburb", "county"]);
+    let locality = first(&[
+        "city",
+        "town",
+        "village",
+        "municipality",
+        "hamlet",
+        "suburb",
+        "county",
+    ]);
     let region = first(&["state", "province", "region", "state_district"]);
     let country = Some(text_or_empty(address.get("country"))).filter(|s| !s.is_empty());
     let mut parts: Vec<String> = Vec::new();
@@ -353,8 +384,12 @@ pub fn parse_geocoding_result(data: &Value) -> Location {
             .map(py::value_str)
             .unwrap_or_default()
     };
-    let (name, admin1, country, country_code) =
-        (text("name"), text("admin1"), text("country"), text("country_code"));
+    let (name, admin1, country, country_code) = (
+        text("name"),
+        text("admin1"),
+        text("country"),
+        text("country_code"),
+    );
     let mut parts = Vec::new();
     if !name.is_empty() {
         parts.push(name.clone());
@@ -365,7 +400,11 @@ pub fn parse_geocoding_result(data: &Value) -> Location {
     if !country.is_empty() && country != "United States" && country != "United States of America" {
         parts.push(country);
     }
-    let display = if parts.is_empty() { "Unknown Location".to_string() } else { parts.join(", ") };
+    let display = if parts.is_empty() {
+        "Unknown Location".to_string()
+    } else {
+        parts.join(", ")
+    };
     let mut location = Location::new(
         display,
         py::as_float(data.get("latitude")).unwrap_or(0.0),
@@ -383,9 +422,13 @@ mod tests {
 
     #[test]
     fn street_address_detection() {
-        assert!(LocationManager::looks_like_street_address("1600 Pennsylvania Ave NW, Washington"));
+        assert!(LocationManager::looks_like_street_address(
+            "1600 Pennsylvania Ave NW, Washington"
+        ));
         assert!(LocationManager::looks_like_street_address("10 Main Street"));
-        assert!(LocationManager::looks_like_street_address("221 Baker, London"));
+        assert!(LocationManager::looks_like_street_address(
+            "221 Baker, London"
+        ));
         assert!(!LocationManager::looks_like_street_address("New York, NY"));
         assert!(!LocationManager::looks_like_street_address("10001"));
     }
@@ -422,10 +465,15 @@ mod tests {
                 {"name": "Springfield", "admin1": "Illinois", "country": "United States",
                  "country_code": "us", "latitude": 39.7, "longitude": -89.6, "population": null}]}),
         );
-        let found = LocationManager::new(&http).search_locations("Springfield", 5).unwrap();
+        let found = LocationManager::new(&http)
+            .search_locations("Springfield", 5)
+            .unwrap();
         let names: Vec<&str> = found.iter().map(|l| l.name.as_str()).collect();
         assert_eq!(names, ["Springfield, Illinois", "Springfield, Ohio"]);
-        assert!(LocationManager::new(&http).search_locations("S", 5).unwrap().is_empty());
+        assert!(LocationManager::new(&http)
+            .search_locations("S", 5)
+            .unwrap()
+            .is_empty());
     }
 
     #[test]
@@ -435,16 +483,26 @@ mod tests {
             json!({"properties": {"timeZone": "America/New_York",
                 "relativeLocation": {"properties": {"city": "Philadelphia", "state": "PA"}}}}),
         );
-        let loc = LocationManager::new(&http).reverse_geocode_coordinates(39.95, -75.16).unwrap();
+        let loc = LocationManager::new(&http)
+            .reverse_geocode_coordinates(39.95, -75.16)
+            .unwrap();
         assert_eq!(loc.name, "Philadelphia, PA");
         assert_eq!(loc.timezone.as_deref(), Some("America/New_York"));
-        assert_eq!(http.request_log(), vec!["https://api.weather.gov/points/39.95,-75.16"]);
+        assert_eq!(
+            http.request_log(),
+            vec!["https://api.weather.gov/points/39.95,-75.16"]
+        );
 
         let http = FixtureClient::new()
             .with_status(NWS_POINTS_BASE_URL, 404)
-            .with(NOMINATIM_BASE_URL, json!({"address": {"city": "Paris", "state": "Île-de-France",
-                "country": "France", "country_code": "fr"}}));
-        let loc = LocationManager::new(&http).reverse_geocode_coordinates(48.85, 2.35).unwrap();
+            .with(
+                NOMINATIM_BASE_URL,
+                json!({"address": {"city": "Paris", "state": "Île-de-France",
+                "country": "France", "country_code": "fr"}}),
+            );
+        let loc = LocationManager::new(&http)
+            .reverse_geocode_coordinates(48.85, 2.35)
+            .unwrap();
         assert_eq!(loc.name, "Paris, Île-de-France, France");
         assert_eq!(loc.country_code.as_deref(), Some("FR"));
         assert_eq!(
@@ -456,11 +514,15 @@ mod tests {
     #[test]
     fn nominatim_name_falls_back_to_display_name() {
         assert_eq!(
-            format_nominatim_location_name(&json!({"display_name": " Somewhere ", "address": {}})).as_deref(),
+            format_nominatim_location_name(&json!({"display_name": " Somewhere ", "address": {}}))
+                .as_deref(),
             Some("Somewhere")
         );
         assert_eq!(
-            format_nominatim_location_name(&json!({"address": {"county": "Monaco", "country": "monaco"}})).as_deref(),
+            format_nominatim_location_name(
+                &json!({"address": {"county": "Monaco", "country": "monaco"}})
+            )
+            .as_deref(),
             Some("Monaco")
         );
         assert_eq!(format_nominatim_location_name(&json!({})), None);
@@ -468,7 +530,10 @@ mod tests {
 
     #[test]
     fn coordinates_formatting_and_distance() {
-        assert_eq!(LocationManager::format_coordinates(40.7128, -74.006, 4), "40.7128°N, 74.0060°W");
+        assert_eq!(
+            LocationManager::format_coordinates(40.7128, -74.006, 4),
+            "40.7128°N, 74.0060°W"
+        );
         let a = Location::new("a", 40.7128, -74.006);
         let b = Location::new("b", 34.0522, -118.2437);
         assert!((LocationManager::calculate_distance(&a, &b) - 2445.0).abs() < 5.0);

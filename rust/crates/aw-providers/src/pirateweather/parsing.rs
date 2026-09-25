@@ -40,15 +40,22 @@ pub enum ResponseTz {
 impl ResponseTz {
     /// `_resolve_response_timezone`.
     pub fn resolve(data: &Value) -> Self {
-        if let Some(name) = get(data, "timezone").and_then(Value::as_str).filter(|s| !s.is_empty()) {
+        if let Some(name) = get(data, "timezone")
+            .and_then(Value::as_str)
+            .filter(|s| !s.is_empty())
+        {
             match name.parse::<Tz>() {
                 Ok(tz) => return ResponseTz::Named(tz),
-                Err(_) => tracing::warn!("Unknown Pirate Weather timezone '{name}'; falling back to offset"),
+                Err(_) => tracing::warn!(
+                    "Unknown Pirate Weather timezone '{name}'; falling back to offset"
+                ),
             }
         }
         let hours = py::as_float(get(data, "offset")).unwrap_or(0.0);
         let secs = (hours * 3600.0).round() as i32;
-        ResponseTz::Fixed(FixedOffset::east_opt(secs).unwrap_or(FixedOffset::east_opt(0).expect("utc")))
+        ResponseTz::Fixed(
+            FixedOffset::east_opt(secs).unwrap_or(FixedOffset::east_opt(0).expect("utc")),
+        )
     }
 
     fn at(&self, utc: DateTime<Utc>) -> Timestamp {
@@ -67,7 +74,10 @@ impl ResponseTz {
     fn noon(&self, date: NaiveDate) -> Option<Timestamp> {
         let naive = date.and_hms_opt(12, 0, 0)?;
         match self {
-            ResponseTz::Named(tz) => tz.from_local_datetime(&naive).earliest().map(|t| t.fixed_offset()),
+            ResponseTz::Named(tz) => tz
+                .from_local_datetime(&naive)
+                .earliest()
+                .map(|t| t.fixed_offset()),
             ResponseTz::Fixed(off) => off.from_local_datetime(&naive).single(),
         }
     }
@@ -269,7 +279,8 @@ pub fn parse_current_conditions(units: &str, data: &Value) -> CurrentConditions 
     let wind_speed = normalize_speed_pair(num(current, "windSpeed"), wind_unit);
     let pressure = normalize_millibars(num(current, "pressure"));
     let visibility = normalize_visibility_pair(num(current, "visibility"), visibility_unit, None);
-    let feels_like = normalize_temperature_pair(num(current, "apparentTemperature"), temperature_unit);
+    let feels_like =
+        normalize_temperature_pair(num(current, "apparentTemperature"), temperature_unit);
     let comfort = sanitize_thermal_comfort_readings(ThermalComfortInput {
         temperature_f: temperature.fahrenheit,
         temperature_c: temperature.celsius,
@@ -407,7 +418,8 @@ pub fn parse_hourly_forecast(units: &str, data: &Value, now: Timestamp) -> Hourl
             let start_time = epoch(hour, "time")
                 .and_then(|t| tz.from_timestamp(t))
                 .unwrap_or_else(|| now.to_utc().fixed_offset());
-            let temperature = normalize_temperature_pair(num(hour, "temperature"), temperature_unit);
+            let temperature =
+                normalize_temperature_pair(num(hour, "temperature"), temperature_unit);
             let humidity = normalize_humidity_percent(num(hour, "humidity"), true);
             let dewpoint = normalize_dewpoint_pair(
                 num(hour, "dewPoint"),
@@ -417,8 +429,10 @@ pub fn parse_hourly_forecast(units: &str, data: &Value, now: Timestamp) -> Hourl
             );
             let pressure = normalize_millibars(num(hour, "pressure"));
             let wind_raw = num(hour, "windSpeed");
-            let visibility = normalize_visibility_pair(num(hour, "visibility"), visibility_unit, None);
-            let feels_like = normalize_temperature_pair(num(hour, "apparentTemperature"), temperature_unit);
+            let visibility =
+                normalize_visibility_pair(num(hour, "visibility"), visibility_unit, None);
+            let feels_like =
+                normalize_temperature_pair(num(hour, "apparentTemperature"), temperature_unit);
 
             let mut p = HourlyForecastPeriod::new(start_time);
             p.temperature = temperature.fahrenheit;
@@ -458,7 +472,9 @@ pub fn parse_hourly_forecast(units: &str, data: &Value, now: Timestamp) -> Hourl
 /// `alerts` list → alerts; only Severe/Extreme regional alerts are kept.
 pub fn parse_alerts(data: &Value) -> WeatherAlerts {
     let tz = ResponseTz::resolve(data);
-    let raw_alerts = get(data, "alerts").and_then(Value::as_array).map_or(&[][..], Vec::as_slice);
+    let raw_alerts = get(data, "alerts")
+        .and_then(Value::as_array)
+        .map_or(&[][..], Vec::as_slice);
     let mut alerts = Vec::new();
     for alert in raw_alerts {
         let title = get(alert, "title")
@@ -528,8 +544,14 @@ pub fn parse_minutely_block(payload: &Value, units: &str) -> Option<MinutelyPrec
         return None;
     }
     Some(MinutelyPrecipitationForecast {
-        summary: minutely.get("summary").and_then(Value::as_str).map(str::to_string),
-        icon: minutely.get("icon").and_then(Value::as_str).map(str::to_string),
+        summary: minutely
+            .get("summary")
+            .and_then(Value::as_str)
+            .map(str::to_string),
+        icon: minutely
+            .get("icon")
+            .and_then(Value::as_str)
+            .map(str::to_string),
         points,
     })
 }
@@ -541,9 +563,18 @@ mod tests {
 
     #[test]
     fn icons_map_to_conditions() {
-        assert_eq!(icon_to_condition(Some("clear-day")).as_deref(), Some("Clear"));
-        assert_eq!(icon_to_condition(Some("mixed")).as_deref(), Some("Wintry Mix"));
-        assert_eq!(icon_to_condition(Some("some-new-icon")).as_deref(), Some("Some New Icon"));
+        assert_eq!(
+            icon_to_condition(Some("clear-day")).as_deref(),
+            Some("Clear")
+        );
+        assert_eq!(
+            icon_to_condition(Some("mixed")).as_deref(),
+            Some("Wintry Mix")
+        );
+        assert_eq!(
+            icon_to_condition(Some("some-new-icon")).as_deref(),
+            Some("Some New Icon")
+        );
         assert_eq!(icon_to_condition(None), None);
         assert_eq!(icon_to_condition(Some("")), None);
     }
@@ -576,8 +607,10 @@ mod tests {
             Some(vec!["rain".to_string(), "snow".to_string()])
         );
         assert_eq!(normalize_precipitation_type(Some(&json!("none"))), None);
-        assert_eq!(precip_type_to_condition(Some(&json!(["ice", "freezing-drizzle"]))).as_deref(),
-            Some("Freezing Rain, Freezing Drizzle"));
+        assert_eq!(
+            precip_type_to_condition(Some(&json!(["ice", "freezing-drizzle"]))).as_deref(),
+            Some("Freezing Rain, Freezing Drizzle")
+        );
     }
 
     #[test]
@@ -586,7 +619,10 @@ mod tests {
         let t = tz.from_timestamp(1719835200.0).unwrap(); // 2024-07-01 12:00 UTC
         assert_eq!(t.to_rfc3339(), "2024-07-01T13:00:00+01:00");
         let tz = ResponseTz::resolve(&json!({"timezone": "Nowhere/Land", "offset": 5.5}));
-        assert_eq!(tz.from_timestamp(0.0).unwrap().to_rfc3339(), "1970-01-01T05:30:00+05:30");
+        assert_eq!(
+            tz.from_timestamp(0.0).unwrap().to_rfc3339(),
+            "1970-01-01T05:30:00+05:30"
+        );
     }
 
     #[test]

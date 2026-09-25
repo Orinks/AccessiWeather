@@ -86,19 +86,39 @@ mod tests {
 
     #[test]
     fn snow_depth_units() {
-        assert_eq!(normalize_snow_depth_to_inches_and_cm(Some(2.0), Some("inch")).0, Some(2.0));
-        assert_eq!(normalize_snow_depth_to_inches_and_cm(Some(1.0), Some("ft")).0, Some(12.0));
+        assert_eq!(
+            normalize_snow_depth_to_inches_and_cm(Some(2.0), Some("inch")).0,
+            Some(2.0)
+        );
+        assert_eq!(
+            normalize_snow_depth_to_inches_and_cm(Some(1.0), Some("ft")).0,
+            Some(12.0)
+        );
         let (inches, _) = normalize_snow_depth_to_inches_and_cm(Some(0.1), Some("m"));
         assert!((inches.unwrap() - 3.937).abs() < 0.001);
-        assert_eq!(normalize_snow_depth_to_inches_and_cm(None, None), (None, None));
+        assert_eq!(
+            normalize_snow_depth_to_inches_and_cm(None, None),
+            (None, None)
+        );
     }
 
     #[test]
     fn precipitation_and_height() {
-        assert_eq!(normalize_precipitation_to_inches_and_mm(Some(25.4), Some("mm")).0, Some(1.0));
-        assert_eq!(normalize_precipitation_to_inches_and_mm(Some(0.5), Some("inch")).1, Some(12.7));
-        assert_eq!(normalize_height_to_feet(Some(100.0), Some("ft")), Some(100.0));
-        assert!((normalize_height_to_feet(Some(1000.0), Some("m")).unwrap() - 3280.84).abs() < 1e-9);
+        assert_eq!(
+            normalize_precipitation_to_inches_and_mm(Some(25.4), Some("mm")).0,
+            Some(1.0)
+        );
+        assert_eq!(
+            normalize_precipitation_to_inches_and_mm(Some(0.5), Some("inch")).1,
+            Some(12.7)
+        );
+        assert_eq!(
+            normalize_height_to_feet(Some(100.0), Some("ft")),
+            Some(100.0)
+        );
+        assert!(
+            (normalize_height_to_feet(Some(1000.0), Some("m")).unwrap() - 3280.84).abs() < 1e-9
+        );
     }
 
     #[test]

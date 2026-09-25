@@ -69,6 +69,15 @@ pub trait HttpClient: Send + Sync {
     }
 }
 
+/// Mask `key=`/`api_key=` query values (the AirNow key travels in the URL)
+/// so retry logs never carry credentials.
+pub fn redact_secrets(text: &str) -> String {
+    static KEY_PARAM: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
+        regex::Regex::new(r"(?i)\b((?:api_?)?key=)[^&\s)]+").expect("valid redaction regex")
+    });
+    KEY_PARAM.replace_all(text, "${1}***").into_owned()
+}
+
 /// Percent-encode like httpx query params: everything except `A-Za-z0-9_.-~`.
 pub fn py_quote(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
@@ -136,7 +145,10 @@ impl HttpClient for ReqwestClient {
                 std::thread::sleep(Duration::from_millis(250 * (1 << attempt)));
             }
             let mut request = self.inner.get(url);
-            if !headers.iter().any(|(k, _)| k.eq_ignore_ascii_case("accept")) {
+            if !headers
+                .iter()
+                .any(|(k, _)| k.eq_ignore_ascii_case("accept"))
+            {
                 request = request.header("Accept", "application/geo+json, application/json");
             }
             for (name, value) in headers {
@@ -151,7 +163,7 @@ impl HttpClient for ReqwestClient {
                             status,
                         };
                         if retryable_status(status) {
-                            tracing::warn!("{err}; retrying");
+                            tracing::warn!("{}; retrying", redact_secrets(&err.to_string()));
                             last = Some(err);
                             continue;
                         }
@@ -168,7 +180,7 @@ impl HttpClient for ReqwestClient {
                         message: e.to_string(),
                     };
                     if e.is_timeout() || e.is_connect() || e.is_request() {
-                        tracing::warn!("{err}; retrying");
+                        tracing::warn!("{}; retrying", redact_secrets(&err.to_string()));
                         last = Some(err);
                         continue;
                     }
@@ -239,11 +251,7 @@ impl FixtureClient {
 
     pub fn from_map(map: HashMap<String, Value>) -> Self {
         Self {
-            fixtures: Mutex::new(
-                map.into_iter()
-                    .map(|(k, v)| (k, Canned::Body(v)))
-                    .collect(),
-            ),
+            fixtures: Mutex::new(map.into_iter().map(|(k, v)| (k, Canned::Body(v))).collect()),
             ..Self::default()
         }
     }
@@ -315,6 +323,14 @@ mod tests {
                 &[("name", "New York".into()), ("count", "5".into())]
             ),
             "https://x.test/s?name=New%20York&count=5"
+        );
+    }
+
+    #[test]
+    fn secrets_are_redacted_from_logged_urls() {
+        assert_eq!(
+            redact_secrets("request to https://a.test/?format=json&API_KEY=abc123&x=1 failed"),
+            "request to https://a.test/?format=json&API_KEY=***&x=1 failed"
         );
     }
 

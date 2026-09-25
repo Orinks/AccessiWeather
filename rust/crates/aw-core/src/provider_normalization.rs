@@ -44,7 +44,11 @@ pub struct ApparentTemperatureClassification {
 
 /// Magnus-approximation dewpoint in the unit family of `unit` ("c"/"°C"/
 /// "celsius"/"degC"... mean Celsius; anything else Fahrenheit).
-pub fn calculate_dewpoint(temperature: Option<f64>, humidity: Option<f64>, unit: &str) -> Option<f64> {
+pub fn calculate_dewpoint(
+    temperature: Option<f64>,
+    humidity: Option<f64>,
+    unit: &str,
+) -> Option<f64> {
     let (temperature, humidity) = (temperature?, humidity?);
     if humidity <= 0.0 {
         return None;
@@ -78,7 +82,10 @@ pub fn normalize_humidity_percent(value: Option<f64>, fraction: bool) -> Option<
 
 pub fn normalize_temperature_pair(value: Option<f64>, unit: Option<&str>) -> TemperaturePair {
     let (fahrenheit, celsius) = normalize_temperature(value, unit);
-    TemperaturePair { fahrenheit, celsius }
+    TemperaturePair {
+        fahrenheit,
+        celsius,
+    }
 }
 
 /// Dewpoint pair, calculated from temperature and humidity when the provider has none.
@@ -264,8 +271,14 @@ mod tests {
 
     #[test]
     fn pressure_pairs_and_pascals() {
-        assert_eq!(normalize_pressure_to_pascals(Some(1013.0), Some("hPa")), Some(101300.0));
-        assert_eq!(normalize_pressure_to_pascals(Some(101300.0), Some("Pa")), Some(101300.0));
+        assert_eq!(
+            normalize_pressure_to_pascals(Some(1013.0), Some("hPa")),
+            Some(101300.0)
+        );
+        assert_eq!(
+            normalize_pressure_to_pascals(Some(101300.0), Some("Pa")),
+            Some(101300.0)
+        );
         assert!(close(
             normalize_pressure_to_pascals(Some(29.92), Some("inHg")),
             101320.79

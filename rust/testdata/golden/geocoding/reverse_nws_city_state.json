@@ -1,0 +1,38 @@
+{
+ "latitude": 39.9526,
+ "longitude": -75.1652,
+ "exchanges": [
+  {
+   "url": "https://api.weather.gov/points/39.9526,-75.1652",
+   "headers": {
+    "user-agent": "AccessiWeather/1.0 (AccessiWeather)",
+    "accept": "application/geo+json"
+   },
+   "status": 200,
+   "body": {
+    "properties": {
+     "timeZone": "America/New_York",
+     "relativeLocation": {
+      "properties": {
+       "city": " Philadelphia ",
+       "state": "PA"
+      }
+     }
+    }
+   }
+  }
+ ],
+ "output": {
+  "name": "Philadelphia, PA",
+  "latitude": 39.9526,
+  "longitude": -75.1652,
+  "timezone": "America/New_York",
+  "country_code": "US",
+  "marine_mode": false,
+  "forecast_zone_id": null,
+  "cwa_office": null,
+  "county_zone_id": null,
+  "fire_zone_id": null,
+  "radar_station": null
+ }
+}

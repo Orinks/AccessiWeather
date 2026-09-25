@@ -1,0 +1,354 @@
+{
+ "input": {
+  "utc_offset_seconds": 0,
+  "hourly": {
+   "time": [
+    "2026-03-19T12:00",
+    "2026-03-19T13:00"
+   ],
+   "temperature_2m": [
+    72.0,
+    20.0
+   ],
+   "relative_humidity_2m": [
+    55,
+    80
+   ],
+   "dew_point_2m": [
+    null,
+    15.5
+   ],
+   "weather_code": [
+    1,
+    999
+   ],
+   "wind_speed_10m": [
+    16.0934,
+    null
+   ],
+   "wind_direction_10m": [
+    180,
+    350
+   ],
+   "pressure_msl": [
+    1015.0,
+    1016.5
+   ],
+   "precipitation_probability": [
+    20,
+    5
+   ],
+   "snowfall": [
+    0.0,
+    0.1
+   ],
+   "uv_index": [
+    4.0,
+    0.0
+   ],
+   "snow_depth": [
+    0.5,
+    null
+   ],
+   "freezing_level_height": [
+    6500.0,
+    900.0
+   ],
+   "visibility": [
+    52800.0,
+    1200.0
+   ],
+   "apparent_temperature": [
+    72.0,
+    12.0
+   ],
+   "is_day": [
+    1,
+    0
+   ]
+  },
+  "hourly_units": {
+   "temperature_2m": "°F",
+   "wind_speed_10m": "km/h",
+   "pressure_msl": "hPa",
+   "snow_depth": "ft",
+   "freezing_level_height": "ft",
+   "visibility": "ft"
+  }
+ },
+ "now": "2025-01-15T12:30:00-05:00",
+ "current": {
+  "temperature": null,
+  "temperature_f": null,
+  "temperature_c": null,
+  "condition": null,
+  "humidity": null,
+  "wind_speed": null,
+  "dewpoint_f": null,
+  "dewpoint_c": null,
+  "wind_speed_mph": null,
+  "wind_speed_kph": null,
+  "wind_direction": null,
+  "pressure": null,
+  "pressure_in": null,
+  "pressure_mb": null,
+  "feels_like_f": null,
+  "feels_like_c": null,
+  "visibility_miles": null,
+  "visibility_km": null,
+  "uv_index": null,
+  "cloud_cover": null,
+  "wind_gust_mph": null,
+  "wind_gust_kph": null,
+  "precipitation_in": null,
+  "precipitation_mm": null,
+  "sunrise_time": null,
+  "sunset_time": null,
+  "moon_phase": null,
+  "moonrise_time": null,
+  "moonset_time": null,
+  "snow_depth_in": null,
+  "snow_depth_cm": null,
+  "snowfall_rate_in": null,
+  "wind_chill_f": null,
+  "wind_chill_c": null,
+  "freezing_level_ft": null,
+  "freezing_level_m": null,
+  "heat_index_f": null,
+  "heat_index_c": null,
+  "frost_risk": null,
+  "precipitation_type": null,
+  "severe_weather_risk": null
+ },
+ "forecast": {
+  "periods": [],
+  "generated_at": "2025-01-15T12:30:00-05:00",
+  "summary": null
+ },
+ "hourly": {
+  "periods": [
+   {
+    "start_time": "2026-03-19T12:00:00+00:00",
+    "temperature": 72.0,
+    "temperature_unit": "F",
+    "short_forecast": "Mainly clear",
+    "wind_speed": "10 mph",
+    "wind_direction": "S",
+    "icon": null,
+    "end_time": null,
+    "humidity": 55,
+    "dewpoint_f": 54.93585258192486,
+    "dewpoint_c": 12.74214032329159,
+    "pressure_mb": 1015.0,
+    "pressure_in": 29.972932817471,
+    "precipitation_probability": 20,
+    "snowfall": 0.0,
+    "uv_index": 4.0,
+    "cloud_cover": null,
+    "wind_speed_mph": 9.9999720514,
+    "wind_gust_mph": null,
+    "precipitation_amount": null,
+    "snow_depth": 6.0,
+    "freezing_level_ft": 6500.0,
+    "wind_chill_f": null,
+    "wind_chill_c": null,
+    "heat_index_f": null,
+    "heat_index_c": null,
+    "air_quality_index": null,
+    "frost_risk": null,
+    "pollen_level": null,
+    "precipitation_type": null,
+    "feels_like": 72.0,
+    "visibility_miles": 10.0,
+    "visibility_km": 16.09344
+   },
+   {
+    "start_time": "2026-03-19T13:00:00+00:00",
+    "temperature": 20.0,
+    "temperature_unit": "F",
+    "short_forecast": "Weather code 999",
+    "wind_speed": null,
+    "wind_direction": "N",
+    "icon": null,
+    "end_time": null,
+    "humidity": 80,
+    "dewpoint_f": 15.5,
+    "dewpoint_c": -9.166666666666666,
+    "pressure_mb": 1016.5,
+    "pressure_in": 30.0172277920781,
+    "precipitation_probability": 5,
+    "snowfall": 0.1,
+    "uv_index": 0.0,
+    "cloud_cover": null,
+    "wind_speed_mph": null,
+    "wind_gust_mph": null,
+    "precipitation_amount": null,
+    "snow_depth": null,
+    "freezing_level_ft": 900.0,
+    "wind_chill_f": 12.0,
+    "wind_chill_c": null,
+    "heat_index_f": null,
+    "heat_index_c": null,
+    "air_quality_index": null,
+    "frost_risk": null,
+    "pollen_level": null,
+    "precipitation_type": null,
+    "feels_like": 12.0,
+    "visibility_miles": 0.22727272727272727,
+    "visibility_km": 0.36576000000000003
+   }
+  ],
+  "generated_at": "2025-01-15T12:30:00-05:00",
+  "summary": null
+ },
+ "mapped_current": {
+  "properties": {
+   "@id": "open-meteo-current-2025-01-15T17:30:00+00:00",
+   "timestamp": "2025-01-15T17:30:00+00:00",
+   "temperature": {
+    "value": null,
+    "unitCode": "wmoUnit:degF",
+    "qualityControl": "qc:V"
+   },
+   "dewpoint": {
+    "value": null,
+    "unitCode": "wmoUnit:degC",
+    "qualityControl": "qc:V"
+   },
+   "apparentTemperature": {
+    "value": null,
+    "unitCode": "wmoUnit:degF",
+    "qualityControl": "qc:V"
+   },
+   "windDirection": {
+    "value": null,
+    "unitCode": "wmoUnit:degree_(angle)",
+    "qualityControl": "qc:V"
+   },
+   "windSpeed": {
+    "value": null,
+    "unitCode": "wmoUnit:mi_h-1",
+    "qualityControl": "qc:V"
+   },
+   "windGust": {
+    "value": null,
+    "unitCode": "wmoUnit:mi_h-1",
+    "qualityControl": "qc:V"
+   },
+   "barometricPressure": {
+    "value": null,
+    "unitCode": "wmoUnit:Pa",
+    "qualityControl": "qc:V"
+   },
+   "relativeHumidity": {
+    "value": null,
+    "unitCode": "wmoUnit:percent",
+    "qualityControl": "qc:V"
+   },
+   "visibility": {
+    "value": null,
+    "unitCode": "wmoUnit:m",
+    "qualityControl": "qc:Z"
+   },
+   "uvIndex": {
+    "value": null,
+    "unitCode": "unit:dimensionless",
+    "qualityControl": "qc:Z"
+   },
+   "cloudLayers": [],
+   "textDescription": "Clear sky",
+   "rawMessage": "Open-Meteo data: 0",
+   "presentWeather": [
+    {
+     "intensity": null,
+     "modifier": null,
+     "weather": "Clear sky",
+     "rawString": "0"
+    }
+   ],
+   "sunrise": null,
+   "sunset": null
+  }
+ },
+ "mapped_forecast": {
+  "properties": {
+   "periods": []
+  }
+ },
+ "mapped_hourly": {
+  "properties": {
+   "updated": "2025-01-15T17:30:00+00:00",
+   "units": {
+    "temperature": "F",
+    "windSpeed": "km/h",
+    "precipitation": "in"
+   },
+   "forecastGenerator": "Open-Meteo API",
+   "generatedAt": "2025-01-15T17:30:00+00:00",
+   "periods": [
+    {
+     "number": 1,
+     "name": "This Hour",
+     "startTime": "2026-03-19T12:00:00+00:00",
+     "endTime": "2026-03-19T13:00:00+00:00",
+     "isDaytime": true,
+     "temperature": 72,
+     "temperatureUnit": "F",
+     "temperatureTrend": null,
+     "relativeHumidity": {
+      "value": 55,
+      "unitCode": "wmoUnit:percent",
+      "qualityControl": "qc:V"
+     },
+     "dewpoint": {
+      "value": 54.93585258192486,
+      "unitCode": "wmoUnit:degF",
+      "qualityControl": "qc:V"
+     },
+     "windSpeed": "16.0934 km/h",
+     "windDirection": "S",
+     "icon": "https://open-meteo.com/images/weather/1.png",
+     "shortForecast": "Mainly clear",
+     "detailedForecast": ""
+    },
+    {
+     "number": 2,
+     "name": "1 PM",
+     "startTime": "2026-03-19T13:00:00+00:00",
+     "endTime": "2026-03-19T14:00:00+00:00",
+     "isDaytime": false,
+     "temperature": 20,
+     "temperatureUnit": "F",
+     "temperatureTrend": null,
+     "relativeHumidity": {
+      "value": 80,
+      "unitCode": "wmoUnit:percent",
+      "qualityControl": "qc:V"
+     },
+     "dewpoint": {
+      "value": 15.5,
+      "unitCode": "wmoUnit:degF",
+      "qualityControl": "qc:V"
+     },
+     "windSpeed": "0 km/h",
+     "windDirection": "N",
+     "icon": "https://open-meteo.com/images/weather/999.png",
+     "shortForecast": "Unknown weather code: 999",
+     "detailedForecast": ""
+    }
+   ]
+  }
+ },
+ "hourly_uv": [
+  {
+   "timestamp": "2026-03-19T12:00:00+00:00",
+   "uv_index": 4.0,
+   "category": "Moderate"
+  },
+  {
+   "timestamp": "2026-03-19T13:00:00+00:00",
+   "uv_index": 0.0,
+   "category": "Low"
+  }
+ ]
+}

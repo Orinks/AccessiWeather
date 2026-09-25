@@ -219,8 +219,14 @@ mod tests {
 
     #[test]
     fn temperature_normalization() {
-        assert_eq!(normalize_temperature(Some(32.0), Some("°F")), (Some(32.0), Some(0.0)));
-        assert_eq!(normalize_temperature(Some(0.0), Some("°C")), (Some(32.0), Some(0.0)));
+        assert_eq!(
+            normalize_temperature(Some(32.0), Some("°F")),
+            (Some(32.0), Some(0.0))
+        );
+        assert_eq!(
+            normalize_temperature(Some(0.0), Some("°C")),
+            (Some(32.0), Some(0.0))
+        );
         assert_eq!(
             normalize_temperature(Some(100.0), Some("wmoUnit:degC")),
             (Some(212.0), Some(100.0))
@@ -231,11 +237,26 @@ mod tests {
     #[test]
     fn wind_speed_conversions() {
         assert!(close(convert_mps_to_mph(Some(10.0)), 22.37));
-        assert!(close(convert_wind_speed_to_mph(Some(100.0), Some("km/h")), 62.1371));
-        assert!(close(convert_wind_speed_to_mph(Some(10.0), Some("wmoUnit:m_s-1")), 22.37));
-        assert!(close(convert_wind_speed_to_mph(Some(10.0), Some("kn")), 11.5078));
-        assert!(close(convert_wind_speed_to_kph(Some(10.0), Some("mph")), 16.0934));
-        assert_eq!(convert_wind_speed_to_mph(Some(7.0), Some("mp/h")), Some(7.0));
+        assert!(close(
+            convert_wind_speed_to_mph(Some(100.0), Some("km/h")),
+            62.1371
+        ));
+        assert!(close(
+            convert_wind_speed_to_mph(Some(10.0), Some("wmoUnit:m_s-1")),
+            22.37
+        ));
+        assert!(close(
+            convert_wind_speed_to_mph(Some(10.0), Some("kn")),
+            11.5078
+        ));
+        assert!(close(
+            convert_wind_speed_to_kph(Some(10.0), Some("mph")),
+            16.0934
+        ));
+        assert_eq!(
+            convert_wind_speed_to_mph(Some(7.0), Some("mp/h")),
+            Some(7.0)
+        );
         assert_eq!(convert_wind_speed_to_mph(Some(7.0), None), Some(7.0));
     }
 
@@ -256,7 +277,10 @@ mod tests {
     fn cardinal_directions() {
         let c = |d: f64| degrees_to_cardinal(Some(d)).unwrap();
         assert_eq!([c(0.0), c(90.0), c(180.0), c(270.0)], ["N", "E", "S", "W"]);
-        assert_eq!([c(45.0), c(135.0), c(225.0), c(315.0)], ["NE", "SE", "SW", "NW"]);
+        assert_eq!(
+            [c(45.0), c(135.0), c(225.0), c(315.0)],
+            ["NE", "SE", "SW", "NW"]
+        );
         assert_eq!(c(22.5), "NNE");
         assert_eq!(c(360.0), "N");
         assert_eq!(c(-22.5), "NNW");

@@ -69,7 +69,11 @@ pub struct PirateWeatherClient {
 /// Unit bundle for a location from the temperature-unit setting
 /// (`WeatherClient._resolve_pirate_weather_units`).
 pub fn resolve_pirate_weather_units(temperature_unit: &str, location: &Location) -> &'static str {
-    let preference = if temperature_unit.is_empty() { "both" } else { temperature_unit };
+    let preference = if temperature_unit.is_empty() {
+        "both"
+    } else {
+        temperature_unit
+    };
     match preference.trim().to_lowercase().as_str() {
         "auto" => match resolve_auto_unit_system(Some(location)) {
             DisplayUnitSystem::Us => "us",
@@ -88,7 +92,11 @@ impl PirateWeatherClient {
             http,
             api_key: api_key.to_string(),
             user_agent: user_agent.to_string(),
-            units: if units == "uk" { "uk2".into() } else { units.to_string() },
+            units: if units == "uk" {
+                "uk2".into()
+            } else {
+                units.to_string()
+            },
             base_url: BASE_URL.into(),
             state: Mutex::new(State::default()),
             fetch_lock: Mutex::new(()),
@@ -106,7 +114,10 @@ impl PirateWeatherClient {
     }
 
     fn cache_key(&self, location: &Location) -> String {
-        format!("{:.6},{:.6}:{}", location.latitude, location.longitude, self.units)
+        format!(
+            "{:.6},{:.6}:{}",
+            location.latitude, location.longitude, self.units
+        )
     }
 
     fn cached(&self, key: &str) -> Option<Value> {
@@ -121,8 +132,14 @@ impl PirateWeatherClient {
 
     fn enforce_rate_limit_cooldown(&self) -> Result<(), PirateWeatherApiError> {
         let state = self.state.lock().unwrap();
-        if state.rate_limited_until.is_some_and(|until| Instant::now() < until) {
-            return Err(PirateWeatherApiError::new("API rate limit exceeded", Some(429)));
+        if state
+            .rate_limited_until
+            .is_some_and(|until| Instant::now() < until)
+        {
+            return Err(PirateWeatherApiError::new(
+                "API rate limit exceeded",
+                Some(429),
+            ));
         }
         Ok(())
     }
@@ -199,9 +216,16 @@ impl PirateWeatherClient {
     }
 
     /// All daily periods (the display layer applies the day window).
-    pub fn get_forecast(&self, location: &Location) -> Result<Option<Forecast>, PirateWeatherApiError> {
+    pub fn get_forecast(
+        &self,
+        location: &Location,
+    ) -> Result<Option<Forecast>, PirateWeatherApiError> {
         let data = self.get_forecast_data(location)?;
-        Ok(parse_forecast(&self.units, &data, Local::now().fixed_offset()))
+        Ok(parse_forecast(
+            &self.units,
+            &data,
+            Local::now().fixed_offset(),
+        ))
     }
 
     pub fn get_hourly_forecast(
@@ -209,12 +233,19 @@ impl PirateWeatherClient {
         location: &Location,
     ) -> Result<HourlyForecast, PirateWeatherApiError> {
         let data = self.get_forecast_data(location)?;
-        Ok(parse_hourly_forecast(&self.units, &data, Local::now().fixed_offset()))
+        Ok(parse_hourly_forecast(
+            &self.units,
+            &data,
+            Local::now().fixed_offset(),
+        ))
     }
 
     /// Minutely precipitation (the notification path parses the payload with
     /// this client's unit group); any failure yields `None`.
-    pub fn get_minutely_forecast(&self, location: &Location) -> Option<MinutelyPrecipitationForecast> {
+    pub fn get_minutely_forecast(
+        &self,
+        location: &Location,
+    ) -> Option<MinutelyPrecipitationForecast> {
         match self.get_forecast_data(location) {
             Ok(data) => parse_minutely_block(&data, &self.units),
             Err(e) => {
@@ -259,7 +290,9 @@ mod tests {
 
     #[test]
     fn request_uses_version_2_and_shares_the_payload() {
-        let http = Arc::new(FixtureClient::new().with(BASE_URL, json!({"currently": {"temperature": 50}})));
+        let http = Arc::new(
+            FixtureClient::new().with(BASE_URL, json!({"currently": {"temperature": 50}})),
+        );
         let client = PirateWeatherClient::new(http.clone(), "k", "AccessiWeather/2.0", "us");
         client.get_current_conditions(&nyc()).unwrap();
         client.get_hourly_forecast(&nyc()).unwrap();
@@ -286,9 +319,13 @@ mod tests {
             assert_eq!(err.message, message);
             assert_eq!(err.status_code, Some(status));
         }
-        let http = Arc::new(FixtureClient::new().with_transport_error(BASE_URL, "operation timed out"));
+        let http =
+            Arc::new(FixtureClient::new().with_transport_error(BASE_URL, "operation timed out"));
         let client = PirateWeatherClient::new(http, "k", "UA", "us");
-        assert_eq!(client.get_forecast(&nyc()).unwrap_err().message, "Request timed out");
+        assert_eq!(
+            client.get_forecast(&nyc()).unwrap_err().message,
+            "Request timed out"
+        );
         assert!(client.get_alerts(&nyc()).alerts.is_empty());
     }
 
@@ -296,8 +333,14 @@ mod tests {
     fn rate_limit_starts_a_cooldown() {
         let http = Arc::new(FixtureClient::new().with_status(BASE_URL, 429));
         let client = PirateWeatherClient::new(http.clone(), "k", "UA", "us");
-        assert_eq!(client.get_forecast(&nyc()).unwrap_err().status_code, Some(429));
-        assert_eq!(client.get_forecast(&nyc()).unwrap_err().message, "API rate limit exceeded");
+        assert_eq!(
+            client.get_forecast(&nyc()).unwrap_err().status_code,
+            Some(429)
+        );
+        assert_eq!(
+            client.get_forecast(&nyc()).unwrap_err().message,
+            "API rate limit exceeded"
+        );
         assert_eq!(http.request_log().len(), 1);
     }
 

@@ -14,7 +14,10 @@ use super::OpenMeteoApiClient;
 
 /// `_parse_openmeteo_datetime`: local wall-clock → UTC ISO string; the input
 /// is returned unchanged when there is no offset or it cannot be parsed.
-pub fn parse_openmeteo_datetime(datetime_str: Option<&str>, utc_offset_seconds: Option<i64>) -> Option<String> {
+pub fn parse_openmeteo_datetime(
+    datetime_str: Option<&str>,
+    utc_offset_seconds: Option<i64>,
+) -> Option<String> {
     let text = datetime_str.filter(|s| !s.is_empty())?;
     let Some(offset) = utc_offset_seconds else {
         return Some(text.to_string());
@@ -53,8 +56,16 @@ fn wind_speed_unit_code(unit: &str) -> &'static str {
 }
 
 /// `_calculate_dewpoint`: the unit hint defaults to Celsius when empty.
-fn mapper_dewpoint(temperature: Option<&Value>, humidity: Option<&Value>, unit_hint: &str) -> Value {
-    let unit = if unit_hint.is_empty() { "celsius" } else { unit_hint };
+fn mapper_dewpoint(
+    temperature: Option<&Value>,
+    humidity: Option<&Value>,
+    unit_hint: &str,
+) -> Value {
+    let unit = if unit_hint.is_empty() {
+        "celsius"
+    } else {
+        unit_hint
+    };
     calculate_dewpoint(py::as_float(temperature), py::as_float(humidity), unit)
         .map_or(Value::Null, |v| json!(v))
 }
@@ -121,7 +132,9 @@ pub fn map_current_conditions(data: &Value, now: Timestamp) -> Value {
     let empty = Value::Null;
     let current = get(data, "current").unwrap_or(&empty);
     let units = get(data, "current_units").unwrap_or(&empty);
-    let daily = get(data, "daily").filter(|d| py::truthy(Some(d))).unwrap_or(&empty);
+    let daily = get(data, "daily")
+        .filter(|d| py::truthy(Some(d)))
+        .unwrap_or(&empty);
     let uv_index_value = get(daily, "uv_index_max")
         .filter(|v| py::truthy(Some(v)))
         .and_then(|v| v.as_array()?.first().cloned())
@@ -227,7 +240,11 @@ fn indexed(block: &Value, key: &str, i: usize) -> Result<Value, ()> {
 
 /// A value from a parallel series when `i < len` and it is not null.
 fn series_at(block: &Value, key: &str, i: usize) -> Option<Value> {
-    get(block, key)?.as_array()?.get(i).filter(|v| !v.is_null()).cloned()
+    get(block, key)?
+        .as_array()?
+        .get(i)
+        .filter(|v| !v.is_null())
+        .cloned()
 }
 
 /// `int(x)` of a JSON number (truncation toward zero).
@@ -254,7 +271,12 @@ fn or_zero_str(value: &Value) -> String {
     }
 }
 
-fn create_detailed_forecast(daily: &Value, units: &Value, index: usize, is_daytime: bool) -> String {
+fn create_detailed_forecast(
+    daily: &Value,
+    units: &Value,
+    index: usize,
+    is_daytime: bool,
+) -> String {
     let build = || -> Result<String, ()> {
         let code = get(daily, "weather_code")
             .and_then(Value::as_array)
@@ -263,7 +285,11 @@ fn create_detailed_forecast(daily: &Value, units: &Value, index: usize, is_dayti
         let description = OpenMeteoApiClient::get_weather_description(&code);
         let temp = indexed(
             daily,
-            if is_daytime { "temperature_2m_max" } else { "temperature_2m_min" },
+            if is_daytime {
+                "temperature_2m_max"
+            } else {
+                "temperature_2m_min"
+            },
             index,
         )?;
         let wind_speed = indexed(daily, "wind_speed_10m_max", index)?;
@@ -345,15 +371,23 @@ fn day_night_periods(
     let mut date = parse_py_datetime(text).ok_or(())?;
     if date.offset.is_none() {
         if let Some(secs) = offset {
-            date.offset = Some(FixedOffset::east_opt(i32::try_from(secs).map_err(|_| ())?).ok_or(())?);
+            date.offset =
+                Some(FixedOffset::east_opt(i32::try_from(secs).map_err(|_| ())?).ok_or(())?);
         }
     }
     let wind_speed = indexed(daily, "wind_speed_10m_max", i)?;
     let wind_unit = str_unit(units, "wind_speed_10m_max", "mph");
     let wind_text = format!("{} {wind_unit}", or_zero_str(&wind_speed));
-    let direction = degrees_to_direction(py::as_float(Some(&indexed(daily, "wind_direction_10m_dominant", i)?)));
+    let direction = degrees_to_direction(py::as_float(Some(&indexed(
+        daily,
+        "wind_direction_10m_dominant",
+        i,
+    )?)));
     let code = code_or_zero(daily, i);
-    let icon = format!("https://open-meteo.com/images/weather/{}.png", py::value_str(&code));
+    let icon = format!(
+        "https://open-meteo.com/images/weather/{}.png",
+        py::value_str(&code)
+    );
     let short = OpenMeteoApiClient::get_weather_description(&code);
     let unit_letter = |key: &str| {
         if str_unit(units, key, "°F").to_lowercase().contains("°f") {
@@ -404,7 +438,10 @@ pub fn map_forecast(data: &Value, now: Timestamp) -> Value {
         return json!({"properties": {"periods": []}});
     }
     let offset = utc_offset(data);
-    let dates = get(daily, "time").and_then(Value::as_array).cloned().unwrap_or_default();
+    let dates = get(daily, "time")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
 
     let mut periods: Vec<Value> = Vec::new();
     for (i, date_str) in dates.iter().enumerate() {
@@ -446,14 +483,28 @@ pub fn map_hourly_forecast(data: &Value, now: Timestamp) -> Value {
         return json!({"properties": {"periods": []}});
     }
     let offset = utc_offset(data);
-    let times = get(hourly, "time").and_then(Value::as_array).cloned().unwrap_or_default();
+    let times = get(hourly, "time")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
     let temp_unit = str_unit(units, "temperature_2m", "°F");
     let wind_unit = str_unit(units, "wind_speed_10m", "mph");
-    let arr = |key: &str| get(hourly, key).and_then(Value::as_array).cloned().unwrap_or_default();
-    let (temperatures, humidities, dew_points) =
-        (arr("temperature_2m"), arr("relative_humidity_2m"), arr("dew_point_2m"));
-    let (wind_speeds, wind_directions, is_day) =
-        (arr("wind_speed_10m"), arr("wind_direction_10m"), arr("is_day"));
+    let arr = |key: &str| {
+        get(hourly, key)
+            .and_then(Value::as_array)
+            .cloned()
+            .unwrap_or_default()
+    };
+    let (temperatures, humidities, dew_points) = (
+        arr("temperature_2m"),
+        arr("relative_humidity_2m"),
+        arr("dew_point_2m"),
+    );
+    let (wind_speeds, wind_directions, is_day) = (
+        arr("wind_speed_10m"),
+        arr("wind_direction_10m"),
+        arr("is_day"),
+    );
 
     let mut periods = Vec::new();
     for (i, time) in times.iter().enumerate() {
@@ -482,7 +533,12 @@ pub fn map_hourly_forecast(data: &Value, now: Timestamp) -> Value {
         let name = if i == 0 {
             "This Hour".to_string()
         } else {
-            start.naive.format("%I %p").to_string().trim_start_matches('0').to_string()
+            start
+                .naive
+                .format("%I %p")
+                .to_string()
+                .trim_start_matches('0')
+                .to_string()
         };
         let dewpoint = match non_null(&dew_points) {
             Some(d) => d,
@@ -495,7 +551,7 @@ pub fn map_hourly_forecast(data: &Value, now: Timestamp) -> Value {
             "name": name,
             "startTime": start.iso(),
             "endTime": end.iso(),
-            "isDaytime": is_day.get(i).map_or(true, |v| py::truthy(Some(v))),
+            "isDaytime": is_day.get(i).is_none_or(|v| py::truthy(Some(v))),
             "temperature": int_value(non_null(&temperatures)),
             "temperatureUnit": if temp_unit.to_lowercase().contains("°f") { "F" } else { "C" },
             "temperatureTrend": null,
@@ -537,8 +593,12 @@ pub fn map_hourly_uv_index(data: &Value) -> Vec<HourlyUVIndex> {
     let empty = Value::Null;
     let hourly = get(data, "hourly").unwrap_or(&empty);
     let offset = utc_offset(data);
-    let times = get(hourly, "time").and_then(Value::as_array).map_or(&[][..], Vec::as_slice);
-    let uv = get(hourly, "uv_index").and_then(Value::as_array).map_or(&[][..], Vec::as_slice);
+    let times = get(hourly, "time")
+        .and_then(Value::as_array)
+        .map_or(&[][..], Vec::as_slice);
+    let uv = get(hourly, "uv_index")
+        .and_then(Value::as_array)
+        .map_or(&[][..], Vec::as_slice);
 
     let mut out = Vec::new();
     for (time, value) in times.iter().zip(uv) {
@@ -577,13 +637,20 @@ mod tests {
 
     #[test]
     fn current_pressure_mapped_to_pascals_once() {
-        let data = json!({"current": {"pressure_msl": 1013.2}, "current_units": {"pressure_msl": "hPa"}});
+        let data =
+            json!({"current": {"pressure_msl": 1013.2}, "current_units": {"pressure_msl": "hPa"}});
         let mapped = map_current_conditions(&data, now());
-        let v = mapped["properties"]["barometricPressure"]["value"].as_f64().unwrap();
+        let v = mapped["properties"]["barometricPressure"]["value"]
+            .as_f64()
+            .unwrap();
         assert!((v - 101320.0).abs() < 1e-6);
-        let data = json!({"current": {"pressure_msl": 101320.0}, "current_units": {"pressure_msl": "Pa"}});
+        let data =
+            json!({"current": {"pressure_msl": 101320.0}, "current_units": {"pressure_msl": "Pa"}});
         let mapped = map_current_conditions(&data, now());
-        assert_eq!(mapped["properties"]["barometricPressure"]["value"], json!(101320.0));
+        assert_eq!(
+            mapped["properties"]["barometricPressure"]["value"],
+            json!(101320.0)
+        );
     }
 
     #[test]
@@ -623,7 +690,10 @@ mod tests {
             "daily": {"time": ["2025-01-15"], "temperature_2m_max": [80], "weather_code": [0],
                 "wind_speed_10m_max": [5], "wind_direction_10m_dominant": [0]}});
         let mapped = map_forecast(&data, now());
-        assert_eq!(mapped["properties"]["periods"][0]["name"], json!("Wednesday"));
+        assert_eq!(
+            mapped["properties"]["periods"][0]["name"],
+            json!("Wednesday")
+        );
         assert_eq!(
             mapped["properties"]["periods"][0]["startTime"],
             json!("2025-01-15T06:00:00+10:00")

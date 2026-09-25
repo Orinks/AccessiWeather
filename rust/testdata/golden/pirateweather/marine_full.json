@@ -1,0 +1,32 @@
+{
+ "input": {
+  "current": {
+   "time": "2026-06-07T12:00",
+   "wave_height": 1.4,
+   "wave_direction": 270,
+   "wave_period": 8,
+   "swell_wave_height": [
+    0.9
+   ],
+   "swell_wave_direction": "250",
+   "swell_wave_period": 11,
+   "sea_surface_temperature": 18.55
+  },
+  "current_units": {
+   "wave_height": "m",
+   "wave_period": "s",
+   "swell_wave_height": "m",
+   "swell_wave_period": "s",
+   "sea_surface_temperature": "°C"
+  }
+ },
+ "now": "2025-01-15T12:30:00-05:00",
+ "product": {
+  "product_type": "SURF_CONDITIONS",
+  "product_id": "openmeteo-marine-surf-conditions",
+  "cwa_office": "Open-Meteo Marine",
+  "issuance_time": "2026-06-07T12:00:00-04:00",
+  "product_text": "Surf conditions from Open-Meteo Marine for Porto.\nMarine/surf conditions from Open-Meteo Marine; not an official NWS Surf Zone Forecast.\nWave height: 1.4 m.\nWave direction: W (270 degrees).\nWave period: 8 s.\nSwell height: 0.9 m.\nSwell direction: WSW (250 degrees).\nSwell period: 11 s.\nSea surface temperature: 18.6 °C.",
+  "headline": "Surf conditions from Open-Meteo Marine"
+ }
+}

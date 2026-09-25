@@ -1,0 +1,47 @@
+{
+ "latitude": 48.8566,
+ "longitude": 2.3522,
+ "exchanges": [
+  {
+   "url": "https://api.weather.gov/points/48.8566,2.3522",
+   "headers": {
+    "user-agent": "AccessiWeather/1.0 (AccessiWeather)",
+    "accept": "application/geo+json"
+   },
+   "status": 404,
+   "body": {
+    "properties": {}
+   }
+  },
+  {
+   "url": "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=48.8566&lon=2.3522&zoom=10&addressdetails=1&accept-language=en",
+   "headers": {
+    "user-agent": "AccessiWeather/1.0 (AccessiWeather)",
+    "accept": "application/json"
+   },
+   "status": 200,
+   "body": {
+    "display_name": "Paris, Île-de-France, France",
+    "address": {
+     "city": "Paris",
+     "state": "Île-de-France",
+     "country": "France",
+     "country_code": "fr"
+    }
+   }
+  }
+ ],
+ "output": {
+  "name": "Paris, Île-de-France, France",
+  "latitude": 48.8566,
+  "longitude": 2.3522,
+  "timezone": null,
+  "country_code": "FR",
+  "marine_mode": false,
+  "forecast_zone_id": null,
+  "cwa_office": null,
+  "county_zone_id": null,
+  "fire_zone_id": null,
+  "radar_station": null
+ }
+}

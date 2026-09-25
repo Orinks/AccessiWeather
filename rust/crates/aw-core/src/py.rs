@@ -49,7 +49,11 @@ pub fn value_str(value: &Value) -> String {
         Value::Null => "None".into(),
         Value::Bool(true) => "True".into(),
         Value::Bool(false) => "False".into(),
-        Value::Number(n) => match n.as_i64().map(|i| i.to_string()).or_else(|| n.as_u64().map(|u| u.to_string())) {
+        Value::Number(n) => match n
+            .as_i64()
+            .map(|i| i.to_string())
+            .or_else(|| n.as_u64().map(|u| u.to_string()))
+        {
             Some(s) if !n.is_f64() => s,
             _ => float_repr(n.as_f64().unwrap_or(0.0)),
         },
@@ -177,7 +181,11 @@ fn parse_offset(text: &str) -> Option<FixedOffset> {
     if !digits.bytes().all(|b| b.is_ascii_digit()) || ![2, 4, 6].contains(&digits.len()) {
         return None;
     }
-    let field = |i: usize| digits.get(i..i + 2).map_or(Some(0), |s| s.parse::<i32>().ok());
+    let field = |i: usize| {
+        digits
+            .get(i..i + 2)
+            .map_or(Some(0), |s| s.parse::<i32>().ok())
+    };
     let secs = field(0)? * 3600 + field(2)? * 60 + field(4)?;
     FixedOffset::east_opt(sign * secs)
 }
@@ -193,7 +201,11 @@ pub fn isoformat(naive: NaiveDateTime, offset: Option<FixedOffset>) -> String {
         let total = offset.fix().local_minus_utc();
         let sign = if total < 0 { '-' } else { '+' };
         let total = total.abs();
-        out.push_str(&format!("{sign}{:02}:{:02}", total / 3600, total % 3600 / 60));
+        out.push_str(&format!(
+            "{sign}{:02}:{:02}",
+            total / 3600,
+            total % 3600 / 60
+        ));
         if total % 60 != 0 {
             out.push_str(&format!(":{:02}", total % 60));
         }
