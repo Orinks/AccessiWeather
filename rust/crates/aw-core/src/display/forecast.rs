@@ -7,16 +7,14 @@ use chrono_tz::Tz;
 
 use crate::display::impact::build_forecast_impact_summary;
 use crate::display::measurement::{
-    format_forecast_temperature, format_hourly_wind, format_period_temperature,
-    format_period_wind, get_temperature_precision, get_uv_description,
+    format_forecast_temperature, format_hourly_wind, format_period_temperature, format_period_wind,
+    get_temperature_precision, get_uv_description,
 };
 use crate::display::models::{
     ForecastPeriodPresentation, ForecastPresentation, HourlyPeriodPresentation,
 };
 use crate::display::pyfmt::{fixed, wrap_text};
-use crate::display::time::{
-    format_display_time, resolve_forecast_display_time, Clock, PyDateTime,
-};
+use crate::display::time::{format_display_time, resolve_forecast_display_time, Clock, PyDateTime};
 use crate::display::units::{
     calculate_dewpoint, format_precipitation, format_temperature, format_wind_speed,
     DisplayUnitSystem, TemperatureUnit,
@@ -63,7 +61,11 @@ fn nonempty(s: &Option<String>) -> Option<&str> {
 
 /// `_looks_like_half_day_periods`: NWS-style day/night lists.
 fn looks_like_half_day_periods(forecast: &Forecast) -> bool {
-    let starts: Vec<_> = forecast.periods.iter().filter_map(|p| p.start_time).collect();
+    let starts: Vec<_> = forecast
+        .periods
+        .iter()
+        .filter_map(|p| p.start_time)
+        .collect();
     if starts.len() >= 3 {
         let diffs: Vec<f64> = starts
             .windows(2)
@@ -74,7 +76,13 @@ fn looks_like_half_day_periods(forecast: &Forecast) -> bool {
             return true;
         }
     }
-    const TOKENS: [&str; 5] = ["tonight", "overnight", "this afternoon", "this evening", "night "];
+    const TOKENS: [&str; 5] = [
+        "tonight",
+        "overnight",
+        "this afternoon",
+        "this evening",
+        "night ",
+    ];
     forecast.periods.iter().any(|p| {
         let name = p.name.trim().to_lowercase();
         TOKENS.iter().any(|t| name.contains(t))
@@ -85,7 +93,8 @@ fn looks_like_half_day_periods(forecast: &Forecast) -> bool {
 /// (in each timestamp's own offset), or a count when timestamps are sparse.
 pub fn select_periods_by_day_window(forecast: &Forecast, days: usize) -> Vec<&ForecastPeriod> {
     let periods = &forecast.periods;
-    let mut dated: Vec<&ForecastPeriod> = periods.iter().filter(|p| p.start_time.is_some()).collect();
+    let mut dated: Vec<&ForecastPeriod> =
+        periods.iter().filter(|p| p.start_time.is_some()).collect();
     if dated.len() < 3.max(periods.len() / 2) {
         let limit = if looks_like_half_day_periods(forecast) {
             days * 2
@@ -110,7 +119,10 @@ pub fn select_periods_by_day_window(forecast: &Forecast, days: usize) -> Vec<&Fo
     }
     periods
         .iter()
-        .filter(|p| p.start_time.is_some_and(|t| unique_days.contains(&t.date_naive())))
+        .filter(|p| {
+            p.start_time
+                .is_some_and(|t| unique_days.contains(&t.date_naive()))
+        })
         .collect()
 }
 
@@ -198,7 +210,10 @@ pub fn build_forecast(
         };
         daily_lines.push(format!(
             "{name}: {}",
-            temp_pair.as_deref().filter(|t| !t.is_empty()).unwrap_or("N/A")
+            temp_pair
+                .as_deref()
+                .filter(|t| !t.is_empty())
+                .unwrap_or("N/A")
         ));
         if let Some(c) = nonempty(&period.short_forecast) {
             daily_lines.push(format!("  Conditions: {c}"));
@@ -302,14 +317,18 @@ pub fn build_forecast(
         _ => (String::new(), None, Vec::new()),
     };
 
-    let fallback_text = [&daily_section_text, &marine_section_text, &hourly_section_text]
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(String::as_str)
-        .collect::<Vec<_>>()
-        .join("\n\n")
-        .trim_end()
-        .to_string();
+    let fallback_text = [
+        &daily_section_text,
+        &marine_section_text,
+        &hourly_section_text,
+    ]
+    .into_iter()
+    .filter(|s| !s.is_empty())
+    .map(String::as_str)
+    .collect::<Vec<_>>()
+    .join("\n\n")
+    .trim_end()
+    .to_string();
 
     let impact_summary = selected
         .first()
@@ -336,7 +355,10 @@ pub fn build_forecast(
 }
 
 /// The marine section: (text, summary, highlights).
-fn build_marine(marine: &MarineForecast, location_name: &str) -> (String, Option<String>, Vec<String>) {
+fn build_marine(
+    marine: &MarineForecast,
+    location_name: &str,
+) -> (String, Option<String>, Vec<String>) {
     let mut lines = vec![format!("Marine conditions for {location_name}:")];
     if let Some(zone) = nonempty(&marine.zone_name) {
         let label = match nonempty(&marine.zone_id) {
@@ -356,7 +378,11 @@ fn build_marine(marine: &MarineForecast, location_name: &str) -> (String, Option
     }
     for period in marine.periods.iter().take(3) {
         if !period.summary.is_empty() {
-            lines.push(format!("{}: {}", period.name, wrap_text(&period.summary, 80)));
+            lines.push(format!(
+                "{}: {}",
+                period.name,
+                wrap_text(&period.summary, 80)
+            ));
         }
     }
     (lines.join("\n").trim_end().to_string(), summary, highlights)
@@ -463,7 +489,9 @@ fn format_hourly_dewpoint(
         dewpoint_f = calculate_dewpoint(temp_f, h as f64, false);
         dewpoint_c = dewpoint_f.map(|d| (d - 32.0) * 5.0 / 9.0);
     }
-    Some(format_temperature(dewpoint_f, unit_pref, dewpoint_c, precision))
+    Some(format_temperature(
+        dewpoint_f, unit_pref, dewpoint_c, precision,
+    ))
 }
 
 fn filled(s: &Option<String>) -> Option<&str> {
@@ -553,21 +581,48 @@ mod tests {
     #[test]
     fn day_window_keeps_both_halves_of_each_day() {
         let periods: Vec<ForecastPeriod> = (0..14)
-            .map(|i| day_period(if i % 2 == 0 { "Day" } else { "Night" }, 1 + i / 2, if i % 2 == 0 { 6 } else { 18 }))
+            .map(|i| {
+                day_period(
+                    if i % 2 == 0 { "Day" } else { "Night" },
+                    1 + i / 2,
+                    if i % 2 == 0 { 6 } else { 18 },
+                )
+            })
             .collect();
-        let f = Forecast { periods, ..Default::default() };
+        let f = Forecast {
+            periods,
+            ..Default::default()
+        };
         assert_eq!(select_periods_by_day_window(&f, 3).len(), 6);
     }
 
     #[test]
     fn undated_nws_style_lists_double_the_count() {
-        let periods: Vec<ForecastPeriod> = ["Today", "Tonight", "Friday", "Friday Night", "Saturday", "Saturday Night", "Sunday", "Sunday Night"]
-            .iter()
-            .map(|n| ForecastPeriod { name: n.to_string(), ..Default::default() })
-            .collect();
-        let f = Forecast { periods, ..Default::default() };
+        let periods: Vec<ForecastPeriod> = [
+            "Today",
+            "Tonight",
+            "Friday",
+            "Friday Night",
+            "Saturday",
+            "Saturday Night",
+            "Sunday",
+            "Sunday Night",
+        ]
+        .iter()
+        .map(|n| ForecastPeriod {
+            name: n.to_string(),
+            ..Default::default()
+        })
+        .collect();
+        let f = Forecast {
+            periods,
+            ..Default::default()
+        };
         assert_eq!(select_periods_by_day_window(&f, 3).len(), 6);
-        let f2 = Forecast { periods: f.periods[..1].to_vec(), ..Default::default() };
+        let f2 = Forecast {
+            periods: f.periods[..1].to_vec(),
+            ..Default::default()
+        };
         assert_eq!(select_periods_by_day_window(&f2, 3).len(), 1);
     }
 

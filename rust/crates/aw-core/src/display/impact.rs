@@ -8,7 +8,10 @@ use crate::model::{CurrentConditions, EnvironmentalConditions, ForecastPeriod};
 /// `_OUTDOOR_TEMP_BANDS`: (upper bound exclusive, label).
 const OUTDOOR_TEMP_BANDS: &[(f64, &str)] = &[
     (0.0, "Dangerous cold - avoid prolonged outdoor exposure"),
-    (15.0, "Extreme cold - dress in heavy layers, limit time outside"),
+    (
+        15.0,
+        "Extreme cold - dress in heavy layers, limit time outside",
+    ),
     (25.0, "Very cold - heavy winter clothing required"),
     (32.0, "Cold - wear a heavy coat"),
     (50.0, "Cool - coat or warm jacket recommended"),
@@ -20,8 +23,9 @@ const OUTDOOR_TEMP_BANDS: &[(f64, &str)] = &[
     (f64::INFINITY, "Extreme heat - avoid outdoor exertion"),
 ];
 
-const PRECIP_CONDITION_KEYWORDS: &[&str] =
-    &["rain", "snow", "storm", "drizzle", "shower", "sleet", "hail", "flurr"];
+const PRECIP_CONDITION_KEYWORDS: &[&str] = &[
+    "rain", "snow", "storm", "drizzle", "shower", "sleet", "hail", "flurr",
+];
 const ICE_KEYWORDS: &[&str] = &["ice", "freezing", "sleet", "glaze"];
 const SNOW_KEYWORDS: &[&str] = &["snow", "blizzard", "flurr"];
 const RAIN_KEYWORDS: &[&str] = &["rain", "downpour", "drizzle", "shower"];
@@ -103,14 +107,18 @@ fn driving_from_conditions(
     if temp_f.is_some_and(|t| (25.0..=36.0).contains(&t)) {
         let moisture = has_keyword(
             condition,
-            &["rain", "drizzle", "snow", "sleet", "cloud", "fog", "mist", "overcast"],
+            &[
+                "rain", "drizzle", "snow", "sleet", "cloud", "fog", "mist", "overcast",
+            ],
         );
         if moisture && !issues.iter().any(|i| i.contains("ice")) {
             issues.push("near-freezing temperatures - watch for black ice");
         }
     }
 
-    let effective_wind = wind_speed_mph.unwrap_or(0.0).max(wind_gust_mph.unwrap_or(0.0));
+    let effective_wind = wind_speed_mph
+        .unwrap_or(0.0)
+        .max(wind_gust_mph.unwrap_or(0.0));
     if effective_wind >= 45.0 {
         issues.push("dangerous winds - high-profile vehicles at serious risk");
     } else if effective_wind >= 30.0 {
@@ -170,9 +178,9 @@ fn allergy_from_conditions(
         parts.push(match rank {
             r if r >= 5 => format!("Very high pollen{allergen} - take allergy precautions"),
             4 => format!("High pollen{allergen} - sensitive individuals should limit exposure"),
-            3 => format!(
-                "Moderate pollen{allergen} - sensitive individuals may experience symptoms"
-            ),
+            3 => {
+                format!("Moderate pollen{allergen} - sensitive individuals may experience symptoms")
+            }
             1 | 2 => format!("Low pollen{allergen}"),
             _ => format!("Pollen: {category}{allergen}"),
         });
@@ -273,8 +281,13 @@ pub fn build_forecast_impact_summary(period: &ForecastPeriod) -> ImpactSummary {
         period.short_forecast.as_deref(),
         period.precipitation_type.as_deref(),
     );
-    let allergy =
-        allergy_from_conditions(None, period.pollen_forecast.as_deref(), None, wind_mph, None);
+    let allergy = allergy_from_conditions(
+        None,
+        period.pollen_forecast.as_deref(),
+        None,
+        wind_mph,
+        None,
+    );
     ImpactSummary {
         outdoor,
         driving: Some(driving),
@@ -320,13 +333,19 @@ mod tests {
             outdoor_from_conditions(None, Some(72.0), Some(9.0), Some("Light Rain")).unwrap(),
             "Comfortable - good conditions for outdoor activities; UV very high - sun protection essential; active precipitation - bring appropriate gear"
         );
-        assert_eq!(outdoor_from_conditions(Some(-5.0), Some(10.0), None, None).unwrap(), "Dangerous cold - avoid prolonged outdoor exposure");
+        assert_eq!(
+            outdoor_from_conditions(Some(-5.0), Some(10.0), None, None).unwrap(),
+            "Dangerous cold - avoid prolonged outdoor exposure"
+        );
         assert_eq!(outdoor_from_conditions(None, None, None, None), None);
     }
 
     #[test]
     fn driving_priorities() {
-        assert_eq!(driving_from_conditions(None, None, None, None, Some("Sunny"), None), "Normal driving conditions");
+        assert_eq!(
+            driving_from_conditions(None, None, None, None, Some("Sunny"), None),
+            "Normal driving conditions"
+        );
         assert_eq!(
             driving_from_conditions(Some(0.5), Some(10.0), Some(32.0), Some(30.0), Some("Fog"), None),
             "Caution: very low visibility - drive with extreme caution; near-freezing temperatures - watch for black ice; high winds - caution especially for tall vehicles"
@@ -343,8 +362,14 @@ mod tests {
             allergy_from_conditions(None, Some("High"), Some("Oak"), Some(20.0), Some("Unhealthy")).unwrap(),
             "High pollen (Oak) - sensitive individuals should limit exposure; wind increasing pollen dispersion; air quality Unhealthy - limit outdoor exposure"
         );
-        assert_eq!(allergy_from_conditions(Some(6.0), None, None, None, None).unwrap(), "Moderate pollen index");
-        assert_eq!(allergy_from_conditions(None, None, None, None, Some("Good")), None);
+        assert_eq!(
+            allergy_from_conditions(Some(6.0), None, None, None, None).unwrap(),
+            "Moderate pollen index"
+        );
+        assert_eq!(
+            allergy_from_conditions(None, None, None, None, Some("Good")),
+            None
+        );
     }
 
     #[test]
@@ -358,7 +383,10 @@ mod tests {
             ..Default::default()
         };
         let s = build_forecast_impact_summary(&p);
-        assert_eq!(s.driving.unwrap(), "Caution: high winds - caution especially for tall vehicles");
+        assert_eq!(
+            s.driving.unwrap(),
+            "Caution: high winds - caution especially for tall vehicles"
+        );
         p.temperature_unit = "C".into();
         p.temperature = Some(0.0);
         let s = build_forecast_impact_summary(&p);

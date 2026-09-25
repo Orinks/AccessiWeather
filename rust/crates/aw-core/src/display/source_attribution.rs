@@ -69,7 +69,10 @@ pub fn build_source_attribution(data: &WeatherData) -> Option<SourceAttributionP
 
     let mut aria = Vec::new();
     if !contributing.is_empty() {
-        aria.push(format!("Weather data provided by {}", contributing.join(", ")));
+        aria.push(format!(
+            "Weather data provided by {}",
+            contributing.join(", ")
+        ));
     }
     if !failed.is_empty() {
         aria.push(format!("Data unavailable from {}", failed.join(", ")));

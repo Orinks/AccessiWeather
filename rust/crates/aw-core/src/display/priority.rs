@@ -81,7 +81,13 @@ fn category_fields(category: WeatherCategory, verbosity: &str) -> &'static [&'st
         Temperature => (
             &["temperature"],
             &["temperature", "feels_like"],
-            &["temperature", "feels_like", "dewpoint", "heat_index", "wind_chill"],
+            &[
+                "temperature",
+                "feels_like",
+                "dewpoint",
+                "heat_index",
+                "wind_chill",
+            ],
         ),
         Precipitation => (
             &["precipitation_chance"],
@@ -122,7 +128,11 @@ pub struct PriorityEngine {
 }
 
 impl PriorityEngine {
-    pub fn new(verbosity_level: &str, category_order: &[String], severe_weather_override: bool) -> Self {
+    pub fn new(
+        verbosity_level: &str,
+        category_order: &[String],
+        severe_weather_override: bool,
+    ) -> Self {
         let category_order = if category_order.is_empty() {
             WeatherCategory::ALL
                 .iter()
@@ -187,7 +197,10 @@ impl PriorityEngine {
             return ensure_all(base);
         }
         let mut order: Vec<WeatherCategory> = Vec::new();
-        for cat in priority.iter().filter_map(|c| WeatherCategory::from_name(c)) {
+        for cat in priority
+            .iter()
+            .filter_map(|c| WeatherCategory::from_name(c))
+        {
             if !order.contains(&cat) {
                 order.push(cat);
             }
@@ -242,7 +255,10 @@ mod tests {
     #[test]
     fn default_order_without_alerts() {
         let engine = PriorityEngine::new("standard", &[], true);
-        assert_eq!(engine.get_category_order(None, Utc::now()), WeatherCategory::ALL.to_vec());
+        assert_eq!(
+            engine.get_category_order(None, Utc::now()),
+            WeatherCategory::ALL.to_vec()
+        );
     }
 
     #[test]
@@ -251,10 +267,20 @@ mod tests {
         let on = PriorityEngine::new("standard", &[], true);
         assert_eq!(
             on.get_category_order(Some(&a), Utc::now()),
-            vec![VisibilityClouds, Precipitation, Temperature, Wind, HumidityPressure, UvIndex]
+            vec![
+                VisibilityClouds,
+                Precipitation,
+                Temperature,
+                Wind,
+                HumidityPressure,
+                UvIndex
+            ]
         );
         let off = PriorityEngine::new("standard", &[], false);
-        assert_eq!(off.get_category_order(Some(&a), Utc::now()), WeatherCategory::ALL.to_vec());
+        assert_eq!(
+            off.get_category_order(Some(&a), Utc::now()),
+            WeatherCategory::ALL.to_vec()
+        );
     }
 
     #[test]
@@ -263,7 +289,14 @@ mod tests {
         let engine = PriorityEngine::new("standard", &["wind".into(), "temperature".into()], true);
         assert_eq!(
             engine.get_category_order(Some(&a), Utc::now()),
-            vec![Temperature, UvIndex, Wind, Precipitation, HumidityPressure, VisibilityClouds]
+            vec![
+                Temperature,
+                UvIndex,
+                Wind,
+                Precipitation,
+                HumidityPressure,
+                VisibilityClouds
+            ]
         );
     }
 
@@ -274,6 +307,9 @@ mod tests {
         let detailed = PriorityEngine::new("detailed", &[], false);
         assert!(detailed.should_include_field(Wind, "wind_gusts"));
         let odd = PriorityEngine::new("chatty", &[], false);
-        assert_eq!(odd.get_fields_for_category(Wind), ["wind_speed", "wind_direction"]);
+        assert_eq!(
+            odd.get_fields_for_category(Wind),
+            ["wind_speed", "wind_direction"]
+        );
     }
 }

@@ -254,7 +254,8 @@ fn build_trend_metrics(
         }
     }
     if show_pressure_trend && !pressure_present {
-        if let Some((_, value)) = compute_pressure_trend_from_hourly(current, hourly_forecast, now) {
+        if let Some((_, value)) = compute_pressure_trend_from_hourly(current, hourly_forecast, now)
+        {
             metrics.push(Metric::new("Pressure trend", value));
         }
     }
@@ -282,7 +283,13 @@ fn trend_summary(trend: &TrendInsight, is_temperature: bool, unit_pref: Temperat
 fn categorize_metric(label: &str) -> WeatherCategory {
     let l = label.to_lowercase();
     let any = |kws: &[&str]| kws.iter().any(|k| l.contains(k));
-    if any(&["temperature", "feels", "dewpoint", "heat index", "wind chill"]) {
+    if any(&[
+        "temperature",
+        "feels",
+        "dewpoint",
+        "heat index",
+        "wind chill",
+    ]) {
         WeatherCategory::Temperature
     } else if l.contains("wind") && !l.contains("chill") {
         WeatherCategory::Wind
@@ -301,8 +308,10 @@ fn categorize_metric(label: &str) -> WeatherCategory {
 
 /// `_order_metrics_by_priority`.
 fn order_metrics_by_priority(metrics: Vec<Metric>, order: &[WeatherCategory]) -> Vec<Metric> {
-    let mut buckets: Vec<(WeatherCategory, Vec<Metric>)> =
-        WeatherCategory::ALL.iter().map(|c| (*c, Vec::new())).collect();
+    let mut buckets: Vec<(WeatherCategory, Vec<Metric>)> = WeatherCategory::ALL
+        .iter()
+        .map(|c| (*c, Vec::new()))
+        .collect();
     for m in metrics {
         let cat = categorize_metric(&m.label);
         if let Some((_, bucket)) = buckets.iter_mut().find(|(c, _)| *c == cat) {
@@ -357,7 +366,10 @@ pub fn build_current_conditions(
         metrics.insert(0, Metric::new("Precipitation outlook", summary));
     }
     metrics.extend(build_astronomical_metrics(current, ctx));
-    metrics.extend(build_environmental_metrics(ctx.environmental, ctx.air_quality));
+    metrics.extend(build_environmental_metrics(
+        ctx.environmental,
+        ctx.air_quality,
+    ));
     metrics.extend(build_trend_metrics(
         ctx.trends,
         current,
@@ -448,10 +460,9 @@ pub fn build_seasonal_metrics(
             .temperature_f
             .is_none_or(|t| (chill_f - t).abs() >= 3.0)
         {
-            let chill_c = current
-                .wind_chill_c
-                .unwrap_or((chill_f - 32.0) * 5.0 / 9.0);
-            if let Some(v) = format_temperature_value(Some(chill_f), Some(chill_c), unit_pref, precision)
+            let chill_c = current.wind_chill_c.unwrap_or((chill_f - 32.0) * 5.0 / 9.0);
+            if let Some(v) =
+                format_temperature_value(Some(chill_f), Some(chill_c), unit_pref, precision)
             {
                 metrics.push(Metric::new("Wind chill", v));
             }
@@ -475,10 +486,9 @@ pub fn build_seasonal_metrics(
             .temperature_f
             .is_none_or(|t| (heat_f - t).abs() >= 3.0)
         {
-            let heat_c = current
-                .heat_index_c
-                .unwrap_or((heat_f - 32.0) * 5.0 / 9.0);
-            if let Some(v) = format_temperature_value(Some(heat_f), Some(heat_c), unit_pref, precision)
+            let heat_c = current.heat_index_c.unwrap_or((heat_f - 32.0) * 5.0 / 9.0);
+            if let Some(v) =
+                format_temperature_value(Some(heat_f), Some(heat_c), unit_pref, precision)
             {
                 metrics.push(Metric::new("Heat index", v));
             }
@@ -493,7 +503,11 @@ pub fn build_seasonal_metrics(
         metrics.push(Metric::new("Frost risk", risk));
     }
 
-    if let Some(types) = current.precipitation_type.as_ref().filter(|t| !t.is_empty()) {
+    if let Some(types) = current
+        .precipitation_type
+        .as_ref()
+        .filter(|t| !t.is_empty())
+    {
         let condition = current.condition.as_deref().unwrap_or("").to_lowercase();
         let active = [
             "rain", "snow", "drizzle", "shower", "storm", "sleet", "hail", "precip",
@@ -579,7 +593,8 @@ fn adapt_temperature_trend_summary(trend: &TrendInsight, unit_pref: TemperatureU
     } else {
         (change * 9.0 / 5.0, change)
     };
-    let both = || format!("Temperature {direction} {change_f:+.1}°F ({change_c:+.1}°C) over {hours}h");
+    let both =
+        || format!("Temperature {direction} {change_f:+.1}°F ({change_c:+.1}°C) over {hours}h");
     match (unit, unit_pref) {
         ("°F", TemperatureUnit::Celsius) => {
             format!("Temperature {direction} {change_c:+.1}°C over {hours}h")
@@ -622,7 +637,8 @@ pub fn format_trend_lines(
     }
     if include_pressure && !pressure_present {
         if let (Some(current), Some(hourly)) = (current, hourly_forecast) {
-            if let Some((summary, _)) = compute_pressure_trend_from_hourly(current, Some(hourly), now)
+            if let Some((summary, _)) =
+                compute_pressure_trend_from_hourly(current, Some(hourly), now)
             {
                 if !summary.is_empty() && !lines.contains(&summary) {
                     lines.push(summary);
@@ -760,17 +776,32 @@ mod tests {
 
     #[test]
     fn describe_trend_formats_by_unit() {
-        assert_eq!(describe_trend(&trend("temperature", Some(4.0), Some("°F"))), "Rising +4.0°F over 24h");
-        assert_eq!(describe_trend(&trend("pressure", Some(-0.056), Some("inHg"))), "Rising -0.06inHg over 24h");
+        assert_eq!(
+            describe_trend(&trend("temperature", Some(4.0), Some("°F"))),
+            "Rising +4.0°F over 24h"
+        );
+        assert_eq!(
+            describe_trend(&trend("pressure", Some(-0.056), Some("inHg"))),
+            "Rising -0.06inHg over 24h"
+        );
         assert_eq!(describe_trend(&trend("x", None, None)), "Rising over 24h");
     }
 
     #[test]
     fn temperature_trend_adapts_to_units() {
         let t = trend("temperature", Some(9.0), Some("°F"));
-        assert_eq!(adapt_temperature_trend_summary(&t, TemperatureUnit::Celsius), "Temperature rising +5.0°C over 24h");
-        assert_eq!(adapt_temperature_trend_summary(&t, TemperatureUnit::Both), "Temperature rising +9.0°F (+5.0°C) over 24h");
-        assert_eq!(adapt_temperature_trend_summary(&t, TemperatureUnit::Fahrenheit), "Rising +9.0°F over 24h");
+        assert_eq!(
+            adapt_temperature_trend_summary(&t, TemperatureUnit::Celsius),
+            "Temperature rising +5.0°C over 24h"
+        );
+        assert_eq!(
+            adapt_temperature_trend_summary(&t, TemperatureUnit::Both),
+            "Temperature rising +9.0°F (+5.0°C) over 24h"
+        );
+        assert_eq!(
+            adapt_temperature_trend_summary(&t, TemperatureUnit::Fahrenheit),
+            "Rising +9.0°F over 24h"
+        );
     }
 
     #[test]
@@ -787,7 +818,10 @@ mod tests {
             ..Default::default()
         };
         let m = build_seasonal_metrics(&c, TemperatureUnit::Both, 1);
-        let text: Vec<String> = m.iter().map(|m| format!("{}: {}", m.label, m.value)).collect();
+        let text: Vec<String> = m
+            .iter()
+            .map(|m| format!("{}: {}", m.label, m.value))
+            .collect();
         assert_eq!(
             text,
             [
@@ -802,10 +836,19 @@ mod tests {
 
     #[test]
     fn metric_categories() {
-        assert_eq!(categorize_metric("Wind chill"), WeatherCategory::Temperature);
+        assert_eq!(
+            categorize_metric("Wind chill"),
+            WeatherCategory::Temperature
+        );
         assert_eq!(categorize_metric("Wind gusts"), WeatherCategory::Wind);
-        assert_eq!(categorize_metric("Snow on ground"), WeatherCategory::Precipitation);
-        assert_eq!(categorize_metric("Freezing level"), WeatherCategory::Temperature);
+        assert_eq!(
+            categorize_metric("Snow on ground"),
+            WeatherCategory::Precipitation
+        );
+        assert_eq!(
+            categorize_metric("Freezing level"),
+            WeatherCategory::Temperature
+        );
         assert_eq!(categorize_metric("UV Index"), WeatherCategory::UvIndex);
     }
 }

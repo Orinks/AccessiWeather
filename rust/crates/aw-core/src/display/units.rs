@@ -312,7 +312,11 @@ pub fn convert_wind_direction_to_cardinal(degrees: f64) -> &'static str {
 }
 
 /// `format_combined_wind` (e.g. "15 mph NW").
-pub fn format_combined_wind(speed: Option<f64>, direction: Option<&str>, speed_unit: &str) -> String {
+pub fn format_combined_wind(
+    speed: Option<f64>,
+    direction: Option<&str>,
+    speed_unit: &str,
+) -> String {
     let Some(speed) = speed else {
         return "N/A".into();
     };
@@ -333,19 +337,40 @@ mod tests {
     #[test]
     fn temperature_smart_precision() {
         let both = TemperatureUnit::Both;
-        assert_eq!(format_temperature(Some(72.0), both, None, 1), "72°F (22.2°C)");
-        assert_eq!(format_temperature(Some(72.5), both, Some(22.5), 1), "72.5°F (22.5°C)");
-        assert_eq!(format_temperature(None, TemperatureUnit::Fahrenheit, Some(0.0), 1), "32°F");
+        assert_eq!(
+            format_temperature(Some(72.0), both, None, 1),
+            "72°F (22.2°C)"
+        );
+        assert_eq!(
+            format_temperature(Some(72.5), both, Some(22.5), 1),
+            "72.5°F (22.5°C)"
+        );
+        assert_eq!(
+            format_temperature(None, TemperatureUnit::Fahrenheit, Some(0.0), 1),
+            "32°F"
+        );
         assert_eq!(format_temperature(None, both, None, 1), "N/A");
     }
 
     #[test]
     fn unit_systems_override_preference() {
         let f = TemperatureUnit::Fahrenheit;
-        assert_eq!(format_wind_speed(Some(10.0), f, None, 1, Some(DisplayUnitSystem::Si)), "4.5 m/s");
-        assert_eq!(format_pressure(Some(30.0), f, None, 2, Some(DisplayUnitSystem::Ca)), "101.59 kPa");
-        assert_eq!(format_visibility(Some(10.0), f, None, 1, Some(DisplayUnitSystem::Uk)), "10.0 mi");
-        assert_eq!(format_precipitation(Some(0.5), f, None, 2, Some(DisplayUnitSystem::Uk)), "12.70 mm");
+        assert_eq!(
+            format_wind_speed(Some(10.0), f, None, 1, Some(DisplayUnitSystem::Si)),
+            "4.5 m/s"
+        );
+        assert_eq!(
+            format_pressure(Some(30.0), f, None, 2, Some(DisplayUnitSystem::Ca)),
+            "101.59 kPa"
+        );
+        assert_eq!(
+            format_visibility(Some(10.0), f, None, 1, Some(DisplayUnitSystem::Uk)),
+            "10.0 mi"
+        );
+        assert_eq!(
+            format_precipitation(Some(0.5), f, None, 2, Some(DisplayUnitSystem::Uk)),
+            "12.70 mm"
+        );
     }
 
     #[test]
@@ -360,11 +385,26 @@ mod tests {
     fn preferences_resolve_like_python() {
         let us = Location::new("x", 0.0, 0.0).with_country("US");
         let gb = Location::new("x", 0.0, 0.0).with_country("GB");
-        assert_eq!(resolve_temperature_unit_preference("auto", Some(&us)), TemperatureUnit::Fahrenheit);
-        assert_eq!(resolve_temperature_unit_preference("auto", Some(&gb)), TemperatureUnit::Celsius);
-        assert_eq!(resolve_temperature_unit_preference("", None), TemperatureUnit::Both);
-        assert_eq!(resolve_wind_display_unit_system("auto", "auto", Some(&gb)), Some(DisplayUnitSystem::Uk));
-        assert_eq!(resolve_wind_display_unit_system("KPH", "f", None), Some(DisplayUnitSystem::Ca));
+        assert_eq!(
+            resolve_temperature_unit_preference("auto", Some(&us)),
+            TemperatureUnit::Fahrenheit
+        );
+        assert_eq!(
+            resolve_temperature_unit_preference("auto", Some(&gb)),
+            TemperatureUnit::Celsius
+        );
+        assert_eq!(
+            resolve_temperature_unit_preference("", None),
+            TemperatureUnit::Both
+        );
+        assert_eq!(
+            resolve_wind_display_unit_system("auto", "auto", Some(&gb)),
+            Some(DisplayUnitSystem::Uk)
+        );
+        assert_eq!(
+            resolve_wind_display_unit_system("KPH", "f", None),
+            Some(DisplayUnitSystem::Ca)
+        );
         assert_eq!(resolve_wind_display_unit_system("auto", "both", None), None);
     }
 

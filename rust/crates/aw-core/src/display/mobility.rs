@@ -15,7 +15,11 @@ const PRECIP_INTENSITY_THRESHOLD: f64 = 0.01;
 /// first hourly period and the hourly generation time.
 fn infer_reference_time(data: &WeatherData) -> Option<DateTime<Utc>> {
     let mut candidates = Vec::new();
-    if let Some(p) = data.minutely_precipitation.as_ref().and_then(|m| m.points.first()) {
+    if let Some(p) = data
+        .minutely_precipitation
+        .as_ref()
+        .and_then(|m| m.points.first())
+    {
         candidates.push(p.time.with_timezone(&Utc));
     }
     if let Some(h) = &data.hourly_forecast {
@@ -99,7 +103,11 @@ fn hourly_fallback_phrase(data: &WeatherData, now: DateTime<Utc>) -> Option<Stri
 }
 
 fn visibility_phrase(data: &WeatherData, now: DateTime<Utc>) -> Option<String> {
-    if data.hourly_forecast.as_ref().is_some_and(|h| !h.periods.is_empty()) {
+    if data
+        .hourly_forecast
+        .as_ref()
+        .is_some_and(|h| !h.periods.is_empty())
+    {
         let min = near_periods(data, now)
             .into_iter()
             .filter_map(|(p, _)| p.visibility_miles)

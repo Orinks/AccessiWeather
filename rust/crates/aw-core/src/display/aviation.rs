@@ -11,6 +11,9 @@ use crate::display::taf::decode_taf_text;
 use crate::display::time::PyDateTime;
 use crate::model::AviationData;
 
+/// The presenter's `_format_timestamp`.
+pub type TimestampFormatter<'a> = &'a dyn Fn(&PyDateTime) -> String;
+
 fn filled(s: &Option<String>) -> Option<&str> {
     s.as_deref().filter(|s| !s.trim().is_empty())
 }
@@ -19,11 +22,12 @@ fn filled(s: &Option<String>) -> Option<&str> {
 pub fn build_aviation(
     aviation: Option<&AviationData>,
     location_name: &str,
-    format_timestamp: &dyn Fn(&PyDateTime) -> String,
+    format_timestamp: TimestampFormatter<'_>,
 ) -> Option<AviationPresentation> {
     let aviation = aviation?;
     let has_advisories = !aviation.active_sigmets.is_empty() || !aviation.active_cwas.is_empty();
-    let taf_available = filled(&aviation.raw_taf).is_some() || filled(&aviation.decoded_taf).is_some();
+    let taf_available =
+        filled(&aviation.raw_taf).is_some() || filled(&aviation.decoded_taf).is_some();
     if !(taf_available || has_advisories) {
         return None;
     }
@@ -49,7 +53,8 @@ pub fn build_aviation(
         }
     }
 
-    let summarize = |entries: &[Value], f: fn(&Map<String, Value>, &dyn Fn(&PyDateTime) -> String) -> String| {
+    let summarize = |entries: &[Value],
+                     f: fn(&Map<String, Value>, TimestampFormatter) -> String| {
         entries
             .iter()
             .take(5)
@@ -113,12 +118,22 @@ fn parse_iso(value: &str) -> Option<PyDateTime> {
     if let Ok(dt) = DateTime::parse_from_rfc3339(&v) {
         return Some(PyDateTime::aware(dt, None));
     }
-    for fmt in ["%Y-%m-%dT%H:%M:%S%.f%:z", "%Y-%m-%d %H:%M:%S%.f%:z", "%Y-%m-%dT%H:%M%:z", "%Y-%m-%d %H:%M%:z"] {
+    for fmt in [
+        "%Y-%m-%dT%H:%M:%S%.f%:z",
+        "%Y-%m-%d %H:%M:%S%.f%:z",
+        "%Y-%m-%dT%H:%M%:z",
+        "%Y-%m-%d %H:%M%:z",
+    ] {
         if let Ok(dt) = DateTime::parse_from_str(&v, fmt) {
             return Some(PyDateTime::aware(dt, None));
         }
     }
-    for fmt in ["%Y-%m-%dT%H:%M:%S%.f", "%Y-%m-%d %H:%M:%S%.f", "%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M"] {
+    for fmt in [
+        "%Y-%m-%dT%H:%M:%S%.f",
+        "%Y-%m-%d %H:%M:%S%.f",
+        "%Y-%m-%dT%H:%M",
+        "%Y-%m-%d %H:%M",
+    ] {
         if let Ok(dt) = NaiveDateTime::parse_from_str(&v, fmt) {
             return Some(PyDateTime::naive(dt));
         }
@@ -132,7 +147,7 @@ fn parse_iso(value: &str) -> Option<PyDateTime> {
 /// `_format_aviation_time`: formatted when parseable, else the raw text.
 fn format_aviation_time(
     value: Option<&Value>,
-    format_timestamp: &dyn Fn(&PyDateTime) -> String,
+    format_timestamp: TimestampFormatter<'_>,
 ) -> Option<String> {
     let value = value?;
     let text = py_str(value);
@@ -170,14 +185,20 @@ fn nonempty(s: Option<String>) -> Option<String> {
 }
 
 /// `_summarize_sigmet`.
-fn summarize_sigmet(data: &Map<String, Value>, format_timestamp: &dyn Fn(&PyDateTime) -> String) -> String {
+fn summarize_sigmet(data: &Map<String, Value>, format_timestamp: TimestampFormatter<'_>) -> String {
     let name = first_truthy(data, &["name", "event", "hazard", "phenomenon"])
         .map(py_str)
         .unwrap_or_else(|| "SIGMET".into());
     let severity = first_truthy(data, &["severity", "intensity"]);
-    let area = nonempty(area_text(first_truthy(data, &["fir", "area", "regions", "airspace"])));
+    let area = nonempty(area_text(first_truthy(
+        data,
+        &["fir", "area", "regions", "airspace"],
+    )));
     let start = nonempty(format_aviation_time(
-        first_truthy(data, &["startTime", "beginTime", "validTimeStart", "issueTime"]),
+        first_truthy(
+            data,
+            &["startTime", "beginTime", "validTimeStart", "issueTime"],
+        ),
         format_timestamp,
     ));
     let end = nonempty(format_aviation_time(
@@ -206,13 +227,14 @@ fn summarize_sigmet(data: &Map<String, Value>, format_timestamp: &dyn Fn(&PyDate
 }
 
 /// `_summarize_cwa`.
-fn summarize_cwa(data: &Map<String, Value>, format_timestamp: &dyn Fn(&PyDateTime) -> String) -> String {
+fn summarize_cwa(data: &Map<String, Value>, format_timestamp: TimestampFormatter<'_>) -> String {
     let name = first_truthy(data, &["event", "phenomenon", "hazard", "productType"])
         .map(py_str)
         .unwrap_or_else(|| "Center Weather Advisory".into());
     let cwsu = first_truthy(data, &["cwsu", "issuingOffice"]).map(py_str);
     let area = nonempty(area_text(
-        first_truthy(data, &["area", "regions", "airspace"]).or(first_truthy(data, &["cwsu", "issuingOffice"])),
+        first_truthy(data, &["area", "regions", "airspace"])
+            .or(first_truthy(data, &["cwsu", "issuingOffice"])),
     ));
     let start = nonempty(format_aviation_time(
         first_truthy(data, &["startTime", "issueTime"]),

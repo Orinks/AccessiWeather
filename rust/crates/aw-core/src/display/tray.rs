@@ -12,10 +12,9 @@ use regex::Regex;
 
 use crate::display::pyfmt::{char_len, fixed};
 use crate::display::units::{
-    celsius_to_fahrenheit, fahrenheit_to_celsius,
-    format_precipitation, format_pressure, format_visibility, format_wind_speed,
-    resolve_display_unit_system, resolve_temperature_unit_preference,
-    resolve_wind_display_unit_system, TemperatureUnit,
+    celsius_to_fahrenheit, fahrenheit_to_celsius, format_precipitation, format_pressure,
+    format_visibility, format_wind_speed, resolve_display_unit_system,
+    resolve_temperature_unit_preference, resolve_wind_display_unit_system, TemperatureUnit,
 };
 use crate::location::Location;
 use crate::model::{CurrentConditions, ForecastPeriod, HourlyForecastPeriod, WeatherData};
@@ -28,24 +27,57 @@ const NA: &str = "N/A";
 
 /// `FormatStringParser.SUPPORTED_PLACEHOLDERS`, in Python's order.
 pub const SUPPORTED_PLACEHOLDERS: &[(&str, &str)] = &[
-    ("alert", "Most severe active weather alert event name (e.g. 'Tornado Watch'), or empty if none"),
-    ("condition", "Current weather condition (e.g., 'Partly Cloudy')"),
-    ("feels_like", "Feels-like temperature (follows your temperature unit setting)"),
-    ("high", "Forecast high temperature when available (follows your temperature unit setting)"),
+    (
+        "alert",
+        "Most severe active weather alert event name (e.g. 'Tornado Watch'), or empty if none",
+    ),
+    (
+        "condition",
+        "Current weather condition (e.g., 'Partly Cloudy')",
+    ),
+    (
+        "feels_like",
+        "Feels-like temperature (follows your temperature unit setting)",
+    ),
+    (
+        "high",
+        "Forecast high temperature when available (follows your temperature unit setting)",
+    ),
     ("humidity", "Current humidity percentage"),
     ("location", "Current location name"),
-    ("low", "Forecast low temperature when available (follows your temperature unit setting)"),
-    ("precip", "Precipitation amount (follows your temperature unit setting)"),
+    (
+        "low",
+        "Forecast low temperature when available (follows your temperature unit setting)",
+    ),
+    (
+        "precip",
+        "Precipitation amount (follows your temperature unit setting)",
+    ),
     ("precip_chance", "Chance of precipitation percentage"),
-    ("pressure", "Barometric pressure (follows your temperature unit setting)"),
-    ("temp", "Current temperature (follows your temperature unit setting)"),
+    (
+        "pressure",
+        "Barometric pressure (follows your temperature unit setting)",
+    ),
+    (
+        "temp",
+        "Current temperature (follows your temperature unit setting)",
+    ),
     ("temp_c", "Current temperature in Celsius"),
     ("temp_f", "Current temperature in Fahrenheit"),
     ("uv", "UV index"),
-    ("visibility", "Visibility (follows your temperature unit setting)"),
-    ("wind", "Wind direction with speed text (e.g., 'NW at 5 mph')"),
+    (
+        "visibility",
+        "Visibility (follows your temperature unit setting)",
+    ),
+    (
+        "wind",
+        "Wind direction with speed text (e.g., 'NW at 5 mph')",
+    ),
     ("wind_dir", "Wind direction (e.g., 'NW')"),
-    ("wind_speed", "Wind speed (follows your temperature unit setting)"),
+    (
+        "wind_speed",
+        "Wind speed (follows your temperature unit setting)",
+    ),
 ];
 
 fn is_supported(name: &str) -> bool {
@@ -214,7 +246,10 @@ impl TaskbarIconUpdater {
         };
         match data.current.as_ref().filter(|c| c.has_data()) {
             Some(current) => {
-                let vars = self.extract(&live_source(data, current, Some(&data.location), now), location_name);
+                let vars = self.extract(
+                    &live_source(data, current, Some(&data.location), now),
+                    location_name,
+                );
                 self.format_text(&vars, None)
             }
             None => DEFAULT_TOOLTIP_TEXT.into(),
@@ -229,7 +264,10 @@ impl TaskbarIconUpdater {
         now: DateTime<Utc>,
     ) -> BTreeMap<String, String> {
         let current = data.current.clone().unwrap_or_default();
-        self.extract(&live_source(data, &current, Some(&data.location), now), location_name)
+        self.extract(
+            &live_source(data, &current, Some(&data.location), now),
+            location_name,
+        )
     }
 
     /// `format_text`: substitute and cap at 127 characters.
@@ -296,7 +334,14 @@ impl TaskbarIconUpdater {
             alert: String::new(),
             location: None,
         };
-        let vars = self.extract(&source, Some(location_name.filter(|n| !n.is_empty()).unwrap_or("Sample Location")));
+        let vars = self.extract(
+            &source,
+            Some(
+                location_name
+                    .filter(|n| !n.is_empty())
+                    .unwrap_or("Sample Location"),
+            ),
+        );
         self.format_text(&vars, Some(format))
     }
 
@@ -308,8 +353,11 @@ impl TaskbarIconUpdater {
         let c = src.current;
         let unit = self.temperature_unit(src.location);
         let system = resolve_display_unit_system(&self.temperature_unit, src.location);
-        let wind_system =
-            resolve_wind_display_unit_system(&self.wind_speed_unit, &self.temperature_unit, src.location);
+        let wind_system = resolve_wind_display_unit_system(
+            &self.wind_speed_unit,
+            &self.temperature_unit,
+            src.location,
+        );
         let round = self.round_values;
 
         let wind_speed = format_wind_speed(
@@ -359,7 +407,10 @@ impl TaskbarIconUpdater {
         put("temp_c", temp_value(c.temperature_c, "C"));
         put(
             "condition",
-            c.condition.clone().filter(|s| !s.is_empty()).unwrap_or_else(|| NA.into()),
+            c.condition
+                .clone()
+                .filter(|s| !s.is_empty())
+                .unwrap_or_else(|| NA.into()),
         );
         // `humidity or relative_humidity`: 0% reads as missing.
         put(
@@ -374,7 +425,13 @@ impl TaskbarIconUpdater {
         put("wind_dir", wind_dir);
         put(
             "pressure",
-            format_pressure(c.pressure_in, unit, c.pressure_mb, if round { 0 } else { 2 }, system),
+            format_pressure(
+                c.pressure_in,
+                unit,
+                c.pressure_mb,
+                if round { 0 } else { 2 },
+                system,
+            ),
         );
         put("feels_like", format_feels_like(c, unit));
         put("uv", format_numeric(c.uv_index, ""));
@@ -392,7 +449,13 @@ impl TaskbarIconUpdater {
         put("low", low);
         put(
             "precip",
-            format_precipitation(precip_in, unit, c.precipitation_mm, if round { 0 } else { 2 }, system),
+            format_precipitation(
+                precip_in,
+                unit,
+                c.precipitation_mm,
+                if round { 0 } else { 2 },
+                system,
+            ),
         );
         put("precip_chance", format_numeric(precip_chance, ""));
         put("alert", src.alert.clone());
@@ -404,20 +467,28 @@ impl TaskbarIconUpdater {
             (None, None, _) => NA.into(),
             (f, _, TemperatureUnit::Fahrenheit) => temp_value(f, "F"),
             (_, c, TemperatureUnit::Celsius) => temp_value(c, "C"),
-            (Some(f), Some(c), TemperatureUnit::Both) => format!("{}F/{}C", fixed(f, 0), fixed(c, 0)),
+            (Some(f), Some(c), TemperatureUnit::Both) => {
+                format!("{}F/{}C", fixed(f, 0), fixed(c, 0))
+            }
             (Some(f), None, _) => format!("{}F", fixed(f, 0)),
             (None, Some(c), _) => format!("{}C", fixed(c, 0)),
         }
     }
 
     /// `_format_forecast_temperatures`: (high, low).
-    fn forecast_temperatures(&self, periods: &[ForecastPeriod], unit: TemperatureUnit) -> (String, String) {
+    fn forecast_temperatures(
+        &self,
+        periods: &[ForecastPeriod],
+        unit: TemperatureUnit,
+    ) -> (String, String) {
         if periods.is_empty() {
             return (NA.into(), NA.into());
         }
         let is_night = |p: &ForecastPeriod| {
             let n = p.name.to_lowercase();
-            ["night", "tonight", "overnight"].iter().any(|t| n.contains(t))
+            ["night", "tonight", "overnight"]
+                .iter()
+                .any(|t| n.contains(t))
         };
         let high_period = periods
             .iter()
@@ -429,10 +500,16 @@ impl TaskbarIconUpdater {
             unit,
         );
         let (low_value, low_unit) = match periods.iter().find(|p| is_night(p)) {
-            Some(p) => (p.temperature_low.or(p.temperature), p.temperature_unit.as_str()),
+            Some(p) => (
+                p.temperature_low.or(p.temperature),
+                p.temperature_unit.as_str(),
+            ),
             None => periods
                 .iter()
-                .find_map(|p| p.temperature_low.map(|v| (Some(v), p.temperature_unit.as_str())))
+                .find_map(|p| {
+                    p.temperature_low
+                        .map(|v| (Some(v), p.temperature_unit.as_str()))
+                })
                 .unwrap_or((None, "F")),
         };
         (high, forecast_temperature(low_value, low_unit, unit))
@@ -531,8 +608,16 @@ fn forecast_temperature(value: Option<f64>, unit_code: &str, unit: TemperatureUn
     let code = if unit_code.is_empty() { "F" } else { unit_code }
         .trim()
         .to_uppercase();
-    let f = if code == "F" { v } else { celsius_to_fahrenheit(v) };
-    let c = if code == "C" { v } else { fahrenheit_to_celsius(v) };
+    let f = if code == "F" {
+        v
+    } else {
+        celsius_to_fahrenheit(v)
+    };
+    let c = if code == "C" {
+        v
+    } else {
+        fahrenheit_to_celsius(v)
+    };
     match unit {
         TemperatureUnit::Fahrenheit => temp_value(Some(f), "F"),
         TemperatureUnit::Celsius => temp_value(Some(c), "C"),

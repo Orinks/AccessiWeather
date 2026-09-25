@@ -30,7 +30,9 @@ fn air_quality_guidance(category: &str) -> &'static str {
              should avoid extended time outdoors."
         }
         "Very Unhealthy" => "Avoid outdoor exertion and move activities indoors when possible.",
-        "Hazardous" => "Avoid all outdoor activity and follow local emergency air quality guidance.",
+        "Hazardous" => {
+            "Avoid all outdoor activity and follow local emergency air quality guidance."
+        }
         _ => "Monitor local guidance and limit exposure if you notice symptoms.",
     }
 }
@@ -228,11 +230,19 @@ mod tests {
             pollen_category: Some("High".into()),
             pollen_primary_allergen: Some("Oak".into()),
             pollen_tree_index: Some(4.5),
-            sources: vec!["Open-Meteo".into(), "".into(), "AirNow".into(), "AirNow".into()],
+            sources: vec![
+                "Open-Meteo".into(),
+                "".into(),
+                "AirNow".into(),
+                "AirNow".into(),
+            ],
             ..Default::default()
         };
         let p = build_air_quality_panel("Home", &env, &AppSettings::default(), None).unwrap();
-        assert_eq!(p.summary, "AQI 52 (Moderate) – Dominant pollutant: PM2.5. Pollen: High (Oak)");
+        assert_eq!(
+            p.summary,
+            "AQI 52 (Moderate) – Dominant pollutant: PM2.5. Pollen: High (Oak)"
+        );
         assert_eq!(p.sources, ["AirNow", "Open-Meteo"]);
         assert_eq!(p.details[1], "Pollen Levels: Tree: 4");
         assert!(p.fallback_text.ends_with("Sources: AirNow, Open-Meteo"));

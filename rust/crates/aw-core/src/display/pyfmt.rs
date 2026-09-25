@@ -182,10 +182,8 @@ fn split_chunks(c: &[char]) -> Vec<String> {
             // hyphenated word
             if at(end) == Some('-') {
                 let behind_two = end >= 2 && is_letter(c[end - 2]) && is_letter(c[end - 1]);
-                let behind_alt = end >= 3
-                    && is_letter(c[end - 3])
-                    && c[end - 2] == '-'
-                    && is_letter(c[end - 1]);
+                let behind_alt =
+                    end >= 3 && is_letter(c[end - 3]) && c[end - 2] == '-' && is_letter(c[end - 1]);
                 let ahead = at(end + 1).is_some_and(is_letter)
                     && (at(end + 2).is_some_and(is_letter)
                         || (at(end + 2) == Some('-') && at(end + 3).is_some_and(is_letter)));
@@ -331,14 +329,27 @@ mod tests {
 
     #[test]
     fn wrap_splits_hyphenated_words_like_textwrap() {
-        let chunks = split_chunks(&"Hello there -- you goof-ball, use the -b option!".chars().collect::<Vec<_>>());
+        let chunks = split_chunks(
+            &"Hello there -- you goof-ball, use the -b option!"
+                .chars()
+                .collect::<Vec<_>>(),
+        );
         assert_eq!(
             chunks,
-            ["Hello", " ", "there", " ", "--", " ", "you", " ", "goof-", "ball,", " ", "use", " ", "the", " ", "-b", " ", "option!"]
+            [
+                "Hello", " ", "there", " ", "--", " ", "you", " ", "goof-", "ball,", " ", "use",
+                " ", "the", " ", "-b", " ", "option!"
+            ]
         );
         assert_eq!(wrap_text("aaa bbb ccc", 7), "aaa bbb\nccc");
-        assert_eq!(wrap_text("north-northwest wind", 10), "north-\nnorthwest\nwind");
-        assert_eq!(wrap_text("averyveryverylongword x", 5), "averyveryverylongword\nx");
+        assert_eq!(
+            wrap_text("north-northwest wind", 10),
+            "north-\nnorthwest\nwind"
+        );
+        assert_eq!(
+            wrap_text("averyveryverylongword x", 5),
+            "averyveryverylongword\nx"
+        );
         assert_eq!(wrap_text("  ", 5), "");
     }
 }

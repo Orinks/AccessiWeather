@@ -260,14 +260,20 @@ impl WeatherPresenter {
     }
 
     /// `_build_summary`: the one-line summary.
-    fn build_summary(&self, data: &WeatherData, unit_pref: TemperatureUnit, clock: &Clock) -> String {
+    fn build_summary(
+        &self,
+        data: &WeatherData,
+        unit_pref: TemperatureUnit,
+        clock: &Clock,
+    ) -> String {
         let name = &data.location.name;
         if !data.has_any_data() {
             return format!("No weather data available for {name}");
         }
         let mut parts = vec![name.clone()];
         if let Some(c) = data.current.as_ref().filter(|c| c.has_data()) {
-            if let Some(t) = format_temperature_pair(c.temperature_f, c.temperature_c, unit_pref, 0) {
+            if let Some(t) = format_temperature_pair(c.temperature_f, c.temperature_c, unit_pref, 0)
+            {
                 parts.push(t);
             }
             if let Some(cond) = c.condition.as_deref().filter(|s| !s.is_empty()) {

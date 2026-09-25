@@ -368,7 +368,7 @@ fn with_thousands(n: u32) -> String {
     let s = n.to_string();
     let mut out = String::new();
     for (i, c) in s.chars().enumerate() {
-        if i > 0 && (s.len() - i) % 3 == 0 {
+        if i > 0 && (s.len() - i).is_multiple_of(3) {
             out.push(',');
         }
         out.push(c);
@@ -420,7 +420,10 @@ pub fn decode_cloud(token: &str) -> Option<String> {
     let altitude = height.filter(|h| is_digits(h)).map(|h| num(h) * 100);
     if cover == "VV" {
         if let Some(a) = altitude {
-            return Some(format!("Vertical visibility {} feet ({token})", with_thousands(a)));
+            return Some(format!(
+                "Vertical visibility {} feet ({token})",
+                with_thousands(a)
+            ));
         }
     }
     let altitude_text = altitude
@@ -506,7 +509,14 @@ fn new_change_segment(tokens: &[String], index: usize) -> Option<(SegmentKind, u
             None => {}
         }
     }
-    Some((SegmentKind::Probability { prob, period, tempo }, next))
+    Some((
+        SegmentKind::Probability {
+            prob,
+            period,
+            tempo,
+        },
+        next,
+    ))
 }
 
 fn split_segments(tokens: &[String]) -> (Vec<Segment>, Option<String>) {
@@ -535,8 +545,18 @@ fn split_segments(tokens: &[String]) -> (Vec<Segment>, Option<String>) {
         i += 1;
     }
     let first = segments[0].clone();
-    let filtered: Vec<Segment> = segments.into_iter().filter(|s| !s.tokens.is_empty()).collect();
-    (if filtered.is_empty() { vec![first] } else { filtered }, remarks)
+    let filtered: Vec<Segment> = segments
+        .into_iter()
+        .filter(|s| !s.tokens.is_empty())
+        .collect();
+    (
+        if filtered.is_empty() {
+            vec![first]
+        } else {
+            filtered
+        },
+        remarks,
+    )
 }
 
 fn segment_intro(kind: &SegmentKind) -> String {
@@ -547,7 +567,11 @@ fn segment_intro(kind: &SegmentKind) -> String {
         SegmentKind::Tempo(None) => "Temporary conditions:".into(),
         SegmentKind::Becmg(Some(p)) => format!("Becoming {}:", format_time_range(p)),
         SegmentKind::Becmg(None) => "Becoming conditions:".into(),
-        SegmentKind::Probability { prob, period, tempo } => {
+        SegmentKind::Probability {
+            prob,
+            period,
+            tempo,
+        } => {
             let mut prefix = format!("Probability {prob}%");
             if *tempo {
                 prefix.push_str(" of temporary conditions");
@@ -727,16 +751,34 @@ mod tests {
     fn header_only_and_nil() {
         assert_eq!(decode_taf_text("   "), "No TAF available.");
         assert_eq!(decode_taf_text("TAF KJFK"), "TAF issued for station KJFK.");
-        assert_eq!(decode_taf_text("TAF KJFK NIL="), "No TAF available for station KJFK.");
+        assert_eq!(
+            decode_taf_text("TAF KJFK NIL="),
+            "No TAF available for station KJFK."
+        );
     }
 
     #[test]
     fn unknown_precipitation_is_named() {
-        assert_eq!(decode_weather("FZUP").unwrap(), "freezing freezing precipitation (FZUP)");
-        assert_eq!(decode_weather("RAUP").unwrap(), "mixed precipitation (RAUP)");
+        assert_eq!(
+            decode_weather("FZUP").unwrap(),
+            "freezing freezing precipitation (FZUP)"
+        );
+        assert_eq!(
+            decode_weather("RAUP").unwrap(),
+            "mixed precipitation (RAUP)"
+        );
         assert_eq!(decode_weather("BLDU").unwrap(), "blowing dust (BLDU)");
-        assert_eq!(decode_cloud("VV002").unwrap(), "Vertical visibility 200 feet (VV002)");
-        assert_eq!(decode_visibility("9999").unwrap(), "Visibility 10 kilometres or more (9999 meters)");
-        assert_eq!(decode_visibility("0800").unwrap(), "Visibility 0.8 kilometres (0800 meters)");
+        assert_eq!(
+            decode_cloud("VV002").unwrap(),
+            "Vertical visibility 200 feet (VV002)"
+        );
+        assert_eq!(
+            decode_visibility("9999").unwrap(),
+            "Visibility 10 kilometres or more (9999 meters)"
+        );
+        assert_eq!(
+            decode_visibility("0800").unwrap(),
+            "Visibility 0.8 kilometres (0800 meters)"
+        );
     }
 }

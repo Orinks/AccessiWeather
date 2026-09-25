@@ -1,4 +1,4 @@
-"""
+r"""
 Golden files for ``aw_core::display`` (the presentation layer).
 
 Run from the Python checkout:
@@ -101,7 +101,9 @@ CASSETTES = Path.cwd() / "tests" / "integration" / "cassettes"
 LOCAL_TZ = "America/New_York"
 
 if time.tzname != ("Eastern Standard Time", "Eastern Daylight Time"):
-    sys.exit("Generate these on a machine set to US Eastern time (the files record America/New_York).")
+    sys.exit(
+        "Generate these on a machine set to US Eastern time (the files record America/New_York)."
+    )
 
 # ---------------------------------------------------------------------------
 # Frozen clock
@@ -218,9 +220,7 @@ def at(text: str) -> datetime:
     return datetime.fromisoformat(text)
 
 
-NYC = Location(
-    "New York, NY", 40.7128, -74.006, timezone="America/New_York", country_code="US"
-)
+NYC = Location("New York, NY", 40.7128, -74.006, timezone="America/New_York", country_code="US")
 ANCHORAGE = Location(
     "Anchorage, AK", 61.2181, -149.9003, timezone="America/Anchorage", country_code="US"
 )
@@ -263,6 +263,7 @@ def openmeteo_nyc() -> tuple[WeatherData, datetime]:
     forecast = parse_openmeteo_forecast(cassette("openmeteo/forecast_daily.yaml"))
     forecast.generated_at = at("2025-01-15T11:55:00-05:00")
     hourly = parse_openmeteo_hourly_forecast(cassette("openmeteo/hourly_forecast.yaml"))
+    hourly.generated_at = at("2025-01-15T09:00:00-05:00")
     data = WeatherData(location=NYC, current=current, forecast=forecast, hourly_forecast=hourly)
     data.source_attribution = SourceAttribution(
         contributing_sources={"openmeteo"}, failed_sources={"nws"}
@@ -280,9 +281,7 @@ def openmeteo_london() -> tuple[WeatherData, datetime]:
 
 
 def openmeteo_celsius_extended() -> tuple[WeatherData, datetime]:
-    current = parse_openmeteo_current_conditions(
-        cassette("openmeteo/current_weather_celsius.yaml")
-    )
+    current = parse_openmeteo_current_conditions(cassette("openmeteo/current_weather_celsius.yaml"))
     forecast = parse_openmeteo_forecast(cassette("openmeteo/forecast_extended.yaml"))
     forecast.generated_at = None
     loc = dataclasses.replace(TORONTO, name="Toronto (metric)")
@@ -313,6 +312,7 @@ def pirate(name: str, location: Location, now: str) -> tuple[WeatherData, dateti
     )
     if data.hourly_forecast is not None:
         del data.hourly_forecast.periods[72:]
+        data.hourly_forecast.generated_at = at(now) - timedelta(minutes=5)
     if data.forecast is not None:
         data.forecast.generated_at = at(now) - timedelta(minutes=5)
     data.source_attribution = SourceAttribution(
@@ -437,12 +437,62 @@ def winter_storm() -> tuple[WeatherData, datetime]:
                         0.2,
                         ["snow"],
                     ),
-                    ("Wednesday", 20.0, "Mostly Sunny", "Mostly sunny.", "10 mph", 5.0, 0.0, 0.0, None),
+                    (
+                        "Wednesday",
+                        20.0,
+                        "Mostly Sunny",
+                        "Mostly sunny.",
+                        "10 mph",
+                        5.0,
+                        0.0,
+                        0.0,
+                        None,
+                    ),
                     ("Wednesday Night", 5.0, "Clear", "Clear", "5 mph", None, None, None, None),
-                    ("Thursday", 27.0, "Sunny", "Sunny, with a high near 27.", "5 to 10 mph", 0.0, None, None, None),
-                    ("Thursday Night", 15.0, "Partly Cloudy", None, "5 mph", None, None, None, None),
-                    ("Friday", 33.0, "Chance Rain And Snow", "A chance of rain and snow.", "10 mph", 40.0, 0.5, 0.1, ["rain", "snow"]),
-                    ("Friday Night", 25.0, "Rain And Snow Likely", None, "10 mph", 60.0, 1.0, 0.25, ["rain", "snow"]),
+                    (
+                        "Thursday",
+                        27.0,
+                        "Sunny",
+                        "Sunny, with a high near 27.",
+                        "5 to 10 mph",
+                        0.0,
+                        None,
+                        None,
+                        None,
+                    ),
+                    (
+                        "Thursday Night",
+                        15.0,
+                        "Partly Cloudy",
+                        None,
+                        "5 mph",
+                        None,
+                        None,
+                        None,
+                        None,
+                    ),
+                    (
+                        "Friday",
+                        33.0,
+                        "Chance Rain And Snow",
+                        "A chance of rain and snow.",
+                        "10 mph",
+                        40.0,
+                        0.5,
+                        0.1,
+                        ["rain", "snow"],
+                    ),
+                    (
+                        "Friday Night",
+                        25.0,
+                        "Rain And Snow Likely",
+                        None,
+                        "10 mph",
+                        60.0,
+                        1.0,
+                        0.25,
+                        ["rain", "snow"],
+                    ),
                 ]
             )
         ],
@@ -456,7 +506,15 @@ def winter_storm() -> tuple[WeatherData, datetime]:
         hourly_forecast=hourly,
         alerts=alerts,
         trend_insights=[
-            TrendInsight("temperature", "falling", -6.4, "°F", 24, "Temperature falling -6.4°F over 24h", "▇▆▅▃▂"),
+            TrendInsight(
+                "temperature",
+                "falling",
+                -6.4,
+                "°F",
+                24,
+                "Temperature falling -6.4°F over 24h",
+                "▇▆▅▃▂",
+            ),
             TrendInsight("wind_speed", "rising", 12.25, "mph", 12),
             TrendInsight("daily_trend", "cooler", None, None, 24, "Colder than yesterday"),
         ],
@@ -577,7 +635,11 @@ def summer_heat() -> tuple[WeatherData, datetime]:
         updated_at=at("2026-07-18T13:05:00-04:00"),
         sources=["AirNow", "Open-Meteo", "AirNow", ""],
         hourly_air_quality=[
-            HourlyAirQuality(timestamp=datetime(2026, 7, 18, 14 + i, tzinfo=tz), aqi=150 + i * 5, category="Unhealthy")
+            HourlyAirQuality(
+                timestamp=datetime(2026, 7, 18, 14 + i, tzinfo=tz),
+                aqi=150 + i * 5,
+                category="Unhealthy",
+            )
             for i in range(3)
         ],
     )
@@ -618,7 +680,9 @@ def summer_heat() -> tuple[WeatherData, datetime]:
                 cloud_cover=30.0,
                 wind_gust="25 mph",
             ),
-            ForecastPeriod(name="Tonight", temperature=78.0, short_forecast="Partly Cloudy", wind_speed="5 mph"),
+            ForecastPeriod(
+                name="Tonight", temperature=78.0, short_forecast="Partly Cloudy", wind_speed="5 mph"
+            ),
             ForecastPeriod(name="Saturday", temperature=94.0, short_forecast="Sunny"),
             ForecastPeriod(name="Saturday Night", temperature=76.0, short_forecast="Clear"),
         ],
@@ -636,12 +700,21 @@ def summer_heat() -> tuple[WeatherData, datetime]:
             forecast_summary="Southeast winds 10 to 15 knots. Seas 2 to 3 feet.",
             issued_at=at("2026-07-18T10:00:00-04:00"),
             periods=[
-                MarineForecastPeriod("Today", "Southeast winds 10 to 15 knots. Seas 2 to 3 feet. Intracoastal waters a light chop. Isolated thunderstorms in the afternoon, which could produce gusty winds and locally higher seas."),
+                MarineForecastPeriod(
+                    "Today",
+                    "Southeast winds 10 to 15 knots. Seas 2 to 3 feet. Intracoastal waters a light chop. Isolated thunderstorms in the afternoon, which could produce gusty winds and locally higher seas.",
+                ),
                 MarineForecastPeriod("Tonight", "South winds around 10 knots."),
                 MarineForecastPeriod("Saturday", ""),
                 MarineForecastPeriod("Sunday", "Not shown"),
             ],
-            highlights=["SE 10-15 kt", "Seas 2-3 ft", "Isolated storms", "Rip current risk", "Fifth highlight"],
+            highlights=[
+                "SE 10-15 kt",
+                "Seas 2-3 ft",
+                "Isolated storms",
+                "Rip current risk",
+                "Fifth highlight",
+            ],
         ),
         forecast_confidence=ForecastConfidence(
             level=ForecastConfidenceLevel.MEDIUM,
@@ -674,7 +747,9 @@ def summer_heat() -> tuple[WeatherData, datetime]:
 
 def aviation_case() -> tuple[WeatherData, datetime]:
     now = at("2026-04-02T16:00:00+00:00")
-    current = CurrentConditions(temperature_c=12.0, condition="Overcast", humidity=0, wind_speed_kph=0.4)
+    current = CurrentConditions(
+        temperature_c=12.0, condition="Overcast", humidity=0, wind_speed_kph=0.4
+    )
     aviation = AviationData(
         raw_taf="TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 "
         "TEMPO 0218/0222 4SM -SHRA BR BKN012 "
@@ -707,7 +782,12 @@ def aviation_case() -> tuple[WeatherData, datetime]:
                 "endTime": "2026-04-02T17:30:00Z",
                 "text": "IFR conditions in low clouds.",
             },
-            {"phenomenon": "TS", "issuingOffice": "ZOA", "area": "ZOA", "issueTime": "2026-04-02T12:00:00"},
+            {
+                "phenomenon": "TS",
+                "issuingOffice": "ZOA",
+                "area": "ZOA",
+                "issueTime": "2026-04-02T12:00:00",
+            },
             {},
         ],
     )
@@ -725,7 +805,9 @@ def aviation_decoded_only() -> tuple[WeatherData, datetime]:
 
 
 def empty_case() -> tuple[WeatherData, datetime]:
-    data = WeatherData(location=NOWHERE, current=CurrentConditions(), alerts=WeatherAlerts(alerts=[]))
+    data = WeatherData(
+        location=NOWHERE, current=CurrentConditions(), alerts=WeatherAlerts(alerts=[])
+    )
     data.forecast = Forecast(periods=[])
     return data, at("2026-05-05T12:00:00+00:00")
 
@@ -742,7 +824,13 @@ def sparse_case() -> tuple[WeatherData, datetime]:
     )
     hourly = HourlyForecast(
         periods=[
-            HourlyForecastPeriod(start_time=datetime(2026, 10, 10, 20, 0) + timedelta(hours=i), temperature=13.0 - i * 0.25, temperature_unit="C", humidity=0 if i == 0 else 80, pressure_mb=1010.2 if i == 5 else None)
+            HourlyForecastPeriod(
+                start_time=datetime(2026, 10, 10, 20, 0) + timedelta(hours=i),
+                temperature=13.0 - i * 0.25,
+                temperature_unit="C",
+                humidity=0 if i == 0 else 80,
+                pressure_mb=1010.2 if i == 5 else None,
+            )
             for i in range(6)
         ]
         + [HourlyForecastPeriod(start_time=datetime(2026, 10, 10, 19, 0))],
@@ -750,7 +838,9 @@ def sparse_case() -> tuple[WeatherData, datetime]:
     )
     forecast = Forecast(
         periods=[
-            ForecastPeriod(name=n, temperature=t, temperature_unit="C", temperature_low=lo, wind_speed=w)
+            ForecastPeriod(
+                name=n, temperature=t, temperature_unit="C", temperature_low=lo, wind_speed=w
+            )
             for n, t, lo, w in [
                 ("Tonight", 10.0, None, ""),
                 ("Sunday", 15.0, 8.0, "Light"),
@@ -772,7 +862,11 @@ def sparse_case() -> tuple[WeatherData, datetime]:
         forecast=forecast,
         minutely_precipitation=MinutelyPrecipitationForecast(summary="Clear for the hour."),
         source_attribution=SourceAttribution(
-            field_sources={"condition": "openmeteo", "hourly_source": "customsource", "hourly_summary": "pirateweather"},
+            field_sources={
+                "condition": "openmeteo",
+                "hourly_source": "customsource",
+                "hourly_summary": "pirateweather",
+            },
             contributing_sources={"openmeteo", "customsource"},
         ),
         incomplete_sections={"hourly"},
@@ -793,7 +887,7 @@ def mobility_case() -> tuple[WeatherData, datetime]:
                 precipitation_intensity=0.0 if m < 20 else 0.4,
                 precipitation_probability=0.1 if m < 20 else 0.8,
             )
-            for m in range(0, 61)
+            for m in range(61)
         ],
     )
     hourly = HourlyForecast(
@@ -875,7 +969,9 @@ def fog_pressure_case() -> tuple[WeatherData, datetime]:
 
 def environment_partial() -> tuple[WeatherData, datetime]:
     """Pollen without air quality, then a pollutant-only reading."""
-    current = CurrentConditions(temperature_f=55.0, condition="Partly Cloudy", humidity=35, wind_speed_mph=18.0)
+    current = CurrentConditions(
+        temperature_f=55.0, condition="Partly Cloudy", humidity=35, wind_speed_mph=18.0
+    )
     env = EnvironmentalConditions(
         pollen_index=6.4,
         pollen_primary_allergen="Ragweed",
@@ -915,17 +1011,43 @@ VARIANTS: list[dict] = [
     {"temperature_unit": "auto"},
     {"temperature_unit": "auto", "wind_speed_unit": "m/s"},
     {"temperature_unit": "both", "wind_speed_unit": "kph"},
-    {"temperature_unit": "fahrenheit", "wind_speed_unit": "mph", "verbosity_level": "detailed", "show_impact_summaries": True},
+    {
+        "temperature_unit": "fahrenheit",
+        "wind_speed_unit": "mph",
+        "verbosity_level": "detailed",
+        "show_impact_summaries": True,
+    },
     {"verbosity_level": "minimal", "round_values": True},
     {"verbosity_level": "detailed", "time_format_12hour": False, "show_timezone_suffix": True},
     {"time_display_mode": "utc", "show_timezone_suffix": True},
     {"time_display_mode": "both", "show_timezone_suffix": True, "time_format_12hour": False},
     {"forecast_time_reference": "user_local", "show_timezone_suffix": True},
-    {"show_dewpoint": False, "show_visibility": False, "show_uv_index": False, "show_pressure_trend": False, "show_seasonal_data": False},
-    {"severe_weather_override": True, "category_order": ["uv_index", "visibility_clouds", "humidity_pressure", "wind", "precipitation", "temperature"]},
+    {
+        "show_dewpoint": False,
+        "show_visibility": False,
+        "show_uv_index": False,
+        "show_pressure_trend": False,
+        "show_seasonal_data": False,
+    },
+    {
+        "severe_weather_override": True,
+        "category_order": [
+            "uv_index",
+            "visibility_clouds",
+            "humidity_pressure",
+            "wind",
+            "precipitation",
+            "temperature",
+        ],
+    },
     {"severe_weather_override": True, "show_impact_summaries": True, "temperature_unit": "celsius"},
     {"forecast_duration_days": 3, "hourly_forecast_hours": 12, "round_values": True},
-    {"forecast_duration_days": 16, "hourly_forecast_hours": 48, "date_format": "eu", "time_display_mode": "both"},
+    {
+        "forecast_duration_days": 16,
+        "hourly_forecast_hours": 48,
+        "date_format": "eu",
+        "time_display_mode": "both",
+    },
 ]
 
 TRAY_FORMATS = [
@@ -1003,7 +1125,9 @@ def generate_cases() -> None:
                         mobility_briefing="Stay dry.",
                     )
                 )
-                variant["present_alerts"] = to_json(presenter.present_alerts(data.alerts, data.location))
+                variant["present_alerts"] = to_json(
+                    presenter.present_alerts(data.alerts, data.location)
+                )
             doc["variants"].append(variant)
         path = OUT / f"{name}.json"
         path.write_text(json.dumps(doc, ensure_ascii=False, indent=0) + "\n", encoding="utf-8")
@@ -1011,7 +1135,7 @@ def generate_cases() -> None:
 
 
 def taf_test_inputs(function: str) -> list[str]:
-    """String literals the Python TAF tests pass to ``function`` (and ``raw = ...``)."""
+    """Return the string literals the Python TAF tests pass to ``function`` (and ``raw = ...``)."""
     tree = ast.parse((Path.cwd() / "tests" / "test_taf_decoder.py").read_text(encoding="utf-8"))
     found: list[str] = []
     for node in ast.walk(tree):
@@ -1070,7 +1194,14 @@ def generate_helpers() -> None:
                     }
                 )
     parser = FormatStringParser()
-    formats = ["", "{temp} {condition}", "{temp", "{bogus} and {temp_f}", "{{temp}}", "{a b} {Temp}"]
+    formats = [
+        "",
+        "{temp} {condition}",
+        "{temp",
+        "{bogus} and {temp_f}",
+        "{{temp}}",
+        "{a b} {Temp}",
+    ]
     placeholders = [
         {
             "format": fmt,

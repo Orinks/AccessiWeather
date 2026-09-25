@@ -118,7 +118,9 @@ impl PyDateTime {
         match self.label {
             TzLabel::Naive => String::new(),
             TzLabel::Fixed => fixed_offset_name(self.dt.offset().local_minus_utc()),
-            TzLabel::Zone(tz) => tz.offset_from_utc_datetime(&self.dt.naive_utc()).to_string(),
+            TzLabel::Zone(tz) => tz
+                .offset_from_utc_datetime(&self.dt.naive_utc())
+                .to_string(),
             TzLabel::Local { tz, at } => tz.offset_from_utc_datetime(&at.naive_utc()).to_string(),
         }
     }
@@ -234,7 +236,8 @@ pub fn format_display_datetime(
     show_timezone: bool,
     date_format: &str,
 ) -> String {
-    let fmt = |dt: &PyDateTime| format!("{} {}", dt.strftime(date_format), fmt_time(dt, use_12hour));
+    let fmt =
+        |dt: &PyDateTime| format!("{} {}", dt.strftime(date_format), fmt_time(dt, use_12hour));
     match time_display_mode {
         "utc" => {
             let mut s = fmt(&value.to_utc());
@@ -349,30 +352,63 @@ mod tests {
     fn modes_and_suffixes() {
         let ny = Some(chrono_tz::America::New_York);
         let t = at(15, 5, -4, ny);
-        assert_eq!(format_display_time(Some(&t), "local", true, false), "3:05 PM");
-        assert_eq!(format_display_time(Some(&t), "local", true, true), "3:05 PM EDT");
-        assert_eq!(format_display_time(Some(&t), "local", false, false), "15:05");
-        assert_eq!(format_display_time(Some(&t), "utc", true, true), "7:05 PM UTC");
-        assert_eq!(format_display_time(Some(&t), "both", false, true), "15:05 EDT (19:05 UTC)");
+        assert_eq!(
+            format_display_time(Some(&t), "local", true, false),
+            "3:05 PM"
+        );
+        assert_eq!(
+            format_display_time(Some(&t), "local", true, true),
+            "3:05 PM EDT"
+        );
+        assert_eq!(
+            format_display_time(Some(&t), "local", false, false),
+            "15:05"
+        );
+        assert_eq!(
+            format_display_time(Some(&t), "utc", true, true),
+            "7:05 PM UTC"
+        );
+        assert_eq!(
+            format_display_time(Some(&t), "both", false, true),
+            "15:05 EDT (19:05 UTC)"
+        );
         let fixed = at(9, 0, -4, None);
-        assert_eq!(format_display_time(Some(&fixed), "local", true, true), "9:00 AM UTC-04:00");
+        assert_eq!(
+            format_display_time(Some(&fixed), "local", true, true),
+            "9:00 AM UTC-04:00"
+        );
         let utc = at(9, 0, 0, None);
-        assert_eq!(format_display_time(Some(&utc), "local", true, true), "9:00 AM");
+        assert_eq!(
+            format_display_time(Some(&utc), "local", true, true),
+            "9:00 AM"
+        );
         assert_eq!(format_display_time(None, "local", true, true), "Unknown");
     }
 
     #[test]
     fn display_datetime_and_date_styles() {
         let t = at(8, 30, -5, None);
-        assert_eq!(format_display_datetime(&t, "local", true, false, "%m/%d"), "07/04 8:30 AM");
+        assert_eq!(
+            format_display_datetime(&t, "local", true, false, "%m/%d"),
+            "07/04 8:30 AM"
+        );
         assert_eq!(format_date(Some(&t), "us_long"), "July 04, 2026");
         assert_eq!(format_date(Some(&t), "nope"), "2026-07-04");
         assert_eq!(format_datetime(Some(&t), "eu", true), "04/07/2026 8:30 AM");
-        assert_eq!(format_datetime(Some(&t), "us_short", false), "07/04/2026 08:30");
-        let naive = PyDateTime::naive(
-            NaiveDate::from_ymd_opt(2026, 1, 2).unwrap().and_hms_opt(0, 15, 0).unwrap(),
+        assert_eq!(
+            format_datetime(Some(&t), "us_short", false),
+            "07/04/2026 08:30"
         );
-        assert_eq!(format_display_datetime(&naive, "both", true, true, "%b %d"), "Jan 02 12:15 AM (Jan 02 12:15 AM UTC)");
+        let naive = PyDateTime::naive(
+            NaiveDate::from_ymd_opt(2026, 1, 2)
+                .unwrap()
+                .and_hms_opt(0, 15, 0)
+                .unwrap(),
+        );
+        assert_eq!(
+            format_display_datetime(&naive, "both", true, true, "%b %d"),
+            "Jan 02 12:15 AM (Jan 02 12:15 AM UTC)"
+        );
     }
 
     #[test]
@@ -384,8 +420,15 @@ mod tests {
         // A July timestamp still gets January's EST offset, as in Python.
         let t = at(12, 0, 0, None);
         let shown = resolve_forecast_display_time(&t, "user_local", None, &clock);
-        assert_eq!(format_display_time(Some(&shown), "local", true, true), "7:00 AM EST");
-        let loc = resolve_forecast_display_time(&t, "location", Some(chrono_tz::Europe::London), &clock);
-        assert_eq!(format_display_time(Some(&loc), "local", true, true), "1:00 PM BST");
+        assert_eq!(
+            format_display_time(Some(&shown), "local", true, true),
+            "7:00 AM EST"
+        );
+        let loc =
+            resolve_forecast_display_time(&t, "location", Some(chrono_tz::Europe::London), &clock);
+        assert_eq!(
+            format_display_time(Some(&loc), "local", true, true),
+            "1:00 PM BST"
+        );
     }
 }

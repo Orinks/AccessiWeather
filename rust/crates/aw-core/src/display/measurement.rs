@@ -72,7 +72,9 @@ pub fn format_dewpoint(
         dewpoint_f = Some(dp);
         dewpoint_c = Some((dp - 32.0) * 5.0 / 9.0);
     }
-    Some(format_temperature(dewpoint_f, unit_pref, dewpoint_c, precision))
+    Some(format_temperature(
+        dewpoint_f, unit_pref, dewpoint_c, precision,
+    ))
 }
 
 /// `format_pressure_value`.
@@ -143,12 +145,20 @@ pub fn select_feels_like_temperature(
 
     if let (Some(t), Some(w), Some(_)) = (temp_f, wind_mph, comfort.wind_chill_f) {
         if t < 50.0 && w > 3.0 {
-            return (comfort.wind_chill_f, comfort.wind_chill_c, Some("wind chill"));
+            return (
+                comfort.wind_chill_f,
+                comfort.wind_chill_c,
+                Some("wind chill"),
+            );
         }
     }
     if let (Some(t), Some(h), Some(_)) = (temp_f, humidity, comfort.heat_index_f) {
         if t > 80.0 && h > 40.0 {
-            return (comfort.heat_index_f, comfort.heat_index_c, Some("heat index"));
+            return (
+                comfort.heat_index_f,
+                comfort.heat_index_c,
+                Some("heat index"),
+            );
         }
     }
     if comfort.feels_like_f.is_some() || comfort.feels_like_c.is_some() {
@@ -211,7 +221,13 @@ pub fn format_period_wind(
         parts.push(d.to_string());
     }
     if let Some(mph) = period.wind_speed_mph {
-        parts.push(format_wind_speed(Some(mph), unit_pref, None, 0, unit_system));
+        parts.push(format_wind_speed(
+            Some(mph),
+            unit_pref,
+            None,
+            0,
+            unit_system,
+        ));
     } else if let Some(s) = filled(&period.wind_speed) {
         parts.push(s.to_string());
     }
@@ -258,9 +274,12 @@ pub fn format_temperature_with_feels_like(
     precision: usize,
 ) -> (String, Option<String>) {
     const DIFFERENCE_THRESHOLD: f64 = 3.0;
-    let Some(temp_str) =
-        format_temperature_pair(current.temperature_f, current.temperature_c, unit_pref, precision)
-    else {
+    let Some(temp_str) = format_temperature_pair(
+        current.temperature_f,
+        current.temperature_c,
+        unit_pref,
+        precision,
+    ) else {
         return ("N/A".into(), None);
     };
     let (mut feels_f, feels_c, selection_reason) = select_feels_like_temperature(current);

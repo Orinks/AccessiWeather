@@ -64,11 +64,17 @@ fn presentations_match_python() {
         .map(|e| e.expect("entry").path())
         .filter(|p| {
             p.extension().is_some_and(|e| e == "json")
-                && !p.file_name().is_some_and(|n| n.to_string_lossy().starts_with('_'))
+                && !p
+                    .file_name()
+                    .is_some_and(|n| n.to_string_lossy().starts_with('_'))
         })
         .collect();
     files.sort();
-    assert!(files.len() >= 15, "expected the golden cases, found {}", files.len());
+    assert!(
+        files.len() >= 15,
+        "expected the golden cases, found {}",
+        files.len()
+    );
 
     let mut failures = Vec::new();
     let mut compared = 0;
@@ -81,7 +87,8 @@ fn presentations_match_python() {
         let clock = Clock::fixed(now, doc["local_tz"].as_str().unwrap().parse().unwrap());
 
         for variant in doc["variants"].as_array().unwrap() {
-            let settings: AppSettings = serde_json::from_value(variant["settings"].clone()).unwrap();
+            let settings: AppSettings =
+                serde_json::from_value(variant["settings"].clone()).unwrap();
             let label = format!("[{case} {}] ", variant["settings"]);
             let presenter = WeatherPresenter::with_clock(&settings, clock);
 
@@ -102,7 +109,12 @@ fn presentations_match_python() {
                     data.hourly_forecast.as_ref(),
                     data.alerts.as_ref(),
                 );
-                check(&mut failures, format!("{label}present_current"), expected, serde_json::to_value(got).unwrap());
+                check(
+                    &mut failures,
+                    format!("{label}present_current"),
+                    expected,
+                    serde_json::to_value(got).unwrap(),
+                );
                 let got = presenter.present_forecast(
                     data.forecast.as_ref(),
                     &data.location,
@@ -111,9 +123,19 @@ fn presentations_match_python() {
                     data.forecast_confidence.as_ref(),
                     Some("Stay dry."),
                 );
-                check(&mut failures, format!("{label}present_forecast"), &variant["present_forecast"], serde_json::to_value(got).unwrap());
+                check(
+                    &mut failures,
+                    format!("{label}present_forecast"),
+                    &variant["present_forecast"],
+                    serde_json::to_value(got).unwrap(),
+                );
                 let got = presenter.present_alerts(data.alerts.as_ref(), &data.location);
-                check(&mut failures, format!("{label}present_alerts"), &variant["present_alerts"], serde_json::to_value(got).unwrap());
+                check(
+                    &mut failures,
+                    format!("{label}present_alerts"),
+                    &variant["present_alerts"],
+                    serde_json::to_value(got).unwrap(),
+                );
             }
 
             for (fmt, expected) in variant["tray"].as_object().unwrap() {
@@ -139,7 +161,12 @@ fn presentations_match_python() {
         failures.is_empty(),
         "{} of {compared} presentations differ from Python:\n{}",
         failures.len(),
-        failures.iter().take(25).cloned().collect::<Vec<_>>().join("\n")
+        failures
+            .iter()
+            .take(25)
+            .cloned()
+            .collect::<Vec<_>>()
+            .join("\n")
     );
 }
 
@@ -154,7 +181,8 @@ fn helpers_match_python() {
             case["raw"]
         );
     }
-    let decoders: [(&str, fn(&str) -> Option<String>); 4] = [
+    type Decoder = fn(&str) -> Option<String>;
+    let decoders: [(&str, Decoder); 4] = [
         ("_decode_wind", taf::decode_wind),
         ("_decode_visibility", taf::decode_visibility),
         ("_decode_weather", taf::decode_weather),
@@ -163,25 +191,41 @@ fn helpers_match_python() {
     for (name, decode) in decoders {
         for case in doc["taf_elements"][name].as_array().unwrap() {
             let token = case["token"].as_str().unwrap();
-            assert_eq!(decode(token).as_deref(), case["decoded"].as_str(), "{name}({token:?})");
+            assert_eq!(
+                decode(token).as_deref(),
+                case["decoded"].as_str(),
+                "{name}({token:?})"
+            );
         }
     }
     for case in doc["dates"].as_array().unwrap() {
         let text = case["value"].as_str().unwrap();
         let value = match DateTime::parse_from_rfc3339(text) {
             Ok(dt) => PyDateTime::aware(dt, None),
-            Err(_) => PyDateTime::naive(NaiveDateTime::parse_from_str(text, "%Y-%m-%dT%H:%M:%S").unwrap()),
+            Err(_) => {
+                PyDateTime::naive(NaiveDateTime::parse_from_str(text, "%Y-%m-%dT%H:%M:%S").unwrap())
+            }
         };
         let style = case["style"].as_str().unwrap();
         let twelve = case["time_12hour"].as_bool().unwrap();
-        assert_eq!(format_date(Some(&value), style), case["date"].as_str().unwrap(), "{case}");
-        assert_eq!(format_datetime(Some(&value), style, twelve), case["datetime"].as_str().unwrap(), "{case}");
+        assert_eq!(
+            format_date(Some(&value), style),
+            case["date"].as_str().unwrap(),
+            "{case}"
+        );
+        assert_eq!(
+            format_datetime(Some(&value), style, twelve),
+            case["datetime"].as_str().unwrap(),
+            "{case}"
+        );
     }
-    let data: BTreeMap<String, String> =
-        [("temp", "72F"), ("condition", "{temp}")].map(|(k, v)| (k.into(), v.into())).into();
+    let data: BTreeMap<String, String> = [("temp", "72F"), ("condition", "{temp}")]
+        .map(|(k, v)| (k.into(), v.into()))
+        .into();
     for case in doc["placeholders"].as_array().unwrap() {
         let fmt = case["format"].as_str().unwrap();
-        let placeholders: Vec<String> = serde_json::from_value(case["placeholders"].clone()).unwrap();
+        let placeholders: Vec<String> =
+            serde_json::from_value(case["placeholders"].clone()).unwrap();
         assert_eq!(tray::get_placeholders(fmt), placeholders, "{fmt}");
         let valid = &case["valid"];
         let got = match tray::validate_format_string(fmt) {
@@ -189,7 +233,14 @@ fn helpers_match_python() {
             Err(e) => serde_json::json!([false, e]),
         };
         assert_eq!(&got, valid, "{fmt}");
-        assert_eq!(tray::format_string(fmt, &data), case["formatted"].as_str().unwrap(), "{fmt}");
+        assert_eq!(
+            tray::format_string(fmt, &data),
+            case["formatted"].as_str().unwrap(),
+            "{fmt}"
+        );
     }
-    assert_eq!(tray::supported_placeholders_help(), doc["placeholder_help"].as_str().unwrap());
+    assert_eq!(
+        tray::supported_placeholders_help(),
+        doc["placeholder_help"].as_str().unwrap()
+    );
 }
