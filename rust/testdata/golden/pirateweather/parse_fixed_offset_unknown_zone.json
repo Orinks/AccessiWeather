@@ -1,0 +1,167 @@
+{
+ "units": "si",
+ "input": {
+  "timezone": "Mars/Olympus_Mons",
+  "offset": 5.5,
+  "currently": {
+   "time": 1700000000,
+   "temperature": 20.0,
+   "humidity": 0.4
+  },
+  "daily": {
+   "data": [
+    {
+     "time": 1699900000,
+     "sunriseTime": 1699920000,
+     "sunsetTime": 0
+    }
+   ]
+  },
+  "hourly": {
+   "data": [
+    {
+     "time": 1700000000,
+     "temperature": 20.0
+    }
+   ]
+  }
+ },
+ "now": "2025-01-15T12:30:00-05:00",
+ "current": {
+  "temperature": 68.0,
+  "temperature_f": 68.0,
+  "temperature_c": 20.0,
+  "condition": null,
+  "humidity": 40,
+  "wind_speed": null,
+  "dewpoint_f": 42.769600385537785,
+  "dewpoint_c": 5.983111325298769,
+  "wind_speed_mph": null,
+  "wind_speed_kph": null,
+  "wind_direction": null,
+  "pressure": null,
+  "pressure_in": null,
+  "pressure_mb": null,
+  "feels_like_f": null,
+  "feels_like_c": null,
+  "visibility_miles": null,
+  "visibility_km": null,
+  "uv_index": null,
+  "cloud_cover": null,
+  "wind_gust_mph": null,
+  "wind_gust_kph": null,
+  "precipitation_in": null,
+  "precipitation_mm": null,
+  "sunrise_time": "2023-11-14T05:30:00+05:30",
+  "sunset_time": null,
+  "moon_phase": null,
+  "moonrise_time": null,
+  "moonset_time": null,
+  "snow_depth_in": null,
+  "snow_depth_cm": null,
+  "snowfall_rate_in": null,
+  "wind_chill_f": null,
+  "wind_chill_c": null,
+  "freezing_level_ft": null,
+  "freezing_level_m": null,
+  "heat_index_f": null,
+  "heat_index_c": null,
+  "frost_risk": null,
+  "precipitation_type": null,
+  "severe_weather_risk": null
+ },
+ "forecast": {
+  "periods": [
+   {
+    "name": "Today",
+    "temperature": null,
+    "temperature_low": null,
+    "temperature_unit": "C",
+    "short_forecast": null,
+    "detailed_forecast": null,
+    "wind_speed": null,
+    "wind_speed_mph": null,
+    "wind_direction": null,
+    "icon": null,
+    "start_time": "2023-11-13T12:00:00+05:30",
+    "end_time": null,
+    "precipitation_probability": null,
+    "snowfall": null,
+    "uv_index": null,
+    "cloud_cover": null,
+    "wind_gust": null,
+    "precipitation_amount": null,
+    "snow_depth": null,
+    "wind_chill_min_f": null,
+    "wind_chill_max_f": null,
+    "freezing_level_ft": null,
+    "ice_risk": null,
+    "heat_index_max_f": null,
+    "heat_index_min_f": null,
+    "uv_index_max": null,
+    "air_quality_forecast": null,
+    "frost_risk": null,
+    "pollen_forecast": null,
+    "precipitation_type": null,
+    "severe_weather_risk": null,
+    "feels_like_high": null,
+    "feels_like_low": null
+   }
+  ],
+  "generated_at": "2025-01-15T17:30:00+00:00",
+  "summary": null
+ },
+ "hourly": {
+  "periods": [
+   {
+    "start_time": "2023-11-15T03:43:20+05:30",
+    "temperature": 68.0,
+    "temperature_unit": "F",
+    "short_forecast": null,
+    "wind_speed": null,
+    "wind_direction": null,
+    "icon": null,
+    "end_time": null,
+    "humidity": null,
+    "dewpoint_f": null,
+    "dewpoint_c": null,
+    "pressure_mb": null,
+    "pressure_in": null,
+    "precipitation_probability": null,
+    "snowfall": null,
+    "uv_index": null,
+    "cloud_cover": null,
+    "wind_speed_mph": null,
+    "wind_gust_mph": null,
+    "precipitation_amount": null,
+    "snow_depth": null,
+    "freezing_level_ft": null,
+    "wind_chill_f": null,
+    "wind_chill_c": null,
+    "heat_index_f": null,
+    "heat_index_c": null,
+    "air_quality_index": null,
+    "frost_risk": null,
+    "pollen_level": null,
+    "precipitation_type": null,
+    "feels_like": null,
+    "visibility_miles": null,
+    "visibility_km": null
+   }
+  ],
+  "generated_at": "2025-01-15T17:30:00+00:00",
+  "summary": null
+ },
+ "alerts": {
+  "alerts": []
+ },
+ "minutely": null,
+ "beach": {
+  "product_type": "SURF_CONDITIONS",
+  "product_id": "pirate-weather-beach-conditions",
+  "cwa_office": "Pirate Weather",
+  "issuance_time": "2025-01-15T17:30:00+00:00",
+  "product_text": "Surf conditions from Pirate Weather for Beach.\nBeach-weather context from Pirate Weather; not an official NWS Surf Zone Forecast and wave data is not available from this source in AccessiWeather.\nTemperature: 20 degrees.",
+  "headline": "Surf conditions from Pirate Weather"
+ }
+}

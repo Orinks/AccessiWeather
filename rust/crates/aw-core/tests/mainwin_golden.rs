@@ -16,7 +16,7 @@ fn sort_locations_for_display_matches_python() {
     let locations: Vec<Location> = serde_json::from_value(g["locations"].clone()).unwrap();
     let anchor: Location = serde_json::from_value(g["anchor"].clone()).unwrap();
     for case in g["cases"].as_array().unwrap() {
-        let order = case["order"].as_str();
+        let order = case["order"].as_str().unwrap_or("");
         let anchor = case["anchor"].as_bool().unwrap().then_some(&anchor);
         let names: Vec<String> = sort_locations_for_display(&locations, order, anchor)
             .into_iter()

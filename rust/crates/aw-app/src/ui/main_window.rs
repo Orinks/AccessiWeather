@@ -633,7 +633,7 @@ pub(crate) fn ordered_saved_locations() -> Vec<Location> {
     let st = state.borrow();
     sort_locations_for_display(
         &st.config.locations,
-        Some(&st.config.settings.location_sort_order),
+        &st.config.settings.location_sort_order,
         st.config.current_location.as_ref(),
     )
 }

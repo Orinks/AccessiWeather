@@ -1,0 +1,36 @@
+{
+ "latitude": 61.2181,
+ "longitude": -149.9003,
+ "exchanges": [
+  {
+   "url": "https://api.weather.gov/points/61.2181,-149.9003",
+   "headers": {
+    "user-agent": "AccessiWeather/1.0 (AccessiWeather)",
+    "accept": "application/geo+json"
+   },
+   "status": 200,
+   "body": {
+    "properties": {
+     "relativeLocation": {
+      "properties": {
+       "city": "Anchorage"
+      }
+     }
+    }
+   }
+  }
+ ],
+ "output": {
+  "name": "Anchorage",
+  "latitude": 61.2181,
+  "longitude": -149.9003,
+  "timezone": null,
+  "country_code": "US",
+  "marine_mode": false,
+  "forecast_zone_id": null,
+  "cwa_office": null,
+  "county_zone_id": null,
+  "fire_zone_id": null,
+  "radar_station": null
+ }
+}

@@ -1,0 +1,12 @@
+{
+ "now": "2025-01-15T12:30:00-05:00",
+ "options": {
+  "include_air_quality": false,
+  "include_pollen": false,
+  "include_hourly_air_quality": false,
+  "include_hourly_uv": false
+ },
+ "airnow_key": "",
+ "exchanges": [],
+ "output": null
+}

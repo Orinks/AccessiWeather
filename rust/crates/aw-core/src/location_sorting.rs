@@ -1,34 +1,30 @@
-//! Ordering of saved locations for user-facing lists. Ported from
-//! `accessiweather.location_sorting`.
-
-use std::cmp::Ordering;
+//! Saved-location ordering, ported from `accessiweather.location_sorting`.
 
 use crate::location::Location;
+use crate::py::casefold;
 
 pub const LOCATION_SORT_ALPHABETICAL: &str = "alphabetical";
 pub const LOCATION_SORT_MANUAL: &str = "manual";
 pub const LOCATION_SORT_NEAREST_CURRENT: &str = "nearest_current";
 
-/// `normalize_location_sort_order`: anything unknown means alphabetical.
-pub fn normalize_location_sort_order(value: Option<&str>) -> &'static str {
+/// A supported sort order; anything unknown means alphabetical.
+pub fn normalize_location_sort_order(value: &str) -> &'static str {
     match value {
-        Some(LOCATION_SORT_MANUAL) => LOCATION_SORT_MANUAL,
-        Some(LOCATION_SORT_NEAREST_CURRENT) => LOCATION_SORT_NEAREST_CURRENT,
+        LOCATION_SORT_MANUAL => LOCATION_SORT_MANUAL,
+        LOCATION_SORT_NEAREST_CURRENT => LOCATION_SORT_NEAREST_CURRENT,
         _ => LOCATION_SORT_ALPHABETICAL,
     }
 }
 
-/// `location_name_sort_key`: case-insensitive, ties broken by the raw name.
-fn name_order(a: &Location, b: &Location) -> Ordering {
-    // ponytail: to_lowercase stands in for Python's casefold (differs only
-    // for a few non-ASCII letters such as ß).
-    (a.name.to_lowercase(), &a.name).cmp(&(b.name.to_lowercase(), &b.name))
+/// Stable, case-insensitive sort key for saved locations.
+pub fn location_name_sort_key(location: &Location) -> (String, String) {
+    (casefold(&location.name), location.name.clone())
 }
 
-/// `sort_locations_for_display`.
+/// Sort saved locations for user-facing lists.
 pub fn sort_locations_for_display(
     locations: &[Location],
-    sort_order: Option<&str>,
+    sort_order: &str,
     anchor: Option<&Location>,
 ) -> Vec<Location> {
     let order = normalize_location_sort_order(sort_order);
@@ -36,20 +32,21 @@ pub fn sort_locations_for_display(
     if order == LOCATION_SORT_MANUAL {
         return sorted;
     }
-    sorted.sort_by(name_order);
-    if let (LOCATION_SORT_NEAREST_CURRENT, Some(anchor)) = (order, anchor) {
-        sorted.sort_by(|a, b| {
-            distance_miles(anchor, a)
-                .total_cmp(&distance_miles(anchor, b))
-                .then_with(|| name_order(a, b))
-        });
-    }
-    sorted
+    sorted.sort_by_cached_key(location_name_sort_key);
+    let Some(anchor) = anchor.filter(|_| order == LOCATION_SORT_NEAREST_CURRENT) else {
+        return sorted;
+    };
+    let mut keyed: Vec<(f64, (String, String), Location)> = sorted
+        .into_iter()
+        .map(|l| (distance_miles(anchor, &l), location_name_sort_key(&l), l))
+        .collect();
+    keyed.sort_by(|a, b| a.0.total_cmp(&b.0).then_with(|| a.1.cmp(&b.1)));
+    keyed.into_iter().map(|(_, _, l)| l).collect()
 }
 
-/// Great-circle distance in miles (`_distance_miles`).
+/// Great-circle distance in miles (mean Earth radius 3958.7613 mi).
 fn distance_miles(first: &Location, second: &Location) -> f64 {
-    const EARTH_RADIUS_MILES: f64 = 3958.7613;
+    let earth_radius_miles = 3958.7613;
     let lat1 = first.latitude.to_radians();
     let lat2 = second.latitude.to_radians();
     let delta_lat = (second.latitude - first.latitude).to_radians();
@@ -57,5 +54,48 @@ fn distance_miles(first: &Location, second: &Location) -> f64 {
     let a =
         (delta_lat / 2.0).sin().powi(2) + lat1.cos() * lat2.cos() * (delta_lon / 2.0).sin().powi(2);
     let c = 2.0 * a.sqrt().atan2((1.0 - a).max(0.0).sqrt());
-    EARTH_RADIUS_MILES * c
+    earth_radius_miles * c
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn names(v: &[Location]) -> Vec<&str> {
+        v.iter().map(|l| l.name.as_str()).collect()
+    }
+
+    #[test]
+    fn alphabetical_is_case_insensitive_and_default() {
+        let locs = vec![
+            Location::new("beta", 0.0, 0.0),
+            Location::new("Alpha", 0.0, 0.0),
+            Location::new("alpha", 0.0, 0.0),
+        ];
+        let sorted = sort_locations_for_display(&locs, "bogus", None);
+        assert_eq!(names(&sorted), ["Alpha", "alpha", "beta"]);
+    }
+
+    #[test]
+    fn manual_keeps_order() {
+        let locs = vec![Location::new("b", 0.0, 0.0), Location::new("a", 0.0, 0.0)];
+        assert_eq!(
+            names(&sort_locations_for_display(&locs, "manual", None)),
+            ["b", "a"]
+        );
+    }
+
+    #[test]
+    fn nearest_current_orders_by_distance_then_name() {
+        let home = Location::new("Home", 40.0, -75.0);
+        let locs = vec![
+            Location::new("Far", 34.0, -118.0),
+            Location::new("Near", 40.1, -75.1),
+            Location::new("Home", 40.0, -75.0),
+        ];
+        let sorted = sort_locations_for_display(&locs, "nearest_current", Some(&home));
+        assert_eq!(names(&sorted), ["Home", "Near", "Far"]);
+        let sorted = sort_locations_for_display(&locs, "nearest_current", None);
+        assert_eq!(names(&sorted), ["Far", "Home", "Near"]);
+    }
 }

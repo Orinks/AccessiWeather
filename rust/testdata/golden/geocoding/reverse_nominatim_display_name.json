@@ -1,0 +1,40 @@
+{
+ "latitude": 10.0,
+ "longitude": 10.0,
+ "exchanges": [
+  {
+   "url": "https://api.weather.gov/points/10.0,10.0",
+   "headers": {
+    "user-agent": "AccessiWeather/1.0 (AccessiWeather)",
+    "accept": "application/geo+json"
+   },
+   "status": 404,
+   "body": {}
+  },
+  {
+   "url": "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=10.0&lon=10.0&zoom=10&addressdetails=1&accept-language=en",
+   "headers": {
+    "user-agent": "AccessiWeather/1.0 (AccessiWeather)",
+    "accept": "application/json"
+   },
+   "status": 200,
+   "body": {
+    "display_name": " Somewhere, Earth ",
+    "address": "not-a-dict"
+   }
+  }
+ ],
+ "output": {
+  "name": "Somewhere, Earth",
+  "latitude": 10.0,
+  "longitude": 10.0,
+  "timezone": null,
+  "country_code": null,
+  "marine_mode": false,
+  "forecast_zone_id": null,
+  "cwa_office": null,
+  "county_zone_id": null,
+  "fire_zone_id": null,
+  "radar_station": null
+ }
+}

@@ -1,0 +1,35 @@
+{
+ "input": [
+  {
+   "DateObserved": "2025-01-15",
+   "HourObserved": 11,
+   "LocalTimeZone": "EST",
+   "ReportingArea": "Philadelphia",
+   "ParameterName": "O3",
+   "AQI": 42,
+   "Category": {
+    "Number": 1,
+    "Name": "Good"
+   }
+  },
+  {
+   "DateObserved": "2025-01-15",
+   "HourObserved": "11",
+   "LocalTimeZone": "EST",
+   "ReportingArea": " Philadelphia ",
+   "ParameterName": "PM2.5",
+   "AQI": "87",
+   "Category": {
+    "Number": 2,
+    "Name": "Moderate"
+   }
+  }
+ ],
+ "output": {
+  "aqi": 87,
+  "category": "Moderate",
+  "pollutant": "PM2.5",
+  "observed_at": "2025-01-15T11:00:00-05:00",
+  "reporting_area": "Philadelphia"
+ }
+}

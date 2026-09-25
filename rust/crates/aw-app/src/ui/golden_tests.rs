@@ -63,7 +63,7 @@ fn all_locations_summary_matches_python() {
         let order: String = from(&case["location_sort_order"]);
         let ordered = aw_core::location_sorting::sort_locations_for_display(
             &locations,
-            Some(&order),
+            &order,
             Some(&current),
         );
         let (text, alerts) = all_locations_summary(

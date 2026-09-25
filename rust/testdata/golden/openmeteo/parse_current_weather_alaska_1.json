@@ -1,0 +1,254 @@
+{
+ "input": {
+  "latitude": 61.265377,
+  "longitude": -149.92735,
+  "generationtime_ms": 0.25653839111328125,
+  "utc_offset_seconds": -28800,
+  "timezone": "America/Anchorage",
+  "timezone_abbreviation": "GMT-8",
+  "elevation": 34.0,
+  "current_units": {
+   "time": "iso8601",
+   "interval": "seconds",
+   "temperature_2m": "°F",
+   "relative_humidity_2m": "%",
+   "dew_point_2m": "°F",
+   "apparent_temperature": "°F",
+   "is_day": "",
+   "precipitation": "inch",
+   "weather_code": "wmo code",
+   "cloud_cover": "%",
+   "pressure_msl": "hPa",
+   "surface_pressure": "hPa",
+   "wind_speed_10m": "mp/h",
+   "wind_direction_10m": "°",
+   "wind_gusts_10m": "mp/h",
+   "uv_index": "",
+   "snowfall": "inch",
+   "snow_depth": "ft",
+   "visibility": "ft"
+  },
+  "current": {
+   "time": "2026-05-11T14:30",
+   "interval": 900,
+   "temperature_2m": 52.2,
+   "relative_humidity_2m": 37,
+   "dew_point_2m": 27.0,
+   "apparent_temperature": 44.5,
+   "is_day": 1,
+   "precipitation": 0.0,
+   "weather_code": 3,
+   "cloud_cover": 86,
+   "pressure_msl": 1015.6,
+   "surface_pressure": 1011.5,
+   "wind_speed_10m": 8.0,
+   "wind_direction_10m": 143,
+   "wind_gusts_10m": 21.3,
+   "uv_index": 4.55,
+   "snowfall": 0.0,
+   "snow_depth": 0.0,
+   "visibility": 203149.609
+  },
+  "daily_units": {
+   "time": "iso8601",
+   "sunrise": "iso8601",
+   "sunset": "iso8601",
+   "uv_index_max": ""
+  },
+  "daily": {
+   "time": [
+    "2026-05-11"
+   ],
+   "sunrise": [
+    "2026-05-11T05:20"
+   ],
+   "sunset": [
+    "2026-05-11T22:31"
+   ],
+   "uv_index_max": [
+    4.65
+   ]
+  }
+ },
+ "now": "2025-01-15T12:30:00-05:00",
+ "current": {
+  "temperature": 52.2,
+  "temperature_f": 52.2,
+  "temperature_c": 11.222222222222223,
+  "condition": "Overcast",
+  "humidity": 37,
+  "wind_speed": 8.0,
+  "dewpoint_f": 26.72286291725413,
+  "dewpoint_c": -2.931742823747706,
+  "wind_speed_mph": 8.0,
+  "wind_speed_kph": 12.87472,
+  "wind_direction": "SE",
+  "pressure": 29.99065080731384,
+  "pressure_in": 29.99065080731384,
+  "pressure_mb": 1015.6,
+  "feels_like_f": 44.5,
+  "feels_like_c": 6.944444444444445,
+  "visibility_miles": 10.0,
+  "visibility_km": 16.09344,
+  "uv_index": 4.55,
+  "cloud_cover": null,
+  "wind_gust_mph": null,
+  "wind_gust_kph": null,
+  "precipitation_in": 0.0,
+  "precipitation_mm": 0.0,
+  "sunrise_time": "2026-05-11T05:20:00-08:00",
+  "sunset_time": "2026-05-11T22:31:00-08:00",
+  "moon_phase": null,
+  "moonrise_time": null,
+  "moonset_time": null,
+  "snow_depth_in": 0.0,
+  "snow_depth_cm": 0.0,
+  "snowfall_rate_in": 0.0,
+  "wind_chill_f": 44.5,
+  "wind_chill_c": 6.944444444444445,
+  "freezing_level_ft": null,
+  "freezing_level_m": null,
+  "heat_index_f": null,
+  "heat_index_c": null,
+  "frost_risk": null,
+  "precipitation_type": null,
+  "severe_weather_risk": null
+ },
+ "forecast": {
+  "periods": [],
+  "generated_at": "2025-01-15T12:30:00-05:00",
+  "summary": null
+ },
+ "hourly": {
+  "periods": [],
+  "generated_at": "2025-01-15T12:30:00-05:00",
+  "summary": null
+ },
+ "mapped_current": {
+  "properties": {
+   "@id": "open-meteo-current-2025-01-15T17:30:00+00:00",
+   "timestamp": "2026-05-11T22:30:00+00:00",
+   "temperature": {
+    "value": 52.2,
+    "unitCode": "wmoUnit:degF",
+    "qualityControl": "qc:V"
+   },
+   "dewpoint": {
+    "value": 26.72286291725413,
+    "unitCode": "wmoUnit:degF",
+    "qualityControl": "qc:V"
+   },
+   "apparentTemperature": {
+    "value": 44.5,
+    "unitCode": "wmoUnit:degF",
+    "qualityControl": "qc:V"
+   },
+   "windDirection": {
+    "value": 143,
+    "unitCode": "wmoUnit:degree_(angle)",
+    "qualityControl": "qc:V"
+   },
+   "windSpeed": {
+    "value": 8.0,
+    "unitCode": "wmoUnit:m_s-1",
+    "qualityControl": "qc:V"
+   },
+   "windGust": {
+    "value": 21.3,
+    "unitCode": "wmoUnit:m_s-1",
+    "qualityControl": "qc:V"
+   },
+   "barometricPressure": {
+    "value": 101560.0,
+    "unitCode": "wmoUnit:Pa",
+    "qualityControl": "qc:V"
+   },
+   "relativeHumidity": {
+    "value": 37,
+    "unitCode": "wmoUnit:percent",
+    "qualityControl": "qc:V"
+   },
+   "visibility": {
+    "value": null,
+    "unitCode": "wmoUnit:m",
+    "qualityControl": "qc:Z"
+   },
+   "uvIndex": {
+    "value": 4.65,
+    "unitCode": "unit:dimensionless",
+    "qualityControl": "qc:Z"
+   },
+   "cloudLayers": [
+    {
+     "amount": "BKN",
+     "base": {
+      "value": null,
+      "unitCode": "wmoUnit:m"
+     }
+    }
+   ],
+   "textDescription": "Overcast",
+   "rawMessage": "Open-Meteo data: 3",
+   "presentWeather": [
+    {
+     "intensity": null,
+     "modifier": null,
+     "weather": "Overcast",
+     "rawString": "3"
+    }
+   ],
+   "sunrise": "2026-05-11T05:20",
+   "sunset": "2026-05-11T22:31"
+  }
+ },
+ "mapped_forecast": {
+  "properties": {
+   "updated": "2025-01-15T17:30:00+00:00",
+   "units": {
+    "temperature": "C",
+    "windSpeed": "mph",
+    "precipitation": "in"
+   },
+   "forecastGenerator": "Open-Meteo API",
+   "generatedAt": "2025-01-15T17:30:00+00:00",
+   "periods": [
+    {
+     "number": 1,
+     "name": "Monday",
+     "startTime": "2026-05-11T06:00:00-08:00",
+     "endTime": "2026-05-11T18:00:00-08:00",
+     "isDaytime": true,
+     "temperature": null,
+     "temperatureUnit": "F",
+     "temperatureTrend": null,
+     "windSpeed": "0 mph",
+     "windDirection": "VAR",
+     "icon": "https://open-meteo.com/images/weather/0.png",
+     "shortForecast": "Clear sky",
+     "detailedForecast": "Clear sky."
+    },
+    {
+     "number": 2,
+     "name": "Monday Night",
+     "startTime": "2026-05-11T18:00:00-08:00",
+     "endTime": "2026-05-12T06:00:00-08:00",
+     "isDaytime": false,
+     "temperature": null,
+     "temperatureUnit": "F",
+     "temperatureTrend": null,
+     "windSpeed": "0 mph",
+     "windDirection": "VAR",
+     "icon": "https://open-meteo.com/images/weather/0.png",
+     "shortForecast": "Clear sky",
+     "detailedForecast": "Clear sky."
+    }
+   ]
+  }
+ },
+ "mapped_hourly": {
+  "properties": {
+   "periods": []
+  }
+ },
+ "hourly_uv": []
+}

@@ -1,0 +1,18 @@
+{
+ "input": {
+  "current": {
+   "time": "2026-06-07T12:00Z",
+   "wave_height": 2.0,
+   "wave_direction": "offshore"
+  }
+ },
+ "now": "2025-01-15T12:30:00-05:00",
+ "product": {
+  "product_type": "SURF_CONDITIONS",
+  "product_id": "openmeteo-marine-surf-conditions",
+  "cwa_office": "Open-Meteo Marine",
+  "issuance_time": "2026-06-07T12:00:00+00:00",
+  "product_text": "Surf conditions from Open-Meteo Marine for Porto.\nMarine/surf conditions from Open-Meteo Marine; not an official NWS Surf Zone Forecast.\nWave height: 2.\nWave direction: offshore.",
+  "headline": "Surf conditions from Open-Meteo Marine"
+ }
+}

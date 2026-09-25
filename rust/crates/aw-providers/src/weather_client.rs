@@ -14,7 +14,7 @@ use chrono::Utc;
 use crate::http::HttpClient;
 use crate::nws::NwsClient;
 use crate::openmeteo::{Bundle, OpenMeteoClient};
-use crate::pirateweather::PirateWeatherClient;
+use crate::pirateweather::legacy::PirateWeatherClient;
 
 /// Result of one provider run.
 #[derive(Debug, Default)]

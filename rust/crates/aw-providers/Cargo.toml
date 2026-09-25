@@ -11,6 +11,14 @@ serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 chrono.workspace = true
+chrono-tz.workspace = true
 tracing.workspace = true
 reqwest.workspace = true
 url.workspace = true
+deunicode = "1"
+regex = "1"
+sha1 = "0.10"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62", features = ["Devices_Geolocation", "Foundation"] }
+windows-future = "0.3"

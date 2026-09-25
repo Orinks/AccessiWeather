@@ -1,0 +1,28 @@
+{
+ "input": [
+  {
+   "ParameterName": "O3",
+   "AQI": -1
+  },
+  {
+   "ParameterName": "PM10",
+   "AQI": null
+  },
+  {
+   "ParameterName": "CO",
+   "AQI": "not available"
+  },
+  {
+   "ParameterName": "PM2.5",
+   "AQI": 151,
+   "Category": {}
+  }
+ ],
+ "output": {
+  "aqi": 151,
+  "category": "Unhealthy",
+  "pollutant": "PM2.5",
+  "observed_at": null,
+  "reporting_area": null
+ }
+}
