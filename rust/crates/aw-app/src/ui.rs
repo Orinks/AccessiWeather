@@ -11,6 +11,17 @@ use wxdragon::prelude::*;
 use crate::app::SMOKE_DURATION_MS;
 use crate::app::{post_to_ui, remember_weather, save, status_for, with_state, Shared, State};
 
+/// Control labels with `&` mnemonics. wxOSX turns mnemonic letters on buttons
+/// into Cmd+letter shortcuts that shadow menu accelerators, so strip them there.
+#[cfg(target_os = "macos")]
+fn mn(label: &str) -> String {
+    label.replace('&', "")
+}
+#[cfg(not(target_os = "macos"))]
+fn mn(label: &str) -> String {
+    label.to_string()
+}
+
 #[cfg(target_os = "macos")]
 const MOD_KEY: &str = "Cmd";
 #[cfg(not(target_os = "macos"))]
@@ -126,7 +137,9 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
 
     // Location row -----------------------------------------------------------
     let location_row = BoxSizer::builder(Orientation::Horizontal).build();
-    let location_label = StaticText::builder(&panel).with_label("&Location:").build();
+    let location_label = StaticText::builder(&panel)
+        .with_label(&mn("&Location:"))
+        .build();
     let location_choice = Choice::builder(&panel).build();
     label_control(
         &location_choice,
@@ -135,7 +148,7 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
     );
     let add_button = Button::builder(&panel)
         .with_id(ID_ADD_LOCATION)
-        .with_label("&Add…")
+        .with_label(&mn("&Add…"))
         .build();
     label_control(
         &add_button,
@@ -144,7 +157,7 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
     );
     let remove_button = Button::builder(&panel)
         .with_id(ID_REMOVE_LOCATION)
-        .with_label("Re&move")
+        .with_label(&mn("Re&move"))
         .build();
     label_control(
         &remove_button,
@@ -153,7 +166,7 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
     );
     let refresh_button = Button::builder(&panel)
         .with_id(ID_REFRESH)
-        .with_label("&Refresh")
+        .with_label(&mn("&Refresh"))
         .build();
     label_control(
         &refresh_button,
@@ -232,7 +245,7 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
     let actions = BoxSizer::builder(Orientation::Horizontal).build();
     let details_button = Button::builder(&panel)
         .with_id(ID_ALERT_DETAILS)
-        .with_label("Alert &details")
+        .with_label(&mn("Alert &details"))
         .build();
     label_control(
         &details_button,
@@ -241,7 +254,7 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
     );
     let discussion_button = Button::builder(&panel)
         .with_id(ID_DISCUSSION)
-        .with_label("Forecast d&iscussion")
+        .with_label(&mn("Forecast d&iscussion"))
         .build();
     label_control(
         &discussion_button,
@@ -252,7 +265,7 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
     );
     let read_button = Button::builder(&panel)
         .with_id(ID_READ_ALOUD)
-        .with_label("Read a&loud")
+        .with_label(&mn("Read a&loud"))
         .build();
     label_control(
         &read_button,
@@ -263,7 +276,7 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
     );
     let settings_button = Button::builder(&panel)
         .with_id(ID_SETTINGS)
-        .with_label("&Settings…")
+        .with_label(&mn("&Settings…"))
         .build();
     label_control(
         &settings_button,
@@ -703,12 +716,12 @@ fn open_text_dialog(ui: &MainUi, state: &Shared, heading: &str, body: &str, labe
     let buttons = BoxSizer::builder(Orientation::Horizontal).build();
     let speak = Button::builder(&dlg)
         .with_id(ID_READ_ALOUD)
-        .with_label("Read a&loud")
+        .with_label(&mn("Read a&loud"))
         .build();
     label_control(&speak, "Read aloud", Some("Speak this text"));
     let close = Button::builder(&dlg)
         .with_id(ID_CANCEL)
-        .with_label("&Close")
+        .with_label(&mn("&Close"))
         .build();
     buttons.add(&speak, 0, SizerFlag::Right, 6);
     buttons.add(&close, 0, SizerFlag::Right, 0);
@@ -747,7 +760,7 @@ fn open_add_location(ui: &MainUi, state: &Shared) {
     let root = BoxSizer::builder(Orientation::Vertical).build();
 
     let query_label = StaticText::builder(&dlg)
-        .with_label("&Search for a place, address or coordinates:")
+        .with_label(&mn("&Search for a place, address or coordinates:"))
         .build();
     let query = TextCtrl::builder(&dlg)
         .with_style(TextCtrlStyle::ProcessEnter)
@@ -759,7 +772,7 @@ fn open_add_location(ui: &MainUi, state: &Shared) {
     );
     let search = Button::builder(&dlg)
         .with_id(ID_SEARCH)
-        .with_label("Searc&h")
+        .with_label(&mn("Searc&h"))
         .build();
     let row = BoxSizer::builder(Orientation::Horizontal).build();
     row.add(&query, 1, SizerFlag::Right, 6);
@@ -772,7 +785,9 @@ fn open_add_location(ui: &MainUi, state: &Shared) {
     );
     root.add_sizer(&row, 0, SizerFlag::Expand | SizerFlag::All, 8);
 
-    let results_label = StaticText::builder(&dlg).with_label("&Results:").build();
+    let results_label = StaticText::builder(&dlg)
+        .with_label(&mn("&Results:"))
+        .build();
     let results = ListBox::builder(&dlg).with_size(Size::new(-1, 160)).build();
     label_control(
         &results,
@@ -783,7 +798,7 @@ fn open_add_location(ui: &MainUi, state: &Shared) {
     root.add(&results, 1, SizerFlag::Expand | SizerFlag::All, 8);
 
     let name_label = StaticText::builder(&dlg)
-        .with_label("Custom &name (optional):")
+        .with_label(&mn("Custom &name (optional):"))
         .build();
     let name = TextCtrl::builder(&dlg).build();
     label_control(
@@ -808,7 +823,7 @@ fn open_add_location(ui: &MainUi, state: &Shared) {
     let buttons = StdDialogButtonSizerBuilder::new().build();
     let add_button = Button::builder(&dlg)
         .with_id(ID_OK)
-        .with_label("&Add")
+        .with_label(&mn("&Add"))
         .build();
     let cancel = Button::builder(&dlg)
         .with_id(ID_CANCEL)
@@ -1114,7 +1129,7 @@ fn open_settings(ui: &MainUi, state: &Shared) {
     );
 
     let key_label = StaticText::builder(&dlg)
-        .with_label("&Pirate Weather API key:")
+        .with_label(&mn("&Pirate Weather API key:"))
         .build();
     let key = TextCtrl::builder(&dlg)
         .with_style(TextCtrlStyle::Password)
@@ -1145,7 +1160,7 @@ fn open_settings(ui: &MainUi, state: &Shared) {
     let buttons = StdDialogButtonSizerBuilder::new().build();
     let save_button = Button::builder(&dlg)
         .with_id(ID_OK)
-        .with_label("&Save")
+        .with_label(&mn("&Save"))
         .build();
     let cancel = Button::builder(&dlg)
         .with_id(ID_CANCEL)
