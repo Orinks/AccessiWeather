@@ -28,5 +28,8 @@ tracing-subscriber.workspace = true
 [target.'cfg(windows)'.dependencies]
 prismer = { workspace = true, features = ["static"] }
 
+[dev-dependencies]
+tempfile.workspace = true
+
 [build-dependencies]
 embed-manifest = "1.4"

@@ -5,7 +5,7 @@ use wxdragon::prelude::*;
 
 use super::display::ALL_LOCATIONS_SENTINEL;
 use super::main_window::{self as mw, message_box, window, window_state};
-use super::{location_dialog, refresh, settings_dialog, weather_source};
+use super::{location_dialog, refresh, settings_actions, settings_dialog, weather_source};
 use crate::app::{post_to_ui, save, with_state};
 
 pub(crate) const MSG_SELECT_TO_EDIT: &str = "Please select a specific location to edit.";
@@ -215,16 +215,23 @@ pub(crate) fn on_refresh() {
     refresh::refresh_weather_async(true);
 }
 
-/// `on_settings` / `open_settings`.
+/// `on_settings`.
 pub(crate) fn on_settings() {
+    open_settings(None);
+}
+
+/// `open_settings`: the Settings dialog, optionally on a page ("Updates",
+/// "AI", ...); after a save, apply the new settings everywhere and refresh.
+pub(crate) fn open_settings(tab: Option<&str>) {
     let (Some(w), Some(state)) = (window(), with_state()) else {
         return;
     };
-    if settings_dialog::show_settings_dialog(&w.frame, &state) {
-        // `refresh_runtime_settings`: the update interval may have changed.
-        mw::start_background_updates();
+    if settings_dialog::show_settings_dialog(&w.frame, &state, tab) {
+        settings_actions::refresh_runtime_settings();
         mw::populate_locations();
+        // The update channel may have changed.
         mw::update_check_updates_menu_label();
+        // Source and key changes take effect immediately.
         refresh::refresh_weather_async(true);
     }
 }

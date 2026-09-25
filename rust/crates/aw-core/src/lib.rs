@@ -9,6 +9,8 @@ pub mod location_sorting;
 pub mod model;
 pub mod presenter;
 pub mod settings;
+pub mod shortcut_preferences;
+pub mod sound_events;
 pub mod sources;
 pub mod units;
 pub mod weather;

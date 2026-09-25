@@ -15,6 +15,7 @@ dependencies = [
  "prismer",
  "serde",
  "serde_json",
+ "tempfile",
  "thiserror",
  "tracing",
  "tracing-subscriber",
