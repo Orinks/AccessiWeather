@@ -14,6 +14,12 @@ copy_prism() {
     \( -name '*.so*' -o -name '*.dylib' \) -exec cp -P {} "$1" \;
 }
 
+# The bundled default sound pack, like the Python build's soundpacks/default.
+copy_soundpack() {
+  mkdir -p "$1/soundpacks"
+  cp -R ../soundpacks/default "$1/soundpacks/"
+}
+
 case "$(uname -s)" in
   Darwin)
     app="stage/AccessiWeather.app"
@@ -22,12 +28,14 @@ case "$(uname -s)" in
     copy_prism "$app/Contents/MacOS"
     sed "s/@VERSION@/$version/g" packaging/macos/Info.plist > "$app/Contents/Info.plist"
     cp crates/aw-app/ui/icon.png "$app/Contents/Resources/icon.png"
+    copy_soundpack "$app/Contents/Resources"
     codesign --force --deep --sign - "$app" || echo "ad-hoc codesign unavailable; shipping unsigned"
     (cd stage && zip -qry "../dist/$name" AccessiWeather.app)
     ;;
   MINGW*|MSYS*|CYGWIN*|Windows_NT)
     cp target/release/accessiweather.exe stage/AccessiWeather.exe
     cp packaging/README-portable.txt stage/README.txt
+    copy_soundpack stage
     if command -v 7z >/dev/null; then
       (cd stage && 7z a -tzip "../dist/$name" ./* > /dev/null)
     else
@@ -41,6 +49,7 @@ case "$(uname -s)" in
     cp packaging/linux/accessiweather.desktop stage/accessiweather/
     cp crates/aw-app/ui/icon.png stage/accessiweather/accessiweather.png
     cp packaging/README-portable.txt stage/accessiweather/README.txt
+    copy_soundpack stage/accessiweather
     tar -C stage -czf "dist/$name" accessiweather
     ;;
 esac

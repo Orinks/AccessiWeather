@@ -5,6 +5,7 @@ members = [
     "crates/aw-providers",
     "crates/aw-store",
     "crates/aw-app",
+    "crates/aw-audio",
 ]
 
 [workspace.package]
