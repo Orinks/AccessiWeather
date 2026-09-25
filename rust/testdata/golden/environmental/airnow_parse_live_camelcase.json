@@ -1,0 +1,29 @@
+{
+ "input": [
+  {
+   "dateObserved": "2026-07-22",
+   "hourObserved": "09:00",
+   "localTimeZone": "EDT",
+   "reportingAreaName": "Riverline",
+   "parameterName": "PM2.5",
+   "nowcastAQI": 28,
+   "aqiCategoryName": "Good"
+  },
+  {
+   "dateObserved": "2026-07-22",
+   "hourObserved": "09:00",
+   "localTimeZone": "EDT",
+   "reportingAreaName": "Riverline",
+   "parameterName": "OZONE",
+   "nowcastAQI": 28,
+   "aqiCategoryName": "Good"
+  }
+ ],
+ "output": {
+  "aqi": 28,
+  "category": "Good",
+  "pollutant": "PM2.5",
+  "observed_at": "2026-07-22T09:00:00-04:00",
+  "reporting_area": "Riverline"
+ }
+}

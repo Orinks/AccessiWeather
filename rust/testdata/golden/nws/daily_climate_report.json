@@ -1,0 +1,47 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "daily_climate_report",
+ "station": " kttn ",
+ "responses": [
+  {
+   "url": "https://api.weather.gov/products?location=TTN&type=CLI&limit=1",
+   "status": 200,
+   "body": "{\"@graph\":[{\"id\":\"cli-ttn\"}]}"
+  },
+  {
+   "url": "https://api.weather.gov/products/cli-ttn",
+   "status": 200,
+   "body": "{\"id\":\"cli-ttn\",\"issuanceTime\":\"2026-01-20T06:00:00+00:00\",\"productText\":\"CLIMATE REPORT\"}"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/products?location=TTN&type=CLI&limit=1",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/products/cli-ttn",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "product_type": "CLI",
+  "product_id": "cli-ttn",
+  "cwa_office": "TTN",
+  "issuance_time": "2026-01-20T06:00:00+00:00",
+  "product_text": "CLIMATE REPORT",
+  "headline": null
+ }
+}

@@ -1,0 +1,755 @@
+[
+  {
+    "enabled": true,
+    "duration": 5,
+    "batches": [
+      [
+        "tornado"
+      ]
+    ],
+    "resolved": "WXK27",
+    "urls": [
+      "https://u1",
+      "https://u2"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "clock": [
+      100.0,
+      401.0
+    ],
+    "playing_before": null,
+    "playing_unknown": false,
+    "manual_during_resolution": null,
+    "cancel_before_run": false,
+    "name": "plays_then_stops",
+    "workers": 1,
+    "statuses": [
+      "Weather radio auto-tune started WXK27 for active alerts.",
+      "Weather radio auto-tune stopped WXK27."
+    ],
+    "played": [
+      "https://u1"
+    ],
+    "waits": [],
+    "wake_sets": 0,
+    "stops": 1,
+    "url_lookups": 1,
+    "final_station": null,
+    "last_station": "WXK27"
+  },
+  {
+    "enabled": false,
+    "duration": 5,
+    "batches": [
+      [
+        "tornado"
+      ]
+    ],
+    "resolved": "WXK27",
+    "urls": [
+      "https://u1",
+      "https://u2"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "clock": [
+      100.0,
+      401.0
+    ],
+    "playing_before": null,
+    "playing_unknown": false,
+    "manual_during_resolution": null,
+    "cancel_before_run": false,
+    "name": "disabled",
+    "workers": 0,
+    "statuses": [],
+    "played": [],
+    "waits": [],
+    "wake_sets": 0,
+    "stops": 0,
+    "url_lookups": 0,
+    "final_station": null,
+    "last_station": null
+  },
+  {
+    "enabled": true,
+    "duration": 5,
+    "batches": [
+      [
+        "air_quality",
+        "no_county_codes",
+        "forecast_zone"
+      ]
+    ],
+    "resolved": "WXK27",
+    "urls": [
+      "https://u1",
+      "https://u2"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "clock": [
+      100.0,
+      401.0
+    ],
+    "playing_before": null,
+    "playing_unknown": false,
+    "manual_during_resolution": null,
+    "cancel_before_run": false,
+    "name": "non_radio_batch",
+    "workers": 0,
+    "statuses": [],
+    "played": [],
+    "waits": [],
+    "wake_sets": 0,
+    "stops": 0,
+    "url_lookups": 0,
+    "final_station": null,
+    "last_station": null
+  },
+  {
+    "enabled": true,
+    "duration": 5,
+    "batches": [
+      []
+    ],
+    "resolved": "WXK27",
+    "urls": [
+      "https://u1",
+      "https://u2"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "clock": [
+      100.0,
+      401.0
+    ],
+    "playing_before": null,
+    "playing_unknown": false,
+    "manual_during_resolution": null,
+    "cancel_before_run": false,
+    "name": "empty_batch",
+    "workers": 0,
+    "statuses": [],
+    "played": [],
+    "waits": [],
+    "wake_sets": 0,
+    "stops": 0,
+    "url_lookups": 0,
+    "final_station": null,
+    "last_station": null
+  },
+  {
+    "enabled": true,
+    "duration": 5,
+    "batches": [
+      [
+        "tornado"
+      ]
+    ],
+    "resolved": null,
+    "urls": [
+      "https://u1",
+      "https://u2"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "clock": [
+      100.0
+    ],
+    "playing_before": null,
+    "playing_unknown": false,
+    "manual_during_resolution": null,
+    "cancel_before_run": false,
+    "name": "no_station_match",
+    "workers": 1,
+    "statuses": [
+      "Weather radio auto-tune skipped: AccessiWeather does not have a reliable station match for this alert."
+    ],
+    "played": [],
+    "waits": [],
+    "wake_sets": 0,
+    "stops": 0,
+    "url_lookups": 0,
+    "final_station": null,
+    "last_station": null
+  },
+  {
+    "enabled": true,
+    "duration": 5,
+    "batches": [
+      [
+        "tornado"
+      ]
+    ],
+    "resolved": "WXK27",
+    "urls": [],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "clock": [
+      100.0
+    ],
+    "playing_before": null,
+    "playing_unknown": false,
+    "manual_during_resolution": null,
+    "cancel_before_run": false,
+    "name": "no_streams",
+    "workers": 1,
+    "statuses": [
+      "Weather radio auto-tune skipped: no stream is available for WXK27."
+    ],
+    "played": [],
+    "waits": [],
+    "wake_sets": 0,
+    "stops": 0,
+    "url_lookups": 1,
+    "final_station": null,
+    "last_station": null
+  },
+  {
+    "enabled": true,
+    "duration": 5,
+    "batches": [
+      [
+        "tornado"
+      ]
+    ],
+    "resolved": "WXK27",
+    "urls": [
+      "https://u1",
+      "https://u2"
+    ],
+    "preferred": {},
+    "play_results": [
+      false,
+      false
+    ],
+    "clock": [
+      100.0
+    ],
+    "playing_before": null,
+    "playing_unknown": false,
+    "manual_during_resolution": null,
+    "cancel_before_run": false,
+    "name": "all_streams_fail",
+    "workers": 1,
+    "statuses": [
+      "Weather radio auto-tune could not start WXK27."
+    ],
+    "played": [
+      "https://u1",
+      "https://u2"
+    ],
+    "waits": [],
+    "wake_sets": 0,
+    "stops": 0,
+    "url_lookups": 1,
+    "final_station": null,
+    "last_station": null
+  },
+  {
+    "enabled": true,
+    "duration": 5,
+    "batches": [
+      [
+        "tornado"
+      ]
+    ],
+    "resolved": "WXK27",
+    "urls": [
+      "https://u1",
+      "https://u2"
+    ],
+    "preferred": {},
+    "play_results": [
+      false,
+      true
+    ],
+    "clock": [
+      100.0,
+      401.0
+    ],
+    "playing_before": null,
+    "playing_unknown": false,
+    "manual_during_resolution": null,
+    "cancel_before_run": false,
+    "name": "fallback_stream",
+    "workers": 1,
+    "statuses": [
+      "Weather radio auto-tune started WXK27 for active alerts.",
+      "Weather radio auto-tune stopped WXK27."
+    ],
+    "played": [
+      "https://u1",
+      "https://u2"
+    ],
+    "waits": [],
+    "wake_sets": 0,
+    "stops": 1,
+    "url_lookups": 1,
+    "final_station": null,
+    "last_station": "WXK27",
+    "divergence": "Intentional divergence: Python loses the station when a fallback stream plays; Rust keeps it (see rust_divergences in tools/golden/radio.py)."
+  },
+  {
+    "enabled": true,
+    "duration": 5,
+    "batches": [
+      [
+        "tornado"
+      ]
+    ],
+    "resolved": "WXK27",
+    "urls": [
+      "https://u1",
+      "https://u2"
+    ],
+    "preferred": {
+      "WXK27": "https://u2"
+    },
+    "play_results": [
+      true
+    ],
+    "clock": [
+      100.0,
+      401.0
+    ],
+    "playing_before": null,
+    "playing_unknown": false,
+    "manual_during_resolution": null,
+    "cancel_before_run": false,
+    "name": "preferred_first",
+    "workers": 1,
+    "statuses": [
+      "Weather radio auto-tune started WXK27 for active alerts.",
+      "Weather radio auto-tune stopped WXK27."
+    ],
+    "played": [
+      "https://u2"
+    ],
+    "waits": [],
+    "wake_sets": 0,
+    "stops": 1,
+    "url_lookups": 1,
+    "final_station": null,
+    "last_station": "WXK27"
+  },
+  {
+    "enabled": true,
+    "duration": 5,
+    "batches": [
+      [
+        "tornado"
+      ]
+    ],
+    "resolved": "WXK27",
+    "urls": [
+      "https://u1",
+      "https://u2"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "clock": [
+      100.0
+    ],
+    "playing_before": "KHB40",
+    "playing_unknown": false,
+    "manual_during_resolution": null,
+    "cancel_before_run": false,
+    "name": "already_playing",
+    "workers": 0,
+    "statuses": [
+      "Weather radio auto-tune skipped because NOAA Weather Radio is already playing KHB40."
+    ],
+    "played": [],
+    "waits": [],
+    "wake_sets": 0,
+    "stops": 0,
+    "url_lookups": 0,
+    "final_station": "KHB40",
+    "last_station": "KHB40"
+  },
+  {
+    "enabled": true,
+    "duration": 5,
+    "batches": [
+      [
+        "tornado"
+      ]
+    ],
+    "resolved": "WXK27",
+    "urls": [
+      "https://u1",
+      "https://u2"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "clock": [
+      100.0
+    ],
+    "playing_before": null,
+    "playing_unknown": true,
+    "manual_during_resolution": null,
+    "cancel_before_run": false,
+    "name": "already_playing_unknown",
+    "workers": 0,
+    "statuses": [
+      "Weather radio auto-tune skipped because NOAA Weather Radio is already playing unknown station."
+    ],
+    "played": [],
+    "waits": [],
+    "wake_sets": 0,
+    "stops": 0,
+    "url_lookups": 0,
+    "final_station": null,
+    "last_station": null
+  },
+  {
+    "enabled": true,
+    "duration": 5,
+    "batches": [
+      [
+        "tornado"
+      ]
+    ],
+    "resolved": "WXK27",
+    "urls": [
+      "https://u1",
+      "https://u2"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "clock": [
+      100.0
+    ],
+    "playing_before": null,
+    "playing_unknown": false,
+    "manual_during_resolution": "KHB40",
+    "cancel_before_run": false,
+    "name": "manual_during_resolution",
+    "workers": 1,
+    "statuses": [
+      "Weather radio auto-tune skipped because NOAA Weather Radio is already playing KHB40."
+    ],
+    "played": [],
+    "waits": [],
+    "wake_sets": 0,
+    "stops": 0,
+    "url_lookups": 0,
+    "final_station": "KHB40",
+    "last_station": "KHB40"
+  },
+  {
+    "enabled": true,
+    "duration": 5,
+    "batches": [
+      [
+        "tornado"
+      ]
+    ],
+    "resolved": "WXK27",
+    "urls": [
+      "https://u1",
+      "https://u2"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "clock": [
+      100.0
+    ],
+    "playing_before": null,
+    "playing_unknown": false,
+    "manual_during_resolution": null,
+    "cancel_before_run": true,
+    "name": "cancelled",
+    "workers": 1,
+    "statuses": [],
+    "played": [],
+    "waits": [],
+    "wake_sets": 1,
+    "stops": 0,
+    "url_lookups": 0,
+    "final_station": null,
+    "last_station": null
+  },
+  {
+    "enabled": true,
+    "duration": 8,
+    "batches": [
+      [
+        "tornado"
+      ]
+    ],
+    "resolved": "WXK27",
+    "urls": [
+      "https://u1",
+      "https://u2"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "clock": [
+      100.0,
+      579.0,
+      580.0
+    ],
+    "playing_before": null,
+    "playing_unknown": false,
+    "manual_during_resolution": null,
+    "cancel_before_run": false,
+    "name": "duration_8",
+    "workers": 1,
+    "statuses": [
+      "Weather radio auto-tune started WXK27 for active alerts.",
+      "Weather radio auto-tune stopped WXK27."
+    ],
+    "played": [
+      "https://u1"
+    ],
+    "waits": [
+      1.0
+    ],
+    "wake_sets": 0,
+    "stops": 1,
+    "url_lookups": 1,
+    "final_station": null,
+    "last_station": "WXK27"
+  },
+  {
+    "enabled": true,
+    "duration": 0,
+    "batches": [
+      [
+        "tornado"
+      ]
+    ],
+    "resolved": "WXK27",
+    "urls": [
+      "https://u1",
+      "https://u2"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "clock": [
+      100.0,
+      401.0
+    ],
+    "playing_before": null,
+    "playing_unknown": false,
+    "manual_during_resolution": null,
+    "cancel_before_run": false,
+    "name": "invalid_duration",
+    "workers": 1,
+    "statuses": [
+      "Weather radio auto-tune started WXK27 for active alerts.",
+      "Weather radio auto-tune stopped WXK27."
+    ],
+    "played": [
+      "https://u1"
+    ],
+    "waits": [],
+    "wake_sets": 0,
+    "stops": 1,
+    "url_lookups": 1,
+    "final_station": null,
+    "last_station": "WXK27"
+  },
+  {
+    "enabled": true,
+    "duration": 61,
+    "batches": [
+      [
+        "tornado"
+      ]
+    ],
+    "resolved": "WXK27",
+    "urls": [
+      "https://u1",
+      "https://u2"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "clock": [
+      100.0,
+      401.0
+    ],
+    "playing_before": null,
+    "playing_unknown": false,
+    "manual_during_resolution": null,
+    "cancel_before_run": false,
+    "name": "duration_61",
+    "workers": 1,
+    "statuses": [
+      "Weather radio auto-tune started WXK27 for active alerts.",
+      "Weather radio auto-tune stopped WXK27."
+    ],
+    "played": [
+      "https://u1"
+    ],
+    "waits": [],
+    "wake_sets": 0,
+    "stops": 1,
+    "url_lookups": 1,
+    "final_station": null,
+    "last_station": "WXK27"
+  },
+  {
+    "enabled": true,
+    "duration": 60,
+    "batches": [
+      [
+        "tornado"
+      ]
+    ],
+    "resolved": "WXK27",
+    "urls": [
+      "https://u1",
+      "https://u2"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "clock": [
+      100.0,
+      3700.0
+    ],
+    "playing_before": null,
+    "playing_unknown": false,
+    "manual_during_resolution": null,
+    "cancel_before_run": false,
+    "name": "duration_60",
+    "workers": 1,
+    "statuses": [
+      "Weather radio auto-tune started WXK27 for active alerts.",
+      "Weather radio auto-tune stopped WXK27."
+    ],
+    "played": [
+      "https://u1"
+    ],
+    "waits": [],
+    "wake_sets": 0,
+    "stops": 1,
+    "url_lookups": 1,
+    "final_station": null,
+    "last_station": "WXK27"
+  },
+  {
+    "enabled": true,
+    "duration": 5,
+    "batches": [
+      [
+        "tornado"
+      ],
+      [
+        "tornado"
+      ]
+    ],
+    "resolved": "WXK27",
+    "urls": [
+      "https://u1",
+      "https://u2"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "clock": [
+      100.0,
+      150.0,
+      399.0,
+      450.0
+    ],
+    "playing_before": null,
+    "playing_unknown": false,
+    "manual_during_resolution": null,
+    "cancel_before_run": false,
+    "name": "duplicate_extends",
+    "workers": 1,
+    "statuses": [
+      "Weather radio auto-tune started WXK27 for active alerts.",
+      "Weather radio auto-tune stopped WXK27."
+    ],
+    "played": [
+      "https://u1"
+    ],
+    "waits": [
+      1.0
+    ],
+    "wake_sets": 1,
+    "stops": 1,
+    "url_lookups": 1,
+    "final_station": null,
+    "last_station": "WXK27"
+  },
+  {
+    "enabled": true,
+    "duration": 5,
+    "batches": [
+      [
+        "tornado"
+      ],
+      [
+        "no_county_codes"
+      ]
+    ],
+    "resolved": "WXK27",
+    "urls": [
+      "https://u1",
+      "https://u2"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "clock": [
+      100.0,
+      401.0
+    ],
+    "playing_before": null,
+    "playing_unknown": false,
+    "manual_during_resolution": null,
+    "cancel_before_run": false,
+    "name": "same_less_does_not_extend",
+    "workers": 1,
+    "statuses": [
+      "Weather radio auto-tune started WXK27 for active alerts.",
+      "Weather radio auto-tune stopped WXK27."
+    ],
+    "played": [
+      "https://u1"
+    ],
+    "waits": [],
+    "wake_sets": 0,
+    "stops": 1,
+    "url_lookups": 1,
+    "final_station": null,
+    "last_station": "WXK27"
+  }
+]

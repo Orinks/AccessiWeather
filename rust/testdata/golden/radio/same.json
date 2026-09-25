@@ -1,0 +1,794 @@
+{
+  "normalize": {
+    "048453": "048453",
+    " 48453 ": "048453",
+    "abc": null,
+    "12-345": "012345",
+    "1234567": "1234567",
+    "": null,
+    "0": "000000"
+  },
+  "alerts": [
+    {
+      "name": "tornado",
+      "event": "Tornado Warning",
+      "affected_zones": [
+        "TXC453"
+      ],
+      "same_codes": [
+        "048453"
+      ],
+      "same_event_codes": [
+        "TOR"
+      ],
+      "same_codes_normalized": [
+        "048453"
+      ],
+      "event_codes": [
+        "TOR"
+      ],
+      "would_wake": true,
+      "states": [
+        "TX"
+      ]
+    },
+    {
+      "name": "air_quality",
+      "same_codes": [
+        "048453"
+      ],
+      "same_event_codes": [
+        "NWS"
+      ],
+      "same_codes_normalized": [
+        "048453"
+      ],
+      "event_codes": [],
+      "would_wake": false,
+      "states": [
+        "TX"
+      ]
+    },
+    {
+      "name": "no_county_codes",
+      "affected_zones": [
+        "TXC453"
+      ],
+      "same_event_codes": [
+        "TOR"
+      ],
+      "same_codes_normalized": [],
+      "event_codes": [
+        "TOR"
+      ],
+      "would_wake": false,
+      "states": [
+        "TX"
+      ]
+    },
+    {
+      "name": "forecast_zone",
+      "affected_zones": [
+        "TXZ192"
+      ],
+      "same_event_codes": [
+        "TOR"
+      ],
+      "same_codes_normalized": [],
+      "event_codes": [
+        "TOR"
+      ],
+      "would_wake": false,
+      "states": []
+    },
+    {
+      "name": "lowercase_smw",
+      "same_codes": [
+        "48453"
+      ],
+      "same_event_codes": [
+        " smw ",
+        "nws",
+        ""
+      ],
+      "same_codes_normalized": [
+        "048453"
+      ],
+      "event_codes": [
+        "SMW"
+      ],
+      "would_wake": true,
+      "states": [
+        "TX"
+      ]
+    },
+    {
+      "name": "flood_nj",
+      "affected_zones": [
+        "https://api.weather.gov/zones/county/NJC005",
+        "https://api.weather.gov/zones/county/NJC007"
+      ],
+      "same_codes": [
+        "034005",
+        "034007",
+        "034015"
+      ],
+      "same_event_codes": [
+        "FLS"
+      ],
+      "same_codes_normalized": [
+        "034005",
+        "034007",
+        "034015"
+      ],
+      "event_codes": [
+        "FLS"
+      ],
+      "would_wake": true,
+      "states": [
+        "NJ"
+      ]
+    },
+    {
+      "name": "malformed",
+      "affected_zones": [
+        "XXC001",
+        "txc453",
+        "TXC45",
+        " https://x/zones/county/okc001 "
+      ],
+      "same_codes": [
+        "abc",
+        "",
+        "1234567",
+        "99001",
+        "072001"
+      ],
+      "same_event_codes": [
+        "TOR"
+      ],
+      "same_codes_normalized": [
+        "072001",
+        "099001",
+        "1234567"
+      ],
+      "event_codes": [
+        "TOR"
+      ],
+      "would_wake": true,
+      "states": [
+        "OK",
+        "PR",
+        "TX",
+        "XX"
+      ]
+    },
+    {
+      "name": "marine",
+      "affected_zones": [
+        "GMZ250"
+      ],
+      "same_codes": [
+        "077250"
+      ],
+      "same_event_codes": [
+        "SMW"
+      ],
+      "same_codes_normalized": [
+        "077250"
+      ],
+      "event_codes": [
+        "SMW"
+      ],
+      "would_wake": true,
+      "states": []
+    }
+  ],
+  "notification_reasons": [
+    [
+      null,
+      "new_alert",
+      true
+    ],
+    [
+      null,
+      "severity_escalated",
+      true
+    ],
+    [
+      null,
+      "updated",
+      false
+    ],
+    [
+      null,
+      "reminder",
+      false
+    ],
+    [
+      "Alert",
+      "new_alert",
+      true
+    ],
+    [
+      "Alert",
+      "severity_escalated",
+      true
+    ],
+    [
+      "Alert",
+      "updated",
+      false
+    ],
+    [
+      "Alert",
+      "reminder",
+      false
+    ],
+    [
+      " alert ",
+      "new_alert",
+      true
+    ],
+    [
+      " alert ",
+      "severity_escalated",
+      true
+    ],
+    [
+      " alert ",
+      "updated",
+      false
+    ],
+    [
+      " alert ",
+      "reminder",
+      false
+    ],
+    [
+      "",
+      "new_alert",
+      true
+    ],
+    [
+      "",
+      "severity_escalated",
+      true
+    ],
+    [
+      "",
+      "updated",
+      false
+    ],
+    [
+      "",
+      "reminder",
+      false
+    ],
+    [
+      "Update",
+      "new_alert",
+      false
+    ],
+    [
+      "Update",
+      "severity_escalated",
+      true
+    ],
+    [
+      "Update",
+      "updated",
+      false
+    ],
+    [
+      "Update",
+      "reminder",
+      false
+    ],
+    [
+      "Cancel",
+      "new_alert",
+      false
+    ],
+    [
+      "Cancel",
+      "severity_escalated",
+      true
+    ],
+    [
+      "Cancel",
+      "updated",
+      false
+    ],
+    [
+      "Cancel",
+      "reminder",
+      false
+    ]
+  ],
+  "resolver": [
+    {
+      "name": "austin_nearest",
+      "alerts": [
+        "tornado"
+      ],
+      "location": [
+        30.2672,
+        -97.7431
+      ],
+      "coverage": {
+        "WXK27": [
+          "048453"
+        ],
+        "KEC56": [
+          "048453"
+        ]
+      },
+      "station": "WXK27",
+      "calls": [
+        "WXK27"
+      ]
+    },
+    {
+      "name": "no_location_state_first",
+      "alerts": [
+        "tornado"
+      ],
+      "location": null,
+      "coverage": {
+        "KEC56": [
+          "048453"
+        ],
+        "WXK38": [
+          "048453"
+        ]
+      },
+      "station": "KEC56",
+      "calls": [
+        "KEC55",
+        "KEC56"
+      ]
+    },
+    {
+      "name": "no_location_same_state",
+      "alerts": [
+        "lowercase_smw"
+      ],
+      "location": null,
+      "coverage": {
+        "WXK35": [
+          "048453"
+        ]
+      },
+      "station": "WXK35",
+      "calls": [
+        "KEC55",
+        "KEC56",
+        "KGG68",
+        "KHB40",
+        "KWN34",
+        "KXI87",
+        "WXK23",
+        "WXK27",
+        "WXK30",
+        "WXK35"
+      ]
+    },
+    {
+      "name": "nj_flood",
+      "alerts": [
+        "flood_nj"
+      ],
+      "location": null,
+      "coverage": {
+        "KIH28": [
+          "034007"
+        ]
+      },
+      "station": "KIH28",
+      "calls": [
+        "KWO72",
+        "KDO89",
+        "KDO94",
+        "KEB98",
+        "KEC38",
+        "KEC49",
+        "KEC55",
+        "KEC56",
+        "KEC59",
+        "KEC61",
+        "KEC63",
+        "KEC65",
+        "KEC73",
+        "KEC74",
+        "KEC80",
+        "KEC85",
+        "KEC86",
+        "KEC94",
+        "KEC96",
+        "KGG68",
+        "KGG95",
+        "KHA53",
+        "KHB32",
+        "KHB34",
+        "KHB35",
+        "KHB36",
+        "KHB37",
+        "KHB39",
+        "KHB40",
+        "KHB60",
+        "KID77",
+        "KIG65",
+        "KIG71",
+        "KIG76",
+        "KIG79",
+        "KIG86",
+        "KIH24",
+        "KIH26",
+        "KIH27",
+        "KIH28"
+      ]
+    },
+    {
+      "name": "empty_coverage_skipped",
+      "alerts": [
+        "tornado"
+      ],
+      "location": [
+        30.2672,
+        -97.7431
+      ],
+      "coverage": {
+        "WXK27": [],
+        "WXK30": [
+          "048453"
+        ]
+      },
+      "station": "WXK30",
+      "calls": [
+        "WXK27",
+        "WXK30"
+      ]
+    },
+    {
+      "name": "no_same_codes",
+      "alerts": [
+        "no_county_codes"
+      ],
+      "location": null,
+      "coverage": {
+        "WXK27": [
+          "048453"
+        ]
+      },
+      "station": null,
+      "calls": []
+    },
+    {
+      "name": "no_match",
+      "alerts": [
+        "marine"
+      ],
+      "location": [
+        29.3,
+        -94.8
+      ],
+      "coverage": {},
+      "station": null,
+      "calls": [
+        "KHB40",
+        "KGG68",
+        "WXK30",
+        "WXK23",
+        "KWN34",
+        "WXK27",
+        "WXK35",
+        "WXK36",
+        "KXI87",
+        "WXJ97",
+        "KEC56",
+        "WXJ96",
+        "KEC55",
+        "WXM73",
+        "KZZ99",
+        "KEC61",
+        "WXK86",
+        "WXK85",
+        "KIH27",
+        "WXK49",
+        "WXL46",
+        "WXK38",
+        "WXM32",
+        "KIH24",
+        "WXK63",
+        "WXM49",
+        "WXK91",
+        "KID77",
+        "KIG79",
+        "KEC80",
+        "KDO89",
+        "KIG76",
+        "KEC38",
+        "WXK56",
+        "KHB32",
+        "KZZ69",
+        "KHB39",
+        "WNG522",
+        "WXM20",
+        "KIH63",
+        "WXL74",
+        "KIH61",
+        "KIH26",
+        "WXJ21",
+        "WXJ76",
+        "WZ2523",
+        "WXJ71",
+        "KZZ66",
+        "KEC85",
+        "WXL57",
+        "KZZ48",
+        "KEC74",
+        "WXJ73",
+        "KZZ58",
+        "WXL62",
+        "WNG663",
+        "WZ2531",
+        "KXI58",
+        "KHB34",
+        "KZZ81",
+        "WXJ37",
+        "KWN54",
+        "WXM71",
+        "WXJ84",
+        "WWG42",
+        "WXL82",
+        "WXK78",
+        "WXJ93",
+        "KIG86",
+        "WXL67",
+        "WXJ86",
+        "WWG41",
+        "WXM74",
+        "KGG95",
+        "WWF34",
+        "WXL58",
+        "WWG57",
+        "WXN99",
+        "KEC94",
+        "WXL51",
+        "WXK81",
+        "WZ2560",
+        "KEC65",
+        "WXJ88",
+        "WNG698",
+        "WWF36",
+        "KDO94",
+        "KZZ77",
+        "KEC63",
+        "WNG676",
+        "KIG65",
+        "WNG672",
+        "KIH29",
+        "KZZ33",
+        "WNG553",
+        "KHB36",
+        "KXI33",
+        "WXM42",
+        "KHB37",
+        "KZZ78",
+        "WWG98",
+        "KEC86",
+        "WXL78",
+        "WXM99",
+        "WXL40",
+        "KEB98",
+        "WWF83",
+        "KIH30",
+        "WXM38",
+        "WNG704",
+        "XMJ225",
+        "XMJ316",
+        "KIH28",
+        "WXL39",
+        "WXL43",
+        "KHA53",
+        "KWO72",
+        "WZ2536",
+        "WNG659",
+        "WXL31",
+        "KWO35",
+        "KWO37",
+        "WXM45",
+        "WXL34",
+        "WXJ42",
+        "KIH62",
+        "KEC59",
+        "WWG53",
+        "WWG20",
+        "WXL93",
+        "WXJ24",
+        "WXJ43",
+        "WXK58",
+        "WXL25",
+        "KHB35",
+        "KEC73",
+        "WXL29",
+        "WWF64",
+        "KEC49",
+        "WSM60",
+        "WWF56",
+        "XLF339",
+        "KIG71",
+        "XLM572",
+        "KHB60",
+        "WWG24",
+        "KEC96",
+        "WWG75"
+      ]
+    },
+    {
+      "name": "batch",
+      "alerts": [
+        "malformed",
+        "flood_nj"
+      ],
+      "location": null,
+      "coverage": {
+        "KHB36": [
+          "001001"
+        ]
+      },
+      "station": null,
+      "calls": [
+        "KEC55",
+        "KEC56",
+        "KGG68",
+        "KHB40",
+        "KIH27",
+        "KWN34",
+        "KWO72",
+        "KXI87",
+        "WXK23",
+        "WXK27",
+        "WXK30",
+        "WXK35",
+        "WXK36",
+        "WXK38",
+        "WXK85",
+        "WXK86",
+        "KDO89",
+        "KDO94",
+        "KEB98",
+        "KEC38",
+        "KEC49",
+        "KEC59",
+        "KEC61",
+        "KEC63",
+        "KEC65",
+        "KEC73",
+        "KEC74",
+        "KEC80",
+        "KEC85",
+        "KEC86",
+        "KEC94",
+        "KEC96",
+        "KGG95",
+        "KHA53",
+        "KHB32",
+        "KHB34",
+        "KHB35",
+        "KHB36",
+        "KHB37",
+        "KHB39",
+        "KHB60",
+        "KID77",
+        "KIG65",
+        "KIG71",
+        "KIG76",
+        "KIG79",
+        "KIG86",
+        "KIH24",
+        "KIH26",
+        "KIH28",
+        "KIH29",
+        "KIH30",
+        "KIH61",
+        "KIH62",
+        "KIH63",
+        "KWN54",
+        "KWO35",
+        "KWO37",
+        "KXI33",
+        "KXI58",
+        "KZZ33",
+        "KZZ48",
+        "KZZ58",
+        "KZZ66",
+        "KZZ69",
+        "KZZ77",
+        "KZZ78",
+        "KZZ81",
+        "KZZ99",
+        "WNG522",
+        "WNG553",
+        "WNG659",
+        "WNG663",
+        "WNG672",
+        "WNG676",
+        "WNG698",
+        "WNG704",
+        "WSM60",
+        "WWF34",
+        "WWF36",
+        "WWF56",
+        "WWF64",
+        "WWF83",
+        "WWG20",
+        "WWG24",
+        "WWG41",
+        "WWG42",
+        "WWG53",
+        "WWG57",
+        "WWG75",
+        "WWG98",
+        "WXJ21",
+        "WXJ24",
+        "WXJ37",
+        "WXJ42",
+        "WXJ43",
+        "WXJ71",
+        "WXJ73",
+        "WXJ76",
+        "WXJ84",
+        "WXJ86",
+        "WXJ88",
+        "WXJ93",
+        "WXJ96",
+        "WXJ97",
+        "WXK49",
+        "WXK56",
+        "WXK58",
+        "WXK63",
+        "WXK78",
+        "WXK81",
+        "WXK91",
+        "WXL25",
+        "WXL29",
+        "WXL31",
+        "WXL34",
+        "WXL39",
+        "WXL40",
+        "WXL43",
+        "WXL46",
+        "WXL51",
+        "WXL57",
+        "WXL58",
+        "WXL62",
+        "WXL67",
+        "WXL74",
+        "WXL78",
+        "WXL82",
+        "WXL93",
+        "WXM20",
+        "WXM32",
+        "WXM38",
+        "WXM42",
+        "WXM45",
+        "WXM49",
+        "WXM71",
+        "WXM73",
+        "WXM74",
+        "WXM99",
+        "WXN99",
+        "WZ2523",
+        "WZ2531",
+        "WZ2536",
+        "WZ2560",
+        "XLF339",
+        "XLM572",
+        "XMJ225",
+        "XMJ316"
+      ]
+    }
+  ]
+}

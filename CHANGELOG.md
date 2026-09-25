@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- AccessiWeather is now a native app for Windows, macOS and Linux, and updating from the previous version keeps your saved locations and settings.
 - The OpenRouter model picker drops the retired Llama 3.3 70B option; choose the free router, the paid auto router, or browse models.
 
 ### Fixed

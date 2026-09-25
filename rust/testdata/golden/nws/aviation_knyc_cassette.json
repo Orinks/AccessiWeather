@@ -1,0 +1,92 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "aviation_weather",
+ "station": "knyc",
+ "include_sigmets": true,
+ "include_cwas": true,
+ "responses": [
+  {
+   "url": "https://api.weather.gov/stations/KNYC",
+   "status": 200,
+   "body": "{\"@context\":[\"https://geojson.org/geojson-ld/geojson-context.jsonld\",{\"@version\":\"1.1\",\"wx\":\"https://api.weather.gov/ontology#\",\"s\":\"https://schema.org/\",\"geo\":\"http://www.opengis.net/ont/geosparql#\",\"unit\":\"http://codes.wmo.int/common/unit/\",\"@vocab\":\"https://api.weather.gov/ontology#\",\"geometry\":{\"@id\":\"s:GeoCoordinates\",\"@type\":\"geo:wktLiteral\"},\"city\":\"s:addressLocality\",\"state\":\"s:addressRegion\",\"distance\":{\"@id\":\"s:Distance\",\"@type\":\"s:QuantitativeValue\"},\"bearing\":{\"@type\":\"s:QuantitativeValue\"},\"value\":{\"@id\":\"s:value\"},\"unitCode\":{\"@id\":\"s:unitCode\",\"@type\":\"@id\"},\"forecastOffice\":{\"@type\":\"@id\"},\"forecastGridData\":{\"@type\":\"@id\"},\"publicZone\":{\"@type\":\"@id\"},\"county\":{\"@type\":\"@id\"}}],\"id\":\"https://api.weather.gov/stations/KNYC\",\"type\":\"Feature\",\"geometry\":{\"type\":\"Point\",\"coordinates\":[-73.96667,40.78333]},\"properties\":{\"@id\":\"https://api.weather.gov/stations/KNYC\",\"@type\":\"wx:ObservationStation\",\"elevation\":{\"unitCode\":\"wmoUnit:m\",\"value\":46.9392},\"stationIdentifier\":\"KNYC\",\"name\":\"New York City, Central Park\",\"timeZone\":\"America/New_York\",\"forecast\":\"https://api.weather.gov/zones/forecast/NYZ072\",\"county\":\"https://api.weather.gov/zones/county/NYC061\",\"fireWeatherZone\":\"https://api.weather.gov/zones/fire/NYZ212\"}}"
+  },
+  {
+   "url": "https://api.weather.gov/stations/KNYC/tafs",
+   "status": 200,
+   "body": "{\"@context\":{\"@version\":\"1.1\"},\"@graph\":[]}"
+  },
+  {
+   "url": "https://aviationweather.gov/api/data/taf?ids=KNYC&format=json",
+   "status": 404,
+   "body": ""
+  },
+  {
+   "url": "https://api.weather.gov/aviation/sigmets",
+   "status": 404,
+   "body": ""
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/stations/KNYC",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/stations/KNYC/tafs",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://aviationweather.gov/api/data/taf",
+   "params": [
+    [
+     "ids",
+     "KNYC"
+    ],
+    [
+     "format",
+     "json"
+    ]
+   ],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ],
+    [
+     "Accept",
+     "application/json"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/aviation/sigmets",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "raw_taf": null,
+  "decoded_taf": null,
+  "station_id": "KNYC",
+  "airport_name": "New York City, Central Park",
+  "active_sigmets": [],
+  "active_cwas": []
+ }
+}

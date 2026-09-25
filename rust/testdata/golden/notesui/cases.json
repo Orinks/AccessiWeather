@@ -1,0 +1,3707 @@
+{
+ "scenarios": [
+  {
+   "name": "afd_with_key_summary_flow",
+   "product_type": "AFD",
+   "cwa_office": "RAH",
+   "has_key": true,
+   "initial": {
+    "product_text": "Loading...",
+    "issuance": "",
+    "sps_entries": [],
+    "sps_selection": null,
+    "sps_visible": false,
+    "retry_visible": false,
+    "ai_visible": false,
+    "ai_text": "",
+    "model_info_visible": false,
+    "model_info": "",
+    "explain_visible": true,
+    "explain_enabled": false,
+    "regenerate_visible": false
+   },
+   "steps": [
+    {
+     "step": {
+      "op": "ensure_loaded"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_complete",
+      "result": {
+       "product_type": "AFD",
+       "product_id": "afd-1",
+       "cwa_office": "RAH",
+       "issuance_time": "2026-05-01T15:00:00+00:00",
+       "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+       "headline": null
+      }
+     },
+     "events": [
+      "availability:true"
+     ],
+     "view": {
+      "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+      "issuance": "Issued: 2026-05-01T15:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": true,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "ensure_loaded"
+     },
+     "events": [],
+     "view": {
+      "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+      "issuance": "Issued: 2026-05-01T15:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": true,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "explain"
+     },
+     "events": [
+      "explain:AREA FORECAST DISCUSSION\nNWS Raleigh"
+     ],
+     "view": {
+      "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+      "issuance": "Issued: 2026-05-01T15:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": true,
+      "ai_text": "Generating plain language summary. Using the selected AI provider...",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "explain"
+     },
+     "events": [],
+     "view": {
+      "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+      "issuance": "Issued: 2026-05-01T15:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": true,
+      "ai_text": "Generating plain language summary. Using the selected AI provider...",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "explain_status",
+      "message": "Trying openrouter/free..."
+     },
+     "events": [
+      "announce:Trying openrouter/free..."
+     ],
+     "view": {
+      "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+      "issuance": "Issued: 2026-05-01T15:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": true,
+      "ai_text": "Trying openrouter/free...",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "explain_status",
+      "message": ""
+     },
+     "events": [],
+     "view": {
+      "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+      "issuance": "Issued: 2026-05-01T15:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": true,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "explain_complete",
+      "explain_had_focus": true,
+      "summary": {
+       "text": "Warm and dry.",
+       "model_used": "openrouter/free",
+       "token_count": 321,
+       "estimated_cost": 0.000123456789,
+       "cached": true,
+       "model_selection_reason": "free tier",
+       "requested_model": "openrouter/auto",
+       "model_attempts": [
+        "a/model",
+        "openrouter/free"
+       ]
+      }
+     },
+     "events": [
+      "focus:ai_summary",
+      "announce:Plain Language Summary generated using openrouter/free."
+     ],
+     "view": {
+      "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+      "issuance": "Issued: 2026-05-01T15:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": true,
+      "ai_text": "Warm and dry.",
+      "model_info_visible": true,
+      "model_info": "Model: openrouter/free\nTokens: 321\nCost: ~$0.000123\nRequested: openrouter/auto\nSelection: free tier\nTried: a/model, openrouter/free\nCached: Yes",
+      "explain_visible": false,
+      "explain_enabled": false,
+      "regenerate_visible": true
+     }
+    },
+    {
+     "step": {
+      "op": "regenerate"
+     },
+     "events": [
+      "explain:AREA FORECAST DISCUSSION\nNWS Raleigh"
+     ],
+     "view": {
+      "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+      "issuance": "Issued: 2026-05-01T15:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": true,
+      "ai_text": "Generating plain language summary. Using the selected AI provider...",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "explain_error",
+      "message": "Rate limited (429)."
+     },
+     "events": [
+      "focus:ai_summary",
+      "announce:Summary failed. Rate limited (429)."
+     ],
+     "view": {
+      "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+      "issuance": "Issued: 2026-05-01T15:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": true,
+      "ai_text": "Failed to generate summary: Rate limited (429).\n\nCheck the selected provider and API key in Settings.",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": false,
+      "explain_enabled": false,
+      "regenerate_visible": true
+     }
+    },
+    {
+     "step": {
+      "op": "regenerate"
+     },
+     "events": [
+      "explain:AREA FORECAST DISCUSSION\nNWS Raleigh"
+     ],
+     "view": {
+      "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+      "issuance": "Issued: 2026-05-01T15:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": true,
+      "ai_text": "Generating plain language summary. Using the selected AI provider...",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "explain_complete",
+      "explain_had_focus": false,
+      "summary": {
+       "text": "Again.",
+       "model_used": "",
+       "token_count": 321,
+       "estimated_cost": null,
+       "cached": false,
+       "model_selection_reason": null,
+       "requested_model": null,
+       "model_attempts": []
+      }
+     },
+     "events": [
+      "announce:Plain Language Summary generated."
+     ],
+     "view": {
+      "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+      "issuance": "Issued: 2026-05-01T15:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": true,
+      "ai_text": "Again.",
+      "model_info_visible": true,
+      "model_info": "Model: \nTokens: 321\nCost: See provider account",
+      "explain_visible": false,
+      "explain_enabled": false,
+      "regenerate_visible": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "afd_without_key",
+   "product_type": "AFD",
+   "cwa_office": "RAH",
+   "has_key": false,
+   "initial": {
+    "product_text": "Loading...",
+    "issuance": "",
+    "sps_entries": [],
+    "sps_selection": null,
+    "sps_visible": false,
+    "retry_visible": false,
+    "ai_visible": false,
+    "ai_text": "",
+    "model_info_visible": false,
+    "model_info": "",
+    "explain_visible": true,
+    "explain_enabled": false,
+    "regenerate_visible": false
+   },
+   "steps": [
+    {
+     "step": {
+      "op": "ensure_loaded"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_complete",
+      "result": {
+       "product_type": "AFD",
+       "product_id": "afd-1",
+       "cwa_office": "RAH",
+       "issuance_time": "2026-05-01T15:00:00+00:00",
+       "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+       "headline": null
+      }
+     },
+     "events": [
+      "availability:true"
+     ],
+     "view": {
+      "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+      "issuance": "Issued: 2026-05-01T15:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "set_key",
+      "has_key": true
+     },
+     "events": [],
+     "view": {
+      "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+      "issuance": "Issued: 2026-05-01T15:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "trigger_load"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_complete",
+      "result": [
+       {
+        "product_type": "AFD",
+        "product_id": "afd-1",
+        "cwa_office": "RAH",
+        "issuance_time": "2026-05-01T15:00:00+00:00",
+        "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+        "headline": null
+       }
+      ]
+     },
+     "events": [
+      "availability:true"
+     ],
+     "view": {
+      "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+      "issuance": "Issued: 2026-05-01T15:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": true,
+      "regenerate_visible": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "afd_empty_text",
+   "product_type": "AFD",
+   "cwa_office": "RAH",
+   "has_key": true,
+   "initial": {
+    "product_text": "Loading...",
+    "issuance": "",
+    "sps_entries": [],
+    "sps_selection": null,
+    "sps_visible": false,
+    "retry_visible": false,
+    "ai_visible": false,
+    "ai_text": "",
+    "model_info_visible": false,
+    "model_info": "",
+    "explain_visible": true,
+    "explain_enabled": false,
+    "regenerate_visible": false
+   },
+   "steps": [
+    {
+     "step": {
+      "op": "ensure_loaded"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_complete",
+      "result": {
+       "product_type": "AFD",
+       "product_id": "afd-2",
+       "cwa_office": "RAH",
+       "issuance_time": null,
+       "product_text": "",
+       "headline": null
+      }
+     },
+     "events": [
+      "availability:true"
+     ],
+     "view": {
+      "product_text": "",
+      "issuance": "Issued: unknown",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "explain"
+     },
+     "events": [],
+     "view": {
+      "product_text": "",
+      "issuance": "Issued: unknown",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "hwo_empty",
+   "product_type": "HWO",
+   "cwa_office": "RAH",
+   "has_key": true,
+   "initial": {
+    "product_text": "Loading...",
+    "issuance": "",
+    "sps_entries": [],
+    "sps_selection": null,
+    "sps_visible": false,
+    "retry_visible": false,
+    "ai_visible": false,
+    "ai_text": "",
+    "model_info_visible": false,
+    "model_info": "",
+    "explain_visible": true,
+    "explain_enabled": false,
+    "regenerate_visible": false
+   },
+   "steps": [
+    {
+     "step": {
+      "op": "ensure_loaded"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_complete",
+      "result": null
+     },
+     "events": [
+      "availability:false"
+     ],
+     "view": {
+      "product_text": "Hazardous Weather Outlook not currently available for RAH.",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "sps_multiple",
+   "product_type": "SPS",
+   "cwa_office": "RAH",
+   "has_key": true,
+   "initial": {
+    "product_text": "Loading...",
+    "issuance": "",
+    "sps_entries": [],
+    "sps_selection": null,
+    "sps_visible": false,
+    "retry_visible": false,
+    "ai_visible": false,
+    "ai_text": "",
+    "model_info_visible": false,
+    "model_info": "",
+    "explain_visible": true,
+    "explain_enabled": false,
+    "regenerate_visible": false
+   },
+   "steps": [
+    {
+     "step": {
+      "op": "ensure_loaded"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_complete",
+      "result": [
+       {
+        "product_type": "SPS",
+        "product_id": "sps-3",
+        "cwa_office": "RAH",
+        "issuance_time": "2026-05-01T13:00:00-04:00",
+        "product_text": "SPECIAL WEATHER STATEMENT 3",
+        "headline": "Fog"
+       },
+       {
+        "product_type": "SPS",
+        "product_id": "sps-2",
+        "cwa_office": "RAH",
+        "issuance_time": "2026-05-01T12:00:00-04:00",
+        "product_text": "SPECIAL WEATHER STATEMENT 2",
+        "headline": null
+       },
+       {
+        "product_type": "SPS",
+        "product_id": "sps-1",
+        "cwa_office": "RAH",
+        "issuance_time": "2026-05-01T11:00:00-04:00",
+        "product_text": "SPECIAL WEATHER STATEMENT 1",
+        "headline": "Wind"
+       }
+      ]
+     },
+     "events": [
+      "availability:true"
+     ],
+     "view": {
+      "product_text": "SPECIAL WEATHER STATEMENT 3",
+      "issuance": "Issued: 2026-05-01T13:00:00-04:00",
+      "sps_entries": [
+       "sps-3: Fog",
+       "sps-2: ",
+       "sps-1: Wind"
+      ],
+      "sps_selection": 0,
+      "sps_visible": true,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": true,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "sps_choice",
+      "index": 2
+     },
+     "events": [],
+     "view": {
+      "product_text": "SPECIAL WEATHER STATEMENT 1",
+      "issuance": "Issued: 2026-05-01T11:00:00-04:00",
+      "sps_entries": [
+       "sps-3: Fog",
+       "sps-2: ",
+       "sps-1: Wind"
+      ],
+      "sps_selection": 2,
+      "sps_visible": true,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": true,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "explain"
+     },
+     "events": [
+      "explain:SPECIAL WEATHER STATEMENT 1"
+     ],
+     "view": {
+      "product_text": "SPECIAL WEATHER STATEMENT 1",
+      "issuance": "Issued: 2026-05-01T11:00:00-04:00",
+      "sps_entries": [
+       "sps-3: Fog",
+       "sps-2: ",
+       "sps-1: Wind"
+      ],
+      "sps_selection": 2,
+      "sps_visible": true,
+      "retry_visible": false,
+      "ai_visible": true,
+      "ai_text": "Generating plain language summary. Using the selected AI provider...",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "sps_choice",
+      "index": 1
+     },
+     "events": [],
+     "view": {
+      "product_text": "SPECIAL WEATHER STATEMENT 2",
+      "issuance": "Issued: 2026-05-01T12:00:00-04:00",
+      "sps_entries": [
+       "sps-3: Fog",
+       "sps-2: ",
+       "sps-1: Wind"
+      ],
+      "sps_selection": 1,
+      "sps_visible": true,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "Generating plain language summary. Using the selected AI provider...",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": true,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "explain_complete",
+      "explain_had_focus": false,
+      "summary": {
+       "text": "Old SPS.",
+       "model_used": "openrouter/free",
+       "token_count": 321,
+       "estimated_cost": 0.0,
+       "cached": false,
+       "model_selection_reason": null,
+       "requested_model": null,
+       "model_attempts": []
+      }
+     },
+     "events": [
+      "announce:Plain Language Summary generated using openrouter/free."
+     ],
+     "view": {
+      "product_text": "SPECIAL WEATHER STATEMENT 2",
+      "issuance": "Issued: 2026-05-01T12:00:00-04:00",
+      "sps_entries": [
+       "sps-3: Fog",
+       "sps-2: ",
+       "sps-1: Wind"
+      ],
+      "sps_selection": 1,
+      "sps_visible": true,
+      "retry_visible": false,
+      "ai_visible": true,
+      "ai_text": "Old SPS.",
+      "model_info_visible": true,
+      "model_info": "Model: openrouter/free\nTokens: 321\nCost: No cost",
+      "explain_visible": false,
+      "explain_enabled": true,
+      "regenerate_visible": true
+     }
+    },
+    {
+     "step": {
+      "op": "sps_choice",
+      "index": 0
+     },
+     "events": [],
+     "view": {
+      "product_text": "SPECIAL WEATHER STATEMENT 3",
+      "issuance": "Issued: 2026-05-01T13:00:00-04:00",
+      "sps_entries": [
+       "sps-3: Fog",
+       "sps-2: ",
+       "sps-1: Wind"
+      ],
+      "sps_selection": 0,
+      "sps_visible": true,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "Old SPS.",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": true,
+      "regenerate_visible": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "sps_single_then_error_and_retry",
+   "product_type": "SPS",
+   "cwa_office": "RAH",
+   "has_key": true,
+   "initial": {
+    "product_text": "Loading...",
+    "issuance": "",
+    "sps_entries": [],
+    "sps_selection": null,
+    "sps_visible": false,
+    "retry_visible": false,
+    "ai_visible": false,
+    "ai_text": "",
+    "model_info_visible": false,
+    "model_info": "",
+    "explain_visible": true,
+    "explain_enabled": false,
+    "regenerate_visible": false
+   },
+   "steps": [
+    {
+     "step": {
+      "op": "ensure_loaded"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_complete",
+      "result": [
+       {
+        "product_type": "SPS",
+        "product_id": "sps-3",
+        "cwa_office": "RAH",
+        "issuance_time": "2026-05-01T13:00:00-04:00",
+        "product_text": "SPECIAL WEATHER STATEMENT 3",
+        "headline": "Fog"
+       },
+       {
+        "product_type": "SPS",
+        "product_id": "sps-2",
+        "cwa_office": "RAH",
+        "issuance_time": "2026-05-01T12:00:00-04:00",
+        "product_text": "SPECIAL WEATHER STATEMENT 2",
+        "headline": null
+       }
+      ]
+     },
+     "events": [
+      "availability:true"
+     ],
+     "view": {
+      "product_text": "SPECIAL WEATHER STATEMENT 3",
+      "issuance": "Issued: 2026-05-01T13:00:00-04:00",
+      "sps_entries": [
+       "sps-3: Fog",
+       "sps-2: "
+      ],
+      "sps_selection": 0,
+      "sps_visible": true,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": true,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_error"
+     },
+     "events": [
+      "availability:true"
+     ],
+     "view": {
+      "product_text": "Failed to fetch Special Weather Statement — try again.",
+      "issuance": "",
+      "sps_entries": [
+       "sps-3: Fog",
+       "sps-2: "
+      ],
+      "sps_selection": 0,
+      "sps_visible": false,
+      "retry_visible": true,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "trigger_load"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [
+       "sps-3: Fog",
+       "sps-2: "
+      ],
+      "sps_selection": 0,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_complete",
+      "result": [
+       {
+        "product_type": "SPS",
+        "product_id": "sps-1",
+        "cwa_office": "RAH",
+        "issuance_time": "2026-05-01T11:00:00-04:00",
+        "product_text": "SPECIAL WEATHER STATEMENT 1",
+        "headline": "Wind"
+       }
+      ]
+     },
+     "events": [
+      "availability:true"
+     ],
+     "view": {
+      "product_text": "SPECIAL WEATHER STATEMENT 1",
+      "issuance": "Issued: 2026-05-01T11:00:00-04:00",
+      "sps_entries": [
+       "sps-1: Wind"
+      ],
+      "sps_selection": 0,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": true,
+      "regenerate_visible": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "sps_empty_list",
+   "product_type": "SPS",
+   "cwa_office": "RAH",
+   "has_key": true,
+   "initial": {
+    "product_text": "Loading...",
+    "issuance": "",
+    "sps_entries": [],
+    "sps_selection": null,
+    "sps_visible": false,
+    "retry_visible": false,
+    "ai_visible": false,
+    "ai_text": "",
+    "model_info_visible": false,
+    "model_info": "",
+    "explain_visible": true,
+    "explain_enabled": false,
+    "regenerate_visible": false
+   },
+   "steps": [
+    {
+     "step": {
+      "op": "ensure_loaded"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_complete",
+      "result": []
+     },
+     "events": [
+      "availability:false"
+     ],
+     "view": {
+      "product_text": "No recent Special Weather Statements for RAH.",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "afd_error_then_retry",
+   "product_type": "AFD",
+   "cwa_office": "RAH",
+   "has_key": true,
+   "initial": {
+    "product_text": "Loading...",
+    "issuance": "",
+    "sps_entries": [],
+    "sps_selection": null,
+    "sps_visible": false,
+    "retry_visible": false,
+    "ai_visible": false,
+    "ai_text": "",
+    "model_info_visible": false,
+    "model_info": "",
+    "explain_visible": true,
+    "explain_enabled": false,
+    "regenerate_visible": false
+   },
+   "steps": [
+    {
+     "step": {
+      "op": "ensure_loaded"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_complete",
+      "result": {
+       "product_type": "AFD",
+       "product_id": "afd-1",
+       "cwa_office": "RAH",
+       "issuance_time": "2026-05-01T15:00:00+00:00",
+       "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+       "headline": null
+      }
+     },
+     "events": [
+      "availability:true"
+     ],
+     "view": {
+      "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+      "issuance": "Issued: 2026-05-01T15:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": true,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "explain"
+     },
+     "events": [
+      "explain:AREA FORECAST DISCUSSION\nNWS Raleigh"
+     ],
+     "view": {
+      "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+      "issuance": "Issued: 2026-05-01T15:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": true,
+      "ai_text": "Generating plain language summary. Using the selected AI provider...",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "explain_complete",
+      "explain_had_focus": true,
+      "summary": {
+       "text": "Sum.",
+       "model_used": "openrouter/free",
+       "token_count": 321,
+       "estimated_cost": 0.0,
+       "cached": false,
+       "model_selection_reason": null,
+       "requested_model": null,
+       "model_attempts": []
+      }
+     },
+     "events": [
+      "focus:ai_summary",
+      "announce:Plain Language Summary generated using openrouter/free."
+     ],
+     "view": {
+      "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+      "issuance": "Issued: 2026-05-01T15:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": true,
+      "ai_text": "Sum.",
+      "model_info_visible": true,
+      "model_info": "Model: openrouter/free\nTokens: 321\nCost: No cost",
+      "explain_visible": false,
+      "explain_enabled": false,
+      "regenerate_visible": true
+     }
+    },
+    {
+     "step": {
+      "op": "load_error"
+     },
+     "events": [
+      "availability:true"
+     ],
+     "view": {
+      "product_text": "Failed to fetch Area Forecast Discussion — try again.",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": true,
+      "ai_visible": false,
+      "ai_text": "Sum.",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": false,
+      "explain_enabled": false,
+      "regenerate_visible": true
+     }
+    },
+    {
+     "step": {
+      "op": "trigger_load"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "Sum.",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_complete",
+      "result": {
+       "product_type": "AFD",
+       "product_id": "afd-1",
+       "cwa_office": "RAH",
+       "issuance_time": "2026-05-01T15:00:00+00:00",
+       "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+       "headline": null
+      }
+     },
+     "events": [
+      "availability:true"
+     ],
+     "view": {
+      "product_text": "AREA FORECAST DISCUSSION\nNWS Raleigh",
+      "issuance": "Issued: 2026-05-01T15:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "Sum.",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": true,
+      "regenerate_visible": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "afd_without_office",
+   "product_type": "AFD",
+   "cwa_office": null,
+   "has_key": true,
+   "initial": {
+    "product_text": "Loading...",
+    "issuance": "",
+    "sps_entries": [],
+    "sps_selection": null,
+    "sps_visible": false,
+    "retry_visible": false,
+    "ai_visible": false,
+    "ai_text": "",
+    "model_info_visible": false,
+    "model_info": "",
+    "explain_visible": true,
+    "explain_enabled": false,
+    "regenerate_visible": false
+   },
+   "steps": [
+    {
+     "step": {
+      "op": "ensure_loaded"
+     },
+     "events": [],
+     "view": {
+      "product_text": "NWS text products will populate after the next weather refresh.",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "trigger_load"
+     },
+     "events": [],
+     "view": {
+      "product_text": "NWS text products will populate after the next weather refresh.",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "surf_without_office",
+   "product_type": "SURF",
+   "cwa_office": null,
+   "has_key": true,
+   "initial": {
+    "product_text": "Loading...",
+    "issuance": "",
+    "sps_entries": [],
+    "sps_selection": null,
+    "sps_visible": false,
+    "retry_visible": false,
+    "ai_visible": false,
+    "ai_text": "",
+    "model_info_visible": false,
+    "model_info": "",
+    "explain_visible": true,
+    "explain_enabled": false,
+    "regenerate_visible": false
+   },
+   "steps": [
+    {
+     "step": {
+      "op": "ensure_loaded"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_complete",
+      "result": {
+       "product_type": "SURF_CONDITIONS",
+       "product_id": "surf-1",
+       "cwa_office": "",
+       "issuance_time": "2026-05-01T14:00:00Z",
+       "product_text": "Waves 2 ft.",
+       "headline": null
+      }
+     },
+     "events": [
+      "availability:true"
+     ],
+     "view": {
+      "product_text": "Marine/surf conditions from a supported source; not an official NWS Surf Zone Forecast.\n\nWaves 2 ft.",
+      "issuance": "Issued: 2026-05-01T14:00:00+00:00",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": true,
+      "regenerate_visible": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "surf_official_srf",
+   "product_type": "SURF",
+   "cwa_office": "mhx",
+   "has_key": true,
+   "initial": {
+    "product_text": "Loading...",
+    "issuance": "",
+    "sps_entries": [],
+    "sps_selection": null,
+    "sps_visible": false,
+    "retry_visible": false,
+    "ai_visible": false,
+    "ai_text": "",
+    "model_info_visible": false,
+    "model_info": "",
+    "explain_visible": true,
+    "explain_enabled": false,
+    "regenerate_visible": false
+   },
+   "steps": [
+    {
+     "step": {
+      "op": "ensure_loaded"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_complete",
+      "result": {
+       "product_type": "SRF",
+       "product_id": "srf-1",
+       "cwa_office": "MHX",
+       "issuance_time": null,
+       "product_text": "SURF ZONE FORECAST",
+       "headline": null
+      }
+     },
+     "events": [
+      "availability:true"
+     ],
+     "view": {
+      "product_text": "Surf Zone Forecast issued by NWS MHX for regional beaches.\n\nSURF ZONE FORECAST",
+      "issuance": "Issued: unknown",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": true,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "trigger_load"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_complete",
+      "result": {
+       "product_type": "SRF",
+       "product_id": "srf-2",
+       "cwa_office": "MHX",
+       "issuance_time": null,
+       "product_text": "Surf Zone Forecast issued by NWS MHX for regional beaches.\n\nBody",
+       "headline": null
+      }
+     },
+     "events": [
+      "availability:true"
+     ],
+     "view": {
+      "product_text": "Surf Zone Forecast issued by NWS MHX for regional beaches.\n\nBody",
+      "issuance": "Issued: unknown",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": true,
+      "regenerate_visible": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "surf_empty",
+   "product_type": "SURF",
+   "cwa_office": "MHX",
+   "has_key": true,
+   "initial": {
+    "product_text": "Loading...",
+    "issuance": "",
+    "sps_entries": [],
+    "sps_selection": null,
+    "sps_visible": false,
+    "retry_visible": false,
+    "ai_visible": false,
+    "ai_text": "",
+    "model_info_visible": false,
+    "model_info": "",
+    "explain_visible": true,
+    "explain_enabled": false,
+    "regenerate_visible": false
+   },
+   "steps": [
+    {
+     "step": {
+      "op": "ensure_loaded"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_complete",
+      "result": null
+     },
+     "events": [
+      "availability:false"
+     ],
+     "view": {
+      "product_text": "No official NWS Surf Zone Forecast or derived surf/beach conditions are currently available for this location.",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "cli_blank_office",
+   "product_type": "CLI",
+   "cwa_office": "",
+   "has_key": true,
+   "initial": {
+    "product_text": "Loading...",
+    "issuance": "",
+    "sps_entries": [],
+    "sps_selection": null,
+    "sps_visible": false,
+    "retry_visible": false,
+    "ai_visible": false,
+    "ai_text": "",
+    "model_info_visible": false,
+    "model_info": "",
+    "explain_visible": true,
+    "explain_enabled": false,
+    "regenerate_visible": false
+   },
+   "steps": [
+    {
+     "step": {
+      "op": "ensure_loaded"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_complete",
+      "result": null
+     },
+     "events": [
+      "availability:false"
+     ],
+     "view": {
+      "product_text": "Daily Climate Report not currently available for .",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "cli_error",
+   "product_type": "CLI",
+   "cwa_office": "RAH",
+   "has_key": true,
+   "initial": {
+    "product_text": "Loading...",
+    "issuance": "",
+    "sps_entries": [],
+    "sps_selection": null,
+    "sps_visible": false,
+    "retry_visible": false,
+    "ai_visible": false,
+    "ai_text": "",
+    "model_info_visible": false,
+    "model_info": "",
+    "explain_visible": true,
+    "explain_enabled": false,
+    "regenerate_visible": false
+   },
+   "steps": [
+    {
+     "step": {
+      "op": "ensure_loaded"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_error"
+     },
+     "events": [
+      "availability:true"
+     ],
+     "view": {
+      "product_text": "Failed to fetch Daily Climate Report — try again.",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": true,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "national_empty_and_error",
+   "product_type": "PMDSPD",
+   "cwa_office": "IEM",
+   "has_key": true,
+   "initial": {
+    "product_text": "Loading...",
+    "issuance": "",
+    "sps_entries": [],
+    "sps_selection": null,
+    "sps_visible": false,
+    "retry_visible": false,
+    "ai_visible": false,
+    "ai_text": "",
+    "model_info_visible": false,
+    "model_info": "",
+    "explain_visible": true,
+    "explain_enabled": false,
+    "regenerate_visible": false
+   },
+   "steps": [
+    {
+     "step": {
+      "op": "ensure_loaded"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_complete",
+      "result": null
+     },
+     "events": [
+      "availability:false"
+     ],
+     "view": {
+      "product_text": "WPC Short Range Discussion is not currently available.",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_error"
+     },
+     "events": [
+      "availability:true"
+     ],
+     "view": {
+      "product_text": "Failed to fetch WPC Short Range Discussion (Weather Prediction Center) — try again.",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": true,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "spc_outlook_error",
+   "product_type": "SPC_OUTLOOK",
+   "cwa_office": "IEM",
+   "has_key": true,
+   "initial": {
+    "product_text": "Loading...",
+    "issuance": "",
+    "sps_entries": [],
+    "sps_selection": null,
+    "sps_visible": false,
+    "retry_visible": false,
+    "ai_visible": false,
+    "ai_text": "",
+    "model_info_visible": false,
+    "model_info": "",
+    "explain_visible": true,
+    "explain_enabled": false,
+    "regenerate_visible": false
+   },
+   "steps": [
+    {
+     "step": {
+      "op": "ensure_loaded"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_error"
+     },
+     "events": [
+      "availability:true"
+     ],
+     "view": {
+      "product_text": "Failed to fetch SPC Day 1 Convective Outlook (Storm Prediction Center) — try again.",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": true,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "unknown_type_empty",
+   "product_type": "XYZ",
+   "cwa_office": "IEM",
+   "has_key": true,
+   "initial": {
+    "product_text": "Loading...",
+    "issuance": "",
+    "sps_entries": [],
+    "sps_selection": null,
+    "sps_visible": false,
+    "retry_visible": false,
+    "ai_visible": false,
+    "ai_text": "",
+    "model_info_visible": false,
+    "model_info": "",
+    "explain_visible": true,
+    "explain_enabled": false,
+    "regenerate_visible": false
+   },
+   "steps": [
+    {
+     "step": {
+      "op": "ensure_loaded"
+     },
+     "events": [
+      "load"
+     ],
+     "view": {
+      "product_text": "Loading...",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    },
+    {
+     "step": {
+      "op": "load_complete",
+      "result": null
+     },
+     "events": [
+      "availability:false"
+     ],
+     "view": {
+      "product_text": "XYZ not currently available for IEM.",
+      "issuance": "",
+      "sps_entries": [],
+      "sps_selection": null,
+      "sps_visible": false,
+      "retry_visible": false,
+      "ai_visible": false,
+      "ai_text": "",
+      "model_info_visible": false,
+      "model_info": "",
+      "explain_visible": true,
+      "explain_enabled": false,
+      "regenerate_visible": false
+     }
+    }
+   ]
+  }
+ ],
+ "issuance": [
+  {
+   "time": "2026-05-01T15:00:00+00:00",
+   "offset_minutes": -240,
+   "zone_name": "Eastern Daylight Time",
+   "text": "Issued: 2026-05-01 11:00 Eastern Daylight Time"
+  },
+  {
+   "time": "2026-01-15T03:30:00+00:00",
+   "offset_minutes": -300,
+   "zone_name": "Eastern Standard Time",
+   "text": "Issued: 2026-01-14 22:30 Eastern Standard Time"
+  },
+  {
+   "time": "2026-05-01T09:05:00-05:00",
+   "offset_minutes": 120,
+   "zone_name": "W. Europe Daylight Time",
+   "text": "Issued: 2026-05-01 16:05 W. Europe Daylight Time"
+  },
+  {
+   "time": "2026-12-31T23:59:59+00:00",
+   "offset_minutes": 330,
+   "zone_name": "India Standard Time",
+   "text": "Issued: 2027-01-01 05:29 India Standard Time"
+  },
+  {
+   "time": "2026-05-01T15:00:00+00:00",
+   "offset_minutes": -240,
+   "zone_name": "EDT",
+   "text": "Issued: 2026-05-01 11:00 EDT"
+  },
+  {
+   "time": "2026-05-01T15:00:00+00:00",
+   "offset_minutes": 0,
+   "zone_name": "",
+   "text": "Issued: 2026-05-01 15:00"
+  },
+  {
+   "time": null,
+   "offset_minutes": 0,
+   "zone_name": "",
+   "text": "Issued: unknown"
+  }
+ ],
+ "host_issuance": {
+  "tzname": [
+   "Eastern Standard Time",
+   "Eastern Daylight Time"
+  ],
+  "cases": [
+   {
+    "time": "2026-07-04T16:00:00+00:00",
+    "text": "Issued: 2026-07-04 12:00 Eastern Daylight Time"
+   },
+   {
+    "time": "2026-01-15T16:00:00+00:00",
+    "text": "Issued: 2026-01-15 11:00 Eastern Standard Time"
+   }
+  ]
+ },
+ "model_info": [
+  {
+   "summary": {
+    "text": "",
+    "model_used": "openrouter/free",
+    "token_count": 321,
+    "estimated_cost": null,
+    "cached": false,
+    "model_selection_reason": null,
+    "requested_model": null,
+    "model_attempts": []
+   },
+   "text": "Model: openrouter/free\nTokens: 321\nCost: See provider account"
+  },
+  {
+   "summary": {
+    "text": "",
+    "model_used": "openrouter/free",
+    "token_count": 321,
+    "estimated_cost": 0.0,
+    "cached": false,
+    "model_selection_reason": null,
+    "requested_model": null,
+    "model_attempts": []
+   },
+   "text": "Model: openrouter/free\nTokens: 321\nCost: No cost"
+  },
+  {
+   "summary": {
+    "text": "",
+    "model_used": "openrouter/free",
+    "token_count": 321,
+    "estimated_cost": 5e-07,
+    "cached": false,
+    "model_selection_reason": null,
+    "requested_model": null,
+    "model_attempts": []
+   },
+   "text": "Model: openrouter/free\nTokens: 321\nCost: ~$0.000000"
+  },
+  {
+   "summary": {
+    "text": "",
+    "model_used": "openrouter/free",
+    "token_count": 0,
+    "estimated_cost": 1.5,
+    "cached": false,
+    "model_selection_reason": null,
+    "requested_model": null,
+    "model_attempts": []
+   },
+   "text": "Model: openrouter/free\nTokens: 0\nCost: ~$1.500000"
+  },
+  {
+   "summary": {
+    "text": "",
+    "model_used": "openrouter/free",
+    "token_count": 321,
+    "estimated_cost": 0.0,
+    "cached": false,
+    "model_selection_reason": null,
+    "requested_model": "openrouter/free",
+    "model_attempts": []
+   },
+   "text": "Model: openrouter/free\nTokens: 321\nCost: No cost"
+  },
+  {
+   "summary": {
+    "text": "",
+    "model_used": "openrouter/free",
+    "token_count": 321,
+    "estimated_cost": 0.0,
+    "cached": false,
+    "model_selection_reason": "",
+    "requested_model": "",
+    "model_attempts": []
+   },
+   "text": "Model: openrouter/free\nTokens: 321\nCost: No cost"
+  },
+  {
+   "summary": {
+    "text": "",
+    "model_used": "openrouter/free",
+    "token_count": 321,
+    "estimated_cost": 0.0,
+    "cached": false,
+    "model_selection_reason": "fallback",
+    "requested_model": "x/y",
+    "model_attempts": [
+     "x/y"
+    ]
+   },
+   "text": "Model: openrouter/free\nTokens: 321\nCost: No cost\nRequested: x/y\nSelection: fallback"
+  },
+  {
+   "summary": {
+    "text": "",
+    "model_used": "openrouter/free",
+    "token_count": 321,
+    "estimated_cost": 0.0,
+    "cached": true,
+    "model_selection_reason": null,
+    "requested_model": null,
+    "model_attempts": [
+     "x/y",
+     "z/w",
+     "openrouter/free"
+    ]
+   },
+   "text": "Model: openrouter/free\nTokens: 321\nCost: No cost\nTried: x/y, z/w, openrouter/free\nCached: Yes"
+  }
+ ],
+ "forecaster_tabs": [
+  [
+   "AFD",
+   "Area Forecast Discussion"
+  ],
+  [
+   "HWO",
+   "Hazardous Weather Outlook"
+  ],
+  [
+   "SPS",
+   "Special Weather Statement"
+  ],
+  [
+   "SURF",
+   "Surf/Beach Conditions"
+  ],
+  [
+   "CLI",
+   "Daily Climate Report"
+  ],
+  [
+   "SPC_OUTLOOK",
+   "SPC Outlook (Storm Prediction Center)"
+  ],
+  [
+   "SPC_MCD",
+   "SPC MCD (Mesoscale Discussion)"
+  ],
+  [
+   "SPC_WATCHES",
+   "SPC Watches (Storm Prediction Center)"
+  ],
+  [
+   "WPC_ERO",
+   "WPC ERO (Excessive Rainfall Outlook)"
+  ],
+  [
+   "WPC_MPD",
+   "WPC MPD (Mesoscale Precipitation Discussion)"
+  ]
+ ],
+ "national_tabs": [
+  [
+   "PMDSPD",
+   "WPC Short Range"
+  ],
+  [
+   "PMDEPD",
+   "WPC Medium Range"
+  ],
+  [
+   "PMDET4",
+   "WPC Extended"
+  ],
+  [
+   "QPFPFD",
+   "WPC QPF Discussion"
+  ],
+  [
+   "PMDMRD",
+   "CPC Outlook"
+  ],
+  [
+   "TWOAT",
+   "NHC Atlantic Outlook"
+  ],
+  [
+   "TWOEP",
+   "NHC East Pacific Outlook"
+  ],
+  [
+   "SWODY1",
+   "SPC Day 1 Outlook"
+  ],
+  [
+   "SWODY2",
+   "SPC Day 2 Outlook"
+  ],
+  [
+   "SWODY3",
+   "SPC Day 3 Outlook"
+  ]
+ ],
+ "panel_widgets": {
+  "AFD": [
+   [
+    "StaticText",
+    "Area Forecast Discussion"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "HWO": [
+   [
+    "StaticText",
+    "Hazardous Weather Outlook"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "SPS": [
+   [
+    "StaticText",
+    "Special Weather Statement"
+   ],
+   [
+    "StaticText",
+    "Recent Special Weather Statements:"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "SURF": [
+   [
+    "StaticText",
+    "Surf/Beach Conditions"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "CLI": [
+   [
+    "StaticText",
+    "Daily Climate Report"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "SPC_OUTLOOK": [
+   [
+    "StaticText",
+    "SPC Day 1 Convective Outlook (Storm Prediction Center)"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "SPC_MCD": [
+   [
+    "StaticText",
+    "SPC Mesoscale Discussions (Storm Prediction Center)"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "SPC_WATCHES": [
+   [
+    "StaticText",
+    "SPC Watches (Storm Prediction Center)"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "WPC_ERO": [
+   [
+    "StaticText",
+    "WPC Day 1 Excessive Rainfall Outlook (Weather Prediction Center)"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "WPC_MPD": [
+   [
+    "StaticText",
+    "WPC Mesoscale Precipitation Discussions (Weather Prediction Center)"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "PMDSPD": [
+   [
+    "StaticText",
+    "WPC Short Range Discussion (Weather Prediction Center)"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "PMDEPD": [
+   [
+    "StaticText",
+    "WPC Medium Range Discussion (Weather Prediction Center)"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "PMDET4": [
+   [
+    "StaticText",
+    "WPC Extended Discussion (Weather Prediction Center)"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "QPFPFD": [
+   [
+    "StaticText",
+    "WPC Quantitative Precipitation Discussion (Weather Prediction Center)"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "PMDMRD": [
+   [
+    "StaticText",
+    "CPC 6-10 and 8-14 Day Outlook (Climate Prediction Center)"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "TWOAT": [
+   [
+    "StaticText",
+    "NHC Atlantic Tropical Weather Outlook (National Hurricane Center)"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "TWOEP": [
+   [
+    "StaticText",
+    "NHC East Pacific Tropical Weather Outlook (National Hurricane Center)"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "SWODY1": [
+   [
+    "StaticText",
+    "SPC Day 1 Convective Outlook (Storm Prediction Center)"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "SWODY2": [
+   [
+    "StaticText",
+    "SPC Day 2 Convective Outlook (Storm Prediction Center)"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "SWODY3": [
+   [
+    "StaticText",
+    "SPC Day 3 Convective Outlook (Storm Prediction Center)"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "SRF": [
+   [
+    "StaticText",
+    "Official NWS Surf Zone Forecast"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "SURF_CONDITIONS": [
+   [
+    "StaticText",
+    "Surf/Beach Conditions"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "LSR": [
+   [
+    "StaticText",
+    "Local Storm Report"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "PNS": [
+   [
+    "StaticText",
+    "Public Information Statement"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ],
+  "XYZ": [
+   [
+    "StaticText",
+    "XYZ"
+   ],
+   [
+    "TextCtrl",
+    "Loading..."
+   ],
+   [
+    "StaticText",
+    ""
+   ],
+   [
+    "StaticText",
+    "Plain Language Summary:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Model Information:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "Button",
+    "Plain Language Summary"
+   ],
+   [
+    "Button",
+    "Regenerate Summary"
+   ],
+   [
+    "Button",
+    "Advanced Lookup"
+   ],
+   [
+    "Button",
+    "Try again"
+   ]
+  ]
+ },
+ "notes_dialog_widgets": [
+  [
+   "StaticText",
+   "Checking active SPC and WPC products..."
+  ],
+  [
+   "Button",
+   "&National Products"
+  ],
+  [
+   "Button#CLOSE",
+   "&Close"
+  ]
+ ],
+ "national_dialog_widgets": [
+  [
+   "Button#CLOSE",
+   "&Close"
+  ]
+ ],
+ "advanced_dialog": {
+  "widgets": [
+   [
+    "StaticText",
+    "Product group:"
+   ],
+   [
+    "StaticText",
+    "Product:"
+   ],
+   [
+    "StaticText",
+    "Custom AFOS product ID (3 to 6 letters/numbers). Only needed when the custom product choice is selected:"
+   ],
+   [
+    "TextCtrl",
+    "AFD"
+   ],
+   [
+    "StaticText",
+    "Office selection for local AFOS products:"
+   ],
+   [
+    "StaticText",
+    "Custom local office (3 letters, for example RAH):"
+   ],
+   [
+    "TextCtrl",
+    "RAH"
+   ],
+   [
+    "StaticText",
+    "Maximum products to retrieve:"
+   ],
+   [
+    "StaticText",
+    "Date lookup preset:"
+   ],
+   [
+    "StaticText",
+    "Start date for archive search (UTC). IEM text products are archive-backed, but specific products and offices may start later than 1983:"
+   ],
+   [
+    "StaticText",
+    "End date for archive search (UTC). Leave blank to search through now:"
+   ],
+   [
+    "StaticText",
+    "Resolved start or valid time in UTC. For SPC/WPC outlooks and SPC watches, this is the valid time:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Resolved end time for historical text products in UTC:"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Result order:"
+   ],
+   [
+    "CheckBox",
+    "Aviation section only for AFD"
+   ],
+   [
+    "StaticText",
+    "Issuing center filter (optional 4-character ID, for ambiguous AFOS IDs):"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "WMO header filter (optional 6-character TTAAII, for ambiguous AFOS IDs):"
+   ],
+   [
+    "TextCtrl",
+    ""
+   ],
+   [
+    "StaticText",
+    "Lookup source:"
+   ],
+   [
+    "StaticText",
+    "Lookup results:"
+   ],
+   [
+    "TextCtrl",
+    "Choose a product and press Lookup."
+   ],
+   [
+    "Button#OK",
+    "Lookup"
+   ],
+   [
+    "Button#CLOSE",
+    "Close"
+   ]
+  ],
+  "accessibility": [
+   [
+    "Product group",
+    "Choose local, point-based, national, or custom text products"
+   ],
+   [
+    "Product",
+    "Choose a valid text product for the selected product group"
+   ],
+   [
+    "Custom AFOS product ID",
+    "Enter a 3 to 6 character AFOS product ID only when using a custom product"
+   ],
+   [
+    "Office selection",
+    "Choose the selected location office, no office, or a custom local office"
+   ],
+   [
+    "Custom local office",
+    "Enter a 3-letter local NWS office such as RAH when custom office is selected"
+   ],
+   [
+    "Maximum products to retrieve",
+    "Choose from 1 through 25 matching products"
+   ],
+   [
+    "Date lookup preset",
+    "Choose latest, recent archive ranges, or custom start and end dates"
+   ],
+   [
+    "Start year",
+    "Choose the UTC start year for archive search"
+   ],
+   [
+    "Start month",
+    "Choose the UTC start month for archive search"
+   ],
+   [
+    "Start day",
+    "Choose the UTC start day for archive search"
+   ],
+   [
+    "End year",
+    "Choose the UTC end year for archive search"
+   ],
+   [
+    "End month",
+    "Choose the UTC end month for archive search"
+   ],
+   [
+    "End day",
+    "Choose the UTC end day for archive search"
+   ],
+   [
+    "Resolved start or valid time",
+    "Generated UTC start time; advanced users may enter a date or ISO timestamp"
+   ],
+   [
+    "Resolved end time",
+    "Generated UTC end time; advanced users may enter a date or ISO timestamp"
+   ],
+   [
+    "Result order",
+    "Choose newest first or oldest first"
+   ],
+   [
+    "Aviation section only for AFD",
+    "Limit Area Forecast Discussion results to the aviation section"
+   ],
+   [
+    "Issuing center filter",
+    "Optional 4-character issuing center filter, such as KDMX"
+   ],
+   [
+    "WMO header filter",
+    "Optional 6-character WMO header filter, such as FXUS63"
+   ],
+   [
+    "Lookup source",
+    "Choose NWS history, IEM AFOS, or prefer NWS"
+   ],
+   [
+    "Lookup results",
+    "Read-only lookup result text"
+   ],
+   [
+    "Lookup",
+    "Run the selected text product lookup"
+   ],
+   [
+    "Close",
+    "Close the advanced text product lookup dialog"
+   ]
+  ]
+ }
+}

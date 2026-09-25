@@ -1,0 +1,2678 @@
+{
+"name": "fog_pressure",
+"now": "2026-11-12T16:00:00+00:00",
+"local_tz": "America/New_York",
+"weather_data": {
+"location": {
+"name": "Seattle, WA",
+"latitude": 47.61,
+"longitude": -122.33,
+"timezone": "America/Los_Angeles",
+"country_code": null,
+"marine_mode": false,
+"forecast_zone_id": null,
+"cwa_office": null,
+"county_zone_id": null,
+"fire_zone_id": null,
+"radar_station": null
+},
+"current": {
+"temperature": 48.4,
+"temperature_f": 48.4,
+"temperature_c": 9.1,
+"condition": "Fog",
+"humidity": 99,
+"wind_speed": 0.3,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"wind_speed_mph": 0.3,
+"wind_speed_kph": 0.5,
+"wind_direction": "S",
+"pressure": 30.12,
+"pressure_in": 30.12,
+"pressure_mb": 1020.0,
+"feels_like_f": 48.0,
+"feels_like_c": null,
+"visibility_miles": 0.12,
+"visibility_km": 0.2,
+"uv_index": 0.0,
+"cloud_cover": null,
+"wind_gust_mph": null,
+"wind_gust_kph": null,
+"precipitation_in": null,
+"precipitation_mm": null,
+"sunrise_time": null,
+"sunset_time": null,
+"moon_phase": null,
+"moonrise_time": null,
+"moonset_time": null,
+"snow_depth_in": 0.0,
+"snow_depth_cm": null,
+"snowfall_rate_in": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"freezing_level_ft": null,
+"freezing_level_m": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"frost_risk": "none",
+"precipitation_type": null,
+"severe_weather_risk": null
+},
+"forecast": null,
+"hourly_forecast": {
+"periods": [
+{
+"start_time": "2026-11-12T08:00:00-08:00",
+"temperature": 48.0,
+"temperature_unit": "F",
+"short_forecast": "Fog",
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": null,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": 1020.0,
+"pressure_in": 30.12,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": null,
+"visibility_km": null
+},
+{
+"start_time": "2026-11-12T09:00:00-08:00",
+"temperature": 49.0,
+"temperature_unit": "F",
+"short_forecast": "Fog",
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": null,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": 1019.6,
+"pressure_in": 30.109,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": null,
+"visibility_km": null
+},
+{
+"start_time": "2026-11-12T10:00:00-08:00",
+"temperature": 50.0,
+"temperature_unit": "F",
+"short_forecast": "Fog",
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": null,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": 1019.2,
+"pressure_in": 30.098000000000003,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": null,
+"visibility_km": null
+},
+{
+"start_time": "2026-11-12T11:00:00-08:00",
+"temperature": 51.0,
+"temperature_unit": "F",
+"short_forecast": "Fog",
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": null,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": 1018.8,
+"pressure_in": 30.087,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": null,
+"visibility_km": null
+},
+{
+"start_time": "2026-11-12T12:00:00-08:00",
+"temperature": 52.0,
+"temperature_unit": "F",
+"short_forecast": "Fog",
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": null,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": 1018.4,
+"pressure_in": 30.076,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": null,
+"visibility_km": null
+},
+{
+"start_time": "2026-11-12T13:00:00-08:00",
+"temperature": 53.0,
+"temperature_unit": "F",
+"short_forecast": "Fog",
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": null,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": 1018.0,
+"pressure_in": 30.065,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": null,
+"visibility_km": null
+},
+{
+"start_time": "2026-11-12T14:00:00-08:00",
+"temperature": 54.0,
+"temperature_unit": "F",
+"short_forecast": "Fog",
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": null,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": 1017.6,
+"pressure_in": 30.054000000000002,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": null,
+"visibility_km": null
+},
+{
+"start_time": "2026-11-12T15:00:00-08:00",
+"temperature": 55.0,
+"temperature_unit": "F",
+"short_forecast": "Fog",
+"wind_speed": null,
+"wind_direction": null,
+"icon": null,
+"end_time": null,
+"humidity": null,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"pressure_mb": 1017.2,
+"pressure_in": 30.043,
+"precipitation_probability": null,
+"snowfall": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_speed_mph": null,
+"wind_gust_mph": null,
+"precipitation_amount": null,
+"snow_depth": null,
+"freezing_level_ft": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"air_quality_index": null,
+"frost_risk": null,
+"pollen_level": null,
+"precipitation_type": null,
+"feels_like": null,
+"visibility_miles": null,
+"visibility_km": null
+}
+],
+"generated_at": null,
+"summary": null
+},
+"daily_history": [],
+"discussion": null,
+"discussion_issuance_time": null,
+"minutely_precipitation": null,
+"alerts": {
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"description": "Visibility a quarter mile or less.",
+"severity": "Moderate",
+"urgency": "Expected",
+"certainty": "Unknown",
+"event": "Dense Fog Advisory",
+"headline": null,
+"instruction": null,
+"onset": null,
+"expires": "2026-11-12T11:00:00-08:00",
+"sent": null,
+"effective": null,
+"areas": [],
+"references": [],
+"id": null,
+"source": null,
+"message_type": null,
+"affected_zones": [],
+"same_codes": [],
+"same_event_codes": []
+}
+]
+},
+"environmental": null,
+"aviation": null,
+"marine": null,
+"trend_insights": [],
+"stale": false,
+"stale_since": null,
+"stale_reason": null,
+"source_attribution": null,
+"incomplete_sections": [],
+"alert_lifecycle_diff": null,
+"forecast_confidence": null,
+"anomaly_callout": null
+},
+"variants": [
+{
+"settings": {},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 48°F (9°C) - Fog - 1 alert - Pressure falling ⬇⬇ -0.05 inHg over next 6h",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.4°F (9.1°C)"
+},
+{
+"label": "Dewpoint",
+"value": "48.1°F (9.0°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.1 inHg (1020.0 hPa)"
+},
+{
+"label": "Visibility",
+"value": "0.1 mi (0.2 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Pressure trend",
+"value": "Falling ⬇⬇ -0.05 inHg over next 6h"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Fog\nTemperature: 48.4°F (9.1°C)\nDewpoint: 48.1°F (9.0°C)\nWind: Calm\nHumidity: 99%\nPressure: 30.1 inHg (1020.0 hPa)\nVisibility: 0.1 mi (0.2 km)\nUV Index: 0.0 (Low)\nPressure trend: Falling ⬇⬇ -0.05 inHg over next 6h",
+"trends": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": {
+"title": "Weather alerts for Seattle, WA",
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"severity": "Moderate",
+"urgency": "Expected",
+"event": "Dense Fog Advisory",
+"areas": [],
+"expires": "11/12 11:00 AM",
+"description": "Visibility a quarter mile or less.",
+"instructions": null,
+"fallback_text": "Alert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less."
+}
+],
+"fallback_text": "Weather alerts for Seattle, WA:\n\nAlert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less.",
+"change_summary": null
+},
+"air_quality": null,
+"aviation": null,
+"trend_summary": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Fog",
+"preview": "48F/9C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0.3 mph (0.5 km/h) 99%",
+"preview": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0.3 mph (0.5 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV 0 0.1 mi (0.2 km) 30.12 inHg (1020.00 hPa) Dense Fog Advisory",
+"preview": "N/A/N/A N/A N/A% UV 0 0.1 mi (0.2 km) 30.12 inHg (1020.00 hPa) Dense Fog Advisory",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C S 0.3 mph (0.5 km/h) {unknown}",
+"preview": "48F 9C S 0.3 mph (0.5 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 48F/9C | 48F/9C",
+"preview": "Feels like: 48F/9C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seat...",
+"preview": "Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seat...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+},
+"present_current": {
+"title": "Current conditions for Seattle, WA",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.4°F (9.1°C)"
+},
+{
+"label": "Dewpoint",
+"value": "48.1°F (9.0°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.1 inHg (1020.0 hPa)"
+},
+{
+"label": "Visibility",
+"value": "0.1 mi (0.2 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Pressure trend",
+"value": "Falling ⬇⬇ -0.05 inHg over next 6h"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Fog\nTemperature: 48.4°F (9.1°C)\nDewpoint: 48.1°F (9.0°C)\nWind: Calm\nHumidity: 99%\nPressure: 30.1 inHg (1020.0 hPa)\nVisibility: 0.1 mi (0.2 km)\nUV Index: 0.0 (Low)\nPressure trend: Falling ⬇⬇ -0.05 inHg over next 6h",
+"trends": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"present_forecast": null,
+"present_alerts": {
+"title": "Weather alerts for Seattle, WA",
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"severity": "Moderate",
+"urgency": "Expected",
+"event": "Dense Fog Advisory",
+"areas": [],
+"expires": "11/12 11:00 AM",
+"description": "Visibility a quarter mile or less.",
+"instructions": null,
+"fallback_text": "Alert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less."
+}
+],
+"fallback_text": "Weather alerts for Seattle, WA:\n\nAlert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less.",
+"change_summary": null
+}
+},
+{
+"settings": {
+"temperature_unit": "f"
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 48°F - Fog - 1 alert - Pressure falling ⬇⬇ -0.05 inHg over next 6h",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.4°F"
+},
+{
+"label": "Dewpoint",
+"value": "48.1°F"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.1 inHg"
+},
+{
+"label": "Visibility",
+"value": "0.1 mi"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Pressure trend",
+"value": "Falling ⬇⬇ -0.05 inHg over next 6h"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Fog\nTemperature: 48.4°F\nDewpoint: 48.1°F\nWind: Calm\nHumidity: 99%\nPressure: 30.1 inHg\nVisibility: 0.1 mi\nUV Index: 0.0 (Low)\nPressure trend: Falling ⬇⬇ -0.05 inHg over next 6h",
+"trends": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": {
+"title": "Weather alerts for Seattle, WA",
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"severity": "Moderate",
+"urgency": "Expected",
+"event": "Dense Fog Advisory",
+"areas": [],
+"expires": "11/12 11:00 AM",
+"description": "Visibility a quarter mile or less.",
+"instructions": null,
+"fallback_text": "Alert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less."
+}
+],
+"fallback_text": "Weather alerts for Seattle, WA:\n\nAlert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less.",
+"change_summary": null
+},
+"air_quality": null,
+"aviation": null,
+"trend_summary": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F Fog",
+"preview": "48F Fog",
+"sample_preview": "72F Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 48F (feels like 48F) S at 0.3 mph 99%",
+"preview": "Seattle, WA: 48F (feels like 48F) S at 0.3 mph 99%",
+"sample_preview": "Sample Location: 72F (feels like 74F) NW at 8.0 mph 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV 0 0.1 mi 30.12 inHg Dense Fog Advisory",
+"preview": "N/A/N/A N/A N/A% UV 0 0.1 mi 30.12 inHg Dense Fog Advisory",
+"sample_preview": "78F/61F 0.00 in 20% UV 5 10.0 mi 30.10 inHg"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C S 0.3 mph {unknown}",
+"preview": "48F 9C S 0.3 mph {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 48F | 48F",
+"preview": "Feels like: 48F | 48F",
+"sample_preview": "Feels like: 74F | 72F"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Fog S at 0.3 mph Seattle, WA Fog S at 0.3 mph Seattle, WA Fog S at 0.3 mph Seattle, WA",
+"preview": "Seattle, WA Fog S at 0.3 mph Seattle, WA Fog S at 0.3 mph Seattle, WA Fog S at 0.3 mph Seattle, WA",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "c"
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 9°C - Fog - 1 alert - Pressure falling ⬇⬇ -0.05 inHg over next 6h",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "9.1°C"
+},
+{
+"label": "Dewpoint",
+"value": "9.0°C"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "1020.0 hPa"
+},
+{
+"label": "Visibility",
+"value": "0.2 km"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Pressure trend",
+"value": "Falling ⬇⬇ -0.05 inHg over next 6h"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Fog\nTemperature: 9.1°C\nDewpoint: 9.0°C\nWind: Calm\nHumidity: 99%\nPressure: 1020.0 hPa\nVisibility: 0.2 km\nUV Index: 0.0 (Low)\nPressure trend: Falling ⬇⬇ -0.05 inHg over next 6h",
+"trends": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": {
+"title": "Weather alerts for Seattle, WA",
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"severity": "Moderate",
+"urgency": "Expected",
+"event": "Dense Fog Advisory",
+"areas": [],
+"expires": "11/12 11:00 AM",
+"description": "Visibility a quarter mile or less.",
+"instructions": null,
+"fallback_text": "Alert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less."
+}
+],
+"fallback_text": "Weather alerts for Seattle, WA:\n\nAlert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less.",
+"change_summary": null
+},
+"air_quality": null,
+"aviation": null,
+"trend_summary": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "9C Fog",
+"preview": "9C Fog",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 9C (feels like 9C) S at 0.5 km/h 99%",
+"preview": "Seattle, WA: 9C (feels like 9C) S at 0.5 km/h 99%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV 0 0.2 km 1020.00 hPa Dense Fog Advisory",
+"preview": "N/A/N/A N/A N/A% UV 0 0.2 km 1020.00 hPa Dense Fog Advisory",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C S 0.5 km/h {unknown}",
+"preview": "48F 9C S 0.5 km/h {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 9C | 9C",
+"preview": "Feels like: 9C | 9C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Fog S at 0.5 km/h Seattle, WA Fog S at 0.5 km/h Seattle, WA Fog S at 0.5 km/h Seattle, WA",
+"preview": "Seattle, WA Fog S at 0.5 km/h Seattle, WA Fog S at 0.5 km/h Seattle, WA Fog S at 0.5 km/h Seattle, WA",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "auto"
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 9°C - Fog - 1 alert - Pressure falling ⬇⬇ -0.05 inHg over next 6h",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "9.1°C"
+},
+{
+"label": "Dewpoint",
+"value": "9.0°C"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "1020.0 hPa"
+},
+{
+"label": "Visibility",
+"value": "0.2 km"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Pressure trend",
+"value": "Falling ⬇⬇ -0.05 inHg over next 6h"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Fog\nTemperature: 9.1°C\nDewpoint: 9.0°C\nWind: Calm\nHumidity: 99%\nPressure: 1020.0 hPa\nVisibility: 0.2 km\nUV Index: 0.0 (Low)\nPressure trend: Falling ⬇⬇ -0.05 inHg over next 6h",
+"trends": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": {
+"title": "Weather alerts for Seattle, WA",
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"severity": "Moderate",
+"urgency": "Expected",
+"event": "Dense Fog Advisory",
+"areas": [],
+"expires": "11/12 11:00 AM",
+"description": "Visibility a quarter mile or less.",
+"instructions": null,
+"fallback_text": "Alert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less."
+}
+],
+"fallback_text": "Weather alerts for Seattle, WA:\n\nAlert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less.",
+"change_summary": null
+},
+"air_quality": null,
+"aviation": null,
+"trend_summary": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "9C Fog",
+"preview": "9C Fog",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 9C (feels like 9C) S at 0.1 m/s 99%",
+"preview": "Seattle, WA: 9C (feels like 9C) S at 0.1 m/s 99%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 3.6 m/s 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV 0 0.2 km 1020.00 hPa Dense Fog Advisory",
+"preview": "N/A/N/A N/A N/A% UV 0 0.2 km 1020.00 hPa Dense Fog Advisory",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C S 0.1 m/s {unknown}",
+"preview": "48F 9C S 0.1 m/s {unknown}",
+"sample_preview": "72F 22C NW 3.6 m/s {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 9C | 9C",
+"preview": "Feels like: 9C | 9C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Fog S at 0.1 m/s Seattle, WA Fog S at 0.1 m/s Seattle, WA Fog S at 0.1 m/s Seattle, WA",
+"preview": "Seattle, WA Fog S at 0.1 m/s Seattle, WA Fog S at 0.1 m/s Seattle, WA Fog S at 0.1 m/s Seattle, WA",
+"sample_preview": "Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "auto",
+"wind_speed_unit": "m/s"
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 9°C - Fog - 1 alert - Pressure falling ⬇⬇ -0.05 inHg over next 6h",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "9.1°C"
+},
+{
+"label": "Dewpoint",
+"value": "9.0°C"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "1020.0 hPa"
+},
+{
+"label": "Visibility",
+"value": "0.2 km"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Pressure trend",
+"value": "Falling ⬇⬇ -0.05 inHg over next 6h"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Fog\nTemperature: 9.1°C\nDewpoint: 9.0°C\nWind: Calm\nHumidity: 99%\nPressure: 1020.0 hPa\nVisibility: 0.2 km\nUV Index: 0.0 (Low)\nPressure trend: Falling ⬇⬇ -0.05 inHg over next 6h",
+"trends": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": {
+"title": "Weather alerts for Seattle, WA",
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"severity": "Moderate",
+"urgency": "Expected",
+"event": "Dense Fog Advisory",
+"areas": [],
+"expires": "11/12 11:00 AM",
+"description": "Visibility a quarter mile or less.",
+"instructions": null,
+"fallback_text": "Alert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less."
+}
+],
+"fallback_text": "Weather alerts for Seattle, WA:\n\nAlert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less.",
+"change_summary": null
+},
+"air_quality": null,
+"aviation": null,
+"trend_summary": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "9C Fog",
+"preview": "9C Fog",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 9C (feels like 9C) S at 0.1 m/s 99%",
+"preview": "Seattle, WA: 9C (feels like 9C) S at 0.1 m/s 99%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 3.6 m/s 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV 0 0.2 km 1020.00 hPa Dense Fog Advisory",
+"preview": "N/A/N/A N/A N/A% UV 0 0.2 km 1020.00 hPa Dense Fog Advisory",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C S 0.1 m/s {unknown}",
+"preview": "48F 9C S 0.1 m/s {unknown}",
+"sample_preview": "72F 22C NW 3.6 m/s {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 9C | 9C",
+"preview": "Feels like: 9C | 9C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Fog S at 0.1 m/s Seattle, WA Fog S at 0.1 m/s Seattle, WA Fog S at 0.1 m/s Seattle, WA",
+"preview": "Seattle, WA Fog S at 0.1 m/s Seattle, WA Fog S at 0.1 m/s Seattle, WA Fog S at 0.1 m/s Seattle, WA",
+"sample_preview": "Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "both",
+"wind_speed_unit": "kph"
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 48°F (9°C) - Fog - 1 alert - Pressure falling ⬇⬇ -0.05 inHg over next 6h",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.4°F (9.1°C)"
+},
+{
+"label": "Dewpoint",
+"value": "48.1°F (9.0°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.1 inHg (1020.0 hPa)"
+},
+{
+"label": "Visibility",
+"value": "0.1 mi (0.2 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Pressure trend",
+"value": "Falling ⬇⬇ -0.05 inHg over next 6h"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Fog\nTemperature: 48.4°F (9.1°C)\nDewpoint: 48.1°F (9.0°C)\nWind: Calm\nHumidity: 99%\nPressure: 30.1 inHg (1020.0 hPa)\nVisibility: 0.1 mi (0.2 km)\nUV Index: 0.0 (Low)\nPressure trend: Falling ⬇⬇ -0.05 inHg over next 6h",
+"trends": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": {
+"title": "Weather alerts for Seattle, WA",
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"severity": "Moderate",
+"urgency": "Expected",
+"event": "Dense Fog Advisory",
+"areas": [],
+"expires": "11/12 11:00 AM",
+"description": "Visibility a quarter mile or less.",
+"instructions": null,
+"fallback_text": "Alert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less."
+}
+],
+"fallback_text": "Weather alerts for Seattle, WA:\n\nAlert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less.",
+"change_summary": null
+},
+"air_quality": null,
+"aviation": null,
+"trend_summary": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Fog",
+"preview": "48F/9C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0.5 km/h 99%",
+"preview": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0.5 km/h 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV 0 0.1 mi (0.2 km) 30.12 inHg (1020.00 hPa) Dense Fog Advisory",
+"preview": "N/A/N/A N/A N/A% UV 0 0.1 mi (0.2 km) 30.12 inHg (1020.00 hPa) Dense Fog Advisory",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C S 0.5 km/h {unknown}",
+"preview": "48F 9C S 0.5 km/h {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 48F/9C | 48F/9C",
+"preview": "Feels like: 48F/9C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Fog S at 0.5 km/h Seattle, WA Fog S at 0.5 km/h Seattle, WA Fog S at 0.5 km/h Seattle, WA",
+"preview": "Seattle, WA Fog S at 0.5 km/h Seattle, WA Fog S at 0.5 km/h Seattle, WA Fog S at 0.5 km/h Seattle, WA",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "fahrenheit",
+"wind_speed_unit": "mph",
+"verbosity_level": "detailed",
+"show_impact_summaries": true
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 48°F - Fog - 1 alert - Pressure falling ⬇⬇ -0.05 inHg over next 6h",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.4°F"
+},
+{
+"label": "Dewpoint",
+"value": "48.1°F"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.1 inHg"
+},
+{
+"label": "Visibility",
+"value": "0.1 mi"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Pressure trend",
+"value": "Falling ⬇⬇ -0.05 inHg over next 6h"
+},
+{
+"label": "Impact: Outdoor",
+"value": "Cool - coat or warm jacket recommended"
+},
+{
+"label": "Impact: Driving",
+"value": "Caution: near-zero visibility - do not drive unless essential"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Fog\nTemperature: 48.4°F\nDewpoint: 48.1°F\nWind: Calm\nHumidity: 99%\nPressure: 30.1 inHg\nVisibility: 0.1 mi\nUV Index: 0.0 (Low)\nPressure trend: Falling ⬇⬇ -0.05 inHg over next 6h\nImpact: Outdoor: Cool - coat or warm jacket recommended\nImpact: Driving: Caution: near-zero visibility - do not drive unless essential",
+"trends": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"impact_summary": {
+"outdoor": "Cool - coat or warm jacket recommended",
+"driving": "Caution: near-zero visibility - do not drive unless essential",
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": {
+"title": "Weather alerts for Seattle, WA",
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"severity": "Moderate",
+"urgency": "Expected",
+"event": "Dense Fog Advisory",
+"areas": [],
+"expires": "11/12 11:00 AM",
+"description": "Visibility a quarter mile or less.",
+"instructions": null,
+"fallback_text": "Alert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less."
+}
+],
+"fallback_text": "Weather alerts for Seattle, WA:\n\nAlert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less.",
+"change_summary": null
+},
+"air_quality": null,
+"aviation": null,
+"trend_summary": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F Fog",
+"preview": "48F Fog",
+"sample_preview": "72F Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 48F (feels like 48F) S at 0.3 mph 99%",
+"preview": "Seattle, WA: 48F (feels like 48F) S at 0.3 mph 99%",
+"sample_preview": "Sample Location: 72F (feels like 74F) NW at 8.0 mph 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV 0 0.1 mi 30.12 inHg Dense Fog Advisory",
+"preview": "N/A/N/A N/A N/A% UV 0 0.1 mi 30.12 inHg Dense Fog Advisory",
+"sample_preview": "78F/61F 0.00 in 20% UV 5 10.0 mi 30.10 inHg"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C S 0.3 mph {unknown}",
+"preview": "48F 9C S 0.3 mph {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 48F | 48F",
+"preview": "Feels like: 48F | 48F",
+"sample_preview": "Feels like: 74F | 72F"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Fog S at 0.3 mph Seattle, WA Fog S at 0.3 mph Seattle, WA Fog S at 0.3 mph Seattle, WA",
+"preview": "Seattle, WA Fog S at 0.3 mph Seattle, WA Fog S at 0.3 mph Seattle, WA Fog S at 0.3 mph Seattle, WA",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"verbosity_level": "minimal",
+"round_values": true
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 48°F (9°C) - Fog - 1 alert - Pressure falling ⬇⬇ -0.05 inHg over next 6h",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48°F (9°C)"
+},
+{
+"label": "Dewpoint",
+"value": "48°F (9°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30 inHg (1020 hPa)"
+},
+{
+"label": "Visibility",
+"value": "0 mi (0 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Pressure trend",
+"value": "Falling ⬇⬇ -0.05 inHg over next 6h"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Fog\nTemperature: 48°F (9°C)\nDewpoint: 48°F (9°C)\nWind: Calm\nHumidity: 99%\nPressure: 30 inHg (1020 hPa)\nVisibility: 0 mi (0 km)\nUV Index: 0.0 (Low)\nPressure trend: Falling ⬇⬇ -0.05 inHg over next 6h",
+"trends": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": {
+"title": "Weather alerts for Seattle, WA",
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"severity": "Moderate",
+"urgency": "Expected",
+"event": "Dense Fog Advisory",
+"areas": [],
+"expires": "11/12 11:00 AM",
+"description": "Visibility a quarter mile or less.",
+"instructions": null,
+"fallback_text": "Alert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less."
+}
+],
+"fallback_text": "Weather alerts for Seattle, WA:\n\nAlert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less.",
+"change_summary": null
+},
+"air_quality": null,
+"aviation": null,
+"trend_summary": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Fog",
+"preview": "48F/9C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0 mph (0 km/h) 99%",
+"preview": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0 mph (0 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8 mph (13 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV 0 0 mi (0 km) 30 inHg (1020 hPa) Dense Fog Advisory",
+"preview": "N/A/N/A N/A N/A% UV 0 0 mi (0 km) 30 inHg (1020 hPa) Dense Fog Advisory",
+"sample_preview": "78F/26C/61F/16C 0 in (0 mm) 20% UV 5 10 mi (16 km) 30 inHg (1019 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C S 0 mph (0 km/h) {unknown}",
+"preview": "48F 9C S 0 mph (0 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8 mph (13 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 48F/9C | 48F/9C",
+"preview": "Feels like: 48F/9C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Fog S at 0 mph (0 km/h) Seattle, WA Fog S at 0 mph (0 km/h) Seattle, WA Fog S at 0 mph (0 km/h) Seattle, WA",
+"preview": "Seattle, WA Fog S at 0 mph (0 km/h) Seattle, WA Fog S at 0 mph (0 km/h) Seattle, WA Fog S at 0 mph (0 km/h) Seattle, WA",
+"sample_preview": "Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Part..."
+}
+}
+},
+{
+"settings": {
+"verbosity_level": "detailed",
+"time_format_12hour": false,
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 48°F (9°C) - Fog - 1 alert - Pressure falling ⬇⬇ -0.05 inHg over next 6h",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.4°F (9.1°C)"
+},
+{
+"label": "Dewpoint",
+"value": "48.1°F (9.0°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.1 inHg (1020.0 hPa)"
+},
+{
+"label": "Visibility",
+"value": "0.1 mi (0.2 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Pressure trend",
+"value": "Falling ⬇⬇ -0.05 inHg over next 6h"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Fog\nTemperature: 48.4°F (9.1°C)\nDewpoint: 48.1°F (9.0°C)\nWind: Calm\nHumidity: 99%\nPressure: 30.1 inHg (1020.0 hPa)\nVisibility: 0.1 mi (0.2 km)\nUV Index: 0.0 (Low)\nPressure trend: Falling ⬇⬇ -0.05 inHg over next 6h",
+"trends": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": {
+"title": "Weather alerts for Seattle, WA",
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"severity": "Moderate",
+"urgency": "Expected",
+"event": "Dense Fog Advisory",
+"areas": [],
+"expires": "11/12 11:00 PST",
+"description": "Visibility a quarter mile or less.",
+"instructions": null,
+"fallback_text": "Alert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 PST\n  Description: Visibility a quarter mile or less."
+}
+],
+"fallback_text": "Weather alerts for Seattle, WA:\n\nAlert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 PST\n  Description: Visibility a quarter mile or less.",
+"change_summary": null
+},
+"air_quality": null,
+"aviation": null,
+"trend_summary": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Fog",
+"preview": "48F/9C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0.3 mph (0.5 km/h) 99%",
+"preview": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0.3 mph (0.5 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV 0 0.1 mi (0.2 km) 30.12 inHg (1020.00 hPa) Dense Fog Advisory",
+"preview": "N/A/N/A N/A N/A% UV 0 0.1 mi (0.2 km) 30.12 inHg (1020.00 hPa) Dense Fog Advisory",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C S 0.3 mph (0.5 km/h) {unknown}",
+"preview": "48F 9C S 0.3 mph (0.5 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 48F/9C | 48F/9C",
+"preview": "Feels like: 48F/9C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seat...",
+"preview": "Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seat...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"time_display_mode": "utc",
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 48°F (9°C) - Fog - 1 alert - Pressure falling ⬇⬇ -0.05 inHg over next 6h",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.4°F (9.1°C)"
+},
+{
+"label": "Dewpoint",
+"value": "48.1°F (9.0°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.1 inHg (1020.0 hPa)"
+},
+{
+"label": "Visibility",
+"value": "0.1 mi (0.2 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Pressure trend",
+"value": "Falling ⬇⬇ -0.05 inHg over next 6h"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Fog\nTemperature: 48.4°F (9.1°C)\nDewpoint: 48.1°F (9.0°C)\nWind: Calm\nHumidity: 99%\nPressure: 30.1 inHg (1020.0 hPa)\nVisibility: 0.1 mi (0.2 km)\nUV Index: 0.0 (Low)\nPressure trend: Falling ⬇⬇ -0.05 inHg over next 6h",
+"trends": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": {
+"title": "Weather alerts for Seattle, WA",
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"severity": "Moderate",
+"urgency": "Expected",
+"event": "Dense Fog Advisory",
+"areas": [],
+"expires": "11/12 7:00 PM UTC",
+"description": "Visibility a quarter mile or less.",
+"instructions": null,
+"fallback_text": "Alert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 7:00 PM UTC\n  Description: Visibility a quarter mile or less."
+}
+],
+"fallback_text": "Weather alerts for Seattle, WA:\n\nAlert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 7:00 PM UTC\n  Description: Visibility a quarter mile or less.",
+"change_summary": null
+},
+"air_quality": null,
+"aviation": null,
+"trend_summary": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Fog",
+"preview": "48F/9C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0.3 mph (0.5 km/h) 99%",
+"preview": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0.3 mph (0.5 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV 0 0.1 mi (0.2 km) 30.12 inHg (1020.00 hPa) Dense Fog Advisory",
+"preview": "N/A/N/A N/A N/A% UV 0 0.1 mi (0.2 km) 30.12 inHg (1020.00 hPa) Dense Fog Advisory",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C S 0.3 mph (0.5 km/h) {unknown}",
+"preview": "48F 9C S 0.3 mph (0.5 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 48F/9C | 48F/9C",
+"preview": "Feels like: 48F/9C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seat...",
+"preview": "Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seat...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"time_display_mode": "both",
+"show_timezone_suffix": true,
+"time_format_12hour": false
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 48°F (9°C) - Fog - 1 alert - Pressure falling ⬇⬇ -0.05 inHg over next 6h",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.4°F (9.1°C)"
+},
+{
+"label": "Dewpoint",
+"value": "48.1°F (9.0°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.1 inHg (1020.0 hPa)"
+},
+{
+"label": "Visibility",
+"value": "0.1 mi (0.2 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Pressure trend",
+"value": "Falling ⬇⬇ -0.05 inHg over next 6h"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Fog\nTemperature: 48.4°F (9.1°C)\nDewpoint: 48.1°F (9.0°C)\nWind: Calm\nHumidity: 99%\nPressure: 30.1 inHg (1020.0 hPa)\nVisibility: 0.1 mi (0.2 km)\nUV Index: 0.0 (Low)\nPressure trend: Falling ⬇⬇ -0.05 inHg over next 6h",
+"trends": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": {
+"title": "Weather alerts for Seattle, WA",
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"severity": "Moderate",
+"urgency": "Expected",
+"event": "Dense Fog Advisory",
+"areas": [],
+"expires": "11/12 11:00 PST (11/12 19:00 UTC)",
+"description": "Visibility a quarter mile or less.",
+"instructions": null,
+"fallback_text": "Alert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 PST (11/12 19:00 UTC)\n  Description: Visibility a quarter mile or less."
+}
+],
+"fallback_text": "Weather alerts for Seattle, WA:\n\nAlert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 PST (11/12 19:00 UTC)\n  Description: Visibility a quarter mile or less.",
+"change_summary": null
+},
+"air_quality": null,
+"aviation": null,
+"trend_summary": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Fog",
+"preview": "48F/9C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0.3 mph (0.5 km/h) 99%",
+"preview": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0.3 mph (0.5 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV 0 0.1 mi (0.2 km) 30.12 inHg (1020.00 hPa) Dense Fog Advisory",
+"preview": "N/A/N/A N/A N/A% UV 0 0.1 mi (0.2 km) 30.12 inHg (1020.00 hPa) Dense Fog Advisory",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C S 0.3 mph (0.5 km/h) {unknown}",
+"preview": "48F 9C S 0.3 mph (0.5 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 48F/9C | 48F/9C",
+"preview": "Feels like: 48F/9C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seat...",
+"preview": "Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seat...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"forecast_time_reference": "user_local",
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 48°F (9°C) - Fog - 1 alert - Pressure falling ⬇⬇ -0.05 inHg over next 6h",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.4°F (9.1°C)"
+},
+{
+"label": "Dewpoint",
+"value": "48.1°F (9.0°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.1 inHg (1020.0 hPa)"
+},
+{
+"label": "Visibility",
+"value": "0.1 mi (0.2 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Pressure trend",
+"value": "Falling ⬇⬇ -0.05 inHg over next 6h"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Fog\nTemperature: 48.4°F (9.1°C)\nDewpoint: 48.1°F (9.0°C)\nWind: Calm\nHumidity: 99%\nPressure: 30.1 inHg (1020.0 hPa)\nVisibility: 0.1 mi (0.2 km)\nUV Index: 0.0 (Low)\nPressure trend: Falling ⬇⬇ -0.05 inHg over next 6h",
+"trends": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": {
+"title": "Weather alerts for Seattle, WA",
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"severity": "Moderate",
+"urgency": "Expected",
+"event": "Dense Fog Advisory",
+"areas": [],
+"expires": "11/12 11:00 AM PST",
+"description": "Visibility a quarter mile or less.",
+"instructions": null,
+"fallback_text": "Alert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM PST\n  Description: Visibility a quarter mile or less."
+}
+],
+"fallback_text": "Weather alerts for Seattle, WA:\n\nAlert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM PST\n  Description: Visibility a quarter mile or less.",
+"change_summary": null
+},
+"air_quality": null,
+"aviation": null,
+"trend_summary": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Fog",
+"preview": "48F/9C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0.3 mph (0.5 km/h) 99%",
+"preview": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0.3 mph (0.5 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV 0 0.1 mi (0.2 km) 30.12 inHg (1020.00 hPa) Dense Fog Advisory",
+"preview": "N/A/N/A N/A N/A% UV 0 0.1 mi (0.2 km) 30.12 inHg (1020.00 hPa) Dense Fog Advisory",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C S 0.3 mph (0.5 km/h) {unknown}",
+"preview": "48F 9C S 0.3 mph (0.5 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 48F/9C | 48F/9C",
+"preview": "Feels like: 48F/9C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seat...",
+"preview": "Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seat...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"show_dewpoint": false,
+"show_visibility": false,
+"show_uv_index": false,
+"show_pressure_trend": false,
+"show_seasonal_data": false
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 48°F (9°C) - Fog - 1 alert - Pressure falling ⬇⬇ -0.05 inHg over next 6h",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.4°F (9.1°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.1 inHg (1020.0 hPa)"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Fog\nTemperature: 48.4°F (9.1°C)\nWind: Calm\nHumidity: 99%\nPressure: 30.1 inHg (1020.0 hPa)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": {
+"title": "Weather alerts for Seattle, WA",
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"severity": "Moderate",
+"urgency": "Expected",
+"event": "Dense Fog Advisory",
+"areas": [],
+"expires": "11/12 11:00 AM",
+"description": "Visibility a quarter mile or less.",
+"instructions": null,
+"fallback_text": "Alert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less."
+}
+],
+"fallback_text": "Weather alerts for Seattle, WA:\n\nAlert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less.",
+"change_summary": null
+},
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Fog",
+"preview": "48F/9C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0.3 mph (0.5 km/h) 99%",
+"preview": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0.3 mph (0.5 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV 0 0.1 mi (0.2 km) 30.12 inHg (1020.00 hPa) Dense Fog Advisory",
+"preview": "N/A/N/A N/A N/A% UV 0 0.1 mi (0.2 km) 30.12 inHg (1020.00 hPa) Dense Fog Advisory",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C S 0.3 mph (0.5 km/h) {unknown}",
+"preview": "48F 9C S 0.3 mph (0.5 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 48F/9C | 48F/9C",
+"preview": "Feels like: 48F/9C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seat...",
+"preview": "Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seat...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"severe_weather_override": true,
+"category_order": [
+"uv_index",
+"visibility_clouds",
+"humidity_pressure",
+"wind",
+"precipitation",
+"temperature"
+]
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 48°F (9°C) - Fog - 1 alert - Pressure falling ⬇⬇ -0.05 inHg over next 6h",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Fog",
+"metrics": [
+{
+"label": "Visibility",
+"value": "0.1 mi (0.2 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.1 inHg (1020.0 hPa)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Temperature",
+"value": "48.4°F (9.1°C)"
+},
+{
+"label": "Dewpoint",
+"value": "48.1°F (9.0°C)"
+},
+{
+"label": "Pressure trend",
+"value": "Falling ⬇⬇ -0.05 inHg over next 6h"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Fog\nVisibility: 0.1 mi (0.2 km)\nUV Index: 0.0 (Low)\nHumidity: 99%\nPressure: 30.1 inHg (1020.0 hPa)\nWind: Calm\nTemperature: 48.4°F (9.1°C)\nDewpoint: 48.1°F (9.0°C)\nPressure trend: Falling ⬇⬇ -0.05 inHg over next 6h",
+"trends": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": {
+"title": "Weather alerts for Seattle, WA",
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"severity": "Moderate",
+"urgency": "Expected",
+"event": "Dense Fog Advisory",
+"areas": [],
+"expires": "11/12 11:00 AM",
+"description": "Visibility a quarter mile or less.",
+"instructions": null,
+"fallback_text": "Alert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less."
+}
+],
+"fallback_text": "Weather alerts for Seattle, WA:\n\nAlert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less.",
+"change_summary": null
+},
+"air_quality": null,
+"aviation": null,
+"trend_summary": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Fog",
+"preview": "48F/9C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0.3 mph (0.5 km/h) 99%",
+"preview": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0.3 mph (0.5 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV 0 0.1 mi (0.2 km) 30.12 inHg (1020.00 hPa) Dense Fog Advisory",
+"preview": "N/A/N/A N/A N/A% UV 0 0.1 mi (0.2 km) 30.12 inHg (1020.00 hPa) Dense Fog Advisory",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C S 0.3 mph (0.5 km/h) {unknown}",
+"preview": "48F 9C S 0.3 mph (0.5 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 48F/9C | 48F/9C",
+"preview": "Feels like: 48F/9C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seat...",
+"preview": "Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seat...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"severe_weather_override": true,
+"show_impact_summaries": true,
+"temperature_unit": "celsius"
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 9°C - Fog - 1 alert - Pressure falling ⬇⬇ -0.05 inHg over next 6h",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Fog",
+"metrics": [
+{
+"label": "Visibility",
+"value": "0.2 km"
+},
+{
+"label": "Temperature",
+"value": "9.1°C"
+},
+{
+"label": "Dewpoint",
+"value": "9.0°C"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "1020.0 hPa"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Pressure trend",
+"value": "Falling ⬇⬇ -0.05 inHg over next 6h"
+},
+{
+"label": "Impact: Outdoor",
+"value": "Cool - coat or warm jacket recommended"
+},
+{
+"label": "Impact: Driving",
+"value": "Caution: near-zero visibility - do not drive unless essential"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Fog\nVisibility: 0.2 km\nTemperature: 9.1°C\nDewpoint: 9.0°C\nWind: Calm\nHumidity: 99%\nPressure: 1020.0 hPa\nUV Index: 0.0 (Low)\nPressure trend: Falling ⬇⬇ -0.05 inHg over next 6h\nImpact: Outdoor: Cool - coat or warm jacket recommended\nImpact: Driving: Caution: near-zero visibility - do not drive unless essential",
+"trends": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"impact_summary": {
+"outdoor": "Cool - coat or warm jacket recommended",
+"driving": "Caution: near-zero visibility - do not drive unless essential",
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": {
+"title": "Weather alerts for Seattle, WA",
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"severity": "Moderate",
+"urgency": "Expected",
+"event": "Dense Fog Advisory",
+"areas": [],
+"expires": "11/12 11:00 AM",
+"description": "Visibility a quarter mile or less.",
+"instructions": null,
+"fallback_text": "Alert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less."
+}
+],
+"fallback_text": "Weather alerts for Seattle, WA:\n\nAlert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less.",
+"change_summary": null
+},
+"air_quality": null,
+"aviation": null,
+"trend_summary": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "9C Fog",
+"preview": "9C Fog",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 9C (feels like 9C) S at 0.5 km/h 99%",
+"preview": "Seattle, WA: 9C (feels like 9C) S at 0.5 km/h 99%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV 0 0.2 km 1020.00 hPa Dense Fog Advisory",
+"preview": "N/A/N/A N/A N/A% UV 0 0.2 km 1020.00 hPa Dense Fog Advisory",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C S 0.5 km/h {unknown}",
+"preview": "48F 9C S 0.5 km/h {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 9C | 9C",
+"preview": "Feels like: 9C | 9C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Fog S at 0.5 km/h Seattle, WA Fog S at 0.5 km/h Seattle, WA Fog S at 0.5 km/h Seattle, WA",
+"preview": "Seattle, WA Fog S at 0.5 km/h Seattle, WA Fog S at 0.5 km/h Seattle, WA Fog S at 0.5 km/h Seattle, WA",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"forecast_duration_days": 3,
+"hourly_forecast_hours": 12,
+"round_values": true
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 48°F (9°C) - Fog - 1 alert - Pressure falling ⬇⬇ -0.05 inHg over next 6h",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48°F (9°C)"
+},
+{
+"label": "Dewpoint",
+"value": "48°F (9°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30 inHg (1020 hPa)"
+},
+{
+"label": "Visibility",
+"value": "0 mi (0 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Pressure trend",
+"value": "Falling ⬇⬇ -0.05 inHg over next 6h"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Fog\nTemperature: 48°F (9°C)\nDewpoint: 48°F (9°C)\nWind: Calm\nHumidity: 99%\nPressure: 30 inHg (1020 hPa)\nVisibility: 0 mi (0 km)\nUV Index: 0.0 (Low)\nPressure trend: Falling ⬇⬇ -0.05 inHg over next 6h",
+"trends": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": {
+"title": "Weather alerts for Seattle, WA",
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"severity": "Moderate",
+"urgency": "Expected",
+"event": "Dense Fog Advisory",
+"areas": [],
+"expires": "11/12 11:00 AM",
+"description": "Visibility a quarter mile or less.",
+"instructions": null,
+"fallback_text": "Alert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less."
+}
+],
+"fallback_text": "Weather alerts for Seattle, WA:\n\nAlert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM\n  Description: Visibility a quarter mile or less.",
+"change_summary": null
+},
+"air_quality": null,
+"aviation": null,
+"trend_summary": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Fog",
+"preview": "48F/9C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0 mph (0 km/h) 99%",
+"preview": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0 mph (0 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8 mph (13 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV 0 0 mi (0 km) 30 inHg (1020 hPa) Dense Fog Advisory",
+"preview": "N/A/N/A N/A N/A% UV 0 0 mi (0 km) 30 inHg (1020 hPa) Dense Fog Advisory",
+"sample_preview": "78F/26C/61F/16C 0 in (0 mm) 20% UV 5 10 mi (16 km) 30 inHg (1019 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C S 0 mph (0 km/h) {unknown}",
+"preview": "48F 9C S 0 mph (0 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8 mph (13 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 48F/9C | 48F/9C",
+"preview": "Feels like: 48F/9C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Fog S at 0 mph (0 km/h) Seattle, WA Fog S at 0 mph (0 km/h) Seattle, WA Fog S at 0 mph (0 km/h) Seattle, WA",
+"preview": "Seattle, WA Fog S at 0 mph (0 km/h) Seattle, WA Fog S at 0 mph (0 km/h) Seattle, WA Fog S at 0 mph (0 km/h) Seattle, WA",
+"sample_preview": "Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Part..."
+}
+}
+},
+{
+"settings": {
+"forecast_duration_days": 16,
+"hourly_forecast_hours": 48,
+"date_format": "eu",
+"time_display_mode": "both"
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 48°F (9°C) - Fog - 1 alert - Pressure falling ⬇⬇ -0.05 inHg over next 6h",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Fog",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.4°F (9.1°C)"
+},
+{
+"label": "Dewpoint",
+"value": "48.1°F (9.0°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "99%"
+},
+{
+"label": "Pressure",
+"value": "30.1 inHg (1020.0 hPa)"
+},
+{
+"label": "Visibility",
+"value": "0.1 mi (0.2 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Pressure trend",
+"value": "Falling ⬇⬇ -0.05 inHg over next 6h"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Fog\nTemperature: 48.4°F (9.1°C)\nDewpoint: 48.1°F (9.0°C)\nWind: Calm\nHumidity: 99%\nPressure: 30.1 inHg (1020.0 hPa)\nVisibility: 0.1 mi (0.2 km)\nUV Index: 0.0 (Low)\nPressure trend: Falling ⬇⬇ -0.05 inHg over next 6h",
+"trends": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": {
+"title": "Weather alerts for Seattle, WA",
+"alerts": [
+{
+"title": "Dense Fog Advisory",
+"severity": "Moderate",
+"urgency": "Expected",
+"event": "Dense Fog Advisory",
+"areas": [],
+"expires": "11/12 11:00 AM (11/12 7:00 PM UTC)",
+"description": "Visibility a quarter mile or less.",
+"instructions": null,
+"fallback_text": "Alert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM (11/12 7:00 PM UTC)\n  Description: Visibility a quarter mile or less."
+}
+],
+"fallback_text": "Weather alerts for Seattle, WA:\n\nAlert 1: Dense Fog Advisory\n  Severity: Moderate, Urgency: Expected\n  Event: Dense Fog Advisory\n  Expires: 11/12 11:00 AM (11/12 7:00 PM UTC)\n  Description: Visibility a quarter mile or less.",
+"change_summary": null
+},
+"air_quality": null,
+"aviation": null,
+"trend_summary": [
+"Pressure falling ⬇⬇ -0.05 inHg over next 6h"
+],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Fog",
+"preview": "48F/9C Fog",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0.3 mph (0.5 km/h) 99%",
+"preview": "Seattle, WA: 48F/9C (feels like 48F/9C) S at 0.3 mph (0.5 km/h) 99%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV 0 0.1 mi (0.2 km) 30.12 inHg (1020.00 hPa) Dense Fog Advisory",
+"preview": "N/A/N/A N/A N/A% UV 0 0.1 mi (0.2 km) 30.12 inHg (1020.00 hPa) Dense Fog Advisory",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C S 0.3 mph (0.5 km/h) {unknown}",
+"preview": "48F 9C S 0.3 mph (0.5 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 48F/9C | 48F/9C",
+"preview": "Feels like: 48F/9C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seat...",
+"preview": "Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seattle, WA Fog S at 0.3 mph (0.5 km/h) Seat...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+}
+]
+}

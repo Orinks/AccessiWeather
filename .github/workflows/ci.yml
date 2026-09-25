@@ -1,10 +1,22 @@
 name: CI
 
+# The Python edition's checks run only when Python files change; the Rust
+# edition is checked by rust.yml.
 on:
   push:
     branches: [ main, dev ]
+    paths: &python-paths
+      - "src/**"
+      - "tests/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "requirements*.txt"
+      - "scripts/**"
+      - "installer/**"
+      - ".github/workflows/ci.yml"
   pull_request:
     branches: [ main, dev ]
+    paths: *python-paths
   workflow_dispatch:
 
 concurrency:

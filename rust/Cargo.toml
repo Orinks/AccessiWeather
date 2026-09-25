@@ -1,0 +1,60 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/aw-core",
+    "crates/aw-providers",
+    "crates/aw-store",
+    "crates/aw-radio",
+    "crates/aw-services",
+    "crates/aw-ai",
+    "crates/aw-notify",
+    "crates/aw-app",
+    "crates/aw-audio",
+    "xtask",
+]
+
+[workspace.package]
+version = "0.11.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/Orinks/AccessiWeather"
+
+[workspace.dependencies]
+aw-core = { path = "crates/aw-core" }
+aw-providers = { path = "crates/aw-providers" }
+aw-store = { path = "crates/aw-store" }
+aw-radio = { path = "crates/aw-radio" }
+aw-services = { path = "crates/aw-services" }
+aw-notify = { path = "crates/aw-notify" }
+aw-audio = { path = "crates/aw-audio" }
+aw-ai = { path = "crates/aw-ai" }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
+thiserror = "2"
+chrono = { version = "0.4", features = ["serde"] }
+chrono-tz = "0.10"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls", "gzip"] }
+tempfile = "3"
+url = "2"
+prismer = "0.1.3"
+wxdragon = "0.9.22"
+clap = { version = "4", features = ["derive"] }
+
+[profile.release]
+opt-level = 2
+lto = "thin"
+codegen-units = 4
+strip = true
+
+# PBKDF2 (390k rounds) is unbearably slow unoptimised; keep dev/test runs fast.
+[profile.dev.package.sha2]
+opt-level = 3
+
+[profile.dev.package.pbkdf2]
+opt-level = 3
+
+[profile.dev.package.hmac]
+opt-level = 3

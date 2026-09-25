@@ -1,0 +1,282 @@
+[
+ {
+  "name": "full",
+  "date": "2026-07-14",
+  "response": {
+   "daily": {
+    "time": [
+     "2026-07-14"
+    ],
+    "weather_code": [
+     3
+    ],
+    "temperature_2m_max": [
+     81.5
+    ],
+    "temperature_2m_min": [
+     62
+    ],
+    "temperature_2m_mean": [
+     "71.2"
+    ],
+    "wind_speed_10m_max": [
+     12.3
+    ],
+    "wind_direction_10m_dominant": [
+     185.7
+    ]
+   }
+  },
+  "result": {
+   "date": "2026-07-14",
+   "temperature_max": 81.5,
+   "temperature_min": 62.0,
+   "temperature_mean": 71.2,
+   "condition": "code 3",
+   "humidity": null,
+   "wind_speed": 12.3,
+   "wind_direction": 185,
+   "pressure": null
+  }
+ },
+ {
+  "name": "no_daily",
+  "date": "2026-07-14",
+  "response": {
+   "hourly": {}
+  },
+  "result": null
+ },
+ {
+  "name": "empty_time",
+  "date": "2026-07-14",
+  "response": {
+   "daily": {
+    "time": [],
+    "weather_code": [
+     3
+    ],
+    "temperature_2m_max": [
+     81.5
+    ],
+    "temperature_2m_min": [
+     62
+    ],
+    "temperature_2m_mean": [
+     "71.2"
+    ],
+    "wind_speed_10m_max": [
+     12.3
+    ],
+    "wind_direction_10m_dominant": [
+     185.7
+    ]
+   }
+  },
+  "result": null
+ },
+ {
+  "name": "missing_mean",
+  "date": "2026-07-14",
+  "response": {
+   "daily": {
+    "time": [
+     "2026-07-14"
+    ],
+    "weather_code": [
+     3
+    ],
+    "temperature_2m_max": [
+     81.5
+    ],
+    "temperature_2m_min": [
+     62
+    ],
+    "wind_speed_10m_max": [
+     12.3
+    ],
+    "wind_direction_10m_dominant": [
+     185.7
+    ]
+   }
+  },
+  "result": null
+ },
+ {
+  "name": "null_code",
+  "date": "2026-07-14",
+  "response": {
+   "daily": {
+    "time": [
+     "2026-07-14"
+    ],
+    "weather_code": [
+     null
+    ],
+    "temperature_2m_max": [
+     81.5
+    ],
+    "temperature_2m_min": [
+     62
+    ],
+    "temperature_2m_mean": [
+     "71.2"
+    ],
+    "wind_speed_10m_max": [
+     12.3
+    ],
+    "wind_direction_10m_dominant": [
+     185.7
+    ]
+   }
+  },
+  "result": null
+ },
+ {
+  "name": "null_direction",
+  "date": "2026-07-14",
+  "response": {
+   "daily": {
+    "time": [
+     "2026-07-14"
+    ],
+    "weather_code": [
+     3
+    ],
+    "temperature_2m_max": [
+     81.5
+    ],
+    "temperature_2m_min": [
+     62
+    ],
+    "temperature_2m_mean": [
+     "71.2"
+    ],
+    "wind_speed_10m_max": [
+     12.3
+    ],
+    "wind_direction_10m_dominant": [
+     null
+    ]
+   }
+  },
+  "result": {
+   "date": "2026-07-14",
+   "temperature_max": 81.5,
+   "temperature_min": 62.0,
+   "temperature_mean": 71.2,
+   "condition": "code 3",
+   "humidity": null,
+   "wind_speed": 12.3,
+   "wind_direction": null,
+   "pressure": null
+  }
+ },
+ {
+  "name": "no_direction",
+  "date": "2026-07-14",
+  "response": {
+   "daily": {
+    "time": [
+     "2026-07-14"
+    ],
+    "weather_code": [
+     3
+    ],
+    "temperature_2m_max": [
+     81.5
+    ],
+    "temperature_2m_min": [
+     62
+    ],
+    "temperature_2m_mean": [
+     "71.2"
+    ],
+    "wind_speed_10m_max": [
+     12.3
+    ]
+   }
+  },
+  "result": {
+   "date": "2026-07-14",
+   "temperature_max": 81.5,
+   "temperature_min": 62.0,
+   "temperature_mean": 71.2,
+   "condition": "code 3",
+   "humidity": null,
+   "wind_speed": 12.3,
+   "wind_direction": null,
+   "pressure": null
+  }
+ },
+ {
+  "name": "bad_number",
+  "date": "2026-07-14",
+  "response": {
+   "daily": {
+    "time": [
+     "2026-07-14"
+    ],
+    "weather_code": [
+     3
+    ],
+    "temperature_2m_max": [
+     "hot"
+    ],
+    "temperature_2m_min": [
+     62
+    ],
+    "temperature_2m_mean": [
+     "71.2"
+    ],
+    "wind_speed_10m_max": [
+     12.3
+    ],
+    "wind_direction_10m_dominant": [
+     185.7
+    ]
+   }
+  },
+  "result": null
+ },
+ {
+  "name": "float_code",
+  "date": "2026-07-14",
+  "response": {
+   "daily": {
+    "time": [
+     "2026-07-14"
+    ],
+    "weather_code": [
+     61.0
+    ],
+    "temperature_2m_max": [
+     81.5
+    ],
+    "temperature_2m_min": [
+     62
+    ],
+    "temperature_2m_mean": [
+     "71.2"
+    ],
+    "wind_speed_10m_max": [
+     12.3
+    ],
+    "wind_direction_10m_dominant": [
+     185.7
+    ]
+   }
+  },
+  "result": {
+   "date": "2026-07-14",
+   "temperature_max": 81.5,
+   "temperature_min": 62.0,
+   "temperature_mean": 71.2,
+   "condition": "code 61.0",
+   "humidity": null,
+   "wind_speed": 12.3,
+   "wind_direction": 185,
+   "pressure": null
+  }
+ }
+]

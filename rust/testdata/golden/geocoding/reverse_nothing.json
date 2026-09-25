@@ -1,0 +1,29 @@
+{
+ "latitude": -45.0,
+ "longitude": 170.0,
+ "exchanges": [
+  {
+   "url": "https://api.weather.gov/points/-45.0,170.0",
+   "headers": {
+    "user-agent": "AccessiWeather/1.0 (AccessiWeather)",
+    "accept": "application/geo+json"
+   },
+   "status": 500,
+   "body": {}
+  },
+  {
+   "url": "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=-45.0&lon=170.0&zoom=10&addressdetails=1&accept-language=en",
+   "headers": {
+    "user-agent": "AccessiWeather/1.0 (AccessiWeather)",
+    "accept": "application/json"
+   },
+   "status": 200,
+   "body": [
+    "not",
+    "an",
+    "object"
+   ]
+  }
+ ],
+ "output": null
+}

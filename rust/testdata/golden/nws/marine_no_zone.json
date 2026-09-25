@@ -1,0 +1,50 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "enrich_with_marine_data",
+ "location": {
+  "name": "Sandy Hook",
+  "latitude": 40.5,
+  "longitude": -73.9,
+  "timezone": null,
+  "country_code": "US",
+  "marine_mode": true,
+  "forecast_zone_id": null,
+  "cwa_office": null,
+  "county_zone_id": null,
+  "fire_zone_id": null,
+  "radar_station": null
+ },
+ "existing_alerts": null,
+ "responses": [
+  {
+   "url": "https://api.weather.gov/zones?type=marine&point=40.5%2C-73.9",
+   "status": 200,
+   "body": "{\"features\":[]}"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/zones",
+   "params": [
+    [
+     "type",
+     "marine"
+    ],
+    [
+     "point",
+     "40.5,-73.9"
+    ]
+   ],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "marine": null,
+  "alerts": null
+ }
+}

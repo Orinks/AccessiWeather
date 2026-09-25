@@ -144,9 +144,10 @@ pytest --hypothesis-profile=thorough
 
 | Workflow | Purpose |
 |----------|---------|
-| `ci.yml` | Linting, tests, changelog check, coverage gate |
-| `build.yml` | Nuitka desktop build artifacts |
-| `integration-tests.yml` | Scheduled integration cassette checks |
+| `ci.yml` | Python edition: linting, tests, changelog check, coverage gate (Python paths only) |
+| `rust.yml` | Rust edition PR checks: fmt, clippy, tests, smoke test, changelog check |
+| `rust-build.yml` | Nightly and tagged releases, built and packaged with `cargo xtask` |
+| `rust-integration.yml` | Scheduled live NWS/Open-Meteo/IEM API tests |
 | `update-pages.yml` | GitHub Pages/download updates |
 
 Important CI environment defaults:

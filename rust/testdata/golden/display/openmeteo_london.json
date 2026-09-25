@@ -1,0 +1,2212 @@
+{
+"name": "openmeteo_london",
+"now": "2025-01-15T12:00:00+00:00",
+"local_tz": "America/New_York",
+"weather_data": {
+"location": {
+"name": "London",
+"latitude": 51.5074,
+"longitude": -0.1278,
+"timezone": "Europe/London",
+"country_code": "GB",
+"marine_mode": false,
+"forecast_zone_id": null,
+"cwa_office": null,
+"county_zone_id": null,
+"fire_zone_id": null,
+"radar_station": null
+},
+"current": {
+"temperature": 48.2,
+"temperature_f": 48.2,
+"temperature_c": 9.000000000000002,
+"condition": "Overcast",
+"humidity": 78,
+"wind_speed": 12.3,
+"dewpoint_f": 41.66701945215134,
+"dewpoint_c": 5.370566362306298,
+"wind_speed_mph": 12.3,
+"wind_speed_kph": 19.794882,
+"wind_direction": "SW",
+"pressure": 29.98179181239242,
+"pressure_in": 29.98179181239242,
+"pressure_mb": 1015.3,
+"feels_like_f": 44.1,
+"feels_like_c": 6.722222222222223,
+"visibility_miles": 4.971022727272727,
+"visibility_km": 8.0000856,
+"uv_index": 0.0,
+"cloud_cover": null,
+"wind_gust_mph": null,
+"wind_gust_kph": null,
+"precipitation_in": 0.0,
+"precipitation_mm": 0.0,
+"sunrise_time": "2025-01-15T08:02:00+00:00",
+"sunset_time": "2025-01-15T16:15:00+00:00",
+"moon_phase": null,
+"moonrise_time": null,
+"moonset_time": null,
+"snow_depth_in": 0.0,
+"snow_depth_cm": 0.0,
+"snowfall_rate_in": 0.0,
+"wind_chill_f": 44.1,
+"wind_chill_c": 6.722222222222223,
+"freezing_level_ft": null,
+"freezing_level_m": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"frost_risk": null,
+"precipitation_type": null,
+"severe_weather_risk": null
+},
+"forecast": null,
+"hourly_forecast": null,
+"daily_history": [],
+"discussion": null,
+"discussion_issuance_time": null,
+"minutely_precipitation": null,
+"alerts": null,
+"environmental": null,
+"aviation": null,
+"marine": null,
+"trend_insights": [],
+"stale": false,
+"stale_since": null,
+"stale_reason": null,
+"source_attribution": null,
+"incomplete_sections": [],
+"alert_lifecycle_diff": null,
+"forecast_confidence": null,
+"anomaly_callout": null
+},
+"variants": [
+{
+"settings": {},
+"presentation": {
+"location_name": "London",
+"summary_text": "London - 48°F (9°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for London",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.2°F (9.0°C) (feels like 44.1°F (6.7°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "41.7°F (5.4°C)"
+},
+{
+"label": "Wind chill",
+"value": "44.1°F (6.7°C)"
+},
+{
+"label": "Wind",
+"value": "SW at 12.3 mph (19.8 kph)"
+},
+{
+"label": "Humidity",
+"value": "78%"
+},
+{
+"label": "Pressure",
+"value": "30.0 inHg (1015.3 hPa)"
+},
+{
+"label": "Visibility",
+"value": "5.0 mi (8.0 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "8:02 AM"
+},
+{
+"label": "Sunset",
+"value": "4:15 PM"
+}
+],
+"fallback_text": "Current conditions for London: Overcast\nTemperature: 48.2°F (9.0°C) (feels like 44.1°F (6.7°C))\nFeels different: Due to wind chill\nDewpoint: 41.7°F (5.4°C)\nWind chill: 44.1°F (6.7°C)\nWind: SW at 12.3 mph (19.8 kph)\nHumidity: 78%\nPressure: 30.0 inHg (1015.3 hPa)\nVisibility: 5.0 mi (8.0 km)\nUV Index: 0.0 (Low)\nSunrise: 8:02 AM\nSunset: 4:15 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Overcast",
+"preview": "48F/9C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "London: 48F/9C (feels like 44F/7C) SW at 12.3 mph (19.8 km/h) 78%",
+"preview": "London: 48F/9C (feels like 44F/7C) SW at 12.3 mph (19.8 km/h) 78%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A 0.00 in (0.00 mm) N/A% UV 0 5.0 mi (8.0 km) 29.98 inHg (1015.30 hPa)",
+"preview": "N/A/N/A 0.00 in (0.00 mm) N/A% UV 0 5.0 mi (8.0 km) 29.98 inHg (1015.30 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C SW 12.3 mph (19.8 km/h) {unknown}",
+"preview": "48F 9C SW 12.3 mph (19.8 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 44F/7C | 48F/9C",
+"preview": "Feels like: 44F/7C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 k...",
+"preview": "London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 k...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+},
+"present_current": {
+"title": "Current conditions for London",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.2°F (9.0°C) (feels like 44.1°F (6.7°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "41.7°F (5.4°C)"
+},
+{
+"label": "Wind chill",
+"value": "44.1°F (6.7°C)"
+},
+{
+"label": "Wind",
+"value": "SW at 12.3 mph (19.8 kph)"
+},
+{
+"label": "Humidity",
+"value": "78%"
+},
+{
+"label": "Pressure",
+"value": "30.0 inHg (1015.3 hPa)"
+},
+{
+"label": "Visibility",
+"value": "5.0 mi (8.0 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "8:02 AM"
+},
+{
+"label": "Sunset",
+"value": "4:15 PM"
+}
+],
+"fallback_text": "Current conditions for London: Overcast\nTemperature: 48.2°F (9.0°C) (feels like 44.1°F (6.7°C))\nFeels different: Due to wind chill\nDewpoint: 41.7°F (5.4°C)\nWind chill: 44.1°F (6.7°C)\nWind: SW at 12.3 mph (19.8 kph)\nHumidity: 78%\nPressure: 30.0 inHg (1015.3 hPa)\nVisibility: 5.0 mi (8.0 km)\nUV Index: 0.0 (Low)\nSunrise: 8:02 AM\nSunset: 4:15 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"present_forecast": null,
+"present_alerts": null
+},
+{
+"settings": {
+"temperature_unit": "f"
+},
+"presentation": {
+"location_name": "London",
+"summary_text": "London - 48°F - Overcast",
+"current_conditions": {
+"title": "Current conditions for London",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.2°F (feels like 44.1°F)"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "41.7°F"
+},
+{
+"label": "Wind chill",
+"value": "44.1°F"
+},
+{
+"label": "Wind",
+"value": "SW at 12.3 mph"
+},
+{
+"label": "Humidity",
+"value": "78%"
+},
+{
+"label": "Pressure",
+"value": "30.0 inHg"
+},
+{
+"label": "Visibility",
+"value": "5.0 mi"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "8:02 AM"
+},
+{
+"label": "Sunset",
+"value": "4:15 PM"
+}
+],
+"fallback_text": "Current conditions for London: Overcast\nTemperature: 48.2°F (feels like 44.1°F)\nFeels different: Due to wind chill\nDewpoint: 41.7°F\nWind chill: 44.1°F\nWind: SW at 12.3 mph\nHumidity: 78%\nPressure: 30.0 inHg\nVisibility: 5.0 mi\nUV Index: 0.0 (Low)\nSunrise: 8:02 AM\nSunset: 4:15 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F Overcast",
+"preview": "48F Overcast",
+"sample_preview": "72F Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "London: 48F (feels like 44F) SW at 12.3 mph 78%",
+"preview": "London: 48F (feels like 44F) SW at 12.3 mph 78%",
+"sample_preview": "Sample Location: 72F (feels like 74F) NW at 8.0 mph 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A 0.00 in N/A% UV 0 5.0 mi 29.98 inHg",
+"preview": "N/A/N/A 0.00 in N/A% UV 0 5.0 mi 29.98 inHg",
+"sample_preview": "78F/61F 0.00 in 20% UV 5 10.0 mi 30.10 inHg"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C SW 12.3 mph {unknown}",
+"preview": "48F 9C SW 12.3 mph {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 44F | 48F",
+"preview": "Feels like: 44F | 48F",
+"sample_preview": "Feels like: 74F | 72F"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "London Overcast SW at 12.3 mph London Overcast SW at 12.3 mph London Overcast SW at 12.3 mph London",
+"preview": "London Overcast SW at 12.3 mph London Overcast SW at 12.3 mph London Overcast SW at 12.3 mph London",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "c"
+},
+"presentation": {
+"location_name": "London",
+"summary_text": "London - 9°C - Overcast",
+"current_conditions": {
+"title": "Current conditions for London",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "9.0°C (feels like 6.7°C)"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "5.4°C"
+},
+{
+"label": "Wind chill",
+"value": "6.7°C"
+},
+{
+"label": "Wind",
+"value": "SW at 19.8 kph"
+},
+{
+"label": "Humidity",
+"value": "78%"
+},
+{
+"label": "Pressure",
+"value": "1015.3 hPa"
+},
+{
+"label": "Visibility",
+"value": "8.0 km"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "8:02 AM"
+},
+{
+"label": "Sunset",
+"value": "4:15 PM"
+}
+],
+"fallback_text": "Current conditions for London: Overcast\nTemperature: 9.0°C (feels like 6.7°C)\nFeels different: Due to wind chill\nDewpoint: 5.4°C\nWind chill: 6.7°C\nWind: SW at 19.8 kph\nHumidity: 78%\nPressure: 1015.3 hPa\nVisibility: 8.0 km\nUV Index: 0.0 (Low)\nSunrise: 8:02 AM\nSunset: 4:15 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "9C Overcast",
+"preview": "9C Overcast",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "London: 9C (feels like 7C) SW at 19.8 km/h 78%",
+"preview": "London: 9C (feels like 7C) SW at 19.8 km/h 78%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A 0.00 mm N/A% UV 0 8.0 km 1015.30 hPa",
+"preview": "N/A/N/A 0.00 mm N/A% UV 0 8.0 km 1015.30 hPa",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C SW 19.8 km/h {unknown}",
+"preview": "48F 9C SW 19.8 km/h {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 7C | 9C",
+"preview": "Feels like: 7C | 9C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "London Overcast SW at 19.8 km/h London Overcast SW at 19.8 km/h London Overcast SW at 19.8 km/h London",
+"preview": "London Overcast SW at 19.8 km/h London Overcast SW at 19.8 km/h London Overcast SW at 19.8 km/h London",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "auto"
+},
+"presentation": {
+"location_name": "London",
+"summary_text": "London - 9°C - Overcast",
+"current_conditions": {
+"title": "Current conditions for London",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "9.0°C (feels like 6.7°C)"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "5.4°C"
+},
+{
+"label": "Wind chill",
+"value": "6.7°C"
+},
+{
+"label": "Wind",
+"value": "SW at 12.3 mph"
+},
+{
+"label": "Humidity",
+"value": "78%"
+},
+{
+"label": "Pressure",
+"value": "1015.3 hPa"
+},
+{
+"label": "Visibility",
+"value": "5.0 mi"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "8:02 AM"
+},
+{
+"label": "Sunset",
+"value": "4:15 PM"
+}
+],
+"fallback_text": "Current conditions for London: Overcast\nTemperature: 9.0°C (feels like 6.7°C)\nFeels different: Due to wind chill\nDewpoint: 5.4°C\nWind chill: 6.7°C\nWind: SW at 12.3 mph\nHumidity: 78%\nPressure: 1015.3 hPa\nVisibility: 5.0 mi\nUV Index: 0.0 (Low)\nSunrise: 8:02 AM\nSunset: 4:15 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "9C Overcast",
+"preview": "9C Overcast",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "London: 9C (feels like 7C) SW at 12.3 mph 78%",
+"preview": "London: 9C (feels like 7C) SW at 5.5 m/s 78%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 3.6 m/s 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A 0.00 mm N/A% UV 0 5.0 mi 1015.30 hPa",
+"preview": "N/A/N/A 0.00 mm N/A% UV 0 8.0 km 1015.30 hPa",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C SW 12.3 mph {unknown}",
+"preview": "48F 9C SW 5.5 m/s {unknown}",
+"sample_preview": "72F 22C NW 3.6 m/s {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 7C | 9C",
+"preview": "Feels like: 7C | 9C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "London Overcast SW at 12.3 mph London Overcast SW at 12.3 mph London Overcast SW at 12.3 mph London",
+"preview": "London Overcast SW at 5.5 m/s London Overcast SW at 5.5 m/s London Overcast SW at 5.5 m/s London",
+"sample_preview": "Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "auto",
+"wind_speed_unit": "m/s"
+},
+"presentation": {
+"location_name": "London",
+"summary_text": "London - 9°C - Overcast",
+"current_conditions": {
+"title": "Current conditions for London",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "9.0°C (feels like 6.7°C)"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "5.4°C"
+},
+{
+"label": "Wind chill",
+"value": "6.7°C"
+},
+{
+"label": "Wind",
+"value": "SW at 5.5 m/s"
+},
+{
+"label": "Humidity",
+"value": "78%"
+},
+{
+"label": "Pressure",
+"value": "1015.3 hPa"
+},
+{
+"label": "Visibility",
+"value": "5.0 mi"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "8:02 AM"
+},
+{
+"label": "Sunset",
+"value": "4:15 PM"
+}
+],
+"fallback_text": "Current conditions for London: Overcast\nTemperature: 9.0°C (feels like 6.7°C)\nFeels different: Due to wind chill\nDewpoint: 5.4°C\nWind chill: 6.7°C\nWind: SW at 5.5 m/s\nHumidity: 78%\nPressure: 1015.3 hPa\nVisibility: 5.0 mi\nUV Index: 0.0 (Low)\nSunrise: 8:02 AM\nSunset: 4:15 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "9C Overcast",
+"preview": "9C Overcast",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "London: 9C (feels like 7C) SW at 5.5 m/s 78%",
+"preview": "London: 9C (feels like 7C) SW at 5.5 m/s 78%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 3.6 m/s 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A 0.00 mm N/A% UV 0 5.0 mi 1015.30 hPa",
+"preview": "N/A/N/A 0.00 mm N/A% UV 0 8.0 km 1015.30 hPa",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C SW 5.5 m/s {unknown}",
+"preview": "48F 9C SW 5.5 m/s {unknown}",
+"sample_preview": "72F 22C NW 3.6 m/s {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 7C | 9C",
+"preview": "Feels like: 7C | 9C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "London Overcast SW at 5.5 m/s London Overcast SW at 5.5 m/s London Overcast SW at 5.5 m/s London",
+"preview": "London Overcast SW at 5.5 m/s London Overcast SW at 5.5 m/s London Overcast SW at 5.5 m/s London",
+"sample_preview": "Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "both",
+"wind_speed_unit": "kph"
+},
+"presentation": {
+"location_name": "London",
+"summary_text": "London - 48°F (9°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for London",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.2°F (9.0°C) (feels like 44.1°F (6.7°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "41.7°F (5.4°C)"
+},
+{
+"label": "Wind chill",
+"value": "44.1°F (6.7°C)"
+},
+{
+"label": "Wind",
+"value": "SW at 19.8 km/h"
+},
+{
+"label": "Humidity",
+"value": "78%"
+},
+{
+"label": "Pressure",
+"value": "30.0 inHg (1015.3 hPa)"
+},
+{
+"label": "Visibility",
+"value": "5.0 mi (8.0 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "8:02 AM"
+},
+{
+"label": "Sunset",
+"value": "4:15 PM"
+}
+],
+"fallback_text": "Current conditions for London: Overcast\nTemperature: 48.2°F (9.0°C) (feels like 44.1°F (6.7°C))\nFeels different: Due to wind chill\nDewpoint: 41.7°F (5.4°C)\nWind chill: 44.1°F (6.7°C)\nWind: SW at 19.8 km/h\nHumidity: 78%\nPressure: 30.0 inHg (1015.3 hPa)\nVisibility: 5.0 mi (8.0 km)\nUV Index: 0.0 (Low)\nSunrise: 8:02 AM\nSunset: 4:15 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Overcast",
+"preview": "48F/9C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "London: 48F/9C (feels like 44F/7C) SW at 19.8 km/h 78%",
+"preview": "London: 48F/9C (feels like 44F/7C) SW at 19.8 km/h 78%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A 0.00 in (0.00 mm) N/A% UV 0 5.0 mi (8.0 km) 29.98 inHg (1015.30 hPa)",
+"preview": "N/A/N/A 0.00 in (0.00 mm) N/A% UV 0 5.0 mi (8.0 km) 29.98 inHg (1015.30 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C SW 19.8 km/h {unknown}",
+"preview": "48F 9C SW 19.8 km/h {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 44F/7C | 48F/9C",
+"preview": "Feels like: 44F/7C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "London Overcast SW at 19.8 km/h London Overcast SW at 19.8 km/h London Overcast SW at 19.8 km/h London",
+"preview": "London Overcast SW at 19.8 km/h London Overcast SW at 19.8 km/h London Overcast SW at 19.8 km/h London",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "fahrenheit",
+"wind_speed_unit": "mph",
+"verbosity_level": "detailed",
+"show_impact_summaries": true
+},
+"presentation": {
+"location_name": "London",
+"summary_text": "London - 48°F - Overcast",
+"current_conditions": {
+"title": "Current conditions for London",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.2°F (feels like 44.1°F)"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "41.7°F"
+},
+{
+"label": "Wind chill",
+"value": "44.1°F"
+},
+{
+"label": "Wind",
+"value": "SW at 12.3 mph"
+},
+{
+"label": "Humidity",
+"value": "78%"
+},
+{
+"label": "Pressure",
+"value": "30.0 inHg"
+},
+{
+"label": "Visibility",
+"value": "5.0 mi"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "8:02 AM"
+},
+{
+"label": "Sunset",
+"value": "4:15 PM"
+},
+{
+"label": "Impact: Outdoor",
+"value": "Cool - coat or warm jacket recommended"
+},
+{
+"label": "Impact: Driving",
+"value": "Normal driving conditions"
+}
+],
+"fallback_text": "Current conditions for London: Overcast\nTemperature: 48.2°F (feels like 44.1°F)\nFeels different: Due to wind chill\nDewpoint: 41.7°F\nWind chill: 44.1°F\nWind: SW at 12.3 mph\nHumidity: 78%\nPressure: 30.0 inHg\nVisibility: 5.0 mi\nUV Index: 0.0 (Low)\nSunrise: 8:02 AM\nSunset: 4:15 PM\nImpact: Outdoor: Cool - coat or warm jacket recommended\nImpact: Driving: Normal driving conditions",
+"trends": [],
+"impact_summary": {
+"outdoor": "Cool - coat or warm jacket recommended",
+"driving": "Normal driving conditions",
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F Overcast",
+"preview": "48F Overcast",
+"sample_preview": "72F Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "London: 48F (feels like 44F) SW at 12.3 mph 78%",
+"preview": "London: 48F (feels like 44F) SW at 12.3 mph 78%",
+"sample_preview": "Sample Location: 72F (feels like 74F) NW at 8.0 mph 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A 0.00 in N/A% UV 0 5.0 mi 29.98 inHg",
+"preview": "N/A/N/A 0.00 in N/A% UV 0 5.0 mi 29.98 inHg",
+"sample_preview": "78F/61F 0.00 in 20% UV 5 10.0 mi 30.10 inHg"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C SW 12.3 mph {unknown}",
+"preview": "48F 9C SW 12.3 mph {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 44F | 48F",
+"preview": "Feels like: 44F | 48F",
+"sample_preview": "Feels like: 74F | 72F"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "London Overcast SW at 12.3 mph London Overcast SW at 12.3 mph London Overcast SW at 12.3 mph London",
+"preview": "London Overcast SW at 12.3 mph London Overcast SW at 12.3 mph London Overcast SW at 12.3 mph London",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"verbosity_level": "minimal",
+"round_values": true
+},
+"presentation": {
+"location_name": "London",
+"summary_text": "London - 48°F (9°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for London",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48°F (9°C) (feels like 44°F (7°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "42°F (5°C)"
+},
+{
+"label": "Wind chill",
+"value": "44°F (7°C)"
+},
+{
+"label": "Wind",
+"value": "SW at 12 mph (20 kph)"
+},
+{
+"label": "Humidity",
+"value": "78%"
+},
+{
+"label": "Pressure",
+"value": "30 inHg (1015 hPa)"
+},
+{
+"label": "Visibility",
+"value": "5 mi (8 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "8:02 AM"
+},
+{
+"label": "Sunset",
+"value": "4:15 PM"
+}
+],
+"fallback_text": "Current conditions for London: Overcast\nTemperature: 48°F (9°C) (feels like 44°F (7°C))\nFeels different: Due to wind chill\nDewpoint: 42°F (5°C)\nWind chill: 44°F (7°C)\nWind: SW at 12 mph (20 kph)\nHumidity: 78%\nPressure: 30 inHg (1015 hPa)\nVisibility: 5 mi (8 km)\nUV Index: 0.0 (Low)\nSunrise: 8:02 AM\nSunset: 4:15 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Overcast",
+"preview": "48F/9C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "London: 48F/9C (feels like 44F/7C) SW at 12 mph (20 km/h) 78%",
+"preview": "London: 48F/9C (feels like 44F/7C) SW at 12 mph (20 km/h) 78%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8 mph (13 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A 0 in (0 mm) N/A% UV 0 5 mi (8 km) 30 inHg (1015 hPa)",
+"preview": "N/A/N/A 0 in (0 mm) N/A% UV 0 5 mi (8 km) 30 inHg (1015 hPa)",
+"sample_preview": "78F/26C/61F/16C 0 in (0 mm) 20% UV 5 10 mi (16 km) 30 inHg (1019 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C SW 12 mph (20 km/h) {unknown}",
+"preview": "48F 9C SW 12 mph (20 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8 mph (13 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 44F/7C | 48F/9C",
+"preview": "Feels like: 44F/7C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "London Overcast SW at 12 mph (20 km/h) London Overcast SW at 12 mph (20 km/h) London Overcast SW at 12 mph (20 km/h) London",
+"preview": "London Overcast SW at 12 mph (20 km/h) London Overcast SW at 12 mph (20 km/h) London Overcast SW at 12 mph (20 km/h) London",
+"sample_preview": "Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Part..."
+}
+}
+},
+{
+"settings": {
+"verbosity_level": "detailed",
+"time_format_12hour": false,
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "London",
+"summary_text": "London - 48°F (9°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for London",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.2°F (9.0°C) (feels like 44.1°F (6.7°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "41.7°F (5.4°C)"
+},
+{
+"label": "Wind chill",
+"value": "44.1°F (6.7°C)"
+},
+{
+"label": "Wind",
+"value": "SW at 12.3 mph (19.8 kph)"
+},
+{
+"label": "Humidity",
+"value": "78%"
+},
+{
+"label": "Pressure",
+"value": "30.0 inHg (1015.3 hPa)"
+},
+{
+"label": "Visibility",
+"value": "5.0 mi (8.0 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "08:02"
+},
+{
+"label": "Sunset",
+"value": "16:15"
+}
+],
+"fallback_text": "Current conditions for London: Overcast\nTemperature: 48.2°F (9.0°C) (feels like 44.1°F (6.7°C))\nFeels different: Due to wind chill\nDewpoint: 41.7°F (5.4°C)\nWind chill: 44.1°F (6.7°C)\nWind: SW at 12.3 mph (19.8 kph)\nHumidity: 78%\nPressure: 30.0 inHg (1015.3 hPa)\nVisibility: 5.0 mi (8.0 km)\nUV Index: 0.0 (Low)\nSunrise: 08:02\nSunset: 16:15",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Overcast",
+"preview": "48F/9C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "London: 48F/9C (feels like 44F/7C) SW at 12.3 mph (19.8 km/h) 78%",
+"preview": "London: 48F/9C (feels like 44F/7C) SW at 12.3 mph (19.8 km/h) 78%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A 0.00 in (0.00 mm) N/A% UV 0 5.0 mi (8.0 km) 29.98 inHg (1015.30 hPa)",
+"preview": "N/A/N/A 0.00 in (0.00 mm) N/A% UV 0 5.0 mi (8.0 km) 29.98 inHg (1015.30 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C SW 12.3 mph (19.8 km/h) {unknown}",
+"preview": "48F 9C SW 12.3 mph (19.8 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 44F/7C | 48F/9C",
+"preview": "Feels like: 44F/7C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 k...",
+"preview": "London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 k...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"time_display_mode": "utc",
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "London",
+"summary_text": "London - 48°F (9°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for London",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.2°F (9.0°C) (feels like 44.1°F (6.7°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "41.7°F (5.4°C)"
+},
+{
+"label": "Wind chill",
+"value": "44.1°F (6.7°C)"
+},
+{
+"label": "Wind",
+"value": "SW at 12.3 mph (19.8 kph)"
+},
+{
+"label": "Humidity",
+"value": "78%"
+},
+{
+"label": "Pressure",
+"value": "30.0 inHg (1015.3 hPa)"
+},
+{
+"label": "Visibility",
+"value": "5.0 mi (8.0 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "8:02 AM UTC"
+},
+{
+"label": "Sunset",
+"value": "4:15 PM UTC"
+}
+],
+"fallback_text": "Current conditions for London: Overcast\nTemperature: 48.2°F (9.0°C) (feels like 44.1°F (6.7°C))\nFeels different: Due to wind chill\nDewpoint: 41.7°F (5.4°C)\nWind chill: 44.1°F (6.7°C)\nWind: SW at 12.3 mph (19.8 kph)\nHumidity: 78%\nPressure: 30.0 inHg (1015.3 hPa)\nVisibility: 5.0 mi (8.0 km)\nUV Index: 0.0 (Low)\nSunrise: 8:02 AM UTC\nSunset: 4:15 PM UTC",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Overcast",
+"preview": "48F/9C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "London: 48F/9C (feels like 44F/7C) SW at 12.3 mph (19.8 km/h) 78%",
+"preview": "London: 48F/9C (feels like 44F/7C) SW at 12.3 mph (19.8 km/h) 78%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A 0.00 in (0.00 mm) N/A% UV 0 5.0 mi (8.0 km) 29.98 inHg (1015.30 hPa)",
+"preview": "N/A/N/A 0.00 in (0.00 mm) N/A% UV 0 5.0 mi (8.0 km) 29.98 inHg (1015.30 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C SW 12.3 mph (19.8 km/h) {unknown}",
+"preview": "48F 9C SW 12.3 mph (19.8 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 44F/7C | 48F/9C",
+"preview": "Feels like: 44F/7C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 k...",
+"preview": "London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 k...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"time_display_mode": "both",
+"show_timezone_suffix": true,
+"time_format_12hour": false
+},
+"presentation": {
+"location_name": "London",
+"summary_text": "London - 48°F (9°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for London",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.2°F (9.0°C) (feels like 44.1°F (6.7°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "41.7°F (5.4°C)"
+},
+{
+"label": "Wind chill",
+"value": "44.1°F (6.7°C)"
+},
+{
+"label": "Wind",
+"value": "SW at 12.3 mph (19.8 kph)"
+},
+{
+"label": "Humidity",
+"value": "78%"
+},
+{
+"label": "Pressure",
+"value": "30.0 inHg (1015.3 hPa)"
+},
+{
+"label": "Visibility",
+"value": "5.0 mi (8.0 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "08:02 GMT (08:02 UTC)"
+},
+{
+"label": "Sunset",
+"value": "16:15 GMT (16:15 UTC)"
+}
+],
+"fallback_text": "Current conditions for London: Overcast\nTemperature: 48.2°F (9.0°C) (feels like 44.1°F (6.7°C))\nFeels different: Due to wind chill\nDewpoint: 41.7°F (5.4°C)\nWind chill: 44.1°F (6.7°C)\nWind: SW at 12.3 mph (19.8 kph)\nHumidity: 78%\nPressure: 30.0 inHg (1015.3 hPa)\nVisibility: 5.0 mi (8.0 km)\nUV Index: 0.0 (Low)\nSunrise: 08:02 GMT (08:02 UTC)\nSunset: 16:15 GMT (16:15 UTC)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Overcast",
+"preview": "48F/9C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "London: 48F/9C (feels like 44F/7C) SW at 12.3 mph (19.8 km/h) 78%",
+"preview": "London: 48F/9C (feels like 44F/7C) SW at 12.3 mph (19.8 km/h) 78%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A 0.00 in (0.00 mm) N/A% UV 0 5.0 mi (8.0 km) 29.98 inHg (1015.30 hPa)",
+"preview": "N/A/N/A 0.00 in (0.00 mm) N/A% UV 0 5.0 mi (8.0 km) 29.98 inHg (1015.30 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C SW 12.3 mph (19.8 km/h) {unknown}",
+"preview": "48F 9C SW 12.3 mph (19.8 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 44F/7C | 48F/9C",
+"preview": "Feels like: 44F/7C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 k...",
+"preview": "London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 k...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"forecast_time_reference": "user_local",
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "London",
+"summary_text": "London - 48°F (9°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for London",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.2°F (9.0°C) (feels like 44.1°F (6.7°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "41.7°F (5.4°C)"
+},
+{
+"label": "Wind chill",
+"value": "44.1°F (6.7°C)"
+},
+{
+"label": "Wind",
+"value": "SW at 12.3 mph (19.8 kph)"
+},
+{
+"label": "Humidity",
+"value": "78%"
+},
+{
+"label": "Pressure",
+"value": "30.0 inHg (1015.3 hPa)"
+},
+{
+"label": "Visibility",
+"value": "5.0 mi (8.0 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "8:02 AM"
+},
+{
+"label": "Sunset",
+"value": "4:15 PM"
+}
+],
+"fallback_text": "Current conditions for London: Overcast\nTemperature: 48.2°F (9.0°C) (feels like 44.1°F (6.7°C))\nFeels different: Due to wind chill\nDewpoint: 41.7°F (5.4°C)\nWind chill: 44.1°F (6.7°C)\nWind: SW at 12.3 mph (19.8 kph)\nHumidity: 78%\nPressure: 30.0 inHg (1015.3 hPa)\nVisibility: 5.0 mi (8.0 km)\nUV Index: 0.0 (Low)\nSunrise: 8:02 AM\nSunset: 4:15 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Overcast",
+"preview": "48F/9C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "London: 48F/9C (feels like 44F/7C) SW at 12.3 mph (19.8 km/h) 78%",
+"preview": "London: 48F/9C (feels like 44F/7C) SW at 12.3 mph (19.8 km/h) 78%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A 0.00 in (0.00 mm) N/A% UV 0 5.0 mi (8.0 km) 29.98 inHg (1015.30 hPa)",
+"preview": "N/A/N/A 0.00 in (0.00 mm) N/A% UV 0 5.0 mi (8.0 km) 29.98 inHg (1015.30 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C SW 12.3 mph (19.8 km/h) {unknown}",
+"preview": "48F 9C SW 12.3 mph (19.8 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 44F/7C | 48F/9C",
+"preview": "Feels like: 44F/7C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 k...",
+"preview": "London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 k...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"show_dewpoint": false,
+"show_visibility": false,
+"show_uv_index": false,
+"show_pressure_trend": false,
+"show_seasonal_data": false
+},
+"presentation": {
+"location_name": "London",
+"summary_text": "London - 48°F (9°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for London",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.2°F (9.0°C) (feels like 44.1°F (6.7°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Wind",
+"value": "SW at 12.3 mph (19.8 kph)"
+},
+{
+"label": "Humidity",
+"value": "78%"
+},
+{
+"label": "Pressure",
+"value": "30.0 inHg (1015.3 hPa)"
+},
+{
+"label": "Sunrise",
+"value": "8:02 AM"
+},
+{
+"label": "Sunset",
+"value": "4:15 PM"
+}
+],
+"fallback_text": "Current conditions for London: Overcast\nTemperature: 48.2°F (9.0°C) (feels like 44.1°F (6.7°C))\nFeels different: Due to wind chill\nWind: SW at 12.3 mph (19.8 kph)\nHumidity: 78%\nPressure: 30.0 inHg (1015.3 hPa)\nSunrise: 8:02 AM\nSunset: 4:15 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Overcast",
+"preview": "48F/9C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "London: 48F/9C (feels like 44F/7C) SW at 12.3 mph (19.8 km/h) 78%",
+"preview": "London: 48F/9C (feels like 44F/7C) SW at 12.3 mph (19.8 km/h) 78%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A 0.00 in (0.00 mm) N/A% UV 0 5.0 mi (8.0 km) 29.98 inHg (1015.30 hPa)",
+"preview": "N/A/N/A 0.00 in (0.00 mm) N/A% UV 0 5.0 mi (8.0 km) 29.98 inHg (1015.30 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C SW 12.3 mph (19.8 km/h) {unknown}",
+"preview": "48F 9C SW 12.3 mph (19.8 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 44F/7C | 48F/9C",
+"preview": "Feels like: 44F/7C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 k...",
+"preview": "London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 k...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"severe_weather_override": true,
+"category_order": [
+"uv_index",
+"visibility_clouds",
+"humidity_pressure",
+"wind",
+"precipitation",
+"temperature"
+]
+},
+"presentation": {
+"location_name": "London",
+"summary_text": "London - 48°F (9°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for London",
+"description": "Overcast",
+"metrics": [
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Visibility",
+"value": "5.0 mi (8.0 km)"
+},
+{
+"label": "Humidity",
+"value": "78%"
+},
+{
+"label": "Pressure",
+"value": "30.0 inHg (1015.3 hPa)"
+},
+{
+"label": "Wind",
+"value": "SW at 12.3 mph (19.8 kph)"
+},
+{
+"label": "Temperature",
+"value": "48.2°F (9.0°C) (feels like 44.1°F (6.7°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "41.7°F (5.4°C)"
+},
+{
+"label": "Wind chill",
+"value": "44.1°F (6.7°C)"
+},
+{
+"label": "Sunrise",
+"value": "8:02 AM"
+},
+{
+"label": "Sunset",
+"value": "4:15 PM"
+}
+],
+"fallback_text": "Current conditions for London: Overcast\nUV Index: 0.0 (Low)\nVisibility: 5.0 mi (8.0 km)\nHumidity: 78%\nPressure: 30.0 inHg (1015.3 hPa)\nWind: SW at 12.3 mph (19.8 kph)\nTemperature: 48.2°F (9.0°C) (feels like 44.1°F (6.7°C))\nFeels different: Due to wind chill\nDewpoint: 41.7°F (5.4°C)\nWind chill: 44.1°F (6.7°C)\nSunrise: 8:02 AM\nSunset: 4:15 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Overcast",
+"preview": "48F/9C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "London: 48F/9C (feels like 44F/7C) SW at 12.3 mph (19.8 km/h) 78%",
+"preview": "London: 48F/9C (feels like 44F/7C) SW at 12.3 mph (19.8 km/h) 78%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A 0.00 in (0.00 mm) N/A% UV 0 5.0 mi (8.0 km) 29.98 inHg (1015.30 hPa)",
+"preview": "N/A/N/A 0.00 in (0.00 mm) N/A% UV 0 5.0 mi (8.0 km) 29.98 inHg (1015.30 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C SW 12.3 mph (19.8 km/h) {unknown}",
+"preview": "48F 9C SW 12.3 mph (19.8 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 44F/7C | 48F/9C",
+"preview": "Feels like: 44F/7C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 k...",
+"preview": "London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 k...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"severe_weather_override": true,
+"show_impact_summaries": true,
+"temperature_unit": "celsius"
+},
+"presentation": {
+"location_name": "London",
+"summary_text": "London - 9°C - Overcast",
+"current_conditions": {
+"title": "Current conditions for London",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "9.0°C (feels like 6.7°C)"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "5.4°C"
+},
+{
+"label": "Wind chill",
+"value": "6.7°C"
+},
+{
+"label": "Wind",
+"value": "SW at 19.8 kph"
+},
+{
+"label": "Humidity",
+"value": "78%"
+},
+{
+"label": "Pressure",
+"value": "1015.3 hPa"
+},
+{
+"label": "Visibility",
+"value": "8.0 km"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "8:02 AM"
+},
+{
+"label": "Sunset",
+"value": "4:15 PM"
+},
+{
+"label": "Impact: Outdoor",
+"value": "Cool - coat or warm jacket recommended"
+},
+{
+"label": "Impact: Driving",
+"value": "Normal driving conditions"
+}
+],
+"fallback_text": "Current conditions for London: Overcast\nTemperature: 9.0°C (feels like 6.7°C)\nFeels different: Due to wind chill\nDewpoint: 5.4°C\nWind chill: 6.7°C\nWind: SW at 19.8 kph\nHumidity: 78%\nPressure: 1015.3 hPa\nVisibility: 8.0 km\nUV Index: 0.0 (Low)\nSunrise: 8:02 AM\nSunset: 4:15 PM\nImpact: Outdoor: Cool - coat or warm jacket recommended\nImpact: Driving: Normal driving conditions",
+"trends": [],
+"impact_summary": {
+"outdoor": "Cool - coat or warm jacket recommended",
+"driving": "Normal driving conditions",
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "9C Overcast",
+"preview": "9C Overcast",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "London: 9C (feels like 7C) SW at 19.8 km/h 78%",
+"preview": "London: 9C (feels like 7C) SW at 19.8 km/h 78%",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A 0.00 mm N/A% UV 0 8.0 km 1015.30 hPa",
+"preview": "N/A/N/A 0.00 mm N/A% UV 0 8.0 km 1015.30 hPa",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C SW 19.8 km/h {unknown}",
+"preview": "48F 9C SW 19.8 km/h {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 7C | 9C",
+"preview": "Feels like: 7C | 9C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "London Overcast SW at 19.8 km/h London Overcast SW at 19.8 km/h London Overcast SW at 19.8 km/h London",
+"preview": "London Overcast SW at 19.8 km/h London Overcast SW at 19.8 km/h London Overcast SW at 19.8 km/h London",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"forecast_duration_days": 3,
+"hourly_forecast_hours": 12,
+"round_values": true
+},
+"presentation": {
+"location_name": "London",
+"summary_text": "London - 48°F (9°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for London",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48°F (9°C) (feels like 44°F (7°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "42°F (5°C)"
+},
+{
+"label": "Wind chill",
+"value": "44°F (7°C)"
+},
+{
+"label": "Wind",
+"value": "SW at 12 mph (20 kph)"
+},
+{
+"label": "Humidity",
+"value": "78%"
+},
+{
+"label": "Pressure",
+"value": "30 inHg (1015 hPa)"
+},
+{
+"label": "Visibility",
+"value": "5 mi (8 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "8:02 AM"
+},
+{
+"label": "Sunset",
+"value": "4:15 PM"
+}
+],
+"fallback_text": "Current conditions for London: Overcast\nTemperature: 48°F (9°C) (feels like 44°F (7°C))\nFeels different: Due to wind chill\nDewpoint: 42°F (5°C)\nWind chill: 44°F (7°C)\nWind: SW at 12 mph (20 kph)\nHumidity: 78%\nPressure: 30 inHg (1015 hPa)\nVisibility: 5 mi (8 km)\nUV Index: 0.0 (Low)\nSunrise: 8:02 AM\nSunset: 4:15 PM",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Overcast",
+"preview": "48F/9C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "London: 48F/9C (feels like 44F/7C) SW at 12 mph (20 km/h) 78%",
+"preview": "London: 48F/9C (feels like 44F/7C) SW at 12 mph (20 km/h) 78%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8 mph (13 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A 0 in (0 mm) N/A% UV 0 5 mi (8 km) 30 inHg (1015 hPa)",
+"preview": "N/A/N/A 0 in (0 mm) N/A% UV 0 5 mi (8 km) 30 inHg (1015 hPa)",
+"sample_preview": "78F/26C/61F/16C 0 in (0 mm) 20% UV 5 10 mi (16 km) 30 inHg (1019 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C SW 12 mph (20 km/h) {unknown}",
+"preview": "48F 9C SW 12 mph (20 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8 mph (13 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 44F/7C | 48F/9C",
+"preview": "Feels like: 44F/7C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "London Overcast SW at 12 mph (20 km/h) London Overcast SW at 12 mph (20 km/h) London Overcast SW at 12 mph (20 km/h) London",
+"preview": "London Overcast SW at 12 mph (20 km/h) London Overcast SW at 12 mph (20 km/h) London Overcast SW at 12 mph (20 km/h) London",
+"sample_preview": "Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Part..."
+}
+}
+},
+{
+"settings": {
+"forecast_duration_days": 16,
+"hourly_forecast_hours": 48,
+"date_format": "eu",
+"time_display_mode": "both"
+},
+"presentation": {
+"location_name": "London",
+"summary_text": "London - 48°F (9°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for London",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "48.2°F (9.0°C) (feels like 44.1°F (6.7°C))"
+},
+{
+"label": "Feels different",
+"value": "Due to wind chill"
+},
+{
+"label": "Dewpoint",
+"value": "41.7°F (5.4°C)"
+},
+{
+"label": "Wind chill",
+"value": "44.1°F (6.7°C)"
+},
+{
+"label": "Wind",
+"value": "SW at 12.3 mph (19.8 kph)"
+},
+{
+"label": "Humidity",
+"value": "78%"
+},
+{
+"label": "Pressure",
+"value": "30.0 inHg (1015.3 hPa)"
+},
+{
+"label": "Visibility",
+"value": "5.0 mi (8.0 km)"
+},
+{
+"label": "UV Index",
+"value": "0.0 (Low)"
+},
+{
+"label": "Sunrise",
+"value": "8:02 AM (8:02 AM UTC)"
+},
+{
+"label": "Sunset",
+"value": "4:15 PM (4:15 PM UTC)"
+}
+],
+"fallback_text": "Current conditions for London: Overcast\nTemperature: 48.2°F (9.0°C) (feels like 44.1°F (6.7°C))\nFeels different: Due to wind chill\nDewpoint: 41.7°F (5.4°C)\nWind chill: 44.1°F (6.7°C)\nWind: SW at 12.3 mph (19.8 kph)\nHumidity: 78%\nPressure: 30.0 inHg (1015.3 hPa)\nVisibility: 5.0 mi (8.0 km)\nUV Index: 0.0 (Low)\nSunrise: 8:02 AM (8:02 AM UTC)\nSunset: 4:15 PM (4:15 PM UTC)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": null,
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "48F/9C Overcast",
+"preview": "48F/9C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "London: 48F/9C (feels like 44F/7C) SW at 12.3 mph (19.8 km/h) 78%",
+"preview": "London: 48F/9C (feels like 44F/7C) SW at 12.3 mph (19.8 km/h) 78%",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A 0.00 in (0.00 mm) N/A% UV 0 5.0 mi (8.0 km) 29.98 inHg (1015.30 hPa)",
+"preview": "N/A/N/A 0.00 in (0.00 mm) N/A% UV 0 5.0 mi (8.0 km) 29.98 inHg (1015.30 hPa)",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "48F 9C SW 12.3 mph (19.8 km/h) {unknown}",
+"preview": "48F 9C SW 12.3 mph (19.8 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "Feels like: 44F/7C | 48F/9C",
+"preview": "Feels like: 44F/7C | 48F/9C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 k...",
+"preview": "London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 km/h) London Overcast SW at 12.3 mph (19.8 k...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+}
+]
+}

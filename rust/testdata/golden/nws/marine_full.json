@@ -1,0 +1,250 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "enrich_with_marine_data",
+ "location": {
+  "name": "Sandy Hook",
+  "latitude": 40.5,
+  "longitude": -73.9,
+  "timezone": null,
+  "country_code": "US",
+  "marine_mode": true,
+  "forecast_zone_id": null,
+  "cwa_office": null,
+  "county_zone_id": null,
+  "fire_zone_id": null,
+  "radar_station": null
+ },
+ "existing_alerts": {
+  "alerts": [
+   {
+    "title": "Existing",
+    "description": "d",
+    "severity": "Unknown",
+    "urgency": "Unknown",
+    "certainty": "Unknown",
+    "event": null,
+    "headline": null,
+    "instruction": null,
+    "onset": null,
+    "expires": null,
+    "sent": null,
+    "effective": null,
+    "areas": [],
+    "references": [],
+    "id": "urn:oid:a",
+    "source": "NWS",
+    "message_type": null,
+    "affected_zones": [],
+    "same_codes": [],
+    "same_event_codes": []
+   },
+   {
+    "title": "Dup",
+    "description": "first",
+    "severity": "Minor",
+    "urgency": "Unknown",
+    "certainty": "Unknown",
+    "event": "E",
+    "headline": null,
+    "instruction": null,
+    "onset": null,
+    "expires": null,
+    "sent": null,
+    "effective": null,
+    "areas": [],
+    "references": [],
+    "id": null,
+    "source": null,
+    "message_type": null,
+    "affected_zones": [],
+    "same_codes": [],
+    "same_event_codes": []
+   },
+   {
+    "title": "Dup",
+    "description": "second",
+    "severity": "Minor",
+    "urgency": "Unknown",
+    "certainty": "Unknown",
+    "event": "E",
+    "headline": null,
+    "instruction": null,
+    "onset": null,
+    "expires": null,
+    "sent": null,
+    "effective": null,
+    "areas": [],
+    "references": [],
+    "id": null,
+    "source": null,
+    "message_type": null,
+    "affected_zones": [],
+    "same_codes": [],
+    "same_event_codes": []
+   }
+  ]
+ },
+ "responses": [
+  {
+   "url": "https://api.weather.gov/zones?type=marine&point=40.5%2C-73.9",
+   "status": 200,
+   "body": "{\"features\":[{\"id\":\"https://x/ANZ355\",\"properties\":{\"id\":\"ANZ355\",\"name\":\"Zone name\"}}]}"
+  },
+  {
+   "url": "https://api.weather.gov/zones/marine/ANZ355/forecast",
+   "status": 200,
+   "body": "{\"properties\":{\"name\":\"Coastal waters from Sandy Hook\",\"updateTime\":\"2026-01-20T15:00:00Z\",\"periods\":[{\"name\":\"Tonight\",\"detailedForecast\":\"W winds 15 to 20 kt. Seas 3 to 5 ft; gusts to 25 kt.\"},{\"name\":null,\"shortForecast\":\"Seas 2 ft. Sunny.\"},{\"name\":\"Wed\",\"detailedForecast\":\"\"},{\"name\":\"Wed Night\",\"detailedForecast\":\"Waves 1 ft. Swell from the SE.\"},{\"name\":\"Thu\",\"detailedForecast\":\"Winds light.\"}]}}"
+  },
+  {
+   "url": "https://api.weather.gov/alerts/active?zone=ANZ355&status=actual",
+   "status": 200,
+   "body": "{\"features\":[{\"id\":\"urn:oid:marine\",\"properties\":{\"event\":\"Small Craft Advisory\",\"headline\":\"Small Craft Advisory issued\",\"areaDesc\":\"Sandy Hook\"}},{\"id\":\"urn:oid:a\",\"properties\":{\"event\":\"Tornado Warning\",\"headline\":\"Tornado Warning issued\",\"severity\":\"Extreme\",\"urgency\":\"Immediate\",\"certainty\":\"Observed\",\"messageType\":\"Alert\",\"description\":\"A tornado was sighted.\",\"instruction\":\"Take cover now.\",\"areaDesc\":\"New York, NY; Kings, NY;\",\"affectedZones\":[\"https://api.weather.gov/zones/county/NYC061\",\"https://api.weather.gov/zones/forecast/NYZ072\"],\"geocode\":{\"SAME\":[\"036061\",36047]},\"eventCode\":{\"SAME\":[\"TOR\"]},\"sent\":\"2026-01-20T18:00:00Z\",\"effective\":\"2026-01-20T18:00:00-05:00\",\"onset\":\"2026-01-20T18:05:00-05:00\",\"expires\":\"2026-01-20T19:00:00-05:00\",\"references\":[{\"identifier\":\"urn:oid:prev\",\"@id\":\"https://x/prev\"}]}}]}"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/zones",
+   "params": [
+    [
+     "type",
+     "marine"
+    ],
+    [
+     "point",
+     "40.5,-73.9"
+    ]
+   ],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/zones/marine/ANZ355/forecast",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/alerts/active",
+   "params": [
+    [
+     "zone",
+     "ANZ355"
+    ],
+    [
+     "status",
+     "actual"
+    ]
+   ],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "marine": {
+   "zone_id": "ANZ355",
+   "zone_name": "Coastal waters from Sandy Hook",
+   "forecast_summary": "W winds 15 to 20 kt. Seas 3 to 5 ft; gusts to 25 kt.",
+   "issued_at": "2026-01-20T15:00:00+00:00",
+   "periods": [
+    {
+     "name": "Tonight",
+     "summary": "W winds 15 to 20 kt. Seas 3 to 5 ft; gusts to 25 kt."
+    },
+    {
+     "name": "Marine period",
+     "summary": "Seas 2 ft. Sunny."
+    }
+   ],
+   "highlights": [
+    "W winds 15 to 20 kt",
+    "Seas 3 to 5 ft",
+    "gusts to 25 kt",
+    "Seas 2 ft"
+   ]
+  },
+  "alerts": {
+   "alerts": [
+    {
+     "title": "Existing",
+     "description": "d",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": null,
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": "urn:oid:a",
+     "source": "NWS",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "Dup",
+     "description": "second",
+     "severity": "Minor",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "E",
+     "headline": null,
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [],
+     "references": [],
+     "id": null,
+     "source": null,
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    },
+    {
+     "title": "Small Craft Advisory issued",
+     "description": "",
+     "severity": "Unknown",
+     "urgency": "Unknown",
+     "certainty": "Unknown",
+     "event": "Small Craft Advisory",
+     "headline": "Small Craft Advisory issued",
+     "instruction": null,
+     "onset": null,
+     "expires": null,
+     "sent": null,
+     "effective": null,
+     "areas": [
+      "Sandy Hook"
+     ],
+     "references": [],
+     "id": "urn:oid:marine",
+     "source": "NWS Marine",
+     "message_type": null,
+     "affected_zones": [],
+     "same_codes": [],
+     "same_event_codes": []
+    }
+   ]
+  }
+ }
+}

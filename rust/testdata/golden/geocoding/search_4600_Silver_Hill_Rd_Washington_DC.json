@@ -1,0 +1,61 @@
+{
+ "query": "4600 Silver Hill Rd, Washington, DC",
+ "limit": 5,
+ "exchanges": [
+  {
+   "url": "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress?address=4600%20Silver%20Hill%20Rd%2C%20Washington%2C%20DC&benchmark=Public_AR_Current&format=json",
+   "headers": {},
+   "status": 200,
+   "body": {
+    "result": {
+     "addressMatches": [
+      {
+       "coordinates": {
+        "x": -76.928365658124,
+        "y": 38.845053106269
+       },
+       "matchedAddress": "4600 SILVER HILL RD, WASHINGTON, DC, 20233"
+      },
+      {
+       "coordinates": {
+        "x": -76.928365658124,
+        "y": 38.845053106269
+       },
+       "matchedAddress": "4600 Silver Hill Rd, Washington, DC, 20233"
+      },
+      {
+       "coordinates": {
+        "x": "bad",
+        "y": 1
+       },
+       "matchedAddress": "Nowhere"
+      },
+      {
+       "coordinates": {
+        "x": -77.0,
+        "y": 38.9
+       },
+       "matchedAddress": ""
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "output": [
+  {
+   "name": "4600 SILVER HILL RD, WASHINGTON, DC, 20233",
+   "latitude": 38.845053106269,
+   "longitude": -76.928365658124,
+   "timezone": null,
+   "country_code": "US",
+   "marine_mode": false,
+   "forecast_zone_id": null,
+   "cwa_office": null,
+   "county_zone_id": null,
+   "fire_zone_id": null,
+   "radar_station": null
+  }
+ ],
+ "error": false
+}

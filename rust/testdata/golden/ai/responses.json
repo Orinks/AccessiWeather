@@ -1,0 +1,1930 @@
+{
+ "markdown": [
+  {
+   "input": "**Bold** and *italic* and __strong__ and _em_.",
+   "preserve": false,
+   "output": "Bold and italic and strong and em."
+  },
+  {
+   "input": "**Bold** and *italic* and __strong__ and _em_.",
+   "preserve": true,
+   "output": "**Bold** and *italic* and __strong__ and _em_."
+  },
+  {
+   "input": "# Header\n## Sub\nText",
+   "preserve": false,
+   "output": "Header\nSub\nText"
+  },
+  {
+   "input": "# Header\n## Sub\nText",
+   "preserve": true,
+   "output": "# Header\n## Sub\nText"
+  },
+  {
+   "input": "Intro\n\n\n\n- one\n* two\n+ three\n\nEnd",
+   "preserve": false,
+   "output": "Intro\none\ntwo\nthree\n\nEnd"
+  },
+  {
+   "input": "Intro\n\n\n\n- one\n* two\n+ three\n\nEnd",
+   "preserve": true,
+   "output": "Intro\n\n\n\n- one\n* two\n+ three\n\nEnd"
+  },
+  {
+   "input": "Code: ```python\nprint(1)\n``` and `inline`",
+   "preserve": false,
+   "output": "Code:  and inline"
+  },
+  {
+   "input": "Code: ```python\nprint(1)\n``` and `inline`",
+   "preserve": true,
+   "output": "Code: ```python\nprint(1)\n``` and `inline`"
+  },
+  {
+   "input": "See [the NWS](https://weather.gov) now.",
+   "preserve": false,
+   "output": "See the NWS now."
+  },
+  {
+   "input": "See [the NWS](https://weather.gov) now.",
+   "preserve": true,
+   "output": "See [the NWS](https://weather.gov) now."
+  },
+  {
+   "input": "  plain text with trailing space  \n",
+   "preserve": false,
+   "output": "plain text with trailing space"
+  },
+  {
+   "input": "  plain text with trailing space  \n",
+   "preserve": true,
+   "output": "  plain text with trailing space  \n"
+  },
+  {
+   "input": "snake_case_name and 2*3*4",
+   "preserve": false,
+   "output": "snakecasename and 234"
+  },
+  {
+   "input": "snake_case_name and 2*3*4",
+   "preserve": true,
+   "output": "snake_case_name and 2*3*4"
+  }
+ ],
+ "refusals": [
+  {
+   "input": "I’m sorry, but I can’t help with that.",
+   "refusal": true
+  },
+  {
+   "input": "I'm sorry, but I can't help with that request about weather.",
+   "refusal": true
+  },
+  {
+   "input": "Sorry, I can't help with that.",
+   "refusal": true
+  },
+  {
+   "input": "  I cannot   help with this request ",
+   "refusal": true
+  },
+  {
+   "input": "I can't assist with that. xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "refusal": false
+  },
+  {
+   "input": "I cannot fulfill this request.",
+   "refusal": true
+  },
+  {
+   "input": "Sorry, the forecast calls for rain.",
+   "refusal": false
+  },
+  {
+   "input": "",
+   "refusal": false
+  }
+ ],
+ "live_weather": [
+  {
+   "input": "Explain today’s forecast",
+   "live": true
+  },
+  {
+   "input": "Why is it so windy now?",
+   "live": true
+  },
+  {
+   "input": "Explain current conditions",
+   "live": true
+  },
+  {
+   "input": "Explain how forecasts work",
+   "live": false
+  },
+  {
+   "input": "What is a weather warning?",
+   "live": false
+  },
+  {
+   "input": "How does rain form?",
+   "live": false
+  },
+  {
+   "input": "Any alerts?",
+   "live": true
+  },
+  {
+   "input": "Will it snow tomorrow?",
+   "live": true
+  },
+  {
+   "input": "What's the UV like this week?",
+   "live": true
+  },
+  {
+   "input": "Tell me a joke",
+   "live": false
+  },
+  {
+   "input": "WEATHER",
+   "live": true
+  }
+ ],
+ "explicit_location": [
+  {
+   "user": "What is the current weather in Home?",
+   "tool": "Home",
+   "selected": "Lumberton, NJ",
+   "explicit": true
+  },
+  {
+   "user": "Are there alerts for Lumberton right now?",
+   "tool": "Home",
+   "selected": "Lumberton, NJ",
+   "explicit": false
+  },
+  {
+   "user": "Are there alerts for Lumberton right now?",
+   "tool": "Lumberton",
+   "selected": "Lumberton, NJ",
+   "explicit": true
+  },
+  {
+   "user": "Weather in Paris, France?",
+   "tool": "Paris, France",
+   "selected": "Home",
+   "explicit": true
+  },
+  {
+   "user": "Weather in Paris?",
+   "tool": "Paris, TX",
+   "selected": "Home",
+   "explicit": true
+  },
+  {
+   "user": "Weather?",
+   "tool": " lumberton, nj ",
+   "selected": "Lumberton, NJ",
+   "explicit": true
+  },
+  {
+   "user": "Weather in Springfield",
+   "tool": "Springfield, IL",
+   "selected": "Springfield, MO",
+   "explicit": false
+  },
+  {
+   "user": "Weather?",
+   "tool": ",X",
+   "selected": "Home",
+   "explicit": true
+  }
+ ],
+ "attempts": [
+  {
+   "provider": "openrouter",
+   "model": "openrouter/free",
+   "primary": "openrouter/free",
+   "index": 0,
+   "text": "Trying OpenRouter's free router. Free models share capacity; if this one does not answer, the router tries another free model."
+  },
+  {
+   "provider": "openrouter",
+   "model": "openrouter/free",
+   "primary": "openrouter/free",
+   "index": 1,
+   "text": "Trying OpenRouter's free router as a backup because the selected model did not answer."
+  },
+  {
+   "provider": "openrouter",
+   "model": "vendor/model:free",
+   "primary": "openrouter/free",
+   "index": 0,
+   "text": "Trying selected free model vendor/model:free. Free models share rate limits; the free router will be tried if this one is busy."
+  },
+  {
+   "provider": "openrouter",
+   "model": "vendor/model:free",
+   "primary": "openrouter/free",
+   "index": 1,
+   "text": "Trying backup free model vendor/model:free because an earlier model did not answer."
+  },
+  {
+   "provider": "openrouter",
+   "model": "vendor/model",
+   "primary": "openrouter/free",
+   "index": 0,
+   "text": "Trying selected model vendor/model."
+  },
+  {
+   "provider": "openrouter",
+   "model": "vendor/model",
+   "primary": "openrouter/free",
+   "index": 1,
+   "text": "Trying backup model vendor/model because openrouter/free did not answer."
+  },
+  {
+   "provider": "openrouter",
+   "model": "openrouter/free",
+   "primary": "vendor/model:free",
+   "index": 0,
+   "text": "Trying OpenRouter's free router. Free models share capacity; if this one does not answer, the router tries another free model."
+  },
+  {
+   "provider": "openrouter",
+   "model": "openrouter/free",
+   "primary": "vendor/model:free",
+   "index": 1,
+   "text": "Trying OpenRouter's free router as a backup because the selected model did not answer."
+  },
+  {
+   "provider": "openrouter",
+   "model": "vendor/model:free",
+   "primary": "vendor/model:free",
+   "index": 0,
+   "text": "Trying selected free model vendor/model:free. Free models share rate limits; the free router will be tried if this one is busy."
+  },
+  {
+   "provider": "openrouter",
+   "model": "vendor/model:free",
+   "primary": "vendor/model:free",
+   "index": 1,
+   "text": "Trying backup free model vendor/model:free because an earlier model did not answer."
+  },
+  {
+   "provider": "openrouter",
+   "model": "vendor/model",
+   "primary": "vendor/model:free",
+   "index": 0,
+   "text": "Trying selected model vendor/model."
+  },
+  {
+   "provider": "openrouter",
+   "model": "vendor/model",
+   "primary": "vendor/model:free",
+   "index": 1,
+   "text": "Trying backup model vendor/model because vendor/model:free did not answer."
+  },
+  {
+   "provider": "openrouter",
+   "model": "openrouter/free",
+   "primary": "vendor/model",
+   "index": 0,
+   "text": "Trying OpenRouter's free router. Free models share capacity; if this one does not answer, the router tries another free model."
+  },
+  {
+   "provider": "openrouter",
+   "model": "openrouter/free",
+   "primary": "vendor/model",
+   "index": 1,
+   "text": "Trying OpenRouter's free router as a backup because the selected model did not answer."
+  },
+  {
+   "provider": "openrouter",
+   "model": "vendor/model:free",
+   "primary": "vendor/model",
+   "index": 0,
+   "text": "Trying selected free model vendor/model:free. Free models share rate limits; the free router will be tried if this one is busy."
+  },
+  {
+   "provider": "openrouter",
+   "model": "vendor/model:free",
+   "primary": "vendor/model",
+   "index": 1,
+   "text": "Trying backup free model vendor/model:free because an earlier model did not answer."
+  },
+  {
+   "provider": "openrouter",
+   "model": "vendor/model",
+   "primary": "vendor/model",
+   "index": 0,
+   "text": "Trying selected model vendor/model."
+  },
+  {
+   "provider": "openrouter",
+   "model": "vendor/model",
+   "primary": "vendor/model",
+   "index": 1,
+   "text": "Trying backup model vendor/model because vendor/model did not answer."
+  },
+  {
+   "provider": "venice",
+   "model": "openrouter/free",
+   "primary": "openrouter/free",
+   "index": 0,
+   "text": "Trying selected Venice model openrouter/free."
+  },
+  {
+   "provider": "venice",
+   "model": "openrouter/free",
+   "primary": "openrouter/free",
+   "index": 1,
+   "text": "Trying selected Venice model openrouter/free."
+  },
+  {
+   "provider": "venice",
+   "model": "vendor/model:free",
+   "primary": "openrouter/free",
+   "index": 0,
+   "text": "Trying selected Venice model vendor/model:free."
+  },
+  {
+   "provider": "venice",
+   "model": "vendor/model:free",
+   "primary": "openrouter/free",
+   "index": 1,
+   "text": "Trying selected Venice model vendor/model:free."
+  },
+  {
+   "provider": "venice",
+   "model": "vendor/model",
+   "primary": "openrouter/free",
+   "index": 0,
+   "text": "Trying selected Venice model vendor/model."
+  },
+  {
+   "provider": "venice",
+   "model": "vendor/model",
+   "primary": "openrouter/free",
+   "index": 1,
+   "text": "Trying selected Venice model vendor/model."
+  },
+  {
+   "provider": "venice",
+   "model": "openrouter/free",
+   "primary": "vendor/model:free",
+   "index": 0,
+   "text": "Trying selected Venice model openrouter/free."
+  },
+  {
+   "provider": "venice",
+   "model": "openrouter/free",
+   "primary": "vendor/model:free",
+   "index": 1,
+   "text": "Trying selected Venice model openrouter/free."
+  },
+  {
+   "provider": "venice",
+   "model": "vendor/model:free",
+   "primary": "vendor/model:free",
+   "index": 0,
+   "text": "Trying selected Venice model vendor/model:free."
+  },
+  {
+   "provider": "venice",
+   "model": "vendor/model:free",
+   "primary": "vendor/model:free",
+   "index": 1,
+   "text": "Trying selected Venice model vendor/model:free."
+  },
+  {
+   "provider": "venice",
+   "model": "vendor/model",
+   "primary": "vendor/model:free",
+   "index": 0,
+   "text": "Trying selected Venice model vendor/model."
+  },
+  {
+   "provider": "venice",
+   "model": "vendor/model",
+   "primary": "vendor/model:free",
+   "index": 1,
+   "text": "Trying selected Venice model vendor/model."
+  },
+  {
+   "provider": "venice",
+   "model": "openrouter/free",
+   "primary": "vendor/model",
+   "index": 0,
+   "text": "Trying selected Venice model openrouter/free."
+  },
+  {
+   "provider": "venice",
+   "model": "openrouter/free",
+   "primary": "vendor/model",
+   "index": 1,
+   "text": "Trying selected Venice model openrouter/free."
+  },
+  {
+   "provider": "venice",
+   "model": "vendor/model:free",
+   "primary": "vendor/model",
+   "index": 0,
+   "text": "Trying selected Venice model vendor/model:free."
+  },
+  {
+   "provider": "venice",
+   "model": "vendor/model:free",
+   "primary": "vendor/model",
+   "index": 1,
+   "text": "Trying selected Venice model vendor/model:free."
+  },
+  {
+   "provider": "venice",
+   "model": "vendor/model",
+   "primary": "vendor/model",
+   "index": 0,
+   "text": "Trying selected Venice model vendor/model."
+  },
+  {
+   "provider": "venice",
+   "model": "vendor/model",
+   "primary": "vendor/model",
+   "index": 1,
+   "text": "Trying selected Venice model vendor/model."
+  }
+ ],
+ "selection_reasons": [
+  {
+   "provider": "openrouter",
+   "requested": "openrouter/free",
+   "used": "openrouter/free",
+   "attempted": [
+    "openrouter/free"
+   ],
+   "error": null,
+   "text": "OpenRouter's free router selected the answering free model."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "openrouter/free",
+   "used": "openrouter/free",
+   "attempted": [
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "RateLimitError",
+    "message": "Rate limit exceeded.\n\nPlease wait a few minutes and try again."
+   },
+   "text": "OpenRouter's free router selected the answering free model."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "openrouter/free",
+   "used": "openrouter/free",
+   "attempted": [
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "EmptyResponseError",
+    "message": "empty or too-short response"
+   },
+   "text": "OpenRouter's free router selected the answering free model."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "openrouter/free",
+   "used": "openrouter/free",
+   "attempted": [
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "AIExplainerError",
+    "message": "The AI model did not start answering within 10 seconds."
+   },
+   "text": "OpenRouter's free router selected the answering free model."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "openrouter/free",
+   "used": "backup:free",
+   "attempted": [
+    "openrouter/free",
+    "openrouter/free"
+   ],
+   "error": null,
+   "text": "OpenRouter's free router selected backup:free from available free models."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "openrouter/free",
+   "used": "backup:free",
+   "attempted": [
+    "openrouter/free",
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "RateLimitError",
+    "message": "Rate limit exceeded.\n\nPlease wait a few minutes and try again."
+   },
+   "text": "OpenRouter's free router or an earlier free model did not answer, so backup:free answered."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "openrouter/free",
+   "used": "backup:free",
+   "attempted": [
+    "openrouter/free",
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "EmptyResponseError",
+    "message": "empty or too-short response"
+   },
+   "text": "OpenRouter's free router or an earlier free model did not answer, so backup:free answered."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "openrouter/free",
+   "used": "backup:free",
+   "attempted": [
+    "openrouter/free",
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "AIExplainerError",
+    "message": "The AI model did not start answering within 10 seconds."
+   },
+   "text": "OpenRouter's free router or an earlier free model did not answer, so backup:free answered."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "vendor/model:free",
+   "used": "vendor/model:free",
+   "attempted": [
+    "vendor/model:free"
+   ],
+   "error": null,
+   "text": "Used the selected model."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "vendor/model:free",
+   "used": "vendor/model:free",
+   "attempted": [
+    "vendor/model:free"
+   ],
+   "error": {
+    "kind": "RateLimitError",
+    "message": "Rate limit exceeded.\n\nPlease wait a few minutes and try again."
+   },
+   "text": "Used the selected model."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "vendor/model:free",
+   "used": "vendor/model:free",
+   "attempted": [
+    "vendor/model:free"
+   ],
+   "error": {
+    "kind": "EmptyResponseError",
+    "message": "empty or too-short response"
+   },
+   "text": "Used the selected model."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "vendor/model:free",
+   "used": "vendor/model:free",
+   "attempted": [
+    "vendor/model:free"
+   ],
+   "error": {
+    "kind": "AIExplainerError",
+    "message": "The AI model did not start answering within 10 seconds."
+   },
+   "text": "Used the selected model."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "vendor/model:free",
+   "used": "backup:free",
+   "attempted": [
+    "vendor/model:free",
+    "openrouter/free"
+   ],
+   "error": null,
+   "text": "Selected free model was limited by an earlier model, so AccessiWeather tried backup free models and backup:free answered."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "vendor/model:free",
+   "used": "backup:free",
+   "attempted": [
+    "vendor/model:free",
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "RateLimitError",
+    "message": "Rate limit exceeded.\n\nPlease wait a few minutes and try again."
+   },
+   "text": "Selected free model was limited by rate limits, so AccessiWeather tried backup free models and backup:free answered."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "vendor/model:free",
+   "used": "backup:free",
+   "attempted": [
+    "vendor/model:free",
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "EmptyResponseError",
+    "message": "empty or too-short response"
+   },
+   "text": "Selected free model was limited by an empty response, so AccessiWeather tried backup free models and backup:free answered."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "vendor/model:free",
+   "used": "backup:free",
+   "attempted": [
+    "vendor/model:free",
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "AIExplainerError",
+    "message": "The AI model did not start answering within 10 seconds."
+   },
+   "text": "Selected free model was limited by a service error, so AccessiWeather tried backup free models and backup:free answered."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "vendor/model",
+   "used": "vendor/model",
+   "attempted": [
+    "vendor/model"
+   ],
+   "error": null,
+   "text": "Used the selected model."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "vendor/model",
+   "used": "vendor/model",
+   "attempted": [
+    "vendor/model"
+   ],
+   "error": {
+    "kind": "RateLimitError",
+    "message": "Rate limit exceeded.\n\nPlease wait a few minutes and try again."
+   },
+   "text": "Used the selected model."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "vendor/model",
+   "used": "vendor/model",
+   "attempted": [
+    "vendor/model"
+   ],
+   "error": {
+    "kind": "EmptyResponseError",
+    "message": "empty or too-short response"
+   },
+   "text": "Used the selected model."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "vendor/model",
+   "used": "vendor/model",
+   "attempted": [
+    "vendor/model"
+   ],
+   "error": {
+    "kind": "AIExplainerError",
+    "message": "The AI model did not start answering within 10 seconds."
+   },
+   "text": "Used the selected model."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "vendor/model",
+   "used": "backup:free",
+   "attempted": [
+    "vendor/model",
+    "openrouter/free"
+   ],
+   "error": null,
+   "text": "The selected model vendor/model did not answer because of an earlier model, so backup:free answered instead."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "vendor/model",
+   "used": "backup:free",
+   "attempted": [
+    "vendor/model",
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "RateLimitError",
+    "message": "Rate limit exceeded.\n\nPlease wait a few minutes and try again."
+   },
+   "text": "The selected model vendor/model did not answer because of rate limits, so backup:free answered instead."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "vendor/model",
+   "used": "backup:free",
+   "attempted": [
+    "vendor/model",
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "EmptyResponseError",
+    "message": "empty or too-short response"
+   },
+   "text": "The selected model vendor/model did not answer because of an empty response, so backup:free answered instead."
+  },
+  {
+   "provider": "openrouter",
+   "requested": "vendor/model",
+   "used": "backup:free",
+   "attempted": [
+    "vendor/model",
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "AIExplainerError",
+    "message": "The AI model did not start answering within 10 seconds."
+   },
+   "text": "The selected model vendor/model did not answer because of a service error, so backup:free answered instead."
+  },
+  {
+   "provider": "venice",
+   "requested": "openrouter/free",
+   "used": "openrouter/free",
+   "attempted": [
+    "openrouter/free"
+   ],
+   "error": null,
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "openrouter/free",
+   "used": "openrouter/free",
+   "attempted": [
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "RateLimitError",
+    "message": "Rate limit exceeded.\n\nPlease wait a few minutes and try again."
+   },
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "openrouter/free",
+   "used": "openrouter/free",
+   "attempted": [
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "EmptyResponseError",
+    "message": "empty or too-short response"
+   },
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "openrouter/free",
+   "used": "openrouter/free",
+   "attempted": [
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "AIExplainerError",
+    "message": "The AI model did not start answering within 10 seconds."
+   },
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "openrouter/free",
+   "used": "backup:free",
+   "attempted": [
+    "openrouter/free",
+    "openrouter/free"
+   ],
+   "error": null,
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "openrouter/free",
+   "used": "backup:free",
+   "attempted": [
+    "openrouter/free",
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "RateLimitError",
+    "message": "Rate limit exceeded.\n\nPlease wait a few minutes and try again."
+   },
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "openrouter/free",
+   "used": "backup:free",
+   "attempted": [
+    "openrouter/free",
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "EmptyResponseError",
+    "message": "empty or too-short response"
+   },
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "openrouter/free",
+   "used": "backup:free",
+   "attempted": [
+    "openrouter/free",
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "AIExplainerError",
+    "message": "The AI model did not start answering within 10 seconds."
+   },
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "vendor/model:free",
+   "used": "vendor/model:free",
+   "attempted": [
+    "vendor/model:free"
+   ],
+   "error": null,
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "vendor/model:free",
+   "used": "vendor/model:free",
+   "attempted": [
+    "vendor/model:free"
+   ],
+   "error": {
+    "kind": "RateLimitError",
+    "message": "Rate limit exceeded.\n\nPlease wait a few minutes and try again."
+   },
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "vendor/model:free",
+   "used": "vendor/model:free",
+   "attempted": [
+    "vendor/model:free"
+   ],
+   "error": {
+    "kind": "EmptyResponseError",
+    "message": "empty or too-short response"
+   },
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "vendor/model:free",
+   "used": "vendor/model:free",
+   "attempted": [
+    "vendor/model:free"
+   ],
+   "error": {
+    "kind": "AIExplainerError",
+    "message": "The AI model did not start answering within 10 seconds."
+   },
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "vendor/model:free",
+   "used": "backup:free",
+   "attempted": [
+    "vendor/model:free",
+    "openrouter/free"
+   ],
+   "error": null,
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "vendor/model:free",
+   "used": "backup:free",
+   "attempted": [
+    "vendor/model:free",
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "RateLimitError",
+    "message": "Rate limit exceeded.\n\nPlease wait a few minutes and try again."
+   },
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "vendor/model:free",
+   "used": "backup:free",
+   "attempted": [
+    "vendor/model:free",
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "EmptyResponseError",
+    "message": "empty or too-short response"
+   },
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "vendor/model:free",
+   "used": "backup:free",
+   "attempted": [
+    "vendor/model:free",
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "AIExplainerError",
+    "message": "The AI model did not start answering within 10 seconds."
+   },
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "vendor/model",
+   "used": "vendor/model",
+   "attempted": [
+    "vendor/model"
+   ],
+   "error": null,
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "vendor/model",
+   "used": "vendor/model",
+   "attempted": [
+    "vendor/model"
+   ],
+   "error": {
+    "kind": "RateLimitError",
+    "message": "Rate limit exceeded.\n\nPlease wait a few minutes and try again."
+   },
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "vendor/model",
+   "used": "vendor/model",
+   "attempted": [
+    "vendor/model"
+   ],
+   "error": {
+    "kind": "EmptyResponseError",
+    "message": "empty or too-short response"
+   },
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "vendor/model",
+   "used": "vendor/model",
+   "attempted": [
+    "vendor/model"
+   ],
+   "error": {
+    "kind": "AIExplainerError",
+    "message": "The AI model did not start answering within 10 seconds."
+   },
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "vendor/model",
+   "used": "backup:free",
+   "attempted": [
+    "vendor/model",
+    "openrouter/free"
+   ],
+   "error": null,
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "vendor/model",
+   "used": "backup:free",
+   "attempted": [
+    "vendor/model",
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "RateLimitError",
+    "message": "Rate limit exceeded.\n\nPlease wait a few minutes and try again."
+   },
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "vendor/model",
+   "used": "backup:free",
+   "attempted": [
+    "vendor/model",
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "EmptyResponseError",
+    "message": "empty or too-short response"
+   },
+   "text": "Used the selected Venice model."
+  },
+  {
+   "provider": "venice",
+   "requested": "vendor/model",
+   "used": "backup:free",
+   "attempted": [
+    "vendor/model",
+    "openrouter/free"
+   ],
+   "error": {
+    "kind": "AIExplainerError",
+    "message": "The AI model did not start answering within 10 seconds."
+   },
+   "text": "Used the selected Venice model."
+  }
+ ],
+ "costs": [
+  {
+   "provider": "openrouter",
+   "model": "x:free",
+   "tokens": 0,
+   "cost": 0.0
+  },
+  {
+   "provider": "openrouter",
+   "model": "x:free",
+   "tokens": 1234,
+   "cost": 0.0
+  },
+  {
+   "provider": "openrouter",
+   "model": "x:free",
+   "tokens": 1000000,
+   "cost": 0.0
+  },
+  {
+   "provider": "openrouter",
+   "model": "openrouter/auto",
+   "tokens": 0,
+   "cost": 0.0
+  },
+  {
+   "provider": "openrouter",
+   "model": "openrouter/auto",
+   "tokens": 1234,
+   "cost": 0.000617
+  },
+  {
+   "provider": "openrouter",
+   "model": "openrouter/auto",
+   "tokens": 1000000,
+   "cost": 0.5
+  },
+  {
+   "provider": "openrouter",
+   "model": "openai/gpt-4o",
+   "tokens": 0,
+   "cost": 0.0
+  },
+  {
+   "provider": "openrouter",
+   "model": "openai/gpt-4o",
+   "tokens": 1234,
+   "cost": 0.037020000000000004
+  },
+  {
+   "provider": "openrouter",
+   "model": "openai/gpt-4o",
+   "tokens": 1000000,
+   "cost": 30.0
+  },
+  {
+   "provider": "openrouter",
+   "model": "openai/gpt-3.5-turbo",
+   "tokens": 0,
+   "cost": 0.0
+  },
+  {
+   "provider": "openrouter",
+   "model": "openai/gpt-3.5-turbo",
+   "tokens": 1234,
+   "cost": 0.000617
+  },
+  {
+   "provider": "openrouter",
+   "model": "openai/gpt-3.5-turbo",
+   "tokens": 1000000,
+   "cost": 0.5
+  },
+  {
+   "provider": "openrouter",
+   "model": "anthropic/claude-3-opus",
+   "tokens": 0,
+   "cost": 0.0
+  },
+  {
+   "provider": "openrouter",
+   "model": "anthropic/claude-3-opus",
+   "tokens": 1234,
+   "cost": 0.018510000000000002
+  },
+  {
+   "provider": "openrouter",
+   "model": "anthropic/claude-3-opus",
+   "tokens": 1000000,
+   "cost": 15.0
+  },
+  {
+   "provider": "openrouter",
+   "model": "anthropic/claude-3-sonnet-x",
+   "tokens": 0,
+   "cost": 0.0
+  },
+  {
+   "provider": "openrouter",
+   "model": "anthropic/claude-3-sonnet-x",
+   "tokens": 1234,
+   "cost": 0.0037020000000000004
+  },
+  {
+   "provider": "openrouter",
+   "model": "anthropic/claude-3-sonnet-x",
+   "tokens": 1000000,
+   "cost": 3.0
+  },
+  {
+   "provider": "openrouter",
+   "model": "anthropic/claude-3-haiku",
+   "tokens": 0,
+   "cost": 0.0
+  },
+  {
+   "provider": "openrouter",
+   "model": "anthropic/claude-3-haiku",
+   "tokens": 1234,
+   "cost": 0.0003085
+  },
+  {
+   "provider": "openrouter",
+   "model": "anthropic/claude-3-haiku",
+   "tokens": 1000000,
+   "cost": 0.25
+  },
+  {
+   "provider": "openrouter",
+   "model": "mistral/other",
+   "tokens": 0,
+   "cost": 0.0
+  },
+  {
+   "provider": "openrouter",
+   "model": "mistral/other",
+   "tokens": 1234,
+   "cost": 0.000617
+  },
+  {
+   "provider": "openrouter",
+   "model": "mistral/other",
+   "tokens": 1000000,
+   "cost": 0.5
+  },
+  {
+   "provider": "venice",
+   "model": "x:free",
+   "tokens": 0,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "x:free",
+   "tokens": 1234,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "x:free",
+   "tokens": 1000000,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "openrouter/auto",
+   "tokens": 0,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "openrouter/auto",
+   "tokens": 1234,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "openrouter/auto",
+   "tokens": 1000000,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "openai/gpt-4o",
+   "tokens": 0,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "openai/gpt-4o",
+   "tokens": 1234,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "openai/gpt-4o",
+   "tokens": 1000000,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "openai/gpt-3.5-turbo",
+   "tokens": 0,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "openai/gpt-3.5-turbo",
+   "tokens": 1234,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "openai/gpt-3.5-turbo",
+   "tokens": 1000000,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "anthropic/claude-3-opus",
+   "tokens": 0,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "anthropic/claude-3-opus",
+   "tokens": 1234,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "anthropic/claude-3-opus",
+   "tokens": 1000000,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "anthropic/claude-3-sonnet-x",
+   "tokens": 0,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "anthropic/claude-3-sonnet-x",
+   "tokens": 1234,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "anthropic/claude-3-sonnet-x",
+   "tokens": 1000000,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "anthropic/claude-3-haiku",
+   "tokens": 0,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "anthropic/claude-3-haiku",
+   "tokens": 1234,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "anthropic/claude-3-haiku",
+   "tokens": 1000000,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "mistral/other",
+   "tokens": 0,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "mistral/other",
+   "tokens": 1234,
+   "cost": null
+  },
+  {
+   "provider": "venice",
+   "model": "mistral/other",
+   "tokens": 1000000,
+   "cost": null
+  }
+ ],
+ "errors": [
+  {
+   "transport": {
+    "status": 400,
+    "body": "{\"error\": {\"message\": \"Model does not exist\", \"code\": 400}}"
+   },
+   "model": "vendor/model:free",
+   "generation": {
+    "kind": "AIExplainerError",
+    "message": "Unable to generate explanation.\n\nIf this persists, try:\n• Checking your internet connection\n• Selecting a different AI model in Settings\n• Trying again in a few minutes",
+    "describe": "the model was unavailable"
+   },
+   "openrouter": {
+    "kind": "AIExplainerError",
+    "message": "OpenRouter could not complete the request. Check your selected model and try again."
+   },
+   "venice": {
+    "kind": "AIExplainerError",
+    "message": "Venice could not complete the request. Check your selected model and try again."
+   }
+  },
+  {
+   "transport": {
+    "status": 400,
+    "body": "{\"error\": {\"message\": \"Model does not exist\", \"code\": 400}}"
+   },
+   "model": "vendor/model",
+   "generation": {
+    "kind": "AIExplainerError",
+    "message": "Unable to generate explanation.\n\nIf this persists, try:\n• Checking your internet connection\n• Selecting a different AI model in Settings\n• Trying again in a few minutes",
+    "describe": "the model was unavailable"
+   },
+   "openrouter": {
+    "kind": "AIExplainerError",
+    "message": "OpenRouter could not complete the request. Check your selected model and try again."
+   },
+   "venice": {
+    "kind": "AIExplainerError",
+    "message": "Venice could not complete the request. Check your selected model and try again."
+   }
+  },
+  {
+   "transport": {
+    "status": 401,
+    "body": "{\"error\": {\"message\": \"No auth credentials found\", \"code\": 401}}"
+   },
+   "model": "vendor/model:free",
+   "generation": {
+    "kind": "InvalidAPIKeyError",
+    "message": "OpenRouter could not authenticate this generation request. Validate your key in Settings; model or provider access may also need checking.",
+    "describe": "a service error"
+   },
+   "openrouter": {
+    "kind": "InvalidAPIKeyError",
+    "message": "OpenRouter could not authenticate this request. Validate your key in Settings > AI."
+   },
+   "venice": {
+    "kind": "InvalidAPIKeyError",
+    "message": "Venice rejected this API key. It may be invalid or expired. Check your Venice key in Settings > AI."
+   }
+  },
+  {
+   "transport": {
+    "status": 401,
+    "body": "{\"error\": {\"message\": \"No auth credentials found\", \"code\": 401}}"
+   },
+   "model": "vendor/model",
+   "generation": {
+    "kind": "InvalidAPIKeyError",
+    "message": "OpenRouter could not authenticate this generation request. Validate your key in Settings; model or provider access may also need checking.",
+    "describe": "a service error"
+   },
+   "openrouter": {
+    "kind": "InvalidAPIKeyError",
+    "message": "OpenRouter could not authenticate this request. Validate your key in Settings > AI."
+   },
+   "venice": {
+    "kind": "InvalidAPIKeyError",
+    "message": "Venice rejected this API key. It may be invalid or expired. Check your Venice key in Settings > AI."
+   }
+  },
+  {
+   "transport": {
+    "status": 402,
+    "body": "{\"error\": {\"message\": \"Insufficient credits\", \"code\": 402}}"
+   },
+   "model": "vendor/model:free",
+   "generation": {
+    "kind": "InsufficientCreditsError",
+    "message": "Your OpenRouter account has no funds.\n\nOptions:\n• Add credits at openrouter.ai/credits\n• Switch to a free model in Settings > AI",
+    "describe": "an empty response"
+   },
+   "openrouter": {
+    "kind": "InsufficientCreditsError",
+    "message": "Your OpenRouter account has insufficient credits for this request. Add credits or choose a free model in Settings > AI."
+   },
+   "venice": {
+    "kind": "InsufficientCreditsError",
+    "message": "Your Venice account has insufficient API credits. Add prepaid USD credits in your Venice account, then try again."
+   }
+  },
+  {
+   "transport": {
+    "status": 402,
+    "body": "{\"error\": {\"message\": \"Insufficient credits\", \"code\": 402}}"
+   },
+   "model": "vendor/model",
+   "generation": {
+    "kind": "InsufficientCreditsError",
+    "message": "Your OpenRouter account has no funds.\n\nOptions:\n• Add credits at openrouter.ai/credits\n• Switch to a free model in Settings > AI",
+    "describe": "an empty response"
+   },
+   "openrouter": {
+    "kind": "InsufficientCreditsError",
+    "message": "Your OpenRouter account has insufficient credits for this request. Add credits or choose a free model in Settings > AI."
+   },
+   "venice": {
+    "kind": "InsufficientCreditsError",
+    "message": "Your Venice account has insufficient API credits. Add prepaid USD credits in your Venice account, then try again."
+   }
+  },
+  {
+   "transport": {
+    "status": 403,
+    "body": "{\"error\": {\"message\": \"Forbidden\", \"code\": 403}}"
+   },
+   "model": "vendor/model:free",
+   "generation": {
+    "kind": "ProviderPermissionError",
+    "message": "OpenRouter denied this generation request. The model, provider, or account permissions may restrict access. This does not establish that your key is invalid.",
+    "describe": "a service error"
+   },
+   "openrouter": {
+    "kind": "ProviderPermissionError",
+    "message": "OpenRouter denied this request. Check your account and model permissions. This does not establish that your key is invalid."
+   },
+   "venice": {
+    "kind": "ProviderPermissionError",
+    "message": "Venice denied permission for this request. Check your key and account permissions. This does not establish that your key is invalid."
+   }
+  },
+  {
+   "transport": {
+    "status": 403,
+    "body": "{\"error\": {\"message\": \"Forbidden\", \"code\": 403}}"
+   },
+   "model": "vendor/model",
+   "generation": {
+    "kind": "ProviderPermissionError",
+    "message": "OpenRouter denied this generation request. The model, provider, or account permissions may restrict access. This does not establish that your key is invalid.",
+    "describe": "a service error"
+   },
+   "openrouter": {
+    "kind": "ProviderPermissionError",
+    "message": "OpenRouter denied this request. Check your account and model permissions. This does not establish that your key is invalid."
+   },
+   "venice": {
+    "kind": "ProviderPermissionError",
+    "message": "Venice denied permission for this request. Check your key and account permissions. This does not establish that your key is invalid."
+   }
+  },
+  {
+   "transport": {
+    "status": 404,
+    "body": "{\"error\": {\"message\": \"No endpoints found\", \"code\": 404}}"
+   },
+   "model": "vendor/model:free",
+   "generation": {
+    "kind": "InvalidModelError",
+    "message": "The AI model 'vendor/model:free' was not found.\n\nIt may have been removed or renamed by OpenRouter.\nPlease go to Settings > AI and select a different model.",
+    "describe": "the model was unavailable"
+   },
+   "openrouter": {
+    "kind": "InvalidModelError",
+    "message": "The selected OpenRouter model is unavailable. Choose another model in Settings > AI."
+   },
+   "venice": {
+    "kind": "InvalidModelError",
+    "message": "The selected Venice model is unavailable. Check Settings > AI."
+   }
+  },
+  {
+   "transport": {
+    "status": 404,
+    "body": "{\"error\": {\"message\": \"No endpoints found\", \"code\": 404}}"
+   },
+   "model": "vendor/model",
+   "generation": {
+    "kind": "InvalidModelError",
+    "message": "The AI model 'vendor/model' was not found.\n\nIt may have been removed or renamed by OpenRouter.\nPlease go to Settings > AI and select a different model.",
+    "describe": "the model was unavailable"
+   },
+   "openrouter": {
+    "kind": "InvalidModelError",
+    "message": "The selected OpenRouter model is unavailable. Choose another model in Settings > AI."
+   },
+   "venice": {
+    "kind": "InvalidModelError",
+    "message": "The selected Venice model is unavailable. Check Settings > AI."
+   }
+  },
+  {
+   "transport": {
+    "status": 408,
+    "body": "{\"error\": {\"message\": \"Request timeout\", \"code\": 408}}"
+   },
+   "model": "vendor/model:free",
+   "generation": {
+    "kind": "AIExplainerError",
+    "message": "Unable to generate explanation.\n\nIf this persists, try:\n• Checking your internet connection\n• Selecting a different AI model in Settings\n• Trying again in a few minutes",
+    "describe": "a timeout"
+   },
+   "openrouter": {
+    "kind": "AIExplainerError",
+    "message": "OpenRouter could not complete the request. Check your selected model and try again."
+   },
+   "venice": {
+    "kind": "AIExplainerError",
+    "message": "Venice could not complete the request. Check your selected model and try again."
+   }
+  },
+  {
+   "transport": {
+    "status": 408,
+    "body": "{\"error\": {\"message\": \"Request timeout\", \"code\": 408}}"
+   },
+   "model": "vendor/model",
+   "generation": {
+    "kind": "AIExplainerError",
+    "message": "Unable to generate explanation.\n\nIf this persists, try:\n• Checking your internet connection\n• Selecting a different AI model in Settings\n• Trying again in a few minutes",
+    "describe": "a timeout"
+   },
+   "openrouter": {
+    "kind": "AIExplainerError",
+    "message": "OpenRouter could not complete the request. Check your selected model and try again."
+   },
+   "venice": {
+    "kind": "AIExplainerError",
+    "message": "Venice could not complete the request. Check your selected model and try again."
+   }
+  },
+  {
+   "transport": {
+    "status": 429,
+    "body": "{\"error\": {\"message\": \"Rate limit exceeded: free-models-per-min\", \"code\": 429}}"
+   },
+   "model": "vendor/model:free",
+   "generation": {
+    "kind": "RateLimitError",
+    "message": "Rate limit exceeded.\n\nFree models share rate limits with all users and may be busy.\n\nOptions:\n• Wait a few minutes and try again\n• Add credits to get your own rate limit\n• Switch to a paid model for faster access",
+    "describe": "rate limits"
+   },
+   "openrouter": {
+    "kind": "RateLimitError",
+    "message": "OpenRouter rate limit reached. Wait a moment and try again."
+   },
+   "venice": {
+    "kind": "RateLimitError",
+    "message": "Venice rate limit reached. Wait a moment and try again."
+   }
+  },
+  {
+   "transport": {
+    "status": 429,
+    "body": "{\"error\": {\"message\": \"Rate limit exceeded: free-models-per-min\", \"code\": 429}}"
+   },
+   "model": "vendor/model",
+   "generation": {
+    "kind": "RateLimitError",
+    "message": "Rate limit exceeded.\n\nPlease wait a few minutes and try again.",
+    "describe": "rate limits"
+   },
+   "openrouter": {
+    "kind": "RateLimitError",
+    "message": "OpenRouter rate limit reached. Wait a moment and try again."
+   },
+   "venice": {
+    "kind": "RateLimitError",
+    "message": "Venice rate limit reached. Wait a moment and try again."
+   }
+  },
+  {
+   "transport": {
+    "status": 500,
+    "body": "{\"error\": {\"message\": \"Internal Server Error\", \"code\": 500}}"
+   },
+   "model": "vendor/model:free",
+   "generation": {
+    "kind": "AIExplainerError",
+    "message": "Unable to generate explanation.\n\nIf this persists, try:\n• Checking your internet connection\n• Selecting a different AI model in Settings\n• Trying again in a few minutes",
+    "describe": "a service error"
+   },
+   "openrouter": {
+    "kind": "NetworkError",
+    "message": "OpenRouter is temporarily unavailable. Please try again later."
+   },
+   "venice": {
+    "kind": "NetworkError",
+    "message": "Venice is temporarily unavailable. Please try again later."
+   }
+  },
+  {
+   "transport": {
+    "status": 500,
+    "body": "{\"error\": {\"message\": \"Internal Server Error\", \"code\": 500}}"
+   },
+   "model": "vendor/model",
+   "generation": {
+    "kind": "AIExplainerError",
+    "message": "Unable to generate explanation.\n\nIf this persists, try:\n• Checking your internet connection\n• Selecting a different AI model in Settings\n• Trying again in a few minutes",
+    "describe": "a service error"
+   },
+   "openrouter": {
+    "kind": "NetworkError",
+    "message": "OpenRouter is temporarily unavailable. Please try again later."
+   },
+   "venice": {
+    "kind": "NetworkError",
+    "message": "Venice is temporarily unavailable. Please try again later."
+   }
+  },
+  {
+   "transport": {
+    "status": 502,
+    "body": "{\"error\": {\"message\": \"Bad gateway\", \"code\": 502}}"
+   },
+   "model": "vendor/model:free",
+   "generation": {
+    "kind": "NetworkError",
+    "message": "Network connection error.\n\nCould not reach the AI service. This is usually temporary.\nPlease check your internet connection and try again.",
+    "describe": "a service error"
+   },
+   "openrouter": {
+    "kind": "NetworkError",
+    "message": "OpenRouter is temporarily unavailable. Please try again later."
+   },
+   "venice": {
+    "kind": "NetworkError",
+    "message": "Venice is temporarily unavailable. Please try again later."
+   }
+  },
+  {
+   "transport": {
+    "status": 502,
+    "body": "{\"error\": {\"message\": \"Bad gateway\", \"code\": 502}}"
+   },
+   "model": "vendor/model",
+   "generation": {
+    "kind": "NetworkError",
+    "message": "Network connection error.\n\nCould not reach the AI service. This is usually temporary.\nPlease check your internet connection and try again.",
+    "describe": "a service error"
+   },
+   "openrouter": {
+    "kind": "NetworkError",
+    "message": "OpenRouter is temporarily unavailable. Please try again later."
+   },
+   "venice": {
+    "kind": "NetworkError",
+    "message": "Venice is temporarily unavailable. Please try again later."
+   }
+  },
+  {
+   "transport": {
+    "status": 503,
+    "body": "{\"error\": {\"message\": \"Service Unavailable\", \"code\": 503}}"
+   },
+   "model": "vendor/model:free",
+   "generation": {
+    "kind": "NetworkError",
+    "message": "Network connection error.\n\nCould not reach the AI service. This is usually temporary.\nPlease check your internet connection and try again.",
+    "describe": "a service error"
+   },
+   "openrouter": {
+    "kind": "NetworkError",
+    "message": "OpenRouter is temporarily unavailable. Please try again later."
+   },
+   "venice": {
+    "kind": "NetworkError",
+    "message": "Venice is temporarily unavailable. Please try again later."
+   }
+  },
+  {
+   "transport": {
+    "status": 503,
+    "body": "{\"error\": {\"message\": \"Service Unavailable\", \"code\": 503}}"
+   },
+   "model": "vendor/model",
+   "generation": {
+    "kind": "NetworkError",
+    "message": "Network connection error.\n\nCould not reach the AI service. This is usually temporary.\nPlease check your internet connection and try again.",
+    "describe": "a service error"
+   },
+   "openrouter": {
+    "kind": "NetworkError",
+    "message": "OpenRouter is temporarily unavailable. Please try again later."
+   },
+   "venice": {
+    "kind": "NetworkError",
+    "message": "Venice is temporarily unavailable. Please try again later."
+   }
+  },
+  {
+   "transport": {
+    "status": 504,
+    "body": "{\"error\": {\"message\": \"Gateway Timeout\", \"code\": 504}}"
+   },
+   "model": "vendor/model:free",
+   "generation": {
+    "kind": "AIExplainerError",
+    "message": "Unable to generate explanation.\n\nIf this persists, try:\n• Checking your internet connection\n• Selecting a different AI model in Settings\n• Trying again in a few minutes",
+    "describe": "a timeout"
+   },
+   "openrouter": {
+    "kind": "NetworkError",
+    "message": "OpenRouter is temporarily unavailable. Please try again later."
+   },
+   "venice": {
+    "kind": "NetworkError",
+    "message": "Venice is temporarily unavailable. Please try again later."
+   }
+  },
+  {
+   "transport": {
+    "status": 504,
+    "body": "{\"error\": {\"message\": \"Gateway Timeout\", \"code\": 504}}"
+   },
+   "model": "vendor/model",
+   "generation": {
+    "kind": "AIExplainerError",
+    "message": "Unable to generate explanation.\n\nIf this persists, try:\n• Checking your internet connection\n• Selecting a different AI model in Settings\n• Trying again in a few minutes",
+    "describe": "a timeout"
+   },
+   "openrouter": {
+    "kind": "NetworkError",
+    "message": "OpenRouter is temporarily unavailable. Please try again later."
+   },
+   "venice": {
+    "kind": "NetworkError",
+    "message": "Venice is temporarily unavailable. Please try again later."
+   }
+  },
+  {
+   "transport": {
+    "api": {
+     "code": "502",
+     "message": "Provider returned error"
+    }
+   },
+   "model": "vendor/model:free",
+   "generation": {
+    "kind": "NetworkError",
+    "message": "Network connection error.\n\nCould not reach the AI service. This is usually temporary.\nPlease check your internet connection and try again.",
+    "describe": "a service error"
+   },
+   "openrouter": {
+    "kind": "AIExplainerError",
+    "message": "OpenRouter could not complete the request. Check your selected model and try again."
+   },
+   "venice": {
+    "kind": "AIExplainerError",
+    "message": "Venice could not complete the request. Check your selected model and try again."
+   }
+  },
+  {
+   "transport": {
+    "api": {
+     "code": null,
+     "message": "Rate limit exceeded upstream"
+    }
+   },
+   "model": "vendor/model:free",
+   "generation": {
+    "kind": "RateLimitError",
+    "message": "Rate limit exceeded.\n\nFree models share rate limits with all users and may be busy.\n\nOptions:\n• Wait a few minutes and try again\n• Add credits to get your own rate limit\n• Switch to a paid model for faster access",
+    "describe": "rate limits"
+   },
+   "openrouter": {
+    "kind": "AIExplainerError",
+    "message": "OpenRouter could not complete the request. Check your selected model and try again."
+   },
+   "venice": {
+    "kind": "AIExplainerError",
+    "message": "Venice could not complete the request. Check your selected model and try again."
+   }
+  },
+  {
+   "transport": {
+    "api": {
+     "code": "invalid_key",
+     "message": "Invalid API key provided"
+    }
+   },
+   "model": "vendor/model:free",
+   "generation": {
+    "kind": "InvalidAPIKeyError",
+    "message": "OpenRouter API key is required.\n\nPlease add your API key in Settings > AI.\nGet a free key at: openrouter.ai/keys",
+    "describe": "a service error"
+   },
+   "openrouter": {
+    "kind": "AIExplainerError",
+    "message": "OpenRouter could not complete the request. Check your selected model and try again."
+   },
+   "venice": {
+    "kind": "AIExplainerError",
+    "message": "Venice could not complete the request. Check your selected model and try again."
+   }
+  },
+  {
+   "transport": {
+    "api": {
+     "code": null,
+     "message": "An error occurred during streaming"
+    }
+   },
+   "model": "vendor/model:free",
+   "generation": {
+    "kind": "AIExplainerError",
+    "message": "Unable to generate explanation.\n\nIf this persists, try:\n• Checking your internet connection\n• Selecting a different AI model in Settings\n• Trying again in a few minutes",
+    "describe": "a service error"
+   },
+   "openrouter": {
+    "kind": "AIExplainerError",
+    "message": "OpenRouter could not complete the request. Check your selected model and try again."
+   },
+   "venice": {
+    "kind": "AIExplainerError",
+    "message": "Venice could not complete the request. Check your selected model and try again."
+   }
+  },
+  {
+   "transport": {
+    "timeout": true
+   },
+   "model": "vendor/model:free",
+   "generation": {
+    "kind": "RequestTimeoutError",
+    "message": "Request timed out.\n\nThe AI service is taking too long to respond.\nThis usually means the servers are busy. Please try again.",
+    "describe": "a timeout"
+   },
+   "openrouter": {
+    "kind": "RequestTimeoutError",
+    "message": "OpenRouter request timed out. Please try again."
+   },
+   "venice": {
+    "kind": "RequestTimeoutError",
+    "message": "Venice request timed out. Please try again."
+   }
+  },
+  {
+   "transport": {
+    "connect": true
+   },
+   "model": "vendor/model:free",
+   "generation": {
+    "kind": "AIExplainerError",
+    "message": "Unable to generate explanation.\n\nIf this persists, try:\n• Checking your internet connection\n• Selecting a different AI model in Settings\n• Trying again in a few minutes",
+    "describe": "a service error"
+   },
+   "openrouter": {
+    "kind": "NetworkError",
+    "message": "Could not reach OpenRouter. Check your internet connection and try again."
+   },
+   "venice": {
+    "kind": "NetworkError",
+    "message": "Could not reach Venice. Check your internet connection and try again."
+   }
+  }
+ ]
+}

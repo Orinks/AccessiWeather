@@ -1,0 +1,2196 @@
+{
+ "lookups": [
+  {
+   "name": "afd_prefers_nws_history",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "AFD",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "5",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "2026-05-01",
+     "end_text": "2026-05-02T12:00:00Z"
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://api.weather.gov/products?",
+     "json": {
+      "@graph": [
+       {
+        "id": "afd-1",
+        "issuanceTime": "2026-05-01T15:00:00+00:00"
+       }
+      ]
+     }
+    },
+    {
+     "url": "https://api.weather.gov/products/afd-1",
+     "json": {
+      "productText": "official text",
+      "issuanceTime": "2026-05-01T15:00:00+00:00",
+      "headline": "Official product"
+     }
+    }
+   ],
+   "requests": [
+    "https://api.weather.gov/products?location=RAH&type=AFD&limit=5&start=2026-05-01T00%3A00%3A00%2B00%3A00&end=2026-05-02T12%3A00%3A00%2B00%3A00",
+    "https://api.weather.gov/products/afd-1"
+   ],
+   "expect": {
+    "ok": "Source: NWS\n\nProduct: AFD\nIssued: 2026-05-01T15:00:00+00:00\nHeadline: Official product\nofficial text"
+   }
+  },
+  {
+   "name": "srf_nws_regional_note",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "srf",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://api.weather.gov/products?",
+     "json": {
+      "@graph": [
+       {
+        "id": "srf-1"
+       }
+      ]
+     }
+    },
+    {
+     "url": "https://api.weather.gov/products/srf-1",
+     "json": {
+      "productText": "SURF ZONE FORECAST",
+      "issuanceTime": null
+     }
+    }
+   ],
+   "requests": [
+    "https://api.weather.gov/products?location=RAH&type=SRF&limit=1",
+    "https://api.weather.gov/products/srf-1"
+   ],
+   "expect": {
+    "ok": "Source: NWS\n\nProduct: SRF\nIssued: unknown\nSurf Zone Forecast issued by NWS RAH for regional beaches.\nSURF ZONE FORECAST"
+   }
+  },
+  {
+   "name": "national_pil_uses_iem",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "SWODY1",
+     "office_choice": "No office or national product",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py",
+     "text": "AFOS PRODUCT TEXT"
+    }
+   ],
+   "requests": [
+    "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=SWODY1&fmt=text&limit=1&order=desc"
+   ],
+   "expect": {
+    "ok": "Source: IEM\n\nProduct: SWODY1\nIssued: unknown\nHeadline: IEM AFOS SWODY1\nAFOS PRODUCT TEXT"
+   }
+  },
+  {
+   "name": "spc_outlook_current",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "SPC Day 1 Outlook",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://mesonet.agron.iastate.edu/json/spcoutlook.py",
+     "json": {
+      "outlook": {
+       "threshold": "TSTM"
+      }
+     }
+    }
+   ],
+   "requests": [
+    "https://mesonet.agron.iastate.edu/json/spcoutlook.py?lat=35.78&lon=-78.64&day=1&fmt=json&current=1"
+   ],
+   "expect": {
+    "ok": "Source: IEM\n\nProduct: SPC_OUTLOOK\nIssued: unknown\nHeadline: SPC Day 1 Convective Outlook\nSPC Day 1 Convective Outlook\n\nProduct 1:\nThreshold: TSTM\n"
+   }
+  },
+  {
+   "name": "spc_outlook_valid_time",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "spc day 3 convective outlook",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "2026-03-06T20:00:00Z",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://mesonet.agron.iastate.edu/json/spcoutlook.py",
+     "json": {
+      "outlooks": []
+     }
+    }
+   ],
+   "requests": [
+    "https://mesonet.agron.iastate.edu/json/spcoutlook.py?lat=35.78&lon=-78.64&day=3&fmt=json&current=0&time=2026-03-06T20%3A00%3A00Z"
+   ],
+   "expect": {
+    "ok": "Source: IEM\n\nProduct: SPC_OUTLOOK\nIssued: unknown\nHeadline: SPC Day 3 Convective Outlook\nSPC Day 3 Convective Outlook\n\nNo matching point-based products were returned for this location."
+   }
+  },
+  {
+   "name": "iem_only_with_filters",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "AFD",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "5",
+     "source": "IEM AFOS only",
+     "order": "Oldest first",
+     "aviation_afd": true,
+     "center": " krah ",
+     "wmo_id": "fxus62",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py",
+     "text": "AFOS PRODUCT TEXT"
+    }
+   ],
+   "requests": [
+    "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=AFDRAH&fmt=text&limit=1&order=asc&center=KRAH&ttaaii=FXUS62&aviation_afd=1"
+   ],
+   "expect": {
+    "ok": "Source: IEM\n\nProduct: AFDRAH\nIssued: unknown\nHeadline: IEM AFOS AFDRAH\nAFOS PRODUCT TEXT"
+   }
+  },
+  {
+   "name": "date_choices_beat_text_fields",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "SWODY1",
+     "office_choice": "No office or national product",
+     "custom_office": "RAH",
+     "limit": "3",
+     "source": "IEM AFOS only",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "2024",
+      "01 - January",
+      "15"
+     ],
+     "end_parts": [
+      "2024",
+      "01 - January",
+      "16"
+     ],
+     "start_text": "2020-01-01",
+     "end_text": "2020-01-02"
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py",
+     "text": "AFOS PRODUCT TEXT"
+    }
+   ],
+   "requests": [
+    "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=SWODY1&fmt=text&limit=3&order=desc&sdate=2024-01-15T00%3A00%3A00Z&edate=2024-01-16T00%3A00%3A00Z"
+   ],
+   "expect": {
+    "ok": "Source: IEM\n\nProduct: SWODY1\nIssued: unknown\nHeadline: IEM AFOS SWODY1\nAFOS PRODUCT TEXT"
+   }
+  },
+  {
+   "name": "incomplete_date_choice",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "AFD",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "2024",
+      "",
+      "15"
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [],
+   "requests": [],
+   "expect": {
+    "ok": "Choose year, month, and day for custom archive dates."
+   }
+  },
+  {
+   "name": "invalid_calendar_date",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "AFD",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "2023",
+      "02 - February",
+      "29"
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [],
+   "requests": [],
+   "expect": {
+    "ok": "Choose a valid calendar date."
+   }
+  },
+  {
+   "name": "bad_date_text",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "AFD",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "not a date",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [],
+   "requests": [],
+   "expect": {
+    "ok": "Enter dates as YYYY-MM-DD or ISO timestamps."
+   }
+  },
+  {
+   "name": "bad_plain_date",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "AFD",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": "2026-02-30"
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [],
+   "requests": [],
+   "expect": {
+    "ok": "Enter dates as YYYY-MM-DD or ISO timestamps."
+   }
+  },
+  {
+   "name": "invalid_custom_product",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "TOO-LONG",
+     "office_choice": "No office or national product",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "IEM AFOS only",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [],
+   "requests": [],
+   "expect": {
+    "ok": "Choose a preset or enter a 3-to-6 character AFOS product ID."
+   }
+  },
+  {
+   "name": "wpc_outlook_valid_time",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "WPC Day 2 Excessive Rainfall Outlook",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "2",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "2026-05-01T12:00:00Z",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://mesonet.agron.iastate.edu/json/wpcoutlook.py",
+     "json": {
+      "outlook": {
+       "threshold": "SLGT"
+      }
+     }
+    }
+   ],
+   "requests": [
+    "https://mesonet.agron.iastate.edu/json/wpcoutlook.py?lat=35.78&lon=-78.64&day=2&fmt=json&last=2&time=2026-05-01T12%3A00%3A00Z"
+   ],
+   "expect": {
+    "ok": "Source: IEM\n\nProduct: WPC_ERO\nIssued: unknown\nHeadline: WPC Day 2 Excessive Rainfall Outlook\nWPC Day 2 Excessive Rainfall Outlook\n\nOutlook 1:\nThreshold: SLGT\n"
+   }
+  },
+  {
+   "name": "wpc_mpd_archive",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "MPD",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://mesonet.agron.iastate.edu/json/wpcmpd.py",
+     "json": {
+      "mpds": [
+       {
+        "product_num": 1,
+        "utc_issue": "2026-04-30T12:00:00Z"
+       },
+       {
+        "product_num": 2,
+        "utc_issue": "2026-04-30T13:00:00Z"
+       }
+      ]
+     }
+    }
+   ],
+   "requests": [
+    "https://mesonet.agron.iastate.edu/json/wpcmpd.py?lat=35.78&lon=-78.64&fmt=json"
+   ],
+   "expect": {
+    "ok": "Source: IEM\n\nProduct: WPC_MPD\nIssued: unknown\nHeadline: WPC Mesoscale Precipitation Discussions\nWPC Mesoscale Precipitation Discussions\n\nDiscussion 1:\nNumber: 1\nIssued: 2026-04-30T12:00:00Z\n\n1 older matches omitted. Use Advanced Lookup for broader history."
+   }
+  },
+  {
+   "name": "spc_mcd_archive",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "SPC Mesoscale Discussion",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "2026-04-01",
+     "end_text": "2026-05-01"
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://mesonet.agron.iastate.edu/json/spcmcd.py",
+     "json": {
+      "mcds": [
+       {
+        "mdnum": 3
+       }
+      ]
+     }
+    }
+   ],
+   "requests": [
+    "https://mesonet.agron.iastate.edu/json/spcmcd.py?lat=35.78&lon=-78.64&fmt=json"
+   ],
+   "expect": {
+    "ok": "Source: IEM\n\nProduct: SPC_MCD\nIssued: unknown\nHeadline: SPC Mesoscale Discussions\nSPC Mesoscale Discussions\n\nNo matching point-based products were returned for this location."
+   }
+  },
+  {
+   "name": "spc_watches_valid_time",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "SPC Watches",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "2026-03-16T15:00:00-04:00",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://mesonet.agron.iastate.edu/json/spcwatch.py",
+     "json": {
+      "features": []
+     }
+    }
+   ],
+   "requests": [
+    "https://mesonet.agron.iastate.edu/json/spcwatch.py?lat=35.78&lon=-78.64&ts=202603161900"
+   ],
+   "expect": {
+    "ok": "Source: IEM\n\nProduct: SPC_WATCHES\nIssued: unknown\nHeadline: SPC Watches\nSPC Watches\n\nNo matching watches were returned."
+   }
+  },
+  {
+   "name": "spc_watches_now",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "watches",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://mesonet.agron.iastate.edu/json/spcwatch.py",
+     "json": {
+      "features": []
+     }
+    }
+   ],
+   "requests": [
+    "https://mesonet.agron.iastate.edu/json/spcwatch.py?lat=35.78&lon=-78.64&ts=202605011800"
+   ],
+   "expect": {
+    "ok": "Source: IEM\n\nProduct: SPC_WATCHES\nIssued: unknown\nHeadline: SPC Watches\nSPC Watches\n\nNo matching watches were returned."
+   }
+  },
+  {
+   "name": "nws_only_empty_history",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "LSR",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "NWS history only",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://api.weather.gov/products?",
+     "json": {
+      "@graph": []
+     }
+    }
+   ],
+   "requests": [
+    "https://api.weather.gov/products?location=RAH&type=LSR&limit=1"
+   ],
+   "expect": {
+    "ok": "No NWS LSR history found for RAH."
+   }
+  },
+  {
+   "name": "prefer_nws_empty_falls_back_to_iem",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "PNS",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://api.weather.gov/products?",
+     "json": {
+      "@graph": []
+     }
+    },
+    {
+     "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py",
+     "text": "AFOS PRODUCT TEXT"
+    }
+   ],
+   "requests": [
+    "https://api.weather.gov/products?location=RAH&type=PNS&limit=1",
+    "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PNSRAH&fmt=text&limit=1&order=desc"
+   ],
+   "expect": {
+    "ok": "Source: IEM\n\nProduct: PNSRAH\nIssued: unknown\nHeadline: IEM AFOS PNSRAH\nAFOS PRODUCT TEXT"
+   }
+  },
+  {
+   "name": "custom_office_invalid",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "AFD",
+     "office_choice": "Custom office below",
+     "custom_office": " ra ",
+     "limit": "1",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://api.weather.gov/products?",
+     "json": {
+      "@graph": []
+     }
+    }
+   ],
+   "requests": [
+    "https://api.weather.gov/products?location=RA&type=AFD&limit=1"
+   ],
+   "expect": {
+    "ok": "Choose a valid 3-letter local NWS office, such as RAH."
+   }
+  },
+  {
+   "name": "custom_office_valid",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "AFD",
+     "office_choice": "Custom office below",
+     "custom_office": " mhx ",
+     "limit": "abc",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://api.weather.gov/products?",
+     "json": {
+      "@graph": [
+       {
+        "id": "afd-1",
+        "issuanceTime": "2026-05-01T15:00:00+00:00"
+       }
+      ]
+     }
+    },
+    {
+     "url": "https://api.weather.gov/products/afd-1",
+     "json": {
+      "productText": "official text",
+      "issuanceTime": "2026-05-01T15:00:00+00:00",
+      "headline": "Official product"
+     }
+    }
+   ],
+   "requests": [
+    "https://api.weather.gov/products?location=MHX&type=AFD&limit=1",
+    "https://api.weather.gov/products/afd-1"
+   ],
+   "expect": {
+    "ok": "Source: NWS\n\nProduct: AFD\nIssued: 2026-05-01T15:00:00+00:00\nHeadline: Official product\nofficial text"
+   }
+  },
+  {
+   "name": "history_http_error",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "AFD",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://api.weather.gov/products?",
+     "status": 500,
+     "json": {}
+    }
+   ],
+   "requests": [
+    "https://api.weather.gov/products?location=RAH&type=AFD&limit=1"
+   ],
+   "expect": {
+    "ok": "Lookup failed: HTTP 500 fetching AFD history for RAH"
+   }
+  },
+  {
+   "name": "iem_error_text",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "AFD",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "99",
+     "source": "IEM AFOS only",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py",
+     "text": "ERROR: No products found"
+    }
+   ],
+   "requests": [
+    "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=AFDRAH&fmt=text&limit=25&order=desc"
+   ],
+   "expect": {
+    "ok": "Lookup failed: ERROR: No products found"
+   }
+  },
+  {
+   "name": "aviation_requires_afd",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "HWO",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "IEM AFOS only",
+     "order": "Newest first",
+     "aviation_afd": true,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [],
+   "requests": [],
+   "expect": {
+    "ok": "Aviation section lookup is only valid for Area Forecast Discussion products."
+   }
+  },
+  {
+   "name": "center_invalid",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "AFD",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "IEM AFOS only",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "KR",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [],
+   "requests": [],
+   "expect": {
+    "ok": "Issuing center must be a 4-character ID, such as KDMX."
+   }
+  },
+  {
+   "name": "wmo_invalid",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "AFD",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "IEM AFOS only",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "FX1234",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [],
+   "requests": [],
+   "expect": {
+    "ok": "WMO header must be 6 characters like FXUS63."
+   }
+  },
+  {
+   "name": "empty_product",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "   ",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "Prefer NWS when available",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [],
+   "requests": [],
+   "expect": {
+    "ok": "Choose a product or enter a custom AFOS product ID."
+   }
+  },
+  {
+   "name": "unmatched_outlook_is_invalid_pil",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "SPC DAY 9 OUTLOOK",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "IEM AFOS only",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [],
+   "requests": [],
+   "expect": {
+    "ok": "Choose a preset or enter a 3-to-6 character AFOS product ID."
+   }
+  },
+  {
+   "name": "blank_source_and_office",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "AFD",
+     "office_choice": "",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py",
+     "text": "AFOS PRODUCT TEXT"
+    }
+   ],
+   "requests": [
+    "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=AFD&fmt=text&limit=1&order=desc"
+   ],
+   "expect": {
+    "ok": "Source: IEM\n\nProduct: AFD\nIssued: unknown\nHeadline: IEM AFOS AFD\nAFOS PRODUCT TEXT"
+   }
+  },
+  {
+   "name": "blank_source_prefers_nws",
+   "call": {
+    "fn": "lookup",
+    "location": {
+     "name": "Raleigh, NC",
+     "latitude": 35.78,
+     "longitude": -78.64,
+     "country_code": "US",
+     "cwa_office": "RAH"
+    },
+    "form": {
+     "product": "AFD",
+     "office_choice": "Selected location office (RAH)",
+     "custom_office": "RAH",
+     "limit": "1",
+     "source": "",
+     "order": "Newest first",
+     "aviation_afd": false,
+     "center": "",
+     "wmo_id": "",
+     "start_parts": [
+      "",
+      "",
+      ""
+     ],
+     "end_parts": [
+      "",
+      "",
+      ""
+     ],
+     "start_text": "",
+     "end_text": ""
+    },
+    "now": "2026-05-01T18:00:00+00:00"
+   },
+   "responses": [
+    {
+     "url": "https://api.weather.gov/products?",
+     "json": {
+      "@graph": [
+       {
+        "id": "afd-1",
+        "issuanceTime": "2026-05-01T15:00:00+00:00"
+       }
+      ]
+     }
+    },
+    {
+     "url": "https://api.weather.gov/products/afd-1",
+     "json": {
+      "productText": "official text",
+      "issuanceTime": "2026-05-01T15:00:00+00:00",
+      "headline": "Official product"
+     }
+    }
+   ],
+   "requests": [
+    "https://api.weather.gov/products?location=RAH&type=AFD&limit=1",
+    "https://api.weather.gov/products/afd-1"
+   ],
+   "expect": {
+    "ok": "Source: NWS\n\nProduct: AFD\nIssued: 2026-05-01T15:00:00+00:00\nHeadline: Official product\nofficial text"
+   }
+  }
+ ],
+ "parse_optional_datetime": [
+  {
+   "input": "",
+   "ok": null
+  },
+  {
+   "input": "  ",
+   "ok": null
+  },
+  {
+   "input": "2026-05-01",
+   "ok": "2026-05-01T00:00:00+00:00"
+  },
+  {
+   "input": " 2026-05-01 ",
+   "ok": "2026-05-01T00:00:00+00:00"
+  },
+  {
+   "input": "2026-02-30",
+   "error": "Enter dates as YYYY-MM-DD or ISO timestamps."
+  },
+  {
+   "input": "2026-05-01T12:00:00Z",
+   "ok": "2026-05-01T12:00:00+00:00"
+  },
+  {
+   "input": "2026-05-01T12:00:00",
+   "ok": "2026-05-01T12:00:00+00:00"
+  },
+  {
+   "input": "2026-05-01 08:00-04:00",
+   "ok": "2026-05-01T08:00:00-04:00"
+  },
+  {
+   "input": "20260501",
+   "ok": "2026-05-01T00:00:00+00:00"
+  },
+  {
+   "input": "20260501T1200Z",
+   "ok": "2026-05-01T12:00:00+00:00"
+  },
+  {
+   "input": "2026-05-01T12:00:00.5Z",
+   "ok": "2026-05-01T12:00:00.500000+00:00"
+  },
+  {
+   "input": "yesterday",
+   "error": "Enter dates as YYYY-MM-DD or ISO timestamps."
+  },
+  {
+   "input": "2026-05-01Z",
+   "ok": "2026-05-01T00:00:00+00:00"
+  }
+ ],
+ "date_from_choice_parts": [
+  {
+   "input": [
+    "",
+    "",
+    ""
+   ],
+   "ok": null
+  },
+  {
+   "input": [
+    "2024",
+    "",
+    ""
+   ],
+   "error": "Choose year, month, and day for custom archive dates."
+  },
+  {
+   "input": [
+    "2024",
+    "02 - February",
+    "29"
+   ],
+   "ok": "2024-02-29T00:00:00+00:00"
+  },
+  {
+   "input": [
+    "2023",
+    "02 - February",
+    "29"
+   ],
+   "error": "Choose a valid calendar date."
+  },
+  {
+   "input": [
+    "1983",
+    "12 - December",
+    "31"
+   ],
+   "ok": "1983-12-31T00:00:00+00:00"
+  }
+ ],
+ "outlook_days": [
+  {
+   "input": "SPC DAY 1 OUTLOOK",
+   "spc": 1,
+   "wpc": null
+  },
+  {
+   "input": "SPC DAY 3 CONVECTIVE OUTLOOK",
+   "spc": 3,
+   "wpc": null
+  },
+  {
+   "input": "SPCDAY8OUTLOOK",
+   "spc": 8,
+   "wpc": null
+  },
+  {
+   "input": "DAY 2 OUTLOOK",
+   "spc": 2,
+   "wpc": 2
+  },
+  {
+   "input": "DAY 2 CONVECTIVEOUTLOOK",
+   "spc": 2,
+   "wpc": null
+  },
+  {
+   "input": "SPC DAY 9 OUTLOOK",
+   "spc": null,
+   "wpc": null
+  },
+  {
+   "input": "SPC DAY 1 OUTLOOKS",
+   "spc": null,
+   "wpc": null
+  },
+  {
+   "input": "SPC  DAY\t4  OUTLOOK",
+   "spc": 4,
+   "wpc": null
+  },
+  {
+   "input": "WPC DAY 1 EXCESSIVE RAINFALL OUTLOOK",
+   "spc": null,
+   "wpc": 1
+  },
+  {
+   "input": "WPC DAY 2 OUTLOOK",
+   "spc": null,
+   "wpc": 2
+  },
+  {
+   "input": "WPC DAY 3 EXCESSIVERAINFALLOUTLOOK",
+   "spc": null,
+   "wpc": 3
+  },
+  {
+   "input": "WPC DAY 3 EXCESSIVE OUTLOOK",
+   "spc": null,
+   "wpc": null
+  },
+  {
+   "input": "DAY 1 EXCESSIVE RAINFALL OUTLOOK",
+   "spc": null,
+   "wpc": 1
+  },
+  {
+   "input": "spc day 5 outlook",
+   "spc": 5,
+   "wpc": null
+  },
+  {
+   "input": "SPC MCD",
+   "spc": null,
+   "wpc": null
+  }
+ ],
+ "parse_limit": [
+  {
+   "input": "1",
+   "limit": 1
+  },
+  {
+   "input": "5",
+   "limit": 5
+  },
+  {
+   "input": " 7 ",
+   "limit": 7
+  },
+  {
+   "input": "25",
+   "limit": 25
+  },
+  {
+   "input": "26",
+   "limit": 25
+  },
+  {
+   "input": "999999999999999999999",
+   "limit": 25
+  },
+  {
+   "input": "0",
+   "limit": 1
+  },
+  {
+   "input": "-3",
+   "limit": 1
+  },
+  {
+   "input": "abc",
+   "limit": 1
+  },
+  {
+   "input": "",
+   "limit": 1
+  },
+  {
+   "input": "+4",
+   "limit": 4
+  },
+  {
+   "input": "3.5",
+   "limit": 1
+  }
+ ],
+ "validate": [
+  {
+   "args": [
+    "AFD",
+    "AFDRAH",
+    "RAH",
+    false,
+    "",
+    ""
+   ],
+   "message": null
+  },
+  {
+   "args": [
+    "AFD",
+    "AFDRA",
+    "RA",
+    false,
+    "",
+    ""
+   ],
+   "message": "Choose a valid 3-letter local NWS office, such as RAH."
+  },
+  {
+   "args": [
+    "AFD",
+    "AFDR1H",
+    "R1H",
+    false,
+    "",
+    ""
+   ],
+   "message": null
+  },
+  {
+   "args": [
+    "SWODY1",
+    "SWODY1",
+    "",
+    false,
+    "",
+    ""
+   ],
+   "message": null
+  },
+  {
+   "args": [
+    "AB",
+    "AB",
+    "",
+    false,
+    "",
+    ""
+   ],
+   "message": "Choose a preset or enter a 3-to-6 character AFOS product ID."
+  },
+  {
+   "args": [
+    "TOOLONG1",
+    "TOOLONG1",
+    "",
+    false,
+    "",
+    ""
+   ],
+   "message": "Choose a preset or enter a 3-to-6 character AFOS product ID."
+  },
+  {
+   "args": [
+    "HWO",
+    "HWORAH",
+    "RAH",
+    true,
+    "",
+    ""
+   ],
+   "message": "Aviation section lookup is only valid for Area Forecast Discussion products."
+  },
+  {
+   "args": [
+    "AFD",
+    "AFDRAH",
+    "RAH",
+    true,
+    "KRAH",
+    "FXUS62"
+   ],
+   "message": null
+  },
+  {
+   "args": [
+    "AFD",
+    "AFDRAH",
+    "RAH",
+    false,
+    "KRA",
+    ""
+   ],
+   "message": "Issuing center must be a 4-character ID, such as KDMX."
+  },
+  {
+   "args": [
+    "AFD",
+    "AFDRAH",
+    "RAH",
+    false,
+    "",
+    "FXUS6"
+   ],
+   "message": "WMO header must be 6 characters like FXUS63."
+  },
+  {
+   "args": [
+    "AFD",
+    "AFDRAH",
+    "RAH",
+    false,
+    "",
+    "FX1234"
+   ],
+   "message": "WMO header must be 6 characters like FXUS63."
+  },
+  {
+   "args": [
+    "PMD SPD",
+    "PMD SPD",
+    "",
+    false,
+    "",
+    ""
+   ],
+   "message": "Choose a preset or enter a 3-to-6 character AFOS product ID."
+  }
+ ],
+ "date_presets": {
+  "now": "2026-09-25T14:30:45.123456+00:00",
+  "ranges": [
+   {
+    "preset": "",
+    "start": null,
+    "end": null
+   },
+   {
+    "preset": "Latest or current",
+    "start": null,
+    "end": null
+   },
+   {
+    "preset": "Past 24 hours",
+    "start": "2026-09-24T14:30:45+00:00",
+    "end": "2026-09-25T14:30:45+00:00"
+   },
+   {
+    "preset": "Past 7 days",
+    "start": "2026-09-18T14:30:45+00:00",
+    "end": "2026-09-25T14:30:45+00:00"
+   },
+   {
+    "preset": "Past 30 days",
+    "start": "2026-08-26T14:30:45+00:00",
+    "end": "2026-09-25T14:30:45+00:00"
+   },
+   {
+    "preset": "Past 90 days",
+    "start": "2026-06-27T14:30:45+00:00",
+    "end": "2026-09-25T14:30:45+00:00"
+   },
+   {
+    "preset": "Past year",
+    "start": "2025-09-25T14:30:45+00:00",
+    "end": "2026-09-25T14:30:45+00:00"
+   },
+   {
+    "preset": "Choose start and end dates",
+    "start": "2026-09-24T14:30:45+00:00",
+    "end": "2026-09-25T14:30:45+00:00"
+   },
+   {
+    "preset": "Bogus",
+    "start": null,
+    "end": null
+   }
+  ]
+ },
+ "categories": [
+  "Custom",
+  "Local office",
+  "Point-based SPC",
+  "Point-based WPC",
+  "National AFOS"
+ ],
+ "labels_by_category": {
+  "Custom": [
+   "Custom AFOS product ID"
+  ],
+  "Local office": [
+   "Local Area Forecast Discussion",
+   "Local Hazardous Weather Outlook",
+   "Local Special Weather Statement",
+   "Official NWS Surf Zone Forecast for regional beaches",
+   "Local Storm Report",
+   "Daily Climate Report",
+   "Monthly Climate Report",
+   "Record Event Report",
+   "Public Information Statement"
+  ],
+  "Point-based SPC": [
+   "SPC Day 1 Outlook",
+   "SPC Day 2 Outlook",
+   "SPC Day 3 Outlook",
+   "SPC Day 4 Outlook",
+   "SPC Day 5 Outlook",
+   "SPC Day 6 Outlook",
+   "SPC Day 7 Outlook",
+   "SPC Day 8 Outlook",
+   "SPC MCD near location",
+   "SPC Watches near location"
+  ],
+  "Point-based WPC": [
+   "WPC Day 1 ERO",
+   "WPC Day 2 ERO",
+   "WPC Day 3 ERO",
+   "WPC MPD near location"
+  ],
+  "National AFOS": [
+   "WPC Short Range Discussion",
+   "WPC Medium Range Discussion",
+   "WPC Extended Discussion",
+   "WPC QPF Discussion",
+   "CPC 6-10 and 8-14 Day Outlook",
+   "NHC Atlantic Tropical Weather Outlook",
+   "NHC East Pacific Tropical Weather Outlook",
+   "SPC Day 1 AFOS Outlook",
+   "SPC Day 2 AFOS Outlook",
+   "SPC Day 3 AFOS Outlook"
+  ]
+ },
+ "preset_changes": [
+  {
+   "label": "Custom AFOS product ID",
+   "product": "",
+   "source_index": null,
+   "office_choice": null
+  },
+  {
+   "label": "Local Area Forecast Discussion",
+   "product": "AFD",
+   "source_index": 0,
+   "office_choice": "Selected location office"
+  },
+  {
+   "label": "Local Hazardous Weather Outlook",
+   "product": "HWO",
+   "source_index": 0,
+   "office_choice": "Selected location office"
+  },
+  {
+   "label": "Local Special Weather Statement",
+   "product": "SPS",
+   "source_index": 0,
+   "office_choice": "Selected location office"
+  },
+  {
+   "label": "Official NWS Surf Zone Forecast for regional beaches",
+   "product": "SRF",
+   "source_index": 0,
+   "office_choice": "Selected location office"
+  },
+  {
+   "label": "Local Storm Report",
+   "product": "LSR",
+   "source_index": 0,
+   "office_choice": "Selected location office"
+  },
+  {
+   "label": "Daily Climate Report",
+   "product": "CLI",
+   "source_index": 0,
+   "office_choice": "Selected location office"
+  },
+  {
+   "label": "Monthly Climate Report",
+   "product": "CF6",
+   "source_index": 0,
+   "office_choice": "Selected location office"
+  },
+  {
+   "label": "Record Event Report",
+   "product": "RER",
+   "source_index": 0,
+   "office_choice": "Selected location office"
+  },
+  {
+   "label": "Public Information Statement",
+   "product": "PNS",
+   "source_index": 0,
+   "office_choice": "Selected location office"
+  },
+  {
+   "label": "SPC Day 1 Outlook",
+   "product": "SPC Day 1 Outlook",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "SPC Day 2 Outlook",
+   "product": "SPC Day 2 Outlook",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "SPC Day 3 Outlook",
+   "product": "SPC Day 3 Outlook",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "SPC Day 4 Outlook",
+   "product": "SPC Day 4 Outlook",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "SPC Day 5 Outlook",
+   "product": "SPC Day 5 Outlook",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "SPC Day 6 Outlook",
+   "product": "SPC Day 6 Outlook",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "SPC Day 7 Outlook",
+   "product": "SPC Day 7 Outlook",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "SPC Day 8 Outlook",
+   "product": "SPC Day 8 Outlook",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "SPC MCD near location",
+   "product": "SPC MCD",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "SPC Watches near location",
+   "product": "SPC Watches",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "WPC Day 1 ERO",
+   "product": "WPC Day 1 Excessive Rainfall Outlook",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "WPC Day 2 ERO",
+   "product": "WPC Day 2 Excessive Rainfall Outlook",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "WPC Day 3 ERO",
+   "product": "WPC Day 3 Excessive Rainfall Outlook",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "WPC MPD near location",
+   "product": "WPC MPD",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "WPC Short Range Discussion",
+   "product": "PMDSPD",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "WPC Medium Range Discussion",
+   "product": "PMDEPD",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "WPC Extended Discussion",
+   "product": "PMDET4",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "WPC QPF Discussion",
+   "product": "QPFPFD",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "CPC 6-10 and 8-14 Day Outlook",
+   "product": "PMDMRD",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "NHC Atlantic Tropical Weather Outlook",
+   "product": "TWOAT",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "NHC East Pacific Tropical Weather Outlook",
+   "product": "TWOEP",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "SPC Day 1 AFOS Outlook",
+   "product": "SWODY1",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "SPC Day 2 AFOS Outlook",
+   "product": "SWODY2",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "SPC Day 3 AFOS Outlook",
+   "product": "SWODY3",
+   "source_index": 1,
+   "office_choice": "No office or national product"
+  },
+  {
+   "label": "SPC MCD (Mesoscale Discussions) near location",
+   "product": "SPC MCD",
+   "source_index": null,
+   "office_choice": null
+  },
+  {
+   "label": "CPC 6-10 and 8-14 Day Outlook (Climate Prediction Center)",
+   "product": "PMDMRD",
+   "source_index": null,
+   "office_choice": null
+  },
+  {
+   "label": "Unknown label",
+   "product": "",
+   "source_index": null,
+   "office_choice": null
+  }
+ ],
+ "format_products": "Source: IEM\n\nProduct: SRF\nIssued: 2026-06-07T10:00:00.000500+00:00\nHeadline: Surf Zone Forecast\nSurf Zone Forecast issued by NWS PHI for regional beaches.\nSURF\n\nProduct: AFDRAH\nIssued: unknown",
+ "format_products_empty": "Source: NWS\n\nNo product found.",
+ "form_datetime": "2026-07-04T12:00:00.000005Z"
+}

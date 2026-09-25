@@ -1,0 +1,52 @@
+[package]
+name = "accessiweather"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "AccessiWeather: accessible desktop weather (native Rust)"
+
+[[bin]]
+name = "accessiweather"
+path = "src/main.rs"
+
+[dependencies]
+aw-core.workspace = true
+aw-notify.workspace = true
+aw-providers.workspace = true
+aw-radio.workspace = true
+aw-store.workspace = true
+aw-audio.workspace = true
+aw-ai.workspace = true
+aw-services.workspace = true
+prismer.workspace = true
+wxdragon.workspace = true
+clap.workspace = true
+thiserror.workspace = true
+chrono.workspace = true
+chrono-tz.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+# Static on Windows (one self-contained .exe); elsewhere prism is a shared
+# library shipped beside the executable.
+[target.'cfg(windows)'.dependencies]
+prismer = { workspace = true, features = ["static"] }
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_System_Threading",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[build-dependencies]
+embed-manifest = "1.4"
+winresource = "0.1"

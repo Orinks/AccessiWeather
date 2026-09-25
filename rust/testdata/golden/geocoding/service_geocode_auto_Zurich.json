@@ -1,0 +1,92 @@
+{
+ "mode": "geocode",
+ "data_source": "auto",
+ "query": "Zurich",
+ "exchanges": [
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Zurich",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Z%C3%BArich",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Z%C3%B9rich",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Z%C3%BBrich",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "generationtime_ms": 0.5
+   }
+  },
+  {
+   "url": "https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&format=json&name=Z%C3%BCrich",
+   "headers": {
+    "user-agent": "AccessiWeather"
+   },
+   "status": 200,
+   "body": {
+    "results": [
+     {
+      "name": "Zürich",
+      "latitude": 47.36667,
+      "longitude": 8.55,
+      "country": "Switzerland",
+      "country_code": "CH",
+      "timezone": "Europe/Zurich",
+      "population": 341730,
+      "admin1": "Zurich"
+     },
+     {
+      "name": "Zürichberg",
+      "latitude": 47.38,
+      "longitude": 8.57,
+      "country": "Switzerland",
+      "country_code": "CH",
+      "timezone": "UTC",
+      "population": null,
+      "admin1": "Zurich"
+     },
+     {
+      "name": "Neu-Zürich",
+      "latitude": 50.0,
+      "longitude": 8.0,
+      "country": "Germany",
+      "country_code": "DE",
+      "timezone": "UTC",
+      "population": 900
+     }
+    ]
+   }
+  }
+ ],
+ "output": [
+  47.36667,
+  8.55,
+  "Zürich, Zurich, Switzerland"
+ ]
+}

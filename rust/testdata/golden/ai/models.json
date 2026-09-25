@@ -1,0 +1,969 @@
+{
+ "openrouter_rows": [
+  {
+   "id": "openai/gpt-4o",
+   "name": "OpenAI: GPT-4o",
+   "description": "Omni model",
+   "context_length": 128000,
+   "pricing": {
+    "prompt": "0.0000025",
+    "completion": "0.00001"
+   },
+   "architecture": {
+    "input_modalities": [
+     "text",
+     "image"
+    ],
+    "output_modalities": [
+     "text"
+    ]
+   }
+  },
+  {
+   "id": "meta-llama/llama-3.3-70b-instruct:free",
+   "name": "Meta: Llama 3.3 70B (free)",
+   "description": "Free Llama",
+   "context_length": 131072,
+   "pricing": {
+    "prompt": "0",
+    "completion": "0"
+   }
+  },
+  {
+   "id": "anthropic/claude-3-haiku",
+   "name": "anthropic: Claude 3 Haiku",
+   "description": null,
+   "context_length": 200000,
+   "pricing": {
+    "prompt": 2.5e-07,
+    "completion": "0.00000125"
+   }
+  },
+  {
+   "id": "google/gemini-2.5-pro",
+   "name": "Google: Gemini 2.5 Pro",
+   "description": "Long context",
+   "context_length": 1048576,
+   "pricing": {
+    "prompt": "abc",
+    "completion": null
+   }
+  },
+  {
+   "id": "some-new-lab/model",
+   "name": "Some New Lab Model",
+   "context_length": 999,
+   "pricing": {
+    "prompt": "0.000001",
+    "completion": "0.000002"
+   }
+  },
+  {
+   "id": "openrouter/auto",
+   "name": "Auto Router",
+   "description": "Routes",
+   "context_length": null,
+   "pricing": {
+    "prompt": "-1",
+    "completion": "-1"
+   }
+  },
+  {
+   "id": "black-forest-labs/flux",
+   "name": "FLUX",
+   "architecture": {
+    "input_modalities": [
+     "text"
+    ],
+    "output_modalities": [
+     "image"
+    ]
+   },
+   "pricing": {
+    "prompt": "0.01"
+   }
+  },
+  {
+   "id": "noslash",
+   "name": "No Slash",
+   "context_length": 4096
+  }
+ ],
+ "openrouter": [
+  {
+   "id": "anthropic/claude-3-haiku",
+   "name": "anthropic: Claude 3 Haiku",
+   "description": null,
+   "context_length": 200000,
+   "pricing_prompt": 2.5e-07,
+   "pricing_completion": 1.25e-06,
+   "is_free": false,
+   "provider": "anthropic",
+   "display_name": "anthropic: Claude 3 Haiku",
+   "context_display": "200K",
+   "supports_function_calling": false,
+   "offline": false
+  },
+  {
+   "id": "openrouter/auto",
+   "name": "Auto Router",
+   "description": "Routes",
+   "context_length": null,
+   "pricing_prompt": -1.0,
+   "pricing_completion": -1.0,
+   "is_free": false,
+   "provider": "openrouter",
+   "display_name": "Auto Router",
+   "context_display": "Unknown",
+   "supports_function_calling": false,
+   "offline": false
+  },
+  {
+   "id": "black-forest-labs/flux",
+   "name": "FLUX",
+   "description": "",
+   "context_length": null,
+   "pricing_prompt": 0.01,
+   "pricing_completion": 0.0,
+   "is_free": false,
+   "provider": "black-forest-labs",
+   "display_name": "FLUX",
+   "context_display": "Unknown",
+   "supports_function_calling": false,
+   "offline": false
+  },
+  {
+   "id": "google/gemini-2.5-pro",
+   "name": "Google: Gemini 2.5 Pro",
+   "description": "Long context",
+   "context_length": 1048576,
+   "pricing_prompt": 0.0,
+   "pricing_completion": 0.0,
+   "is_free": true,
+   "provider": "google",
+   "display_name": "Google: Gemini 2.5 Pro (Free)",
+   "context_display": "1.0M",
+   "supports_function_calling": false,
+   "offline": false
+  },
+  {
+   "id": "meta-llama/llama-3.3-70b-instruct:free",
+   "name": "Meta: Llama 3.3 70B (free)",
+   "description": "Free Llama",
+   "context_length": 131072,
+   "pricing_prompt": 0.0,
+   "pricing_completion": 0.0,
+   "is_free": true,
+   "provider": "meta-llama",
+   "display_name": "Meta: Llama 3.3 70B (free) (Free)",
+   "context_display": "131K",
+   "supports_function_calling": false,
+   "offline": false
+  },
+  {
+   "id": "noslash",
+   "name": "No Slash",
+   "description": "",
+   "context_length": 4096,
+   "pricing_prompt": 0.0,
+   "pricing_completion": 0.0,
+   "is_free": true,
+   "provider": "unknown",
+   "display_name": "No Slash (Free)",
+   "context_display": "4K",
+   "supports_function_calling": false,
+   "offline": false
+  },
+  {
+   "id": "openai/gpt-4o",
+   "name": "OpenAI: GPT-4o",
+   "description": "Omni model",
+   "context_length": 128000,
+   "pricing_prompt": 2.5e-06,
+   "pricing_completion": 1e-05,
+   "is_free": false,
+   "provider": "openai",
+   "display_name": "OpenAI: GPT-4o",
+   "context_display": "128K",
+   "supports_function_calling": false,
+   "offline": false
+  },
+  {
+   "id": "some-new-lab/model",
+   "name": "Some New Lab Model",
+   "description": "",
+   "context_length": 999,
+   "pricing_prompt": 1e-06,
+   "pricing_completion": 2e-06,
+   "is_free": false,
+   "provider": "some-new-lab",
+   "display_name": "Some New Lab Model",
+   "context_display": "999",
+   "supports_function_calling": false,
+   "offline": false
+  }
+ ],
+ "openrouter_text_ids": [
+  "anthropic/claude-3-haiku",
+  "openrouter/auto",
+  "google/gemini-2.5-pro",
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "noslash",
+  "openai/gpt-4o",
+  "some-new-lab/model"
+ ],
+ "openrouter_browser": [
+  {
+   "filter": {
+    "search": "",
+    "free_only": false,
+    "price": 0,
+    "function_calling_only": false,
+    "provider": null
+   },
+   "providers": [
+    "anthropic",
+    "google",
+    "meta-llama",
+    "openai",
+    "openrouter",
+    "some-new-lab",
+    "unknown"
+   ],
+   "provider_names": [
+    "Anthropic",
+    "Google",
+    "Meta",
+    "OpenAI",
+    "OpenRouter",
+    "Some New Lab",
+    "Unknown"
+   ],
+   "ids": [
+    "anthropic/claude-3-haiku",
+    "openrouter/auto",
+    "google/gemini-2.5-pro",
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "noslash",
+    "openai/gpt-4o",
+    "some-new-lab/model"
+   ],
+   "items": [
+    "anthropic: Claude 3 Haiku - Context: 200K - $0.000000 per 1K tokens",
+    "Auto Router - Context: Unknown - $-0.001000 per 1K tokens",
+    "Google: Gemini 2.5 Pro (Free) - Context: 1.0M - Free",
+    "Meta: Llama 3.3 70B (free) (Free) - Context: 131K - Free",
+    "No Slash (Free) - Context: 4K - Free",
+    "OpenAI: GPT-4o - Context: 128K - $0.000000 per 1K tokens",
+    "Some New Lab Model - Context: 999 - $0.000000 per 1K tokens"
+   ],
+   "status": "7 models available",
+   "descriptions": [
+    "No description available.",
+    "Routes",
+    "Long context",
+    "Free Llama",
+    "No description available.",
+    "Omni model",
+    "No description available."
+   ]
+  },
+  {
+   "filter": {
+    "search": "",
+    "free_only": true,
+    "price": 0,
+    "function_calling_only": false,
+    "provider": null
+   },
+   "providers": [
+    "google",
+    "meta-llama",
+    "unknown"
+   ],
+   "provider_names": [
+    "Google",
+    "Meta",
+    "Unknown"
+   ],
+   "ids": [
+    "google/gemini-2.5-pro",
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "noslash"
+   ],
+   "items": [
+    "Google: Gemini 2.5 Pro (Free) - Context: 1.0M - Free",
+    "Meta: Llama 3.3 70B (free) (Free) - Context: 131K - Free",
+    "No Slash (Free) - Context: 4K - Free"
+   ],
+   "status": "Showing 3 of 7 models",
+   "descriptions": [
+    "Long context",
+    "Free Llama",
+    "No description available."
+   ]
+  },
+  {
+   "filter": {
+    "search": "  LLAMA ",
+    "free_only": false,
+    "price": 0,
+    "function_calling_only": false,
+    "provider": null
+   },
+   "providers": [
+    "anthropic",
+    "google",
+    "meta-llama",
+    "openai",
+    "openrouter",
+    "some-new-lab",
+    "unknown"
+   ],
+   "provider_names": [
+    "Anthropic",
+    "Google",
+    "Meta",
+    "OpenAI",
+    "OpenRouter",
+    "Some New Lab",
+    "Unknown"
+   ],
+   "ids": [
+    "meta-llama/llama-3.3-70b-instruct:free"
+   ],
+   "items": [
+    "Meta: Llama 3.3 70B (free) (Free) - Context: 131K - Free"
+   ],
+   "status": "Showing 1 of 7 models",
+   "descriptions": [
+    "Free Llama"
+   ]
+  },
+  {
+   "filter": {
+    "search": "context",
+    "free_only": false,
+    "price": 0,
+    "function_calling_only": false,
+    "provider": null
+   },
+   "providers": [
+    "anthropic",
+    "google",
+    "meta-llama",
+    "openai",
+    "openrouter",
+    "some-new-lab",
+    "unknown"
+   ],
+   "provider_names": [
+    "Anthropic",
+    "Google",
+    "Meta",
+    "OpenAI",
+    "OpenRouter",
+    "Some New Lab",
+    "Unknown"
+   ],
+   "ids": [
+    "google/gemini-2.5-pro"
+   ],
+   "items": [
+    "Google: Gemini 2.5 Pro (Free) - Context: 1.0M - Free"
+   ],
+   "status": "Showing 1 of 7 models",
+   "descriptions": [
+    "Long context"
+   ]
+  },
+  {
+   "filter": {
+    "search": "",
+    "free_only": false,
+    "price": 0,
+    "function_calling_only": false,
+    "provider": "anthropic"
+   },
+   "providers": [
+    "anthropic",
+    "google",
+    "meta-llama",
+    "openai",
+    "openrouter",
+    "some-new-lab",
+    "unknown"
+   ],
+   "provider_names": [
+    "Anthropic",
+    "Google",
+    "Meta",
+    "OpenAI",
+    "OpenRouter",
+    "Some New Lab",
+    "Unknown"
+   ],
+   "ids": [
+    "anthropic/claude-3-haiku"
+   ],
+   "items": [
+    "anthropic: Claude 3 Haiku - Context: 200K - $0.000000 per 1K tokens"
+   ],
+   "status": "Showing 1 of 7 models",
+   "descriptions": [
+    "No description available."
+   ]
+  },
+  {
+   "filter": {
+    "search": "",
+    "free_only": true,
+    "price": 0,
+    "function_calling_only": false,
+    "provider": "openai"
+   },
+   "providers": [
+    "google",
+    "meta-llama",
+    "unknown"
+   ],
+   "provider_names": [
+    "Google",
+    "Meta",
+    "Unknown"
+   ],
+   "ids": [
+    "google/gemini-2.5-pro",
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "noslash"
+   ],
+   "items": [
+    "Google: Gemini 2.5 Pro (Free) - Context: 1.0M - Free",
+    "Meta: Llama 3.3 70B (free) (Free) - Context: 131K - Free",
+    "No Slash (Free) - Context: 4K - Free"
+   ],
+   "status": "Showing 3 of 7 models",
+   "descriptions": [
+    "Long context",
+    "Free Llama",
+    "No description available."
+   ]
+  }
+ ],
+ "venice_rows": [
+  {
+   "id": "venice-uncensored-1-2",
+   "type": "text",
+   "model_spec": {
+    "name": "Venice Uncensored",
+    "description": "Default",
+    "availableContextTokens": 32768,
+    "pricing": {
+     "input": {
+      "usd": 0.2
+     },
+     "output": {
+      "usd": 0.9
+     }
+    },
+    "capabilities": {
+     "supportsFunctionCalling": false
+    }
+   }
+  },
+  {
+   "id": "qwen3-235b",
+   "type": "text",
+   "model_spec": {
+    "name": "Qwen 3 235B",
+    "availableContextTokens": 131072.9,
+    "pricing": {
+     "input": {
+      "usd": "0.45"
+     },
+     "output": {
+      "usd": 3.5
+     }
+    },
+    "capabilities": {
+     "supportsFunctionCalling": true
+    }
+   }
+  },
+  {
+   "id": "llama-3.2-3b",
+   "type": "text",
+   "model_spec": {
+    "name": "llama 3.2 3B",
+    "pricing": {
+     "input": {
+      "usd": 0
+     },
+     "output": {
+      "usd": 0
+     }
+    },
+    "capabilities": {
+     "supportsFunctionCalling": true
+    },
+    "offline": true
+   }
+  },
+  {
+   "id": "e2ee-claude-opus",
+   "model_spec": {
+    "name": "Claude Opus",
+    "pricing": {
+     "input": {
+      "usd": null
+     },
+     "output": {
+      "usd": 15
+     }
+    },
+    "availableContextTokens": 0
+   }
+  },
+  {
+   "id": "mystery",
+   "type": "text",
+   "model_spec": {
+    "name": 5,
+    "description": [
+     "x"
+    ],
+    "pricing": {
+     "input": {
+      "usd": -1
+     },
+     "output": {
+      "usd": "nan"
+     }
+    }
+   }
+  },
+  {
+   "id": "image-model",
+   "type": "image",
+   "model_spec": {
+    "name": "Image"
+   }
+  },
+  {
+   "id": "",
+   "type": "text",
+   "model_spec": {}
+  },
+  "junk",
+  {
+   "id": "grok-4",
+   "type": "text",
+   "model_spec": {
+    "name": "Grok 4",
+    "pricing": {
+     "input": {
+      "usd": 3e-06
+     },
+     "output": {
+      "usd": 1234567.0
+     }
+    },
+    "capabilities": {
+     "supportsFunctionCalling": true
+    }
+   }
+  }
+ ],
+ "venice": [
+  {
+   "id": "e2ee-claude-opus",
+   "name": "Claude Opus",
+   "description": "",
+   "context_length": null,
+   "pricing_prompt": null,
+   "pricing_completion": 15.0,
+   "is_free": false,
+   "provider": "anthropic",
+   "display_name": "Claude Opus",
+   "context_display": "Unknown",
+   "supports_function_calling": false,
+   "offline": false
+  },
+  {
+   "id": "grok-4",
+   "name": "Grok 4",
+   "description": "",
+   "context_length": null,
+   "pricing_prompt": 3e-06,
+   "pricing_completion": 1234567.0,
+   "is_free": false,
+   "provider": "x-ai",
+   "display_name": "Grok 4",
+   "context_display": "Unknown",
+   "supports_function_calling": true,
+   "offline": false
+  },
+  {
+   "id": "llama-3.2-3b",
+   "name": "llama 3.2 3B",
+   "description": "",
+   "context_length": null,
+   "pricing_prompt": 0.0,
+   "pricing_completion": 0.0,
+   "is_free": true,
+   "provider": "meta-llama",
+   "display_name": "llama 3.2 3B (Free) (Offline)",
+   "context_display": "Unknown",
+   "supports_function_calling": true,
+   "offline": true
+  },
+  {
+   "id": "mystery",
+   "name": "mystery",
+   "description": "",
+   "context_length": null,
+   "pricing_prompt": null,
+   "pricing_completion": null,
+   "is_free": false,
+   "provider": "venice",
+   "display_name": "mystery",
+   "context_display": "Unknown",
+   "supports_function_calling": false,
+   "offline": false
+  },
+  {
+   "id": "qwen3-235b",
+   "name": "Qwen 3 235B",
+   "description": "",
+   "context_length": 131072,
+   "pricing_prompt": 0.45,
+   "pricing_completion": 3.5,
+   "is_free": false,
+   "provider": "qwen",
+   "display_name": "Qwen 3 235B",
+   "context_display": "131K",
+   "supports_function_calling": true,
+   "offline": false
+  },
+  {
+   "id": "venice-uncensored-1-2",
+   "name": "Venice Uncensored",
+   "description": "Default",
+   "context_length": 32768,
+   "pricing_prompt": 0.2,
+   "pricing_completion": 0.9,
+   "is_free": false,
+   "provider": "venice",
+   "display_name": "Venice Uncensored",
+   "context_display": "33K",
+   "supports_function_calling": false,
+   "offline": false
+  }
+ ],
+ "venice_browser": [
+  {
+   "filter": {
+    "search": "",
+    "free_only": false,
+    "price": 0,
+    "function_calling_only": false,
+    "provider": null
+   },
+   "providers": [
+    "anthropic",
+    "meta-llama",
+    "qwen",
+    "venice",
+    "x-ai"
+   ],
+   "provider_names": [
+    "Anthropic",
+    "Meta",
+    "Qwen",
+    "Venice",
+    "xAI"
+   ],
+   "ids": [
+    "e2ee-claude-opus",
+    "grok-4",
+    "llama-3.2-3b",
+    "mystery",
+    "qwen3-235b",
+    "venice-uncensored-1-2"
+   ],
+   "items": [
+    "Claude Opus - Context: Unknown - Input: unknown; output: $15 per million tokens - Explanations only",
+    "Grok 4 - Context: Unknown - Input: $3e-06; output: $1.23457e+06 per million tokens - Weather assistant compatible",
+    "llama 3.2 3B (Free) (Offline) - Context: Unknown - Free - Weather assistant compatible",
+    "mystery - Context: Unknown - Input: unknown; output: unknown per million tokens - Explanations only",
+    "Qwen 3 235B - Context: 131K - Input: $0.45; output: $3.5 per million tokens - Weather assistant compatible",
+    "Venice Uncensored - Context: 33K - Input: $0.2; output: $0.9 per million tokens - Explanations only"
+   ],
+   "status": "6 models available",
+   "descriptions": [
+    "No description available.\nInput: unknown; output: $15 per million tokens\nDoes not support weather assistant function calling; use for explanations only.",
+    "No description available.\nInput: $3e-06; output: $1.23457e+06 per million tokens\nSupports weather assistant function calling.",
+    "No description available.\nThis model is offline and unavailable for selection.\nFree\nSupports weather assistant function calling.",
+    "No description available.\nInput: unknown; output: unknown per million tokens\nDoes not support weather assistant function calling; use for explanations only.",
+    "No description available.\nInput: $0.45; output: $3.5 per million tokens\nSupports weather assistant function calling.",
+    "Default\nInput: $0.2; output: $0.9 per million tokens\nDoes not support weather assistant function calling; use for explanations only."
+   ]
+  },
+  {
+   "filter": {
+    "search": "",
+    "free_only": false,
+    "price": 1,
+    "function_calling_only": false,
+    "provider": null
+   },
+   "providers": [
+    "meta-llama"
+   ],
+   "provider_names": [
+    "Meta"
+   ],
+   "ids": [
+    "llama-3.2-3b"
+   ],
+   "items": [
+    "llama 3.2 3B (Free) (Offline) - Context: Unknown - Free - Weather assistant compatible"
+   ],
+   "status": "Showing 1 of 6 models",
+   "descriptions": [
+    "No description available.\nThis model is offline and unavailable for selection.\nFree\nSupports weather assistant function calling."
+   ]
+  },
+  {
+   "filter": {
+    "search": "",
+    "free_only": false,
+    "price": 2,
+    "function_calling_only": false,
+    "provider": null
+   },
+   "providers": [
+    "anthropic",
+    "qwen",
+    "venice",
+    "x-ai"
+   ],
+   "provider_names": [
+    "Anthropic",
+    "Qwen",
+    "Venice",
+    "xAI"
+   ],
+   "ids": [
+    "e2ee-claude-opus",
+    "grok-4",
+    "qwen3-235b",
+    "venice-uncensored-1-2"
+   ],
+   "items": [
+    "Claude Opus - Context: Unknown - Input: unknown; output: $15 per million tokens - Explanations only",
+    "Grok 4 - Context: Unknown - Input: $3e-06; output: $1.23457e+06 per million tokens - Weather assistant compatible",
+    "Qwen 3 235B - Context: 131K - Input: $0.45; output: $3.5 per million tokens - Weather assistant compatible",
+    "Venice Uncensored - Context: 33K - Input: $0.2; output: $0.9 per million tokens - Explanations only"
+   ],
+   "status": "Showing 4 of 6 models",
+   "descriptions": [
+    "No description available.\nInput: unknown; output: $15 per million tokens\nDoes not support weather assistant function calling; use for explanations only.",
+    "No description available.\nInput: $3e-06; output: $1.23457e+06 per million tokens\nSupports weather assistant function calling.",
+    "No description available.\nInput: $0.45; output: $3.5 per million tokens\nSupports weather assistant function calling.",
+    "Default\nInput: $0.2; output: $0.9 per million tokens\nDoes not support weather assistant function calling; use for explanations only."
+   ]
+  },
+  {
+   "filter": {
+    "search": "",
+    "free_only": false,
+    "price": 0,
+    "function_calling_only": true,
+    "provider": null
+   },
+   "providers": [
+    "meta-llama",
+    "qwen",
+    "x-ai"
+   ],
+   "provider_names": [
+    "Meta",
+    "Qwen",
+    "xAI"
+   ],
+   "ids": [
+    "grok-4",
+    "llama-3.2-3b",
+    "qwen3-235b"
+   ],
+   "items": [
+    "Grok 4 - Context: Unknown - Input: $3e-06; output: $1.23457e+06 per million tokens - Weather assistant compatible",
+    "llama 3.2 3B (Free) (Offline) - Context: Unknown - Free - Weather assistant compatible",
+    "Qwen 3 235B - Context: 131K - Input: $0.45; output: $3.5 per million tokens - Weather assistant compatible"
+   ],
+   "status": "Showing 3 of 6 models",
+   "descriptions": [
+    "No description available.\nInput: $3e-06; output: $1.23457e+06 per million tokens\nSupports weather assistant function calling.",
+    "No description available.\nThis model is offline and unavailable for selection.\nFree\nSupports weather assistant function calling.",
+    "No description available.\nInput: $0.45; output: $3.5 per million tokens\nSupports weather assistant function calling."
+   ]
+  },
+  {
+   "filter": {
+    "search": "",
+    "free_only": false,
+    "price": 2,
+    "function_calling_only": true,
+    "provider": "qwen"
+   },
+   "providers": [
+    "qwen",
+    "x-ai"
+   ],
+   "provider_names": [
+    "Qwen",
+    "xAI"
+   ],
+   "ids": [
+    "qwen3-235b"
+   ],
+   "items": [
+    "Qwen 3 235B - Context: 131K - Input: $0.45; output: $3.5 per million tokens - Weather assistant compatible"
+   ],
+   "status": "Showing 1 of 6 models",
+   "descriptions": [
+    "No description available.\nInput: $0.45; output: $3.5 per million tokens\nSupports weather assistant function calling."
+   ]
+  },
+  {
+   "filter": {
+    "search": "claude",
+    "free_only": false,
+    "price": 0,
+    "function_calling_only": false,
+    "provider": null
+   },
+   "providers": [
+    "anthropic",
+    "meta-llama",
+    "qwen",
+    "venice",
+    "x-ai"
+   ],
+   "provider_names": [
+    "Anthropic",
+    "Meta",
+    "Qwen",
+    "Venice",
+    "xAI"
+   ],
+   "ids": [
+    "e2ee-claude-opus"
+   ],
+   "items": [
+    "Claude Opus - Context: Unknown - Input: unknown; output: $15 per million tokens - Explanations only"
+   ],
+   "status": "Showing 1 of 6 models",
+   "descriptions": [
+    "No description available.\nInput: unknown; output: $15 per million tokens\nDoes not support weather assistant function calling; use for explanations only."
+   ]
+  }
+ ],
+ "balances": [
+  {
+   "payload": {
+    "canConsume": true,
+    "consumptionCurrency": "USD",
+    "balances": {
+     "usd": 12.5,
+     "diem": 0.123456789
+    }
+   },
+   "balance": {
+    "can_consume": true,
+    "consumption_currency": "USD",
+    "usd": 12.5,
+    "diem": 0.123456789
+   },
+   "status": "USD: $12.5; DIEM: 0.123457; Consumption currency: USD. Account can consume API credits. Paid model charges still apply; this does not guarantee enough credit for a request."
+  },
+  {
+   "payload": {
+    "canConsume": false,
+    "balances": {
+     "usd": 0,
+     "diem": "0"
+    }
+   },
+   "balance": {
+    "can_consume": false,
+    "consumption_currency": null,
+    "usd": 0.0,
+    "diem": 0.0
+   },
+   "status": "USD: $0; DIEM: 0. No API credits available. Paid models remain selectable but need credits before use."
+  },
+  {
+   "payload": {
+    "canConsume": false,
+    "consumptionCurrency": "BTC",
+    "balances": {
+     "usd": 3
+    }
+   },
+   "balance": {
+    "can_consume": false,
+    "consumption_currency": null,
+    "usd": 3.0,
+    "diem": null
+   },
+   "status": "USD: $3. Account cannot currently consume API credits. Paid models remain selectable but require usable credits before use."
+  },
+  {
+   "payload": {
+    "canConsume": "yes",
+    "balances": null
+   },
+   "balance": {
+    "can_consume": null,
+    "consumption_currency": null,
+    "usd": null,
+    "diem": null
+   },
+   "status": "Credit status unknown. Paid models remain selectable; check your Venice API account before use."
+  },
+  {
+   "payload": {
+    "consumptionCurrency": "DIEM",
+    "balances": {
+     "usd": -5,
+     "diem": 1e-07
+    }
+   },
+   "balance": {
+    "can_consume": null,
+    "consumption_currency": "DIEM",
+    "usd": null,
+    "diem": 1e-07
+   },
+   "status": "DIEM: 1e-07; Consumption currency: DIEM. Credit status unknown. Paid models remain selectable; check your Venice API account before use."
+  },
+  {
+   "payload": null,
+   "balance": null,
+   "status": "Credit status unknown. Paid models remain selectable; check your Venice API account before use."
+  }
+ ],
+ "provider_names": {
+  "openai": "OpenAI",
+  "meta-llama": "Meta",
+  "01-ai": "01.AI",
+  "eva-unit-01": "Eva Unit 01",
+  "some-new-lab": "Some New Lab",
+  "x2y": "X2Y",
+  "unknown": "Unknown",
+  "cohere": "Cohere",
+  "aion-labs": "Aion Labs"
+ }
+}

@@ -1,0 +1,2003 @@
+{
+"name": "aviation",
+"now": "2026-04-02T16:00:00+00:00",
+"local_tz": "America/New_York",
+"weather_data": {
+"location": {
+"name": "Seattle, WA",
+"latitude": 47.61,
+"longitude": -122.33,
+"timezone": "America/Los_Angeles",
+"country_code": null,
+"marine_mode": false,
+"forecast_zone_id": null,
+"cwa_office": null,
+"county_zone_id": null,
+"fire_zone_id": null,
+"radar_station": null
+},
+"current": {
+"temperature": 12.0,
+"temperature_f": null,
+"temperature_c": 12.0,
+"condition": "Overcast",
+"humidity": 0,
+"wind_speed": 0.4,
+"dewpoint_f": null,
+"dewpoint_c": null,
+"wind_speed_mph": null,
+"wind_speed_kph": 0.4,
+"wind_direction": null,
+"pressure": null,
+"pressure_in": null,
+"pressure_mb": null,
+"feels_like_f": null,
+"feels_like_c": null,
+"visibility_miles": null,
+"visibility_km": null,
+"uv_index": null,
+"cloud_cover": null,
+"wind_gust_mph": null,
+"wind_gust_kph": null,
+"precipitation_in": null,
+"precipitation_mm": null,
+"sunrise_time": null,
+"sunset_time": null,
+"moon_phase": null,
+"moonrise_time": null,
+"moonset_time": null,
+"snow_depth_in": null,
+"snow_depth_cm": null,
+"snowfall_rate_in": null,
+"wind_chill_f": null,
+"wind_chill_c": null,
+"freezing_level_ft": null,
+"freezing_level_m": null,
+"heat_index_f": null,
+"heat_index_c": null,
+"frost_risk": null,
+"precipitation_type": null,
+"severe_weather_risk": null
+},
+"forecast": null,
+"hourly_forecast": null,
+"daily_history": [],
+"discussion": null,
+"discussion_issuance_time": null,
+"minutely_precipitation": null,
+"alerts": null,
+"environmental": null,
+"aviation": {
+"raw_taf": "TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2",
+"decoded_taf": null,
+"station_id": "KSEA",
+"airport_name": "Seattle-Tacoma International Airport",
+"active_sigmets": [
+{
+"name": "SIGMET NOVEMBER 3",
+"severity": "SEV",
+"fir": [
+"KZSE",
+"",
+"KZOA"
+],
+"startTime": "2026-04-02T15:00:00Z",
+"endTime": "2026-04-02T19:00:00Z",
+"description": "Severe turbulence between FL250 and FL380."
+},
+{
+"hazard": "ICE",
+"area": "Cascades",
+"validUntil": "2026-04-02T20:00:00+00:00"
+},
+{
+"phenomenon": "MTN OBSCN",
+"issueTime": "not a time",
+"intensity": 2
+},
+{
+"text": "Only text"
+},
+"not a dict",
+{
+"name": "Sixth",
+"regions": []
+}
+],
+"active_cwas": [
+{
+"event": "IFR",
+"cwsu": "ZSE",
+"startTime": "2026-04-02T15:30:00Z",
+"endTime": "2026-04-02T17:30:00Z",
+"text": "IFR conditions in low clouds."
+},
+{
+"phenomenon": "TS",
+"issuingOffice": "ZOA",
+"area": "ZOA",
+"issueTime": "2026-04-02T12:00:00"
+},
+{}
+]
+},
+"marine": null,
+"trend_insights": [],
+"stale": false,
+"stale_since": null,
+"stale_reason": null,
+"source_attribution": null,
+"incomplete_sections": [],
+"alert_lifecycle_diff": null,
+"forecast_confidence": null,
+"anomaly_callout": null
+},
+"variants": [
+{
+"settings": {},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 54°F (12°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "53.6°F (12°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "0%"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Overcast\nTemperature: 53.6°F (12°C)\nWind: Calm\nHumidity: 0%",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": "Seattle-Tacoma International Airport",
+"station_id": "KSEA",
+"taf_summary": "Forecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.",
+"raw_taf": "TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2",
+"sigmets": [
+"SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.",
+"ICE; Area: Cascades; Valid until Apr 02 8:00 PM",
+"MTN OBSCN severity 2; Effective not a time",
+"SIGMET; Only text"
+],
+"cwas": [
+"IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.",
+"TS (ZOA); Issued Apr 02 12:00 PM",
+"Center Weather Advisory"
+],
+"fallback_text": "Aviation weather for Seattle-Tacoma International Airport near Seattle, WA.\nTerminal Aerodrome Forecast:\nForecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.\nRaw TAF message:\nTAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2\nSIGMET and AIRMET advisories:\n• SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.\n• ICE; Area: Cascades; Valid until Apr 02 8:00 PM\n• MTN OBSCN severity 2; Effective not a time\n• SIGMET; Only text\nCenter Weather Advisories:\n• IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.\n• TS (ZOA); Issued Apr 02 12:00 PM\n• Center Weather Advisory"
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "12C Overcast",
+"preview": "12C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 12C at 0.2 mph (0.4 km/h) N/A",
+"preview": "Seattle, WA: 12C at 0.2 mph (0.4 km/h) N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 12C N/A 0.2 mph (0.4 km/h) {unknown}",
+"preview": "N/A 12C N/A 0.2 mph (0.4 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "12C",
+"preview": "12C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 k...",
+"preview": "Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 k...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+},
+"present_current": {
+"title": "Current conditions for Seattle, WA",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "53.6°F (12°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "0%"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Overcast\nTemperature: 53.6°F (12°C)\nWind: Calm\nHumidity: 0%",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"present_forecast": null,
+"present_alerts": null
+},
+{
+"settings": {
+"temperature_unit": "f"
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 54°F - Overcast",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "53.6°F"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "0%"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Overcast\nTemperature: 53.6°F\nWind: Calm\nHumidity: 0%",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": "Seattle-Tacoma International Airport",
+"station_id": "KSEA",
+"taf_summary": "Forecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.",
+"raw_taf": "TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2",
+"sigmets": [
+"SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.",
+"ICE; Area: Cascades; Valid until Apr 02 8:00 PM",
+"MTN OBSCN severity 2; Effective not a time",
+"SIGMET; Only text"
+],
+"cwas": [
+"IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.",
+"TS (ZOA); Issued Apr 02 12:00 PM",
+"Center Weather Advisory"
+],
+"fallback_text": "Aviation weather for Seattle-Tacoma International Airport near Seattle, WA.\nTerminal Aerodrome Forecast:\nForecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.\nRaw TAF message:\nTAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2\nSIGMET and AIRMET advisories:\n• SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.\n• ICE; Area: Cascades; Valid until Apr 02 8:00 PM\n• MTN OBSCN severity 2; Effective not a time\n• SIGMET; Only text\nCenter Weather Advisories:\n• IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.\n• TS (ZOA); Issued Apr 02 12:00 PM\n• Center Weather Advisory"
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "N/A Overcast",
+"preview": "N/A Overcast",
+"sample_preview": "72F Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: N/A at 0.2 mph N/A",
+"preview": "Seattle, WA: N/A at 0.2 mph N/A",
+"sample_preview": "Sample Location: 72F (feels like 74F) NW at 8.0 mph 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/61F 0.00 in 20% UV 5 10.0 mi 30.10 inHg"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 12C N/A 0.2 mph {unknown}",
+"preview": "N/A 12C N/A 0.2 mph {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "N/A",
+"preview": "N/A",
+"sample_preview": "Feels like: 74F | 72F"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Overcast at 0.2 mph Seattle, WA Overcast at 0.2 mph Seattle, WA Overcast at 0.2 mph Seattle, WA",
+"preview": "Seattle, WA Overcast at 0.2 mph Seattle, WA Overcast at 0.2 mph Seattle, WA Overcast at 0.2 mph Seattle, WA",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "c"
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 12°C - Overcast",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "12°C"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "0%"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Overcast\nTemperature: 12°C\nWind: Calm\nHumidity: 0%",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": "Seattle-Tacoma International Airport",
+"station_id": "KSEA",
+"taf_summary": "Forecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.",
+"raw_taf": "TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2",
+"sigmets": [
+"SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.",
+"ICE; Area: Cascades; Valid until Apr 02 8:00 PM",
+"MTN OBSCN severity 2; Effective not a time",
+"SIGMET; Only text"
+],
+"cwas": [
+"IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.",
+"TS (ZOA); Issued Apr 02 12:00 PM",
+"Center Weather Advisory"
+],
+"fallback_text": "Aviation weather for Seattle-Tacoma International Airport near Seattle, WA.\nTerminal Aerodrome Forecast:\nForecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.\nRaw TAF message:\nTAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2\nSIGMET and AIRMET advisories:\n• SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.\n• ICE; Area: Cascades; Valid until Apr 02 8:00 PM\n• MTN OBSCN severity 2; Effective not a time\n• SIGMET; Only text\nCenter Weather Advisories:\n• IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.\n• TS (ZOA); Issued Apr 02 12:00 PM\n• Center Weather Advisory"
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "12C Overcast",
+"preview": "12C Overcast",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 12C at 0.4 km/h N/A",
+"preview": "Seattle, WA: 12C at 0.4 km/h N/A",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 12C N/A 0.4 km/h {unknown}",
+"preview": "N/A 12C N/A 0.4 km/h {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "12C",
+"preview": "12C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Overcast at 0.4 km/h Seattle, WA Overcast at 0.4 km/h Seattle, WA Overcast at 0.4 km/h Seattle, WA",
+"preview": "Seattle, WA Overcast at 0.4 km/h Seattle, WA Overcast at 0.4 km/h Seattle, WA Overcast at 0.4 km/h Seattle, WA",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "auto"
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 12°C - Overcast",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "12°C"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "0%"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Overcast\nTemperature: 12°C\nWind: Calm\nHumidity: 0%",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": "Seattle-Tacoma International Airport",
+"station_id": "KSEA",
+"taf_summary": "Forecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.",
+"raw_taf": "TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2",
+"sigmets": [
+"SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.",
+"ICE; Area: Cascades; Valid until Apr 02 8:00 PM",
+"MTN OBSCN severity 2; Effective not a time",
+"SIGMET; Only text"
+],
+"cwas": [
+"IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.",
+"TS (ZOA); Issued Apr 02 12:00 PM",
+"Center Weather Advisory"
+],
+"fallback_text": "Aviation weather for Seattle-Tacoma International Airport near Seattle, WA.\nTerminal Aerodrome Forecast:\nForecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.\nRaw TAF message:\nTAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2\nSIGMET and AIRMET advisories:\n• SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.\n• ICE; Area: Cascades; Valid until Apr 02 8:00 PM\n• MTN OBSCN severity 2; Effective not a time\n• SIGMET; Only text\nCenter Weather Advisories:\n• IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.\n• TS (ZOA); Issued Apr 02 12:00 PM\n• Center Weather Advisory"
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "12C Overcast",
+"preview": "12C Overcast",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 12C at 0.1 m/s N/A",
+"preview": "Seattle, WA: 12C at 0.1 m/s N/A",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 3.6 m/s 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 12C N/A 0.1 m/s {unknown}",
+"preview": "N/A 12C N/A 0.1 m/s {unknown}",
+"sample_preview": "72F 22C NW 3.6 m/s {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "12C",
+"preview": "12C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Overcast at 0.1 m/s Seattle, WA Overcast at 0.1 m/s Seattle, WA Overcast at 0.1 m/s Seattle, WA",
+"preview": "Seattle, WA Overcast at 0.1 m/s Seattle, WA Overcast at 0.1 m/s Seattle, WA Overcast at 0.1 m/s Seattle, WA",
+"sample_preview": "Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "auto",
+"wind_speed_unit": "m/s"
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 12°C - Overcast",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "12°C"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "0%"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Overcast\nTemperature: 12°C\nWind: Calm\nHumidity: 0%",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": "Seattle-Tacoma International Airport",
+"station_id": "KSEA",
+"taf_summary": "Forecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.",
+"raw_taf": "TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2",
+"sigmets": [
+"SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.",
+"ICE; Area: Cascades; Valid until Apr 02 8:00 PM",
+"MTN OBSCN severity 2; Effective not a time",
+"SIGMET; Only text"
+],
+"cwas": [
+"IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.",
+"TS (ZOA); Issued Apr 02 12:00 PM",
+"Center Weather Advisory"
+],
+"fallback_text": "Aviation weather for Seattle-Tacoma International Airport near Seattle, WA.\nTerminal Aerodrome Forecast:\nForecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.\nRaw TAF message:\nTAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2\nSIGMET and AIRMET advisories:\n• SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.\n• ICE; Area: Cascades; Valid until Apr 02 8:00 PM\n• MTN OBSCN severity 2; Effective not a time\n• SIGMET; Only text\nCenter Weather Advisories:\n• IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.\n• TS (ZOA); Issued Apr 02 12:00 PM\n• Center Weather Advisory"
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "12C Overcast",
+"preview": "12C Overcast",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 12C at 0.1 m/s N/A",
+"preview": "Seattle, WA: 12C at 0.1 m/s N/A",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 3.6 m/s 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 12C N/A 0.1 m/s {unknown}",
+"preview": "N/A 12C N/A 0.1 m/s {unknown}",
+"sample_preview": "72F 22C NW 3.6 m/s {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "12C",
+"preview": "12C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Overcast at 0.1 m/s Seattle, WA Overcast at 0.1 m/s Seattle, WA Overcast at 0.1 m/s Seattle, WA",
+"preview": "Seattle, WA Overcast at 0.1 m/s Seattle, WA Overcast at 0.1 m/s Seattle, WA Overcast at 0.1 m/s Seattle, WA",
+"sample_preview": "Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at 3.6 m/s Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "both",
+"wind_speed_unit": "kph"
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 54°F (12°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "53.6°F (12°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "0%"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Overcast\nTemperature: 53.6°F (12°C)\nWind: Calm\nHumidity: 0%",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": "Seattle-Tacoma International Airport",
+"station_id": "KSEA",
+"taf_summary": "Forecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.",
+"raw_taf": "TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2",
+"sigmets": [
+"SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.",
+"ICE; Area: Cascades; Valid until Apr 02 8:00 PM",
+"MTN OBSCN severity 2; Effective not a time",
+"SIGMET; Only text"
+],
+"cwas": [
+"IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.",
+"TS (ZOA); Issued Apr 02 12:00 PM",
+"Center Weather Advisory"
+],
+"fallback_text": "Aviation weather for Seattle-Tacoma International Airport near Seattle, WA.\nTerminal Aerodrome Forecast:\nForecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.\nRaw TAF message:\nTAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2\nSIGMET and AIRMET advisories:\n• SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.\n• ICE; Area: Cascades; Valid until Apr 02 8:00 PM\n• MTN OBSCN severity 2; Effective not a time\n• SIGMET; Only text\nCenter Weather Advisories:\n• IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.\n• TS (ZOA); Issued Apr 02 12:00 PM\n• Center Weather Advisory"
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "12C Overcast",
+"preview": "12C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 12C at 0.4 km/h N/A",
+"preview": "Seattle, WA: 12C at 0.4 km/h N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 12C N/A 0.4 km/h {unknown}",
+"preview": "N/A 12C N/A 0.4 km/h {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "12C",
+"preview": "12C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Overcast at 0.4 km/h Seattle, WA Overcast at 0.4 km/h Seattle, WA Overcast at 0.4 km/h Seattle, WA",
+"preview": "Seattle, WA Overcast at 0.4 km/h Seattle, WA Overcast at 0.4 km/h Seattle, WA Overcast at 0.4 km/h Seattle, WA",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"temperature_unit": "fahrenheit",
+"wind_speed_unit": "mph",
+"verbosity_level": "detailed",
+"show_impact_summaries": true
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 54°F - Overcast",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "53.6°F"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "0%"
+},
+{
+"label": "Impact: Driving",
+"value": "Normal driving conditions"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Overcast\nTemperature: 53.6°F\nWind: Calm\nHumidity: 0%\nImpact: Driving: Normal driving conditions",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": "Normal driving conditions",
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": "Seattle-Tacoma International Airport",
+"station_id": "KSEA",
+"taf_summary": "Forecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.",
+"raw_taf": "TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2",
+"sigmets": [
+"SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.",
+"ICE; Area: Cascades; Valid until Apr 02 8:00 PM",
+"MTN OBSCN severity 2; Effective not a time",
+"SIGMET; Only text"
+],
+"cwas": [
+"IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.",
+"TS (ZOA); Issued Apr 02 12:00 PM",
+"Center Weather Advisory"
+],
+"fallback_text": "Aviation weather for Seattle-Tacoma International Airport near Seattle, WA.\nTerminal Aerodrome Forecast:\nForecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.\nRaw TAF message:\nTAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2\nSIGMET and AIRMET advisories:\n• SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.\n• ICE; Area: Cascades; Valid until Apr 02 8:00 PM\n• MTN OBSCN severity 2; Effective not a time\n• SIGMET; Only text\nCenter Weather Advisories:\n• IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.\n• TS (ZOA); Issued Apr 02 12:00 PM\n• Center Weather Advisory"
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "N/A Overcast",
+"preview": "N/A Overcast",
+"sample_preview": "72F Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: N/A at 0.2 mph N/A",
+"preview": "Seattle, WA: N/A at 0.2 mph N/A",
+"sample_preview": "Sample Location: 72F (feels like 74F) NW at 8.0 mph 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/61F 0.00 in 20% UV 5 10.0 mi 30.10 inHg"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 12C N/A 0.2 mph {unknown}",
+"preview": "N/A 12C N/A 0.2 mph {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "N/A",
+"preview": "N/A",
+"sample_preview": "Feels like: 74F | 72F"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Overcast at 0.2 mph Seattle, WA Overcast at 0.2 mph Seattle, WA Overcast at 0.2 mph Seattle, WA",
+"preview": "Seattle, WA Overcast at 0.2 mph Seattle, WA Overcast at 0.2 mph Seattle, WA Overcast at 0.2 mph Seattle, WA",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at 8.0 mph Sample Location Partly Cloudy NW at ..."
+}
+}
+},
+{
+"settings": {
+"verbosity_level": "minimal",
+"round_values": true
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 54°F (12°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "54°F (12°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "0%"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Overcast\nTemperature: 54°F (12°C)\nWind: Calm\nHumidity: 0%",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": "Seattle-Tacoma International Airport",
+"station_id": "KSEA",
+"taf_summary": "Forecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.",
+"raw_taf": "TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2",
+"sigmets": [
+"SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.",
+"ICE; Area: Cascades; Valid until Apr 02 8:00 PM",
+"MTN OBSCN severity 2; Effective not a time",
+"SIGMET; Only text"
+],
+"cwas": [
+"IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.",
+"TS (ZOA); Issued Apr 02 12:00 PM",
+"Center Weather Advisory"
+],
+"fallback_text": "Aviation weather for Seattle-Tacoma International Airport near Seattle, WA.\nTerminal Aerodrome Forecast:\nForecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.\nRaw TAF message:\nTAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2\nSIGMET and AIRMET advisories:\n• SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.\n• ICE; Area: Cascades; Valid until Apr 02 8:00 PM\n• MTN OBSCN severity 2; Effective not a time\n• SIGMET; Only text\nCenter Weather Advisories:\n• IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.\n• TS (ZOA); Issued Apr 02 12:00 PM\n• Center Weather Advisory"
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "12C Overcast",
+"preview": "12C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 12C at 0 mph (0 km/h) N/A",
+"preview": "Seattle, WA: 12C at 0 mph (0 km/h) N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8 mph (13 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0 in (0 mm) 20% UV 5 10 mi (16 km) 30 inHg (1019 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 12C N/A 0 mph (0 km/h) {unknown}",
+"preview": "N/A 12C N/A 0 mph (0 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8 mph (13 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "12C",
+"preview": "12C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Overcast at 0 mph (0 km/h) Seattle, WA Overcast at 0 mph (0 km/h) Seattle, WA Overcast at 0 mph (0 km/h) Seattle...",
+"preview": "Seattle, WA Overcast at 0 mph (0 km/h) Seattle, WA Overcast at 0 mph (0 km/h) Seattle, WA Overcast at 0 mph (0 km/h) Seattle...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Part..."
+}
+}
+},
+{
+"settings": {
+"verbosity_level": "detailed",
+"time_format_12hour": false,
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 54°F (12°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "53.6°F (12°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "0%"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Overcast\nTemperature: 53.6°F (12°C)\nWind: Calm\nHumidity: 0%",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": "Seattle-Tacoma International Airport",
+"station_id": "KSEA",
+"taf_summary": "Forecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.",
+"raw_taf": "TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2",
+"sigmets": [
+"SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 15:00 UTC to Apr 02 19:00 UTC; Severe turbulence between FL250 and FL380.",
+"ICE; Area: Cascades; Valid until Apr 02 20:00 UTC",
+"MTN OBSCN severity 2; Effective not a time",
+"SIGMET; Only text"
+],
+"cwas": [
+"IFR (ZSE); Valid Apr 02 15:30 UTC to Apr 02 17:30 UTC; IFR conditions in low clouds.",
+"TS (ZOA); Issued Apr 02 12:00",
+"Center Weather Advisory"
+],
+"fallback_text": "Aviation weather for Seattle-Tacoma International Airport near Seattle, WA.\nTerminal Aerodrome Forecast:\nForecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.\nRaw TAF message:\nTAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2\nSIGMET and AIRMET advisories:\n• SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 15:00 UTC to Apr 02 19:00 UTC; Severe turbulence between FL250 and FL380.\n• ICE; Area: Cascades; Valid until Apr 02 20:00 UTC\n• MTN OBSCN severity 2; Effective not a time\n• SIGMET; Only text\nCenter Weather Advisories:\n• IFR (ZSE); Valid Apr 02 15:30 UTC to Apr 02 17:30 UTC; IFR conditions in low clouds.\n• TS (ZOA); Issued Apr 02 12:00\n• Center Weather Advisory"
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "12C Overcast",
+"preview": "12C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 12C at 0.2 mph (0.4 km/h) N/A",
+"preview": "Seattle, WA: 12C at 0.2 mph (0.4 km/h) N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 12C N/A 0.2 mph (0.4 km/h) {unknown}",
+"preview": "N/A 12C N/A 0.2 mph (0.4 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "12C",
+"preview": "12C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 k...",
+"preview": "Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 k...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"time_display_mode": "utc",
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 54°F (12°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "53.6°F (12°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "0%"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Overcast\nTemperature: 53.6°F (12°C)\nWind: Calm\nHumidity: 0%",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": "Seattle-Tacoma International Airport",
+"station_id": "KSEA",
+"taf_summary": "Forecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.",
+"raw_taf": "TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2",
+"sigmets": [
+"SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM UTC to Apr 02 7:00 PM UTC; Severe turbulence between FL250 and FL380.",
+"ICE; Area: Cascades; Valid until Apr 02 8:00 PM UTC",
+"MTN OBSCN severity 2; Effective not a time",
+"SIGMET; Only text"
+],
+"cwas": [
+"IFR (ZSE); Valid Apr 02 3:30 PM UTC to Apr 02 5:30 PM UTC; IFR conditions in low clouds.",
+"TS (ZOA); Issued Apr 02 12:00 PM UTC",
+"Center Weather Advisory"
+],
+"fallback_text": "Aviation weather for Seattle-Tacoma International Airport near Seattle, WA.\nTerminal Aerodrome Forecast:\nForecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.\nRaw TAF message:\nTAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2\nSIGMET and AIRMET advisories:\n• SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM UTC to Apr 02 7:00 PM UTC; Severe turbulence between FL250 and FL380.\n• ICE; Area: Cascades; Valid until Apr 02 8:00 PM UTC\n• MTN OBSCN severity 2; Effective not a time\n• SIGMET; Only text\nCenter Weather Advisories:\n• IFR (ZSE); Valid Apr 02 3:30 PM UTC to Apr 02 5:30 PM UTC; IFR conditions in low clouds.\n• TS (ZOA); Issued Apr 02 12:00 PM UTC\n• Center Weather Advisory"
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "12C Overcast",
+"preview": "12C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 12C at 0.2 mph (0.4 km/h) N/A",
+"preview": "Seattle, WA: 12C at 0.2 mph (0.4 km/h) N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 12C N/A 0.2 mph (0.4 km/h) {unknown}",
+"preview": "N/A 12C N/A 0.2 mph (0.4 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "12C",
+"preview": "12C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 k...",
+"preview": "Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 k...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"time_display_mode": "both",
+"show_timezone_suffix": true,
+"time_format_12hour": false
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 54°F (12°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "53.6°F (12°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "0%"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Overcast\nTemperature: 53.6°F (12°C)\nWind: Calm\nHumidity: 0%",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": "Seattle-Tacoma International Airport",
+"station_id": "KSEA",
+"taf_summary": "Forecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.",
+"raw_taf": "TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2",
+"sigmets": [
+"SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 15:00 UTC (Apr 02 15:00 UTC) to Apr 02 19:00 UTC (Apr 02 19:00 UTC); Severe turbulence between FL250 and FL380.",
+"ICE; Area: Cascades; Valid until Apr 02 20:00 UTC (Apr 02 20:00 UTC)",
+"MTN OBSCN severity 2; Effective not a time",
+"SIGMET; Only text"
+],
+"cwas": [
+"IFR (ZSE); Valid Apr 02 15:30 UTC (Apr 02 15:30 UTC) to Apr 02 17:30 UTC (Apr 02 17:30 UTC); IFR conditions in low clouds.",
+"TS (ZOA); Issued Apr 02 12:00 (Apr 02 12:00 UTC)",
+"Center Weather Advisory"
+],
+"fallback_text": "Aviation weather for Seattle-Tacoma International Airport near Seattle, WA.\nTerminal Aerodrome Forecast:\nForecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.\nRaw TAF message:\nTAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2\nSIGMET and AIRMET advisories:\n• SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 15:00 UTC (Apr 02 15:00 UTC) to Apr 02 19:00 UTC (Apr 02 19:00 UTC); Severe turbulence between FL250 and FL380.\n• ICE; Area: Cascades; Valid until Apr 02 20:00 UTC (Apr 02 20:00 UTC)\n• MTN OBSCN severity 2; Effective not a time\n• SIGMET; Only text\nCenter Weather Advisories:\n• IFR (ZSE); Valid Apr 02 15:30 UTC (Apr 02 15:30 UTC) to Apr 02 17:30 UTC (Apr 02 17:30 UTC); IFR conditions in low clouds.\n• TS (ZOA); Issued Apr 02 12:00 (Apr 02 12:00 UTC)\n• Center Weather Advisory"
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "12C Overcast",
+"preview": "12C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 12C at 0.2 mph (0.4 km/h) N/A",
+"preview": "Seattle, WA: 12C at 0.2 mph (0.4 km/h) N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 12C N/A 0.2 mph (0.4 km/h) {unknown}",
+"preview": "N/A 12C N/A 0.2 mph (0.4 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "12C",
+"preview": "12C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 k...",
+"preview": "Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 k...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"forecast_time_reference": "user_local",
+"show_timezone_suffix": true
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 54°F (12°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "53.6°F (12°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "0%"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Overcast\nTemperature: 53.6°F (12°C)\nWind: Calm\nHumidity: 0%",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": "Seattle-Tacoma International Airport",
+"station_id": "KSEA",
+"taf_summary": "Forecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.",
+"raw_taf": "TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2",
+"sigmets": [
+"SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM UTC to Apr 02 7:00 PM UTC; Severe turbulence between FL250 and FL380.",
+"ICE; Area: Cascades; Valid until Apr 02 8:00 PM UTC",
+"MTN OBSCN severity 2; Effective not a time",
+"SIGMET; Only text"
+],
+"cwas": [
+"IFR (ZSE); Valid Apr 02 3:30 PM UTC to Apr 02 5:30 PM UTC; IFR conditions in low clouds.",
+"TS (ZOA); Issued Apr 02 12:00 PM",
+"Center Weather Advisory"
+],
+"fallback_text": "Aviation weather for Seattle-Tacoma International Airport near Seattle, WA.\nTerminal Aerodrome Forecast:\nForecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.\nRaw TAF message:\nTAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2\nSIGMET and AIRMET advisories:\n• SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM UTC to Apr 02 7:00 PM UTC; Severe turbulence between FL250 and FL380.\n• ICE; Area: Cascades; Valid until Apr 02 8:00 PM UTC\n• MTN OBSCN severity 2; Effective not a time\n• SIGMET; Only text\nCenter Weather Advisories:\n• IFR (ZSE); Valid Apr 02 3:30 PM UTC to Apr 02 5:30 PM UTC; IFR conditions in low clouds.\n• TS (ZOA); Issued Apr 02 12:00 PM\n• Center Weather Advisory"
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "12C Overcast",
+"preview": "12C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 12C at 0.2 mph (0.4 km/h) N/A",
+"preview": "Seattle, WA: 12C at 0.2 mph (0.4 km/h) N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 12C N/A 0.2 mph (0.4 km/h) {unknown}",
+"preview": "N/A 12C N/A 0.2 mph (0.4 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "12C",
+"preview": "12C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 k...",
+"preview": "Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 k...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"show_dewpoint": false,
+"show_visibility": false,
+"show_uv_index": false,
+"show_pressure_trend": false,
+"show_seasonal_data": false
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 54°F (12°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "53.6°F (12°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "0%"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Overcast\nTemperature: 53.6°F (12°C)\nWind: Calm\nHumidity: 0%",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": "Seattle-Tacoma International Airport",
+"station_id": "KSEA",
+"taf_summary": "Forecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.",
+"raw_taf": "TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2",
+"sigmets": [
+"SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.",
+"ICE; Area: Cascades; Valid until Apr 02 8:00 PM",
+"MTN OBSCN severity 2; Effective not a time",
+"SIGMET; Only text"
+],
+"cwas": [
+"IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.",
+"TS (ZOA); Issued Apr 02 12:00 PM",
+"Center Weather Advisory"
+],
+"fallback_text": "Aviation weather for Seattle-Tacoma International Airport near Seattle, WA.\nTerminal Aerodrome Forecast:\nForecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.\nRaw TAF message:\nTAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2\nSIGMET and AIRMET advisories:\n• SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.\n• ICE; Area: Cascades; Valid until Apr 02 8:00 PM\n• MTN OBSCN severity 2; Effective not a time\n• SIGMET; Only text\nCenter Weather Advisories:\n• IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.\n• TS (ZOA); Issued Apr 02 12:00 PM\n• Center Weather Advisory"
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "12C Overcast",
+"preview": "12C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 12C at 0.2 mph (0.4 km/h) N/A",
+"preview": "Seattle, WA: 12C at 0.2 mph (0.4 km/h) N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 12C N/A 0.2 mph (0.4 km/h) {unknown}",
+"preview": "N/A 12C N/A 0.2 mph (0.4 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "12C",
+"preview": "12C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 k...",
+"preview": "Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 k...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"severe_weather_override": true,
+"category_order": [
+"uv_index",
+"visibility_clouds",
+"humidity_pressure",
+"wind",
+"precipitation",
+"temperature"
+]
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 54°F (12°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Humidity",
+"value": "0%"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Temperature",
+"value": "53.6°F (12°C)"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Overcast\nHumidity: 0%\nWind: Calm\nTemperature: 53.6°F (12°C)",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": "Seattle-Tacoma International Airport",
+"station_id": "KSEA",
+"taf_summary": "Forecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.",
+"raw_taf": "TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2",
+"sigmets": [
+"SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.",
+"ICE; Area: Cascades; Valid until Apr 02 8:00 PM",
+"MTN OBSCN severity 2; Effective not a time",
+"SIGMET; Only text"
+],
+"cwas": [
+"IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.",
+"TS (ZOA); Issued Apr 02 12:00 PM",
+"Center Weather Advisory"
+],
+"fallback_text": "Aviation weather for Seattle-Tacoma International Airport near Seattle, WA.\nTerminal Aerodrome Forecast:\nForecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.\nRaw TAF message:\nTAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2\nSIGMET and AIRMET advisories:\n• SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.\n• ICE; Area: Cascades; Valid until Apr 02 8:00 PM\n• MTN OBSCN severity 2; Effective not a time\n• SIGMET; Only text\nCenter Weather Advisories:\n• IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.\n• TS (ZOA); Issued Apr 02 12:00 PM\n• Center Weather Advisory"
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "12C Overcast",
+"preview": "12C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 12C at 0.2 mph (0.4 km/h) N/A",
+"preview": "Seattle, WA: 12C at 0.2 mph (0.4 km/h) N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 12C N/A 0.2 mph (0.4 km/h) {unknown}",
+"preview": "N/A 12C N/A 0.2 mph (0.4 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "12C",
+"preview": "12C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 k...",
+"preview": "Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 k...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+},
+{
+"settings": {
+"severe_weather_override": true,
+"show_impact_summaries": true,
+"temperature_unit": "celsius"
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 12°C - Overcast",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "12°C"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "0%"
+},
+{
+"label": "Impact: Driving",
+"value": "Normal driving conditions"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Overcast\nTemperature: 12°C\nWind: Calm\nHumidity: 0%\nImpact: Driving: Normal driving conditions",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": "Normal driving conditions",
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": "Seattle-Tacoma International Airport",
+"station_id": "KSEA",
+"taf_summary": "Forecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.",
+"raw_taf": "TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2",
+"sigmets": [
+"SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.",
+"ICE; Area: Cascades; Valid until Apr 02 8:00 PM",
+"MTN OBSCN severity 2; Effective not a time",
+"SIGMET; Only text"
+],
+"cwas": [
+"IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.",
+"TS (ZOA); Issued Apr 02 12:00 PM",
+"Center Weather Advisory"
+],
+"fallback_text": "Aviation weather for Seattle-Tacoma International Airport near Seattle, WA.\nTerminal Aerodrome Forecast:\nForecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.\nRaw TAF message:\nTAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2\nSIGMET and AIRMET advisories:\n• SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.\n• ICE; Area: Cascades; Valid until Apr 02 8:00 PM\n• MTN OBSCN severity 2; Effective not a time\n• SIGMET; Only text\nCenter Weather Advisories:\n• IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.\n• TS (ZOA); Issued Apr 02 12:00 PM\n• Center Weather Advisory"
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "12C Overcast",
+"preview": "12C Overcast",
+"sample_preview": "22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 12C at 0.4 km/h N/A",
+"preview": "Seattle, WA: 12C at 0.4 km/h N/A",
+"sample_preview": "Sample Location: 22C (feels like 23C) NW at 12.9 km/h 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "26C/16C 0.00 mm 20% UV 5 16.1 km 1019.30 hPa"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 12C N/A 0.4 km/h {unknown}",
+"preview": "N/A 12C N/A 0.4 km/h {unknown}",
+"sample_preview": "72F 22C NW 12.9 km/h {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "12C",
+"preview": "12C",
+"sample_preview": "Feels like: 23C | 22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Overcast at 0.4 km/h Seattle, WA Overcast at 0.4 km/h Seattle, WA Overcast at 0.4 km/h Seattle, WA",
+"preview": "Seattle, WA Overcast at 0.4 km/h Seattle, WA Overcast at 0.4 km/h Seattle, WA Overcast at 0.4 km/h Seattle, WA",
+"sample_preview": "Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW at 12.9 km/h Sample Location Partly Cloudy NW..."
+}
+}
+},
+{
+"settings": {
+"forecast_duration_days": 3,
+"hourly_forecast_hours": 12,
+"round_values": true
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 54°F (12°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "54°F (12°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "0%"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Overcast\nTemperature: 54°F (12°C)\nWind: Calm\nHumidity: 0%",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": "Seattle-Tacoma International Airport",
+"station_id": "KSEA",
+"taf_summary": "Forecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.",
+"raw_taf": "TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2",
+"sigmets": [
+"SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.",
+"ICE; Area: Cascades; Valid until Apr 02 8:00 PM",
+"MTN OBSCN severity 2; Effective not a time",
+"SIGMET; Only text"
+],
+"cwas": [
+"IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.",
+"TS (ZOA); Issued Apr 02 12:00 PM",
+"Center Weather Advisory"
+],
+"fallback_text": "Aviation weather for Seattle-Tacoma International Airport near Seattle, WA.\nTerminal Aerodrome Forecast:\nForecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.\nRaw TAF message:\nTAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2\nSIGMET and AIRMET advisories:\n• SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM to Apr 02 7:00 PM; Severe turbulence between FL250 and FL380.\n• ICE; Area: Cascades; Valid until Apr 02 8:00 PM\n• MTN OBSCN severity 2; Effective not a time\n• SIGMET; Only text\nCenter Weather Advisories:\n• IFR (ZSE); Valid Apr 02 3:30 PM to Apr 02 5:30 PM; IFR conditions in low clouds.\n• TS (ZOA); Issued Apr 02 12:00 PM\n• Center Weather Advisory"
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "12C Overcast",
+"preview": "12C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 12C at 0 mph (0 km/h) N/A",
+"preview": "Seattle, WA: 12C at 0 mph (0 km/h) N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8 mph (13 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0 in (0 mm) 20% UV 5 10 mi (16 km) 30 inHg (1019 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 12C N/A 0 mph (0 km/h) {unknown}",
+"preview": "N/A 12C N/A 0 mph (0 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8 mph (13 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "12C",
+"preview": "12C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Overcast at 0 mph (0 km/h) Seattle, WA Overcast at 0 mph (0 km/h) Seattle, WA Overcast at 0 mph (0 km/h) Seattle...",
+"preview": "Seattle, WA Overcast at 0 mph (0 km/h) Seattle, WA Overcast at 0 mph (0 km/h) Seattle, WA Overcast at 0 mph (0 km/h) Seattle...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Partly Cloudy NW at 8 mph (13 km/h) Sample Location Part..."
+}
+}
+},
+{
+"settings": {
+"forecast_duration_days": 16,
+"hourly_forecast_hours": 48,
+"date_format": "eu",
+"time_display_mode": "both"
+},
+"presentation": {
+"location_name": "Seattle, WA",
+"summary_text": "Seattle, WA - 54°F (12°C) - Overcast",
+"current_conditions": {
+"title": "Current conditions for Seattle, WA",
+"description": "Overcast",
+"metrics": [
+{
+"label": "Temperature",
+"value": "53.6°F (12°C)"
+},
+{
+"label": "Wind",
+"value": "Calm"
+},
+{
+"label": "Humidity",
+"value": "0%"
+}
+],
+"fallback_text": "Current conditions for Seattle, WA: Overcast\nTemperature: 53.6°F (12°C)\nWind: Calm\nHumidity: 0%",
+"trends": [],
+"impact_summary": {
+"outdoor": null,
+"driving": null,
+"allergy": null
+}
+},
+"forecast": null,
+"alerts": null,
+"air_quality": null,
+"aviation": {
+"title": "Aviation Weather",
+"airport_name": "Seattle-Tacoma International Airport",
+"station_id": "KSEA",
+"taf_summary": "Forecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.",
+"raw_taf": "TAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2",
+"sigmets": [
+"SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM (Apr 02 3:00 PM UTC) to Apr 02 7:00 PM (Apr 02 7:00 PM UTC); Severe turbulence between FL250 and FL380.",
+"ICE; Area: Cascades; Valid until Apr 02 8:00 PM (Apr 02 8:00 PM UTC)",
+"MTN OBSCN severity 2; Effective not a time",
+"SIGMET; Only text"
+],
+"cwas": [
+"IFR (ZSE); Valid Apr 02 3:30 PM (Apr 02 3:30 PM UTC) to Apr 02 5:30 PM (Apr 02 5:30 PM UTC); IFR conditions in low clouds.",
+"TS (ZOA); Issued Apr 02 12:00 PM (Apr 02 12:00 PM UTC)",
+"Center Weather Advisory"
+],
+"fallback_text": "Aviation weather for Seattle-Tacoma International Airport near Seattle, WA.\nTerminal Aerodrome Forecast:\nForecast for station KSEA.\nIssued at 17:20 UTC on the 2nd.\nValid from 18:00 UTC on the 2nd until 24:00 UTC on the 3rd.\nBase forecast: Winds variable at 3 knots (VRB03KT). Visibility greater than 6 statute miles (6 SM) (P6SM). Clouds: Scattered clouds at 1,500 feet (SCT015); Broken clouds at 3,500 feet (BKN035).\nTemporary between from 18:00 UTC on the 2nd until 22:00 UTC on the 2nd: Visibility 4 statute miles (4 SM) (4SM). Weather: light showers of rain (-SHRA); mist (BR). Clouds: Broken clouds at 1,200 feet (BKN012).\nFrom 02:00 UTC on the 3rd: Winds from 200 degrees at 12 knots with gusts to 22 knots (20012G22KT). Visibility 3/4 statute miles (0.75 SM) (3/4SM). Weather: heavy rain (+RA); fog (FG). Clouds: Vertical visibility 500 feet (VV005).\nBecoming from 06:00 UTC on the 3rd until 08:00 UTC on the 3rd: Visibility less than 1/4 statute miles (0.25 SM) (M1/4SM). Weather: freezing fog (FZFG).\nProbability 40% of temporary conditions from 10:00 UTC on the 3rd until 14:00 UTC on the 3rd: Visibility 1 1/2 statute miles (1.5 SM) (1 1/2SM). Weather: thunderstorms with rain (TSRA). Clouds: Scattered clouds at 2,000 feet with cumulonimbus (SCT020CB).\nFrom 12:00 UTC on the 3rd: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Weather: No significant weather (NSW). Clouds: No significant clouds (NSC); Ceiling and visibility OK (CAVOK). Additional codes: XYZ.\nRemarks: AO2.\nRaw TAF message:\nTAF AMD KSEA 021720Z 0218/0324 VRB03KT P6SM SCT015 BKN035 TEMPO 0218/0222 4SM -SHRA BR BKN012 FM030200 20012G22KT 3/4SM +RA FG VV005 BECMG 0306/0308 M1/4SM FZFG PROB40 TEMPO 0310/0314 1 1/2SM TSRA SCT020CB FM031200 00000KT 9999 NSC CAVOK NSW XYZ= RMK AO2\nSIGMET and AIRMET advisories:\n• SIGMET NOVEMBER 3 severity SEV; Area: KZSE, KZOA; Valid Apr 02 3:00 PM (Apr 02 3:00 PM UTC) to Apr 02 7:00 PM (Apr 02 7:00 PM UTC); Severe turbulence between FL250 and FL380.\n• ICE; Area: Cascades; Valid until Apr 02 8:00 PM (Apr 02 8:00 PM UTC)\n• MTN OBSCN severity 2; Effective not a time\n• SIGMET; Only text\nCenter Weather Advisories:\n• IFR (ZSE); Valid Apr 02 3:30 PM (Apr 02 3:30 PM UTC) to Apr 02 5:30 PM (Apr 02 5:30 PM UTC); IFR conditions in low clouds.\n• TS (ZOA); Issued Apr 02 12:00 PM (Apr 02 12:00 PM UTC)\n• Center Weather Advisory"
+},
+"trend_summary": [],
+"status_messages": [],
+"source_attribution": null
+},
+"tray": {
+"{temp} {condition}": {
+"tooltip": "12C Overcast",
+"preview": "12C Overcast",
+"sample_preview": "72F/22C Partly Cloudy"
+},
+"{location}: {temp} (feels like {feels_like}) {wind} {humidity}": {
+"tooltip": "Seattle, WA: 12C at 0.2 mph (0.4 km/h) N/A",
+"preview": "Seattle, WA: 12C at 0.2 mph (0.4 km/h) N/A",
+"sample_preview": "Sample Location: 72F/22C (feels like 74F/23C) NW at 8.0 mph (12.9 km/h) 55%"
+},
+"{high}/{low} {precip} {precip_chance}% UV {uv} {visibility} {pressure} {alert}": {
+"tooltip": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"preview": "N/A/N/A N/A N/A% UV N/A N/A N/A",
+"sample_preview": "78F/26C/61F/16C 0.00 in (0.00 mm) 20% UV 5 10.0 mi (16.1 km) 30.10 inHg (1019.30 hPa)"
+},
+"{temp_f} {temp_c} {wind_dir} {wind_speed} {unknown}": {
+"tooltip": "N/A 12C N/A 0.2 mph (0.4 km/h) {unknown}",
+"preview": "N/A 12C N/A 0.2 mph (0.4 km/h) {unknown}",
+"sample_preview": "72F 22C NW 8.0 mph (12.9 km/h) {unknown}"
+},
+"Feels like: {feels_like} | {temp}": {
+"tooltip": "12C",
+"preview": "12C",
+"sample_preview": "Feels like: 74F/23C | 72F/22C"
+},
+"{temp": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"Error: {temp}": {
+"tooltip": "AccessiWeather",
+"preview": "AccessiWeather",
+"sample_preview": "AccessiWeather"
+},
+"{location} {condition} {wind} {location} {condition} {wind} {location} {condition} {wind} {location}": {
+"tooltip": "Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 k...",
+"preview": "Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 km/h) Seattle, WA Overcast at 0.2 mph (0.4 k...",
+"sample_preview": "Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Location Partly Cloudy NW at 8.0 mph (12.9 km/h) Sample Locat..."
+}
+}
+}
+]
+}

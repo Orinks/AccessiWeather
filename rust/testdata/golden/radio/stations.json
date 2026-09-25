@@ -1,0 +1,3436 @@
+{
+  "stations": [
+    {
+      "call_sign": "KEC96",
+      "frequency": 162.55,
+      "name": "Anchorage, AK",
+      "lat": 61.2181,
+      "lon": -149.9003,
+      "state": "AK"
+    },
+    {
+      "call_sign": "KEC61",
+      "frequency": 162.55,
+      "name": "Mobile, AL",
+      "lat": 30.6954,
+      "lon": -88.0399,
+      "state": "AL"
+    },
+    {
+      "call_sign": "KZZ99",
+      "frequency": 162.55,
+      "name": "Little Rock, AR",
+      "lat": 34.7465,
+      "lon": -92.2896,
+      "state": "AR"
+    },
+    {
+      "call_sign": "KEC94",
+      "frequency": 162.55,
+      "name": "Phoenix, AZ",
+      "lat": 33.4484,
+      "lon": -112.074,
+      "state": "AZ"
+    },
+    {
+      "call_sign": "WWG42",
+      "frequency": 162.5,
+      "name": "Globe, AZ",
+      "lat": 33.3942,
+      "lon": -110.7865,
+      "state": "AZ"
+    },
+    {
+      "call_sign": "WWG41",
+      "frequency": 162.425,
+      "name": "Payson, AZ",
+      "lat": 34.2309,
+      "lon": -111.3251,
+      "state": "AZ"
+    },
+    {
+      "call_sign": "KEC49",
+      "frequency": 162.55,
+      "name": "San Francisco Bay, CA",
+      "lat": 37.7749,
+      "lon": -122.4194,
+      "state": "CA"
+    },
+    {
+      "call_sign": "WNG659",
+      "frequency": 162.525,
+      "name": "El Paso Mountains, CA",
+      "lat": 35.43,
+      "lon": -117.58,
+      "state": "CA"
+    },
+    {
+      "call_sign": "KIH62",
+      "frequency": 162.4,
+      "name": "Fresno, CA",
+      "lat": 36.7378,
+      "lon": -119.7871,
+      "state": "CA"
+    },
+    {
+      "call_sign": "KWO37",
+      "frequency": 162.4,
+      "name": "Los Angeles, CA",
+      "lat": 34.0522,
+      "lon": -118.2437,
+      "state": "CA"
+    },
+    {
+      "call_sign": "WWF64",
+      "frequency": 162.45,
+      "name": "Monterey Marine, CA",
+      "lat": 36.6002,
+      "lon": -121.8947,
+      "state": "CA"
+    },
+    {
+      "call_sign": "KWN54",
+      "frequency": 162.425,
+      "name": "Durango, CO",
+      "lat": 37.2753,
+      "lon": -107.8801,
+      "state": "CO"
+    },
+    {
+      "call_sign": "KIH30",
+      "frequency": 162.475,
+      "name": "Lewes, DE",
+      "lat": 38.7746,
+      "lon": -75.1393,
+      "state": "DE"
+    },
+    {
+      "call_sign": "WXJ42",
+      "frequency": 162.4,
+      "name": "Meriden, CT",
+      "lat": 41.5382,
+      "lon": -72.807,
+      "state": "CT"
+    },
+    {
+      "call_sign": "KIH26",
+      "frequency": 162.4,
+      "name": "Daytona Beach, FL",
+      "lat": 29.2108,
+      "lon": -81.0228,
+      "state": "FL"
+    },
+    {
+      "call_sign": "WZ2531",
+      "frequency": 162.4,
+      "name": "Hialeah (Spanish), FL",
+      "lat": 25.8576,
+      "lon": -80.2781,
+      "state": "FL"
+    },
+    {
+      "call_sign": "KHB39",
+      "frequency": 162.4,
+      "name": "Jacksonville, FL",
+      "lat": 30.3322,
+      "lon": -81.6557,
+      "state": "FL"
+    },
+    {
+      "call_sign": "KEC38",
+      "frequency": 162.4,
+      "name": "Largo, FL",
+      "lat": 27.9095,
+      "lon": -82.7873,
+      "state": "FL"
+    },
+    {
+      "call_sign": "KHB34",
+      "frequency": 162.4,
+      "name": "Miami, FL",
+      "lat": 25.7617,
+      "lon": -80.1918,
+      "state": "FL"
+    },
+    {
+      "call_sign": "KIH63",
+      "frequency": 162.475,
+      "name": "Orlando, FL",
+      "lat": 28.5383,
+      "lon": -81.3792,
+      "state": "FL"
+    },
+    {
+      "call_sign": "WNG522",
+      "frequency": 162.425,
+      "name": "Palatka, FL",
+      "lat": 29.6486,
+      "lon": -81.6376,
+      "state": "FL"
+    },
+    {
+      "call_sign": "KIH24",
+      "frequency": 162.4,
+      "name": "Tallahassee, FL",
+      "lat": 30.4383,
+      "lon": -84.2807,
+      "state": "FL"
+    },
+    {
+      "call_sign": "WNG663",
+      "frequency": 162.4,
+      "name": "Princeton, FL",
+      "lat": 25.5384,
+      "lon": -80.4089,
+      "state": "FL"
+    },
+    {
+      "call_sign": "KHB32",
+      "frequency": 162.55,
+      "name": "Tampa Bay, FL",
+      "lat": 27.9506,
+      "lon": -82.4572,
+      "state": "FL"
+    },
+    {
+      "call_sign": "WXK56",
+      "frequency": 162.4,
+      "name": "Athens, GA",
+      "lat": 33.9519,
+      "lon": -83.3576,
+      "state": "GA"
+    },
+    {
+      "call_sign": "KEC80",
+      "frequency": 162.55,
+      "name": "Atlanta, GA",
+      "lat": 33.749,
+      "lon": -84.388,
+      "state": "GA"
+    },
+    {
+      "call_sign": "WXM32",
+      "frequency": 162.4,
+      "name": "Columbus, GA",
+      "lat": 32.461,
+      "lon": -84.9877,
+      "state": "GA"
+    },
+    {
+      "call_sign": "WWG53",
+      "frequency": 162.55,
+      "name": "Boise, ID",
+      "lat": 43.615,
+      "lon": -116.2023,
+      "state": "ID"
+    },
+    {
+      "call_sign": "WWG75",
+      "frequency": 162.4,
+      "name": "Maui, HI",
+      "lat": 20.7984,
+      "lon": -156.3319,
+      "state": "HI"
+    },
+    {
+      "call_sign": "WXL57",
+      "frequency": 162.55,
+      "name": "Des Moines, IA",
+      "lat": 41.5868,
+      "lon": -93.625,
+      "state": "IA"
+    },
+    {
+      "call_sign": "WXL62",
+      "frequency": 162.475,
+      "name": "Sioux City, IA",
+      "lat": 42.4963,
+      "lon": -96.4049,
+      "state": "IA"
+    },
+    {
+      "call_sign": "WXJ76",
+      "frequency": 162.55,
+      "name": "Champaign, IL",
+      "lat": 40.1164,
+      "lon": -88.2434,
+      "state": "IL"
+    },
+    {
+      "call_sign": "KZZ66",
+      "frequency": 162.4,
+      "name": "Galesburg, IL",
+      "lat": 40.9478,
+      "lon": -90.3712,
+      "state": "IL"
+    },
+    {
+      "call_sign": "KZZ58",
+      "frequency": 162.525,
+      "name": "Kankakee, IL",
+      "lat": 41.12,
+      "lon": -87.8612,
+      "state": "IL"
+    },
+    {
+      "call_sign": "WXM49",
+      "frequency": 162.425,
+      "name": "Marion, IL",
+      "lat": 37.7306,
+      "lon": -88.9331,
+      "state": "IL"
+    },
+    {
+      "call_sign": "WXJ71",
+      "frequency": 162.475,
+      "name": "Peoria, IL",
+      "lat": 40.6936,
+      "lon": -89.589,
+      "state": "IL"
+    },
+    {
+      "call_sign": "KXI58",
+      "frequency": 162.4,
+      "name": "Plano, IL",
+      "lat": 41.6628,
+      "lon": -88.5368,
+      "state": "IL"
+    },
+    {
+      "call_sign": "WXJ73",
+      "frequency": 162.55,
+      "name": "Quad Cities, IL",
+      "lat": 41.5236,
+      "lon": -90.5776,
+      "state": "IL"
+    },
+    {
+      "call_sign": "KZZ81",
+      "frequency": 162.4,
+      "name": "Lockport, IL",
+      "lat": 41.5895,
+      "lon": -88.0573,
+      "state": "IL"
+    },
+    {
+      "call_sign": "KEC74",
+      "frequency": 162.55,
+      "name": "Indianapolis, IN",
+      "lat": 39.7684,
+      "lon": -86.1581,
+      "state": "IN"
+    },
+    {
+      "call_sign": "KIG76",
+      "frequency": 162.4,
+      "name": "Evansville, IN",
+      "lat": 37.9716,
+      "lon": -87.5711,
+      "state": "IN"
+    },
+    {
+      "call_sign": "WXK91",
+      "frequency": 162.475,
+      "name": "Topeka, KS",
+      "lat": 39.0473,
+      "lon": -95.6752,
+      "state": "KS"
+    },
+    {
+      "call_sign": "WZ2523",
+      "frequency": 162.5,
+      "name": "Frankfort, KY",
+      "lat": 38.2009,
+      "lon": -84.8733,
+      "state": "KY"
+    },
+    {
+      "call_sign": "KZZ48",
+      "frequency": 162.45,
+      "name": "Owenton, KY",
+      "lat": 38.5365,
+      "lon": -84.8419,
+      "state": "KY"
+    },
+    {
+      "call_sign": "WXJ96",
+      "frequency": 162.55,
+      "name": "Monroe, LA",
+      "lat": 32.5093,
+      "lon": -92.1193,
+      "state": "LA"
+    },
+    {
+      "call_sign": "WXJ97",
+      "frequency": 162.4,
+      "name": "Shreveport, LA",
+      "lat": 32.5252,
+      "lon": -93.7502,
+      "state": "LA"
+    },
+    {
+      "call_sign": "WSM60",
+      "frequency": 162.475,
+      "name": "Dresden, ME",
+      "lat": 44.0834,
+      "lon": -69.7312,
+      "state": "ME"
+    },
+    {
+      "call_sign": "WXM42",
+      "frequency": 162.475,
+      "name": "Hagerstown, MD",
+      "lat": 39.6418,
+      "lon": -77.72,
+      "state": "MD"
+    },
+    {
+      "call_sign": "KHB35",
+      "frequency": 162.475,
+      "name": "Boston, MA",
+      "lat": 42.3601,
+      "lon": -71.0589,
+      "state": "MA"
+    },
+    {
+      "call_sign": "KEC73",
+      "frequency": 162.55,
+      "name": "Bourne, MA",
+      "lat": 41.7415,
+      "lon": -70.5989,
+      "state": "MA"
+    },
+    {
+      "call_sign": "WXL93",
+      "frequency": 162.55,
+      "name": "Worcester, MA",
+      "lat": 42.2626,
+      "lon": -71.8023,
+      "state": "MA"
+    },
+    {
+      "call_sign": "KEC59",
+      "frequency": 162.55,
+      "name": "Great Falls, MT",
+      "lat": 47.5063,
+      "lon": -111.3008,
+      "state": "MT"
+    },
+    {
+      "call_sign": "WXL25",
+      "frequency": 162.4,
+      "name": "Missoula, MT",
+      "lat": 46.8721,
+      "lon": -113.994,
+      "state": "MT"
+    },
+    {
+      "call_sign": "KEC63",
+      "frequency": 162.55,
+      "name": "Detroit, MI",
+      "lat": 42.3314,
+      "lon": -83.0458,
+      "state": "MI"
+    },
+    {
+      "call_sign": "KIH29",
+      "frequency": 162.475,
+      "name": "Flint, MI",
+      "lat": 43.0125,
+      "lon": -83.6875,
+      "state": "MI"
+    },
+    {
+      "call_sign": "WWF36",
+      "frequency": 162.475,
+      "name": "Hesperia, MI",
+      "lat": 43.5672,
+      "lon": -86.0403,
+      "state": "MI"
+    },
+    {
+      "call_sign": "WWF34",
+      "frequency": 162.475,
+      "name": "Kalamazoo, MI",
+      "lat": 42.2917,
+      "lon": -85.5872,
+      "state": "MI"
+    },
+    {
+      "call_sign": "KZZ33",
+      "frequency": 162.525,
+      "name": "Mount Pleasant, MI",
+      "lat": 43.5978,
+      "lon": -84.7675,
+      "state": "MI"
+    },
+    {
+      "call_sign": "WXK81",
+      "frequency": 162.4,
+      "name": "Onondaga, MI",
+      "lat": 42.4392,
+      "lon": -84.5519,
+      "state": "MI"
+    },
+    {
+      "call_sign": "KXI33",
+      "frequency": 162.45,
+      "name": "West Branch, MI",
+      "lat": 44.2764,
+      "lon": -84.2386,
+      "state": "MI"
+    },
+    {
+      "call_sign": "WXN99",
+      "frequency": 162.425,
+      "name": "West Olive, MI",
+      "lat": 42.9189,
+      "lon": -86.1767,
+      "state": "MI"
+    },
+    {
+      "call_sign": "WNG672",
+      "frequency": 162.425,
+      "name": "Wolf Lake, MI",
+      "lat": 43.7786,
+      "lon": -85.4942,
+      "state": "MI"
+    },
+    {
+      "call_sign": "WZ2560",
+      "frequency": 162.4,
+      "name": "Cannonsburg, MI",
+      "lat": 43.0631,
+      "lon": -85.4967,
+      "state": "MI"
+    },
+    {
+      "call_sign": "KEC65",
+      "frequency": 162.55,
+      "name": "Minneapolis, MN",
+      "lat": 44.9778,
+      "lon": -93.265,
+      "state": "MN"
+    },
+    {
+      "call_sign": "WXM99",
+      "frequency": 162.425,
+      "name": "Bemidji, MN",
+      "lat": 47.4736,
+      "lon": -94.8803,
+      "state": "MN"
+    },
+    {
+      "call_sign": "WNG676",
+      "frequency": 162.5,
+      "name": "Clearwater, MN",
+      "lat": 45.4183,
+      "lon": -93.981,
+      "state": "MN"
+    },
+    {
+      "call_sign": "WXJ86",
+      "frequency": 162.55,
+      "name": "La Crescent, MN",
+      "lat": 43.828,
+      "lon": -91.304,
+      "state": "MN"
+    },
+    {
+      "call_sign": "WWG98",
+      "frequency": 162.475,
+      "name": "Park Rapids, MN",
+      "lat": 46.9222,
+      "lon": -95.0536,
+      "state": "MN"
+    },
+    {
+      "call_sign": "KID77",
+      "frequency": 162.55,
+      "name": "Kansas City, MO",
+      "lat": 39.0997,
+      "lon": -94.5786,
+      "state": "MO"
+    },
+    {
+      "call_sign": "KDO89",
+      "frequency": 162.55,
+      "name": "St. Louis, MO",
+      "lat": 38.627,
+      "lon": -90.1994,
+      "state": "MO"
+    },
+    {
+      "call_sign": "WXL46",
+      "frequency": 162.4,
+      "name": "Springfield, MO",
+      "lat": 37.209,
+      "lon": -93.2923,
+      "state": "MO"
+    },
+    {
+      "call_sign": "WXL78",
+      "frequency": 162.475,
+      "name": "Bismarck, ND",
+      "lat": 46.8083,
+      "lon": -100.7837,
+      "state": "ND"
+    },
+    {
+      "call_sign": "WWF83",
+      "frequency": 162.4,
+      "name": "Grand Forks, ND",
+      "lat": 47.9253,
+      "lon": -97.0329,
+      "state": "ND"
+    },
+    {
+      "call_sign": "WXM38",
+      "frequency": 162.4,
+      "name": "Petersburg, ND",
+      "lat": 48.0158,
+      "lon": -98.0018,
+      "state": "ND"
+    },
+    {
+      "call_sign": "KZZ69",
+      "frequency": 162.45,
+      "name": "Beatrice, NE",
+      "lat": 40.2681,
+      "lon": -96.7475,
+      "state": "NE"
+    },
+    {
+      "call_sign": "WXL74",
+      "frequency": 162.4,
+      "name": "Grand Island, NE",
+      "lat": 40.9264,
+      "lon": -98.342,
+      "state": "NE"
+    },
+    {
+      "call_sign": "WXM20",
+      "frequency": 162.475,
+      "name": "Lincoln, NE",
+      "lat": 40.8136,
+      "lon": -96.7026,
+      "state": "NE"
+    },
+    {
+      "call_sign": "KIH61",
+      "frequency": 162.4,
+      "name": "Omaha, NE",
+      "lat": 41.2565,
+      "lon": -95.9345,
+      "state": "NE"
+    },
+    {
+      "call_sign": "WXL67",
+      "frequency": 162.475,
+      "name": "Scottsbluff, NE",
+      "lat": 41.8666,
+      "lon": -103.6672,
+      "state": "NE"
+    },
+    {
+      "call_sign": "WWG20",
+      "frequency": 162.45,
+      "name": "Fernley, NV",
+      "lat": 39.608,
+      "lon": -119.2518,
+      "state": "NV"
+    },
+    {
+      "call_sign": "WXK58",
+      "frequency": 162.55,
+      "name": "Reno, NV",
+      "lat": 39.5296,
+      "lon": -119.8138,
+      "state": "NV"
+    },
+    {
+      "call_sign": "WXL29",
+      "frequency": 162.4,
+      "name": "Concord, NH",
+      "lat": 43.2081,
+      "lon": -71.5376,
+      "state": "NH"
+    },
+    {
+      "call_sign": "KWO72",
+      "frequency": 162.475,
+      "name": "Atlantic City, NJ",
+      "lat": 39.3643,
+      "lon": -74.4229,
+      "state": "NJ"
+    },
+    {
+      "call_sign": "WXJ37",
+      "frequency": 162.475,
+      "name": "Farmington, NM",
+      "lat": 36.7281,
+      "lon": -108.2187,
+      "state": "NM"
+    },
+    {
+      "call_sign": "KWO35",
+      "frequency": 162.55,
+      "name": "New York City, NY",
+      "lat": 40.7128,
+      "lon": -74.006,
+      "state": "NY"
+    },
+    {
+      "call_sign": "WXL34",
+      "frequency": 162.55,
+      "name": "Albany, NY",
+      "lat": 42.6526,
+      "lon": -73.7562,
+      "state": "NY"
+    },
+    {
+      "call_sign": "KEB98",
+      "frequency": 162.55,
+      "name": "Buffalo, NY",
+      "lat": 42.8864,
+      "lon": -78.8784,
+      "state": "NY"
+    },
+    {
+      "call_sign": "WZ2536",
+      "frequency": 162.475,
+      "name": "Lyons, NY",
+      "lat": 43.0642,
+      "lon": -76.9905,
+      "state": "NY"
+    },
+    {
+      "call_sign": "WXM45",
+      "frequency": 162.425,
+      "name": "Middleville, NY",
+      "lat": 43.1198,
+      "lon": -74.979,
+      "state": "NY"
+    },
+    {
+      "call_sign": "KHA53",
+      "frequency": 162.4,
+      "name": "Rochester, NY",
+      "lat": 43.1566,
+      "lon": -77.6088,
+      "state": "NY"
+    },
+    {
+      "call_sign": "WXL31",
+      "frequency": 162.55,
+      "name": "Syracuse, NY",
+      "lat": 43.0481,
+      "lon": -76.1474,
+      "state": "NY"
+    },
+    {
+      "call_sign": "KDO94",
+      "frequency": 162.4,
+      "name": "Akron, OH",
+      "lat": 41.0814,
+      "lon": -81.519,
+      "state": "OH"
+    },
+    {
+      "call_sign": "KIG86",
+      "frequency": 162.55,
+      "name": "Columbus, OH",
+      "lat": 39.9612,
+      "lon": -82.9988,
+      "state": "OH"
+    },
+    {
+      "call_sign": "WNG698",
+      "frequency": 162.5,
+      "name": "Grafton, OH",
+      "lat": 41.1726,
+      "lon": -82.0546,
+      "state": "OH"
+    },
+    {
+      "call_sign": "WWG57",
+      "frequency": 162.45,
+      "name": "Mansfield, OH",
+      "lat": 40.7589,
+      "lon": -82.5155,
+      "state": "OH"
+    },
+    {
+      "call_sign": "WXJ93",
+      "frequency": 162.4,
+      "name": "Lima, OH",
+      "lat": 40.7428,
+      "lon": -84.1052,
+      "state": "OH"
+    },
+    {
+      "call_sign": "WXL51",
+      "frequency": 162.5,
+      "name": "Toledo, OH",
+      "lat": 41.6528,
+      "lon": -83.5379,
+      "state": "OH"
+    },
+    {
+      "call_sign": "KIG71",
+      "frequency": 162.55,
+      "name": "Portland, OR",
+      "lat": 45.5152,
+      "lon": -122.6784,
+      "state": "OR"
+    },
+    {
+      "call_sign": "WXK85",
+      "frequency": 162.4,
+      "name": "Oklahoma City, OK",
+      "lat": 35.4676,
+      "lon": -97.5164,
+      "state": "OK"
+    },
+    {
+      "call_sign": "WXK86",
+      "frequency": 162.55,
+      "name": "Lawton, OK",
+      "lat": 34.6036,
+      "lon": -98.3959,
+      "state": "OK"
+    },
+    {
+      "call_sign": "KIH27",
+      "frequency": 162.55,
+      "name": "Tulsa, OK",
+      "lat": 36.154,
+      "lon": -95.9928,
+      "state": "OK"
+    },
+    {
+      "call_sign": "KIH28",
+      "frequency": 162.475,
+      "name": "Philadelphia, PA",
+      "lat": 39.9526,
+      "lon": -75.1652,
+      "state": "PA"
+    },
+    {
+      "call_sign": "WXL39",
+      "frequency": 162.4,
+      "name": "Allentown, PA",
+      "lat": 40.6084,
+      "lon": -75.4902,
+      "state": "PA"
+    },
+    {
+      "call_sign": "WXL40",
+      "frequency": 162.55,
+      "name": "Harrisburg, PA",
+      "lat": 40.2732,
+      "lon": -76.8867,
+      "state": "PA"
+    },
+    {
+      "call_sign": "WNG704",
+      "frequency": 162.425,
+      "name": "Hibernia Park, PA",
+      "lat": 40.0521,
+      "lon": -75.8166,
+      "state": "PA"
+    },
+    {
+      "call_sign": "WXL43",
+      "frequency": 162.55,
+      "name": "Wilkes-Barre, PA",
+      "lat": 41.2459,
+      "lon": -75.8813,
+      "state": "PA"
+    },
+    {
+      "call_sign": "WXJ24",
+      "frequency": 162.4,
+      "name": "Providence, RI",
+      "lat": 41.824,
+      "lon": -71.4128,
+      "state": "RI"
+    },
+    {
+      "call_sign": "WXJ21",
+      "frequency": 162.55,
+      "name": "Greer, SC",
+      "lat": 34.9388,
+      "lon": -82.2271,
+      "state": "SC"
+    },
+    {
+      "call_sign": "KEC85",
+      "frequency": 162.4,
+      "name": "Jasper County, SC",
+      "lat": 32.4316,
+      "lon": -81.0112,
+      "state": "SC"
+    },
+    {
+      "call_sign": "WXL82",
+      "frequency": 162.4,
+      "name": "Sioux Falls, SD",
+      "lat": 43.5446,
+      "lon": -96.7311,
+      "state": "SD"
+    },
+    {
+      "call_sign": "WXK49",
+      "frequency": 162.475,
+      "name": "Memphis, TN",
+      "lat": 35.1495,
+      "lon": -90.049,
+      "state": "TN"
+    },
+    {
+      "call_sign": "WXK63",
+      "frequency": 162.475,
+      "name": "Shelbyville, TN",
+      "lat": 35.4834,
+      "lon": -86.4603,
+      "state": "TN"
+    },
+    {
+      "call_sign": "KIG79",
+      "frequency": 162.55,
+      "name": "White House, TN",
+      "lat": 36.4706,
+      "lon": -86.6514,
+      "state": "TN"
+    },
+    {
+      "call_sign": "WXK38",
+      "frequency": 162.55,
+      "name": "Amarillo, TX",
+      "lat": 35.222,
+      "lon": -101.8313,
+      "state": "TX"
+    },
+    {
+      "call_sign": "WXK27",
+      "frequency": 162.4,
+      "name": "Austin, TX",
+      "lat": 30.2672,
+      "lon": -97.7431,
+      "state": "TX"
+    },
+    {
+      "call_sign": "WXK30",
+      "frequency": 162.55,
+      "name": "College Station, TX",
+      "lat": 30.628,
+      "lon": -96.3344,
+      "state": "TX"
+    },
+    {
+      "call_sign": "KXI87",
+      "frequency": 162.525,
+      "name": "Corsicana, TX",
+      "lat": 32.0954,
+      "lon": -96.4689,
+      "state": "TX"
+    },
+    {
+      "call_sign": "KEC56",
+      "frequency": 162.4,
+      "name": "Dallas, TX",
+      "lat": 32.7767,
+      "lon": -96.797,
+      "state": "TX"
+    },
+    {
+      "call_sign": "KEC55",
+      "frequency": 162.55,
+      "name": "Fort Worth, TX",
+      "lat": 32.7555,
+      "lon": -97.3308,
+      "state": "TX"
+    },
+    {
+      "call_sign": "KHB40",
+      "frequency": 162.55,
+      "name": "Galveston, TX",
+      "lat": 29.3013,
+      "lon": -94.7977,
+      "state": "TX"
+    },
+    {
+      "call_sign": "KGG68",
+      "frequency": 162.4,
+      "name": "Houston/Tomball, TX",
+      "lat": 30.0972,
+      "lon": -95.6161,
+      "state": "TX"
+    },
+    {
+      "call_sign": "WXK23",
+      "frequency": 162.55,
+      "name": "Lufkin, TX",
+      "lat": 31.3382,
+      "lon": -94.7291,
+      "state": "TX"
+    },
+    {
+      "call_sign": "KWN34",
+      "frequency": 162.45,
+      "name": "Palestine, TX",
+      "lat": 31.7621,
+      "lon": -95.6308,
+      "state": "TX"
+    },
+    {
+      "call_sign": "WXK36",
+      "frequency": 162.475,
+      "name": "Tyler, TX",
+      "lat": 32.3513,
+      "lon": -95.3011,
+      "state": "TX"
+    },
+    {
+      "call_sign": "WXK35",
+      "frequency": 162.475,
+      "name": "Waco, TX",
+      "lat": 31.5493,
+      "lon": -97.1467,
+      "state": "TX"
+    },
+    {
+      "call_sign": "KEC86",
+      "frequency": 162.55,
+      "name": "Salt Lake City, UT",
+      "lat": 40.7608,
+      "lon": -111.891,
+      "state": "UT"
+    },
+    {
+      "call_sign": "WXJ43",
+      "frequency": 162.55,
+      "name": "Burlington, VT",
+      "lat": 44.4759,
+      "lon": -73.2121,
+      "state": "VT"
+    },
+    {
+      "call_sign": "KHB36",
+      "frequency": 162.55,
+      "name": "Manassas, VA",
+      "lat": 38.7509,
+      "lon": -77.4753,
+      "state": "VA"
+    },
+    {
+      "call_sign": "KHB37",
+      "frequency": 162.55,
+      "name": "Virginia Beach, VA",
+      "lat": 36.8529,
+      "lon": -75.978,
+      "state": "VA"
+    },
+    {
+      "call_sign": "KHB60",
+      "frequency": 162.55,
+      "name": "Seattle, WA",
+      "lat": 47.6062,
+      "lon": -122.3321,
+      "state": "WA"
+    },
+    {
+      "call_sign": "WWG24",
+      "frequency": 162.425,
+      "name": "Puget Sound Marine, WA",
+      "lat": 47.6062,
+      "lon": -122.3321,
+      "state": "WA"
+    },
+    {
+      "call_sign": "WWF56",
+      "frequency": 162.45,
+      "name": "Richland, WA",
+      "lat": 46.2856,
+      "lon": -119.2845,
+      "state": "WA"
+    },
+    {
+      "call_sign": "WXM71",
+      "frequency": 162.4,
+      "name": "Beckley, WV",
+      "lat": 37.7782,
+      "lon": -81.1882,
+      "state": "WV"
+    },
+    {
+      "call_sign": "WXJ84",
+      "frequency": 162.4,
+      "name": "Charleston, WV",
+      "lat": 38.3498,
+      "lon": -81.6326,
+      "state": "WV"
+    },
+    {
+      "call_sign": "WXM74",
+      "frequency": 162.4,
+      "name": "Sutton, WV",
+      "lat": 38.6646,
+      "lon": -80.7098,
+      "state": "WV"
+    },
+    {
+      "call_sign": "KZZ78",
+      "frequency": 162.525,
+      "name": "Ashland, WI",
+      "lat": 46.5925,
+      "lon": -90.8838,
+      "state": "WI"
+    },
+    {
+      "call_sign": "KIG65",
+      "frequency": 162.55,
+      "name": "Green Bay, WI",
+      "lat": 44.5133,
+      "lon": -88.0133,
+      "state": "WI"
+    },
+    {
+      "call_sign": "WXJ88",
+      "frequency": 162.4,
+      "name": "Menomonie, WI",
+      "lat": 44.8755,
+      "lon": -91.9193,
+      "state": "WI"
+    },
+    {
+      "call_sign": "WNG553",
+      "frequency": 162.4,
+      "name": "Wausaukee, WI",
+      "lat": 45.3808,
+      "lon": -87.9651,
+      "state": "WI"
+    },
+    {
+      "call_sign": "KGG95",
+      "frequency": 162.425,
+      "name": "Winona, WI",
+      "lat": 44.0461,
+      "lon": -91.6393,
+      "state": "WI"
+    },
+    {
+      "call_sign": "KZZ77",
+      "frequency": 162.425,
+      "name": "Withee, WI",
+      "lat": 44.9572,
+      "lon": -90.5932,
+      "state": "WI"
+    },
+    {
+      "call_sign": "XLF339",
+      "frequency": 162.475,
+      "name": "Calgary, AB",
+      "lat": 51.0447,
+      "lon": -114.0719,
+      "state": "AB"
+    },
+    {
+      "call_sign": "WXK78",
+      "frequency": 162.475,
+      "name": "Cheyenne, WY",
+      "lat": 41.15,
+      "lon": -104.8,
+      "state": "WY"
+    },
+    {
+      "call_sign": "WXL58",
+      "frequency": 162.475,
+      "name": "Raleigh, NC",
+      "lat": 35.78,
+      "lon": -78.64,
+      "state": "NC"
+    },
+    {
+      "call_sign": "WXM73",
+      "frequency": 162.55,
+      "name": "Jackson, MS",
+      "lat": 32.3,
+      "lon": -90.18,
+      "state": "MS"
+    },
+    {
+      "call_sign": "XLM572",
+      "frequency": 162.4,
+      "name": "Edmonton, AB",
+      "lat": 53.5461,
+      "lon": -113.4938,
+      "state": "AB"
+    },
+    {
+      "call_sign": "XMJ316",
+      "frequency": 162.4,
+      "name": "Collingwood, ON",
+      "lat": 44.5001,
+      "lon": -80.2169,
+      "state": "ON"
+    },
+    {
+      "call_sign": "XMJ225",
+      "frequency": 162.4,
+      "name": "Toronto, ON",
+      "lat": 43.6532,
+      "lon": -79.3832,
+      "state": "ON"
+    }
+  ],
+  "stream_urls": {
+    "KEC61": [
+      "https://radio.weatherusa.net/NWR/KEC61_2.mp3"
+    ],
+    "WWG42": [
+      "https://wxr.gwes-cdn.net/WWG42",
+      "https://wxradio.org/AZ-Globe-WWG42"
+    ],
+    "WWG41": [
+      "https://wxr.gwes-cdn.net/WWG41",
+      "https://wxradio.org/AZ-PaysonGilaCountyN-WWG41"
+    ],
+    "KEC94": [
+      "https://wxr.gwes-cdn.net/KEC94",
+      "https://wxradio.org/AZ-Phoenix-KEC94"
+    ],
+    "WNG659": [
+      "https://wxr.gwes-cdn.net/WNG659"
+    ],
+    "KIH62": [
+      "https://radio.weatherusa.net/NWR/KIH62_2.mp3"
+    ],
+    "KWO37": [
+      "https://wxr.gwes-cdn.net/KWO37"
+    ],
+    "WWF64": [
+      "https://wxradio.org/CA-MontereyMarine-WWF64"
+    ],
+    "KEC49": [
+      "https://wxradio.org/CA-Monterey-KEC49"
+    ],
+    "KWN54": [
+      "https://wxr.gwes-cdn.net/KWN54",
+      "https://radio.weatherusa.net/NWR/KWN54.mp3"
+    ],
+    "WXJ42": [
+      "https://wxradio.org/CT-Meriden-WXJ42"
+    ],
+    "KIH26": [
+      "https://wxradio.org/FL-DaytonaBeach-KIH26"
+    ],
+    "WZ2531": [
+      "https://wxr.gwes-cdn.net/WZ2531"
+    ],
+    "KHB39": [
+      "https://wxr.gwes-cdn.net/KHB39"
+    ],
+    "KEC38": [
+      "https://wxradio.org/FL-Largo-KEC38"
+    ],
+    "KHB34": [
+      "https://wxr.gwes-cdn.net/KHB34"
+    ],
+    "KIH63": [
+      "https://wxradio.org/FL-Orlando-KIH63"
+    ],
+    "WNG522": [
+      "https://wxradio.org/FL-Palatka-WNG522"
+    ],
+    "WNG663": [
+      "https://wxr.gwes-cdn.net/WNG663"
+    ],
+    "KIH24": [
+      "https://wxradio.org/FL-Tallahassee-KIH24",
+      "http://wxradio.dyndns.org:8000/FL-Tallahassee-KIH24"
+    ],
+    "KHB32": [
+      "https://wxradio.org/FL-TampaBay-KHB32"
+    ],
+    "WXK56": [
+      "https://wxradio.org/GA-Athens-WXK56"
+    ],
+    "KEC80": [
+      "https://wxr.gwes-cdn.net/KEC80-ALT",
+      "https://wxradio.org/GA-Atlanta-KEC80"
+    ],
+    "WXM32": [
+      "https://wxradio.org/AL-Columbus-WXM32",
+      "https://radio.weatherusa.net/NWR/WXM32.mp3"
+    ],
+    "WWG75": [
+      "https://wxradio.org/HI-Maui-WWG75"
+    ],
+    "WXL57": [
+      "https://radio.weatherusa.net/NWR/WXL57.mp3"
+    ],
+    "WXL62": [
+      "https://wxradio.org/IA-Sioux_City-WXL62"
+    ],
+    "WXJ76": [
+      "https://wxradio.org/IL-Champaign-WXJ76"
+    ],
+    "KZZ66": [
+      "https://wxradio.org/IL-Galesburg-KZZ66"
+    ],
+    "KZZ58": [
+      "https://wxradio.org/IL-Kankakee-KZZ58"
+    ],
+    "KZZ81": [
+      "https://wxr.gwes-cdn.net/KZZ81"
+    ],
+    "WXM49": [
+      "https://wxradio.org/IL-Marion-WXM49-ALT1"
+    ],
+    "WXJ71": [
+      "https://wxradio.org/IL-Peoria-WXJ71"
+    ],
+    "KXI58": [
+      "https://wxradio.org/IL-Plano-KXI58"
+    ],
+    "WXJ73": [
+      "https://wxradio.org/IL-QuadCities-WXJ73"
+    ],
+    "KEC74": [
+      "https://wxradio.org/IN-Indianapolis-KEC74"
+    ],
+    "KIG76": [
+      "https://wxr.gwes-cdn.net/KIG76"
+    ],
+    "WXK91": [
+      "https://wxradio.org/KS-Topeka-WXK91-alt1"
+    ],
+    "WZ2523": [
+      "https://wxradio.org/KY-Frankfort-WZ2523"
+    ],
+    "KZZ48": [
+      "https://wxradio.org/KY-Owenton-KZZ48"
+    ],
+    "WXJ96": [
+      "https://wxradio.org/LA-Monroe-WXJ96",
+      "https://radio.weatherusa.net/NWR/WXJ96_2.mp3"
+    ],
+    "WXJ97": [
+      "https://wxr.gwes-cdn.net/WXJ97",
+      "https://wxradio.org/LA-Shreveport-WXJ97",
+      "https://wxradio.org/LA-Shreveport-WXJ97-alt1"
+    ],
+    "WSM60": [
+      "https://wxradio.org/ME-Dresden-WSM60"
+    ],
+    "WXM42": [
+      "https://wxradio.org/MD-Hagerstown-WXM42",
+      "https://noaa-manassas-radio.from-va.com/Hagerstown.mp3"
+    ],
+    "KHB35": [
+      "https://radio.weatherusa.net/NWR/KHB35_3.mp3"
+    ],
+    "KEC73": [
+      "https://wxradio.org/MA-Bourne/Hyannis-KEC73"
+    ],
+    "WXL93": [
+      "https://wxradio.org/MA-Worcester-WXL93"
+    ],
+    "KEC63": [
+      "https://radio.weatherusa.net/NWR/KEC63.mp3",
+      "https://wxr.gwes-cdn.net/KEC63"
+    ],
+    "KIH29": [
+      "https://wxr.gwes-cdn.net/KIH29",
+      "https://wxradio.org/MI-Clio-KIH29"
+    ],
+    "WWF36": [
+      "https://wxradio.org/MI-Hesperia-WWF36"
+    ],
+    "WWF34": [
+      "https://icecast.wxstream.org/NWR/WWF34",
+      "https://wxr.gwes-cdn.net/WWF34",
+      "https://wxradio.org/MI-Plainwell-WWF34"
+    ],
+    "KZZ33": [
+      "https://wxr.gwes-cdn.net/KZZ33",
+      "https://wxradio.org/MI-MountPleasant-KZZ33",
+      "https://wxradio.org/MI-MountPleasant-KZZ33-alt2",
+      "https://noaaradio.herseyweather.com/MI-MountPleasant-KZZ33-alt1"
+    ],
+    "WXK81": [
+      "https://wxr.gwes-cdn.net/WXK81",
+      "https://icecast.wxstream.org/NWR/WXK81"
+    ],
+    "KXI33": [
+      "https://wxr.gwes-cdn.net/KXI33",
+      "https://wxradio.org/MI-WestBranch-KXI33"
+    ],
+    "WXN99": [
+      "https://wxr.gwes-cdn.net/WXN99-Alt",
+      "https://radio.weatherusa.net/NWR/WXN99.mp3"
+    ],
+    "WNG672": [
+      "https://wxradio.org/MI-WolfLake-WNG672",
+      "https://noaaradio.herseyweather.com/MI-WolfLake-WNG672-alt1"
+    ],
+    "WZ2560": [
+      "https://wxr.gwes-cdn.net/WZ2560"
+    ],
+    "KEC65": [
+      "https://radio.weatherusa.net/NWR/KEC65.mp3"
+    ],
+    "WXM99": [
+      "https://wxr.gwes-cdn.net/WXM99",
+      "https://wxr.bemidjiwx.org/WXM99",
+      "https://wxradio.org/MN-Bemidji-WXM99"
+    ],
+    "WNG676": [
+      "https://radio.weatherusa.net/NWR/WNG676.mp3",
+      "http://wxradio.dyndns.org:8000/NWR/WNG676.mp3"
+    ],
+    "WXJ86": [
+      "https://wxradio.org/MN-LaCrescent-WXJ86"
+    ],
+    "WWG98": [
+      "https://wxr.gwes-cdn.net/WWG98",
+      "https://wxr.bemidjiwx.org/WWG98"
+    ],
+    "KID77": [
+      "https://wxr.gwes-cdn.net/KID77",
+      "https://wxradio.org/MO-KansasCity-KID77",
+      "https://radio.weatherusa.net/NWR/KID77_3.mp3"
+    ],
+    "KDO89": [
+      "https://wxradio.org/MO-StLouis-KDO89"
+    ],
+    "WXL46": [
+      "https://wxr.gwes-cdn.net/WXL46",
+      "https://wxradio.org/MO-Springfield-WXL46"
+    ],
+    "WXL25": [
+      "https://wxr.gwes-cdn.net/WXL25"
+    ],
+    "WXL78": [
+      "https://wxradio.org/ND-Bismarck-WXL78"
+    ],
+    "WWF83": [
+      "https://wxr.gwes-cdn.net/WWF83",
+      "https://wxradio.org/ND-GrandForks-WWF83"
+    ],
+    "WXM38": [
+      "https://wxr.gwes-cdn.net/WXM38"
+    ],
+    "KZZ69": [
+      "https://radio.weatherusa.net/NWR/KZZ69.mp3"
+    ],
+    "WXL74": [
+      "https://wxradio.org/NE-GrandIsland-WXL74"
+    ],
+    "WXM20": [
+      "https://wxradio.org/NE-Lincoln-WXM20-alt2",
+      "https://wxradio.org/NE-Lincoln-WXM20-alt1"
+    ],
+    "KIH61": [
+      "https://radio.weatherusa.net/NWR/KIH61.mp3",
+      "https://wxr.gwes-cdn.net/KIH61",
+      "https://wxradio.org/NE-Omaha-KIH61-A"
+    ],
+    "WXL67": [
+      "https://wxradio.org/NE-Scottsbluff-WXL67"
+    ],
+    "WWG20": [
+      "https://radio.weatherusa.net/NWR/WWG20.mp3"
+    ],
+    "WXK58": [
+      "https://radio.weatherusa.net/NWR/WXK58.mp3"
+    ],
+    "WXL58": [
+      "https://radio.weatherusa.net/NWR/WXL58.mp3"
+    ],
+    "WXK78": [
+      "https://radio.weatherusa.net/NWR/WXK78.mp3"
+    ],
+    "WXJ37": [
+      "https://wxr.gwes-cdn.net/WXJ37",
+      "https://radio.weatherusa.net/NWR/WXJ37.mp3"
+    ],
+    "KWO35": [
+      "https://wxr.gwes-cdn.net/KWO35",
+      "https://wxradio.org/NY-NewYorkCity-KWO35",
+      "https://www.saucci.net:8443/audio3.ogg"
+    ],
+    "WXL34": [
+      "https://wxradio.org/NY-Albany-WXL34"
+    ],
+    "KEB98": [
+      "https://radio.weatherusa.net/NWR/KEB98.mp3"
+    ],
+    "WZ2536": [
+      "https://wxradio.org/NY-Lyons-WZ2536"
+    ],
+    "WXM45": [
+      "https://wxradio.org/NY-Middleville-WXM45-alt1"
+    ],
+    "KHA53": [
+      "https://wxradio.org/NY-Rochester-KHA53"
+    ],
+    "WXL31": [
+      "https://wxradio.org/NY-Syracuse-WXL31",
+      "https://wxradio.org/NY-Syracuse-WXL31-alt1"
+    ],
+    "KDO94": [
+      "https://radio.weatherusa.net/NWR/KDO94.mp3"
+    ],
+    "KIG86": [
+      "https://wxradio.org/OH-Columbus-KIG86",
+      "https://radio.weatherusa.net/NWR/KIG86.mp3"
+    ],
+    "WNG698": [
+      "https://wxradio.org/OH-Grafton-WNG698"
+    ],
+    "WWG57": [
+      "https://wxradio.org/OH-Mansfield-WWG57"
+    ],
+    "WXJ93": [
+      "https://wxradio.org/OH-Lima-WXJ93",
+      "https://wxradio.org/OH-Lima-WXJ93-alt1",
+      "https://wxradio.org/OH-Lima-WXJ93-alt2"
+    ],
+    "WXL51": [
+      "https://wxr.gwes-cdn.net/WXL51",
+      "https://wxradio.org/OH-Toledo-WXL51"
+    ],
+    "WXK85": [
+      "https://wxradio.org/OK-OklahomaCity-WXK85",
+      "https://radio.weatherusa.net/NWR/WXK85.mp3"
+    ],
+    "WXK86": [
+      "https://wxradio.org/OK-Lawton-WXK86",
+      "https://radio.weatherusa.net/NWR/WXK86.mp3"
+    ],
+    "KIH27": [
+      "https://wxradio.org/OK-Tulsa-KIH27"
+    ],
+    "WXL39": [
+      "https://wxr.gwes-cdn.net/WXL39"
+    ],
+    "KIH28": [
+      "https://radio.weatherusa.net/NWR/KIH28_3.mp3",
+      "https://wxr.gwes-cdn.net/KIH28",
+      "https://wxradio.org/PA-Philadelphia-KIH28"
+    ],
+    "WXL40": [
+      "https://wxradio.org/PA-Harrisburg-WXL40"
+    ],
+    "WNG704": [
+      "https://wxradio.org/PA-HiberniaPark-WNG704"
+    ],
+    "WXL43": [
+      "https://wxradio.org/PA-WilkesBarre-WXL43"
+    ],
+    "WXJ21": [
+      "https://wxr.gwes-cdn.net/WXJ21",
+      "https://wxradio.org/SC-Greenville-WXJ21"
+    ],
+    "KEC85": [
+      "https://wxr.gwes-cdn.net/KEC85",
+      "https://wxradio.org/SC-Savannah-KEC85"
+    ],
+    "WXK49": [
+      "https://usa10.fastcast4u.com:3210/1"
+    ],
+    "WXK63": [
+      "https://radio.weatherusa.net/NWR/WXK63.mp3"
+    ],
+    "KIG79": [
+      "https://wxr.gwes-cdn.net/KIG79"
+    ],
+    "WXK38": [
+      "https://radio.weatherusa.net/NWR/WXK38_2.mp3"
+    ],
+    "WXK27": [
+      "https://wxradio.org/TX-Austin-WXK27"
+    ],
+    "WXK30": [
+      "https://wxr.gwes-cdn.net/WXK30"
+    ],
+    "KXI87": [
+      "https://wxr.gwes-cdn.net/KXI87",
+      "https://radio.weatherusa.net/NWR/KXI87.mp3"
+    ],
+    "KEC56": [
+      "https://wxradio.org/TX-Dallas-KEC56"
+    ],
+    "KEC55": [
+      "https://wxr.gwes-cdn.net/KEC55",
+      "https://radio.weatherusa.net/NWR/KEC55_2.mp3"
+    ],
+    "KHB40": [
+      "https://wxradio.org/TX-Galveston-KHB40"
+    ],
+    "KGG68": [
+      "https://wxr.gwes-cdn.net/KGG68",
+      "https://radio.weatherusa.net/NWR/KGG68.mp3"
+    ],
+    "WXK23": [
+      "https://radio.weatherusa.net/NWR/WXK23.mp3"
+    ],
+    "KWN34": [
+      "https://radio.weatherusa.net/NWR/KWN34.mp3"
+    ],
+    "WXK36": [
+      "https://wxradio.org/TX-Tyler-WXK36",
+      "https://radio.weatherusa.net/NWR/WXK36_2.mp3",
+      "https://wxradio.org/TX-Tyler-WXK36-alt1",
+      "https://wxradio.org/TX-Tyler-WXK36-alt2"
+    ],
+    "WXK35": [
+      "https://radio.weatherusa.net/NWR/EW6308.mp3"
+    ],
+    "KHB36": [
+      "https://wxr.gwes-cdn.net/KHB36",
+      "https://stream.mikev.com/khb36.mp3",
+      "https://wxradio.org/VA-Manassas-KHB36"
+    ],
+    "KHB37": [
+      "https://wxr.gwes-cdn.net/KHB37",
+      "https://wxradio.org/VA-Norfolk-KHB37",
+      "https://radio.weatherusa.net/NWR/KHB37_3.mp3"
+    ],
+    "KHB60": [
+      "https://wxradio.bobc.io/stream/KHB60",
+      "https://wxr.gwes-cdn.net/KHB60"
+    ],
+    "WWG24": [
+      "https://wxradio.org/WA-PugetSoundMarine-WWG24",
+      "https://wxradio.bobc.io/stream/WWG24",
+      "https://wxr.gwes-cdn.net/WWG24"
+    ],
+    "WWF56": [
+      "https://radio.weatherusa.net/NWR/WWF56_2.mp3"
+    ],
+    "WXM71": [
+      "https://wxradio.org/WV-Beckley-WXM71"
+    ],
+    "WXJ84": [
+      "https://wxr.gwes-cdn.net/WXJ84"
+    ],
+    "WXM74": [
+      "https://wxr.gwes-cdn.net/WXM74"
+    ],
+    "KZZ78": [
+      "https://wxradio.org/WI-Ashland-KZZ78"
+    ],
+    "KIG65": [
+      "https://wxradio.org/WI-GreenBay-KIG65"
+    ],
+    "WXJ88": [
+      "https://wxradio.org/WI-Menomonie-WXJ88",
+      "https://radio.weatherusa.net/NWR/WXJ88.mp3",
+      "https://wxradio.org/WI-Menomonie-WXJ88-alt1"
+    ],
+    "WNG553": [
+      "https://wxradio.org/WI-Wausaukee-WNG553"
+    ],
+    "KGG95": [
+      "https://wxradio.org/MN-Winona-KGG95",
+      "https://radio.weatherusa.net/NWR/KGG95.mp3"
+    ],
+    "KZZ77": [
+      "https://wxradio.org/WI-Withee-KZZ77"
+    ],
+    "XLF339": [
+      "https://wxradio.org/AB-Calgary-XLF339"
+    ],
+    "XLM572": [
+      "https://wxradio.org/AB-Edmonton-XLM572"
+    ],
+    "XMJ316": [
+      "https://wxradio.org/ON-Collingwood-XMJ316"
+    ],
+    "XMJ225": [
+      "https://wxradio.org/ON-Toronto-XMJ225"
+    ]
+  },
+  "state_choices": [
+    "All states and territories",
+    "AB",
+    "Alaska (AK)",
+    "Alabama (AL)",
+    "Arkansas (AR)",
+    "Arizona (AZ)",
+    "California (CA)",
+    "Colorado (CO)",
+    "Connecticut (CT)",
+    "Delaware (DE)",
+    "Florida (FL)",
+    "Georgia (GA)",
+    "Hawaii (HI)",
+    "Iowa (IA)",
+    "Idaho (ID)",
+    "Illinois (IL)",
+    "Indiana (IN)",
+    "Kansas (KS)",
+    "Kentucky (KY)",
+    "Louisiana (LA)",
+    "Massachusetts (MA)",
+    "Maryland (MD)",
+    "Maine (ME)",
+    "Michigan (MI)",
+    "Minnesota (MN)",
+    "Missouri (MO)",
+    "Mississippi (MS)",
+    "Montana (MT)",
+    "North Carolina (NC)",
+    "North Dakota (ND)",
+    "Nebraska (NE)",
+    "New Hampshire (NH)",
+    "New Jersey (NJ)",
+    "New Mexico (NM)",
+    "Nevada (NV)",
+    "New York (NY)",
+    "Ohio (OH)",
+    "Oklahoma (OK)",
+    "ON",
+    "Oregon (OR)",
+    "Pennsylvania (PA)",
+    "Rhode Island (RI)",
+    "South Carolina (SC)",
+    "South Dakota (SD)",
+    "Tennessee (TN)",
+    "Texas (TX)",
+    "Utah (UT)",
+    "Virginia (VA)",
+    "Vermont (VT)",
+    "Washington (WA)",
+    "Wisconsin (WI)",
+    "West Virginia (WV)",
+    "Wyoming (WY)"
+  ],
+  "base_labels": [
+    {
+      "station": {
+        "call_sign": "KEC96",
+        "frequency": 162.55,
+        "name": "Anchorage, AK",
+        "lat": 61.2181,
+        "lon": -149.9003,
+        "state": "AK"
+      },
+      "label": "KEC96 - Anchorage, AK - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KEC61",
+        "frequency": 162.55,
+        "name": "Mobile, AL",
+        "lat": 30.6954,
+        "lon": -88.0399,
+        "state": "AL"
+      },
+      "label": "KEC61 - Mobile, AL - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KZZ99",
+        "frequency": 162.55,
+        "name": "Little Rock, AR",
+        "lat": 34.7465,
+        "lon": -92.2896,
+        "state": "AR"
+      },
+      "label": "KZZ99 - Little Rock, AR - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KEC94",
+        "frequency": 162.55,
+        "name": "Phoenix, AZ",
+        "lat": 33.4484,
+        "lon": -112.074,
+        "state": "AZ"
+      },
+      "label": "KEC94 - Phoenix, AZ - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WWG42",
+        "frequency": 162.5,
+        "name": "Globe, AZ",
+        "lat": 33.3942,
+        "lon": -110.7865,
+        "state": "AZ"
+      },
+      "label": "WWG42 - Globe, AZ - 162.500 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WWG41",
+        "frequency": 162.425,
+        "name": "Payson, AZ",
+        "lat": 34.2309,
+        "lon": -111.3251,
+        "state": "AZ"
+      },
+      "label": "WWG41 - Payson, AZ - 162.425 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KEC49",
+        "frequency": 162.55,
+        "name": "San Francisco Bay, CA",
+        "lat": 37.7749,
+        "lon": -122.4194,
+        "state": "CA"
+      },
+      "label": "KEC49 - San Francisco Bay, CA - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WNG659",
+        "frequency": 162.525,
+        "name": "El Paso Mountains, CA",
+        "lat": 35.43,
+        "lon": -117.58,
+        "state": "CA"
+      },
+      "label": "WNG659 - El Paso Mountains, CA - 162.525 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KIH62",
+        "frequency": 162.4,
+        "name": "Fresno, CA",
+        "lat": 36.7378,
+        "lon": -119.7871,
+        "state": "CA"
+      },
+      "label": "KIH62 - Fresno, CA - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KWO37",
+        "frequency": 162.4,
+        "name": "Los Angeles, CA",
+        "lat": 34.0522,
+        "lon": -118.2437,
+        "state": "CA"
+      },
+      "label": "KWO37 - Los Angeles, CA - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WWF64",
+        "frequency": 162.45,
+        "name": "Monterey Marine, CA",
+        "lat": 36.6002,
+        "lon": -121.8947,
+        "state": "CA"
+      },
+      "label": "WWF64 - Monterey Marine, CA - 162.450 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KWN54",
+        "frequency": 162.425,
+        "name": "Durango, CO",
+        "lat": 37.2753,
+        "lon": -107.8801,
+        "state": "CO"
+      },
+      "label": "KWN54 - Durango, CO - 162.425 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KIH30",
+        "frequency": 162.475,
+        "name": "Lewes, DE",
+        "lat": 38.7746,
+        "lon": -75.1393,
+        "state": "DE"
+      },
+      "label": "KIH30 - Lewes, DE - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXJ42",
+        "frequency": 162.4,
+        "name": "Meriden, CT",
+        "lat": 41.5382,
+        "lon": -72.807,
+        "state": "CT"
+      },
+      "label": "WXJ42 - Meriden, CT - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KIH26",
+        "frequency": 162.4,
+        "name": "Daytona Beach, FL",
+        "lat": 29.2108,
+        "lon": -81.0228,
+        "state": "FL"
+      },
+      "label": "KIH26 - Daytona Beach, FL - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WZ2531",
+        "frequency": 162.4,
+        "name": "Hialeah (Spanish), FL",
+        "lat": 25.8576,
+        "lon": -80.2781,
+        "state": "FL"
+      },
+      "label": "WZ2531 - Hialeah (Spanish), FL - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KHB39",
+        "frequency": 162.4,
+        "name": "Jacksonville, FL",
+        "lat": 30.3322,
+        "lon": -81.6557,
+        "state": "FL"
+      },
+      "label": "KHB39 - Jacksonville, FL - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KEC38",
+        "frequency": 162.4,
+        "name": "Largo, FL",
+        "lat": 27.9095,
+        "lon": -82.7873,
+        "state": "FL"
+      },
+      "label": "KEC38 - Largo, FL - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KHB34",
+        "frequency": 162.4,
+        "name": "Miami, FL",
+        "lat": 25.7617,
+        "lon": -80.1918,
+        "state": "FL"
+      },
+      "label": "KHB34 - Miami, FL - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KIH63",
+        "frequency": 162.475,
+        "name": "Orlando, FL",
+        "lat": 28.5383,
+        "lon": -81.3792,
+        "state": "FL"
+      },
+      "label": "KIH63 - Orlando, FL - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WNG522",
+        "frequency": 162.425,
+        "name": "Palatka, FL",
+        "lat": 29.6486,
+        "lon": -81.6376,
+        "state": "FL"
+      },
+      "label": "WNG522 - Palatka, FL - 162.425 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KIH24",
+        "frequency": 162.4,
+        "name": "Tallahassee, FL",
+        "lat": 30.4383,
+        "lon": -84.2807,
+        "state": "FL"
+      },
+      "label": "KIH24 - Tallahassee, FL - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WNG663",
+        "frequency": 162.4,
+        "name": "Princeton, FL",
+        "lat": 25.5384,
+        "lon": -80.4089,
+        "state": "FL"
+      },
+      "label": "WNG663 - Princeton, FL - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KHB32",
+        "frequency": 162.55,
+        "name": "Tampa Bay, FL",
+        "lat": 27.9506,
+        "lon": -82.4572,
+        "state": "FL"
+      },
+      "label": "KHB32 - Tampa Bay, FL - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXK56",
+        "frequency": 162.4,
+        "name": "Athens, GA",
+        "lat": 33.9519,
+        "lon": -83.3576,
+        "state": "GA"
+      },
+      "label": "WXK56 - Athens, GA - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KEC80",
+        "frequency": 162.55,
+        "name": "Atlanta, GA",
+        "lat": 33.749,
+        "lon": -84.388,
+        "state": "GA"
+      },
+      "label": "KEC80 - Atlanta, GA - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXM32",
+        "frequency": 162.4,
+        "name": "Columbus, GA",
+        "lat": 32.461,
+        "lon": -84.9877,
+        "state": "GA"
+      },
+      "label": "WXM32 - Columbus, GA - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WWG53",
+        "frequency": 162.55,
+        "name": "Boise, ID",
+        "lat": 43.615,
+        "lon": -116.2023,
+        "state": "ID"
+      },
+      "label": "WWG53 - Boise, ID - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WWG75",
+        "frequency": 162.4,
+        "name": "Maui, HI",
+        "lat": 20.7984,
+        "lon": -156.3319,
+        "state": "HI"
+      },
+      "label": "WWG75 - Maui, HI - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXL57",
+        "frequency": 162.55,
+        "name": "Des Moines, IA",
+        "lat": 41.5868,
+        "lon": -93.625,
+        "state": "IA"
+      },
+      "label": "WXL57 - Des Moines, IA - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXL62",
+        "frequency": 162.475,
+        "name": "Sioux City, IA",
+        "lat": 42.4963,
+        "lon": -96.4049,
+        "state": "IA"
+      },
+      "label": "WXL62 - Sioux City, IA - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXJ76",
+        "frequency": 162.55,
+        "name": "Champaign, IL",
+        "lat": 40.1164,
+        "lon": -88.2434,
+        "state": "IL"
+      },
+      "label": "WXJ76 - Champaign, IL - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KZZ66",
+        "frequency": 162.4,
+        "name": "Galesburg, IL",
+        "lat": 40.9478,
+        "lon": -90.3712,
+        "state": "IL"
+      },
+      "label": "KZZ66 - Galesburg, IL - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KZZ58",
+        "frequency": 162.525,
+        "name": "Kankakee, IL",
+        "lat": 41.12,
+        "lon": -87.8612,
+        "state": "IL"
+      },
+      "label": "KZZ58 - Kankakee, IL - 162.525 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXM49",
+        "frequency": 162.425,
+        "name": "Marion, IL",
+        "lat": 37.7306,
+        "lon": -88.9331,
+        "state": "IL"
+      },
+      "label": "WXM49 - Marion, IL - 162.425 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXJ71",
+        "frequency": 162.475,
+        "name": "Peoria, IL",
+        "lat": 40.6936,
+        "lon": -89.589,
+        "state": "IL"
+      },
+      "label": "WXJ71 - Peoria, IL - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KXI58",
+        "frequency": 162.4,
+        "name": "Plano, IL",
+        "lat": 41.6628,
+        "lon": -88.5368,
+        "state": "IL"
+      },
+      "label": "KXI58 - Plano, IL - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXJ73",
+        "frequency": 162.55,
+        "name": "Quad Cities, IL",
+        "lat": 41.5236,
+        "lon": -90.5776,
+        "state": "IL"
+      },
+      "label": "WXJ73 - Quad Cities, IL - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KZZ81",
+        "frequency": 162.4,
+        "name": "Lockport, IL",
+        "lat": 41.5895,
+        "lon": -88.0573,
+        "state": "IL"
+      },
+      "label": "KZZ81 - Lockport, IL - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KEC74",
+        "frequency": 162.55,
+        "name": "Indianapolis, IN",
+        "lat": 39.7684,
+        "lon": -86.1581,
+        "state": "IN"
+      },
+      "label": "KEC74 - Indianapolis, IN - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KIG76",
+        "frequency": 162.4,
+        "name": "Evansville, IN",
+        "lat": 37.9716,
+        "lon": -87.5711,
+        "state": "IN"
+      },
+      "label": "KIG76 - Evansville, IN - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXK91",
+        "frequency": 162.475,
+        "name": "Topeka, KS",
+        "lat": 39.0473,
+        "lon": -95.6752,
+        "state": "KS"
+      },
+      "label": "WXK91 - Topeka, KS - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WZ2523",
+        "frequency": 162.5,
+        "name": "Frankfort, KY",
+        "lat": 38.2009,
+        "lon": -84.8733,
+        "state": "KY"
+      },
+      "label": "WZ2523 - Frankfort, KY - 162.500 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KZZ48",
+        "frequency": 162.45,
+        "name": "Owenton, KY",
+        "lat": 38.5365,
+        "lon": -84.8419,
+        "state": "KY"
+      },
+      "label": "KZZ48 - Owenton, KY - 162.450 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXJ96",
+        "frequency": 162.55,
+        "name": "Monroe, LA",
+        "lat": 32.5093,
+        "lon": -92.1193,
+        "state": "LA"
+      },
+      "label": "WXJ96 - Monroe, LA - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXJ97",
+        "frequency": 162.4,
+        "name": "Shreveport, LA",
+        "lat": 32.5252,
+        "lon": -93.7502,
+        "state": "LA"
+      },
+      "label": "WXJ97 - Shreveport, LA - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WSM60",
+        "frequency": 162.475,
+        "name": "Dresden, ME",
+        "lat": 44.0834,
+        "lon": -69.7312,
+        "state": "ME"
+      },
+      "label": "WSM60 - Dresden, ME - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXM42",
+        "frequency": 162.475,
+        "name": "Hagerstown, MD",
+        "lat": 39.6418,
+        "lon": -77.72,
+        "state": "MD"
+      },
+      "label": "WXM42 - Hagerstown, MD - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KHB35",
+        "frequency": 162.475,
+        "name": "Boston, MA",
+        "lat": 42.3601,
+        "lon": -71.0589,
+        "state": "MA"
+      },
+      "label": "KHB35 - Boston, MA - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KEC73",
+        "frequency": 162.55,
+        "name": "Bourne, MA",
+        "lat": 41.7415,
+        "lon": -70.5989,
+        "state": "MA"
+      },
+      "label": "KEC73 - Bourne, MA - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXL93",
+        "frequency": 162.55,
+        "name": "Worcester, MA",
+        "lat": 42.2626,
+        "lon": -71.8023,
+        "state": "MA"
+      },
+      "label": "WXL93 - Worcester, MA - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KEC59",
+        "frequency": 162.55,
+        "name": "Great Falls, MT",
+        "lat": 47.5063,
+        "lon": -111.3008,
+        "state": "MT"
+      },
+      "label": "KEC59 - Great Falls, MT - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXL25",
+        "frequency": 162.4,
+        "name": "Missoula, MT",
+        "lat": 46.8721,
+        "lon": -113.994,
+        "state": "MT"
+      },
+      "label": "WXL25 - Missoula, MT - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KEC63",
+        "frequency": 162.55,
+        "name": "Detroit, MI",
+        "lat": 42.3314,
+        "lon": -83.0458,
+        "state": "MI"
+      },
+      "label": "KEC63 - Detroit, MI - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KIH29",
+        "frequency": 162.475,
+        "name": "Flint, MI",
+        "lat": 43.0125,
+        "lon": -83.6875,
+        "state": "MI"
+      },
+      "label": "KIH29 - Flint, MI - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WWF36",
+        "frequency": 162.475,
+        "name": "Hesperia, MI",
+        "lat": 43.5672,
+        "lon": -86.0403,
+        "state": "MI"
+      },
+      "label": "WWF36 - Hesperia, MI - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WWF34",
+        "frequency": 162.475,
+        "name": "Kalamazoo, MI",
+        "lat": 42.2917,
+        "lon": -85.5872,
+        "state": "MI"
+      },
+      "label": "WWF34 - Kalamazoo, MI - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KZZ33",
+        "frequency": 162.525,
+        "name": "Mount Pleasant, MI",
+        "lat": 43.5978,
+        "lon": -84.7675,
+        "state": "MI"
+      },
+      "label": "KZZ33 - Mount Pleasant, MI - 162.525 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXK81",
+        "frequency": 162.4,
+        "name": "Onondaga, MI",
+        "lat": 42.4392,
+        "lon": -84.5519,
+        "state": "MI"
+      },
+      "label": "WXK81 - Onondaga, MI - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KXI33",
+        "frequency": 162.45,
+        "name": "West Branch, MI",
+        "lat": 44.2764,
+        "lon": -84.2386,
+        "state": "MI"
+      },
+      "label": "KXI33 - West Branch, MI - 162.450 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXN99",
+        "frequency": 162.425,
+        "name": "West Olive, MI",
+        "lat": 42.9189,
+        "lon": -86.1767,
+        "state": "MI"
+      },
+      "label": "WXN99 - West Olive, MI - 162.425 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WNG672",
+        "frequency": 162.425,
+        "name": "Wolf Lake, MI",
+        "lat": 43.7786,
+        "lon": -85.4942,
+        "state": "MI"
+      },
+      "label": "WNG672 - Wolf Lake, MI - 162.425 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WZ2560",
+        "frequency": 162.4,
+        "name": "Cannonsburg, MI",
+        "lat": 43.0631,
+        "lon": -85.4967,
+        "state": "MI"
+      },
+      "label": "WZ2560 - Cannonsburg, MI - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KEC65",
+        "frequency": 162.55,
+        "name": "Minneapolis, MN",
+        "lat": 44.9778,
+        "lon": -93.265,
+        "state": "MN"
+      },
+      "label": "KEC65 - Minneapolis, MN - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXM99",
+        "frequency": 162.425,
+        "name": "Bemidji, MN",
+        "lat": 47.4736,
+        "lon": -94.8803,
+        "state": "MN"
+      },
+      "label": "WXM99 - Bemidji, MN - 162.425 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WNG676",
+        "frequency": 162.5,
+        "name": "Clearwater, MN",
+        "lat": 45.4183,
+        "lon": -93.981,
+        "state": "MN"
+      },
+      "label": "WNG676 - Clearwater, MN - 162.500 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXJ86",
+        "frequency": 162.55,
+        "name": "La Crescent, MN",
+        "lat": 43.828,
+        "lon": -91.304,
+        "state": "MN"
+      },
+      "label": "WXJ86 - La Crescent, MN - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WWG98",
+        "frequency": 162.475,
+        "name": "Park Rapids, MN",
+        "lat": 46.9222,
+        "lon": -95.0536,
+        "state": "MN"
+      },
+      "label": "WWG98 - Park Rapids, MN - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KID77",
+        "frequency": 162.55,
+        "name": "Kansas City, MO",
+        "lat": 39.0997,
+        "lon": -94.5786,
+        "state": "MO"
+      },
+      "label": "KID77 - Kansas City, MO - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KDO89",
+        "frequency": 162.55,
+        "name": "St. Louis, MO",
+        "lat": 38.627,
+        "lon": -90.1994,
+        "state": "MO"
+      },
+      "label": "KDO89 - St. Louis, MO - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXL46",
+        "frequency": 162.4,
+        "name": "Springfield, MO",
+        "lat": 37.209,
+        "lon": -93.2923,
+        "state": "MO"
+      },
+      "label": "WXL46 - Springfield, MO - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXL78",
+        "frequency": 162.475,
+        "name": "Bismarck, ND",
+        "lat": 46.8083,
+        "lon": -100.7837,
+        "state": "ND"
+      },
+      "label": "WXL78 - Bismarck, ND - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WWF83",
+        "frequency": 162.4,
+        "name": "Grand Forks, ND",
+        "lat": 47.9253,
+        "lon": -97.0329,
+        "state": "ND"
+      },
+      "label": "WWF83 - Grand Forks, ND - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXM38",
+        "frequency": 162.4,
+        "name": "Petersburg, ND",
+        "lat": 48.0158,
+        "lon": -98.0018,
+        "state": "ND"
+      },
+      "label": "WXM38 - Petersburg, ND - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KZZ69",
+        "frequency": 162.45,
+        "name": "Beatrice, NE",
+        "lat": 40.2681,
+        "lon": -96.7475,
+        "state": "NE"
+      },
+      "label": "KZZ69 - Beatrice, NE - 162.450 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXL74",
+        "frequency": 162.4,
+        "name": "Grand Island, NE",
+        "lat": 40.9264,
+        "lon": -98.342,
+        "state": "NE"
+      },
+      "label": "WXL74 - Grand Island, NE - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXM20",
+        "frequency": 162.475,
+        "name": "Lincoln, NE",
+        "lat": 40.8136,
+        "lon": -96.7026,
+        "state": "NE"
+      },
+      "label": "WXM20 - Lincoln, NE - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KIH61",
+        "frequency": 162.4,
+        "name": "Omaha, NE",
+        "lat": 41.2565,
+        "lon": -95.9345,
+        "state": "NE"
+      },
+      "label": "KIH61 - Omaha, NE - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXL67",
+        "frequency": 162.475,
+        "name": "Scottsbluff, NE",
+        "lat": 41.8666,
+        "lon": -103.6672,
+        "state": "NE"
+      },
+      "label": "WXL67 - Scottsbluff, NE - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WWG20",
+        "frequency": 162.45,
+        "name": "Fernley, NV",
+        "lat": 39.608,
+        "lon": -119.2518,
+        "state": "NV"
+      },
+      "label": "WWG20 - Fernley, NV - 162.450 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXK58",
+        "frequency": 162.55,
+        "name": "Reno, NV",
+        "lat": 39.5296,
+        "lon": -119.8138,
+        "state": "NV"
+      },
+      "label": "WXK58 - Reno, NV - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXL29",
+        "frequency": 162.4,
+        "name": "Concord, NH",
+        "lat": 43.2081,
+        "lon": -71.5376,
+        "state": "NH"
+      },
+      "label": "WXL29 - Concord, NH - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KWO72",
+        "frequency": 162.475,
+        "name": "Atlantic City, NJ",
+        "lat": 39.3643,
+        "lon": -74.4229,
+        "state": "NJ"
+      },
+      "label": "KWO72 - Atlantic City, NJ - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXJ37",
+        "frequency": 162.475,
+        "name": "Farmington, NM",
+        "lat": 36.7281,
+        "lon": -108.2187,
+        "state": "NM"
+      },
+      "label": "WXJ37 - Farmington, NM - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KWO35",
+        "frequency": 162.55,
+        "name": "New York City, NY",
+        "lat": 40.7128,
+        "lon": -74.006,
+        "state": "NY"
+      },
+      "label": "KWO35 - New York City, NY - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXL34",
+        "frequency": 162.55,
+        "name": "Albany, NY",
+        "lat": 42.6526,
+        "lon": -73.7562,
+        "state": "NY"
+      },
+      "label": "WXL34 - Albany, NY - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KEB98",
+        "frequency": 162.55,
+        "name": "Buffalo, NY",
+        "lat": 42.8864,
+        "lon": -78.8784,
+        "state": "NY"
+      },
+      "label": "KEB98 - Buffalo, NY - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WZ2536",
+        "frequency": 162.475,
+        "name": "Lyons, NY",
+        "lat": 43.0642,
+        "lon": -76.9905,
+        "state": "NY"
+      },
+      "label": "WZ2536 - Lyons, NY - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXM45",
+        "frequency": 162.425,
+        "name": "Middleville, NY",
+        "lat": 43.1198,
+        "lon": -74.979,
+        "state": "NY"
+      },
+      "label": "WXM45 - Middleville, NY - 162.425 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KHA53",
+        "frequency": 162.4,
+        "name": "Rochester, NY",
+        "lat": 43.1566,
+        "lon": -77.6088,
+        "state": "NY"
+      },
+      "label": "KHA53 - Rochester, NY - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXL31",
+        "frequency": 162.55,
+        "name": "Syracuse, NY",
+        "lat": 43.0481,
+        "lon": -76.1474,
+        "state": "NY"
+      },
+      "label": "WXL31 - Syracuse, NY - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KDO94",
+        "frequency": 162.4,
+        "name": "Akron, OH",
+        "lat": 41.0814,
+        "lon": -81.519,
+        "state": "OH"
+      },
+      "label": "KDO94 - Akron, OH - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KIG86",
+        "frequency": 162.55,
+        "name": "Columbus, OH",
+        "lat": 39.9612,
+        "lon": -82.9988,
+        "state": "OH"
+      },
+      "label": "KIG86 - Columbus, OH - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WNG698",
+        "frequency": 162.5,
+        "name": "Grafton, OH",
+        "lat": 41.1726,
+        "lon": -82.0546,
+        "state": "OH"
+      },
+      "label": "WNG698 - Grafton, OH - 162.500 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WWG57",
+        "frequency": 162.45,
+        "name": "Mansfield, OH",
+        "lat": 40.7589,
+        "lon": -82.5155,
+        "state": "OH"
+      },
+      "label": "WWG57 - Mansfield, OH - 162.450 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXJ93",
+        "frequency": 162.4,
+        "name": "Lima, OH",
+        "lat": 40.7428,
+        "lon": -84.1052,
+        "state": "OH"
+      },
+      "label": "WXJ93 - Lima, OH - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXL51",
+        "frequency": 162.5,
+        "name": "Toledo, OH",
+        "lat": 41.6528,
+        "lon": -83.5379,
+        "state": "OH"
+      },
+      "label": "WXL51 - Toledo, OH - 162.500 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KIG71",
+        "frequency": 162.55,
+        "name": "Portland, OR",
+        "lat": 45.5152,
+        "lon": -122.6784,
+        "state": "OR"
+      },
+      "label": "KIG71 - Portland, OR - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXK85",
+        "frequency": 162.4,
+        "name": "Oklahoma City, OK",
+        "lat": 35.4676,
+        "lon": -97.5164,
+        "state": "OK"
+      },
+      "label": "WXK85 - Oklahoma City, OK - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXK86",
+        "frequency": 162.55,
+        "name": "Lawton, OK",
+        "lat": 34.6036,
+        "lon": -98.3959,
+        "state": "OK"
+      },
+      "label": "WXK86 - Lawton, OK - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KIH27",
+        "frequency": 162.55,
+        "name": "Tulsa, OK",
+        "lat": 36.154,
+        "lon": -95.9928,
+        "state": "OK"
+      },
+      "label": "KIH27 - Tulsa, OK - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KIH28",
+        "frequency": 162.475,
+        "name": "Philadelphia, PA",
+        "lat": 39.9526,
+        "lon": -75.1652,
+        "state": "PA"
+      },
+      "label": "KIH28 - Philadelphia, PA - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXL39",
+        "frequency": 162.4,
+        "name": "Allentown, PA",
+        "lat": 40.6084,
+        "lon": -75.4902,
+        "state": "PA"
+      },
+      "label": "WXL39 - Allentown, PA - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXL40",
+        "frequency": 162.55,
+        "name": "Harrisburg, PA",
+        "lat": 40.2732,
+        "lon": -76.8867,
+        "state": "PA"
+      },
+      "label": "WXL40 - Harrisburg, PA - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WNG704",
+        "frequency": 162.425,
+        "name": "Hibernia Park, PA",
+        "lat": 40.0521,
+        "lon": -75.8166,
+        "state": "PA"
+      },
+      "label": "WNG704 - Hibernia Park, PA - 162.425 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXL43",
+        "frequency": 162.55,
+        "name": "Wilkes-Barre, PA",
+        "lat": 41.2459,
+        "lon": -75.8813,
+        "state": "PA"
+      },
+      "label": "WXL43 - Wilkes-Barre, PA - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXJ24",
+        "frequency": 162.4,
+        "name": "Providence, RI",
+        "lat": 41.824,
+        "lon": -71.4128,
+        "state": "RI"
+      },
+      "label": "WXJ24 - Providence, RI - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXJ21",
+        "frequency": 162.55,
+        "name": "Greer, SC",
+        "lat": 34.9388,
+        "lon": -82.2271,
+        "state": "SC"
+      },
+      "label": "WXJ21 - Greer, SC - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KEC85",
+        "frequency": 162.4,
+        "name": "Jasper County, SC",
+        "lat": 32.4316,
+        "lon": -81.0112,
+        "state": "SC"
+      },
+      "label": "KEC85 - Jasper County, SC - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXL82",
+        "frequency": 162.4,
+        "name": "Sioux Falls, SD",
+        "lat": 43.5446,
+        "lon": -96.7311,
+        "state": "SD"
+      },
+      "label": "WXL82 - Sioux Falls, SD - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXK49",
+        "frequency": 162.475,
+        "name": "Memphis, TN",
+        "lat": 35.1495,
+        "lon": -90.049,
+        "state": "TN"
+      },
+      "label": "WXK49 - Memphis, TN - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXK63",
+        "frequency": 162.475,
+        "name": "Shelbyville, TN",
+        "lat": 35.4834,
+        "lon": -86.4603,
+        "state": "TN"
+      },
+      "label": "WXK63 - Shelbyville, TN - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KIG79",
+        "frequency": 162.55,
+        "name": "White House, TN",
+        "lat": 36.4706,
+        "lon": -86.6514,
+        "state": "TN"
+      },
+      "label": "KIG79 - White House, TN - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXK38",
+        "frequency": 162.55,
+        "name": "Amarillo, TX",
+        "lat": 35.222,
+        "lon": -101.8313,
+        "state": "TX"
+      },
+      "label": "WXK38 - Amarillo, TX - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXK27",
+        "frequency": 162.4,
+        "name": "Austin, TX",
+        "lat": 30.2672,
+        "lon": -97.7431,
+        "state": "TX"
+      },
+      "label": "WXK27 - Austin, TX - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXK30",
+        "frequency": 162.55,
+        "name": "College Station, TX",
+        "lat": 30.628,
+        "lon": -96.3344,
+        "state": "TX"
+      },
+      "label": "WXK30 - College Station, TX - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KXI87",
+        "frequency": 162.525,
+        "name": "Corsicana, TX",
+        "lat": 32.0954,
+        "lon": -96.4689,
+        "state": "TX"
+      },
+      "label": "KXI87 - Corsicana, TX - 162.525 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KEC56",
+        "frequency": 162.4,
+        "name": "Dallas, TX",
+        "lat": 32.7767,
+        "lon": -96.797,
+        "state": "TX"
+      },
+      "label": "KEC56 - Dallas, TX - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KEC55",
+        "frequency": 162.55,
+        "name": "Fort Worth, TX",
+        "lat": 32.7555,
+        "lon": -97.3308,
+        "state": "TX"
+      },
+      "label": "KEC55 - Fort Worth, TX - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KHB40",
+        "frequency": 162.55,
+        "name": "Galveston, TX",
+        "lat": 29.3013,
+        "lon": -94.7977,
+        "state": "TX"
+      },
+      "label": "KHB40 - Galveston, TX - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KGG68",
+        "frequency": 162.4,
+        "name": "Houston/Tomball, TX",
+        "lat": 30.0972,
+        "lon": -95.6161,
+        "state": "TX"
+      },
+      "label": "KGG68 - Houston/Tomball, TX - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXK23",
+        "frequency": 162.55,
+        "name": "Lufkin, TX",
+        "lat": 31.3382,
+        "lon": -94.7291,
+        "state": "TX"
+      },
+      "label": "WXK23 - Lufkin, TX - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KWN34",
+        "frequency": 162.45,
+        "name": "Palestine, TX",
+        "lat": 31.7621,
+        "lon": -95.6308,
+        "state": "TX"
+      },
+      "label": "KWN34 - Palestine, TX - 162.450 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXK36",
+        "frequency": 162.475,
+        "name": "Tyler, TX",
+        "lat": 32.3513,
+        "lon": -95.3011,
+        "state": "TX"
+      },
+      "label": "WXK36 - Tyler, TX - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXK35",
+        "frequency": 162.475,
+        "name": "Waco, TX",
+        "lat": 31.5493,
+        "lon": -97.1467,
+        "state": "TX"
+      },
+      "label": "WXK35 - Waco, TX - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KEC86",
+        "frequency": 162.55,
+        "name": "Salt Lake City, UT",
+        "lat": 40.7608,
+        "lon": -111.891,
+        "state": "UT"
+      },
+      "label": "KEC86 - Salt Lake City, UT - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXJ43",
+        "frequency": 162.55,
+        "name": "Burlington, VT",
+        "lat": 44.4759,
+        "lon": -73.2121,
+        "state": "VT"
+      },
+      "label": "WXJ43 - Burlington, VT - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KHB36",
+        "frequency": 162.55,
+        "name": "Manassas, VA",
+        "lat": 38.7509,
+        "lon": -77.4753,
+        "state": "VA"
+      },
+      "label": "KHB36 - Manassas, VA - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KHB37",
+        "frequency": 162.55,
+        "name": "Virginia Beach, VA",
+        "lat": 36.8529,
+        "lon": -75.978,
+        "state": "VA"
+      },
+      "label": "KHB37 - Virginia Beach, VA - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KHB60",
+        "frequency": 162.55,
+        "name": "Seattle, WA",
+        "lat": 47.6062,
+        "lon": -122.3321,
+        "state": "WA"
+      },
+      "label": "KHB60 - Seattle, WA - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WWG24",
+        "frequency": 162.425,
+        "name": "Puget Sound Marine, WA",
+        "lat": 47.6062,
+        "lon": -122.3321,
+        "state": "WA"
+      },
+      "label": "WWG24 - Puget Sound Marine, WA - 162.425 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WWF56",
+        "frequency": 162.45,
+        "name": "Richland, WA",
+        "lat": 46.2856,
+        "lon": -119.2845,
+        "state": "WA"
+      },
+      "label": "WWF56 - Richland, WA - 162.450 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXM71",
+        "frequency": 162.4,
+        "name": "Beckley, WV",
+        "lat": 37.7782,
+        "lon": -81.1882,
+        "state": "WV"
+      },
+      "label": "WXM71 - Beckley, WV - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXJ84",
+        "frequency": 162.4,
+        "name": "Charleston, WV",
+        "lat": 38.3498,
+        "lon": -81.6326,
+        "state": "WV"
+      },
+      "label": "WXJ84 - Charleston, WV - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXM74",
+        "frequency": 162.4,
+        "name": "Sutton, WV",
+        "lat": 38.6646,
+        "lon": -80.7098,
+        "state": "WV"
+      },
+      "label": "WXM74 - Sutton, WV - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KZZ78",
+        "frequency": 162.525,
+        "name": "Ashland, WI",
+        "lat": 46.5925,
+        "lon": -90.8838,
+        "state": "WI"
+      },
+      "label": "KZZ78 - Ashland, WI - 162.525 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KIG65",
+        "frequency": 162.55,
+        "name": "Green Bay, WI",
+        "lat": 44.5133,
+        "lon": -88.0133,
+        "state": "WI"
+      },
+      "label": "KIG65 - Green Bay, WI - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXJ88",
+        "frequency": 162.4,
+        "name": "Menomonie, WI",
+        "lat": 44.8755,
+        "lon": -91.9193,
+        "state": "WI"
+      },
+      "label": "WXJ88 - Menomonie, WI - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WNG553",
+        "frequency": 162.4,
+        "name": "Wausaukee, WI",
+        "lat": 45.3808,
+        "lon": -87.9651,
+        "state": "WI"
+      },
+      "label": "WNG553 - Wausaukee, WI - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KGG95",
+        "frequency": 162.425,
+        "name": "Winona, WI",
+        "lat": 44.0461,
+        "lon": -91.6393,
+        "state": "WI"
+      },
+      "label": "KGG95 - Winona, WI - 162.425 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "KZZ77",
+        "frequency": 162.425,
+        "name": "Withee, WI",
+        "lat": 44.9572,
+        "lon": -90.5932,
+        "state": "WI"
+      },
+      "label": "KZZ77 - Withee, WI - 162.425 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "XLF339",
+        "frequency": 162.475,
+        "name": "Calgary, AB",
+        "lat": 51.0447,
+        "lon": -114.0719,
+        "state": "AB"
+      },
+      "label": "XLF339 - Calgary, AB - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXK78",
+        "frequency": 162.475,
+        "name": "Cheyenne, WY",
+        "lat": 41.15,
+        "lon": -104.8,
+        "state": "WY"
+      },
+      "label": "WXK78 - Cheyenne, WY - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXL58",
+        "frequency": 162.475,
+        "name": "Raleigh, NC",
+        "lat": 35.78,
+        "lon": -78.64,
+        "state": "NC"
+      },
+      "label": "WXL58 - Raleigh, NC - 162.475 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "WXM73",
+        "frequency": 162.55,
+        "name": "Jackson, MS",
+        "lat": 32.3,
+        "lon": -90.18,
+        "state": "MS"
+      },
+      "label": "WXM73 - Jackson, MS - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "XLM572",
+        "frequency": 162.4,
+        "name": "Edmonton, AB",
+        "lat": 53.5461,
+        "lon": -113.4938,
+        "state": "AB"
+      },
+      "label": "XLM572 - Edmonton, AB - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "XMJ316",
+        "frequency": 162.4,
+        "name": "Collingwood, ON",
+        "lat": 44.5001,
+        "lon": -80.2169,
+        "state": "ON"
+      },
+      "label": "XMJ316 - Collingwood, ON - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "XMJ225",
+        "frequency": 162.4,
+        "name": "Toronto, ON",
+        "lat": 43.6532,
+        "lon": -79.3832,
+        "state": "ON"
+      },
+      "label": "XMJ225 - Toronto, ON - 162.400 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "EDGE1",
+        "frequency": 162.4375,
+        "name": "Somewhere, TX",
+        "lat": 30.0,
+        "lon": -97.0,
+        "state": "TX"
+      },
+      "label": "EDGE1 - Somewhere, TX - 162.438 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "EDGE2",
+        "frequency": 162.5,
+        "name": "  Padded  ",
+        "lat": 30.0,
+        "lon": -97.0,
+        "state": " tx "
+      },
+      "label": "EDGE2 - Padded, TX - 162.500 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "EDGE3",
+        "frequency": 162.55,
+        "name": "No State",
+        "lat": 30.0,
+        "lon": -97.0,
+        "state": ""
+      },
+      "label": "EDGE3 - No State - 162.550 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "EDGE4",
+        "frequency": 162.025,
+        "name": "Lower, tx",
+        "lat": 30.0,
+        "lon": -97.0,
+        "state": "TX"
+      },
+      "label": "EDGE4 - Lower, tx - 162.025 MHz"
+    },
+    {
+      "station": {
+        "call_sign": "EDGE5",
+        "frequency": 162.475,
+        "name": "Toronto, ON",
+        "lat": 43.6,
+        "lon": -79.3,
+        "state": "ON"
+      },
+      "label": "EDGE5 - Toronto, ON - 162.475 MHz"
+    }
+  ],
+  "state_choice_codes": {
+    "Texas (TX)": "TX",
+    "NY": "NY",
+    "U.S. Virgin Islands (VI)": "VI",
+    "Weird (Name) (XX)": "XX",
+    "Open (": "Open (",
+    "AB": "AB"
+  },
+  "station_limit_indexes": [
+    [
+      10,
+      0
+    ],
+    [
+      25,
+      1
+    ],
+    [
+      50,
+      2
+    ],
+    [
+      100,
+      3
+    ],
+    [
+      null,
+      4
+    ],
+    [
+      7,
+      0
+    ],
+    [
+      0,
+      0
+    ]
+  ]
+}

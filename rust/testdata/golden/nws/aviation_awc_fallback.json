@@ -1,0 +1,78 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "aviation_weather",
+ "station": "KAWC",
+ "include_sigmets": false,
+ "include_cwas": false,
+ "avwx_api_key": "",
+ "responses": [
+  {
+   "url": "https://api.weather.gov/stations/KAWC",
+   "status": 404,
+   "body": ""
+  },
+  {
+   "url": "https://api.weather.gov/stations/KAWC/tafs",
+   "status": 200,
+   "body": "{\"features\":[]}"
+  },
+  {
+   "url": "https://aviationweather.gov/api/data/taf?ids=KAWC&format=json",
+   "status": 200,
+   "body": "{\"data\":[{\"raw_taf\":\"KAWC 201730Z 2018/2118 00000KT 9999 SKC\"}]}"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/stations/KAWC",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/stations/KAWC/tafs",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://aviationweather.gov/api/data/taf",
+   "params": [
+    [
+     "ids",
+     "KAWC"
+    ],
+    [
+     "format",
+     "json"
+    ]
+   ],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ],
+    [
+     "Accept",
+     "application/json"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "raw_taf": "KAWC 201730Z 2018/2118 00000KT 9999 SKC",
+  "decoded_taf": "Forecast for station KAWC.\nIssued at 17:30 UTC on the 20th.\nValid from 18:00 UTC on the 20th until 18:00 UTC on the 21st.\nBase forecast: Calm winds (00000KT). Visibility 10 kilometres or more (9999 meters). Clouds: Sky clear (SKC).",
+  "station_id": "KAWC",
+  "airport_name": "KAWC",
+  "active_sigmets": [],
+  "active_cwas": []
+ }
+}

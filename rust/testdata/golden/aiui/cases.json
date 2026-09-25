@@ -1,0 +1,2288 @@
+{
+  "explanations": [
+    {
+      "result": {
+        "text": "Mild and dry this afternoon.",
+        "model_used": "vendor/model:free",
+        "token_count": 412,
+        "estimated_cost": 0.0,
+        "cached": false,
+        "timestamp": "2026-09-25T14:03:05-04:00"
+      },
+      "location": "Philadelphia, Pennsylvania",
+      "title": "Weather Explanation - Philadelphia, Pennsylvania",
+      "controls": [
+        {
+          "kind": "label",
+          "label": "Weather explanation for Philadelphia, Pennsylvania",
+          "bold": true,
+          "italic": false
+        },
+        {
+          "kind": "label",
+          "label": "Generated: September 25, 2026 at 02:03 PM",
+          "bold": false,
+          "italic": true
+        },
+        {
+          "kind": "label",
+          "label": "Explanation:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "text",
+          "value": "Mild and dry this afternoon."
+        },
+        {
+          "kind": "label",
+          "label": "Model Information:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "Model information",
+          "value": "Model: vendor/model:free\nTokens: 412\nCost: No cost"
+        },
+        {
+          "kind": "button",
+          "id": "auto",
+          "label": "&Regenerate",
+          "name": "button",
+          "enabled": true
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "Close",
+          "name": "button",
+          "enabled": true
+        }
+      ],
+      "focus": "text",
+      "regenerating": [
+        {
+          "kind": "label",
+          "label": "Weather explanation for Philadelphia, Pennsylvania",
+          "bold": true,
+          "italic": false
+        },
+        {
+          "kind": "label",
+          "label": "Regenerating...",
+          "bold": false,
+          "italic": true
+        },
+        {
+          "kind": "label",
+          "label": "Explanation:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "text",
+          "value": "Generating explanation..."
+        },
+        {
+          "kind": "label",
+          "label": "Model Information:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "Model information",
+          "value": ""
+        },
+        {
+          "kind": "button",
+          "id": "auto",
+          "label": "&Regenerate",
+          "name": "button",
+          "enabled": false
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "Close",
+          "name": "button",
+          "enabled": true
+        }
+      ],
+      "regenerated": [
+        {
+          "kind": "label",
+          "label": "Weather explanation for Philadelphia, Pennsylvania",
+          "bold": true,
+          "italic": false
+        },
+        {
+          "kind": "label",
+          "label": "Generated: January 05, 2026 at 09:07 AM",
+          "bold": false,
+          "italic": true
+        },
+        {
+          "kind": "label",
+          "label": "Explanation:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "text",
+          "value": "Rain arrives tonight.\n\nCarry an umbrella tomorrow."
+        },
+        {
+          "kind": "label",
+          "label": "Model Information:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "Model information",
+          "value": "Model: openai/gpt-4o\nTokens: 1234\nCost: ~$0.000617\nCached: Yes"
+        },
+        {
+          "kind": "button",
+          "id": "auto",
+          "label": "&Regenerate",
+          "name": "button",
+          "enabled": true
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "Close",
+          "name": "button",
+          "enabled": true
+        }
+      ],
+      "regenerated_focus": "text",
+      "failed": [
+        {
+          "kind": "label",
+          "label": "Weather explanation for Philadelphia, Pennsylvania",
+          "bold": true,
+          "italic": false
+        },
+        {
+          "kind": "label",
+          "label": "Generated: January 05, 2026 at 09:07 AM",
+          "bold": false,
+          "italic": true
+        },
+        {
+          "kind": "label",
+          "label": "Explanation:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "text",
+          "value": "Failed to regenerate: No weather data available."
+        },
+        {
+          "kind": "label",
+          "label": "Model Information:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "Model information",
+          "value": "Model: openai/gpt-4o\nTokens: 1234\nCost: ~$0.000617\nCached: Yes"
+        },
+        {
+          "kind": "button",
+          "id": "auto",
+          "label": "&Regenerate",
+          "name": "button",
+          "enabled": true
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "Close",
+          "name": "button",
+          "enabled": true
+        }
+      ],
+      "failed_spoken": [
+        "Failed to regenerate. No weather data available."
+      ]
+    },
+    {
+      "result": {
+        "text": "Rain arrives tonight.\n\nCarry an umbrella tomorrow.",
+        "model_used": "openai/gpt-4o",
+        "token_count": 1234,
+        "estimated_cost": 0.000617,
+        "cached": true,
+        "timestamp": "2026-01-05T09:07:00-04:00"
+      },
+      "location": "Philadelphia, Pennsylvania",
+      "title": "Weather Explanation - Philadelphia, Pennsylvania",
+      "controls": [
+        {
+          "kind": "label",
+          "label": "Weather explanation for Philadelphia, Pennsylvania",
+          "bold": true,
+          "italic": false
+        },
+        {
+          "kind": "label",
+          "label": "Generated: January 05, 2026 at 09:07 AM",
+          "bold": false,
+          "italic": true
+        },
+        {
+          "kind": "label",
+          "label": "Explanation:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "text",
+          "value": "Rain arrives tonight.\n\nCarry an umbrella tomorrow."
+        },
+        {
+          "kind": "label",
+          "label": "Model Information:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "Model information",
+          "value": "Model: openai/gpt-4o\nTokens: 1234\nCost: ~$0.000617\nCached: Yes"
+        },
+        {
+          "kind": "button",
+          "id": "auto",
+          "label": "&Regenerate",
+          "name": "button",
+          "enabled": true
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "Close",
+          "name": "button",
+          "enabled": true
+        }
+      ],
+      "focus": "text",
+      "regenerating": [
+        {
+          "kind": "label",
+          "label": "Weather explanation for Philadelphia, Pennsylvania",
+          "bold": true,
+          "italic": false
+        },
+        {
+          "kind": "label",
+          "label": "Regenerating...",
+          "bold": false,
+          "italic": true
+        },
+        {
+          "kind": "label",
+          "label": "Explanation:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "text",
+          "value": "Generating explanation..."
+        },
+        {
+          "kind": "label",
+          "label": "Model Information:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "Model information",
+          "value": ""
+        },
+        {
+          "kind": "button",
+          "id": "auto",
+          "label": "&Regenerate",
+          "name": "button",
+          "enabled": false
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "Close",
+          "name": "button",
+          "enabled": true
+        }
+      ],
+      "regenerated": [
+        {
+          "kind": "label",
+          "label": "Weather explanation for Philadelphia, Pennsylvania",
+          "bold": true,
+          "italic": false
+        },
+        {
+          "kind": "label",
+          "label": "Generated: December 31, 2026 at 12:00 AM",
+          "bold": false,
+          "italic": true
+        },
+        {
+          "kind": "label",
+          "label": "Explanation:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "text",
+          "value": "(No explanation text received)"
+        },
+        {
+          "kind": "label",
+          "label": "Model Information:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "Model information",
+          "value": "Model: venice-uncensored-1-2\nTokens: 0\nCost: See provider account"
+        },
+        {
+          "kind": "button",
+          "id": "auto",
+          "label": "&Regenerate",
+          "name": "button",
+          "enabled": true
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "Close",
+          "name": "button",
+          "enabled": true
+        }
+      ],
+      "regenerated_focus": "text",
+      "failed": [
+        {
+          "kind": "label",
+          "label": "Weather explanation for Philadelphia, Pennsylvania",
+          "bold": true,
+          "italic": false
+        },
+        {
+          "kind": "label",
+          "label": "Generated: December 31, 2026 at 12:00 AM",
+          "bold": false,
+          "italic": true
+        },
+        {
+          "kind": "label",
+          "label": "Explanation:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "text",
+          "value": "Failed to regenerate: No weather data available."
+        },
+        {
+          "kind": "label",
+          "label": "Model Information:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "Model information",
+          "value": "Model: venice-uncensored-1-2\nTokens: 0\nCost: See provider account"
+        },
+        {
+          "kind": "button",
+          "id": "auto",
+          "label": "&Regenerate",
+          "name": "button",
+          "enabled": true
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "Close",
+          "name": "button",
+          "enabled": true
+        }
+      ],
+      "failed_spoken": [
+        "Failed to regenerate. No weather data available."
+      ]
+    },
+    {
+      "result": {
+        "text": "",
+        "model_used": "venice-uncensored-1-2",
+        "token_count": 0,
+        "estimated_cost": null,
+        "cached": false,
+        "timestamp": "2026-12-31T00:00:00-04:00"
+      },
+      "location": "Philadelphia, Pennsylvania",
+      "title": "Weather Explanation - Philadelphia, Pennsylvania",
+      "controls": [
+        {
+          "kind": "label",
+          "label": "Weather explanation for Philadelphia, Pennsylvania",
+          "bold": true,
+          "italic": false
+        },
+        {
+          "kind": "label",
+          "label": "Generated: December 31, 2026 at 12:00 AM",
+          "bold": false,
+          "italic": true
+        },
+        {
+          "kind": "label",
+          "label": "Explanation:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "text",
+          "value": "(No explanation text received)"
+        },
+        {
+          "kind": "label",
+          "label": "Model Information:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "Model information",
+          "value": "Model: venice-uncensored-1-2\nTokens: 0\nCost: See provider account"
+        },
+        {
+          "kind": "button",
+          "id": "auto",
+          "label": "&Regenerate",
+          "name": "button",
+          "enabled": true
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "Close",
+          "name": "button",
+          "enabled": true
+        }
+      ],
+      "focus": "text",
+      "regenerating": [
+        {
+          "kind": "label",
+          "label": "Weather explanation for Philadelphia, Pennsylvania",
+          "bold": true,
+          "italic": false
+        },
+        {
+          "kind": "label",
+          "label": "Regenerating...",
+          "bold": false,
+          "italic": true
+        },
+        {
+          "kind": "label",
+          "label": "Explanation:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "text",
+          "value": "Generating explanation..."
+        },
+        {
+          "kind": "label",
+          "label": "Model Information:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "Model information",
+          "value": ""
+        },
+        {
+          "kind": "button",
+          "id": "auto",
+          "label": "&Regenerate",
+          "name": "button",
+          "enabled": false
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "Close",
+          "name": "button",
+          "enabled": true
+        }
+      ],
+      "regenerated": [
+        {
+          "kind": "label",
+          "label": "Weather explanation for Philadelphia, Pennsylvania",
+          "bold": true,
+          "italic": false
+        },
+        {
+          "kind": "label",
+          "label": "Generated: September 25, 2026 at 02:03 PM",
+          "bold": false,
+          "italic": true
+        },
+        {
+          "kind": "label",
+          "label": "Explanation:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "text",
+          "value": "Mild and dry this afternoon."
+        },
+        {
+          "kind": "label",
+          "label": "Model Information:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "Model information",
+          "value": "Model: vendor/model:free\nTokens: 412\nCost: No cost"
+        },
+        {
+          "kind": "button",
+          "id": "auto",
+          "label": "&Regenerate",
+          "name": "button",
+          "enabled": true
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "Close",
+          "name": "button",
+          "enabled": true
+        }
+      ],
+      "regenerated_focus": "text",
+      "failed": [
+        {
+          "kind": "label",
+          "label": "Weather explanation for Philadelphia, Pennsylvania",
+          "bold": true,
+          "italic": false
+        },
+        {
+          "kind": "label",
+          "label": "Generated: September 25, 2026 at 02:03 PM",
+          "bold": false,
+          "italic": true
+        },
+        {
+          "kind": "label",
+          "label": "Explanation:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "text",
+          "value": "Failed to regenerate: No weather data available."
+        },
+        {
+          "kind": "label",
+          "label": "Model Information:",
+          "bold": false,
+          "italic": false
+        },
+        {
+          "kind": "text",
+          "name": "Model information",
+          "value": "Model: vendor/model:free\nTokens: 412\nCost: No cost"
+        },
+        {
+          "kind": "button",
+          "id": "auto",
+          "label": "&Regenerate",
+          "name": "button",
+          "enabled": true
+        },
+        {
+          "kind": "button",
+          "id": 5001,
+          "label": "Close",
+          "name": "button",
+          "enabled": true
+        }
+      ],
+      "failed_spoken": [
+        "Failed to regenerate. No weather data available."
+      ]
+    }
+  ],
+  "loading": {
+    "title": "Generating Explanation",
+    "controls": [
+      {
+        "kind": "label",
+        "label": "Generating explanation for Philadelphia, Pennsylvania...",
+        "bold": false,
+        "italic": false
+      },
+      {
+        "kind": "gauge",
+        "range": 100
+      },
+      {
+        "kind": "label",
+        "label": "Please wait...",
+        "bold": false,
+        "italic": true
+      },
+      {
+        "kind": "button",
+        "id": 5101,
+        "label": "Cancel",
+        "name": "button",
+        "enabled": true
+      }
+    ]
+  },
+  "explanation_messages": [
+    {
+      "has_location": false,
+      "message": "No location selected. Please select a location first.",
+      "caption": "AI Explanation Error",
+      "icon": "warning"
+    },
+    {
+      "has_location": true,
+      "message": "No weather data available. Please refresh weather data first.",
+      "caption": "AI Explanation Error",
+      "icon": "warning"
+    },
+    {
+      "has_location": true,
+      "message": "No weather data available. Please refresh weather data first.",
+      "caption": "AI Explanation Error",
+      "icon": "warning"
+    }
+  ],
+  "assistant": [
+    {
+      "location": "Lumberton, NJ",
+      "title": "Weather Assistant",
+      "steps": [
+        {
+          "step": "open",
+          "focus": "Type your message",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n",
+          "status": "",
+          "input": "",
+          "send_enabled": true,
+          "clear_enabled": true,
+          "spoken": [
+            "Weather Assistant: Welcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans."
+          ],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": ""
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "send",
+          "message": "  Will it rain tonight?  ",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n",
+          "status": "Thinking...",
+          "input": "",
+          "send_enabled": false,
+          "clear_enabled": false,
+          "spoken": [
+            "You: Will it rain tonight?",
+            "Thinking..."
+          ],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "Thinking...",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": ""
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": false
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": false
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "send_while_generating",
+          "message": "Another",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n",
+          "status": "Thinking...",
+          "input": "Another",
+          "send_enabled": false,
+          "clear_enabled": false,
+          "spoken": [],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "Thinking...",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": "Another"
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": false
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": false
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "reply",
+          "text": "No rain is expected.",
+          "model": "vendor/model:free",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n",
+          "status": "Model: vendor/model:free",
+          "input": "",
+          "send_enabled": true,
+          "clear_enabled": true,
+          "spoken": [
+            "Weather Assistant: No rain is expected."
+          ],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "Model: vendor/model:free",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": ""
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "send",
+          "message": "What about tomorrow?",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n",
+          "status": "Thinking...",
+          "input": "",
+          "send_enabled": false,
+          "clear_enabled": false,
+          "spoken": [
+            "You: What about tomorrow?",
+            "Thinking..."
+          ],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "Thinking...",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": ""
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": false
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": false
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "error",
+          "error": "Venice rate limit reached. Wait a moment and try again.",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n",
+          "status": "Ready",
+          "input": "What about tomorrow?",
+          "send_enabled": true,
+          "clear_enabled": true,
+          "spoken": [
+            "Weather Assistant: Sorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again. Your question is restored in the input for editing."
+          ],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "Ready",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": "What about tomorrow?"
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "send",
+          "message": "What about tomorrow?",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n",
+          "status": "Thinking...",
+          "input": "",
+          "send_enabled": false,
+          "clear_enabled": false,
+          "spoken": [
+            "You: What about tomorrow?",
+            "Thinking..."
+          ],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "Thinking...",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": ""
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": false
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": false
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "error",
+          "error": "Received an empty response. Try again or switch models in Settings.",
+          "input_before": "draft",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Received an empty response. Try again or switch models in Settings.\n\n",
+          "status": "Ready",
+          "input": "draft",
+          "send_enabled": true,
+          "clear_enabled": true,
+          "spoken": [
+            "Weather Assistant: Sorry, I couldn't respond: Received an empty response. Try again or switch models in Settings."
+          ],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Received an empty response. Try again or switch models in Settings.\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "Ready",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": "draft"
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "send",
+          "message": "   ",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Received an empty response. Try again or switch models in Settings.\n\n",
+          "status": "Ready",
+          "input": "   ",
+          "send_enabled": true,
+          "clear_enabled": true,
+          "spoken": [],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Received an empty response. Try again or switch models in Settings.\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "Ready",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": "   "
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "copy",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Received an empty response. Try again or switch models in Settings.\n\n",
+          "status": "Chat copied to clipboard.",
+          "input": "   ",
+          "send_enabled": true,
+          "clear_enabled": true,
+          "spoken": [],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Received an empty response. Try again or switch models in Settings.\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "Chat copied to clipboard.",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": "   "
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "clear",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n",
+          "status": "",
+          "input": "   ",
+          "send_enabled": true,
+          "clear_enabled": true,
+          "spoken": [
+            "Weather Assistant: Welcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans."
+          ],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for Lumberton, NJ. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": "   "
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        }
+      ],
+      "conversation_after_clear": []
+    },
+    {
+      "location": null,
+      "title": "Weather Assistant",
+      "steps": [
+        {
+          "step": "open",
+          "focus": "Type your message",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n",
+          "status": "",
+          "input": "",
+          "send_enabled": true,
+          "clear_enabled": true,
+          "spoken": [
+            "Weather Assistant: Welcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans."
+          ],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": ""
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "send",
+          "message": "  Will it rain tonight?  ",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n",
+          "status": "Thinking...",
+          "input": "",
+          "send_enabled": false,
+          "clear_enabled": false,
+          "spoken": [
+            "You: Will it rain tonight?",
+            "Thinking..."
+          ],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "Thinking...",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": ""
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": false
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": false
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "send_while_generating",
+          "message": "Another",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n",
+          "status": "Thinking...",
+          "input": "Another",
+          "send_enabled": false,
+          "clear_enabled": false,
+          "spoken": [],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "Thinking...",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": "Another"
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": false
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": false
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "reply",
+          "text": "No rain is expected.",
+          "model": "vendor/model:free",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n",
+          "status": "Model: vendor/model:free",
+          "input": "",
+          "send_enabled": true,
+          "clear_enabled": true,
+          "spoken": [
+            "Weather Assistant: No rain is expected."
+          ],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "Model: vendor/model:free",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": ""
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "send",
+          "message": "What about tomorrow?",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n",
+          "status": "Thinking...",
+          "input": "",
+          "send_enabled": false,
+          "clear_enabled": false,
+          "spoken": [
+            "You: What about tomorrow?",
+            "Thinking..."
+          ],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "Thinking...",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": ""
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": false
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": false
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "error",
+          "error": "Venice rate limit reached. Wait a moment and try again.",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n",
+          "status": "Ready",
+          "input": "What about tomorrow?",
+          "send_enabled": true,
+          "clear_enabled": true,
+          "spoken": [
+            "Weather Assistant: Sorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again. Your question is restored in the input for editing."
+          ],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "Ready",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": "What about tomorrow?"
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "send",
+          "message": "What about tomorrow?",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n",
+          "status": "Thinking...",
+          "input": "",
+          "send_enabled": false,
+          "clear_enabled": false,
+          "spoken": [
+            "You: What about tomorrow?",
+            "Thinking..."
+          ],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "Thinking...",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": ""
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": false
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": false
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "error",
+          "error": "Received an empty response. Try again or switch models in Settings.",
+          "input_before": "draft",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Received an empty response. Try again or switch models in Settings.\n\n",
+          "status": "Ready",
+          "input": "draft",
+          "send_enabled": true,
+          "clear_enabled": true,
+          "spoken": [
+            "Weather Assistant: Sorry, I couldn't respond: Received an empty response. Try again or switch models in Settings."
+          ],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Received an empty response. Try again or switch models in Settings.\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "Ready",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": "draft"
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "send",
+          "message": "   ",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Received an empty response. Try again or switch models in Settings.\n\n",
+          "status": "Ready",
+          "input": "   ",
+          "send_enabled": true,
+          "clear_enabled": true,
+          "spoken": [],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Received an empty response. Try again or switch models in Settings.\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "Ready",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": "   "
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "copy",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Received an empty response. Try again or switch models in Settings.\n\n",
+          "status": "Chat copied to clipboard.",
+          "input": "   ",
+          "send_enabled": true,
+          "clear_enabled": true,
+          "spoken": [],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n[02:03 PM] You:\nWill it rain tonight?\n\n[02:03 PM] Weather Assistant:\nNo rain is expected.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Venice rate limit reached. Wait a moment and try again.\n\n[02:03 PM] You:\nWhat about tomorrow?\n\n[02:03 PM] Weather Assistant:\nSorry, I couldn't respond: Received an empty response. Try again or switch models in Settings.\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "Chat copied to clipboard.",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": "   "
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        },
+        {
+          "step": "clear",
+          "history": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n",
+          "status": "",
+          "input": "   ",
+          "send_enabled": true,
+          "clear_enabled": true,
+          "spoken": [
+            "Weather Assistant: Welcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans."
+          ],
+          "controls": [
+            {
+              "kind": "label",
+              "label": "&Conversation:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Conversation history",
+              "value": "[02:03 PM] Weather Assistant:\nWelcome to Weather Assistant! I can help you understand the weather conditions for your area. Ask me anything about the current weather, forecast, what to wear, or how conditions might affect your plans.\n\n"
+            },
+            {
+              "kind": "label",
+              "label": "",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "label",
+              "label": "&Message:",
+              "bold": false,
+              "italic": false
+            },
+            {
+              "kind": "text",
+              "name": "Type your message",
+              "value": "   "
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "&Send",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "C&lear Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": "auto",
+              "label": "Cop&y Chat",
+              "name": "button",
+              "enabled": true
+            },
+            {
+              "kind": "button",
+              "id": 5001,
+              "label": "&Close",
+              "name": "button",
+              "enabled": true
+            }
+          ]
+        }
+      ],
+      "conversation_after_clear": []
+    }
+  ],
+  "invalid_model": [
+    {
+      "answer": "yes",
+      "message": "Your configured AI model 'removed/model' is no longer available on OpenRouter.\n\nIt may have been removed or renamed.\n\nWould you like to reset to the default model (openrouter/free)?\n\nClick 'Yes' to reset, or 'No' to open Settings and choose a different model.",
+      "caption": "AI Model Not Found",
+      "yes_no": true,
+      "icon_warning": true,
+      "labels": [
+        "Reset to Default",
+        "Open Settings"
+      ],
+      "opened_settings": false,
+      "confirmation": [
+        "AI model has been reset to: openrouter/free",
+        "Model Reset"
+      ],
+      "saved_model": "openrouter/free"
+    },
+    {
+      "answer": "no",
+      "message": "Your configured AI model 'removed/model' is no longer available on OpenRouter.\n\nIt may have been removed or renamed.\n\nWould you like to reset to the default model (openrouter/free)?\n\nClick 'Yes' to reset, or 'No' to open Settings and choose a different model.",
+      "caption": "AI Model Not Found",
+      "yes_no": true,
+      "icon_warning": true,
+      "labels": [
+        "Reset to Default",
+        "Open Settings"
+      ],
+      "opened_settings": true
+    }
+  ],
+  "ids": {
+    "close": 5001,
+    "cancel": 5101
+  }
+}

@@ -1,0 +1,108 @@
+name: Rust native app
+
+# Pull request checks for rust/: format, lint, tests, the headless
+# self-check and a windowed smoke test, all on the debug build so each job
+# compiles wxWidgets once. Release builds and packaging live in
+# rust-build.yml.
+
+on:
+  pull_request:
+    paths: ["rust/**", ".github/workflows/rust.yml"]
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+# A newer push to the same PR supersedes the running build.
+concurrency:
+  group: rust-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, name: Linux }
+          - { os: windows-latest, name: Windows }
+          - { os: macos-latest, name: macOS }
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The CHANGELOG gate compares against the base branch.
+          fetch-depth: ${{ matrix.os == 'ubuntu-latest' && 0 || 1 }}
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+          shared-key: debug-${{ runner.os }}
+          cache-on-failure: false
+
+      - name: Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential libclang-dev pkg-config \
+            libglibmm-2.68-dev libgtk-3-dev libgl1-mesa-dev libglu1-mesa-dev \
+            libasound2-dev xvfb at-spi2-core
+
+      - name: Format
+        run: cargo fmt --all -- --check
+
+      - name: Check CHANGELOG entry
+        # Skipped when a PR carries the `skip-changelog` label.
+        if: runner.os == 'Linux' && github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'skip-changelog')
+        shell: bash
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          BASE="origin/${BASE_REF}"
+          git fetch --no-tags --depth=1 origin "${BASE_REF}:${BASE}" || true
+          if ! cargo xtask changelog check --base "$BASE" --head HEAD; then
+            {
+              echo "### CHANGELOG gate"
+              echo
+              echo "User-facing changes need a curated \`CHANGELOG.md\` entry under \`## [Unreleased]\`."
+              echo "This keeps nightly and stable release notes based on product wording instead of PR titles."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets
+      - name: Tests
+        run: cargo test --workspace
+      - name: Headless self-check
+        run: cargo run -p accessiweather -- --check
+
+      # Linux/macOS load prism from beside the executable (rpath $ORIGIN).
+      - name: Place prism beside the binary
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          find target/debug/build -path '*prism-sys-*/out/lib/*' -name 'libprism*' \
+            \( -name '*.so*' -o -name '*.dylib' \) -exec cp -P {} target/debug/ \;
+      - name: Window smoke test (Linux, Xvfb)
+        if: runner.os == 'Linux'
+        timeout-minutes: 3
+        run: xvfb-run -a target/debug/accessiweather --smoke
+      - name: Window smoke test (Windows)
+        if: runner.os == 'Windows'
+        timeout-minutes: 3
+        run: target/debug/accessiweather.exe --smoke
+      - name: Window smoke test (macOS)
+        if: runner.os == 'macOS'
+        timeout-minutes: 3
+        run: target/debug/accessiweather --smoke
