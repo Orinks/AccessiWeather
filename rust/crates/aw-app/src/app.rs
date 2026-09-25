@@ -2,6 +2,7 @@
 
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use aw_core::presenter::{WeatherPresentation, WeatherPresenter};
@@ -16,6 +17,29 @@ use crate::cli::Args;
 use crate::ui;
 
 pub(crate) const SMOKE_DURATION_MS: i32 = 2500;
+const SMOKE_WATCHDOG_GRACE_MS: u64 = 15_000;
+
+/// Set by the UI once the smoke timer has fired and data was displayed.
+pub(crate) static SMOKE_COMPLETED: AtomicBool = AtomicBool::new(false);
+
+/// A modal assert dialog or a toolkit that refuses to quit would otherwise
+/// leave a headless CI smoke run hanging forever.
+fn spawn_smoke_watchdog() {
+    std::thread::Builder::new()
+        .name("aw-smoke-watchdog".into())
+        .spawn(|| {
+            std::thread::sleep(std::time::Duration::from_millis(
+                SMOKE_DURATION_MS as u64 + SMOKE_WATCHDOG_GRACE_MS,
+            ));
+            if SMOKE_COMPLETED.load(Ordering::SeqCst) {
+                eprintln!("smoke: window did not close after completion; forcing exit 0");
+                std::process::exit(0);
+            }
+            eprintln!("smoke: window never reached completion (event loop blocked?); exit 1");
+            std::process::exit(1);
+        })
+        .expect("spawn smoke watchdog");
+}
 
 #[derive(Debug, thiserror::Error)]
 pub enum AppError {
@@ -115,6 +139,9 @@ pub fn run(args: Args) -> Result<(), AppError> {
     APP_STATE.with(|s| *s.borrow_mut() = Some(state.clone()));
 
     let smoke = args.smoke;
+    if smoke {
+        spawn_smoke_watchdog();
+    }
     wxdragon::main(move |_app| {
         let Some(state) = with_state() else { return };
         ui::build_main_window(&state, smoke);

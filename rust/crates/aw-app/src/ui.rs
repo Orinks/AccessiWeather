@@ -8,8 +8,9 @@ use aw_core::Location;
 use aw_providers::geocoding::Geocoder;
 use wxdragon::prelude::*;
 
-use crate::app::SMOKE_DURATION_MS;
 use crate::app::{post_to_ui, remember_weather, save, status_for, with_state, Shared, State};
+use crate::app::{SMOKE_COMPLETED, SMOKE_DURATION_MS};
+use std::sync::atomic::Ordering;
 
 /// Control labels with `&` mnemonics. wxOSX turns mnemonic letters on buttons
 /// into Cmd+letter shortcuts that shadow menu accelerators, so strip them there.
@@ -341,7 +342,11 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
 
     if smoke {
         let timer = Timer::new(&frame);
+        let smoke_state = state.clone();
         timer.on_tick(move |_| {
+            if smoke_state.borrow().last_data.is_some() {
+                SMOKE_COMPLETED.store(true, Ordering::SeqCst);
+            }
             tracing::info!("smoke run complete");
             frame.close(true);
         });
