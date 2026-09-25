@@ -8,7 +8,8 @@ description = "Weather data providers (NWS, Open-Meteo, geocoding) for AccessiWe
 [dependencies]
 aw-core.workspace = true
 serde.workspace = true
-serde_json.workspace = true
+# float_roundtrip: parse floats exactly like Python's json (golden parity).
+serde_json = { workspace = true, features = ["float_roundtrip"] }
 thiserror.workspace = true
 chrono.workspace = true
 chrono-tz.workspace = true

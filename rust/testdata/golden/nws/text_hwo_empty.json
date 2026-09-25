@@ -1,0 +1,26 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "text_product",
+ "product_type": "HWO",
+ "office": "OKX",
+ "responses": [
+  {
+   "url": "https://api.weather.gov/products/types/HWO/locations/OKX",
+   "status": 200,
+   "body": "{\"@graph\":[]}"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/products/types/HWO/locations/OKX",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": null
+}

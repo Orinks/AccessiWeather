@@ -7,6 +7,7 @@ use crate::display::units::{
     calculate_dewpoint, format_pressure, format_temperature, format_visibility, format_wind_speed,
     DisplayUnitSystem, TemperatureUnit,
 };
+use crate::model::WindDirection;
 use crate::model::{CurrentConditions, ForecastPeriod, HourlyForecastPeriod};
 
 /// `format_temperature_pair`.
@@ -41,7 +42,11 @@ pub fn format_wind(
     if speed_mph.is_some_and(|s| s.abs() < 0.5) {
         return Some("Calm".into());
     }
-    let direction = current.wind_direction.clone().filter(|d| !d.is_empty());
+    let direction = current
+        .wind_direction
+        .as_ref()
+        .map(WindDirection::display_text)
+        .filter(|d| !d.is_empty());
     // format_wind_speed never returns an empty string, so a direction always
     // gets "at <speed>" - even "at N/A" when only the direction is known.
     let speed = format_wind_speed(

@@ -1,0 +1,102 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "aviation_weather",
+ "station": "RJTT",
+ "include_sigmets": false,
+ "include_cwas": false,
+ "avwx_api_key": "secret",
+ "responses": [
+  {
+   "url": "https://avwx.rest/api/taf/RJTT?token=secret&options=info%2Ctranslate%2Cspeech%2Csummary",
+   "status": 401,
+   "body": ""
+  },
+  {
+   "url": "https://api.weather.gov/stations/RJTT",
+   "status": 404,
+   "body": ""
+  },
+  {
+   "url": "https://api.weather.gov/stations/RJTT/tafs",
+   "status": 200,
+   "body": "{\"features\":[]}"
+  },
+  {
+   "url": "https://aviationweather.gov/api/data/taf?ids=RJTT&format=json",
+   "status": 404,
+   "body": ""
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://avwx.rest/api/taf/RJTT",
+   "params": [
+    [
+     "token",
+     "secret"
+    ],
+    [
+     "options",
+     "info,translate,speech,summary"
+    ]
+   ],
+   "headers": [
+    [
+     "Accept",
+     "application/json"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/stations/RJTT",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/stations/RJTT/tafs",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://aviationweather.gov/api/data/taf",
+   "params": [
+    [
+     "ids",
+     "RJTT"
+    ],
+    [
+     "format",
+     "json"
+    ]
+   ],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ],
+    [
+     "Accept",
+     "application/json"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "raw_taf": null,
+  "decoded_taf": null,
+  "station_id": "RJTT",
+  "airport_name": "RJTT",
+  "active_sigmets": [],
+  "active_cwas": []
+ }
+}

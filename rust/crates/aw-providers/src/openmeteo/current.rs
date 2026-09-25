@@ -207,7 +207,8 @@ pub fn parse_openmeteo_current_conditions(data: &Value) -> CurrentConditions {
         dewpoint_c: dewpoint.celsius,
         wind_speed_mph,
         wind_speed_kph,
-        wind_direction: degrees_to_cardinal(py::number(get(current, "wind_direction_10m"))),
+        wind_direction: degrees_to_cardinal(py::number(get(current, "wind_direction_10m")))
+            .map(Into::into),
         pressure_in,
         pressure_mb,
         feels_like_f: comfort.feels_like_f,

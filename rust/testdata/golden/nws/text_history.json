@@ -1,0 +1,76 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "text_product_history",
+ "product_type": "AFD",
+ "office": "OKX",
+ "limit": 2,
+ "start": "2026-01-19T00:00:00+00:00",
+ "end": "2026-01-20T00:00:00+00:00",
+ "responses": [
+  {
+   "url": "https://api.weather.gov/products?location=OKX&type=AFD&limit=2&start=2026-01-19T00%3A00%3A00%2B00%3A00&end=2026-01-20T00%3A00%3A00%2B00%3A00",
+   "status": 200,
+   "body": "{\"@graph\":[{\"id\":\"afd-old\",\"issuanceTime\":\"2026-01-19T10:00:00+00:00\"},{\"id\":\"afd-new\",\"issuanceTime\":\"2026-01-19T20:00:00+00:00\"}]}"
+  },
+  {
+   "url": "https://api.weather.gov/products/afd-old",
+   "status": 200,
+   "body": "{\"id\":\"afd-old\",\"issuanceTime\":\"2026-01-19T10:00:00+00:00\",\"productText\":\"afd-old TEXT\"}"
+  },
+  {
+   "url": "https://api.weather.gov/products/afd-new",
+   "status": 200,
+   "body": "{\"id\":\"afd-new\",\"issuanceTime\":\"2026-01-19T20:00:00+00:00\",\"productText\":\"afd-new TEXT\"}"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/products?location=OKX&type=AFD&limit=2&start=2026-01-19T00%3A00%3A00%2B00%3A00&end=2026-01-20T00%3A00%3A00%2B00%3A00",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/products/afd-old",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/products/afd-new",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": [
+  {
+   "product_type": "AFD",
+   "product_id": "afd-new",
+   "cwa_office": "OKX",
+   "issuance_time": "2026-01-19T20:00:00+00:00",
+   "product_text": "afd-new TEXT",
+   "headline": null
+  },
+  {
+   "product_type": "AFD",
+   "product_id": "afd-old",
+   "cwa_office": "OKX",
+   "issuance_time": "2026-01-19T10:00:00+00:00",
+   "product_text": "afd-old TEXT",
+   "headline": null
+  }
+ ]
+}

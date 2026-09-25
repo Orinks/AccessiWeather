@@ -98,7 +98,7 @@ pub struct CurrentConditions {
     pub dewpoint_c: Option<f64>,
     pub wind_speed_mph: Option<f64>,
     pub wind_speed_kph: Option<f64>,
-    pub wind_direction: Option<String>,
+    pub wind_direction: Option<WindDirection>,
     pub pressure: Option<f64>,
     pub pressure_in: Option<f64>,
     pub pressure_mb: Option<f64>,
@@ -139,6 +139,40 @@ pub struct CurrentConditions {
     pub precipitation_type: Option<Vec<String>>,
     /// 0-100 scale.
     pub severe_weather_risk: Option<i64>,
+}
+
+/// `CurrentConditions.wind_direction` is typed `str` in Python but NWS
+/// observations store the raw degrees (a number) there, and the display
+/// layer branches on the type (`isinstance(..., int | float)` -> cardinal).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum WindDirection {
+    Degrees(f64),
+    Text(String),
+}
+
+impl WindDirection {
+    /// What Python shows: degrees become a compass point, text is used as-is.
+    pub fn display_text(&self) -> String {
+        match self {
+            WindDirection::Degrees(d) => {
+                crate::display::units::convert_wind_direction_to_cardinal(*d).to_string()
+            }
+            WindDirection::Text(s) => s.clone(),
+        }
+    }
+}
+
+impl From<&str> for WindDirection {
+    fn from(s: &str) -> Self {
+        WindDirection::Text(s.to_string())
+    }
+}
+
+impl From<String> for WindDirection {
+    fn from(s: String) -> Self {
+        WindDirection::Text(s)
+    }
 }
 
 impl CurrentConditions {

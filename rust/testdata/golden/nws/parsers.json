@@ -1,0 +1,455 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "parsers",
+ "result": {
+  "current": [
+   [
+    {
+     "properties": {
+      "textDescription": "",
+      "temperature": {
+       "value": "31.5",
+       "unitCode": "wmoUnit:degF"
+      },
+      "relativeHumidity": {
+       "value": 92.5
+      },
+      "windSpeed": {
+       "value": 5,
+       "unitCode": "wmoUnit:m_s-1"
+      },
+      "windDirection": {
+       "value": "N"
+      },
+      "barometricPressure": {
+       "value": 1015.2,
+       "unitCode": "wmoUnit:hPa"
+      },
+      "visibility": {
+       "value": 402
+      },
+      "uvIndex": {
+       "value": true
+      },
+      "windChill": {
+       "value": 20.0,
+       "unitCode": "wmoUnit:degF"
+      }
+     }
+    },
+    {
+     "temperature": 31.5,
+     "temperature_f": 31.5,
+     "temperature_c": -0.2777777777777778,
+     "condition": "",
+     "humidity": 92,
+     "wind_speed": 11.185,
+     "dewpoint_f": null,
+     "dewpoint_c": null,
+     "wind_speed_mph": 11.185,
+     "wind_speed_kph": 18.0,
+     "wind_direction": "N",
+     "pressure": 29.978838814085282,
+     "pressure_in": 29.978838814085282,
+     "pressure_mb": 1015.2,
+     "feels_like_f": 20.0,
+     "feels_like_c": -6.666666666666667,
+     "visibility_miles": 0.24979121927940826,
+     "visibility_km": 0.402,
+     "uv_index": 1.0,
+     "cloud_cover": null,
+     "wind_gust_mph": null,
+     "wind_gust_kph": null,
+     "precipitation_in": null,
+     "precipitation_mm": null,
+     "sunrise_time": null,
+     "sunset_time": null,
+     "moon_phase": null,
+     "moonrise_time": null,
+     "moonset_time": null,
+     "snow_depth_in": null,
+     "snow_depth_cm": null,
+     "snowfall_rate_in": null,
+     "wind_chill_f": 20.0,
+     "wind_chill_c": -6.666666666666667,
+     "freezing_level_ft": null,
+     "freezing_level_m": null,
+     "heat_index_f": null,
+     "heat_index_c": null,
+     "frost_risk": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null
+    }
+   ],
+   [
+    {
+     "properties": {
+      "temperature": {
+       "value": 35.0,
+       "unitCode": "wmoUnit:degC"
+      },
+      "relativeHumidity": {
+       "value": 60
+      },
+      "heatIndex": {
+       "value": 41.0,
+       "unitCode": "wmoUnit:degC"
+      },
+      "windSpeed": {
+       "value": null
+      },
+      "windDirection": {
+       "value": 182.5
+      },
+      "uvIndex": {
+       "value": "x"
+      }
+     }
+    },
+    {
+     "temperature": 95.0,
+     "temperature_f": 95.0,
+     "temperature_c": 35.0,
+     "condition": null,
+     "humidity": 60,
+     "wind_speed": null,
+     "dewpoint_f": null,
+     "dewpoint_c": null,
+     "wind_speed_mph": null,
+     "wind_speed_kph": null,
+     "wind_direction": 182.5,
+     "pressure": null,
+     "pressure_in": null,
+     "pressure_mb": null,
+     "feels_like_f": 105.8,
+     "feels_like_c": 41.0,
+     "visibility_miles": null,
+     "visibility_km": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust_mph": null,
+     "wind_gust_kph": null,
+     "precipitation_in": null,
+     "precipitation_mm": null,
+     "sunrise_time": null,
+     "sunset_time": null,
+     "moon_phase": null,
+     "moonrise_time": null,
+     "moonset_time": null,
+     "snow_depth_in": null,
+     "snow_depth_cm": null,
+     "snowfall_rate_in": null,
+     "wind_chill_f": null,
+     "wind_chill_c": null,
+     "freezing_level_ft": null,
+     "freezing_level_m": null,
+     "heat_index_f": 105.8,
+     "heat_index_c": 41.0,
+     "frost_risk": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null
+    }
+   ],
+   [
+    {
+     "properties": {
+      "temperature": {
+       "value": 35.0,
+       "unitCode": "wmoUnit:degC"
+      },
+      "relativeHumidity": {
+       "value": 10
+      },
+      "heatIndex": {
+       "value": 45.0,
+       "unitCode": "wmoUnit:degC"
+      }
+     }
+    },
+    {
+     "temperature": 95.0,
+     "temperature_f": 95.0,
+     "temperature_c": 35.0,
+     "condition": null,
+     "humidity": 10,
+     "wind_speed": null,
+     "dewpoint_f": null,
+     "dewpoint_c": null,
+     "wind_speed_mph": null,
+     "wind_speed_kph": null,
+     "wind_direction": null,
+     "pressure": null,
+     "pressure_in": null,
+     "pressure_mb": null,
+     "feels_like_f": null,
+     "feels_like_c": null,
+     "visibility_miles": null,
+     "visibility_km": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust_mph": null,
+     "wind_gust_kph": null,
+     "precipitation_in": null,
+     "precipitation_mm": null,
+     "sunrise_time": null,
+     "sunset_time": null,
+     "moon_phase": null,
+     "moonrise_time": null,
+     "moonset_time": null,
+     "snow_depth_in": null,
+     "snow_depth_cm": null,
+     "snowfall_rate_in": null,
+     "wind_chill_f": null,
+     "wind_chill_c": null,
+     "freezing_level_ft": null,
+     "freezing_level_m": null,
+     "heat_index_f": null,
+     "heat_index_c": null,
+     "frost_risk": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null
+    }
+   ],
+   [
+    {},
+    {
+     "temperature": null,
+     "temperature_f": null,
+     "temperature_c": null,
+     "condition": null,
+     "humidity": null,
+     "wind_speed": null,
+     "dewpoint_f": null,
+     "dewpoint_c": null,
+     "wind_speed_mph": null,
+     "wind_speed_kph": null,
+     "wind_direction": null,
+     "pressure": null,
+     "pressure_in": null,
+     "pressure_mb": null,
+     "feels_like_f": null,
+     "feels_like_c": null,
+     "visibility_miles": null,
+     "visibility_km": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust_mph": null,
+     "wind_gust_kph": null,
+     "precipitation_in": null,
+     "precipitation_mm": null,
+     "sunrise_time": null,
+     "sunset_time": null,
+     "moon_phase": null,
+     "moonrise_time": null,
+     "moonset_time": null,
+     "snow_depth_in": null,
+     "snow_depth_cm": null,
+     "snowfall_rate_in": null,
+     "wind_chill_f": null,
+     "wind_chill_c": null,
+     "freezing_level_ft": null,
+     "freezing_level_m": null,
+     "heat_index_f": null,
+     "heat_index_c": null,
+     "frost_risk": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null
+    }
+   ]
+  ],
+  "alerts": [
+   {
+    "features": [
+     {
+      "id": "urn:oid:a",
+      "properties": {
+       "event": "Tornado Warning",
+       "headline": "Tornado Warning issued",
+       "severity": "Extreme",
+       "urgency": "Immediate",
+       "certainty": "Observed",
+       "messageType": "Alert",
+       "description": "A tornado was sighted.",
+       "instruction": "Take cover now.",
+       "areaDesc": "New York, NY; Kings, NY;",
+       "affectedZones": [
+        "https://api.weather.gov/zones/county/NYC061",
+        "https://api.weather.gov/zones/forecast/NYZ072"
+       ],
+       "geocode": {
+        "SAME": [
+         "036061",
+         36047
+        ]
+       },
+       "eventCode": {
+        "SAME": [
+         "TOR"
+        ]
+       },
+       "sent": "2026-01-20T18:00:00Z",
+       "effective": "2026-01-20T18:00:00-05:00",
+       "onset": "2026-01-20T18:05:00-05:00",
+       "expires": "2026-01-20T19:00:00-05:00",
+       "references": [
+        {
+         "identifier": "urn:oid:prev",
+         "@id": "https://x/prev"
+        }
+       ]
+      }
+     },
+     {
+      "id": "urn:oid:b",
+      "properties": {
+       "event": "Winter Storm Warning",
+       "headline": null,
+       "severity": "Severe",
+       "messageType": "Update",
+       "areaDesc": "Queens, NY",
+       "description": null
+      }
+     },
+     {
+      "id": "urn:oid:a",
+      "properties": {
+       "event": "Tornado Warning",
+       "headline": "Tornado Warning issued",
+       "severity": "Extreme",
+       "urgency": "Immediate",
+       "certainty": "Observed",
+       "messageType": "Alert",
+       "description": "A tornado was sighted.",
+       "instruction": "Take cover now.",
+       "areaDesc": "New York, NY; Kings, NY;",
+       "affectedZones": [
+        "https://api.weather.gov/zones/county/NYC061",
+        "https://api.weather.gov/zones/forecast/NYZ072"
+       ],
+       "geocode": {
+        "SAME": [
+         "036061",
+         36047
+        ]
+       },
+       "eventCode": {
+        "SAME": [
+         "TOR"
+        ]
+       },
+       "sent": "2026-01-20T18:00:00Z",
+       "effective": "2026-01-20T18:00:00-05:00",
+       "onset": "2026-01-20T18:05:00-05:00",
+       "expires": "2026-01-20T19:00:00-05:00",
+       "references": [
+        {
+         "identifier": "urn:oid:prev",
+         "@id": "https://x/prev"
+        }
+       ]
+      }
+     },
+     {
+      "properties": {
+       "identifier": "ident-42",
+       "references": "nope",
+       "geocode": [],
+       "eventCode": {
+        "SAME": "TOR"
+       },
+       "affectedZones": "x",
+       "areaDesc": 5,
+       "onset": "",
+       "expires": "bad"
+      }
+     }
+    ]
+   },
+   {
+    "alerts": [
+     {
+      "title": "Tornado Warning issued",
+      "description": "A tornado was sighted.",
+      "severity": "Extreme",
+      "urgency": "Immediate",
+      "certainty": "Observed",
+      "event": "Tornado Warning",
+      "headline": "Tornado Warning issued",
+      "instruction": "Take cover now.",
+      "onset": "2026-01-20T18:05:00-05:00",
+      "expires": "2026-01-20T19:00:00-05:00",
+      "sent": "2026-01-20T18:00:00+00:00",
+      "effective": "2026-01-20T18:00:00-05:00",
+      "areas": [
+       "New York, NY",
+       "Kings, NY"
+      ],
+      "references": [
+       "urn:oid:prev"
+      ],
+      "id": "urn:oid:a",
+      "source": "NWS",
+      "message_type": "Alert",
+      "affected_zones": [
+       "NYC061",
+       "NYZ072"
+      ],
+      "same_codes": [
+       "036061",
+       "36047"
+      ],
+      "same_event_codes": [
+       "TOR"
+      ]
+     },
+     {
+      "title": "",
+      "description": "",
+      "severity": "Severe",
+      "urgency": "Unknown",
+      "certainty": "Unknown",
+      "event": "Winter Storm Warning",
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": null,
+      "sent": null,
+      "effective": null,
+      "areas": [
+       "Queens, NY"
+      ],
+      "references": [],
+      "id": "urn:oid:b",
+      "source": "NWS",
+      "message_type": "Update",
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     },
+     {
+      "title": "Weather Alert",
+      "description": "",
+      "severity": "Unknown",
+      "urgency": "Unknown",
+      "certainty": "Unknown",
+      "event": null,
+      "headline": null,
+      "instruction": null,
+      "onset": null,
+      "expires": null,
+      "sent": null,
+      "effective": null,
+      "areas": [],
+      "references": [],
+      "id": "ident-42",
+      "source": "NWS",
+      "message_type": null,
+      "affected_zones": [],
+      "same_codes": [],
+      "same_event_codes": []
+     }
+    ]
+   }
+  ]
+ }
+}

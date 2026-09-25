@@ -1,0 +1,41 @@
+{
+ "now": "2026-01-20T18:30:00+00:00",
+ "call": "cancel_references",
+ "responses": [
+  {
+   "url": "https://api.weather.gov/alerts?message_type=cancel&start=2026-01-20T18%3A15%3A00Z&end=2026-01-20T18%3A30%3A00Z",
+   "status": 200,
+   "body": "{\"features\":[{\"properties\":{\"references\":[{\"identifier\":\"id-1\"},{\"@id\":\"id-2\"},{\"id\":\"id-3\"},{}]}},{\"properties\":{}},{\"properties\":{\"references\":[{\"identifier\":\"id-1\"}]}}]}"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/alerts",
+   "params": [
+    [
+     "message_type",
+     "cancel"
+    ],
+    [
+     "start",
+     "2026-01-20T18:15:00Z"
+    ],
+    [
+     "end",
+     "2026-01-20T18:30:00Z"
+    ]
+   ],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": [
+  "id-1",
+  "id-2",
+  "id-3"
+ ]
+}

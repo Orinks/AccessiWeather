@@ -12,7 +12,7 @@ use aw_core::Location;
 use chrono::Utc;
 
 use crate::http::HttpClient;
-use crate::nws::NwsClient;
+use crate::nws_legacy::NwsClient;
 use crate::openmeteo::{Bundle, OpenMeteoClient};
 use crate::pirateweather::legacy::PirateWeatherClient;
 
@@ -23,7 +23,7 @@ pub struct FetchOutcome {
     pub bundle: Bundle,
     pub alerts: Option<aw_core::alerts::WeatherAlerts>,
     pub discussion: Option<String>,
-    pub location_metadata: Option<crate::nws::PointInfo>,
+    pub location_metadata: Option<crate::nws_legacy::PointInfo>,
     pub error: Option<String>,
 }
 

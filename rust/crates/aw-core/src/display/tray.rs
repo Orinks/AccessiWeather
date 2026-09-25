@@ -367,7 +367,11 @@ impl TaskbarIconUpdater {
             if round { 0 } else { 1 },
             wind_system,
         );
-        let wind_dir = c.wind_direction.clone().unwrap_or_else(|| NA.into());
+        let wind_dir = c
+            .wind_direction
+            .as_ref()
+            .map(crate::model::WindDirection::display_text)
+            .unwrap_or_else(|| NA.into());
         let mut wind_parts: Vec<String> = Vec::new();
         if wind_dir != NA {
             wind_parts.push(wind_dir.clone());

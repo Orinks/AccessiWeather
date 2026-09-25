@@ -1,0 +1,27 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "daily_climate_locations",
+ "responses": [
+  {
+   "url": "https://api.weather.gov/products/types/CLI/locations",
+   "status": 200,
+   "body": "{\"locations\":{\"TTN\":\"Trenton\",\" phl \":\"Phila\",\"\":\"x\"}}"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/products/types/CLI/locations",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": [
+  "PHL",
+  "TTN"
+ ]
+}

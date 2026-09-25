@@ -308,7 +308,8 @@ pub fn parse_current_conditions(units: &str, data: &Value) -> CurrentConditions 
         dewpoint_c: dewpoint.celsius,
         wind_speed_mph: wind_speed.mph,
         wind_speed_kph: wind_speed.kph,
-        wind_direction: degrees_to_cardinal(py::number(get(current, "windBearing"))),
+        wind_direction: degrees_to_cardinal(py::number(get(current, "windBearing")))
+            .map(Into::into),
         pressure_in: pressure.inches,
         pressure_mb: pressure.millibars,
         feels_like_f: comfort.feels_like_f,
