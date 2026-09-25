@@ -171,9 +171,24 @@ pub(crate) fn on_update_available(info: UpdateInfo) {
     let Some(frame) = main_frame() else { return };
     let nightly = nightly_date();
     let version = crate::lifecycle::app_version();
-    let current = update::display_version(&version, nightly.as_deref());
+    offer_update(
+        &frame,
+        update::display_version(&version, nightly.as_deref()),
+        info,
+    );
+}
+
+/// The "Update Available" dialog over `parent` (Settings > Updates passes
+/// itself), then `app._download_and_apply_update` on Download Update.
+pub(crate) fn offer_update(parent: &dyn WxWidget, current_version: &str, info: UpdateInfo) {
     let label = messages::channel_label(info.is_nightly);
-    if show_update_dialog(&frame, current, &info.version, label, &info.release_notes) {
+    if show_update_dialog(
+        parent,
+        current_version,
+        &info.version,
+        label,
+        &info.release_notes,
+    ) {
         download_and_apply_update(info);
     }
 }
@@ -191,7 +206,7 @@ fn update_dialog_header(current_version: &str, new_version: &str, channel_label:
 
 /// `UpdateAvailableDialog`: true when the user chose Download Update.
 fn show_update_dialog(
-    parent: &Frame,
+    parent: &dyn WxWidget,
     current_version: &str,
     new_version: &str,
     channel_label: &str,

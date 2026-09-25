@@ -54,6 +54,8 @@ fn show_invalid_model_warning(invalid_model: &str) {
         locations::on_settings();
         return;
     }
+    // Python calls `config_manager.save_settings`, which does not exist, so
+    // its reset always ends in "Failed to reset model"; this one saves.
     let saved = {
         let mut st = state.borrow_mut();
         st.config.settings.ai_model_preference = DEFAULT_FREE_MODEL.to_string();

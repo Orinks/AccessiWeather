@@ -2,12 +2,8 @@
 //! Forecaster Notes panels and the AI backend. Port of
 //! `ui/dialogs/forecast_product_ai.py` and the generation half of
 //! `ForecastProductPanel._run_explain`.
-//!
-//! Integration (AI workstream): replace the body of [`explain_text_product`]
-//! with `AIExplainer(**explainer_options(settings)).explain_text_product(...)`,
-//! reporting progress through `status` and returning errors already passed
-//! through `ai_request_error`. Nothing else in the dialogs needs to change.
 
+use aw_ai::{AiExplainer, CancelToken, ExplanationStyle};
 use aw_core::settings::AppSettings;
 
 /// Shown when no explainer can be built for the selected provider.
@@ -42,13 +38,40 @@ pub(crate) fn has_selected_key(settings: &AppSettings) -> bool {
 /// Summarise `text` (blocking; call on a worker thread). `status` receives
 /// model-selection progress. `Err` carries the message the panel shows after
 /// "Failed to generate summary: ".
+///
+/// As in Python, each request builds a fresh explainer with no cache
+/// (`build_explainer` gets no injected explainer). `cancel` drops the
+/// request once the panel closes.
 pub(crate) fn explain_text_product(
     settings: &AppSettings,
     text: &str,
     product_type: &str,
     location_name: &str,
     status: &dyn Fn(String),
+    cancel: &CancelToken,
 ) -> Result<Summary, String> {
-    let _ = (settings, text, product_type, location_name, status);
-    Err(NOT_CONFIGURED.to_string())
+    let Ok(explainer) = AiExplainer::from_settings(settings) else {
+        return Err(NOT_CONFIGURED.to_string());
+    };
+    let result = explainer
+        .explain_text_product(
+            text,
+            product_type,
+            location_name,
+            ExplanationStyle::Detailed,
+            false,
+            &|message| status(message.to_string()),
+            Some(cancel),
+        )
+        .map_err(|e| e.message)?;
+    Ok(Summary {
+        text: result.text,
+        model_used: result.model_used,
+        token_count: result.token_count as i64,
+        estimated_cost: result.estimated_cost,
+        cached: result.cached,
+        model_selection_reason: result.model_selection_reason,
+        requested_model: result.requested_model,
+        model_attempts: result.model_attempts,
+    })
 }

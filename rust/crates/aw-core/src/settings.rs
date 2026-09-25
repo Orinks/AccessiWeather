@@ -174,6 +174,9 @@ pub struct AppSettings {
     pub notify_precipitation_likelihood: bool,
     #[serde(default = "d_half")]
     pub precipitation_likelihood_threshold: f64,
+    /// Sound pack submission backend; empty means the built-in one.
+    #[serde(default)]
+    pub github_backend_url: String,
     #[serde(default = "d_county")]
     pub alert_radius_type: String,
     #[serde(default = "d_true")]
@@ -314,7 +317,161 @@ impl Default for AppSettings {
     }
 }
 
+const VALID_DATA_SOURCES: [&str; 4] = ["auto", "nws", "openmeteo", "pirateweather"];
+const SOURCE_LIST_KEYS: [&str; 4] = [
+    "source_priority_us",
+    "source_priority_international",
+    "auto_sources_us",
+    "auto_sources_international",
+];
+
+/// `_as_bool`: loose true/false spellings; anything else keeps `default`.
+fn py_as_bool(value: &Value, default: bool) -> bool {
+    match value {
+        Value::Bool(b) => *b,
+        Value::Number(n) => n.as_f64().is_some_and(|f| f != 0.0),
+        Value::String(s) => match s.trim().to_lowercase().as_str() {
+            "true" | "1" | "yes" | "on" => true,
+            "false" | "0" | "no" | "off" => false,
+            _ => default,
+        },
+        _ => default,
+    }
+}
+
+fn keep_valid(value: &mut String, valid: &[&str], default: &str) {
+    if !valid.contains(&value.as_str()) {
+        *value = default.to_string();
+    }
+}
+
 impl AppSettings {
+    /// `AppSettings.from_dict`: the settings object of a config (or settings
+    /// export) with Python's clean-ups: loose booleans and floats, the legacy
+    /// `specific_alert_sounds_enabled` key, and the validations `from_dict`
+    /// runs. A value of the wrong JSON type falls back to its default, where
+    /// Python would keep a value it cannot use (Rust cannot hold one, and
+    /// failing the whole load would lose every other setting).
+    pub fn from_python_dict(mut data: Map<String, Value>) -> Self {
+        // The legacy on/off switch becomes a one-pack list; Python drops the
+        // old key on its next save.
+        let legacy = data.remove("specific_alert_sounds_enabled");
+        if data
+            .get("specific_alert_sound_packs")
+            .is_none_or(Value::is_null)
+        {
+            let packs = if legacy.is_some_and(|v| py_as_bool(&v, false)) {
+                let pack = data
+                    .get("sound_pack")
+                    .map_or("default".to_string(), crate::py::value_str);
+                let pack = pack.trim();
+                vec![Value::from(if pack.is_empty() { "default" } else { pack })]
+            } else {
+                Vec::new()
+            };
+            data.insert("specific_alert_sound_packs".into(), Value::Array(packs));
+        }
+        if let Some(Value::Array(items)) = data.get_mut("specific_alert_sound_packs") {
+            let mut packs: Vec<Value> = Vec::new();
+            for item in items.iter() {
+                let pack = crate::py::value_str(item).trim().to_string();
+                if !pack.is_empty() && !packs.contains(&Value::from(pack.as_str())) {
+                    packs.push(pack.into());
+                }
+            }
+            *items = packs;
+        }
+        for key in SOURCE_LIST_KEYS {
+            if let Some(Value::Array(items)) = data.get_mut(key) {
+                items.retain(|s| {
+                    s.as_str()
+                        .is_some_and(|s| VALID_DATA_SOURCES[1..].contains(&s))
+                });
+            }
+        }
+        if let Some(v) = data.get_mut("auto_tune_weather_radio_duration_minutes") {
+            if !v.as_i64().is_some_and(|m| (1..=60).contains(&m)) {
+                *v = 5.into();
+            }
+        }
+        // `_normalized_hotkey`: anything but text disables the hotkey.
+        if let Some(v) = data.get_mut("noaa_radio_hotkey").filter(|v| !v.is_string()) {
+            *v = "".into();
+        }
+        let defaults = match serde_json::to_value(AppSettings::default()) {
+            Ok(Value::Object(defaults)) => defaults,
+            _ => Map::new(),
+        };
+        for (key, default) in &defaults {
+            let Some(value) = data.get_mut(key) else {
+                continue;
+            };
+            match default {
+                Value::Bool(d) => *value = py_as_bool(value, *d).into(),
+                Value::Number(n) if n.is_f64() => {
+                    let d = n.as_f64().unwrap_or_default();
+                    let f = crate::py::as_float(Some(value)).filter(|f| f.is_finite());
+                    *value = f.unwrap_or(d).into();
+                }
+                _ => {}
+            }
+        }
+
+        let mut settings: AppSettings = serde_json::from_value(Value::Object(data.clone()))
+            .unwrap_or_else(|_| {
+                data.retain(|key, value| {
+                    let probe = Map::from_iter([(key.clone(), value.clone())]);
+                    serde_json::from_value::<AppSettings>(Value::Object(probe)).is_ok()
+                });
+                serde_json::from_value(Value::Object(data)).unwrap_or_default()
+            });
+
+        let s = &mut settings;
+        keep_valid(
+            &mut s.auto_mode_api_budget,
+            &["economy", "balanced", "max_coverage"],
+            "max_coverage",
+        );
+        keep_valid(
+            &mut s.alert_display_style,
+            &["separate", "combined"],
+            "separate",
+        );
+        keep_valid(
+            &mut s.location_sort_order,
+            &["alphabetical", "manual", "nearest_current"],
+            "alphabetical",
+        );
+        keep_valid(
+            &mut s.date_format,
+            &["iso", "us_short", "us_long", "eu"],
+            "iso",
+        );
+        keep_valid(&mut s.data_source, &VALID_DATA_SOURCES, "auto");
+        let defaults = AppSettings::default();
+        for (list, default) in [
+            (&mut s.source_priority_us, &defaults.source_priority_us),
+            (
+                &mut s.source_priority_international,
+                &defaults.source_priority_international,
+            ),
+            (&mut s.auto_sources_us, &defaults.auto_sources_us),
+            (
+                &mut s.auto_sources_international,
+                &defaults.auto_sources_international,
+            ),
+        ] {
+            if list.is_empty() {
+                list.clone_from(default);
+            }
+        }
+        if !(1.0..=60.0).contains(&s.parallel_fetch_timeout) {
+            s.parallel_fetch_timeout = 10.0;
+        }
+        crate::shortcuts::normalize_shortcut_settings(s);
+        settings
+    }
+
     pub fn forecast_days(&self) -> u32 {
         self.forecast_duration_days.clamp(3, 16) as u32
     }
@@ -343,12 +500,52 @@ pub struct AppConfig {
 
 impl AppConfig {
     /// Parse the JSON document, applying the same clean-ups as Python's
-    /// `AppConfig.from_dict` (drop the legacy "Nationwide" entry, uppercase
-    /// country codes, canonical hotkeys and shortcuts).
+    /// `AppConfig.from_dict` (settings as [`AppSettings::from_python_dict`],
+    /// drop the legacy "Nationwide" entry, uppercase country codes).
     pub fn from_json(text: &str) -> Result<Self, serde_json::Error> {
-        let mut config: AppConfig = serde_json::from_str(text)?;
+        Self::from_json_for_build(text, "stable").map(|(config, _)| config)
+    }
+
+    /// [`Self::from_json`] as `ConfigManager.load_config` runs it: a
+    /// settings object without `update_channel` gets the running build's
+    /// `default_update_channel`. The flag says it did; Python then saves.
+    pub fn from_json_for_build(
+        text: &str,
+        default_update_channel: &str,
+    ) -> Result<(Self, bool), serde_json::Error> {
+        use serde::de::Error;
+        let mut value: Value = serde_json::from_str(text)?;
+        let Some(object) = value.as_object_mut() else {
+            return Err(serde_json::Error::custom("config must be a JSON object"));
+        };
+        let settings = match object.remove("settings") {
+            None => None,
+            Some(Value::Object(settings)) => Some(settings),
+            Some(_) => return Err(serde_json::Error::custom("settings must be an object")),
+        };
+        // `bool(loc_data.get("marine_mode", False))`.
+        let truthy_marine = |location: &mut Value| {
+            if let Some(marine) = location.get_mut("marine_mode") {
+                *marine = crate::py::truthy(Some(marine)).into();
+            }
+        };
+        if let Some(current) = object.get_mut("current_location") {
+            truthy_marine(current);
+        }
+        if let Some(locations) = object.get_mut("locations").and_then(Value::as_array_mut) {
+            locations.iter_mut().for_each(truthy_marine);
+        }
+        let mut config: AppConfig = serde_json::from_value(value)?;
+        let mut defaulted = false;
+        if let Some(mut settings) = settings {
+            if !settings.contains_key("update_channel") {
+                settings.insert("update_channel".into(), default_update_channel.into());
+                defaulted = true;
+            }
+            config.settings = AppSettings::from_python_dict(settings);
+        }
         config.normalize();
-        Ok(config)
+        Ok((config, defaulted))
     }
 
     pub fn normalize(&mut self) {
@@ -525,5 +722,40 @@ mod tests {
         assert_eq!(out["settings"]["temperature_unit"], "f");
         assert_eq!(out["schema_version"], 1);
         assert!(out["settings"].get("pirate_weather_api_key").is_none());
+    }
+
+    /// Rust-side divergence: Python keeps a value of the wrong type (and
+    /// fails later); here only that setting falls back to its default.
+    #[test]
+    fn a_mistyped_setting_falls_back_without_losing_the_rest() {
+        let text = r#"{"settings":{"update_interval_minutes":"15","temperature_unit":null,
+            "sound_pack":"chimes","specific_alert_sounds_enabled":"yes","future_flag":[1]},
+            "locations":[]}"#;
+        let (cfg, defaulted) = AppConfig::from_json_for_build(text, "nightly").unwrap();
+        let s = &cfg.settings;
+        assert_eq!(
+            (s.update_interval_minutes, s.temperature_unit.as_str()),
+            (10, "both")
+        );
+        assert_eq!(s.sound_pack, "chimes");
+        assert_eq!(s.specific_alert_sound_packs, ["chimes"]);
+        assert!(!s.extra.contains_key("specific_alert_sounds_enabled"));
+        assert_eq!(s.extra["future_flag"], serde_json::json!([1]));
+        assert!(defaulted && s.update_channel == "nightly");
+    }
+
+    #[test]
+    fn github_backend_url_round_trips_in_pythons_position() {
+        let mut s = AppSettings::default();
+        assert_eq!(s.github_backend_url, "");
+        s.github_backend_url = "https://example.test".into();
+        let out = serde_json::to_value(&s).unwrap();
+        let keys: Vec<&String> = out.as_object().unwrap().keys().collect();
+        let at = keys
+            .iter()
+            .position(|k| *k == "github_backend_url")
+            .unwrap();
+        assert_eq!(keys[at - 1], "precipitation_likelihood_threshold");
+        assert_eq!(serde_json::from_value::<AppSettings>(out).unwrap(), s);
     }
 }

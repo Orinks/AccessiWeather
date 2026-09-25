@@ -13,7 +13,7 @@
 
 use std::path::PathBuf;
 
-use crate::activation::{self, ActivationKind, ActivationRequest};
+use aw_notify::activation::{self, ActivationKind, ActivationRequest};
 
 pub const SINGLE_INSTANCE_MUTEX_NAME: &str = "Local\\AccessiWeather.SingleInstance";
 pub const ACTIVATION_PIPE_NAME: &str = r"\\.\pipe\AccessiWeather.SingleInstance.Activation.Rust";
@@ -95,11 +95,11 @@ impl SingleInstance {
     }
 
     pub fn write_activation_handoff(&self, request: &ActivationRequest) -> bool {
-        activation::write_handoff(&self.config_dir, request)
+        activation::write_handoff(&activation::handoff_file(&self.config_dir), request)
     }
 
     pub fn consume_activation_handoff(&self) -> Option<ActivationRequest> {
-        activation::consume_handoff(&self.config_dir)
+        activation::consume_handoff(&activation::handoff_file(&self.config_dir))
     }
 
     /// Listen for duplicate-launch requests; `on_request` runs on the
@@ -278,7 +278,7 @@ mod ipc {
         PIPE_TYPE_BYTE, PIPE_UNLIMITED_INSTANCES, PIPE_WAIT,
     };
 
-    use crate::activation::ActivationRequest;
+    use aw_notify::ActivationRequest;
 
     type Callback = Box<dyn Fn(ActivationRequest) + Send>;
 
@@ -378,7 +378,7 @@ mod ipc {
 
 #[cfg(not(windows))]
 mod ipc {
-    use crate::activation::ActivationRequest;
+    use aw_notify::ActivationRequest;
 
     pub struct Server;
 
@@ -404,7 +404,7 @@ mod tests {
 
     #[test]
     fn startup_launches_only_wake_the_primary_for_toast_requests() {
-        let req = ActivationRequest::new("discussion", None).unwrap();
+        let req = ActivationRequest::discussion();
         assert!(should_request_existing_instance(None, false));
         assert!(!should_request_existing_instance(None, true));
         assert!(should_request_existing_instance(Some(&req), true));
@@ -468,7 +468,7 @@ mod tests {
             }),
         )
         .unwrap();
-        let req = ActivationRequest::new("alert_details", Some("urn:1".into())).unwrap();
+        let req = ActivationRequest::alert_details("urn:1");
         std::fs::OpenOptions::new()
             .write(true)
             .open(pipe)

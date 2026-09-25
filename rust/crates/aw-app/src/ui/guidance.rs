@@ -262,10 +262,8 @@ fn perform(frame: &Frame, state: &Shared, step: Step) -> Response {
             save_api_key(&mut state.borrow_mut(), name, &value);
             Response::Done
         }
-        // Python opens Settings on the AI tab (for both keys); the tab
-        // follows once the settings port takes a tab argument.
-        Step::OpenSettings { tab: _ } => {
-            locations::on_settings();
+        Step::OpenSettings { tab } => {
+            locations::open_settings(tab);
             Response::Done
         }
         Step::WriteKeyBundle { keys, passphrase } => {

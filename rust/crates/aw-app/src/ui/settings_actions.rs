@@ -1,25 +1,26 @@
-//! The work behind the Settings dialog's buttons: one function per backend
-//! action. Actions the existing Rust code can do (folders, settings and
-//! encrypted key transfer, resets, portable copy checks, sound pack
-//! discovery) are implemented here, mirroring `config/import_export*.py`,
-//! `config/settings.py`, `settings_dialog_portable.py` and
-//! `notifications/sound_pack_helpers.py`. Actions whose backends are ported
-//! separately (key validation, model catalogs, audio, update checks, startup
-//! registration, tray text preview, hotkeys) are stubs that log and change
-//! nothing; they are listed together at the end of this file.
+//! The work behind the Settings dialog's buttons, mirroring
+//! `config/import_export*.py`, `config/settings.py`,
+//! `settings_dialog_portable.py`, `notifications/sound_pack_helpers.py` and
+//! the key checks in `settings_dialog_handlers.py`. Buttons whose backend is
+//! a single call elsewhere (model catalogs, AI key checks, sounds, update
+//! checks, launch at login) call it from the dialog directly.
 
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
+use aw_core::display::tray::TaskbarIconUpdater;
 use aw_core::model::WeatherData;
 use aw_core::settings::{AppConfig, AppSettings};
 use aw_core::sound_events::LEGACY_SOUND_EVENT_KEYS;
 use aw_core::Location;
+use aw_providers::environmental::airnow::AirNowClient;
+use aw_providers::pirateweather::PirateWeatherClient;
+use aw_providers::{HttpClient, ReqwestClient};
 use aw_store::secrets;
 use serde_json::{json, Map, Value};
 
-use super::model_browser_dialog::CatalogModel;
 use super::settings_form::SoundPack;
-use crate::app::{with_state, State};
+use crate::app::State;
 
 // ---------------------------------------------------------------------------
 // Folders, links and sound packs
@@ -42,25 +43,6 @@ pub(crate) fn open_folder(path: &Path) {
 /// Open a web page in the default browser; false when that failed.
 pub(crate) fn open_url(url: &str) -> bool {
     wxdragon::prelude::launch_default_browser(url, wxdragon::prelude::BrowserLaunchFlags::Default)
-}
-
-/// `get_soundpacks_dir` for a compiled build: `data/soundpacks` beside the
-/// executable in portable mode, `soundpacks` beside it otherwise. Debug
-/// builds fall back to the repository's packs.
-pub(crate) fn soundpacks_dir(portable: bool) -> PathBuf {
-    let exe_dir = std::env::current_exe()
-        .ok()
-        .and_then(|p| p.parent().map(Path::to_path_buf))
-        .unwrap_or_default();
-    let dir = if portable {
-        exe_dir.join("data").join("soundpacks")
-    } else {
-        exe_dir.join("soundpacks")
-    };
-    if cfg!(debug_assertions) && !dir.exists() {
-        return Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../soundpacks");
-    }
-    dir
 }
 
 /// `get_available_sound_packs` plus `sound_pack_uses_specific_alert_sounds`:
@@ -153,8 +135,26 @@ pub(crate) fn export_settings(path: &Path, config: &AppConfig) -> Result<(), Str
     Ok(())
 }
 
+/// Carry the API keys active in `from` over to `to` where `to` has none.
+fn keep_api_keys(to: &mut AppSettings, from: &mut AppSettings) {
+    for name in secrets::API_KEY_NAMES {
+        if let (Some(new), Some(old)) = (
+            secrets::api_key_mut(to, name),
+            secrets::api_key_mut(from, name),
+        ) {
+            if new.is_empty() {
+                *new = std::mem::take(old);
+            }
+        }
+    }
+}
+
 /// `import_settings`: replace the settings with the file's and add any
-/// locations whose names are new. The imported settings carry no API keys.
+/// locations whose names are new.
+///
+/// Deliberate divergence: Python also replaces the in-memory API keys with
+/// the file's (an export has none), so the next Save deletes every key from
+/// the keyring or the portable bundle. Here the active keys stay.
 pub(crate) fn import_settings(path: &Path, config: &mut AppConfig) -> Result<(), String> {
     let text = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
     let data: Value = serde_json::from_str(&text)
@@ -171,8 +171,8 @@ pub(crate) fn import_settings(path: &Path, config: &mut AppConfig) -> Result<(),
             settings_data.insert("data_source".into(), "auto".into());
         }
     }
-    let imported: AppSettings = serde_json::from_value(Value::Object(settings_data))
-        .map_err(|e| format!("Failed to deserialize settings: {e}"))?;
+    let mut imported = AppSettings::from_python_dict(settings_data);
+    keep_api_keys(&mut imported, &mut config.settings);
     config.settings = imported;
     for entry in data
         .get("locations")
@@ -306,12 +306,22 @@ pub(crate) fn import_encrypted_api_keys(st: &mut State, path: &Path, passphrase:
 // Resets (`config/settings.py`)
 // ---------------------------------------------------------------------------
 
-/// `reset_to_defaults`: a fresh default configuration, saved. Like Python
-/// this also empties the saved locations.
+/// `reset_to_defaults`: default settings, saved.
+///
+/// Deliberate divergence: Python replaces the whole config with
+/// `AppConfig.default()`, emptying the saved locations its confirmation
+/// promises to keep and blanking the active API keys. Here the locations,
+/// the current location and the keys stay.
 pub(crate) fn reset_to_defaults(st: &mut State) -> bool {
     tracing::info!("Resetting configuration to defaults");
-    st.config = AppConfig::default();
+    reset_settings(&mut st.config);
     crate::app::save(st).is_ok()
+}
+
+fn reset_settings(config: &mut AppConfig) {
+    let mut settings = AppSettings::default();
+    keep_api_keys(&mut settings, &mut config.settings);
+    config.settings = settings;
 }
 
 /// `reset_all_data`: delete everything in the config folder, then save a
@@ -522,12 +532,17 @@ pub(crate) fn copy_installed_config(
 /// `config_manager._config = None; load_config()`: reread the config file.
 /// Portable mode keeps API keys in the bundle, so none are loaded here.
 pub(crate) fn reload_config(st: &mut State) -> Result<(), String> {
-    let mut config = aw_store::load_config(&st.paths.config_file()).map_err(|e| e.to_string())?;
-    config.normalize();
+    let build_tag = crate::lifecycle::build_tag();
+    let channel = aw_services::update::default_update_channel(build_tag.as_deref());
+    let (mut config, channel_defaulted) =
+        aw_store::load_config(&st.paths.config_file(), channel).map_err(|e| e.to_string())?;
     if !st.paths.portable && !st.offline {
         secrets::load_into(&mut config.settings);
     }
     st.config = config;
+    if channel_defaulted {
+        let _ = crate::app::save(st);
+    }
     Ok(())
 }
 
@@ -537,9 +552,8 @@ pub(crate) fn reload_config(st: &mut State) -> Result<(), String> {
 
 /// Everything Python refreshes after Settings are saved. The weather client
 /// and presenter read the settings on every fetch, so only the timers, menu
-/// and not-yet-ported subsystems need a nudge.
+/// and notification subsystems need a nudge.
 pub(crate) fn refresh_runtime_settings() {
-    tracing::info!("Refreshing runtime settings");
     refresh_notifier_settings();
     refresh_alert_notification_settings();
     // Tray text, global hotkeys, window/tray shortcuts, update checks and
@@ -548,170 +562,152 @@ pub(crate) fn refresh_runtime_settings() {
 }
 
 // ---------------------------------------------------------------------------
-// Stubs for backends ported by other workstreams. Each logs and changes
-// nothing until its subsystem lands.
+// Hooks the notifications workstream fills in
 // ---------------------------------------------------------------------------
 
-fn not_ported(action: &str) {
-    tracing::info!("{action} is not ported yet");
-}
-
-/// `_notifier.sound_enabled / soundpack / muted_sound_events`.
+/// Hook: `_notifier.sound_enabled / soundpack / muted_sound_events`.
 fn refresh_notifier_settings() {
-    not_ported("Refreshing notification sound settings");
+    tracing::debug!("Notification sound settings refresh hook: nothing to refresh yet");
 }
 
-/// `alert_notification_system.update_settings(settings.to_alert_settings())`.
+/// Hook: `alert_notification_system.update_settings(settings.to_alert_settings())`.
 fn refresh_alert_notification_settings() {
-    not_ported("Refreshing alert notification settings");
+    tracing::debug!("Alert notification settings refresh hook: nothing to refresh yet");
 }
 
-/// Account state for the Venice model browser (`VeniceBalance`).
-#[derive(Debug, Clone, Default, PartialEq, serde::Deserialize)]
-pub(crate) struct VeniceBalance {
-    pub can_consume: Option<bool>,
-    pub consumption_currency: Option<String>,
-    pub usd: Option<f64>,
-    pub diem: Option<f64>,
+// ---------------------------------------------------------------------------
+// Key checks and the tray text preview
+// ---------------------------------------------------------------------------
+
+fn http_client() -> Result<Arc<dyn HttpClient>, String> {
+    ReqwestClient::new()
+        .map(|c| Arc::new(c) as Arc<dyn HttpClient>)
+        .map_err(|e| e.to_string())
 }
 
-/// `OpenRouterModelsClient` / `VeniceModelsClient.get_text_models` (and
-/// `fetch_balance` for Venice). Runs on a worker thread.
-pub(crate) fn fetch_model_catalog(
-    venice: bool,
-    api_key: Option<&str>,
-) -> Result<(Vec<CatalogModel>, Option<VeniceBalance>), String> {
-    let _ = (venice, api_key);
-    not_ported("Fetching the AI model catalog");
-    Err("Unable to load models. Check your connection and API key, then refresh.".into())
-}
-
-/// `PirateWeatherClient.get_current_conditions` as a key check: `Err` holds
-/// the reason ("Invalid API key", ...). Runs on a worker thread.
+/// `_on_validate_pw_api_key`'s check: current conditions for New York.
+/// `Err` holds the reason shown after "validation failed: ". Runs on a
+/// worker thread.
 pub(crate) fn validate_pirate_weather_key(key: &str) -> Result<(), String> {
-    let _ = key;
-    not_ported("Pirate Weather key validation");
-    Err("Validation is not available in this build yet.".into())
+    check_pirate_weather_key(http_client()?, key)
+}
+
+fn check_pirate_weather_key(http: Arc<dyn HttpClient>, key: &str) -> Result<(), String> {
+    let client = PirateWeatherClient::new(http, key, "AccessiWeather/1.0", "us");
+    let location = Location::new("Test", 40.7128, -74.0060);
+    match client.get_current_conditions(&location) {
+        Ok(_) => Ok(()),
+        Err(e) if e.status_code == Some(401) => Err("Invalid API key".into()),
+        Err(e) if e.status_code == Some(429) => {
+            Err("Rate limit exceeded — but key appears valid".into())
+        }
+        Err(e) => Err(e.message),
+    }
 }
 
 /// `AirNowClient.validate_api_key`. Runs on a worker thread.
 pub(crate) fn validate_airnow_key(key: &str) -> Result<(), String> {
-    let _ = key;
-    not_ported("AirNow key validation");
-    Err("Validation is not available in this build yet.".into())
+    match AirNowClient::new(http_client()?, key, "AccessiWeather/2.0").validate_api_key() {
+        (true, _) => Ok(()),
+        (false, error) => Err(error.unwrap_or_else(|| "None".into())),
+    }
 }
 
-/// `validate_openrouter_api_key`: (valid, message). Runs on a worker thread.
-pub(crate) fn validate_openrouter_key(key: &str) -> (bool, String) {
-    let _ = key;
-    not_ported("OpenRouter key validation");
-    (
-        false,
-        "Unable to validate OpenRouter access. Check your connection and try again.".into(),
-    )
-}
-
-/// `validate_venice_api_key`: (valid, message). Runs on a worker thread.
-pub(crate) fn validate_venice_key(key: &str) -> (bool, String) {
-    let _ = key;
-    not_ported("Venice key validation");
-    (
-        false,
-        "Unable to validate Venice access. Check your connection and try again.".into(),
-    )
-}
-
-/// `play_sample_sound(pack_id)`.
-pub(crate) fn play_sample_sound(pack_id: &str) -> Result<(), String> {
-    not_ported(&format!("Playing a sample from sound pack {pack_id}"));
-    Ok(())
-}
-
-/// `show_soundpack_manager_dialog`.
-pub(crate) fn show_soundpack_manager(parent: &dyn wxdragon::prelude::WxWidget) {
-    let _ = parent;
-    not_ported("Soundpack Manager");
-}
-
-/// A newer release (`UpdateService.check_for_updates` result).
-#[derive(Debug, Clone)]
-pub(crate) struct UpdateInfo {
-    pub version: String,
-    pub is_nightly: bool,
-    pub release_notes: String,
-}
-
-/// The running version for update checks, and the nightly build date when
-/// this is a nightly build (`parse_nightly_date(app.build_tag)`).
-pub(crate) fn current_update_version() -> (String, Option<String>) {
-    (aw_core::VERSION.to_string(), None)
-}
-
-/// `UpdateService.check_for_updates`: `Ok(None)` when up to date. Runs on a
-/// worker thread.
-pub(crate) fn check_for_updates(
-    current_version: &str,
-    current_nightly_date: Option<&str>,
-    channel: &str,
-) -> Result<Option<UpdateInfo>, String> {
-    let _ = (current_version, current_nightly_date, channel);
-    not_ported("Checking for updates");
-    Err("Update checking is not available in this build yet.".into())
-}
-
-/// `UpdateAvailableDialog` then `app._download_and_apply_update`.
-pub(crate) fn offer_update(
-    parent: &dyn wxdragon::prelude::WxWidget,
-    current_version: &str,
-    info: &UpdateInfo,
-) {
-    let _ = parent;
-    let channel = if info.is_nightly { "Nightly" } else { "Stable" };
-    not_ported(&format!(
-        "Offering the {channel} update {} over {current_version} ({} bytes of notes)",
-        info.version,
-        info.release_notes.len()
-    ));
-}
-
-/// `config_manager.is_startup_enabled`: whether the OS launches the app at
-/// sign-in. Until registration is ported this reports the saved setting.
-pub(crate) fn is_startup_enabled() -> bool {
-    with_state().is_some_and(|s| s.borrow().config.settings.startup_enabled)
-}
-
-/// `config_manager.enable_startup`: (success, message).
-pub(crate) fn enable_startup() -> (bool, String) {
-    not_ported("Launch at startup registration");
-    (true, "Startup enabled successfully".into())
-}
-
-/// `config_manager.disable_startup`: (success, message).
-pub(crate) fn disable_startup() -> (bool, String) {
-    not_ported("Launch at startup registration");
-    (true, "Startup disabled successfully".into())
-}
-
-/// What the tray text preview formats with (`TaskbarIconUpdater` settings
-/// taken from the dialog, plus the weather on screen).
+/// What the tray text preview formats with: the updater
+/// `_on_edit_taskbar_text_format` builds from the dialog, plus the weather
+/// on screen.
 #[derive(Debug, Clone, Default)]
 pub(crate) struct TrayPreviewContext {
-    pub dynamic_enabled: bool,
-    pub temperature_unit: String,
-    pub wind_speed_unit: String,
+    pub updater: TaskbarIconUpdater,
     pub weather: Option<WeatherData>,
     pub location_name: Option<String>,
 }
 
 /// `TaskbarIconUpdater.build_preview`.
 pub(crate) fn tray_text_preview(format: &str, context: &TrayPreviewContext) -> String {
-    not_ported(&format!(
-        "Tray text preview of {format:?} (dynamic={}, units {}/{}, location {:?}, weather {})",
-        context.dynamic_enabled,
-        context.temperature_unit,
-        context.wind_speed_unit,
-        context.location_name,
-        context.weather.is_some()
-    ));
-    String::new()
+    context.updater.build_preview(
+        format,
+        context.weather.as_ref(),
+        context.location_name.as_deref(),
+        chrono::Utc::now(),
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use aw_providers::http::FixtureClient;
+    use aw_providers::pirateweather::BASE_URL;
+
+    use super::*;
+
+    fn with_keys() -> AppConfig {
+        let mut config = AppConfig::default();
+        config.settings.pirate_weather_api_key = "pw".into();
+        config.settings.venice_api_key = "vn".into();
+        config.settings.temperature_unit = "c".into();
+        config.add_location(Location::new("Home", 40.0, -75.0));
+        config.add_location(Location::new("Work", 41.0, -74.0));
+        config.set_current_location("Work");
+        config
+    }
+
+    /// Python's reset empties the locations its message promises to keep.
+    #[test]
+    fn reset_keeps_locations_and_active_keys() {
+        let mut config = with_keys();
+        reset_settings(&mut config);
+        assert_eq!(config.settings.temperature_unit, "both");
+        assert_eq!(config.location_names(), ["Home", "Work"]);
+        assert_eq!(config.current_location.unwrap().name, "Work");
+        assert_eq!(config.settings.pirate_weather_api_key, "pw");
+        assert_eq!(config.settings.venice_api_key, "vn");
+    }
+
+    /// Python's import blanks the active keys, and the next Save deletes
+    /// them from the keyring; a key the file itself carries still wins.
+    #[test]
+    fn import_keeps_active_keys() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("settings.json");
+        std::fs::write(
+            &path,
+            r#"{"settings": {"temperature_unit": "f", "sound_enabled": "off",
+                "venice_api_key": "from-file"}, "locations": []}"#,
+        )
+        .unwrap();
+        let mut config = with_keys();
+        import_settings(&path, &mut config).unwrap();
+        let s = &config.settings;
+        assert_eq!((s.temperature_unit.as_str(), s.sound_enabled), ("f", false));
+        assert_eq!(s.pirate_weather_api_key, "pw");
+        assert_eq!(s.venice_api_key, "from-file");
+    }
+
+    #[test]
+    fn pirate_weather_key_check_reads_like_python() {
+        let check = |status| {
+            let http = Arc::new(FixtureClient::new().with_status(BASE_URL, status));
+            check_pirate_weather_key(http, "k").unwrap_err()
+        };
+        assert_eq!(check(401), "Invalid API key");
+        assert_eq!(check(429), "Rate limit exceeded — but key appears valid");
+        assert_eq!(check(500), "API request failed: HTTP 500");
+    }
+
+    #[test]
+    fn tray_preview_uses_sample_weather_and_the_dialog_format() {
+        let context = TrayPreviewContext {
+            updater: TaskbarIconUpdater {
+                format_string: "{temp}".into(),
+                temperature_unit: "f".into(),
+                ..TaskbarIconUpdater::default()
+            },
+            ..TrayPreviewContext::default()
+        };
+        assert_eq!(tray_text_preview("{condition}", &context), "Partly Cloudy");
+        assert_eq!(
+            tray_text_preview("", &context),
+            tray_text_preview("{temp}", &context)
+        );
+    }
 }

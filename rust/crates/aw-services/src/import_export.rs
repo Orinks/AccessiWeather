@@ -248,16 +248,8 @@ pub fn import_settings(config: &mut AppConfig, path: &Path, config_file: &Path) 
         }
     }
     let field_count = settings_data.len();
-    // Python's `data.get(key, default)` never sees a null for a typed field.
     let present: Vec<String> = settings_data.keys().cloned().collect();
-    settings_data.retain(|_, v| !v.is_null());
-    let mut imported: AppSettings = match serde_json::from_value(Value::Object(settings_data)) {
-        Ok(s) => s,
-        Err(e) => {
-            tracing::error!("Failed to deserialize settings: {e}");
-            return false;
-        }
-    };
+    let mut imported = AppSettings::from_python_dict(settings_data);
     for name in API_KEY_NAMES {
         if let (Some(new), Some(old)) = (
             secrets::api_key_mut(&mut imported, name),
@@ -430,10 +422,19 @@ pub fn restore_config(config_file: &Path, backup_path: &Path) -> Option<AppConfi
         tracing::error!("Failed to restore config: {e}");
         return None;
     }
-    let config = aw_store::load_config(config_file).unwrap_or_else(|e| {
-        tracing::error!("Failed to load config: {e}");
-        AppConfig::default()
-    });
+    let channel = crate::update::default_update_channel(crate::update::build_tag());
+    let config = match aw_store::load_config(config_file, channel) {
+        Ok((config, defaulted)) => {
+            if defaulted {
+                let _ = aw_store::save_config(config_file, &config);
+            }
+            config
+        }
+        Err(e) => {
+            tracing::error!("Failed to load config: {e}");
+            AppConfig::default()
+        }
+    };
     tracing::info!("Config restored from {}", backup_path.display());
     Some(config)
 }
@@ -825,12 +826,15 @@ mod tests {
             let f = write(dir.path(), "bad.json", bad);
             assert!(!import_settings(&mut config, &f, &cfg_file));
         }
+        // Python imports a mistyped value as is; Rust falls back to the default.
         let wrong_type = write(
             dir.path(),
             "t.json",
-            json!({"settings": {"update_interval_minutes": "soon"}}),
+            json!({"settings": {"update_interval_minutes": "soon", "sound_enabled": "off"}}),
         );
-        assert!(!import_settings(&mut config, &wrong_type, &cfg_file));
+        assert!(import_settings(&mut config, &wrong_type, &cfg_file));
+        assert_eq!(config.settings.update_interval_minutes, 10);
+        assert!(!config.settings.sound_enabled);
         assert!(!import_settings(
             &mut config,
             &dir.path().join("nope.json"),

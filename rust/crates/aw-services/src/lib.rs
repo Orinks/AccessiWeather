@@ -7,7 +7,6 @@ use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-pub mod activation;
 pub mod import_export;
 pub mod logging;
 pub mod onboarding;
@@ -130,29 +129,6 @@ fn quote_plus(text: &str) -> String {
     out
 }
 
-/// `urllib.parse.unquote_plus`.
-pub(crate) fn unquote_plus(text: &str) -> String {
-    let bytes = text.as_bytes();
-    let mut out = Vec::with_capacity(bytes.len());
-    let mut i = 0;
-    while i < bytes.len() {
-        match bytes[i] {
-            b'+' => out.push(b' '),
-            b'%' if bytes
-                .get(i + 1..i + 3)
-                .is_some_and(|h| h.iter().all(u8::is_ascii_hexdigit)) =>
-            {
-                let hex = std::str::from_utf8(&bytes[i + 1..i + 3]).unwrap_or("00");
-                out.push(u8::from_str_radix(hex, 16).unwrap_or(0));
-                i += 2;
-            }
-            b => out.push(b),
-        }
-        i += 1;
-    }
-    String::from_utf8_lossy(&out).into_owned()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -170,7 +146,6 @@ mod tests {
             urlencode(&[("title", "Test & Title"), ("body", "<x>~*é")]),
             "title=Test+%26+Title&body=%3Cx%3E~%2A%C3%A9"
         );
-        assert_eq!(unquote_plus("a+b%2Bc%zz%4"), "a b+c%zz%4");
     }
 
     #[test]
