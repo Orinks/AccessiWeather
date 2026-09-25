@@ -49,3 +49,4 @@ tempfile.workspace = true
 
 [build-dependencies]
 embed-manifest = "1.4"
+winresource = "0.1"

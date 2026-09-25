@@ -5,8 +5,8 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 ## Core Workflows
 
 ### 1. CI (`ci.yml`)
-**Purpose**: Validate pull requests and branch pushes with the same core checks, using the fewest visible jobs possible
-**Triggers**:
+**Purpose**: Validate the Python edition's pull requests and branch pushes with the same core checks, using the fewest visible jobs possible
+**Triggers** (only when Python files change: `src/`, `tests/`, `scripts/`, `installer/`, `pyproject.toml`, requirements):
 - Push to `main` or `dev` branches
 - Pull requests to `main` or `dev`
 - Manual dispatch
@@ -19,22 +19,38 @@ This directory contains the GitHub Actions workflows for AccessiWeather. Below i
 
 ---
 
-### 2. Build and Package (`build.yml`)
+### 2. Rust CI (`rust.yml`)
+**Purpose**: Validate pull requests that touch `rust/`
+**Triggers**: pull requests (`rust/**`), version tags, manual dispatch
+
+**What it does**:
+- Runs `cargo fmt`, clippy, the workspace tests, the headless `--check` and a windowed `--smoke` on Linux, Windows and macOS (debug builds)
+- Fails when user-facing changes lack a curated `CHANGELOG.md` entry under `## [Unreleased]` (`cargo xtask changelog check`)
+
+---
+
+### 3. Build and Package (`rust-build.yml`)
 **Purpose**: Build nightly or tagged release artifacts separately from pull request validation
 **Triggers**:
 - Nightly schedule at 00:17 UTC (8:17 PM EDT / 7:17 PM EST)
 - Version tags
-- Manual dispatch (with optional version override)
+- Manual dispatch (`dry_run` skips publishing)
 
 **What it does**:
-- Builds Windows installer + portable ZIP, macOS ZIP, and Linux tarball
-- Creates nightly or stable GitHub releases
+- Builds the Rust edition's Windows installer + portable ZIP, macOS ZIP + disk image, and Linux tarball + AppImage with `cargo xtask package`, and smoke-tests them (including the AppImage on Fedora)
+- Creates nightly or stable GitHub releases under the asset names the Python edition's updater also reads, so Python installs update into the Rust edition
 - Builds release bodies from curated `CHANGELOG.md` entries instead of PR titles
 - Skips scheduled nightlies when there are no new curated release notes or explicit build marker
 
 ---
 
-### 3. Website Deployment
+### 4. Integration Tests (`rust-integration.yml`)
+**Purpose**: Catch weather API changes with live NWS, Open-Meteo and IEM requests
+**Triggers**: daily at 06:00 UTC and manual dispatch, never on pull requests
+
+---
+
+### 5. Website Deployment
 **Purpose**: Handled by the separate Vercel deployment workflow
 
 The desktop build workflow does not trigger website publishing. It only creates GitHub
@@ -46,9 +62,9 @@ release assets that the Vercel site can consume.
 
 ## Workflow Dependencies
 
-`ci.yml` handles validation only.
+`ci.yml` and `rust.yml` handle validation only.
 
-`build.yml` handles nightly/tagged packaging and release publication.
+`rust-build.yml` handles nightly/tagged packaging and release publication.
 
 Website deployment is intentionally separate and owned by the Vercel workflow.
 
@@ -58,8 +74,8 @@ Website deployment is intentionally separate and owned by the Vercel workflow.
 
 | Need to... | Use workflow | How |
 |------------|--------------|-----|
-| Test code changes | `ci.yml` | Automatic on PR/push |
-| Build installers / nightlies | `build.yml` | Nightly, tags, or manual |
+| Test code changes | `rust.yml` (Rust), `ci.yml` (Python) | Automatic on PR |
+| Build installers / nightlies | `rust-build.yml` | Nightly, tags, or manual |
 | Deploy website | Vercel workflow | Managed outside the desktop build workflow |
 
 ---
@@ -68,16 +84,17 @@ Website deployment is intentionally separate and owned by the Vercel workflow.
 
 As a solo maintainer, you typically only need to:
 
-1. **Open a PR to `dev`**: `ci.yml` validates formatting, lint, tests, changelog entries, and diff coverage
-2. **Merge changes to `dev`**: Nightly `build.yml` creates user-facing artifacts when there were user-facing commits
-3. **Publish a stable release tag**: `build.yml` creates the release assets; the Vercel workflow owns website deployment
+1. **Open a PR to `dev`**: `rust.yml` (and `ci.yml` for Python changes) validates formatting, lint, tests and changelog entries
+2. **Merge changes to `dev`**: Nightly `rust-build.yml` creates user-facing artifacts when there were user-facing commits
+3. **Publish a stable release tag**: `rust-build.yml` creates the release assets; the Vercel workflow owns website deployment
 
 Every user-facing PR needs a `CHANGELOG.md` bullet under `## [Unreleased]`. Direct pushes to
 `dev` or `main` are checked too, so user-facing commits without an associated PR still need a
 curated changelog entry.
 
 **Skipping the gate for non-user-facing work.** The gate flags any change under `src/`,
-`installer/`, or `soundpacks/` (the generated `weather_gov_api_client/` client is excluded). When a
+`installer/`, `soundpacks/`, `rust/crates/` or `rust/packaging/` (the generated
+`weather_gov_api_client/` client is excluded). When a
 PR is purely internal — refactors, CI, tooling, release plumbing — you have two escape hatches:
 
 - **PR:** add the `skip-changelog` label. The `Check CHANGELOG entry` step is skipped entirely.
@@ -125,7 +142,7 @@ If a workflow fails:
 
 Common issues:
 - **CI fails**: Usually linting or test failures - run locally first
-- **Build fails**: Check Python version, dependencies, or packaging setup
+- **Build fails**: Check the Rust toolchain, system packages, or packaging setup (`cargo xtask package` runs the same steps locally)
 - **Release fails**: Check if release already exists or version conflicts
 
 ---

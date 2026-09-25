@@ -2,9 +2,10 @@
 //! (`AppLifecycleMixin.update_tray_tooltip`,
 //! `MainWindowDisplayMixin._get_all_locations_tray_data`).
 //!
-//! The icon is Python's `resources/app.ico` at 16, 24, 32 and 48 px as raw
-//! RGBA (`ui/tray_<size>.rgba`, extracted with Pillow), so wx picks the size
-//! the display scaling asks for.
+//! The icon is the app icon's 16, 24, 32 and 48 px frames (the sizes Python
+//! loads from `resources/app.ico`) as raw RGBA, `ui/tray_<size>.rgba`
+//! written by `cargo xtask icons`, so wx picks the size the display scaling
+//! asks for.
 //!
 //! Menu commands run one event-loop turn later: wxDragon deletes the tray
 //! icon immediately, and "Quit" would otherwise delete it while its popup

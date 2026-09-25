@@ -10,10 +10,11 @@ members = [
     "crates/aw-notify",
     "crates/aw-app",
     "crates/aw-audio",
+    "xtask",
 ]
 
 [workspace.package]
-version = "0.11.0-rust.1"
+version = "0.11.0"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/Orinks/AccessiWeather"

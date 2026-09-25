@@ -12,6 +12,12 @@ use crate::wxradio::WxRadioClient;
 
 const DEFAULT_PATTERN: &str = "https://broadcastify.cdnstream1.com/noaa/{call_sign}";
 
+/// The bundled table (`StreamURLProvider._STREAM_URLS`): each call sign with
+/// its stream URLs in the order they are tried.
+pub fn bundled_stream_urls() -> &'static [(&'static str, &'static [&'static str])] {
+    STREAM_URLS
+}
+
 /// Something that can list stream URLs for a call sign. Implemented by
 /// [`StreamUrlProvider`] and by closures (handy for tests).
 pub trait StreamUrls: Send + Sync {

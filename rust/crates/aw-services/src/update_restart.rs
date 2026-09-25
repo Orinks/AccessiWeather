@@ -1,10 +1,10 @@
 //! Restart planning and the update scripts (`services/update_restart.py`,
 //! `apply_update` / `can_auto_apply` from `services/simple_update.py`).
 //!
-//! The Rust edition ships a zip on Windows and macOS and a tarball on Linux
-//! (`rust/packaging/package.sh`), so Windows always takes Python's portable
-//! path (unzip over the running folder), macOS its `.app` zip path, and Linux
-//! is a manual install exactly like a Python tarball run.
+//! A portable Windows run unzips over its folder, an installed one runs the
+//! setup program, macOS replaces the `.app` from the zip or disk image, and a
+//! running AppImage swaps itself for the new one. Anything else (a Linux
+//! tarball run) is a manual install.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -12,7 +12,9 @@ use std::process::Command;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RestartKind {
     Portable,
+    WindowsInstaller,
     MacosScript,
+    AppImageScript,
     Unsupported,
 }
 
@@ -112,49 +114,131 @@ pub(crate) fn shlex_quote(text: &str) -> String {
     format!("'{}'", text.replace('\'', r#"'"'"'"#))
 }
 
-/// How to apply `update_path` on `os` (`std::env::consts::OS` naming).
-pub fn plan_restart(update_path: &Path, os: &str) -> std::io::Result<RestartPlan> {
-    match os {
-        "windows" => {
+/// Python's `build_appimage_update_script`: wait for `pid` to exit, swap the
+/// AppImage for the download and relaunch it with `--updated`.
+pub fn build_appimage_update_script(update_path: &Path, appimage_path: &Path, pid: u32) -> String {
+    let q_update = shlex_quote(&update_path.display().to_string());
+    let q_appimage = shlex_quote(&appimage_path.display().to_string());
+    format!(
+        r#"#!/bin/bash
+PID={pid}
+UPDATE_PATH={q_update}
+APPIMAGE_PATH={q_appimage}
+while kill -0 "$PID" 2>/dev/null; do sleep 1; done
+STAGED="$APPIMAGE_PATH.update-new"
+cp "$UPDATE_PATH" "$STAGED" || exit 1
+chmod +x "$STAGED"
+mv -f "$STAGED" "$APPIMAGE_PATH" || exit 1
+rm -f "$UPDATE_PATH"
+cd "$HOME" || true
+nohup "$APPIMAGE_PATH" --updated >/dev/null 2>&1 &
+rm -f "$0""#
+    )
+}
+
+/// The `.AppImage` this process runs from (`running_appimage_path`): the
+/// AppImage runtime exports its path as `APPIMAGE`.
+pub fn running_appimage_path() -> Option<PathBuf> {
+    let path = PathBuf::from(std::env::var_os("APPIMAGE").filter(|p| !p.is_empty())?);
+    path.is_file().then_some(path)
+}
+
+fn private_script(name: &str) -> std::io::Result<PathBuf> {
+    let dir = tempfile::Builder::new()
+        .prefix("accessiweather_update_")
+        .tempdir()?
+        .keep();
+    Ok(dir.join(name))
+}
+
+fn script_plan(kind: RestartKind, script: PathBuf) -> RestartPlan {
+    RestartPlan {
+        kind,
+        command: vec!["bash".into(), script.display().to_string()],
+        script_path: Some(script),
+    }
+}
+
+/// How to apply `update_path` (`plan_restart`; `os` in
+/// `std::env::consts::OS` naming, `appimage` the running AppImage).
+pub fn plan_restart(
+    update_path: &Path,
+    portable: bool,
+    os: &str,
+    appimage: Option<&Path>,
+) -> std::io::Result<RestartPlan> {
+    let unsupported = || RestartPlan {
+        kind: RestartKind::Unsupported,
+        command: vec![update_path.display().to_string()],
+        script_path: None,
+    };
+    Ok(match os {
+        "windows" if portable => {
             let script = crate::exe_dir().join("accessiweather_portable_update.bat");
-            Ok(RestartPlan {
+            RestartPlan {
                 kind: RestartKind::Portable,
                 command: vec![script.display().to_string()],
                 script_path: Some(script),
-            })
+            }
         }
-        "macos" => {
-            let dir = tempfile::Builder::new()
-                .prefix("accessiweather_update_")
-                .tempdir()?
-                .keep();
-            let script = dir.join("accessiweather_update.sh");
-            Ok(RestartPlan {
-                kind: RestartKind::MacosScript,
-                command: vec!["bash".into(), script.display().to_string()],
-                script_path: Some(script),
-            })
-        }
-        _ => Ok(RestartPlan {
-            kind: RestartKind::Unsupported,
+        "windows" => RestartPlan {
+            kind: RestartKind::WindowsInstaller,
             command: vec![update_path.display().to_string()],
             script_path: None,
-        }),
-    }
+        },
+        "macos" => script_plan(
+            RestartKind::MacosScript,
+            private_script("accessiweather_update.sh")?,
+        ),
+        "linux"
+            if appimage.is_some()
+                && update_path
+                    .to_string_lossy()
+                    .to_lowercase()
+                    .ends_with(".appimage") =>
+        {
+            script_plan(
+                RestartKind::AppImageScript,
+                private_script("accessiweather_appimage_update.sh")?,
+            )
+        }
+        _ => unsupported(),
+    })
+}
+
+fn current_plan(update_path: &Path, portable: bool) -> std::io::Result<RestartPlan> {
+    let appimage = running_appimage_path();
+    plan_restart(
+        update_path,
+        portable,
+        std::env::consts::OS,
+        appimage.as_deref(),
+    )
 }
 
 /// Whether [`apply_update`] can install this download; when false the UI
 /// shows the "Manual Update Required" message with the file location.
-pub fn can_auto_apply(update_path: &Path) -> bool {
-    plan_restart(update_path, std::env::consts::OS)
-        .is_ok_and(|plan| plan.kind != RestartKind::Unsupported)
+pub fn can_auto_apply(update_path: &Path, portable: bool) -> bool {
+    current_plan(update_path, portable).is_ok_and(|plan| plan.kind != RestartKind::Unsupported)
 }
 
-/// Launch the update script and exit the process. Returns `Ok(false)` when
-/// the update needs a manual install. The caller must close its windows
-/// first so no file stays locked.
-pub fn apply_update(update_path: &Path) -> std::io::Result<bool> {
-    let plan = plan_restart(update_path, std::env::consts::OS)?;
+#[cfg(unix)]
+fn write_private_script(path: &Path, text: &str) -> std::io::Result<()> {
+    use std::os::unix::fs::PermissionsExt;
+    std::fs::write(path, text)?;
+    std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o700))
+}
+
+#[cfg(not(unix))]
+fn write_private_script(path: &Path, text: &str) -> std::io::Result<()> {
+    std::fs::write(path, text)
+}
+
+/// Launch the update script (or installer) and exit the process. Returns
+/// `Ok(false)` when the update needs a manual install. The caller must close
+/// its windows first so no file stays locked.
+pub fn apply_update(update_path: &Path, portable: bool) -> std::io::Result<bool> {
+    let plan = current_plan(update_path, portable)?;
     let exe = crate::exe_path();
     match (plan.kind, plan.script_path) {
         (RestartKind::Portable, Some(script)) => {
@@ -173,23 +257,33 @@ pub fn apply_update(update_path: &Path) -> std::io::Result<bool> {
                 .nth(3)
                 .map(Path::to_path_buf)
                 .unwrap_or_default();
-            std::fs::write(&script, build_macos_update_script(update_path, &app_path))?;
-            #[cfg(unix)]
-            {
-                use std::os::unix::fs::PermissionsExt;
-                std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o700))?;
-            }
+            write_private_script(&script, &build_macos_update_script(update_path, &app_path))?;
             Command::new("bash").arg(&script).spawn()?;
             std::process::exit(0);
         }
-        _ => {
-            tracing::warn!(
-                "Update requires manual installation: {}",
-                update_path.display()
-            );
-            Ok(false)
+        (RestartKind::WindowsInstaller, _) => {
+            Command::new(update_path).spawn()?;
+            std::process::exit(0);
         }
+        (RestartKind::AppImageScript, Some(script)) => {
+            let Some(appimage) = running_appimage_path() else {
+                return Ok(needs_manual_install(update_path));
+            };
+            let text = build_appimage_update_script(update_path, &appimage, std::process::id());
+            write_private_script(&script, &text)?;
+            Command::new("bash").arg(&script).spawn()?;
+            std::process::exit(0);
+        }
+        _ => Ok(needs_manual_install(update_path)),
     }
+}
+
+fn needs_manual_install(update_path: &Path) -> bool {
+    tracing::warn!(
+        "Update requires manual installation: {}",
+        update_path.display()
+    );
+    false
 }
 
 #[cfg(test)]
@@ -197,8 +291,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn windows_always_replaces_the_unzipped_install() {
-        let plan = plan_restart(Path::new("C:/temp/update.zip"), "windows").unwrap();
+    fn windows_portable_runs_unzip_over_the_folder_and_installs_run_setup() {
+        let plan = plan_restart(Path::new("C:/temp/update.zip"), true, "windows", None).unwrap();
         assert_eq!(plan.kind, RestartKind::Portable);
         let script = plan.script_path.unwrap();
         assert_eq!(
@@ -206,11 +300,15 @@ mod tests {
             "accessiweather_portable_update.bat"
         );
         assert_eq!(script.parent().unwrap(), crate::exe_dir());
+        let setup = plan_restart(Path::new("C:/t/setup.exe"), false, "windows", None).unwrap();
+        assert_eq!(setup.kind, RestartKind::WindowsInstaller);
+        assert_eq!(setup.command, ["C:/t/setup.exe"]);
+        assert_eq!(setup.script_path, None);
     }
 
     #[test]
     fn macos_writes_its_script_to_a_private_temp_dir() {
-        let plan = plan_restart(Path::new("/tmp/update.zip"), "macos").unwrap();
+        let plan = plan_restart(Path::new("/tmp/update.zip"), false, "macos", None).unwrap();
         assert_eq!(plan.kind, RestartKind::MacosScript);
         let script = plan.script_path.unwrap();
         assert_eq!(script.file_name().unwrap(), "accessiweather_update.sh");
@@ -224,10 +322,28 @@ mod tests {
     }
 
     #[test]
-    fn linux_tarballs_need_a_manual_install() {
-        let plan = plan_restart(Path::new("/tmp/a.tar.gz"), "linux").unwrap();
+    fn linux_swaps_a_running_appimage_and_leaves_tarballs_to_the_user() {
+        let plan = plan_restart(Path::new("/tmp/a.tar.gz"), false, "linux", None).unwrap();
         assert_eq!(plan.kind, RestartKind::Unsupported);
         assert_eq!(plan.command, ["/tmp/a.tar.gz"]);
+        let running = Path::new("/home/u/AccessiWeather.AppImage");
+        let not_appimage =
+            plan_restart(Path::new("/tmp/a.tar.gz"), false, "linux", Some(running)).unwrap();
+        assert_eq!(not_appimage.kind, RestartKind::Unsupported);
+        let plan = plan_restart(
+            Path::new("/tmp/New.AppImage"),
+            false,
+            "linux",
+            Some(running),
+        )
+        .unwrap();
+        assert_eq!(plan.kind, RestartKind::AppImageScript);
+        let script = plan.script_path.unwrap();
+        assert_eq!(
+            script.file_name().unwrap(),
+            "accessiweather_appimage_update.sh"
+        );
+        std::fs::remove_dir(script.parent().unwrap()).unwrap();
     }
 
     #[test]
