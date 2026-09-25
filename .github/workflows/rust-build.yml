@@ -13,6 +13,13 @@ on:
     - cron: "17 0 * * *"
   push:
     tags: ['v*.*.*']
+  # Packaging changes build every artifact as a dry run: pull requests never
+  # publish (see the guards on the release steps).
+  pull_request:
+    paths:
+      - "rust/packaging/**"
+      - "rust/xtask/**"
+      - ".github/workflows/rust-build.yml"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -76,8 +83,9 @@ jobs:
             echo "should_build=true" >> "$GITHUB_OUTPUT"
             echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
             echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
-          elif [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
-            # Manual nightly dispatches are intentional force-builds.
+          elif [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" || "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            # Manual nightly dispatches are intentional force-builds; pull
+            # requests build everything as a dry run.
             echo "is_nightly=true" >> "$GITHUB_OUTPUT"
             echo "should_build=true" >> "$GITHUB_OUTPUT"
             echo "tag=nightly-$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
@@ -423,7 +431,7 @@ jobs:
           fi
 
       - name: Create release
-        if: ${{ inputs.dry_run != true }}
+        if: ${{ github.event_name != 'pull_request' && inputs.dry_run != true }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IS_NIGHTLY: ${{ needs.prepare.outputs.is_nightly }}
@@ -448,7 +456,7 @@ jobs:
           fi
 
       - name: Send build notification
-        if: ${{ inputs.dry_run != true }}
+        if: ${{ github.event_name != 'pull_request' && inputs.dry_run != true }}
         env:
           ORINKS_BUILD_NOTIFICATION_TOKEN: ${{ secrets.ORINKS_BUILD_NOTIFICATION_TOKEN }}
           IS_NIGHTLY: ${{ needs.prepare.outputs.is_nightly }}
