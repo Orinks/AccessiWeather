@@ -19,6 +19,8 @@ pub mod provider_normalization;
 pub mod py;
 pub mod settings;
 pub mod source_selection;
+pub mod shortcut_preferences;
+pub mod sound_events;
 pub mod sources;
 pub mod thermal_comfort;
 pub mod trends;

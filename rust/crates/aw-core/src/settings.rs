@@ -68,6 +68,14 @@ default_fn!(d_300, i64, 300);
 default_fn!(d_parallel_timeout, f64, 10.0);
 default_fn!(d_max_coverage, String, s("max_coverage"));
 default_fn!(
+    d_muted_sound_events,
+    Vec<String>,
+    crate::sound_events::DEFAULT_MUTED_SOUND_EVENTS
+        .iter()
+        .map(|e| s(e))
+        .collect()
+);
+default_fn!(
     d_us_sources,
     Vec<String>,
     vec![s("nws"), s("openmeteo"), s("pirateweather")]
@@ -500,6 +508,7 @@ mod tests {
         );
         assert_eq!(s.parallel_fetch_timeout, 10.0);
         assert!(s.custom_system_prompt.is_none());
+        assert_eq!(s.muted_sound_events, vec!["data_updated"]);
     }
 
     #[test]

@@ -31,6 +31,8 @@ prismer = { workspace = true, features = ["static"] }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
+[dev-dependencies]
+tempfile.workspace = true
 
 [build-dependencies]
 embed-manifest = "1.4"
