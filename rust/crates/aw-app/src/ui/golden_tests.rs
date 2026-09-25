@@ -211,7 +211,8 @@ fn message_boxes_match_python() {
         ),
     ]
     .into_iter()
-    .map(|(m, c)| (m, c.to_string()))
+    // The only intended difference: the About box names wxWidgets.
+    .map(|(m, c)| (m.replace("wxWidgets", "wxPython"), c.to_string()))
     .collect();
     assert_eq!(ours, expected);
 }

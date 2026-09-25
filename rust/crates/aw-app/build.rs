@@ -26,6 +26,10 @@ fn windows() {
         }
         // Bridges for other platforms have no imports here; LNK4199 is expected.
         println!("cargo:rustc-link-arg=/IGNORE:4199");
+        // prism's failure hook substitutes stubs for screen reader DLLs that
+        // aren't installed. Pull it in explicitly, or delayimp.lib's empty
+        // default wins and probing a missing reader crashes the process.
+        println!("cargo:rustc-link-arg=/INCLUDE:__pfnDliFailureHook2");
     }
     let manifest = new_manifest("Orinks.AccessiWeather")
         .supported_os(Windows7..=Windows10)

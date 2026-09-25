@@ -286,13 +286,13 @@ pub(crate) fn check_updates_label(channel: &str) -> String {
     format!("Check for &Updates ({})...", python_title(channel))
 }
 
-/// `_on_about` message text.
+/// `_on_about` message text; names the toolkit this edition is built with.
 pub(crate) fn about_text(version: &str, portable: bool, config_path: &str) -> String {
     let mode = if portable { "Portable" } else { "Installed" };
     format!(
         "AccessiWeather v{version}\n\n\
          An accessible weather application with NOAA and Open-Meteo support.\n\n\
-         Built with wxPython for screen reader compatibility.\n\n\
+         Built with wxWidgets for screen reader compatibility.\n\n\
          Mode: {mode}\n\
          Config path: {config_path}\n\n\
          https://github.com/Orinks/AccessiWeather"

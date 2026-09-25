@@ -63,6 +63,18 @@ pub fn shutdown() {
 
 #[cfg(test)]
 mod tests {
+    /// Every backend must initialise or fail cleanly, including those whose
+    /// DLLs are absent (prism's delay-load hook substitutes stubs).
+    #[test]
+    fn every_backend_initialises_or_fails_cleanly() {
+        let prism = prismer::Prism::new().unwrap();
+        for id in prism.backend_ids() {
+            if let Ok(backend) = prism.create(id) {
+                let _ = backend.initialize();
+            }
+        }
+    }
+
     #[test]
     fn init_and_shutdown_never_panic() {
         super::init();
