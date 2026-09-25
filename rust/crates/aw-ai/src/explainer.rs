@@ -175,6 +175,14 @@ impl ExplanationCache {
         entries.insert(key, (Instant::now() + ttl, value));
     }
 
+    /// Forget one entry (Forecaster Notes' Regenerate Summary).
+    pub fn remove(&self, key: &str) {
+        self.entries
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .remove(key);
+    }
+
     /// Emptied by the explanation dialog's Regenerate button.
     pub fn clear(&self) {
         self.entries
@@ -1125,6 +1133,25 @@ mod tests {
                 ExplanationStyle::Detailed
             ))
             .is_none());
+    }
+
+    #[test]
+    fn removing_one_entry_forces_a_fresh_answer() {
+        let good = "A clear weather summary with enough useful detail.";
+        let server = TestServer::start(vec![answer(good, "m:free"), answer(good, "m:free")]);
+        let cache = Arc::new(ExplanationCache::new());
+        let e =
+            explainer(&server, Provider::OpenRouter, "openrouter/free").with_cache(cache.clone());
+        assert!(!run(&e, true).0.unwrap().cached);
+        assert!(run(&e, true).0.unwrap().cached);
+        cache.remove(&e.text_product_cache_key(
+            "AFD",
+            "Test",
+            "Forecast discussion",
+            ExplanationStyle::Detailed,
+        ));
+        assert!(!run(&e, true).0.unwrap().cached);
+        assert_eq!(server.requests().len(), 2);
     }
 
     #[test]

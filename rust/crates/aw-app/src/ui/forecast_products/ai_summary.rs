@@ -3,7 +3,9 @@
 //! `ui/dialogs/forecast_product_ai.py` and the generation half of
 //! `ForecastProductPanel._run_explain`.
 
-use aw_ai::{AiExplainer, CancelToken, ExplanationStyle};
+use std::sync::Arc;
+
+use aw_ai::{AiExplainer, CancelToken, ExplanationCache, ExplanationStyle};
 use aw_core::settings::AppSettings;
 
 /// Shown when no explainer can be built for the selected provider.
@@ -39,11 +41,15 @@ pub(crate) fn has_selected_key(settings: &AppSettings) -> bool {
 /// model-selection progress. `Err` carries the message the panel shows after
 /// "Failed to generate summary: ".
 ///
-/// As in Python, each request builds a fresh explainer with no cache
-/// (`build_explainer` gets no injected explainer). `cancel` drops the
+/// Unlike Python (whose explainer never gets a cache), summaries go through
+/// the app's shared explanation cache, so reopening a product answers
+/// instantly; `regenerate` drops the cached entry first. `cancel` drops the
 /// request once the panel closes.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn explain_text_product(
     settings: &AppSettings,
+    cache: Arc<ExplanationCache>,
+    regenerate: bool,
     text: &str,
     product_type: &str,
     location_name: &str,
@@ -53,6 +59,15 @@ pub(crate) fn explain_text_product(
     let Ok(explainer) = AiExplainer::from_settings(settings) else {
         return Err(NOT_CONFIGURED.to_string());
     };
+    let explainer = explainer.with_cache(cache.clone());
+    if regenerate {
+        cache.remove(&explainer.text_product_cache_key(
+            product_type,
+            location_name,
+            text,
+            ExplanationStyle::Detailed,
+        ));
+    }
     let result = explainer
         .explain_text_product(
             text,

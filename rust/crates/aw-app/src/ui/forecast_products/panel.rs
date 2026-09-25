@@ -200,10 +200,10 @@ impl ProductPanel {
         register(p.id, p.clone());
 
         let id = p.id;
-        explain_button.on_click(move |_| on(id, |p| p.on_explain()));
+        explain_button.on_click(move |_| on(id, |p| p.on_explain(false)));
         // Python's Regenerate also clears the injected explainer's cache,
         // but no explainer is ever injected; each click builds a fresh one.
-        regenerate_button.on_click(move |_| on(id, |p| p.on_explain()));
+        regenerate_button.on_click(move |_| on(id, |p| p.on_explain(true)));
         retry_button.on_click(move |_| on(id, |p| p.trigger_load()));
         let advanced_lookup = options.advanced_lookup;
         advanced_lookup_button.on_click(move |_| {
@@ -297,13 +297,16 @@ impl ProductPanel {
         self.render();
     }
 
-    /// Plain Language Summary / Regenerate Summary.
-    fn on_explain(&self) {
+    /// Plain Language Summary / Regenerate Summary (`regenerate`).
+    fn on_explain(&self, regenerate: bool) {
         let Some(text) = self.state.borrow_mut().on_explain() else {
             return;
         };
         self.render();
-        let Some(settings) = with_state().map(|s| s.borrow().config.settings.clone()) else {
+        let Some((settings, cache)) = with_state().map(|s| {
+            let st = s.borrow();
+            (st.config.settings.clone(), st.ai_explanation_cache.clone())
+        }) else {
             return;
         };
         let product_type = self.product_type();
@@ -320,6 +323,8 @@ impl ProductPanel {
                 };
                 ai_summary::explain_text_product(
                     &settings,
+                    cache,
+                    regenerate,
                     &text,
                     &product_type,
                     &location_name,
