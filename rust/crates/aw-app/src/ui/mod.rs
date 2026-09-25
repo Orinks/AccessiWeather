@@ -5,6 +5,7 @@ mod alert_dialog;
 mod commands;
 mod community_packs_dialog;
 mod display;
+mod forecast_products;
 mod location_dialog;
 mod locations;
 mod main_window;

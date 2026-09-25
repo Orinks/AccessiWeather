@@ -8,6 +8,7 @@ use std::sync::Arc;
 use aw_core::presenter::WeatherPresenter;
 use aw_core::settings::AppConfig;
 use aw_core::Location;
+use aw_providers::products::ForecastProductService;
 use aw_providers::{HttpClient, ReqwestClient, WeatherClient};
 use aw_store::Paths;
 
@@ -56,6 +57,9 @@ pub(crate) struct State {
     pub paths: Paths,
     pub config: AppConfig,
     pub client: WeatherClient,
+    /// Text products shared by Forecaster Notes, National Products and
+    /// Advanced Lookup (`_get_forecast_product_service`).
+    pub products: Arc<ForecastProductService>,
     /// `app.current_weather_data`: what the main window shows.
     pub current_weather_data: Option<aw_core::model::WeatherData>,
     /// `app.is_updating`: a full refresh is in flight.
@@ -118,6 +122,7 @@ pub fn run(args: Args) -> Result<(), AppError> {
     } else {
         Arc::new(ReqwestClient::new()?)
     };
+    let products = Arc::new(ForecastProductService::new(http.clone()));
     let client = WeatherClient::new(http);
 
     if args.check {
@@ -139,6 +144,7 @@ pub fn run(args: Args) -> Result<(), AppError> {
         paths,
         config,
         client,
+        products,
         current_weather_data: None,
         is_updating: false,
         smoke: args.smoke,
