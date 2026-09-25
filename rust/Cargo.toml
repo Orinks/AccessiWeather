@@ -18,6 +18,7 @@ repository = "https://github.com/Orinks/AccessiWeather"
 aw-core = { path = "crates/aw-core" }
 aw-providers = { path = "crates/aw-providers" }
 aw-store = { path = "crates/aw-store" }
+aw-audio = { path = "crates/aw-audio" }
 
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
