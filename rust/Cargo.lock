@@ -288,6 +288,7 @@ version = "0.11.0-rust.1"
 dependencies = [
  "aw-core",
  "chrono",
+ "chrono-tz",
  "reqwest 0.12.28",
  "serde",
  "serde_json",

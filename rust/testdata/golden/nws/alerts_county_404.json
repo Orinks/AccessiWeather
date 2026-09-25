@@ -1,0 +1,49 @@
+{
+ "now": "2026-01-20T18:30:00+00:00",
+ "call": "alerts",
+ "location": {
+  "name": "New York, NY",
+  "latitude": 40.7128,
+  "longitude": -74.006,
+  "timezone": null,
+  "country_code": null,
+  "marine_mode": false,
+  "forecast_zone_id": null,
+  "cwa_office": null,
+  "county_zone_id": "XXC000",
+  "fire_zone_id": null,
+  "radar_station": null
+ },
+ "radius": "county",
+ "responses": [
+  {
+   "url": "https://api.weather.gov/alerts/active?zone=XXC000&status=actual",
+   "status": 404,
+   "body": ""
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/alerts/active",
+   "params": [
+    [
+     "zone",
+     "XXC000"
+    ],
+    [
+     "status",
+     "actual"
+    ]
+   ],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "alerts": []
+ }
+}

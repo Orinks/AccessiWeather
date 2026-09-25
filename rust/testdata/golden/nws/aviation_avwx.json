@@ -1,0 +1,44 @@
+{
+ "now": "2026-01-20T18:21:00+00:00",
+ "call": "aviation_weather",
+ "station": "EGLL",
+ "include_sigmets": false,
+ "include_cwas": false,
+ "avwx_api_key": "secret",
+ "responses": [
+  {
+   "url": "https://avwx.rest/api/taf/EGLL?token=secret&options=info%2Ctranslate%2Cspeech%2Csummary",
+   "status": 200,
+   "body": "{\"raw\":\"TAF EGLL 201700Z 2018/2124 24010KT 9999 SCT030\",\"info\":{\"name\":\"London Heathrow\"},\"start_time\":{\"dt\":\"2026-01-20T18:00:00Z\"},\"end_time\":{\"repr\":\"2124\"},\"forecast\":[{\"type\":\"FROM\",\"start_time\":{\"dt\":\"2026-01-20T18:00:00Z\"},\"speech\":\"Winds 240 at 10kt\"},{\"type\":\"TEMPO\",\"raw\":\"TEMPO 2020/2024 4000 RA\"},{\"type\":\"PROB\",\"probability\":{\"value\":30},\"flight_rules\":\"MVFR\"}],\"translate\":{\"forecast\":[{},{},{\"wind\":\"W-10kt\",\"visibility\":\"4km\",\"wx_codes\":\"Rain\"}]}}"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://avwx.rest/api/taf/EGLL",
+   "params": [
+    [
+     "token",
+     "secret"
+    ],
+    [
+     "options",
+     "info,translate,speech,summary"
+    ]
+   ],
+   "headers": [
+    [
+     "Accept",
+     "application/json"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "raw_taf": "TAF EGLL 201700Z 2018/2124 24010KT 9999 SCT030",
+  "decoded_taf": "Terminal Aerodrome Forecast for London Heathrow.\nValid from 18:00Z on the 20th to 2124.\nFrom from 18:00Z on the 20th:\n  Winds 240 at 10kt\nTemporary:\n  TEMPO 2020/2024 4000 RA\nProbability 30%:\n  Flight rules: MVFR.\n  W-10kt; Visibility: 4km; Weather: Rain.",
+  "station_id": "EGLL",
+  "airport_name": "London Heathrow",
+  "active_sigmets": [],
+  "active_cwas": []
+ }
+}

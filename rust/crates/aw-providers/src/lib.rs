@@ -6,6 +6,7 @@
 pub mod geocoding;
 pub mod http;
 pub mod nws;
+pub mod nws_legacy;
 pub mod openmeteo;
 pub mod pirateweather;
 pub mod weather_client;

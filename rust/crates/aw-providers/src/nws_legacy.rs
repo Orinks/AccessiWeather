@@ -1,4 +1,6 @@
-//! National Weather Service (api.weather.gov) client.
+//! Legacy National Weather Service client against the old `aw_core::weather`
+//! model, kept only for `weather_client.rs` until the orchestration rewrite
+//! lands. New code uses [`crate::nws`].
 
 use aw_core::alerts::{WeatherAlert, WeatherAlerts};
 use aw_core::units::wind_direction_to_cardinal;

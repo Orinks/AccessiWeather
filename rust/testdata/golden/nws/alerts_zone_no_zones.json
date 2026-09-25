@@ -1,0 +1,100 @@
+{
+ "now": "2026-01-20T18:30:00+00:00",
+ "call": "alerts",
+ "location": {
+  "name": "New York, NY",
+  "latitude": 40.7128,
+  "longitude": -74.006,
+  "timezone": null,
+  "country_code": null,
+  "marine_mode": false,
+  "forecast_zone_id": null,
+  "cwa_office": null,
+  "county_zone_id": null,
+  "fire_zone_id": null,
+  "radar_station": null
+ },
+ "radius": "zone",
+ "responses": [
+  {
+   "url": "https://api.weather.gov/points/40.7128,-74.006",
+   "status": 200,
+   "body": "{\"properties\":{}}"
+  },
+  {
+   "url": "https://api.weather.gov/alerts/active?point=40.7128%2C-74.006&status=actual",
+   "status": 200,
+   "body": "{\"features\":[{\"id\":\"urn:oid:a\",\"properties\":{\"event\":\"Tornado Warning\",\"headline\":\"Tornado Warning issued\",\"severity\":\"Extreme\",\"urgency\":\"Immediate\",\"certainty\":\"Observed\",\"messageType\":\"Alert\",\"description\":\"A tornado was sighted.\",\"instruction\":\"Take cover now.\",\"areaDesc\":\"New York, NY; Kings, NY;\",\"affectedZones\":[\"https://api.weather.gov/zones/county/NYC061\",\"https://api.weather.gov/zones/forecast/NYZ072\"],\"geocode\":{\"SAME\":[\"036061\",36047]},\"eventCode\":{\"SAME\":[\"TOR\"]},\"sent\":\"2026-01-20T18:00:00Z\",\"effective\":\"2026-01-20T18:00:00-05:00\",\"onset\":\"2026-01-20T18:05:00-05:00\",\"expires\":\"2026-01-20T19:00:00-05:00\",\"references\":[{\"identifier\":\"urn:oid:prev\",\"@id\":\"https://x/prev\"}]}}]}"
+  }
+ ],
+ "requests": [
+  {
+   "url": "https://api.weather.gov/points/40.7128,-74.006",
+   "params": [],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  },
+  {
+   "url": "https://api.weather.gov/alerts/active",
+   "params": [
+    [
+     "point",
+     "40.7128,-74.006"
+    ],
+    [
+     "status",
+     "actual"
+    ]
+   ],
+   "headers": [
+    [
+     "User-Agent",
+     "AccessiWeather/2.0"
+    ]
+   ]
+  }
+ ],
+ "result": {
+  "alerts": [
+   {
+    "title": "Tornado Warning issued",
+    "description": "A tornado was sighted.",
+    "severity": "Extreme",
+    "urgency": "Immediate",
+    "certainty": "Observed",
+    "event": "Tornado Warning",
+    "headline": "Tornado Warning issued",
+    "instruction": "Take cover now.",
+    "onset": "2026-01-20T18:05:00-05:00",
+    "expires": "2026-01-20T19:00:00-05:00",
+    "sent": "2026-01-20T18:00:00+00:00",
+    "effective": "2026-01-20T18:00:00-05:00",
+    "areas": [
+     "New York, NY",
+     "Kings, NY"
+    ],
+    "references": [
+     "urn:oid:prev"
+    ],
+    "id": "urn:oid:a",
+    "source": "NWS",
+    "message_type": "Alert",
+    "affected_zones": [
+     "NYC061",
+     "NYZ072"
+    ],
+    "same_codes": [
+     "036061",
+     "36047"
+    ],
+    "same_event_codes": [
+     "TOR"
+    ]
+   }
+  ]
+ }
+}
