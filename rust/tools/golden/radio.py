@@ -879,7 +879,45 @@ def auto_tune_golden() -> None:
         {"name": "duplicate_extends", "batches": [["tornado"], ["tornado"]], "clock": [100.0, 150.0, 399.0, 450.0]},
         {"name": "same_less_does_not_extend", "batches": [["tornado"], ["no_county_codes"]]},
     ]
-    write("auto_tune.json", [run_auto_tune({**base, **c}) for c in cases])
+    write("auto_tune.json", rust_divergences([run_auto_tune({**base, **c}) for c in cases]))
+
+
+# ---------------------------------------------------------------------------
+# Intentional divergences from Python
+#
+# Python bug: when a stream fails and a fallback URL then plays, the failed
+# attempt's on_error has already cleared ``session.playing_station`` and the
+# fallback never sets it again. Auto-tune then sees "playback stopped" and
+# never stops the stream it started, and the hotkey never remembers the
+# station. The Rust port restores the station before every attempt, so these
+# cases record what Python would do without the bug.
+
+FALLBACK_NOTE = (
+    "Intentional divergence: Python loses the station when a fallback stream plays; "
+    "Rust keeps it (see rust_divergences in tools/golden/radio.py)."
+)
+
+DIVERGENCES = {
+    # Auto-tune now stops the fallback stream when its time is up.
+    "fallback_stream": {
+        "statuses": [
+            "Weather radio auto-tune started WXK27 for active alerts.",
+            "Weather radio auto-tune stopped WXK27.",
+        ],
+        "stops": 1,
+        "last_station": "WXK27",
+    },
+    # The hotkey's fallback stream stays on record as the playing station.
+    "second_stream": {"final_station": "WXK27"},
+}
+
+
+def rust_divergences(results: list[dict]) -> list[dict]:
+    for result in results:
+        change = DIVERGENCES.get(result["name"])
+        if change:
+            result.update(change, divergence=FALLBACK_NOTE)
+    return results
 
 
 # ---------------------------------------------------------------------------
@@ -943,7 +981,7 @@ def toggle_golden() -> None:
         {"name": "preferred", "preferred": {"WXK27": "http://b"}},
         {"name": "state_in_name", "last_station": "KEC61"},
     ]
-    write("toggle.json", [run_toggle({**base, **c}) for c in cases])
+    write("toggle.json", rust_divergences([run_toggle({**base, **c}) for c in cases]))
 
 
 if __name__ == "__main__":

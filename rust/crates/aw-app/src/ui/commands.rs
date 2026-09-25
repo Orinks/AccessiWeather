@@ -64,7 +64,7 @@ pub(crate) fn on_uv_index() {
 
 /// View > NOAA Weather Radio (Ctrl+N).
 pub(crate) fn on_noaa_radio() {
-    not_ported("NOAA Weather Radio");
+    super::noaa_radio_dialog::show_noaa_radio_dialog();
 }
 
 /// View > Weather Assistant (Ctrl+T).

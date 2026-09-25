@@ -2,6 +2,8 @@
 //! the main window, its menus and shortcuts, and the location and alert dialogs.
 //! the main window, its menus and shortcuts, the location dialogs and the
 //! Settings dialog.
+//! the main window, its menus and shortcuts, and the location, alert and NOAA
+//! Weather Radio dialogs.
 
 mod ai_model_check;
 mod alert_dialog;
@@ -19,6 +21,7 @@ mod main_window;
 mod menus;
 mod progress_dialog;
 mod model_browser_dialog;
+mod noaa_radio_dialog;
 mod refresh;
 mod settings_actions;
 mod settings_dialog;
@@ -41,5 +44,6 @@ mod settings_golden_tests;
 pub(crate) use alert_dialog::{show_alert_details, show_alerts_summary};
 #[allow(unused_imports)]
 pub(crate) use commands::show_alert_details_at;
-pub(crate) use main_window::{build_main_window, main_frame};
+pub(crate) use main_window::{build_main_window, main_frame, set_status};
+pub(crate) use noaa_radio_dialog::close_noaa_radio_dialog;
 pub(crate) use refresh::refresh_now;

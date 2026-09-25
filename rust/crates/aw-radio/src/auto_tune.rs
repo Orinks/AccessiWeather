@@ -565,7 +565,13 @@ impl AlertRadioAutoTuner {
                 if state.generation != generation {
                     return false;
                 }
-                self.session.update(|s| s.current_url_index = index);
+                // Divergence from Python: a failed attempt's error clears the
+                // station; put it back so a fallback stream that starts is one
+                // auto-tune can see, and stop when its time is up.
+                self.session.update(|s| {
+                    s.playing_station = Some(station.clone());
+                    s.current_url_index = index;
+                });
             }
             if self.session.player.play(url) {
                 self.emit_status(format!(

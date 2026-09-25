@@ -112,7 +112,13 @@ impl RadioToggleController {
             s.current_url_index = 0;
         });
         for (index, url) in urls.iter().enumerate() {
-            self.session.update(|s| s.current_url_index = index);
+            // Divergence from Python: a failed attempt's error clears the
+            // station; put it back so a fallback stream that starts is
+            // remembered for the next toggle.
+            self.session.update(|s| {
+                s.playing_station = Some(station.clone());
+                s.current_url_index = index;
+            });
             if self.session.player.play(url) {
                 // Station names already end in the state ("Mobile, AL").
                 self.announce(format!("Playing {}, {}.", station.call_sign, station.name));

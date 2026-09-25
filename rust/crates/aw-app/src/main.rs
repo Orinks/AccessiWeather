@@ -4,6 +4,7 @@ mod app;
 mod cli;
 mod fixtures;
 mod portable_keys;
+mod radio;
 mod screen_reader;
 mod ui;
 

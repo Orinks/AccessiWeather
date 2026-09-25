@@ -124,12 +124,17 @@ pub fn run(args: Args) -> Result<(), AppError> {
     } else {
         Arc::new(ReqwestClient::new()?)
     };
+<<<<<<< HEAD
     let products = Arc::new(ForecastProductService::new(http.clone()));
     let client = WeatherClient::new(http);
+=======
+    let client = WeatherClient::new(http.clone());
+>>>>>>> port/radioui
 
     if args.check {
         return self_check(&config, &client);
     }
+    crate::radio::init(&paths.config_dir, http);
 
     if (args.smoke || args.offline) && config.locations.is_empty() {
         config.add_location(

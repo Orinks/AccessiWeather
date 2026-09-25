@@ -903,7 +903,10 @@ impl RadioDialog {
     }
 
     fn update_favorite_button_state(&self) {
-        let station = self.lock().selected_station();
+        // Read and write under one lock: a station load can finish on the
+        // worker while a UI-thread action (Favorite, a new selection) runs.
+        let mut inner = self.lock();
+        let station = inner.selected_station();
         let favorite = station.as_ref().is_some_and(|s| {
             self.deps
                 .preferences
@@ -911,7 +914,6 @@ impl RadioDialog {
                 .unwrap()
                 .is_favorite_station(&s.call_sign)
         });
-        let mut inner = self.lock();
         inner.view.favorite_enabled = station.is_some();
         inner.view.favorite_label = if favorite {
             labels::REMOVE_FAVORITE
@@ -1032,16 +1034,24 @@ impl RadioDialog {
         });
         {
             let mut inner = self.lock();
-            inner.playing_station = Some(station);
+            inner.playing_station = Some(station.clone());
             inner.current_urls = urls;
             inner.current_url_index = 0;
         }
-        self.try_play_current(&call_sign);
+        self.try_play_current(&station);
     }
 
     /// Try the current URL, advancing through the rest on failure.
-    fn try_play_current(&self, call_sign: &str) {
+    fn try_play_current(&self, station: &Station) {
+        let call_sign = &station.call_sign;
         loop {
+            // Divergence from Python: a failed attempt's error clears the
+            // station (session and dialog); put it back so a fallback stream
+            // that starts is remembered for the hotkey and known to auto-tune.
+            self.deps
+                .session
+                .update(|s| s.playing_station = Some(station.clone()));
+            self.lock().playing_station = Some(station.clone());
             let (total, index, url) = {
                 let inner = self.lock();
                 let index = inner.current_url_index;

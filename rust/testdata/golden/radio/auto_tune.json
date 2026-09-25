@@ -289,7 +289,8 @@
     "name": "fallback_stream",
     "workers": 1,
     "statuses": [
-      "Weather radio auto-tune started WXK27 for active alerts."
+      "Weather radio auto-tune started WXK27 for active alerts.",
+      "Weather radio auto-tune stopped WXK27."
     ],
     "played": [
       "https://u1",
@@ -297,10 +298,11 @@
     ],
     "waits": [],
     "wake_sets": 0,
-    "stops": 0,
+    "stops": 1,
     "url_lookups": 1,
     "final_station": null,
-    "last_station": null
+    "last_station": "WXK27",
+    "divergence": "Intentional divergence: Python loses the station when a fallback stream plays; Rust keeps it (see rust_divergences in tools/golden/radio.py)."
   },
   {
     "enabled": true,

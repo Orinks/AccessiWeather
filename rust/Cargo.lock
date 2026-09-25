@@ -10,6 +10,7 @@ dependencies = [
  "aw-core",
  "aw-notify",
  "aw-providers",
+ "aw-radio",
  "aw-store",
  "chrono",
  "clap",
