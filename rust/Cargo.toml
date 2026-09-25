@@ -4,6 +4,7 @@ members = [
     "crates/aw-core",
     "crates/aw-providers",
     "crates/aw-store",
+    "crates/aw-ai",
     "crates/aw-app",
 ]
 
