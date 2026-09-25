@@ -396,7 +396,7 @@
    "steps": [
     {
      "write": {
-      "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n- Duplicate entry\n\n### Accessibility\n- Screen reader label added\n\n### Added\n- Added entry one\n* Starred line is not a bullet\n#### Deep heading is not a section\n- Added entry two\n\n  - Indented continuation after a blank line\ntrailing text that is ignored\n\n### Added\n- Second Added section wins\n\n### Notes\n### Empty section above\n\n## [2.0.0] - 2026-05-05\n\n### Changed\n- Two point oh change\n\n## [1.9.0]\n\n### Fixed\n- Undated release with trailing spaces\n\n## [1.8.0] - 2026-04-04 [YANKED]\n\n### Removed\n- Yanked release\n"
+      "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n- Duplicate entry\n\n### Accessibility\n- Screen reader label added\n\n### Added\n- Added entry one\n* Starred line is not a bullet\n#### Deep heading is not a section\n- Added entry two\n\n  - Indented continuation after a blank line\ntrailing text that is ignored\n\n### Added\n- Second Added section wins\n\n### Notes\n### Empty section above\n\n## [2.0.0] - 2026-05-05\n\n### Changed\n- Two point oh change\n\n## [1.9.0]   \n\n### Fixed\n- Undated release with trailing spaces\n\n## [1.8.0] - 2026-04-04 [YANKED]\n\n### Removed\n- Yanked release\n"
      },
      "commit": "edge"
     }
@@ -424,7 +424,7 @@
    "steps": [
     {
      "write": {
-      "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n- Duplicate entry\n\n### Accessibility\n- Screen reader label added\n\n### Added\n- Added entry one\n* Starred line is not a bullet\n#### Deep heading is not a section\n- Added entry two\n\n  - Indented continuation after a blank line\ntrailing text that is ignored\n\n### Added\n- Second Added section wins\n\n### Notes\n### Empty section above\n\n## [2.0.0] - 2026-05-05\n\n### Changed\n- Two point oh change\n\n## [1.9.0]\n\n### Fixed\n- Undated release with trailing spaces\n\n## [1.8.0] - 2026-04-04 [YANKED]\n\n### Removed\n- Yanked release\n"
+      "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n- Duplicate entry\n\n### Accessibility\n- Screen reader label added\n\n### Added\n- Added entry one\n* Starred line is not a bullet\n#### Deep heading is not a section\n- Added entry two\n\n  - Indented continuation after a blank line\ntrailing text that is ignored\n\n### Added\n- Second Added section wins\n\n### Notes\n### Empty section above\n\n## [2.0.0] - 2026-05-05\n\n### Changed\n- Two point oh change\n\n## [1.9.0]   \n\n### Fixed\n- Undated release with trailing spaces\n\n## [1.8.0] - 2026-04-04 [YANKED]\n\n### Removed\n- Yanked release\n"
      },
      "commit": "edge"
     }
@@ -452,7 +452,7 @@
    "steps": [
     {
      "write": {
-      "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n- Duplicate entry\n\n### Accessibility\n- Screen reader label added\n\n### Added\n- Added entry one\n* Starred line is not a bullet\n#### Deep heading is not a section\n- Added entry two\n\n  - Indented continuation after a blank line\ntrailing text that is ignored\n\n### Added\n- Second Added section wins\n\n### Notes\n### Empty section above\n\n## [2.0.0] - 2026-05-05\n\n### Changed\n- Two point oh change\n\n## [1.9.0]\n\n### Fixed\n- Undated release with trailing spaces\n\n## [1.8.0] - 2026-04-04 [YANKED]\n\n### Removed\n- Yanked release\n"
+      "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n- Duplicate entry\n\n### Accessibility\n- Screen reader label added\n\n### Added\n- Added entry one\n* Starred line is not a bullet\n#### Deep heading is not a section\n- Added entry two\n\n  - Indented continuation after a blank line\ntrailing text that is ignored\n\n### Added\n- Second Added section wins\n\n### Notes\n### Empty section above\n\n## [2.0.0] - 2026-05-05\n\n### Changed\n- Two point oh change\n\n## [1.9.0]   \n\n### Fixed\n- Undated release with trailing spaces\n\n## [1.8.0] - 2026-04-04 [YANKED]\n\n### Removed\n- Yanked release\n"
      },
      "commit": "edge"
     }
@@ -480,7 +480,7 @@
    "steps": [
     {
      "write": {
-      "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n- Duplicate entry\n\n### Accessibility\n- Screen reader label added\n\n### Added\n- Added entry one\n* Starred line is not a bullet\n#### Deep heading is not a section\n- Added entry two\n\n  - Indented continuation after a blank line\ntrailing text that is ignored\n\n### Added\n- Second Added section wins\n\n### Notes\n### Empty section above\n\n## [2.0.0] - 2026-05-05\n\n### Changed\n- Two point oh change\n\n## [1.9.0]\n\n### Fixed\n- Undated release with trailing spaces\n\n## [1.8.0] - 2026-04-04 [YANKED]\n\n### Removed\n- Yanked release\n"
+      "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n- Duplicate entry\n\n### Accessibility\n- Screen reader label added\n\n### Added\n- Added entry one\n* Starred line is not a bullet\n#### Deep heading is not a section\n- Added entry two\n\n  - Indented continuation after a blank line\ntrailing text that is ignored\n\n### Added\n- Second Added section wins\n\n### Notes\n### Empty section above\n\n## [2.0.0] - 2026-05-05\n\n### Changed\n- Two point oh change\n\n## [1.9.0]   \n\n### Fixed\n- Undated release with trailing spaces\n\n## [1.8.0] - 2026-04-04 [YANKED]\n\n### Removed\n- Yanked release\n"
      },
      "commit": "edge"
     }
@@ -508,7 +508,7 @@
    "steps": [
     {
      "write": {
-      "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n- Duplicate entry\n\n### Accessibility\n- Screen reader label added\n\n### Added\n- Added entry one\n* Starred line is not a bullet\n#### Deep heading is not a section\n- Added entry two\n\n  - Indented continuation after a blank line\ntrailing text that is ignored\n\n### Added\n- Second Added section wins\n\n### Notes\n### Empty section above\n\n## [2.0.0] - 2026-05-05\n\n### Changed\n- Two point oh change\n\n## [1.9.0]\n\n### Fixed\n- Undated release with trailing spaces\n\n## [1.8.0] - 2026-04-04 [YANKED]\n\n### Removed\n- Yanked release\n"
+      "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n- Duplicate entry\n\n### Accessibility\n- Screen reader label added\n\n### Added\n- Added entry one\n* Starred line is not a bullet\n#### Deep heading is not a section\n- Added entry two\n\n  - Indented continuation after a blank line\ntrailing text that is ignored\n\n### Added\n- Second Added section wins\n\n### Notes\n### Empty section above\n\n## [2.0.0] - 2026-05-05\n\n### Changed\n- Two point oh change\n\n## [1.9.0]   \n\n### Fixed\n- Undated release with trailing spaces\n\n## [1.8.0] - 2026-04-04 [YANKED]\n\n### Removed\n- Yanked release\n"
      },
      "commit": "edge"
     }
@@ -536,7 +536,7 @@
    "steps": [
     {
      "write": {
-      "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n- Duplicate entry\n\n### Accessibility\n- Screen reader label added\n\n### Added\n- Added entry one\n* Starred line is not a bullet\n#### Deep heading is not a section\n- Added entry two\n\n  - Indented continuation after a blank line\ntrailing text that is ignored\n\n### Added\n- Second Added section wins\n\n### Notes\n### Empty section above\n\n## [2.0.0] - 2026-05-05\n\n### Changed\n- Two point oh change\n\n## [1.9.0]\n\n### Fixed\n- Undated release with trailing spaces\n\n## [1.8.0] - 2026-04-04 [YANKED]\n\n### Removed\n- Yanked release\n"
+      "CHANGELOG.md": "# Changelog\n\n## Unreleased\n\n### Fixed\n- Fixed first, listed before Added\n- Duplicate entry\n- Duplicate entry\n\n### Accessibility\n- Screen reader label added\n\n### Added\n- Added entry one\n* Starred line is not a bullet\n#### Deep heading is not a section\n- Added entry two\n\n  - Indented continuation after a blank line\ntrailing text that is ignored\n\n### Added\n- Second Added section wins\n\n### Notes\n### Empty section above\n\n## [2.0.0] - 2026-05-05\n\n### Changed\n- Two point oh change\n\n## [1.9.0]   \n\n### Fixed\n- Undated release with trailing spaces\n\n## [1.8.0] - 2026-04-04 [YANKED]\n\n### Removed\n- Yanked release\n"
      },
      "commit": "edge"
     }
@@ -562,7 +562,7 @@
    "steps": [
     {
      "write": {
-      "CHANGELOG.md": "# Changelog\r\n\r\n## Unreleased\r\n\r\n### Fixed\r\n- Fixed first, listed before Added\r\n- Duplicate entry\r\n- Duplicate entry\r\n\r\n### Accessibility\r\n- Screen reader label added\r\n\r\n### Added\r\n- Added entry one\r\n* Starred line is not a bullet\r\n#### Deep heading is not a section\r\n- Added entry two\r\n\r\n  - Indented continuation after a blank line\r\ntrailing text that is ignored\r\n\r\n### Added\r\n- Second Added section wins\r\n\r\n### Notes\r\n### Empty section above\r\n\r\n## [2.0.0] - 2026-05-05\r\n\r\n### Changed\r\n- Two point oh change\r\n\r\n## [1.9.0]\r\n\r\n### Fixed\r\n- Undated release with trailing spaces\r\n\r\n## [1.8.0] - 2026-04-04 [YANKED]\r\n\r\n### Removed\r\n- Yanked release\r\n"
+      "CHANGELOG.md": "# Changelog\r\n\r\n## Unreleased\r\n\r\n### Fixed\r\n- Fixed first, listed before Added\r\n- Duplicate entry\r\n- Duplicate entry\r\n\r\n### Accessibility\r\n- Screen reader label added\r\n\r\n### Added\r\n- Added entry one\r\n* Starred line is not a bullet\r\n#### Deep heading is not a section\r\n- Added entry two\r\n\r\n  - Indented continuation after a blank line\r\ntrailing text that is ignored\r\n\r\n### Added\r\n- Second Added section wins\r\n\r\n### Notes\r\n### Empty section above\r\n\r\n## [2.0.0] - 2026-05-05\r\n\r\n### Changed\r\n- Two point oh change\r\n\r\n## [1.9.0]   \r\n\r\n### Fixed\r\n- Undated release with trailing spaces\r\n\r\n## [1.8.0] - 2026-04-04 [YANKED]\r\n\r\n### Removed\r\n- Yanked release\r\n"
      },
      "commit": "crlf"
     }
@@ -588,7 +588,7 @@
    "steps": [
     {
      "write": {
-      "CHANGELOG.md": "# Changelog\r\n\r\n## Unreleased\r\n\r\n### Fixed\r\n- Fixed first, listed before Added\r\n- Duplicate entry\r\n- Duplicate entry\r\n\r\n### Accessibility\r\n- Screen reader label added\r\n\r\n### Added\r\n- Added entry one\r\n* Starred line is not a bullet\r\n#### Deep heading is not a section\r\n- Added entry two\r\n\r\n  - Indented continuation after a blank line\r\ntrailing text that is ignored\r\n\r\n### Added\r\n- Second Added section wins\r\n\r\n### Notes\r\n### Empty section above\r\n\r\n## [2.0.0] - 2026-05-05\r\n\r\n### Changed\r\n- Two point oh change\r\n\r\n## [1.9.0]\r\n\r\n### Fixed\r\n- Undated release with trailing spaces\r\n\r\n## [1.8.0] - 2026-04-04 [YANKED]\r\n\r\n### Removed\r\n- Yanked release\r\n"
+      "CHANGELOG.md": "# Changelog\r\n\r\n## Unreleased\r\n\r\n### Fixed\r\n- Fixed first, listed before Added\r\n- Duplicate entry\r\n- Duplicate entry\r\n\r\n### Accessibility\r\n- Screen reader label added\r\n\r\n### Added\r\n- Added entry one\r\n* Starred line is not a bullet\r\n#### Deep heading is not a section\r\n- Added entry two\r\n\r\n  - Indented continuation after a blank line\r\ntrailing text that is ignored\r\n\r\n### Added\r\n- Second Added section wins\r\n\r\n### Notes\r\n### Empty section above\r\n\r\n## [2.0.0] - 2026-05-05\r\n\r\n### Changed\r\n- Two point oh change\r\n\r\n## [1.9.0]   \r\n\r\n### Fixed\r\n- Undated release with trailing spaces\r\n\r\n## [1.8.0] - 2026-04-04 [YANKED]\r\n\r\n### Removed\r\n- Yanked release\r\n"
      },
      "commit": "crlf"
     }

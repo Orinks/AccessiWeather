@@ -118,6 +118,9 @@ trailing text that is ignored
 ### Removed
 - Yanked release
 """
+# Trailing spaces after a release heading (added here so editors and hooks
+# that trim whitespace leave the fixture alone).
+EDGE = EDGE.replace("## [1.9.0]\n", "## [1.9.0]   \n")
 
 EMPTY_UNRELEASED = """# Changelog
 
