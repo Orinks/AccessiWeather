@@ -3,12 +3,12 @@
 //! Ports `ui/dialogs/explanation_generation.py`: the explainer payload built
 //! from the app's current weather and the location's time context.
 
-use aw_core::model::{CurrentConditions, Location, WeatherData};
-use aw_core::units::{
+use aw_core::display::units::{
     format_pressure, format_temperature, format_visibility, format_wind_speed,
     resolve_display_unit_system, resolve_temperature_unit_preference,
     resolve_wind_display_unit_system, DisplayUnitSystem, TemperatureUnit,
 };
+use aw_core::model::{CurrentConditions, Location, WeatherData};
 use chrono::{DateTime, Timelike, Utc};
 use serde_json::{json, Map, Value};
 
@@ -58,8 +58,8 @@ pub fn build_current_weather_payload(
         "temperature_text",
         formatted_or_none(format_temperature(
             current.temperature_f,
-            current.temperature_c,
             unit,
+            current.temperature_c,
             1,
         )),
     );
@@ -77,8 +77,8 @@ pub fn build_current_weather_payload(
         "wind_text",
         formatted_or_none(format_wind_speed(
             current.wind_speed_mph,
-            current.wind_speed_kph,
             unit,
+            current.wind_speed_kph,
             1,
             wind_system,
         )),
@@ -100,8 +100,8 @@ pub fn build_current_weather_payload(
         "visibility_text",
         formatted_or_none(format_visibility(
             current.visibility_miles,
-            current.visibility_km,
             unit,
+            current.visibility_km,
             1,
             system,
         )),
@@ -112,8 +112,8 @@ pub fn build_current_weather_payload(
         "pressure_text",
         formatted_or_none(format_pressure(
             current.pressure_in,
-            current.pressure_mb,
             unit,
+            current.pressure_mb,
             2,
             system,
         )),
@@ -139,7 +139,7 @@ pub fn build_current_weather_payload(
             };
             let wind_speed = match period.wind_speed_mph {
                 Some(mph) => {
-                    Value::String(format_wind_speed(Some(mph), None, unit, 1, wind_system))
+                    Value::String(format_wind_speed(Some(mph), unit, None, 1, wind_system))
                 }
                 None => opt_str(&period.wind_speed),
             };
@@ -147,7 +147,7 @@ pub fn build_current_weather_payload(
                 "name": period.name,
                 "temperature": num(period.temperature),
                 "temperature_unit": period.temperature_unit,
-                "temperature_text": format_temperature(unit_is("F"), unit_is("C"), unit, 1),
+                "temperature_text": format_temperature(unit_is("F"), unit, unit_is("C"), 1),
                 "short_forecast": opt_str(&period.short_forecast),
                 "wind_speed": wind_speed,
                 "wind_direction": opt_str(&period.wind_direction),

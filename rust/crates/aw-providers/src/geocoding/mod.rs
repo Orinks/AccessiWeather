@@ -4,7 +4,6 @@
 //! location manager used by the location dialogs
 //! (`accessiweather.location_manager`).
 
-pub mod legacy;
 pub mod location_manager;
 
 use std::cmp::Ordering;
@@ -16,8 +15,6 @@ use serde_json::Value;
 
 use crate::http::{build_url, HttpClient, HttpError};
 
-// The legacy location dialog still uses these.
-pub use legacy::{GeocodeResult, Geocoder, NOMINATIM, OPEN_METEO_GEOCODING};
 pub use location_manager::LocationManager;
 
 pub const BASE_URL: &str = "https://geocoding-api.open-meteo.com/v1";

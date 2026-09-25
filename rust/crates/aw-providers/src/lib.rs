@@ -9,12 +9,9 @@ pub mod environmental;
 pub mod geocoding;
 pub mod http;
 pub mod nws;
-pub mod nws_legacy;
 pub mod openmeteo;
 pub mod pirateweather;
 pub mod products;
 pub mod surf_conditions;
-pub mod weather_client;
 
 pub use http::{HttpClient, HttpError, ReqwestClient};
-pub use weather_client::{FetchOutcome, WeatherClient};

@@ -18,7 +18,7 @@ use aw_store::weather_cache::WeatherDataCache;
 use chrono::{DateTime, Duration, Utc};
 
 mod auto;
-mod enrichment;
+pub mod enrichment;
 mod fetch;
 pub mod history;
 pub mod live;
@@ -322,16 +322,7 @@ impl WeatherClient {
         station_id: &str,
         options: &AviationOptions,
     ) -> SourceResult<aw_core::model::AviationData> {
-        let station = station_id.trim().to_uppercase();
-        if station.is_empty() {
-            return Err(SourceError::new(
-                "station_id must be a non-empty ICAO identifier.",
-            ));
-        }
-        self.cfg()
-            .sources
-            .aviation
-            .aviation_weather(&station, options)
+        enrichment::aviation_weather(self.cfg().sources.aviation.as_ref(), station_id, options)
     }
 
     fn remember_weather_data(&self, weather: &WeatherData) {

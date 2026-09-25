@@ -15,81 +15,16 @@ pub const MAX_OBSERVATION_AGE_HOURS: i64 = 2;
 // Python value semantics
 // ---------------------------------------------------------------------------
 
-/// `repr(float)`: shortest round-trip digits, exponent form outside
-/// `1e-4 <= |x| < 1e16`.
-pub fn py_float_repr(x: f64) -> String {
-    if x.is_nan() {
-        return "nan".into();
-    }
-    if x.is_infinite() {
-        return if x > 0.0 { "inf" } else { "-inf" }.into();
-    }
-    if x == 0.0 {
-        return if x.is_sign_negative() { "-0.0" } else { "0.0" }.into();
-    }
-    let sci = format!("{x:e}");
-    let (mantissa, exp) = sci.split_once('e').expect("LowerExp has an exponent");
-    let exp: i32 = exp.parse().expect("LowerExp exponent is an integer");
-    let (sign, mantissa) = match mantissa.strip_prefix('-') {
-        Some(m) => ("-", m),
-        None => ("", mantissa),
-    };
-    let digits: String = mantissa.chars().filter(|c| *c != '.').collect();
-    if !(-5 < exp && exp < 16) {
-        let mut m = digits[..1].to_string();
-        if digits.len() > 1 {
-            m.push('.');
-            m.push_str(&digits[1..]);
-        }
-        let esign = if exp < 0 { '-' } else { '+' };
-        return format!("{sign}{m}e{esign}{:02}", exp.abs());
-    }
-    let point = exp + 1; // digits before the decimal point
-    let body = if point <= 0 {
-        format!("0.{}{digits}", "0".repeat((-point) as usize))
-    } else if point as usize >= digits.len() {
-        format!("{digits}{}.0", "0".repeat(point as usize - digits.len()))
-    } else {
-        let (int, frac) = digits.split_at(point as usize);
-        format!("{int}.{frac}")
-    };
-    format!("{sign}{body}")
-}
-
-/// `str(value)` for a JSON value (dicts/lists fall back to JSON text).
-pub fn py_str(v: &Value) -> String {
-    match v {
-        Value::Null => "None".into(),
-        Value::Bool(b) => if *b { "True" } else { "False" }.into(),
-        Value::Number(n) => py_num_str(n),
-        Value::String(s) => s.clone(),
-        other => other.to_string(),
-    }
-}
-
-pub fn py_num_str(n: &serde_json::Number) -> String {
-    if n.is_f64() {
-        py_float_repr(n.as_f64().unwrap_or(f64::NAN))
-    } else {
-        n.to_string()
-    }
-}
+pub use aw_core::py::{float_repr as py_float_repr, value_str as py_str};
 
 /// Python's `round()` to an integer: ties go to the even neighbour.
 pub fn py_round(x: f64) -> i64 {
-    x.round_ties_even() as i64
+    aw_core::py::round(x) as i64
 }
 
 /// Python truthiness of a JSON value.
 pub fn truthy(v: &Value) -> bool {
-    match v {
-        Value::Null => false,
-        Value::Bool(b) => *b,
-        Value::Number(n) => n.as_f64().is_some_and(|f| f != 0.0),
-        Value::String(s) => !s.is_empty(),
-        Value::Array(a) => !a.is_empty(),
-        Value::Object(o) => !o.is_empty(),
-    }
+    aw_core::py::truthy(Some(v))
 }
 
 /// `value.get(key)` returning `None` for missing *or* falsy values, i.e.
@@ -472,25 +407,6 @@ pub fn extract_temperature(measurement: &Value, unit_hint: &Value) -> (Option<f6
 mod tests {
     use super::*;
     use serde_json::json;
-
-    #[test]
-    fn float_repr_matches_python() {
-        for (x, s) in [
-            (40.0, "40.0"),
-            (40.7128, "40.7128"),
-            (-74.006, "-74.006"),
-            (0.1, "0.1"),
-            (1e-5, "1e-05"),
-            (0.0001, "0.0001"),
-            (1e16, "1e+16"),
-            (1234567890123456.0, "1234567890123456.0"),
-            (1.5e-7, "1.5e-07"),
-            (-0.0, "-0.0"),
-            (12.0, "12.0"),
-        ] {
-            assert_eq!(py_float_repr(x), s, "{x}");
-        }
-    }
 
     #[test]
     fn round_is_bankers() {

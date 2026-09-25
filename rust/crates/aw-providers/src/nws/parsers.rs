@@ -430,7 +430,7 @@ fn get_unit(v: &Value) -> Option<String> {
 /// inches, around 850-1100 millibars, anything else pascals.
 fn normalize_gridpoint_pressure(value: f64, unit: Option<&str>) -> PressurePair {
     if let Some(unit) = unit.filter(|u| !u.is_empty()) {
-        let (i, m) = normalize_pressure(value, Some(unit));
+        let (i, m) = normalize_pressure(Some(value), Some(unit));
         if i.is_some() || m.is_some() {
             return (i, m);
         }
@@ -442,8 +442,8 @@ fn normalize_gridpoint_pressure(value: f64, unit: Option<&str>) -> PressurePair 
         return (Some(value * 0.0295299830714), Some(value));
     }
     (
-        Some(convert_pa_to_inches(value)),
-        Some(convert_pa_to_mb(value)),
+        convert_pa_to_inches(Some(value)),
+        convert_pa_to_mb(Some(value)),
     )
 }
 

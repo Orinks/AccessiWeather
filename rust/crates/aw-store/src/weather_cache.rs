@@ -195,9 +195,8 @@ pub fn safe_location_key(location: &Location) -> String {
 // Python-compatible JSON text
 // ---------------------------------------------------------------------------
 
-/// Python's `repr(float)`: shortest round-trip digits, scientific notation
-/// below 1e-4 and from 1e16 up (`1e-05`, `1e+16`), always with a `.0` or
-/// exponent.
+/// A float as Python's `json.dump` writes it: `repr`, with the `NaN` and
+/// `Infinity` tokens for non-finite values.
 pub fn py_float_repr(value: f64) -> String {
     if value.is_nan() {
         return "NaN".into();
@@ -205,41 +204,7 @@ pub fn py_float_repr(value: f64) -> String {
     if value.is_infinite() {
         return if value > 0.0 { "Infinity" } else { "-Infinity" }.into();
     }
-    let sci = format!("{value:e}");
-    let (mantissa, exponent) = sci.split_once('e').expect("{:e} always has an exponent");
-    let exponent: i32 = exponent.parse().expect("integer exponent");
-    let (sign, mantissa) = match mantissa.strip_prefix('-') {
-        Some(m) => ("-", m),
-        None => ("", mantissa),
-    };
-    let digits: String = mantissa.chars().filter(|c| *c != '.').collect();
-    if (-4..16).contains(&exponent) {
-        let point = exponent + 1;
-        let body = if point <= 0 {
-            format!("0.{}{digits}", "0".repeat((-point) as usize))
-        } else if point as usize >= digits.len() {
-            format!("{digits}{}.0", "0".repeat(point as usize - digits.len()))
-        } else {
-            format!(
-                "{}.{}",
-                &digits[..point as usize],
-                &digits[point as usize..]
-            )
-        };
-        format!("{sign}{body}")
-    } else {
-        let rest = if digits.len() > 1 {
-            format!(".{}", &digits[1..])
-        } else {
-            String::new()
-        };
-        let exp_sign = if exponent < 0 { '-' } else { '+' };
-        format!(
-            "{sign}{}{rest}e{exp_sign}{:02}",
-            &digits[..1],
-            exponent.abs()
-        )
-    }
+    aw_core::py::float_repr(value)
 }
 
 /// `json.dumps(value, indent=2)` with Python's defaults (`ensure_ascii`).

@@ -8,7 +8,6 @@
 //! are retried with a 1 s, 2 s backoff and surface as `Err` once exhausted;
 //! everything else degrades to the same fallback value Python returns.
 
-mod aggregator;
 mod alerts;
 mod aviation;
 mod avwx;
@@ -16,7 +15,6 @@ pub mod common;
 mod current;
 mod forecast;
 mod hourly;
-mod marine;
 pub mod normalize;
 pub mod parsers;
 pub mod taf;
@@ -33,12 +31,10 @@ use serde_json::Value;
 
 use crate::http::{retry_with_backoff, HttpClient, HttpError, HttpRequest, HttpResponse};
 
-pub use aggregator::AlertAggregator;
 pub use aviation::{filter_advisories, taf_indicates_no_data, AviationError, AviationOptions};
 pub use avwx::{fetch_avwx_taf, is_us_station, AvwxError, AVWX_BASE_URL};
 pub use common::py_float_repr;
 pub use forecast::{ForecastAndDiscussion, TextProductError, TextProducts};
-pub use marine::build_marine_highlights;
 pub use parsers::Malformed;
 pub use taf::decode_taf_text;
 pub use zones::{diff_zone_fields, extract_zone_fields, last_path_segment, ZoneFields};

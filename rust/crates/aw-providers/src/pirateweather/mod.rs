@@ -3,19 +3,18 @@
 //! current, minutely, hourly, daily and alert data; a short-lived cache lets
 //! the per-section getters share it.
 
-pub mod legacy;
 pub mod parsing;
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
+use aw_core::display::units::{resolve_auto_unit_system, DisplayUnitSystem};
 use aw_core::model::{
     CurrentConditions, Forecast, HourlyForecast, Location, MinutelyPrecipitationForecast,
     WeatherAlerts,
 };
 use aw_core::py;
-use aw_core::units::{resolve_auto_unit_system, DisplayUnitSystem};
 use chrono::Local;
 use serde_json::Value;
 

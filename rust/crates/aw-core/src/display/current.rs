@@ -14,7 +14,7 @@ use crate::display::models::{
     AirQualityPresentation, CurrentConditionsPresentation, ImpactSummary, Metric,
 };
 use crate::display::priority::{PriorityEngine, WeatherCategory};
-use crate::display::pyfmt::{capitalize, fixed, repr_f64, title};
+use crate::display::pyfmt::{capitalize, fixed, title};
 use crate::display::time::{format_sun_time, PyDateTime};
 use crate::display::units::{
     format_precipitation, format_wind_speed, DisplayUnitSystem, TemperatureUnit,
@@ -23,6 +23,7 @@ use crate::model::{
     AnomalyCallout, CurrentConditions, EnvironmentalConditions, HourlyForecast,
     MinutelyPrecipitationForecast, TrendInsight, WeatherAlerts,
 };
+use crate::py::float_repr;
 use crate::settings::AppSettings;
 
 const MAX_LEGACY_PRESSURE_TREND_IN: f64 = 0.30;
@@ -108,7 +109,7 @@ fn build_basic_metrics(
         if let Some(uv) = current.uv_index {
             metrics.push(Metric::new(
                 "UV Index",
-                format!("{} ({})", repr_f64(uv), get_uv_description(uv)),
+                format!("{} ({})", float_repr(uv), get_uv_description(uv)),
             ));
         }
     }

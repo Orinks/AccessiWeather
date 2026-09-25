@@ -6,7 +6,6 @@
 //! Open-Meteo has no alerts; only current, daily and hourly data.
 
 pub mod current;
-pub mod legacy;
 pub mod mapper;
 pub mod parse;
 pub mod units;
@@ -21,8 +20,6 @@ pub use current::{
     parse_iso_datetime, parse_openmeteo_current_conditions, pick_precipitation_type,
     resolve_current_condition_description,
 };
-// The legacy orchestrator (`weather_client.rs`) still uses these.
-pub use legacy::{parse_bundle, Bundle, OpenMeteoClient};
 pub use parse::{format_wind_speed_mph, parse_openmeteo_forecast, parse_openmeteo_hourly_forecast};
 
 pub const BASE_URL: &str = "https://api.open-meteo.com/v1";

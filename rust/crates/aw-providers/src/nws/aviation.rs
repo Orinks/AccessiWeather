@@ -1,12 +1,11 @@
 //! Aviation products: TAFs (NWS, then aviationweather.gov), SIGMETs,
 //! Center Weather Advisories and marine zone forecasts
-//! (`weather_client_nws_aviation.py`), plus the aviation enrichment
+//! (`weather_client_nws_aviation.py`) and `get_aviation_weather`
 //! (`weather_client_aviation.py`).
 
 use std::collections::BTreeSet;
 
-use aw_core::is_us_location;
-use aw_core::model::{AviationData, Location, WeatherData};
+use aw_core::model::AviationData;
 use serde_json::Value;
 
 use super::avwx::{fetch_avwx_taf, is_us_station};
@@ -431,31 +430,6 @@ impl NwsClient<'_> {
         aviation.raw_taf = Some(cleaned.to_string());
         aviation.decoded_taf = Some(decoded);
         Ok(())
-    }
-
-    /// `enrich_with_aviation_data`: TAF for a US location's primary station.
-    pub fn enrich_with_aviation_data(
-        &self,
-        weather_data: &mut WeatherData,
-        location: &Location,
-        avwx_api_key: &str,
-    ) {
-        if !is_us_location(location) {
-            return;
-        }
-        let (station_id, station_name) = self.primary_station_info(location);
-        let Some(station_id) = station_id.filter(|s| !s.is_empty()) else {
-            return;
-        };
-        match self.aviation_weather(&station_id, &AviationOptions::default(), avwx_api_key) {
-            Ok(mut aviation) => {
-                if let Some(name) = station_name.filter(|n| !n.is_empty()) {
-                    aviation.airport_name = Some(name);
-                }
-                weather_data.aviation = Some(aviation);
-            }
-            Err(e) => tracing::debug!("Failed to fetch aviation data: {e}"),
-        }
     }
 }
 

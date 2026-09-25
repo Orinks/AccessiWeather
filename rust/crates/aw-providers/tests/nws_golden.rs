@@ -7,7 +7,13 @@
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::Duration;
+
+use aw_core::alert_aggregator::AlertAggregator;
+use aw_core::settings::AppSettings;
+use aw_providers::client::enrichment::{enrich_with_aviation_data, enrich_with_marine_data};
+use aw_providers::client::live::Live;
 
 use aw_core::model::{
     AviationData, CurrentConditions, Forecast, HourlyForecast, Location, MarineForecast,
@@ -15,8 +21,7 @@ use aw_core::model::{
 };
 use aw_providers::http::{FixtureClient, HttpError, HttpRequest};
 use aw_providers::nws::{
-    self, AlertAggregator, AviationError, AviationOptions, NwsClient, TextProductError,
-    TextProducts, ZoneFields,
+    self, AviationError, AviationOptions, NwsClient, TextProductError, TextProducts, ZoneFields,
 };
 use chrono::DateTime;
 use serde::de::DeserializeOwned;
@@ -76,7 +81,7 @@ fn first_difference(path: &str, got: &Value, want: &Value) -> Option<String> {
 struct Scenario {
     name: String,
     doc: Value,
-    http: FixtureClient,
+    http: Arc<FixtureClient>,
 }
 
 impl Scenario {
@@ -95,14 +100,26 @@ impl Scenario {
                 r["body"].as_str().unwrap(),
             );
         }
-        Self { name, doc, http }
+        Self {
+            name,
+            doc,
+            http: Arc::new(http),
+        }
     }
 
     fn client(&self) -> NwsClient<'_> {
-        let mut client = NwsClient::new(&self.http);
+        let mut client = NwsClient::new(self.http.as_ref());
         client.retry_delay = Duration::ZERO;
         client.now = Some(ts(&self.doc["now"]));
         client
+    }
+
+    fn live(&self) -> Live {
+        let mut live = Live::new(self.http.clone());
+        live.retry_delay = Duration::ZERO;
+        let now = ts(&self.doc["now"]);
+        live.local_now = Arc::new(move || now);
+        live
     }
 
     fn location(&self) -> Location {
@@ -285,18 +302,20 @@ fn run(s: &Scenario) -> Result<(), String> {
                 (other, _) => return Err(format!("got {other:?}, want {expected}")),
             }
         }
+        // The orchestrator's enrichment over the live sources.
         "enrich_with_aviation_data" => {
             let location = s.location();
             let mut data = WeatherData::new(location.clone());
-            s.client()
-                .enrich_with_aviation_data(&mut data, &location, "");
+            let sources = s.live().sources(&AppSettings::default());
+            enrich_with_aviation_data(sources.aviation.as_ref(), &mut data, &location);
             same_as(&data.aviation, expected)?;
         }
         "enrich_with_marine_data" => {
             let location = s.location();
             let mut data = WeatherData::new(location.clone());
             data.alerts = typed(&s.doc["existing_alerts"]);
-            s.client().enrich_with_marine_data(&mut data, &location);
+            let sources = s.live().sources(&AppSettings::default());
+            enrich_with_marine_data(sources.marine.as_ref(), &mut data, &location);
             same_as::<Option<MarineForecast>>(&data.marine, &expected["marine"])?;
             same_as::<Option<WeatherAlerts>>(&data.alerts, &expected["alerts"])?;
         }
@@ -330,8 +349,10 @@ fn run(s: &Scenario) -> Result<(), String> {
             same_as(&parsed, &alerts[1])?;
         }
         "aggregator" => {
-            let mut merged = AlertAggregator::default()
-                .aggregate_alerts(typed(&expected["nws"]), typed(&expected["secondary"]));
+            let nws: Option<WeatherAlerts> = typed(&expected["nws"]);
+            let secondary: Option<WeatherAlerts> = typed(&expected["secondary"]);
+            let mut merged =
+                AlertAggregator::default().aggregate_alerts(nws.as_ref(), secondary.as_ref());
             for alert in &mut merged.alerts {
                 alert.areas.sort();
             }

@@ -10,6 +10,7 @@
 use std::collections::BTreeSet;
 use std::thread::ScopedJoinHandle;
 
+use aw_core::is_us_location;
 use aw_core::model::{
     AviationData, CurrentConditions, EnvironmentalConditions, Location, MarineForecast,
     MarineForecastPeriod, Timestamp, WeatherAlert, WeatherAlerts, WeatherData,
@@ -18,7 +19,7 @@ use aw_core::trends::apply_trend_insights;
 use serde_json::Value;
 
 use super::auto::should_enrich_nws_discussion;
-use super::sources::{AviationOptions, SourceResult};
+use super::sources::{AviationOptions, AviationSource, MarineSource, SourceError, SourceResult};
 use super::{Config, WeatherClient};
 
 /// `_get_uv_category` (EPA/WHO bands).
@@ -244,9 +245,10 @@ impl WeatherClient {
                         )
                     })
                 });
-            let aviation = is_us.then(|| scope.spawn(|| self.fetch_aviation(cfg, location)));
+            let aviation = is_us
+                .then(|| scope.spawn(|| fetch_aviation(cfg.sources.aviation.as_ref(), location)));
             let marine = (location.marine_mode && is_us)
-                .then(|| scope.spawn(|| Self::fetch_marine(cfg, location)));
+                .then(|| scope.spawn(|| fetch_marine(cfg.sources.marine.as_ref(), location)));
 
             Enrichments {
                 sun: joined("sunrise_sunset", sun).flatten(),
@@ -292,65 +294,117 @@ impl WeatherClient {
         if let Some(aviation) = results.aviation {
             weather.aviation = Some(aviation);
         }
-        if let Some((marine, marine_alerts)) = results.marine {
-            if let Some(marine) = marine {
-                weather.marine = Some(marine);
-            }
-            if !marine_alerts.alerts.is_empty() {
-                weather.alerts = Some(merge_marine_alerts(weather.alerts.take(), marine_alerts));
-            }
+        if let Some(marine) = results.marine {
+            apply_marine(weather, marine);
         }
     }
+}
 
-    /// `enrich_with_aviation_data`: TAF for the location's primary station.
-    fn fetch_aviation(
-        &self,
-        cfg: &Config,
-        location: &Location,
-    ) -> SourceResult<Option<AviationData>> {
-        let (station_id, station_name) = cfg.sources.aviation.primary_station_info(location)?;
-        let Some(station_id) = station_id.filter(|s| !s.is_empty()) else {
-            return Ok(None);
-        };
-        let mut aviation = self.get_aviation_weather(&station_id, &AviationOptions::default())?;
-        if let Some(name) = station_name.filter(|n| !n.is_empty()) {
-            aviation.airport_name = Some(name);
-        }
-        Ok(Some(aviation))
+/// `get_aviation_weather`'s station check, then the aviation source.
+pub(super) fn aviation_weather(
+    aviation: &dyn AviationSource,
+    station_id: &str,
+    options: &AviationOptions,
+) -> SourceResult<AviationData> {
+    let station = station_id.trim().to_uppercase();
+    if station.is_empty() {
+        return Err(SourceError::new(
+            "station_id must be a non-empty ICAO identifier.",
+        ));
     }
+    aviation.aviation_weather(&station, options)
+}
 
-    /// `enrich_with_marine_data`: zone forecast summary and marine alerts.
-    fn fetch_marine(
-        cfg: &Config,
-        location: &Location,
-    ) -> SourceResult<Option<(Option<MarineForecast>, WeatherAlerts)>> {
-        let zones = cfg.sources.marine.marine_zones(location)?;
-        let Some((zone_id, zone_properties)) = marine_zone(&zones) else {
-            return Ok(None);
-        };
-        let Some(forecast) = cfg
-            .sources
-            .marine
-            .marine_forecast(&zone_id)?
-            .filter(|f| !is_falsy(f))
-        else {
-            return Ok(None);
-        };
-        let marine = Some(build_marine_forecast(&zone_id, zone_properties, &forecast))
-            .filter(MarineForecast::has_data);
-        // Python sets the forecast before requesting alerts, so an alerts
-        // failure keeps the forecast.
-        let alerts = match cfg.sources.marine.marine_alerts(&zone_id) {
-            Ok(alerts) => alerts,
-            Err(e) => {
-                tracing::debug!(
-                    "Failed to fetch marine essentials for {}: {e}",
-                    location.name
-                );
-                WeatherAlerts::default()
-            }
-        };
-        Ok(Some((marine, alerts)))
+/// The TAF for the location's primary station.
+fn fetch_aviation(
+    aviation: &dyn AviationSource,
+    location: &Location,
+) -> SourceResult<Option<AviationData>> {
+    let (station_id, station_name) = aviation.primary_station_info(location)?;
+    let Some(station_id) = station_id.filter(|s| !s.is_empty()) else {
+        return Ok(None);
+    };
+    let mut data = aviation_weather(aviation, &station_id, &AviationOptions::default())?;
+    if let Some(name) = station_name.filter(|n| !n.is_empty()) {
+        data.airport_name = Some(name);
+    }
+    Ok(Some(data))
+}
+
+/// `enrich_with_aviation_data`: the TAF for a US location's primary station.
+pub fn enrich_with_aviation_data(
+    aviation: &dyn AviationSource,
+    weather: &mut WeatherData,
+    location: &Location,
+) {
+    if !is_us_location(location) {
+        return;
+    }
+    match fetch_aviation(aviation, location) {
+        Ok(Some(data)) => weather.aviation = Some(data),
+        Ok(None) => {}
+        Err(e) => tracing::debug!("Failed to fetch aviation data: {e}"),
+    }
+}
+
+/// The marine zone forecast summary and the zone's alerts.
+fn fetch_marine(
+    marine: &dyn MarineSource,
+    location: &Location,
+) -> SourceResult<Option<(Option<MarineForecast>, WeatherAlerts)>> {
+    let zones = marine.marine_zones(location)?;
+    let Some((zone_id, zone_properties)) = marine_zone(&zones) else {
+        return Ok(None);
+    };
+    let Some(forecast) = marine.marine_forecast(&zone_id)?.filter(|f| !is_falsy(f)) else {
+        return Ok(None);
+    };
+    let summary = Some(build_marine_forecast(&zone_id, zone_properties, &forecast))
+        .filter(MarineForecast::has_data);
+    // Python sets the forecast before requesting alerts, so an alerts
+    // failure keeps the forecast.
+    let alerts = match marine.marine_alerts(&zone_id) {
+        Ok(alerts) => alerts,
+        Err(e) => {
+            tracing::debug!(
+                "Failed to fetch marine essentials for {}: {e}",
+                location.name
+            );
+            WeatherAlerts::default()
+        }
+    };
+    Ok(Some((summary, alerts)))
+}
+
+fn apply_marine(
+    weather: &mut WeatherData,
+    (summary, alerts): (Option<MarineForecast>, WeatherAlerts),
+) {
+    if let Some(summary) = summary {
+        weather.marine = Some(summary);
+    }
+    if !alerts.alerts.is_empty() {
+        weather.alerts = Some(merge_marine_alerts(weather.alerts.take(), alerts));
+    }
+}
+
+/// `enrich_with_marine_data`: marine essentials for US locations in marine
+/// mode (alerts tagged "NWS Marine"). Failures leave `weather` as it was.
+pub fn enrich_with_marine_data(
+    marine: &dyn MarineSource,
+    weather: &mut WeatherData,
+    location: &Location,
+) {
+    if !location.marine_mode || !is_us_location(location) {
+        return;
+    }
+    match fetch_marine(marine, location) {
+        Ok(Some(result)) => apply_marine(weather, result),
+        Ok(None) => {}
+        Err(e) => tracing::debug!(
+            "Failed to fetch marine essentials for {}: {e}",
+            location.name
+        ),
     }
 }
 
