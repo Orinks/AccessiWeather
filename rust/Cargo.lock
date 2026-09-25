@@ -6,8 +6,11 @@ version = 4
 name = "accessiweather"
 version = "0.11.0-rust.1"
 dependencies = [
+ "aw-audio",
  "aw-core",
+ "aw-notify",
  "aw-providers",
+ "aw-services",
  "aw-store",
  "chrono",
  "clap",

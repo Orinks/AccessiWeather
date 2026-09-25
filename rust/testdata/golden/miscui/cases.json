@@ -1,0 +1,989 @@
+{
+ "wx": {
+  "OK": 4,
+  "CANCEL": 16,
+  "YES_NO": 10,
+  "YES": 2,
+  "NO": 8,
+  "ICON_INFORMATION": 2048,
+  "ICON_WARNING": 256,
+  "ICON_ERROR": 512,
+  "ICON_QUESTION": 1024,
+  "TE_PASSWORD": 2048,
+  "FD_OPEN": 1,
+  "FD_FILE_MUST_EXIST": 16,
+  "PD_APP_MODAL": 2,
+  "PD_AUTO_HIDE": 4,
+  "PD_CAN_ABORT": 1,
+  "ID_OK": 5100,
+  "ID_CANCEL": 5101,
+  "ID_CLOSE": 5001,
+  "ID_YES": 5103,
+  "ID_NO": 5104
+ },
+ "update_dialogs": [
+  {
+   "current_version": "0.10.1",
+   "new_version": "0.11.0",
+   "channel_label": "Stable",
+   "release_notes": "## Added\n- **National Products** now use `IEM AFOS` text.\n\n## Fixed\n- Pirate Weather handles _freezing rain_ correctly.\n",
+   "title": "Stable Update Available",
+   "resizable": true,
+   "size": [
+    500,
+    420
+   ],
+   "controls": [
+    {
+     "kind": "label",
+     "label": "A new Stable update is available!\nCurrent: 0.10.1  →  Latest: 0.11.0"
+    },
+    {
+     "kind": "label",
+     "label": "What's new:"
+    },
+    {
+     "kind": "text",
+     "name": "text",
+     "value": "Added\n- National Products now use IEM AFOS text.\n\nFixed\n- Pirate Weather handles freezing rain correctly.",
+     "hint": "",
+     "multiline": true,
+     "readonly": true,
+     "rich2": true,
+     "dont_wrap": true,
+     "no_vscroll": false
+    },
+    {
+     "kind": "button",
+     "id": 5100,
+     "label": "&Download Update",
+     "name": "button"
+    },
+    {
+     "kind": "button",
+     "id": 5101,
+     "label": "&Cancel",
+     "name": "button"
+    }
+   ],
+   "default": "&Download Update",
+   "focus": true,
+   "insertion_point": 0
+  },
+  {
+   "current_version": "20260924",
+   "new_version": "20260925",
+   "channel_label": "Nightly",
+   "release_notes": "",
+   "title": "Nightly Update Available",
+   "resizable": true,
+   "size": [
+    500,
+    420
+   ],
+   "controls": [
+    {
+     "kind": "label",
+     "label": "A new Nightly update is available!\nCurrent: 20260924  →  Latest: 20260925"
+    },
+    {
+     "kind": "label",
+     "label": "What's new:"
+    },
+    {
+     "kind": "text",
+     "name": "text",
+     "value": "No release notes available.",
+     "hint": "",
+     "multiline": true,
+     "readonly": true,
+     "rich2": true,
+     "dont_wrap": true,
+     "no_vscroll": false
+    },
+    {
+     "kind": "button",
+     "id": 5100,
+     "label": "&Download Update",
+     "name": "button"
+    },
+    {
+     "kind": "button",
+     "id": 5101,
+     "label": "&Cancel",
+     "name": "button"
+    }
+   ],
+   "default": "&Download Update",
+   "focus": true,
+   "insertion_point": 0
+  },
+  {
+   "current_version": "0.10.1",
+   "new_version": "20260925",
+   "channel_label": "Nightly",
+   "release_notes": "Commit: abc1234\n\n* one\n* two",
+   "title": "Nightly Update Available",
+   "resizable": true,
+   "size": [
+    500,
+    420
+   ],
+   "controls": [
+    {
+     "kind": "label",
+     "label": "A new Nightly update is available!\nCurrent: 0.10.1  →  Latest: 20260925"
+    },
+    {
+     "kind": "label",
+     "label": "What's new:"
+    },
+    {
+     "kind": "text",
+     "name": "text",
+     "value": "Commit: abc1234\n\n- one\n- two",
+     "hint": "",
+     "multiline": true,
+     "readonly": true,
+     "rich2": true,
+     "dont_wrap": true,
+     "no_vscroll": false
+    },
+    {
+     "kind": "button",
+     "id": 5100,
+     "label": "&Download Update",
+     "name": "button"
+    },
+    {
+     "kind": "button",
+     "id": 5101,
+     "label": "&Cancel",
+     "name": "button"
+    }
+   ],
+   "default": "&Download Update",
+   "focus": true,
+   "insertion_point": 0
+  }
+ ],
+ "check_updates": [
+  {
+   "name": "source",
+   "compiled": false,
+   "check_args": [],
+   "events": [
+    [
+     "message_box",
+     "Update checking is only available in installed builds.\nYou're running from source — use git pull to update.",
+     "Running from Source",
+     2052
+    ]
+   ]
+  },
+  {
+   "name": "up_to_date",
+   "version": "0.10.1",
+   "build_tag": null,
+   "channel": "stable",
+   "check_args": [
+    {
+     "current_version": "0.10.1",
+     "current_nightly_date": null,
+     "channel": "stable"
+    }
+   ],
+   "events": [
+    [
+     "begin_busy_cursor"
+    ],
+    [
+     "end_busy_cursor"
+    ],
+    [
+     "message_box",
+     "You're up to date (0.10.1).",
+     "No Updates Available",
+     2052
+    ]
+   ]
+  },
+  {
+   "name": "nightly_on_stable",
+   "version": "0.10.1",
+   "build_tag": "nightly-20260924",
+   "channel": "stable",
+   "check_args": [
+    {
+     "current_version": "0.10.1",
+     "current_nightly_date": "20260924",
+     "channel": "stable"
+    }
+   ],
+   "events": [
+    [
+     "begin_busy_cursor"
+    ],
+    [
+     "end_busy_cursor"
+    ],
+    [
+     "message_box",
+     "You're on nightly (20260924).\nNo newer stable release available.",
+     "No Updates Available",
+     2052
+    ]
+   ]
+  },
+  {
+   "name": "latest_nightly",
+   "version": "0.10.1",
+   "build_tag": "nightly-20260924",
+   "channel": "nightly",
+   "check_args": [
+    {
+     "current_version": "0.10.1",
+     "current_nightly_date": "20260924",
+     "channel": "nightly"
+    }
+   ],
+   "events": [
+    [
+     "begin_busy_cursor"
+    ],
+    [
+     "end_busy_cursor"
+    ],
+    [
+     "message_box",
+     "You're on the latest nightly (20260924).",
+     "No Updates Available",
+     2052
+    ]
+   ]
+  },
+  {
+   "name": "stable_update",
+   "version": "0.10.1",
+   "build_tag": null,
+   "channel": "stable",
+   "update": [
+    "0.11.0",
+    false
+   ],
+   "check_args": [
+    {
+     "current_version": "0.10.1",
+     "current_nightly_date": null,
+     "channel": "stable"
+    }
+   ],
+   "events": [
+    [
+     "begin_busy_cursor"
+    ],
+    [
+     "end_busy_cursor"
+    ],
+    [
+     "update_dialog",
+     {
+      "current_version": "0.10.1",
+      "new_version": "0.11.0",
+      "channel_label": "Stable",
+      "release_notes": "## Added\n- **National Products** now use `IEM AFOS` text.\n\n## Fixed\n- Pirate Weather handles _freezing rain_ correctly.\n"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "nightly_update",
+   "version": "0.10.1",
+   "build_tag": "nightly-20260924",
+   "channel": "nightly",
+   "update": [
+    "20260925",
+    true
+   ],
+   "check_args": [
+    {
+     "current_version": "0.10.1",
+     "current_nightly_date": "20260924",
+     "channel": "nightly"
+    }
+   ],
+   "events": [
+    [
+     "begin_busy_cursor"
+    ],
+    [
+     "end_busy_cursor"
+    ],
+    [
+     "update_dialog",
+     {
+      "current_version": "20260924",
+      "new_version": "20260925",
+      "channel_label": "Nightly",
+      "release_notes": "## Added\n- **National Products** now use `IEM AFOS` text.\n\n## Fixed\n- Pirate Weather handles _freezing rain_ correctly.\n"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "stable_to_nightly",
+   "version": "0.10.1",
+   "build_tag": null,
+   "channel": "nightly",
+   "update": [
+    "20260925",
+    true
+   ],
+   "check_args": [
+    {
+     "current_version": "0.10.1",
+     "current_nightly_date": null,
+     "channel": "nightly"
+    }
+   ],
+   "events": [
+    [
+     "begin_busy_cursor"
+    ],
+    [
+     "end_busy_cursor"
+    ],
+    [
+     "update_dialog",
+     {
+      "current_version": "0.10.1",
+      "new_version": "20260925",
+      "channel_label": "Nightly",
+      "release_notes": "## Added\n- **National Products** now use `IEM AFOS` text.\n\n## Fixed\n- Pirate Weather handles _freezing rain_ correctly.\n"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "failure",
+   "version": "0.10.1",
+   "build_tag": null,
+   "channel": "stable",
+   "error": "network down",
+   "check_args": [
+    {
+     "current_version": "0.10.1",
+     "current_nightly_date": null,
+     "channel": "stable"
+    }
+   ],
+   "events": [
+    [
+     "begin_busy_cursor"
+    ],
+    [
+     "end_busy_cursor"
+    ],
+    [
+     "message_box",
+     "Failed to check for updates:\nnetwork down",
+     "Update Check Failed",
+     516
+    ]
+   ]
+  }
+ ],
+ "downloads": [
+  {
+   "name": "manual_install",
+   "can_auto_apply": false,
+   "progress_pairs": [
+    [
+     0,
+     0
+    ],
+    [
+     65536,
+     0
+    ],
+    [
+     51200,
+     102400
+    ],
+    [
+     29,
+     100
+    ],
+    [
+     1536000,
+     3072000
+    ],
+    [
+     102400,
+     102400
+    ]
+   ],
+   "events": [
+    [
+     "progress_dialog",
+     "Downloading Update",
+     "Downloading accessiweather-windows-x86_64.zip...",
+     100,
+     7
+    ],
+    [
+     "progress_update",
+     50,
+     "Downloading... 50 / 100 KB"
+    ],
+    [
+     "progress_update",
+     28,
+     "Downloading... 0 / 0 KB"
+    ],
+    [
+     "progress_update",
+     50,
+     "Downloading... 1500 / 3000 KB"
+    ],
+    [
+     "progress_update",
+     100,
+     "Downloading... 100 / 100 KB"
+    ],
+    [
+     "progress_destroy"
+    ],
+    [
+     "message_box",
+     "The update was downloaded, but this type of install can't update itself automatically.\n\nThe new version was saved to:\nC:\\Users\\Test\\AppData\\Local\\Temp\\accessiweather-windows-x86_64.zip\n\nInstall it manually, then restart AccessiWeather.",
+     "Manual Update Required",
+     2052
+    ]
+   ]
+  },
+  {
+   "name": "apply_declined",
+   "can_auto_apply": true,
+   "answer": "NO",
+   "progress_pairs": [
+    [
+     0,
+     0
+    ],
+    [
+     65536,
+     0
+    ],
+    [
+     51200,
+     102400
+    ],
+    [
+     29,
+     100
+    ],
+    [
+     1536000,
+     3072000
+    ],
+    [
+     102400,
+     102400
+    ]
+   ],
+   "events": [
+    [
+     "progress_dialog",
+     "Downloading Update",
+     "Downloading accessiweather-windows-x86_64.zip...",
+     100,
+     7
+    ],
+    [
+     "progress_update",
+     50,
+     "Downloading... 50 / 100 KB"
+    ],
+    [
+     "progress_update",
+     28,
+     "Downloading... 0 / 0 KB"
+    ],
+    [
+     "progress_update",
+     50,
+     "Downloading... 1500 / 3000 KB"
+    ],
+    [
+     "progress_update",
+     100,
+     "Downloading... 100 / 100 KB"
+    ],
+    [
+     "progress_destroy"
+    ],
+    [
+     "message_box",
+     "Download complete. The application will now restart to apply the update.\n\nContinue?",
+     "Apply Update",
+     1034
+    ]
+   ]
+  },
+  {
+   "name": "apply_accepted",
+   "can_auto_apply": true,
+   "answer": "YES",
+   "progress_pairs": [
+    [
+     0,
+     0
+    ],
+    [
+     65536,
+     0
+    ],
+    [
+     51200,
+     102400
+    ],
+    [
+     29,
+     100
+    ],
+    [
+     1536000,
+     3072000
+    ],
+    [
+     102400,
+     102400
+    ]
+   ],
+   "events": [
+    [
+     "progress_dialog",
+     "Downloading Update",
+     "Downloading accessiweather-windows-x86_64.zip...",
+     100,
+     7
+    ],
+    [
+     "progress_update",
+     50,
+     "Downloading... 50 / 100 KB"
+    ],
+    [
+     "progress_update",
+     28,
+     "Downloading... 0 / 0 KB"
+    ],
+    [
+     "progress_update",
+     50,
+     "Downloading... 1500 / 3000 KB"
+    ],
+    [
+     "progress_update",
+     100,
+     "Downloading... 100 / 100 KB"
+    ],
+    [
+     "progress_destroy"
+    ],
+    [
+     "message_box",
+     "Download complete. The application will now restart to apply the update.\n\nContinue?",
+     "Apply Update",
+     1034
+    ],
+    [
+     "apply_update",
+     "C:\\Users\\Test\\AppData\\Local\\Temp\\accessiweather-windows-x86_64.zip"
+    ]
+   ]
+  },
+  {
+   "name": "download_error",
+   "error": "Checksum verification failed for app.zip.",
+   "progress_pairs": [
+    [
+     0,
+     0
+    ],
+    [
+     65536,
+     0
+    ],
+    [
+     51200,
+     102400
+    ],
+    [
+     29,
+     100
+    ],
+    [
+     1536000,
+     3072000
+    ],
+    [
+     102400,
+     102400
+    ]
+   ],
+   "events": [
+    [
+     "progress_dialog",
+     "Downloading Update",
+     "Downloading accessiweather-windows-x86_64.zip...",
+     100,
+     7
+    ],
+    [
+     "progress_update",
+     50,
+     "Downloading... 50 / 100 KB"
+    ],
+    [
+     "progress_update",
+     28,
+     "Downloading... 0 / 0 KB"
+    ],
+    [
+     "progress_update",
+     50,
+     "Downloading... 1500 / 3000 KB"
+    ],
+    [
+     "progress_update",
+     100,
+     "Downloading... 100 / 100 KB"
+    ],
+    [
+     "progress_destroy"
+    ],
+    [
+     "message_box",
+     "Failed to download update:\nChecksum verification failed for app.zip.",
+     "Download Error",
+     516
+    ]
+   ]
+  }
+ ],
+ "report_issue": {
+  "title": "Report Issue",
+  "resizable": true,
+  "size": [
+   500,
+   400
+  ],
+  "controls": [
+   {
+    "kind": "label",
+    "label": "Issue Type:"
+   },
+   {
+    "kind": "choice",
+    "name": "choice",
+    "items": [
+     "Bug Report",
+     "Feature Request"
+    ],
+    "selection": 0
+   },
+   {
+    "kind": "label",
+    "label": "Title:"
+   },
+   {
+    "kind": "text",
+    "name": "text",
+    "value": "",
+    "hint": "Brief summary of the issue",
+    "multiline": false,
+    "readonly": false,
+    "rich2": false,
+    "dont_wrap": false,
+    "no_vscroll": false
+   },
+   {
+    "kind": "label",
+    "label": "Description:"
+   },
+   {
+    "kind": "text",
+    "name": "text",
+    "value": "",
+    "hint": "Describe the issue or feature request.\nFor bugs: What happened? What did you expect?",
+    "multiline": true,
+    "readonly": false,
+    "rich2": false,
+    "dont_wrap": false,
+    "no_vscroll": false
+   },
+   {
+    "kind": "label",
+    "label": "System info (auto-collected):"
+   },
+   {
+    "kind": "text",
+    "name": "text",
+    "value": null,
+    "hint": "",
+    "multiline": true,
+    "readonly": true,
+    "rich2": false,
+    "dont_wrap": false,
+    "no_vscroll": false
+   },
+   {
+    "kind": "button",
+    "id": 5100,
+    "label": "Open in Browser",
+    "name": "button"
+   },
+   {
+    "kind": "button",
+    "id": 5101,
+    "label": "Cancel",
+    "name": "button"
+   }
+  ],
+  "info_min_height": 60,
+  "system_info_lines": [
+   "- App Version",
+   "- OS",
+   "- Python"
+  ],
+  "default": null,
+  "empty_title_events": [
+   [
+    "message_box",
+    "Please enter a title for the issue.",
+    "Title Required",
+    260
+   ]
+  ]
+ },
+ "debug_alert": {
+  "title": "Test Alert Notification",
+  "resizable": true,
+  "size": [
+   520,
+   440
+  ],
+  "controls": [
+   {
+    "kind": "label",
+    "label": "Select alert type to send:"
+   },
+   {
+    "kind": "listbox",
+    "name": "Select alert type to send",
+    "items": [
+     "Tornado Warning (Extreme)",
+     "Severe Thunderstorm Warning (Severe)",
+     "Flash Flood Warning (Severe)",
+     "Flash Flood Watch (Moderate)",
+     "Hurricane Warning (Extreme)",
+     "Winter Storm Watch (Moderate)",
+     "Winter Storm Warning (Severe)",
+     "Dense Fog Advisory (Minor)",
+     "Frost Advisory (Minor)",
+     "Heat Advisory (Moderate)",
+     "Special Weather Statement (Minor)",
+     "Air Quality Alert (Unknown)"
+    ],
+    "selection": 0,
+    "single": true
+   },
+   {
+    "kind": "label",
+    "label": "Sound event candidates (tried in order):"
+   },
+   {
+    "kind": "text",
+    "name": "Sound event candidates",
+    "value": "extreme → alert → notify",
+    "hint": "",
+    "multiline": true,
+    "readonly": true,
+    "rich2": false,
+    "dont_wrap": false,
+    "no_vscroll": true
+   },
+   {
+    "kind": "label",
+    "label": ""
+   },
+   {
+    "kind": "button",
+    "id": "auto",
+    "label": "&Send Test Notification",
+    "name": "Send test notification"
+   },
+   {
+    "kind": "button",
+    "id": 5001,
+    "label": "&Close",
+    "name": "Close test alert notification dialog"
+   }
+  ],
+  "default": "&Send Test Notification",
+  "candidates_height": 48,
+  "candidates": [
+   {
+    "label": "Tornado Warning (Extreme)",
+    "text": "extreme → alert → notify"
+   },
+   {
+    "label": "Severe Thunderstorm Warning (Severe)",
+    "text": "severe → alert → notify"
+   },
+   {
+    "label": "Flash Flood Warning (Severe)",
+    "text": "severe → alert → notify"
+   },
+   {
+    "label": "Flash Flood Watch (Moderate)",
+    "text": "moderate → alert → notify"
+   },
+   {
+    "label": "Hurricane Warning (Extreme)",
+    "text": "extreme → alert → notify"
+   },
+   {
+    "label": "Winter Storm Watch (Moderate)",
+    "text": "moderate → alert → notify"
+   },
+   {
+    "label": "Winter Storm Warning (Severe)",
+    "text": "severe → alert → notify"
+   },
+   {
+    "label": "Dense Fog Advisory (Minor)",
+    "text": "minor → alert → notify"
+   },
+   {
+    "label": "Frost Advisory (Minor)",
+    "text": "minor → alert → notify"
+   },
+   {
+    "label": "Heat Advisory (Moderate)",
+    "text": "moderate → alert → notify"
+   },
+   {
+    "label": "Special Weather Statement (Minor)",
+    "text": "minor → alert → notify"
+   },
+   {
+    "label": "Air Quality Alert (Unknown)",
+    "text": "unknown → alert → notify"
+   }
+  ],
+  "sends": [
+   {
+    "preset": 0,
+    "kwargs": {
+     "title": "EXTREME ALERT: Tornado Warning",
+     "message": "Tornado Warning in effect until 9:15 PM EDT.\nA tornado warning has been issued for your area. Take cover now in a sturdy building.",
+     "timeout": 10,
+     "sound_candidates": [
+      "extreme",
+      "alert",
+      "notify"
+     ],
+     "play_sound": true
+    },
+    "status": "✓ Sent: Tornado Warning (Extreme)"
+   },
+   {
+    "preset": 7,
+    "kwargs": {
+     "title": "MINOR ALERT: Dense Fog Advisory",
+     "message": "Dense Fog Advisory until 10 AM EDT.\nVisibility of one quarter mile or less expected.",
+     "timeout": 10,
+     "sound_candidates": [
+      "minor",
+      "alert",
+      "notify"
+     ],
+     "play_sound": true
+    },
+    "status": "✗ Notification not sent — check system permissions"
+   }
+  ]
+ },
+ "debug_commands": {
+  "discussion": {
+   "kwargs": {
+    "title": "NWS Discussion Updated",
+    "message": "The Area Forecast Discussion for your location has been updated. This is a debug test notification.",
+    "timeout": 10,
+    "sound_candidates": [
+     "discussion_update",
+     "notify"
+    ],
+    "play_sound": true,
+    "activation_arguments": "accessiweather-toast:kind=discussion"
+   },
+   "events": [
+    [
+     "message_box",
+     "Discussion notification could not be sent.\nCheck that desktop notifications are enabled on your system.",
+     "Debug: Discussion Notification",
+     260
+    ]
+   ]
+  },
+  "simulate": [
+   [
+    "message_box",
+    "No current location.",
+    "Debug",
+    260
+   ],
+   [
+    "message_box",
+    "Weather client not ready.",
+    "Debug",
+    260
+   ]
+  ],
+  "diagnostics": [
+   {
+    "passed": [
+     true,
+     true,
+     true
+    ],
+    "events": [
+     [
+      "message_box",
+      "Notification test results:\n- Safe Desktop Notifier: PASS\n  safe_desktop_notifier detail\n- Alert Notification System: PASS\n  alert_notification_system detail\n- Discussion Update Path: PASS\n  discussion_update_path detail\n\nSummary: 3/3 passed",
+      "Notification Test Results",
+      2052
+     ]
+    ]
+   },
+   {
+    "passed": [
+     true,
+     false,
+     true
+    ],
+    "events": [
+     [
+      "message_box",
+      "Notification test results:\n- Safe Desktop Notifier: PASS\n  safe_desktop_notifier detail\n- Alert Notification System: FAIL\n  alert_notification_system detail\n- Discussion Update Path: PASS\n  discussion_update_path detail\n\nSummary: 2/3 passed",
+      "Notification Test Results",
+      260
+     ]
+    ]
+   }
+  ]
+ }
+}

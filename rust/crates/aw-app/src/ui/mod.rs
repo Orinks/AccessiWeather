@@ -3,16 +3,22 @@
 
 mod alert_dialog;
 mod commands;
+mod debug_menu;
 mod display;
+pub(crate) mod guidance;
 mod location_dialog;
 mod locations;
 mod main_window;
 mod menus;
 mod refresh;
+mod report_issue;
 mod settings_dialog;
 mod shortcuts;
+pub(crate) mod updates;
 mod weather_source;
 
+#[cfg(test)]
+mod golden_miscui;
 #[cfg(test)]
 mod golden_tests;
 
