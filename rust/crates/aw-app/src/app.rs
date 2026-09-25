@@ -13,7 +13,6 @@ use aw_providers::{HttpClient, ReqwestClient, WeatherClient};
 use aw_store::Paths;
 
 use crate::cli::Args;
-use crate::ui;
 
 pub(crate) const SMOKE_DURATION_MS: i32 = 2500;
 const SMOKE_WATCHDOG_GRACE_MS: u64 = 15_000;
@@ -102,6 +101,31 @@ pub fn run(args: Args) -> Result<(), AppError> {
         return Ok(());
     }
 
+    // `main.setup_logging`: logs go under the config root the app uses.
+    if args.check || args.smoke {
+        crate::init_console_logging(args.verbose || args.debug);
+    } else {
+        aw_services::logging::setup_logging(args.verbose || args.debug, &paths.config_dir);
+    }
+
+    // One instance per session, settled before any window exists. Smoke
+    // runs sit beside a running copy instead of waking it.
+    let mut single_instance = None;
+    if !(args.check || args.smoke) {
+        let mut si = aw_services::single_instance::SingleInstance::new(paths.config_dir.clone());
+        if !si.try_acquire_lock() {
+            tracing::info!("Another instance is already running; requesting window restore");
+            if aw_services::single_instance::should_request_existing_instance(
+                args.activation_request.as_ref(),
+                args.startup_launch,
+            ) {
+                si.request_existing_instance_show(args.activation_request.clone());
+            }
+            return Ok(());
+        }
+        single_instance = Some(si);
+    }
+
     let mut config = aw_store::load_config(&paths.config_file())?;
     config.normalize();
     tracing::info!(
@@ -111,10 +135,11 @@ pub fn run(args: Args) -> Result<(), AppError> {
     );
 
     let offline = args.offline || args.smoke || args.check;
-    let mut needs_passphrase = false;
     if !offline {
         if paths.portable {
-            needs_passphrase = crate::portable_keys::import_silently(&paths, &mut config.settings);
+            // A failed silent import is retried with a prompt at 400 ms
+            // (`ui::guidance`).
+            crate::portable_keys::import_silently(&paths, &mut config.settings);
         } else {
             aw_store::secrets::load_into(&mut config.settings);
         }
@@ -161,24 +186,34 @@ pub fn run(args: Args) -> Result<(), AppError> {
     if smoke {
         spawn_smoke_watchdog();
     }
+    let launch = crate::lifecycle::Launch {
+        version: args
+            .fake_version
+            .clone()
+            .unwrap_or_else(|| aw_services::update::app_version().to_string()),
+        build_tag: args
+            .fake_nightly
+            .clone()
+            .or_else(|| aw_services::update::build_tag().map(str::to_string)),
+        force_wizard: args.wizard,
+        activation_request: args.activation_request.clone(),
+        smoke,
+    };
+    if let Some(v) = &args.fake_version {
+        tracing::info!("Using fake version for testing: {v}");
+    }
+    if let Some(tag) = &args.fake_nightly {
+        tracing::info!("Using fake nightly tag for testing: {tag}");
+    }
     wxdragon::main(move |_app| {
         let Some(state) = with_state() else { return };
         if !smoke {
             crate::screen_reader::init();
         }
-        ui::build_main_window(&state, smoke);
-        if needs_passphrase {
-            wxdragon::call_after(Box::new(|| {
-                let (Some(state), Some(frame)) = (with_state(), ui::main_frame()) else {
-                    return;
-                };
-                if crate::portable_keys::prompt(&frame, &state) {
-                    ui::refresh_now();
-                }
-            }));
-        }
+        crate::lifecycle::on_init(&state, launch, single_instance);
     })
     .map_err(|e| AppError::Ui(e.to_string()))?;
+    crate::lifecycle::wait_for_exit_sound();
     crate::screen_reader::shutdown();
 
     if state.borrow().smoke && state.borrow().current_weather_data.is_none() {

@@ -62,6 +62,33 @@ pub fn value_str(value: &Value) -> String {
     }
 }
 
+/// `repr(str)`: single quotes unless the text holds a single quote and no
+/// double quote.
+pub fn repr_str(s: &str) -> String {
+    let quote = if s.contains('\'') && !s.contains('"') {
+        '"'
+    } else {
+        '\''
+    };
+    let mut out = String::with_capacity(s.len() + 2);
+    out.push(quote);
+    for c in s.chars() {
+        match c {
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            c if c == quote => {
+                out.push('\\');
+                out.push(c);
+            }
+            c => out.push(c),
+        }
+    }
+    out.push(quote);
+    out
+}
+
 /// `float(value)` treating missing, empty and unparseable values as absent.
 pub fn as_float(value: Option<&Value>) -> Option<f64> {
     match value? {

@@ -8,7 +8,7 @@ use std::cell::RefCell;
 use std::mem::ManuallyDrop;
 use std::path::Path;
 use std::sync::Mutex;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use aw_services::update::{self, messages, UpdateError, UpdateInfo, UpdateService};
 use aw_services::update_restart::{apply_update, can_auto_apply};
@@ -24,9 +24,6 @@ const DIALOG_SIZE: (i32, i32) = (500, 420);
 const WHATS_NEW_LABEL: &str = "What's new:";
 const DOWNLOAD_LABEL: &str = "&Download Update";
 const CANCEL_LABEL: &str = "&Cancel";
-
-/// `_last_update_check_at`: when the last automatic check started.
-static LAST_AUTOMATIC_CHECK: Mutex<Option<Instant>> = Mutex::new(None);
 
 thread_local! {
     static PROGRESS_DIALOG: RefCell<Option<ProgressDialog>> = const { RefCell::new(None) };
@@ -61,15 +58,7 @@ fn show((message, caption, style): Message) -> i32 {
 }
 
 fn nightly_date() -> Option<String> {
-    update::build_tag().and_then(update::parse_nightly_date)
-}
-
-/// When the last automatic check started, for the periodic scheduler.
-#[allow(dead_code)] // Read by the lifecycle's auto-update timer.
-pub(crate) fn last_automatic_check() -> Option<Instant> {
-    *LAST_AUTOMATIC_CHECK
-        .lock()
-        .unwrap_or_else(|e| e.into_inner())
+    crate::lifecycle::build_tag().and_then(|tag| update::parse_nightly_date(&tag))
 }
 
 /// Check GitHub for a newer build on the configured channel. `manual` is
@@ -88,12 +77,13 @@ pub(crate) fn check_for_updates(manual: bool) {
         }
         begin_busy_cursor(None);
     } else {
-        if !update::should_run_automatic_check(from_source, &settings, update::build_tag()) {
+        if !update::should_run_automatic_check(
+            from_source,
+            &settings,
+            crate::lifecycle::build_tag().as_deref(),
+        ) {
             return;
         }
-        *LAST_AUTOMATIC_CHECK
-            .lock()
-            .unwrap_or_else(|e| e.into_inner()) = Some(Instant::now());
         tracing::info!(
             "Auto-update check starting (channel={})",
             settings.update_channel
@@ -105,7 +95,11 @@ pub(crate) fn check_for_updates(manual: bool) {
         .spawn(move || {
             let nightly = nightly_date();
             let result = UpdateService::new().and_then(|service| {
-                service.check_for_updates(update::app_version(), nightly.as_deref(), &channel)
+                service.check_for_updates(
+                    &crate::lifecycle::app_version(),
+                    nightly.as_deref(),
+                    &channel,
+                )
             });
             post_to_ui(move || finish_check(manual, result, nightly.as_deref(), &channel));
         })
@@ -133,7 +127,11 @@ fn finish_check(
             on_update_available(info);
         }
         Ok(None) if manual => {
-            show(no_update_message(nightly, channel, update::app_version()));
+            show(no_update_message(
+                nightly,
+                channel,
+                &crate::lifecycle::app_version(),
+            ));
         }
         Ok(None) => tracing::info!("Auto-update check: no updates available"),
         Err(e) if manual => {
@@ -172,7 +170,8 @@ fn check_failed_message(error_text: &str) -> Message {
 pub(crate) fn on_update_available(info: UpdateInfo) {
     let Some(frame) = main_frame() else { return };
     let nightly = nightly_date();
-    let current = update::display_version(update::app_version(), nightly.as_deref());
+    let version = crate::lifecycle::app_version();
+    let current = update::display_version(&version, nightly.as_deref());
     let label = messages::channel_label(info.is_nightly);
     if show_update_dialog(&frame, current, &info.version, label, &info.release_notes) {
         download_and_apply_update(info);

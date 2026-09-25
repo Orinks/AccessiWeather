@@ -12,6 +12,7 @@ dependencies = [
  "aw-notify",
  "aw-providers",
  "aw-radio",
+ "aw-services",
  "aw-store",
  "chrono",
  "clap",
@@ -24,6 +25,7 @@ dependencies = [
  "thiserror 2.0.21",
  "tracing",
  "tracing-subscriber",
+ "windows-sys 0.61.2",
  "wxdragon",
 ]
 

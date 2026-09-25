@@ -67,7 +67,6 @@ pub(crate) fn auto_tuner() -> Option<Arc<AlertRadioAutoTuner>> {
 /// resume the last station. `notify` shows a desktop notification titled
 /// "NOAA Weather Radio" (`_notify_radio_hotkey`). Like Python, the
 /// controller is created on the first press and keeps that callback.
-#[allow(dead_code)] // Wired by the lifecycle workstream's global hotkeys.
 pub(crate) fn radio_toggle(notify: NotifyCallback) {
     let Some(radio) = radio() else { return };
     radio
@@ -81,7 +80,6 @@ pub(crate) fn radio_toggle(notify: NotifyCallback) {
 }
 
 /// App exit: `alert_radio_auto_tuner.stop()`, then stop the stream.
-#[allow(dead_code)] // Wired by the lifecycle workstream's shutdown.
 pub(crate) fn radio_shutdown() {
     crate::ui::close_noaa_radio_dialog();
     if let Some(radio) = radio() {

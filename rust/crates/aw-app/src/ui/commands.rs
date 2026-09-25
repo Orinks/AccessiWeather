@@ -10,10 +10,6 @@ use crate::app::with_state;
 
 pub(crate) const MSG_SELECT_LOCATION_FIRST: &str = "Please select a location first.";
 
-fn not_ported(feature: &str) {
-    tracing::info!("{feature} is not ported yet");
-}
-
 /// View > Explain Weather (Ctrl+E) and the Explain Conditions button.
 pub(crate) fn on_explain_weather() {
     super::explanation_dialog::show_explanation_dialog();

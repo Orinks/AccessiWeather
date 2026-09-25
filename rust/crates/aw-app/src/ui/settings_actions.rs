@@ -542,12 +542,9 @@ pub(crate) fn refresh_runtime_settings() {
     tracing::info!("Refreshing runtime settings");
     refresh_notifier_settings();
     refresh_alert_notification_settings();
-    refresh_taskbar_icon_settings();
-    refresh_global_hotkeys();
-    setup_window_tray_shortcuts();
-    start_auto_update_checks();
-    super::main_window::start_background_updates();
-    tracing::info!("Runtime settings refreshed successfully");
+    // Tray text, global hotkeys, window/tray shortcuts, update checks and
+    // background timers.
+    crate::lifecycle::refresh_runtime_settings();
 }
 
 // ---------------------------------------------------------------------------
@@ -567,26 +564,6 @@ fn refresh_notifier_settings() {
 /// `alert_notification_system.update_settings(settings.to_alert_settings())`.
 fn refresh_alert_notification_settings() {
     not_ported("Refreshing alert notification settings");
-}
-
-/// `taskbar_icon_updater.update_settings(...)`.
-fn refresh_taskbar_icon_settings() {
-    not_ported("Refreshing tray icon text settings");
-}
-
-/// `refresh_global_hotkeys`: the NOAA Weather Radio hotkey.
-fn refresh_global_hotkeys() {
-    not_ported("Registering the NOAA Weather Radio hotkey");
-}
-
-/// `_setup_accelerators` for the configurable window/tray shortcuts.
-fn setup_window_tray_shortcuts() {
-    not_ported("Registering window and tray shortcuts");
-}
-
-/// `_start_auto_update_checks`.
-fn start_auto_update_checks() {
-    not_ported("Automatic update checks");
 }
 
 /// Account state for the Venice model browser (`VeniceBalance`).

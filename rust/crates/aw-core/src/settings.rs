@@ -344,7 +344,7 @@ pub struct AppConfig {
 impl AppConfig {
     /// Parse the JSON document, applying the same clean-ups as Python's
     /// `AppConfig.from_dict` (drop the legacy "Nationwide" entry, uppercase
-    /// country codes).
+    /// country codes, canonical hotkeys and shortcuts).
     pub fn from_json(text: &str) -> Result<Self, serde_json::Error> {
         let mut config: AppConfig = serde_json::from_str(text)?;
         config.normalize();
@@ -352,6 +352,7 @@ impl AppConfig {
     }
 
     pub fn normalize(&mut self) {
+        crate::shortcuts::normalize_shortcut_settings(&mut self.settings);
         self.locations
             .retain(|loc| loc.name != LEGACY_NATIONWIDE_LOCATION_NAME);
         for loc in &mut self.locations {

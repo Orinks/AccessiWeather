@@ -192,6 +192,7 @@ pub(crate) fn on_weather_data_received(weather_data: WeatherData, play_refresh_s
 
     // Python also hands the alerts to the notification system, updates the
     // tray tooltip and processes AFD/severe-risk notification events here.
+    crate::tray::update_for_current_location(&weather_data);
     mw::set_last_updated_status();
     if play_refresh_sound {
         tracing::debug!("data_updated sound belongs to the audio port");
@@ -199,9 +200,4 @@ pub(crate) fn on_weather_data_received(weather_data: WeatherData, play_refresh_s
 
     state.borrow_mut().is_updating = false;
     w.refresh_button.enable(true);
-}
-
-/// Re-fetch after something outside the window changed (API keys imported).
-pub(crate) fn refresh_now() {
-    refresh_weather_async(false);
 }

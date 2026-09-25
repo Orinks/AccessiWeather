@@ -1,0 +1,100 @@
+[
+  {
+    "input": {
+      "noaa_radio_hotkey": "Ctrl+Alt+Shift+R",
+      "shortcut_show_main_window": "Ctrl+Shift+W",
+      "shortcut_hide_main_window": "Ctrl+Shift+M",
+      "shortcut_read_tray_info": "Ctrl+Shift+I"
+    },
+    "output": {
+      "noaa_radio_hotkey": "Ctrl+Alt+Shift+R",
+      "shortcut_show_main_window": "Ctrl+Alt+Shift+W",
+      "shortcut_hide_main_window": "Ctrl+Alt+Shift+M",
+      "shortcut_read_tray_info": "Ctrl+Alt+Shift+I"
+    }
+  },
+  {
+    "input": {
+      "noaa_radio_hotkey": "Ctrl+Alt+Shift+W",
+      "shortcut_show_main_window": "Ctrl+Shift+W",
+      "shortcut_hide_main_window": "Ctrl+Shift+M",
+      "shortcut_read_tray_info": "Ctrl+Shift+I"
+    },
+    "output": {
+      "noaa_radio_hotkey": "Ctrl+Alt+Shift+W",
+      "shortcut_show_main_window": "",
+      "shortcut_hide_main_window": "Ctrl+Alt+Shift+M",
+      "shortcut_read_tray_info": "Ctrl+Alt+Shift+I"
+    }
+  },
+  {
+    "input": {
+      "noaa_radio_hotkey": "",
+      "shortcut_show_main_window": "Ctrl+Shift+W",
+      "shortcut_hide_main_window": "Ctrl+Alt+Shift+M",
+      "shortcut_read_tray_info": "ctrl+shift+i"
+    },
+    "output": {
+      "noaa_radio_hotkey": "",
+      "shortcut_show_main_window": "Ctrl+Alt+Shift+W",
+      "shortcut_hide_main_window": "Ctrl+Alt+Shift+M",
+      "shortcut_read_tray_info": "Ctrl+Alt+Shift+I"
+    }
+  },
+  {
+    "input": {
+      "noaa_radio_hotkey": "win+alt+r",
+      "shortcut_show_main_window": "ctrl+alt+shift+w",
+      "shortcut_hide_main_window": "bogus",
+      "shortcut_read_tray_info": ""
+    },
+    "output": {
+      "noaa_radio_hotkey": "Alt+Win+R",
+      "shortcut_show_main_window": "Ctrl+Alt+Shift+W",
+      "shortcut_hide_main_window": "Ctrl+Alt+Shift+M",
+      "shortcut_read_tray_info": ""
+    }
+  },
+  {
+    "input": {
+      "noaa_radio_hotkey": "junk",
+      "shortcut_show_main_window": "Ctrl+Alt+W",
+      "shortcut_hide_main_window": "Ctrl+Shift+M",
+      "shortcut_read_tray_info": "Ctrl+Alt+Shift+M"
+    },
+    "output": {
+      "noaa_radio_hotkey": "Ctrl+Alt+Shift+R",
+      "shortcut_show_main_window": "Ctrl+Alt+W",
+      "shortcut_hide_main_window": "",
+      "shortcut_read_tray_info": "Ctrl+Alt+Shift+M"
+    }
+  },
+  {
+    "input": {
+      "noaa_radio_hotkey": "   ",
+      "shortcut_show_main_window": "",
+      "shortcut_hide_main_window": "",
+      "shortcut_read_tray_info": ""
+    },
+    "output": {
+      "noaa_radio_hotkey": "",
+      "shortcut_show_main_window": "",
+      "shortcut_hide_main_window": "",
+      "shortcut_read_tray_info": ""
+    }
+  },
+  {
+    "input": {
+      "noaa_radio_hotkey": "Ctrl+Alt+Shift+R",
+      "shortcut_show_main_window": "Alt+F2",
+      "shortcut_hide_main_window": "Ctrl+Shift+W",
+      "shortcut_read_tray_info": "Ctrl+Shift+W"
+    },
+    "output": {
+      "noaa_radio_hotkey": "Ctrl+Alt+Shift+R",
+      "shortcut_show_main_window": "Alt+F2",
+      "shortcut_hide_main_window": "Ctrl+Shift+W",
+      "shortcut_read_tray_info": "Ctrl+Shift+W"
+    }
+  }
+]
