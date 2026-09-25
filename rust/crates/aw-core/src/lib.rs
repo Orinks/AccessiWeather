@@ -8,8 +8,8 @@ pub mod alert_lifecycle;
 pub mod alerts;
 pub mod forecast_confidence;
 pub mod fusion;
-#[cfg(test)]
-mod golden;
+#[cfg(any(test, feature = "golden"))]
+pub mod golden;
 pub mod location;
 pub mod model;
 pub mod presenter;
@@ -18,6 +18,7 @@ pub mod source_selection;
 pub mod sources;
 pub mod thermal_comfort;
 pub mod trends;
+pub mod ttl_cache;
 pub mod units;
 pub mod weather;
 pub mod weather_anomaly;

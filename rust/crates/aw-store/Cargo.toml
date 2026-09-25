@@ -7,6 +7,8 @@ description = "Configuration paths, portable mode, secrets and atomic JSON persi
 
 [dependencies]
 aw-core.workspace = true
+chrono.workspace = true
+chrono-tz.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
@@ -22,3 +24,6 @@ windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Securit
 
 [target.'cfg(not(windows))'.dependencies]
 keyring = { version = "3", features = ["apple-native", "async-secret-service", "async-io", "crypto-rust"] }
+
+[dev-dependencies]
+aw-core = { workspace = true, features = ["golden"] }

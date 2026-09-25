@@ -1,0 +1,17 @@
+{
+ "now": "2026-07-15T16:00:00+00:00",
+ "files": {
+  "fresh.json": "{\n  \"schema_version\": 6,\n  \"saved_at\": {\n    \"iso\": \"2026-07-15T14:20:00+00:00\"\n  },\n  \"weather\": {}\n}",
+  "boundary.json": "{\n  \"schema_version\": 6,\n  \"saved_at\": {\n    \"iso\": \"2026-07-15T10:00:00+00:00\"\n  },\n  \"weather\": {}\n}",
+  "old.json": "{\n  \"schema_version\": 6,\n  \"saved_at\": {\n    \"iso\": \"2026-07-15T09:59:00+00:00\"\n  },\n  \"weather\": {}\n}",
+  "no_saved_at.json": "{\n  \"schema_version\": 6,\n  \"saved_at\": null,\n  \"weather\": {}\n}",
+  "broken.json": "{",
+  "other.txt": "not json"
+ },
+ "remaining": [
+  "boundary.json",
+  "fresh.json",
+  "no_saved_at.json",
+  "other.txt"
+ ]
+}
