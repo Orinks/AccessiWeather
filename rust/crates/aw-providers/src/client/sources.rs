@@ -41,6 +41,9 @@ pub struct NwsAllData {
     pub discussion_issuance_time: Option<Timestamp>,
     pub alerts: Option<WeatherAlerts>,
     pub hourly_forecast: Option<HourlyForecast>,
+    /// `/points`' `timeZone`, which the Python helper copies onto the
+    /// location it was given.
+    pub timezone: Option<String>,
 }
 
 /// National Weather Service (`weather_client_nws.py`).
@@ -152,14 +155,7 @@ pub trait EnvironmentalSource: Send + Sync {
     ) -> SourceResult<Option<EnvironmentalConditions>>;
 }
 
-/// Options for `get_aviation_weather`.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct AviationOptions {
-    pub include_sigmets: bool,
-    pub atsu: Option<String>,
-    pub include_cwas: bool,
-    pub cwsu_id: Option<String>,
-}
+pub use crate::nws::AviationOptions;
 
 /// Aviation products (`weather_client_aviation.py`, NWS / AVWX backed).
 pub trait AviationSource: Send + Sync {

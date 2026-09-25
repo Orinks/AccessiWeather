@@ -2,7 +2,7 @@
 //! `accessiweather/weather_client_auto.py`.
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, PoisonError};
 
 use aw_core::alert_aggregator::AlertAggregator;
 use aw_core::alert_lifecycle::diff_alerts;
@@ -17,7 +17,7 @@ use aw_core::source_selection::{
 };
 
 use super::parallel::{ParallelFetchCoordinator, SourceFetch};
-use super::{location_key, WeatherClient};
+use super::{location_key, Config, WeatherClient};
 
 pub const AUTO_NWS_DISCUSSION_PLACEHOLDER: &str =
     "Forecast discussion available from NWS for US locations.";
@@ -66,22 +66,27 @@ impl WeatherClient {
     /// One fetch closure per requested source, in Python's fixed
     /// NWS / Open-Meteo / Pirate Weather order.
     fn auto_fetches(
-        &self,
+        cfg: &Config,
         location: &Location,
         requested: &[String],
         fetchable: &[&str],
+        nws_timezone: &Arc<Mutex<Option<String>>>,
     ) -> Vec<(String, SourceFetch)> {
         let wanted = |s: &str| fetchable.contains(&s) && requested.iter().any(|r| r == s);
         let mut fetches: Vec<(String, SourceFetch)> = Vec::new();
-        let settings = &self.settings;
+        let settings = &cfg.settings;
         if wanted(NWS) {
-            let nws = Arc::clone(&self.sources.nws);
+            let nws = Arc::clone(&cfg.sources.nws);
             let loc = location.clone();
             let radius = settings.alert_radius_type.clone();
+            let timezone = Arc::clone(nws_timezone);
             fetches.push((
                 NWS.into(),
                 Box::new(move || {
                     let data = nws.get_all_data(&loc, &radius)?;
+                    if data.timezone.is_some() {
+                        *timezone.lock().unwrap_or_else(PoisonError::into_inner) = data.timezone;
+                    }
                     Ok(SourceData {
                         current: data.current,
                         forecast: data.forecast,
@@ -95,7 +100,7 @@ impl WeatherClient {
             ));
         }
         if wanted(OPENMETEO) {
-            let openmeteo = Arc::clone(&self.sources.openmeteo);
+            let openmeteo = Arc::clone(&cfg.sources.openmeteo);
             let loc = location.clone();
             let days =
                 selection::forecast_days_for_source(settings.forecast_duration_days, OPENMETEO);
@@ -117,7 +122,7 @@ impl WeatherClient {
                 }),
             ));
         }
-        if let Some(pirate) = self
+        if let Some(pirate) = cfg
             .sources
             .pirate_weather
             .as_ref()
@@ -125,7 +130,7 @@ impl WeatherClient {
         {
             let pirate = Arc::clone(pirate);
             let loc = location.clone();
-            let units = self.pirate_units(location);
+            let units = Self::pirate_units(settings, location);
             let days =
                 selection::forecast_days_for_source(settings.forecast_duration_days, PIRATEWEATHER);
             fetches.push((
@@ -148,7 +153,8 @@ impl WeatherClient {
     /// for max coverage, staged for economy/balanced) and fuse them.
     pub(super) fn fetch_smart_auto_source(&self, location: &Location) -> WeatherData {
         tracing::info!("Using smart auto source for {}", location.name);
-        let settings = &self.settings;
+        let cfg = self.cfg();
+        let settings = &cfg.settings;
         let is_us = self.is_us(location);
         let auto_sources_us = selection::validated_auto_sources(&settings.auto_sources_us, true);
         let auto_sources_international =
@@ -165,15 +171,13 @@ impl WeatherClient {
         } else {
             auto_sources_international
         };
-        let fetchable = selection::auto_fetchable_sources(
-            &active,
-            is_us,
-            self.sources.pirate_weather.is_some(),
-        );
+        let fetchable =
+            selection::auto_fetchable_sources(&active, is_us, cfg.sources.pirate_weather.is_some());
 
+        let nws_timezone = Arc::new(Mutex::new(None));
         let initial = selection::auto_initial_sources(budget, &active, &fetchable);
         let mut results = coordinator.fetch_all(
-            self.auto_fetches(location, &initial, &fetchable),
+            Self::auto_fetches(&cfg, location, &initial, &fetchable, &nws_timezone),
             self.now(),
         );
         if budget != AutoBudget::MaxCoverage {
@@ -194,12 +198,24 @@ impl WeatherClient {
             let secondary = selection::auto_secondary_sources(&outcome);
             if !secondary.is_empty() {
                 let more = coordinator.fetch_all(
-                    self.auto_fetches(location, &secondary, &fetchable),
+                    Self::auto_fetches(&cfg, location, &secondary, &fetchable, &nws_timezone),
                     self.now(),
                 );
                 results.extend(more);
             }
         }
+
+        // Python's NWS helper copies /points' timezone onto the location
+        // object everything below works with.
+        let mut location = location.clone();
+        let fetched_timezone = nws_timezone
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .take();
+        if fetched_timezone.is_some() {
+            location.timezone = fetched_timezone;
+        }
+        let location = &location;
 
         let successful = results.iter().filter(|s| s.success).count();
         if successful == 0 {
@@ -217,9 +233,9 @@ impl WeatherClient {
             || settings.notify_minutely_precipitation_stop
             || settings.notify_precipitation_likelihood;
         let pirate_fetched = results.iter().any(|s| s.source == PIRATEWEATHER);
-        let minutely = match &self.sources.pirate_weather {
+        let minutely = match &cfg.sources.pirate_weather {
             Some(pirate) if pirate_fetched || wants_minutely => {
-                pirate.get_minutely(location, self.pirate_units(location))
+                pirate.get_minutely(location, Self::pirate_units(settings, location))
             }
             _ => None,
         };
@@ -252,7 +268,7 @@ impl WeatherClient {
 
         let key = location_key(location);
         let cancel_ids: HashSet<String> = if nws_alerts.is_some() {
-            self.sources.nws.fetch_cancel_references(15)
+            cfg.sources.nws.fetch_cancel_references(15)
         } else {
             HashSet::new()
         };
@@ -331,7 +347,7 @@ impl WeatherClient {
             ..WeatherData::new(location.clone())
         };
         if weather.has_any_data() {
-            self.run_enrichments(&mut weather, location);
+            self.run_enrichments(&cfg, &mut weather, location);
         }
         tracing::info!(
             "Smart auto source completed for {}: {successful} sources succeeded",

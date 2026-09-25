@@ -569,7 +569,7 @@ fn forecast_sections_and_generated_time() {
     let mut london = Location::new("London", 51.5074, -0.1278);
     london.timezone = Some("Europe/London".into());
     let mut f = today_forecast();
-    f.generated_at = Some(utc(2026, 7, 1, 12, 0));
+    f.generated_at = Some(aw_core::model::PyTimestamp::Aware(utc(2026, 7, 1, 12, 0)));
     let out = presenter(serde_json::json!({"show_timezone_suffix": true}), start)
         .present_forecast(Some(&f), &london, None, None, None, None)
         .unwrap();

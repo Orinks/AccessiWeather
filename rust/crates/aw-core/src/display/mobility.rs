@@ -27,7 +27,7 @@ fn infer_reference_time(data: &WeatherData) -> Option<DateTime<Utc>> {
             candidates.push(p.start_time.with_timezone(&Utc));
         }
         if let Some(g) = h.generated_at {
-            candidates.push(g.with_timezone(&Utc));
+            candidates.push(g.coerce_utc());
         }
     }
     candidates.into_iter().min()
@@ -161,4 +161,46 @@ pub fn build_mobility_briefing(
         out.push('.');
     }
     Some(out)
+}
+
+#[cfg(test)]
+mod tests {
+    use chrono::TimeZone;
+
+    use super::*;
+    use crate::location::Location;
+    use crate::model::{HourlyForecast, PyTimestamp};
+
+    fn rainy_hour(generated_at: PyTimestamp) -> WeatherData {
+        let start = Utc.with_ymd_and_hms(2026, 1, 20, 18, 30, 0).unwrap();
+        let mut period = HourlyForecastPeriod::new(start.fixed_offset());
+        period.precipitation_probability = Some(80.0);
+        WeatherData {
+            hourly_forecast: Some(HourlyForecast {
+                periods: vec![period],
+                generated_at: Some(generated_at),
+                summary: None,
+            }),
+            ..WeatherData::new(Location::new("Here", 40.0, -74.0))
+        }
+    }
+
+    #[test]
+    fn naive_generation_time_is_read_as_utc() {
+        let now = Utc.with_ymd_and_hms(2026, 1, 20, 18, 20, 0).unwrap();
+        let aware = rainy_hour(PyTimestamp::Aware(now.fixed_offset()));
+        assert_eq!(
+            build_mobility_briefing(&aware, None, now).as_deref(),
+            Some("Rain likely.")
+        );
+        // A naive 1:20 PM (US Eastern wall time) is taken as 13:20 UTC, five
+        // hours early, so Python finds nothing within 90 minutes of it.
+        let wall = now
+            .with_timezone(&chrono_tz::America::New_York)
+            .naive_local();
+        assert_eq!(
+            build_mobility_briefing(&rainy_hour(PyTimestamp::Naive(wall)), None, now),
+            None
+        );
+    }
 }

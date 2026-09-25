@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 use aw_core::model::{
     CurrentConditions, Forecast, ForecastPeriod, HourlyForecast, HourlyForecastPeriod, Location,
-    Timestamp, WeatherAlert, WeatherAlerts, WindDirection,
+    PyTimestamp, Timestamp, WeatherAlert, WeatherAlerts, WindDirection,
 };
 use chrono::DateTime;
 use serde_json::Value;
@@ -209,7 +209,7 @@ pub fn parse_forecast(data: &Value, now: Timestamp) -> Forecast {
 
     Forecast {
         periods,
-        generated_at: Some(now),
+        generated_at: Some(PyTimestamp::Naive(now.naive_local())),
         summary: None,
     }
 }
@@ -377,7 +377,7 @@ pub fn parse_hourly_forecast(
 
     Ok(HourlyForecast {
         periods,
-        generated_at: Some(now),
+        generated_at: Some(PyTimestamp::Naive(now.naive_local())),
         summary: None,
     })
 }
@@ -430,7 +430,7 @@ fn get_unit(v: &Value) -> Option<String> {
 /// inches, around 850-1100 millibars, anything else pascals.
 fn normalize_gridpoint_pressure(value: f64, unit: Option<&str>) -> PressurePair {
     if let Some(unit) = unit.filter(|u| !u.is_empty()) {
-        let (i, m) = normalize_pressure(value, Some(unit));
+        let (i, m) = normalize_pressure(Some(value), Some(unit));
         if i.is_some() || m.is_some() {
             return (i, m);
         }
@@ -442,8 +442,8 @@ fn normalize_gridpoint_pressure(value: f64, unit: Option<&str>) -> PressurePair 
         return (Some(value * 0.0295299830714), Some(value));
     }
     (
-        Some(convert_pa_to_inches(value)),
-        Some(convert_pa_to_mb(value)),
+        convert_pa_to_inches(Some(value)),
+        convert_pa_to_mb(Some(value)),
     )
 }
 
@@ -590,7 +590,10 @@ mod tests {
         assert_eq!(monday.detailed_forecast.as_deref(), Some("Sunny."));
         assert_eq!(monday.wind_speed.as_deref(), Some("5 to 10 mph"));
         assert_eq!(monday.wind_speed_mph, Some(10.0));
-        assert_eq!(f.generated_at, Some(now()));
+        assert_eq!(
+            f.generated_at,
+            Some(PyTimestamp::Naive(now().naive_local()))
+        );
         assert!(
             parse_forecast(&json!({"properties": {"periods": []}}), now())
                 .periods

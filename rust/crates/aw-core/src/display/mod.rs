@@ -19,7 +19,6 @@ pub mod priority;
 pub mod pyfmt;
 pub mod source_attribution;
 pub mod taf;
-pub mod thermal;
 pub mod time;
 pub mod tray;
 pub mod units;

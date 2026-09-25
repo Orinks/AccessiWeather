@@ -1,7 +1,7 @@
 //! Sanity checks for apparent temperature, wind chill and heat index
 //! readings. Port of `accessiweather/thermal_comfort.py`.
 
-use crate::units::{c_to_f, f_to_c};
+use crate::display::units::{celsius_to_fahrenheit as c_to_f, fahrenheit_to_celsius as f_to_c};
 
 const WARM_FEELS_LIKE_DISPLAY_THRESHOLD_F: f64 = 3.0;
 const HEAT_INDEX_COHERENCE_TOLERANCE_F: f64 = 2.5;
@@ -236,5 +236,24 @@ mod tests {
             ..Default::default()
         });
         assert_eq!(out, ThermalComfortReadings::default());
+    }
+
+    #[test]
+    fn implausible_warm_feels_like_is_dropped() {
+        // 70°F, dry air, feels like 85°F: no heat index envelope, beyond solar allowance.
+        let r = sanitize_thermal_comfort_readings(ThermalComfortInput {
+            temperature_f: Some(70.0),
+            humidity: Some(30.0),
+            feels_like_f: Some(85.0),
+            ..Default::default()
+        });
+        assert_eq!(r.feels_like_f, None);
+    }
+
+    #[test]
+    fn wind_chill_formula() {
+        let wc = calculate_wind_chill_f(20.0, 15.0).unwrap();
+        assert!((wc - 6.2).abs() < 0.1, "{wc}");
+        assert!(calculate_wind_chill_f(60.0, 15.0).is_none());
     }
 }

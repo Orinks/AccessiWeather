@@ -15,7 +15,7 @@ use aw_core::model::{
 use aw_core::source_selection::{self as selection, NWS, OPENMETEO, PIRATEWEATHER};
 
 use super::sources::{SourceError, SourceResult};
-use super::{joined, location_key, WeatherClient};
+use super::{joined, location_key, Config, WeatherClient};
 
 pub const PIRATE_WEATHER_DISCUSSION_TEXT: &str =
     "Forecast discussion not available from Pirate Weather.";
@@ -45,22 +45,23 @@ fn set_empty(weather: &mut WeatherData) {
 
 impl WeatherClient {
     pub(super) fn fetch_single_source(&self, location: &Location) -> WeatherData {
+        let cfg = self.cfg();
         let api = selection::determine_api_choice(
-            &self.data_source,
-            self.sources.pirate_weather.is_some(),
+            &cfg.data_source,
+            cfg.sources.pirate_weather.is_some(),
             self.is_us(location),
         );
         tracing::info!(
             "Using {} API for {} (data_source: {})",
             selection::api_display_name(api),
             location.name,
-            self.data_source
+            cfg.data_source
         );
         let mut weather = WeatherData::new(location.clone());
         let result = match api {
-            PIRATEWEATHER => self.fetch_pirate_weather(location, &mut weather),
-            OPENMETEO => self.fetch_openmeteo_only(location, &mut weather),
-            _ => self.fetch_nws_only(location, &mut weather),
+            PIRATEWEATHER => self.fetch_pirate_weather(&cfg, location, &mut weather),
+            OPENMETEO => self.fetch_openmeteo_only(&cfg, location, &mut weather),
+            _ => self.fetch_nws_only(&cfg, location, &mut weather),
         };
         if let Err(e) = result {
             tracing::error!(
@@ -72,7 +73,8 @@ impl WeatherClient {
         }
 
         if weather.has_any_data() {
-            self.run_enrichments(&mut weather, location);
+            let location = weather.location.clone();
+            self.run_enrichments(&cfg, &mut weather, &location);
         } else if let Some(cached) = self
             .offline_cache
             .as_ref()
@@ -88,19 +90,18 @@ impl WeatherClient {
 
     fn fetch_pirate_weather(
         &self,
+        cfg: &Config,
         location: &Location,
         weather: &mut WeatherData,
     ) -> SourceResult<()> {
-        let pirate = self
+        let pirate = cfg
             .sources
             .pirate_weather
             .clone()
             .ok_or_else(|| SourceError::new("Pirate Weather API key not configured"))?;
-        let units = self.pirate_units(location);
-        let days = selection::forecast_days_for_source(
-            self.settings.forecast_duration_days,
-            PIRATEWEATHER,
-        );
+        let units = Self::pirate_units(&cfg.settings, location);
+        let days =
+            selection::forecast_days_for_source(cfg.settings.forecast_duration_days, PIRATEWEATHER);
         let (current, forecast, hourly, alerts) = std::thread::scope(|scope| {
             let current = scope.spawn(|| pirate.get_current_conditions(location, units));
             let forecast = scope.spawn(|| pirate.get_forecast(location, days, units));
@@ -142,11 +143,12 @@ impl WeatherClient {
 
     fn fetch_openmeteo_only(
         &self,
+        cfg: &Config,
         location: &Location,
         weather: &mut WeatherData,
     ) -> SourceResult<()> {
-        let settings = &self.settings;
-        let (current, forecast, hourly) = self.sources.openmeteo.get_all_data(
+        let settings = &cfg.settings;
+        let (current, forecast, hourly) = cfg.sources.openmeteo.get_all_data(
             location,
             selection::forecast_days_for_source(settings.forecast_duration_days, OPENMETEO),
             selection::hourly_hours_for_pressure_outlook(
@@ -166,11 +168,19 @@ impl WeatherClient {
         Ok(())
     }
 
-    fn fetch_nws_only(&self, location: &Location, weather: &mut WeatherData) -> SourceResult<()> {
-        let data = self
+    fn fetch_nws_only(
+        &self,
+        cfg: &Config,
+        location: &Location,
+        weather: &mut WeatherData,
+    ) -> SourceResult<()> {
+        let data = cfg
             .sources
             .nws
-            .get_all_data(location, &self.settings.alert_radius_type)?;
+            .get_all_data(location, &cfg.settings.alert_radius_type)?;
+        if data.timezone.is_some() {
+            weather.location.timezone = data.timezone;
+        }
         weather.current = data.current;
         weather.forecast = data.forecast;
         weather.hourly_forecast = data.hourly_forecast;
@@ -180,7 +190,7 @@ impl WeatherClient {
 
         let key = location_key(location);
         let previous = self.state().previous_alerts.get(&key).cloned();
-        let cancel_ids = self.sources.nws.fetch_cancel_references(15);
+        let cancel_ids = cfg.sources.nws.fetch_cancel_references(15);
         weather.alert_lifecycle_diff = Some(diff_alerts(
             previous.as_ref(),
             alerts.as_ref(),

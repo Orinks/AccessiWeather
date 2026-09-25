@@ -168,43 +168,7 @@ fn parse_hh_mm_ss_ff(t: &[char], end: usize) -> Option<(u32, u32, u32, u32, bool
     Some((vals[0], vals[1], vals[2], micro, at(p) != '\0'))
 }
 
-/// Python `repr(float)`.
-pub fn py_float(x: f64) -> String {
-    if x.is_nan() {
-        return "nan".into();
-    }
-    if x.is_infinite() {
-        return if x > 0.0 { "inf" } else { "-inf" }.into();
-    }
-    if x == 0.0 {
-        return if x.is_sign_negative() { "-0.0" } else { "0.0" }.into();
-    }
-    let sci = format!("{:e}", x.abs());
-    let (mantissa, exp) = sci.split_once('e').expect("LowerExp has an exponent");
-    let exp: i32 = exp.parse().expect("numeric exponent");
-    let digits: String = mantissa.chars().filter(char::is_ascii_digit).collect();
-    let sign = if x < 0.0 { "-" } else { "" };
-    let body = if (-4..16).contains(&exp) {
-        if exp >= 0 {
-            let int_len = exp as usize + 1;
-            if digits.len() <= int_len {
-                format!("{digits}{}.0", "0".repeat(int_len - digits.len()))
-            } else {
-                format!("{}.{}", &digits[..int_len], &digits[int_len..])
-            }
-        } else {
-            format!("0.{}{digits}", "0".repeat((-exp - 1) as usize))
-        }
-    } else {
-        let m = if digits.len() > 1 {
-            format!("{}.{}", &digits[..1], &digits[1..])
-        } else {
-            digits
-        };
-        format!("{m}e{}{:02}", if exp < 0 { '-' } else { '+' }, exp.abs())
-    };
-    format!("{sign}{body}")
-}
+pub use aw_core::py::float_repr as py_float;
 
 /// Python `str()` of a JSON-decoded value.
 pub fn py_str(value: &Value) -> String {
@@ -265,14 +229,7 @@ fn repr_str(s: &str) -> String {
 
 /// Python truthiness of a JSON value.
 pub fn truthy(value: &Value) -> bool {
-    match value {
-        Value::Null => false,
-        Value::Bool(b) => *b,
-        Value::Number(n) => n.as_f64().is_some_and(|f| f != 0.0),
-        Value::String(s) => !s.is_empty(),
-        Value::Array(a) => !a.is_empty(),
-        Value::Object(o) => !o.is_empty(),
-    }
+    aw_core::py::truthy(Some(value))
 }
 
 /// Percent-encode like `urllib.parse.quote(safe="")` (httpx params) or

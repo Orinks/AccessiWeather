@@ -15,8 +15,8 @@ use std::path::PathBuf;
 
 use aw_core::model::{
     CurrentConditions, EnvironmentalConditions, Forecast, ForecastPeriod, HourlyForecast,
-    HourlyForecastPeriod, Location, SourceAttribution, Timestamp, TrendInsight, WeatherAlert,
-    WeatherAlerts, WeatherData,
+    HourlyForecastPeriod, Location, PyTimestamp, SourceAttribution, Timestamp, TrendInsight,
+    WeatherAlert, WeatherAlerts, WeatherData,
 };
 use chrono::{
     DateTime, Duration, FixedOffset, Local, NaiveDate, NaiveDateTime, SecondsFormat, TimeZone,
@@ -195,9 +195,8 @@ pub fn safe_location_key(location: &Location) -> String {
 // Python-compatible JSON text
 // ---------------------------------------------------------------------------
 
-/// Python's `repr(float)`: shortest round-trip digits, scientific notation
-/// below 1e-4 and from 1e16 up (`1e-05`, `1e+16`), always with a `.0` or
-/// exponent.
+/// A float as Python's `json.dump` writes it: `repr`, with the `NaN` and
+/// `Infinity` tokens for non-finite values.
 pub fn py_float_repr(value: f64) -> String {
     if value.is_nan() {
         return "NaN".into();
@@ -205,41 +204,7 @@ pub fn py_float_repr(value: f64) -> String {
     if value.is_infinite() {
         return if value > 0.0 { "Infinity" } else { "-Infinity" }.into();
     }
-    let sci = format!("{value:e}");
-    let (mantissa, exponent) = sci.split_once('e').expect("{:e} always has an exponent");
-    let exponent: i32 = exponent.parse().expect("integer exponent");
-    let (sign, mantissa) = match mantissa.strip_prefix('-') {
-        Some(m) => ("-", m),
-        None => ("", mantissa),
-    };
-    let digits: String = mantissa.chars().filter(|c| *c != '.').collect();
-    if (-4..16).contains(&exponent) {
-        let point = exponent + 1;
-        let body = if point <= 0 {
-            format!("0.{}{digits}", "0".repeat((-point) as usize))
-        } else if point as usize >= digits.len() {
-            format!("{digits}{}.0", "0".repeat(point as usize - digits.len()))
-        } else {
-            format!(
-                "{}.{}",
-                &digits[..point as usize],
-                &digits[point as usize..]
-            )
-        };
-        format!("{sign}{body}")
-    } else {
-        let rest = if digits.len() > 1 {
-            format!(".{}", &digits[1..])
-        } else {
-            String::new()
-        };
-        let exp_sign = if exponent < 0 { '-' } else { '+' };
-        format!(
-            "{sign}{}{rest}e{exp_sign}{:02}",
-            &digits[..1],
-            exponent.abs()
-        )
-    }
+    aw_core::py::float_repr(value)
 }
 
 /// `json.dumps(value, indent=2)` with Python's defaults (`ensure_ascii`).
@@ -420,6 +385,11 @@ fn ts(value: &Option<Timestamp>) -> Value {
     serialize_datetime(value.as_ref())
 }
 
+/// Python stores a naive datetime as its wall time in UTC.
+fn py_ts(value: &Option<PyTimestamp>) -> Value {
+    serialize_datetime(value.map(|v| v.coerce_utc().fixed_offset()).as_ref())
+}
+
 fn serialize_current(c: &CurrentConditions) -> Value {
     obj(vec![
         ("temperature_f", json!(c.temperature_f)),
@@ -563,7 +533,7 @@ pub fn serialize_weather_data(w: &WeatherData) -> Value {
                         "periods",
                         Value::Array(f.periods.iter().map(serialize_forecast_period).collect()),
                     ),
-                    ("generated_at", ts(&f.generated_at)),
+                    ("generated_at", py_ts(&f.generated_at)),
                 ])
             })),
         ),
@@ -575,7 +545,7 @@ pub fn serialize_weather_data(w: &WeatherData) -> Value {
                         "periods",
                         Value::Array(h.periods.iter().map(serialize_hourly_period).collect()),
                     ),
-                    ("generated_at", ts(&h.generated_at)),
+                    ("generated_at", py_ts(&h.generated_at)),
                 ])
             })),
         ),
@@ -808,7 +778,7 @@ pub fn deserialize_weather_data(
                 .into_iter()
                 .map(|p| deserialize_forecast_period(&Fields(p, now)))
                 .collect(),
-            generated_at: d.time("generated_at"),
+            generated_at: d.time("generated_at").map(PyTimestamp::Aware),
             summary: None,
         }),
         hourly_forecast: with_periods("hourly_forecast").map(|d| HourlyForecast {
@@ -817,7 +787,7 @@ pub fn deserialize_weather_data(
                 .into_iter()
                 .map(|p| deserialize_hourly_period(&Fields(p, now)))
                 .collect(),
-            generated_at: d.time("generated_at"),
+            generated_at: d.time("generated_at").map(PyTimestamp::Aware),
             summary: None,
         }),
         discussion: top.string("discussion"),

@@ -5,9 +5,9 @@ use std::collections::BTreeMap;
 
 use serde_json::{Map, Value};
 
+use crate::display::units::{celsius_to_fahrenheit as c_to_f, fahrenheit_to_celsius as f_to_c};
 use crate::model::{CurrentConditions, DataConflict, SourceAttribution, SourceData};
 use crate::thermal_comfort::{sanitize_thermal_comfort_readings, ThermalComfortInput};
-use crate::units::{c_to_f, f_to_c};
 
 pub const KM_PER_MILE: f64 = 1.609344;
 pub const MB_PER_INHG: f64 = 33.8639;

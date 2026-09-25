@@ -6,13 +6,14 @@
 //! (tab) order, golden-tested against the real Python dialogs
 //! (`rust/tools/golden/dataui.py`), and then built by [`show`].
 
-use aw_core::display::pyfmt::{repr_f64, round_int};
+use aw_core::display::pyfmt::round_int;
 use aw_core::display::time::location_zone;
 use aw_core::model::{
     EnvironmentalConditions, MinutelyPrecipitationForecast, MinutelyPrecipitationPoint, Timestamp,
     WeatherData,
 };
 use aw_core::py::casefold;
+use aw_core::py::float_repr as repr_f64;
 use aw_core::Location;
 use aw_notify::events::minutely::{is_wet, precipitation_type_label};
 use wxdragon::prelude::*;

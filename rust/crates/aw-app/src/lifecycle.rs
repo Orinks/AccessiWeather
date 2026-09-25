@@ -555,6 +555,8 @@ pub(crate) fn toggle_noaa_radio() {
 pub(crate) fn refresh_runtime_settings() {
     tracing::info!("Refreshing runtime settings");
     let Some(state) = with_state() else { return };
+    // Settings, the data source and API keys reach the weather client.
+    crate::app::refresh_runtime_settings(&state.borrow());
     let offline = state.borrow().offline;
     tray::refresh_updater(&state.borrow().config.settings);
     hotkeys::refresh();

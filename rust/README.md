@@ -10,8 +10,8 @@ NSAccessibility and AT-SPI respectively, like the wxPython edition.
 
 | Crate | Purpose |
 |-------|---------|
-| `aw-core` | Domain models, settings (JSON-compatible with the Python app), units, source planning, alerts, text presentation |
-| `aw-providers` | NWS, Open-Meteo, Pirate Weather, geocoding, multi-source fetch/merge with fallback |
+| `aw-core` | Domain models, settings (JSON-compatible with the Python app), source selection, fusion, alert lifecycle, the weather presenter |
+| `aw-providers` | NWS, Open-Meteo, Pirate Weather, environmental, geocoding and text-product clients, and the multi-source weather client |
 | `aw-store` | Config directories, portable mode, API keys (keyring / encrypted bundle), atomic JSON persistence |
 | `aw-audio` | Sound playback (rodio), sound packs, Sound Pack Manager/wizard logic, community packs and pack sharing |
 | `aw-radio` | NOAA Weather Radio: station finder, stream lookup, network playback (rodio + symphonia), hotkey toggle, alert auto-tune |
@@ -25,8 +25,8 @@ NSAccessibility and AT-SPI respectively, like the wxPython edition.
 cd rust
 cargo build --release -p accessiweather
 ./target/release/accessiweather            # live weather
-./target/release/accessiweather --offline  # bundled sample data
-./target/release/accessiweather --check    # headless self-check, exit 0 on success
+./target/release/accessiweather --offline  # recorded NWS/Open-Meteo responses instead of the network
+./target/release/accessiweather --check    # headless: replay recorded responses, require the Python app's text
 ./target/release/accessiweather --smoke    # open the window on sample data, exit 0 after ~2 s
 ```
 

@@ -15,6 +15,7 @@ dependencies = [
  "aw-services",
  "aw-store",
  "chrono",
+ "chrono-tz",
  "clap",
  "embed-manifest",
  "libc",

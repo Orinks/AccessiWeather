@@ -49,28 +49,11 @@ pub fn calculate_dewpoint(
     humidity: Option<f64>,
     unit: &str,
 ) -> Option<f64> {
-    let (temperature, humidity) = (temperature?, humidity?);
-    if humidity <= 0.0 {
-        return None;
-    }
     let celsius = matches!(
         unit.trim().to_lowercase().as_str(),
         "c" | "celsius" | "°c" | "degc" | "wmounit:degc"
     );
-    let ratio = humidity.clamp(0.1, 100.0) / 100.0;
-    let temp_c = if celsius {
-        temperature
-    } else {
-        (temperature - 32.0) * 5.0 / 9.0
-    };
-    let (a, b) = (17.27, 237.7);
-    let alpha = (a * temp_c) / (b + temp_c) + ratio.ln();
-    let dewpoint_c = (b * alpha) / (a - alpha);
-    Some(if celsius {
-        dewpoint_c
-    } else {
-        (dewpoint_c * 9.0 / 5.0) + 32.0
-    })
+    crate::display::units::calculate_dewpoint(temperature?, humidity?, celsius)
 }
 
 /// Humidity rounded to a 0-100 percentage (`fraction` scales 0-1 values).

@@ -258,11 +258,14 @@ pub(crate) fn update_for_current_location(weather_data: &WeatherData) {
 /// most severe alert.
 pub(crate) fn update_for_all_locations() {
     let Some(state) = with_state() else { return };
-    let locations = state.borrow().config.locations.clone();
+    let (locations, client) = {
+        let st = state.borrow();
+        (st.config.locations.clone(), st.client.clone())
+    };
     let last = ui::window_state(|s| s.last_single_location_name.clone());
     let picked = all_locations_tray_data(
         &locations,
-        ui::get_cached_weather,
+        |l| client.get_cached_weather(l),
         last.as_deref(),
         Utc::now(),
     );

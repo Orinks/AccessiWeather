@@ -1,9 +1,5 @@
 //! wxDragon user interface, mirroring the Python `accessiweather.ui` package:
-//! the main window, its menus and shortcuts, and the location and alert dialogs.
-//! the main window, its menus and shortcuts, the location dialogs and the
-//! Settings dialog.
-//! the main window, its menus and shortcuts, and the location, alert and NOAA
-//! Weather Radio dialogs.
+//! the main window, its menus and shortcuts, and every dialog.
 
 mod ai_model_check;
 mod alert_dialog;
@@ -13,7 +9,7 @@ mod commands;
 mod community_packs_dialog;
 mod data_dialogs;
 mod debug_menu;
-mod display;
+pub(crate) mod display;
 mod explanation_dialog;
 mod forecast_products;
 pub(crate) mod guidance;
@@ -37,7 +33,7 @@ mod soundpack_wizard;
 mod tray_text_format_dialog;
 pub(crate) mod updates;
 mod weather_assistant_dialog;
-mod weather_source;
+mod weather_events;
 
 #[cfg(test)]
 mod golden_miscui;
@@ -60,4 +56,3 @@ pub(crate) use commands::{
 pub(crate) use main_window::{
     message_box, set_initial_focus, set_status, start_background_updates, window_state,
 };
-pub(crate) use weather_source::get_cached_weather;

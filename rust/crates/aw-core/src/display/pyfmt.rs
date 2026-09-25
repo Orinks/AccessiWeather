@@ -14,33 +14,7 @@ pub fn fixed(x: f64, prec: usize) -> String {
 
 /// Python's `round(x)` (ties to even), as an integer.
 pub fn round_int(x: f64) -> i64 {
-    x.round_ties_even() as i64
-}
-
-/// `repr(x)` / `str(x)` / `f"{x}"` for a float.
-pub fn repr_f64(x: f64) -> String {
-    if x.is_nan() {
-        return "nan".into();
-    }
-    if x.is_infinite() {
-        return if x > 0.0 { "inf" } else { "-inf" }.into();
-    }
-    let abs = x.abs();
-    if abs != 0.0 && !(1e-4..1e16).contains(&abs) {
-        // Python switches to exponent notation outside [1e-4, 1e16) and
-        // always writes a sign and at least two exponent digits.
-        let s = format!("{x:e}");
-        let (mantissa, exp) = s.split_once('e').unwrap_or((&s, "0"));
-        let exp: i32 = exp.parse().unwrap_or(0);
-        let sign = if exp < 0 { '-' } else { '+' };
-        return format!("{mantissa}e{sign}{:02}", exp.abs());
-    }
-    let s = format!("{x}");
-    if s.contains('.') {
-        s
-    } else {
-        format!("{s}.0")
-    }
+    crate::py::round(x) as i64
 }
 
 fn is_cased(c: char) -> bool {
@@ -256,14 +230,7 @@ pub fn wrap_text(text: &str, width: usize) -> String {
 
 /// Python truthiness of a JSON value.
 pub fn truthy(v: &Value) -> bool {
-    match v {
-        Value::Null => false,
-        Value::Bool(b) => *b,
-        Value::Number(n) => n.as_f64().is_some_and(|f| f != 0.0),
-        Value::String(s) => !s.is_empty(),
-        Value::Array(a) => !a.is_empty(),
-        Value::Object(o) => !o.is_empty(),
-    }
+    crate::py::truthy(Some(v))
 }
 
 /// `str(value)` for a JSON value.
@@ -275,7 +242,7 @@ pub fn py_str(v: &Value) -> String {
         Value::Number(n) => match (n.as_i64(), n.as_u64()) {
             (Some(i), _) => i.to_string(),
             (None, Some(u)) => u.to_string(),
-            _ => repr_f64(n.as_f64().unwrap_or(0.0)),
+            _ => crate::py::float_repr(n.as_f64().unwrap_or(0.0)),
         },
         Value::String(s) => s.clone(),
         Value::Array(items) => {
@@ -308,16 +275,6 @@ fn py_repr(v: &Value) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn repr_matches_python() {
-        assert_eq!(repr_f64(5.0), "5.0");
-        assert_eq!(repr_f64(3.25), "3.25");
-        assert_eq!(repr_f64(-0.0), "-0.0");
-        assert_eq!(repr_f64(1e16), "1e+16");
-        assert_eq!(repr_f64(0.00001), "1e-05");
-        assert_eq!(repr_f64(0.0001), "0.0001");
-    }
 
     #[test]
     fn title_and_capitalize_match_python() {

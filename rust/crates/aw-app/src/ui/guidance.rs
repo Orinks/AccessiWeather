@@ -124,10 +124,9 @@ fn should_show_first_start_onboarding(state: &Shared, force_wizard: bool) -> boo
     )
 }
 
-/// `refresh_runtime_settings`: settings are read fresh on every fetch, so
-/// only the refresh timer needs restarting.
+/// `refresh_runtime_settings`: imported keys reach the weather client.
 fn refresh_runtime_settings() {
-    mw::start_background_updates();
+    crate::lifecycle::refresh_runtime_settings();
 }
 
 /// `_maybe_auto_import_keys_file`: a portable copy imports its key bundle

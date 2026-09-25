@@ -121,7 +121,7 @@ fn test_weather() -> WeatherData {
                 short_forecast: Some("Sunny".into()),
                 ..Default::default()
             }],
-            generated_at: Some(Utc::now().fixed_offset()),
+            generated_at: Some(PyTimestamp::Aware(Utc::now().fixed_offset())),
             summary: None,
         }),
         alerts: Some(WeatherAlerts::default()),
@@ -165,4 +165,20 @@ fn old_entries_are_stale_rejected_when_strict_and_purged() {
     assert!(cache.load(&test_location(), false, later).is_none());
     cache.purge_expired(later);
     assert!(cache.load(&test_location(), true, later).is_none());
+}
+
+#[test]
+fn naive_generation_times_are_stored_as_utc_wall_time() {
+    // Python's cache writes a naive `datetime.now()` with `tzinfo=UTC`.
+    let wall = chrono::NaiveDate::from_ymd_opt(2026, 1, 20)
+        .unwrap()
+        .and_hms_opt(13, 30, 0)
+        .unwrap();
+    let mut weather = test_weather();
+    weather.forecast.as_mut().unwrap().generated_at = Some(PyTimestamp::Naive(wall));
+    let stored = serialize_weather_data(&weather);
+    assert_eq!(
+        stored["forecast"]["generated_at"],
+        serde_json::json!({"iso": "2026-01-20T13:30:00+00:00"})
+    );
 }

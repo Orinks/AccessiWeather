@@ -2,13 +2,13 @@
 //!
 //! Port of `display/presentation/measurement_formatters.py`.
 
-use crate::display::thermal::{sanitize_thermal_comfort_readings, ThermalInputs};
 use crate::display::units::{
     calculate_dewpoint, format_pressure, format_temperature, format_visibility, format_wind_speed,
     DisplayUnitSystem, TemperatureUnit,
 };
 use crate::model::WindDirection;
 use crate::model::{CurrentConditions, ForecastPeriod, HourlyForecastPeriod};
+use crate::thermal_comfort::{sanitize_thermal_comfort_readings, ThermalComfortInput};
 
 /// `format_temperature_pair`.
 pub fn format_temperature_pair(
@@ -136,7 +136,7 @@ pub fn select_feels_like_temperature(
         .wind_speed_mph
         .or(current.wind_speed_kph.map(|k| k * 0.621371));
     let humidity = current.humidity.map(|h| h as f64);
-    let comfort = sanitize_thermal_comfort_readings(ThermalInputs {
+    let comfort = sanitize_thermal_comfort_readings(ThermalComfortInput {
         temperature_f: temp_f,
         temperature_c: current.temperature_c,
         humidity,

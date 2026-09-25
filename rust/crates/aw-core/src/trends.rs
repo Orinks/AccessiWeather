@@ -15,10 +15,7 @@ const MIN_PRESSURE_TREND_IN: f64 = 0.30;
 const MIXED_PRESSURE_REFERENCE_SUMMARY: &str =
     "Pressure outlook unavailable: pressure data uses mixed reference levels.";
 
-/// Python's `round(x, ndigits)` (correctly rounded, ties to even).
-pub fn py_round(value: f64, ndigits: usize) -> f64 {
-    format!("{value:.ndigits$}").parse().unwrap_or(value)
-}
+use crate::py::round_to as py_round;
 
 /// `apply_trend_insights`: replace `trend_insights` on `weather`.
 pub fn apply_trend_insights(

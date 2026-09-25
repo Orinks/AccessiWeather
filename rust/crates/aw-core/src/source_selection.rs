@@ -1,12 +1,9 @@
 //! Which weather source(s) to ask, and how much. Port of the pure decisions
 //! in `accessiweather/weather_client_sources.py`, `weather_client_base.py`
 //! and the staged automatic-mode budget rules in `weather_client_auto.py`.
-//!
-//! Supersedes the legacy [`crate::sources`] planner, which only the legacy
-//! `aw_providers::weather_client` still uses.
 
+use crate::display::units::{resolve_auto_unit_system, DisplayUnitSystem};
 use crate::location::Location;
-use crate::units::{resolve_auto_unit_system, DisplayUnitSystem};
 
 pub const NWS: &str = "nws";
 pub const OPENMETEO: &str = "openmeteo";

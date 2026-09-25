@@ -8,7 +8,7 @@
 //! Everything here is blocking; call it from a worker thread.
 
 use std::collections::HashMap;
-use std::sync::{Arc, Condvar, Mutex, PoisonError};
+use std::sync::{Arc, Condvar, Mutex, PoisonError, RwLock};
 
 use aw_core::location::is_us_location;
 use aw_core::model::{Location, WeatherAlerts, WeatherData};
@@ -18,9 +18,10 @@ use aw_store::weather_cache::WeatherDataCache;
 use chrono::{DateTime, Duration, Utc};
 
 mod auto;
-mod enrichment;
+pub mod enrichment;
 mod fetch;
 pub mod history;
+pub mod live;
 mod notification;
 pub mod parallel;
 pub mod sources;
@@ -69,16 +70,46 @@ struct InFlight {
 /// Clock used for every "now" decision, replaceable in tests.
 pub type Clock = Arc<dyn Fn() -> DateTime<Utc> + Send + Sync>;
 
-/// Multi-source weather client (Python's `WeatherClient`).
-pub struct WeatherClient {
+/// What `refresh_runtime_settings` swaps on a live client.
+struct Config {
     sources: ClientSources,
     settings: AppSettings,
     /// "auto", "nws", "openmeteo" or "pirateweather".
     data_source: String,
+}
+
+/// Trend options Python reads once in `WeatherClient.__init__`;
+/// `refresh_runtime_settings` never updates them, so changing them in
+/// Settings only takes effect after a restart.
+#[derive(Clone, Copy)]
+struct TrendOptions {
+    enabled: bool,
+    hours: i64,
+    show_pressure: bool,
+}
+
+/// Multi-source weather client (Python's `WeatherClient`).
+pub struct WeatherClient {
+    config: RwLock<Arc<Config>>,
+    trends: TrendOptions,
     offline_cache: Option<WeatherDataCache>,
     state: Mutex<ClientState>,
     in_flight: Mutex<HashMap<String, Arc<InFlight>>>,
     clock: Clock,
+}
+
+impl Config {
+    fn new(sources: ClientSources, settings: AppSettings, data_source: &str) -> Self {
+        let normalized = normalize_data_source(data_source);
+        if normalized != data_source {
+            tracing::warn!("Invalid data source '{data_source}', defaulting to 'auto'");
+        }
+        Self {
+            sources,
+            settings,
+            data_source: normalized.to_string(),
+        }
+    }
 }
 
 /// Result of a scoped worker thread; a panic counts as a failed call.
@@ -100,13 +131,18 @@ impl WeatherClient {
         data_source: &str,
         offline_cache: Option<WeatherDataCache>,
     ) -> Self {
-        if normalize_data_source(data_source) != data_source {
-            tracing::warn!("Invalid data source '{data_source}', defaulting to 'auto'");
-        }
+        let trends = TrendOptions {
+            enabled: settings.trend_insights_enabled,
+            hours: if settings.trend_hours == 0 {
+                24
+            } else {
+                settings.trend_hours.max(1)
+            },
+            show_pressure: settings.show_pressure_trend,
+        };
         Self {
-            sources,
-            settings,
-            data_source: normalize_data_source(data_source).to_string(),
+            config: RwLock::new(Arc::new(Config::new(sources, settings, data_source))),
+            trends,
             offline_cache,
             state: Mutex::default(),
             in_flight: Mutex::default(),
@@ -120,12 +156,28 @@ impl WeatherClient {
         self
     }
 
-    pub fn settings(&self) -> &AppSettings {
-        &self.settings
+    /// `refresh_runtime_settings`: new settings, data source and API keys
+    /// (as freshly built sources) take effect from the next fetch, while the
+    /// alert history and poll bookkeeping carry on.
+    pub fn reconfigure(&self, sources: ClientSources, settings: AppSettings) {
+        let data_source = settings.data_source.clone();
+        *self.config.write().unwrap_or_else(PoisonError::into_inner) =
+            Arc::new(Config::new(sources, settings, &data_source));
     }
 
-    pub fn data_source(&self) -> &str {
-        &self.data_source
+    fn cfg(&self) -> Arc<Config> {
+        self.config
+            .read()
+            .unwrap_or_else(PoisonError::into_inner)
+            .clone()
+    }
+
+    pub fn settings(&self) -> AppSettings {
+        self.cfg().settings.clone()
+    }
+
+    pub fn data_source(&self) -> String {
+        self.cfg().data_source.clone()
     }
 
     fn now(&self) -> DateTime<Utc> {
@@ -148,16 +200,8 @@ impl WeatherClient {
         us
     }
 
-    fn pirate_units(&self, location: &Location) -> &'static str {
-        source_selection::resolve_pirate_weather_units(&self.settings.temperature_unit, location)
-    }
-
-    fn trend_hours(&self) -> i64 {
-        if self.settings.trend_hours == 0 {
-            24
-        } else {
-            self.settings.trend_hours.max(1)
-        }
+    fn pirate_units(settings: &AppSettings, location: &Location) -> &'static str {
+        source_selection::resolve_pirate_weather_units(&settings.temperature_unit, location)
     }
 
     /// Get complete weather data for a location. `force_refresh` drops the
@@ -240,7 +284,7 @@ impl WeatherClient {
     }
 
     fn do_fetch_weather_data(&self, location: &Location) -> WeatherData {
-        if self.data_source == "auto" {
+        if self.cfg().data_source == "auto" {
             self.fetch_smart_auto_source(location)
         } else {
             self.fetch_single_source(location)
@@ -278,13 +322,7 @@ impl WeatherClient {
         station_id: &str,
         options: &AviationOptions,
     ) -> SourceResult<aw_core::model::AviationData> {
-        let station = station_id.trim().to_uppercase();
-        if station.is_empty() {
-            return Err(SourceError::new(
-                "station_id must be a non-empty ICAO identifier.",
-            ));
-        }
-        self.sources.aviation.aviation_weather(&station, options)
+        enrichment::aviation_weather(self.cfg().sources.aviation.as_ref(), station_id, options)
     }
 
     fn remember_weather_data(&self, weather: &WeatherData) {
@@ -339,11 +377,12 @@ impl WeatherClient {
     /// longer); with fast polling on and rain likely soon, every 5 minutes
     /// (or the update interval if shorter).
     pub fn should_fetch_minutely_precipitation(&self, location: &Location) -> bool {
-        let normal = Duration::minutes(self.settings.update_interval_minutes.max(1));
+        let cfg = self.cfg();
+        let normal = Duration::minutes(cfg.settings.update_interval_minutes.max(1));
         let mut target = normal.max(Duration::minutes(
             MINUTELY_RECOMMENDED_MIN_POLL_INTERVAL_MINUTES,
         ));
-        if self.settings.minutely_precipitation_fast_polling
+        if cfg.settings.minutely_precipitation_fast_polling
             && self.should_use_fast_minutely_poll(location)
         {
             target = normal.min(Duration::minutes(MINUTELY_FAST_POLL_INTERVAL_MINUTES));

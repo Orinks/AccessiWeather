@@ -6,14 +6,12 @@
 //! Open-Meteo has no alerts; only current, daily and hourly data.
 
 pub mod current;
-pub mod legacy;
 pub mod mapper;
 pub mod parse;
 pub mod units;
 
-use aw_core::model::{CurrentConditions, Forecast, HourlyForecast, Location};
+use aw_core::model::{CurrentConditions, Forecast, HourlyForecast, Location, Timestamp};
 use aw_core::py;
-use chrono::Local;
 use serde_json::Value;
 
 use crate::http::{build_url, HttpClient, HttpError};
@@ -22,8 +20,6 @@ pub use current::{
     parse_iso_datetime, parse_openmeteo_current_conditions, pick_precipitation_type,
     resolve_current_condition_description,
 };
-// The legacy orchestrator (`weather_client.rs`) still uses these.
-pub use legacy::{parse_bundle, Bundle, OpenMeteoClient};
 pub use parse::{format_wind_speed_mph, parse_openmeteo_forecast, parse_openmeteo_hourly_forecast};
 
 pub const BASE_URL: &str = "https://api.open-meteo.com/v1";
@@ -76,7 +72,7 @@ impl<'a> OpenMeteoApiClient<'a> {
         }
     }
 
-    fn make_request(
+    pub(crate) fn make_request(
         &self,
         endpoint: &str,
         params: &[(&'static str, String)],
@@ -351,31 +347,33 @@ pub fn get_openmeteo_current_conditions(
     )
 }
 
-/// Daily forecast (`get_openmeteo_forecast`), clamped to 1-16 days.
+/// Daily forecast (`get_openmeteo_forecast`), clamped to 1-16 days. `now`
+/// is the local time Python's `datetime.now()` would read.
 pub fn get_openmeteo_forecast(
     http: &dyn HttpClient,
     location: &Location,
     base_url: &str,
     days: i64,
     model: &str,
+    now: Timestamp,
 ) -> Result<Option<Forecast>, HttpError> {
     let url = forecast_url(location, base_url, days, model);
-    fetch(http, &url, "forecast", |d| {
-        parse_openmeteo_forecast(d, Local::now().fixed_offset())
-    })
+    fetch(http, &url, "forecast", |d| parse_openmeteo_forecast(d, now))
 }
 
-/// Hourly forecast (`get_openmeteo_hourly_forecast`), clamped to 1-384 hours.
+/// Hourly forecast (`get_openmeteo_hourly_forecast`), clamped to 1-384
+/// hours. `now` is the local time Python's `datetime.now()` would read.
 pub fn get_openmeteo_hourly_forecast(
     http: &dyn HttpClient,
     location: &Location,
     base_url: &str,
     hours: i64,
     model: &str,
+    now: Timestamp,
 ) -> Result<Option<HourlyForecast>, HttpError> {
     let url = hourly_forecast_url(location, base_url, hours, model);
     fetch(http, &url, "hourly forecast", |d| {
-        parse_openmeteo_hourly_forecast(d, Local::now().fixed_offset())
+        parse_openmeteo_hourly_forecast(d, now)
     })
 }
 
@@ -393,13 +391,15 @@ pub fn get_openmeteo_all_data_parallel(
     forecast_days: i64,
     model: &str,
     hourly_hours: i64,
+    now: Timestamp,
 ) -> Result<OpenMeteoBundle, HttpError> {
     std::thread::scope(|s| {
         let current = s.spawn(|| get_openmeteo_current_conditions(http, location, base_url, model));
         let forecast =
-            s.spawn(|| get_openmeteo_forecast(http, location, base_url, forecast_days, model));
-        let hourly = s
-            .spawn(|| get_openmeteo_hourly_forecast(http, location, base_url, hourly_hours, model));
+            s.spawn(|| get_openmeteo_forecast(http, location, base_url, forecast_days, model, now));
+        let hourly = s.spawn(|| {
+            get_openmeteo_hourly_forecast(http, location, base_url, hourly_hours, model, now)
+        });
         let current = current.join().expect("Open-Meteo current thread")?;
         let forecast = forecast.join().expect("Open-Meteo forecast thread")?;
         let hourly = hourly.join().expect("Open-Meteo hourly thread")?;
@@ -415,6 +415,10 @@ mod tests {
 
     fn nyc() -> Location {
         Location::new("New York", 40.7128, -74.006)
+    }
+
+    fn now() -> Timestamp {
+        chrono::Local::now().fixed_offset()
     }
 
     #[test]
@@ -467,11 +471,11 @@ mod tests {
     fn non_retryable_failures_become_none() {
         let http = FixtureClient::new().with_status(BASE_URL, 404);
         assert!(
-            get_openmeteo_forecast(&http, &nyc(), BASE_URL, 7, "best_match")
+            get_openmeteo_forecast(&http, &nyc(), BASE_URL, 7, "best_match", now())
                 .unwrap()
                 .is_none()
         );
         let http = FixtureClient::new().with_status(BASE_URL, 503);
-        assert!(get_openmeteo_forecast(&http, &nyc(), BASE_URL, 7, "best_match").is_err());
+        assert!(get_openmeteo_forecast(&http, &nyc(), BASE_URL, 7, "best_match", now()).is_err());
     }
 }

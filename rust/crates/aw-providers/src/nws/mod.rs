@@ -8,7 +8,6 @@
 //! are retried with a 1 s, 2 s backoff and surface as `Err` once exhausted;
 //! everything else degrades to the same fallback value Python returns.
 
-mod aggregator;
 mod alerts;
 mod aviation;
 mod avwx;
@@ -16,7 +15,6 @@ pub mod common;
 mod current;
 mod forecast;
 mod hourly;
-mod marine;
 pub mod normalize;
 pub mod parsers;
 pub mod taf;
@@ -31,14 +29,12 @@ use aw_core::model::{
 use chrono::Local;
 use serde_json::Value;
 
-use crate::http::{HttpClient, HttpError, HttpRequest, HttpResponse};
+use crate::http::{retry_with_backoff, HttpClient, HttpError, HttpRequest, HttpResponse};
 
-pub use aggregator::AlertAggregator;
 pub use aviation::{filter_advisories, taf_indicates_no_data, AviationError, AviationOptions};
 pub use avwx::{fetch_avwx_taf, is_us_station, AvwxError, AVWX_BASE_URL};
 pub use common::py_float_repr;
 pub use forecast::{ForecastAndDiscussion, TextProductError, TextProducts};
-pub use marine::build_marine_highlights;
 pub use parsers::Malformed;
 pub use taf::decode_taf_text;
 pub use zones::{diff_zone_fields, extract_zone_fields, last_path_segment, ZoneFields};
@@ -134,22 +130,9 @@ impl<'a> NwsClient<'a> {
     /// `async_retry_with_backoff(max_attempts=3, base_delay=1.0)`.
     pub(crate) fn retry<T>(
         &self,
-        mut attempt: impl FnMut() -> Result<T, HttpError>,
+        attempt: impl FnMut() -> Result<T, HttpError>,
     ) -> Result<T, HttpError> {
-        let mut n = 1;
-        loop {
-            match attempt() {
-                Err(e) if e.is_retryable() && n < MAX_ATTEMPTS => {
-                    let delay = self.retry_delay * 2u32.pow(n - 1);
-                    tracing::warn!(
-                        "Attempt {n}/{MAX_ATTEMPTS} failed with {e}. Retrying in {delay:?}"
-                    );
-                    std::thread::sleep(delay);
-                    n += 1;
-                }
-                other => return other,
-            }
-        }
+        retry_with_backoff(MAX_ATTEMPTS, self.retry_delay, attempt)
     }
 
     /// `get_nws_all_data_parallel`: one `/points` fetch shared by the

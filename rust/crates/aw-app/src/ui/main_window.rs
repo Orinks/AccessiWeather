@@ -4,7 +4,7 @@
 //! window lifecycle from `app.py` / `app_lifecycle.py`.
 
 use std::cell::{Cell, RefCell};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::atomic::Ordering;
 
 use aw_core::location_sorting::sort_locations_for_display;
@@ -62,12 +62,11 @@ pub(crate) struct MainWindow {
     status_bar: StatusBar,
 }
 
-/// Instance attributes of the Python `MainWindow`.
+/// Instance attributes of the Python `MainWindow` (the fetch generation is
+/// [`refresh::FETCH_GENERATION`]).
 pub(crate) struct WindowState {
-    /// Bumped per fetch so a superseded fetch never updates the display.
-    pub fetch_generation: u64,
     /// alert id -> "New" / "Updated"; cleared when the location changes.
-    pub alert_lifecycle_labels: HashMap<String, String>,
+    pub alert_lifecycle_labels: BTreeMap<String, String>,
     /// "All Locations" is the active view.
     pub all_locations_active: bool,
     pub last_single_location_name: Option<String>,
@@ -81,8 +80,7 @@ pub(crate) struct WindowState {
 impl Default for WindowState {
     fn default() -> Self {
         Self {
-            fetch_generation: 0,
-            alert_lifecycle_labels: HashMap::new(),
+            alert_lifecycle_labels: BTreeMap::new(),
             all_locations_active: false,
             last_single_location_name: None,
             all_locations_alerts_data: Vec::new(),
@@ -99,6 +97,7 @@ thread_local! {
     /// left in thread-locals past that they crash on exit.
     static TIMERS: RefCell<Vec<Timer<Frame>>> = const { RefCell::new(Vec::new()) };
     static UPDATE_TIMER: RefCell<Option<Timer<Frame>>> = const { RefCell::new(None) };
+    static EVENT_TIMER: RefCell<Option<Timer<Frame>>> = const { RefCell::new(None) };
     static DEBOUNCE_TIMER: RefCell<Option<Timer<Frame>>> = const { RefCell::new(None) };
 }
 
@@ -396,7 +395,7 @@ fn on_close(e: &Event) {
         return;
     }
     // Stop timers and drop handles before wx tears the window down.
-    for slot in [&UPDATE_TIMER, &DEBOUNCE_TIMER] {
+    for slot in [&UPDATE_TIMER, &EVENT_TIMER, &DEBOUNCE_TIMER] {
         slot.with(|t| {
             if let Some(timer) = t.borrow_mut().take() {
                 timer.stop();
@@ -409,8 +408,12 @@ fn on_close(e: &Event) {
     e.skip(true);
 }
 
+/// `constants.ALERT_POLL_INTERVAL_SECONDS`.
+const ALERT_POLL_INTERVAL_SECONDS: i32 = 60;
+
 /// `app_timer_manager.start_background_updates`: a full refresh every
-/// `update_interval_minutes`, skipped while one is already running.
+/// `update_interval_minutes` (skipped while one is already running) and a
+/// lightweight alert/event check every minute.
 pub(crate) fn start_background_updates() {
     let Some(frame) = main_frame() else { return };
     let minutes = app_state()
@@ -418,17 +421,30 @@ pub(crate) fn start_background_updates() {
         .config
         .settings
         .update_interval_minutes();
-    let timer = Timer::new(&frame);
-    timer.on_tick(|_| {
+    for slot in [&UPDATE_TIMER, &EVENT_TIMER] {
+        if let Some(old) = slot.with(|t| t.borrow_mut().take()) {
+            old.stop();
+        }
+    }
+    let update_timer = Timer::new(&frame);
+    update_timer.on_tick(|_| {
         if window().is_some() && !app_state().borrow().is_updating {
             refresh::refresh_weather_async(false);
         }
     });
-    timer.start((minutes * 60_000).min(i32::MAX as u64) as i32, false);
-    tracing::info!("Background updates started (weather every {minutes} minutes)");
-    if let Some(old) = UPDATE_TIMER.with(|t| t.borrow_mut().replace(timer)) {
-        old.stop();
-    }
+    update_timer.start((minutes * 60_000).min(i32::MAX as u64) as i32, false);
+    let event_timer = Timer::new(&frame);
+    event_timer.on_tick(|_| {
+        if window().is_some() {
+            refresh::refresh_notification_events_async();
+        }
+    });
+    event_timer.start(ALERT_POLL_INTERVAL_SECONDS * 1000, false);
+    UPDATE_TIMER.with(|t| *t.borrow_mut() = Some(update_timer));
+    EVENT_TIMER.with(|t| *t.borrow_mut() = Some(event_timer));
+    tracing::info!(
+        "Background updates started (weather every {minutes} minutes, events every {ALERT_POLL_INTERVAL_SECONDS}s)"
+    );
 }
 
 /// Restart the 500 ms location-change debounce, then force a fetch.
@@ -579,7 +595,7 @@ fn set_alert_items(w: &MainWindow, items: &[String]) {
 }
 
 /// `_update_alerts`: active alerts only, with lifecycle labels.
-pub(crate) fn update_alerts(alerts: Option<&WeatherAlerts>, labels: &HashMap<String, String>) {
+pub(crate) fn update_alerts(alerts: Option<&WeatherAlerts>, labels: &BTreeMap<String, String>) {
     let Some(w) = window() else { return };
     let active = alerts.map(|a| a.active(Utc::now())).unwrap_or_default();
     set_alert_items(&w, &display::alert_list_items(&active, labels));
@@ -691,10 +707,14 @@ pub(crate) fn show_all_locations_summary() {
         update_precipitation_timeline_menu_state(None);
         return;
     }
-    let settings = app_state().borrow().config.settings.clone();
+    let (settings, client) = {
+        let state = app_state();
+        let st = state.borrow();
+        (st.config.settings.clone(), st.client.clone())
+    };
     let (text, location_alerts) = display::all_locations_summary(
         &locations,
-        super::weather_source::get_cached_weather,
+        |l| client.get_cached_weather(l),
         &settings,
         Utc::now(),
     );

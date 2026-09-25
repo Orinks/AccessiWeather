@@ -34,17 +34,19 @@ impl WeatherClient {
         location: &Location,
         weather: &mut WeatherData,
     ) -> SourceResult<()> {
-        let source = self.data_source.as_str();
+        let cfg = self.cfg();
+        let settings = &cfg.settings;
+        let source = cfg.data_source.as_str();
         let nws_like = matches!(source, "auto" | "nws");
         let pirate_like = matches!(source, "auto" | "pirateweather");
-        let pirate = self.sources.pirate_weather.clone().filter(|_| pirate_like);
+        let pirate = cfg.sources.pirate_weather.clone().filter(|_| pirate_like);
 
         if nws_like && self.is_us(location) {
             // Discussion-only so a forecast outage cannot hide AFD updates.
-            let radius = &self.settings.alert_radius_type;
+            let radius = &settings.alert_radius_type;
             let (discussion, alerts) = std::thread::scope(|scope| {
-                let discussion = scope.spawn(|| self.sources.nws.get_discussion_only(location));
-                let alerts = scope.spawn(|| self.sources.nws.get_alerts(location, radius));
+                let discussion = scope.spawn(|| cfg.sources.nws.get_discussion_only(location));
+                let alerts = scope.spawn(|| cfg.sources.nws.get_alerts(location, radius));
                 (joined(discussion), joined(alerts))
             });
             let (discussion, issuance) = discussion?;
@@ -53,7 +55,7 @@ impl WeatherClient {
             weather.discussion_issuance_time = issuance;
             weather.alerts = Some(alerts.unwrap_or_default());
         } else if let Some(pirate) = &pirate {
-            let units = self.pirate_units(location);
+            let units = Self::pirate_units(settings, location);
             let (current, alerts) = std::thread::scope(|scope| {
                 let current = scope.spawn(|| pirate.get_current_conditions(location, units));
                 let alerts = scope.spawn(|| pirate.get_alerts(location, units));
@@ -68,14 +70,13 @@ impl WeatherClient {
 
         // Minutely data only when the user wants precipitation notifications,
         // and no more often than the polling cadence allows.
-        let settings = &self.settings;
         let wants_minutely = settings.notify_minutely_precipitation_start
             || settings.notify_minutely_precipitation_stop
             || settings.notify_precipitation_likelihood;
         if let Some(pirate) = &pirate {
             if wants_minutely && self.should_fetch_minutely_precipitation(location) {
                 weather.minutely_precipitation =
-                    pirate.get_minutely(location, self.pirate_units(location));
+                    pirate.get_minutely(location, Self::pirate_units(settings, location));
                 let now = self.now();
                 self.state()
                     .last_minutely_poll
@@ -95,7 +96,7 @@ impl WeatherClient {
         let key = location_key(location);
         let previous = self.state().previous_alerts.get(&key).cloned();
         let cancel_ids: HashSet<String> = if nws_like {
-            self.sources.nws.fetch_cancel_references(15)
+            cfg.sources.nws.fetch_cancel_references(15)
         } else {
             HashSet::new()
         };

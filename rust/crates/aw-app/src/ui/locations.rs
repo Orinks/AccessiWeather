@@ -5,7 +5,7 @@ use wxdragon::prelude::*;
 
 use super::display::ALL_LOCATIONS_SENTINEL;
 use super::main_window::{self as mw, message_box, window, window_state};
-use super::{location_dialog, refresh, settings_actions, settings_dialog, weather_source};
+use super::{location_dialog, refresh, settings_actions, settings_dialog};
 use crate::app::{post_to_ui, save, with_state};
 
 pub(crate) const MSG_SELECT_TO_EDIT: &str = "Please select a specific location to edit.";
@@ -51,12 +51,10 @@ pub(crate) fn on_location_changed() {
     window_state(|s| s.alert_lifecycle_labels.clear());
 
     if selected == ALL_LOCATIONS_SENTINEL {
-        window_state(|s| {
-            s.all_locations_active = true;
-            s.fetch_generation += 1;
-        });
+        window_state(|s| s.all_locations_active = true);
         mw::update_title_for_location(Some(ALL_LOCATIONS_SENTINEL));
         mw::update_precipitation_timeline_menu_state(None);
+        refresh::FETCH_GENERATION.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         // After anything already queued (e.g. a finished fetch), so stale
         // single-location data cannot overwrite the summary.
         post_to_ui(mw::show_all_locations_summary);
@@ -73,15 +71,20 @@ pub(crate) fn on_location_changed() {
     mw::update_title_for_location(Some(&selected));
     refresh::set_current_location(&selected);
 
-    let location = with_state().and_then(|s| s.borrow().config.current_location.clone());
-    if let Some(location) = location {
-        if let Some(cached) =
-            weather_source::get_cached_weather(&location).filter(|d| d.has_any_data())
+    let current = with_state().map(|s| {
+        let st = s.borrow();
+        (st.config.current_location.clone(), st.client.clone())
+    });
+    if let Some((Some(location), client)) = current {
+        if let Some(cached) = client
+            .get_cached_weather(&location)
+            .filter(|d| d.has_any_data())
         {
             tracing::info!("Showing cached data for {selected} while refreshing");
             refresh::on_weather_data_received(cached, false);
         }
-        // Python also runs a lightweight alert/event check here.
+        // An immediate alert/event check for the new location.
+        refresh::refresh_notification_events_async();
     }
     mw::restart_location_debounce();
 }
@@ -227,6 +230,7 @@ pub(crate) fn open_settings(tab: Option<&str>) {
         return;
     };
     if settings_dialog::show_settings_dialog(&w.frame, &state, tab) {
+        // The weather client, tray, hotkeys, update checks and timers.
         settings_actions::refresh_runtime_settings();
         mw::populate_locations();
         // The update channel may have changed.

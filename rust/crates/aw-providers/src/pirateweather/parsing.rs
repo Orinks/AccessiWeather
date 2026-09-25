@@ -4,8 +4,8 @@
 
 use aw_core::model::{
     CurrentConditions, Forecast, ForecastPeriod, HourlyForecast, HourlyForecastPeriod,
-    MinutelyPrecipitationForecast, MinutelyPrecipitationPoint, Timestamp, WeatherAlert,
-    WeatherAlerts,
+    MinutelyPrecipitationForecast, MinutelyPrecipitationPoint, PyTimestamp, Timestamp,
+    WeatherAlert, WeatherAlerts,
 };
 use aw_core::provider_normalization::{
     format_speed, normalize_dewpoint_pair, normalize_humidity_percent, normalize_millibars,
@@ -398,7 +398,7 @@ pub fn parse_forecast(units: &str, data: &Value, now: Timestamp) -> Option<Forec
 
     Some(Forecast {
         periods,
-        generated_at: Some(now.to_utc().fixed_offset()),
+        generated_at: Some(PyTimestamp::Aware(now.to_utc().fixed_offset())),
         summary: get(data, "daily")
             .and_then(|d| get(d, "summary"))
             .and_then(Value::as_str)
@@ -462,7 +462,7 @@ pub fn parse_hourly_forecast(units: &str, data: &Value, now: Timestamp) -> Hourl
 
     HourlyForecast {
         periods,
-        generated_at: Some(now.to_utc().fixed_offset()),
+        generated_at: Some(PyTimestamp::Aware(now.to_utc().fixed_offset())),
         summary: get(data, "hourly")
             .and_then(|h| get(h, "summary"))
             .and_then(Value::as_str)
