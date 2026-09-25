@@ -5,10 +5,14 @@ use std::rc::Rc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-use aw_core::presenter::WeatherPresenter;
 use aw_core::settings::AppConfig;
 use aw_core::Location;
-use aw_providers::{HttpClient, ReqwestClient, WeatherClient};
+use aw_providers::client::live::Live;
+use aw_providers::client::WeatherClient;
+use aw_providers::nws::{ZoneDriftSink, ZoneFields};
+use aw_providers::products::ForecastProductService;
+use aw_providers::{HttpClient, ReqwestClient};
+use aw_store::weather_cache::{WeatherDataCache, DEFAULT_MAX_AGE_MINUTES};
 use aw_store::Paths;
 
 use crate::cli::Args;
@@ -55,7 +59,15 @@ pub enum AppError {
 pub(crate) struct State {
     pub paths: Paths,
     pub config: AppConfig,
-    pub client: WeatherClient,
+    /// Shared by every service (the offline fixtures in sample-data runs).
+    pub http: Arc<dyn HttpClient>,
+    /// Builds the weather client's sources from settings and API keys.
+    pub live: Live,
+    /// `app.weather_client`.
+    pub client: Arc<WeatherClient>,
+    /// The main window's `_forecast_product_service`: text products the
+    /// refresh pre-warms for the dialogs and notification checks.
+    pub products: Arc<ForecastProductService>,
     /// `app.current_weather_data`: what the main window shows.
     pub current_weather_data: Option<aw_core::model::WeatherData>,
     /// `app.is_updating`: a full refresh is in flight.
@@ -113,16 +125,14 @@ pub fn run(args: Args) -> Result<(), AppError> {
             aw_store::secrets::load_into(&mut config.settings);
         }
     }
+    if args.check {
+        return self_check();
+    }
     let http: Arc<dyn HttpClient> = if offline {
-        crate::fixtures::offline_client()
+        crate::fixtures::offline_client(chrono::Utc::now())
     } else {
         Arc::new(ReqwestClient::new()?)
     };
-    let client = WeatherClient::new(http);
-
-    if args.check {
-        return self_check(&config, &client);
-    }
 
     if (args.smoke || args.offline) && config.locations.is_empty() {
         config.add_location(
@@ -135,10 +145,35 @@ pub fn run(args: Args) -> Result<(), AppError> {
         config.current_location = config.locations.first().cloned();
     }
 
+    // Sample-data runs keep their cache out of the user's.
+    let cache_dir = if offline {
+        std::env::temp_dir().join("accessiweather-offline-cache")
+    } else {
+        paths.cache_dir()
+    };
+    let offline_cache = WeatherDataCache::new(&cache_dir, DEFAULT_MAX_AGE_MINUTES)
+        .inspect_err(|e| {
+            tracing::error!("Weather cache unavailable at {}: {e}", cache_dir.display())
+        })
+        .ok();
+    let mut live = Live::new(http.clone());
+    live.zone_drift_sink = Some(zone_drift_sink());
+    let settings = config.settings.clone();
+    let client = Arc::new(WeatherClient::new(
+        live.sources(&settings),
+        settings.clone(),
+        &settings.data_source,
+        offline_cache,
+    ));
+    let products = Arc::new(ForecastProductService::new(http.clone()));
+
     let state: Shared = Rc::new(RefCell::new(State {
         paths,
         config,
+        http,
+        live,
         client,
+        products,
         current_weather_data: None,
         is_updating: false,
         smoke: args.smoke,
@@ -163,6 +198,7 @@ pub fn run(args: Args) -> Result<(), AppError> {
                     return;
                 };
                 if crate::portable_keys::prompt(&frame, &state) {
+                    refresh_runtime_settings(&state.borrow());
                     ui::refresh_now();
                 }
             }));
@@ -179,23 +215,95 @@ pub fn run(args: Args) -> Result<(), AppError> {
     Ok(())
 }
 
-fn self_check(config: &AppConfig, client: &WeatherClient) -> Result<(), AppError> {
-    let location = config
-        .current_location
-        .clone()
-        .unwrap_or_else(|| Location::new("Philadelphia", 39.9526, -75.1652).with_country("US"));
-    let data = client.fetch(&config.settings, &location);
-    if !data.has_any_data() {
-        return Err(AppError::Check(format!(
-            "no weather data from fixtures: {:?}",
-            data.failed_sources
-        )));
+/// `--check`: replay the recorded Python runs through the real data path
+/// and require the main window's text Python showed.
+fn self_check() -> Result<(), AppError> {
+    for text in crate::fixtures::CASES {
+        let case = crate::fixtures::case(text);
+        let (weather, panels) = crate::fixtures::replay(&case);
+        let expected = &case["panels"];
+        let checks = [
+            ("current conditions", &panels.current, &expected["current"]),
+            ("daily forecast", &panels.daily, &expected["daily"]),
+            ("hourly forecast", &panels.hourly, &expected["hourly"]),
+        ];
+        for (section, got, want) in checks {
+            if want.as_str() != Some(got.as_str()) {
+                return Err(AppError::Check(format!(
+                    "{} {section} differs from the Python app:
+{got}
+--- expected ---
+{}",
+                    weather.location.name,
+                    want.as_str().unwrap_or_default()
+                )));
+            }
+        }
+        println!(
+            "{}
+",
+            panels.current
+        );
     }
-    let presentation = WeatherPresenter::new(&config.settings).present(&data);
-    println!("{}", presentation.summary_text);
-    println!("{}", presentation.current_text);
-    println!("sources: {}", data.sources.join(", "));
     Ok(())
+}
+
+/// `refresh_runtime_settings`: settings, the data source and API keys reach
+/// the weather client (its sources are rebuilt from them).
+pub(crate) fn refresh_runtime_settings(st: &State) {
+    tracing::info!("Refreshing runtime settings");
+    let settings = st.config.settings.clone();
+    st.client.reconfigure(st.live.sources(&settings), settings);
+}
+
+/// `set_zone_drift_sink(config_manager._locations)`: corrections the NWS
+/// client finds on a refresh are saved on the UI thread (`wx.CallAfter`).
+fn zone_drift_sink() -> ZoneDriftSink {
+    Arc::new(|name: &str, fields: &ZoneFields| {
+        let (name, fields) = (name.to_string(), fields.clone());
+        post_to_ui(move || {
+            if let Some(state) = with_state() {
+                update_zone_metadata(&mut state.borrow_mut(), &name, &fields);
+            }
+        });
+    })
+}
+
+/// `LocationOperations.update_zone_metadata`.
+pub(crate) fn update_zone_metadata(
+    st: &mut State,
+    location_name: &str,
+    fields: &ZoneFields,
+) -> bool {
+    if fields.is_empty() {
+        return false;
+    }
+    let Some(location) = st
+        .config
+        .locations
+        .iter_mut()
+        .find(|l| l.name == location_name)
+    else {
+        tracing::debug!("update_zone_metadata: location {location_name} not found (skipped)");
+        return false;
+    };
+    fields.apply_to(location);
+    let updated = location.clone();
+    if let Some(current) = st
+        .config
+        .current_location
+        .as_mut()
+        .filter(|c| c.name == location_name)
+    {
+        *current = updated;
+    }
+    let mut keys: Vec<String> = serde_json::to_value(fields)
+        .ok()
+        .and_then(|v| v.as_object().map(|o| o.keys().cloned().collect()))
+        .unwrap_or_default();
+    keys.sort();
+    tracing::info!("Updated zone metadata on {location_name}: {keys:?}");
+    save(st).is_ok()
 }
 
 /// Persist the current config, logging (not propagating) failures.

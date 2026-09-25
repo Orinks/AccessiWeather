@@ -10,6 +10,7 @@ dependencies = [
  "aw-providers",
  "aw-store",
  "chrono",
+ "chrono-tz",
  "clap",
  "embed-manifest",
  "prismer",

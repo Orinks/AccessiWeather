@@ -1,7 +1,14 @@
 //! Golden parity for the main window's text logic, generated from the Python
 //! mixins by `rust/tools/golden/mainwin.py`.
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
+
+use aw_core::alert_lifecycle::compute_lifecycle_labels;
+use aw_core::display::{
+    CurrentConditionsPresentation, ForecastPresentation, SourceAttributionPresentation,
+    WeatherPresentation,
+};
+use aw_providers::geocoding::LocationManager;
 
 use aw_core::model::{WeatherAlerts, WeatherData};
 use aw_core::settings::AppSettings;
@@ -11,8 +18,8 @@ use serde_json::Value;
 
 use super::display::*;
 use super::location_dialog::edit_location_is_us;
+use super::location_dialog::format_coordinates;
 use super::locations::*;
-use super::weather_source::{calculate_distance, format_coordinates, WeatherPresentation};
 
 fn golden() -> Value {
     serde_json::from_str(include_str!(
@@ -32,16 +39,17 @@ fn alert_items_and_lifecycle_labels() {
         alerts: from(&g["alerts"]),
     };
     let active = alerts.active(Utc::now());
-    let labels = compute_lifecycle_labels(&active);
-    let expected: HashMap<String, String> = from(&g["labels"]);
+    let owned: Vec<_> = active.iter().map(|a| (*a).clone()).collect();
+    let labels = compute_lifecycle_labels(&owned);
+    let expected: BTreeMap<String, String> = from(&g["labels"]);
     assert_eq!(labels, expected);
     for case in g["cases"].as_array().unwrap() {
         let items = if case.get("empty").is_some() {
-            alert_list_items(&[], &HashMap::new())
+            alert_list_items(&[], &BTreeMap::new())
         } else if case["use_labels"].as_bool().unwrap() {
             alert_list_items(&active, &labels)
         } else {
-            alert_list_items(&active, &HashMap::new())
+            alert_list_items(&active, &BTreeMap::new())
         };
         assert_eq!(items, from::<Vec<String>>(&case["items"]));
         assert_eq!(!items.is_empty(), case["button_enabled"].as_bool().unwrap());
@@ -81,10 +89,41 @@ fn all_locations_summary_matches_python() {
     assert_eq!(NO_LOCATIONS_TEXT, g["empty_text"].as_str().unwrap());
 }
 
+/// The golden cases only give the fields the window reads.
+fn partial_presentation(p: &Value) -> WeatherPresentation {
+    let text = |v: &Value, key: &str| v[key].as_str().unwrap_or_default().to_string();
+    WeatherPresentation {
+        current_conditions: p["current_conditions"].as_object().map(|_| {
+            CurrentConditionsPresentation {
+                fallback_text: text(&p["current_conditions"], "fallback_text"),
+                ..Default::default()
+            }
+        }),
+        source_attribution: p["source_attribution"].as_object().map(|_| {
+            SourceAttributionPresentation {
+                summary_text: text(&p["source_attribution"], "summary_text"),
+                ..Default::default()
+            }
+        }),
+        status_messages: from(&p["status_messages"]),
+        forecast: p["forecast"].as_object().map(|_| {
+            let f = &p["forecast"];
+            ForecastPresentation {
+                daily_section_text: text(f, "daily_section_text"),
+                hourly_section_text: text(f, "hourly_section_text"),
+                marine_section_text: text(f, "marine_section_text"),
+                mobility_briefing: f["mobility_briefing"].as_str().map(str::to_string),
+                ..Default::default()
+            }
+        }),
+        ..Default::default()
+    }
+}
+
 #[test]
 fn panels_match_python() {
     for case in golden()["panels"].as_array().unwrap() {
-        let presentation: WeatherPresentation = from(&case["presentation"]);
+        let presentation = partial_presentation(&case["presentation"]);
         let texts = panel_texts(&presentation);
         assert_eq!(texts.current, case["current"].as_str().unwrap());
         assert_eq!(texts.stale_warning, case["stale_warning"].as_str().unwrap());
@@ -164,7 +203,7 @@ fn location_manager_helpers_match_python() {
         assert_eq!(text, case["text"].as_str().unwrap());
     }
     for case in g["distances"].as_array().unwrap() {
-        let miles = calculate_distance(&from(&case["a"]), &from(&case["b"]));
+        let miles = LocationManager::calculate_distance(&from(&case["a"]), &from(&case["b"]));
         assert_eq!(format!("{miles:.2}"), case["miles"].as_str().unwrap());
     }
     for case in g["is_us"].as_array().unwrap() {

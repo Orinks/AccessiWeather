@@ -15,7 +15,7 @@ use aw_core::model::{
 };
 use aw_core::py;
 use aw_core::settings::AppSettings;
-use chrono::{Local, Utc};
+use chrono::Local;
 use serde_json::Value;
 
 use super::history::{ArchiveRequest, ArchiveSource};
@@ -23,7 +23,7 @@ use super::sources::{
     AviationOptions, AviationSource, EnvironmentalSource, MarineSource, NwsAllData, NwsSource,
     OpenMeteoSource, PirateWeatherSource, SourceError, SourceResult,
 };
-use super::{ClientSources, Clock};
+use super::ClientSources;
 use crate::environmental::{EnvironmentalDataClient, FetchOptions};
 use crate::http::{retry_with_backoff, HttpClient, HttpError};
 use crate::nws::{self, parsers::parse_alerts, NwsClient, ZoneDriftSink};
@@ -71,8 +71,9 @@ pub struct Live {
     pub http: Arc<dyn HttpClient>,
     /// Receives NWS zone metadata drift (`set_zone_drift_sink`).
     pub zone_drift_sink: Option<ZoneDriftSink>,
-    /// "now" for the parsers; tests freeze it.
-    pub clock: Clock,
+    /// Python's naive `datetime.now()`: the local wall time, with the
+    /// system offset. Tests freeze it (and the zone).
+    pub local_now: Arc<dyn Fn() -> Timestamp + Send + Sync>,
     /// First delay of every retry wrapper (Python: 1 s).
     pub retry_delay: Duration,
 }
@@ -82,14 +83,13 @@ impl Live {
         Self {
             http,
             zone_drift_sink: None,
-            clock: Arc::new(Utc::now),
+            local_now: Arc::new(|| Local::now().fixed_offset()),
             retry_delay: Duration::from_secs(1),
         }
     }
 
-    /// Python's local, naive `datetime.now()`.
     fn local_now(&self) -> Timestamp {
-        (self.clock)().with_timezone(&Local).fixed_offset()
+        (self.local_now)()
     }
 
     /// Every source for `settings`: Pirate Weather only with an API key,

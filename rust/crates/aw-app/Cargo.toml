@@ -18,6 +18,7 @@ wxdragon.workspace = true
 clap.workspace = true
 thiserror.workspace = true
 chrono.workspace = true
+chrono-tz.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tracing.workspace = true

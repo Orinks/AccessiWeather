@@ -189,6 +189,15 @@ def nyc_routes() -> list[dict]:
         not_found(f"{NWS}/"),
         not_found("https://api.open-meteo.com/"),
         not_found("https://aviationweather.gov/"),
+        # Never requested by the weather client; the app's --offline mode
+        # answers location searches with them.
+        route(
+            "https://geocoding-api.open-meteo.com/v1/search",
+            at,
+            cassette("openmeteo/geocoding_search_nyc.yaml", 0),
+        ),
+        not_found("https://geocoding.geo.census.gov/"),
+        not_found("https://nominatim.openstreetmap.org/"),
     ]
 
 

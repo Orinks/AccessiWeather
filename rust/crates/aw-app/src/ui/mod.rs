@@ -3,7 +3,7 @@
 
 mod alert_dialog;
 mod commands;
-mod display;
+pub(crate) mod display;
 mod location_dialog;
 mod locations;
 mod main_window;
@@ -11,7 +11,7 @@ mod menus;
 mod refresh;
 mod settings_dialog;
 mod shortcuts;
-mod weather_source;
+mod weather_events;
 
 #[cfg(test)]
 mod golden_tests;

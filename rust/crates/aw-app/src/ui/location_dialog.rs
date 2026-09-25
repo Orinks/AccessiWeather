@@ -5,13 +5,14 @@ use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
 use aw_core::Location;
+use aw_providers::current_location::{
+    CurrentLocationService, LocationDetectionStatus, DEFAULT_TIMEOUT,
+};
+use aw_providers::geocoding::LocationManager;
+use aw_providers::HttpClient;
 use wxdragon::prelude::*;
 
 use super::main_window::{self as mw, message_box};
-use super::weather_source::{
-    calculate_distance, detect_current_location, format_coordinates, search_locations,
-    validate_coordinates,
-};
 use crate::app::{post_to_ui, save, with_state};
 
 const MARINE_LABEL: &str = "Enable Marine Mode for this location (coastal essentials only)";
@@ -71,6 +72,37 @@ fn results_list<W: WxWidget>(parent: &W, first_column: (&str, i32), second_width
     list
 }
 
+/// `location_manager.format_coordinates` (4 decimals).
+pub(crate) fn format_coordinates(latitude: f64, longitude: f64) -> String {
+    LocationManager::format_coordinates(latitude, longitude, 4)
+}
+
+/// `location_manager.search_locations` (blocking).
+fn search_locations(
+    http: &dyn HttpClient,
+    query: &str,
+    limit: usize,
+) -> Result<Vec<Location>, String> {
+    LocationManager::new(http)
+        .search_locations(query, limit)
+        .map_err(|e| e.to_string())
+}
+
+/// `_do_current_location_detection` + `_resolve_detected_location`
+/// (blocking): one native request, then a reverse-geocoded label when one
+/// exists. `Err` carries the message the dialog shows.
+fn detect_current_location(http: &dyn HttpClient) -> Result<Location, String> {
+    let result = CurrentLocationService::default().detect_once(DEFAULT_TIMEOUT);
+    match result.location {
+        Some(location) if result.status == LocationDetectionStatus::Success => {
+            Ok(LocationManager::new(http)
+                .reverse_geocode_coordinates(location.latitude, location.longitude)
+                .unwrap_or(location))
+        }
+        _ => Err(result.message),
+    }
+}
+
 fn fill_results(list: &ListCtrl, locations: &[Location]) {
     for location in locations {
         let index = list.insert_item(list.get_item_count() as i64, &location.name, None);
@@ -89,11 +121,11 @@ fn in_background<T: Send + 'static>(
     done: impl FnOnce(T) + Send + 'static,
 ) {
     let Some(state) = with_state() else { return };
-    let client = state.borrow().client.clone();
+    let http = state.borrow().http.clone();
     std::thread::Builder::new()
         .name("aw-location".into())
         .spawn(move || {
-            let result = work(client.http());
+            let result = work(http.as_ref());
             post_to_ui(move || done(result));
         })
         .expect("spawn location thread");
@@ -404,7 +436,7 @@ impl AddLocationDialog {
             self.update_status("Please search for and select a location", true);
             return;
         };
-        if !validate_coordinates(selected.latitude, selected.longitude) {
+        if !LocationManager::validate_coordinates(selected.latitude, selected.longitude) {
             self.update_status(
                 "Invalid coordinates. Latitude must be -90 to 90, longitude -180 to 180",
                 true,
@@ -753,7 +785,7 @@ impl EditLocationDialog {
         fill_results(&self.address_results_list, std::slice::from_ref(&location));
         self.name_input.set_value(&location.name);
         let coords = format_coordinates(location.latitude, location.longitude);
-        let distance = calculate_distance(&self.location, &location);
+        let distance = LocationManager::calculate_distance(&self.location, &location);
         self.set_coordinate_comparison(
             &format!(
                 "Detected current location as {}: {coords}. \
@@ -774,7 +806,7 @@ impl EditLocationDialog {
         else {
             return;
         };
-        let distance = calculate_distance(&self.location, &selected);
+        let distance = LocationManager::calculate_distance(&self.location, &selected);
         let current = format_coordinates(self.location.latitude, self.location.longitude);
         let new = format_coordinates(selected.latitude, selected.longitude);
         self.name_input.set_value(&selected.name);

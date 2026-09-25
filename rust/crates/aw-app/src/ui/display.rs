@@ -1,17 +1,16 @@
 //! Text the main window shows, kept free of wx so it can be golden-tested.
 //! Ported from `ui/main_window_display.py`, `_update_title_for_location` in
-//! `ui/main_window_ui.py`, the panel filling in `_on_weather_data_received`
-//! (`ui/main_window_refresh.py`) and `alert_lifecycle.compute_lifecycle_labels`.
+//! `ui/main_window_ui.py` and the panel filling in `_on_weather_data_received`
+//! (`ui/main_window_refresh.py`).
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
+use aw_core::display::units::{format_temperature, resolve_temperature_unit_preference};
+use aw_core::display::WeatherPresentation;
 use aw_core::model::{WeatherAlert, WeatherData};
 use aw_core::settings::AppSettings;
-use aw_core::units::{format_temperature, resolve_temperature_unit_preference};
 use aw_core::Location;
 use chrono::{DateTime, NaiveTime, Utc};
-
-use super::weather_source::WeatherPresentation;
 
 /// The first dropdown entry: a cached summary of every saved location.
 pub(crate) const ALL_LOCATIONS_SENTINEL: &str = "All Locations";
@@ -58,22 +57,6 @@ pub(crate) fn last_updated_status(now: NaiveTime) -> String {
     format!("Last updated {}", clock_12h(now))
 }
 
-/// `alert_lifecycle.compute_lifecycle_labels`: NWS messageType as a label.
-pub(crate) fn compute_lifecycle_labels(alerts: &[&WeatherAlert]) -> HashMap<String, String> {
-    alerts
-        .iter()
-        .filter(|a| a.source.as_deref() == Some("NWS"))
-        .filter_map(|a| {
-            let label = match a.message_type.as_deref()?.to_lowercase().as_str() {
-                "alert" => "New",
-                "update" => "Updated",
-                _ => return None,
-            };
-            Some((a.unique_id(), label.to_string()))
-        })
-        .collect()
-}
-
 /// Python formats `alert.event` with an f-string, so a missing event reads "None".
 fn event_text(alert: &WeatherAlert) -> &str {
     alert.event.as_deref().unwrap_or("None")
@@ -82,7 +65,7 @@ fn event_text(alert: &WeatherAlert) -> &str {
 /// `_update_alerts`: "{event} ({severity})" plus an optional lifecycle label.
 pub(crate) fn alert_list_items(
     active: &[&WeatherAlert],
-    lifecycle_labels: &HashMap<String, String>,
+    lifecycle_labels: &BTreeMap<String, String>,
 ) -> Vec<String> {
     active
         .iter()
@@ -126,7 +109,7 @@ pub(crate) fn all_locations_summary(
                     resolve_temperature_unit_preference(&settings.temperature_unit, Some(loc));
                 // get_temperature_precision() is always 1.
                 let precision = if settings.round_values { 0 } else { 1 };
-                let temp = format_temperature(cc.temperature_f, cc.temperature_c, unit, precision);
+                let temp = format_temperature(cc.temperature_f, unit, cc.temperature_c, precision);
                 let condition = cc
                     .condition
                     .as_deref()

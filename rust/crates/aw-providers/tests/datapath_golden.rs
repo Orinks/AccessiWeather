@@ -16,6 +16,7 @@ use aw_providers::client::live::Live;
 use aw_providers::client::WeatherClient;
 use aw_providers::http::FixtureClient;
 use chrono::{DateTime, Utc};
+use chrono_tz::Tz;
 use common::{assert_matches, cases};
 use serde_json::Value;
 
@@ -47,8 +48,9 @@ fn settings(overrides: &Value) -> AppSettings {
 fn run(case: &Value) -> (Arc<FixtureClient>, WeatherData, AppSettings, Clock) {
     let now: DateTime<Utc> = common::timestamp(&case["now"]).with_timezone(&Utc);
     let http = Arc::new(fixture(&case["routes"]));
+    let tz: Tz = case["local_tz"].as_str().unwrap().parse().unwrap();
     let mut live = Live::new(http.clone());
-    live.clock = Arc::new(move || now);
+    live.local_now = Arc::new(move || now.with_timezone(&tz).fixed_offset());
     live.retry_delay = Duration::ZERO;
     let settings = settings(&case["settings"]);
     let client = WeatherClient::new(
@@ -60,7 +62,6 @@ fn run(case: &Value) -> (Arc<FixtureClient>, WeatherData, AppSettings, Clock) {
     .with_clock(Arc::new(move || now));
     let location: Location = serde_json::from_value(case["location"].clone()).unwrap();
     let weather = client.get_weather_data(&location, false);
-    let tz = case["local_tz"].as_str().unwrap().parse().unwrap();
     (http, weather, settings, Clock::fixed(now, tz))
 }
 

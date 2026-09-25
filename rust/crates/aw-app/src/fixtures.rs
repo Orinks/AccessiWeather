@@ -1,144 +1,286 @@
-//! Offline fixtures for `--offline`, `--smoke` and `--check`.
+//! Offline data for `--offline`, `--smoke` and `--check`: the recorded NWS
+//! and Open-Meteo responses `rust/tools/golden/datapath.py` serves the
+//! Python weather client (New York for US locations, London elsewhere),
+//! answered by URL prefix as the golden tests answer them.
 
 use std::sync::Arc;
 
-use aw_providers::http::FixtureClient;
-use aw_providers::{geocoding, nws, openmeteo};
-use chrono::{Duration, Utc};
-use serde_json::json;
+use aw_core::display::{Clock, WeatherPresenter};
+use aw_core::is_us_location;
+use aw_core::model::{Location, WeatherData};
+use aw_core::py;
+use aw_core::settings::AppSettings;
+use aw_providers::client::live::Live;
+use aw_providers::client::WeatherClient;
+use aw_providers::http::{FixtureClient, HttpClient, HttpError, HttpRequest, HttpResponse};
+use chrono::{DateTime, Duration, NaiveDate, NaiveDateTime, SecondsFormat, Utc};
+use chrono_tz::Tz;
+use serde_json::Value;
 
-pub fn offline_client() -> Arc<FixtureClient> {
-    let now = Utc::now();
-    let iso = |d: Duration| (now + d).to_rfc3339();
-    let hour = |h: i64| {
-        (now + Duration::hours(h))
-            .format("%Y-%m-%dT%H:00")
-            .to_string()
-    };
-    let day = |d: i64| (now + Duration::days(d)).format("%Y-%m-%d").to_string();
+use crate::ui::display::{panel_texts, PanelTexts};
 
-    let points = json!({"properties": {
-        "forecast": format!("{}/gridpoints/PHI/49,75/forecast", nws::BASE_URL),
-        "forecastHourly": format!("{}/gridpoints/PHI/49,75/forecast/hourly", nws::BASE_URL),
-        "observationStations": format!("{}/gridpoints/PHI/49,75/stations", nws::BASE_URL),
-        "forecastZone": format!("{}/zones/forecast/PAZ106", nws::BASE_URL),
-        "county": format!("{}/zones/county/PAC101", nws::BASE_URL),
-        "fireWeatherZone": format!("{}/zones/fire/PAZ106", nws::BASE_URL),
-        "cwa": "PHI", "radarStation": "KDIX", "timeZone": "America/New_York"
-    }});
-    let stations = json!({"features": [{"properties": {"stationIdentifier": "KPHL"}}]});
-    let observation = json!({"properties": {
-        "timestamp": iso(Duration::minutes(-20)),
-        "textDescription": "Partly Cloudy",
-        "temperature": {"value": 21.7, "unitCode": "wmoUnit:degC"},
-        "dewpoint": {"value": 12.0, "unitCode": "wmoUnit:degC"},
-        "relativeHumidity": {"value": 54.0, "unitCode": "wmoUnit:percent"},
-        "windSpeed": {"value": 14.8, "unitCode": "wmoUnit:km_h-1"},
-        "windGust": {"value": 27.7, "unitCode": "wmoUnit:km_h-1"},
-        "windDirection": {"value": 250, "unitCode": "wmoUnit:degree_(angle)"},
-        "barometricPressure": {"value": 101690, "unitCode": "wmoUnit:Pa"},
-        "visibility": {"value": 16090, "unitCode": "wmoUnit:m"}
-    }});
-    let forecast = json!({"properties": {"generatedAt": iso(Duration::zero()), "periods": [
-        {"name": "Today", "temperature": 74, "temperatureUnit": "F", "isDaytime": true,
-         "windSpeed": "5 to 10 mph", "windDirection": "W", "startTime": iso(Duration::zero()),
-         "shortForecast": "Partly Sunny", "detailedForecast": "Partly sunny, with a high near 74. West wind 5 to 10 mph.",
-         "probabilityOfPrecipitation": {"value": 10}},
-        {"name": "Tonight", "temperature": 55, "temperatureUnit": "F", "isDaytime": false,
-         "windSpeed": "5 mph", "windDirection": "NW", "startTime": iso(Duration::hours(8)),
-         "shortForecast": "Mostly Clear", "detailedForecast": "Mostly clear, with a low around 55.",
-         "probabilityOfPrecipitation": {"value": 0}},
-        {"name": "Saturday", "temperature": 71, "temperatureUnit": "F", "isDaytime": true,
-         "windSpeed": "10 mph", "windDirection": "N", "startTime": iso(Duration::hours(20)),
-         "shortForecast": "Sunny", "detailedForecast": "Sunny, with a high near 71.",
-         "probabilityOfPrecipitation": {"value": 0}},
-        {"name": "Saturday Night", "temperature": 52, "temperatureUnit": "F", "isDaytime": false,
-         "windSpeed": "5 mph", "windDirection": "N", "startTime": iso(Duration::hours(32)),
-         "shortForecast": "Clear", "detailedForecast": "Clear, with a low around 52."},
-        {"name": "Sunday", "temperature": 69, "temperatureUnit": "F", "isDaytime": true,
-         "windSpeed": "5 to 10 mph", "windDirection": "NE", "startTime": iso(Duration::hours(44)),
-         "shortForecast": "Chance Showers", "detailedForecast": "A chance of showers after 2pm. High near 69.",
-         "probabilityOfPrecipitation": {"value": 40}}
-    ]}});
-    let hourly_periods: Vec<_> = (0..24)
-        .map(|h| {
-            json!({"startTime": iso(Duration::hours(h)), "temperature": 70 - (h % 12),
-                "temperatureUnit": "F", "shortForecast": if h % 5 == 0 {"Partly Cloudy"} else {"Sunny"},
-                "windSpeed": "8 mph", "windDirection": "W",
-                "relativeHumidity": {"value": 50 + h}, "probabilityOfPrecipitation": {"value": h * 2}})
-        })
-        .collect();
-    let hourly =
-        json!({"properties": {"generatedAt": iso(Duration::zero()), "periods": hourly_periods}});
-    let alerts = json!({"features": [{"id": "urn:oid:2.49.0.1.840.0.demo", "properties": {
-        "id": "urn:oid:2.49.0.1.840.0.demo",
-        "event": "Wind Advisory", "headline": "Wind Advisory issued for Philadelphia",
-        "severity": "Moderate", "urgency": "Expected", "certainty": "Likely",
-        "areaDesc": "Philadelphia; Delaware",
-        "onset": iso(Duration::hours(-1)), "expires": iso(Duration::hours(6)),
-        "description": "West winds 20 to 30 mph with gusts up to 45 mph expected.",
-        "instruction": "Use extra caution when driving, especially if operating a high profile vehicle.",
-        "parameters": {"SAME": ["042101"]}
-    }}]});
-    let afd_list = json!({"@graph": [{"id": "demo-afd"}]});
-    let afd = json!({"productText": "Area Forecast Discussion\nNational Weather Service Mount Holly NJ\n\n.SYNOPSIS...\nHigh pressure builds in behind a departing cold front, bringing breezy northwest winds and dry conditions through the weekend."});
+/// Recorded runs of the Python client: New York in automatic mode, London.
+pub(crate) const CASES: [&str; 2] = [
+    include_str!("../../../testdata/golden/datapath/us_auto.json"),
+    include_str!("../../../testdata/golden/datapath/intl_auto.json"),
+];
 
-    let om_days: Vec<String> = (0..7).map(day).collect();
-    let om_hours: Vec<String> = (0..48).map(hour).collect();
-    let open_meteo = json!({
-        "utc_offset_seconds": 0,
-        "current": {"time": hour(0), "temperature_2m": 61.0, "relative_humidity_2m": 62,
-            "dew_point_2m": 48.0, "apparent_temperature": 60.0, "weather_code": 2,
-            "cloud_cover": 40, "pressure_msl": 1015.0, "wind_speed_10m": 9.0,
-            "wind_direction_10m": 220, "wind_gusts_10m": 15.0, "uv_index": 3.0, "visibility": 52800},
-        "daily": {"time": om_days, "weather_code": [2, 61, 3, 0, 1, 80, 2],
-            "temperature_2m_max": [64.0, 58.0, 60.0, 66.0, 68.0, 63.0, 65.0],
-            "temperature_2m_min": [48.0, 47.0, 45.0, 49.0, 51.0, 50.0, 48.0],
-            "sunrise": (0..7).map(|d| format!("{}T06:40", day(d))).collect::<Vec<_>>(),
-            "sunset": (0..7).map(|d| format!("{}T19:20", day(d))).collect::<Vec<_>>(),
-            "precipitation_probability_max": [10, 70, 20, 0, 0, 60, 10],
-            "precipitation_sum": [0.0, 0.3, 0.0, 0.0, 0.0, 0.2, 0.0],
-            "wind_speed_10m_max": [12.0, 15.0, 10.0, 8.0, 9.0, 14.0, 11.0],
-            "wind_direction_10m_dominant": [220, 180, 300, 90, 120, 200, 250],
-            "uv_index_max": [4.0, 2.0, 3.0, 5.0, 5.0, 3.0, 4.0]},
-        "hourly": {"time": om_hours,
-            "temperature_2m": (0..48).map(|h| 60.0 - (h % 12) as f64).collect::<Vec<_>>(),
-            "relative_humidity_2m": (0..48).map(|h| 55 + h % 20).collect::<Vec<_>>(),
-            "precipitation_probability": (0..48).map(|h| (h * 3) % 100).collect::<Vec<_>>(),
-            "weather_code": (0..48).map(|h| if h % 7 == 0 { 61 } else { 1 }).collect::<Vec<_>>(),
-            "wind_speed_10m": (0..48).map(|h| 6.0 + (h % 5) as f64).collect::<Vec<_>>(),
-            "wind_direction_10m": (0..48).map(|h| (h * 15) % 360).collect::<Vec<_>>(),
-            "pressure_msl": (0..48).map(|_| 1015.0).collect::<Vec<_>>()}
-    });
-    let geocode = json!({"results": [
-        {"name": "Philadelphia", "latitude": 39.9526, "longitude": -75.1652, "admin1": "Pennsylvania",
-         "country": "United States", "country_code": "us", "timezone": "America/New_York"},
-        {"name": "London", "latitude": 51.5072, "longitude": -0.1276, "admin1": "England",
-         "country": "United Kingdom", "country_code": "gb", "timezone": "Europe/London"},
-        {"name": "Tokyo", "latitude": 35.6762, "longitude": 139.6503, "country": "Japan",
-         "country_code": "jp", "timezone": "Asia/Tokyo"}
-    ]});
+const NWS_POINTS: &str = "https://api.weather.gov/points/";
 
-    Arc::new(
-        FixtureClient::new()
-            .with(&format!("{}/points/", nws::BASE_URL), points)
-            .with(
-                &format!("{}/gridpoints/PHI/49,75/stations", nws::BASE_URL),
-                stations,
-            )
-            .with(
-                &format!("{}/gridpoints/PHI/49,75/forecast/hourly", nws::BASE_URL),
-                hourly,
-            )
-            .with(
-                &format!("{}/gridpoints/PHI/49,75/forecast", nws::BASE_URL),
-                forecast,
-            )
-            .with(&format!("{}/stations/", nws::BASE_URL), observation)
-            .with(&format!("{}/alerts/active", nws::BASE_URL), alerts)
-            .with(&format!("{}/products/types/AFD", nws::BASE_URL), afd_list)
-            .with(&format!("{}/products/demo-afd", nws::BASE_URL), afd)
-            .with(openmeteo::BASE_URL, open_meteo)
-            .with(geocoding::OPEN_METEO_GEOCODING, geocode),
+pub(crate) fn case(text: &str) -> Value {
+    serde_json::from_str(text).expect("embedded fixture is valid JSON")
+}
+
+fn location_of(case: &Value) -> Location {
+    serde_json::from_value(case["location"].clone()).expect("fixture location")
+}
+
+/// A timestamp-like string moved by `by` in its own format, or `None`.
+fn shifted(text: &str, by: Duration) -> Option<String> {
+    if let Ok(t) = DateTime::parse_from_rfc3339(text) {
+        return Some((t + by).to_rfc3339_opts(SecondsFormat::AutoSi, false));
+    }
+    for format in ["%Y-%m-%dT%H:%M", "%Y-%m-%dT%H:%M:%S"] {
+        if let Ok(t) = NaiveDateTime::parse_from_str(text, format) {
+            return Some((t + by).format(format).to_string());
+        }
+    }
+    NaiveDate::parse_from_str(text, "%Y-%m-%d")
+        .ok()
+        .map(|d| (d + by).format("%Y-%m-%d").to_string())
+}
+
+fn shift(value: &mut Value, by: Duration) {
+    match value {
+        Value::String(text) => {
+            if let Some(moved) = shifted(text, by) {
+                *text = moved;
+            }
+        }
+        Value::Array(items) => items.iter_mut().for_each(|v| shift(v, by)),
+        Value::Object(map) => map.values_mut().for_each(|v| shift(v, by)),
+        _ => {}
+    }
+}
+
+/// A `FixtureClient` answering the case's routes. With `today`, each body
+/// moves forward by the whole days between its recording and today, so the
+/// sample weather is current while times of day (sunrise, forecast periods)
+/// stay realistic.
+pub(crate) fn routes_client(case: &Value, today: Option<DateTime<Utc>>) -> FixtureClient {
+    let mut http = FixtureClient::new();
+    for route in case["routes"].as_array().expect("fixture routes") {
+        let prefix = route["prefix"].as_str().unwrap_or_default();
+        let status = route["status"].as_u64().unwrap_or(404) as u16;
+        let mut body = route["body"].as_str().unwrap_or_default().to_string();
+        let recorded = route["recorded_at"]
+            .as_str()
+            .and_then(|t| DateTime::parse_from_rfc3339(t).ok());
+        if let (Some(today), Some(recorded)) = (today, recorded) {
+            let days = ((today - recorded.with_timezone(&Utc)).num_seconds() as f64 / 86_400.0)
+                .round() as i64;
+            if let Ok(mut json) = serde_json::from_str::<Value>(&body) {
+                shift(&mut json, Duration::days(days));
+                body = json.to_string();
+            }
+        }
+        http = if body.is_empty() && status >= 400 {
+            http.with_status(prefix, status)
+        } else {
+            http.with_response(prefix, status, &body)
+        };
+    }
+    http
+}
+
+/// `--offline`: any location gets the sample weather. NWS `/points` and
+/// Open-Meteo requests are pointed at the recorded coordinates (New York for
+/// US coordinates, London otherwise); everything else is answered as-is.
+pub(crate) struct OfflineHttp {
+    us: FixtureClient,
+    us_location: Location,
+    intl: FixtureClient,
+    intl_location: Location,
+}
+
+pub(crate) fn offline_client(today: DateTime<Utc>) -> Arc<OfflineHttp> {
+    let [us, intl] = CASES.map(case);
+    Arc::new(OfflineHttp {
+        us: routes_client(&us, Some(today)),
+        us_location: location_of(&us),
+        intl: routes_client(&intl, Some(today)),
+        intl_location: location_of(&intl),
+    })
+}
+
+impl OfflineHttp {
+    fn coordinates(location: &Location) -> (String, String) {
+        (
+            py::float_repr(location.latitude),
+            py::float_repr(location.longitude),
+        )
+    }
+
+    fn route(&self, url: &str) -> (&FixtureClient, String) {
+        if let Some(rest) = url.strip_prefix(NWS_POINTS) {
+            let tail = rest.find(['/', '?']).map_or("", |i| &rest[i..]);
+            let (lat, lon) = Self::coordinates(&self.us_location);
+            return (&self.us, format!("{NWS_POINTS}{lat},{lon}{tail}"));
+        }
+        let Some((base, query)) = url.split_once('?') else {
+            return (&self.us, url.to_string());
+        };
+        let param = |name: &str| {
+            query
+                .split('&')
+                .find_map(|p| p.strip_prefix(name))
+                .and_then(|v| v.parse::<f64>().ok())
+        };
+        let (Some(lat), Some(lon)) = (param("latitude="), param("longitude=")) else {
+            return (&self.us, url.to_string());
+        };
+        let (client, location) = if is_us_location(&Location::new("", lat, lon)) {
+            (&self.us, &self.us_location)
+        } else {
+            (&self.intl, &self.intl_location)
+        };
+        let (lat, lon) = Self::coordinates(location);
+        let query: Vec<String> = query
+            .split('&')
+            .map(|p| {
+                if p.starts_with("latitude=") {
+                    format!("latitude={lat}")
+                } else if p.starts_with("longitude=") {
+                    format!("longitude={lon}")
+                } else {
+                    p.to_string()
+                }
+            })
+            .collect();
+        (client, format!("{base}?{}", query.join("&")))
+    }
+}
+
+impl HttpClient for OfflineHttp {
+    fn get_json(&self, url: &str) -> Result<Value, HttpError> {
+        let (client, url) = self.route(url);
+        client.get_json(&url)
+    }
+
+    fn get_json_with_headers(
+        &self,
+        url: &str,
+        headers: &[(&str, &str)],
+    ) -> Result<Value, HttpError> {
+        let (client, url) = self.route(url);
+        client.get_json_with_headers(&url, headers)
+    }
+
+    fn get_text(&self, url: &str) -> Result<String, HttpError> {
+        let (client, url) = self.route(url);
+        client.get_text(&url)
+    }
+
+    fn send(&self, req: &HttpRequest) -> Result<HttpResponse, HttpError> {
+        let (client, url) = self.route(&req.url);
+        client.send(&HttpRequest { url, ..req.clone() })
+    }
+}
+
+/// The settings the case ran with: defaults plus its overrides.
+fn case_settings(case: &Value) -> AppSettings {
+    let mut value = serde_json::to_value(AppSettings::default()).expect("settings serialize");
+    for (key, v) in case["settings"].as_object().into_iter().flatten() {
+        value[key] = v.clone();
+    }
+    serde_json::from_value(value).expect("fixture settings")
+}
+
+/// Run a recorded case the way the Python golden did (frozen clock and
+/// zone, recorded bodies): the weather data and the main window's panels.
+pub(crate) fn replay(case: &Value) -> (WeatherData, PanelTexts) {
+    let now: DateTime<Utc> = case["now"]
+        .as_str()
+        .and_then(|t| DateTime::parse_from_rfc3339(t).ok())
+        .expect("fixture now")
+        .with_timezone(&Utc);
+    let tz: Tz = case["local_tz"]
+        .as_str()
+        .and_then(|t| t.parse().ok())
+        .expect("fixture zone");
+    let mut live = Live::new(Arc::new(routes_client(case, None)));
+    live.local_now = Arc::new(move || now.with_timezone(&tz).fixed_offset());
+    let settings = case_settings(case);
+    let client = WeatherClient::new(
+        live.sources(&settings),
+        settings.clone(),
+        &settings.data_source,
+        None,
     )
+    .with_clock(Arc::new(move || now));
+    let weather = client.get_weather_data(&location_of(case), false);
+    let presentation =
+        WeatherPresenter::with_clock(&settings, Clock::fixed(now, tz)).present(&weather);
+    (weather, panel_texts(&presentation))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn recorded_cases_replay_to_the_python_panels() {
+        for text in CASES {
+            let case = case(text);
+            let (weather, panels) = replay(&case);
+            assert!(weather.has_any_data());
+            let expected = &case["panels"];
+            assert_eq!(panels.current, expected["current"].as_str().unwrap());
+            assert_eq!(panels.daily, expected["daily"].as_str().unwrap());
+            assert_eq!(panels.hourly, expected["hourly"].as_str().unwrap());
+            assert_eq!(
+                panels.stale_warning,
+                expected["stale_warning"].as_str().unwrap()
+            );
+            assert_eq!(panels.briefing.as_deref(), expected["briefing"].as_str());
+        }
+    }
+
+    #[test]
+    fn offline_client_serves_any_location_today() {
+        let today = Utc::now();
+        let http = offline_client(today);
+        let points = http
+            .get_json("https://api.weather.gov/points/35.1,-90.05")
+            .unwrap();
+        assert!(points["properties"]["forecast"].is_string());
+        let paris = http
+            .get_json(
+                "https://api.open-meteo.com/v1/forecast?latitude=48.85&longitude=2.35&current=x",
+            )
+            .unwrap();
+        assert_eq!(paris["timezone"], "Europe/London");
+        let observation = http
+            .get_json("https://api.weather.gov/stations/KNYC/observations/latest")
+            .unwrap();
+        let observed =
+            DateTime::parse_from_rfc3339(observation["properties"]["timestamp"].as_str().unwrap())
+                .unwrap();
+        assert!((today - observed.with_timezone(&Utc)).num_hours().abs() <= 13);
+    }
+
+    #[test]
+    fn timestamps_shift_in_their_own_format() {
+        let day = Duration::days(1);
+        assert_eq!(
+            shifted("2026-01-20T17:51:00+00:00", day).as_deref(),
+            Some("2026-01-21T17:51:00+00:00")
+        );
+        assert_eq!(
+            shifted("2026-05-11T23:00", day).as_deref(),
+            Some("2026-05-12T23:00")
+        );
+        assert_eq!(shifted("2026-05-11", day).as_deref(), Some("2026-05-12"));
+        assert_eq!(shifted("Tonight", day), None);
+    }
 }
