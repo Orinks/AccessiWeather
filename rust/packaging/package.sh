@@ -33,5 +33,9 @@ case "$(uname -s)" in
     ;;
 esac
 
-(cd dist && shasum -a 256 "$name" > "$name.sha256")
+if command -v sha256sum >/dev/null; then
+  (cd dist && sha256sum "$name" > "$name.sha256")
+else
+  (cd dist && shasum -a 256 "$name" > "$name.sha256")
+fi
 ls -la dist
