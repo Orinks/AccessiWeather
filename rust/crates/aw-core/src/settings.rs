@@ -104,6 +104,9 @@ pub struct AppSettings {
     pub update_interval_minutes: i64,
     #[serde(default = "d_true")]
     pub enable_alerts: bool,
+    /// Speak refresh results through the system speech engine.
+    #[serde(default = "d_true")]
+    pub speech_announcements: bool,
     #[serde(default)]
     pub minimize_to_tray: bool,
     #[serde(default)]

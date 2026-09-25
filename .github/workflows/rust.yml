@@ -1,0 +1,75 @@
+name: Rust native app
+
+on:
+  push:
+    branches: [main, dev]
+    paths: ["rust/**", ".github/workflows/rust.yml"]
+  pull_request:
+    paths: ["rust/**", ".github/workflows/rust.yml"]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, name: Linux, artifact: accessiweather-linux-x86_64.tar.gz }
+          - { os: windows-latest, name: Windows, artifact: accessiweather-windows-x86_64.zip }
+          - { os: macos-latest, name: macOS, artifact: accessiweather-macos-arm64.zip }
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+
+      - name: Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libclang-dev libspeechd-dev libxkbcommon-dev libwayland-dev \
+            libxcb-shape0-dev libxcb-xfixes0-dev libfontconfig1-dev xvfb
+
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets
+      - name: Tests
+        run: cargo test --workspace
+      - name: Release build
+        run: cargo build --release -p accessiweather
+
+      - name: Headless self-check
+        run: cargo run --release -p accessiweather -- --check
+
+      - name: Window smoke test (Linux, Xvfb)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a target/release/accessiweather --smoke
+      - name: Window smoke test (Windows)
+        if: runner.os == 'Windows'
+        run: target/release/accessiweather.exe --smoke
+      - name: Window smoke test (macOS)
+        if: runner.os == 'macOS'
+        run: target/release/accessiweather --smoke
+
+      - name: Package
+        shell: bash
+        run: bash packaging/package.sh "${{ matrix.artifact }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: rust/dist/${{ matrix.artifact }}
+          if-no-files-found: error

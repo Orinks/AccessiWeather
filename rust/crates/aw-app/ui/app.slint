@@ -1,1 +1,524 @@
-export component MainWindow inherits Window { }
+import { Button, ComboBox, LineEdit, TextEdit, ListView, StandardListView, CheckBox, SpinBox, ScrollView, GroupBox, VerticalBox, HorizontalBox, StandardButton, TabWidget, Palette } from "std-widgets.slint";
+
+export global AppState {
+    in-out property <[string]> location-names: [];
+    in-out property <int> current-location-index: -1;
+    in-out property <string> summary-text: "No location selected. Press Alt+A to add a location.";
+    in-out property <string> current-text: "";
+    in-out property <string> hourly-text: "";
+    in-out property <string> daily-text: "";
+    in-out property <[StandardListViewItem]> alerts: [{ text: "No active alerts" }];
+    in-out property <int> alert-count: 0;
+    in-out property <int> selected-alert-index: -1;
+    in-out property <string> status-text: "Ready";
+    in-out property <bool> busy: false;
+    in-out property <bool> high-contrast: false;
+    in-out property <bool> has-discussion: false;
+    in-out property <string> discussion-text: "";
+}
+
+// ---------------------------------------------------------------------------
+// Reusable read-only, keyboard-focusable text region.
+// ---------------------------------------------------------------------------
+component ReadOnlyText inherits GroupBox {
+    in property <string> label;
+    in property <string> text;
+    in property <string> description;
+    title: label;
+    min-height: 120px;
+    edit := TextEdit {
+        read-only: true;
+        wrap: word-wrap;
+        text: root.text;
+        accessible-label: root.label;
+        accessible-description: root.description;
+    }
+    public function focus-text() { edit.focus(); }
+}
+
+export component MainWindow inherits Window {
+    title: "AccessiWeather";
+    preferred-width: 900px;
+    preferred-height: 700px;
+    min-width: 520px;
+    min-height: 420px;
+    icon: @image-url("icon.png");
+
+    callback refresh();
+    callback location-changed(int);
+    callback add-location();
+    callback remove-location();
+    callback open-settings();
+    callback speak-current();
+    callback stop-speech();
+    callback show-alert-details(int);
+    callback show-discussion();
+    callback quit();
+
+    public function focus-current() { current.focus-text(); }
+    public function focus-location() { location-box.focus(); }
+    public function focus-alerts() { alert-list.focus(); }
+
+    forward-focus: location-box;
+
+    FocusScope {
+        key-pressed(event) => {
+            if (event.modifiers.control && event.text == "r") { root.refresh(); return accept; }
+            if (event.modifiers.alt && event.text == "a") { root.add-location(); return accept; }
+            if (event.modifiers.control && event.text == ",") { root.open-settings(); return accept; }
+            if (event.modifiers.control && event.text == "d") { root.show-discussion(); return accept; }
+            if (event.modifiers.control && event.text == "q") { root.quit(); return accept; }
+            if (event.text == Key.F5) { root.refresh(); return accept; }
+            if (event.modifiers.control && event.modifiers.shift && event.text == "s") { root.speak-current(); return accept; }
+            if (event.modifiers.control && event.text == "1") { location-box.focus(); return accept; }
+            if (event.modifiers.control && event.text == "2") { current.focus-text(); return accept; }
+            if (event.modifiers.control && event.text == "3") { hourly.focus-text(); return accept; }
+            if (event.modifiers.control && event.text == "4") { daily.focus-text(); return accept; }
+            if (event.modifiers.control && event.text == "5") { alert-list.focus(); return accept; }
+            if (event.text == Key.Escape) { root.stop-speech(); return accept; }
+            return reject;
+        }
+
+        VerticalBox {
+            spacing: 8px;
+
+            HorizontalBox {
+                spacing: 8px;
+                Text {
+                    text: "Location:";
+                    vertical-alignment: center;
+                    accessible-role: none;
+                }
+                location-box := ComboBox {
+                    horizontal-stretch: 1;
+                    model: AppState.location-names;
+                    current-index: AppState.current-location-index;
+                    enabled: AppState.location-names.length > 0;
+                    accessible-label: "Location";
+                    accessible-description: "Choose which saved location to show weather for";
+                    selected(_value) => { root.location-changed(self.current-index); }
+                }
+                Button {
+                    text: "Add…";
+                    accessible-label: "Add location";
+                    accessible-description: "Search for a city, address or coordinates and save it. Shortcut Alt+A";
+                    clicked => { root.add-location(); }
+                }
+                Button {
+                    text: "Remove";
+                    enabled: AppState.current-location-index >= 0;
+                    accessible-label: "Remove location";
+                    accessible-description: "Remove the selected saved location";
+                    clicked => { root.remove-location(); }
+                }
+                Button {
+                    text: AppState.busy ? "Refreshing…" : "Refresh";
+                    enabled: !AppState.busy && AppState.current-location-index >= 0;
+                    accessible-label: "Refresh weather";
+                    accessible-description: "Fetch the latest weather for the selected location. Shortcut F5 or Ctrl+R";
+                    clicked => { root.refresh(); }
+                }
+            }
+
+            Text {
+                text: AppState.summary-text;
+                wrap: word-wrap;
+                font-weight: 600;
+                accessible-role: text;
+                accessible-label: "Weather summary";
+                accessible-value: AppState.summary-text;
+            }
+
+            HorizontalBox {
+                spacing: 8px;
+                vertical-stretch: 1;
+                VerticalBox {
+                    horizontal-stretch: 2;
+                    current := ReadOnlyText {
+                        label: "Current conditions";
+                        description: "Current temperature, wind, humidity and other observations. Shortcut Ctrl+2";
+                        text: AppState.current-text;
+                        vertical-stretch: 1;
+                    }
+                    hourly := ReadOnlyText {
+                        label: "Hourly forecast";
+                        description: "Forecast for the next several hours. Shortcut Ctrl+3";
+                        text: AppState.hourly-text;
+                        vertical-stretch: 1;
+                    }
+                    daily := ReadOnlyText {
+                        label: "Extended forecast";
+                        description: "Daily forecast for the coming days. Shortcut Ctrl+4";
+                        text: AppState.daily-text;
+                        vertical-stretch: 2;
+                    }
+                }
+                GroupBox {
+                    horizontal-stretch: 1;
+                    title: AppState.alert-count == 0 ? "Alerts (none active)" : "Alerts (" + AppState.alert-count + ")";
+                    VerticalBox {
+                        FocusScope {
+                            vertical-stretch: 1;
+                            key-pressed(event) => {
+                                if (event.text == Key.Return && AppState.alert-count > 0) {
+                                    root.show-alert-details(alert-list.current-item);
+                                    return accept;
+                                }
+                                return reject;
+                            }
+                        alert-list := StandardListView {
+                            width: 100%; height: 100%;
+                            accessible-label: "Weather alerts";
+                            accessible-description: "Active alerts for the selected location. Press Enter for details. Shortcut Ctrl+5";
+                            model: AppState.alerts;
+                            current-item: AppState.selected-alert-index;
+                            current-item-changed(idx) => { AppState.selected-alert-index = idx; }
+                            item-pointer-event(idx, event, _pos) => {
+                                if (event.kind == PointerEventKind.up && event.button == PointerEventButton.left && AppState.alert-count > 0) {
+                                    root.show-alert-details(idx);
+                                }
+                            }
+                        }
+                        }
+                        Button {
+                            text: "Alert details";
+                            enabled: AppState.alert-count > 0 && AppState.selected-alert-index >= 0;
+                            accessible-label: "Alert details";
+                            accessible-description: "Open the full text of the selected alert";
+                            clicked => { root.show-alert-details(AppState.selected-alert-index); }
+                        }
+                        Button {
+                            text: "Forecast discussion";
+                            enabled: AppState.has-discussion;
+                            accessible-label: "Forecast discussion";
+                            accessible-description: "Read the National Weather Service area forecast discussion. Shortcut Ctrl+D";
+                            clicked => { root.show-discussion(); }
+                        }
+                        Button {
+                            text: "Read aloud";
+                            accessible-label: "Read current conditions aloud";
+                            accessible-description: "Speak the current conditions with the system speech engine. Shortcut Ctrl+Shift+S. Press Escape to stop";
+                            clicked => { root.speak-current(); }
+                        }
+                        Button {
+                            text: "Settings…";
+                            accessible-label: "Settings";
+                            accessible-description: "Change units, data source, refresh interval and other preferences. Shortcut Ctrl+Comma";
+                            clicked => { root.open-settings(); }
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                height: 28px;
+                background: Palette.alternate-background;
+                border-radius: 4px;
+                Text {
+                    x: 8px;
+                    width: parent.width - 16px;
+                    vertical-alignment: center;
+                    text: AppState.status-text;
+                    overflow: elide;
+                    accessible-role: text;
+                    accessible-label: "Status";
+                    accessible-value: AppState.status-text;
+                }
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Add location dialog
+// ---------------------------------------------------------------------------
+export component AddLocationDialog inherits Window {
+    title: "Add Location";
+    preferred-width: 520px;
+    preferred-height: 420px;
+
+    in-out property <string> query;
+    in-out property <[StandardListViewItem]> results: [];
+    in-out property <int> selected-index: -1;
+    in-out property <string> status: "Type a city, address, ZIP code or \"lat, lon\" and press Enter to search.";
+    in-out property <bool> searching: false;
+    in-out property <string> custom-name;
+
+    callback search(string);
+    callback accept-selection(int, string);
+    callback cancel();
+
+    forward-focus: query-edit;
+
+    FocusScope {
+        key-pressed(event) => {
+            if (event.text == Key.Escape) { root.cancel(); return accept; }
+            return reject;
+        }
+        VerticalBox {
+            spacing: 8px;
+            Text { text: "Search for a location:"; accessible-role: none; }
+            HorizontalBox {
+                query-edit := LineEdit {
+                    horizontal-stretch: 1;
+                    placeholder-text: "City, address, ZIP or latitude, longitude";
+                    text <=> root.query;
+                    accessible-label: "Location search";
+                    accessible-description: "Type a place and press Enter to search";
+                    accepted(text) => { root.search(text); }
+                }
+                Button {
+                    text: root.searching ? "Searching…" : "Search";
+                    enabled: !root.searching;
+                    accessible-label: "Search";
+                    clicked => { root.search(root.query); }
+                }
+            }
+            Text {
+                text: root.status;
+                wrap: word-wrap;
+                accessible-role: text;
+                accessible-label: "Search status";
+                accessible-value: root.status;
+            }
+            FocusScope {
+                vertical-stretch: 1;
+                key-pressed(event) => {
+                    if (event.text == Key.Return && result-list.current-item >= 0) {
+                        root.accept-selection(result-list.current-item, root.custom-name);
+                        return accept;
+                    }
+                    return reject;
+                }
+            result-list := StandardListView {
+                width: 100%; height: 100%;
+                accessible-label: "Search results";
+                accessible-description: "Select a result and press Enter or the Add button";
+                model: root.results;
+                current-item: root.selected-index;
+                current-item-changed(idx) => { root.selected-index = idx; }
+            }
+            }
+            HorizontalBox {
+                Text { text: "Display name (optional):"; vertical-alignment: center; accessible-role: none; }
+                LineEdit {
+                    horizontal-stretch: 1;
+                    text <=> root.custom-name;
+                    accessible-label: "Display name";
+                    accessible-description: "Optional custom name for the saved location";
+                }
+            }
+            HorizontalBox {
+                alignment: end;
+                Button {
+                    text: "Add";
+                    primary: true;
+                    enabled: root.selected-index >= 0;
+                    accessible-label: "Add selected location";
+                    clicked => { root.accept-selection(root.selected-index, root.custom-name); }
+                }
+                Button {
+                    text: "Cancel";
+                    accessible-label: "Cancel";
+                    clicked => { root.cancel(); }
+                }
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Plain text dialog (alert details, forecast discussion)
+// ---------------------------------------------------------------------------
+export component TextDialog inherits Window {
+    in-out property <string> heading;
+    in-out property <string> body;
+    in-out property <string> body-label: "Details";
+    title: heading;
+    preferred-width: 640px;
+    preferred-height: 480px;
+    callback close-dialog();
+    callback speak();
+    forward-focus: body-edit;
+    VerticalBox {
+        body-edit := TextEdit {
+            vertical-stretch: 1;
+            read-only: true;
+            wrap: word-wrap;
+            text: root.body;
+            accessible-label: root.body-label;
+            key-pressed(event) => {
+                if (event.text == Key.Escape) { root.close-dialog(); return accept; }
+                return reject;
+            }
+        }
+        HorizontalBox {
+            alignment: end;
+            Button {
+                text: "Read aloud";
+                accessible-label: "Read aloud";
+                clicked => { root.speak(); }
+            }
+            Button {
+                text: "Close";
+                primary: true;
+                accessible-label: "Close";
+                clicked => { root.close-dialog(); }
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Settings dialog
+// ---------------------------------------------------------------------------
+export component SettingsDialog inherits Window {
+    title: "AccessiWeather Settings";
+    preferred-width: 560px;
+    preferred-height: 560px;
+
+    in-out property <int> temperature-unit-index: 2;   // 0 F, 1 C, 2 Both
+    in-out property <int> data-source-index: 0;        // 0 auto, 1 nws, 2 openmeteo, 3 pirateweather
+    in-out property <int> update-interval: 10;
+    in-out property <int> forecast-days: 7;
+    in-out property <int> hourly-hours: 6;
+    in-out property <int> verbosity-index: 1;          // 0 minimal, 1 standard, 2 detailed
+    in-out property <bool> enable-alerts: true;
+    in-out property <bool> speech-announcements: true;
+    in-out property <bool> show-dewpoint: true;
+    in-out property <bool> show-pressure: true;
+    in-out property <bool> show-visibility: true;
+    in-out property <bool> show-uv: true;
+    in-out property <bool> minimize-to-tray: false;
+    in-out property <string> pirate-key;
+    in-out property <int> budget-index: 2;             // 0 economy, 1 balanced, 2 max_coverage
+
+    callback save();
+    callback cancel();
+
+    forward-focus: temp-box;
+
+    FocusScope {
+        key-pressed(event) => {
+            if (event.text == Key.Escape) { root.cancel(); return accept; }
+            return reject;
+        }
+        VerticalBox {
+            spacing: 6px;
+            TabWidget {
+                vertical-stretch: 1;
+                Tab {
+                    title: "General";
+                    VerticalBox {
+                        alignment: start;
+                        spacing: 8px;
+                        HorizontalBox {
+                            Text { text: "Temperature unit:"; vertical-alignment: center; accessible-role: none; }
+                            temp-box := ComboBox {
+                                model: ["Fahrenheit", "Celsius", "Both"];
+                                current-index <=> root.temperature-unit-index;
+                                accessible-label: "Temperature unit";
+                            }
+                        }
+                        HorizontalBox {
+                            Text { text: "Update interval (minutes):"; vertical-alignment: center; accessible-role: none; }
+                            SpinBox {
+                                minimum: 1; maximum: 1440;
+                                value <=> root.update-interval;
+                                accessible-label: "Update interval in minutes";
+                            }
+                        }
+                        HorizontalBox {
+                            Text { text: "Forecast days:"; vertical-alignment: center; accessible-role: none; }
+                            SpinBox {
+                                minimum: 3; maximum: 16;
+                                value <=> root.forecast-days;
+                                accessible-label: "Forecast days";
+                                accessible-description: "Between 3 and 16 days; providers cap what they can supply";
+                            }
+                        }
+                        HorizontalBox {
+                            Text { text: "Hourly forecast hours:"; vertical-alignment: center; accessible-role: none; }
+                            SpinBox {
+                                minimum: 1; maximum: 48;
+                                value <=> root.hourly-hours;
+                                accessible-label: "Hourly forecast hours";
+                            }
+                        }
+                        HorizontalBox {
+                            Text { text: "Detail level:"; vertical-alignment: center; accessible-role: none; }
+                            ComboBox {
+                                model: ["Minimal", "Standard", "Detailed"];
+                                current-index <=> root.verbosity-index;
+                                accessible-label: "Forecast detail level";
+                            }
+                        }
+                        CheckBox { text: "Enable weather alerts"; checked <=> root.enable-alerts; accessible-label: "Enable weather alerts"; }
+                        CheckBox { text: "Announce weather updates with speech"; checked <=> root.speech-announcements; accessible-label: "Announce weather updates with speech"; }
+                        CheckBox { text: "Minimize to tray instead of closing"; checked <=> root.minimize-to-tray; accessible-label: "Minimize to tray instead of closing"; }
+                    }
+                }
+                Tab {
+                    title: "Display";
+                    VerticalBox {
+                        alignment: start;
+                        spacing: 8px;
+                        CheckBox { text: "Show dew point"; checked <=> root.show-dewpoint; accessible-label: "Show dew point"; }
+                        CheckBox { text: "Show barometric pressure"; checked <=> root.show-pressure; accessible-label: "Show barometric pressure"; }
+                        CheckBox { text: "Show visibility"; checked <=> root.show-visibility; accessible-label: "Show visibility"; }
+                        CheckBox { text: "Show UV index"; checked <=> root.show-uv; accessible-label: "Show UV index"; }
+                    }
+                }
+                Tab {
+                    title: "Data sources";
+                    VerticalBox {
+                        alignment: start;
+                        spacing: 8px;
+                        HorizontalBox {
+                            Text { text: "Weather data source:"; vertical-alignment: center; accessible-role: none; }
+                            ComboBox {
+                                model: ["Automatic", "National Weather Service (US only)", "Open-Meteo", "Pirate Weather"];
+                                current-index <=> root.data-source-index;
+                                accessible-label: "Weather data source";
+                                accessible-description: "Automatic uses NWS for US locations and Open-Meteo elsewhere";
+                            }
+                        }
+                        HorizontalBox {
+                            Text { text: "Automatic mode API budget:"; vertical-alignment: center; accessible-role: none; }
+                            ComboBox {
+                                model: ["Economy", "Balanced", "Maximum coverage"];
+                                current-index <=> root.budget-index;
+                                accessible-label: "Automatic mode API budget";
+                                accessible-description: "Maximum coverage queries every configured source in parallel";
+                            }
+                        }
+                        HorizontalBox {
+                            Text { text: "Pirate Weather API key:"; vertical-alignment: center; accessible-role: none; }
+                            LineEdit {
+                                horizontal-stretch: 1;
+                                input-type: password;
+                                text <=> root.pirate-key;
+                                accessible-label: "Pirate Weather API key";
+                                accessible-description: "Optional. Required to include Pirate Weather as a source";
+                            }
+                        }
+                    }
+                }
+            }
+            HorizontalBox {
+                alignment: end;
+                Button {
+                    text: "Save";
+                    primary: true;
+                    accessible-label: "Save settings";
+                    clicked => { root.save(); }
+                }
+                Button {
+                    text: "Cancel";
+                    accessible-label: "Cancel";
+                    clicked => { root.cancel(); }
+                }
+            }
+        }
+    }
+}

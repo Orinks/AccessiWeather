@@ -17,6 +17,7 @@ aw-store.workspace = true
 aw-speech.workspace = true
 slint.workspace = true
 clap.workspace = true
+thiserror.workspace = true
 chrono.workspace = true
 serde_json.workspace = true
 tracing.workspace = true

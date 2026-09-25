@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=AccessiWeather
+Comment=Accessible desktop weather
+Exec=accessiweather
+Icon=accessiweather
+Terminal=false
+Categories=Utility;
