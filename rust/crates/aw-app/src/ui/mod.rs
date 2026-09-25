@@ -1,9 +1,12 @@
 //! wxDragon user interface, mirroring the Python `accessiweather.ui` package:
 //! the main window, its menus and shortcuts, and the location and alert dialogs.
 
+mod ai_model_check;
 mod alert_dialog;
+mod assistant_host;
 mod commands;
 mod display;
+mod explanation_dialog;
 mod location_dialog;
 mod locations;
 mod main_window;
@@ -11,6 +14,7 @@ mod menus;
 mod refresh;
 mod settings_dialog;
 mod shortcuts;
+mod weather_assistant_dialog;
 mod weather_source;
 
 #[cfg(test)]

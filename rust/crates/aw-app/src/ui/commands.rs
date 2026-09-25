@@ -16,7 +16,7 @@ fn not_ported(feature: &str) {
 
 /// View > Explain Weather (Ctrl+E) and the Explain Conditions button.
 pub(crate) fn on_explain_weather() {
-    not_ported("Explain Weather");
+    super::explanation_dialog::show_explanation_dialog();
 }
 
 /// View > Precipitation Timeline.
@@ -68,7 +68,7 @@ pub(crate) fn on_noaa_radio() {
 
 /// View > Weather Assistant (Ctrl+T).
 pub(crate) fn on_weather_chat() {
-    not_ported("Weather Assistant");
+    super::weather_assistant_dialog::show_weather_assistant_dialog();
 }
 
 /// Tools > Soundpack Manager.

@@ -25,6 +25,7 @@ aw-store = { path = "crates/aw-store" }
 aw-radio = { path = "crates/aw-radio" }
 aw-services = { path = "crates/aw-services" }
 aw-notify = { path = "crates/aw-notify" }
+aw-ai = { path = "crates/aw-ai" }
 
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }

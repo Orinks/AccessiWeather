@@ -65,6 +65,8 @@ pub(crate) struct State {
     pub offline: bool,
     /// `--debug`: adds the Help > Debug menu.
     pub debug: bool,
+    /// `app.ai_explanation_cache`, emptied by the explanation's Regenerate.
+    pub ai_explanation_cache: Arc<aw_ai::ExplanationCache>,
 }
 
 pub(crate) type Shared = Rc<RefCell<State>>;
@@ -144,6 +146,7 @@ pub fn run(args: Args) -> Result<(), AppError> {
         smoke: args.smoke,
         offline,
         debug: args.debug,
+        ai_explanation_cache: Arc::default(),
     }));
     APP_STATE.with(|s| *s.borrow_mut() = Some(state.clone()));
 
