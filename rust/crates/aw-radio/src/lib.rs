@@ -10,7 +10,9 @@
 pub mod audio;
 pub mod auto_tune;
 pub mod availability;
+mod context;
 mod data;
+pub mod dialog;
 pub mod player;
 pub mod preferences;
 pub mod session;
@@ -22,6 +24,8 @@ pub mod wxradio;
 
 pub use audio::RodioBackend;
 pub use auto_tune::AlertRadioAutoTuner;
+pub use context::RadioContext;
+pub use dialog::{DialogEvent, DialogView, RadioDialog};
 pub use player::{AudioBackend, AudioStream, PlayerEvent, RadioPlayer};
 pub use preferences::{RadioPreferences, SharedPreferences};
 pub use session::RadioSession;
