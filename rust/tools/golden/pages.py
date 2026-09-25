@@ -119,7 +119,10 @@ def main() -> None:
                 bp.build_pages()
             finally:
                 os.chdir(cwd)
-            read = lambda rel: (Path(tmp) / rel).read_bytes().decode("utf-8").replace("\r\n", "\n")
+
+            def read(rel, tmp=tmp):
+                return (Path(tmp) / rel).read_bytes().decode("utf-8").replace("\r\n", "\n")
+
             cases.append(
                 {
                     "name": name,
@@ -132,7 +135,12 @@ def main() -> None:
             )
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(
-        json.dumps({"template": real, "compact_template": compact, "cases": cases}, indent=1, ensure_ascii=False) + "\n",
+        json.dumps(
+            {"template": real, "compact_template": compact, "cases": cases},
+            indent=1,
+            ensure_ascii=False,
+        )
+        + "\n",
         encoding="utf-8",
         newline="\n",
     )

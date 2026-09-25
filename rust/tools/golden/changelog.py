@@ -429,11 +429,19 @@ def should_build_scenarios() -> list[dict]:
 
 
 def check_scenarios() -> list[dict]:
-    base = step({"CHANGELOG.md": BASE, "pyproject.toml": PYPROJECT, "src/app.py": "x = 0\n"}, "base", tag="base")
+    base = step(
+        {"CHANGELOG.md": BASE, "pyproject.toml": PYPROJECT, "src/app.py": "x = 0\n"},
+        "base",
+        tag="base",
+    )
     check = ["check", "--base", "base"]
     return [
         scenario("docs only", [base, step({"docs/a.md": "a\n"}, "docs")], check),
-        scenario("source without changelog", [base, step({"src/app.py": "x = 1\n", "src/b.py": "b\n"}, "feat")], check),
+        scenario(
+            "source without changelog",
+            [base, step({"src/app.py": "x = 1\n", "src/b.py": "b\n"}, "feat")],
+            check,
+        ),
         scenario(
             "source with new bullet",
             [base, step({"src/app.py": "x = 1\n", "CHANGELOG.md": NEXT}, "feat")],
@@ -478,7 +486,10 @@ def check_scenarios() -> list[dict]:
         ),
         scenario(
             "pyproject ruff bump",
-            [base, step({"pyproject.toml": PYPROJECT.replace("ruff>=0.16.0", "ruff>=0.16.1")}, "ruff")],
+            [
+                base,
+                step({"pyproject.toml": PYPROJECT.replace("ruff>=0.16.0", "ruff>=0.16.1")}, "ruff"),
+            ],
             check,
         ),
         scenario(
@@ -486,7 +497,11 @@ def check_scenarios() -> list[dict]:
             [
                 base,
                 step(
-                    {"pyproject.toml": PYPROJECT.replace('"httpx>=0.28",', '"httpx>=0.28",\n    "rich>=13",')},
+                    {
+                        "pyproject.toml": PYPROJECT.replace(
+                            '"httpx>=0.28",', '"httpx>=0.28",\n    "rich>=13",'
+                        )
+                    },
                     "deps",
                 ),
             ],
@@ -550,10 +565,14 @@ def check_scenarios() -> list[dict]:
 
 
 def main() -> None:
-    results = [record(sc) for sc in [*notes_scenarios(), *should_build_scenarios(), *check_scenarios()]]
+    results = [
+        record(sc) for sc in [*notes_scenarios(), *should_build_scenarios(), *check_scenarios()]
+    ]
     OUT.parent.mkdir(parents=True, exist_ok=True)
     golden = {"real_changelog": REAL, "scenarios": results}
-    OUT.write_text(json.dumps(golden, indent=1, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+    OUT.write_text(
+        json.dumps(golden, indent=1, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n"
+    )
     print("wrote", OUT, len(results), "scenarios")
 
 

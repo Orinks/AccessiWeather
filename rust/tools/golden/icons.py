@@ -14,7 +14,9 @@ from pathlib import Path
 RUST = Path(__file__).resolve().parents[2]
 OUT = RUST / "testdata" / "golden" / "icons"
 
-spec = importlib.util.spec_from_file_location("create_icons", RUST.parent / "installer" / "create_icons.py")
+spec = importlib.util.spec_from_file_location(
+    "create_icons", RUST.parent / "installer" / "create_icons.py"
+)
 create_icons = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(create_icons)
 
