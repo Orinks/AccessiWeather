@@ -1,0 +1,252 @@
+[
+  {
+    "playing": true,
+    "last_station": "WXK27",
+    "favorites": [],
+    "urls": [
+      "http://a",
+      "http://b"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "name": "stops_when_playing",
+    "notifications": [],
+    "played": [],
+    "stops": 1,
+    "lookups": [],
+    "final_station": null,
+    "current_url_index": 0
+  },
+  {
+    "playing": false,
+    "last_station": "WXK27",
+    "favorites": [],
+    "urls": [
+      "http://a",
+      "http://b"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "name": "plays_last_station",
+    "notifications": [
+      "Playing WXK27, Austin, TX."
+    ],
+    "played": [
+      "http://a"
+    ],
+    "stops": 0,
+    "lookups": [
+      "WXK27"
+    ],
+    "final_station": "WXK27",
+    "current_url_index": 0
+  },
+  {
+    "playing": false,
+    "last_station": "KEC61",
+    "favorites": [
+      "kec61",
+      "WXK27"
+    ],
+    "urls": [
+      "http://a",
+      "http://b"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "name": "first_favorite",
+    "notifications": [
+      "Playing KEC61, Mobile, AL."
+    ],
+    "played": [
+      "http://a"
+    ],
+    "stops": 0,
+    "lookups": [
+      "KEC61"
+    ],
+    "final_station": "KEC61",
+    "current_url_index": 0
+  },
+  {
+    "playing": false,
+    "last_station": null,
+    "favorites": [],
+    "urls": [
+      "http://a",
+      "http://b"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "name": "nothing_known",
+    "notifications": [
+      "No station to play yet. Open NOAA Weather Radio and play a station once, then this hotkey will resume it."
+    ],
+    "played": [],
+    "stops": 0,
+    "lookups": [],
+    "final_station": null,
+    "current_url_index": 0
+  },
+  {
+    "playing": false,
+    "last_station": "NOPE1",
+    "favorites": [],
+    "urls": [
+      "http://a",
+      "http://b"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "name": "unknown_station",
+    "notifications": [
+      "NOPE1 is no longer in the station list."
+    ],
+    "played": [],
+    "stops": 0,
+    "lookups": [],
+    "final_station": null,
+    "current_url_index": 0
+  },
+  {
+    "playing": false,
+    "last_station": "WXK27",
+    "favorites": [],
+    "urls": [],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "name": "no_streams",
+    "notifications": [
+      "No stream is available for WXK27."
+    ],
+    "played": [],
+    "stops": 0,
+    "lookups": [
+      "WXK27"
+    ],
+    "final_station": null,
+    "current_url_index": 0
+  },
+  {
+    "playing": false,
+    "last_station": "WXK27",
+    "favorites": [],
+    "urls": [
+      "http://a",
+      "http://b"
+    ],
+    "preferred": {},
+    "play_results": [
+      false,
+      true
+    ],
+    "name": "second_stream",
+    "notifications": [
+      "Playing WXK27, Austin, TX."
+    ],
+    "played": [
+      "http://a",
+      "http://b"
+    ],
+    "stops": 0,
+    "lookups": [
+      "WXK27"
+    ],
+    "final_station": null,
+    "current_url_index": 1
+  },
+  {
+    "playing": false,
+    "last_station": "WXK27",
+    "favorites": [],
+    "urls": [
+      "http://a",
+      "http://b"
+    ],
+    "preferred": {},
+    "play_results": [
+      false,
+      false
+    ],
+    "name": "all_fail",
+    "notifications": [
+      "Could not start WXK27."
+    ],
+    "played": [
+      "http://a",
+      "http://b"
+    ],
+    "stops": 0,
+    "lookups": [
+      "WXK27"
+    ],
+    "final_station": null,
+    "current_url_index": 1
+  },
+  {
+    "playing": false,
+    "last_station": "WXK27",
+    "favorites": [],
+    "urls": [
+      "http://a",
+      "http://b"
+    ],
+    "preferred": {
+      "WXK27": "http://b"
+    },
+    "play_results": [
+      true
+    ],
+    "name": "preferred",
+    "notifications": [
+      "Playing WXK27, Austin, TX."
+    ],
+    "played": [
+      "http://b"
+    ],
+    "stops": 0,
+    "lookups": [
+      "WXK27"
+    ],
+    "final_station": "WXK27",
+    "current_url_index": 0
+  },
+  {
+    "playing": false,
+    "last_station": "KEC61",
+    "favorites": [],
+    "urls": [
+      "http://a",
+      "http://b"
+    ],
+    "preferred": {},
+    "play_results": [
+      true
+    ],
+    "name": "state_in_name",
+    "notifications": [
+      "Playing KEC61, Mobile, AL."
+    ],
+    "played": [
+      "http://a"
+    ],
+    "stops": 0,
+    "lookups": [
+      "KEC61"
+    ],
+    "final_station": "KEC61",
+    "current_url_index": 0
+  }
+]
