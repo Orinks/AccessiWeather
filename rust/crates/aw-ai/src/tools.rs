@@ -24,11 +24,15 @@ use crate::pyfmt::{self, casefold};
 ///
 /// | method | NWS (`api.weather.gov`) | Open-Meteo fallback |
 /// |---|---|---|
-/// | `current_conditions` | `/stations/{first station}/observations/latest` | forecast API `current=...` response |
-/// | `forecast` | `/gridpoints/.../forecast` (ignores `days`) | forecast API `daily=...&forecast_days={days}` |
-/// | `hourly_forecast` | `/gridpoints/.../forecast/hourly` | forecast API `hourly=...` |
+/// | `current_conditions` | `/stations/{first station}/observations/latest` | `OpenMeteoApiClient.get_current_weather` response |
+/// | `forecast` | `/gridpoints/.../forecast` (ignores `days`) | `get_forecast(days=days)` response (`daily`) |
+/// | `hourly_forecast` | `/gridpoints/.../forecast/hourly` | `get_hourly_forecast` response (`hourly`) |
 /// | `alerts` | `/alerts/active?point={lat},{lon}` (no fallback) | — |
 /// | `discussion` | latest AFD text for the point's office, `None` if none | — |
+///
+/// Open-Meteo calls use Python's client defaults (fahrenheit, mph, inch,
+/// `best_match`). The WPC and SPC texts are `NationalDiscussionService`'s
+/// `short_range` and `day1` discussions (15 s timeout, two retries).
 pub trait AssistantHost: Send + Sync {
     /// `GeocodingService.geocode_address`: `(lat, lon, display name)`.
     fn geocode(&self, query: &str) -> Option<(f64, f64, String)>;
@@ -37,6 +41,8 @@ pub trait AssistantHost: Send + Sync {
     fn current_conditions(&self, lat: f64, lon: f64) -> Result<Value, String>;
     fn forecast(&self, lat: f64, lon: f64, days: u32) -> Result<Value, String>;
     fn hourly_forecast(&self, lat: f64, lon: f64) -> Result<Value, String>;
+    /// Any `Err` is reported as "Weather alerts could not be checked. Alert
+    /// status is unknown." (Python's adapter replaces the upstream error).
     fn alerts(&self, lat: f64, lon: f64) -> Result<Value, String>;
     fn discussion(&self, lat: f64, lon: f64) -> Result<Option<String>, String>;
     /// WPC short-range discussion text; empty when unavailable.
