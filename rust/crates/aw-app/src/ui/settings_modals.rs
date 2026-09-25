@@ -27,8 +27,8 @@ fn configure_buttons(dialog: &Dialog, ok: &Button, focus: &dyn WxWidget) {
     focus.set_focus();
 }
 
-/// A right-aligned OK/Cancel row with explicit labels, in `first`, `second`
-/// order.
+/// A right-aligned row of "OK" and "Cancel" (or "Cancel" then "OK");
+/// returns the OK button.
 fn button_row(dialog: &Dialog, sizer: &BoxSizer, ok_first: bool) -> Button {
     let row = BoxSizer::builder(Orientation::Horizontal).build();
     row.add_stretch_spacer(1);
