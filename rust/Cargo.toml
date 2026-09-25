@@ -2,10 +2,10 @@
 resolver = "2"
 members = [
     "crates/aw-core",
-#    "crates/aw-providers",
-#    "crates/aw-store",
-#    "crates/aw-speech",
-#    "crates/aw-app",
+    "crates/aw-providers",
+    "crates/aw-store",
+    "crates/aw-speech",
+    "crates/aw-app",
 ]
 
 [workspace.package]
@@ -27,10 +27,13 @@ chrono = { version = "0.4", features = ["serde"] }
 chrono-tz = "0.10"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "gzip"] }
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync"] }
-directories = "6"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls", "gzip"] }
 tempfile = "3"
+url = "2"
+tts = "0.26"
+slint = "1.13"
+slint-build = "1.13"
+clap = { version = "4", features = ["derive"] }
 
 [profile.release]
 opt-level = 2

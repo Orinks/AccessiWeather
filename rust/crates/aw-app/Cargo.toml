@@ -1,0 +1,26 @@
+[package]
+name = "accessiweather"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "AccessiWeather: accessible desktop weather (native Rust)"
+build = "build.rs"
+
+[[bin]]
+name = "accessiweather"
+path = "src/main.rs"
+
+[dependencies]
+aw-core.workspace = true
+aw-providers.workspace = true
+aw-store.workspace = true
+aw-speech.workspace = true
+slint.workspace = true
+clap.workspace = true
+chrono.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[build-dependencies]
+slint-build.workspace = true
