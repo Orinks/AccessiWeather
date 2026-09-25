@@ -755,9 +755,14 @@ impl WeatherAlerts {
         !self.alerts.is_empty()
     }
 
-    /// `get_active_alerts`: alerts without an expiry or expiring after `now`.
+    /// `get_active_alerts`: alerts without an expiry or expiring after `now`
+    /// (an alert expiring exactly at `now` is neither active nor expired,
+    /// as in Python).
     pub fn active(&self, now: DateTime<Utc>) -> Vec<&WeatherAlert> {
-        self.alerts.iter().filter(|a| !a.is_expired(now)).collect()
+        self.alerts
+            .iter()
+            .filter(|a| a.expires.is_none_or(|e| e > now))
+            .collect()
     }
 }
 
