@@ -56,12 +56,15 @@ jobs:
 
       - name: Window smoke test (Linux, Xvfb)
         if: runner.os == 'Linux'
+        timeout-minutes: 3
         run: xvfb-run -a target/release/accessiweather --smoke
       - name: Window smoke test (Windows)
         if: runner.os == 'Windows'
+        timeout-minutes: 3
         run: target/release/accessiweather.exe --smoke
       - name: Window smoke test (macOS)
         if: runner.os == 'macOS'
+        timeout-minutes: 3
         run: target/release/accessiweather --smoke
 
       - name: Package
