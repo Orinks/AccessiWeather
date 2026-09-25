@@ -356,9 +356,6 @@ impl AppConfig {
                 current.normalize();
             }
         }
-        if self.current_location.is_none() {
-            self.current_location = self.locations.first().cloned();
-        }
     }
 
     pub fn to_json(&self) -> Result<String, serde_json::Error> {
@@ -373,30 +370,104 @@ impl AppConfig {
         self.locations.iter().find(|l| l.name == name)
     }
 
-    /// Add or replace a location by name and make it current.
-    pub fn upsert_location(&mut self, location: Location) {
-        if let Some(existing) = self.locations.iter_mut().find(|l| l.name == location.name) {
-            *existing = location.clone();
-        } else {
-            self.locations.push(location.clone());
+    /// `LocationOperations.add_location`: append a new location, making it
+    /// current when none is set. False for bad coordinates or a duplicate name.
+    pub fn add_location(&mut self, mut location: Location) -> bool {
+        location.normalize();
+        if !location.valid_coordinates() || self.find_location(&location.name).is_some() {
+            return false;
         }
-        self.sort_locations();
-        self.current_location = Some(location);
+        if self.current_location.is_none() {
+            self.current_location = Some(location.clone());
+        }
+        self.locations.push(location);
+        true
     }
 
+    /// `LocationOperations.update_location_details`. Moving the coordinates
+    /// clears the NWS metadata so the next refresh resolves the new point.
+    pub fn update_location_details(
+        &mut self,
+        name: &str,
+        latitude: f64,
+        longitude: f64,
+        country_code: Option<String>,
+        marine_mode: bool,
+        display_name: Option<&str>,
+    ) -> bool {
+        let new_name = display_name.unwrap_or(name).trim().to_string();
+        if new_name.is_empty() || (new_name != name && self.find_location(&new_name).is_some()) {
+            return false;
+        }
+        let current_matches = self
+            .current_location
+            .as_ref()
+            .is_some_and(|c| c.name == name);
+        let Some(location) = self.locations.iter_mut().find(|l| l.name == name) else {
+            return false;
+        };
+        let moved = (location.latitude - latitude).abs() > 1e-6
+            || (location.longitude - longitude).abs() > 1e-6;
+        location.name = new_name;
+        location.latitude = latitude;
+        location.longitude = longitude;
+        location.country_code = country_code.map(|c| c.to_uppercase());
+        location.marine_mode = marine_mode;
+        if moved {
+            location.timezone = None;
+            location.forecast_zone_id = None;
+            location.cwa_office = None;
+            location.county_zone_id = None;
+            location.fire_zone_id = None;
+            location.radar_station = None;
+        }
+        if current_matches {
+            self.current_location = Some(location.clone());
+        }
+        true
+    }
+
+    /// `LocationOperations.remove_location`: the first remaining location
+    /// becomes current when the current one is removed.
     pub fn remove_location(&mut self, name: &str) -> bool {
-        let before = self.locations.len();
-        self.locations.retain(|l| l.name != name);
-        let removed = self.locations.len() != before;
-        if removed
-            && self
-                .current_location
-                .as_ref()
-                .is_some_and(|c| c.name == name)
+        let Some(index) = self.locations.iter().position(|l| l.name == name) else {
+            return false;
+        };
+        self.locations.remove(index);
+        if self
+            .current_location
+            .as_ref()
+            .is_some_and(|c| c.name == name)
         {
             self.current_location = self.locations.first().cloned();
         }
-        removed
+        true
+    }
+
+    /// `LocationOperations.reorder_locations`: the names must be exactly the
+    /// saved ones, in a new order.
+    pub fn reorder_locations(&mut self, ordered_names: &[String]) -> bool {
+        let current_names = self.location_names();
+        if ordered_names == current_names.as_slice() {
+            return true;
+        }
+        let mut sorted_new = ordered_names.to_vec();
+        let mut sorted_old = current_names;
+        sorted_new.sort();
+        sorted_new.dedup();
+        sorted_old.sort();
+        if ordered_names.len() != self.locations.len() || sorted_new != sorted_old {
+            return false;
+        }
+        let mut old = std::mem::take(&mut self.locations);
+        for name in ordered_names {
+            let i = old
+                .iter()
+                .position(|l| &l.name == name)
+                .expect("names checked");
+            self.locations.push(old.remove(i));
+        }
+        true
     }
 
     pub fn set_current_location(&mut self, name: &str) -> bool {
@@ -406,12 +477,6 @@ impl AppConfig {
                 true
             }
             None => false,
-        }
-    }
-
-    fn sort_locations(&mut self) {
-        if self.settings.location_sort_order == "alphabetical" {
-            self.locations.sort_by_key(|a| a.name.to_lowercase());
         }
     }
 }
@@ -444,10 +509,7 @@ mod tests {
         let cfg = AppConfig::from_json(text).unwrap();
         assert_eq!(cfg.locations.len(), 1);
         assert_eq!(cfg.locations[0].country_code.as_deref(), Some("US"));
-        assert_eq!(
-            cfg.current_location.as_ref().unwrap().name,
-            "Philadelphia, PA"
-        );
+        assert!(cfg.current_location.is_none());
         let out: Value = serde_json::from_str(&cfg.to_json().unwrap()).unwrap();
         assert_eq!(out["settings"]["future_flag"], Value::Bool(true));
         assert_eq!(out["settings"]["temperature_unit"], "f");

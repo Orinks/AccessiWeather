@@ -5,6 +5,7 @@
 
 pub mod alerts;
 pub mod location;
+pub mod location_sorting;
 pub mod model;
 pub mod presenter;
 pub mod settings;

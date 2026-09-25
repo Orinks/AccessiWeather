@@ -11,7 +11,7 @@ use std::process::ExitCode;
 
 fn main() -> ExitCode {
     let args = cli::Args::parse_args();
-    init_logging(args.verbose);
+    init_logging(args.verbose || args.debug);
     match app::run(args) {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) => {

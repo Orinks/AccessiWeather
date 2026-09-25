@@ -38,6 +38,10 @@ pub struct Args {
     /// Verbose logging.
     #[arg(short, long)]
     pub verbose: bool,
+
+    /// Enable debug logging
+    #[arg(long)]
+    pub debug: bool,
 }
 
 impl Args {

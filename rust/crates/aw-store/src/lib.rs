@@ -205,7 +205,7 @@ mod tests {
         let path = dir.path().join("nested").join(CONFIG_FILE_NAME);
         let mut cfg = load_config(&path).unwrap();
         assert!(cfg.locations.is_empty());
-        cfg.upsert_location(Location::new("Home", 40.0, -75.0).with_country("US"));
+        assert!(cfg.add_location(Location::new("Home", 40.0, -75.0).with_country("US")));
         save_config(&path, &cfg).unwrap();
         let loaded = load_config(&path).unwrap();
         assert_eq!(loaded.locations.len(), 1);
