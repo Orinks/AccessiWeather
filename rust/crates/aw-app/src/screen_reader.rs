@@ -61,7 +61,11 @@ pub fn shutdown() {
     BACKEND.with(|b| b.borrow_mut().take());
 }
 
-#[cfg(test)]
+// prism's macOS backends (AVSpeech, VoiceOver) marshal onto the main thread
+// unless they are already on it. The app calls them from the main thread;
+// cargo runs tests on worker threads while the main thread just waits, so
+// on macOS these would deadlock.
+#[cfg(all(test, not(target_os = "macos")))]
 mod tests {
     /// Every backend must initialise or fail cleanly, including those whose
     /// DLLs are absent (prism's delay-load hook substitutes stubs).
