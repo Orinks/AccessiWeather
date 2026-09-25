@@ -116,14 +116,21 @@ impl Env {
     }
 }
 
-/// Poll the view until `done`, after letting queued work finish.
+/// Generous: only a failing test waits this long, and loaded CI runners are slow.
+const TIMEOUT: Duration = Duration::from_secs(60);
+
+/// Poll the view until `done`, then let the job that got there finish, so
+/// the returned view and the recorded statuses include all of its updates.
 fn wait_for(dialog: &RadioDialog, done: impl Fn(&DialogView) -> bool) -> DialogView {
-    let deadline = Instant::now() + Duration::from_secs(5);
+    let deadline = Instant::now() + TIMEOUT;
     loop {
         settle(dialog);
         let view = dialog.view();
         if done(&view) {
-            return view;
+            // `view` may have been read halfway through a worker job (status
+            // set, labels and events still to come).
+            settle(dialog);
+            return dialog.view();
         }
         assert!(Instant::now() < deadline, "timed out; last view: {view:#?}");
         std::thread::sleep(Duration::from_millis(5));
@@ -136,7 +143,8 @@ fn settle(dialog: &RadioDialog) {
     dialog.enqueue(Box::new(move |_| {
         let _ = tx.send(());
     }));
-    let _ = rx.recv_timeout(Duration::from_secs(5));
+    rx.recv_timeout(TIMEOUT)
+        .expect("dialog worker did not drain its queue");
 }
 
 fn status_is(expected: &str) -> impl Fn(&DialogView) -> bool + '_ {
@@ -312,6 +320,18 @@ fn single_stream_failure_and_fallback_success() {
     assert_eq!(view.play_label, "Stop");
     let mut cache = StationAvailabilityCache::new(env.dir.path().join(AVAILABILITY_FILE_NAME));
     assert!(!cache.is_suppressed("AAA11"));
+    // Divergence from Python, which loses the station here: the session
+    // knows what the fallback stream is, and the hotkey remembers it.
+    assert_eq!(env.ctx.session.playing_station(), Some(aaa11()));
+    assert_eq!(
+        env.ctx
+            .preferences
+            .lock()
+            .unwrap()
+            .get_last_station()
+            .as_deref(),
+        Some("AAA11")
+    );
 }
 
 fn env_with_suppressed_aaa11(results: &[bool]) -> Env {

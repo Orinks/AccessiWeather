@@ -164,8 +164,9 @@
     "lookups": [
       "WXK27"
     ],
-    "final_station": null,
-    "current_url_index": 1
+    "final_station": "WXK27",
+    "current_url_index": 1,
+    "divergence": "Intentional divergence: Python loses the station when a fallback stream plays; Rust keeps it (see rust_divergences in tools/golden/radio.py)."
   },
   {
     "playing": false,
