@@ -3,6 +3,7 @@
 mod app;
 mod cli;
 mod fixtures;
+mod ui;
 
 use std::process::ExitCode;
 

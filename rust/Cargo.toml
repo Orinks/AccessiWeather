@@ -31,8 +31,7 @@ reqwest = { version = "0.12", default-features = false, features = ["blocking", 
 tempfile = "3"
 url = "2"
 tts = "0.26"
-slint = "1.13"
-slint-build = "1.13"
+wxdragon = "0.9.22"
 clap = { version = "4", features = ["derive"] }
 
 [profile.release]

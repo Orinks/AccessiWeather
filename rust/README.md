@@ -1,8 +1,10 @@
 # AccessiWeather — native Rust edition
 
 A native desktop port of AccessiWeather (no Python, no webview). The UI is
-built with [Slint](https://slint.dev) and exposes accessibility through
-AccessKit (UIA on Windows, NSAccessibility on macOS, AT-SPI on Linux).
+built with [wxDragon](https://crates.io/crates/wxdragon), the Rust bindings
+for wxWidgets, so every control is the platform's own (Win32 on Windows,
+Cocoa on macOS, GTK on Linux) and is exposed to screen readers through UIA,
+NSAccessibility and AT-SPI respectively, like the wxPython edition.
 
 ## Crates
 
@@ -12,7 +14,7 @@ AccessKit (UIA on Windows, NSAccessibility on macOS, AT-SPI on Linux).
 | `aw-providers` | NWS, Open-Meteo, Pirate Weather, geocoding, multi-source fetch/merge with fallback |
 | `aw-store` | Config directories, portable mode, atomic JSON persistence |
 | `aw-speech` | Bounded worker-thread text-to-speech (`tts` crate) with recording/null sinks for tests |
-| `aw-app` (`accessiweather`) | The executable: CLI, Slint windows, refresh loop, dialogs |
+| `aw-app` (`accessiweather`) | The executable: CLI, wxDragon windows and dialogs, refresh loop |
 
 ## Building
 
@@ -25,8 +27,15 @@ cargo build --release -p accessiweather
 ./target/release/accessiweather --smoke    # open the window on sample data, exit 0 after ~2 s
 ```
 
-Linux build dependencies (Debian/Ubuntu): `libclang-dev libspeechd-dev
-libxkbcommon-dev libwayland-dev libfontconfig1-dev`.
+wxDragon compiles wxWidgets from source on first build (needs CMake and a C++
+toolchain; allow several minutes). Linux build dependencies (Debian/Ubuntu):
+`cmake build-essential libclang-dev libspeechd-dev libgtk-3-dev
+libgl1-mesa-dev libglu1-mesa-dev`.
+
+Keyboard shortcuts: F5 / Ctrl+R refresh, Alt+A add location, Ctrl+, settings,
+Ctrl+D forecast discussion, Ctrl+Shift+S read aloud, Escape stop speaking or
+close a dialog, Ctrl+1..5 jump to the location, current, hourly, extended and
+alerts panels, Ctrl+Q quit. On macOS use Command in place of Ctrl.
 
 ## Configuration
 

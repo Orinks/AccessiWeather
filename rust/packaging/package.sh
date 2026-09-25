@@ -21,7 +21,11 @@ case "$(uname -s)" in
   MINGW*|MSYS*|CYGWIN*|Windows_NT)
     cp target/release/accessiweather.exe stage/AccessiWeather.exe
     cp packaging/README-portable.txt stage/README.txt
-    (cd stage && 7z a -tzip "../dist/$name" ./* > /dev/null)
+    if command -v 7z >/dev/null; then
+      (cd stage && 7z a -tzip "../dist/$name" ./* > /dev/null)
+    else
+      powershell -NoProfile -Command "Compress-Archive -Force -Path 'stage\\*' -DestinationPath 'dist\\$name'"
+    fi
     ;;
   *)
     mkdir -p stage/accessiweather
