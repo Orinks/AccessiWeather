@@ -323,7 +323,7 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
 }
 
 /// Start a one-shot timer that lives until the window closes.
-fn keep_timer(ms: i32, f: impl Fn() + 'static) {
+pub(crate) fn keep_timer(ms: i32, f: impl Fn() + 'static) {
     let Some(frame) = main_frame() else { return };
     let timer = Timer::new(&frame);
     timer.on_tick(move |_| f());

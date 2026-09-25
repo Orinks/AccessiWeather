@@ -23,7 +23,7 @@ const ZONE_NOT_RESOLVED: &str = "Not yet resolved - will populate after next wea
 /// `wx.TextCtrl.SetHint`: wxDragon lacks it, so send the cue banner the way
 /// wxMSW does. Elsewhere the hint is skipped.
 #[cfg(windows)]
-fn set_hint(ctrl: &TextCtrl, hint: &str) {
+pub(super) fn set_hint(ctrl: &TextCtrl, hint: &str) {
     #[link(name = "user32")]
     extern "system" {
         fn SendMessageW(
@@ -48,7 +48,7 @@ fn set_hint(ctrl: &TextCtrl, hint: &str) {
 }
 
 #[cfg(not(windows))]
-fn set_hint(_ctrl: &TextCtrl, _hint: &str) {}
+pub(super) fn set_hint(_ctrl: &TextCtrl, _hint: &str) {}
 
 fn text_colour(ctrl: &StaticText, is_error: bool) {
     ctrl.set_foreground_color(SystemSettings::get_colour(if is_error {

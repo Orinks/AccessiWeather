@@ -3,14 +3,18 @@
 
 mod alert_dialog;
 mod commands;
+mod community_packs_dialog;
 mod display;
 mod location_dialog;
 mod locations;
 mod main_window;
 mod menus;
+mod progress_dialog;
 mod refresh;
 mod settings_dialog;
 mod shortcuts;
+mod soundpack_manager;
+mod soundpack_wizard;
 mod weather_source;
 
 #[cfg(test)]

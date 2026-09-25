@@ -73,7 +73,9 @@ pub(crate) fn on_weather_chat() {
 
 /// Tools > Soundpack Manager.
 pub(crate) fn on_soundpack_manager() {
-    not_ported("Soundpack Manager");
+    if let Some(w) = window() {
+        super::soundpack_manager::open_soundpack_manager(&w.frame);
+    }
 }
 
 /// Help > Check for Updates.
