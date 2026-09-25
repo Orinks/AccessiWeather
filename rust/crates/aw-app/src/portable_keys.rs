@@ -2,12 +2,25 @@
 //! silently with the passphrase cached in the keyring or after a prompt,
 //! as `AccessiWeatherApp._maybe_auto_import_keys_file` does.
 
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use aw_core::settings::AppSettings;
 use aw_store::secrets::{self, PORTABLE_PASSPHRASE_KEY};
 use aw_store::Paths;
 use wxdragon::prelude::*;
 
 use crate::app::Shared;
+
+/// `_portable_keys_imported_this_session`.
+static IMPORTED_THIS_SESSION: AtomicBool = AtomicBool::new(false);
+
+pub(crate) fn keys_imported_this_session() -> bool {
+    IMPORTED_THIS_SESSION.load(Ordering::SeqCst)
+}
+
+pub(crate) fn set_keys_imported_this_session() {
+    IMPORTED_THIS_SESSION.store(true, Ordering::SeqCst);
+}
 
 /// Try the cached passphrase. Returns true when a bundle exists but still
 /// needs a passphrase from the user.
@@ -24,6 +37,7 @@ pub(crate) fn import_silently(paths: &Paths, settings: &mut AppSettings) -> bool
     }
     match import(paths, &bundle, &cached, settings) {
         Ok(()) => {
+            set_keys_imported_this_session();
             tracing::info!("Portable API keys auto-imported silently.");
             false
         }
@@ -64,7 +78,11 @@ pub(crate) fn prompt(parent: &Frame, state: &Shared) -> bool {
             "An encrypted API key bundle was found. Enter your passphrase to import your keys.",
             "Import API keys",
         )
-        .password()
+        .with_style(
+            TextEntryDialogStyle::Ok
+                | TextEntryDialogStyle::Cancel
+                | TextEntryDialogStyle::Password,
+        )
         .build();
         let ok = dlg.show_modal() == ID_OK;
         let passphrase = dlg.get_value().unwrap_or_default().trim().to_string();
@@ -80,6 +98,7 @@ pub(crate) fn prompt(parent: &Frame, state: &Shared) -> bool {
         );
         match imported {
             Ok(()) => {
+                set_keys_imported_this_session();
                 secrets::set_password(PORTABLE_PASSPHRASE_KEY, &passphrase);
                 let done = MessageDialog::builder(
                     parent,

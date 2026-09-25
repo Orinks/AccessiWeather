@@ -81,37 +81,52 @@ pub(crate) fn on_soundpack_manager() {
 
 /// Help > Check for Updates.
 pub(crate) fn on_check_updates() {
-    not_ported("Check for Updates");
+    super::updates::check_for_updates(true);
 }
 
-/// Help > User Manual.
+/// Help > User Manual: the bundled manual, else the online one.
 pub(crate) fn on_open_user_manual() {
-    not_ported("User Manual");
+    use aw_services::user_manual::{
+        open_user_manual, MANUAL_UNAVAILABLE, MANUAL_UNAVAILABLE_TITLE,
+    };
+    if open_user_manual() {
+        return;
+    }
+    if let Some(w) = window() {
+        message_box(
+            &w.frame,
+            MANUAL_UNAVAILABLE,
+            MANUAL_UNAVAILABLE_TITLE,
+            MessageDialogStyle::OK | MessageDialogStyle::IconError,
+        );
+    }
 }
 
 /// Help > Report Issue.
 pub(crate) fn on_report_issue() {
-    not_ported("Report Issue");
+    if let Some(w) = window() {
+        super::report_issue::show_report_issue_dialog(&w.frame);
+    }
 }
 
 /// Help > Debug > Test: Discussion Updated.
 pub(crate) fn on_test_discussion_notification() {
-    not_ported("Debug discussion notification");
+    super::debug_menu::on_test_discussion_notification();
 }
 
 /// Help > Debug > Test: Alert Notification.
 pub(crate) fn on_test_alert_notification() {
-    not_ported("Debug alert notification dialog");
+    super::debug_menu::on_test_alert_notification();
 }
 
 /// Help > Debug > Test: Simulate Alert Change.
 pub(crate) fn on_debug_simulate_alert() {
-    not_ported("Debug alert simulation");
+    super::debug_menu::on_debug_simulate_alert();
 }
 
 /// Help > Debug > Run Notification Diagnostics.
 pub(crate) fn on_test_notifications() {
-    not_ported("Notification diagnostics");
+    super::debug_menu::on_test_notifications();
 }
 
 /// Help > About.

@@ -15,6 +15,8 @@ mod data_dialogs;
 mod display;
 mod forecast_products;
 mod explanation_dialog;
+mod debug_menu;
+pub(crate) mod guidance;
 mod location_dialog;
 mod locations;
 mod main_window;
@@ -24,6 +26,7 @@ mod model_browser_dialog;
 mod noaa_radio_dialog;
 mod refresh;
 mod settings_actions;
+mod report_issue;
 mod settings_dialog;
 mod settings_form;
 mod settings_modals;
@@ -33,8 +36,11 @@ mod soundpack_manager;
 mod soundpack_wizard;
 mod tray_text_format_dialog;
 mod weather_assistant_dialog;
+pub(crate) mod updates;
 mod weather_source;
 
+#[cfg(test)]
+mod golden_miscui;
 #[cfg(test)]
 mod golden_tests;
 #[cfg(test)]
