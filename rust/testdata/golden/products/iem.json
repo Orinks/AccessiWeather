@@ -1,0 +1,1496 @@
+[
+ {
+  "name": "afos_cassette_swody1",
+  "call": {
+   "fn": "afos",
+   "pil": "SWODY1",
+   "query": {
+    "limit": 1,
+    "start": null,
+    "end": null,
+    "order": "desc",
+    "center": null,
+    "wmo_id": null,
+    "matches": null,
+    "aviation_afd": false
+   }
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py",
+    "text": "\u0001\n175 \nACUS01 KWNS 080036\nSWODY1\nSPC AC 080035\n\nDay 1 Convective Outlook  \nNWS Storm Prediction Center Norman OK\n0735 PM CDT Thu May 07 2026\n\nValid 080100Z - 081200Z\n\n...NO SEVERE THUNDERSTORM AREAS FORECAST...\n\n...SUMMARY...\nSevere storms are not expected through tonight.\n\n...MT/WY...\n\nForcing for ascent attendant to a short-wave trough moving southeast\nthrough the region has fostered widely scattered thunderstorms from\nportions of northwest MT into central WY as of 00z. Moisture is\nlimited, but the presence of steep lapse rates (ref. 00z RIW\nsounding) may be sufficient to support briefly strong storms capable\nof gusty winds and/or small hail for the next couple of hours.\n\n...Carolinas...\n\nA small cluster of showers and thunderstorms is ongoing across parts\nof southern and central NC along a cold front settling south through\nthe area. Weakening, low-level lapse rates and resultant instability\nshould limit any severe-weather threat as the convection continues\neast tonight.\n\n...LA...\n\nA few thunderstorms have recently developed in the vicinity of the\nsurface front in far southeast LA amidst a moist low-level air mass.\nThe 00z LIX sounding located to the immediate north of the front\nsampled MUCAPE of around 1500 J/kg for parcels lifted from around 1\nKM. Moreover, deep-layer shear remains strong (effective bulk shear\nof 60 kt), which would conditionally support some storm\norganization. Current thinking is that nebulous forcing for ascent\nand poor low/mid-level lapse rates will tend to limit updraft vigor\nin an otherwise seemingly favorable, severe-storm environment. As\nsuch, no severe-weather probabilities will be included for this\nforecast.\n\n...Southern AZ/NM into TX...\n\nIsolated thunderstorms remain possible overnight from southern parts\nof AZ and NM into western and southern TX, near and ahead of a\nmid-level low drifting east across Sonora and Chihuahua, Mexico.\n\n..Mead.. 05/08/2026\n\n$$\n\n\u0003\n"
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=SWODY1&fmt=text&limit=1&order=desc"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SWODY1",
+    "product_id": "SWODY1",
+    "cwa_office": "IEM",
+    "issuance_time": null,
+    "product_text": "175 \nACUS01 KWNS 080036\nSWODY1\nSPC AC 080035\n\nDay 1 Convective Outlook  \nNWS Storm Prediction Center Norman OK\n0735 PM CDT Thu May 07 2026\n\nValid 080100Z - 081200Z\n\n...NO SEVERE THUNDERSTORM AREAS FORECAST...\n\n...SUMMARY...\nSevere storms are not expected through tonight.\n\n...MT/WY...\n\nForcing for ascent attendant to a short-wave trough moving southeast\nthrough the region has fostered widely scattered thunderstorms from\nportions of northwest MT into central WY as of 00z. Moisture is\nlimited, but the presence of steep lapse rates (ref. 00z RIW\nsounding) may be sufficient to support briefly strong storms capable\nof gusty winds and/or small hail for the next couple of hours.\n\n...Carolinas...\n\nA small cluster of showers and thunderstorms is ongoing across parts\nof southern and central NC along a cold front settling south through\nthe area. Weakening, low-level lapse rates and resultant instability\nshould limit any severe-weather threat as the convection continues\neast tonight.\n\n...LA...\n\nA few thunderstorms have recently developed in the vicinity of the\nsurface front in far southeast LA amidst a moist low-level air mass.\nThe 00z LIX sounding located to the immediate north of the front\nsampled MUCAPE of around 1500 J/kg for parcels lifted from around 1\nKM. Moreover, deep-layer shear remains strong (effective bulk shear\nof 60 kt), which would conditionally support some storm\norganization. Current thinking is that nebulous forcing for ascent\nand poor low/mid-level lapse rates will tend to limit updraft vigor\nin an otherwise seemingly favorable, severe-storm environment. As\nsuch, no severe-weather probabilities will be included for this\nforecast.\n\n...Southern AZ/NM into TX...\n\nIsolated thunderstorms remain possible overnight from southern parts\nof AZ and NM into western and southern TX, near and ahead of a\nmid-level low drifting east across Sonora and Chihuahua, Mexico.\n\n..Mead.. 05/08/2026\n\n$$",
+    "headline": "IEM AFOS SWODY1"
+   }
+  }
+ },
+ {
+  "name": "afos_history_filters",
+  "call": {
+   "fn": "afos",
+   "pil": " afddmx ",
+   "query": {
+    "limit": 5,
+    "start": "2026-04-01T00:00:00+00:00",
+    "end": "2026-04-01T19:30:00.250000-05:00",
+    "order": "asc",
+    "center": "kdmx",
+    "wmo_id": "fxus63",
+    "matches": " AVIATION ",
+    "aviation_afd": false
+   }
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py",
+    "text": "historical text"
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=AFDDMX&fmt=text&limit=5&order=asc&sdate=2026-04-01T00%3A00%3A00Z&edate=2026-04-02T00%3A30%3A00.250000Z&center=KDMX&ttaaii=FXUS63&matches=AVIATION"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "AFDDMX",
+    "product_id": "AFDDMX",
+    "cwa_office": "KDMX",
+    "issuance_time": null,
+    "product_text": "historical text",
+    "headline": "IEM AFOS AFDDMX"
+   }
+  }
+ },
+ {
+  "name": "afos_aviation_flag",
+  "call": {
+   "fn": "afos",
+   "pil": "AFDDMX",
+   "query": {
+    "limit": 0,
+    "start": null,
+    "end": null,
+    "order": "desc",
+    "center": null,
+    "wmo_id": null,
+    "matches": null,
+    "aviation_afd": true
+   }
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py",
+    "text": "aviation section"
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=AFDDMX&fmt=text&limit=1&order=desc&aviation_afd=1"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "AFDDMX",
+    "product_id": "AFDDMX",
+    "cwa_office": "IEM",
+    "issuance_time": null,
+    "product_text": "aviation section",
+    "headline": "IEM AFOS AFDDMX"
+   }
+  }
+ },
+ {
+  "name": "afos_blank_center_is_sent_empty",
+  "call": {
+   "fn": "afos",
+   "pil": "AFDDMX",
+   "query": {
+    "limit": 1,
+    "start": null,
+    "end": null,
+    "order": "desc",
+    "center": "  ",
+    "wmo_id": null,
+    "matches": null,
+    "aviation_afd": false
+   }
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py",
+    "text": "text"
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=AFDDMX&fmt=text&limit=1&order=desc&center="
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "AFDDMX",
+    "product_id": "AFDDMX",
+    "cwa_office": "",
+    "issuance_time": null,
+    "product_text": "text",
+    "headline": "IEM AFOS AFDDMX"
+   }
+  }
+ },
+ {
+  "name": "afos_strips_control_characters",
+  "call": {
+   "fn": "afos",
+   "pil": "AFDRAH",
+   "query": {
+    "limit": 1,
+    "start": null,
+    "end": null,
+    "order": "desc",
+    "center": null,
+    "wmo_id": null,
+    "matches": null,
+    "aviation_afd": false
+   }
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py",
+    "text": "\u0001 627\r\nAFDRAH text\u0003\n"
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=AFDRAH&fmt=text&limit=1&order=desc"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "AFDRAH",
+    "product_id": "AFDRAH",
+    "cwa_office": "IEM",
+    "issuance_time": null,
+    "product_text": "627\r\nAFDRAH text",
+    "headline": "IEM AFOS AFDRAH"
+   }
+  }
+ },
+ {
+  "name": "afos_http_error",
+  "call": {
+   "fn": "afos",
+   "pil": "SWODY1",
+   "query": {
+    "limit": 1,
+    "start": null,
+    "end": null,
+    "order": "desc",
+    "center": null,
+    "wmo_id": null,
+    "matches": null,
+    "aviation_afd": false
+   }
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py",
+    "status": 503,
+    "text": "slow"
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=SWODY1&fmt=text&limit=1&order=desc"
+  ],
+  "expect": {
+   "error": "IEM AFOS returned HTTP 503 for SWODY1"
+  }
+ },
+ {
+  "name": "afos_iem_error_text",
+  "call": {
+   "fn": "afos",
+   "pil": "PMDSPD",
+   "query": {
+    "limit": 1,
+    "start": null,
+    "end": null,
+    "order": "desc",
+    "center": null,
+    "wmo_id": null,
+    "matches": null,
+    "aviation_afd": false
+   }
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py",
+    "text": "\n  ERROR: Could not Find: PMDSPD\nmore\n"
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDSPD&fmt=text&limit=1&order=desc"
+  ],
+  "expect": {
+   "error": "ERROR: Could not Find: PMDSPD"
+  }
+ },
+ {
+  "name": "afos_empty_text",
+  "call": {
+   "fn": "afos",
+   "pil": "PMDSPD",
+   "query": {
+    "limit": 1,
+    "start": null,
+    "end": null,
+    "order": "desc",
+    "center": null,
+    "wmo_id": null,
+    "matches": null,
+    "aviation_afd": false
+   }
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py",
+    "text": " \u0003\u0001 \n"
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDSPD&fmt=text&limit=1&order=desc"
+  ],
+  "expect": {
+   "error": "IEM AFOS returned no text for PMDSPD"
+  }
+ },
+ {
+  "name": "afos_transport_error",
+  "call": {
+   "fn": "afos",
+   "pil": "PMDSPD",
+   "query": {
+    "limit": 1,
+    "start": null,
+    "end": null,
+    "order": "desc",
+    "center": null,
+    "wmo_id": null,
+    "matches": null,
+    "aviation_afd": false
+   }
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py",
+    "error": "boom"
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDSPD&fmt=text&limit=1&order=desc"
+  ],
+  "expect": {
+   "error": "IEM AFOS request failed for PMDSPD: boom"
+  }
+ },
+ {
+  "name": "afos_blank_pil",
+  "call": {
+   "fn": "afos",
+   "pil": "   ",
+   "query": {
+    "limit": 1,
+    "start": null,
+    "end": null,
+    "order": "desc",
+    "center": null,
+    "wmo_id": null,
+    "matches": null,
+    "aviation_afd": false
+   }
+  },
+  "responses": [],
+  "requests": [],
+  "expect": {
+   "error": "A product ID is required."
+  }
+ },
+ {
+  "name": "spc_outlook_cassette",
+  "call": {
+   "fn": "spc_outlook",
+   "lat": 35.7796,
+   "lon": -78.6382,
+   "day": 1,
+   "current": false,
+   "valid_at": "2026-05-07T12:00:00+00:00",
+   "max_items": 2
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcoutlook.py",
+    "status": 200,
+    "text": "{\"query_params\": {\"time\": \"2026-05-07T12:00:00Z\", \"lon\": -78.6382, \"lat\": 35.7796, \"cat\": \"CATEGORICAL\", \"day\": 1}, \"outlook\": {\"threshold\": \"TSTM\", \"conditional\": null, \"utc_product_issue\": \"2026-05-07T05:32:00Z\", \"utc_issue\": \"2026-05-07T12:00:00Z\", \"utc_expire\": \"2026-05-08T12:00:00Z\"}, \"generated_at\": \"2026-05-08T02:31:43Z\"}"
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcoutlook.py?lat=35.7796&lon=-78.6382&day=1&fmt=json&current=0&time=2026-05-07T12%3A00%3A00Z"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SPC_OUTLOOK",
+    "product_id": "SPC_OUTLOOK_DAY1",
+    "cwa_office": "SPC",
+    "issuance_time": "2026-05-08T02:31:43+00:00",
+    "product_text": "SPC Day 1 Convective Outlook\n\nGenerated: 2026-05-08T02:31:43Z\n\nProduct 1:\nThreshold: TSTM\n",
+    "headline": "SPC Day 1 Convective Outlook"
+   }
+  }
+ },
+ {
+  "name": "spc_outlook_plural",
+  "call": {
+   "fn": "spc_outlook",
+   "lat": 38.907,
+   "lon": -77.037,
+   "day": 1,
+   "current": true,
+   "valid_at": null,
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcoutlook.py",
+    "status": 200,
+    "json": {
+     "generated_at": "2026-05-01T12:00:00Z",
+     "outlooks": [
+      {
+       "category": "ENH",
+       "threshold": "CATEGORICAL",
+       "valid": "2026-05-01T13:00:00Z"
+      }
+     ]
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcoutlook.py?lat=38.907&lon=-77.037&day=1&fmt=json&current=1"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SPC_OUTLOOK",
+    "product_id": "SPC_OUTLOOK_DAY1",
+    "cwa_office": "SPC",
+    "issuance_time": "2026-05-01T12:00:00+00:00",
+    "product_text": "SPC Day 1 Convective Outlook\n\nGenerated: 2026-05-01T12:00:00Z\n\nProduct 1:\nCategory: ENH\nThreshold: CATEGORICAL\nValid: 2026-05-01T13:00:00Z\n",
+    "headline": "SPC Day 1 Convective Outlook"
+   }
+  }
+ },
+ {
+  "name": "spc_outlook_current_ignores_valid_time",
+  "call": {
+   "fn": "spc_outlook",
+   "lat": 38.907,
+   "lon": -77.0,
+   "day": 2,
+   "current": true,
+   "valid_at": "2026-03-06T20:00:00+00:00",
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcoutlook.py",
+    "status": 200,
+    "json": {
+     "outlook": {
+      "category": "MRGL",
+      "threshold": "CATEGORICAL"
+     }
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcoutlook.py?lat=38.907&lon=-77.0&day=2&fmt=json&current=1"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SPC_OUTLOOK",
+    "product_id": "SPC_OUTLOOK_DAY2",
+    "cwa_office": "SPC",
+    "issuance_time": null,
+    "product_text": "SPC Day 2 Convective Outlook\n\nProduct 1:\nCategory: MRGL\nThreshold: CATEGORICAL\n",
+    "headline": "SPC Day 2 Convective Outlook"
+   }
+  }
+ },
+ {
+  "name": "spc_outlook_value_formatting_and_limit",
+  "call": {
+   "fn": "spc_outlook",
+   "lat": 40.0,
+   "lon": -100.25,
+   "day": 12,
+   "current": true,
+   "valid_at": null,
+   "max_items": 3
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcoutlook.py",
+    "status": 200,
+    "json": {
+     "generated_at": "",
+     "generated": 1714500000,
+     "features": [
+      {
+       "category": 0,
+       "threshold": false,
+       "valid": 2.5,
+       "mdnum": [
+        1,
+        "a",
+        null
+       ]
+      },
+      "not a dict",
+      {
+       "category": "",
+       "threshold": null,
+       "watch_prob": 1e+20
+      },
+      {
+       "concerning": "third"
+      }
+     ]
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcoutlook.py?lat=40.0&lon=-100.25&day=8&fmt=json&current=1"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SPC_OUTLOOK",
+    "product_id": "SPC_OUTLOOK_DAY8",
+    "cwa_office": "SPC",
+    "issuance_time": null,
+    "product_text": "SPC Day 8 Convective Outlook\n\nGenerated: 1714500000\n\nProduct 1:\nNumber: [1, 'a', None]\nCategory: 0\nThreshold: False\nValid: 2.5\n\nProduct 3:\nWatch probability: 1e+20\n\n1 older matches omitted. Use Advanced Lookup for broader history.",
+    "headline": "SPC Day 8 Convective Outlook"
+   }
+  }
+ },
+ {
+  "name": "spc_outlook_list_payload",
+  "call": {
+   "fn": "spc_outlook",
+   "lat": 40.0,
+   "lon": -100.0,
+   "day": 0,
+   "current": true,
+   "valid_at": null,
+   "max_items": null
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcoutlook.py",
+    "status": 200,
+    "json": []
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcoutlook.py?lat=40.0&lon=-100.0&day=1&fmt=json&current=1"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SPC_OUTLOOK",
+    "product_id": "SPC_OUTLOOK_DAY1",
+    "cwa_office": "SPC",
+    "issuance_time": null,
+    "product_text": "SPC Day 1 Convective Outlook\n\nNo structured data returned.",
+    "headline": "SPC Day 1 Convective Outlook"
+   }
+  }
+ },
+ {
+  "name": "spc_outlook_empty_list_stops_key_search",
+  "call": {
+   "fn": "spc_outlook",
+   "lat": 40.0,
+   "lon": -100.0,
+   "day": 1,
+   "current": true,
+   "valid_at": null,
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcoutlook.py",
+    "status": 200,
+    "json": {
+     "outlooks": [],
+     "outlook": {
+      "category": "SLGT"
+     }
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcoutlook.py?lat=40.0&lon=-100.0&day=1&fmt=json&current=1"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SPC_OUTLOOK",
+    "product_id": "SPC_OUTLOOK_DAY1",
+    "cwa_office": "SPC",
+    "issuance_time": null,
+    "product_text": "SPC Day 1 Convective Outlook\n\nNo matching point-based products were returned for this location.",
+    "headline": "SPC Day 1 Convective Outlook"
+   }
+  }
+ },
+ {
+  "name": "spc_outlook_http_error",
+  "call": {
+   "fn": "spc_outlook",
+   "lat": 40.0,
+   "lon": -100.0,
+   "day": 1,
+   "current": true,
+   "valid_at": null,
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcoutlook.py",
+    "status": 500,
+    "json": {}
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcoutlook.py?lat=40.0&lon=-100.0&day=1&fmt=json&current=1"
+  ],
+  "expect": {
+   "error": "IEM SPC outlook returned HTTP 500"
+  }
+ },
+ {
+  "name": "spc_mcd_active_summary",
+  "call": {
+   "fn": "spc_mcds",
+   "lat": 42.0,
+   "lon": -95.0,
+   "active_at": "2026-05-01T18:00:00+00:00",
+   "start": null,
+   "end": null,
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcmcd.py",
+    "json": {
+     "mcds": [
+      {
+       "mdnum": 123,
+       "product_issue": "2026-05-01T17:00:00Z",
+       "concerning": "Severe potential",
+       "watch_prob": 60
+      },
+      {
+       "mdnum": 124,
+       "utc_issue": "2026-05-01T19:00:00Z"
+      },
+      {
+       "mdnum": 125,
+       "utc_expire": "2026-05-01T18:00:00Z"
+      },
+      {
+       "mdnum": 126,
+       "utc_expire": "2026-05-01T18:00:01+00:00"
+      }
+     ]
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcmcd.py?lat=42.0&lon=-95.0&fmt=json"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SPC_MCD",
+    "product_id": "SPC_MCD",
+    "cwa_office": "SPC",
+    "issuance_time": null,
+    "product_text": "SPC Mesoscale Discussions\n\nProduct 1:\nNumber: 123\nIssued: 2026-05-01T17:00:00Z\nConcerning: Severe potential\nWatch probability: 60\n\nProduct 2:\nNumber: 126\n",
+    "headline": "SPC Mesoscale Discussions"
+   }
+  }
+ },
+ {
+  "name": "spc_mcd_limit",
+  "call": {
+   "fn": "spc_mcds",
+   "lat": 42.0,
+   "lon": -95.0,
+   "active_at": "2026-05-01T18:00:00+00:00",
+   "start": null,
+   "end": null,
+   "max_items": 2
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcmcd.py",
+    "json": {
+     "mcds": [
+      {
+       "mdnum": 1,
+       "concerning": "first"
+      },
+      {
+       "mdnum": 2,
+       "concerning": "second"
+      },
+      {
+       "mdnum": 3,
+       "concerning": "third"
+      }
+     ]
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcmcd.py?lat=42.0&lon=-95.0&fmt=json"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SPC_MCD",
+    "product_id": "SPC_MCD",
+    "cwa_office": "SPC",
+    "issuance_time": null,
+    "product_text": "SPC Mesoscale Discussions\n\nProduct 1:\nNumber: 1\nConcerning: first\n\nProduct 2:\nNumber: 2\nConcerning: second\n\n1 older matches omitted. Use Advanced Lookup for broader history.",
+    "headline": "SPC Mesoscale Discussions"
+   }
+  }
+ },
+ {
+  "name": "spc_mcd_archive_window",
+  "call": {
+   "fn": "spc_mcds",
+   "lat": 42.0,
+   "lon": -95.0,
+   "active_at": null,
+   "start": "2026-05-01T00:00:00+00:00",
+   "end": "2026-05-02T00:00:00+00:00",
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcmcd.py",
+    "json": {
+     "mcds": [
+      {
+       "mdnum": 1,
+       "utc_issue": "2026-05-01T12:00:00Z",
+       "concerning": "inside"
+      },
+      {
+       "mdnum": 2,
+       "utc_issue": "2026-04-01T12:00:00Z",
+       "concerning": "outside"
+      },
+      {
+       "mdnum": 3,
+       "concerning": "undated"
+      },
+      {
+       "mdnum": 4,
+       "utc_issue": "2026-05-02T00:00:00Z",
+       "concerning": "at end"
+      }
+     ]
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcmcd.py?lat=42.0&lon=-95.0&fmt=json"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SPC_MCD",
+    "product_id": "SPC_MCD",
+    "cwa_office": "SPC",
+    "issuance_time": null,
+    "product_text": "SPC Mesoscale Discussions\n\nProduct 1:\nNumber: 1\nConcerning: inside\n",
+    "headline": "SPC Mesoscale Discussions"
+   }
+  }
+ },
+ {
+  "name": "spc_mcd_none_active",
+  "call": {
+   "fn": "spc_mcds",
+   "lat": 42.0,
+   "lon": -95.0,
+   "active_at": "2026-05-01T18:00:00+00:00",
+   "start": null,
+   "end": null,
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcmcd.py",
+    "json": {
+     "mcds": [
+      {
+       "mdnum": 9,
+       "utc_expire": "2026-05-01T10:00:00Z"
+      }
+     ]
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcmcd.py?lat=42.0&lon=-95.0&fmt=json"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SPC_MCD",
+    "product_id": "SPC_MCD",
+    "cwa_office": "SPC",
+    "issuance_time": null,
+    "product_text": "SPC Mesoscale Discussions\n\nNo active point-based products were returned for this location.",
+    "headline": "SPC Mesoscale Discussions"
+   }
+  }
+ },
+ {
+  "name": "spc_mcd_features_with_properties",
+  "call": {
+   "fn": "spc_mcds",
+   "lat": 42.0,
+   "lon": -95.0,
+   "active_at": "2026-05-01T18:00:00+00:00",
+   "start": null,
+   "end": null,
+   "max_items": 0
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcmcd.py",
+    "json": {
+     "features": [
+      {
+       "properties": {
+        "utc_issue": "2026-05-01T17:00:00Z"
+       },
+       "mdnum": 77,
+       "concerning": "top-level fields render"
+      }
+     ]
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcmcd.py?lat=42.0&lon=-95.0&fmt=json"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SPC_MCD",
+    "product_id": "SPC_MCD",
+    "cwa_office": "SPC",
+    "issuance_time": null,
+    "product_text": "SPC Mesoscale Discussions\n\nProduct 1:\nNumber: 77\nConcerning: top-level fields render\n",
+    "headline": "SPC Mesoscale Discussions"
+   }
+  }
+ },
+ {
+  "name": "spc_mcd_archive_no_items",
+  "call": {
+   "fn": "spc_mcds",
+   "lat": 42.0,
+   "lon": -95.0,
+   "active_at": null,
+   "start": null,
+   "end": null,
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcmcd.py",
+    "json": {
+     "mcds": []
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcmcd.py?lat=42.0&lon=-95.0&fmt=json"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SPC_MCD",
+    "product_id": "SPC_MCD",
+    "cwa_office": "SPC",
+    "issuance_time": null,
+    "product_text": "SPC Mesoscale Discussions\n\nNo matching point-based products were returned for this location.",
+    "headline": "SPC Mesoscale Discussions"
+   }
+  }
+ },
+ {
+  "name": "spc_watches_summary",
+  "call": {
+   "fn": "spc_watches",
+   "lat": 38.0,
+   "lon": -77.0,
+   "active_at": "2026-03-16T18:00:00+00:00",
+   "max_items": 2
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcwatch.py",
+    "json": {
+     "features": [
+      {
+       "properties": {
+        "sel": "SEL7",
+        "type": "TOR",
+        "number": 67,
+        "issue": "2026-03-16T14:50:00Z",
+        "expire": "2026-03-16T23:13:00Z",
+        "is_pds": false,
+        "max_hail_size": 1.75
+       }
+      },
+      {
+       "no_properties": true
+      },
+      {
+       "properties": {
+        "sel": "SEL8",
+        "type": "SVR",
+        "issue": "2026-03-16T15:00:00Z",
+        "expire": "2026-03-17T04:00:00Z"
+       }
+      }
+     ]
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcwatch.py?lat=38.0&lon=-77.0&ts=202603161800"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SPC_WATCHES",
+    "product_id": "SPC_WATCHES",
+    "cwa_office": "SPC",
+    "issuance_time": null,
+    "product_text": "SPC Watches\n\nWatch 1:\nSEL: SEL7\nType: TOR\nNumber: 67\nIssued: 2026-03-16T14:50:00Z\nExpires: 2026-03-16T23:13:00Z\nPDS: False\nMax hail size: 1.75\n\n1 older matches omitted. Use Advanced Lookup for broader history.",
+    "headline": "SPC Watches"
+   }
+  }
+ },
+ {
+  "name": "spc_watches_filters_expired",
+  "call": {
+   "fn": "spc_watches",
+   "lat": 38.0,
+   "lon": -77.0,
+   "active_at": "2026-03-16T23:30:00-04:00",
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcwatch.py",
+    "json": {
+     "features": [
+      {
+       "properties": {
+        "sel": "SEL7",
+        "issue": "2026-03-16T14:50:00Z",
+        "expire": "2026-03-16T23:13:00Z"
+       }
+      },
+      {
+       "properties": {
+        "sel": "SEL8",
+        "issue": "2026-03-16T23:00:00Z",
+        "expire": "2026-03-17T04:00:00Z"
+       }
+      }
+     ]
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcwatch.py?lat=38.0&lon=-77.0&ts=202603170330"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SPC_WATCHES",
+    "product_id": "SPC_WATCHES",
+    "cwa_office": "SPC",
+    "issuance_time": null,
+    "product_text": "SPC Watches\n\nWatch 1:\nSEL: SEL8\nIssued: 2026-03-16T23:00:00Z\nExpires: 2026-03-17T04:00:00Z\n",
+    "headline": "SPC Watches"
+   }
+  }
+ },
+ {
+  "name": "spc_watches_none_active_uses_now",
+  "call": {
+   "fn": "spc_watches",
+   "lat": 38.0,
+   "lon": -77.0,
+   "active_at": "2026-05-01T18:00:00+00:00",
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcwatch.py",
+    "json": {
+     "features": [
+      {
+       "properties": {
+        "sel": "SEL1",
+        "expire": "2026-05-01T12:00:00Z"
+       }
+      }
+     ]
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcwatch.py?lat=38.0&lon=-77.0&ts=202605011800"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SPC_WATCHES",
+    "product_id": "SPC_WATCHES",
+    "cwa_office": "SPC",
+    "issuance_time": null,
+    "product_text": "SPC Watches\n\nNo active watches were returned.",
+    "headline": "SPC Watches"
+   }
+  }
+ },
+ {
+  "name": "spc_watches_empty",
+  "call": {
+   "fn": "spc_watches",
+   "lat": 38.0,
+   "lon": -77.0,
+   "active_at": "2026-05-01T18:00:00+00:00",
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcwatch.py",
+    "json": {
+     "features": []
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcwatch.py?lat=38.0&lon=-77.0&ts=202605011800"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SPC_WATCHES",
+    "product_id": "SPC_WATCHES",
+    "cwa_office": "SPC",
+    "issuance_time": null,
+    "product_text": "SPC Watches\n\nNo matching watches were returned.",
+    "headline": "SPC Watches"
+   }
+  }
+ },
+ {
+  "name": "spc_watches_list_payload",
+  "call": {
+   "fn": "spc_watches",
+   "lat": 38.0,
+   "lon": -77.0,
+   "active_at": "2026-05-01T18:00:00+00:00",
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcwatch.py",
+    "json": [
+     "x"
+    ]
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcwatch.py?lat=38.0&lon=-77.0&ts=202605011800"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "SPC_WATCHES",
+    "product_id": "SPC_WATCHES",
+    "cwa_office": "SPC",
+    "issuance_time": null,
+    "product_text": "SPC Watches\n\nNo structured data returned.",
+    "headline": "SPC Watches"
+   }
+  }
+ },
+ {
+  "name": "spc_watches_transport_error",
+  "call": {
+   "fn": "spc_watches",
+   "lat": 38.0,
+   "lon": -77.0,
+   "active_at": "2026-05-01T18:00:00+00:00",
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/spcwatch.py",
+    "error": "timed out"
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/spcwatch.py?lat=38.0&lon=-77.0&ts=202605011800"
+  ],
+  "expect": {
+   "error": "IEM SPC watches request failed: timed out"
+  }
+ },
+ {
+  "name": "wpc_outlook_cassette",
+  "call": {
+   "fn": "wpc_outlook",
+   "lat": 38.907,
+   "lon": -77.037,
+   "day": 1,
+   "valid_at": "2026-05-07T12:00:00+00:00",
+   "now": "2026-05-01T18:00:00+00:00",
+   "limit": 1,
+   "max_items": 2
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/wpcoutlook.py",
+    "text": "{\"query_params\": {\"time\": \"2026-05-07T12:00:00Z\", \"lon\": -78.6382, \"lat\": 35.7796, \"day\": 1}, \"outlook\": {}, \"generated_at\": \"2026-05-08T02:31:53Z\"}"
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/wpcoutlook.py?lat=38.907&lon=-77.037&day=1&fmt=json&last=1&time=2026-05-07T12%3A00%3A00Z"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "WPC_ERO",
+    "product_id": "WPC_ERO_DAY1",
+    "cwa_office": "WPC",
+    "issuance_time": "2026-05-08T02:31:53+00:00",
+    "product_text": "WPC Day 1 Excessive Rainfall Outlook\n\nNo matching outlooks were returned.",
+    "headline": "WPC Day 1 Excessive Rainfall Outlook"
+   }
+  }
+ },
+ {
+  "name": "wpc_outlook_valid_time",
+  "call": {
+   "fn": "wpc_outlook",
+   "lat": 38.907,
+   "lon": -77.037,
+   "day": 1,
+   "valid_at": "2026-03-16T18:00:00+00:00",
+   "now": "2026-05-01T18:00:00+00:00",
+   "limit": 1,
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/wpcoutlook.py",
+    "json": {
+     "generated_at": "2026-05-01T12:00:00Z",
+     "outlooks": [
+      {
+       "day": 1,
+       "utc_product_issue": "2026-03-16T07:22:00Z",
+       "utc_issue": "2026-03-16T12:00:00Z",
+       "utc_expire": "2026-03-17T12:00:00Z",
+       "threshold": "MRGL",
+       "category": "CATEGORICAL"
+      }
+     ]
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/wpcoutlook.py?lat=38.907&lon=-77.037&day=1&fmt=json&last=1&time=2026-03-16T18%3A00%3A00Z"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "WPC_ERO",
+    "product_id": "WPC_ERO_DAY1",
+    "cwa_office": "WPC",
+    "issuance_time": "2026-05-01T12:00:00+00:00",
+    "product_text": "WPC Day 1 Excessive Rainfall Outlook\n\nGenerated: 2026-05-01T12:00:00Z\n\nOutlook 1:\nDay: 1\nCategory: CATEGORICAL\nThreshold: MRGL\nProduct issued: 2026-03-16T07:22:00Z\nValid begins: 2026-03-16T12:00:00Z\nValid expires: 2026-03-17T12:00:00Z\n",
+    "headline": "WPC Day 1 Excessive Rainfall Outlook"
+   }
+  }
+ },
+ {
+  "name": "wpc_outlook_current_keyword",
+  "call": {
+   "fn": "wpc_outlook",
+   "lat": 38.907,
+   "lon": -77.037,
+   "day": 1,
+   "valid_at": null,
+   "now": "2026-05-01T18:00:00+00:00",
+   "limit": 0,
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/wpcoutlook.py",
+    "json": {
+     "generated_at": "2026-05-01T12:00:00Z",
+     "outlook": {
+      "day": 1,
+      "utc_issue": "2026-05-01T12:00:00Z",
+      "utc_expire": "2026-05-02T12:00:00Z",
+      "threshold": "MRGL"
+     }
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/wpcoutlook.py?lat=38.907&lon=-77.037&day=1&fmt=json&last=1&time=current"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "WPC_ERO",
+    "product_id": "WPC_ERO_DAY1",
+    "cwa_office": "WPC",
+    "issuance_time": "2026-05-01T12:00:00+00:00",
+    "product_text": "WPC Day 1 Excessive Rainfall Outlook\n\nGenerated: 2026-05-01T12:00:00Z\n\nOutlook 1:\nDay: 1\nThreshold: MRGL\nValid begins: 2026-05-01T12:00:00Z\nValid expires: 2026-05-02T12:00:00Z\n",
+    "headline": "WPC Day 1 Excessive Rainfall Outlook"
+   }
+  }
+ },
+ {
+  "name": "wpc_outlook_no_outlooks_drops_generated",
+  "call": {
+   "fn": "wpc_outlook",
+   "lat": 38.907,
+   "lon": -77.037,
+   "day": 9,
+   "valid_at": null,
+   "now": "2026-05-01T18:00:00+00:00",
+   "limit": 1,
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/wpcoutlook.py",
+    "json": {
+     "generated_at": "2026-05-01T12:00:00Z",
+     "outlooks": []
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/wpcoutlook.py?lat=38.907&lon=-77.037&day=8&fmt=json&last=1&time=current"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "WPC_ERO",
+    "product_id": "WPC_ERO_DAY8",
+    "cwa_office": "WPC",
+    "issuance_time": "2026-05-01T12:00:00+00:00",
+    "product_text": "WPC Day 8 Excessive Rainfall Outlook\n\nNo matching outlooks were returned.",
+    "headline": "WPC Day 8 Excessive Rainfall Outlook"
+   }
+  }
+ },
+ {
+  "name": "wpc_outlook_inactive",
+  "call": {
+   "fn": "wpc_outlook",
+   "lat": 38.907,
+   "lon": -77.037,
+   "day": 1,
+   "valid_at": null,
+   "now": "2026-05-01T18:00:00+00:00",
+   "limit": 3,
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/wpcoutlook.py",
+    "json": {
+     "outlooks": [
+      {
+       "utc_expire": "2026-05-01T00:00:00Z"
+      }
+     ]
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/wpcoutlook.py?lat=38.907&lon=-77.037&day=1&fmt=json&last=3&time=current"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "WPC_ERO",
+    "product_id": "WPC_ERO_DAY1",
+    "cwa_office": "WPC",
+    "issuance_time": null,
+    "product_text": "WPC Day 1 Excessive Rainfall Outlook\n\nNo active outlooks were returned.",
+    "headline": "WPC Day 1 Excessive Rainfall Outlook"
+   }
+  }
+ },
+ {
+  "name": "wpc_outlook_http_error",
+  "call": {
+   "fn": "wpc_outlook",
+   "lat": 38.907,
+   "lon": -77.037,
+   "day": 1,
+   "valid_at": null,
+   "now": "2026-05-01T18:00:00+00:00",
+   "limit": 1,
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/wpcoutlook.py",
+    "status": 502,
+    "json": {}
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/wpcoutlook.py?lat=38.907&lon=-77.037&day=1&fmt=json&last=1&time=current"
+  ],
+  "expect": {
+   "error": "IEM WPC outlook returned HTTP 502"
+  }
+ },
+ {
+  "name": "wpc_mpd_active",
+  "call": {
+   "fn": "wpc_mpds",
+   "lat": 38.907,
+   "lon": -77.037,
+   "active_at": "2026-05-01T18:00:00+00:00",
+   "start": null,
+   "end": null,
+   "max_items": 3
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/wpcmpd.py",
+    "json": {
+     "mpds": [
+      {
+       "product_num": 934,
+       "product_id": "202605011728-KWNH-AWUS01-FFGMPD",
+       "utc_issue": "2026-05-01T17:27:00Z",
+       "utc_expire": "2026-05-01T20:27:00Z",
+       "concerning": "HEAVY RAINFALL...FLASH FLOODING POSSIBLE",
+       "product_href": "https://www.wpc.ncep.noaa.gov/metwatch/metwatch_mpd_multi.php?md=934"
+      },
+      {
+       "product_num": 933,
+       "utc_issue": "2026-05-01T10:00:00Z",
+       "utc_expire": "2026-05-01T13:00:00Z"
+      }
+     ]
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/wpcmpd.py?lat=38.907&lon=-77.037&fmt=json"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "WPC_MPD",
+    "product_id": "WPC_MPD",
+    "cwa_office": "WPC",
+    "issuance_time": null,
+    "product_text": "WPC Mesoscale Precipitation Discussions\n\nDiscussion 1:\nNumber: 934\nProduct ID: 202605011728-KWNH-AWUS01-FFGMPD\nIssued: 2026-05-01T17:27:00Z\nExpires: 2026-05-01T20:27:00Z\nConcerning: HEAVY RAINFALL...FLASH FLOODING POSSIBLE\nLink: https://www.wpc.ncep.noaa.gov/metwatch/metwatch_mpd_multi.php?md=934\n",
+    "headline": "WPC Mesoscale Precipitation Discussions"
+   }
+  }
+ },
+ {
+  "name": "wpc_mpd_archive_window",
+  "call": {
+   "fn": "wpc_mpds",
+   "lat": 38.907,
+   "lon": -77.037,
+   "active_at": null,
+   "start": "2026-05-01T09:00:00+00:00",
+   "end": "2026-05-01T12:00:00+00:00",
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/wpcmpd.py",
+    "json": {
+     "mpds": [
+      {
+       "product_num": 934,
+       "product_id": "202605011728-KWNH-AWUS01-FFGMPD",
+       "utc_issue": "2026-05-01T17:27:00Z",
+       "utc_expire": "2026-05-01T20:27:00Z",
+       "concerning": "HEAVY RAINFALL...FLASH FLOODING POSSIBLE",
+       "product_href": "https://www.wpc.ncep.noaa.gov/metwatch/metwatch_mpd_multi.php?md=934"
+      },
+      {
+       "product_num": 933,
+       "utc_issue": "2026-05-01T10:00:00Z",
+       "utc_expire": "2026-05-01T13:00:00Z"
+      }
+     ]
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/wpcmpd.py?lat=38.907&lon=-77.037&fmt=json"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "WPC_MPD",
+    "product_id": "WPC_MPD",
+    "cwa_office": "WPC",
+    "issuance_time": null,
+    "product_text": "WPC Mesoscale Precipitation Discussions\n\nDiscussion 1:\nNumber: 933\nIssued: 2026-05-01T10:00:00Z\nExpires: 2026-05-01T13:00:00Z\n",
+    "headline": "WPC Mesoscale Precipitation Discussions"
+   }
+  }
+ },
+ {
+  "name": "wpc_mpd_window_excludes_all",
+  "call": {
+   "fn": "wpc_mpds",
+   "lat": 38.907,
+   "lon": -77.037,
+   "active_at": null,
+   "start": "2026-06-01T00:00:00+00:00",
+   "end": null,
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/wpcmpd.py",
+    "json": {
+     "mpds": [
+      {
+       "product_num": 934,
+       "product_id": "202605011728-KWNH-AWUS01-FFGMPD",
+       "utc_issue": "2026-05-01T17:27:00Z",
+       "utc_expire": "2026-05-01T20:27:00Z",
+       "concerning": "HEAVY RAINFALL...FLASH FLOODING POSSIBLE",
+       "product_href": "https://www.wpc.ncep.noaa.gov/metwatch/metwatch_mpd_multi.php?md=934"
+      },
+      {
+       "product_num": 933,
+       "utc_issue": "2026-05-01T10:00:00Z",
+       "utc_expire": "2026-05-01T13:00:00Z"
+      }
+     ]
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/wpcmpd.py?lat=38.907&lon=-77.037&fmt=json"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "WPC_MPD",
+    "product_id": "WPC_MPD",
+    "cwa_office": "WPC",
+    "issuance_time": null,
+    "product_text": "WPC Mesoscale Precipitation Discussions\n\nNo matching discussions were returned.",
+    "headline": "WPC Mesoscale Precipitation Discussions"
+   }
+  }
+ },
+ {
+  "name": "wpc_mpd_all_expired",
+  "call": {
+   "fn": "wpc_mpds",
+   "lat": 38.907,
+   "lon": -77.037,
+   "active_at": "2026-05-01T18:00:00+00:00",
+   "start": null,
+   "end": null,
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/wpcmpd.py",
+    "json": {
+     "mpds": [
+      {
+       "product_num": 933,
+       "utc_issue": "2026-05-01T10:00:00Z",
+       "utc_expire": "2026-05-01T13:00:00Z"
+      }
+     ]
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/wpcmpd.py?lat=38.907&lon=-77.037&fmt=json"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "WPC_MPD",
+    "product_id": "WPC_MPD",
+    "cwa_office": "WPC",
+    "issuance_time": null,
+    "product_text": "WPC Mesoscale Precipitation Discussions\n\nNo active discussions were returned.",
+    "headline": "WPC Mesoscale Precipitation Discussions"
+   }
+  }
+ },
+ {
+  "name": "wpc_mpd_not_a_list",
+  "call": {
+   "fn": "wpc_mpds",
+   "lat": 38.907,
+   "lon": -77.037,
+   "active_at": "2026-05-01T18:00:00+00:00",
+   "start": null,
+   "end": null,
+   "max_items": 5
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/json/wpcmpd.py",
+    "json": {
+     "mpds": {
+      "product_num": 1
+     }
+    }
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/json/wpcmpd.py?lat=38.907&lon=-77.037&fmt=json"
+  ],
+  "expect": {
+   "ok": {
+    "product_type": "WPC_MPD",
+    "product_id": "WPC_MPD",
+    "cwa_office": "WPC",
+    "issuance_time": null,
+    "product_text": "WPC Mesoscale Precipitation Discussions\n\nNo matching discussions were returned.",
+    "headline": "WPC Mesoscale Precipitation Discussions"
+   }
+  }
+ }
+]
