@@ -2,7 +2,9 @@
 //! the main window, its menus and shortcuts, and the location and alert dialogs.
 
 mod alert_dialog;
+mod aviation_dialog;
 mod commands;
+mod data_dialogs;
 mod display;
 mod location_dialog;
 mod locations;

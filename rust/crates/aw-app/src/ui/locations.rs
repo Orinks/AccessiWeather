@@ -229,7 +229,7 @@ pub(crate) fn on_settings() {
     }
 }
 
-/// `on_view_history` (Ctrl+H): the Weather History dialog is ported separately.
+/// `on_view_history` (Ctrl+H).
 pub(crate) fn on_view_history() {
-    tracing::info!("Weather History dialog is not ported yet");
+    super::data_dialogs::show_weather_history();
 }
