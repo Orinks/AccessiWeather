@@ -1,7 +1,8 @@
 r"""
-Golden files for the Rust data path: the live source adapters
-(``crates/aw-providers/src/client/live.rs``), the orchestrator and
-``aw_core::display::WeatherPresenter``, end to end.
+Golden files for the Rust data path, end to end.
+
+Covers the live source adapters (``crates/aw-providers/src/client/live.rs``),
+the orchestrator and ``aw_core::display::WeatherPresenter``.
 
 Run from the Python checkout on a machine set to US Eastern time:
 
@@ -146,17 +147,13 @@ def nyc_routes() -> list[dict]:
     at = NYC_NOW
     return [
         route(f"{NWS}/points/40.7128,-74.006", at, cassette("nws/point_nyc.yaml", 0)),
-        route(
-            f"{NWS}/gridpoints/OKX/33,35/stations", at, cassette("nws/stations_nyc.yaml", 1)
-        ),
+        route(f"{NWS}/gridpoints/OKX/33,35/stations", at, cassette("nws/stations_nyc.yaml", 1)),
         route(
             f"{NWS}/stations/KNYC/observations/latest",
             at,
             cassette("nws/current_nyc.yaml", 2),
         ),
-        route(
-            f"{NWS}/gridpoints/OKX/33,35/forecast", at, cassette("nws/forecast_nyc.yaml", 1)
-        ),
+        route(f"{NWS}/gridpoints/OKX/33,35/forecast", at, cassette("nws/forecast_nyc.yaml", 1)),
         route(
             f"{NWS}/gridpoints/OKX/33,35/forecast/hourly",
             at,
@@ -218,6 +215,7 @@ class MockClient:
     """AsyncClient stand-in answering by longest URL prefix, like FixtureClient."""
 
     def __init__(self, routes: list[dict]):
+        """Serve `routes` and record every requested URL."""
         self.routes = routes
         self.requests: list[str] = []
 
@@ -259,7 +257,7 @@ def to_json(value):
 
 
 def panel_texts(presentation) -> dict:
-    """What `_on_weather_data_received` puts in each panel."""
+    """Return what `_on_weather_data_received` puts in each panel."""
     if presentation.current_conditions:
         current = presentation.current_conditions.fallback_text
     else:
