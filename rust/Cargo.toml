@@ -1,0 +1,39 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/aw-core",
+#    "crates/aw-providers",
+#    "crates/aw-store",
+#    "crates/aw-speech",
+#    "crates/aw-app",
+]
+
+[workspace.package]
+version = "0.11.0-rust.1"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/Orinks/AccessiWeather"
+
+[workspace.dependencies]
+aw-core = { path = "crates/aw-core" }
+aw-providers = { path = "crates/aw-providers" }
+aw-store = { path = "crates/aw-store" }
+aw-speech = { path = "crates/aw-speech" }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+thiserror = "2"
+chrono = { version = "0.4", features = ["serde"] }
+chrono-tz = "0.10"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "gzip"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync"] }
+directories = "6"
+tempfile = "3"
+
+[profile.release]
+opt-level = 2
+lto = "thin"
+codegen-units = 4
+strip = true

@@ -1,0 +1,12 @@
+[package]
+name = "aw-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Toolkit-independent weather domain models, settings, units and presentation for AccessiWeather"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+chrono-tz.workspace = true
