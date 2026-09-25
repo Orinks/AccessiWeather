@@ -485,7 +485,10 @@ SCENARIOS = [
         True,
         [
             {"op": "ensure_loaded"},
-            {"op": "load_complete", "result": product("SRF", "srf-1", "SURF ZONE FORECAST", office="MHX")},
+            {
+                "op": "load_complete",
+                "result": product("SRF", "srf-1", "SURF ZONE FORECAST", office="MHX"),
+            },
             {"op": "trigger_load"},
             {
                 "op": "load_complete",
@@ -498,8 +501,20 @@ SCENARIOS = [
             },
         ],
     ),
-    ("surf_empty", "SURF", "MHX", True, [{"op": "ensure_loaded"}, {"op": "load_complete", "result": None}]),
-    ("cli_blank_office", "CLI", "", True, [{"op": "ensure_loaded"}, {"op": "load_complete", "result": None}]),
+    (
+        "surf_empty",
+        "SURF",
+        "MHX",
+        True,
+        [{"op": "ensure_loaded"}, {"op": "load_complete", "result": None}],
+    ),
+    (
+        "cli_blank_office",
+        "CLI",
+        "",
+        True,
+        [{"op": "ensure_loaded"}, {"op": "load_complete", "result": None}],
+    ),
     ("cli_error", "CLI", "RAH", True, [{"op": "ensure_loaded"}, {"op": "load_error"}]),
     (
         "national_empty_and_error",
@@ -512,8 +527,20 @@ SCENARIOS = [
             {"op": "load_error"},
         ],
     ),
-    ("spc_outlook_error", "SPC_OUTLOOK", "IEM", True, [{"op": "ensure_loaded"}, {"op": "load_error"}]),
-    ("unknown_type_empty", "XYZ", "IEM", True, [{"op": "ensure_loaded"}, {"op": "load_complete", "result": None}]),
+    (
+        "spc_outlook_error",
+        "SPC_OUTLOOK",
+        "IEM",
+        True,
+        [{"op": "ensure_loaded"}, {"op": "load_error"}],
+    ),
+    (
+        "unknown_type_empty",
+        "XYZ",
+        "IEM",
+        True,
+        [{"op": "ensure_loaded"}, {"op": "load_complete", "result": None}],
+    ),
 ]
 
 
@@ -528,7 +555,10 @@ def run_scenario(name, product_type, cwa, has_key, steps) -> dict:
         events = list(EVENTS)
         if p.ai_summary_display.focused > focused:
             # Python focuses the summary before announcing.
-            events.insert(next((i for i, e in enumerate(events) if e.startswith("announce:")), len(events)), "focus:ai_summary")
+            events.insert(
+                next((i for i, e in enumerate(events) if e.startswith("announce:")), len(events)),
+                "focus:ai_summary",
+            )
         results.append({"step": step, "events": events, "view": view(p)})
     return {
         "name": name,
@@ -567,7 +597,9 @@ def issuance_cases() -> list[dict]:
         FixedLocal.zone = timezone(timedelta(minutes=minutes), name)
         text = fmt.format_issuance(FixedLocal.fromisoformat(issued))
         cases.append({"time": issued, "offset_minutes": minutes, "zone_name": name, "text": text})
-    cases.append({"time": None, "offset_minutes": 0, "zone_name": "", "text": fmt.format_issuance(None)})
+    cases.append(
+        {"time": None, "offset_minutes": 0, "zone_name": "", "text": fmt.format_issuance(None)}
+    )
     return cases
 
 
@@ -591,7 +623,9 @@ def model_info_cases() -> list[dict]:
         summary("", estimated_cost=1.5, token_count=0),
         summary("", requested_model="openrouter/free"),
         summary("", requested_model="", model_selection_reason=""),
-        summary("", requested_model="x/y", model_selection_reason="fallback", model_attempts=["x/y"]),
+        summary(
+            "", requested_model="x/y", model_selection_reason="fallback", model_attempts=["x/y"]
+        ),
         summary("", model_attempts=["x/y", "z/w", "openrouter/free"], cached=True),
     ]:
         text = fpp.ForecastProductPanel._build_model_info(
@@ -619,9 +653,11 @@ RALEIGH = Location(
 
 def panel_widgets() -> dict:
     out = {}
-    for product_type in [t.product_type for t in fpd.ForecastProductsDialog._TABS] + [
-        t.product_id for t in npd.NationalProductsDialog._TABS
-    ] + ["SRF", "SURF_CONDITIONS", "LSR", "PNS", "XYZ"]:
+    for product_type in (
+        [t.product_type for t in fpd.ForecastProductsDialog._TABS]
+        + [t.product_id for t in npd.NationalProductsDialog._TABS]
+        + ["SRF", "SURF_CONDITIONS", "LSR", "PNS", "XYZ"]
+    ):
         out[product_type] = capture(
             lambda pt=product_type: fpw.create_product_panel_widgets(
                 SimpleNamespace(product_type=pt, SetSizer=lambda _s: None)
@@ -631,7 +667,9 @@ def panel_widgets() -> dict:
 
 
 def notes_dialog_widgets() -> list:
-    stub = borrow(fpd.ForecastProductsDialog, ["_TABS", "_create_widgets", "_should_autoload_tab"])()
+    stub = borrow(
+        fpd.ForecastProductsDialog, ["_TABS", "_create_widgets", "_should_autoload_tab"]
+    )()
     stub._location = RALEIGH
     stub._add_tab_panel = lambda *_a, **_k: None
     stub.SetSizer = lambda _s: None

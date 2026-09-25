@@ -367,7 +367,7 @@ def download_flows() -> list:
             (wx, "MessageBox", rec.message_box),
             (wx, "CallAfter", lambda f, *a, **k: f(*a, **k)),
             (wx, "ProgressDialog", FakeProgress),
-            (wx, "GetTopLevelWindows", lambda: []),
+            (wx, "GetTopLevelWindows", list),
             (wx, "SafeYield", lambda *a, **k: True),
             (threading, "Thread", SyncThread),
             (simple_update, "UpdateService", FakeService),

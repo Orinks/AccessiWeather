@@ -32,7 +32,9 @@ from accessiweather.notifications.minutely_precipitation import (  # noqa: E402
 from accessiweather.pirate_weather_client import PirateWeatherClient  # noqa: E402
 
 AREA = "pirateweather"
-common.freeze(pirate_weather_client, pirate_weather_current, pirate_weather_parsing, surf_conditions)
+common.freeze(
+    pirate_weather_client, pirate_weather_current, pirate_weather_parsing, surf_conditions
+)
 common.fast_retries()
 
 SAMPLE = {
@@ -63,8 +65,13 @@ SAMPLE = {
         "icon": "rain",
         "data": [
             {"time": 1700000060, "precipIntensity": 0.0, "precipProbability": 0.0},
-            {"time": 1700000120, "precipIntensity": 0.02, "precipProbability": 0.6,
-             "precipType": "Rain", "precipIntensityError": 0.01},
+            {
+                "time": 1700000120,
+                "precipIntensity": 0.02,
+                "precipProbability": 0.6,
+                "precipType": "Rain",
+                "precipIntensityError": 0.01,
+            },
             {"time": "bad"},
             "junk",
         ],
@@ -249,7 +256,9 @@ MARINE_CASES = {
     "utc_time_text_direction": {
         "current": {"time": "2026-06-07T12:00Z", "wave_height": 2.0, "wave_direction": "offshore"},
     },
-    "empty_values": {"current": {"time": "2026-06-07T12:00", "wave_height": None, "wave_period": []}},
+    "empty_values": {
+        "current": {"time": "2026-06-07T12:00", "wave_height": None, "wave_period": []}
+    },
     "bad_time": {"current": {"time": "not-a-time", "wave_height": 0.25}, "current_units": []},
     "no_current": {"hourly": {}},
 }
@@ -258,10 +267,20 @@ MARINE_CASES = {
 def main() -> None:
     common.reset(AREA)
     bodies = common.unique_bodies(
-        [f"pirate_weather/{n}.yaml" for n in (
-            "current_nyc", "current_london", "current_wind_gust", "alerts_nyc", "alerts_tromso",
-            "forecast_daily_summary", "forecast_nyc", "hourly_nyc", "minutely_nyc",
-        )]
+        [
+            f"pirate_weather/{n}.yaml"
+            for n in (
+                "current_nyc",
+                "current_london",
+                "current_wind_gust",
+                "alerts_nyc",
+                "alerts_tromso",
+                "forecast_daily_summary",
+                "forecast_nyc",
+                "hourly_nyc",
+                "minutely_nyc",
+            )
+        ]
     )
     for name, body in bodies:
         common.write(AREA, f"parse_{name}_us", parse_all(body, "us"))
@@ -269,7 +288,9 @@ def main() -> None:
         common.write(AREA, f"parse_sample_{units}", parse_all(copy.deepcopy(SAMPLE), units))
     common.write(AREA, "parse_london_dst", parse_all(LONDON_DST, "uk"))
     common.write(AREA, "parse_london_duplicate_dates", parse_all(LONDON_DUPLICATE, "uk"))
-    common.write(AREA, "parse_fixed_offset_unknown_zone", parse_all(FIXED_OFFSET_UNKNOWN_ZONE, "si"))
+    common.write(
+        AREA, "parse_fixed_offset_unknown_zone", parse_all(FIXED_OFFSET_UNKNOWN_ZONE, "si")
+    )
 
     location = Location(name="Porto", latitude=41.15, longitude=-8.63, country_code="PT")
     for name, body in MARINE_CASES.items():
@@ -287,7 +308,9 @@ def main() -> None:
     # Request shape and HTTP error messages.
     nyc = Location(name="NYC", latitude=40.7128, longitude=-74.006)
     for status in (200, 400, 401, 429, 503):
-        router = common.Router([("https://api.pirateweather.net/", status, bodies[0][1] if status == 200 else {})])
+        router = common.Router(
+            [("https://api.pirateweather.net/", status, bodies[0][1] if status == 200 else {})]
+        )
         common.patch_httpx(router)
         client = PirateWeatherClient(api_key="secret", user_agent="AccessiWeather/2.0", units="uk")
         try:
@@ -301,9 +324,7 @@ def main() -> None:
             {"exchanges": router.exchanges(), "output": result, "error": error},
         )
 
-    router = common.Router(
-        [("https://marine-api.open-meteo.com/", 200, MARINE_CASES["full"])]
-    )
+    router = common.Router([("https://marine-api.open-meteo.com/", 200, MARINE_CASES["full"])])
     common.patch_httpx(router)
     product = common.run(surf_conditions.fetch_openmeteo_marine_surf_conditions(location))
     common.write(AREA, "fetch_marine", {"exchanges": router.exchanges(), "output": product})

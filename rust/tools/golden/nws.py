@@ -559,7 +559,11 @@ async def alert_scenarios():
         ("alerts_county_stored", "county", {"county_zone_id": "NYC061"}),
         ("alerts_county_points", "county", {}),
         ("alerts_zone_stored", "zone", {"county_zone_id": "NYC061", "forecast_zone_id": "NYZ072"}),
-        ("alerts_zone_one_fails", "zone", {"county_zone_id": "NYZ999", "forecast_zone_id": "NYZ072"}),
+        (
+            "alerts_zone_one_fails",
+            "zone",
+            {"county_zone_id": "NYZ999", "forecast_zone_id": "NYZ072"},
+        ),
         ("alerts_zone_points", "zone", {}),
         ("alerts_state", "state", {}),
         ("alerts_point", "point", {}),

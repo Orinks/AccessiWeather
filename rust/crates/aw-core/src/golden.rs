@@ -23,13 +23,17 @@ pub fn field<T: serde::de::DeserializeOwned>(case: &Value, key: &str) -> T {
 /// by instant and offset (chrono writes `Z` where Python writes `+00:00`),
 /// and treating a missing key as `null`.
 pub fn json_diff(a: &Value, b: &Value, path: &str) -> Option<String> {
+    diff(a, b, path, true)
+}
+
+fn diff(a: &Value, b: &Value, path: &str, offsets: bool) -> Option<String> {
     let differ = || Some(format!("{path}: {a} != {b}"));
     match (a, b) {
         (Value::Number(x), Value::Number(y)) if x.as_f64() == y.as_f64() => None,
         (Value::String(x), Value::String(y)) if x != y => {
             let parse = |s: &str| chrono::DateTime::parse_from_rfc3339(s).ok();
             match (parse(x), parse(y)) {
-                (Some(p), Some(q)) if p == q && p.offset() == q.offset() => None,
+                (Some(p), Some(q)) if p == q && (!offsets || p.offset() == q.offset()) => None,
                 _ => differ(),
             }
         }
@@ -37,12 +41,13 @@ pub fn json_diff(a: &Value, b: &Value, path: &str) -> Option<String> {
             .iter()
             .zip(y)
             .enumerate()
-            .find_map(|(i, (p, q))| json_diff(p, q, &format!("{path}[{i}]"))),
+            .find_map(|(i, (p, q))| diff(p, q, &format!("{path}[{i}]"), offsets)),
         (Value::Object(x), Value::Object(y)) => x.keys().chain(y.keys()).find_map(|k| {
-            json_diff(
+            diff(
                 x.get(k).unwrap_or(&Value::Null),
                 y.get(k).unwrap_or(&Value::Null),
                 &format!("{path}.{k}"),
+                offsets,
             )
         }),
         _ if a == b => None,
@@ -53,7 +58,17 @@ pub fn json_diff(a: &Value, b: &Value, path: &str) -> Option<String> {
 /// Assert `actual` serialises to JSON equal (per [`json_diff`]) to `expected`.
 pub fn assert_json_eq<T: serde::Serialize>(actual: &T, expected: &Value, context: &str) {
     let actual = serde_json::to_value(actual).expect("serialisable");
-    if let Some(diff) = json_diff(&actual, expected, "$") {
-        panic!("{context}: {diff}");
+    if let Some(d) = json_diff(&actual, expected, "$") {
+        panic!("{context}: {d}");
+    }
+}
+
+/// Like [`assert_json_eq`], but datetimes only need the same instant: for
+/// values that are machine-local by nature (naive times read back as local),
+/// whose offset depends on the timezone of the machine running the test.
+pub fn assert_json_eq_instants<T: serde::Serialize>(actual: &T, expected: &Value, context: &str) {
+    let actual = serde_json::to_value(actual).expect("serialisable");
+    if let Some(d) = diff(&actual, expected, "$", false) {
+        panic!("{context}: {d}");
     }
 }

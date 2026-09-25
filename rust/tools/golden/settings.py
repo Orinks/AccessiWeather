@@ -53,9 +53,9 @@ def install_stubs():
     sound_player.get_available_sound_packs = lambda: {
         pid: {"name": info["name"]} for pid, info in SOUND_PACKS.items()
     }
-    sound_player.sound_pack_uses_specific_alert_sounds = lambda pid: SOUND_PACKS.get(
-        pid, {}
-    ).get("specific", False)
+    sound_player.sound_pack_uses_specific_alert_sounds = lambda pid: SOUND_PACKS.get(pid, {}).get(
+        "specific", False
+    )
 
 
 def make_dialog(settings: AppSettings, startup_actual: bool):
@@ -74,11 +74,9 @@ def control_state(dlg) -> dict:
     for key, ctrl in dlg._controls.items():
         if isinstance(ctrl, wx.Choice):
             out[key] = ctrl.GetSelection()
-        elif isinstance(ctrl, wx.StaticText):
-            continue
-        elif isinstance(ctrl, wx.Button):
-            continue
-        elif isinstance(ctrl, wx.TextCtrl) and key == "source_settings_summary":
+        elif isinstance(ctrl, (wx.StaticText, wx.Button)) or (
+            isinstance(ctrl, wx.TextCtrl) and key == "source_settings_summary"
+        ):
             continue
         else:
             out[key] = ctrl.GetValue()
@@ -245,7 +243,11 @@ def case_widgets():
 
     def walk(window, out):
         for child in window.GetChildren():
-            entry = {"class": child.__class__.__name__, "label": child.GetLabel(), "name": child.GetName()}
+            entry = {
+                "class": child.__class__.__name__,
+                "label": child.GetLabel(),
+                "name": child.GetName(),
+            }
             if isinstance(child, wx.Choice):
                 entry["choices"] = child.GetStrings()
             tip = child.GetToolTipText()
@@ -327,7 +329,7 @@ def case_edits():
         dlg._audio_tab._refresh_event_sound_summary()
 
     def all_sounds_off():
-        dlg._event_sound_states = {k: False for k in dlg._event_sound_states}
+        dlg._event_sound_states = dict.fromkeys(dlg._event_sound_states, False)
         dlg._audio_tab._refresh_event_sound_summary()
 
     step("minimize_on", minimize_on)
@@ -346,7 +348,10 @@ def case_edits():
     step("invalid_hotkey", lambda: c["noaa_radio_hotkey"].SetValue("Shift"))
     step("blank_hotkey", lambda: c["noaa_radio_hotkey"].SetValue("   "))
     step("blank_venice_model", lambda: c["venice_model"].SetValue("  "))
-    step("data_source_nws", lambda: (c["data_source"].SetSelection(1), dlg._update_api_key_visibility()))
+    step(
+        "data_source_nws",
+        lambda: (c["data_source"].SetSelection(1), dlg._update_api_key_visibility()),
+    )
     step("reset_prompt", lambda: dlg._on_reset_prompt(None))
     dlg.Destroy()
     return {"settings": dataclasses.asdict(settings), "steps": steps}
@@ -521,9 +526,7 @@ def case_summaries():
     events = []
     for muted in ([], keys[:1], keys[:5], keys):
         states = {k: k not in muted for k in keys}
-        events.append(
-            {"muted": muted, "text": AudioTab.build_event_sound_summary_text(states)}
-        )
+        events.append({"muted": muted, "text": AudioTab.build_event_sound_summary_text(states)})
     sections = [
         {"title": t, "description": d, "events": list(e)}
         for t, d, e in AudioTab._get_event_sound_sections()
@@ -600,7 +603,16 @@ class Widget:
         return self.value
 
 
-def browser_stub(provider, models, search="", free_only=False, price=0, function_only=False, provider_index=0, providers=None):
+def browser_stub(
+    provider,
+    models,
+    search="",
+    free_only=False,
+    price=0,
+    function_only=False,
+    provider_index=0,
+    providers=None,
+):
     stub = SimpleNamespace(
         provider=provider,
         _all_models=models,
@@ -638,7 +650,17 @@ def case_model_browser():
         openrouter("noslash", "No Slash", "unknown provider", None, 0, 0.2),
     ]
     ven_models = [
-        VeniceModel("venice-uncensored-1-2", "Venice Uncensored", "House model.", 32768, 0.5, 2, False, True, False),
+        VeniceModel(
+            "venice-uncensored-1-2",
+            "Venice Uncensored",
+            "House model.",
+            32768,
+            0.5,
+            2,
+            False,
+            True,
+            False,
+        ),
         VeniceModel("llama-3.3-70b", "Llama 3.3 70B", "", 65536, None, 2.8, False, True, False),
         VeniceModel("qwen3-4b", "Qwen 3 4B", "Tiny", 32000, 0, 0, True, False, False),
         VeniceModel("e2ee-grok-4", "Grok 4", "Private.", 1500000, 1.25, None, False, False, True),

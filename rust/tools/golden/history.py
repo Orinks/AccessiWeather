@@ -90,7 +90,10 @@ def archive_parsing():
         ("missing_mean", {"daily": {k: v for k, v in full.items() if k != "temperature_2m_mean"}}),
         ("null_code", {"daily": {**full, "weather_code": [None]}}),
         ("null_direction", {"daily": {**full, "wind_direction_10m_dominant": [None]}}),
-        ("no_direction", {"daily": {k: v for k, v in full.items() if k != "wind_direction_10m_dominant"}}),
+        (
+            "no_direction",
+            {"daily": {k: v for k, v in full.items() if k != "wind_direction_10m_dominant"}},
+        ),
         ("bad_number", {"daily": {**full, "temperature_2m_max": ["hot"]}}),
         ("float_code", {"daily": {**full, "weather_code": [61.0]}}),
     ]
@@ -114,15 +117,41 @@ def anomaly():
         return respond
 
     cases = [
-        ("five_years", 75.0, date(2026, 7, 15), date(2026, 7, 15), {
-            2025: [70.0, 71.0, None], 2024: [72.0], 2023: [68.5, 69.5], 2022: [71.0], 2021: [70.0]}),
+        (
+            "five_years",
+            75.0,
+            date(2026, 7, 15),
+            date(2026, 7, 15),
+            {
+                2025: [70.0, 71.0, None],
+                2024: [72.0],
+                2023: [68.5, 69.5],
+                2022: [71.0],
+                2021: [70.0],
+            },
+        ),
         ("insufficient", 75.0, date(2026, 7, 15), date(2026, 7, 15), {2025: [70.0], 2024: [72.0]}),
-        ("empty_lists_skipped", 60.0, date(2026, 7, 15), date(2026, 7, 15), {
-            2025: [], 2024: [None], 2023: [59.0], 2022: [60.2], 2021: [60.1]}),
-        ("leap_day", 40.0, date(2028, 2, 29), date(2028, 2, 29), {
-            2027: [45.0], 2026: [44.0], 2025: [46.0], 2024: [43.0], 2023: [47.0]}),
-        ("recent_window_clamped", 50.0, date(2026, 7, 15), date(2025, 7, 20), {
-            2025: [49.0], 2024: [48.0], 2023: [47.0], 2022: [51.0], 2021: [52.0]}),
+        (
+            "empty_lists_skipped",
+            60.0,
+            date(2026, 7, 15),
+            date(2026, 7, 15),
+            {2025: [], 2024: [None], 2023: [59.0], 2022: [60.2], 2021: [60.1]},
+        ),
+        (
+            "leap_day",
+            40.0,
+            date(2028, 2, 29),
+            date(2028, 2, 29),
+            {2027: [45.0], 2026: [44.0], 2025: [46.0], 2024: [43.0], 2023: [47.0]},
+        ),
+        (
+            "recent_window_clamped",
+            50.0,
+            date(2026, 7, 15),
+            date(2025, 7, 20),
+            {2025: [49.0], 2024: [48.0], 2023: [47.0], 2022: [51.0], 2021: [52.0]},
+        ),
     ]
     out = []
     for name, temp, current_date, today, means in cases:

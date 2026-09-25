@@ -121,8 +121,10 @@ from accessiweather.services.forecast_product_service import (  # noqa: E402
 from accessiweather.services.national_discussion_service import (  # noqa: E402
     NationalDiscussionService,
 )
-from accessiweather.ui.dialogs import forecast_product_formatting as fmt  # noqa: E402
-from accessiweather.ui.dialogs import forecast_products_dialog as fpd  # noqa: E402
+from accessiweather.ui.dialogs import (
+    forecast_product_formatting as fmt,  # noqa: E402
+    forecast_products_dialog as fpd,  # noqa: E402
+)
 from accessiweather.ui.dialogs.advanced_text_product_dialog import (  # noqa: E402
     AdvancedTextProductDialog,
 )
@@ -333,7 +335,11 @@ def iem_cases() -> list[dict]:
                 "json": {
                     "generated_at": "2026-05-01T12:00:00Z",
                     "outlooks": [
-                        {"category": "ENH", "threshold": "CATEGORICAL", "valid": "2026-05-01T13:00:00Z"}
+                        {
+                            "category": "ENH",
+                            "threshold": "CATEGORICAL",
+                            "valid": "2026-05-01T13:00:00Z",
+                        }
                     ],
                 }
             },
@@ -558,9 +564,15 @@ def iem_cases() -> list[dict]:
             },
             datetime(2026, 3, 16, 23, 30, tzinfo=timezone(timedelta(hours=-4))),
         ),
-        watches("spc_watches_none_active_uses_now", {"json": {"features": [
-            {"properties": {"sel": "SEL1", "expire": "2026-05-01T12:00:00Z"}}
-        ]}}, None),
+        watches(
+            "spc_watches_none_active_uses_now",
+            {
+                "json": {
+                    "features": [{"properties": {"sel": "SEL1", "expire": "2026-05-01T12:00:00Z"}}]
+                }
+            },
+            None,
+        ),
         watches("spc_watches_empty", {"json": {"features": []}}, None),
         watches("spc_watches_list_payload", {"json": ["x"]}, None),
         watches("spc_watches_transport_error", {"error": "timed out"}, None),
@@ -713,7 +725,10 @@ def iem_cases() -> list[dict]:
 
 
 def nws_product(pid, text, issued, **extra):
-    return {"url": f"{NWS}/products/{pid}", "json": {"productText": text, "issuanceTime": issued, **extra}}
+    return {
+        "url": f"{NWS}/products/{pid}",
+        "json": {"productText": text, "issuanceTime": issued, **extra},
+    }
 
 
 def nws_cases() -> list[dict]:
@@ -780,7 +795,9 @@ def nws_cases() -> list[dict]:
                 nws_product("afd-new", "NEW AREA FORECAST DISCUSSION", None, headline=""),
             ],
         ),
-        text_product("afd_empty_graph", "AFD", "PHI", [{"url": afd_listing, "json": {"@graph": []}}]),
+        text_product(
+            "afd_empty_graph", "AFD", "PHI", [{"url": afd_listing, "json": {"@graph": []}}]
+        ),
         text_product("afd_no_office", "AFD", "", []),
         text_product(
             "hwo_body_issuance_wins_and_entry_headline",
@@ -843,7 +860,9 @@ def nws_cases() -> list[dict]:
                 },
                 nws_product("sps-middle", "SPS middle", "2026-04-16T12:00:00+00:00"),
                 nws_product("sps-undated", "SPS undated", None),
-                nws_product("sps-newest", "SPS newest", "2026-04-16T14:00:00+00:00", headline="Newest"),
+                nws_product(
+                    "sps-newest", "SPS newest", "2026-04-16T14:00:00+00:00", headline="Newest"
+                ),
                 {"url": f"{NWS}/products/sps-empty", "json": {}},
                 nws_product("sps-oldest", "SPS oldest", "2026-04-16T10:00:00+00:00"),
             ],
@@ -949,12 +968,12 @@ def nws_cases() -> list[dict]:
                 {
                     "url": f"{NWS}/products?",
                     "json": {
-                        "@graph": [
-                            {"id": "cli-rdu", "issuanceTime": "2026-05-22T20:54:00+00:00"}
-                        ]
+                        "@graph": [{"id": "cli-rdu", "issuanceTime": "2026-05-22T20:54:00+00:00"}]
                     },
                 },
-                nws_product("cli-rdu", "CLIMATE REPORT\n...RALEIGH...", "2026-05-22T20:54:00+00:00"),
+                nws_product(
+                    "cli-rdu", "CLIMATE REPORT\n...RALEIGH...", "2026-05-22T20:54:00+00:00"
+                ),
             ],
             lambda: get_nws_daily_climate_report("RDU"),
         ),
@@ -1134,8 +1153,13 @@ def surf_cases() -> list[dict]:
                 "current_units": {"wave_height": 5, "sea_surface_temperature": ""},
             },
         ),
-        marine("marine_invalid_time_uses_now", {"current": {"time": "not-a-time", "wave_height": 1.2}}),
-        marine("marine_offset_time", {"current": {"time": "2026-06-07T12:00+01:00", "wave_height": True}}),
+        marine(
+            "marine_invalid_time_uses_now", {"current": {"time": "not-a-time", "wave_height": 1.2}}
+        ),
+        marine(
+            "marine_offset_time",
+            {"current": {"time": "2026-06-07T12:00+01:00", "wave_height": True}},
+        ),
         marine("marine_empty_current", {"current": {}}),
         marine("marine_only_time", {"current": {"time": "2026-06-07T12:00"}}),
         marine("marine_units_not_dict", {"current": {"wave_height": 1}, "current_units": []}),
@@ -1195,7 +1219,14 @@ def surf_cases() -> list[dict]:
         ),
         pirate(
             "pirate_partial",
-            {"currently": {"summary": "Clear", "windSpeed": 8, "windBearing": "calm", "precipProbability": True}},
+            {
+                "currently": {
+                    "summary": "Clear",
+                    "windSpeed": 8,
+                    "windBearing": "calm",
+                    "precipProbability": True,
+                }
+            },
             porto,
         ),
         pirate("pirate_currently_not_dict", {"currently": []}, porto),
@@ -1323,8 +1354,8 @@ def advanced_lookup_products(location) -> dict:
     opened: dict[str, str] = {}
     stub = dialog_stub(location)
     for tab in fpd.ForecastProductsDialog._TABS:
-        fpd.show_advanced_text_product_dialog = lambda *_a, initial_product_type, **_k: opened.update(
-            {tab.product_type: initial_product_type}
+        fpd.show_advanced_text_product_dialog = lambda *_a, initial_product_type, **_k: (
+            opened.update({tab.product_type: initial_product_type})
         )
         stub._make_advanced_lookup_opener(tab.product_type)()
     return opened
@@ -1353,7 +1384,10 @@ def tab_cases() -> dict:
         ],
         "HWO": [{"url": f"{listing}/HWO/locations/RAH", "json": {"@graph": []}}],
         "SPS": [
-            {"url": f"{listing}/SPS/locations/RAH", "json": {"@graph": [{"id": "s1"}, {"id": "s2"}]}},
+            {
+                "url": f"{listing}/SPS/locations/RAH",
+                "json": {"@graph": [{"id": "s1"}, {"id": "s2"}]},
+            },
             nws_product("s1", "SPS one", "2026-05-01T12:00:00+00:00"),
             nws_product("s2", "SPS two", "2026-05-01T13:00:00+00:00"),
         ],
@@ -1367,13 +1401,18 @@ def tab_cases() -> dict:
         "CLI": [
             {
                 "url": f"{NWS}/points/",
-                "json": {"properties": {"observationStations": f"{NWS}/gridpoints/RAH/1,1/stations"}},
+                "json": {
+                    "properties": {"observationStations": f"{NWS}/gridpoints/RAH/1,1/stations"}
+                },
             },
             {
                 "url": f"{NWS}/gridpoints/RAH/1,1/stations",
                 "json": {"observationStations": [f"{NWS}/stations/KRDU", f"{NWS}/stations/KIGX"]},
             },
-            {"url": f"{listing}/CLI/locations", "json": {"locations": {"RDU": "Raleigh", "GSO": ""}}},
+            {
+                "url": f"{listing}/CLI/locations",
+                "json": {"locations": {"RDU": "Raleigh", "GSO": ""}},
+            },
             {"url": f"{NWS}/products?", "json": {"@graph": [{"id": "cli-rdu"}]}},
             nws_product("cli-rdu", "CLIMATE REPORT RDU", "2026-05-01T06:00:00+00:00"),
         ],
@@ -1407,7 +1446,11 @@ def tab_cases() -> dict:
         stub = dialog_stub(raleigh, service)
         entry = case(
             f"loader_{tab.product_type.lower()}",
-            {"fn": "load_tab", "product_type": tab.product_type, "location": location_json(raleigh)},
+            {
+                "fn": "load_tab",
+                "product_type": tab.product_type,
+                "location": location_json(raleigh),
+            },
             loader_responses[tab.product_type],
             lambda stub=stub, tab=tab: stub._make_loader(tab)(),
             product_result,
@@ -1463,7 +1506,13 @@ def tab_cases() -> dict:
     formatting = {
         "full_names": fmt.PRODUCT_FULL_NAMES,
         "empty_copy": [
-            {"product_type": t, "cwa": cwa, "text": fmt.EMPTY_COPY.get(t, f"{t} not currently available for {{cwa_office}}.").format(cwa_office=cwa)}
+            {
+                "product_type": t,
+                "cwa": cwa,
+                "text": fmt.EMPTY_COPY.get(
+                    t, f"{t} not currently available for {{cwa_office}}."
+                ).format(cwa_office=cwa),
+            }
             for t in product_types
             for cwa in ("RAH", None)
         ],
@@ -1602,7 +1651,9 @@ def advanced_cases() -> dict:
             "url": f"{NWS}/products?",
             "json": {"@graph": [{"id": "afd-1", "issuanceTime": "2026-05-01T15:00:00+00:00"}]},
         },
-        nws_product("afd-1", "official text", "2026-05-01T15:00:00+00:00", headline="Official product"),
+        nws_product(
+            "afd-1", "official text", "2026-05-01T15:00:00+00:00", headline="Official product"
+        ),
     ]
     srf_history = [
         {"url": f"{NWS}/products?", "json": {"@graph": [{"id": "srf-1"}]}},
@@ -1665,9 +1716,7 @@ def advanced_cases() -> dict:
             start_text="2020-01-01",
             end_text="2020-01-02",
         ),
-        lookup_case(
-            "incomplete_date_choice", raleigh, [], start_parts=["2024", "", "15"]
-        ),
+        lookup_case("incomplete_date_choice", raleigh, [], start_parts=["2024", "", "15"]),
         lookup_case(
             "invalid_calendar_date", raleigh, [], end_parts=["2023", "02 - February", "29"]
         ),
@@ -1734,7 +1783,9 @@ def advanced_cases() -> dict:
             product="LSR",
             source="NWS history only",
         ),
-        lookup_case("prefer_nws_empty_falls_back_to_iem", raleigh, empty_history + afos, product="PNS"),
+        lookup_case(
+            "prefer_nws_empty_falls_back_to_iem", raleigh, empty_history + afos, product="PNS"
+        ),
         lookup_case(
             "custom_office_invalid",
             raleigh,
@@ -1821,7 +1872,9 @@ def advanced_cases() -> dict:
         stub.start_month_choice = Ctl(selection=month)
         stub.start_day_choice = Ctl(selection=day)
         try:
-            parts.append({"input": [year, month, day], "ok": iso(stub._date_from_choice_parts("start"))})
+            parts.append(
+                {"input": [year, month, day], "ok": iso(stub._date_from_choice_parts("start"))}
+            )
         except ValueError as exc:
             parts.append({"input": [year, month, day], "error": str(exc)})
 
@@ -1849,7 +1902,20 @@ def advanced_cases() -> dict:
 
     limits = [
         {"input": v, "limit": ADV._parse_limit(v)}
-        for v in ["1", "5", " 7 ", "25", "26", "999999999999999999999", "0", "-3", "abc", "", "+4", "3.5"]
+        for v in [
+            "1",
+            "5",
+            " 7 ",
+            "25",
+            "26",
+            "999999999999999999999",
+            "0",
+            "-3",
+            "abc",
+            "",
+            "+4",
+            "3.5",
+        ]
     ]
 
     validations = [
@@ -1905,7 +1971,14 @@ def advanced_cases() -> dict:
     formatted = ADV._format_products(
         "IEM",
         [
-            TextProduct("SRF", "srf-1", "PHI", datetime(2026, 6, 7, 10, 0, 0, 500, tzinfo=UTC), "SURF", "Surf Zone Forecast"),
+            TextProduct(
+                "SRF",
+                "srf-1",
+                "PHI",
+                datetime(2026, 6, 7, 10, 0, 0, 500, tzinfo=UTC),
+                "SURF",
+                "Surf Zone Forecast",
+            ),
             TextProduct("AFDRAH", "AFDRAH", "IEM", None, "", ""),
         ],
     )
@@ -1919,11 +1992,15 @@ def advanced_cases() -> dict:
         "validate": validations,
         "date_presets": {"now": iso(now), "ranges": presets},
         "categories": list(adv_mod._PRODUCT_CATEGORIES),
-        "labels_by_category": {c: ADV._preset_labels_for_category(c) for c in adv_mod._PRODUCT_CATEGORIES},
+        "labels_by_category": {
+            c: ADV._preset_labels_for_category(c) for c in adv_mod._PRODUCT_CATEGORIES
+        },
         "preset_changes": preset_changes,
         "format_products": formatted,
         "format_products_empty": ADV._format_products("NWS", []),
-        "form_datetime": ADV._format_form_datetime(datetime(2026, 7, 4, 8, 0, 0, 5, tzinfo=timezone(timedelta(hours=-4)))),
+        "form_datetime": ADV._format_form_datetime(
+            datetime(2026, 7, 4, 8, 0, 0, 5, tzinfo=timezone(timedelta(hours=-4)))
+        ),
     }
 
 
@@ -1991,7 +2068,21 @@ def py_cases() -> dict:
             fromiso.append({"input": text, "ok": iso(datetime.fromisoformat(text))})
         except ValueError:
             fromiso.append({"input": text, "ok": None})
-    floats = [-77.0, 35.7796, 1e20, 1e16, 1234567890123456.0, 0.0001, 0.00001, 0.1 + 0.2, 2.5, -0.5, 100.0, 1e-7, 123456789.123]
+    floats = [
+        -77.0,
+        35.7796,
+        1e20,
+        1e16,
+        1234567890123456.0,
+        0.0001,
+        0.00001,
+        0.1 + 0.2,
+        2.5,
+        -0.5,
+        100.0,
+        1e-7,
+        123456789.123,
+    ]
     return {
         "fromisoformat": fromiso,
         "float_repr": [{"value": f, "repr": repr(f)} for f in floats],

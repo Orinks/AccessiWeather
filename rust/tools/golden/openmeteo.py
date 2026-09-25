@@ -287,14 +287,18 @@ def main() -> None:
     common.run(
         fetch_case(
             "forecast_model_clamped",
-            lambda c: wc.get_openmeteo_forecast(london, FETCH_BASE, 10.0, c, days=30, model="icon_seamless"),
+            lambda c: wc.get_openmeteo_forecast(
+                london, FETCH_BASE, 10.0, c, days=30, model="icon_seamless"
+            ),
             forecast_body,
         )
     )
     common.run(
         fetch_case(
             "hourly_min_clamped",
-            lambda c: wc.get_openmeteo_hourly_forecast(nyc, FETCH_BASE, 10.0, c, "best_match", hours=0),
+            lambda c: wc.get_openmeteo_hourly_forecast(
+                nyc, FETCH_BASE, 10.0, c, "best_match", hours=0
+            ),
             hourly_body,
         )
     )
@@ -305,7 +309,9 @@ def main() -> None:
     client = openmeteo_client.OpenMeteoApiClient()
     client.get_current_weather(40.7128, -74.006)
     client.get_forecast(40.0, -74.0, days=20, temperature_unit="celsius", model="gfs_seamless")
-    client.get_hourly_forecast(51.5, -0.12, hours=500, wind_speed_unit="kmh", precipitation_unit="mm")
+    client.get_hourly_forecast(
+        51.5, -0.12, hours=500, wind_speed_unit="kmh", precipitation_unit="mm"
+    )
     common.write(AREA, "fetch_dict_client_urls", {"exchanges": router.exchanges()})
 
 

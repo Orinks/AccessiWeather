@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 import wx
@@ -27,7 +27,7 @@ from accessiweather.ui.dialogs.alerts_summary_dialog import AlertsSummaryDialog
 OUT = Path(__file__).resolve().parents[2] / "testdata" / "golden" / "alertui" / "cases.json"
 
 EDT = timezone(timedelta(hours=-4))
-UTC = timezone.utc
+UTC = UTC
 
 ALERTS = [
     # A full NWS alert: wrapped description, instruction, both times.
@@ -157,9 +157,7 @@ def alert_case(parent, alert) -> dict:
     view = type("View", (), {"alert": alert})()
     case["subject"] = AlertDialog._build_subject_text(view)
     case["info"] = AlertDialog._build_info_text(view)
-    case["combined"] = [
-        AlertDialog._build_combined_text(alert, AppSettings(**s)) for s in SETTINGS
-    ]
+    case["combined"] = [AlertDialog._build_combined_text(alert, AppSettings(**s)) for s in SETTINGS]
     case["copy"] = [AlertDialog._copy_payload(alert, AppSettings(**s)) for s in SETTINGS]
     return case
 

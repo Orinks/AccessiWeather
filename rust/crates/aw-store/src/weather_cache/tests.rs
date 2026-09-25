@@ -1,4 +1,4 @@
-use aw_core::golden::{self, assert_json_eq, field};
+use aw_core::golden::{self, assert_json_eq_instants, field};
 use aw_core::model::{CurrentConditions, Forecast, ForecastPeriod, WeatherAlerts};
 
 use super::*;
@@ -48,7 +48,9 @@ fn golden_load_matches_python() {
             let typed: Location = serde_json::from_value(stored.clone()).unwrap();
             *stored = serde_json::to_value(typed).unwrap();
         }
-        assert_json_eq(&loaded, &expected, name);
+        // Legacy naive timestamps load as machine-local time; the goldens were
+        // made on a US Eastern machine, so compare instants, not offsets.
+        assert_json_eq_instants(&loaded, &expected, name);
         assert_eq!(
             path.exists(),
             case["file_kept"].as_bool().unwrap(),

@@ -38,16 +38,34 @@ def write(name: str, data) -> None:
 
 
 def updates() -> None:
-    from accessiweather.services import simple_update as su
-    from accessiweather.services import update_restart
+    from accessiweather.services import (
+        simple_update as su,
+        update_restart,
+    )
     from accessiweather.services.update_integrity import find_checksum_asset, parse_checksum_file
     from accessiweather.ui.dialogs.update_dialog import format_release_notes_for_dialog
 
     tags = [
-        "v0.10.1", "v0.10.0", "0.9.0", "v1.0.0rc1", "v1.0.0", "v1.0", "vv2.0", "V1.2",
-        "v1.0.0-beta.2", "v1.0.post1", "v1.0.dev3", "v2!0.1", "v1.0+local.7", "junk",
-        "v0.11.0-rust.1", "nightly-20260925", "Nightly-20260101", "build-nightly-20251231-x",
-        "nightly-2026", "",
+        "v0.10.1",
+        "v0.10.0",
+        "0.9.0",
+        "v1.0.0rc1",
+        "v1.0.0",
+        "v1.0",
+        "vv2.0",
+        "V1.2",
+        "v1.0.0-beta.2",
+        "v1.0.post1",
+        "v1.0.dev3",
+        "v2!0.1",
+        "v1.0+local.7",
+        "junk",
+        "v0.11.0-rust.1",
+        "nightly-20260925",
+        "Nightly-20260101",
+        "build-nightly-20251231-x",
+        "nightly-2026",
+        "",
     ]
     currents = ["0.10.1", "0.10.0", "v0.9.0", "1.0.0", "1.0.0rc1", "1.0", "0.11.0", "abc", ""]
     nightlies = [None, "20260924", "20260925"]
@@ -139,7 +157,9 @@ def updates() -> None:
         "####### Seven hashes\n#NoSpace\n__bold__ and *em* and snake_case_name and 2*3*4",
         "- [link](url) [not a link] `code` ``double``",
     ]
-    release_notes = [{"raw": n, "formatted": format_release_notes_for_dialog(n)} for n in note_inputs]
+    release_notes = [
+        {"raw": n, "formatted": format_release_notes_for_dialog(n)} for n in note_inputs
+    ]
 
     h256 = "a" * 64
     h512 = "B" * 128
@@ -173,7 +193,9 @@ def updates() -> None:
     checksum_find = []
     for names, artifact in find_cases:
         found = find_checksum_asset({"assets": [{"name": n} for n in names]}, artifact)
-        checksum_find.append({"assets": names, "artifact": artifact, "found": found["name"] if found else None})
+        checksum_find.append(
+            {"assets": names, "artifact": artifact, "found": found["name"] if found else None}
+        )
     for release in RELEASES:
         for asset in release["assets"]:
             found = find_checksum_asset(release, asset["name"])
@@ -264,7 +286,9 @@ def startup() -> None:
 
     desktop = []
     for exe in ["/opt/accessiweather/accessiweather", '/home/me/My "Apps"/aw/accessiweather']:
-        desktop.append({"executable": exe, "text": manager_for(exe, "linux")._build_desktop_entry()})
+        desktop.append(
+            {"executable": exe, "text": manager_for(exe, "linux")._build_desktop_entry()}
+        )
 
     plists = []
     startup_utils.is_compiled_runtime = lambda: True
@@ -353,7 +377,9 @@ def activation() -> None:
         extracted.append(
             {
                 "argv": argv,
-                "request": None if request is None else {"kind": request.kind, "alert_id": request.alert_id},
+                "request": None
+                if request is None
+                else {"kind": request.kind, "alert_id": request.alert_id},
             }
         )
     titles = [
@@ -365,7 +391,8 @@ def activation() -> None:
         "",
     ]
     window_titles = [
-        {"title": t, "match": SingleInstanceManager._is_accessiweather_window_title(t)} for t in titles
+        {"title": t, "match": SingleInstanceManager._is_accessiweather_window_title(t)}
+        for t in titles
     ]
     write("activation.json", {"tokens": tokens, "argv": extracted, "window_titles": window_titles})
 
@@ -419,7 +446,12 @@ def import_export() -> None:
 
     def location_state(cfg):
         return [
-            {"name": l.name, "latitude": l.latitude, "longitude": l.longitude, "country_code": l.country_code}
+            {
+                "name": l.name,
+                "latitude": l.latitude,
+                "longitude": l.longitude,
+                "country_code": l.country_code,
+            }
             for l in cfg.locations
         ]
 
@@ -432,22 +464,38 @@ def import_export() -> None:
 
     location_cases = [
         {"locations": [{"name": "Paris", "latitude": 48.8566, "longitude": 2.3522}]},
-        {"locations": [
-            {"name": "Existing Location", "latitude": 1, "longitude": 2},
-            {"name": "New", "latitude": "40.5", "longitude": " -80 ", "country_code": "ca"},
-        ]},
+        {
+            "locations": [
+                {"name": "Existing Location", "latitude": 1, "longitude": 2},
+                {"name": "New", "latitude": "40.5", "longitude": " -80 ", "country_code": "ca"},
+            ]
+        },
         {"other_data": "value"},
-        {"locations": ["invalid_string_entry", {"name": "Valid", "latitude": 40.0, "longitude": -80.0}]},
+        {
+            "locations": [
+                "invalid_string_entry",
+                {"name": "Valid", "latitude": 40.0, "longitude": -80.0},
+            ]
+        },
         {"locations": [{"name": "Missing Coords"}, {"latitude": 40.0, "longitude": -80.0}]},
         {"locations": [{"name": "Bad", "latitude": "not_a_number", "longitude": -80.0}]},
         {"locations": []},
-        {"locations": [{"name": "", "latitude": 1, "longitude": 1}, {"name": "Zero", "latitude": 0, "longitude": 0}]},
+        {
+            "locations": [
+                {"name": "", "latitude": 1, "longitude": 1},
+                {"name": "Zero", "latitude": 0, "longitude": 0},
+            ]
+        },
         [1, 2],
     ]
     settings_cases = [
-        {"settings": {"temperature_unit": "f", "data_source": "visualcrossing"},
-         "locations": [{"name": "Existing Location", "latitude": 1, "longitude": 1},
-                       {"name": "Tokyo", "latitude": 35.6762, "longitude": 139.6503, "country_code": "jp"}]},
+        {
+            "settings": {"temperature_unit": "f", "data_source": "visualcrossing"},
+            "locations": [
+                {"name": "Existing Location", "latitude": 1, "longitude": 1},
+                {"name": "Tokyo", "latitude": 35.6762, "longitude": 139.6503, "country_code": "jp"},
+            ],
+        },
         {"settings": {"data_source": "pirateweather", "update_interval_minutes": 30}},
         {"settings": {"data_source": "auto"}, "locations": ["junk"]},
         {"other": 1},
@@ -476,7 +524,11 @@ def import_export() -> None:
                 )
             cfg = fresh()
             results.append(
-                {"input": "<invalid json>", "result": _import_raw(operations(cfg), method, tmp), "locations": location_state(cfg)}
+                {
+                    "input": "<invalid json>",
+                    "result": _import_raw(operations(cfg), method, tmp),
+                    "locations": location_state(cfg),
+                }
             )
         return results
 
@@ -504,8 +556,12 @@ def portable_copy() -> None:
     mixin = SettingsDialogPortableMixin()
     cases = []
     full = {
-        "settings": {"data_source": "nws", "ai_model_preference": "auto", "temperature_unit": "f",
-                     "custom_system_prompt": None},
+        "settings": {
+            "data_source": "nws",
+            "ai_model_preference": "auto",
+            "temperature_unit": "f",
+            "custom_system_prompt": None,
+        },
         "locations": [{"name": "Home", "latitude": 1, "longitude": 2}],
     }
     installed_variants = {
@@ -520,11 +576,19 @@ def portable_copy() -> None:
     }
     portable_variants = {
         "same": full,
-        "changed": {"settings": {"data_source": "auto", "temperature_unit": "f", "prompt": "  "},
-                    "locations": []},
-        "quote": {"settings": {"data_source": "it's", "ai_model_preference": 3,
-                               "temperature_unit": True, "custom_instructions": ""},
-                  "locations": [1, 2]},
+        "changed": {
+            "settings": {"data_source": "auto", "temperature_unit": "f", "prompt": "  "},
+            "locations": [],
+        },
+        "quote": {
+            "settings": {
+                "data_source": "it's",
+                "ai_model_preference": 3,
+                "temperature_unit": True,
+                "custom_instructions": "",
+            },
+            "locations": [1, 2],
+        },
         "bare": {},
     }
     with tempfile.TemporaryDirectory() as tmp:
@@ -640,8 +704,15 @@ SCENARIOS = [
         "portable": False,
         "keyring_available": False,
         "script": [
-            "yes", "yes", "no", "yes", {"text": "  sk-or-1  "}, "yes",
-            "yes", "yes", {"text": "   "},
+            "yes",
+            "yes",
+            "no",
+            "yes",
+            {"text": "  sk-or-1  "},
+            "yes",
+            "yes",
+            "yes",
+            {"text": "   "},
         ],
     },
     {
@@ -678,7 +749,16 @@ SCENARIOS = [
         "name": "portable_keys_bundle_written",
         "portable": True,
         "results": {"export": True},
-        "script": ["yes", "yes", "yes", {"text": "sk-or"}, "yes", "yes", {"text": "pw-key"}, {"text": " secret "}],
+        "script": [
+            "yes",
+            "yes",
+            "yes",
+            {"text": "sk-or"},
+            "yes",
+            "yes",
+            {"text": "pw-key"},
+            {"text": " secret "},
+        ],
     },
     {
         "name": "portable_bundle_write_fails",
@@ -715,14 +795,29 @@ SCENARIOS = [
         "results": {"import_api_keys": True, "import_settings": True},
         "settings_adds_location": True,
         "bundle_keys": {"pirate_weather_api_key": "pw"},
-        "script": ["no", "yes", {"file": "C:/s.json"}, "yes", {"file": "C:/k.keys"}, {"text": "pass"}],
+        "script": [
+            "no",
+            "yes",
+            {"file": "C:/s.json"},
+            "yes",
+            {"file": "C:/k.keys"},
+            {"text": "pass"},
+        ],
     },
-    {"name": "import_settings_then_configure_myself", "portable": False, "script": ["no", "cancel"]},
+    {
+        "name": "import_settings_then_configure_myself",
+        "portable": False,
+        "script": ["no", "cancel"],
+    },
     {"name": "settings_file_cancelled", "portable": False, "script": ["no", "yes", "cancel"]},
     {"name": "keys_file_cancelled", "portable": False, "script": ["no", "no", "yes", "cancel"]},
     {"name": "key_choice_configure_myself", "portable": False, "script": ["yes", "yes", "cancel"]},
     {"name": "key_entry_cancelled", "portable": False, "script": ["yes", "yes", "yes", "cancel"]},
-    {"name": "skip_openrouter_setup_cancel_pirate", "portable": False, "script": ["yes", "no", "cancel"]},
+    {
+        "name": "skip_openrouter_setup_cancel_pirate",
+        "portable": False,
+        "script": ["yes", "no", "cancel"],
+    },
 ]
 
 
@@ -731,7 +826,11 @@ def onboarding() -> None:
     import accessiweather.config.secure_storage as secure_storage
     from accessiweather.app import AccessiWeatherApp
 
-    icons = [(wx.ICON_ERROR, "error"), (wx.ICON_WARNING, "warning"), (wx.ICON_INFORMATION, "information")]
+    icons = [
+        (wx.ICON_ERROR, "error"),
+        (wx.ICON_WARNING, "warning"),
+        (wx.ICON_INFORMATION, "information"),
+    ]
 
     def icon(style):
         return next((name for bit, name in icons if style & bit), None)
@@ -915,7 +1014,10 @@ def onboarding() -> None:
                 for wizard_will_show in (False, True):
                     for bundle in (False, True):
                         for imported in (False, True):
-                            d = Path(tmp) / f"{portable}{hint_shown}{wizard_will_show}{bundle}{imported}"
+                            d = (
+                                Path(tmp)
+                                / f"{portable}{hint_shown}{wizard_will_show}{bundle}{imported}"
+                            )
                             d.mkdir()
                             if bundle:
                                 (d / "api-keys.awkeys").write_text("{}")

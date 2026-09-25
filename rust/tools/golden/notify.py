@@ -97,13 +97,18 @@ from accessiweather.notification_activation import (  # noqa: E402
     serialize_activation_request,
     write_activation_request_handoff,
 )
-from accessiweather.notifications import alert_sound_mapper  # noqa: E402
-from accessiweather.notifications import sound_player  # noqa: E402
+from accessiweather.notifications import (
+    alert_sound_mapper,  # noqa: E402
+    sound_player,  # noqa: E402
+)
 from accessiweather.notifications.toast_notifier import _DesktopNotifierBackend  # noqa: E402
 from accessiweather.paths import RuntimeStoragePaths  # noqa: E402
 from accessiweather.runtime_state import RuntimeStateManager  # noqa: E402
 from accessiweather.ui import main_window_notification_events as mwne  # noqa: E402
-from accessiweather.ui.dialogs.debug_alert_dialog import ALERT_PRESETS, DebugAlertDialog  # noqa: E402
+from accessiweather.ui.dialogs.debug_alert_dialog import (  # noqa: E402
+    ALERT_PRESETS,
+    DebugAlertDialog,
+)
 from accessiweather.ui.main_window_commands import MainWindowCommandMixin  # noqa: E402
 from accessiweather.ui.system_tray import SystemTrayIcon  # noqa: E402
 
@@ -391,12 +396,8 @@ def seed_legacy(config_dir: Path) -> dict:
     return {"alert_state.json": text}
 
 
-FRESH_ALERT = alert(
-    "fresh-1", "Flood Warning", "Severe", sent="2026-09-25T11:55:00-04:00"
-)
-STALE_ALERT = alert(
-    "stale-1", "Wind Advisory", "Moderate", sent="2026-09-25T11:00:00-04:00"
-)
+FRESH_ALERT = alert("fresh-1", "Flood Warning", "Severe", sent="2026-09-25T11:55:00-04:00")
+STALE_ALERT = alert("stale-1", "Wind Advisory", "Moderate", sent="2026-09-25T11:00:00-04:00")
 LEGACY_ALERT = alert("legacy-1", "Winter Storm Warning", "Severe")
 
 
@@ -407,7 +408,9 @@ def alert_scenarios() -> list[dict]:
     a4 = alert("a4", "Frost Advisory", "Minor")
     a5 = alert("a5", "Dense Fog Advisory", "Moderate", expires="2026-09-25T11:00:00-04:00")
     a6 = alert("a6", "Wind Advisory", "Moderate", sent="2026-09-25T12:01:00-04:00")
-    a2_changed = dict(a2, description="Tornado Warning description, updated with a much longer text " * 3)
+    a2_changed = dict(
+        a2, description="Tornado Warning description, updated with a much longer text " * 3
+    )
     a1_esc = dict(a1, severity="Severe", headline="Flood Watch upgraded")
     a1_back = dict(a1, severity="Moderate", headline="Flood Watch downgraded")
     no_id = alert(None, "Heat Advisory", "Moderate", areas=["Z", "Y"], source="NWS")
@@ -436,7 +439,11 @@ def alert_scenarios() -> list[dict]:
         {"sound_pack": MISSING_PACK},
         [
             {"kind": "process", "now": at(0), "alerts": [LEGACY_ALERT]},
-            {"kind": "process", "now": at(40), "alerts": [LEGACY_ALERT, alert("n1", "Flood Warning")]},
+            {
+                "kind": "process",
+                "now": at(40),
+                "alerts": [LEGACY_ALERT, alert("n1", "Flood Warning")],
+            },
         ],
         seed=seed_legacy,
     )
@@ -486,7 +493,12 @@ def alert_scenarios() -> list[dict]:
                     alert("s1", "Frost Advisory", "Minor", urgency="Future"),
                     alert("s2", "Heat Advisory", "Severe"),
                     alert("s3", "Air Quality Alert", "Unknown"),
-                    alert("s4", "Special Weather Statement", "Moderate", description="Issued by the office. Ice possible."),
+                    alert(
+                        "s4",
+                        "Special Weather Statement",
+                        "Moderate",
+                        description="Issued by the office. Ice possible.",
+                    ),
                     alert("s5", "Hurricane Force Wind Warning", "Extreme", message_type="alert "),
                 ],
             },
@@ -495,11 +507,19 @@ def alert_scenarios() -> list[dict]:
                 "now": at(1),
                 "settings": dict(specific_settings, alert_notifications_enabled=False),
             },
-            {"kind": "process", "now": at(20), "alerts": [alert("s6", "Tornado Warning", "Extreme")]},
+            {
+                "kind": "process",
+                "now": at(20),
+                "alerts": [alert("s6", "Tornado Warning", "Extreme")],
+            },
             {
                 "kind": "lifecycle",
                 "now": at(21),
-                "diff": {"cancelled_alerts": [{"kind": "cancelled", "alert_id": "x", "title": "Tornado Warning"}]},
+                "diff": {
+                    "cancelled_alerts": [
+                        {"kind": "cancelled", "alert_id": "x", "title": "Tornado Warning"}
+                    ]
+                },
             },
         ],
     )
@@ -511,7 +531,11 @@ def alert_scenarios() -> list[dict]:
             {
                 "kind": "lifecycle",
                 "now": at(1),
-                "diff": {"new_alerts": [{"kind": "new", "alert": a1, "alert_id": "a1", "title": "Flood Watch"}]},
+                "diff": {
+                    "new_alerts": [
+                        {"kind": "new", "alert": a1, "alert_id": "a1", "title": "Flood Watch"}
+                    ]
+                },
             },
             {
                 "kind": "lifecycle",
@@ -532,7 +556,12 @@ def alert_scenarios() -> list[dict]:
                         }
                     ],
                     "extended_alerts": [
-                        {"kind": "extended", "alert": a4, "alert_id": "a4", "title": "Frost Advisory"}
+                        {
+                            "kind": "extended",
+                            "alert": a4,
+                            "alert_id": "a4",
+                            "title": "Frost Advisory",
+                        }
                     ],
                     "cancelled_alerts": [
                         {"kind": "cancelled", "alert_id": "a3", "title": "Winter Storm Warning"},
@@ -553,8 +582,17 @@ def alert_scenarios() -> list[dict]:
                     "location": {"name": "Home", "latitude": 40.0, "longitude": -75.0},
                     "alerts": {"alerts": [a2]},
                     "alert_lifecycle_diff": {
-                        "new_alerts": [{"kind": "new", "alert": a2, "alert_id": "a2", "title": "Tornado Warning"}],
-                        "cancelled_alerts": [{"kind": "cancelled", "alert_id": "a3", "title": "Flood Watch"}],
+                        "new_alerts": [
+                            {
+                                "kind": "new",
+                                "alert": a2,
+                                "alert_id": "a2",
+                                "title": "Tornado Warning",
+                            }
+                        ],
+                        "cancelled_alerts": [
+                            {"kind": "cancelled", "alert_id": "a3", "title": "Flood Watch"}
+                        ],
                     },
                 },
             },
@@ -565,7 +603,14 @@ def alert_scenarios() -> list[dict]:
                     "location": {"name": "Home", "latitude": 40.0, "longitude": -75.0},
                     "alerts": {"alerts": []},
                     "alert_lifecycle_diff": {
-                        "updated_alerts": [{"kind": "updated", "alert": a2_changed, "alert_id": "a2", "title": "Tornado Warning"}]
+                        "updated_alerts": [
+                            {
+                                "kind": "updated",
+                                "alert": a2_changed,
+                                "alert_id": "a2",
+                                "title": "Tornado Warning",
+                            }
+                        ]
                     },
                 },
             },
@@ -674,7 +719,10 @@ def sound_cases() -> dict:
                 )
 
     looked_up: list = []
-    sound_player.get_sound_entry_for_candidates = lambda c, pack: (looked_up.append(list(c)), (None, 1.0))[1]
+    sound_player.get_sound_entry_for_candidates = lambda c, pack: (
+        looked_up.append(list(c)),
+        (None, 1.0),
+    )[1]
     sound_player.get_sound_entry = lambda e, pack: (looked_up.append([e]), (None, 1.0))[1]
     mute_cases = []
     for sound_event, cands, muted in [
@@ -832,7 +880,9 @@ def run_event_scenario(name: str, steps: list[dict], seed_files: dict | None = N
             local = set_now(step["now"])
             app = window.app
             app.config_manager.settings = mk_settings(step["settings"])
-            app.config_manager.location = mk_location(step["location"]) if step.get("location") else None
+            app.config_manager.location = (
+                mk_location(step["location"]) if step.get("location") else None
+            )
             cache = window._forecast_product_service._cache
             cache.entries = {}
             cwa = (step.get("location") or {}).get("cwa_office")
@@ -927,7 +977,9 @@ def hwo(text: str, issued: str) -> dict:
     }
 
 
-def sps(pid: str, text: str, headline: str | None, issued: str = "2026-09-25T15:00:00+00:00") -> dict:
+def sps(
+    pid: str, text: str, headline: str | None, issued: str = "2026-09-25T15:00:00+00:00"
+) -> dict:
     return {
         "product_type": "SPS",
         "product_id": pid,
@@ -1010,7 +1062,10 @@ def event_scenarios() -> list[dict]:
         "CLIMATE REPORT\nTEMPERATURE (F)\n  MAXIMUM   74\n  MINIMUM   55\nPRECIPITATION (IN)\n  TODAY 0.12\nSNOWFALL 0.0\nAVERAGE 63\n",
         "2026-09-25T20:00:00+00:00",
     )
-    hwo_1 = hwo("HAZARDOUS WEATHER OUTLOOK\n.DAY ONE...\nNo hazardous weather is expected.\n$$", "2026-09-25T09:00:00+00:00")
+    hwo_1 = hwo(
+        "HAZARDOUS WEATHER OUTLOOK\n.DAY ONE...\nNo hazardous weather is expected.\n$$",
+        "2026-09-25T09:00:00+00:00",
+    )
     hwo_2 = hwo(
         "HAZARDOUS WEATHER OUTLOOK\n.DAY ONE...\nNo hazardous weather is expected.\n"
         "Thunderstorms with damaging winds are possible this evening.\n$$",
@@ -1051,7 +1106,9 @@ def event_scenarios() -> list[dict]:
                 "hwo": hwo_2,
                 "sps": [sps_other, sps_local, sps_event],
                 "cli_stations": ["PHL", "ILG"],
-                "cli_cache": {"ILG": cli(cli_2["product_text"], "2026-09-25T20:00:00+00:00", "ILG")},
+                "cli_cache": {
+                    "ILG": cli(cli_2["product_text"], "2026-09-25T20:00:00+00:00", "ILG")
+                },
                 "active_alerts": [sps_alert],
             },
             {  # no-change AFD, risk down, countdown no renotify, HWO rate limited, SPS rate limited
@@ -1067,7 +1124,9 @@ def event_scenarios() -> list[dict]:
                 "hwo": hwo_3,
                 "sps": [sps_local, sps_noheadline],
                 "cli_stations": ["ILG"],
-                "cli_cache": {"ILG": cli(cli_2["product_text"], "2026-09-25T20:00:00+00:00", "ILG")},
+                "cli_cache": {
+                    "ILG": cli(cli_2["product_text"], "2026-09-25T20:00:00+00:00", "ILG")
+                },
                 "active_alerts": [sps_alert],
             },
             {  # metadata-time AFD fallback, far-off rain (pending), snow stop, HWO after window
@@ -1103,9 +1162,11 @@ def event_scenarios() -> list[dict]:
             },
             {  # every toggle off: nothing runs, no state write
                 "now": at(90),
-                "settings": {k: False for k in ALL_ON},
+                "settings": dict.fromkeys(ALL_ON, False),
                 "location": HOME,
-                "weather": weather(discussion="x", discussion_issuance_time="2026-09-26T00:00:00+00:00"),
+                "weather": weather(
+                    discussion="x", discussion_issuance_time="2026-09-26T00:00:00+00:00"
+                ),
             },
             {  # no location
                 "now": at(91),
@@ -1122,18 +1183,28 @@ def event_scenarios() -> list[dict]:
         [
             {
                 "now": at(0),
-                "settings": {"notify_discussion_update": True, "notify_daily_climate_report_update": True},
+                "settings": {
+                    "notify_discussion_update": True,
+                    "notify_daily_climate_report_update": True,
+                },
                 "location": HOME,
-                "weather": weather(discussion=AFD_1, discussion_issuance_time="2026-09-25T06:45:00+00:00"),
+                "weather": weather(
+                    discussion=AFD_1, discussion_issuance_time="2026-09-25T06:45:00+00:00"
+                ),
                 "hwo": hwo_1,
                 "sps": [],
                 "suppress_startup": False,
             },
             {  # suppression turned on again (e.g. a restart): newer products baseline silently
                 "now": at(5),
-                "settings": {"notify_discussion_update": True, "notify_daily_climate_report_update": True},
+                "settings": {
+                    "notify_discussion_update": True,
+                    "notify_daily_climate_report_update": True,
+                },
                 "location": HOME,
-                "weather": weather(discussion=AFD_2, discussion_issuance_time="2026-09-25T17:32:00+00:00"),
+                "weather": weather(
+                    discussion=AFD_2, discussion_issuance_time="2026-09-25T17:32:00+00:00"
+                ),
                 "hwo": hwo_2,
                 "sps": [sps_local],
                 "cli_stations": ["PHL"],
@@ -1142,9 +1213,14 @@ def event_scenarios() -> list[dict]:
             },
             {
                 "now": at(6),
-                "settings": {"notify_discussion_update": True, "notify_daily_climate_report_update": True},
+                "settings": {
+                    "notify_discussion_update": True,
+                    "notify_daily_climate_report_update": True,
+                },
                 "location": HOME,
-                "weather": weather(discussion=AFD_3, discussion_issuance_time="2026-09-25T21:00:00+00:00"),
+                "weather": weather(
+                    discussion=AFD_3, discussion_issuance_time="2026-09-25T21:00:00+00:00"
+                ),
                 "cli_stations": ["PHL"],
                 "cli_cache": {"PHL": cli_2},
             },
@@ -1208,7 +1284,8 @@ def debug_data() -> dict:
                 "expires": a.expires.isoformat(),
                 "candidates_text": " → ".join(cands),
                 "title": f"{preset.severity.upper()} ALERT: {preset.event}",
-                "message": preset.headline + (f"\n{preset.description}" if preset.description else ""),
+                "message": preset.headline
+                + (f"\n{preset.description}" if preset.description else ""),
             }
         )
 

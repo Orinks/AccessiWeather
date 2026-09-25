@@ -49,7 +49,7 @@ def rich_weather(location):
         current=CurrentConditions(
             temperature_f=72.5,
             temperature_c=22.5,
-            condition="Partly cloudy — café ° \U0001f326 \"quoted\" \\ tab\there",
+            condition='Partly cloudy — café ° \U0001f326 "quoted" \\ tab\there',
             humidity=55,
             dewpoint_f=55.4,
             dewpoint_c=13.0,
@@ -82,7 +82,11 @@ def rich_weather(location):
                     end_time=datetime(2026, 7, 15, 18, tzinfo=EDT),
                     precipitation_probability=20.0,
                 ),
-                ForecastPeriod(name="Tonight", temperature=-0.0, start_time=datetime(2026, 7, 15, 18, tzinfo=IST)),
+                ForecastPeriod(
+                    name="Tonight",
+                    temperature=-0.0,
+                    start_time=datetime(2026, 7, 15, 18, tzinfo=IST),
+                ),
                 ForecastPeriod(name="Huge", temperature=1e16, temperature_unit="C"),
             ],
             generated_at=datetime(2026, 7, 15, 15, 30, tzinfo=UTC),
@@ -103,7 +107,9 @@ def rich_weather(location):
                     pressure_in=29.97,
                     precipitation_probability=5.0,
                 ),
-                HourlyForecastPeriod(start_time=datetime(2026, 7, 15, 17, tzinfo=UTC), temperature=1.5e-07),
+                HourlyForecastPeriod(
+                    start_time=datetime(2026, 7, 15, 17, tzinfo=UTC), temperature=1.5e-07
+                ),
             ],
             generated_at=None,
         ),
@@ -237,18 +243,30 @@ def load_cases():
         "forecast": {
             "periods": [
                 {"name": "Today", "temperature": 80, "start_time": "2026-07-15T06:00:00-04:00"},
-                {"temperature": 60.5, "start_time": {"iso": "2026-07-15T22:00:00+00:00", "original_tz": "Not/AZone"}},
+                {
+                    "temperature": 60.5,
+                    "start_time": {"iso": "2026-07-15T22:00:00+00:00", "original_tz": "Not/AZone"},
+                },
                 "not a dict",
             ],
             "generated_at": {"iso": "   "},
         },
         "hourly_forecast": {
             "periods": [
-                {"start_time": {"iso": "2026-07-15T16:00:00+00:00", "utc_offset_seconds": 19800}, "pressure_mb": 1012},
+                {
+                    "start_time": {"iso": "2026-07-15T16:00:00+00:00", "utc_offset_seconds": 19800},
+                    "pressure_mb": 1012,
+                },
                 {"temperature": 71.0},
             ]
         },
-        "alerts": {"alerts": [{"event": "Flood"}, {"title": "Z", "areas": ["A"], "affected_zones": ["NYZ1"]}, 5]},
+        "alerts": {
+            "alerts": [
+                {"event": "Flood"},
+                {"title": "Z", "areas": ["A"], "affected_zones": ["NYZ1"]},
+                5,
+            ]
+        },
         "environmental": {"air_quality_index": None, "sources": ["x"]},
         "trend_insights": [{"metric": "pressure", "timeframe_hours": "12"}, "bad"],
         "source_attribution": {"contributing_sources": ["openmeteo"], "field_sources": {"a": "b"}},
@@ -259,7 +277,20 @@ def load_cases():
         "discussion_issuance_time": "2026-07-15T12:00:00Z",
     }
     cases = [
-        ("fresh", payload(saved, named_tz_weather, location={"name": "Stored", "latitude": 41.5, "longitude": -73.25, "country_code": "us"}), True),
+        (
+            "fresh",
+            payload(
+                saved,
+                named_tz_weather,
+                location={
+                    "name": "Stored",
+                    "latitude": 41.5,
+                    "longitude": -73.25,
+                    "country_code": "us",
+                },
+            ),
+            True,
+        ),
         ("fresh_strict", payload(saved, {"current": {"temperature_c": 20.0}}), False),
         ("stale_allowed", payload(old, {"current": {"temperature_c": 20.0}}), True),
         ("stale_rejected", payload(old, {"current": {"temperature_c": 20.0}}), False),

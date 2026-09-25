@@ -26,8 +26,10 @@ import wx
 
 from accessiweather import app_initialization
 from accessiweather.ai_explainer import DEFAULT_FREE_MODEL, ExplanationResult
-from accessiweather.ui.dialogs import explanation_dialog as expl
-from accessiweather.ui.dialogs import weather_assistant_dialog as wad
+from accessiweather.ui.dialogs import (
+    explanation_dialog as expl,
+    weather_assistant_dialog as wad,
+)
 
 OUT = Path(__file__).resolve().parents[2] / "testdata" / "golden" / "aiui" / "cases.json"
 
@@ -252,7 +254,9 @@ def assistant_case(parent, location_name) -> dict:
             dlg._on_send(None)
             step("send", message="What about tomorrow?")
             dlg.input_ctrl.SetValue("draft")
-            dlg._on_response_error("Received an empty response. Try again or switch models in Settings.")
+            dlg._on_response_error(
+                "Received an empty response. Try again or switch models in Settings."
+            )
             step(
                 "error",
                 error="Received an empty response. Try again or switch models in Settings.",

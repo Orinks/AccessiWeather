@@ -86,7 +86,10 @@ def stations_golden() -> None:
             "stream_urls": StreamURLProvider._STREAM_URLS,
             "state_choices": list(Dialog._get_state_choices()),
             "base_labels": [
-                {"station": dataclasses.asdict(s), "label": StationAvailabilityService._base_label(s)}
+                {
+                    "station": dataclasses.asdict(s),
+                    "label": StationAvailabilityService._base_label(s),
+                }
                 for s in DB.get_all_stations() + edge_stations
             ],
             "state_choice_codes": {
@@ -152,7 +155,9 @@ def search_golden() -> None:
             "lat": lat,
             "lon": lon,
             "limit": limit,
-            "result": [[r.station.call_sign, r.distance_km] for r in DB.find_nearest(lat, lon, limit)],
+            "result": [
+                [r.station.call_sign, r.distance_km] for r in DB.find_nearest(lat, lon, limit)
+            ],
         }
         for lat, lon in points
         for limit in (None, 5)
@@ -162,7 +167,9 @@ def search_golden() -> None:
         {
             "search": search,
             "nearest": nearest,
-            "by_state": {s: call_signs(DB.get_stations_by_state(s)) for s in ["ny", "TX", "zz", "ab", ""]},
+            "by_state": {
+                s: call_signs(DB.get_stations_by_state(s)) for s in ["ny", "TX", "zz", "ab", ""]
+            },
             "by_call_signs": [
                 {"input": inp, "result": call_signs(DB.get_stations_by_call_signs(inp))}
                 for inp in [["wxk27", " ", "KEC49", "WXK27", "NOPE"], [], ["khb60", "WWG24"]]
@@ -199,7 +206,9 @@ def run_finder(case: dict, tmp: Path) -> dict:
         cache.suppress(cs, 600, "all_streams_failed")
     prefs = RadioPreferences()
     prefs._favorite_stations = list(case["favorites"])
-    saved = [Location(name=n, latitude=lat, longitude=lon) for n, lat, lon in case["saved_locations"]]
+    saved = [
+        Location(name=n, latitude=lat, longitude=lon) for n, lat, lon in case["saved_locations"]
+    ]
     stub = MagicMock()
     stub._prefs = prefs
     stub._lat, stub._lon = case["origin"] if case["origin"] else (None, None)
@@ -228,7 +237,10 @@ def run_finder(case: dict, tmp: Path) -> dict:
         **case,
         "stations": call_signs(stations),
         "choices": choices,
-        "display": [Dialog._format_station_choice_label(stub, s, c) for s, c in zip(stations, choices, strict=True)],
+        "display": [
+            Dialog._format_station_choice_label(stub, s, c)
+            for s, c in zip(stations, choices, strict=True)
+        ],
         "empty_status": Dialog._get_empty_station_status(stub, mode),
     }
 
@@ -250,18 +262,41 @@ def finder_golden() -> None:
     cases = [
         {"name": "search_default", "mode": 0},
         {"name": "search_all_unbounded", "mode": 0, "limit": None},
-        {"name": "search_tx_show_unavailable", "mode": 0, "query": "tx", "limit": None, "show_unavailable": True},
+        {
+            "name": "search_tx_show_unavailable",
+            "mode": 0,
+            "query": "tx",
+            "limit": None,
+            "show_unavailable": True,
+        },
         {"name": "search_coordinates", "mode": 0, "query": "30.2672, -97.7431", "limit": 5},
-        {"name": "favorites", "mode": 1, "favorites": ["WXK27", "KEC49", "NOPE", "KEC61"], "limit": 1},
+        {
+            "name": "favorites",
+            "mode": 1,
+            "favorites": ["WXK27", "KEC49", "NOPE", "KEC61"],
+            "limit": 1,
+        },
         {"name": "favorites_empty", "mode": 1},
         {"name": "favorites_without_streams", "mode": 1, "favorites": ["NOPE"]},
         {"name": "state_tx", "mode": 2, "state_code": "TX", "limit": 3},
         {"name": "state_all", "mode": 2, "limit": 25, "show_unavailable": True},
         {"name": "nearest_query", "mode": 3, "query": "40.7128, -74.0060"},
-        {"name": "nearest_origin_fallback", "mode": 3, "query": "Austin", "origin": [30.27, -97.74], "limit": 4},
+        {
+            "name": "nearest_origin_fallback",
+            "mode": 3,
+            "query": "Austin",
+            "origin": [30.27, -97.74],
+            "limit": 4,
+        },
         {"name": "nearest_no_coordinates", "mode": 3, "query": "Austin"},
         {"name": "nearest_out_of_range", "mode": 3, "query": "95, 10", "origin": [47.6, -122.3]},
-        {"name": "saved_location", "mode": 4, "saved_locations": [austin], "saved_index": 0, "limit": 5},
+        {
+            "name": "saved_location",
+            "mode": 4,
+            "saved_locations": [austin],
+            "saved_index": 0,
+            "limit": 5,
+        },
         {"name": "saved_location_none", "mode": 4},
         {
             "name": "saved_location_without_streams",
@@ -298,10 +333,17 @@ def finder_golden() -> None:
         "finder.json",
         {
             "cases": results,
-            "coordinate_queries": {q: Dialog._parse_coordinate_query(q) for q in coordinate_queries},
+            "coordinate_queries": {
+                q: Dialog._parse_coordinate_query(q) for q in coordinate_queries
+            },
             "initial_search_text": [
                 [lat, lon, f"{lat:.4f}, {lon:.4f}"]
-                for lat, lon in [(30.2672, -97.7431), (0.03125, -0.00005), (40.7, -74.0), (1.23456789, 2.5)]
+                for lat, lon in [
+                    (30.2672, -97.7431),
+                    (0.03125, -0.00005),
+                    (40.7, -74.0),
+                    (1.23456789, 2.5),
+                ]
             ],
         },
     )
@@ -399,12 +441,32 @@ def files_golden() -> None:
         {"name": "limit_float", "file": '{"station_limit": 2.5}', "ops": []},
         {"name": "limit_numeric_string", "file": '{"station_limit": "10"}', "ops": []},
         {"name": "limit_null", "file": '{"station_limit": null}', "ops": []},
-        {"name": "streams_not_object", "file": '{"preferred_streams": [1], "last_station": 42}', "ops": []},
-        {"name": "favorites_not_list", "file": '{"preferred_streams": {}, "favorite_stations": "KEC49"}', "ops": []},
-        {"name": "set_favorites", "file": None, "ops": [["set_favorite_stations", ["b", "A", " b ", ""]]]},
-        {"name": "blank_last_station", "file": None, "ops": [["set_last_station", "x"], ["set_last_station", "  "]]},
+        {
+            "name": "streams_not_object",
+            "file": '{"preferred_streams": [1], "last_station": 42}',
+            "ops": [],
+        },
+        {
+            "name": "favorites_not_list",
+            "file": '{"preferred_streams": {}, "favorite_stations": "KEC49"}',
+            "ops": [],
+        },
+        {
+            "name": "set_favorites",
+            "file": None,
+            "ops": [["set_favorite_stations", ["b", "A", " b ", ""]]],
+        },
+        {
+            "name": "blank_last_station",
+            "file": None,
+            "ops": [["set_last_station", "x"], ["set_last_station", "  "]],
+        },
         {"name": "same_last_station_no_write", "file": None, "ops": [["set_last_station", None]]},
-        {"name": "non_ascii_url", "file": None, "ops": [["set_preferred_url", "kec49", "https://é/😀"]]},
+        {
+            "name": "non_ascii_url",
+            "file": None,
+            "ops": [["set_preferred_url", "kec49", "https://é/😀"]],
+        },
     ]
     cache_cases = [
         {"name": "missing", "file": None, "now": NOW, "ops": []},
@@ -462,8 +524,19 @@ def files_golden() -> None:
 
 def clients_golden() -> None:
     weatherindex_payloads = [
-        {"feeds": [{"stream_url": "https://a"}, {"stream_url": " https://b "}, {"stream_url": "https://a"}]},
-        {"station": {"callsign": "wxk27", "feeds": [{"stream_url": 5}, "junk", {"stream_url": ""}]}},
+        {
+            "feeds": [
+                {"stream_url": "https://a"},
+                {"stream_url": " https://b "},
+                {"stream_url": "https://a"},
+            ]
+        },
+        {
+            "station": {
+                "callsign": "wxk27",
+                "feeds": [{"stream_url": 5}, "junk", {"stream_url": ""}],
+            }
+        },
         {"station": {}, "feeds": [{"stream_url": "https://outer"}]},
         {"call_sign": "WXK27"},
         {},
@@ -547,13 +620,21 @@ def clients_golden() -> None:
         "/XX-KIH24-City",
     ]
     merge_cases = [
-        {"call_sign": "KIH24", "weatherindex": ["https://wi/1", "https://wxradio.org/FL-Tallahassee-KIH24"],
-         "wxradio": {"KIH24": ["https://wxradio.org/FL-Tallahassee-KIH24-alt"]}, "use_fallback": True},
+        {
+            "call_sign": "KIH24",
+            "weatherindex": ["https://wi/1", "https://wxradio.org/FL-Tallahassee-KIH24"],
+            "wxradio": {"KIH24": ["https://wxradio.org/FL-Tallahassee-KIH24-alt"]},
+            "use_fallback": True,
+        },
         {"call_sign": " kih24 ", "weatherindex": [], "wxradio": {}, "use_fallback": False},
         {"call_sign": "ZZZ99", "weatherindex": [], "wxradio": {}, "use_fallback": True},
         {"call_sign": "ZZZ99", "weatherindex": [], "wxradio": {}, "use_fallback": False},
-        {"call_sign": "ZZZ99", "weatherindex": ["https://only"], "wxradio": {"ZZZ99": ["https://only", "https://w"]},
-         "use_fallback": True},
+        {
+            "call_sign": "ZZZ99",
+            "weatherindex": ["https://only"],
+            "wxradio": {"ZZZ99": ["https://only", "https://w"]},
+            "use_fallback": True,
+        },
         {"call_sign": "", "weatherindex": ["https://x"], "wxradio": {}, "use_fallback": True},
     ]
     merged = []
@@ -562,7 +643,9 @@ def clients_golden() -> None:
         wi.get_stream_urls.return_value = case["weatherindex"]
         wxr = MagicMock()
         wxr.get_streams.return_value = case["wxradio"]
-        provider = StreamURLProvider(use_fallback=case["use_fallback"], wxradio_client=wxr, weatherindex_client=wi)
+        provider = StreamURLProvider(
+            use_fallback=case["use_fallback"], wxradio_client=wxr, weatherindex_client=wi
+        )
         merged.append({**case, "urls": provider.get_stream_urls(case["call_sign"])})
     write(
         "clients.json",
@@ -592,19 +675,38 @@ def make_alert(spec: dict) -> WeatherAlert:
 
 
 ALERTS = [
-    {"name": "tornado", "event": "Tornado Warning", "affected_zones": ["TXC453"], "same_codes": ["048453"],
-     "same_event_codes": ["TOR"]},
+    {
+        "name": "tornado",
+        "event": "Tornado Warning",
+        "affected_zones": ["TXC453"],
+        "same_codes": ["048453"],
+        "same_event_codes": ["TOR"],
+    },
     {"name": "air_quality", "same_codes": ["048453"], "same_event_codes": ["NWS"]},
     {"name": "no_county_codes", "affected_zones": ["TXC453"], "same_event_codes": ["TOR"]},
     {"name": "forecast_zone", "affected_zones": ["TXZ192"], "same_event_codes": ["TOR"]},
     {"name": "lowercase_smw", "same_codes": ["48453"], "same_event_codes": [" smw ", "nws", ""]},
-    {"name": "flood_nj", "affected_zones": [
-        "https://api.weather.gov/zones/county/NJC005",
-        "https://api.weather.gov/zones/county/NJC007",
-    ], "same_codes": ["034005", "034007", "034015"], "same_event_codes": ["FLS"]},
-    {"name": "malformed", "affected_zones": ["XXC001", "txc453", "TXC45", " https://x/zones/county/okc001 "],
-     "same_codes": ["abc", "", "1234567", "99001", "072001"], "same_event_codes": ["TOR"]},
-    {"name": "marine", "affected_zones": ["GMZ250"], "same_codes": ["077250"], "same_event_codes": ["SMW"]},
+    {
+        "name": "flood_nj",
+        "affected_zones": [
+            "https://api.weather.gov/zones/county/NJC005",
+            "https://api.weather.gov/zones/county/NJC007",
+        ],
+        "same_codes": ["034005", "034007", "034015"],
+        "same_event_codes": ["FLS"],
+    },
+    {
+        "name": "malformed",
+        "affected_zones": ["XXC001", "txc453", "TXC45", " https://x/zones/county/okc001 "],
+        "same_codes": ["abc", "", "1234567", "99001", "072001"],
+        "same_event_codes": ["TOR"],
+    },
+    {
+        "name": "marine",
+        "affected_zones": ["GMZ250"],
+        "same_codes": ["077250"],
+        "same_event_codes": ["SMW"],
+    },
 ]
 
 
@@ -628,40 +730,83 @@ class _Metadata:
             wfo=None,
             latitude=None,
             longitude=None,
-            served_counties=tuple(WeatherIndexServedCounty(county="C", same_code=c, state="TX") for c in codes),
+            served_counties=tuple(
+                WeatherIndexServedCounty(county="C", same_code=c, state="TX") for c in codes
+            ),
         )
 
 
 def same_golden() -> None:
     by_name = {a["name"]: a for a in ALERTS}
     resolver_cases = [
-        {"name": "austin_nearest", "alerts": ["tornado"], "location": [30.2672, -97.7431],
-         "coverage": {"WXK27": ["048453"], "KEC56": ["048453"]}},
-        {"name": "no_location_state_first", "alerts": ["tornado"], "location": None,
-         "coverage": {"KEC56": ["048453"], "WXK38": ["048453"]}},
-        {"name": "no_location_same_state", "alerts": ["lowercase_smw"], "location": None,
-         "coverage": {"WXK35": ["048453"]}},
-        {"name": "nj_flood", "alerts": ["flood_nj"], "location": None, "coverage": {"KIH28": ["034007"]}},
-        {"name": "empty_coverage_skipped", "alerts": ["tornado"], "location": [30.2672, -97.7431],
-         "coverage": {"WXK27": [], "WXK30": ["048453"]}},
-        {"name": "no_same_codes", "alerts": ["no_county_codes"], "location": None, "coverage": {"WXK27": ["048453"]}},
+        {
+            "name": "austin_nearest",
+            "alerts": ["tornado"],
+            "location": [30.2672, -97.7431],
+            "coverage": {"WXK27": ["048453"], "KEC56": ["048453"]},
+        },
+        {
+            "name": "no_location_state_first",
+            "alerts": ["tornado"],
+            "location": None,
+            "coverage": {"KEC56": ["048453"], "WXK38": ["048453"]},
+        },
+        {
+            "name": "no_location_same_state",
+            "alerts": ["lowercase_smw"],
+            "location": None,
+            "coverage": {"WXK35": ["048453"]},
+        },
+        {
+            "name": "nj_flood",
+            "alerts": ["flood_nj"],
+            "location": None,
+            "coverage": {"KIH28": ["034007"]},
+        },
+        {
+            "name": "empty_coverage_skipped",
+            "alerts": ["tornado"],
+            "location": [30.2672, -97.7431],
+            "coverage": {"WXK27": [], "WXK30": ["048453"]},
+        },
+        {
+            "name": "no_same_codes",
+            "alerts": ["no_county_codes"],
+            "location": None,
+            "coverage": {"WXK27": ["048453"]},
+        },
         {"name": "no_match", "alerts": ["marine"], "location": [29.3, -94.8], "coverage": {}},
-        {"name": "batch", "alerts": ["malformed", "flood_nj"], "location": None, "coverage": {"KHB36": ["001001"]}},
+        {
+            "name": "batch",
+            "alerts": ["malformed", "flood_nj"],
+            "location": None,
+            "coverage": {"KHB36": ["001001"]},
+        },
     ]
     resolved = []
     for case in resolver_cases:
         fake = _Metadata(case["coverage"])
         resolver = WeatherIndexAlertStationResolver(station_database=DB, weatherindex_client=fake)
         alerts = [make_alert(by_name[n]) for n in case["alerts"]]
-        location = Location(name="Here", latitude=case["location"][0], longitude=case["location"][1]) \
-            if case["location"] else None
+        location = (
+            Location(name="Here", latitude=case["location"][0], longitude=case["location"][1])
+            if case["location"]
+            else None
+        )
         station = resolver.resolve_station(alerts, location)
-        resolved.append({**case, "station": station.call_sign if station else None, "calls": fake.calls})
-    resolver = WeatherIndexAlertStationResolver(station_database=DB, weatherindex_client=_Metadata({}))
+        resolved.append(
+            {**case, "station": station.call_sign if station else None, "calls": fake.calls}
+        )
+    resolver = WeatherIndexAlertStationResolver(
+        station_database=DB, weatherindex_client=_Metadata({})
+    )
     write(
         "same.json",
         {
-            "normalize": {v: normalize_same_code(v) for v in ["048453", " 48453 ", "abc", "12-345", "1234567", "", "0"]},
+            "normalize": {
+                v: normalize_same_code(v)
+                for v in ["048453", " 48453 ", "abc", "12-345", "1234567", "", "0"]
+            },
             "alerts": [
                 {
                     **a,
@@ -673,7 +818,13 @@ def same_golden() -> None:
                 for a in ALERTS
             ],
             "notification_reasons": [
-                [mt, reason, _should_auto_tune_for_alert_notification(make_alert({"message_type": mt}), reason)]
+                [
+                    mt,
+                    reason,
+                    _should_auto_tune_for_alert_notification(
+                        make_alert({"message_type": mt}), reason
+                    ),
+                ]
                 for mt in [None, "Alert", " alert ", "", "Update", "Cancel"]
                 for reason in ["new_alert", "severity_escalated", "updated", "reminder"]
             ],
@@ -778,7 +929,9 @@ def station_by(call_sign: str | None) -> Station | None:
     if call_sign is None:
         return None
     found = DB.get_stations_by_call_signs([call_sign])
-    return found[0] if found else Station(call_sign, 162.4, f"{call_sign} City, TX", 30.0, -97.0, "TX")
+    return (
+        found[0] if found else Station(call_sign, 162.4, f"{call_sign} City, TX", 30.0, -97.0, "TX")
+    )
 
 
 def run_auto_tune(case: dict) -> dict:
@@ -787,12 +940,21 @@ def run_auto_tune(case: dict) -> dict:
     prefs = RadioPreferences()
     for cs, url in case["preferred"].items():
         prefs.set_preferred_url(cs, url)
-    manual_first = case["playing_before"] or case["playing_unknown"] or case["manual_during_resolution"]
+    manual_first = (
+        case["playing_before"] or case["playing_unknown"] or case["manual_during_resolution"]
+    )
     ensure, url_stream = audio_patches()
-    with ensure, url_stream, patch(
-        "accessiweather.noaa_radio.alert_auto_tune.wx.CallAfter", side_effect=lambda f, *a: f(*a)
+    with (
+        ensure,
+        url_stream,
+        patch(
+            "accessiweather.noaa_radio.alert_auto_tune.wx.CallAfter",
+            side_effect=lambda f, *a: f(*a),
+        ),
     ):
-        session, stops = real_session(([True] if manual_first else []) + case["play_results"], prefs)
+        session, stops = real_session(
+            ([True] if manual_first else []) + case["play_results"], prefs
+        )
         if case["playing_before"] or case["playing_unknown"]:
             session.playing_station = station_by(case["playing_before"])
             session.player.play("manual")
@@ -861,7 +1023,10 @@ def auto_tune_golden() -> None:
     cases = [
         {"name": "plays_then_stops"},
         {"name": "disabled", "enabled": False},
-        {"name": "non_radio_batch", "batches": [["air_quality", "no_county_codes", "forecast_zone"]]},
+        {
+            "name": "non_radio_batch",
+            "batches": [["air_quality", "no_county_codes", "forecast_zone"]],
+        },
         {"name": "empty_batch", "batches": [[]]},
         {"name": "no_station_match", "resolved": None, "clock": [100.0]},
         {"name": "no_streams", "urls": [], "clock": [100.0]},
@@ -876,7 +1041,11 @@ def auto_tune_golden() -> None:
         {"name": "invalid_duration", "duration": 0},
         {"name": "duration_61", "duration": 61, "clock": [100.0, 401.0]},
         {"name": "duration_60", "duration": 60, "clock": [100.0, 3700.0]},
-        {"name": "duplicate_extends", "batches": [["tornado"], ["tornado"]], "clock": [100.0, 150.0, 399.0, 450.0]},
+        {
+            "name": "duplicate_extends",
+            "batches": [["tornado"], ["tornado"]],
+            "clock": [100.0, 150.0, 399.0, 450.0],
+        },
         {"name": "same_less_does_not_extend", "batches": [["tornado"], ["no_county_codes"]]},
     ]
     write("auto_tune.json", rust_divergences([run_auto_tune({**base, **c}) for c in cases]))
@@ -934,7 +1103,9 @@ def run_toggle(case: dict) -> dict:
         prefs.set_preferred_url(cs, url)
     ensure, url_stream = audio_patches()
     with ensure, url_stream:
-        session, stops = real_session(([True] if case["playing"] else []) + case["play_results"], prefs)
+        session, stops = real_session(
+            ([True] if case["playing"] else []) + case["play_results"], prefs
+        )
         if case["playing"]:
             session.player.play("manual")
         urls = MagicMock()

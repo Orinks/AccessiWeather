@@ -31,6 +31,7 @@ import accessiweather.weather_client_parallel as parallel_module
 import accessiweather.weather_client_trends as trends_module
 from accessiweather.cache import WeatherDataCache
 from accessiweather.models import AppSettings
+from accessiweather.models.alerts import WeatherAlert, WeatherAlerts
 from accessiweather.models.weather import (
     AviationData,
     CurrentConditions,
@@ -43,7 +44,6 @@ from accessiweather.models.weather import (
     MinutelyPrecipitationForecast,
     MinutelyPrecipitationPoint,
 )
-from accessiweather.models.alerts import WeatherAlert, WeatherAlerts
 from accessiweather.pirate_weather_client import PirateWeatherApiError
 from accessiweather.weather_client import WeatherClient
 
@@ -138,7 +138,9 @@ def alert(alert_id, title, source=None, severity="Moderate", minutes_ago=5, **kw
 
 TEMPS_24 = [70.0 + i * 0.25 for i in range(30)]
 
-NWS_CURRENT = current(72.0, "Partly Cloudy", humidity=None, wind_speed_mph=8.0, pressure_in=30.01, uv_index=6.0)
+NWS_CURRENT = current(
+    72.0, "Partly Cloudy", humidity=None, wind_speed_mph=8.0, pressure_in=30.01, uv_index=6.0
+)
 OM_CURRENT = current(
     71.0,
     "Mainly clear",
@@ -150,10 +152,23 @@ OM_CURRENT = current(
 )
 PW_CURRENT = current(73.0, "Humid", humidity=60, wind_gust_mph=15.0, visibility_miles=9.0)
 NWS_ALERTS = WeatherAlerts(alerts=[alert("urn:nws:heat", "Heat Advisory", areas=["Kings"])])
-PW_ALERTS = WeatherAlerts(alerts=[alert("pw-1", "Heat Advisory", areas=["kings"], description="Longer heat advisory text from Pirate Weather.")])
+PW_ALERTS = WeatherAlerts(
+    alerts=[
+        alert(
+            "pw-1",
+            "Heat Advisory",
+            areas=["kings"],
+            description="Longer heat advisory text from Pirate Weather.",
+        )
+    ]
+)
 MINUTELY = MinutelyPrecipitationForecast(
     summary="Rain starting in 20 min.",
-    points=[MinutelyPrecipitationPoint(time=T0, precipitation_intensity=0.0, precipitation_probability=0.1)],
+    points=[
+        MinutelyPrecipitationPoint(
+            time=T0, precipitation_intensity=0.0, precipitation_probability=0.1
+        )
+    ],
 )
 AFD = ("Area Forecast Discussion text", datetime(2026, 7, 15, 14, 2, tzinfo=UTC))
 NWS_ALL = [
@@ -164,7 +179,11 @@ NWS_ALL = [
     NWS_ALERTS,
     hourly("NWS", TEMPS_24),
 ]
-OM_ALL = [OM_CURRENT, forecast("OM", [79.0, 64.0, 81.0], precip=[25.0, 15.0, 30.0]), hourly("OM", TEMPS_24, pressure=1016.0)]
+OM_ALL = [
+    OM_CURRENT,
+    forecast("OM", [79.0, 64.0, 81.0], precip=[25.0, 15.0, 30.0]),
+    hourly("OM", TEMPS_24, pressure=1016.0),
+]
 PW_FULL = {
     "current": PW_CURRENT,
     "forecast": forecast("PW", [83.0, 66.0], precip=[40.0, 20.0], summary="Humid all week."),
@@ -172,21 +191,47 @@ PW_FULL = {
     "alerts": PW_ALERTS,
     "minutely": MINUTELY,
 }
-ENV = EnvironmentalConditions(air_quality_index=35.0, air_quality_category="Good", sources=["AirNow"])
-AVIATION = {"station": ["KJFK", "John F. Kennedy International Airport"], "data": AviationData(raw_taf="TAF KJFK 151720Z", decoded_taf="Decoded TAF", station_id="KJFK", airport_name="KJFK")}
-MARINE_ZONES = {"features": [{"id": "https://api.weather.gov/zones/forecast/ANZ350", "properties": {"id": "ANZ350", "name": "Moriches Inlet to Montauk Point"}}]}
+ENV = EnvironmentalConditions(
+    air_quality_index=35.0, air_quality_category="Good", sources=["AirNow"]
+)
+AVIATION = {
+    "station": ["KJFK", "John F. Kennedy International Airport"],
+    "data": AviationData(
+        raw_taf="TAF KJFK 151720Z",
+        decoded_taf="Decoded TAF",
+        station_id="KJFK",
+        airport_name="KJFK",
+    ),
+}
+MARINE_ZONES = {
+    "features": [
+        {
+            "id": "https://api.weather.gov/zones/forecast/ANZ350",
+            "properties": {"id": "ANZ350", "name": "Moriches Inlet to Montauk Point"},
+        }
+    ]
+}
 MARINE_FORECAST = {
     "properties": {
         "updateTime": "2026-07-15T14:30:00Z",
         "periods": [
-            {"name": "Today", "detailedForecast": "SW winds 10 to 15 kt. Seas 3 to 4 ft. A chance of showers."},
-            {"name": "Tonight", "shortForecast": "Patchy fog", "detailedForecast": "S winds around 10 kt; seas 3 ft."},
+            {
+                "name": "Today",
+                "detailedForecast": "SW winds 10 to 15 kt. Seas 3 to 4 ft. A chance of showers.",
+            },
+            {
+                "name": "Tonight",
+                "shortForecast": "Patchy fog",
+                "detailedForecast": "S winds around 10 kt; seas 3 ft.",
+            },
             {"name": "", "detailedForecast": "Swells subsiding. Winds light."},
             {"name": "Thursday", "detailedForecast": "Gusts to 25 kt. WAVES 5 FT."},
         ],
     }
 }
-MARINE_ALERTS = WeatherAlerts(alerts=[alert(None, "Small Craft Advisory", event="Small Craft Advisory", areas=["ANZ350"])])
+MARINE_ALERTS = WeatherAlerts(
+    alerts=[alert(None, "Small Craft Advisory", event="Small Craft Advisory", areas=["ANZ350"])]
+)
 
 
 def defaults():
@@ -199,7 +244,13 @@ def defaults():
             "cancel_refs": [],
         },
         "openmeteo": {"all": [None] * 3, "current": None},
-        "pirateweather": {"current": None, "forecast": None, "hourly": None, "alerts": None, "minutely": None},
+        "pirateweather": {
+            "current": None,
+            "forecast": None,
+            "hourly": None,
+            "alerts": None,
+            "minutely": None,
+        },
         "environmental": ENV,
         "aviation": {"station": [None, None], "data": AviationData()},
         "marine": {"zones": {"features": []}, "forecast": None, "alerts": WeatherAlerts(alerts=[])},
@@ -222,7 +273,12 @@ def fakes(**overrides):
 
 def full_sources(**extra):
     base = fakes(
-        nws={"all": NWS_ALL, "forecast_and_discussion": [None, *AFD], "discussion_only": list(AFD), "alerts": NWS_ALERTS},
+        nws={
+            "all": NWS_ALL,
+            "forecast_and_discussion": [None, *AFD],
+            "discussion_only": list(AFD),
+            "alerts": NWS_ALERTS,
+        },
         openmeteo={"all": OM_ALL, "current": OM_CURRENT},
         pirateweather=PW_FULL,
         aviation=AVIATION,
@@ -278,7 +334,9 @@ def build_client(scenario, log, cache, state):
     client._get_nws_forecast_and_discussion = recorder(
         "nws.forecast_and_discussion", "nws", "forecast_and_discussion", "tuple"
     )
-    client._get_nws_discussion_only = recorder("nws.discussion_only", "nws", "discussion_only", "tuple")
+    client._get_nws_discussion_only = recorder(
+        "nws.discussion_only", "nws", "discussion_only", "tuple"
+    )
     client._get_nws_alerts = recorder("nws.alerts", "nws", "alerts")
     client._fetch_nws_cancel_references = recorder("nws.cancel_refs", "nws", "cancel_refs", "set")
     client._fetch_openmeteo_data = recorder("openmeteo.all", "openmeteo", "all", "tuple")
@@ -286,14 +344,20 @@ def build_client(scenario, log, cache, state):
 
     class FakePirate:
         units = "us"
-        get_current_conditions = staticmethod(recorder("pirateweather.current", "pirateweather", "current"))
+        get_current_conditions = staticmethod(
+            recorder("pirateweather.current", "pirateweather", "current")
+        )
         get_forecast = staticmethod(recorder("pirateweather.forecast", "pirateweather", "forecast"))
-        get_hourly_forecast = staticmethod(recorder("pirateweather.hourly", "pirateweather", "hourly"))
+        get_hourly_forecast = staticmethod(
+            recorder("pirateweather.hourly", "pirateweather", "hourly")
+        )
         get_alerts = staticmethod(recorder("pirateweather.alerts", "pirateweather", "alerts"))
 
     pirate = FakePirate() if scenario.get("pirate") else None
     client._pirate_weather_client_for_location = lambda _location: pirate
-    client._get_pirate_weather_minutely = recorder("pirateweather.minutely", "pirateweather", "minutely")
+    client._get_pirate_weather_minutely = recorder(
+        "pirateweather.minutely", "pirateweather", "minutely"
+    )
     return client
 
 
@@ -352,12 +416,18 @@ def run_scenario(scenario):
                 log.clear()
                 if step["call"] == "weather":
                     data = asyncio.run(
-                        client.get_weather_data(scenario["location"], force_refresh=step.get("force", False))
+                        client.get_weather_data(
+                            scenario["location"], force_refresh=step.get("force", False)
+                        )
                     )
                 else:
                     data = asyncio.run(client.get_notification_event_data(scenario["location"]))
                 results.append(
-                    {"fakes": encode_fakes(step.get("fakes", {})), "requests": sorted(log), "weather": data}
+                    {
+                        "fakes": encode_fakes(step.get("fakes", {})),
+                        "requests": sorted(log),
+                        "weather": data,
+                    }
                 )
     return results
 
@@ -391,26 +461,60 @@ def notify(now=T0, **fakes):
 
 
 SCENARIOS = [
-    dict(name="max_coverage_us_all_sources", data_source="auto", location=US, pirate=True, fakes=full_sources(), steps=[weather()]),
-    dict(name="max_coverage_intl", data_source="auto", location=INTL, pirate=True, fakes=full_sources(), steps=[weather()]),
-    dict(name="max_coverage_us_without_key", data_source="auto", location=US, fakes=full_sources(), steps=[weather()]),
+    dict(
+        name="max_coverage_us_all_sources",
+        data_source="auto",
+        location=US,
+        pirate=True,
+        fakes=full_sources(),
+        steps=[weather()],
+    ),
+    dict(
+        name="max_coverage_intl",
+        data_source="auto",
+        location=INTL,
+        pirate=True,
+        fakes=full_sources(),
+        steps=[weather()],
+    ),
+    dict(
+        name="max_coverage_us_without_key",
+        data_source="auto",
+        location=US,
+        fakes=full_sources(),
+        steps=[weather()],
+    ),
     dict(
         name="economy_us_extended_forecast",
         data_source="auto",
         location=US,
         pirate=True,
-        settings={"auto_mode_api_budget": "economy", "forecast_duration_days": 10, "auto_sources_us": ["nws", "pirateweather", "openmeteo"]},
+        settings={
+            "auto_mode_api_budget": "economy",
+            "forecast_duration_days": 10,
+            "auto_sources_us": ["nws", "pirateweather", "openmeteo"],
+        },
         fakes=full_sources(),
         steps=[weather()],
     ),
-    dict(name="economy_us_sufficient", data_source="auto", location=US, pirate=True, settings={"auto_mode_api_budget": "economy"}, fakes=full_sources(), steps=[weather()]),
+    dict(
+        name="economy_us_sufficient",
+        data_source="auto",
+        location=US,
+        pirate=True,
+        settings={"auto_mode_api_budget": "economy"},
+        fakes=full_sources(),
+        steps=[weather()],
+    ),
     dict(
         name="balanced_us_pirate_secondary",
         data_source="auto",
         location=US,
         pirate=True,
         settings={"auto_mode_api_budget": "balanced", "auto_sources_us": ["nws", "pirateweather"]},
-        fakes=full_sources(nws={"all": [None, NWS_ALL[1], None, None, WeatherAlerts(alerts=[]), None]}),
+        fakes=full_sources(
+            nws={"all": [None, NWS_ALL[1], None, None, WeatherAlerts(alerts=[]), None]}
+        ),
         steps=[weather()],
     ),
     dict(
@@ -418,7 +522,10 @@ SCENARIOS = [
         data_source="auto",
         location=INTL,
         pirate=True,
-        settings={"auto_mode_api_budget": "balanced", "auto_sources_international": ["pirateweather", "openmeteo"]},
+        settings={
+            "auto_mode_api_budget": "balanced",
+            "auto_sources_international": ["pirateweather", "openmeteo"],
+        },
         fakes=full_sources(),
         steps=[weather()],
     ),
@@ -454,13 +561,24 @@ SCENARIOS = [
         fakes=full_sources(nws={"all": [None] * 6, "forecast_and_discussion": Err("no AFD")}),
         steps=[weather()],
     ),
-    dict(name="us_without_nws_configured", data_source="auto", location=US, settings={"auto_sources_us": ["openmeteo", "bogus"]}, fakes=full_sources(), steps=[weather()]),
+    dict(
+        name="us_without_nws_configured",
+        data_source="auto",
+        location=US,
+        settings={"auto_sources_us": ["openmeteo", "bogus"]},
+        fakes=full_sources(),
+        steps=[weather()],
+    ),
     dict(
         name="all_failed_no_cache",
         data_source="auto",
         location=US,
         pirate=True,
-        fakes=fakes(nws={"all": Err("down")}, openmeteo={"all": Err("down")}, pirateweather={"current": Err("down")}),
+        fakes=fakes(
+            nws={"all": Err("down")},
+            openmeteo={"all": Err("down")},
+            pirateweather={"current": Err("down")},
+        ),
         steps=[weather()],
     ),
     dict(
@@ -471,7 +589,9 @@ SCENARIOS = [
         fakes=full_sources(),
         steps=[
             weather(),
-            weather(T0 + timedelta(minutes=30), nws={"all": Err("down")}, openmeteo={"all": Err("down")}),
+            weather(
+                T0 + timedelta(minutes=30), nws={"all": Err("down")}, openmeteo={"all": Err("down")}
+            ),
         ],
     ),
     dict(
@@ -493,7 +613,12 @@ SCENARIOS = [
                     NWS_ALL[1],
                     AFD[0],
                     AFD[1],
-                    WeatherAlerts(alerts=[alert("a", "Heat Advisory"), alert("b", "Flood Watch", minutes_ago=120)]),
+                    WeatherAlerts(
+                        alerts=[
+                            alert("a", "Heat Advisory"),
+                            alert("b", "Flood Watch", minutes_ago=120),
+                        ]
+                    ),
                     NWS_ALL[5],
                 ],
                 "cancel_refs": ["b"],
@@ -527,29 +652,79 @@ SCENARIOS = [
         data_source="auto",
         location=US_MARINE,
         settings={"pollen_enabled": False},
-        fakes=full_sources(marine={"zones": MARINE_ZONES, "forecast": MARINE_FORECAST, "alerts": MARINE_ALERTS}),
+        fakes=full_sources(
+            marine={"zones": MARINE_ZONES, "forecast": MARINE_FORECAST, "alerts": MARINE_ALERTS}
+        ),
         steps=[weather()],
     ),
     dict(
         name="marine_alerts_fail_keeps_forecast",
         data_source="nws",
         location=US_MARINE,
-        fakes=full_sources(environmental="absent", marine={"zones": MARINE_ZONES, "forecast": MARINE_FORECAST, "alerts": Err("alerts down")}),
+        fakes=full_sources(
+            environmental="absent",
+            marine={
+                "zones": MARINE_ZONES,
+                "forecast": MARINE_FORECAST,
+                "alerts": Err("alerts down"),
+            },
+        ),
         steps=[weather()],
     ),
-    dict(name="nws_only", data_source="nws", location=US, fakes=full_sources(nws={"cancel_refs": ["urn:nws:heat"]}), steps=[weather(), weather(T0 + timedelta(minutes=10))]),
-    dict(name="nws_only_failure", data_source="nws", location=US, fakes=full_sources(nws={"all": Err("boom")}), steps=[weather()]),
-    dict(name="openmeteo_only", data_source="openmeteo", location=US, fakes=full_sources(), steps=[weather()]),
-    dict(name="pirate_only", data_source="pirateweather", location=INTL, pirate=True, fakes=full_sources(), steps=[weather(), weather(T0 + timedelta(minutes=5))]),
-    dict(name="pirate_only_without_key", data_source="pirateweather", location=US, fakes=full_sources(), steps=[weather()]),
-    dict(name="pirate_only_failure", data_source="pirateweather", location=INTL, pirate=True, cache=True, fakes=full_sources(pirateweather={"forecast": Err("quota")}), steps=[weather()]),
+    dict(
+        name="nws_only",
+        data_source="nws",
+        location=US,
+        fakes=full_sources(nws={"cancel_refs": ["urn:nws:heat"]}),
+        steps=[weather(), weather(T0 + timedelta(minutes=10))],
+    ),
+    dict(
+        name="nws_only_failure",
+        data_source="nws",
+        location=US,
+        fakes=full_sources(nws={"all": Err("boom")}),
+        steps=[weather()],
+    ),
+    dict(
+        name="openmeteo_only",
+        data_source="openmeteo",
+        location=US,
+        fakes=full_sources(),
+        steps=[weather()],
+    ),
+    dict(
+        name="pirate_only",
+        data_source="pirateweather",
+        location=INTL,
+        pirate=True,
+        fakes=full_sources(),
+        steps=[weather(), weather(T0 + timedelta(minutes=5))],
+    ),
+    dict(
+        name="pirate_only_without_key",
+        data_source="pirateweather",
+        location=US,
+        fakes=full_sources(),
+        steps=[weather()],
+    ),
+    dict(
+        name="pirate_only_failure",
+        data_source="pirateweather",
+        location=INTL,
+        pirate=True,
+        cache=True,
+        fakes=full_sources(pirateweather={"forecast": Err("quota")}),
+        steps=[weather()],
+    ),
     dict(
         name="notification_auto_us",
         data_source="auto",
         location=US,
         pirate=True,
         settings={"notify_minutely_precipitation_start": True},
-        fakes=full_sources(nws={"alerts": WeatherAlerts(alerts=[alert("x", "Wind Advisory", areas=["Kings"])])}),
+        fakes=full_sources(
+            nws={"alerts": WeatherAlerts(alerts=[alert("x", "Wind Advisory", areas=["Kings"])])}
+        ),
         steps=[notify(), notify(T0 + timedelta(minutes=10)), notify(T0 + timedelta(minutes=15))],
     ),
     dict(
@@ -557,14 +732,59 @@ SCENARIOS = [
         data_source="auto",
         location=INTL,
         pirate=True,
-        settings={"notify_precipitation_likelihood": True, "minutely_precipitation_fast_polling": True, "update_interval_minutes": 3},
-        fakes=full_sources(openmeteo={"all": [OM_CURRENT, OM_ALL[1], hourly("OM", [60.0] * 8, precip=[0, 10, 20, 50, 0, 0, 0, 0])]}),
-        steps=[notify(), notify(T0 + timedelta(minutes=2)), notify(T0 + timedelta(minutes=3)), weather(T0 + timedelta(minutes=4)), notify(T0 + timedelta(minutes=5)), notify(T0 + timedelta(minutes=8))],
+        settings={
+            "notify_precipitation_likelihood": True,
+            "minutely_precipitation_fast_polling": True,
+            "update_interval_minutes": 3,
+        },
+        fakes=full_sources(
+            openmeteo={
+                "all": [
+                    OM_CURRENT,
+                    OM_ALL[1],
+                    hourly("OM", [60.0] * 8, precip=[0, 10, 20, 50, 0, 0, 0, 0]),
+                ]
+            }
+        ),
+        steps=[
+            notify(),
+            notify(T0 + timedelta(minutes=2)),
+            notify(T0 + timedelta(minutes=3)),
+            weather(T0 + timedelta(minutes=4)),
+            notify(T0 + timedelta(minutes=5)),
+            notify(T0 + timedelta(minutes=8)),
+        ],
     ),
-    dict(name="notification_nws_error", data_source="nws", location=US, fakes=full_sources(nws={"alerts": Err("alerts down")}), steps=[notify()]),
-    dict(name="notification_openmeteo", data_source="openmeteo", location=US, fakes=full_sources(), steps=[notify()]),
-    dict(name="notification_pirate_intl", data_source="pirateweather", location=INTL, pirate=True, fakes=full_sources(), steps=[notify()]),
-    dict(name="force_refresh", data_source="openmeteo", location=US, cache=True, fakes=full_sources(), steps=[weather(), weather(T0 + timedelta(minutes=1), force=True)]),
+    dict(
+        name="notification_nws_error",
+        data_source="nws",
+        location=US,
+        fakes=full_sources(nws={"alerts": Err("alerts down")}),
+        steps=[notify()],
+    ),
+    dict(
+        name="notification_openmeteo",
+        data_source="openmeteo",
+        location=US,
+        fakes=full_sources(),
+        steps=[notify()],
+    ),
+    dict(
+        name="notification_pirate_intl",
+        data_source="pirateweather",
+        location=INTL,
+        pirate=True,
+        fakes=full_sources(),
+        steps=[notify()],
+    ),
+    dict(
+        name="force_refresh",
+        data_source="openmeteo",
+        location=US,
+        cache=True,
+        fakes=full_sources(),
+        steps=[weather(), weather(T0 + timedelta(minutes=1), force=True)],
+    ),
 ]
 
 
@@ -583,7 +803,12 @@ def main():
                 "cache": bool(scenario.get("cache")),
                 "fakes": encode_fakes(scenario["fakes"]),
                 "steps": [
-                    {"call": step["call"], "now": step["now"], "force": step.get("force", False), **result}
+                    {
+                        "call": step["call"],
+                        "now": step["now"],
+                        "force": step.get("force", False),
+                        **result,
+                    }
                     for step, result in zip(scenario["steps"], results, strict=True)
                 ],
             },

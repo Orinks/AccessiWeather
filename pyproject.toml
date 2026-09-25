@@ -160,6 +160,8 @@ ignore = [
 "src/accessiweather/weatherapi_mapper.py" = ["F401"]
 "tests/test_logging_config.py" = ["SIM117"]
 "tests/test_smart_auto_properties.py" = ["D205", "D400", "D415", "E402", "F841"]
+# Golden-data generators for the Rust port: dev tooling, not app code.
+"rust/tools/**" = ["D", "B008", "B023", "B905", "C408", "E402", "E741", "RET504"]
 
 [tool.ruff.lint.isort]
 # Black-compatible settings

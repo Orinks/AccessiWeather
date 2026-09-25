@@ -110,9 +110,7 @@ def golden_events() -> None:
             "legacy_keys": sorted(sound_events.LEGACY_SOUND_EVENT_KEYS),
             "known_keys": sorted(sound_events.KNOWN_SOUND_EVENT_KEYS),
             "friendly_choices": [list(c) for c in sound_events.FRIENDLY_SOUND_EVENT_CHOICES],
-            "normalize": [
-                [c, sound_events.normalize_muted_sound_events(c)] for c in muted_cases
-            ],
+            "normalize": [[c, sound_events.normalize_muted_sound_events(c)] for c in muted_cases],
             "normalize_known": [
                 [c, sound_events.normalize_known_muted_sound_events(c)] for c in muted_cases
             ],
@@ -280,9 +278,7 @@ def golden_packs() -> None:
             key=lambda d: d["directory"],
         )
 
-        pack_dirs = sorted(
-            {k.split("/")[0] for k in PACK_FIXTURE} | {"missingpack"}
-        )
+        pack_dirs = sorted({k.split("/")[0] for k in PACK_FIXTURE} | {"missingpack"})
         specific = {
             p: helpers.sound_pack_prefers_specific_alert_sounds(
                 p,
@@ -316,17 +312,47 @@ def golden_packs() -> None:
 # ---------------------------------------------------------------------------
 
 ALERTS = [
-    {"title": "Tornado Warning", "description": "x", "severity": "Extreme", "event": "Tornado Warning"},
-    {"title": "t", "description": "Heavy snow expected", "severity": "high", "event": "Winter Storm Watch"},
+    {
+        "title": "Tornado Warning",
+        "description": "x",
+        "severity": "Extreme",
+        "event": "Tornado Warning",
+    },
+    {
+        "title": "t",
+        "description": "Heavy snow expected",
+        "severity": "high",
+        "event": "Winter Storm Watch",
+    },
     {"title": "Flood Advisory issued", "description": "", "severity": "Moderate", "event": None},
-    {"title": "Special Weather Statement", "description": "Dense fog", "severity": "minor",
-     "event": "Special Weather Statement", "headline": "Areas of dense fog"},
-    {"title": "Air Quality Alert", "description": "smoke", "severity": None, "event": "Air Quality Alert"},
-    {"title": "x", "description": "y", "severity": "  CRITICAL ", "event": "Excessive  Heat -- Watch!"},
+    {
+        "title": "Special Weather Statement",
+        "description": "Dense fog",
+        "severity": "minor",
+        "event": "Special Weather Statement",
+        "headline": "Areas of dense fog",
+    },
+    {
+        "title": "Air Quality Alert",
+        "description": "smoke",
+        "severity": None,
+        "event": "Air Quality Alert",
+    },
+    {
+        "title": "x",
+        "description": "y",
+        "severity": "  CRITICAL ",
+        "event": "Excessive  Heat -- Watch!",
+    },
     {"title": "prewarnings", "description": "", "severity": "bogus", "event": "Red Flag Warning"},
     {"title": "Hurricane", "description": "", "severity": "", "event": "__"},
-    {"title": "Blowing Dust Advisory", "description": "", "severity": "low", "event": "Dust Advisory",
-     "headline": "Freezing rain and ice"},
+    {
+        "title": "Blowing Dust Advisory",
+        "description": "",
+        "severity": "low",
+        "event": "Dust Advisory",
+        "headline": "Freezing rain and ice",
+    },
 ]
 REASONS = [None, "new_alert", "content_changed", "alert_updated", "updated", "escalated"]
 
@@ -355,18 +381,37 @@ def golden_alert_sounds() -> None:
 # ---------------------------------------------------------------------------
 
 INSTALL_CASES = [
-    ["nested", [["MyPack/pack.json", pj({"name": "My Pack", "sounds": {"alert": "a.wav"}})],
-                ["MyPack/a.wav", "a"], ["MyPack/sub/extra.txt", "e"]]],
-    ["root", [["pack.json", pj({"name": "Root Pack", "author": "R", "sounds": {"alert": "s/a.wav"}})],
-              ["s/a.wav", "a"]]],
+    [
+        "nested",
+        [
+            ["MyPack/pack.json", pj({"name": "My Pack", "sounds": {"alert": "a.wav"}})],
+            ["MyPack/a.wav", "a"],
+            ["MyPack/sub/extra.txt", "e"],
+        ],
+    ],
+    [
+        "root",
+        [
+            ["pack.json", pj({"name": "Root Pack", "author": "R", "sounds": {"alert": "s/a.wav"}})],
+            ["s/a.wav", "a"],
+        ],
+    ],
     ["nested", [["pack.json", pj({"name": "Again", "sounds": {}})]]],
     ["noname_display", [["pack.json", pj({"sounds": {}})]]],
     ["nopack", [["a.wav", "a"]]],
-    ["missingfile", [["pack.json", pj({"name": "M", "sounds": {"alert": "gone.wav", "b": "b.wav"}})],
-                     ["b.wav", "b"]]],
+    [
+        "missingfile",
+        [
+            ["pack.json", pj({"name": "M", "sounds": {"alert": "gone.wav", "b": "b.wav"}})],
+            ["b.wav", "b"],
+        ],
+    ],
     ["noname", [["pack.json", pj({"sounds": {}})], ["x/pack.json", pj({"name": "deeper"})]]],
     ["nosounds", [["pack.json", pj({"name": "N"})]]],
-    ["dictentry", [["pack.json", pj({"name": "D", "sounds": {"alert": {"file": "a.wav"}}})], ["a.wav", "a"]]],
+    [
+        "dictentry",
+        [["pack.json", pj({"name": "D", "sounds": {"alert": {"file": "a.wav"}}})], ["a.wav", "a"]],
+    ],
     ["slip", [["pack.json", pj({"name": "S", "sounds": {}})], ["../evil.txt", "pwned"]]],
     ["badzip", None],
     ["deep", [["a/b/pack.json", pj({"name": "Deep", "sounds": {}})], ["c/pack.txt", "x"]]],
@@ -466,16 +511,33 @@ class FakeFileDialog:
 
 
 MANAGER_FIXTURE = {
-    "default/pack.json": pj({"name": "Default", "author": "AccessiWeather Team",
-                             "sounds": {"alert": "alert.ogg", "notify": "notify.ogg",
-                                        "tornado_warning": "alert.ogg", "wind2x_gust": "gone.ogg"}}),
+    "default/pack.json": pj(
+        {
+            "name": "Default",
+            "author": "AccessiWeather Team",
+            "sounds": {
+                "alert": "alert.ogg",
+                "notify": "notify.ogg",
+                "tornado_warning": "alert.ogg",
+                "wind2x_gust": "gone.ogg",
+            },
+        }
+    ),
     "default/alert.ogg": "a",
     "default/notify.ogg": "n",
     "custom/pack.json": json.dumps(
-        {"name": "Custom", "author": "Me", "description": "Mine",
-         "sounds": {"notify": "n.wav", "alert": {"file": "a.wav", "volume": 0.29},
-                    "startup": "missing.wav"},
-         "volumes": {"notify": 0.25, "startup": 0.5}, "extra_field": [1, 2]},
+        {
+            "name": "Custom",
+            "author": "Me",
+            "description": "Mine",
+            "sounds": {
+                "notify": "n.wav",
+                "alert": {"file": "a.wav", "volume": 0.29},
+                "startup": "missing.wav",
+            },
+            "volumes": {"notify": 0.25, "startup": 0.5},
+            "extra_field": [1, 2],
+        },
         indent=4,
     ),
     "custom/n.wav": "n",
@@ -500,8 +562,18 @@ def _manager(packs: Path) -> SoundPackManagerDialog:
     dlg.volume_spin = FakeValue(100)
     dlg.mapping_file_text = FakeValue("")
     dlg.custom_key_input = FakeValue("")
-    for name in ("preview_btn", "set_volume_btn", "duplicate_btn", "edit_btn", "delete_btn",
-                 "export_btn", "share_btn", "name_label", "author_label", "description_label"):
+    for name in (
+        "preview_btn",
+        "set_volume_btn",
+        "duplicate_btn",
+        "edit_btn",
+        "delete_btn",
+        "export_btn",
+        "share_btn",
+        "name_label",
+        "author_label",
+        "description_label",
+    ):
         setattr(dlg, name, FakeValue())
     dlg._preview_player = MagicMock()
     dlg._preview_player.is_playing.return_value = False
@@ -516,8 +588,11 @@ def golden_manager() -> None:
         return wx.YES
 
     out: dict = {"fixture": MANAGER_FIXTURE}
-    with tempfile.TemporaryDirectory() as tmp, \
-            patch("wx.MessageBox", box), patch("wx.FileDialog", FakeFileDialog):
+    with (
+        tempfile.TemporaryDirectory() as tmp,
+        patch("wx.MessageBox", box),
+        patch("wx.FileDialog", FakeFileDialog),
+    ):
         root = Path(tmp)
         materialize(root, MANAGER_FIXTURE)
         packs = root
@@ -525,8 +600,13 @@ def golden_manager() -> None:
         dlg._load_sound_packs()
         out["loaded"] = sorted(
             [
-                {"pack_id": i.pack_id, "name": i.name, "author": i.author,
-                 "description": i.description, "sounds": i.sounds}
+                {
+                    "pack_id": i.pack_id,
+                    "name": i.name,
+                    "author": i.author,
+                    "description": i.description,
+                    "sounds": i.sounds,
+                }
                 for i in dlg.sound_packs.values()
             ],
             key=lambda d: d["pack_id"],
@@ -540,12 +620,19 @@ def golden_manager() -> None:
             dlg._update_pack_details()
             categories = []
             from accessiweather.ui.dialogs.soundpack_manager_models import FRIENDLY_ALERT_CATEGORIES
+
             for i, (_label, key) in enumerate(FRIENDLY_ALERT_CATEGORIES):
                 dlg.category_choice.sel = i
                 dlg.set_volume_btn.enabled = None
                 dlg._on_category_changed(None)
-                categories.append([key, dlg.mapping_file_text.value, dlg.volume_spin.value,
-                                   bool(dlg.set_volume_btn.enabled)])
+                categories.append(
+                    [
+                        key,
+                        dlg.mapping_file_text.value,
+                        dlg.volume_spin.value,
+                        bool(dlg.set_volume_btn.enabled),
+                    ]
+                )
             dlg.category_choice.sel = wx.NOT_FOUND
             details[pack_id] = {
                 "sounds": [[label, list(data)] for label, data in dlg.sounds_listbox.items],
@@ -576,14 +663,27 @@ def golden_manager() -> None:
         steps.append(["set_volume", "custom", "startup", "missing.wav", 1.0, pack_json("custom")])
 
         # Browse / custom key mappings.
-        for key, src, pct in (("severe", "siren.wav", 40), ("exit", "chime.wav", 100),
-                              ("tornado_warning", "siren.wav", 100)):
+        for key, src, pct in (
+            ("severe", "siren.wav", 40),
+            ("exit", "chime.wav", 100),
+            ("tornado_warning", "siren.wav", 100),
+        ):
             select("custom")
             FakeFileDialog.path = root / "external" / src
             dlg.volume_spin.value = pct
             messages.clear()
             dlg._apply_mapping(key)
-            steps.append(["apply_mapping", "custom", key, src, pct / 100.0, messages[-1], pack_json("custom")])
+            steps.append(
+                [
+                    "apply_mapping",
+                    "custom",
+                    key,
+                    src,
+                    pct / 100.0,
+                    messages[-1],
+                    pack_json("custom"),
+                ]
+            )
 
         for key in ("  Severe ", "nothere"):
             select("custom")
@@ -614,9 +714,18 @@ def golden_manager() -> None:
         # Import (manager flavour): pack.json at the root, id from the name.
         imports = []
         for name, entries in (
-            ["first", [["pack.json", pj({"name": "Imported Pack-One", "sounds": {"alert": "a.wav"}})],
-                       ["a.wav", "1"], ["sub/b.wav", "b"]]],
-            ["overwrite", [["pack.json", pj({"name": "Imported Pack-One", "sounds": {}})], ["c.wav", "2"]]],
+            [
+                "first",
+                [
+                    ["pack.json", pj({"name": "Imported Pack-One", "sounds": {"alert": "a.wav"}})],
+                    ["a.wav", "1"],
+                    ["sub/b.wav", "b"],
+                ],
+            ],
+            [
+                "overwrite",
+                [["pack.json", pj({"name": "Imported Pack-One", "sounds": {}})], ["c.wav", "2"]],
+            ],
             ["unnamed", [["pack.json", pj({"sounds": {}})]]],
             ["nested", [["x/pack.json", pj({"name": "Nested"})]]],
         ):
@@ -656,10 +765,16 @@ def golden_manager() -> None:
             wiz.EndModal = lambda code: None
             messages.clear()
             wiz._create_pack()
-            created.append([wiz.created_pack_id, messages[-1], listing(packs / wiz.created_pack_id)])
+            created.append(
+                [wiz.created_pack_id, messages[-1], listing(packs / wiz.created_pack_id)]
+            )
         out["wizard"] = {
-            "state": {"pack_name": "My Cool-Pack! é", "author": "", "description": "Desc é",
-                      "sources": ["exit=two.ogg", "startup=one.wav", "alert=gone.wav", "notify=one.wav"]},
+            "state": {
+                "pack_name": "My Cool-Pack! é",
+                "author": "",
+                "description": "Desc é",
+                "sources": ["exit=two.ogg", "startup=one.wav", "alert=gone.wav", "notify=one.wav"],
+            },
             "created": created,
         }
     write("manager.json", out)
@@ -674,10 +789,19 @@ RAW = "https://raw.githubusercontent.com/orinks/accessiweather-soundpacks/main"
 
 INDEX = {
     "packs": [
-        {"name": "Storm", "author": "Ann", "description": "Loud", "version": "2.1",
-         "download_url": "https://example.com/storm.zip", "file_size": 262144,
-         "homepage": "https://example.com/storm", "release_tag": "v2.1", "download_count": 7,
-         "created_date": "2025-01-02", "preview_image_url": "https://example.com/s.png"},
+        {
+            "name": "Storm",
+            "author": "Ann",
+            "description": "Loud",
+            "version": "2.1",
+            "download_url": "https://example.com/storm.zip",
+            "file_size": 262144,
+            "homepage": "https://example.com/storm",
+            "release_tag": "v2.1",
+            "download_count": 7,
+            "created_date": "2025-01-02",
+            "preview_image_url": "https://example.com/s.png",
+        },
         {"id": "only-id"},
         {"name": "", "id": "", "version": 2, "file_size": 1572864},
         {"name": "Tiny", "file_size": 786432, "release_tag": 3},
@@ -685,16 +809,29 @@ INDEX = {
 }
 
 RELEASES = [
-    {"tag_name": "vv1.2", "body": "  Release notes \n", "author": {"login": "bob"},
-     "published_at": "2025-03-04T00:00:00Z", "html_url": "https://github.com/x/releases/1",
-     "assets": [
-         {"name": "alpha.zip", "browser_download_url": "https://dl/alpha.zip", "size": 1048576,
-          "download_count": 3},
-         {"name": "Beta.ZIP", "browser_download_url": "https://dl/beta", "size": 0},
-         {"name": "readme.txt"},
-     ]},
-    {"tag_name": "", "body": None, "author": None,
-     "assets": [{"name": "c.zip.zip", "size": 52428, "browser_download_url": "https://dl/c"}]},
+    {
+        "tag_name": "vv1.2",
+        "body": "  Release notes \n",
+        "author": {"login": "bob"},
+        "published_at": "2025-03-04T00:00:00Z",
+        "html_url": "https://github.com/x/releases/1",
+        "assets": [
+            {
+                "name": "alpha.zip",
+                "browser_download_url": "https://dl/alpha.zip",
+                "size": 1048576,
+                "download_count": 3,
+            },
+            {"name": "Beta.ZIP", "browser_download_url": "https://dl/beta", "size": 0},
+            {"name": "readme.txt"},
+        ],
+    },
+    {
+        "tag_name": "",
+        "body": None,
+        "author": None,
+        "assets": [{"name": "c.zip.zip", "size": 52428, "browser_download_url": "https://dl/c"}],
+    },
     {"tag_name": "v", "assets": None},
 ]
 
@@ -706,17 +843,19 @@ REPO_ENTRIES = [
     {"type": "dir", "name": "delta", "sha": "d1"},
 ]
 
-TREE_A1 = {"tree": [
-    {"type": "blob", "path": "pack.json", "size": 40},
-    {"type": "tree", "path": "sounds"},
-    {"type": "blob", "path": "sounds/a.wav", "size": 5},
-    {"type": "blob", "path": "sounds/b.wav"},
-]}
+TREE_A1 = {
+    "tree": [
+        {"type": "blob", "path": "pack.json", "size": 40},
+        {"type": "tree", "path": "sounds"},
+        {"type": "blob", "path": "sounds/a.wav", "size": 5},
+        {"type": "blob", "path": "sounds/b.wav"},
+    ]
+}
 
 
 def _b64(obj) -> str:
     raw = base64.b64encode(json.dumps(obj).encode()).decode()
-    return "\n".join(raw[i:i + 60] for i in range(0, len(raw), 60)) + "\n"
+    return "\n".join(raw[i : i + 60] for i in range(0, len(raw), 60)) + "\n"
 
 
 SCENARIOS = {
@@ -731,8 +870,16 @@ SCENARIOS = {
         f"{API}/contents/index.json": [200, {"content": ""}],
         f"{API}/releases?per_page=50": [403, {"message": "rate limited"}],
         f"{API}/contents/packs?ref=main": [200, REPO_ENTRIES],
-        f"{RAW}/packs/alpha/pack.json": [200, {"name": "Alpha", "author": "A", "version": 1.5,
-                                                "description": "First", "preview_image_url": "http://p"}],
+        f"{RAW}/packs/alpha/pack.json": [
+            200,
+            {
+                "name": "Alpha",
+                "author": "A",
+                "version": 1.5,
+                "description": "First",
+                "preview_image_url": "http://p",
+            },
+        ],
         f"{RAW}/packs/beta/pack.json": [200, {}],
         f"{RAW}/packs/gamma/pack.json": [404, "Not Found"],
         f"{RAW}/packs/delta/pack.json": [200, {"name": "Delta"}],
@@ -800,7 +947,9 @@ def golden_community() -> None:
     details = []
     for pack in all_packs:
         dlg._update_details(pack)
-        details.append([labels[a].SetLabel.call_args[0][0] for a in labels] + [dlg.description_text.value])
+        details.append(
+            [labels[a].SetLabel.call_args[0][0] for a in labels] + [dlg.description_text.value]
+        )
     out["display"] = {
         "keys": [dlg._pack_key(p) for p in all_packs],
         "installable": [bool(p.download_url or getattr(p, "repo_path", None)) for p in all_packs],
@@ -809,7 +958,13 @@ def golden_community() -> None:
         "str": [str(p) for p in all_packs],
     }
     progress = []
-    for downloaded, total in ((0, 0), (52428, 0), (262144, 1048576), (1048576, 1048576), (1100000, 3000000)):
+    for downloaded, total in (
+        (0, 0),
+        (52428, 0),
+        (262144, 1048576),
+        (1048576, 1048576),
+        (1100000, 3000000),
+    ):
         if total > 0:
             detail = f"{downloaded / (1024 * 1024):.1f} MB of {total / (1024 * 1024):.1f} MB"
         else:
@@ -820,28 +975,78 @@ def golden_community() -> None:
     # Downloads.
     downloads = []
     repo_routes = dict(SCENARIOS["repo"])
-    repo_routes[f"{RAW}/packs/alpha/pack.json"] = [200, {"name": "Alpha", "sounds": {"a": "sounds/a.wav"}}]
+    repo_routes[f"{RAW}/packs/alpha/pack.json"] = [
+        200,
+        {"name": "Alpha", "sounds": {"a": "sounds/a.wav"}},
+    ]
     repo_routes[f"{RAW}/packs/alpha/sounds/a.wav"] = [200, "AAAAA"]
     repo_routes[f"{RAW}/packs/alpha/sounds/b.wav"] = [200, "bb"]
     repo_routes["https://dl/alpha.zip"] = [200, "zip-bytes-here"]
     repo_routes["https://dl/fail"] = [404, "nope"]
-    repo_routes[f"{API}/git/trees/evil?recursive=1"] = [200, {"tree": [
-        {"type": "blob", "path": "ok.wav", "size": 1}, {"type": "blob", "path": "../escape.wav", "size": 4}]}]
+    repo_routes[f"{API}/git/trees/evil?recursive=1"] = [
+        200,
+        {
+            "tree": [
+                {"type": "blob", "path": "ok.wav", "size": 1},
+                {"type": "blob", "path": "../escape.wav", "size": 4},
+            ]
+        },
+    ]
     repo_routes[f"{RAW}/packs/evil/ok.wav"] = [200, "o"]
-    alpha = CommunityPack(name="Alpha Pack", author="A", description="", version="1.5",
-                          download_url="", file_size=None, repository_url="", release_tag="main",
-                          repo_path="packs/alpha", tree_sha="a1")
-    url_pack = CommunityPack(name="alpha", author="bob", description="", version="1.2",
-                             download_url="https://dl/alpha.zip", file_size=14, repository_url="",
-                             release_tag="vv1.2")
-    fail_pack = CommunityPack(name="fail", author="x", description="", version="1",
-                              download_url="https://dl/fail", file_size=None, repository_url="",
-                              release_tag="")
-    evil = CommunityPack(name="Evil", author="x", description="", version="1", download_url="",
-                         file_size=None, repository_url="", release_tag="", repo_path="packs/evil",
-                         tree_sha="evil")
-    nosource = CommunityPack(name="Nothing", author="x", description="", version="1",
-                             download_url="", file_size=None, repository_url="", release_tag="")
+    alpha = CommunityPack(
+        name="Alpha Pack",
+        author="A",
+        description="",
+        version="1.5",
+        download_url="",
+        file_size=None,
+        repository_url="",
+        release_tag="main",
+        repo_path="packs/alpha",
+        tree_sha="a1",
+    )
+    url_pack = CommunityPack(
+        name="alpha",
+        author="bob",
+        description="",
+        version="1.2",
+        download_url="https://dl/alpha.zip",
+        file_size=14,
+        repository_url="",
+        release_tag="vv1.2",
+    )
+    fail_pack = CommunityPack(
+        name="fail",
+        author="x",
+        description="",
+        version="1",
+        download_url="https://dl/fail",
+        file_size=None,
+        repository_url="",
+        release_tag="",
+    )
+    evil = CommunityPack(
+        name="Evil",
+        author="x",
+        description="",
+        version="1",
+        download_url="",
+        file_size=None,
+        repository_url="",
+        release_tag="",
+        repo_path="packs/evil",
+        tree_sha="evil",
+    )
+    nosource = CommunityPack(
+        name="Nothing",
+        author="x",
+        description="",
+        version="1",
+        download_url="",
+        file_size=None,
+        repository_url="",
+        release_tag="",
+    )
     with tempfile.TemporaryDirectory() as tmp:
         dest = Path(tmp) / "_downloads"
         for pack in (alpha, alpha, url_pack, fail_pack, evil, nosource):
@@ -849,16 +1054,28 @@ def golden_community() -> None:
             calls: list = []
             service = _service(repo_routes, log)
             try:
-                path = asyncio.run(service.download_pack(
-                    pack, dest, lambda pct, done, total: calls.append([pct, done, total])))
-                result = {"file": path.name, "zip": zip_listing(path.read_bytes())
-                          if zipfile.is_zipfile(path) else path.read_text()}
+                path = asyncio.run(
+                    service.download_pack(
+                        pack, dest, lambda pct, done, total: calls.append([pct, done, total])
+                    )
+                )
+                result = {
+                    "file": path.name,
+                    "zip": zip_listing(path.read_bytes())
+                    if zipfile.is_zipfile(path)
+                    else path.read_text(),
+                }
             except Exception as exc:
                 result = {"error": str(exc)}
-            downloads.append({"pack": pack.__dict__.copy(), "result": result, "progress": calls,
-                              "requests": log})
+            downloads.append(
+                {"pack": pack.__dict__.copy(), "result": result, "progress": calls, "requests": log}
+            )
         leftovers = sorted(p.name for p in dest.iterdir())
-    out["downloads"] = {"routes": _text_routes(repo_routes), "cases": downloads, "leftovers": leftovers}
+    out["downloads"] = {
+        "routes": _text_routes(repo_routes),
+        "cases": downloads,
+        "leftovers": leftovers,
+    }
     write("community.json", out)
 
 
@@ -877,33 +1094,68 @@ def golden_submission() -> None:
         ("weird", {"name": "!!!", "author": None}),
         ("a", {"name": "Name_With_Underscores", "author": "B-C"}),
     ):
-        derive.append([dir_name, meta, PackSubmissionService._derive_pack_id(Path("/p") / dir_name, meta)])
+        derive.append(
+            [dir_name, meta, PackSubmissionService._derive_pack_id(Path("/p") / dir_name, meta)]
+        )
 
     urls = []
-    for url in ("", "   ", "http://example.com", "ftp://x", "not a url", "https://", "https://localhost/x",
-                "https://127.0.0.1", "https://[::1]:8443/", "https://0.0.0.0", "https://10.1.2.3",
-                "https://172.20.0.1/api", "https://192.168.1.1", "https://169.254.1.1",
-                "https://100.64.0.1", "https://8.8.8.8/", "https://[fe80::1]", "https://[2001:db8::1]",
-                "https://[2606:4700::1111]", "https://[::ffff:10.0.0.1]", "https://240.0.0.1",
-                "https://192.0.0.9", "https://example.invalid/path", "  https://example.invalid  "):
+    for url in (
+        "",
+        "   ",
+        "http://example.com",
+        "ftp://x",
+        "not a url",
+        "https://",
+        "https://localhost/x",
+        "https://127.0.0.1",
+        "https://[::1]:8443/",
+        "https://0.0.0.0",
+        "https://10.1.2.3",
+        "https://172.20.0.1/api",
+        "https://192.168.1.1",
+        "https://169.254.1.1",
+        "https://100.64.0.1",
+        "https://8.8.8.8/",
+        "https://[fe80::1]",
+        "https://[2001:db8::1]",
+        "https://[2606:4700::1111]",
+        "https://[::ffff:10.0.0.1]",
+        "https://240.0.0.1",
+        "https://192.0.0.9",
+        "https://example.invalid/path",
+        "  https://example.invalid  ",
+    ):
         try:
             urls.append([url, True, validate_backend_url(url)])
         except SSRFError as exc:
             urls.append([url, False, str(exc)])
 
     submissions = []
-    pack_tree = {"pack.json": pj({"name": "My Pack", "author": "Jane", "sounds": {"alert": "s/a.wav"}}),
-                 "s/a.wav": "a", "notes.txt": "n"}
+    pack_tree = {
+        "pack.json": pj({"name": "My Pack", "author": "Jane", "sounds": {"alert": "s/a.wav"}}),
+        "s/a.wav": "a",
+        "notes.txt": "n",
+    }
     with tempfile.TemporaryDirectory() as tmp:
         pack_path = Path(tmp) / "my_pack"
         materialize(pack_path, pack_tree)
         bad_path = Path(tmp) / "bad_pack"
         materialize(bad_path, {"pack.json": pj({"name": "Bad", "sounds": {"alert": "gone.wav"}})})
         for case, path, status, body in (
-            ("ok", pack_path, 200, {"html_url": "https://github.com/orinks/accessiweather-soundpacks/pull/9"}),
+            (
+                "ok",
+                pack_path,
+                200,
+                {"html_url": "https://github.com/orinks/accessiweather-soundpacks/pull/9"},
+            ),
             ("no_url", pack_path, 200, {"number": 3}),
             ("http_500", pack_path, 500, {"detail": "boom"}),
-            ("http_422", pack_path, 422, {"detail": [{"loc": ["body"], "msg": "bad", "type": "x"}]}),
+            (
+                "http_422",
+                pack_path,
+                422,
+                {"detail": [{"loc": ["body"], "msg": "bad", "type": "x"}]},
+            ),
             ("http_502", pack_path, 502, "Bad Gateway"),
             ("invalid_pack", bad_path, 200, {}),
         ):
@@ -916,14 +1168,16 @@ def golden_submission() -> None:
                 part = [p for p in raw.split(b"--" + boundary) if b"filename=" in p][0]
                 head, _, data = part.partition(b"\r\n\r\n")
                 head = head.decode()
-                requests.append({
-                    "url": str(request.url),
-                    "method": request.method,
-                    "field": re.search(r'name="([^"]+)"', head).group(1),
-                    "filename": re.search(r'filename="([^"]+)"', head).group(1),
-                    "content_type": re.search(r"Content-Type: (\S+)", head).group(1),
-                    "zip": zip_listing(data[:-2]),
-                })
+                requests.append(
+                    {
+                        "url": str(request.url),
+                        "method": request.method,
+                        "field": re.search(r'name="([^"]+)"', head).group(1),
+                        "filename": re.search(r'filename="([^"]+)"', head).group(1),
+                        "content_type": re.search(r"Content-Type: (\S+)", head).group(1),
+                        "zip": zip_listing(data[:-2]),
+                    }
+                )
                 return httpx.Response(status, content=_body(body))
 
             real_client = httpx.AsyncClient
@@ -935,14 +1189,34 @@ def golden_submission() -> None:
                 service = PackSubmissionService()
                 meta = {"name": "My Pack", "author": "Jane", "description": "", "sounds": {}}
                 try:
-                    result = {"url": asyncio.run(service.submit_pack(
-                        path, meta, lambda pct, status: progress.append([pct, status])))}
+                    result = {
+                        "url": asyncio.run(
+                            service.submit_pack(
+                                path, meta, lambda pct, status: progress.append([pct, status])
+                            )
+                        )
+                    }
                 except Exception as exc:
                     result = {"error": str(exc).replace(str(path), "<PACK>")}
-            submissions.append({"case": case, "status": status, "body": body, "result": result,
-                                "progress": progress, "requests": requests})
-    write("submission.json", {"derive_pack_id": derive, "validate_backend_url": urls,
-                              "pack_tree": pack_tree, "submissions": submissions})
+            submissions.append(
+                {
+                    "case": case,
+                    "status": status,
+                    "body": body,
+                    "result": result,
+                    "progress": progress,
+                    "requests": requests,
+                }
+            )
+    write(
+        "submission.json",
+        {
+            "derive_pack_id": derive,
+            "validate_backend_url": urls,
+            "pack_tree": pack_tree,
+            "submissions": submissions,
+        },
+    )
 
 
 def main() -> None:

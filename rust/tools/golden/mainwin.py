@@ -99,12 +99,36 @@ FUTURE = datetime(2099, 1, 1, tzinfo=UTC)
 PAST = datetime(2000, 1, 1, tzinfo=UTC)
 
 ALERTS = [
-    alert(event="Dense Fog Advisory", severity="Moderate", id="a1", source="NWS", message_type="Alert"),
-    alert(event="Wind Advisory", severity="Minor", id="a2", source="NWS", message_type="Update", expires=FUTURE),
+    alert(
+        event="Dense Fog Advisory", severity="Moderate", id="a1", source="NWS", message_type="Alert"
+    ),
+    alert(
+        event="Wind Advisory",
+        severity="Minor",
+        id="a2",
+        source="NWS",
+        message_type="Update",
+        expires=FUTURE,
+    ),
     alert(event="Heat Advisory", severity="Severe", id="a3", source="NWS", message_type="Cancel"),
-    alert(event="Flood Watch", severity="Extreme", id="a4", source="VisualCrossing", message_type="Alert"),
-    alert(event="Old Warning", severity="Severe", id="a5", source="NWS", message_type="Alert", expires=PAST),
-    alert(title="No event", severity="Unknown", source="NWS", message_type="alert", areas=["B", "A"]),
+    alert(
+        event="Flood Watch",
+        severity="Extreme",
+        id="a4",
+        source="VisualCrossing",
+        message_type="Alert",
+    ),
+    alert(
+        event="Old Warning",
+        severity="Severe",
+        id="a5",
+        source="NWS",
+        message_type="Alert",
+        expires=PAST,
+    ),
+    alert(
+        title="No event", severity="Unknown", source="NWS", message_type="alert", areas=["B", "A"]
+    ),
 ]
 
 
@@ -131,10 +155,14 @@ def case_alert_items():
     return {"alerts": jsonable(ALERTS), "labels": labels, "cases": cases}
 
 
-def weather(loc, *, temp_f=None, temp_c=None, condition=None, alerts=None, stale=False, current=True):
+def weather(
+    loc, *, temp_f=None, temp_c=None, condition=None, alerts=None, stale=False, current=True
+):
     data = WeatherData(location=loc)
     if current:
-        data.current = CurrentConditions(temperature_f=temp_f, temperature_c=temp_c, condition=condition)
+        data.current = CurrentConditions(
+            temperature_f=temp_f, temperature_c=temp_c, condition=condition
+        )
     if alerts is not None:
         data.alerts = WeatherAlerts(alerts=alerts)
     data.stale = stale
@@ -180,7 +208,9 @@ def case_all_locations():
     nowhere = Location("Zed", 10.0, 10.0)
     locations = [philly, london, austin, nowhere]
     cached = {
-        philly.name: weather(philly, temp_f=72.5, temp_c=22.5, condition="Sunny", alerts=ALERTS[:3]),
+        philly.name: weather(
+            philly, temp_f=72.5, temp_c=22.5, condition="Sunny", alerts=ALERTS[:3]
+        ),
         london.name: weather(london, temp_c=11.0, condition=None, alerts=[], stale=True),
         austin.name: weather(austin, current=False, alerts=[ALERTS[3]]),
     }
@@ -410,9 +440,7 @@ def case_sorting():
     out = []
     for order in ("alphabetical", "manual", "nearest_current", "bogus", None):
         for use_anchor in (True, False):
-            result = sort_locations_for_display(
-                locs, order, anchor=anchor if use_anchor else None
-            )
+            result = sort_locations_for_display(locs, order, anchor=anchor if use_anchor else None)
             out.append(
                 {
                     "order": order,
@@ -427,7 +455,8 @@ def case_location_manager():
     manager = LocationManager()
     coords = [(39.9526, -75.1652), (-33.8688, 151.2093), (0.0, 0.0), (51.123456, -0.00004)]
     formatted = [
-        {"lat": lat, "lon": lon, "text": manager.format_coordinates(lat, lon)} for lat, lon in coords
+        {"lat": lat, "lon": lon, "text": manager.format_coordinates(lat, lon)}
+        for lat, lon in coords
     ]
     a = Location("A", 39.9526, -75.1652)
     b = Location("B", 40.7128, -74.0060)
