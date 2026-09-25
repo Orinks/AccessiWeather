@@ -4,8 +4,10 @@
 //! Settings dialog.
 
 mod alert_dialog;
+mod aviation_dialog;
 mod commands;
 mod community_packs_dialog;
+mod data_dialogs;
 mod display;
 mod forecast_products;
 mod location_dialog;

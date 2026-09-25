@@ -11,6 +11,7 @@ path = "src/main.rs"
 
 [dependencies]
 aw-core.workspace = true
+aw-notify.workspace = true
 aw-providers.workspace = true
 aw-store.workspace = true
 aw-audio.workspace = true

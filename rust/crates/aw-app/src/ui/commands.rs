@@ -21,7 +21,7 @@ pub(crate) fn on_explain_weather() {
 
 /// View > Precipitation Timeline.
 pub(crate) fn on_precipitation_timeline() {
-    not_ported("Precipitation Timeline");
+    super::data_dialogs::show_precipitation_timeline();
 }
 
 /// View > Event Center.
@@ -49,17 +49,17 @@ pub(crate) fn on_discussion() {
 
 /// View > Aviation Weather.
 pub(crate) fn on_aviation() {
-    not_ported("Aviation Weather");
+    super::aviation_dialog::show_aviation_dialog();
 }
 
 /// View > Air Quality.
 pub(crate) fn on_air_quality() {
-    not_ported("Air Quality");
+    super::data_dialogs::show_air_quality();
 }
 
 /// View > UV Index.
 pub(crate) fn on_uv_index() {
-    not_ported("UV Index");
+    super::data_dialogs::show_uv_index();
 }
 
 /// View > NOAA Weather Radio (Ctrl+N).

@@ -50,7 +50,7 @@ pub(super) fn set_hint(ctrl: &TextCtrl, hint: &str) {
 #[cfg(not(windows))]
 pub(super) fn set_hint(_ctrl: &TextCtrl, _hint: &str) {}
 
-fn text_colour(ctrl: &StaticText, is_error: bool) {
+pub(super) fn text_colour(ctrl: &StaticText, is_error: bool) {
     ctrl.set_foreground_color(SystemSettings::get_colour(if is_error {
         SystemColour::GrayText
     } else {
@@ -84,7 +84,7 @@ fn fill_results(list: &ListCtrl, locations: &[Location]) {
 
 /// Runs `work` on a worker thread with the app's HTTP client, then `done`
 /// with its result on the UI thread.
-fn in_background<T: Send + 'static>(
+pub(super) fn in_background<T: Send + 'static>(
     work: impl FnOnce(&dyn aw_providers::HttpClient) -> T + Send + 'static,
     done: impl FnOnce(T) + Send + 'static,
 ) {
