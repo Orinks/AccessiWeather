@@ -111,11 +111,7 @@ impl RadioPreferences {
             "favorite_stations": self.favorite_stations,
             "last_station": self.last_station,
         });
-        let result = path
-            .parent()
-            .map_or(Ok(()), std::fs::create_dir_all)
-            .and_then(|()| std::fs::write(path, crate::python_json(&payload)));
-        if let Err(e) = result {
+        if let Err(e) = crate::write_python_json(path, &payload) {
             tracing::warn!("Failed to save radio preferences: {e}");
         }
     }
@@ -430,7 +426,10 @@ mod tests {
                 }
             }
             assert_eq!(state(&prefs), case["after"], "{name}: after");
-            let saved = std::fs::read_to_string(&path).ok();
+            // Python's read_text folds CRLF, as this does.
+            let saved = std::fs::read_to_string(&path)
+                .ok()
+                .map(|t| t.replace("\r\n", "\n"));
             assert_eq!(
                 saved.as_deref(),
                 case["saved_text"].as_str(),

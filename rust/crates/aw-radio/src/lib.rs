@@ -51,8 +51,24 @@ pub fn thread_spawner(name: &'static str) -> Spawner {
     })
 }
 
-/// Text of Python's `json.dumps(value, indent=2)` (ASCII-only output), so
-/// files the Rust app writes are byte-identical to the Python app's.
+/// Write `value` as Python's `path.write_text(json.dumps(value, indent=2))`
+/// does (parents created, CRLF on Windows), so both apps write identical
+/// bytes to the files they share.
+pub(crate) fn write_python_json(path: &std::path::Path, value: &Value) -> std::io::Result<()> {
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    let text = python_json(value);
+    // Text mode; JSON strings never hold a raw newline, so this is safe.
+    let text = if cfg!(windows) {
+        text.replace('\n', "\r\n")
+    } else {
+        text
+    };
+    std::fs::write(path, text)
+}
+
+/// Text of Python's `json.dumps(value, indent=2)` (ASCII-only output).
 pub(crate) fn python_json(value: &Value) -> String {
     let pretty = serde_json::to_string_pretty(value).unwrap_or_default();
     let mut out = String::with_capacity(pretty.len());

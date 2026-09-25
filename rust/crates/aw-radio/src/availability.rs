@@ -156,12 +156,7 @@ impl StationAvailabilityCache {
                 (call_sign.clone(), Value::Object(entry))
             })
             .collect();
-        let result = self
-            .path
-            .parent()
-            .map_or(Ok(()), std::fs::create_dir_all)
-            .and_then(|()| std::fs::write(&self.path, crate::python_json(&Value::Object(payload))));
-        if let Err(e) = result {
+        if let Err(e) = crate::write_python_json(&self.path, &Value::Object(payload)) {
             tracing::warn!("Failed to save NOAA radio availability cache: {e}");
         }
     }
@@ -423,7 +418,10 @@ mod tests {
             }
             let expected: Vec<String> = serde_json::from_value(case["suppressed"].clone()).unwrap();
             assert_eq!(cache.get_suppressed_call_signs(), expected, "{name}");
-            let saved = std::fs::read_to_string(&path).ok();
+            // Python's read_text folds CRLF, as this does.
+            let saved = std::fs::read_to_string(&path)
+                .ok()
+                .map(|t| t.replace("\r\n", "\n"));
             assert_eq!(
                 saved.as_deref(),
                 case["saved_text"].as_str(),
