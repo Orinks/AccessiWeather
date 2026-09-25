@@ -13,7 +13,7 @@ path = "src/main.rs"
 aw-core.workspace = true
 aw-providers.workspace = true
 aw-store.workspace = true
-aw-speech.workspace = true
+prismer.workspace = true
 wxdragon.workspace = true
 clap.workspace = true
 thiserror.workspace = true
@@ -21,6 +21,11 @@ chrono.workspace = true
 serde_json.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
+
+# Static on Windows (one self-contained .exe); elsewhere prism is a shared
+# library shipped beside the executable.
+[target.'cfg(windows)'.dependencies]
+prismer = { workspace = true, features = ["static"] }
 
 [build-dependencies]
 embed-manifest = "1.4"

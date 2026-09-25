@@ -1,11 +1,10 @@
 name: Rust native app
 
 on:
-  push:
-    branches: [main, dev]
-    paths: ["rust/**", ".github/workflows/rust.yml"]
   pull_request:
     paths: ["rust/**", ".github/workflows/rust.yml"]
+  push:
+    tags: ["v*"]
   workflow_dispatch:
 
 env:
@@ -39,8 +38,9 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake build-essential libclang-dev libspeechd-dev \
-            libgtk-3-dev libgl1-mesa-dev libglu1-mesa-dev xvfb at-spi2-core
+          sudo apt-get install -y cmake build-essential libclang-dev pkg-config \
+            libglibmm-2.68-dev libgtk-3-dev libgl1-mesa-dev libglu1-mesa-dev \
+            xvfb at-spi2-core
 
       - name: Format
         run: cargo fmt --all -- --check
@@ -54,6 +54,13 @@ jobs:
       - name: Headless self-check
         run: cargo run --release -p accessiweather -- --check
 
+      # Linux/macOS load prism from beside the executable (rpath $ORIGIN).
+      - name: Place prism beside the binary
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          find target/release/build -path '*prism-sys-*/out/lib/*' -name 'libprism*' \
+            \( -name '*.so*' -o -name '*.dylib' \) -exec cp -P {} target/release/ \;
       - name: Window smoke test (Linux, Xvfb)
         if: runner.os == 'Linux'
         timeout-minutes: 3

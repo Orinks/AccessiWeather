@@ -104,9 +104,6 @@ pub struct AppSettings {
     pub update_interval_minutes: i64,
     #[serde(default = "d_true")]
     pub enable_alerts: bool,
-    /// Speak refresh results through the system speech engine.
-    #[serde(default = "d_true")]
-    pub speech_announcements: bool,
     #[serde(default)]
     pub minimize_to_tray: bool,
     #[serde(default)]
@@ -121,11 +118,11 @@ pub struct AppSettings {
     pub startup_enabled: bool,
     #[serde(default = "d_auto")]
     pub data_source: String,
-    /// Weather provider API keys live in secure storage; these are only
-    /// populated from legacy configs or portable-mode files.
-    #[serde(default, skip_serializing_if = "String::is_empty")]
+    /// API keys live in the keyring or the portable bundle (see
+    /// `aw_store::secrets`) and are never written to the JSON file.
+    #[serde(default, skip_serializing)]
     pub pirate_weather_api_key: String,
-    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[serde(default, skip_serializing)]
     pub airnow_api_key: String,
     #[serde(default = "d_true")]
     pub auto_update_enabled: bool,
@@ -255,13 +252,13 @@ pub struct AppSettings {
     pub openmeteo_weather_model: String,
     #[serde(default = "d_hybrid")]
     pub station_selection_strategy: String,
-    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[serde(default, skip_serializing)]
     pub avwx_api_key: String,
-    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[serde(default, skip_serializing)]
     pub openrouter_api_key: String,
     #[serde(default = "d_openrouter")]
     pub ai_provider: String,
-    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[serde(default, skip_serializing)]
     pub venice_api_key: String,
     #[serde(default = "d_venice_model")]
     pub venice_model: String,

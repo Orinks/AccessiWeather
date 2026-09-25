@@ -4,7 +4,6 @@ members = [
     "crates/aw-core",
     "crates/aw-providers",
     "crates/aw-store",
-    "crates/aw-speech",
     "crates/aw-app",
 ]
 
@@ -18,7 +17,6 @@ repository = "https://github.com/Orinks/AccessiWeather"
 aw-core = { path = "crates/aw-core" }
 aw-providers = { path = "crates/aw-providers" }
 aw-store = { path = "crates/aw-store" }
-aw-speech = { path = "crates/aw-speech" }
 
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
@@ -30,7 +28,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls", "gzip"] }
 tempfile = "3"
 url = "2"
-tts = "0.26"
+prismer = "0.1.3"
 wxdragon = "0.9.22"
 clap = { version = "4", features = ["derive"] }
 
@@ -39,3 +37,13 @@ opt-level = 2
 lto = "thin"
 codegen-units = 4
 strip = true
+
+# PBKDF2 (390k rounds) is unbearably slow unoptimised; keep dev/test runs fast.
+[profile.dev.package.sha2]
+opt-level = 3
+
+[profile.dev.package.pbkdf2]
+opt-level = 3
+
+[profile.dev.package.hmac]
+opt-level = 3

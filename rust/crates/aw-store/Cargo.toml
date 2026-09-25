@@ -3,7 +3,7 @@ name = "aw-store"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Configuration paths, portable mode and atomic JSON persistence for AccessiWeather"
+description = "Configuration paths, portable mode, secrets and atomic JSON persistence for AccessiWeather"
 
 [dependencies]
 aw-core.workspace = true
@@ -11,3 +11,14 @@ serde_json.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 tempfile.workspace = true
+base64 = "0.22"
+fernet = { version = "0.2", default-features = false, features = ["rustcrypto"] }
+getrandom = "0.2"
+pbkdf2 = { version = "0.12", default-features = false, features = ["hmac"] }
+sha2 = "0.10"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Security_Credentials"] }
+
+[target.'cfg(not(windows))'.dependencies]
+keyring = { version = "3", features = ["apple-native", "async-secret-service", "async-io", "crypto-rust"] }

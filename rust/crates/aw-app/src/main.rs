@@ -3,6 +3,8 @@
 mod app;
 mod cli;
 mod fixtures;
+mod portable_keys;
+mod screen_reader;
 mod ui;
 
 use std::process::ExitCode;

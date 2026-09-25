@@ -8,6 +8,8 @@ use std::path::{Path, PathBuf};
 use aw_core::settings::AppConfig;
 use aw_core::APP_NAME;
 
+pub mod secrets;
+
 pub const CONFIG_FILE_NAME: &str = "accessiweather.json";
 pub const PORTABLE_DIR_NAME: &str = "config";
 
@@ -37,26 +39,28 @@ pub struct Paths {
 }
 
 impl Paths {
-    /// Resolve paths, honouring an explicit `--config-dir`, portable mode
-    /// (a `config` folder next to the executable or `--portable`) and finally
-    /// the platform default.
+    /// Resolve the config root like Python's `resolve_runtime_storage`: an
+    /// explicit `--config-dir`, then portable mode (`<exe dir>/config`), then
+    /// the platform default `<base>/Config`.
     pub fn resolve(explicit: Option<PathBuf>, force_portable: bool) -> Result<Self, StoreError> {
         if let Some(dir) = explicit {
             return Ok(Self {
                 config_dir: dir,
-                portable: false,
+                portable: force_portable,
             });
         }
-        if let Some(portable_dir) = portable_dir() {
-            if force_portable || portable_dir.is_dir() {
+        if let Some(exe_dir) = exe_dir() {
+            if force_portable || detect_portable_mode(&exe_dir) {
                 return Ok(Self {
-                    config_dir: portable_dir,
+                    config_dir: exe_dir.join(PORTABLE_DIR_NAME),
                     portable: true,
                 });
             }
         }
         Ok(Self {
-            config_dir: platform_config_dir().ok_or(StoreError::NoConfigDir)?,
+            config_dir: platform_base_dir()
+                .ok_or(StoreError::NoConfigDir)?
+                .join("Config"),
             portable: false,
         })
     }
@@ -78,20 +82,35 @@ impl Paths {
     }
 }
 
-fn portable_dir() -> Option<PathBuf> {
-    let exe = std::env::current_exe().ok()?;
-    Some(exe.parent()?.join(PORTABLE_DIR_NAME))
+fn exe_dir() -> Option<PathBuf> {
+    Some(std::env::current_exe().ok()?.parent()?.to_path_buf())
 }
 
-/// Default per-user data directory, matching `accessiweather.paths`:
+/// Python's `detect_portable_mode`: forced by `ACCESSIWEATHER_FORCE_PORTABLE`,
+/// a `.portable` marker, or a legacy `config` folder in a build that has no
+/// uninstaller beside it.
+pub fn detect_portable_mode(exe_dir: &Path) -> bool {
+    let forced = std::env::var("ACCESSIWEATHER_FORCE_PORTABLE")
+        .map(|v| matches!(v.to_lowercase().as_str(), "1" | "true" | "yes"))
+        .unwrap_or(false);
+    if forced || exe_dir.join(".portable").exists() {
+        return true;
+    }
+    let has_uninstaller = fs::read_dir(exe_dir).is_ok_and(|entries| {
+        entries.flatten().any(|e| {
+            let name = e.file_name().to_string_lossy().to_lowercase();
+            name.starts_with("unins") && (name.ends_with(".exe") || name.ends_with(".dat"))
+        })
+    });
+    !has_uninstaller && exe_dir.join(PORTABLE_DIR_NAME).is_dir()
+}
+
+/// Per-user application base directory, matching `accessiweather.paths.Paths`:
 ///
 /// * Windows: `%LOCALAPPDATA%\Orinks\AccessiWeather`
 /// * macOS:   `~/Library/Application Support/AccessiWeather`
 /// * Linux:   `$XDG_DATA_HOME/accessiweather` (default `~/.local/share/accessiweather`)
-pub fn platform_config_dir() -> Option<PathBuf> {
-    if let Some(dir) = std::env::var_os("ACCESSIWEATHER_CONFIG_DIR") {
-        return Some(PathBuf::from(dir));
-    }
+pub fn platform_base_dir() -> Option<PathBuf> {
     if cfg!(target_os = "windows") {
         let base = std::env::var_os("LOCALAPPDATA")
             .map(PathBuf::from)
@@ -196,8 +215,28 @@ mod tests {
 
     #[test]
     fn explicit_dir_wins() {
-        let p = Paths::resolve(Some(PathBuf::from("/tmp/x")), true).unwrap();
+        let p = Paths::resolve(Some(PathBuf::from("/tmp/x")), false).unwrap();
         assert_eq!(p.config_file(), PathBuf::from("/tmp/x/accessiweather.json"));
         assert!(!p.portable);
+    }
+
+    #[test]
+    fn default_config_lives_in_config_subfolder_like_python() {
+        let p = Paths::resolve(None, false).unwrap();
+        assert!(!p.portable);
+        assert_eq!(p.config_dir.file_name().unwrap(), "Config");
+        assert_eq!(p.config_dir.parent(), platform_base_dir().as_deref());
+    }
+
+    #[test]
+    fn portable_detection_follows_python_markers() {
+        let dir = tempfile::tempdir().unwrap();
+        assert!(!detect_portable_mode(dir.path()));
+        fs::create_dir(dir.path().join("config")).unwrap();
+        assert!(detect_portable_mode(dir.path()));
+        fs::write(dir.path().join("unins000.exe"), b"").unwrap();
+        assert!(!detect_portable_mode(dir.path()));
+        fs::write(dir.path().join(".portable"), b"").unwrap();
+        assert!(detect_portable_mode(dir.path()));
     }
 }

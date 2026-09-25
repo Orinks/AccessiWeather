@@ -12,8 +12,7 @@ NSAccessibility and AT-SPI respectively, like the wxPython edition.
 |-------|---------|
 | `aw-core` | Domain models, settings (JSON-compatible with the Python app), units, source planning, alerts, text presentation |
 | `aw-providers` | NWS, Open-Meteo, Pirate Weather, geocoding, multi-source fetch/merge with fallback |
-| `aw-store` | Config directories, portable mode, atomic JSON persistence |
-| `aw-speech` | Bounded worker-thread text-to-speech (`tts` crate) with recording/null sinks for tests |
+| `aw-store` | Config directories, portable mode, API keys (keyring / encrypted bundle), atomic JSON persistence |
 | `aw-app` (`accessiweather`) | The executable: CLI, wxDragon windows and dialogs, refresh loop |
 
 ## Building
@@ -29,7 +28,7 @@ cargo build --release -p accessiweather
 
 wxDragon compiles wxWidgets from source on first build (needs CMake and a C++
 toolchain; allow several minutes). Linux build dependencies (Debian/Ubuntu):
-`cmake build-essential libclang-dev libspeechd-dev libgtk-3-dev
+`cmake build-essential libclang-dev pkg-config libglibmm-2.68-dev libgtk-3-dev
 libgl1-mesa-dev libglu1-mesa-dev`.
 
 Keyboard shortcuts: F5 / Ctrl+R refresh, Alt+A add location, Ctrl+, settings,
@@ -41,14 +40,22 @@ alerts panels, Ctrl+Q quit. On macOS use Command in place of Ctrl.
 
 The app reads and writes the same `accessiweather.json` as the Python app:
 
-- Windows: `%LOCALAPPDATA%\Orinks\AccessiWeather\`
-- macOS: `~/Library/Application Support/AccessiWeather/`
-- Linux: `$XDG_DATA_HOME/accessiweather` (default `~/.local/share/accessiweather`)
-- `--portable` or a `config` folder beside the executable: portable mode
-- `ACCESSIWEATHER_CONFIG_DIR` / `--config-dir` override everything
+- Windows: `%LOCALAPPDATA%\Orinks\AccessiWeather\Config\`
+- macOS: `~/Library/Application Support/AccessiWeather/Config/`
+- Linux: `$XDG_DATA_HOME/accessiweather/Config` (default `~/.local/share/accessiweather/Config`)
+- Portable mode (`--portable`, a `.portable` marker, or a `config` folder
+  beside the executable): `<exe folder>/config`
+- `--config-dir` overrides everything
 
-Unknown settings keys are preserved on save so the two editions can be used
-side by side.
+API keys come from the same places too: the system keyring (service
+`accessiweather`), or the encrypted `api-keys.keys` bundle in portable mode.
+They are never written to the JSON file. Unknown settings keys are preserved
+on save so the two editions can be used side by side.
+
+Screen reader announcements go through [prism](https://github.com/ethindp/prism)
+via [prismer](https://crates.io/crates/prismer), the same library the Python
+app uses through prismatoid. On Linux and macOS prism is a shared library
+shipped next to the executable.
 
 ## Packaging
 

@@ -33,8 +33,6 @@ const ID_REMOVE_LOCATION: Id = ID_HIGHEST + 2;
 const ID_REFRESH: Id = ID_HIGHEST + 3;
 const ID_SETTINGS: Id = ID_HIGHEST + 4;
 const ID_DISCUSSION: Id = ID_HIGHEST + 5;
-const ID_READ_ALOUD: Id = ID_HIGHEST + 6;
-const ID_STOP_SPEECH: Id = ID_HIGHEST + 7;
 const ID_ALERT_DETAILS: Id = ID_HIGHEST + 8;
 const ID_SEARCH: Id = ID_HIGHEST + 9;
 
@@ -69,6 +67,16 @@ thread_local! {
 
 fn main_ui() -> Option<MainUi> {
     MAIN_UI.with(|u| *u.borrow())
+}
+
+pub(crate) fn main_frame() -> Option<Frame> {
+    main_ui().map(|ui| ui.frame)
+}
+
+pub(crate) fn refresh_now(state: &Shared) {
+    if let Some(ui) = main_ui() {
+        start_refresh(&ui, state);
+    }
 }
 
 /// Give a control an accessible name (and optional description) on the
@@ -264,17 +272,6 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
             "Read the NWS area forecast discussion ({MOD_KEY}+D)"
         )),
     );
-    let read_button = Button::builder(&panel)
-        .with_id(ID_READ_ALOUD)
-        .with_label(&mn("Read a&loud"))
-        .build();
-    label_control(
-        &read_button,
-        "Read aloud",
-        Some(&format!(
-            "Speak the summary and current conditions ({MOD_KEY}+Shift+S)"
-        )),
-    );
     let settings_button = Button::builder(&panel)
         .with_id(ID_SETTINGS)
         .with_label(&mn("&Settings…"))
@@ -284,12 +281,7 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
         "Settings",
         Some(&format!("Open settings ({MOD_KEY}+,)")),
     );
-    for b in [
-        &details_button,
-        &discussion_button,
-        &read_button,
-        &settings_button,
-    ] {
+    for b in [&details_button, &discussion_button, &settings_button] {
         actions.add(b, 0, SizerFlag::Right, 6);
     }
     root.add_sizer(
@@ -325,6 +317,13 @@ pub(crate) fn build_main_window(state: &Shared, smoke: bool) {
     };
     MAIN_UI.with(|u| *u.borrow_mut() = Some(ui));
 
+    // Timers and window handles must go before wxWidgets tears down; left in
+    // thread-locals they would be destroyed after it and crash on exit.
+    frame.on_close(|e| {
+        TIMERS.with(|t| t.borrow_mut().clear());
+        MAIN_UI.with(|u| u.borrow_mut().take());
+        e.skip(true);
+    });
     wire_commands(&ui, state);
     wire_keys(&ui, state);
     sync_locations(&ui, &state.borrow());
@@ -393,13 +392,6 @@ fn build_menu_bar() -> MenuBar {
             "Forecast &Discussion\tCtrl+D",
             "Read the area forecast discussion",
         )
-        .append_separator()
-        .append_item(
-            ID_READ_ALOUD,
-            "Read &Aloud\tCtrl+Shift+S",
-            "Speak the current conditions",
-        )
-        .append_item(ID_STOP_SPEECH, "S&top Speaking", "Stop speech (Escape)")
         .build();
     MenuBar::builder()
         .append(file, "&File")
@@ -417,8 +409,6 @@ fn wire_commands(ui: &MainUi, state: &Shared) {
         ID_SETTINGS => open_settings(&ui, &state),
         ID_ALERT_DETAILS => show_alert_details(&ui, &state),
         ID_DISCUSSION => show_discussion(&ui, &state),
-        ID_READ_ALOUD => speak_current(&state),
-        ID_STOP_SPEECH => state.borrow().speaker.stop(),
         ID_EXIT => ui.frame.close(true),
         _ => {}
     });
@@ -467,10 +457,6 @@ fn wire_keys(ui: &MainUi, state: &Shared) {
             let code = e.get_key_code().unwrap_or(0);
             let ctrl = e.control_down() || e.cmd_down();
             let handled = match (ctrl, code) {
-                (false, WXK_ESCAPE) => {
-                    state.borrow().speaker.stop();
-                    false
-                }
                 (false, WXK_RETURN) | (false, WXK_NUMPAD_ENTER) if ui.alerts.has_focus() => {
                     show_alert_details(&ui, &state);
                     true
@@ -538,23 +524,10 @@ fn set_status(ui: &MainUi, text: &str) {
     ui.frame.layout();
 }
 
-/// Update the status line and, if enabled, speak it.
-fn announce(ui: &MainUi, state: &Shared, text: &str) {
+/// Update the status line and announce it to the screen reader.
+fn announce(ui: &MainUi, _state: &Shared, text: &str) {
     set_status(ui, text);
-    let st = state.borrow();
-    if st.config.settings.speech_announcements {
-        st.speaker.speak(text, true);
-    }
-}
-
-fn speak_current(state: &Shared) {
-    let st = state.borrow();
-    let text = st
-        .last_presentation
-        .as_ref()
-        .map(|p| format!("{}\n{}", p.summary_text, p.current_text))
-        .unwrap_or_else(|| "No weather data loaded yet.".to_string());
-    st.speaker.speak(text, true);
+    crate::screen_reader::announce(text);
 }
 
 fn select_location(ui: &MainUi, state: &Shared, index: usize) {
@@ -681,7 +654,7 @@ fn show_alert_details(ui: &MainUi, state: &Shared) {
             }
         }
     };
-    open_text_dialog(ui, state, &label, &detail, "Alert details");
+    open_text_dialog(ui, &label, &detail, "Alert details");
 }
 
 fn show_discussion(ui: &MainUi, state: &Shared) {
@@ -693,7 +666,6 @@ fn show_discussion(ui: &MainUi, state: &Shared) {
     match text {
         Some(t) => open_text_dialog(
             ui,
-            state,
             "Area Forecast Discussion",
             &t,
             "Forecast discussion text",
@@ -713,7 +685,7 @@ fn dialog_frame(parent: &Frame, title: &str, w: i32, h: i32) -> Dialog {
         .build()
 }
 
-fn open_text_dialog(ui: &MainUi, state: &Shared, heading: &str, body: &str, label: &str) {
+fn open_text_dialog(ui: &MainUi, heading: &str, body: &str, label: &str) {
     let dlg = dialog_frame(&ui.frame, heading, 640, 480);
     let root = BoxSizer::builder(Orientation::Vertical).build();
     let text = TextCtrl::builder(&dlg)
@@ -724,16 +696,10 @@ fn open_text_dialog(ui: &MainUi, state: &Shared, heading: &str, body: &str, labe
     root.add(&text, 1, SizerFlag::Expand | SizerFlag::All, 8);
 
     let buttons = BoxSizer::builder(Orientation::Horizontal).build();
-    let speak = Button::builder(&dlg)
-        .with_id(ID_READ_ALOUD)
-        .with_label(&mn("Read a&loud"))
-        .build();
-    label_control(&speak, "Read aloud", Some("Speak this text"));
     let close = Button::builder(&dlg)
         .with_id(ID_CANCEL)
         .with_label(&mn("&Close"))
         .build();
-    buttons.add(&speak, 0, SizerFlag::Right, 6);
     buttons.add(&close, 0, SizerFlag::Right, 0);
     root.add_sizer(
         &buttons,
@@ -745,11 +711,6 @@ fn open_text_dialog(ui: &MainUi, state: &Shared, heading: &str, body: &str, labe
     dlg.set_escape_id(ID_CANCEL);
     close.set_default();
 
-    {
-        let state = state.clone();
-        let spoken = format!("{heading}. {body}");
-        speak.on_click(move |_| state.borrow().speaker.speak(spoken.clone(), true));
-    }
     text.set_focus();
     text.set_insertion_point(0);
     dlg.show_modal();
@@ -1160,7 +1121,6 @@ fn open_settings(ui: &MainUi, state: &Shared) {
     );
 
     let alerts = check(&dlg, &root, "Show weather &alerts", s.enable_alerts);
-    let speech = check(&dlg, &root, "&Speak status updates", s.speech_announcements);
     let dewpoint = check(&dlg, &root, "Show de&wpoint", s.show_dewpoint);
     let pressure = check(&dlg, &root, "Show pressure t&rend", s.show_pressure_trend);
     let visibility = check(&dlg, &root, "Show visi&bility", s.show_visibility);
@@ -1202,15 +1162,17 @@ fn open_settings(ui: &MainUi, state: &Shared) {
         s.update_interval_minutes = interval.value() as i64;
         s.forecast_duration_days = days.value() as i64;
         s.hourly_forecast_hours = hours.value() as i64;
-        s.pirate_weather_api_key = key.get_value().trim().to_string();
         s.enable_alerts = alerts.is_checked();
-        s.speech_announcements = speech.is_checked();
         s.show_dewpoint = dewpoint.is_checked();
         s.show_pressure_trend = pressure.is_checked();
         s.show_visibility = visibility.is_checked();
         s.show_uv_index = uv.is_checked();
         s.minimize_to_tray = tray.is_checked();
         interval_changed = old_interval != s.update_interval_minutes;
+        let new_key = key.get_value();
+        if new_key.trim() != s.pirate_weather_api_key {
+            crate::app::save_api_key(&mut st, "pirate_weather_api_key", &new_key);
+        }
         if let Err(e) = save(&st) {
             drop(st);
             dlg.destroy();

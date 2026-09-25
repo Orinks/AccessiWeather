@@ -1,4 +1,4 @@
-//! Application wiring: config, weather client, speech and the wxDragon UI.
+//! Application wiring: config, weather client, screen reader and the wxDragon UI.
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -10,7 +10,6 @@ use aw_core::settings::AppConfig;
 use aw_core::weather::WeatherData;
 use aw_core::Location;
 use aw_providers::{HttpClient, ReqwestClient, WeatherClient};
-use aw_speech::Speaker;
 use aw_store::Paths;
 
 use crate::cli::Args;
@@ -58,11 +57,12 @@ pub(crate) struct State {
     pub paths: Paths,
     pub config: AppConfig,
     pub client: WeatherClient,
-    pub speaker: Speaker,
     pub last_data: Option<WeatherData>,
     pub last_presentation: Option<WeatherPresentation>,
     pub busy: bool,
     pub smoke: bool,
+    /// Sample data runs never write the user's configuration.
+    pub offline: bool,
 }
 
 pub(crate) type Shared = Rc<RefCell<State>>;
@@ -103,6 +103,14 @@ pub fn run(args: Args) -> Result<(), AppError> {
     );
 
     let offline = args.offline || args.smoke || args.check;
+    let mut needs_passphrase = false;
+    if !offline {
+        if paths.portable {
+            needs_passphrase = crate::portable_keys::import_silently(&paths, &mut config.settings);
+        } else {
+            aw_store::secrets::load_into(&mut config.settings);
+        }
+    }
     let http: Arc<dyn HttpClient> = if offline {
         crate::fixtures::offline_client()
     } else {
@@ -120,21 +128,15 @@ pub fn run(args: Args) -> Result<(), AppError> {
         );
     }
 
-    let speaker = if args.smoke {
-        Speaker::null()
-    } else {
-        Speaker::native_or_null()
-    };
-
     let state: Shared = Rc::new(RefCell::new(State {
         paths,
         config,
         client,
-        speaker,
         last_data: None,
         last_presentation: None,
         busy: false,
         smoke: args.smoke,
+        offline,
     }));
     APP_STATE.with(|s| *s.borrow_mut() = Some(state.clone()));
 
@@ -144,12 +146,24 @@ pub fn run(args: Args) -> Result<(), AppError> {
     }
     wxdragon::main(move |_app| {
         let Some(state) = with_state() else { return };
+        if !smoke {
+            crate::screen_reader::init();
+        }
         ui::build_main_window(&state, smoke);
+        if needs_passphrase {
+            wxdragon::call_after(Box::new(|| {
+                let (Some(state), Some(frame)) = (with_state(), ui::main_frame()) else {
+                    return;
+                };
+                if crate::portable_keys::prompt(&frame, &state) {
+                    ui::refresh_now(&state);
+                }
+            }));
+        }
     })
     .map_err(|e| AppError::Ui(e.to_string()))?;
+    crate::screen_reader::shutdown();
 
-    let speaker = state.borrow().speaker.clone();
-    speaker.shutdown();
     if state.borrow().smoke && state.borrow().last_data.is_none() {
         return Err(AppError::Check(
             "smoke run never received weather data".into(),
@@ -179,9 +193,40 @@ fn self_check(config: &AppConfig, client: &WeatherClient) -> Result<(), AppError
 
 /// Persist the current config, logging (not propagating) failures.
 pub(crate) fn save(st: &State) -> Result<(), aw_store::StoreError> {
+    if st.offline {
+        return Ok(());
+    }
     aw_store::save_config(&st.paths.config_file(), &st.config).inspect_err(|e| {
         tracing::error!("saving config: {e}");
     })
+}
+
+/// Persist an API key where the Python app keeps it: the keyring, or the
+/// encrypted bundle in portable mode (using the cached passphrase).
+pub(crate) fn save_api_key(st: &mut State, name: &str, value: &str) -> bool {
+    use aw_store::secrets;
+    let value = value.trim();
+    if let Some(field) = secrets::api_key_mut(&mut st.config.settings, name) {
+        *field = value.to_string();
+    }
+    if st.offline {
+        return true;
+    }
+    if !st.paths.portable {
+        return secrets::set_password(name, value);
+    }
+    let passphrase = secrets::get_password(secrets::PORTABLE_PASSPHRASE_KEY).unwrap_or_default();
+    if passphrase.trim().is_empty() {
+        tracing::warn!(
+            "No portable bundle passphrase cached; {name} is kept for this session only"
+        );
+        return false;
+    }
+    let bundle = st.paths.config_dir.join(secrets::BUNDLE_FILE_NAMES[0]);
+    let keys = secrets::collect(&mut st.config.settings);
+    secrets::write_bundle(&bundle, &keys, passphrase.trim())
+        .inspect_err(|e| tracing::error!("Failed to update {}: {e}", bundle.display()))
+        .is_ok()
 }
 
 /// Build the status line for a completed fetch.
