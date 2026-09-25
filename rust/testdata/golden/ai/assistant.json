@@ -1,0 +1,1767 @@
+{
+ "system_prompt": "You are Weather Assistant, a friendly and knowledgeable weather assistant built into AccessiWeather. You help users understand weather conditions in plain, accessible language optimized for screen reader users.\n\nYou have access to live weather tools that can fetch current conditions, forecasts, and active alerts for any location. The available tools are:\n- get_current_weather: Get current weather conditions for a location\n- get_forecast: Get the weather forecast for a location\n- get_hourly_forecast: Get hourly forecast (great for specific time questions)\n- get_alerts: Get active weather alerts for a location\n- search_location: Search for a location by name or ZIP code\n- add_location: Save a location to the user's locations list\n- list_locations: Show all saved locations\n- query_open_meteo: Custom Open-Meteo API query for any weather variable (soil temp, UV, cloud cover, dew point, snow depth, visibility, etc.)\n- get_area_forecast_discussion: Local NWS forecaster's detailed discussion\n- get_wpc_discussion: National WPC short range forecast discussion\n- get_spc_outlook: Storm Prediction Center severe weather outlook\n\nUse the provided tools to fetch weather data when users ask about specific locations or conditions not in the current context. You can call multiple tools if needed to give a complete answer. Use search_location when a place name is ambiguous. When adding locations, first resolve coordinates with search_location, then use add_location with the resolved name and coordinates.\n\nGuidelines:\n- Be conversational and helpful\n- Explain weather in practical terms (what to wear, activity suitability, etc.)\n- Avoid visual-only descriptions\n- When referencing data, use the weather context provided\n- For live weather requests, fetch the requested data before answering; never finish with a promise to check later\n- After tool results arrive, answer using those results and their observation times\n- A failed alert lookup means alerts are unknown, not that there are no alerts\n- Keep responses concise but thorough\n- Respond in plain text only — no markdown formatting\n- Do not repeat information the user can already see\n\nIMPORTANT: Respond in plain text. No bold, italic, headers, or bullet markers.",
+ "contexts": [
+  {
+   "weather": {
+    "location": {
+     "name": "Philadelphia, PA",
+     "latitude": 39.9526,
+     "longitude": -75.1652,
+     "timezone": "America/New_York",
+     "country_code": "US",
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "current": {
+     "temperature": 72.5,
+     "temperature_f": 72.5,
+     "temperature_c": 22.5,
+     "condition": "Partly Cloudy",
+     "humidity": 65,
+     "wind_speed": 8.3,
+     "dewpoint_f": null,
+     "dewpoint_c": null,
+     "wind_speed_mph": 8.3,
+     "wind_speed_kph": 13.36,
+     "wind_direction": "NW",
+     "pressure": 30.02,
+     "pressure_in": 30.02,
+     "pressure_mb": 1016.6,
+     "feels_like_f": 73.4,
+     "feels_like_c": null,
+     "visibility_miles": 10.0,
+     "visibility_km": 16.09,
+     "uv_index": 5.3,
+     "cloud_cover": null,
+     "wind_gust_mph": null,
+     "wind_gust_kph": null,
+     "precipitation_in": null,
+     "precipitation_mm": null,
+     "sunrise_time": null,
+     "sunset_time": null,
+     "moon_phase": null,
+     "moonrise_time": null,
+     "moonset_time": null,
+     "snow_depth_in": null,
+     "snow_depth_cm": null,
+     "snowfall_rate_in": null,
+     "wind_chill_f": null,
+     "wind_chill_c": null,
+     "freezing_level_ft": null,
+     "freezing_level_m": null,
+     "heat_index_f": null,
+     "heat_index_c": null,
+     "frost_risk": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null
+    },
+    "forecast": {
+     "periods": [
+      {
+       "name": "This Afternoon",
+       "temperature": 78,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": "Mostly Sunny",
+       "detailed_forecast": null,
+       "wind_speed": "5 to 10 mph",
+       "wind_speed_mph": 10.0,
+       "wind_direction": "NW",
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      },
+      {
+       "name": "Tonight",
+       "temperature": 61,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": "Partly Cloudy",
+       "detailed_forecast": null,
+       "wind_speed": "5 mph",
+       "wind_speed_mph": null,
+       "wind_direction": "N",
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      },
+      {
+       "name": "Friday",
+       "temperature": 80.5,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": "Chance Showers And Thunderstorms",
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      },
+      {
+       "name": "Friday Night",
+       "temperature": 63,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": "10 mph",
+       "wind_speed_mph": 7.5,
+       "wind_direction": "",
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      },
+      {
+       "name": "Saturday",
+       "temperature": null,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": "Sunny",
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      },
+      {
+       "name": "Saturday Night",
+       "temperature": 58,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": "Clear",
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      },
+      {
+       "name": "Sunday",
+       "temperature": 75,
+       "temperature_low": null,
+       "temperature_unit": "F",
+       "short_forecast": "Sunny",
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "daily_history": [],
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "minutely_precipitation": null,
+    "alerts": {
+     "alerts": [
+      {
+       "title": "Heat Advisory issued September 25 at 2:10PM EDT",
+       "description": "Heat index values up to 105 expected.",
+       "severity": "Moderate",
+       "urgency": "Unknown",
+       "certainty": "Unknown",
+       "event": "Heat Advisory",
+       "headline": "Heat Advisory until 8 PM",
+       "instruction": null,
+       "onset": null,
+       "expires": "2099-01-01T00:00:00+00:00",
+       "sent": null,
+       "effective": null,
+       "areas": [],
+       "references": [],
+       "id": null,
+       "source": null,
+       "message_type": null,
+       "affected_zones": [],
+       "same_codes": [],
+       "same_event_codes": []
+      },
+      {
+       "title": "Special Weather Statement",
+       "description": "",
+       "severity": "Minor",
+       "urgency": "Unknown",
+       "certainty": "Unknown",
+       "event": null,
+       "headline": null,
+       "instruction": null,
+       "onset": null,
+       "expires": "2000-01-01T00:00:00+00:00",
+       "sent": null,
+       "effective": null,
+       "areas": [],
+       "references": [],
+       "id": null,
+       "source": null,
+       "message_type": null,
+       "affected_zones": [],
+       "same_codes": [],
+       "same_event_codes": []
+      }
+     ]
+    },
+    "environmental": null,
+    "aviation": null,
+    "marine": null,
+    "trend_insights": [
+     {
+      "metric": "temperature",
+      "direction": "rising",
+      "change": 3.4,
+      "unit": "°F",
+      "timeframe_hours": 24,
+      "summary": null,
+      "sparkline": null
+     },
+     {
+      "metric": "pressure",
+      "direction": "falling",
+      "change": -0.06,
+      "unit": "inHg",
+      "timeframe_hours": 24,
+      "summary": "Pressure falling",
+      "sparkline": null
+     },
+     {
+      "metric": "humidity",
+      "direction": "steady",
+      "change": null,
+      "unit": "%",
+      "timeframe_hours": 24,
+      "summary": null,
+      "sparkline": null
+     },
+     {
+      "metric": "wind",
+      "direction": "rising",
+      "change": 2.0,
+      "unit": null,
+      "timeframe_hours": 24,
+      "summary": null,
+      "sparkline": null
+     }
+    ],
+    "stale": false,
+    "stale_since": null,
+    "stale_reason": null,
+    "source_attribution": null,
+    "incomplete_sections": [],
+    "alert_lifecycle_diff": null,
+    "forecast_confidence": null,
+    "anomaly_callout": null
+   },
+   "context": "Location: Philadelphia, PA (39.9526, -75.1652)\nTemperature: 72°F\nFeels like: 73°F\nConditions: Partly Cloudy\nHumidity: 65%\nWind: 8 mph from NW\nPressure: 30.02 inHg\nVisibility: 10.0 miles\nUV Index: 5.3\n\nForecast:\n  This Afternoon: 78°F, Mostly Sunny\n  Tonight: 61°F, Partly Cloudy\n  Friday: 80.5°F, Chance Showers And Thunderstorms\n  Friday Night: 63°F\n  Saturday: None°F, Sunny\n  Saturday Night: 58°F, Clear\n\nActive Alerts:\n  - Heat Advisory (Severity: Moderate)\n  - Special Weather Statement (Severity: Minor)\n\nTrend Insights:\n  - temperature: rising (+3.4°F)\n  - Pressure falling (-0.1inHg)\n  - humidity: steady"
+  },
+  {
+   "weather": {
+    "location": {
+     "name": "London, United Kingdom",
+     "latitude": 51.5074,
+     "longitude": -0.1278,
+     "timezone": "Europe/London",
+     "country_code": "GB",
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "current": {
+     "temperature": 14.0,
+     "temperature_f": null,
+     "temperature_c": 14.0,
+     "condition": "Light Rain",
+     "humidity": 88,
+     "wind_speed": 20.0,
+     "dewpoint_f": null,
+     "dewpoint_c": null,
+     "wind_speed_mph": null,
+     "wind_speed_kph": 20.0,
+     "wind_direction": null,
+     "pressure": 1009.0,
+     "pressure_in": null,
+     "pressure_mb": 1009.0,
+     "feels_like_f": null,
+     "feels_like_c": null,
+     "visibility_miles": null,
+     "visibility_km": 8.0,
+     "uv_index": 1,
+     "cloud_cover": null,
+     "wind_gust_mph": null,
+     "wind_gust_kph": null,
+     "precipitation_in": null,
+     "precipitation_mm": null,
+     "sunrise_time": null,
+     "sunset_time": null,
+     "moon_phase": null,
+     "moonrise_time": null,
+     "moonset_time": null,
+     "snow_depth_in": null,
+     "snow_depth_cm": null,
+     "snowfall_rate_in": null,
+     "wind_chill_f": null,
+     "wind_chill_c": null,
+     "freezing_level_ft": null,
+     "freezing_level_m": null,
+     "heat_index_f": null,
+     "heat_index_c": null,
+     "frost_risk": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null
+    },
+    "forecast": {
+     "periods": [
+      {
+       "name": "Today",
+       "temperature": 16,
+       "temperature_low": null,
+       "temperature_unit": "C",
+       "short_forecast": "Rain",
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": null,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      },
+      {
+       "name": "Tomorrow",
+       "temperature": 18.5,
+       "temperature_low": null,
+       "temperature_unit": "C",
+       "short_forecast": null,
+       "detailed_forecast": null,
+       "wind_speed": null,
+       "wind_speed_mph": 12.0,
+       "wind_direction": null,
+       "icon": null,
+       "start_time": null,
+       "end_time": null,
+       "precipitation_probability": null,
+       "snowfall": null,
+       "uv_index": null,
+       "cloud_cover": null,
+       "wind_gust": null,
+       "precipitation_amount": null,
+       "snow_depth": null,
+       "wind_chill_min_f": null,
+       "wind_chill_max_f": null,
+       "freezing_level_ft": null,
+       "ice_risk": null,
+       "heat_index_max_f": null,
+       "heat_index_min_f": null,
+       "uv_index_max": null,
+       "air_quality_forecast": null,
+       "frost_risk": null,
+       "pollen_forecast": null,
+       "precipitation_type": null,
+       "severe_weather_risk": null,
+       "feels_like_high": null,
+       "feels_like_low": null
+      }
+     ],
+     "generated_at": null,
+     "summary": null
+    },
+    "hourly_forecast": null,
+    "daily_history": [],
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "minutely_precipitation": null,
+    "alerts": null,
+    "environmental": null,
+    "aviation": null,
+    "marine": null,
+    "trend_insights": [],
+    "stale": false,
+    "stale_since": null,
+    "stale_reason": null,
+    "source_attribution": null,
+    "incomplete_sections": [],
+    "alert_lifecycle_diff": null,
+    "forecast_confidence": null,
+    "anomaly_callout": null
+   },
+   "context": "Location: London, United Kingdom (51.5074, -0.1278)\nConditions: Light Rain\nHumidity: 88%\nUV Index: 1\n\nForecast:\n  Today: 16°C, Rain\n  Tomorrow: 18.5°C"
+  },
+  {
+   "weather": {
+    "location": {
+     "name": "Toronto, ON",
+     "latitude": 43.65,
+     "longitude": -79.38,
+     "timezone": "America/Toronto",
+     "country_code": "CA",
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "current": {
+     "temperature": 41.0,
+     "temperature_f": 41.0,
+     "temperature_c": null,
+     "condition": null,
+     "humidity": null,
+     "wind_speed": 15.5,
+     "dewpoint_f": null,
+     "dewpoint_c": null,
+     "wind_speed_mph": 15.5,
+     "wind_speed_kph": null,
+     "wind_direction": null,
+     "pressure": 29.8,
+     "pressure_in": 29.8,
+     "pressure_mb": null,
+     "feels_like_f": null,
+     "feels_like_c": null,
+     "visibility_miles": null,
+     "visibility_km": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust_mph": null,
+     "wind_gust_kph": null,
+     "precipitation_in": null,
+     "precipitation_mm": null,
+     "sunrise_time": null,
+     "sunset_time": null,
+     "moon_phase": null,
+     "moonrise_time": null,
+     "moonset_time": null,
+     "snow_depth_in": null,
+     "snow_depth_cm": null,
+     "snowfall_rate_in": null,
+     "wind_chill_f": null,
+     "wind_chill_c": null,
+     "freezing_level_ft": null,
+     "freezing_level_m": null,
+     "heat_index_f": null,
+     "heat_index_c": null,
+     "frost_risk": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null
+    },
+    "forecast": null,
+    "hourly_forecast": null,
+    "daily_history": [],
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "minutely_precipitation": null,
+    "alerts": null,
+    "environmental": null,
+    "aviation": null,
+    "marine": null,
+    "trend_insights": [],
+    "stale": false,
+    "stale_since": null,
+    "stale_reason": null,
+    "source_attribution": null,
+    "incomplete_sections": [],
+    "alert_lifecycle_diff": null,
+    "forecast_confidence": null,
+    "anomaly_callout": null
+   },
+   "context": "Location: Toronto, ON (43.65, -79.38)\nTemperature: 41°F\nWind: 16 mph\nPressure: 29.80 inHg"
+  },
+  {
+   "weather": {
+    "location": {
+     "name": "Nowhere",
+     "latitude": 0.0,
+     "longitude": 0.0,
+     "timezone": "Not/AZone",
+     "country_code": null,
+     "marine_mode": false,
+     "forecast_zone_id": null,
+     "cwa_office": null,
+     "county_zone_id": null,
+     "fire_zone_id": null,
+     "radar_station": null
+    },
+    "current": {
+     "temperature": null,
+     "temperature_f": null,
+     "temperature_c": null,
+     "condition": "Fog",
+     "humidity": null,
+     "wind_speed": null,
+     "dewpoint_f": null,
+     "dewpoint_c": null,
+     "wind_speed_mph": null,
+     "wind_speed_kph": null,
+     "wind_direction": null,
+     "pressure": null,
+     "pressure_in": null,
+     "pressure_mb": null,
+     "feels_like_f": null,
+     "feels_like_c": null,
+     "visibility_miles": null,
+     "visibility_km": null,
+     "uv_index": null,
+     "cloud_cover": null,
+     "wind_gust_mph": null,
+     "wind_gust_kph": null,
+     "precipitation_in": null,
+     "precipitation_mm": null,
+     "sunrise_time": null,
+     "sunset_time": null,
+     "moon_phase": null,
+     "moonrise_time": null,
+     "moonset_time": null,
+     "snow_depth_in": null,
+     "snow_depth_cm": null,
+     "snowfall_rate_in": null,
+     "wind_chill_f": null,
+     "wind_chill_c": null,
+     "freezing_level_ft": null,
+     "freezing_level_m": null,
+     "heat_index_f": null,
+     "heat_index_c": null,
+     "frost_risk": null,
+     "precipitation_type": null,
+     "severe_weather_risk": null
+    },
+    "forecast": null,
+    "hourly_forecast": null,
+    "daily_history": [],
+    "discussion": null,
+    "discussion_issuance_time": null,
+    "minutely_precipitation": null,
+    "alerts": null,
+    "environmental": null,
+    "aviation": null,
+    "marine": null,
+    "trend_insights": [],
+    "stale": false,
+    "stale_since": null,
+    "stale_reason": null,
+    "source_attribution": null,
+    "incomplete_sections": [],
+    "alert_lifecycle_diff": null,
+    "forecast_confidence": null,
+    "anomaly_callout": null
+   },
+   "context": "Location: Nowhere (0.0, 0.0)\nConditions: Fog"
+  },
+  {
+   "weather": null,
+   "context": "No weather data currently loaded."
+  }
+ ],
+ "requests": [
+  {
+   "settings": {
+    "ai_provider": "openrouter",
+    "openrouter_api_key": "k",
+    "ai_model_preference": "vendor/model",
+    "venice_api_key": "",
+    "venice_model": "",
+    "custom_system_prompt": null,
+    "custom_instructions": null
+   },
+   "context": "Location: Philadelphia, PA (39.9526, -75.1652)\nTemperature: 72°F\nFeels like: 73°F\nConditions: Partly Cloudy\nHumidity: 65%\nWind: 8 mph from NW\nPressure: 30.02 inHg\nVisibility: 10.0 miles\nUV Index: 5.3\n\nForecast:\n  This Afternoon: 78°F, Mostly Sunny\n  Tonight: 61°F, Partly Cloudy\n  Friday: 80.5°F, Chance Showers And Thunderstorms\n  Friday Night: 63°F\n  Saturday: None°F, Sunny\n  Saturday Night: 58°F, Clear\n\nActive Alerts:\n  - Heat Advisory (Severity: Moderate)\n  - Special Weather Statement (Severity: Minor)\n\nTrend Insights:\n  - temperature: rising (+3.4°F)\n  - Pressure falling (-0.1inHg)\n  - humidity: steady",
+   "now": "2026-09-25T14:05:30.123456-04:00",
+   "model": "vendor/model",
+   "system": "You are Weather Assistant, a friendly and knowledgeable weather assistant built into AccessiWeather. You help users understand weather conditions in plain, accessible language optimized for screen reader users.\n\nYou have access to live weather tools that can fetch current conditions, forecasts, and active alerts for any location. The available tools are:\n- get_current_weather: Get current weather conditions for a location\n- get_forecast: Get the weather forecast for a location\n- get_hourly_forecast: Get hourly forecast (great for specific time questions)\n- get_alerts: Get active weather alerts for a location\n- search_location: Search for a location by name or ZIP code\n- add_location: Save a location to the user's locations list\n- list_locations: Show all saved locations\n- query_open_meteo: Custom Open-Meteo API query for any weather variable (soil temp, UV, cloud cover, dew point, snow depth, visibility, etc.)\n- get_area_forecast_discussion: Local NWS forecaster's detailed discussion\n- get_wpc_discussion: National WPC short range forecast discussion\n- get_spc_outlook: Storm Prediction Center severe weather outlook\n\nUse the provided tools to fetch weather data when users ask about specific locations or conditions not in the current context. You can call multiple tools if needed to give a complete answer. Use search_location when a place name is ambiguous. When adding locations, first resolve coordinates with search_location, then use add_location with the resolved name and coordinates.\n\nGuidelines:\n- Be conversational and helpful\n- Explain weather in practical terms (what to wear, activity suitability, etc.)\n- Avoid visual-only descriptions\n- When referencing data, use the weather context provided\n- For live weather requests, fetch the requested data before answering; never finish with a promise to check later\n- After tool results arrive, answer using those results and their observation times\n- A failed alert lookup means alerts are unknown, not that there are no alerts\n- Keep responses concise but thorough\n- Respond in plain text only — no markdown formatting\n- Do not repeat information the user can already see\n\nIMPORTANT: Respond in plain text. No bold, italic, headers, or bullet markers.\n\nCurrent device time: 2026-09-25T14:05:30.123456-04:00\nUse the weather location's provider timezone for forecast times; the device timezone may differ.\nTreat weather observation timestamps as the time of that data, not as the current time.\n\nCurrent weather data:\nLocation: Philadelphia, PA (39.9526, -75.1652)\nTemperature: 72°F\nFeels like: 73°F\nConditions: Partly Cloudy\nHumidity: 65%\nWind: 8 mph from NW\nPressure: 30.02 inHg\nVisibility: 10.0 miles\nUV Index: 5.3\n\nForecast:\n  This Afternoon: 78°F, Mostly Sunny\n  Tonight: 61°F, Partly Cloudy\n  Friday: 80.5°F, Chance Showers And Thunderstorms\n  Friday Night: 63°F\n  Saturday: None°F, Sunny\n  Saturday Night: 58°F, Clear\n\nActive Alerts:\n  - Heat Advisory (Severity: Moderate)\n  - Special Weather Statement (Severity: Minor)\n\nTrend Insights:\n  - temperature: rising (+3.4°F)\n  - Pressure falling (-0.1inHg)\n  - humidity: steady",
+   "venice": false
+  },
+  {
+   "settings": {
+    "ai_provider": "openrouter",
+    "openrouter_api_key": "k",
+    "ai_model_preference": "",
+    "venice_api_key": "",
+    "venice_model": "",
+    "custom_system_prompt": "  My prompt  ",
+    "custom_instructions": "  Use Celsius  "
+   },
+   "context": "Location: Philadelphia, PA (39.9526, -75.1652)\nTemperature: 72°F\nFeels like: 73°F\nConditions: Partly Cloudy\nHumidity: 65%\nWind: 8 mph from NW\nPressure: 30.02 inHg\nVisibility: 10.0 miles\nUV Index: 5.3\n\nForecast:\n  This Afternoon: 78°F, Mostly Sunny\n  Tonight: 61°F, Partly Cloudy\n  Friday: 80.5°F, Chance Showers And Thunderstorms\n  Friday Night: 63°F\n  Saturday: None°F, Sunny\n  Saturday Night: 58°F, Clear\n\nActive Alerts:\n  - Heat Advisory (Severity: Moderate)\n  - Special Weather Statement (Severity: Minor)\n\nTrend Insights:\n  - temperature: rising (+3.4°F)\n  - Pressure falling (-0.1inHg)\n  - humidity: steady",
+   "now": "2026-09-25T14:05:30.123456-04:00",
+   "model": "openrouter/free",
+   "system": "My prompt\n\nCurrent device time: 2026-09-25T14:05:30.123456-04:00\nUse the weather location's provider timezone for forecast times; the device timezone may differ.\nTreat weather observation timestamps as the time of that data, not as the current time.\n\nCurrent weather data:\nLocation: Philadelphia, PA (39.9526, -75.1652)\nTemperature: 72°F\nFeels like: 73°F\nConditions: Partly Cloudy\nHumidity: 65%\nWind: 8 mph from NW\nPressure: 30.02 inHg\nVisibility: 10.0 miles\nUV Index: 5.3\n\nForecast:\n  This Afternoon: 78°F, Mostly Sunny\n  Tonight: 61°F, Partly Cloudy\n  Friday: 80.5°F, Chance Showers And Thunderstorms\n  Friday Night: 63°F\n  Saturday: None°F, Sunny\n  Saturday Night: 58°F, Clear\n\nActive Alerts:\n  - Heat Advisory (Severity: Moderate)\n  - Special Weather Statement (Severity: Minor)\n\nTrend Insights:\n  - temperature: rising (+3.4°F)\n  - Pressure falling (-0.1inHg)\n  - humidity: steady\n\nAdditional instructions: Use Celsius",
+   "venice": false
+  },
+  {
+   "settings": {
+    "ai_provider": "venice",
+    "openrouter_api_key": "k",
+    "ai_model_preference": "x",
+    "venice_api_key": "v",
+    "venice_model": "",
+    "custom_system_prompt": "   ",
+    "custom_instructions": ""
+   },
+   "context": "Location: Philadelphia, PA (39.9526, -75.1652)\nTemperature: 72°F\nFeels like: 73°F\nConditions: Partly Cloudy\nHumidity: 65%\nWind: 8 mph from NW\nPressure: 30.02 inHg\nVisibility: 10.0 miles\nUV Index: 5.3\n\nForecast:\n  This Afternoon: 78°F, Mostly Sunny\n  Tonight: 61°F, Partly Cloudy\n  Friday: 80.5°F, Chance Showers And Thunderstorms\n  Friday Night: 63°F\n  Saturday: None°F, Sunny\n  Saturday Night: 58°F, Clear\n\nActive Alerts:\n  - Heat Advisory (Severity: Moderate)\n  - Special Weather Statement (Severity: Minor)\n\nTrend Insights:\n  - temperature: rising (+3.4°F)\n  - Pressure falling (-0.1inHg)\n  - humidity: steady",
+   "now": "2026-09-25T14:05:30.123456-04:00",
+   "model": "venice-uncensored-1-2",
+   "system": "You are Weather Assistant, a friendly and knowledgeable weather assistant built into AccessiWeather. You help users understand weather conditions in plain, accessible language optimized for screen reader users.\n\nYou have access to live weather tools that can fetch current conditions, forecasts, and active alerts for any location. The available tools are:\n- get_current_weather: Get current weather conditions for a location\n- get_forecast: Get the weather forecast for a location\n- get_hourly_forecast: Get hourly forecast (great for specific time questions)\n- get_alerts: Get active weather alerts for a location\n- search_location: Search for a location by name or ZIP code\n- add_location: Save a location to the user's locations list\n- list_locations: Show all saved locations\n- query_open_meteo: Custom Open-Meteo API query for any weather variable (soil temp, UV, cloud cover, dew point, snow depth, visibility, etc.)\n- get_area_forecast_discussion: Local NWS forecaster's detailed discussion\n- get_wpc_discussion: National WPC short range forecast discussion\n- get_spc_outlook: Storm Prediction Center severe weather outlook\n\nUse the provided tools to fetch weather data when users ask about specific locations or conditions not in the current context. You can call multiple tools if needed to give a complete answer. Use search_location when a place name is ambiguous. When adding locations, first resolve coordinates with search_location, then use add_location with the resolved name and coordinates.\n\nGuidelines:\n- Be conversational and helpful\n- Explain weather in practical terms (what to wear, activity suitability, etc.)\n- Avoid visual-only descriptions\n- When referencing data, use the weather context provided\n- For live weather requests, fetch the requested data before answering; never finish with a promise to check later\n- After tool results arrive, answer using those results and their observation times\n- A failed alert lookup means alerts are unknown, not that there are no alerts\n- Keep responses concise but thorough\n- Respond in plain text only — no markdown formatting\n- Do not repeat information the user can already see\n\nIMPORTANT: Respond in plain text. No bold, italic, headers, or bullet markers.\n\nCurrent device time: 2026-09-25T14:05:30.123456-04:00\nUse the weather location's provider timezone for forecast times; the device timezone may differ.\nTreat weather observation timestamps as the time of that data, not as the current time.\n\nCurrent weather data:\nLocation: Philadelphia, PA (39.9526, -75.1652)\nTemperature: 72°F\nFeels like: 73°F\nConditions: Partly Cloudy\nHumidity: 65%\nWind: 8 mph from NW\nPressure: 30.02 inHg\nVisibility: 10.0 miles\nUV Index: 5.3\n\nForecast:\n  This Afternoon: 78°F, Mostly Sunny\n  Tonight: 61°F, Partly Cloudy\n  Friday: 80.5°F, Chance Showers And Thunderstorms\n  Friday Night: 63°F\n  Saturday: None°F, Sunny\n  Saturday Night: 58°F, Clear\n\nActive Alerts:\n  - Heat Advisory (Severity: Moderate)\n  - Special Weather Statement (Severity: Minor)\n\nTrend Insights:\n  - temperature: rising (+3.4°F)\n  - Pressure falling (-0.1inHg)\n  - humidity: steady",
+   "venice": true
+  },
+  {
+   "settings": {
+    "ai_provider": "venice",
+    "openrouter_api_key": "k",
+    "ai_model_preference": "x",
+    "venice_api_key": "",
+    "venice_model": "m",
+    "custom_system_prompt": null,
+    "custom_instructions": null
+   },
+   "context": "Location: Philadelphia, PA (39.9526, -75.1652)\nTemperature: 72°F\nFeels like: 73°F\nConditions: Partly Cloudy\nHumidity: 65%\nWind: 8 mph from NW\nPressure: 30.02 inHg\nVisibility: 10.0 miles\nUV Index: 5.3\n\nForecast:\n  This Afternoon: 78°F, Mostly Sunny\n  Tonight: 61°F, Partly Cloudy\n  Friday: 80.5°F, Chance Showers And Thunderstorms\n  Friday Night: 63°F\n  Saturday: None°F, Sunny\n  Saturday Night: 58°F, Clear\n\nActive Alerts:\n  - Heat Advisory (Severity: Moderate)\n  - Special Weather Statement (Severity: Minor)\n\nTrend Insights:\n  - temperature: rising (+3.4°F)\n  - Pressure falling (-0.1inHg)\n  - humidity: steady",
+   "now": "2026-09-25T14:05:30.123456-04:00",
+   "error": "No Venice API key configured. Set one in Settings > AI."
+  },
+  {
+   "settings": {
+    "ai_provider": "openrouter",
+    "openrouter_api_key": "",
+    "ai_model_preference": "x",
+    "venice_api_key": "v",
+    "venice_model": "m",
+    "custom_system_prompt": null,
+    "custom_instructions": null
+   },
+   "context": "Location: Philadelphia, PA (39.9526, -75.1652)\nTemperature: 72°F\nFeels like: 73°F\nConditions: Partly Cloudy\nHumidity: 65%\nWind: 8 mph from NW\nPressure: 30.02 inHg\nVisibility: 10.0 miles\nUV Index: 5.3\n\nForecast:\n  This Afternoon: 78°F, Mostly Sunny\n  Tonight: 61°F, Partly Cloudy\n  Friday: 80.5°F, Chance Showers And Thunderstorms\n  Friday Night: 63°F\n  Saturday: None°F, Sunny\n  Saturday Night: 58°F, Clear\n\nActive Alerts:\n  - Heat Advisory (Severity: Moderate)\n  - Special Weather Statement (Severity: Minor)\n\nTrend Insights:\n  - temperature: rising (+3.4°F)\n  - Pressure falling (-0.1inHg)\n  - humidity: steady",
+   "now": "2026-09-25T14:05:30.123456-04:00",
+   "error": "No OpenRouter API key configured. Set one in Settings > AI."
+  },
+  {
+   "settings": {
+    "ai_provider": "gemini",
+    "openrouter_api_key": "k",
+    "ai_model_preference": "x",
+    "venice_api_key": "v",
+    "venice_model": "m",
+    "custom_system_prompt": null,
+    "custom_instructions": null
+   },
+   "context": "Location: Philadelphia, PA (39.9526, -75.1652)\nTemperature: 72°F\nFeels like: 73°F\nConditions: Partly Cloudy\nHumidity: 65%\nWind: 8 mph from NW\nPressure: 30.02 inHg\nVisibility: 10.0 miles\nUV Index: 5.3\n\nForecast:\n  This Afternoon: 78°F, Mostly Sunny\n  Tonight: 61°F, Partly Cloudy\n  Friday: 80.5°F, Chance Showers And Thunderstorms\n  Friday Night: 63°F\n  Saturday: None°F, Sunny\n  Saturday Night: 58°F, Clear\n\nActive Alerts:\n  - Heat Advisory (Severity: Moderate)\n  - Special Weather Statement (Severity: Minor)\n\nTrend Insights:\n  - temperature: rising (+3.4°F)\n  - Pressure falling (-0.1inHg)\n  - humidity: steady",
+   "now": "2026-09-25T14:05:30.123456-04:00",
+   "error": "Unknown AI provider. Select one in Settings > AI."
+  }
+ ],
+ "loops": [
+  {
+   "name": "answer_after_lookup",
+   "messages": [
+    {
+     "role": "user",
+     "content": "Current weather at Home?"
+    }
+   ],
+   "tools": [
+    "get_current_weather",
+    "add_location"
+   ],
+   "selected": null,
+   "responses": [
+    {
+     "content": "Checking",
+     "calls": [
+      {
+       "id": "call-1",
+       "name": "get_current_weather",
+       "arguments": "{\"location\": \"Home\"}"
+      }
+     ]
+    },
+    {
+     "content": "  It is 70 F.  ",
+     "calls": []
+    }
+   ],
+   "results": {
+    "get_current_weather": "Observed at noon: 70 F"
+   },
+   "outcome": {
+    "answer": {
+     "text": "It is 70 F.",
+     "model": "chosen",
+     "messages": [
+      {
+       "role": "user",
+       "content": "Current weather at Home?"
+      },
+      {
+       "role": "assistant",
+       "content": "Checking",
+       "tool_calls": [
+        {
+         "id": "call-1",
+         "type": "function",
+         "function": {
+          "name": "get_current_weather",
+          "arguments": "{\"location\": \"Home\"}"
+         }
+        }
+       ]
+      },
+      {
+       "role": "tool",
+       "tool_call_id": "call-1",
+       "content": "Observed at noon: 70 F"
+      },
+      {
+       "role": "assistant",
+       "content": "It is 70 F."
+      }
+     ]
+    }
+   },
+   "requests": [
+    {
+     "tools": [
+      "get_current_weather"
+     ],
+     "tool_choice": "required",
+     "messages": 1
+    },
+    {
+     "tools": [
+      "get_current_weather",
+      "add_location"
+     ],
+     "tool_choice": null,
+     "messages": 3
+    }
+   ],
+   "executed": [
+    [
+     "get_current_weather",
+     {
+      "location": "Home"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "ignored_required_tool",
+   "messages": [
+    {
+     "role": "user",
+     "content": "Weather tomorrow?"
+    }
+   ],
+   "tools": [
+    "get_current_weather"
+   ],
+   "selected": null,
+   "responses": [
+    {
+     "content": "I'll check.",
+     "calls": []
+    },
+    {
+     "content": "Let me fetch that.",
+     "calls": []
+    }
+   ],
+   "results": {},
+   "outcome": {
+    "error": "The model did not perform the requested weather lookup. Try another model."
+   },
+   "requests": [
+    {
+     "tools": [
+      "get_current_weather"
+     ],
+     "tool_choice": "required",
+     "messages": 1
+    },
+    {
+     "tools": [
+      "get_current_weather"
+     ],
+     "tool_choice": "required",
+     "messages": 1
+    }
+   ],
+   "executed": []
+  },
+  {
+   "name": "refusal",
+   "messages": [
+    {
+     "role": "user",
+     "content": "Explain how fog forms."
+    }
+   ],
+   "tools": [
+    "get_current_weather"
+   ],
+   "selected": null,
+   "responses": [
+    {
+     "content": "I’m sorry, but I can’t help with that.",
+     "calls": []
+    }
+   ],
+   "results": {},
+   "outcome": {
+    "error": "The selected model declined this request. Choose another model or revise your custom prompt in Settings > AI."
+   },
+   "requests": [
+    {
+     "tools": [
+      "get_current_weather"
+     ],
+     "tool_choice": null,
+     "messages": 1
+    }
+   ],
+   "executed": []
+  },
+  {
+   "name": "conceptual",
+   "messages": [
+    {
+     "role": "user",
+     "content": "How does rain form?"
+    }
+   ],
+   "tools": [
+    "get_current_weather"
+   ],
+   "selected": null,
+   "responses": [
+    {
+     "content": "Rain forms from condensed moisture.",
+     "calls": [],
+     "model": ""
+    }
+   ],
+   "results": {},
+   "outcome": {
+    "answer": {
+     "text": "Rain forms from condensed moisture.",
+     "model": "model",
+     "messages": [
+      {
+       "role": "user",
+       "content": "How does rain form?"
+      },
+      {
+       "role": "assistant",
+       "content": "Rain forms from condensed moisture."
+      }
+     ]
+    }
+   },
+   "requests": [
+    {
+     "tools": [
+      "get_current_weather"
+     ],
+     "tool_choice": null,
+     "messages": 1
+    }
+   ],
+   "executed": []
+  },
+  {
+   "name": "round_exhaustion",
+   "messages": [
+    {
+     "role": "user",
+     "content": "Weather now?"
+    }
+   ],
+   "tools": [
+    "get_current_weather"
+   ],
+   "selected": null,
+   "max_rounds": 2,
+   "responses": [
+    {
+     "content": null,
+     "calls": [
+      {
+       "id": "call-1",
+       "name": "get_current_weather",
+       "arguments": "{\"location\": \"Home\"}"
+      }
+     ]
+    },
+    {
+     "content": null,
+     "calls": [
+      {
+       "id": "call-1",
+       "name": "get_current_weather",
+       "arguments": "{\"location\": \"Home\"}"
+      }
+     ]
+    },
+    {
+     "content": null,
+     "calls": [
+      {
+       "id": "call-1",
+       "name": "get_current_weather",
+       "arguments": "{\"location\": \"Home\"}"
+      }
+     ]
+    }
+   ],
+   "results": {
+    "get_current_weather": "ok"
+   },
+   "outcome": {
+    "error": "The assistant could not finish its weather lookup. Please try a simpler question."
+   },
+   "requests": [
+    {
+     "tools": [
+      "get_current_weather"
+     ],
+     "tool_choice": "required",
+     "messages": 1
+    },
+    {
+     "tools": [
+      "get_current_weather"
+     ],
+     "tool_choice": null,
+     "messages": 3
+    },
+    {
+     "tools": [
+      "get_current_weather"
+     ],
+     "tool_choice": null,
+     "messages": 5
+    }
+   ],
+   "executed": [
+    [
+     "get_current_weather",
+     {
+      "location": "Home"
+     }
+    ],
+    [
+     "get_current_weather",
+     {
+      "location": "Home"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "write_tool_blocked",
+   "messages": [
+    {
+     "role": "user",
+     "content": "Weather now?"
+    }
+   ],
+   "tools": [
+    "get_current_weather",
+    "add_location"
+   ],
+   "selected": null,
+   "responses": [
+    {
+     "content": "Saving",
+     "calls": [
+      {
+       "id": "call-1",
+       "name": "add_location",
+       "arguments": "{\"name\": \"X\", \"latitude\": 1, \"longitude\": 2}"
+      }
+     ]
+    },
+    {
+     "content": "I could not check.",
+     "calls": []
+    }
+   ],
+   "results": {},
+   "outcome": {
+    "error": "The weather lookup did not return usable data. Please try again."
+   },
+   "requests": [
+    {
+     "tools": [
+      "get_current_weather"
+     ],
+     "tool_choice": "required",
+     "messages": 1
+    },
+    {
+     "tools": [
+      "get_current_weather",
+      "add_location"
+     ],
+     "tool_choice": null,
+     "messages": 3
+    }
+   ],
+   "executed": []
+  },
+  {
+   "name": "alert_namesake",
+   "messages": [
+    {
+     "role": "user",
+     "content": "Are there alerts for Lumberton right now?"
+    }
+   ],
+   "tools": [
+    "get_current_weather",
+    "get_alerts",
+    "add_location"
+   ],
+   "selected": "Lumberton, NJ",
+   "responses": [
+    {
+     "content": "Checking",
+     "calls": [
+      {
+       "id": "call-1",
+       "name": "get_alerts",
+       "arguments": "{\"location\": \"Home\"}"
+      }
+     ]
+    },
+    {
+     "content": "Alert checked.",
+     "calls": []
+    }
+   ],
+   "results": {
+    "get_alerts": "Weather alerts for Lumberton, NJ:\nSource: NWS\nNo active alerts."
+   },
+   "outcome": {
+    "answer": {
+     "text": "Alert checked.",
+     "model": "chosen",
+     "messages": [
+      {
+       "role": "user",
+       "content": "Are there alerts for Lumberton right now?"
+      },
+      {
+       "role": "assistant",
+       "content": "Checking",
+       "tool_calls": [
+        {
+         "id": "call-1",
+         "type": "function",
+         "function": {
+          "name": "get_alerts",
+          "arguments": "{\"location\": \"Home\"}"
+         }
+        }
+       ]
+      },
+      {
+       "role": "tool",
+       "tool_call_id": "call-1",
+       "content": "Weather alerts for Lumberton, NJ:\nSource: NWS\nNo active alerts."
+      },
+      {
+       "role": "assistant",
+       "content": "Alert checked."
+      }
+     ]
+    }
+   },
+   "requests": [
+    {
+     "tools": [
+      "get_alerts"
+     ],
+     "tool_choice": "required",
+     "messages": 1
+    },
+    {
+     "tools": [
+      "get_current_weather",
+      "get_alerts",
+      "add_location"
+     ],
+     "tool_choice": null,
+     "messages": 3
+    }
+   ],
+   "executed": [
+    [
+     "get_alerts",
+     {
+      "location": "Lumberton, NJ"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "explicit_other_location",
+   "messages": [
+    {
+     "role": "user",
+     "content": "What is the current weather in Home?"
+    }
+   ],
+   "tools": [
+    "get_current_weather"
+   ],
+   "selected": "Lumberton, NJ",
+   "responses": [
+    {
+     "content": "Checking",
+     "calls": [
+      {
+       "id": "call-1",
+       "name": "get_current_weather",
+       "arguments": "{\"location\": \"Home\"}"
+      }
+     ]
+    },
+    {
+     "content": "Done",
+     "calls": []
+    }
+   ],
+   "results": {
+    "get_current_weather": "Current weather for Home:"
+   },
+   "outcome": {
+    "answer": {
+     "text": "Done",
+     "model": "chosen",
+     "messages": [
+      {
+       "role": "user",
+       "content": "What is the current weather in Home?"
+      },
+      {
+       "role": "assistant",
+       "content": "Checking",
+       "tool_calls": [
+        {
+         "id": "call-1",
+         "type": "function",
+         "function": {
+          "name": "get_current_weather",
+          "arguments": "{\"location\": \"Home\"}"
+         }
+        }
+       ]
+      },
+      {
+       "role": "tool",
+       "tool_call_id": "call-1",
+       "content": "Current weather for Home:"
+      },
+      {
+       "role": "assistant",
+       "content": "Done"
+      }
+     ]
+    }
+   },
+   "requests": [
+    {
+     "tools": [
+      "get_current_weather"
+     ],
+     "tool_choice": "required",
+     "messages": 1
+    },
+    {
+     "tools": [
+      "get_current_weather"
+     ],
+     "tool_choice": null,
+     "messages": 3
+    }
+   ],
+   "executed": [
+    [
+     "get_current_weather",
+     {
+      "location": "Home"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "alert_contradiction",
+   "messages": [
+    {
+     "role": "user",
+     "content": "Any alerts now?"
+    }
+   ],
+   "tools": [
+    "get_alerts"
+   ],
+   "selected": "Home",
+   "responses": [
+    {
+     "content": "Checking",
+     "calls": [
+      {
+       "id": "call-1",
+       "name": "get_alerts",
+       "arguments": "{\"location\": \"Home\"}"
+      }
+     ]
+    },
+    {
+     "content": "There are no active alerts.",
+     "calls": []
+    }
+   ],
+   "results": {
+    "get_alerts": "Weather alerts for Home:\n- Coastal Flood Warning"
+   },
+   "outcome": {
+    "error": "The model contradicted the alert lookup. Please try again or use the app's alert list."
+   },
+   "requests": [
+    {
+     "tools": [
+      "get_alerts"
+     ],
+     "tool_choice": "required",
+     "messages": 1
+    },
+    {
+     "tools": [
+      "get_alerts"
+     ],
+     "tool_choice": null,
+     "messages": 3
+    }
+   ],
+   "executed": [
+    [
+     "get_alerts",
+     {
+      "location": "Home"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "namesake_in_answer",
+   "messages": [
+    {
+     "role": "user",
+     "content": "What is the weather now?"
+    }
+   ],
+   "tools": [
+    "get_current_weather"
+   ],
+   "selected": "Lumberton, NJ",
+   "responses": [
+    {
+     "content": "Checking",
+     "calls": [
+      {
+       "id": "call-1",
+       "name": "get_current_weather",
+       "arguments": "{\"location\": \"x\"}"
+      }
+     ]
+    },
+    {
+     "content": "Lumberton, NC is sunny.",
+     "calls": []
+    }
+   ],
+   "results": {
+    "get_current_weather": "ok"
+   },
+   "outcome": {
+    "error": "The model named a different place. Please try again or check the selected location."
+   },
+   "requests": [
+    {
+     "tools": [
+      "get_current_weather"
+     ],
+     "tool_choice": "required",
+     "messages": 1
+    },
+    {
+     "tools": [
+      "get_current_weather"
+     ],
+     "tool_choice": null,
+     "messages": 3
+    }
+   ],
+   "executed": [
+    [
+     "get_current_weather",
+     {
+      "location": "Lumberton, NJ"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "namesake_requested",
+   "messages": [
+    {
+     "role": "user",
+     "content": "What is the weather now in Lumberton, NC?"
+    }
+   ],
+   "tools": [
+    "get_current_weather"
+   ],
+   "selected": "Lumberton, NJ",
+   "responses": [
+    {
+     "content": "Checking",
+     "calls": [
+      {
+       "id": "call-1",
+       "name": "get_current_weather",
+       "arguments": "{\"location\": \"Lumberton, NC\"}"
+      }
+     ]
+    },
+    {
+     "content": "Lumberton, NC is sunny.",
+     "calls": []
+    }
+   ],
+   "results": {
+    "get_current_weather": "ok"
+   },
+   "outcome": {
+    "answer": {
+     "text": "Lumberton, NC is sunny.",
+     "model": "chosen",
+     "messages": [
+      {
+       "role": "user",
+       "content": "What is the weather now in Lumberton, NC?"
+      },
+      {
+       "role": "assistant",
+       "content": "Checking",
+       "tool_calls": [
+        {
+         "id": "call-1",
+         "type": "function",
+         "function": {
+          "name": "get_current_weather",
+          "arguments": "{\"location\": \"Lumberton, NC\"}"
+         }
+        }
+       ]
+      },
+      {
+       "role": "tool",
+       "tool_call_id": "call-1",
+       "content": "ok"
+      },
+      {
+       "role": "assistant",
+       "content": "Lumberton, NC is sunny."
+      }
+     ]
+    }
+   },
+   "requests": [
+    {
+     "tools": [
+      "get_current_weather"
+     ],
+     "tool_choice": "required",
+     "messages": 1
+    },
+    {
+     "tools": [
+      "get_current_weather"
+     ],
+     "tool_choice": null,
+     "messages": 3
+    }
+   ],
+   "executed": [
+    [
+     "get_current_weather",
+     {
+      "location": "Lumberton, NC"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "bad_arguments_and_failures",
+   "messages": [
+    {
+     "role": "user",
+     "content": "Weather now and a forecast?"
+    }
+   ],
+   "tools": [
+    "get_current_weather",
+    "get_forecast",
+    "get_hourly_forecast"
+   ],
+   "selected": null,
+   "responses": [
+    {
+     "content": "",
+     "calls": [
+      {
+       "id": "a",
+       "name": "get_current_weather",
+       "arguments": "not json"
+      },
+      {
+       "id": "b",
+       "name": "get_forecast",
+       "arguments": "[1, 2]"
+      },
+      {
+       "id": "c",
+       "name": "get_hourly_forecast",
+       "arguments": "{\"location\": \"Home\"}"
+      },
+      {
+       "id": "d",
+       "name": "get_current_weather",
+       "arguments": "{\"location\": \"Home\"}"
+      }
+     ]
+    },
+    {
+     "content": "Here you go.",
+     "calls": []
+    }
+   ],
+   "results": {
+    "get_hourly_forecast": "raise",
+    "get_current_weather": "Error: Could not resolve location: Home"
+   },
+   "outcome": {
+    "error": "The weather lookup did not return usable data. Please try again."
+   },
+   "requests": [
+    {
+     "tools": [
+      "get_current_weather",
+      "get_forecast",
+      "get_hourly_forecast"
+     ],
+     "tool_choice": "required",
+     "messages": 1
+    },
+    {
+     "tools": [
+      "get_current_weather",
+      "get_forecast",
+      "get_hourly_forecast"
+     ],
+     "tool_choice": null,
+     "messages": 6
+    }
+   ],
+   "executed": [
+    [
+     "get_hourly_forecast",
+     {
+      "location": "Home"
+     }
+    ],
+    [
+     "get_current_weather",
+     {
+      "location": "Home"
+     }
+    ]
+   ]
+  },
+  {
+   "name": "no_executor_tool_call",
+   "messages": [
+    {
+     "role": "user",
+     "content": "Weather now?"
+    }
+   ],
+   "tools": [],
+   "selected": null,
+   "executor": false,
+   "responses": [
+    {
+     "content": "",
+     "calls": [
+      {
+       "id": "call-1",
+       "name": "get_current_weather",
+       "arguments": "{\"location\": \"Home\"}"
+      }
+     ]
+    }
+   ],
+   "results": {},
+   "outcome": {
+    "error": "The assistant could not finish its weather lookup. Please try a simpler question."
+   },
+   "requests": [
+    {
+     "tools": [],
+     "tool_choice": null,
+     "messages": 1
+    }
+   ],
+   "executed": []
+  },
+  {
+   "name": "empty_choices",
+   "messages": [
+    {
+     "role": "user",
+     "content": "hi"
+    }
+   ],
+   "tools": [],
+   "selected": null,
+   "responses": [
+    null
+   ],
+   "results": {},
+   "outcome": {
+    "error": "Received an empty response. Try again or switch models in Settings."
+   },
+   "requests": [
+    {
+     "tools": [],
+     "tool_choice": null,
+     "messages": 1
+    }
+   ],
+   "executed": []
+  },
+  {
+   "name": "empty_answer",
+   "messages": [
+    {
+     "role": "system",
+     "content": "sys"
+    },
+    {
+     "role": "user",
+     "content": "hi"
+    }
+   ],
+   "tools": [],
+   "selected": null,
+   "responses": [
+    {
+     "content": "   ",
+     "calls": []
+    }
+   ],
+   "results": {},
+   "outcome": {
+    "error": "Received an empty response. Try again or switch models in Settings."
+   },
+   "requests": [
+    {
+     "tools": [],
+     "tool_choice": null,
+     "messages": 2
+    }
+   ],
+   "executed": []
+  }
+ ]
+}
