@@ -31,6 +31,8 @@ pub mod tools;
 pub mod transport;
 
 #[cfg(test)]
+mod golden;
+#[cfg(test)]
 mod test_server;
 
 pub use errors::{AiError, AiErrorKind};

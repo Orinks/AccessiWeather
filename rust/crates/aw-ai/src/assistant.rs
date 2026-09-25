@@ -107,7 +107,11 @@ pub fn needs_live_weather(message: &str) -> bool {
 
 /// `_explicitly_requested_location`: allow a different place only when the
 /// user's question identifies it.
-fn explicitly_requested_location(user_text: &str, tool_location: &str, selected: &str) -> bool {
+pub(crate) fn explicitly_requested_location(
+    user_text: &str,
+    tool_location: &str,
+    selected: &str,
+) -> bool {
     let text = casefold(user_text);
     let requested = casefold(tool_location.trim());
     let current = casefold(selected.trim());
@@ -191,6 +195,10 @@ fn tool_name(tool: &Value) -> &str {
     tool["function"]["name"].as_str().unwrap_or("")
 }
 
+/// Runs one tool call: the tool's text, or `Err` when the call failed
+/// (normally [`WeatherToolExecutor::execute`]).
+pub type ToolRunner<'a> = &'a dyn Fn(&str, &Map<String, Value>) -> Result<String, String>;
+
 /// `run_assistant_request`: real completion/tool turns that refuse empty
 /// promises, ungrounded answers and unbounded tool calls. `options` holds
 /// the extra request fields (`tools`, `venice_parameters`).
@@ -199,7 +207,7 @@ pub fn run_assistant_request(
     client: &AssistantClient,
     model: &str,
     messages: &[Value],
-    executor: Option<&WeatherToolExecutor>,
+    executor: Option<ToolRunner>,
     options: &Map<String, Value>,
     selected_location: Option<&str>,
     max_tool_rounds: usize,
@@ -313,7 +321,7 @@ pub fn run_assistant_request(
                                 }
                             }
                         }
-                        executor.execute(name, &arguments).ok().inspect(|result| {
+                        executor(name, &arguments).ok().inspect(|result| {
                             if read_names.contains(name) && !result.starts_with("Error") {
                                 lookup_completed = true;
                             }
@@ -571,7 +579,11 @@ pub fn prepare_request(
         ),
         Provider::OpenRouter => (
             settings.openrouter_api_key.clone(),
-            settings.ai_model_preference.clone(),
+            if settings.ai_model_preference.is_empty() {
+                DEFAULT_WEATHER_ASSISTANT_MODEL.to_string()
+            } else {
+                settings.ai_model_preference.clone()
+            },
         ),
     };
     if api_key.is_empty() {
@@ -609,17 +621,9 @@ pub fn prepare_request(
     })
 }
 
-/// `_build_completion_request`: the model and tools for this turn.
-fn completion_options(
-    configured_model: &str,
-    messages: &[Value],
-    with_tools: bool,
-) -> (String, Map<String, Value>) {
-    let model = if configured_model.is_empty() {
-        DEFAULT_WEATHER_ASSISTANT_MODEL.to_string()
-    } else {
-        configured_model.to_string()
-    };
+/// `_build_completion_request`'s tools for this turn (the model default is
+/// applied by [`prepare_request`]).
+fn completion_options(messages: &[Value], with_tools: bool) -> Map<String, Value> {
     let mut options = Map::new();
     if with_tools {
         let latest = messages
@@ -630,7 +634,7 @@ fn completion_options(
             .map_or(String::new(), pyfmt::str);
         options.insert("tools".into(), Value::Array(tools_for_message(&latest)));
     }
-    (model, options)
+    options
 }
 
 /// Answer the conversation's latest question. On success pass the answer to
@@ -654,7 +658,7 @@ fn respond(
 ) -> Result<AssistantAnswer, AiError> {
     let mut messages = vec![json!({"role": "system", "content": request.system_message})];
     messages.extend(conversation.messages.iter().cloned());
-    let (model, mut options) = completion_options(&request.model, &messages, executor.is_some());
+    let mut options = completion_options(&messages, executor.is_some());
     if request.provider == Provider::Venice {
         options.insert(
             "venice_parameters".into(),
@@ -662,11 +666,15 @@ fn respond(
         );
     }
     let selected = executor.and_then(WeatherToolExecutor::selected_location);
+    let execute = |name: &str, arguments: &Map<String, Value>| match executor {
+        Some(executor) => executor.execute(name, arguments),
+        None => Err(String::new()),
+    };
     run_assistant_request(
         client,
-        &model,
+        &request.model,
         &messages,
-        executor,
+        executor.is_some().then_some(&execute as ToolRunner),
         &options,
         selected,
         MAX_TOOL_ROUNDS,
@@ -778,6 +786,12 @@ mod tests {
         Location::new("Home", 40.1, -74.2)
     }
 
+    fn runner<'a>(
+        executor: &'a WeatherToolExecutor<'a>,
+    ) -> impl Fn(&str, &Map<String, Value>) -> Result<String, String> + 'a {
+        move |name, arguments| executor.execute(name, arguments)
+    }
+
     fn now() -> DateTime<Utc> {
         Utc.with_ymd_and_hms(2026, 9, 12, 12, 0, 0).unwrap()
     }
@@ -794,7 +808,7 @@ mod tests {
             &client(&server),
             "model",
             &user("Current weather at Home?"),
-            Some(&executor),
+            Some(&runner(&executor)),
             &options(&["get_current_weather", "add_location"]),
             None,
             5,
@@ -841,7 +855,7 @@ mod tests {
             &client(&server),
             "m",
             &user("Weather tomorrow?"),
-            Some(&executor),
+            Some(&runner(&executor)),
             &options(&["get_current_weather"]),
             None,
             5,
@@ -870,7 +884,7 @@ mod tests {
             &client(&server),
             "m",
             &user("Explain how fog forms."),
-            Some(&executor),
+            Some(&runner(&executor)),
             &opts,
             None,
             5,
@@ -882,7 +896,7 @@ mod tests {
             &client(&server),
             "m",
             &user("How does rain form?"),
-            Some(&executor),
+            Some(&runner(&executor)),
             &opts,
             None,
             5,
@@ -905,7 +919,7 @@ mod tests {
             &client(&server),
             "m",
             &user("Weather now?"),
-            Some(&executor),
+            Some(&runner(&executor)),
             &opts,
             None,
             2,
@@ -923,7 +937,7 @@ mod tests {
             &client(&server),
             "m",
             &user("Weather now?"),
-            Some(&executor),
+            Some(&runner(&executor)),
             &opts,
             None,
             5,
@@ -954,7 +968,7 @@ mod tests {
             &client(&server),
             "m",
             &user("Are there alerts for Lumberton right now?"),
-            Some(&executor),
+            Some(&runner(&executor)),
             &options(&["get_current_weather", "get_alerts", "add_location"]),
             Some("Lumberton, NJ"),
             5,
@@ -985,7 +999,7 @@ mod tests {
             &client(&server),
             "m",
             &user("What is the current weather in Home?"),
-            Some(&executor),
+            Some(&runner(&executor)),
             &options(&["get_current_weather"]),
             Some("Lumberton, NJ"),
             5,
@@ -1013,7 +1027,7 @@ mod tests {
             &client(&server),
             "m",
             &user("Any alerts now?"),
-            Some(&executor),
+            Some(&runner(&executor)),
             &options(&["get_alerts"]),
             Some("Home"),
             5,
@@ -1032,7 +1046,7 @@ mod tests {
             &client(&server),
             "m",
             &user("What is the weather now?"),
-            Some(&executor),
+            Some(&runner(&executor)),
             &options(&["get_current_weather"]),
             Some("Lumberton, NJ"),
             5,
@@ -1053,7 +1067,7 @@ mod tests {
         let request = AssistantRequest {
             provider: Provider::OpenRouter,
             api_key: "secret-key".into(),
-            model: String::new(),
+            model: DEFAULT_WEATHER_ASSISTANT_MODEL.into(),
             system_message: "sys".into(),
         };
         let host = Host::default();

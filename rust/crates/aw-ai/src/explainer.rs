@@ -31,6 +31,11 @@ use crate::transport::{self, CancelToken, StreamLimits};
 /// `ai_cache_ttl`, but the explainer always stores with `ttl=300`.
 pub const EXPLANATION_CACHE_TTL: Duration = Duration::from_secs(300);
 
+/// Shown by forecast-product summaries when no explainer can be built for
+/// the selected provider ([`AiExplainer::from_settings`] failed).
+pub const PROVIDER_UNAVAILABLE_MESSAGE: &str =
+    "Selected AI provider API key not configured. Set it in Settings > AI.";
+
 const MAX_PROMPT_LENGTH: usize = 2000;
 const MAX_TOKENS: u32 = 4000;
 const OPENROUTER_HEADERS: [(&str, &str); 2] = [
