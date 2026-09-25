@@ -29,6 +29,8 @@ pub enum HttpError {
 /// Minimal blocking JSON GET abstraction.
 pub trait HttpClient: Send + Sync {
     fn get_json(&self, url: &str) -> Result<Value, HttpError>;
+    /// GET a plain-text body (IEM AFOS text products).
+    fn get_text(&self, url: &str) -> Result<String, HttpError>;
 }
 
 /// Production client with a shared `reqwest` connection pool, retries with
@@ -59,16 +61,32 @@ fn retryable_status(status: u16) -> bool {
 
 impl HttpClient for ReqwestClient {
     fn get_json(&self, url: &str) -> Result<Value, HttpError> {
+        self.send(url, "application/geo+json, application/json")?
+            .json::<Value>()
+            .map_err(|e| HttpError::Json {
+                url: url.to_string(),
+                message: e.to_string(),
+            })
+    }
+
+    fn get_text(&self, url: &str) -> Result<String, HttpError> {
+        self.send(url, "*/*")?
+            .text()
+            .map_err(|e| HttpError::Transport {
+                url: url.to_string(),
+                message: e.to_string(),
+            })
+    }
+}
+
+impl ReqwestClient {
+    fn send(&self, url: &str, accept: &str) -> Result<reqwest::blocking::Response, HttpError> {
         let mut last = None;
         for attempt in 0..MAX_ATTEMPTS {
             if attempt > 0 {
                 std::thread::sleep(Duration::from_millis(250 * (1 << attempt)));
             }
-            let result = self
-                .inner
-                .get(url)
-                .header("Accept", "application/geo+json, application/json")
-                .send();
+            let result = self.inner.get(url).header("Accept", accept).send();
             match result {
                 Ok(resp) => {
                     let status = resp.status().as_u16();
@@ -84,10 +102,7 @@ impl HttpClient for ReqwestClient {
                         }
                         return Err(err);
                     }
-                    return resp.json::<Value>().map_err(|e| HttpError::Json {
-                        url: url.to_string(),
-                        message: e.to_string(),
-                    });
+                    return Ok(resp);
                 }
                 Err(e) => {
                     let err = HttpError::Transport {
@@ -154,6 +169,14 @@ impl HttpClient for FixtureClient {
             .max_by_key(|(prefix, _)| prefix.len())
             .map(|(_, body)| body.clone())
             .ok_or_else(|| HttpError::MissingFixture(url.to_string()))
+    }
+
+    /// String fixtures are served verbatim; anything else as its JSON text.
+    fn get_text(&self, url: &str) -> Result<String, HttpError> {
+        Ok(match self.get_json(url)? {
+            Value::String(text) => text,
+            other => other.to_string(),
+        })
     }
 }
 

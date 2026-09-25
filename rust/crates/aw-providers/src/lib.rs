@@ -8,6 +8,7 @@ pub mod http;
 pub mod nws;
 pub mod openmeteo;
 pub mod pirateweather;
+pub mod products;
 pub mod weather_client;
 
 pub use http::{HttpClient, HttpError, ReqwestClient};

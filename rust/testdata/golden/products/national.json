@@ -1,0 +1,232 @@
+[
+ {
+  "name": "fetch_all_in_season",
+  "call": {
+   "fn": "fetch_all",
+   "now": "2026-09-15T00:00:00+00:00"
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDSPD&",
+    "text": "PMDSPD\nShort Range Discussion text"
+   },
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDEPD&",
+    "status": 503,
+    "text": "busy"
+   },
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDET4&",
+    "text": "ERROR: Could not Find: PMDET4"
+   },
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=SWODY1&",
+    "text": "SWODY1\nDay 1"
+   },
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=SWODY2&",
+    "text": "\u0001SWODY2\nDay 2\u0003"
+   },
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=SWODY3&",
+    "error": "timed out"
+   },
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=QPFPFD&",
+    "text": "QPF text"
+   },
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDMRD&",
+    "text": " \n "
+   },
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=TWOAT&",
+    "text": "Atlantic outlook"
+   },
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=TWOEP&",
+    "text": "East Pacific outlook"
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDSPD&fmt=text&limit=1&order=desc",
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDEPD&fmt=text&limit=1&order=desc",
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDET4&fmt=text&limit=1&order=desc",
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=SWODY1&fmt=text&limit=1&order=desc",
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=SWODY2&fmt=text&limit=1&order=desc",
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=SWODY3&fmt=text&limit=1&order=desc",
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=QPFPFD&fmt=text&limit=1&order=desc",
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDMRD&fmt=text&limit=1&order=desc",
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=TWOAT&fmt=text&limit=1&order=desc",
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=TWOEP&fmt=text&limit=1&order=desc"
+  ],
+  "expect": {
+   "ok": {
+    "wpc": {
+     "short_range": {
+      "title": "Short Range Forecast (Days 1-3)",
+      "text": "PMDSPD\nShort Range Discussion text"
+     },
+     "medium_range": {
+      "title": "Medium Range Forecast (Days 3-7)",
+      "text": "Error fetching Medium Range Forecast (Days 3-7): IEM AFOS returned HTTP 503 for PMDEPD"
+     },
+     "extended": {
+      "title": "Extended Forecast (Days 8-10)",
+      "text": "Error fetching Extended Forecast (Days 8-10): ERROR: Could not Find: PMDET4"
+     }
+    },
+    "spc": {
+     "day1": {
+      "title": "Day 1 Convective Outlook",
+      "text": "SWODY1\nDay 1"
+     },
+     "day2": {
+      "title": "Day 2 Convective Outlook",
+      "text": "SWODY2\nDay 2"
+     },
+     "day3": {
+      "title": "Day 3 Convective Outlook",
+      "text": "Error fetching Day 3 Convective Outlook: IEM AFOS request failed for SWODY3: timed out"
+     }
+    },
+    "qpf": {
+     "qpf": {
+      "title": "Quantitative Precipitation Forecast Discussion",
+      "text": "QPF text"
+     }
+    },
+    "nhc": {
+     "atlantic_outlook": {
+      "title": "Atlantic Tropical Weather Outlook",
+      "text": "Atlantic outlook"
+     },
+     "east_pacific_outlook": {
+      "title": "East Pacific Tropical Weather Outlook",
+      "text": "East Pacific outlook"
+     }
+    },
+    "cpc": {
+     "outlook": {
+      "title": "CPC 6-10 & 8-14 Day Outlook",
+      "text": "Error fetching CPC 6-10 & 8-14 Day Outlook: IEM AFOS returned no text for PMDMRD"
+     }
+    }
+   }
+  }
+ },
+ {
+  "name": "fetch_all_out_of_season",
+  "call": {
+   "fn": "fetch_all",
+   "now": "2026-01-15T00:00:00+00:00"
+  },
+  "responses": [
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDSPD&",
+    "text": "PMDSPD\nShort Range Discussion text"
+   },
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDEPD&",
+    "status": 503,
+    "text": "busy"
+   },
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDET4&",
+    "text": "ERROR: Could not Find: PMDET4"
+   },
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=SWODY1&",
+    "text": "SWODY1\nDay 1"
+   },
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=SWODY2&",
+    "text": "\u0001SWODY2\nDay 2\u0003"
+   },
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=SWODY3&",
+    "error": "timed out"
+   },
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=QPFPFD&",
+    "text": "QPF text"
+   },
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDMRD&",
+    "text": " \n "
+   },
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=TWOAT&",
+    "text": "Atlantic outlook"
+   },
+   {
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=TWOEP&",
+    "text": "East Pacific outlook"
+   }
+  ],
+  "requests": [
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDSPD&fmt=text&limit=1&order=desc",
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDEPD&fmt=text&limit=1&order=desc",
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDET4&fmt=text&limit=1&order=desc",
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=SWODY1&fmt=text&limit=1&order=desc",
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=SWODY2&fmt=text&limit=1&order=desc",
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=SWODY3&fmt=text&limit=1&order=desc",
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=QPFPFD&fmt=text&limit=1&order=desc",
+   "https://mesonet.agron.iastate.edu/cgi-bin/afos/retrieve.py?pil=PMDMRD&fmt=text&limit=1&order=desc"
+  ],
+  "expect": {
+   "ok": {
+    "wpc": {
+     "short_range": {
+      "title": "Short Range Forecast (Days 1-3)",
+      "text": "PMDSPD\nShort Range Discussion text"
+     },
+     "medium_range": {
+      "title": "Medium Range Forecast (Days 3-7)",
+      "text": "Error fetching Medium Range Forecast (Days 3-7): IEM AFOS returned HTTP 503 for PMDEPD"
+     },
+     "extended": {
+      "title": "Extended Forecast (Days 8-10)",
+      "text": "Error fetching Extended Forecast (Days 8-10): ERROR: Could not Find: PMDET4"
+     }
+    },
+    "spc": {
+     "day1": {
+      "title": "Day 1 Convective Outlook",
+      "text": "SWODY1\nDay 1"
+     },
+     "day2": {
+      "title": "Day 2 Convective Outlook",
+      "text": "SWODY2\nDay 2"
+     },
+     "day3": {
+      "title": "Day 3 Convective Outlook",
+      "text": "Error fetching Day 3 Convective Outlook: IEM AFOS request failed for SWODY3: timed out"
+     }
+    },
+    "qpf": {
+     "qpf": {
+      "title": "Quantitative Precipitation Forecast Discussion",
+      "text": "QPF text"
+     }
+    },
+    "nhc": {
+     "atlantic_outlook": {
+      "title": "Atlantic Tropical Weather Outlook",
+      "text": "NHC tropical outlooks are available during hurricane season (June-November)."
+     },
+     "east_pacific_outlook": {
+      "title": "East Pacific Tropical Weather Outlook",
+      "text": "NHC tropical outlooks are available during hurricane season (June-November)."
+     }
+    },
+    "cpc": {
+     "outlook": {
+      "title": "CPC 6-10 & 8-14 Day Outlook",
+      "text": "Error fetching CPC 6-10 & 8-14 Day Outlook: IEM AFOS returned no text for PMDMRD"
+     }
+    }
+   }
+  }
+ }
+]
